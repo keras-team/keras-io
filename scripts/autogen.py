@@ -35,8 +35,8 @@ from master import MASTER
 import tutobooks
 
 
-EXAMPLES_GH_LOCATION = "https://github.com/keras-team/keras-io/blob/master/examples/"
-GUIDES_GH_LOCATION = "https://github.com/keras-team/keras-io/blob/master/guides/"
+EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
+GUIDES_GH_LOCATION = "keras-team/keras-io/blob/master/guides/"
 
 
 class TFKerasDocumentationGenerator(keras_autodoc.DocumentationGenerator):
@@ -184,7 +184,7 @@ class KerasIO:
             "[**View in Colab**](https://colab.research.google.com/github/"
             + github_repo_dir
             + "ipynb/"
-            + fname
+            + name + ".ipynb"
             + ")  "
             '<span class="k-dot">•</span>'
             '<img class="k-inline-icon" src="https://github.com/favicon.ico"/> '
@@ -280,7 +280,7 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=True)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = EXAMPLES_GH_LOCATION + folder + "/" + name + "/"
+        github_repo_dir = EXAMPLES_GH_LOCATION + folder + "/"
         site_img_dir = "img/examples/" + folder + "/" + name
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
@@ -298,7 +298,7 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=True)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = GUIDES_GH_LOCATION + name + "/"
+        github_repo_dir = GUIDES_GH_LOCATION
         site_img_dir = "img/guides/" + name
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
