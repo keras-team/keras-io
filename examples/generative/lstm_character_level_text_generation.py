@@ -100,7 +100,7 @@ def sample(preds, temperature=1.0):
 ## Train the model
 """
 
-epochs = 1  # In practice, you need ~40 epochs
+epochs = 40
 batch_size = 128
 
 for epoch in range(epochs):
