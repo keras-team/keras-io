@@ -857,7 +857,8 @@ def generate_md_toc(entries, url, depth=2):
             title_prefix = "### "
         else:
             title_prefix = "- "
-        generated += title_prefix + f"[{title}]({full_url})\n"
+        generated += title_prefix + "[{title}]({full_url})\n".format(
+            title=title, full_url=full_url)
         if children:
             assert path.endswith("/")
             for child in children:
@@ -866,16 +867,19 @@ def generate_md_toc(entries, url, depth=2):
                 child_title = child["title"]
                 child_path = child["path"]
                 child_url = full_url + child_path
-                generated += f"- [{child_title}]({child_url})\n"
+                generated += "- [{child_title}]({child_url})\n".format(
+                    child_title=child_title, child_url=child_url)
             generated += "\n"
         elif generate and print_generate:
             for gen in generate:
                 obj = keras_autodoc.utils.import_object(gen)
                 obj_name = keras_autodoc.utils.get_name(obj)
                 obj_type = keras_autodoc.utils.get_type(obj)
-                link = f"{full_url}/#{obj_name}-{obj_type}".lower()
+                link = "{full_url}/#{obj_name}-{obj_type}".format(
+                    full_url=full_url, obj_name=obj_name, obj_type=obj_type).lower()
                 name = gen.split(".")[-1]
-                generated += f"- [{name} {obj_type}]({link})\n"
+                generated += "- [{name} {obj_type}]({link})\n".format(
+                    name=name, obj_type=obj_type, link=link)
             generated += "\n"
     return generated
 
