@@ -1,0 +1,6 @@
+tmp/*
+sources/*
+site/*
+scripts/upload.py
+*.pyc
+*.txt
