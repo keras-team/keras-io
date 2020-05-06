@@ -159,7 +159,7 @@ class GANMonitor(keras.callbacks.Callback):
 ## Train the end-to-end model
 """
 
-epochs = 1  # In practice, you need at least 20 epochs.
+epochs = 30
 
 gan = GAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 gan.compile(
@@ -171,3 +171,13 @@ gan.compile(
 gan.fit(
     dataset, epochs=epochs, callbacks=[GANMonitor(num_img=3, latent_dim=latent_dim)]
 )
+
+"""
+Display the last generated images:
+"""
+
+from IPython.display import Image, display
+
+display(Image("generated_img_0_29.png"))
+display(Image("generated_img_1_29.png"))
+display(Image("generated_img_2_29.png"))
