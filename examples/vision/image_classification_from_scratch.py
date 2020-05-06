@@ -291,10 +291,10 @@ model.compile(
     metrics=["accuracy"],
 )
 model.fit(
-    restricted_train_ds,
+    train_ds,
     epochs=epochs,
     callbacks=callbacks,
-    validation_data=restricted_val_ds,
+    validation_data=val_ds,
 )
 
 """
