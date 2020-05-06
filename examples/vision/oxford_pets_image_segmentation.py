@@ -210,8 +210,7 @@ callbacks = [
 ]
 
 # Train the model, doing validation at the end of each epoch.
-# We use only 1 epoch to cut execution time; in practice you need ~15 epochs.
-epochs = 1
+epochs = 15
 model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
 
 """

@@ -551,9 +551,7 @@ model.compile(
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
-# We only train for 2 epochs to cut execution time.
-# In practice, you'll need 10-20 epochs.
-epochs = 2
+epochs = 20
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 
 """
@@ -583,9 +581,7 @@ model.compile(
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
-# We only train for 1 epoch to cut execution time.
-# In practice, you'll need ~10 epochs.
-epochs = 1
+epochs = 10
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 
 """

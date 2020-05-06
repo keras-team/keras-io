@@ -280,10 +280,7 @@ keras.utils.plot_model(model, show_shapes=True)
 ## Train the model
 """
 
-epochs = 1  # In practice you will need at least 50 epochs
-# When training for real, comment out the 2 lines below
-restricted_train_ds = train_ds.take(10)  # Limit to 10 batches to cut execution time
-restricted_val_ds = val_ds.take(10)  # Limit to 10 batches to cut execution time
+epochs = 50
 
 callbacks = [
     keras.callbacks.ModelCheckpoint("save_at_{epoch}.h5"),

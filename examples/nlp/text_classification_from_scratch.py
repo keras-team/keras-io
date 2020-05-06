@@ -265,7 +265,7 @@ model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
 ## Train the model
 """
 
-epochs = 1  # In practice you will need 3 epochs.
+epochs = 3
 
 # Fit the model using the train and test datasets.
 model.fit(train_ds, validation_data=val_ds, epochs=epochs)

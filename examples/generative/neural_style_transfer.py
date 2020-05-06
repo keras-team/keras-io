@@ -252,7 +252,7 @@ base_image = preprocess_image(base_image_path)
 style_reference_image = preprocess_image(style_reference_image_path)
 combination_image = tf.Variable(preprocess_image(base_image_path))
 
-iterations = 1  # In practice you need 4000-5000 iterations
+iterations = 5000
 for i in range(iterations):
     loss, grads = compute_loss_and_grads(
         combination_image, base_image, style_reference_image

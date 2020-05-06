@@ -208,9 +208,7 @@ model.summary()
 ## Train the model
 """
 
-# To shorten execution time, we only train for 5 epochs.
-# In practice, you will need at least ~30 epochs
-epochs = 5
+epochs = 30
 batch_size = 32
 
 # For colorful logging.
