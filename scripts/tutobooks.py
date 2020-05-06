@@ -177,7 +177,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
         current_files = os.listdir(parent_dir)
         try:
             os.system(
-                "jupyter nbconvert --to notebook --execute "
+                "jupyter nbconvert --to notebook --execute --debug "
                 + str(nb_path)
                 + " --inplace"
                 + " --ExecutePreprocessor.timeout="
@@ -226,7 +226,7 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
         os.makedirs(img_dir)
 
     os.system(
-        "jupyter nbconvert --to markdown --execute "
+        "jupyter nbconvert --to markdown --execute --debug "
         + nb_fname
         + " --output "
         + target_md
