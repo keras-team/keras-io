@@ -149,8 +149,8 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
             lines = lines[1:]
         source = [l + "\n" for l in lines]
         # Drop last newline char
-        if source and source[-1][-1] == "\n":
-            source[-1] = source[-1][:-1]
+        if source and not source[-1].strip():
+            source = source[:-1]
         if tag == "shell":
             source = ["!" + l for l in source]
             cell_type = "code"
