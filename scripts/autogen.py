@@ -292,10 +292,23 @@ class KerasIO:
         """e.g. add_guide('functional_api')"""
         if name.endswith(".py"):
             name = name[:-3]
+
+        ipynb_dir = Path(self.guides_dir) / "ipynb"
+        if not os.path.exists(ipynb_dir):
+            os.makedirs(ipynb_dir)
+
+        md_dir = Path(self.guides_dir) / "md"
+        if not os.path.exists(md_dir):
+            os.makedirs(md_dir)
+
         img_dir = Path(self.guides_dir) / "img"
+        if not os.path.exists(img_dir):
+            os.makedirs(img_dir)
+
         py_path = Path(self.guides_dir) / (name + ".py")
-        md_path = Path(self.guides_dir) / "md" / (name + ".md")
-        nb_path = Path(self.guides_dir) / "ipynb" / (name + ".ipynb")
+        md_path = md_dir / (name + ".md")
+        nb_path = ipynb_dir / (name + ".ipynb")
+
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=True)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
