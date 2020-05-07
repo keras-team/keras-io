@@ -29,7 +29,6 @@ from tensorflow.keras import layers
 
 import numpy as np
 import random
-import sys
 import io
 
 """
