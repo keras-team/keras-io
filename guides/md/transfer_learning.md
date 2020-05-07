@@ -779,10 +779,6 @@ Trainable params: 20,809,001
 Non-trainable params: 54,528
 _________________________________________________________________
 Epoch 1/10
-  2/291 [..............................] - ETA: 18s - loss: 0.1222 - binary_accuracy: 0.9219WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
-
 291/291 [==============================] - 39s 135ms/step - loss: 0.0856 - binary_accuracy: 0.9643 - val_loss: 0.0605 - val_binary_accuracy: 0.9781
 Epoch 2/10
 291/291 [==============================] - 38s 132ms/step - loss: 0.0625 - binary_accuracy: 0.9747 - val_loss: 0.0549 - val_binary_accuracy: 0.9785
