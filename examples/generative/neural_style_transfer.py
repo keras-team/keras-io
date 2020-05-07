@@ -252,8 +252,8 @@ base_image = preprocess_image(base_image_path)
 style_reference_image = preprocess_image(style_reference_image_path)
 combination_image = tf.Variable(preprocess_image(base_image_path))
 
-iterations = 5000
-for i in range(iterations):
+iterations = 4000
+for i in range(1, iterations + 1):
     loss, grads = compute_loss_and_grads(
         combination_image, base_image, style_reference_image
     )
@@ -265,7 +265,7 @@ for i in range(iterations):
         keras.preprocessing.image.save_img(fname, img)
 
 """
-After 5000 iterations, you get the following result:
-
-[transfer](https://i.imgur.com/x6sozcN.png)
+After 4000 iterations, you get the following result:
 """
+
+display(Image(result_prefix + "_at_iteration_4000.png"))
