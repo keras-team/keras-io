@@ -16,7 +16,6 @@
 
 
 ```python
-
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -32,8 +31,8 @@ where each layer has **exactly one input tensor and one output tensor**.
 Schematically, the following `Sequential` model:
 
 
-```python
 
+```python
 # Define Sequential model with 3 layers
 model = keras.Sequential(
     [
@@ -51,8 +50,8 @@ y = model(x)
 is equivalent to this function:
 
 
-```python
 
+```python
 # Create 3 layers
 layer1 = layers.Dense(2, activation="relu", name="layer1")
 layer2 = layers.Dense(3, activation="relu", name="layer2")
@@ -72,6 +71,7 @@ A Sequential model is **not appropriate** when:
 - You want non-linear topology (e.g. a residual connection, a multi-branch
 model)
 
+
 ---
 ## Creating a Sequential model
 
@@ -79,8 +79,8 @@ You can create a Sequential model by passing a list of layers to the Sequential
 constructor:
 
 
-```python
 
+```python
 model = keras.Sequential(
     [
         layers.Dense(2, activation="relu"),
@@ -94,8 +94,8 @@ model = keras.Sequential(
 Its layers are accessible via the `layers` attribute:
 
 
-```python
 
+```python
 model.layers
 
 ```
@@ -105,17 +105,17 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x14c7d93d0>,
- <tensorflow.python.keras.layers.core.Dense at 0x14c7ea0d0>,
- <tensorflow.python.keras.layers.core.Dense at 0x10c88ddd0>]
+[<tensorflow.python.keras.layers.core.Dense at 0x1486a9c50>,
+ <tensorflow.python.keras.layers.core.Dense at 0x1486b8c50>,
+ <tensorflow.python.keras.layers.core.Dense at 0x1486b72d0>]
 
 ```
 </div>
 You can also create a Sequential model incrementally via the `add()` method:
 
 
-```python
 
+```python
 model = keras.Sequential()
 model.add(layers.Dense(2, activation="relu"))
 model.add(layers.Dense(3, activation="relu"))
@@ -127,8 +127,8 @@ Note that there's also a corresponding `pop()` method to remove layers:
 a Sequential model behaves very much like a list of layers.
 
 
-```python
 
+```python
 model.pop()
 print(len(model.layers))  # 2
 
@@ -145,8 +145,8 @@ any layer or model in Keras. This is useful to annotate TensorBoard graphs
 with semantically meaningful names.
 
 
-```python
 
+```python
 model = keras.Sequential(name="my_sequential")
 model.add(layers.Dense(2, activation="relu", name="layer1"))
 model.add(layers.Dense(3, activation="relu", name="layer2"))
@@ -162,8 +162,8 @@ in order to be able to create their weights. So when you create a layer like
 this, initially, it has no weights:
 
 
-```python
 
+```python
 layer = layers.Dense(3)
 layer.weights  # Empty
 
@@ -182,8 +182,8 @@ It creates its weights the first time it is called on an input, since the shape
 of the weights depends on the shape of the inputs:
 
 
-```python
 
+```python
 # Call layer on a test input
 x = tf.ones((1, 4))
 y = layer(x)
@@ -197,10 +197,10 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 <div class="k-default-codeblock">
 ```
 [<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[ 0.8750578 , -0.43277076, -0.4342203 ],
-        [-0.18477821, -0.626124  , -0.46004385],
-        [-0.30668384, -0.8882271 , -0.3619988 ],
-        [ 0.5997056 , -0.5662476 , -0.8104979 ]], dtype=float32)>,
+ array([[ 0.78764236, -0.02616894, -0.53216314],
+        [ 0.5338869 ,  0.84029853, -0.8019882 ],
+        [ 0.68069625,  0.57742643, -0.1713844 ],
+        [ 0.11814868, -0.87056077, -0.8873605 ]], dtype=float32)>,
  <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
 
 ```
@@ -212,8 +212,8 @@ Sequential model without an input shape, it isn't "built": it has no weights
 when the model first sees some input data:
 
 
-```python
 
+```python
 model = keras.Sequential(
     [
         layers.Dense(2, activation="relu"),
@@ -245,8 +245,8 @@ Once a model is "built", you can call its `summary()` method to display its
 contents:
 
 
-```python
 
+```python
 model.summary()
 
 ```
@@ -257,11 +257,11 @@ Model: "sequential_3"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
-dense_7 (Dense)              multiple                  10        
+dense_7 (Dense)              (1, 2)                    10        
 _________________________________________________________________
-dense_8 (Dense)              multiple                  9         
+dense_8 (Dense)              (1, 3)                    9         
 _________________________________________________________________
-dense_9 (Dense)              multiple                  16        
+dense_9 (Dense)              (1, 4)                    16        
 =================================================================
 Total params: 35
 Trainable params: 35
@@ -276,8 +276,8 @@ output shape. In this case, you should start your model by passing an `Input`
 object to your model, so that it knows its input shape from the start:
 
 
-```python
 
+```python
 model = keras.Sequential()
 model.add(keras.Input(shape=(4,)))
 model.add(layers.Dense(2, activation="relu"))
@@ -305,8 +305,8 @@ Note that the `Input` object is not displayed as part of `model.layers`, since
 it isn't a layer:
 
 
-```python
 
+```python
 model.layers
 
 ```
@@ -316,7 +316,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x10c8ac410>]
+[<tensorflow.python.keras.layers.core.Dense at 0x148c1ee90>]
 
 ```
 </div>
@@ -324,8 +324,8 @@ A simple alternative is to just pass an `input_shape` argument to your first
 layer:
 
 
-```python
 
+```python
 model = keras.Sequential()
 model.add(layers.Dense(2, activation="relu", input_shape=(4,)))
 
@@ -354,6 +354,7 @@ before seeing any data) and always have a defined output shape.
 In general, it's a recommended best practice to always specify the input shape
 of a Sequential model in advance if you know what it is.
 
+
 ---
 ## A common debugging workflow: `add()` + `summary()`
 
@@ -363,8 +364,8 @@ enables you to monitor how a stack of `Conv2D` and `MaxPooling2D` layers is
 downsampling image feature maps:
 
 
-```python
 
+```python
 model = keras.Sequential()
 model.add(keras.Input(shape=(250, 250, 3)))  # 250x250 RGB images
 model.add(layers.Conv2D(32, 5, strides=2, activation="relu"))
@@ -457,6 +458,7 @@ Once your model architecture is ready, you will want to:
 - Speed up model training by leveraging multiple GPUs. See our
 [guide to multi-GPU and distributed training](distributed_training).
 
+
 ---
 ## Feature extraction with a Sequential model
 
@@ -468,8 +470,8 @@ creating a model that extracts the outputs of all intermediate layers in a
 Sequential model:
 
 
-```python
 
+```python
 initial_model = keras.Sequential(
     [
         keras.Input(shape=(250, 250, 3)),
@@ -492,8 +494,8 @@ features = feature_extractor(x)
 Here's a similar example that only extract features from one layer:
 
 
-```python
 
+```python
 initial_model = keras.Sequential(
     [
         keras.Input(shape=(250, 250, 3)),
@@ -513,13 +515,13 @@ features = feature_extractor(x)
 ```
 
 ---
-## Fine-tuning with a Sequential model
+## Transfer learning with a Sequential model
 
-Fine-tuning consists of freezing the bottom layers in a model and only training
+Transfer learning consists of freezing the bottom layers in a model and only training
 the top layers. If you aren't familiar with it, make sure to read our [guide
-to fine-tuning Keras models](/guides/fine_tuning/).
+to transfer learning](/guides/transfer_learning/).
 
-Here are two common fine-tuning blueprint involving Sequential models.
+Here are two common transfer learning blueprint involving Sequential models.
 
 First, let's say that you have a Sequential model, and you want to freeze all
 layers except the last one. In this case, you would simply iterate over
@@ -574,6 +576,7 @@ model.fit(...)
 If you do transfer learning, you will probably find yourself frequently using
 these two patterns.
 
+
 That's about all you need to know about Sequential models!
 
 To find out more about building models in Keras, see:
@@ -581,3 +584,4 @@ To find out more about building models in Keras, see:
 - [Guide to the Functional API](/guides/functional_api/)
 - [Guide to making new Layers & Models via subclassing](
     /guides/making_new_layers_and_models_via_subclassing/)
+
