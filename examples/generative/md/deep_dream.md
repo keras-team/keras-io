@@ -6,7 +6,7 @@
 **Description:** Generating Deep Dreams with Keras.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/https://github.com/keras-team/keras-io/blob/master/examples/generative/deep_dream/ipynb/deep_dream.py)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/https://github.com/keras-team/keras-io/blob/master/examples/generative/deep_dream/deep_dream.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/deep_dream.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/deep_dream.py)
 
 
 
@@ -35,8 +35,10 @@ To obtain the detail lost during upscaling, we simply
 take the original image, shrink it down, upscale it,
 and compare the result to the (resized) original image.
 
+
 ---
 ## Setup
+
 
 
 ```python
@@ -45,7 +47,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.applications import inception_v3
 
-base_image_path = keras.utils.get_file("paris.jpg", "https://i.imgur.com/aGBdQyK.jpg")
+base_image_path = keras.utils.get_file("sky.jpg", "https://i.imgur.com/aGBdQyK.jpg")
 result_prefix = "sky_dream"
 
 # These are the names of the layers
@@ -72,6 +74,7 @@ max_loss = 15.0
 This is our base image:
 
 
+
 ```python
 from IPython.display import Image, display
 
@@ -84,6 +87,7 @@ display(Image(base_image_path))
 
 
 Let's set up some image preprocessing/deprocessing utilities:
+
 
 
 ```python
@@ -119,6 +123,7 @@ First, build a feature extraction model to retrieve the activations of our targe
 given an input image.
 
 
+
 ```python
 # Build an InceptionV3 model loaded with pre-trained ImageNet weights
 model = inception_v3.InceptionV3(weights="imagenet", include_top=False)
@@ -140,6 +145,7 @@ feature_extractor = keras.Model(inputs=model.inputs, outputs=outputs_dict)
 The actual loss computation is very simple:
 
 
+
 ```python
 
 def compute_loss(input_image):
@@ -159,6 +165,7 @@ def compute_loss(input_image):
 
 ---
 ## Set up the gradient ascent loop for one octave
+
 
 
 ```python
@@ -189,6 +196,7 @@ def gradient_ascent_loop(img, iterations, learning_rate, max_loss=None):
 
 ---
 ## Run the training loop, iterating over different octaves
+
 
 
 ```python
@@ -222,73 +230,74 @@ keras.preprocessing.image.save_img(result_prefix + ".png", deprocess_image(img.n
 
 <div class="k-default-codeblock">
 ```
-Processing octave 0 with shape (309, 464)
-... Loss value at step 0: 0.59
-... Loss value at step 1: 0.80
-... Loss value at step 2: 1.06
-... Loss value at step 3: 1.30
-... Loss value at step 4: 1.53
-... Loss value at step 5: 1.76
-... Loss value at step 6: 1.98
-... Loss value at step 7: 2.19
-... Loss value at step 8: 2.41
-... Loss value at step 9: 2.59
-... Loss value at step 10: 2.82
-... Loss value at step 11: 2.97
-... Loss value at step 12: 3.18
-... Loss value at step 13: 3.31
-... Loss value at step 14: 3.57
-... Loss value at step 15: 3.68
-... Loss value at step 16: 3.92
-... Loss value at step 17: 4.06
-... Loss value at step 18: 4.40
-... Loss value at step 19: 4.46
-Processing octave 1 with shape (433, 650)
-... Loss value at step 0: 0.85
-... Loss value at step 1: 1.36
-... Loss value at step 2: 1.84
-... Loss value at step 3: 2.26
-... Loss value at step 4: 2.67
-... Loss value at step 5: 3.02
-... Loss value at step 6: 3.31
-... Loss value at step 7: 3.59
-... Loss value at step 8: 3.93
-... Loss value at step 9: 4.18
-... Loss value at step 10: 4.37
-... Loss value at step 11: 4.65
-... Loss value at step 12: 5.04
-... Loss value at step 13: 4.99
-... Loss value at step 14: 5.56
-... Loss value at step 15: 5.49
-... Loss value at step 16: 5.79
-... Loss value at step 17: 5.98
-... Loss value at step 18: 6.38
-... Loss value at step 19: 6.63
-Processing octave 2 with shape (607, 910)
-... Loss value at step 0: 0.93
-... Loss value at step 1: 1.47
-... Loss value at step 2: 1.96
-... Loss value at step 3: 2.39
-... Loss value at step 4: 2.77
-... Loss value at step 5: 3.12
-... Loss value at step 6: 3.46
-... Loss value at step 7: 3.77
-... Loss value at step 8: 4.12
-... Loss value at step 9: 4.39
-... Loss value at step 10: 4.66
-... Loss value at step 11: 5.05
-... Loss value at step 12: 5.20
-... Loss value at step 13: 5.51
-... Loss value at step 14: 5.74
-... Loss value at step 15: 6.16
-... Loss value at step 16: 6.38
-... Loss value at step 17: 6.65
-... Loss value at step 18: 6.82
-... Loss value at step 19: 7.13
+Processing octave 0 with shape (326, 489)
+... Loss value at step 0: 0.44
+... Loss value at step 1: 0.62
+... Loss value at step 2: 0.90
+... Loss value at step 3: 1.25
+... Loss value at step 4: 1.57
+... Loss value at step 5: 1.92
+... Loss value at step 6: 2.20
+... Loss value at step 7: 2.52
+... Loss value at step 8: 2.82
+... Loss value at step 9: 3.11
+... Loss value at step 10: 3.39
+... Loss value at step 11: 3.67
+... Loss value at step 12: 3.93
+... Loss value at step 13: 4.19
+... Loss value at step 14: 4.42
+... Loss value at step 15: 4.69
+... Loss value at step 16: 4.93
+... Loss value at step 17: 5.18
+... Loss value at step 18: 5.47
+... Loss value at step 19: 5.70
+Processing octave 1 with shape (457, 685)
+... Loss value at step 0: 1.08
+... Loss value at step 1: 1.74
+... Loss value at step 2: 2.30
+... Loss value at step 3: 2.79
+... Loss value at step 4: 3.21
+... Loss value at step 5: 3.64
+... Loss value at step 6: 4.04
+... Loss value at step 7: 4.42
+... Loss value at step 8: 4.78
+... Loss value at step 9: 5.13
+... Loss value at step 10: 5.49
+... Loss value at step 11: 5.82
+... Loss value at step 12: 6.14
+... Loss value at step 13: 6.43
+... Loss value at step 14: 6.78
+... Loss value at step 15: 7.07
+... Loss value at step 16: 7.36
+... Loss value at step 17: 7.64
+... Loss value at step 18: 7.94
+... Loss value at step 19: 8.21
+Processing octave 2 with shape (640, 960)
+... Loss value at step 0: 1.25
+... Loss value at step 1: 2.02
+... Loss value at step 2: 2.65
+... Loss value at step 3: 3.18
+... Loss value at step 4: 3.68
+... Loss value at step 5: 4.18
+... Loss value at step 6: 4.63
+... Loss value at step 7: 5.09
+... Loss value at step 8: 5.49
+... Loss value at step 9: 5.90
+... Loss value at step 10: 6.24
+... Loss value at step 11: 6.57
+... Loss value at step 12: 6.84
+... Loss value at step 13: 7.21
+... Loss value at step 14: 7.59
+... Loss value at step 15: 7.89
+... Loss value at step 16: 8.18
+... Loss value at step 17: 8.55
+... Loss value at step 18: 8.84
+... Loss value at step 19: 9.13
 
 ```
 </div>
 Display the result.
+
 
 
 ```python
