@@ -126,6 +126,7 @@ a:hover {
 
 .logo {
   width: 28rem;
+  max-width: 100%;
   margin-bottom: 1rem;
 }
 
