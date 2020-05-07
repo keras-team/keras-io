@@ -67,7 +67,7 @@ import random
 import shutil
 from pathlib import Path
 
-TIMEOUT = 60 * 60
+TIMEOUT = 2 * 60 * 60
 
 
 def nb_to_py(nb_path, py_path):
