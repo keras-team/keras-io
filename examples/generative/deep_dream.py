@@ -40,7 +40,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.applications import inception_v3
 
-base_image_path = keras.utils.get_file("paris.jpg", "https://i.imgur.com/aGBdQyK.jpg")
+base_image_path = keras.utils.get_file("sky.jpg", "https://i.imgur.com/aGBdQyK.jpg")
 result_prefix = "sky_dream"
 
 # These are the names of the layers
