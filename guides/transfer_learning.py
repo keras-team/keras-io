@@ -585,7 +585,5 @@ epochs = 10
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 
 """
-After 10 epochs, fine-tuning gains us 2 percentage points here!
-
-This concludes our guide on transfer learning & fine-tuning.
+After 10 epochs, fine-tuning gains us a nice improvement here.
 """
