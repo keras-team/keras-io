@@ -4,3 +4,8 @@ site/*
 scripts/upload.py
 *.pyc
 *.txt
+templates/examples/generative/*
+templates/examples/nlp/*
+templates/examples/vision/*
+templates/examples/structured_data/*
+templates/examples/keras_recipes/*
