@@ -139,7 +139,7 @@ seq.fit(
     shifted_movies[:1000],
     batch_size=10,
     epochs=epochs,
-    verbose=0,
+    verbose=2,
     validation_split=0.1,
 )
 
