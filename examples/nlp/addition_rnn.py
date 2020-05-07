@@ -211,12 +211,6 @@ model.summary()
 epochs = 30
 batch_size = 32
 
-# For colorful logging.
-class colors:
-    ok = "\033[92m"
-    fail = "\033[91m"
-    close = "\033[0m"
-
 
 # Train the model each generation and show predictions against the validation
 # dataset.
@@ -242,10 +236,9 @@ for epoch in range(1, epochs):
         print("Q", q[::-1] if REVERSE else q, end=" ")
         print("T", correct, end=" ")
         if correct == guess:
-            print(colors.ok + "☑" + colors.close, end=" ")
+            print("☑ " + guess)
         else:
-            print(colors.fail + "☒" + colors.close, end=" ")
-        print(guess)
+            print("☒ " + guess)
 
 """
 You'll get to 99+% validation accuracy after ~30 epochs.
