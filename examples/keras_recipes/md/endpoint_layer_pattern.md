@@ -77,11 +77,11 @@ model.fit(data, epochs=2)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-32/32 [==============================] - 0s 871us/step - loss: 0.3674 - accuracy: 0.0000e+00
+32/32 [==============================] - 0s 898us/step - loss: 0.3674 - accuracy: 0.0000e+00
 Epoch 2/2
-32/32 [==============================] - 0s 683us/step - loss: 0.3573 - accuracy: 0.0000e+00
+32/32 [==============================] - 0s 847us/step - loss: 0.3563 - accuracy: 0.0000e+00
 
-<tensorflow.python.keras.callbacks.History at 0x151e0cad0>
+<tensorflow.python.keras.callbacks.History at 0x14b31d090>
 
 ```
 </div>
@@ -144,11 +144,11 @@ model.fit(data, epochs=2)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-32/32 [==============================] - 0s 763us/step - loss: 0.3598 - accuracy: 0.0000e+00
+32/32 [==============================] - 0s 833us/step - loss: 0.3499 - accuracy: 0.0000e+00
 Epoch 2/2
-32/32 [==============================] - 0s 715us/step - loss: 0.3588 - accuracy: 0.0000e+00
+32/32 [==============================] - 0s 643us/step - loss: 0.3443 - accuracy: 0.0000e+00
 
-<tensorflow.python.keras.callbacks.History at 0x151ab5bd0>
+<tensorflow.python.keras.callbacks.History at 0x14afb6850>
 
 ```
 </div>

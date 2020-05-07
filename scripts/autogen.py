@@ -242,7 +242,7 @@ class KerasIO:
                     name = fname[:-3]
                     py_path = Path(src_dir) / fname
                     nb_path = target_dir / (name + ".ipynb")
-                    py_to_nb(py_path, nb_path, fill_outputs=True)
+                    py_to_nb(py_path, nb_path, fill_outputs=False)
 
         # Guides
         guides_dir = Path(self.guides_dir)
@@ -278,7 +278,7 @@ class KerasIO:
         py_path = Path(self.examples_dir) / folder / (name + ".py")
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
-        tutobooks.py_to_nb(py_path, nb_path, fill_outputs=True)
+        tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
         github_repo_dir = EXAMPLES_GH_LOCATION + folder + "/"
@@ -309,7 +309,7 @@ class KerasIO:
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
 
-        tutobooks.py_to_nb(py_path, nb_path, fill_outputs=True)
+        tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
         github_repo_dir = GUIDES_GH_LOCATION
