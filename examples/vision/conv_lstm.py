@@ -131,7 +131,7 @@ def generate_movies(n_samples=1200, n_frames=15):
 ## Train the model
 """
 
-epochs = 200
+epochs = 1  # In practice, you would need hundreds of epochs.
 
 noisy_movies, shifted_movies = generate_movies(n_samples=1200)
 seq.fit(
@@ -151,36 +151,13 @@ predict the new positions.
 """
 
 movie_index = 1004
-track = noisy_movies[movie_index][:7, ::, ::, ::]
+test_movie = noisy_movies[movie_index]
 
+# Start from first 7 frames
+track = test_movie[:7, ::, ::, ::]
+
+# Predict 16 frames
 for j in range(16):
     new_pos = seq.predict(track[np.newaxis, ::, ::, ::, ::])
     new = new_pos[::, -1, ::, ::, ::]
     track = np.concatenate((track, new), axis=0)
-
-
-# And then compare the predictions
-# to the ground truth
-track2 = noisy_movies[movie_index][::, ::, ::, ::]
-for i in range(15):
-    fig = plt.figure(figsize=(10, 5))
-
-    ax = fig.add_subplot(121)
-
-    if i >= 7:
-        ax.text(1, 3, "Predictions !", fontsize=20, color="w")
-    else:
-        ax.text(1, 3, "Initial trajectory", fontsize=20)
-
-    toplot = track[i, ::, ::, 0]
-
-    plt.imshow(toplot)
-    ax = fig.add_subplot(122)
-    plt.text(1, 3, "Ground truth", fontsize=20)
-
-    toplot = track2[i, ::, ::, 0]
-    if i >= 2:
-        toplot = shifted_movies[movie_index][i - 1, ::, ::, 0]
-
-    plt.imshow(toplot)
-    plt.savefig("%i_animate.png" % (i + 1))
