@@ -255,8 +255,8 @@ def decode_sequence(input_seq):
 
 """
 You can now generate decoded sentences as such:
+"""
 
-```python
 for seq_index in range(20):
     # Take one sequence (part of the training set)
     # for trying out decoding.
@@ -265,5 +265,3 @@ for seq_index in range(20):
     print("-")
     print("Input sentence:", input_texts[seq_index])
     print("Decoded sentence:", decoded_sentence)
-```
-"""
