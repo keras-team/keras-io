@@ -6,7 +6,7 @@
 **Description:** Complete guide to writing `Layer` and `Model` objects from scratch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/https://github.com/keras-team/keras-io/blob/master/guides/making_new_layers_and_models_via_subclassing/ipynb/making_new_layers_and_models_via_subclassing.py)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/https://github.com/keras-team/keras-io/blob/master/guides/making_new_layers_and_models_via_subclassing/making_new_layers_and_models_via_subclassing.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/making_new_layers_and_models_via_subclassing.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/making_new_layers_and_models_via_subclassing.py)
 
 
 
