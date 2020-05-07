@@ -113,7 +113,6 @@ for epoch in range(epochs):
 
         generated = ""
         sentence = text[start_index : start_index + maxlen]
-        generated += sentence
         print('...Generating with seed: "' + sentence + '"')
 
         for i in range(400):
@@ -124,6 +123,7 @@ for epoch in range(epochs):
             next_index = sample(preds, diversity)
             next_char = indices_char[next_index]
             sentence = sentence[1:] + next_char
+            generated += next_char
 
         print("...Generated: ", generated)
         print()
