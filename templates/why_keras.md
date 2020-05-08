@@ -61,7 +61,7 @@ Your Keras models can be easily deployed across a greater range of platforms tha
 
 
 Keras is scalable. Using the [TensorFlow `DistributionStrategy` API](https://www.tensorflow.org/tutorials/distribute/keras), which is supported natively by Keras,
-you easily can run your models on large GPU clusters (up to thousands of devices) or an entrie TPU pod, representing over one exaFLOPs of computing power.
+you easily can run your models on large GPU clusters (up to thousands of devices) or an entire TPU pod, representing over one exaFLOPs of computing power.
 
 Keras also has native support for mixed-precision training on the latest NVIDIA GPUs as well as on TPUs, which can offer up to 2x speedup for training and inference.
 
