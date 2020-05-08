@@ -663,6 +663,23 @@ class KerasIO:
         )
         save_file(Path(self.site_dir) / "search.html", search_page)
 
+        # 404 page
+        page404 = base_template.render(
+            {
+                "title": "Page not found",
+                "nav": nav,
+                "base_url": self.url,
+                "main": docs_template.render(
+                    {
+                        "title": "404",
+                        "content": "<h1>404: Page not found</h1>",
+                        "base_url": self.url,
+                    }
+                )
+            }
+        )
+        save_file(Path(self.site_dir) / "404.html", page404)
+
         # Tutobooks
         self.sync_tutobook_media()
 
