@@ -6,8 +6,8 @@ This repository hosts the code used to generate the [keras.io](https://keras.io)
 
 ```
 cd scripts
-python autogen make
-python autogen serve
+python autogen.py make
+python autogen.py serve
 ```
 
 ## Call for examples
@@ -61,10 +61,11 @@ To see examples of tutobooks, you can check out any `.py` file in `examples/` or
 
 1. Save the `ipynb` file to local disk.
 2. Convert the file to a tutobook by running:
+(assuming you are in the `scripts/` directory)
 
 
 ```
-python tutobooks nb2py path_to_your_nb.ipynb ../examples/vision/script_name.py
+python tutobooks.py nb2py path_to_your_nb.ipynb ../examples/vision/script_name.py
 ```
 
 This will create the file `examples/vision/script_name.py`.
@@ -114,8 +115,8 @@ stay very lightweight.
 Then serving the website:
 
 ```
-python autogen make
-python autogen serve
+python autogen.py make
+python autogen.py serve
 ```
 
 And navigating to `0.0.0.0:8000/examples`.
