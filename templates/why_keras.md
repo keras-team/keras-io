@@ -65,10 +65,7 @@ you easily can run your models on large GPU clusters (up to thousands of devices
 
 Keras also has native support for mixed-precision training on the latest NVIDIA GPUs as well as on TPUs, which can offer up to 2x speedup for training and inference.
 
-For more information, see our guides:
-
-- [Guide to multi-GPU & distributed training](/guides/distributed_training/)
-- [Guide to training Keras models on TPU](/guides/tpu_training/)
+For more information, see our [guide to multi-GPU & distributed training](/guides/distributed_training/).
 
 
 ---

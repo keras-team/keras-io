@@ -60,7 +60,7 @@ blockquote {
 
 
 .k-page {
-  width:80rem;
+  width:66rem;
   float: left;
 }
 .k-nav {
@@ -70,7 +70,7 @@ blockquote {
   border-bottom: 1px solid #ccc;
 }
 .k-main {
-  width: 60rem;
+  width: 47rem;
   background: #fff;
   float: left;
 }
@@ -98,6 +98,7 @@ blockquote {
 }
 @media screen and (max-width: 1342px) {
     .k-outline {
+        width: 0;
         display: none !important;
     }
 }
