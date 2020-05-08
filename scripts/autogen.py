@@ -7,7 +7,6 @@ python autogen.py serve
 
 DEPENDENCIES:
 
-keras_autodoc
 pygments
 jinja2
 markdown
@@ -22,12 +21,11 @@ import json
 import re
 import os
 import sys
-import time
 from pathlib import Path
 import http.server
 import socketserver
 import signal
-import keras_autodoc
+import docstrings
 import jinja2
 import markdown
 import requests
@@ -38,57 +36,6 @@ import tutobooks
 
 EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
 GUIDES_GH_LOCATION = "keras-team/keras-io/blob/master/guides/"
-
-
-class TFKerasDocumentationGenerator(keras_autodoc.DocumentationGenerator):
-    def process_docstring(self, docstring):
-        docstring = docstring.replace("Args:", "# Arguments")
-        docstring = docstring.replace("Arguments:", "# Arguments")
-        docstring = docstring.replace("Attributes:", "# Attributes")
-        docstring = docstring.replace("Returns:", "# Returns")
-        docstring = docstring.replace("Raises:", "# Raises")
-        docstring = docstring.replace("Input shape:", "# Input shape")
-        docstring = docstring.replace("Output shape:", "# Output shape")
-        docstring = docstring.replace("Call arguments:", "# Call arguments")
-
-        docstring = docstring.replace("Example:", "# Example\n")
-        docstring = docstring.replace("Examples:", "# Examples\n")
-        docstring = docstring.replace("Reference:\n-", "Reference:\n\n-")
-
-        # Fix typo
-        docstring = docstring.replace("\n >>> ", "\n>>> ")
-
-        lines = docstring.split("\n")
-        doctest_lines = []
-        usable_lines = []
-
-        def flush_docstest(usable_lines, doctest_lines):
-            usable_lines.append("```shell")
-            usable_lines += doctest_lines
-            usable_lines.append("```endshell")
-            usable_lines.append("")
-
-        for line in lines:
-            if doctest_lines:
-                if not line or set(line) == {" "}:
-                    flush_docstest(usable_lines, doctest_lines)
-                    doctest_lines = []
-                else:
-                    doctest_lines.append(line)
-            else:
-                if line.startswith(">>>"):
-                    doctest_lines.append(line)
-                else:
-                    usable_lines.append(line)
-        if doctest_lines:
-            flush_docstest(usable_lines, doctest_lines)
-        docstring = "\n".join(usable_lines)
-        return super(TFKerasDocumentationGenerator, self).process_docstring(docstring)
-
-    def process_signature(self, signature):
-        signature = signature.replace("tensorflow.keras", "tf.keras")
-        signature = signature.replace("*args, **kwargs", "")
-        return signature
 
 
 class KerasIO:
@@ -116,7 +63,7 @@ class KerasIO:
         self.refresh_guides = refresh_guides
         self.refresh_examples = refresh_examples
 
-        self.docstring_printer = TFKerasDocumentationGenerator()
+        self.docstring_printer = docstrings.TFKerasDocumentationGenerator()
         self.make_examples_master()
 
     def make_examples_master(self):
@@ -903,9 +850,9 @@ def generate_md_toc(entries, url, depth=2):
             generated += "\n"
         elif generate and print_generate:
             for gen in generate:
-                obj = keras_autodoc.utils.import_object(gen)
-                obj_name = keras_autodoc.utils.get_name(obj)
-                obj_type = keras_autodoc.utils.get_type(obj)
+                obj = docstrings.import_object(gen)
+                obj_name = docstrings.get_name(obj)
+                obj_type = docstrings.get_type(obj)
                 link = "{full_url}/#{obj_name}-{obj_type}".format(
                     full_url=full_url, obj_name=obj_name, obj_type=obj_type).lower()
                 name = gen.split(".")[-1]
