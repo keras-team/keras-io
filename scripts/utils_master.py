@@ -34,5 +34,21 @@ UTILS_MASTER = {
                 'tensorflow.keras.utils.Sequence',
             ]
         },
+        {
+            'path': 'backend_utils',
+            'title': 'Backend utilities',
+            'generate': [
+                'tensorflow.keras.backend.clear_session',
+                'tensorflow.keras.backend.floatx',
+                'tensorflow.keras.backend.set_floatx',
+                'tensorflow.keras.backend.image_data_format',
+                'tensorflow.keras.backend.set_image_data_format',
+                'tensorflow.keras.backend.epsilon',
+                'tensorflow.keras.backend.set_epsilon',
+                'tensorflow.keras.backend.is_keras_tensor',
+                'tensorflow.keras.backend.get_uid',
+                'tensorflow.keras.backend.rnn',
+            ]
+        }
     ]
 }
