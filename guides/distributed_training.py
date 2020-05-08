@@ -456,4 +456,6 @@ results = model.evaluate(val_dataset)
     https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy)
 4. [MultiWorkerMirroredStrategy docs](
     https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy)
+5. [Distributed training in tf.keras with Weights & Biases](
+    https://towardsdatascience.com/distributed-training-in-tf-keras-with-w-b-ccf021f9322e)
 """
