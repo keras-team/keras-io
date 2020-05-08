@@ -54,9 +54,9 @@ Depth refers to the topological depth of the network. This includes activation l
 ### Classify ImageNet classes with ResNet50
 
 ```python
-from keras.applications.resnet50 import ResNet50
-from keras.preprocessing import image
-from keras.applications.resnet50 import preprocess_input, decode_predictions
+from tensorflow.keras.applications.resnet50 import ResNet50
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions
 import numpy as np
 
 model = ResNet50(weights='imagenet')
@@ -77,9 +77,9 @@ print('Predicted:', decode_predictions(preds, top=3)[0])
 ### Extract features with VGG16
 
 ```python
-from keras.applications.vgg16 import VGG16
-from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.vgg16 import preprocess_input
 import numpy as np
 
 model = VGG16(weights='imagenet', include_top=False)
@@ -96,10 +96,10 @@ features = model.predict(x)
 ### Extract features from an arbitrary intermediate layer with VGG19
 
 ```python
-from keras.applications.vgg19 import VGG19
-from keras.preprocessing import image
-from keras.applications.vgg19 import preprocess_input
-from keras.models import Model
+from tensorflow.keras.applications.vgg19 import VGG19
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.vgg19 import preprocess_input
+from tensorflow.keras.models import Model
 import numpy as np
 
 base_model = VGG19(weights='imagenet')
@@ -117,10 +117,10 @@ block4_pool_features = model.predict(x)
 ### Fine-tune InceptionV3 on a new set of classes
 
 ```python
-from keras.applications.inception_v3 import InceptionV3
-from keras.preprocessing import image
-from keras.models import Model
-from keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 
 # create the base pre-trained model
 base_model = InceptionV3(weights='imagenet', include_top=False)
@@ -165,7 +165,7 @@ for layer in model.layers[249:]:
 
 # we need to recompile the model for these modifications to take effect
 # we use SGD with a low learning rate
-from keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD
 model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
 
 # we train our model again (this time fine-tuning the top 2 inception blocks
@@ -177,8 +177,8 @@ model.fit(...)
 ### Build InceptionV3 over a custom input tensor
 
 ```python
-from keras.applications.inception_v3 import InceptionV3
-from keras.layers import Input
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.layers import Input
 
 # this could also be the output a different Keras model or layer
 input_tensor = Input(shape=(224, 224, 3))
