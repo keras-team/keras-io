@@ -35,7 +35,7 @@ which allows to build arbitrary graphs of layers, or [write models entirely from
 Here is the `Sequential` model:
 
 ```python
-from keras.models import Sequential
+from tensorflow.keras.models import Sequential
 
 model = Sequential()
 ```
@@ -43,7 +43,7 @@ model = Sequential()
 Stacking layers is as easy as `.add()`:
 
 ```python
-from keras.layers import Dense
+from tensorflow.keras.layers import Dense
 
 model.add(Dense(units=64, activation='relu'))
 model.add(Dense(units=10, activation='softmax'))
