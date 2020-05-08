@@ -278,6 +278,11 @@ LAYERS_MASTER = {
                             'title': 'TextVectorization layer',
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.TextVectorization']
                         },
+                        {
+                            'path': 'normalization',
+                            'title': 'Normalization layer',
+                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Normalization']
+                        },
                     ]
                 },
                 # {

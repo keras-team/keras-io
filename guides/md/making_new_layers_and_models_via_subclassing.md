@@ -685,7 +685,7 @@ Meanwhile, the `Model` class corresponds to what is referred to in the
 literature as a "model" (as in "deep learning model") or as a "network" (as in
 "deep neural network").
 
-So if you'ree wondering, "should I use the `Layer` class or the `Model` class?",
+So if you're wondering, "should I use the `Layer` class or the `Model` class?",
 ask yourself: will I need to call `fit()` on it? Will I need to call `save()`
 on it? If so, go with `Model`. If not (either because your class is just a block
 in a bigger system, or because you are writing training & saving code yourself),
