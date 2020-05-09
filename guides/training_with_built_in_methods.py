@@ -92,7 +92,7 @@ model.compile(
     # Loss function to minimize
     loss=keras.losses.SparseCategoricalCrossentropy(),
     # List of metrics to monitor
-    metrics=["sparse_categorical_accuracy"],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 """
@@ -151,7 +151,7 @@ You pass these to the model as arguments to the `compile()` method:
 model.compile(
     optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
     loss=keras.losses.SparseCategoricalCrossentropy(),
-    metrics=[keras.metrics.sparse_categorical_accuracy],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 """

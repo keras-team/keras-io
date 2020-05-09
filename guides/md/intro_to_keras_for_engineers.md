@@ -24,7 +24,7 @@ from tensorflow import keras
 ---
 ## Introduction
 
-Are you a machine learning looking to use Keras
+Are you a machine learning engineer looking to use Keras
 to ship deep-learning powered features in real products? This guide will serve
 as your first introduction to core Keras API concepts.
 

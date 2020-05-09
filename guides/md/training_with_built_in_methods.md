@@ -14,8 +14,8 @@
 ## Setup
 
 
-```python
 
+```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -45,6 +45,7 @@ scratch via model subclassing.
 This guide doesn't cover distributed training. For distributed training, see
 our [guide to multi-gpu & distributed training](/guides/distributed_training/).
 
+
 ---
 ## API overview: a first end-to-end example
 
@@ -57,8 +58,8 @@ Let's consider the following model (here, we build in with the Functional API, b
 could be a Sequential model or a subclassed model as well):
 
 
-```python
 
+```python
 inputs = keras.Input(shape=(784,), name="digits")
 x = layers.Dense(64, activation="relu", name="dense_1")(inputs)
 x = layers.Dense(64, activation="relu", name="dense_2")(x)
@@ -77,8 +78,8 @@ Here's what the typical end-to-end workflow looks like, consisting of:
 We'll use MNIST data for this example.
 
 
-```python
 
+```python
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Preprocess the data (these are NumPy arrays)
@@ -99,14 +100,14 @@ y_train = y_train[:-10000]
 We specify the training configuration (optimizer, loss, metrics):
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(),  # Optimizer
     # Loss function to minimize
     loss=keras.losses.SparseCategoricalCrossentropy(),
     # List of metrics to monitor
-    metrics=["sparse_categorical_accuracy"],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 ```
@@ -116,8 +117,8 @@ We call `fit()`, which will train the model by slicing the data into "batches" o
 "epochs".
 
 
-```python
 
+```python
 print("Fit model on training data")
 history = model.fit(
     x_train,
@@ -136,9 +137,9 @@ history = model.fit(
 ```
 Fit model on training data
 Epoch 1/2
-782/782 [==============================] - 1s 1ms/step - loss: 0.3491 - sparse_categorical_accuracy: 0.9017 - val_loss: 0.1817 - val_sparse_categorical_accuracy: 0.9481
+782/782 [==============================] - 1s 880us/step - loss: 0.3472 - sparse_categorical_accuracy: 0.9016 - val_loss: 0.1890 - val_sparse_categorical_accuracy: 0.9462
 Epoch 2/2
-782/782 [==============================] - 1s 2ms/step - loss: 0.1638 - sparse_categorical_accuracy: 0.9510 - val_loss: 0.1385 - val_sparse_categorical_accuracy: 0.9593
+782/782 [==============================] - 1s 805us/step - loss: 0.1616 - sparse_categorical_accuracy: 0.9518 - val_loss: 0.1473 - val_sparse_categorical_accuracy: 0.9589
 
 ```
 </div>
@@ -146,8 +147,8 @@ The returned "history" object holds a record of the loss values and metric value
 during training:
 
 
-```python
 
+```python
 history.history
 
 ```
@@ -157,18 +158,18 @@ history.history
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.3491191565990448, 0.1638353317975998],
- 'sparse_categorical_accuracy': [0.9017000198364258, 0.9509999752044678],
- 'val_loss': [0.1816689372062683, 0.13846170902252197],
- 'val_sparse_categorical_accuracy': [0.9480999708175659, 0.9592999815940857]}
+{'loss': [0.3472226858139038, 0.16158349812030792],
+ 'sparse_categorical_accuracy': [0.9015600085258484, 0.9518399834632874],
+ 'val_loss': [0.18901307880878448, 0.1472991555929184],
+ 'val_sparse_categorical_accuracy': [0.9462000131607056, 0.958899974822998]}
 
 ```
 </div>
 We evaluate the model on the test data via `evaluate()`:
 
 
-```python
 
+```python
 # Evaluate the model on the test data using `evaluate`
 print("Evaluate on test data")
 results = model.evaluate(x_test, y_test, batch_size=128)
@@ -185,14 +186,15 @@ print("predictions shape:", predictions.shape)
 <div class="k-default-codeblock">
 ```
 Evaluate on test data
-79/79 [==============================] - 0s 1ms/step - loss: 0.1443 - sparse_categorical_accuracy: 0.9561
-test loss, test acc: [0.1442800760269165, 0.9560999870300293]
+79/79 [==============================] - 0s 729us/step - loss: 0.1463 - sparse_categorical_accuracy: 0.9560
+test loss, test acc: [0.14629484713077545, 0.9559999704360962]
 Generate predictions for 3 samples
 predictions shape: (3, 10)
 
 ```
 </div>
 Now, let's review each piece of this workflow in detail.
+
 
 ---
 ## The `compile()` method: specifying a loss, metrics, and an optimizer
@@ -203,12 +205,12 @@ optionally, some metrics to monitor.
 You pass these to the model as arguments to the `compile()` method:
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
     loss=keras.losses.SparseCategoricalCrossentropy(),
-    metrics=[keras.metrics.sparse_categorical_accuracy],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 ```
@@ -224,8 +226,8 @@ Note that if you're satisfied with the default settings, in many cases the optim
 loss, and metrics can be specified via string identifiers as a shortcut:
 
 
-```python
 
+```python
 model.compile(
     optimizer="rmsprop",
     loss="sparse_categorical_crossentropy",
@@ -238,8 +240,8 @@ For later reuse, let's put our model definition and compile step in functions; w
 call them several times across different examples in this guide.
 
 
-```python
 
+```python
 
 def get_uncompiled_model():
     inputs = keras.Input(shape=(784,), name="digits")
@@ -288,6 +290,7 @@ Metrics:
 - `Recall()`
 - etc.
 
+
 ### Custom losses
 
 There are two ways to provide custom losses with Keras. The first example creates a
@@ -296,8 +299,8 @@ function that computes the mean squared error between the real data and the
 predictions:
 
 
-```python
 
+```python
 
 def custom_mean_squared_error(y_true, y_pred):
     return tf.math.reduce_mean(tf.square(y_true - y_pred))
@@ -314,9 +317,9 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.0164
+782/782 [==============================] - 0s 633us/step - loss: 0.0161
 
-<tensorflow.python.keras.callbacks.History at 0x15b977350>
+<tensorflow.python.keras.callbacks.History at 0x1493dadd0>
 
 ```
 </div>
@@ -336,8 +339,8 @@ reduce overfitting (we won't know if it works until we try!).
 Here's how you would do it:
 
 
-```python
 
+```python
 
 class CustomMSE(keras.losses.Loss):
     def __init__(self, regularization_factor=0.1, name="custom_mse"):
@@ -360,9 +363,9 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.0386
+782/782 [==============================] - 1s 662us/step - loss: 0.0389
 
-<tensorflow.python.keras.callbacks.History at 0x15ba1a750>
+<tensorflow.python.keras.callbacks.History at 0x157f143d0>
 
 ```
 </div>
@@ -386,8 +389,8 @@ Here's a simple example showing how to implement a `CategoricalTruePositives` me
 that counts how many samples where correctly classified as belonging to a given class:
 
 
-```python
 
+```python
 
 class CategoricalTruePositives(keras.metrics.Metric):
     def __init__(self, name="categorical_true_positives", **kwargs):
@@ -424,13 +427,13 @@ model.fit(x_train, y_train, batch_size=64, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.3446 - categorical_true_positives: 45094.0000
+782/782 [==============================] - 1s 683us/step - loss: 0.3396 - categorical_true_positives: 45182.0000
 Epoch 2/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.1615 - categorical_true_positives: 47607.0000
+782/782 [==============================] - 1s 656us/step - loss: 0.1597 - categorical_true_positives: 47592.0000
 Epoch 3/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.1190 - categorical_true_positives: 48190.0000
+782/782 [==============================] - 1s 661us/step - loss: 0.1170 - categorical_true_positives: 48235.0000
 
-<tensorflow.python.keras.callbacks.History at 0x15bb5e1d0>
+<tensorflow.python.keras.callbacks.History at 0x158062a50>
 
 ```
 </div>
@@ -448,8 +451,8 @@ regularization (note that activity regularization is built-in in all Keras layer
 this layer is just for the sake of providing a concrete example):
 
 
-```python
 
+```python
 
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
@@ -480,17 +483,17 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 2.4656
+782/782 [==============================] - 1s 670us/step - loss: 2.5177
 
-<tensorflow.python.keras.callbacks.History at 0x15bc90fd0>
+<tensorflow.python.keras.callbacks.History at 0x158199590>
 
 ```
 </div>
 You can do the same for logging metric values, using `add_metric()`:
 
 
-```python
 
+```python
 
 class MetricLoggingLayer(layers.Layer):
     def call(self, inputs):
@@ -524,9 +527,9 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.3414 - std_of_activation: 0.9603
+782/782 [==============================] - 1s 697us/step - loss: 0.3357 - std_of_activation: 0.9758
 
-<tensorflow.python.keras.callbacks.History at 0x15bdfc4d0>
+<tensorflow.python.keras.callbacks.History at 0x15831a290>
 
 ```
 </div>
@@ -537,8 +540,8 @@ or `model.add_metric(metric_tensor, name, aggregation)`.
 Here's a simple example:
 
 
-```python
 
+```python
 inputs = keras.Input(shape=(784,), name="digits")
 x1 = layers.Dense(64, activation="relu", name="dense_1")(inputs)
 x2 = layers.Dense(64, activation="relu", name="dense_2")(x1)
@@ -559,9 +562,9 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 2.5054 - std_of_activation: 0.0020
+782/782 [==============================] - 1s 687us/step - loss: 2.4910 - std_of_activation: 0.0019
 
-<tensorflow.python.keras.callbacks.History at 0x15bf56890>
+<tensorflow.python.keras.callbacks.History at 0x15848d210>
 
 ```
 </div>
@@ -573,8 +576,8 @@ targets & logits, and it tracks a crossentropy loss via `add_loss()`. It also
 tracks classification accuracy via `add_metric()`.
 
 
-```python
 
+```python
 
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
@@ -603,8 +606,8 @@ You can use it in a model with two inputs (input data & targets), compiled witho
 `loss` argument, like this:
 
 
-```python
 
+```python
 import numpy as np
 
 inputs = keras.Input(shape=(3,), name="inputs")
@@ -625,14 +628,15 @@ model.fit(data)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 1ms/step - loss: 0.9428 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 814us/step - loss: 0.9615 - binary_accuracy: 0.0000e+00
 
-<tensorflow.python.keras.callbacks.History at 0x15c0b6d10>
+<tensorflow.python.keras.callbacks.History at 0x1585c1d90>
 
 ```
 </div>
 For more information about training multi-input models, see the section **Passing data
 to multi-input, multi-output models**.
+
 
 ### Automatically setting apart a validation holdout set
 
@@ -653,8 +657,8 @@ received by the fit call, before any shuffling.
 Note that you can only use `validation_split` when training with NumPy data.
 
 
-```python
 
+```python
 model = get_compiled_model()
 model.fit(x_train, y_train, batch_size=64, validation_split=0.2, epochs=1)
 
@@ -662,9 +666,9 @@ model.fit(x_train, y_train, batch_size=64, validation_split=0.2, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-625/625 [==============================] - 1s 1ms/step - loss: 0.3657 - sparse_categorical_accuracy: 0.8966 - val_loss: 0.2488 - val_sparse_categorical_accuracy: 0.9266
+625/625 [==============================] - 1s 937us/step - loss: 0.3705 - sparse_categorical_accuracy: 0.8961 - val_loss: 0.2332 - val_sparse_categorical_accuracy: 0.9316
 
-<tensorflow.python.keras.callbacks.History at 0x16574c910>
+<tensorflow.python.keras.callbacks.History at 0x1586ff310>
 
 ```
 </div>
@@ -688,8 +692,8 @@ You can pass a `Dataset` instance directly to the methods `fit()`, `evaluate()`,
 `predict()`:
 
 
-```python
 
+```python
 model = get_compiled_model()
 
 # First, let's create a training Dataset instance.
@@ -716,16 +720,16 @@ dict(zip(model.metrics_names, result))
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.3333 - sparse_categorical_accuracy: 0.9053
+782/782 [==============================] - 1s 851us/step - loss: 0.3413 - sparse_categorical_accuracy: 0.9034
 Epoch 2/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.1579 - sparse_categorical_accuracy: 0.9530
+782/782 [==============================] - 1s 796us/step - loss: 0.1606 - sparse_categorical_accuracy: 0.9519
 Epoch 3/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.1167 - sparse_categorical_accuracy: 0.9654
+782/782 [==============================] - 1s 812us/step - loss: 0.1171 - sparse_categorical_accuracy: 0.9651
 Evaluate
-157/157 [==============================] - 0s 964us/step - loss: 0.1175 - sparse_categorical_accuracy: 0.9656
+157/157 [==============================] - 0s 601us/step - loss: 0.1269 - sparse_categorical_accuracy: 0.9614
 
-{'loss': 0.11754827201366425,
- 'sparse_categorical_accuracy': 0.9656000137329102}
+{'loss': 0.12692764401435852,
+ 'sparse_categorical_accuracy': 0.9613999724388123}
 
 ```
 </div>
@@ -741,8 +745,8 @@ drawing the next batches. The dataset will eventually run out of data (unless it
 infinitely-looping dataset).
 
 
-```python
 
+```python
 model = get_compiled_model()
 
 # Prepare the training dataset
@@ -757,13 +761,13 @@ model.fit(train_dataset, epochs=3, steps_per_epoch=100)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-100/100 [==============================] - 0s 1ms/step - loss: 0.8243 - sparse_categorical_accuracy: 0.7897
+100/100 [==============================] - 0s 932us/step - loss: 0.7853 - sparse_categorical_accuracy: 0.7934
 Epoch 2/3
-100/100 [==============================] - 0s 2ms/step - loss: 0.3852 - sparse_categorical_accuracy: 0.8894
+100/100 [==============================] - 0s 851us/step - loss: 0.3635 - sparse_categorical_accuracy: 0.8995
 Epoch 3/3
-100/100 [==============================] - 0s 1ms/step - loss: 0.3266 - sparse_categorical_accuracy: 0.9052
+100/100 [==============================] - 0s 932us/step - loss: 0.3201 - sparse_categorical_accuracy: 0.9069
 
-<tensorflow.python.keras.callbacks.History at 0x170d99250>
+<tensorflow.python.keras.callbacks.History at 0x158494550>
 
 ```
 </div>
@@ -772,8 +776,8 @@ Epoch 3/3
 You can pass a `Dataset` instance as the `validation_data` argument in `fit()`:
 
 
-```python
 
+```python
 model = get_compiled_model()
 
 # Prepare the training dataset
@@ -790,9 +794,9 @@ model.fit(train_dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 2ms/step - loss: 0.3262 - sparse_categorical_accuracy: 0.9088 - val_loss: 0.1874 - val_sparse_categorical_accuracy: 0.9465
+782/782 [==============================] - 1s 997us/step - loss: 0.3446 - sparse_categorical_accuracy: 0.9033 - val_loss: 0.2105 - val_sparse_categorical_accuracy: 0.9375
 
-<tensorflow.python.keras.callbacks.History at 0x16575bb90>
+<tensorflow.python.keras.callbacks.History at 0x16b4d1c90>
 
 ```
 </div>
@@ -805,8 +809,8 @@ steps the model should run with the validation dataset before interrupting valid
 and moving on to the next epoch:
 
 
-```python
 
+```python
 model = get_compiled_model()
 
 # Prepare the training dataset
@@ -830,9 +834,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.3294 - sparse_categorical_accuracy: 0.9057 - val_loss: 0.3323 - val_sparse_categorical_accuracy: 0.9109
+782/782 [==============================] - 1s 888us/step - loss: 0.3360 - sparse_categorical_accuracy: 0.9045 - val_loss: 0.2796 - val_sparse_categorical_accuracy: 0.9328
 
-<tensorflow.python.keras.callbacks.History at 0x16585e810>
+<tensorflow.python.keras.callbacks.History at 0x16b4d1450>
 
 ```
 </div>
@@ -843,6 +847,7 @@ The argument `validation_split` (generating a holdout set from the training data
 not supported when training from `Dataset` objects, since this features requires the
 ability to index the samples of the datasets, which is not possible in general with
 the `Dataset` API.
+
 
 ---
 ## Other input formats supported
@@ -937,8 +942,8 @@ importance to the correct classification of class #5 (which is the digit "5" in 
 MNIST dataset).
 
 
-```python
 
+```python
 import numpy as np
 
 class_weight = {
@@ -965,17 +970,17 @@ model.fit(x_train, y_train, class_weight=class_weight, batch_size=64, epochs=1)
 <div class="k-default-codeblock">
 ```
 Fit with class weight
-782/782 [==============================] - 1s 1ms/step - loss: 0.3728 - sparse_categorical_accuracy: 0.9035
+782/782 [==============================] - 1s 712us/step - loss: 0.3665 - sparse_categorical_accuracy: 0.9048
 
-<tensorflow.python.keras.callbacks.History at 0x170ebd450>
+<tensorflow.python.keras.callbacks.History at 0x16b79e490>
 
 ```
 </div>
 Here's the same example using `sample_weight` instead:
 
 
-```python
 
+```python
 sample_weight = np.ones(shape=(len(y_train),))
 sample_weight[y_train == 5] = 2.0
 
@@ -988,17 +993,17 @@ model.fit(x_train, y_train, sample_weight=sample_weight, batch_size=64, epochs=1
 <div class="k-default-codeblock">
 ```
 Fit with sample weight
-782/782 [==============================] - 1s 1ms/step - loss: 0.3732 - sparse_categorical_accuracy: 0.9018
+782/782 [==============================] - 1s 724us/step - loss: 0.3635 - sparse_categorical_accuracy: 0.9039
 
-<tensorflow.python.keras.callbacks.History at 0x1710040d0>
+<tensorflow.python.keras.callbacks.History at 0x16b8ed0d0>
 
 ```
 </div>
 Here's a matching `Dataset` example:
 
 
-```python
 
+```python
 sample_weight = np.ones(shape=(len(y_train),))
 sample_weight[y_train == 5] = 2.0
 
@@ -1016,9 +1021,9 @@ model.fit(train_dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.3720 - sparse_categorical_accuracy: 0.9028
+782/782 [==============================] - 1s 990us/step - loss: 0.3630 - sparse_categorical_accuracy: 0.9024
 
-<tensorflow.python.keras.callbacks.History at 0x17112fed0>
+<tensorflow.python.keras.callbacks.History at 0x16ba20850>
 
 ```
 </div>
@@ -1036,8 +1041,8 @@ combination of these inputs: a "score" (of shape `(1,)`) and a probability
 distribution over five classes (of shape `(5,)`).
 
 
-```python
 
+```python
 image_input = keras.Input(shape=(32, 32, 3), name="img_input")
 timeseries_input = keras.Input(shape=(None, 10), name="ts_input")
 
@@ -1062,8 +1067,8 @@ Let's plot this model, so you can clearly see what we're doing here (note that t
 shapes shown in the plot are batch shapes, rather than per-sample shapes).
 
 
-```python
 
+```python
 keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=True)
 
 ```
@@ -1071,7 +1076,7 @@ keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=Tr
 
 
 
-![png](/img/guides/training_with_built_in_methods/training_with_built_in_methods/training_with_built_in_methods_62_0.png)
+![png](/img/guides/training_with_built_in_methods/training_with_built_in_methods_62_0.png)
 
 
 
@@ -1079,8 +1084,8 @@ At compilation time, we can specify different losses to different outputs, by pa
 the loss functions as a list:
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss=[keras.losses.MeanSquaredError(), keras.losses.CategoricalCrossentropy()],
@@ -1094,8 +1099,8 @@ applied to every output (which is not appropriate here).
 Likewise for metrics:
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss=[keras.losses.MeanSquaredError(), keras.losses.CategoricalCrossentropy()],
@@ -1114,8 +1119,8 @@ Since we gave names to our output layers, we could also specify per-output losse
 metrics via a dict:
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss={
@@ -1140,8 +1145,8 @@ instance, one might wish to privilege the "score" loss in our example, by giving
 the importance of the class loss), using the `loss_weights` argument:
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss={
@@ -1164,8 +1169,8 @@ You could also chose not to compute a loss for certain outputs, if these outputs
 for prediction but not for training:
 
 
-```python
 
+```python
 # List loss version
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
@@ -1186,8 +1191,8 @@ specifying a loss function in compile: you can pass **lists of NumPy arrays** (w
 names to NumPy arrays**.
 
 
-```python
 
+```python
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss=[keras.losses.MeanSquaredError(), keras.losses.CategoricalCrossentropy()],
@@ -1214,10 +1219,10 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 11.2440 - score_output_loss: 5.3288 - class_output_loss: 5.9152
-4/4 [==============================] - 0s 3ms/step - loss: 8.8626 - score_output_loss: 3.3736 - class_output_loss: 5.4890
+4/4 [==============================] - 0s 4ms/step - loss: 5.4659 - score_output_loss: 0.2944 - class_output_loss: 5.1716
+4/4 [==============================] - 0s 3ms/step - loss: 5.2598 - score_output_loss: 0.2286 - class_output_loss: 5.0312
 
-<tensorflow.python.keras.callbacks.History at 0x1714dc190>
+<tensorflow.python.keras.callbacks.History at 0x16bdd7990>
 
 ```
 </div>
@@ -1225,8 +1230,8 @@ Here's the `Dataset` use case: similarly as what we did for NumPy arrays, the `D
 should return a tuple of dicts.
 
 
-```python
 
+```python
 train_dataset = tf.data.Dataset.from_tensor_slices(
     (
         {"img_input": img_data, "ts_input": ts_data},
@@ -1241,9 +1246,9 @@ model.fit(train_dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-2/2 [==============================] - 0s 3ms/step - loss: 8.2558 - score_output_loss: 2.8579 - class_output_loss: 5.3980
+2/2 [==============================] - 0s 3ms/step - loss: 5.1720 - score_output_loss: 0.2476 - class_output_loss: 4.9244
 
-<tensorflow.python.keras.callbacks.History at 0x171118450>
+<tensorflow.python.keras.callbacks.History at 0x16bc39890>
 
 ```
 </div>
@@ -1267,8 +1272,8 @@ performance threshold is exceeded
 Callbacks can be passed as a list to your call to `fit()`:
 
 
-```python
 
+```python
 model = get_compiled_model()
 
 callbacks = [
@@ -1296,18 +1301,20 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.3669 - sparse_categorical_accuracy: 0.8947 - val_loss: 0.2358 - val_sparse_categorical_accuracy: 0.9285
+625/625 [==============================] - 1s 921us/step - loss: 0.3861 - sparse_categorical_accuracy: 0.8916 - val_loss: 0.2570 - val_sparse_categorical_accuracy: 0.9225
 Epoch 2/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.1672 - sparse_categorical_accuracy: 0.9506 - val_loss: 0.1755 - val_sparse_categorical_accuracy: 0.9484
+625/625 [==============================] - 0s 793us/step - loss: 0.1733 - sparse_categorical_accuracy: 0.9482 - val_loss: 0.1663 - val_sparse_categorical_accuracy: 0.9511
 Epoch 3/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.1211 - sparse_categorical_accuracy: 0.9636 - val_loss: 0.1417 - val_sparse_categorical_accuracy: 0.9568
+625/625 [==============================] - 0s 796us/step - loss: 0.1266 - sparse_categorical_accuracy: 0.9618 - val_loss: 0.1518 - val_sparse_categorical_accuracy: 0.9552
 Epoch 4/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.0960 - sparse_categorical_accuracy: 0.9709 - val_loss: 0.1387 - val_sparse_categorical_accuracy: 0.9603
+625/625 [==============================] - 1s 801us/step - loss: 0.0991 - sparse_categorical_accuracy: 0.9696 - val_loss: 0.1342 - val_sparse_categorical_accuracy: 0.9592
 Epoch 5/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.0786 - sparse_categorical_accuracy: 0.9763 - val_loss: 0.1453 - val_sparse_categorical_accuracy: 0.9577
-Epoch 00005: early stopping
+625/625 [==============================] - 1s 854us/step - loss: 0.0809 - sparse_categorical_accuracy: 0.9751 - val_loss: 0.1349 - val_sparse_categorical_accuracy: 0.9625
+Epoch 6/20
+625/625 [==============================] - 1s 907us/step - loss: 0.0684 - sparse_categorical_accuracy: 0.9794 - val_loss: 0.1597 - val_sparse_categorical_accuracy: 0.9547
+Epoch 00006: early stopping
 
-<tensorflow.python.keras.callbacks.History at 0x1716b9e10>
+<tensorflow.python.keras.callbacks.History at 0x16dad6710>
 
 ```
 </div>
@@ -1336,8 +1343,8 @@ Make sure to read the
 Here's a simple example saving a list of per-batch loss values during training:
 
 
-```python
 
+```python
 
 class LossHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs):
@@ -1358,8 +1365,8 @@ checkpoints of your model at frequent intervals.
 The easiest way to achieve this is with the `ModelCheckpoint` callback:
 
 
-```python
 
+```python
 model = get_compiled_model()
 
 callbacks = [
@@ -1384,15 +1391,21 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-595/625 [===========================>..] - ETA: 0s - loss: 0.3841 - sparse_categorical_accuracy: 0.8920
-Epoch 00001: val_loss improved from inf to 0.22930, saving model to mymodel_1
-625/625 [==============================] - 1s 2ms/step - loss: 0.3764 - sparse_categorical_accuracy: 0.8942 - val_loss: 0.2293 - val_sparse_categorical_accuracy: 0.9318
-Epoch 2/2
-593/625 [===========================>..] - ETA: 0s - loss: 0.1760 - sparse_categorical_accuracy: 0.9478
-Epoch 00002: val_loss improved from 0.22930 to 0.17705, saving model to mymodel_2
-625/625 [==============================] - 1s 2ms/step - loss: 0.1746 - sparse_categorical_accuracy: 0.9485 - val_loss: 0.1771 - val_sparse_categorical_accuracy: 0.9453
+602/625 [===========================>..] - ETA: 0s - loss: 0.3775 - sparse_categorical_accuracy: 0.8929
+Epoch 00001: val_loss improved from inf to 0.22929, saving model to mymodel_1
 
-<tensorflow.python.keras.callbacks.History at 0x1712b9750>
+WARNING: Logging before flag parsing goes to stderr.
+W0508 20:35:15.585927 4489225664 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Network.state_updates (from tensorflow.python.keras.engine.network) is deprecated and will be removed in a future version.
+Instructions for updating:
+This property should not be used in TensorFlow 2.0, as updates are applied automatically.
+
+625/625 [==============================] - 1s 2ms/step - loss: 0.3718 - sparse_categorical_accuracy: 0.8943 - val_loss: 0.2293 - val_sparse_categorical_accuracy: 0.9353
+Epoch 2/2
+570/625 [==========================>...] - ETA: 0s - loss: 0.1734 - sparse_categorical_accuracy: 0.9482
+Epoch 00002: val_loss improved from 0.22929 to 0.19255, saving model to mymodel_2
+625/625 [==============================] - 1s 1ms/step - loss: 0.1739 - sparse_categorical_accuracy: 0.9481 - val_loss: 0.1926 - val_sparse_categorical_accuracy: 0.9410
+
+<tensorflow.python.keras.callbacks.History at 0x161e49310>
 
 ```
 </div>
@@ -1401,8 +1414,8 @@ the ability to restart training from the last saved state of the model in case t
 gets randomly interrupted. Here's a basic example:
 
 
-```python
 
+```python
 import os
 
 # Prepare a directory to store all the checkpoints.
@@ -1438,9 +1451,9 @@ model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
 <div class="k-default-codeblock">
 ```
 Creating a new model
-1563/1563 [==============================] - 6s 4ms/step - loss: 0.3039 - sparse_categorical_accuracy: 0.9121
+1563/1563 [==============================] - 6s 4ms/step - loss: 0.3014 - sparse_categorical_accuracy: 0.9122
 
-<tensorflow.python.keras.callbacks.History at 0x171a5cf90>
+<tensorflow.python.keras.callbacks.History at 0x16faee0d0>
 
 ```
 </div>
@@ -1448,6 +1461,7 @@ You call also write your own callback for saving and restoring models.
 
 For a complete guide on serialization and saving, see the
 [guide to saving and serializing Models](/guides/serialization_and_saving/).
+
 
 ---
 ## Using learning rate schedules
@@ -1465,8 +1479,8 @@ You can easily use a static learning rate decay schedule by passing a schedule o
 as the `learning_rate` argument in your optimizer:
 
 
-```python
 
+```python
 initial_learning_rate = 0.1
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
@@ -1489,6 +1503,7 @@ However, callbacks do have access to all metrics, including validation metrics! 
 thus achieve this pattern by using a callback that modifies the current learning rate
 on the optimizer. In fact, this is even built-in as the `ReduceLROnPlateau` callback.
 
+
 ---
 ## Visualizing loss and metrics during training
 
@@ -1508,6 +1523,7 @@ from the command line:
 tensorboard --logdir=/full_path_to_your_logs
 ```
 
+
 ### Using the TensorBoard callback
 
 The easiest way to use TensorBoard with a Keras model and the fit method is the
@@ -1517,8 +1533,8 @@ In the simplest case, just specify where you want the callback to write logs, an
 you're good to go:
 
 
-```python
 
+```python
 keras.callbacks.TensorBoard(
     log_dir="/full_path_to_your_logs",
     histogram_freq=0,  # How often to log histogram visualizations
@@ -1533,9 +1549,10 @@ keras.callbacks.TensorBoard(
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.keras.callbacks.TensorBoard at 0x1719d5390>
+<tensorflow.python.keras.callbacks.TensorBoard at 0x16db3e850>
 
 ```
 </div>
 For more information, see the
 [documentation for the `TensorBoard` callback](/api/callbacks/tensorboard/).
+
