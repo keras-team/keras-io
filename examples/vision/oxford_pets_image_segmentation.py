@@ -161,7 +161,8 @@ def get_model(img_size, num_classes):
         previous_block_activation = x  # Set aside next residual
 
     # Add a per-pixel classification layer
-    outputs = layers.Conv2D(num_classes, 3, activation="sigmoid", padding="same")(x)
+    _activation = "softmax" if num_classes > 1 else "sigmoid"
+    outputs = layers.Conv2D(num_classes, 3, activation=_activation, padding="same")(x)
 
     # Define the model
     model = keras.Model(inputs, outputs)
