@@ -217,7 +217,7 @@ def format_signature(signature_start: str, signature_end: str):
     fake_signature = fake_signature_start + signature_end
     fake_python_code = f"def {fake_signature}:\n    pass\n"
     # we format with black
-    mode = black.FileMode(line_length=110)
+    mode = black.FileMode(line_length=90)
     formatted_fake_python_code = black.format_str(fake_python_code, mode=mode)
     # we make the final, multiline signature
     new_signature_end = extract_signature_end(formatted_fake_python_code)
