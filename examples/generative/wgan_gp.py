@@ -61,6 +61,7 @@ train_dataset = (
     tf.data.Dataset.from_tensor_slices(train_images)
     .shuffle(BUFFER_SIZE)
     .batch(BATCH_SIZE)
+    .prefetch(128)
 )
 
 """
