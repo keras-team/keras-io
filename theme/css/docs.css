@@ -93,7 +93,7 @@ blockquote {
 .k-content {
   width: 47rem;
   float: left;
-  padding: 2rem;
+  padding: 1.5rem;
   padding-top: 1rem;
 }
 @media screen and (max-width: 1342px) {
