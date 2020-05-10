@@ -402,7 +402,7 @@ def generator_loss(fake_img):
 
 
 # epochs to train
-epochs = 10
+epochs = 20
 
 # callbacks
 cbk = GANMonitor(num_img=3, latent_dim=noise_dim)
@@ -432,6 +432,6 @@ Display the last generated images:
 
 from IPython.display import Image, display
 
-display(Image("generated_img_0_9.png"))
-display(Image("generated_img_1_9.png"))
-display(Image("generated_img_2_9.png"))
+display(Image("generated_img_0_19.png"))
+display(Image("generated_img_1_19.png"))
+display(Image("generated_img_2_19.png"))
