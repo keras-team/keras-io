@@ -142,7 +142,7 @@ Now, let's review each piece of this workflow in detail.
 """
 ## The `compile()` method: specifying a loss, metrics, and an optimizer
 
-To train a model with `fi()`t, you need to specify a loss function, an optimizer, and
+To train a model with `fit()`, you need to specify a loss function, an optimizer, and
 optionally, some metrics to monitor.
 
 You pass these to the model as arguments to the `compile()` method:
