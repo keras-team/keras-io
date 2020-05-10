@@ -25,6 +25,7 @@ from tensorflow import keras
 # Display
 from IPython.display import Image
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 ```
@@ -183,22 +184,34 @@ Predicted: [('n02504458', 'African_elephant', 0.8871446)]
 img = keras.preprocessing.image.load_img(img_path)
 img = keras.preprocessing.image.img_to_array(img)
 
-# We convert the heatmap to image
-heatmap = np.expand_dims(heatmap, axis=-1)
-heatmap = keras.preprocessing.image.array_to_img(heatmap)
+# We rescale heatmap to a range 0-255
+heatmap = np.uint8(255 * heatmap)
 
-# We resize the heatmap to match image size
-heatmap = heatmap.resize((img.shape[1], img.shape[0]))
+# We use jet colormap to colorize heatmap
+jet = cm.get_cmap("jet")
 
-# Show image overlayed with the heatmap
-plt.imshow(img / 255.0)
+# We use RGB values of the colormap
+jet_colors = jet(np.arange(256))[:, :3]
+jet_heatmap = jet_colors[heatmap]
 
-# 0.4 here is a heatmap intensity factor
-plt.imshow(heatmap, cmap="jet", alpha=0.4)
-plt.show()
+# We create an image with RGB colorized heatmap
+jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
+jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
+jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
+
+# Superimpose the heatmap on original image
+superimposed_img = jet_heatmap * 0.4 + img
+superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
+
+# Save the superimposed image
+save_path = "elephant_cam.jpg"
+superimposed_img.save(save_path)
+
+# Display Grad CAM
+display(Image(save_path))
 
 ```
 
 
-![png](/img/examples/vision/grad_cam/grad_cam_10_0.png)
+![jpeg](/img/examples/vision/grad_cam/grad_cam_10_0.jpg)
 
