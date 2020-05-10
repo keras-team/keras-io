@@ -1,0 +1,8 @@
+pygments
+jinja2
+markdown
+requests
+mdx_truly_sane_lists
+sphinx
+black
+tf-nightly
