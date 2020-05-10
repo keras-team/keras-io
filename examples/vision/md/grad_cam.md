@@ -61,14 +61,8 @@ display(Image(img_path))
 
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from  https://i.imgur.com/Bvro0YD.png
-4218880/4217496 [==============================] - 13s 3us/step
 
-```
-</div>
-![jpeg](/img/examples/vision/grad_cam/grad_cam_4_1.jpg)
+![jpeg](/img/examples/vision/grad_cam/grad_cam_4_0.jpg)
 
 
 ---
@@ -172,10 +166,6 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/xception/xception_weights_tf_dim_ordering_tf_kernels.h5
-91889664/91884032 [==============================] - 152s 2us/step
-Downloading data from https://storage.googleapis.com/download.tensorflow.org/data/imagenet_class_index.json
-40960/35363 [==================================] - 0s 3us/step
 Predicted: [('n02504458', 'African_elephant', 0.8871446)]
 
 ```
