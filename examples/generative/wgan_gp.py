@@ -11,15 +11,17 @@ Description: WGAN-GP implementation
 
 The original [Wasserstein GAN](https://arxiv.org/abs/1701.07875) leverages
 the Wasserstein distance to produce a value function that has better theoretical
-properties than the original.  WGAN requires that the discriminator (aka the critic)
-must lie within the space of 1-Lipschitz functions. The authors proposed the idea of
-weight clipping to achieve the same. Though weight clipping works, it is not a very
-good idea to enforce 1-Lipschitz and can cause undesirable behavior.
+properties than the value function of the original GAN paper.  WGAN requires that
+the discriminator (aka the critic) must lie within the space of 1-Lipschitz functions.
+The authors proposed the idea of weight clipping to achieve this constraint. Though 
+weight clipping works, it is not a very good idea to enforce 1-Lipschitz constraint
+and can cause undesirable behavior e.g. a very deep WGAN discriminantor (critic)
+often fails to converge.   
 
 [WGAN-GP](https://arxiv.org/pdf/1704.00028.pdf) proposed an alternative to weight
 clipping to ensure smooth training. Instead of clipping the weights, the authors
-proposed `gradient penalty` Gradient penalty measures the squared difference
-between the norm of the gradient of the predictions and 1. 
+proposed `gradient penalty` Gradient penalty adds a loss term that keeps the L2
+norm of the discriminator gradients close to 1. 
 """
 
 """
@@ -37,11 +39,11 @@ from tensorflow.keras import layers
 
 We will be using the [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist) dataset
 in this work to demonstrate the training of WGAN-GP. Each sample in this dataset is a 28x28
-grayscale image associated with a label from 10 classes. 
+grayscale image associated with a label from 10 classes (e.g. Trouser, Pullover, Sneaker, etc.)
 """
 
 IMG_SHAPE = (28, 28, 1)
-BUFFER_SIZE = 60000
+BUFFER_SIZE = 4096
 BATCH_SIZE = 512
 
 # Size of noise vector
@@ -64,14 +66,14 @@ train_dataset = (
 """
 ## Create the discriminator (aka critic in the original WGAN)
 
-The samples in the dataset have a shape of (28, 28, 1). As we will be
+The samples in the dataset have a shape of `(28, 28, 1)`. As we will be
 using strided convolutions, this can result in odd shape. For example
 `(28, 28) -> Conv_s2 -> (14, 14) -> Conv_s2 -> (7, 7) -> Conv_s2 ->(3, 3)`.
 While doing upsampling in the generator, we won't get the same input shape
 as the original images if we aren't careful. To avoid this, we will do
-something much simpler. In the discriminator, we will `zero pad` the input
-to make the shape (32, 32, 1) for each sample while in the generator we will
-`crop` the final output to match the shape with input shape.
+something much simpler. In the discriminator, we will "zero pad" the input
+to make the shape `(32, 32, 1)` for each sample while in the generator we will
+"crop" the final output to match the shape with input shape.
 """
 
 
@@ -87,7 +89,6 @@ def conv_block(
     use_dropout=False,
     drop_value=0.5,
 ):
-
     x = layers.Conv2D(
         filters, kernel_size, strides=strides, padding=padding, use_bias=use_bias
     )(x)
@@ -177,7 +178,6 @@ def upsample_block(
     use_dropout=False,
     drop_value=0.3,
 ):
-
     x = layers.UpSampling2D(up_size)(x)
     x = layers.Conv2D(
         filters, kernel_size, strides=strides, padding=padding, use_bias=use_bias
@@ -223,8 +223,8 @@ def get_generator_model():
     x = upsample_block(
         x, 1, layers.Activation("tanh"), strides=(1, 1), use_bias=False, use_bn=True
     )
-    # At this point, we have an output which has the same shape as input (32, 32, 1).
-    # We will simply use Cropping2D layer to crop and make it (28, 28, 1).
+    # At this point, we have an output which has the same shape as the input, (32, 32, 1).
+    # We will use a Cropping2D layer to make it (28, 28, 1).
     x = layers.Cropping2D((2, 2))(x)
 
     g_model = keras.models.Model(noise, x, name="generator")
@@ -266,8 +266,10 @@ class WGAN(keras.Model):
         self.g_loss_fn = g_loss_fn
 
     def gradient_penalty(self, batch_size, real_images, fake_images):
-        """ The gradient penalty loss is calculated on an interpolated
-        image. This loss is then added to the discriminator loss.
+        """ Calculates the gradient penalty. 
+        
+        This loss is calculated on an interpolated image 
+        and added to the discriminator loss.
         """
         # get the interplated image
         alpha = tf.random.normal([batch_size, 1, 1, 1], 0.0, 1.0)
@@ -377,11 +379,15 @@ class GANMonitor(keras.callbacks.Callback):
 
 # Optimizer for both the networks
 # lr=0.0002, beta_1=0.5 are recommened
-generator_optimizer = keras.optimizers.Adam(lr=0.0002, beta_1=0.5, beta_2=0.9)
-discriminator_optimizer = keras.optimizers.Adam(lr=0.0002, beta_1=0.5, beta_2=0.9)
+generator_optimizer = keras.optimizers.Adam(
+    learning_rate=0.0002, beta_1=0.5, beta_2=0.9
+)
+discriminator_optimizer = keras.optimizers.Adam(
+    learning_rate=0.0002, beta_1=0.5, beta_2=0.9
+)
 
 # Define the loss functions to be used for discrimiator
-# This should be -(real_loss - fake_loss)
+# This should be (fake_loss - real_loss)
 # We will add the gradient penalty later to this loss function
 def discriminator_loss(real_img, fake_img):
     real_loss = tf.reduce_mean(real_img)
@@ -395,7 +401,7 @@ def generator_loss(fake_img):
 
 
 # epochs to train
-nb_epochs = 20
+epochs = 10
 
 # callbacks
 cbk = GANMonitor(num_img=3, latent_dim=noise_dim)
@@ -417,7 +423,7 @@ wgan.compile(
 )
 
 # start training
-wgan.fit(train_dataset, epochs=nb_epochs, callbacks=[cbk])
+wgan.fit(train_images, batch_size=BATCH_SIZE, epochs=epochs, callbacks=[cbk])
 
 """
 Display the last generated images:
@@ -425,6 +431,6 @@ Display the last generated images:
 
 from IPython.display import Image, display
 
-display(Image("generated_img_0_19.png"))
-display(Image("generated_img_1_19.png"))
-display(Image("generated_img_2_19.png"))
+display(Image("generated_img_0_9.png"))
+display(Image("generated_img_1_9.png"))
+display(Image("generated_img_2_9.png"))
