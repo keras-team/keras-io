@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/26<br>
-**Last modified:** 2020/04/26<br>
+**Last modified:** 2020/05/10<br>
 **Description:** How to obtain a class activation heatmap for an image classification model.
 
 
@@ -16,6 +16,7 @@ Adapted from Deep Learning with Python (2017).
 ## Setup
 
 
+
 ```python
 import numpy as np
 import tensorflow as tf
@@ -24,7 +25,7 @@ from tensorflow import keras
 # Display
 from IPython.display import Image
 import matplotlib.pyplot as plt
-import cv2
+
 
 ```
 
@@ -35,6 +36,7 @@ You can change these to another model.
 
 To get the values for `last_conv_layer_name` and `classifier_layer_names`, use
  `model.summary()` to see the names of all layers in the model.
+
 
 
 ```python
@@ -56,14 +58,22 @@ img_path = keras.utils.get_file(
 
 display(Image(img_path))
 
+
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from  https://i.imgur.com/Bvro0YD.png
+4218880/4217496 [==============================] - 13s 3us/step
 
-![jpeg](/img/examples/vision/grad_cam/grad_cam_4_0.jpeg)
+```
+</div>
+![jpeg](/img/examples/vision/grad_cam/grad_cam_4_1.jpg)
 
 
 ---
 ## The Grad-CAM algorithm
+
 
 
 ```python
@@ -136,6 +146,7 @@ def make_gradcam_heatmap(
 ## Let's test-drive it
 
 
+
 ```python
 # Prepare image
 img_array = preprocess_input(get_img_array(img_path, size=img_size))
@@ -156,10 +167,15 @@ heatmap = make_gradcam_heatmap(
 plt.matshow(heatmap)
 plt.show()
 
+
 ```
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/xception/xception_weights_tf_dim_ordering_tf_kernels.h5
+91889664/91884032 [==============================] - 152s 2us/step
+Downloading data from https://storage.googleapis.com/download.tensorflow.org/data/imagenet_class_index.json
+40960/35363 [==================================] - 0s 3us/step
 Predicted: [('n02504458', 'African_elephant', 0.8871446)]
 
 ```
@@ -171,30 +187,28 @@ Predicted: [('n02504458', 'African_elephant', 0.8871446)]
 ## Create a superimposed visualization
 
 
+
 ```python
-# We use cv2 to load the original image
-img = cv2.imread(img_path)
+# We load the original image
+img = keras.preprocessing.image.load_img(img_path)
+img = keras.preprocessing.image.img_to_array(img)
 
-# We resize the heatmap to have the same size as the original image
-heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
+# We convert the heatmap to image
+heatmap = np.expand_dims(heatmap, axis=-1)
+heatmap = keras.preprocessing.image.array_to_img(heatmap)
 
-# We convert the heatmap to RGB
-heatmap = np.uint8(255 * heatmap)
+# We resize the heatmap to match image size
+heatmap = heatmap.resize((img.shape[1], img.shape[0]))
 
-# We apply the heatmap to the original image
-heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+# Show image overlayed with the heatmap
+plt.imshow(img / 255.0)
 
 # 0.4 here is a heatmap intensity factor
-superimposed_img = heatmap * 0.4 + img
-
-# Save the image to disk
-save_path = "elephant_cam.jpg"
-cv2.imwrite(save_path, superimposed_img)
-
-display(Image(save_path))
+plt.imshow(heatmap, cmap="jet", alpha=0.4)
+plt.show()
 
 ```
 
 
-![jpeg](/img/examples/vision/grad_cam/grad_cam_10_0.jpeg)
+![png](/img/examples/vision/grad_cam/grad_cam_10_0.png)
 
