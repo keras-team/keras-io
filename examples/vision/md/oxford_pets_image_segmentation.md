@@ -446,7 +446,6 @@ model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
-  2/199 [..............................] - ETA: 11s - loss: 5.4155WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
 199/199 [==============================] - 44s 223ms/step - loss: 0.9539 - val_loss: 13.5056
 Epoch 2/15
 199/199 [==============================] - 44s 221ms/step - loss: 0.5145 - val_loss: 2.2228
