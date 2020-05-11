@@ -43,7 +43,6 @@ grayscale image associated with a label from 10 classes (e.g. Trouser, Pullover,
 """
 
 IMG_SHAPE = (28, 28, 1)
-BUFFER_SIZE = 4096
 BATCH_SIZE = 512
 
 # Size of noise vector
@@ -57,12 +56,6 @@ print(f"Shape of the images in the dataset: {train_images.shape[1:]}")
 # we will reshape each sample to (28, 28, 1) and normalize the pixel values in [-1, 1].
 train_images = train_images.reshape(train_images.shape[0], *IMG_SHAPE).astype("float32")
 train_images = (train_images - 127.5) / 127.5
-train_dataset = (
-    tf.data.Dataset.from_tensor_slices(train_images)
-    .shuffle(BUFFER_SIZE)
-    .batch(BATCH_SIZE)
-    .prefetch(128)
-)
 
 """
 ## Create the discriminator (aka critic in the original WGAN)
@@ -290,6 +283,9 @@ class WGAN(keras.Model):
         return gp
 
     def train_step(self, real_images):
+        if isinstance(real_images, (tuple, list)):
+            real_images = real_images[0]
+
         # Get the batch size
         batch_size = tf.shape(real_images)[0]
 
