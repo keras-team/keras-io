@@ -36,7 +36,7 @@ In this guide, you will learn about:
  indexing.
 - How to build a model that turns your data into useful predictions,
 using the Keras Functional API.
-- How to train your model with the built-in Keras `fit()` method, while being.
+- How to train your model with the built-in Keras `fit()` method, while being
 mindful of checkpointing, metrics monitoring, and fault tolerance.
 - How to evaluate your model on a test data and how to use it for inference on new data.
 - How to customize what `fit()` does, for instance to build a GAN.
@@ -87,7 +87,7 @@ these formats. If you have a large dataset and you are training on GPU(s), consi
 using `Dataset` objects, since they will take care of performance-critical details,
  such as:
 
-- Asynchronously preprocessing your data on CPU while your CPU is busy, and bufferring
+- Asynchronously preprocessing your data on CPU while your GPU is busy, and bufferring
  it into a queue.
 - Prefetching data on GPU memory so it's immediately available when the GPU has
  finished processing the previous batch, so you can reach full GPU utilization.
@@ -353,10 +353,10 @@ A "model" is a directed acyclic graph of layers. You can think of a model as a
 "bigger layer" that encompasses multiple sublayers and that can be trained via exposure
  to data.
 
-The most common and most powerful way to build Keras models is the Functional API. To
+The most common and powerful way to build Keras models is the Functional API. To
 build models with the Functional API, you start by specifying the shape (and
 optionally the dtype) of your inputs. If any dimension of your input can vary, you can
-specify it as `None`. For instance, an input for 200x200 RBG image would have shape
+specify it as `None`. For instance, an input for 200x200 RGB image would have shape
 `(200, 200, 3)`, but an input for RGB images of any size would have shape `(None,
  None, 3)`.
 
@@ -395,7 +395,7 @@ outputs = layers.Dense(num_classes, activation="softmax")(x)
 
 ```
 
-Once you have defined the directed acylic graph of layers that turns your input(s) into
+Once you have defined the directed acyclic graph of layers that turns your input(s) into
  your outputs, instantiate a `Model` object:
 
 
@@ -404,8 +404,8 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 
 ```
 
-This model behaves basically like a bigger layer. You call it on batches of data, like
- this:
+This model behaves basically like a bigger layer. You can call it on batches of data
+ like this:
 
 
 ```python
@@ -425,7 +425,7 @@ You can print a summary of how your data gets transformed at each stage of the m
  This is useful for debugging.
 
 Note that the output shape displayed for each layers includes the **batch size**. Here
- the batch size is None, which indicates our model can process batchs of any size.
+ the batch size is None, which indicates our model can process batches of any size.
 
 
 ```python
@@ -485,7 +485,7 @@ built-in training loop, the `fit()` method. It accepts `Dataset` objects, Python
  generators that yield batches of data, or NumPy arrays.
 
 Before you can call `fit()`, you need to specify an optimizer and a loss function (we
- asssume you are already familiar with these concepts). This is the `compile()` step:
+ assume you're already familiar with these concepts). This is the `compile()` step:
 
 ```python
 model.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
@@ -721,7 +721,7 @@ What's more, you can launch an in-line TensorBoard tab when training models in J
 
 ### After `fit()`: evaluating test performance & generating predictions on new data
 
-Once you have a train model, you can evaluate its loss and metrics on new data via
+Once you have a trained model, you can evaluate its loss and metrics on new data via
  `evaluate()`:
 
 
@@ -808,16 +808,16 @@ For a detailed overview of how you customize the built-in training & evaluation 
 ## Debugging your model with eager execution
 
 If you write custom training steps or custom layers, you will need to debug them. The
-begugging experience is an integral part of a framework: with Keras, the debugging
+debugging experience is an integral part of a framework: with Keras, the debugging
  workflow is designed with the user in mind.
 
 By default, your Keras models are compiled to highly-optimized computation graphs that
 deliver fast execution times. That means that the Python code you write (e.g. in a
-custom `train_step`) is not the code you are actually excecuting. This introduces a
+custom `train_step`) is not the code you are actually executing. This introduces a
  layer of indirection that can make debugging hard.
 
 Debugging is best done step by step. You want to be able to sprinkle your code with
-`print()`  statement to see what your data looks like after every operation, you want
+`print()` statements to see what your data looks like after every operation, you want
 to be able to use `pdb`. You can achieve this by **running your model eagerly**. With
  eager execution, the Python code you write is the code that gets executed.
 
