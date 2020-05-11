@@ -14,6 +14,7 @@
 ## Setup
 
 
+
 ```python
 import numpy as np
 import tensorflow as tf
@@ -36,7 +37,7 @@ In this guide, you will learn about:
  indexing.
 - How to build a model that turns your data into useful predictions,
 using the Keras Functional API.
-- How to train your model with the built-in Keras `fit()` method, while being.
+- How to train your model with the built-in Keras `fit()` method, while being
 mindful of checkpointing, metrics monitoring, and fault tolerance.
 - How to evaluate your model on a test data and how to use it for inference on new data.
 - How to customize what `fit()` does, for instance to build a GAN.
@@ -87,7 +88,7 @@ these formats. If you have a large dataset and you are training on GPU(s), consi
 using `Dataset` objects, since they will take care of performance-critical details,
  such as:
 
-- Asynchronously preprocessing your data on CPU while your CPU is busy, and bufferring
+- Asynchronously preprocessing your data on CPU while your GPU is busy, and bufferring
  it into a queue.
 - Prefetching data on GPU memory so it's immediately available when the GPU has
  finished processing the previous batch, so you can reach full GPU utilization.
@@ -249,6 +250,7 @@ tf.Tensor(
 **Example: turning strings into sequences of one-hot encoded bigrams**
 
 
+
 ```python
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 
@@ -313,6 +315,7 @@ Both the `Rescaling` layer and the `CenterCrop` layer are stateless, so it isn't
  necessary to call `adapt()` in this case.
 
 
+
 ```python
 from tensorflow.keras.layers.experimental.preprocessing import CenterCrop
 from tensorflow.keras.layers.experimental.preprocessing import Rescaling
@@ -356,9 +359,10 @@ A "model" is a directed acyclic graph of layers. You can think of a model as a
 The most common and most powerful way to build Keras models is the Functional API. To
 build models with the Functional API, you start by specifying the shape (and
 optionally the dtype) of your inputs. If any dimension of your input can vary, you can
-specify it as `None`. For instance, an input for 200x200 RBG image would have shape
+specify it as `None`. For instance, an input for 200x200 RGB image would have shape
 `(200, 200, 3)`, but an input for RGB images of any size would have shape `(None,
  None, 3)`.
+
 
 
 ```python
@@ -369,6 +373,7 @@ inputs = keras.Input(shape=(None, None, 3))
 
 After defining your input(s), you chain layer transformations on top of your inputs,
  until your final output:
+
 
 
 ```python
@@ -395,8 +400,9 @@ outputs = layers.Dense(num_classes, activation="softmax")(x)
 
 ```
 
-Once you have defined the directed acylic graph of layers that turns your input(s) into
+Once you have defined the directed acyclic graph of layers that turns your input(s) into
  your outputs, instantiate a `Model` object:
+
 
 
 ```python
@@ -404,8 +410,9 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 
 ```
 
-This model behaves basically like a bigger layer. You call it on batches of data, like
+This model behaves basically like a bigger layer. You can call it on batches of data, like
  this:
+
 
 
 ```python
@@ -426,6 +433,7 @@ You can print a summary of how your data gets transformed at each stage of the m
 
 Note that the output shape displayed for each layers includes the **batch size**. Here
  the batch size is None, which indicates our model can process batchs of any size.
+
 
 
 ```python
@@ -472,6 +480,7 @@ the class of the image *and* the likelihood that a user will click on it). For a
  deeper dive into what you can do, see our
 [guide to the Functional API](/guides/functional_api/).
 
+
 ---
 ## Training models with `fit()`
 
@@ -485,7 +494,7 @@ built-in training loop, the `fit()` method. It accepts `Dataset` objects, Python
  generators that yield batches of data, or NumPy arrays.
 
 Before you can call `fit()`, you need to specify an optimizer and a loss function (we
- asssume you are already familiar with these concepts). This is the `compile()` step:
+ assume you are already familiar with these concepts). This is the `compile()` step:
 
 ```python
 model.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
@@ -523,6 +532,7 @@ Since the data yielded by a dataset is expect to be already batched, you don't n
 
 Let's look at it in practice with a toy example model that learns to classify MNIST
  digits:
+
 
 
 ```python
@@ -577,9 +587,9 @@ Trainable params: 118,282
 Non-trainable params: 0
 _________________________________________________________________
 Fit on NumPy data
-938/938 [==============================] - 1s 794us/step - loss: 0.2553
+938/938 [==============================] - 1s 777us/step - loss: 0.2615
 Fit on Dataset
-938/938 [==============================] - 1s 868us/step - loss: 0.1141
+938/938 [==============================] - 1s 869us/step - loss: 0.1126
 
 ```
 </div>
@@ -589,6 +599,7 @@ values (here we have only one metric, the loss, and one epoch, so we only get a 
  scalar):
 
 
+
 ```python
 print(history.history)
 
@@ -596,13 +607,14 @@ print(history.history)
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.11405839025974274]}
+{'loss': [0.11258204281330109]}
 
 ```
 </div>
 For a detailed overview of how to use `fit()`, see the
 [guide to training & evaluation with the built-in Keras methods](
   /guides/training_with_built_in_methods/).
+
 
 ### Keeping track of performance metrics
 
@@ -629,7 +641,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 907us/step - loss: 0.0808 - acc: 0.9750
+938/938 [==============================] - 1s 886us/step - loss: 0.0795 - acc: 0.9761
 
 ```
 </div>
@@ -648,7 +660,7 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0556 - acc: 0.9830 - val_loss: 0.0930 - val_acc: 0.9731
+938/938 [==============================] - 1s 1ms/step - loss: 0.0544 - acc: 0.9839 - val_loss: 0.1083 - val_acc: 0.9656
 
 ```
 </div>
@@ -682,6 +694,7 @@ callbacks = [
 model.fit(dataset, epochs=2, callbacks=callbacks)
 ```
 
+
 You can also use callbacks to do things like periodically changing the learning of your
 optimizer, streaming metrics to a Slack bot, sending yourself an email notification
  when training is complete, etc.
@@ -689,6 +702,7 @@ optimizer, streaming metrics to a Slack bot, sending yourself an email notificat
 For detailed overview of what callbacks are available and how to write your own, see
 the [callbacks API documentation](/api/callbacks/) and the
 [guide to writing custom callbacks](/guides/writing_your_own_callbacks/).
+
 
 ### Monitoring training progress with TensorBoard
 
@@ -719,10 +733,12 @@ What's more, you can launch an in-line TensorBoard tab when training models in J
  / Colab notebooks.
 [Here's more information](https://www.tensorflow.org/tensorboard/tensorboard_in_notebooks).
 
+
 ### After `fit()`: evaluating test performance & generating predictions on new data
 
-Once you have a train model, you can evaluate its loss and metrics on new data via
+Once you have a trained model, you can evaluate its loss and metrics on new data via
  `evaluate()`:
+
 
 
 ```python
@@ -734,14 +750,15 @@ print("acc: %.2f" % acc)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 688us/step - loss: 0.0930 - acc: 0.9731
-loss: 0.09
+157/157 [==============================] - 0s 671us/step - loss: 0.1083 - acc: 0.9656
+loss: 0.11
 acc: 0.97
 
 ```
 </div>
 You can also generate NumPy arrays of predictions (the activations of the output
  layer(s) in the model) via `predict()`:
+
 
 
 ```python
@@ -804,20 +821,21 @@ For a detailed overview of how you customize the built-in training & evaluation 
  see the guide:
 ["Customizing what happens in `fit()`"](/guides/customizing_what_happens_in_fit/).
 
+
 ---
 ## Debugging your model with eager execution
 
 If you write custom training steps or custom layers, you will need to debug them. The
-begugging experience is an integral part of a framework: with Keras, the debugging
+debugging experience is an integral part of a framework: with Keras, the debugging
  workflow is designed with the user in mind.
 
 By default, your Keras models are compiled to highly-optimized computation graphs that
 deliver fast execution times. That means that the Python code you write (e.g. in a
-custom `train_step`) is not the code you are actually excecuting. This introduces a
+custom `train_step`) is not the code you are actually executing. This introduces a
  layer of indirection that can make debugging hard.
 
 Debugging is best done step by step. You want to be able to sprinkle your code with
-`print()`  statement to see what your data looks like after every operation, you want
+`print()` statement to see what your data looks like after every operation, you want
 to be able to use `pdb`. You can achieve this by **running your model eagerly**. With
  eager execution, the Python code you write is the code that gets executed.
 
@@ -833,6 +851,7 @@ switch it back off to get the benefits of compiled computation graphs once you a
 
 In general, you will use `run_eagerly=True` every time you need to debug what's
  happening inside your `fit()` call.
+
 
 ---
 ## Speeding up training with multiple GPUs
@@ -868,6 +887,7 @@ model.evaluate(test_dataset)
 For a detailed introduction to multi-GPU & distributed training, see
 [this guide](/guides/distributed_training/).
 
+
 ---
 ## Doing preprocessing synchronously on-device vs. asynchronously on host CPU
 
@@ -890,6 +910,7 @@ from the queue to the GPU memory right before the GPU becomes available again
 
 To do asynchronous preprocessing, simply use `dataset.map` to inject a preprocessing
  operation into your data pipeline:
+
 
 
 ```python
@@ -922,13 +943,14 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 1ms/step - loss: 0.4925
+1/1 [==============================] - 0s 873us/step - loss: 0.5090
 
-<tensorflow.python.keras.callbacks.History at 0x153e24550>
+<tensorflow.python.keras.callbacks.History at 0x1378ed310>
 
 ```
 </div>
 Compare this to doing text vectorization as part of the model:
+
 
 
 ```python
@@ -949,9 +971,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 739us/step - loss: 0.5121
+1/1 [==============================] - 0s 864us/step - loss: 0.4909
 
-<tensorflow.python.keras.callbacks.History at 0x17b0cfe90>
+<tensorflow.python.keras.callbacks.History at 0x17792f110>
 
 ```
 </div>
@@ -969,6 +991,7 @@ x = vectorizer(inputs)
 outputs = trained_model(x)
 end_to_end_model = keras.Model(inputs, outputs)
 ```
+
 
 ---
 ## Finding the best model configuration with hyperparameter tuning
@@ -1067,3 +1090,4 @@ To familiarize yourself with the concepts in this introduction, see the followin
 - Learn more about
 [multi-GPU and distributed training](/guides/distributed_training/).
 - Learn how to do [transfer learning](/guides/transfer_learning/).
+
