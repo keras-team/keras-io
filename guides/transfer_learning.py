@@ -428,7 +428,7 @@ values between 0 and 255 (RGB level values). This isn't a great fit for feeding 
  neural network. We need to do 2 things:
 
 - Standardize to a fixed image size. We pick 150x150.
-- Normalize pixel values between 0 and 1. We'll do this using a `Rescaling` layer as
+- Normalize pixel values between -1 and 1. We'll do this using a `Normalization` layer as
  part of the model itself.
 
 In general, it's a good practice to develop models that take raw data as input, as
@@ -507,8 +507,8 @@ Now let's built a model that follows the blueprint we've explained earlier.
 
 Note that:
 
-- We add a `Rescaling` layer to scale input values (initially in the `[0, 255]` range)
- to the `[0, 1]` range.
+- We add a `Normalization` layer to scale input values (initially in the `[0, 255]` 
+ range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
 it runs in inference mode, so that batchnorm statistics don't get updated
@@ -527,9 +527,16 @@ base_model.trainable = False
 # Create new model on top
 inputs = keras.Input(shape=(150, 150, 3))
 x = data_augmentation(inputs)  # Apply random data augmentation
-x = keras.layers.experimental.preprocessing.Rescaling(1.0 / 255.0)(
-    x
-)  # Scale inputs to [0. 1]
+
+# Pre-trained Xception weights requires that input be normalized
+# from (0, 255.) to a range (-1, +1), the normalization layer
+# does the following outputs = (inputs - mean) / sqrt(var)
+norm_layer = keras.layers.experimental.preprocessing.Normalization()
+mean = np.array([127.5] * 3)
+var = mean ** 2
+norm_layer.set_weights([mean, var])
+x = norm_layer(x)  # Scale inputs to [-1, +1]
+
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the
 # base_model is running in inference mode here.
