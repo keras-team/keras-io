@@ -534,8 +534,9 @@ x = data_augmentation(inputs)  # Apply random data augmentation
 norm_layer = keras.layers.experimental.preprocessing.Normalization()
 mean = np.array([127.5] * 3)
 var = mean ** 2
-norm_layer.set_weights([mean, var])
-x = norm_layer(x)  # Scale inputs to [-1, +1]
+# Scale inputs to [-1, +1]
+x = norm_layer(x)  
+norm_layer.set_weights([mean, var]) 
 
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the
