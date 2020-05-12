@@ -7,4 +7,4 @@ COPY ./ ./
 WORKDIR scripts
 RUN python autogen.py make
 
-CMD ["python", "autogen.py", "serve"]
+CMD ["python", "-u", "autogen.py", "serve"]

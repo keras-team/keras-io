@@ -10,6 +10,12 @@ python autogen.py make
 python autogen.py serve
 ```
 
+If you have Docker (you don't need the gpu version of Docker), you can run instead:
+
+```
+docker build -t keras-io . && docker run --rm -p 8000:8000 keras-io
+```
+
 ## Call for examples
 
 Are you interested in submitting new examples for publication on keras.io?
