@@ -6,3 +6,5 @@ RUN pip install -r requirements.txt
 COPY ./ ./
 WORKDIR scripts
 RUN python autogen.py make
+
+CMD ["python", "autogen.py", "serve"]
