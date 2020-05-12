@@ -62,7 +62,7 @@ you would have to do it by hand before calling the method.
 
 ## Learning rate decay / scheduling
 
-You can use a [learning rate schedule](/api/optimizer/learning_rate_schedules) to modulate
+You can use a [learning rate schedule](/api/optimizers/learning_rate_schedules) to modulate
 how the learning rate of your optimizer changes over time:
 
 ```python
@@ -73,7 +73,7 @@ lr_schedule = keras.optimizers.schedules.ExponentialDecay(
 optimizer = keras.optimizers.SGD(learning_rate=lr_schedule)
 ```
 
-Check out [the learning rate schedule API documentation](/api/optimizer/learning_rate_schedules) for a list of available schedules.
+Check out [the learning rate schedule API documentation](/api/optimizers/learning_rate_schedules) for a list of available schedules.
 
 
 ---
