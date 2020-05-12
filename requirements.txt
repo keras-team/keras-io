@@ -3,6 +3,6 @@ jinja2
 markdown
 requests
 mdx_truly_sane_lists
-sphinx
-black
-tf-nightly
+sphinx~=3.0.3
+black==19.10b0
+tf-nightly==2.3.0.dev20200512
