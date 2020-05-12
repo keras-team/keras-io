@@ -53,7 +53,7 @@ episode_count = 0
 while True:  # run till solved
     state = env.reset()
     episode_reward = 0
-    with tf.GradientTape() as tape:  # keep track of gradients
+    with tf.GradientTape() as tape:  # keep track of ops for backprop
         for timestep in range(1, 10000):
             state = tf.convert_to_tensor(state)
             state = tf.expand_dims(state, 0)
@@ -72,9 +72,10 @@ while True:  # run till solved
             if done:
                 break
 
+        # Update running reward to check condition for solving
         running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
 
-        # Perform backprop
+        # Calculate expected value from rewards
         returns = []
         discounted_sum = 0
         for r in rewards_history[::-1]:
@@ -91,11 +92,12 @@ while True:  # run till solved
         critic_losses = []
         for log_prob, value, ret in history:
             diff = ret - value
-            actor_losses.append(-log_prob * diff)
+            actor_losses.append(-log_prob * diff)  # actor loss
             critic_losses.append(
                 losses.Huber()(tf.expand_dims(value, 0), tf.expand_dims(diff, 0))
-            )
+            )  # critic loss
 
+        # Backprop
         loss_value = sum(actor_losses) + sum(critic_losses)
 
         grads = tape.gradient(loss_value, model.trainable_variables)
@@ -113,5 +115,5 @@ while True:  # run till solved
         print(template.format(running_reward, episode_count))
 
     if running_reward > 195:  # Condition to consider the task solved
-        print("Solved! at episode {}".format(episode_count))
+        print("Solved at episode {}!".format(episode_count))
         break
