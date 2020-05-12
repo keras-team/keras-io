@@ -529,8 +529,8 @@ inputs = keras.Input(shape=(150, 150, 3))
 x = data_augmentation(inputs)  # Apply random data augmentation
 
 # Pre-trained Xception weights requires that input be normalized
-# from (0, 255.) to a range (-1, +1), the normalization layer
-# does the following outputs = (inputs - mean) / sqrt(var)
+# from (0, 255) to a range (-1., +1.), the normalization layer
+# does the following, outputs = (inputs - mean) / sqrt(var)
 norm_layer = keras.layers.experimental.preprocessing.Normalization()
 mean = np.array([127.5] * 3)
 var = mean ** 2
