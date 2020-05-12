@@ -5,6 +5,7 @@ This repository hosts the code used to generate the [keras.io](https://keras.io)
 ## Generating a local copy of the website
 
 ```
+pip install -r requirements.txt
 cd scripts
 python autogen.py make
 python autogen.py serve
@@ -15,6 +16,9 @@ If you have Docker (you don't need the gpu version of Docker), you can run inste
 ```
 docker build -t keras-io . && docker run --rm -p 8000:8000 keras-io
 ```
+
+It's going to take a while the first time, because it's going to pull the 
+image and the dependencies, but the second time, it's much faster.
 
 ## Call for examples
 
