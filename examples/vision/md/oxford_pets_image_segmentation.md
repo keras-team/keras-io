@@ -27,10 +27,10 @@
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  755M  100  755M    0     0  20.3M      0  0:00:37  0:00:37 --:--:-- 22.7M
+100  755M  100  755M    0     0  19.7M      0  0:00:38  0:00:38 --:--:-- 14.0M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 18.2M  100 18.2M    0     0  9359k      0  0:00:02  0:00:02 --:--:-- 9361k
+100 18.2M  100 18.2M    0     0  9162k      0  0:00:02  0:00:02 --:--:-- 9164k
 
 ```
 </div>
@@ -217,7 +217,7 @@ def get_model(img_size, num_classes):
         previous_block_activation = x  # Set aside next residual
 
     # Add a per-pixel classification layer
-    outputs = layers.Conv2D(num_classes, 3, activation="sigmoid", padding="same")(x)
+    outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
 
     # Define the model
     model = keras.Model(inputs, outputs)
@@ -446,37 +446,37 @@ model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
-199/199 [==============================] - 47s 237ms/step - loss: 0.8336 - val_loss: 2.0870
+199/199 [==============================] - 44s 223ms/step - loss: 0.9539 - val_loss: 13.5056
 Epoch 2/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.5165 - val_loss: 2.4628
+199/199 [==============================] - 44s 221ms/step - loss: 0.5145 - val_loss: 2.2228
 Epoch 3/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.4247 - val_loss: 0.4224
+199/199 [==============================] - 44s 222ms/step - loss: 0.4318 - val_loss: 0.4182
 Epoch 4/15
-199/199 [==============================] - 45s 224ms/step - loss: 0.3793 - val_loss: 0.4144
+199/199 [==============================] - 44s 221ms/step - loss: 0.4027 - val_loss: 0.4100
 Epoch 5/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.3436 - val_loss: 0.4378
+199/199 [==============================] - 44s 223ms/step - loss: 0.3551 - val_loss: 0.3894
 Epoch 6/15
-199/199 [==============================] - 45s 226ms/step - loss: 0.3165 - val_loss: 0.3959
+199/199 [==============================] - 44s 220ms/step - loss: 0.3226 - val_loss: 0.4020
 Epoch 7/15
-199/199 [==============================] - 44s 222ms/step - loss: 0.2918 - val_loss: 0.4047
+199/199 [==============================] - 44s 219ms/step - loss: 0.3195 - val_loss: 0.4273
 Epoch 8/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.2686 - val_loss: 0.4640
+199/199 [==============================] - 44s 220ms/step - loss: 0.2789 - val_loss: 0.3707
 Epoch 9/15
-199/199 [==============================] - 44s 219ms/step - loss: 0.2513 - val_loss: 0.4190
+199/199 [==============================] - 43s 219ms/step - loss: 0.2599 - val_loss: 0.4059
 Epoch 10/15
-199/199 [==============================] - 44s 221ms/step - loss: 0.2382 - val_loss: 0.3784
+199/199 [==============================] - 44s 222ms/step - loss: 0.2440 - val_loss: 0.3799
 Epoch 11/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.2251 - val_loss: 0.3751
+199/199 [==============================] - 43s 218ms/step - loss: 0.2297 - val_loss: 0.4244
 Epoch 12/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.2139 - val_loss: 0.3964
+199/199 [==============================] - 43s 218ms/step - loss: 0.2179 - val_loss: 0.4320
 Epoch 13/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.2026 - val_loss: 0.3975
+199/199 [==============================] - 43s 218ms/step - loss: 0.2081 - val_loss: 0.4034
 Epoch 14/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.1944 - val_loss: 0.4107
+199/199 [==============================] - 44s 220ms/step - loss: 0.1977 - val_loss: 0.4034
 Epoch 15/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.1871 - val_loss: 0.4038
+199/199 [==============================] - 44s 222ms/step - loss: 0.1901 - val_loss: 0.4150
 
-<tensorflow.python.keras.callbacks.History at 0x7fda8b99f438>
+<tensorflow.python.keras.callbacks.History at 0x7f0e18087898>
 
 ```
 </div>
