@@ -9,3 +9,4 @@ templates/examples/nlp/*
 templates/examples/vision/*
 templates/examples/structured_data/*
 templates/examples/keras_recipes/*
+templates/guides/*.md

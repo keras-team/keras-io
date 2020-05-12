@@ -81,7 +81,8 @@ to start with, so that the script won't have to shorten them.
 rendering of your example, creating files in `examples/vision/ipynb`,
 `examples/vision/md`, and `examples/vision/img`. Do not modify any of these files by hand; only the
 original Python script should ever be edited manually.
-5. Submit a PR adding `examples/vision/script_name.py` as well as all files created by the `add_example` command.
+5. Submit a PR adding `examples/vision/script_name.py` (only the `.py`, not the generated files). Get a review and approval.
+6. Once the PR is approved, add to the PR the files created by the `add_example` command. Then we will merge the PR.
 
 
 ### Creating a new example starting from a Python script
@@ -93,7 +94,9 @@ original Python script should ever be edited manually.
 rendering of your example, creating files in `examples/vision/ipynb`,
 `examples/vision/md`, and `examples/vision/img`. Do not modify any of these files by hand; only the
 original Python script should ever be edited manually.
-5. Submit a PR adding `examples/vision/script_name.py` as well as all files created by the `add_example` command.
+5. Submit a PR adding `examples/vision/script_name.py` (only the `.py`, not the generated files). Get a review and approval.
+6. Once the PR is approved, add to the PR the files created by the `add_example` command. Then we will merge the PR.
+
 
 ### Previewing a new example
 
