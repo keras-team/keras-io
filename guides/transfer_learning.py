@@ -507,7 +507,7 @@ Now let's built a model that follows the blueprint we've explained earlier.
 
 Note that:
 
-- We add a `Normalization` layer to scale input values (initially in the `[0, 255]` 
+- We add a `Normalization` layer to scale input values (initially in the `[0, 255]`
  range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
