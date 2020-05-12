@@ -2,7 +2,7 @@
 Title: Transfer learning & fine-tuning
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/15
-Last modified: 2020/04/17
+Last modified: 2020/05/12
 Description: Complete guide to transfer learning & fine-tuning in Keras.
 """
 """
