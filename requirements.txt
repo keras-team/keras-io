@@ -1,4 +1,4 @@
-pygments==2.4.2
+pygments~=2.5.2
 jinja2
 markdown
 requests
