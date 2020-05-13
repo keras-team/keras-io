@@ -87,8 +87,8 @@ while True:  # run till solved
         for timestep in range(1, max_steps_per_episode):
             state = tf.convert_to_tensor(state)
             state = tf.expand_dims(state, 0)
-            
-            # Predict action probabilities and estimated future rewards 
+
+            # Predict action probabilities and estimated future rewards
             # from environment state
             action_probs, critic_value = model(state)
             critic_value_history.append(critic_value[0, 0])
@@ -128,15 +128,15 @@ while True:  # run till solved
         actor_losses = []
         critic_losses = []
         for log_prob, value, ret in history:
-            # At this point in history, the critic estimated that we would get a 
+            # At this point in history, the critic estimated that we would get a
             # total reward = `value` in the future. We took an action with log probability
             # of `log_prob` and ended up recieving a total reward = `ret`.
             # The actor must be updated so that it predicts an action that leads to
             # high rewards (compared to critic's estimate) with high probability.
             diff = ret - value
             actor_losses.append(-log_prob * diff)  # actor loss
-            
-            # The critic must be updated so that it predicts a better estimate of 
+
+            # The critic must be updated so that it predicts a better estimate of
             # the future rewards.
             critic_losses.append(
                 huber_loss(tf.expand_dims(value, 0), tf.expand_dims(ret, 0))
