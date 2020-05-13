@@ -156,3 +156,4 @@ These are the only files that should be edited by hand:
 - `guides/*.py`
 - `theme/*`
 - `scripts/*.py`
+
