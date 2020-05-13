@@ -55,12 +55,12 @@ display(Image(img_path))
 
 
 def get_img_array(img_path, size):
-    # `img` is a PIL image of size 224x224
+    # `img` is a PIL image of size 299x299
     img = keras.preprocessing.image.load_img(img_path, target_size=size)
-    # `array` is a float32 Numpy array of shape (224, 224, 3)
+    # `array` is a float32 Numpy array of shape (299, 299, 3)
     array = keras.preprocessing.image.img_to_array(img)
     # We add a dimension to transform our array into a "batch"
-    # of size (1, 224, 224, 3)
+    # of size (1, 299, 299, 3)
     array = np.expand_dims(array, axis=0)
     return array
 
