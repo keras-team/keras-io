@@ -71,14 +71,6 @@ train_images = (train_images - 127.5) / 127.5
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-labels-idx1-ubyte.gz
-32768/29515 [=================================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-images-idx3-ubyte.gz
-26427392/26421880 [==============================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-labels-idx1-ubyte.gz
-8192/5148 [===============================================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-images-idx3-ubyte.gz
-4423680/4422102 [==============================] - 0s 0us/step
 Number of examples: 60000
 Shape of the images in the dataset: (28, 28)
 
@@ -414,7 +406,7 @@ class WGAN(keras.Model):
         return gp
 
     def train_step(self, real_images):
-        if isinstance(real_images, (tuple, list)):
+        if isinstance(real_images, tuple):
             real_images = real_images[0]
 
         # Get the batch size
@@ -566,47 +558,47 @@ wgan.fit(train_images, batch_size=BATCH_SIZE, epochs=epochs, callbacks=[cbk])
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-118/118 [==============================] - 40s 339ms/step - d_loss: -7.7530 - g_loss: -16.4810
+118/118 [==============================] - 39s 334ms/step - d_loss: -7.6571 - g_loss: -16.9272
 Epoch 2/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -7.1854 - g_loss: -6.8980
+118/118 [==============================] - 39s 334ms/step - d_loss: -7.2396 - g_loss: -8.5466
 Epoch 3/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -6.4576 - g_loss: -0.8381
+118/118 [==============================] - 40s 335ms/step - d_loss: -6.3892 - g_loss: 1.3971
 Epoch 4/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -5.8271 - g_loss: 5.0386
+118/118 [==============================] - 40s 335ms/step - d_loss: -5.7705 - g_loss: 6.5997
 Epoch 5/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -5.3291 - g_loss: 7.7776
+118/118 [==============================] - 40s 336ms/step - d_loss: -5.2659 - g_loss: 7.4743
 Epoch 6/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -4.8904 - g_loss: 9.1174
+118/118 [==============================] - 40s 335ms/step - d_loss: -4.9563 - g_loss: 6.2071
 Epoch 7/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -4.5986 - g_loss: 8.8564
+118/118 [==============================] - 40s 335ms/step - d_loss: -4.5759 - g_loss: 6.4767
 Epoch 8/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -4.3179 - g_loss: 9.5426
+118/118 [==============================] - 40s 335ms/step - d_loss: -4.3748 - g_loss: 5.4304
 Epoch 9/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -4.0026 - g_loss: 10.3692
+118/118 [==============================] - 40s 335ms/step - d_loss: -4.1142 - g_loss: 6.4326
 Epoch 10/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -3.8153 - g_loss: 10.4992
+118/118 [==============================] - 40s 335ms/step - d_loss: -3.7956 - g_loss: 7.1200
 Epoch 11/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -3.6051 - g_loss: 9.7643
+118/118 [==============================] - 40s 335ms/step - d_loss: -3.5723 - g_loss: 7.1837
 Epoch 12/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -3.3479 - g_loss: 9.5051
+118/118 [==============================] - 40s 335ms/step - d_loss: -3.4374 - g_loss: 9.0537
 Epoch 13/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -3.2959 - g_loss: 8.9967
+118/118 [==============================] - 40s 335ms/step - d_loss: -3.3402 - g_loss: 8.4949
 Epoch 14/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -3.1023 - g_loss: 9.6678
+118/118 [==============================] - 40s 335ms/step - d_loss: -3.1252 - g_loss: 8.6130
 Epoch 15/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -3.0260 - g_loss: 10.2714
+118/118 [==============================] - 40s 336ms/step - d_loss: -3.0130 - g_loss: 9.4563
 Epoch 16/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -2.9009 - g_loss: 10.0437
+118/118 [==============================] - 40s 335ms/step - d_loss: -2.9330 - g_loss: 8.8075
 Epoch 17/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -2.8054 - g_loss: 10.6862
+118/118 [==============================] - 40s 336ms/step - d_loss: -2.7980 - g_loss: 8.0775
 Epoch 18/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -2.7436 - g_loss: 9.3381
+118/118 [==============================] - 40s 335ms/step - d_loss: -2.7835 - g_loss: 8.7983
 Epoch 19/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -2.6778 - g_loss: 7.3427
+118/118 [==============================] - 40s 335ms/step - d_loss: -2.6409 - g_loss: 7.8309
 Epoch 20/20
-118/118 [==============================] - 40s 337ms/step - d_loss: -2.6269 - g_loss: 10.0137
+118/118 [==============================] - 40s 336ms/step - d_loss: -2.5134 - g_loss: 8.6653
 
-<tensorflow.python.keras.callbacks.History at 0x7f97d56b28d0>
+<tensorflow.python.keras.callbacks.History at 0x7fc1a410a278>
 
 ```
 </div>

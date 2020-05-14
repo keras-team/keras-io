@@ -130,13 +130,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 1ms/step - loss: 0.4863 - mae: 0.5660
+32/32 [==============================] - 0s 2ms/step - loss: 0.3701 - mae: 0.4972
 Epoch 2/3
-32/32 [==============================] - 0s 676us/step - loss: 0.2865 - mae: 0.4278
+32/32 [==============================] - 0s 2ms/step - loss: 0.2283 - mae: 0.3842
 Epoch 3/3
-32/32 [==============================] - 0s 600us/step - loss: 0.2755 - mae: 0.4203
+32/32 [==============================] - 0s 2ms/step - loss: 0.2193 - mae: 0.3759
 
-<tensorflow.python.keras.callbacks.History at 0x14d440990>
+<tensorflow.python.keras.callbacks.History at 0x7f3bfc41c0f0>
 
 ```
 </div>
@@ -194,13 +194,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 614us/step - loss: 0.5267 - mae: 0.6142
+32/32 [==============================] - 0s 2ms/step - loss: 0.3244 - mae: 0.4531
 Epoch 2/3
-32/32 [==============================] - 0s 497us/step - loss: 0.3569 - mae: 0.4838
+32/32 [==============================] - 0s 2ms/step - loss: 0.2864 - mae: 0.4263
 Epoch 3/3
-32/32 [==============================] - 0s 450us/step - loss: 0.2975 - mae: 0.4377
+32/32 [==============================] - 0s 2ms/step - loss: 0.2715 - mae: 0.4145
 
-<tensorflow.python.keras.callbacks.History at 0x14db41150>
+<tensorflow.python.keras.callbacks.History at 0x7f3b9c048390>
 
 ```
 </div>
@@ -273,13 +273,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 625us/step - loss: 0.1211 - mae: 0.4026
+32/32 [==============================] - 0s 2ms/step - loss: 1.0058 - mae: 1.3402
 Epoch 2/3
-32/32 [==============================] - 0s 553us/step - loss: 0.1137 - mae: 0.3905
+32/32 [==============================] - 0s 2ms/step - loss: 0.4708 - mae: 0.8719
 Epoch 3/3
-32/32 [==============================] - 0s 573us/step - loss: 0.1084 - mae: 0.3826
+32/32 [==============================] - 0s 2ms/step - loss: 0.2220 - mae: 0.5591
 
-<tensorflow.python.keras.callbacks.History at 0x14dc0b310>
+<tensorflow.python.keras.callbacks.History at 0x7f3b7c7efc50>
 
 ```
 </div>
@@ -323,9 +323,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 514us/step - loss: 0.2312 - mae: 0.3917
+32/32 [==============================] - 0s 1ms/step - loss: 0.8495 - mae: 0.8096
 
-[0.23124444484710693, 0.3917294442653656]
+[0.849469780921936, 0.8096422553062439]
 
 ```
 </div>
@@ -478,9 +478,11 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 63s 633ms/step - d_loss: 0.5406 - g_loss: 0.7655
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+100/100 [==============================] - 1s 11ms/step - d_loss: 0.4090 - g_loss: 0.8741
 
-<tensorflow.python.keras.callbacks.History at 0x14dd3bd50>
+<tensorflow.python.keras.callbacks.History at 0x7f3b7c735c88>
 
 ```
 </div>
