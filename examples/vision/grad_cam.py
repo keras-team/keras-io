@@ -2,7 +2,7 @@
 Title: Grad-CAM class activation visualization
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/26
-Last modified: 2020/05/10
+Last modified: 2020/05/14
 Description: How to obtain a class activation heatmap for an image classification model.
 """
 """
