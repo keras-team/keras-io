@@ -93,6 +93,8 @@ class GAN(keras.Model):
         self.loss_fn = loss_fn
 
     def train_step(self, real_images):
+        if isinstance(real_images, tuple):
+            real_images = real_images[0]
         # Sample random points in the latent space
         batch_size = tf.shape(real_images)[0]
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
