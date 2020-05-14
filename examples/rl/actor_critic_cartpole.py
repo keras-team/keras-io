@@ -93,6 +93,9 @@ while True:  # Run until solved
     episode_reward = 0
     with tf.GradientTape() as tape:
         for timestep in range(1, max_steps_per_episode):
+            # env.render(); Adding this line would show the attempts
+            # of the agent in a pop up window.
+            
             state = tf.convert_to_tensor(state)
             state = tf.expand_dims(state, 0)
 
@@ -169,3 +172,11 @@ while True:  # Run until solved
     if running_reward > 195:  # Condition to consider the task solved
         print("Solved at episode {}!".format(episode_count))
         break
+"""
+## Visualizations
+In early stages of training:
+![Imgur](https://i.imgur.com/5gCs5kH.gif)
+
+In later stages of training:
+![Imgur](https://i.imgur.com/5ziiZUD.gif)
+"""
