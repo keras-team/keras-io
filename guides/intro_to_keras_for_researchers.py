@@ -30,7 +30,7 @@ In this guide, you will learn about:
 - The Keras Functional API
 
 You will also see the Keras API in action in two end-to-end research examples:
-a Variational Autoencoder, an a Hypernetwork.
+a Variational Autoencoder, and a Hypernetwork.
 """
 
 """
