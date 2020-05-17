@@ -1,9 +1,9 @@
 """
 Title: Object Detection with RetinaNet
-Author: []
+Author: [Srihari Humbarwadi](https://twitter.com/srihari_rh)
 Date created: 2020/05/17
 Last modified: 2020/05/17
-Description: Implementation of Focal Loss for Dense Object Detection
+Description: Implementation of Focal Loss for Dense Object Detection.
 """
 """
 <a
@@ -30,8 +30,7 @@ logger.info("version : {}".format(tf.__version__))
 #### Download the dataset
 """
 
-url = \
-"https://raw.githubusercontent.com/srihari-humbarwadi/shapes_dataset/master/tfrecords.zip"
+url = "https://raw.githubusercontent.com/srihari-humbarwadi/shapes_dataset/master/tfrecords.zip"
 filename = os.path.join(os.getcwd(), "shapes_tfrecords.zip")
 tf.keras.utils.get_file(filename, url, extract=True, archive_format="zip")
 
@@ -154,7 +153,7 @@ def absolute_to_relative(boxes, image_dims):
 
 
 def swap_xy(boxes):
-    return tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2],], axis=-1)
+    return tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1)
 
 
 """
@@ -331,8 +330,8 @@ class BoxMatcher:
      - Classification targets: For each of the localtion on the feature map
 </br>the anchor boxes are also responsible to predict probablities for the K
 classes.
-         
-         
+
+
  - Encoding Box targets:
      - Let [x, y, w, h] and [xa, ya, wa, ha] represent the assigned
 </br>ground truth and the anchor box respectively and [tx, ty, tw, th] be the
@@ -342,8 +341,8 @@ target.
      - ty = (y - ya) / wh
      - tw = log(w / wa)
      - th = log(h / ha)
-     
-     
+
+
  - Encoding the classification targets:
      - We only encode classification targets as cls_ids, as we will be expanding
          </br>them as one hot labels during the loss computation.
@@ -707,8 +706,8 @@ class RetinaNetLoss(tf.losses.Loss):
         positive_mask = tf.cast(tf.greater(y_true[:, :, 4], -1.0), dtype=tf.float32)
         ignore_mask = tf.cast(tf.equal(y_true[:, :, 4], -2.0), dtype=tf.float32)
 
-        cls_loss = self._cls_loss(cls_labels, cls_predictions)  #  [None, A]
-        box_loss = self._box_loss(box_labels, box_predictions)  #  [None, A]
+        cls_loss = self._cls_loss(cls_labels, cls_predictions)  # [None, A]
+        box_loss = self._box_loss(box_labels, box_predictions)  # [None, A]
 
         cls_loss = tf.where(tf.equal(ignore_mask, 1.0), 0.0, cls_loss)
         box_loss = tf.where(tf.equal(positive_mask, 1.0), box_loss, 0.0)
@@ -867,7 +866,7 @@ class RetinaNet(tf.keras.Model):
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
         loss_dict = OrderedDict(
-            {"total_loss": loss, "cls_loss": cls_loss, "box_loss": box_loss,}
+            {"total_loss": loss, "cls_loss": cls_loss, "box_loss": box_loss}
         )
 
         if self.l2_regularization:
@@ -888,7 +887,7 @@ class RetinaNet(tf.keras.Model):
         loss = cls_loss + box_loss
 
         loss_dict = OrderedDict(
-            {"total_loss": loss, "cls_loss": cls_loss, "box_loss": box_loss,}
+            {"total_loss": loss, "cls_loss": cls_loss, "box_loss": box_loss}
         )
 
         # average all losses, these are tracked and displayed by the fit method
@@ -1060,7 +1059,7 @@ config = EasyDict(
         "num_classes": 2,
         "classes": ["circle", "rectangle"],
         # If running with TPUs make sure you store your tfrecords on a gcs bucket
-        "tfrecords": {"train": "./tfrecords/train*", "validation": "./tfrecords/val*",},
+        "tfrecords": {"train": "./tfrecords/train*", "validation": "./tfrecords/val*"},
         "num_train_samples": 10000,
         "num_val_samples": 2500,
         "box_variance": [0.1, 0.1, 0.2, 0.2],
