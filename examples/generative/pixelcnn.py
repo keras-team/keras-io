@@ -1,22 +1,16 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-"""
-# PixelCNN
-**Author:** ADMoreau  
-**Date Created:** 2020/05/17  
-**Last Modified:** 2020/05/20  
-**Description:** PixelCNN implemented in Keras
+Title: PixelCNN
+Author: ADMoreau
+Date created: 2020/05/17
+Last modified: 2020/05/20
+Description: PixelCNN implemented in Keras.
 """
 
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras, nn
 from tensorflow.keras import layers
+from tensorflow.python.ops import nn_ops
 
 """
 #Getting the Data
@@ -163,10 +157,7 @@ order, append the next created pixel to current image, and feed the image back i
 model to repeat the process.
 """
 
-import matplotlib.pyplot as plt
-
-#%matplotlib inline
-
+from IPython.display import Image, display
 from tqdm import tqdm
 from scipy.stats import bernoulli
 
@@ -179,14 +170,31 @@ batch, rows, cols, channels = pixels.shape
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
-# Feed the whole array and retrieving the pixel value probabilities for the next 
-#pixel.
+            # Feed the whole array and retrieving the pixel value probabilities for the next
+            # pixel.
             p = PixelCNN.predict_on_batch(pixels)[:, row, col, channel]
-# Use the probabilities to pick pixel values and append the values to the image 
-#frame.
+            # Use the probabilities to pick pixel values and append the values to the image
+            # frame.
             pixels[:, row, col, channel] = bernoulli.rvs(size=batch, p=p)
 
+
+def deprocess_image(x):
+    # stack the single channeled black and white image to rgb values.
+    x = np.stack((x, x, x), 2)
+    # Undo preprocessing
+    x *= 255.0
+    # Convert to uint8 and clip to the valid range [0, 255]
+    x = np.clip(x, 0, 255).astype("uint8")
+    return x
+
+
 # Iterate the generated images and plot them with matplotlib.
-for pic in pixels:
-    plt.imshow(np.squeeze(pic, -1), interpolation="nearest")
-    plt.show(block=True)
+for i, pic in enumerate(pixels):
+    keras.preprocessing.image.save_img(
+        "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
+    )
+
+display(Image("generated_image_0.png"))
+display(Image("generated_image_1.png"))
+display(Image("generated_image_2.png"))
+display(Image("generated_image_3.png"))
