@@ -38,6 +38,8 @@ You are already constantly interacting with features built with Keras -- it is i
 Keras & TensorFlow 2.0 are also a favorite among researchers, coming in #1 in terms of mentions in scientific papers indexed by Google Scholar. Keras has also been adopted by researchers at large scientific organizations, such as CERN and NASA.
 
 
+![Daily PyPI downloads](/img/graph-downloads.jpg)
+
 ![Weekly Google Scholar articles](/img/graph-scholar.jpeg)
 
 
