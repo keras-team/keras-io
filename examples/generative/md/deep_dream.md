@@ -105,7 +105,7 @@ def preprocess_image(image_path):
 def deprocess_image(x):
     # Util function to convert a NumPy array into a valid image.
     x = x.reshape((x.shape[1], x.shape[2], 3))
-    # Undo inception v3 preprocession
+    # Undo inception v3 preprocessing
     x /= 2.0
     x += 0.5
     x *= 255.0

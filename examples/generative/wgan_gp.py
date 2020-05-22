@@ -285,7 +285,7 @@ class WGAN(keras.Model):
         return gp
 
     def train_step(self, real_images):
-        if isinstance(real_images, (tuple, list)):
+        if isinstance(real_images, tuple):
             real_images = real_images[0]
 
         # Get the batch size

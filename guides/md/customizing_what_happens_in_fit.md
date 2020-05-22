@@ -40,12 +40,13 @@ models, or subclassed models.
 
 Let's see how that works.
 
+
 ---
 ## Setup
 
 
-```python
 
+```python
 import tensorflow as tf
 from tensorflow import keras
 
@@ -78,8 +79,8 @@ of the metrics that were passed in `compile()`, and we query results from
 `self.metrics` at the end to retrieve their current value.
 
 
-```python
 
+```python
 
 class CustomModel(keras.Model):
     def train_step(self, data):
@@ -109,8 +110,8 @@ class CustomModel(keras.Model):
 Let's try this out:
 
 
-```python
 
+```python
 import numpy as np
 
 # Construct and compile an instance of CustomModel
@@ -129,13 +130,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 689us/step - loss: 1.3242 - mae: 1.0386
+32/32 [==============================] - 0s 2ms/step - loss: 0.3701 - mae: 0.4972
 Epoch 2/3
-32/32 [==============================] - 0s 638us/step - loss: 0.5691 - mae: 0.6311
+32/32 [==============================] - 0s 2ms/step - loss: 0.2283 - mae: 0.3842
 Epoch 3/3
-32/32 [==============================] - 0s 634us/step - loss: 0.3060 - mae: 0.4450
+32/32 [==============================] - 0s 2ms/step - loss: 0.2193 - mae: 0.3759
 
-<tensorflow.python.keras.callbacks.History at 0x147ef9e90>
+<tensorflow.python.keras.callbacks.History at 0x7f3bfc41c0f0>
 
 ```
 </div>
@@ -147,8 +148,8 @@ everything *manually* in `train_step`. Likewise for metrics. Here's a lower-leve
 example, that only uses `compile()` to configure the optimizer:
 
 
-```python
 
+```python
 mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
 loss_tracker = keras.metrics.Mean(name="loss")
 
@@ -193,13 +194,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 730us/step - loss: 0.6084 - mae: 0.6512
+32/32 [==============================] - 0s 2ms/step - loss: 0.3244 - mae: 0.4531
 Epoch 2/3
-32/32 [==============================] - 0s 650us/step - loss: 0.4367 - mae: 0.5310
+32/32 [==============================] - 0s 2ms/step - loss: 0.2864 - mae: 0.4263
 Epoch 3/3
-32/32 [==============================] - 0s 707us/step - loss: 0.3707 - mae: 0.4883
+32/32 [==============================] - 0s 2ms/step - loss: 0.2715 - mae: 0.4145
 
-<tensorflow.python.keras.callbacks.History at 0x1485e7bd0>
+<tensorflow.python.keras.callbacks.History at 0x7f3b9c048390>
 
 ```
 </div>
@@ -216,8 +217,8 @@ it manually if you don't rely on `compile()` for losses & metrics)
 - That's it. That's the list.
 
 
-```python
 
+```python
 
 class CustomModel(keras.Model):
     def train_step(self, data):
@@ -272,13 +273,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 716us/step - loss: 0.1171 - mae: 0.3897
+32/32 [==============================] - 0s 2ms/step - loss: 1.0058 - mae: 1.3402
 Epoch 2/3
-32/32 [==============================] - 0s 660us/step - loss: 0.0938 - mae: 0.3487
+32/32 [==============================] - 0s 2ms/step - loss: 0.4708 - mae: 0.8719
 Epoch 3/3
-32/32 [==============================] - 0s 652us/step - loss: 0.0893 - mae: 0.3434
+32/32 [==============================] - 0s 2ms/step - loss: 0.2220 - mae: 0.5591
 
-<tensorflow.python.keras.callbacks.History at 0x1486ac2d0>
+<tensorflow.python.keras.callbacks.History at 0x7f3b7c7efc50>
 
 ```
 </div>
@@ -289,8 +290,8 @@ What if you want to do the same for calls to `model.evaluate()`? Then you would
 override `test_step` in exactly the same way. Here's what it looks like:
 
 
-```python
 
+```python
 
 class CustomModel(keras.Model):
     def test_step(self, data):
@@ -322,9 +323,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 2ms/step - loss: 0.3730 - mae: 0.5007
+32/32 [==============================] - 0s 1ms/step - loss: 0.8495 - mae: 0.8096
 
-[0.37301942706108093, 0.5006654858589172]
+[0.849469780921936, 0.8096422553062439]
 
 ```
 </div>
@@ -345,7 +346,6 @@ Let's consider:
 
 
 ```python
-
 from tensorflow.keras import layers
 
 # Create the discriminator
@@ -386,8 +386,8 @@ Here's a feature-complete GAN class, overriding `compile()` to use its own signa
 and implementing the entire GAN algorithm in 17 lines in `train_step`:
 
 
-```python
 
+```python
 
 class GAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
@@ -403,6 +403,8 @@ class GAN(keras.Model):
         self.loss_fn = loss_fn
 
     def train_step(self, real_images):
+        if isinstance(real_images, tuple):
+            real_images = real_images[0]
         # Sample random points in the latent space
         batch_size = tf.shape(real_images)[0]
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
@@ -450,8 +452,8 @@ class GAN(keras.Model):
 Let's test-drive it:
 
 
-```python
 
+```python
 # Prepare the dataset. We use both the training & test MNIST digits.
 batch_size = 64
 (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
@@ -476,10 +478,13 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 54s 542ms/step - d_loss: 0.4218 - g_loss: 0.8620
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+100/100 [==============================] - 1s 11ms/step - d_loss: 0.4090 - g_loss: 0.8741
 
-<tensorflow.python.keras.callbacks.History at 0x147f19810>
+<tensorflow.python.keras.callbacks.History at 0x7f3b7c735c88>
 
 ```
 </div>
 The idea behind deep learning are simple, so why should their implementation be painful?
+

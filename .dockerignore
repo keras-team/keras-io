@@ -1,0 +1,12 @@
+.git
+.gitignore
+tmp/*
+sources/*
+site/*
+scripts/upload.py
+*.pyc
+templates/examples/generative/*
+templates/examples/nlp/*
+templates/examples/vision/*
+templates/examples/structured_data/*
+templates/examples/keras_recipes/*

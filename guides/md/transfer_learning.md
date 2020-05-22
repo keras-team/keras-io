@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/15<br>
-**Last modified:** 2020/04/17<br>
+**Last modified:** 2020/05/12<br>
 **Description:** Complete guide to transfer learning & fine-tuning in Keras.
 
 
@@ -187,7 +187,7 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 2ms/step - loss: 0.0844
+1/1 [==============================] - 0s 1ms/step - loss: 0.0846
 
 ```
 </div>
@@ -495,7 +495,7 @@ values between 0 and 255 (RGB level values). This isn't a great fit for feeding 
  neural network. We need to do 2 things:
 
 - Standardize to a fixed image size. We pick 150x150.
-- Normalize pixel values between 0 and 1. We'll do this using a `Rescaling` layer as
+- Normalize pixel values between -1 and 1. We'll do this using a `Normalization` layer as
  part of the model itself.
 
 In general, it's a good practice to develop models that take raw data as input, as
@@ -591,8 +591,8 @@ Now let's built a model that follows the blueprint we've explained earlier.
 
 Note that:
 
-- We add a `Rescaling` layer to scale input values (initially in the `[0, 255]` range)
- to the `[0, 1]` range.
+- We add a `Normalization` layer to scale input values (initially in the `[0, 255]`
+ range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
 it runs in inference mode, so that batchnorm statistics don't get updated
@@ -613,9 +613,17 @@ base_model.trainable = False
 # Create new model on top
 inputs = keras.Input(shape=(150, 150, 3))
 x = data_augmentation(inputs)  # Apply random data augmentation
-x = keras.layers.experimental.preprocessing.Rescaling(1.0 / 255.0)(
-    x
-)  # Scale inputs to [0. 1]
+
+# Pre-trained Xception weights requires that input be normalized
+# from (0, 255) to a range (-1., +1.), the normalization layer
+# does the following, outputs = (inputs - mean) / sqrt(var)
+norm_layer = keras.layers.experimental.preprocessing.Normalization()
+mean = np.array([127.5] * 3)
+var = mean ** 2
+# Scale inputs to [-1, +1]
+x = norm_layer(x)
+norm_layer.set_weights([mean, var])
+
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the
 # base_model is running in inference mode here.
@@ -639,7 +647,7 @@ input_5 (InputLayer)         [(None, 150, 150, 3)]     0
 _________________________________________________________________
 sequential_3 (Sequential)    (None, 150, 150, 3)       0         
 _________________________________________________________________
-rescaling (Rescaling)        (None, 150, 150, 3)       0         
+normalization (Normalization (None, 150, 150, 3)       7         
 _________________________________________________________________
 xception (Model)             (None, 5, 5, 2048)        20861480  
 _________________________________________________________________
@@ -649,9 +657,9 @@ dropout (Dropout)            (None, 2048)              0
 _________________________________________________________________
 dense_7 (Dense)              (None, 1)                 2049      
 =================================================================
-Total params: 20,863,529
+Total params: 20,863,536
 Trainable params: 2,049
-Non-trainable params: 20,861,480
+Non-trainable params: 20,861,487
 _________________________________________________________________
 
 ```
@@ -676,47 +684,47 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-291/291 [==============================] - 17s 60ms/step - loss: 0.1793 - binary_accuracy: 0.9208 - val_loss: 0.0914 - val_binary_accuracy: 0.9673
+291/291 [==============================] - 24s 83ms/step - loss: 0.1639 - binary_accuracy: 0.9276 - val_loss: 0.0883 - val_binary_accuracy: 0.9652
 Epoch 2/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1321 - binary_accuracy: 0.9428 - val_loss: 0.0815 - val_binary_accuracy: 0.9699
+291/291 [==============================] - 22s 76ms/step - loss: 0.1202 - binary_accuracy: 0.9491 - val_loss: 0.0855 - val_binary_accuracy: 0.9686
 Epoch 3/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1276 - binary_accuracy: 0.9443 - val_loss: 0.0969 - val_binary_accuracy: 0.9660
+291/291 [==============================] - 23s 80ms/step - loss: 0.1076 - binary_accuracy: 0.9546 - val_loss: 0.0802 - val_binary_accuracy: 0.9682
 Epoch 4/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1205 - binary_accuracy: 0.9494 - val_loss: 0.0827 - val_binary_accuracy: 0.9686
+291/291 [==============================] - 23s 80ms/step - loss: 0.1127 - binary_accuracy: 0.9539 - val_loss: 0.0798 - val_binary_accuracy: 0.9682
 Epoch 5/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1157 - binary_accuracy: 0.9498 - val_loss: 0.0803 - val_binary_accuracy: 0.9682
+291/291 [==============================] - 23s 78ms/step - loss: 0.1072 - binary_accuracy: 0.9558 - val_loss: 0.0807 - val_binary_accuracy: 0.9695
 Epoch 6/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1171 - binary_accuracy: 0.9525 - val_loss: 0.0827 - val_binary_accuracy: 0.9682
+291/291 [==============================] - 23s 79ms/step - loss: 0.1073 - binary_accuracy: 0.9565 - val_loss: 0.0746 - val_binary_accuracy: 0.9733
 Epoch 7/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1137 - binary_accuracy: 0.9514 - val_loss: 0.0843 - val_binary_accuracy: 0.9682
+291/291 [==============================] - 23s 79ms/step - loss: 0.1037 - binary_accuracy: 0.9562 - val_loss: 0.0738 - val_binary_accuracy: 0.9712
 Epoch 8/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1127 - binary_accuracy: 0.9522 - val_loss: 0.0846 - val_binary_accuracy: 0.9660
+291/291 [==============================] - 23s 79ms/step - loss: 0.1061 - binary_accuracy: 0.9580 - val_loss: 0.0764 - val_binary_accuracy: 0.9738
 Epoch 9/20
-291/291 [==============================] - 8s 29ms/step - loss: 0.1144 - binary_accuracy: 0.9516 - val_loss: 0.0902 - val_binary_accuracy: 0.9673
+291/291 [==============================] - 23s 78ms/step - loss: 0.0959 - binary_accuracy: 0.9612 - val_loss: 0.0823 - val_binary_accuracy: 0.9673
 Epoch 10/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1106 - binary_accuracy: 0.9567 - val_loss: 0.0855 - val_binary_accuracy: 0.9673
+291/291 [==============================] - 23s 79ms/step - loss: 0.0956 - binary_accuracy: 0.9600 - val_loss: 0.0736 - val_binary_accuracy: 0.9725
 Epoch 11/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1100 - binary_accuracy: 0.9528 - val_loss: 0.0849 - val_binary_accuracy: 0.9682
+291/291 [==============================] - 23s 79ms/step - loss: 0.0944 - binary_accuracy: 0.9603 - val_loss: 0.0781 - val_binary_accuracy: 0.9716
 Epoch 12/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1159 - binary_accuracy: 0.9535 - val_loss: 0.0797 - val_binary_accuracy: 0.9703
+291/291 [==============================] - 23s 79ms/step - loss: 0.0960 - binary_accuracy: 0.9615 - val_loss: 0.0720 - val_binary_accuracy: 0.9725
 Epoch 13/20
-291/291 [==============================] - 8s 29ms/step - loss: 0.1117 - binary_accuracy: 0.9524 - val_loss: 0.0832 - val_binary_accuracy: 0.9699
+291/291 [==============================] - 23s 79ms/step - loss: 0.0987 - binary_accuracy: 0.9614 - val_loss: 0.0791 - val_binary_accuracy: 0.9708
 Epoch 14/20
-291/291 [==============================] - 8s 29ms/step - loss: 0.1039 - binary_accuracy: 0.9567 - val_loss: 0.0866 - val_binary_accuracy: 0.9703
+291/291 [==============================] - 23s 79ms/step - loss: 0.0930 - binary_accuracy: 0.9636 - val_loss: 0.0780 - val_binary_accuracy: 0.9690
 Epoch 15/20
-291/291 [==============================] - 8s 29ms/step - loss: 0.1091 - binary_accuracy: 0.9558 - val_loss: 0.0822 - val_binary_accuracy: 0.9690
+291/291 [==============================] - 23s 78ms/step - loss: 0.0954 - binary_accuracy: 0.9624 - val_loss: 0.0772 - val_binary_accuracy: 0.9678
 Epoch 16/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1087 - binary_accuracy: 0.9535 - val_loss: 0.0824 - val_binary_accuracy: 0.9695
+291/291 [==============================] - 23s 78ms/step - loss: 0.0963 - binary_accuracy: 0.9598 - val_loss: 0.0781 - val_binary_accuracy: 0.9695
 Epoch 17/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1131 - binary_accuracy: 0.9556 - val_loss: 0.0826 - val_binary_accuracy: 0.9695
+291/291 [==============================] - 23s 78ms/step - loss: 0.1006 - binary_accuracy: 0.9585 - val_loss: 0.0832 - val_binary_accuracy: 0.9699
 Epoch 18/20
-291/291 [==============================] - 9s 30ms/step - loss: 0.1059 - binary_accuracy: 0.9550 - val_loss: 0.0808 - val_binary_accuracy: 0.9721
+291/291 [==============================] - 23s 78ms/step - loss: 0.0942 - binary_accuracy: 0.9615 - val_loss: 0.0761 - val_binary_accuracy: 0.9703
 Epoch 19/20
-291/291 [==============================] - 9s 30ms/step - loss: 0.1070 - binary_accuracy: 0.9562 - val_loss: 0.0798 - val_binary_accuracy: 0.9690
+291/291 [==============================] - 23s 79ms/step - loss: 0.0950 - binary_accuracy: 0.9613 - val_loss: 0.0817 - val_binary_accuracy: 0.9690
 Epoch 20/20
-291/291 [==============================] - 9s 29ms/step - loss: 0.1075 - binary_accuracy: 0.9560 - val_loss: 0.0985 - val_binary_accuracy: 0.9673
+291/291 [==============================] - 23s 79ms/step - loss: 0.0906 - binary_accuracy: 0.9624 - val_loss: 0.0755 - val_binary_accuracy: 0.9712
 
-<tensorflow.python.keras.callbacks.History at 0x7f045b259748>
+<tensorflow.python.keras.callbacks.History at 0x7f3fa4cdab00>
 
 ```
 </div>
@@ -764,7 +772,7 @@ input_5 (InputLayer)         [(None, 150, 150, 3)]     0
 _________________________________________________________________
 sequential_3 (Sequential)    (None, 150, 150, 3)       0         
 _________________________________________________________________
-rescaling (Rescaling)        (None, 150, 150, 3)       0         
+normalization (Normalization (None, 150, 150, 3)       7         
 _________________________________________________________________
 xception (Model)             (None, 5, 5, 2048)        20861480  
 _________________________________________________________________
@@ -774,32 +782,32 @@ dropout (Dropout)            (None, 2048)              0
 _________________________________________________________________
 dense_7 (Dense)              (None, 1)                 2049      
 =================================================================
-Total params: 20,863,529
+Total params: 20,863,536
 Trainable params: 20,809,001
-Non-trainable params: 54,528
+Non-trainable params: 54,535
 _________________________________________________________________
 Epoch 1/10
-291/291 [==============================] - 39s 135ms/step - loss: 0.0856 - binary_accuracy: 0.9643 - val_loss: 0.0605 - val_binary_accuracy: 0.9781
+291/291 [==============================] - 92s 318ms/step - loss: 0.0766 - binary_accuracy: 0.9710 - val_loss: 0.0571 - val_binary_accuracy: 0.9772
 Epoch 2/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0625 - binary_accuracy: 0.9747 - val_loss: 0.0549 - val_binary_accuracy: 0.9785
+291/291 [==============================] - 90s 308ms/step - loss: 0.0534 - binary_accuracy: 0.9800 - val_loss: 0.0471 - val_binary_accuracy: 0.9807
 Epoch 3/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0487 - binary_accuracy: 0.9817 - val_loss: 0.0519 - val_binary_accuracy: 0.9807
+291/291 [==============================] - 90s 308ms/step - loss: 0.0491 - binary_accuracy: 0.9799 - val_loss: 0.0411 - val_binary_accuracy: 0.9815
 Epoch 4/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0436 - binary_accuracy: 0.9836 - val_loss: 0.0484 - val_binary_accuracy: 0.9815
+291/291 [==============================] - 90s 308ms/step - loss: 0.0349 - binary_accuracy: 0.9868 - val_loss: 0.0438 - val_binary_accuracy: 0.9832
 Epoch 5/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0364 - binary_accuracy: 0.9867 - val_loss: 0.0489 - val_binary_accuracy: 0.9815
+291/291 [==============================] - 89s 307ms/step - loss: 0.0302 - binary_accuracy: 0.9881 - val_loss: 0.0440 - val_binary_accuracy: 0.9837
 Epoch 6/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0312 - binary_accuracy: 0.9884 - val_loss: 0.0443 - val_binary_accuracy: 0.9841
+291/291 [==============================] - 90s 308ms/step - loss: 0.0290 - binary_accuracy: 0.9890 - val_loss: 0.0445 - val_binary_accuracy: 0.9832
 Epoch 7/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0233 - binary_accuracy: 0.9910 - val_loss: 0.0457 - val_binary_accuracy: 0.9841
+291/291 [==============================] - 90s 310ms/step - loss: 0.0209 - binary_accuracy: 0.9920 - val_loss: 0.0527 - val_binary_accuracy: 0.9811
 Epoch 8/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0215 - binary_accuracy: 0.9916 - val_loss: 0.0524 - val_binary_accuracy: 0.9837
+291/291 [==============================] - 91s 311ms/step - loss: 0.0162 - binary_accuracy: 0.9940 - val_loss: 0.0510 - val_binary_accuracy: 0.9828
 Epoch 9/10
-291/291 [==============================] - 38s 131ms/step - loss: 0.0144 - binary_accuracy: 0.9951 - val_loss: 0.0510 - val_binary_accuracy: 0.9841
+291/291 [==============================] - 91s 311ms/step - loss: 0.0199 - binary_accuracy: 0.9933 - val_loss: 0.0470 - val_binary_accuracy: 0.9867
 Epoch 10/10
-291/291 [==============================] - 38s 132ms/step - loss: 0.0160 - binary_accuracy: 0.9936 - val_loss: 0.0480 - val_binary_accuracy: 0.9858
+291/291 [==============================] - 90s 308ms/step - loss: 0.0128 - binary_accuracy: 0.9953 - val_loss: 0.0471 - val_binary_accuracy: 0.9845
 
-<tensorflow.python.keras.callbacks.History at 0x7f045a9b8fd0>
+<tensorflow.python.keras.callbacks.History at 0x7f3c0ca6d0f0>
 
 ```
 </div>

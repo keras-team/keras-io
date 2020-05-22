@@ -17,9 +17,7 @@ In this example, we train a model to learn to add two numbers, provided as strin
 
 Input may optionally be reversed, which was shown to increase performance in many tasks
  in: [Learning to Execute](http://arxiv.org/abs/1410.4615) and
-[Sequence to Sequence Learning with Neural Networks](
-
- http://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf)
+[Sequence to Sequence Learning with Neural Networks](http://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf).
 
 Theoretically, sequence order inversion introduces shorter term dependencies between
  source and target for this problem.
