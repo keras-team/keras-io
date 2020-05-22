@@ -6,6 +6,10 @@ Last modified: 2020/05/20
 Description: PixelCNN implemented in Keras.
 """
 
+"""
+## Setup
+"""
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras, nn
@@ -191,10 +195,10 @@ def deprocess_image(x):
 # Iterate the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
     keras.preprocessing.image.save_img(
-        "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
+        "img/pixelcnn/pixelcnn_9_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
     )
 
-display(Image("generated_image_0.png"))
-display(Image("generated_image_1.png"))
-display(Image("generated_image_2.png"))
-display(Image("generated_image_3.png"))
+display(Image("img/pixelcnn/pixelcnn_9_1.png"))
+display(Image("img/pixelcnn/pixelcnn_9_2.png"))
+display(Image("img/pixelcnn/pixelcnn_9_3.png"))
+display(Image("img/pixelcnn/pixelcnn_9_4.png"))
