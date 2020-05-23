@@ -1,23 +1,26 @@
 
+# PixelCNN
 
-**Author:** ADMoreau<br>
+**Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
-**Last modified:** 2020/05/20<br>
-**Description:** PixelCNN implemented in Keras.
+**Last modified:** 2020/05/23<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
+
+
+**Description:** PixelCNN implemented in Keras.
+
 
 ```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras, nn
 from tensorflow.keras import layers
-from tensorflow.python.ops import nn_ops
 
 ```
 
-#Getting the Data
+##Getting the Data
 
 
 
@@ -34,6 +37,7 @@ data = np.concatenate((x, y), axis=0)
 # anything above this value gets rounded up to 1 so that all values are either
 # 0 or 1
 data = np.where(data < (0.33 * 256), 0, 1)
+data = data.astype(np.float32)
 
 ```
 
@@ -44,65 +48,37 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 
 ```
 </div>
-#Create two classes for the requisite Layers for the model
+##Create two classes for the requisite Layers for the model
 
 
 
 ```python
-# the first layer to create will be the PixelCNN layer, this layer is simply
-# the 2D convolutional layer with the masking included
-class PixelConvLayer(keras.layers.Conv2D):
-    def __init__(self, mask_type, *args, **kwargs):
-        super(PixelConvLayer, self).__init__(*args, **kwargs)
+# the first layer to create will be the PixelCNN layer, this layer simply
+# builds on the 2D convolutional layer but with the requisite masking included
+class PixelConvLayer(layers.Layer):
+    def __init__(self, mask_type, **kwargs):
+        super(PixelConvLayer, self).__init__()
         self.mask_type = mask_type
-        self.mask = None
+        self.conv = layers.Conv2D(**kwargs)
+
+    def build(self, input_shape):
+        # build the conv2d layer to initialize kernel variables
+        self.conv.build(input_shape)
+        # use said initialized kernel to develop the mask
+        kernel_shape = self.conv.kernel.get_shape()
+        self.mask = np.zeros(shape=kernel_shape)
+        self.mask[: kernel_shape[0] // 2, ...] = 1.0
+        self.mask[kernel_shape[0] // 2, : kernel_shape[1] // 2, ...] = 1.0
+        if self.mask_type == "B":
+            self.mask[kernel_shape[0] // 2, kernel_shape[1] // 2, ...] = 1.0
 
     def call(self, inputs):
-        if self._recreate_conv_op(inputs):
-            self._convolution_op = nn_ops.Convolution(
-                inputs.get_shape(),
-                filter_shape=self.kernel.shape,
-                dilation_rate=self.dilation_rate,
-                strides=self.strides,
-                padding=self._padding_op,
-                data_format=self._conv_op_data_format,
-            )
-
-        # Apply causal padding to inputs for Conv1D.
-        if self.padding == "causal" and self.__class__.__name__ == "Conv1D":
-            inputs = array_ops.pad(inputs, self._compute_causal_padding())
-
-        # The divergence from the original 2D conv. layer is here, where we
-        # create the mask depending on which layer we are using
-        if self.mask is None:
-            kernel_shape = self.kernel.get_shape()
-            self.mask = np.zeros(shape=kernel_shape)
-            self.mask[: kernel_shape[0] // 2, ...] = 1.0
-            self.mask[kernel_shape[0] // 2, : kernel_shape[1] // 2, ...] = 1.0
-            if self.mask_type == "B":
-                self.mask[kernel_shape[0] // 2, kernel_shape[1] // 2, ...] = 1
-
-        # and here we apply the mask to convoltional kernal
-        outputs = self._convolution_op(inputs, self.kernel * self.mask)
-
-        if self.use_bias:
-            if self.data_format == "channels_first":
-                if self.rank == 1:
-                    # nn.bias_add does not accept a 1D input tensor.
-                    bias = array_ops.reshape(self.bias, (1, self.filters, 1))
-                    outputs += bias
-                else:
-                    outputs = nn.bias_add(outputs, self.bias, data_format="NCHW")
-            else:
-                outputs = nn.bias_add(outputs, self.bias, data_format="NHWC")
-
-        if self.activation is not None:
-            return self.activation(outputs)
-        return outputs
+        self.conv.kernel.assign(self.conv.kernel * self.mask)
+        return self.conv(inputs)
 
 
 # Next we build our residual block layer,
-# this is just a normal res. block but with the PixelConvLayer built in
+# this is just a normal residual block but with the PixelConvLayer built in
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
@@ -127,15 +103,16 @@ class ResidualBlock(keras.layers.Layer):
 
 ```
 
-# Build the model based on the original paper
+---
+## Build the model based on the original paper
 
 
 
 ```python
-PixelCNN_input = keras.Input(shape=input_shape)
+inputs = keras.Input(shape=input_shape)
 x = PixelConvLayer(
     mask_type="A", filters=128, kernel_size=7, padding="same", activation="relu"
-)(PixelCNN_input)
+)(inputs)
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)
@@ -151,22 +128,16 @@ for _ in range(2):
         padding="valid",
     )(x)
 
-x = keras.layers.Conv2D(
+out = keras.layers.Conv2D(
     filters=1, kernel_size=1, strides=1, activation="sigmoid", padding="valid"
 )(x)
 
-PixelCNN = keras.Model(PixelCNN_input, x)
+PixelCNN = keras.Model(inputs, out)
 adam = keras.optimizers.Adam(learning_rate=0.0001)
 PixelCNN.compile(optimizer=adam, loss="binary_crossentropy")
 
 PixelCNN.summary()
-PixelCNN.fit(
-    x=data.astype("float32"),
-    y=data.astype("float32"),
-    batch_size=64,
-    epochs=50,
-    validation_split=0.1,
-)
+PixelCNN.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
 
 ```
 
@@ -196,29 +167,38 @@ pixel_conv_layer_6 (PixelCon (None, 28, 28, 128)       16512
 _________________________________________________________________
 pixel_conv_layer_7 (PixelCon (None, 28, 28, 128)       16512     
 _________________________________________________________________
-conv2d_10 (Conv2D)           (None, 28, 28, 1)         129       
+conv2d_18 (Conv2D)           (None, 28, 28, 1)         129       
 =================================================================
 Total params: 532,673
 Trainable params: 532,673
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/50
-  2/985 [..............................] - ETA: 1:05 - loss: 0.6946WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
-985/985 [==============================] - 131s 133ms/step - loss: 0.1257 - val_loss: 0.0940
+  1/985 [..............................] - ETA: 0s - loss: 0.6917WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
+985/985 [==============================] - 35s 35ms/step - loss: 0.1239 - val_loss: 0.0934
 Epoch 2/50
-985/985 [==============================] - 130s 132ms/step - loss: 0.0927 - val_loss: 0.0922
+985/985 [==============================] - 34s 35ms/step - loss: 0.0922 - val_loss: 0.0909
 Epoch 3/50
-985/985 [==============================] - 130s 132ms/step - loss: 0.0908 - val_loss: 0.0903
+985/985 [==============================] - 34s 35ms/step - loss: 0.0906 - val_loss: 0.0899
 Epoch 4/50
-985/985 [==============================] - 130s 132ms/step - loss: 0.0898 - val_loss: 0.0893
+985/985 [==============================] - 34s 35ms/step - loss: 0.0897 - val_loss: 0.0903
 Epoch 5/50
-985/985 [==============================] - 130s 132ms/step - loss: 0.0893 - val_loss: 0.0888
+985/985 [==============================] - 34s 35ms/step - loss: 0.0892 - val_loss: 0.0890
 Epoch 6/50
-547/985 [===============>..............] - ETA: 55s - loss: 0.0887
+985/985 [==============================] - 34s 35ms/step - loss: 0.0887 - val_loss: 0.0885
+Epoch 7/50
+985/985 [==============================] - 35s 35ms/step - loss: 0.0883 - val_loss: 0.0881
+Epoch 8/50
+985/985 [==============================] - 35s 35ms/step - loss: 0.0880 - val_loss: 0.0879
+Epoch 9/50
+985/985 [==============================] - 35s 35ms/step - loss: 0.0877 - val_loss: 0.0877
+Epoch 10/50
+975/985 [============================>.] - ETA: 0s - loss: 0.0874
 
 ```
 </div>
-# Demo
+---
+## Demonstration
 
 The PixelCNN cannot create the full image at once and must instead create each pixel in
 order, append the next created pixel to current image, and feed the image back into the
@@ -229,7 +209,7 @@ model to repeat the process.
 ```python
 from IPython.display import Image, display
 from tqdm import tqdm
-from scipy.stats import bernoulli
+import tensorflow_probability as tfp
 
 # Create an empty array of pixels.
 batch = 4
@@ -242,10 +222,12 @@ for row in tqdm(range(rows)):
         for channel in range(channels):
             # Feed the whole array and retrieving the pixel value probabilities for the next
             # pixel.
-            p = PixelCNN.predict_on_batch(pixels)[:, row, col, channel]
+            probs = PixelCNN.predict(pixels)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
-            pixels[:, row, col, channel] = bernoulli.rvs(size=batch, p=p)
+            pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
+                probs=probs
+            ).sample()
 
 
 def deprocess_image(x):
@@ -273,7 +255,7 @@ display(Image("generated_image_3.png"))
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 28/28 [00:07<00:00,  3.69it/s]
+100%|██████████| 28/28 [00:22<00:00,  1.23it/s]
 
 ```
 </div>

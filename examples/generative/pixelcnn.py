@@ -1,16 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-"""
-# PixelCNN
-**Author:** [ADMoreau](https://github.com/ADMoreau)  
-**Date Created:** 2020/05/17  
-**Last Modified:** 2020/05/23  
-**Description:** PixelCNN implemented in Keras
+Title: PixelCNN
+Author: [ADMoreau](https://github.com/ADMoreau)
+Date created: 2020/05/17
+Last modified: 2020/05/23
+Description: PixelCNN implemented in Keras.
 """
 
 import numpy as np
@@ -143,11 +136,11 @@ batch, rows, cols, channels = pixels.shape
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
-# Feed the whole array and retrieving the pixel value probabilities for the next
-#pixel.
+            # Feed the whole array and retrieving the pixel value probabilities for the next
+            # pixel.
             probs = PixelCNN.predict(pixels)[:, row, col, channel]
-# Use the probabilities to pick pixel values and append the values to the image
-#frame.
+            # Use the probabilities to pick pixel values and append the values to the image
+            # frame.
             pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
                 probs=probs
             ).sample()
