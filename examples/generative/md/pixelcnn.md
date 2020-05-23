@@ -1,18 +1,34 @@
 
+# PixelCNN
 
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
 **Last modified:** 2020/05/23<br>
-**Description:** PixelCNN implemented in Keras.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
 
 
+**Description:** PixelCNN implemented in Keras.
+
+---
+## Introduction
+PixelCNN is a generative model proposed in 2016 by van den Oord et al.
+(https://arxiv.org/abs/1606.05328). It is designed to generate images or other data types
+from an input vector where the probability distribution of prior elements dictate the
+probability distribution of later elements. In the following example images are generated
+in this fashion through a masked convolutional kernel that is only capable of using data
+from earlier pixels (origin at the top left) to generate later pixels. During inference,
+the output of the network is used as a probability ditribution from which pixel values
+for the desired generated image are sampled (here, with MNIST, the pixels values are
+either black or white) from the network output.
+
+
+
 ```python
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras, nn
+from tensorflow import keras
 from tensorflow.keras import layers
 
 ```
@@ -113,7 +129,6 @@ x = PixelConvLayer(
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)
-x = layers.ReLU()(x)
 
 for _ in range(2):
     x = PixelConvLayer(
@@ -129,12 +144,12 @@ out = keras.layers.Conv2D(
     filters=1, kernel_size=1, strides=1, activation="sigmoid", padding="valid"
 )(x)
 
-PixelCNN = keras.Model(inputs, out)
+pixel_cnn = keras.Model(inputs, out)
 adam = keras.optimizers.Adam(learning_rate=0.0001)
-PixelCNN.compile(optimizer=adam, loss="binary_crossentropy")
+pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 
-PixelCNN.summary()
-PixelCNN.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
+pixel_cnn.summary()
+pixel_cnn.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
 
 ```
 
@@ -158,8 +173,6 @@ residual_block_3 (ResidualBl (None, 28, 28, 128)       98624
 _________________________________________________________________
 residual_block_4 (ResidualBl (None, 28, 28, 128)       98624     
 _________________________________________________________________
-re_lu_5 (ReLU)               (None, 28, 28, 128)       0         
-_________________________________________________________________
 pixel_conv_layer_6 (PixelCon (None, 28, 28, 128)       16512     
 _________________________________________________________________
 pixel_conv_layer_7 (PixelCon (None, 28, 28, 128)       16512     
@@ -171,26 +184,18 @@ Trainable params: 532,673
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/50
-  1/985 [..............................] - ETA: 0s - loss: 0.6917WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
-985/985 [==============================] - 35s 35ms/step - loss: 0.1239 - val_loss: 0.0934
+  2/985 [..............................] - ETA: 41s - loss: 0.6949WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
+985/985 [==============================] - 83s 84ms/step - loss: 0.1293 - val_loss: 0.0949
 Epoch 2/50
-985/985 [==============================] - 34s 35ms/step - loss: 0.0922 - val_loss: 0.0909
+985/985 [==============================] - 83s 84ms/step - loss: 0.0930 - val_loss: 0.0920
 Epoch 3/50
-985/985 [==============================] - 34s 35ms/step - loss: 0.0906 - val_loss: 0.0899
+985/985 [==============================] - 83s 84ms/step - loss: 0.0912 - val_loss: 0.0909
 Epoch 4/50
-985/985 [==============================] - 34s 35ms/step - loss: 0.0897 - val_loss: 0.0903
+985/985 [==============================] - 83s 84ms/step - loss: 0.0902 - val_loss: 0.0897
 Epoch 5/50
-985/985 [==============================] - 34s 35ms/step - loss: 0.0892 - val_loss: 0.0890
+985/985 [==============================] - 82s 84ms/step - loss: 0.0896 - val_loss: 0.0892
 Epoch 6/50
-985/985 [==============================] - 34s 35ms/step - loss: 0.0887 - val_loss: 0.0885
-Epoch 7/50
-985/985 [==============================] - 35s 35ms/step - loss: 0.0883 - val_loss: 0.0881
-Epoch 8/50
-985/985 [==============================] - 35s 35ms/step - loss: 0.0880 - val_loss: 0.0879
-Epoch 9/50
-985/985 [==============================] - 35s 35ms/step - loss: 0.0877 - val_loss: 0.0877
-Epoch 10/50
-975/985 [============================>.] - ETA: 0s - loss: 0.0874
+554/985 [===============>..............] - ETA: 34s - loss: 0.0890
 
 ```
 </div>
@@ -210,7 +215,7 @@ import tensorflow_probability as tfp
 
 # Create an empty array of pixels.
 batch = 4
-pixels = np.zeros(shape=(batch,) + (PixelCNN.input_shape)[1:])
+pixels = np.zeros(shape=(batch,) + (pixel_cnn.input_shape)[1:])
 batch, rows, cols, channels = pixels.shape
 
 # Iterate the pixels because generation has to be done sequentially pixel by pixel.
@@ -219,7 +224,7 @@ for row in tqdm(range(rows)):
         for channel in range(channels):
             # Feed the whole array and retrieving the pixel value probabilities for the next
             # pixel.
-            probs = PixelCNN.predict(pixels)[:, row, col, channel]
+            probs = pixel_cnn.predict(pixels)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
             pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
@@ -252,21 +257,21 @@ display(Image("generated_image_3.png"))
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 28/28 [00:22<00:00,  1.23it/s]
+100%|██████████| 28/28 [00:19<00:00,  1.47it/s]
 
 ```
 </div>
-![png](/img/examples/generative/pixelcnn/pixelcnn_9_1.png)
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_1.png)
 
 
 
-![png](/img/examples/generative/pixelcnn/pixelcnn_9_2.png)
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_2.png)
 
 
 
-![png](/img/examples/generative/pixelcnn/pixelcnn_9_3.png)
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_3.png)
 
 
 
-![png](/img/examples/generative/pixelcnn/pixelcnn_9_4.png)
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_4.png)
 

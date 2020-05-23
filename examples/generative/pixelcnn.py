@@ -1,9 +1,9 @@
 """
 Title: PixelCNN
 Author: [ADMoreau](https://github.com/ADMoreau)
-Date Created: 2020/05/17
-Last Modified: 2020/05/23
-Description: PixelCNN implemented in Keras
+Date created: 2020/05/17
+Last modified: 2020/05/23
+Description: PixelCNN implemented in Keras.
 """
 
 """
@@ -16,7 +16,7 @@ in this fashion through a masked convolutional kernel that is only capable of us
 from earlier pixels (origin at the top left) to generate later pixels. During inference,
 the output of the network is used as a probability ditribution from which pixel values
 for the desired generated image are sampled (here, with MNIST, the pixels values are
-either black or white) from the network output.  
+either black or white) from the network output.
 """
 
 import numpy as np
@@ -148,11 +148,11 @@ batch, rows, cols, channels = pixels.shape
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
-# Feed the whole array and retrieving the pixel value probabilities for the next
-#pixel.
+            # Feed the whole array and retrieving the pixel value probabilities for the next
+            # pixel.
             probs = pixel_cnn.predict(pixels)[:, row, col, channel]
-# Use the probabilities to pick pixel values and append the values to the image
-#frame.
+            # Use the probabilities to pick pixel values and append the values to the image
+            # frame.
             pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
                 probs=probs
             ).sample()
