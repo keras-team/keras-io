@@ -1,9 +1,9 @@
 """
-Title: BERT for Text Extraction
+Title: BERT (from HuggingFace Transformers) for Text Extraction
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/23
 Last modified: 2020/05/23
-Description: Fine tune pretrained BERT from HuggingFace on SQuAD.
+Description: Fine tune pretrained BERT from HuggingFace Transformers on SQuAD.
 """
 """
 ## Introduction
@@ -213,7 +213,7 @@ x_eval, y_eval = create_inputs_targets(eval_squad_examples)
 print(f"{len(eval_squad_examples)} evaluation points created.")
 
 """
-Create the Question Answering Model using BERT and Functional API
+Create the Question-Answering Model using BERT and Functional API
 """
 
 
@@ -248,15 +248,19 @@ def create_model():
     return model
 
 
+"""
+This code should preferably be run on Google Colab TPU runtime.
+With Colab TPUs, each epoch will take 5-6 minutes.
+"""
 use_tpu = True
 if use_tpu:
-    # create distribution strategy
+    # Create distribution strategy
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
     tf.config.experimental_connect_to_cluster(tpu)
     tf.tpu.experimental.initialize_tpu_system(tpu)
     strategy = tf.distribute.experimental.TPUStrategy(tpu)
 
-    # create model
+    # Create model
     with strategy.scope():
         model = create_model()
 else:
@@ -275,22 +279,35 @@ after every epoch.
 def normalize_text(text):
     text = text.lower()
 
-    # remove punctuations
+    # Remove punctuations
     exclude = set(string.punctuation)
     text = "".join(ch for ch in text if ch not in exclude)
 
-    # remove articles
+    # Remove articles
     regex = re.compile(r"\b(a|an|the)\b", re.UNICODE)
     text = re.sub(regex, " ", text)
 
-    # remove extra white space
+    # Remove extra white space
     text = " ".join(text.split())
     return text
 
 
 class ExactMatch(keras.callbacks.Callback):
+    """
+    Each `SquadExample` object contains the character level offsets for each token
+    in its input paragraph. We use them to get back the span of text corresponding
+    to the tokens between our predicted start and end tokens.
+    All the ground-truth answers are also present in each `SquadExample` object.
+    We calculate the percentage of data points where the span of text obtained
+    from model predictions matches one of the ground-truth answers.
+    """
+
+    def __init__(self, x_eval, y_eval):
+        self.x_eval = x_eval
+        self.y_eval = y_eval
+
     def on_epoch_end(self, epoch, logs=None):
-        pred_start, pred_end = self.model.predict(x_eval)
+        pred_start, pred_end = self.model.predict(self.x_eval)
         count = 0
         eval_examples_no_skip = [_ for _ in eval_squad_examples if _.skip == False]
         for idx, (start, end) in enumerate(zip(pred_start, pred_end)):
@@ -311,13 +328,19 @@ class ExactMatch(keras.callbacks.Callback):
             normalized_true_ans = [normalize_text(_) for _ in squad_eg.all_answers]
             if normalized_pred_ans in normalized_true_ans:
                 count += 1
-        acc = count / len(y_eval[0])
+        acc = count / len(self.y_eval[0])
         print(f"\nepoch={epoch+1}, exact match score={acc:.2f}")
 
 
 """
 ## Train and Evaluate
 """
+exact_match_callback = ExactMatch(x_eval, y_eval)
 model.fit(
-    x_train, y_train, epochs=3, verbose=2, batch_size=64, callbacks=[ExactMatch()]
+    x_train,
+    y_train,
+    epochs=3,
+    verbose=2,
+    batch_size=64,
+    callbacks=[exact_match_callback],
 )
