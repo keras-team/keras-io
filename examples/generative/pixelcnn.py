@@ -1,8 +1,8 @@
 """
 Title: PixelCNN
 Author: [ADMoreau](https://github.com/ADMoreau)
-Date created: 2020/05/17
-Last modified: 2020/05/23
+Date Created: 2020/05/17
+Last Modified: 2020/05/23
 Description: PixelCNN implemented in Keras
 """
 
@@ -16,7 +16,7 @@ in this fashion through a masked convolutional kernel that is only capable of us
 from earlier pixels (origin at the top left) to generate later pixels. During inference,
 the output of the network is used as a probability ditribution from which pixel values
 for the desired generated image are sampled (here, with MNIST, the pixels values are
-either black or white) from the network output.
+either black or white) from the network output.  
 """
 
 import numpy as np
@@ -25,7 +25,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-## Getting the Data
+##Getting the Data
 """
 
 # Model / data parameters
@@ -43,11 +43,11 @@ data = np.where(data < (0.33 * 256), 0, 1)
 data = data.astype(np.float32)
 
 """
-## Create two Layer classes required by the model
+##Create two classes for the requisite Layers for the model
 """
 
-# The first layer is the PixelCNN layer. This layer simply
-# builds on the 2D convolutional layer, but includes masking.
+# the first layer to create will be the PixelCNN layer, this layer simply
+# builds on the 2D convolutional layer but with the requisite masking included
 class PixelConvLayer(layers.Layer):
     def __init__(self, mask_type, **kwargs):
         super(PixelConvLayer, self).__init__()
@@ -55,9 +55,9 @@ class PixelConvLayer(layers.Layer):
         self.conv = layers.Conv2D(**kwargs)
 
     def build(self, input_shape):
-        # Build the conv2d layer to initialize kernel variables
+        # build the conv2d layer to initialize kernel variables
         self.conv.build(input_shape)
-        # Use the initialized kernel to create the mask
+        # use said initialized kernel to develop the mask
         kernel_shape = self.conv.kernel.get_shape()
         self.mask = np.zeros(shape=kernel_shape)
         self.mask[: kernel_shape[0] // 2, ...] = 1.0
@@ -70,27 +70,27 @@ class PixelConvLayer(layers.Layer):
         return self.conv(inputs)
 
 
-# Next, we build our residual block layer.
-# This is just a normal residual block, but base don the PixelConvLayer.
+# Next we build our residual block layer,
+# this is just a normal residual block but with the PixelConvLayer built in
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
-        self.activation = keras.layers.ReLU()
-        self.conv1 = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
-        self.pixel_conv = PixelConvLayer(
+        self.a = keras.layers.ReLU()
+        self.b = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
+        self.c = PixelConvLayer(
             mask_type="B",
             filters=filters // 2,
             kernel_size=3,
             activation="relu",
             padding="same",
         )
-        self.conv2 = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
+        self.d = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
 
     def call(self, inputs):
-        x = self.activation(inputs)
-        x = self.conv1(x)
-        x = self.pixel_conv(x)
-        x = self.conv2(x)
+        x = self.a(inputs)
+        x = self.b(x)
+        x = self.c(x)
+        x = self.d(x)
         return keras.layers.add([inputs, x])
 
 
@@ -130,8 +130,8 @@ pixel_cnn.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
 """
 ## Demonstration
 
-The PixelCNN cannot generate the full image at once, and must instead generate each pixel in
-order, append the last generated pixel to the current image, and feed the image back into the
+The PixelCNN cannot create the full image at once and must instead create each pixel in
+order, append the next created pixel to current image, and feed the image back into the
 model to repeat the process.
 """
 
@@ -159,7 +159,7 @@ for row in tqdm(range(rows)):
 
 
 def deprocess_image(x):
-    # Stack the single channeled black and white image to rgb values.
+    # stack the single channeled black and white image to rgb values.
     x = np.stack((x, x, x), 2)
     # Undo preprocessing
     x *= 255.0
