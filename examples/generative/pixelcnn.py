@@ -1,23 +1,25 @@
 """
-Title: PixelCNN
-Author: ADMoreau
-Date created: 2020/05/17
-Last modified: 2020/05/20
-Description: PixelCNN implemented in Keras.
+Title: FILLME
+Author: FILLME
+Date created: FILLME
+Last modified: FILLME
+Description: FILLME
 """
-
 """
-## Setup
+# PixelCNN
+**Author:** [ADMoreau](https://github.com/ADMoreau)  
+**Date Created:** 2020/05/17  
+**Last Modified:** 2020/05/23  
+**Description:** PixelCNN implemented in Keras
 """
 
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras, nn
 from tensorflow.keras import layers
-from tensorflow.python.ops import nn_ops
 
 """
-#Getting the Data
+##Getting the Data
 """
 
 # Model / data parameters
@@ -32,65 +34,38 @@ data = np.concatenate((x, y), axis=0)
 # anything above this value gets rounded up to 1 so that all values are either
 # 0 or 1
 data = np.where(data < (0.33 * 256), 0, 1)
+data = data.astype(np.float32)
 
 """
-#Create two classes for the requisite Layers for the model
+##Create two classes for the requisite Layers for the model
 """
 
-# the first layer to create will be the PixelCNN layer, this layer is simply
-# the 2D convolutional layer with the masking included
-class PixelConvLayer(keras.layers.Conv2D):
-    def __init__(self, mask_type, *args, **kwargs):
-        super(PixelConvLayer, self).__init__(*args, **kwargs)
+# the first layer to create will be the PixelCNN layer, this layer simply
+# builds on the 2D convolutional layer but with the requisite masking included
+class PixelConvLayer(layers.Layer):
+    def __init__(self, mask_type, **kwargs):
+        super(PixelConvLayer, self).__init__()
         self.mask_type = mask_type
-        self.mask = None
+        self.conv = layers.Conv2D(**kwargs)
+
+    def build(self, input_shape):
+        # build the conv2d layer to initialize kernel variables
+        self.conv.build(input_shape)
+        # use said initialized kernel to develop the mask
+        kernel_shape = self.conv.kernel.get_shape()
+        self.mask = np.zeros(shape=kernel_shape)
+        self.mask[: kernel_shape[0] // 2, ...] = 1.0
+        self.mask[kernel_shape[0] // 2, : kernel_shape[1] // 2, ...] = 1.0
+        if self.mask_type == "B":
+            self.mask[kernel_shape[0] // 2, kernel_shape[1] // 2, ...] = 1.0
 
     def call(self, inputs):
-        if self._recreate_conv_op(inputs):
-            self._convolution_op = nn_ops.Convolution(
-                inputs.get_shape(),
-                filter_shape=self.kernel.shape,
-                dilation_rate=self.dilation_rate,
-                strides=self.strides,
-                padding=self._padding_op,
-                data_format=self._conv_op_data_format,
-            )
-
-        # Apply causal padding to inputs for Conv1D.
-        if self.padding == "causal" and self.__class__.__name__ == "Conv1D":
-            inputs = array_ops.pad(inputs, self._compute_causal_padding())
-
-        # The divergence from the original 2D conv. layer is here, where we
-        # create the mask depending on which layer we are using
-        if self.mask is None:
-            kernel_shape = self.kernel.get_shape()
-            self.mask = np.zeros(shape=kernel_shape)
-            self.mask[: kernel_shape[0] // 2, ...] = 1.0
-            self.mask[kernel_shape[0] // 2, : kernel_shape[1] // 2, ...] = 1.0
-            if self.mask_type == "B":
-                self.mask[kernel_shape[0] // 2, kernel_shape[1] // 2, ...] = 1
-
-        # and here we apply the mask to convoltional kernal
-        outputs = self._convolution_op(inputs, self.kernel * self.mask)
-
-        if self.use_bias:
-            if self.data_format == "channels_first":
-                if self.rank == 1:
-                    # nn.bias_add does not accept a 1D input tensor.
-                    bias = array_ops.reshape(self.bias, (1, self.filters, 1))
-                    outputs += bias
-                else:
-                    outputs = nn.bias_add(outputs, self.bias, data_format="NCHW")
-            else:
-                outputs = nn.bias_add(outputs, self.bias, data_format="NHWC")
-
-        if self.activation is not None:
-            return self.activation(outputs)
-        return outputs
+        self.conv.kernel.assign(self.conv.kernel * self.mask)
+        return self.conv(inputs)
 
 
 # Next we build our residual block layer,
-# this is just a normal res. block but with the PixelConvLayer built in
+# this is just a normal residual block but with the PixelConvLayer built in
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
@@ -114,13 +89,13 @@ class ResidualBlock(keras.layers.Layer):
 
 
 """
-# Build the model based on the original paper
+## Build the model based on the original paper
 """
 
-PixelCNN_input = keras.Input(shape=input_shape)
+inputs = keras.Input(shape=input_shape)
 x = PixelConvLayer(
     mask_type="A", filters=128, kernel_size=7, padding="same", activation="relu"
-)(PixelCNN_input)
+)(inputs)
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)
@@ -136,25 +111,19 @@ for _ in range(2):
         padding="valid",
     )(x)
 
-x = keras.layers.Conv2D(
+out = keras.layers.Conv2D(
     filters=1, kernel_size=1, strides=1, activation="sigmoid", padding="valid"
 )(x)
 
-PixelCNN = keras.Model(PixelCNN_input, x)
+PixelCNN = keras.Model(inputs, out)
 adam = keras.optimizers.Adam(learning_rate=0.0001)
 PixelCNN.compile(optimizer=adam, loss="binary_crossentropy")
 
 PixelCNN.summary()
-PixelCNN.fit(
-    x=data.astype("float32"),
-    y=data.astype("float32"),
-    batch_size=64,
-    epochs=50,
-    validation_split=0.1,
-)
+PixelCNN.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
 
 """
-# Demo
+## Demonstration
 
 The PixelCNN cannot create the full image at once and must instead create each pixel in
 order, append the next created pixel to current image, and feed the image back into the
@@ -163,7 +132,7 @@ model to repeat the process.
 
 from IPython.display import Image, display
 from tqdm import tqdm
-from scipy.stats import bernoulli
+import tensorflow_probability as tfp
 
 # Create an empty array of pixels.
 batch = 4
@@ -174,12 +143,14 @@ batch, rows, cols, channels = pixels.shape
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
-            # Feed the whole array and retrieving the pixel value probabilities for the next
-            # pixel.
-            p = PixelCNN.predict_on_batch(pixels)[:, row, col, channel]
-            # Use the probabilities to pick pixel values and append the values to the image
-            # frame.
-            pixels[:, row, col, channel] = bernoulli.rvs(size=batch, p=p)
+# Feed the whole array and retrieving the pixel value probabilities for the next
+pixel.
+            probs = PixelCNN.predict(pixels)[:, row, col, channel]
+# Use the probabilities to pick pixel values and append the values to the image
+frame.
+            pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
+                probs=probs
+            ).sample()
 
 
 def deprocess_image(x):
@@ -195,10 +166,10 @@ def deprocess_image(x):
 # Iterate the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
     keras.preprocessing.image.save_img(
-        "img/pixelcnn/pixelcnn_9_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
+        "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
     )
 
-display(Image("img/pixelcnn/pixelcnn_9_1.png"))
-display(Image("img/pixelcnn/pixelcnn_9_2.png"))
-display(Image("img/pixelcnn/pixelcnn_9_3.png"))
-display(Image("img/pixelcnn/pixelcnn_9_4.png"))
+display(Image("generated_image_0.png"))
+display(Image("generated_image_1.png"))
+display(Image("generated_image_2.png"))
+display(Image("generated_image_3.png"))
