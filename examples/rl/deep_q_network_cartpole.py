@@ -65,14 +65,14 @@ the larger of the two q-values predicted in the output layer.
 
 num_inputs = 4
 num_actions = 2
-num_hidden = 128
+num_hidden = 24
 
 inputs = layers.Input(shape=(num_inputs,))
-common = layers.Dense(num_hidden, activation="relu")(inputs)
-action = layers.Dense(num_actions, activation="softmax")(common)
-critic = layers.Dense(1)(common)
+hidden_layer_1 = layers.Dense(num_hidden, activation="relu")(inputs)
+hidden_layer_2 = layers.Dense(num_hidden, activation="relu")(hidden_layer_1)
+action = layers.Dense(num_actions, activation="linear")(hidden_layer_2)
 
-model = keras.Model(inputs=inputs, outputs=[action, critic])
+model = keras.Model(inputs=inputs, outputs=action)
 
 
 """
