@@ -1,20 +1,16 @@
 
-# PixelCNN
-
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
 **Last modified:** 2020/05/23<br>
+**Description:** PixelCNN implemented in Keras.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
 
-
-**Description:** PixelCNN implemented in Keras.
-
 ---
 ## Introduction
-PixelCNN is a generative model proposed in 2016 by van den Oord et al.
-(https://arxiv.org/abs/1606.05328). It is designed to generate images or other data types
+[PixelCNN](https://arxiv.org/abs/1606.05328) is a generative model proposed in 2016 
+by van den Oord et al. It is designed to generate images or other data types
 from an input vector where the probability distribution of prior elements dictate the
 probability distribution of later elements. In the following example images are generated
 in this fashion through a masked convolutional kernel that is only capable of using data
