@@ -3,12 +3,25 @@ Title: PixelCNN
 Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/17
 Last modified: 2020/05/23
-Description: PixelCNN implemented in Keras.
+Description: PixelCNN implemented in Keras
+"""
+
+"""
+## Introduction
+PixelCNN is a generative model proposed in 2016 by van den Oord et al.
+(https://arxiv.org/abs/1606.05328). It is designed to generate images or other data types
+from an input vector where the probability distribution of prior elements dictate the
+probability distribution of later elements. In the following example images are generated
+in this fashion through a masked convolutional kernel that is only capable of using data
+from earlier pixels (origin at the top left) to generate later pixels. During inference,
+the output of the network is used as a probability ditribution from which pixel values
+for the desired generated image are sampled (here, with MNIST, the pixels values are
+either black or white) from the network output.
 """
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras, nn
+from tensorflow import keras
 from tensorflow.keras import layers
 
 """
@@ -92,7 +105,6 @@ x = PixelConvLayer(
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)
-x = layers.ReLU()(x)
 
 for _ in range(2):
     x = PixelConvLayer(
@@ -108,12 +120,12 @@ out = keras.layers.Conv2D(
     filters=1, kernel_size=1, strides=1, activation="sigmoid", padding="valid"
 )(x)
 
-PixelCNN = keras.Model(inputs, out)
+pixel_cnn = keras.Model(inputs, out)
 adam = keras.optimizers.Adam(learning_rate=0.0001)
-PixelCNN.compile(optimizer=adam, loss="binary_crossentropy")
+pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 
-PixelCNN.summary()
-PixelCNN.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
+pixel_cnn.summary()
+pixel_cnn.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
 
 """
 ## Demonstration
@@ -129,18 +141,18 @@ import tensorflow_probability as tfp
 
 # Create an empty array of pixels.
 batch = 4
-pixels = np.zeros(shape=(batch,) + (PixelCNN.input_shape)[1:])
+pixels = np.zeros(shape=(batch,) + (pixel_cnn.input_shape)[1:])
 batch, rows, cols, channels = pixels.shape
 
 # Iterate the pixels because generation has to be done sequentially pixel by pixel.
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
-            # Feed the whole array and retrieving the pixel value probabilities for the next
-            # pixel.
-            probs = PixelCNN.predict(pixels)[:, row, col, channel]
-            # Use the probabilities to pick pixel values and append the values to the image
-            # frame.
+# Feed the whole array and retrieving the pixel value probabilities for the next
+#pixel.
+            probs = pixel_cnn.predict(pixels)[:, row, col, channel]
+# Use the probabilities to pick pixel values and append the values to the image
+#frame.
             pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
                 probs=probs
             ).sample()
