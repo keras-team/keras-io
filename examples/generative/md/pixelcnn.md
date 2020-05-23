@@ -29,7 +29,7 @@ from tensorflow.keras import layers
 
 ```
 
-##Getting the Data
+## Getting the Data
 
 
 
@@ -62,8 +62,8 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 
 
 ```python
-# the first layer to create will be the PixelCNN layer, this layer simply
-# builds on the 2D convolutional layer but with the requisite masking included
+# The first layer is the PixelCNN layer. This layer simply
+# builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
     def __init__(self, mask_type, **kwargs):
         super(PixelConvLayer, self).__init__()
@@ -71,9 +71,9 @@ class PixelConvLayer(layers.Layer):
         self.conv = layers.Conv2D(**kwargs)
 
     def build(self, input_shape):
-        # build the conv2d layer to initialize kernel variables
+        # Build the conv2d layer to initialize kernel variables
         self.conv.build(input_shape)
-        # use said initialized kernel to develop the mask
+        # Use the initialized kernel to create the mask
         kernel_shape = self.conv.kernel.get_shape()
         self.mask = np.zeros(shape=kernel_shape)
         self.mask[: kernel_shape[0] // 2, ...] = 1.0
@@ -86,27 +86,27 @@ class PixelConvLayer(layers.Layer):
         return self.conv(inputs)
 
 
-# Next we build our residual block layer,
-# this is just a normal residual block but with the PixelConvLayer built in
+# Next, we build our residual block layer,
+# This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
-        self.a = keras.layers.ReLU()
-        self.b = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
-        self.c = PixelConvLayer(
+        self.activation = keras.layers.ReLU()
+        self.conv1 = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
+        self.pixelconv = PixelConvLayer(
             mask_type="B",
             filters=filters // 2,
             kernel_size=3,
             activation="relu",
             padding="same",
         )
-        self.d = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
+        self.conv2 = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
 
     def call(self, inputs):
-        x = self.a(inputs)
-        x = self.b(x)
-        x = self.c(x)
-        x = self.d(x)
+        x = self.activation(inputs)
+        x = self.conv1(x)
+        x = self.pixel_conv(x)
+        x = self.conv2(x)
         return keras.layers.add([inputs, x])
 
 
@@ -198,8 +198,8 @@ Epoch 6/50
 ---
 ## Demonstration
 
-The PixelCNN cannot create the full image at once and must instead create each pixel in
-order, append the next created pixel to current image, and feed the image back into the
+The PixelCNN cannot generate the full image at once, and must instead generate each pixel in
+order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
 
 
@@ -229,7 +229,7 @@ for row in tqdm(range(rows)):
 
 
 def deprocess_image(x):
-    # stack the single channeled black and white image to rgb values.
+    # Stack the single channeled black and white image to rgb values.
     x = np.stack((x, x, x), 2)
     # Undo preprocessing
     x *= 255.0
