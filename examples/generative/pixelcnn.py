@@ -144,10 +144,10 @@ for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
 # Feed the whole array and retrieving the pixel value probabilities for the next
-pixel.
+#pixel.
             probs = PixelCNN.predict(pixels)[:, row, col, channel]
 # Use the probabilities to pick pixel values and append the values to the image
-frame.
+#frame.
             pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
                 probs=probs
             ).sample()
