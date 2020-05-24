@@ -76,7 +76,9 @@ class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
         self.activation = keras.layers.ReLU()
-        self.conv1 = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
+        self.conv1 = keras.layers.Conv2D(
+            filters=filters, kernel_size=1, activation="relu"
+        )
         self.pixel_conv = PixelConvLayer(
             mask_type="B",
             filters=filters // 2,
@@ -84,7 +86,9 @@ class ResidualBlock(keras.layers.Layer):
             activation="relu",
             padding="same",
         )
-        self.conv2 = keras.layers.Conv2D(filters=filters, kernel_size=1, activation="relu")
+        self.conv2 = keras.layers.Conv2D(
+            filters=filters, kernel_size=1, activation="relu"
+        )
 
     def call(self, inputs):
         x = self.activation(inputs)
