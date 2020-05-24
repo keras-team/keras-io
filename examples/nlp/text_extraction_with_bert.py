@@ -28,12 +28,13 @@ We fine-tune a BERT model to perform this task as follows:
    similarly with the vector T.
 4. Fine-tune BERT and learn S and T along the way.
 
-References:
+**References:**
+
 - [BERT](https://arxiv.org/pdf/1810.04805.pdf)
 - [SQuAD](https://arxiv.org/abs/1606.05250)
 """
 """
-Setup
+## Setup
 """
 import os
 import re
@@ -74,7 +75,7 @@ eval_path = keras.utils.get_file("eval.json", eval_data_url)
 ## Preprocess the data
 
 1. Go through the JSON file and store every record as a `SquadExample` object.
-2. Go through each `SquadExample` and create `X_train, y_train, X_eval, y_eval`.
+2. Go through each `SquadExample` and create `x_train, y_train, x_eval, y_eval`.
 """
 
 
