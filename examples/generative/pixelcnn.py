@@ -8,15 +8,17 @@ Description: PixelCNN implemented in Keras.
 
 """
 ## Introduction
+
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
-(https://arxiv.org/abs/1606.05328). It is designed to generate images or other data types
-from an input vector where the probability distribution of prior elements dictate the
-probability distribution of later elements. In the following example images are generated
-in this fashion through a masked convolutional kernel that is only capable of using data
-from earlier pixels (origin at the top left) to generate later pixels. During inference,
-the output of the network is used as a probability ditribution from which pixel values
-for the desired generated image are sampled (here, with MNIST, the pixels values are
-either black or white) from the network output.
+(reference: [https://arxiv.org/abs/1606.05328](https://arxiv.org/abs/1606.05328)).
+It is designed to generate images (or other data types) iteratively,
+from an input vector where the probability distribution of prior elements dictates the
+probability distribution of later elements. In the following example, images are generated
+in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
+from previously generated pixels (origin at the top left) to generate later pixels.
+During inference, the output of the network is used as a probability ditribution
+from which new pixel values are sampled to generate a new image
+(here, with MNIST, the pixels values are either black or white).
 """
 
 import numpy as np
@@ -25,18 +27,18 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-##Getting the Data
+## Getting the Data
 """
 
 # Model / data parameters
 num_classes = 10
 input_shape = (28, 28, 1)
 n_residual_blocks = 5
-# the data, split between train and test sets
+# The data, split between train and test sets
 (x, _), (y, _) = keras.datasets.mnist.load_data()
 # Concatenate all of the images together
 data = np.concatenate((x, y), axis=0)
-# round all pixel values less than 33% of the max 256 value to 0
+# Round all pixel values less than 33% of the max 256 value to 0
 # anything above this value gets rounded up to 1 so that all values are either
 # 0 or 1
 data = np.where(data < (0.33 * 256), 0, 1)
