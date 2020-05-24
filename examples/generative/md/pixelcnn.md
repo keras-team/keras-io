@@ -57,7 +57,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 
 ```
 </div>
-##Create two classes for the requisite Layers for the model
+## Create two Layer classes required by the model
 
 
 
