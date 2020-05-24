@@ -500,7 +500,7 @@ exact_match_callback = ExactMatch(x_eval, y_eval)
 model.fit(
     x_train,
     y_train,
-    epochs=1,
+    epochs=1,  # For demonstration, 3 epochs are recommended
     verbose=2,
     batch_size=64,
     callbacks=[exact_match_callback],
