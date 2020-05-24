@@ -103,9 +103,7 @@ class ResidualBlock(keras.layers.Layer):
 """
 
 inputs = keras.Input(shape=input_shape)
-x = PixelConvLayer(
-    mask_type="A", filters=128, kernel_size=7, padding="same", activation="relu"
-)(inputs)
+x = PixelConvLayer(mask_type="A", filters=128, kernel_size=7, padding="same")(inputs)
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)
