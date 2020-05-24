@@ -13,13 +13,16 @@
 
 ---
 ## Introduction
+
 This demonstration uses SQuAD (Stanford Question-Answering Dataset).
 In SQuAD, an input consists of a question, and a paragraph for context.
 The goal is to find the span of text in the paragraph that answers the question.
 We evaluate our performance on this data with the "Exact Match" metric,
 which measures the percentage of predictions that exactly match any one of the
 ground-truth answers.
+
 We fine-tune a BERT model to perform this task as follows:
+
 1. Feed the context and the question as inputs to BERT.
 2. Take two vectors S and T with dimensions equal to that of
    hidden states in BERT.
@@ -30,6 +33,7 @@ We fine-tune a BERT model to perform this task as follows:
    The probability of a token being the end of the answer is computed
    similarly with the vector T.
 4. Fine-tune BERT and learn S and T along the way.
+
 References:
 - [BERT](https://arxiv.org/pdf/1810.04805.pdf)
 - [SQuAD](https://arxiv.org/abs/1606.05250)
@@ -74,16 +78,6 @@ tokenizer = BertWordPieceTokenizer("bert_base_uncased/vocab.txt", lowercase=True
 
 ```
 
-
-<div class="k-default-codeblock">
-```
-HBox(children=(FloatProgress(value=0.0, description='Downloading', max=231508.0, style=ProgressStyle(descripti…
-
-```
-</div>
-    
-
-
 ---
 ## Load the data
 
@@ -97,17 +91,9 @@ eval_path = keras.utils.get_file("eval.json", eval_data_url)
 
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
-30294016/30288272 [==============================] - 1s 0us/step
-Downloading data from https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
-4857856/4854279 [==============================] - 0s 0us/step
-
-```
-</div>
 ---
 ## Preprocess the data
+
 1. Go through the JSON file and store every record as a `SquadExample` object.
 2. Go through each `SquadExample` and create `X_train, y_train, X_eval, y_eval`.
 
@@ -325,9 +311,9 @@ model.summary()
 ```
 INFO:absl:Entering into master device scope: /job:worker/replica:0/task:0/device:CPU:0
 
-INFO:tensorflow:Initializing the TPU system: grpc://10.57.232.98:8470
+INFO:tensorflow:Initializing the TPU system: grpc://10.48.159.170:8470
 
-INFO:tensorflow:Initializing the TPU system: grpc://10.57.232.98:8470
+INFO:tensorflow:Initializing the TPU system: grpc://10.48.159.170:8470
 
 INFO:tensorflow:Clearing out eager caches
 
@@ -405,23 +391,6 @@ INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/ta
 
 INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
 
-HBox(children=(FloatProgress(value=0.0, description='Downloading', max=433.0, style=ProgressStyle(description_…
-
-```
-</div>
-    
-
-
-
-<div class="k-default-codeblock">
-```
-HBox(children=(FloatProgress(value=0.0, description='Downloading', max=536063208.0, style=ProgressStyle(descri…
-
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
 Model: "model"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
@@ -455,6 +424,7 @@ ________________________________________________________________________________
 </div>
 ---
 ## Create evaluation Callback
+
 This callback will compute the exact match score using the validation data
 after every epoch.
 
@@ -562,9 +532,9 @@ WARNING:tensorflow:Gradients do not exist for variables ['tf_bert_model/bert/poo
 <div class="k-default-codeblock">
 ```
 epoch=1, exact match score=0.78
-1346/1346 - 345s - activation_8_loss: 1.2105 - loss: 2.5403 - activation_7_loss: 1.3298
+1346/1346 - 350s - activation_7_loss: 1.3488 - loss: 2.5905 - activation_8_loss: 1.2417
 
-<tensorflow.python.keras.callbacks.History at 0x7f30d72edf60>
+<tensorflow.python.keras.callbacks.History at 0x7fc78b4458d0>
 
 ```
 </div>
