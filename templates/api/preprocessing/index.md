@@ -43,7 +43,7 @@ validation_ds = image_dataset_from_directory(
 
 model = keras.applications.Xception(weights=None, input_shape=(256, 256, 3), classes=10)
 model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
-model.fit(ds, epochs=10, validation_data=validation_ds)
+model.fit(train_ds, epochs=10, validation_data=validation_ds)
 ```
 
 
