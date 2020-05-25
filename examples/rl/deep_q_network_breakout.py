@@ -106,9 +106,12 @@ done_history = []
 running_reward = 0
 episode_count = 0
 frame_count = 0
-epsilon_random_frames = 50000  # Number of frames to take random action and observe output
-epsilon_greedy_frames = 1000000.0  # Number of frames for exploration
-max_memory_length = 1000000  # Maximum replay length
+# Number of frames to take random action and observe output
+epsilon_random_frames = 50000
+# Number of frames for exploration
+epsilon_greedy_frames = 1000000.0
+# Maximum replay length
+max_memory_length = 1000000
 update_after_actions = 4
 
 while True:  # Run until solved
