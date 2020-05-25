@@ -71,22 +71,25 @@ class KerasIO:
             if entry["path"] == "examples/":
                 examples_entry = entry
                 break
-        for entry in examples_entry["children"]:
-            children = []
-            subdir = entry["path"]
+        for entry in examples_entry["children"]:  # e.g. {"path": "nlp", ...}
+            children = entry.get("children", [])
+            preexisting = [e["path"] for e in children]
+            subdir = entry["path"]  # e.g. nlp
             path = Path(self.examples_dir) / subdir  # e.g. examples/nlp
-            for fname in os.listdir(path):
+            for fname in sorted(os.listdir(path)):
                 if fname.endswith(".py"):  # e.g. examples/nlp/test.py
                     name = fname[:-3]
-                    f = open(path / fname)
-                    f.readline()
-                    title_line = f.readline()
-                    f.close()
-                    assert title_line.startswith("Title: ")
-                    title = title_line[len("Title: ") :]
-                    children.append(
-                        {"path": name, "title": title.strip(),}
-                    )
+                    example_path = name.split('/')[-1]
+                    if example_path not in preexisting:
+                        f = open(path / fname)
+                        f.readline()
+                        title_line = f.readline()
+                        f.close()
+                        assert title_line.startswith("Title: ")
+                        title = title_line[len("Title: ") :]
+                        children.append(
+                            {"path": example_path, "title": title.strip()}
+                        )
             entry["children"] = children
 
     def make_md_sources(self):
