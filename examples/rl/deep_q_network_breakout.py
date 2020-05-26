@@ -47,8 +47,8 @@ from tensorflow.keras import layers
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
 epsilon = 1.0  # Epsilon greedy parameter
-epsilon_min = 0.01  # Minimum epsilon greedy parameter
-epsilon_max = 1.0  # Minimum epsilon greedy parameter
+epsilon_min = 0.1  # Minimum epsilon greedy parameter
+epsilon_max = 1.0  # Maximum epsilon greedy parameter
 epsilon_interval = (
     epsilon_max - epsilon_min
 )  # Rate at which to reduce chance of random action being taken
@@ -93,7 +93,8 @@ model = keras.Model(inputs=inputs, outputs=action)
 ## Train
 """
 
-optimizer = keras.optimizers.RMSprop(learning_rate=0.00025, momentum=0.95)
+
+optimizer = keras.optimizers.RMSprop(learning_rate=0.00025, epsilon=1e-06, clipnorm=1, momentum=0.95)
 mse_loss = keras.losses.MeanSquaredError()
 model.compile(loss=mse_loss, optimizer=optimizer)
 
@@ -111,7 +112,8 @@ epsilon_random_frames = 50000
 # Number of frames for exploration
 epsilon_greedy_frames = 1000000.0
 # Maximum replay length
-max_memory_length = 1000000
+# Note: The Deepmind paper suggests 1000000 however this causes memory issues
+max_memory_length = 100000
 update_after_actions = 4
 
 while True:  # Run until solved
@@ -215,6 +217,6 @@ while True:  # Run until solved
         template = "running reward: {:.2f} at episode {}, frame count {}, epsilon {}"
         print(template.format(running_reward, episode_count, frame_count, epsilon))
 
-    if running_reward > 2000:  # Condition to consider the task solved
+    if running_reward > 12:  # Condition to consider the task solved
         print("Solved at episode {}!".format(episode_count))
         break
