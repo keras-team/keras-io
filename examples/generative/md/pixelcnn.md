@@ -1,12 +1,17 @@
-"""
-Title: PixelCNN
-Author: [ADMoreau](https://github.com/ADMoreau)
-Date created: 2020/05/17
-Last modified: 2020/05/23
-Description: PixelCNN implemented in Keras.
-"""
 
-"""
+# PixelCNN
+
+**Author:** [ADMoreau](https://github.com/ADMoreau)<br>
+**Date created:** 2020/05/17<br>
+**Last modified:** 2020/05/23<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
+
+
+**Description:** PixelCNN implemented in Keras.
+
+---
 ## Introduction
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
@@ -19,17 +24,23 @@ from previously generated pixels (origin at the top left) to generate later pixe
 During inference, the output of the network is used as a probability ditribution
 from which new pixel values are sampled to generate a new image
 (here, with MNIST, the pixels values are either black or white).
-"""
 
+
+
+```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-"""
-## Getting the Data
-"""
+```
 
+---
+## Getting the Data
+
+
+
+```python
 # Model / data parameters
 num_classes = 10
 input_shape = (28, 28, 1)
@@ -44,10 +55,14 @@ data = np.concatenate((x, y), axis=0)
 data = np.where(data < (0.33 * 256), 0, 1)
 data = data.astype(np.float32)
 
-"""
-## Create two classes for the requisite Layers for the model
-"""
+```
 
+---
+## Create two classes for the requisite Layers for the model
+
+
+
+```python
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
@@ -100,10 +115,14 @@ class ResidualBlock(keras.layers.Layer):
         return keras.layers.add([inputs, x])
 
 
-"""
-## Build the model based on the original paper
-"""
+```
 
+---
+## Build the model based on the original paper
+
+
+
+```python
 inputs = keras.Input(shape=input_shape)
 x = PixelConvLayer(mask_type="A", filters=128, kernel_size=7, padding="same")(inputs)
 
@@ -131,14 +150,64 @@ pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 pixel_cnn.summary()
 pixel_cnn.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
 
-"""
+```
+
+<div class="k-default-codeblock">
+```
+Model: "model"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         [(None, 28, 28, 1)]       0         
+_________________________________________________________________
+pixel_conv_layer (PixelConvL (None, 28, 28, 128)       6400      
+_________________________________________________________________
+residual_block (ResidualBloc (None, 28, 28, 128)       98624     
+_________________________________________________________________
+residual_block_1 (ResidualBl (None, 28, 28, 128)       98624     
+_________________________________________________________________
+residual_block_2 (ResidualBl (None, 28, 28, 128)       98624     
+_________________________________________________________________
+residual_block_3 (ResidualBl (None, 28, 28, 128)       98624     
+_________________________________________________________________
+residual_block_4 (ResidualBl (None, 28, 28, 128)       98624     
+_________________________________________________________________
+pixel_conv_layer_6 (PixelCon (None, 28, 28, 128)       16512     
+_________________________________________________________________
+pixel_conv_layer_7 (PixelCon (None, 28, 28, 128)       16512     
+_________________________________________________________________
+conv2d_18 (Conv2D)           (None, 28, 28, 1)         129       
+=================================================================
+Total params: 532,673
+Trainable params: 532,673
+Non-trainable params: 0
+_________________________________________________________________
+Epoch 1/50
+  2/985 [..............................] - ETA: 1:02 - loss: 0.6944WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
+985/985 [==============================] - 126s 128ms/step - loss: 0.1267 - val_loss: 0.0943
+Epoch 2/50
+985/985 [==============================] - 126s 128ms/step - loss: 0.0925 - val_loss: 0.0915
+Epoch 3/50
+985/985 [==============================] - 126s 128ms/step - loss: 0.0909 - val_loss: 0.0902
+Epoch 4/50
+985/985 [==============================] - 126s 128ms/step - loss: 0.0899 - val_loss: 0.0893
+Epoch 5/50
+985/985 [==============================] - 125s 127ms/step - loss: 0.0893 - val_loss: 0.0889
+Epoch 6/50
+553/985 [===============>..............] - ETA: 53s - loss: 0.0889
+
+```
+</div>
+---
 ## Demonstration
 
 The PixelCNN cannot generate the full image at once, and must instead generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
-"""
 
+
+
+```python
 from IPython.display import Image, display
 from tqdm import tqdm
 import tensorflow_probability as tfp
@@ -182,3 +251,26 @@ display(Image("generated_image_0.png"))
 display(Image("generated_image_1.png"))
 display(Image("generated_image_2.png"))
 display(Image("generated_image_3.png"))
+
+```
+
+<div class="k-default-codeblock">
+```
+100%|██████████| 28/28 [00:31<00:00,  1.12s/it]
+
+```
+</div>
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_1.png)
+
+
+
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_2.png)
+
+
+
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_3.png)
+
+
+
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_4.png)
+
