@@ -2,7 +2,7 @@
 
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
-**Last modified:** 2020/05/23<br>
+**Last modified:** 2020/05/26<br>
 **Description:** PixelCNN implemented in Keras.
 
 
@@ -185,7 +185,6 @@ Trainable params: 532,673
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/50
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
 493/493 - 18s - loss: 0.1163 - val_loss: 0.0937
 Epoch 2/50
 493/493 - 18s - loss: 0.0911 - val_loss: 0.0908
