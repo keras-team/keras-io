@@ -73,11 +73,10 @@ class PixelConvLayer(layers.Layer):
 
 
 # Next, we build our residual block layer.
-# This is just a normal residual block, but base don the PixelConvLayer.
+# This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
-        self.activation = keras.layers.ReLU()
         self.conv1 = keras.layers.Conv2D(
             filters=filters, kernel_size=1, activation="relu"
         )
@@ -93,8 +92,7 @@ class ResidualBlock(keras.layers.Layer):
         )
 
     def call(self, inputs):
-        x = self.activation(inputs)
-        x = self.conv1(x)
+        x = self.conv1(inputs)
         x = self.pixel_conv(x)
         x = self.conv2(x)
         return keras.layers.add([inputs, x])
@@ -105,7 +103,9 @@ class ResidualBlock(keras.layers.Layer):
 """
 
 inputs = keras.Input(shape=input_shape)
-x = PixelConvLayer(mask_type="A", filters=128, kernel_size=7, padding="same")(inputs)
+x = PixelConvLayer(
+    mask_type="A", filters=128, kernel_size=7, activation="relu", padding="same"
+)(inputs)
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)

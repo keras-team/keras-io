@@ -1,11 +1,15 @@
 
+# PixelCNN
+
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
 **Last modified:** 2020/05/23<br>
-**Description:** PixelCNN implemented in Keras.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
+
+
+**Description:** PixelCNN implemented in Keras.
 
 ---
 ## Introduction
@@ -84,11 +88,10 @@ class PixelConvLayer(layers.Layer):
 
 
 # Next, we build our residual block layer.
-# This is just a normal residual block, but base don the PixelConvLayer.
+# This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super(ResidualBlock, self).__init__(**kwargs)
-        self.activation = keras.layers.ReLU()
         self.conv1 = keras.layers.Conv2D(
             filters=filters, kernel_size=1, activation="relu"
         )
@@ -104,8 +107,7 @@ class ResidualBlock(keras.layers.Layer):
         )
 
     def call(self, inputs):
-        x = self.activation(inputs)
-        x = self.conv1(x)
+        x = self.conv1(inputs)
         x = self.pixel_conv(x)
         x = self.conv2(x)
         return keras.layers.add([inputs, x])
@@ -120,7 +122,9 @@ class ResidualBlock(keras.layers.Layer):
 
 ```python
 inputs = keras.Input(shape=input_shape)
-x = PixelConvLayer(mask_type="A", filters=128, kernel_size=7, padding="same")(inputs)
+x = PixelConvLayer(
+    mask_type="A", filters=128, kernel_size=7, activation="relu", padding="same"
+)(inputs)
 
 for _ in range(n_residual_blocks):
     x = ResidualBlock(filters=128)(x)
@@ -179,18 +183,18 @@ Trainable params: 532,673
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/50
-  2/985 [..............................] - ETA: 1:02 - loss: 0.6944WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
-985/985 [==============================] - 126s 128ms/step - loss: 0.1267 - val_loss: 0.0943
+  2/985 [..............................] - ETA: 1:03 - loss: 0.6911WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
+985/985 [==============================] - 128s 130ms/step - loss: 0.1251 - val_loss: 0.0938
 Epoch 2/50
-985/985 [==============================] - 126s 128ms/step - loss: 0.0925 - val_loss: 0.0915
+985/985 [==============================] - 127s 129ms/step - loss: 0.0926 - val_loss: 0.0912
 Epoch 3/50
-985/985 [==============================] - 126s 128ms/step - loss: 0.0909 - val_loss: 0.0902
+985/985 [==============================] - 128s 129ms/step - loss: 0.0909 - val_loss: 0.0903
 Epoch 4/50
-985/985 [==============================] - 126s 128ms/step - loss: 0.0899 - val_loss: 0.0893
+985/985 [==============================] - 128s 129ms/step - loss: 0.0900 - val_loss: 0.0899
 Epoch 5/50
-985/985 [==============================] - 125s 127ms/step - loss: 0.0893 - val_loss: 0.0889
+985/985 [==============================] - 128s 130ms/step - loss: 0.0893 - val_loss: 0.0890
 Epoch 6/50
-553/985 [===============>..............] - ETA: 53s - loss: 0.0889
+553/985 [===============>..............] - ETA: 53s - loss: 0.0890
 
 ```
 </div>
@@ -252,7 +256,7 @@ display(Image("generated_image_3.png"))
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 28/28 [00:31<00:00,  1.12s/it]
+100%|██████████| 28/28 [00:30<00:00,  1.11s/it]
 
 ```
 </div>
