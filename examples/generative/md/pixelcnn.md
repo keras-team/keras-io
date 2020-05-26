@@ -1,16 +1,20 @@
+# PixelCNN
 
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
 **Last modified:** 2020/05/23<br>
 **Description:** PixelCNN implemented in Keras.
 
+
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
+
+
 
 ---
 ## Introduction
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
-(reference: [https://arxiv.org/abs/1606.05328](https://arxiv.org/abs/1606.05328)).
+(reference: [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)).
 It is designed to generate images (or other data types) iteratively,
 from an input vector where the probability distribution of prior elements dictates the
 probability distribution of later elements. In the following example, images are generated
@@ -27,6 +31,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tqdm import tqdm
 
 ```
 
@@ -139,11 +144,13 @@ out = keras.layers.Conv2D(
 )(x)
 
 pixel_cnn = keras.Model(inputs, out)
-adam = keras.optimizers.Adam(learning_rate=0.0001)
+adam = keras.optimizers.Adam(learning_rate=0.0005)
 pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 
 pixel_cnn.summary()
-pixel_cnn.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
+pixel_cnn.fit(
+    x=data, y=data, batch_size=128, epochs=50, validation_split=0.1, verbose=2
+)
 
 ```
 
@@ -178,18 +185,108 @@ Trainable params: 532,673
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/50
-  2/985 [..............................] - ETA: 1:03 - loss: 0.6911WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
-985/985 [==============================] - 128s 130ms/step - loss: 0.1251 - val_loss: 0.0938
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
+493/493 - 18s - loss: 0.1163 - val_loss: 0.0937
 Epoch 2/50
-985/985 [==============================] - 127s 129ms/step - loss: 0.0926 - val_loss: 0.0912
+493/493 - 18s - loss: 0.0911 - val_loss: 0.0908
 Epoch 3/50
-985/985 [==============================] - 128s 129ms/step - loss: 0.0909 - val_loss: 0.0903
+493/493 - 18s - loss: 0.0889 - val_loss: 0.0890
 Epoch 4/50
-985/985 [==============================] - 128s 129ms/step - loss: 0.0900 - val_loss: 0.0899
+493/493 - 18s - loss: 0.0878 - val_loss: 0.0879
 Epoch 5/50
-985/985 [==============================] - 128s 130ms/step - loss: 0.0893 - val_loss: 0.0890
+493/493 - 18s - loss: 0.0871 - val_loss: 0.0868
 Epoch 6/50
-553/985 [===============>..............] - ETA: 53s - loss: 0.0890
+493/493 - 18s - loss: 0.0865 - val_loss: 0.0875
+Epoch 7/50
+493/493 - 18s - loss: 0.0861 - val_loss: 0.0857
+Epoch 8/50
+493/493 - 18s - loss: 0.0857 - val_loss: 0.0860
+Epoch 9/50
+493/493 - 18s - loss: 0.0854 - val_loss: 0.0855
+Epoch 10/50
+493/493 - 18s - loss: 0.0850 - val_loss: 0.0853
+Epoch 11/50
+493/493 - 18s - loss: 0.0848 - val_loss: 0.0849
+Epoch 12/50
+493/493 - 18s - loss: 0.0846 - val_loss: 0.0850
+Epoch 13/50
+493/493 - 18s - loss: 0.0844 - val_loss: 0.0849
+Epoch 14/50
+493/493 - 18s - loss: 0.0842 - val_loss: 0.0845
+Epoch 15/50
+493/493 - 18s - loss: 0.0840 - val_loss: 0.0850
+Epoch 16/50
+493/493 - 18s - loss: 0.0839 - val_loss: 0.0850
+Epoch 17/50
+493/493 - 18s - loss: 0.0837 - val_loss: 0.0843
+Epoch 18/50
+493/493 - 18s - loss: 0.0836 - val_loss: 0.0842
+Epoch 19/50
+493/493 - 18s - loss: 0.0835 - val_loss: 0.0840
+Epoch 20/50
+493/493 - 18s - loss: 0.0834 - val_loss: 0.0842
+Epoch 21/50
+493/493 - 18s - loss: 0.0832 - val_loss: 0.0837
+Epoch 22/50
+493/493 - 18s - loss: 0.0831 - val_loss: 0.0839
+Epoch 23/50
+493/493 - 18s - loss: 0.0830 - val_loss: 0.0835
+Epoch 24/50
+493/493 - 18s - loss: 0.0829 - val_loss: 0.0839
+Epoch 25/50
+493/493 - 18s - loss: 0.0829 - val_loss: 0.0835
+Epoch 26/50
+493/493 - 18s - loss: 0.0827 - val_loss: 0.0836
+Epoch 27/50
+493/493 - 18s - loss: 0.0827 - val_loss: 0.0834
+Epoch 28/50
+493/493 - 18s - loss: 0.0826 - val_loss: 0.0834
+Epoch 29/50
+493/493 - 18s - loss: 0.0825 - val_loss: 0.0834
+Epoch 30/50
+493/493 - 18s - loss: 0.0824 - val_loss: 0.0834
+Epoch 31/50
+493/493 - 18s - loss: 0.0823 - val_loss: 0.0832
+Epoch 32/50
+493/493 - 18s - loss: 0.0823 - val_loss: 0.0832
+Epoch 33/50
+493/493 - 18s - loss: 0.0822 - val_loss: 0.0833
+Epoch 34/50
+493/493 - 18s - loss: 0.0821 - val_loss: 0.0835
+Epoch 35/50
+493/493 - 18s - loss: 0.0821 - val_loss: 0.0834
+Epoch 36/50
+493/493 - 18s - loss: 0.0820 - val_loss: 0.0837
+Epoch 37/50
+493/493 - 18s - loss: 0.0820 - val_loss: 0.0832
+Epoch 38/50
+493/493 - 18s - loss: 0.0819 - val_loss: 0.0834
+Epoch 39/50
+493/493 - 18s - loss: 0.0818 - val_loss: 0.0834
+Epoch 40/50
+493/493 - 18s - loss: 0.0818 - val_loss: 0.0832
+Epoch 41/50
+493/493 - 18s - loss: 0.0817 - val_loss: 0.0834
+Epoch 42/50
+493/493 - 18s - loss: 0.0817 - val_loss: 0.0836
+Epoch 43/50
+493/493 - 18s - loss: 0.0816 - val_loss: 0.0833
+Epoch 44/50
+493/493 - 18s - loss: 0.0816 - val_loss: 0.0835
+Epoch 45/50
+493/493 - 18s - loss: 0.0815 - val_loss: 0.0832
+Epoch 46/50
+493/493 - 18s - loss: 0.0815 - val_loss: 0.0830
+Epoch 47/50
+493/493 - 18s - loss: 0.0814 - val_loss: 0.0831
+Epoch 48/50
+493/493 - 18s - loss: 0.0813 - val_loss: 0.0832
+Epoch 49/50
+493/493 - 18s - loss: 0.0813 - val_loss: 0.0834
+Epoch 50/50
+493/493 - 18s - loss: 0.0813 - val_loss: 0.0832
+
+<tensorflow.python.keras.callbacks.History at 0x7f1bdaeb4320>
 
 ```
 </div>
@@ -204,8 +301,6 @@ model to repeat the process.
 
 ```python
 from IPython.display import Image, display
-from tqdm import tqdm
-import tensorflow_probability as tfp
 
 # Create an empty array of pixels.
 batch = 4
@@ -221,9 +316,9 @@ for row in tqdm(range(rows)):
             probs = pixel_cnn.predict(pixels)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
-            pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
-                probs=probs
-            ).sample()
+            pixels[:, row, col, channel] = tf.math.ceil(
+                probs - tf.random.uniform(probs.shape)
+            )
 
 
 def deprocess_image(x):
@@ -251,7 +346,7 @@ display(Image("generated_image_3.png"))
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 28/28 [00:30<00:00,  1.11s/it]
+100%|██████████| 28/28 [00:18<00:00,  1.51it/s]
 
 ```
 </div>
