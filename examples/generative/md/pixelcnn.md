@@ -1,15 +1,11 @@
 
-# PixelCNN
-
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
 **Last modified:** 2020/05/23<br>
+**Description:** PixelCNN implemented in Keras.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
-
-
-**Description:** PixelCNN implemented in Keras.
 
 ---
 ## Introduction
