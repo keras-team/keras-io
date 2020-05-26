@@ -1,30 +1,32 @@
 """
-Title: Deep Q Network Method
+Title: Deep Q-Learning for Atari Breakout
 Author: [Jacob Chapman](https://twitter.com/jacoblchapman)
 Date created: 2020/05/23
 Last modified: 2020/05/23
-Description: Implement Deep Q Network in Breakout Atari environment.
+Description: Play Atari Breakout with a Deep Q-Network.
 """
 """
 ## Introduction
 
-This script shows an implementation of Deep Q Network method on BreakoutNoFrameskip-v4 environment.
+This script shows an implementation of Deep Q-Learning on the
+`BreakoutNoFrameskip-v4` environment.
 
-### Deep Q Network Method
+### Deep Q-Learning
 
 As an agent takes actions and moves through an environment, it learns to map
 the observed state of the environment to an action. An agent will choose an action 
-in a given state based on a Q quantity, which is a weighted reward based on the 
-expected highest long term reward. This method is considered an Off-Policy method, 
+in a given state based on a "Q-value", which is a weighted reward based on the 
+expected highest long-term reward. A Q-Learning Agent learns to perform its 
+task such that the recommended action maximizes the potential future rewards.
+This method is considered an "Off-Policy" method, 
 meaning its Q values are updated assuming that the best action was chosen, even 
-if the best action was not chosen. Thus A Q-Learning Agent learns to perform its 
-tasks, such that the recommended action maximizes the potential rewards.
+if the best action was not chosen.
 
+### Atari Breakout
 
-### BreakoutNoFrameskip-v4
-
-A board moves along the bottom of the screen returning a ball that will destroy blocks
-at the top of the screen. The aim of the game is to remove all blocks and breakout of the
+In this environment, a board moves along the bottom of the screen returning a ball that
+will destroy blocks at the top of the screen.
+The aim of the game is to remove all blocks and breakout of the
 level. The agent must learn to control the board by moving left and right, returning the 
 ball and removing all the blocks without the ball passing the board.   
 
@@ -57,17 +59,17 @@ max_steps_per_episode = 10000
 
 # Use the Baseline Atari environment because of Deepmind helper functions
 env = make_atari("BreakoutNoFrameskip-v4")
-# warp the frames, grey scale, stake four frame and scale to smaller ratio
+# Warp the frames, grey scale, stake four frame and scale to smaller ratio
 env = wrap_deepmind(env, frame_stack=True, scale=True)
 env.seed(seed)
 
 """
-## Implement Deep Q Network
+## Implement the Deep Q-Network
 
-This network learns an approximation of the Q table, which is a mapping between
+This network learns an approximation of the Q-table, which is a mapping between
 the states and actions that an agent will take. For every state we'll have two
-actions, that can be taken. The environment provides the state and the action
-is choose by selecting the larger of the two q-values predicted in the output layer.
+actions, that can be taken. The environment provides the state, and the action
+is chosen by selecting the larger of the two Q-values predicted in the output layer.
 
 """
 
@@ -97,7 +99,6 @@ model = keras.Model(inputs=inputs, outputs=action)
 optimizer = keras.optimizers.RMSprop(learning_rate=0.00025, epsilon=1e-06, clipnorm=1, momentum=0.95)
 mse_loss = keras.losses.MeanSquaredError()
 model.compile(loss=mse_loss, optimizer=optimizer)
-
 
 action_history = []
 state_history = []
@@ -130,7 +131,7 @@ while True:  # Run until solved
             # Take random action
             action = np.random.choice(num_actions)
         else:
-            # Predict action q-values
+            # Predict action Q-values
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
@@ -175,7 +176,7 @@ while True:  # Run until solved
                 rewards_sample, done_sample, action_sample, future_rewards, q_values
             )
 
-            # Build the new updated Q values for the sampled states and actions
+            # Build the new updated Q-values for the sampled states and actions
             updated_q_values = []
             for (
                 sampled_reward,
@@ -184,18 +185,18 @@ while True:  # Run until solved
                 future_reward,
                 q_value,
             ) in history:
-                # If final frame take the last reward as the new Q value
+                # If final frame take the last reward as the new Q-value
                 q_update = sampled_reward
                 if not sampled_done:
-                    # Calculate the new Q value
+                    # Calculate the new Q-value
                     # Q value = reward + discount factor * expected future reward
                     q_update = sampled_reward + gamma * np.amax(future_reward)
 
-                # Replace old Q value with the updated value
+                # Replace old Q-value with the updated value
                 q_value[sampled_action] = q_update
                 updated_q_values.append(q_value)
 
-            # Train the model on the states and updated Q values
+            # Train the model on the states and updated Q-values
             model.fit(state_sample, np.array(updated_q_values), verbose=0)
 
         # Limit the state and reward history
