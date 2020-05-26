@@ -2,15 +2,15 @@
 Title: Point cloud classification with PointNet
 Author: [David Griffiths](https://dgriffiths3.github.io)
 Date created: 2020/05/25
-Last modified: 2020/05/25
+Last modified: 2020/05/26
 Description: Implementation of PointNet for ModelNet10 classification.
 """
 
 """
-## Introduction
-"""
+# Point cloud classification
 
-"""
+## Introduction
+
 Classification, detection and segmentation of unordered 3D point sets i.e. point clouds
 is a core problem in computer vision. This example implements the seminal point cloud
 deep learning paper [PointNet (Qi et al., 2017)](https://arxiv.org/abs/1612.00593). For a
@@ -20,10 +20,9 @@ post](https://medium.com/@luis_gonzales/an-in-depth-look-at-pointnet-111d7efdaa1
 
 """
 ## Setup
-"""
 
-"""
-If running in google colab first run `!pip install trimesh`.
+Install trimesh for mesh processing and sampling
+If using colab run `!pip install trimesh`
 """
 
 import glob
@@ -32,13 +31,11 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras import backend as K
+from matplotlib import pyplot as plt
 
 """
 ## Load dataset
-"""
 
-"""
 We use the ModelNet10 model dataset, the smaller 10 class version of the ModelNet40
 dataset. First download the data:
 """
@@ -62,226 +59,186 @@ and visualize in `matplotlib`.
 """
 
 points = mesh.sample(2048)
-trimesh.points.plot_points(points)
+
+fig = plt.figure(figsize=(5, 5))
+ax = fig.add_subplot(111, projection="3d")
+ax.scatter(points[:, 0], points[:, 1], points[:, 2])
+ax.set_axis_off()
+plt.show()
 
 """
 To generate a `tf.data.Dataset()` we need to first parse through the ModelNet data
 folders. Each mesh is loaded and sampled into a point cloud before being added to a
 standard python list and converted to a `numpy` array. We also store the current
-enumerate index value as the object label.
+enumerate index value as the object label and use a dictionary to recall this later.
 """
 
+def parse_dataset(num_points=2048):
 
-def parse_dataset(n_pts=2048):
-
-    train_pts = []
+    train_points = []
     train_labels = []
-    test_pts = []
+    test_points = []
     test_labels = []
-
+    class_map = {}
     folders = glob.glob("ModelNet10/[!README]*")
 
     for i, folder in enumerate(folders):
-
         print("processing: %s" % folder)
+        # store folder name with ID so we can retrieve later
+        class_map[i] = folder.split("/")[-1]
+        # gather all files
         train_files = glob.glob(folder + "/train/*")
         test_files = glob.glob(folder + "/test/*")
 
         for f in train_files:
-            train_pts.append(trimesh.load(f).sample(n_pts))
+            train_points.append(trimesh.load(f).sample(num_points))
             train_labels.append(i)
 
         for f in test_files:
-            test_pts.append(trimesh.load(f).sample(n_pts))
+            test_points.append(trimesh.load(f).sample(num_points))
             test_labels.append(i)
 
     return (
-        np.array(train_pts),
-        np.array(test_pts),
+        np.array(train_points),
+        np.array(test_points),
         np.array(train_labels),
         np.array(test_labels),
+        class_map,
     )
-
 
 """
 Set the number of points to sample and batch size and parse the dataset. This can take
 ~5minutes to complete.
 """
 
-N_PTS = 2048
+NUM_POINTS = 2048
 NUM_CLASSES = 10
 BATCH_SIZE = 32
 
-X_train, X_test, y_train, y_test = parse_dataset(N_PTS)
+train_points, test_points, train_labels, test_labels, CLASS_MAP = parse_dataset(
+    NUM_POINTS
+)
 
 """
 Our data can now be read into a `tf.data.Dataset()` object. We set the shuffle buffer
 size to the entire size of the dataset as prior to this the data is ordered by class.
 Data augmentation is important when working with point cloud data. We create a
-augmentation function to jitter, shuffle and rotate the train dataset.
+augmentation function to jitter and shuffle the train dataset.
 """
 
-
-def augment(pts, label):
-
+def augment(points, label):
     # jitter points
-    pts += tf.random.uniform(pts.shape, -0.005, 0.005, dtype=tf.float64)
+    points += tf.random.uniform(points.shape, -0.005, 0.005, dtype=tf.float64)
     # shuffle points
-    pts = tf.random.shuffle(pts)
-    # random rotation about the z axis
-    theta = np.random.uniform(-np.pi, np.pi)
-    c = np.cos(theta)
-    s = np.sin(theta)
-    R = tf.constant([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]], tf.float64)
-    pts = tf.einsum("...ij,...kj->...ki", R, pts)
+    points = tf.random.shuffle(points)
+    return points, label
 
-    return pts, label
+train_dataset = tf.data.Dataset.from_tensor_slices(
+    (train_points, train_labels))
+test_dataset = tf.data.Dataset.from_tensor_slices((test_points, test_labels))
 
-
-train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
-
-train_dataset = train_dataset.shuffle(len(X_train)).map(augment).batch(BATCH_SIZE)
-test_dataset = test_dataset.shuffle(len(X_test)).batch(BATCH_SIZE)
+train_dataset = train_dataset.shuffle(
+    len(train_points)).map(augment).batch(BATCH_SIZE)
+test_dataset = test_dataset.shuffle(len(test_points)).batch(BATCH_SIZE)
 
 """
 ### Build a model
-"""
 
-"""
 Each convolution and fully-connected layer (with exception for end layers) consits of
-Convolution / Dense -> Batch Normalization -> ReLU Activation. We can make simple
-sub-classed layer to perform all these as a single layer.
+Convolution / Dense -> Batch Normalization -> ReLU Activation.
 """
 
+def conv_bn(x, filters):
+    x = layers.Conv1D(filters, kernel_size=1, padding="valid")(x)
+    x = layers.BatchNormalization(momentum=0.0)(x)
+    return layers.Activation("relu")(x)
 
-class ConvBN(layers.Layer):
-    def __init__(self, filters):
-        super(ConvBN, self).__init__()
-
-        self.conv = layers.Conv1D(filters, kernel_size=1, padding="valid")
-        self.bn = layers.BatchNormalization(momentum=0.0)
-        self.activation = tf.nn.relu
-
-    def call(self, inputs):
-
-        x = self.conv(inputs)
-        x = self.bn(x)
-        return self.activation(x)
-
-
-class DenseBN(layers.Layer):
-    def __init__(self, filters):
-        super(DenseBN, self).__init__()
-
-        self.dense = layers.Dense(filters)
-        self.bn = layers.BatchNormalization(momentum=0.0)
-        self.activation = tf.nn.relu
-
-    def call(self, inputs):
-
-        x = self.dense(inputs)
-        x = self.bn(x)
-        return self.activation(x)
-
+def dense_bn(x, filters):
+    x = layers.Dense(filters)(x)
+    x = layers.BatchNormalization(momentum=0.0)(x)
+    return layers.Activation("relu")(x)
 
 """
 PointNet consists of two core components. The primary MLP network, and the transformer
-net (t-net). The t-net aims to learn an affine transformation matrix by its own mini
-network. The mini network strongly resembles the main network. The t-net is used twice.
-The first time to transform the input features ($n \times 3$) into a canonical
-representation. The second is an affine transformation for alignment in feature space ($n
-\times 64$). As per the original paper we constrain the transformation to be close to an
-orthogonal matrix (i.e. $||X*X^T - I||$ = 0).
+net (T-net). The T-net aims to learn an affine transformation matrix by its own mini
+network. The T-net is used twice. The first time to transform the input features (n, 3)
+into a canonical representation. The second is an affine transformation for alignment in
+feature space (n, 3). As per the original paper we constrain the transformation to be
+close to an orthogonal matrix (i.e. ||X*X^T - I|| = 0).
 """
-
 
 class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, k, l2reg=0.001):
         self.k = k
         self.l2reg = l2reg
-        self.eye = K.eye(self.k)
+        self.eye = tf.eye(self.k)
 
     def __call__(self, x):
-        x = K.reshape(x, (-1, self.k, self.k))
-        xxt = K.batch_dot(x, x, axes=(2, 2))
-        return K.sum(self.l2reg * K.square(xxt - self.eye))
-
+        x = tf.reshape(x, (-1, self.k, self.k))
+        xxt = tf.tensordot(x, x, axes=(2, 2))
+        xxt = tf.reshape(xxt, (-1, self.k, self.k))
+        return tf.reduce_sum(self.l2reg * tf.square(xxt - self.eye))
 
 """
- We can define the t-net as a functional model.
+ We can define the T-net as a functional model.
 """
 
+def tnet(num_points, k, name):
 
-def tnet(n_pts, k, name):
-
-    inputs = keras.Input(shape=(n_pts, k))
+    inputs = keras.Input(shape=(num_points, k))
 
     # Initalise bias as the indentity matrix
     bias = keras.initializers.Constant(np.eye(k).flatten())
     reg = OrthogonalRegularizer(k)
 
-    x = ConvBN(64)(inputs)
-    x = ConvBN(128)(x)
-    x = ConvBN(1024)(x)
-
+    x = conv_bn(inputs, 32)
+    x = conv_bn(x, 64)
+    x = conv_bn(x, 512)
     x = layers.GlobalMaxPooling1D()(x)
-
-    x = DenseBN(512)(x)
-    x = DenseBN(256)(x)
+    x = dense_bn(x, 256)
+    x = dense_bn(x, 128)
     x = layers.Dense(
         k * k,
         kernel_initializer="zeros",
         bias_initializer=bias,
         activity_regularizer=reg,
     )(x)
-
     feat_T = layers.Reshape((k, k))(x)
-
     # Apply affine transformation to input features
     outputs = layers.Dot(axes=(2, 1))([inputs, feat_T])
 
     return keras.Model(inputs=inputs, outputs=outputs, name=name)
 
-
 """
 The main network can be then implemented in the same manner where the t-net mini models
 can be dropped in a layers in the graph. Here we replicate the network architecture
-published in the original paper.
+published in the original paper but with half the number of weights at each layer as we
+are using the smaller 10 class ModelNet dataset.
 """
 
-inputs = keras.Input(shape=(N_PTS, 3))
+inputs = keras.Input(shape=(NUM_POINTS, 3))
 
-# x = tnet(N_PTS, 3, 'input_tnet')(inputs)
-
-x = ConvBN(64)(inputs)
-x = ConvBN(64)(x)
-
-# x = tnet(N_PTS, 64, 'feat_tnet')(x)
-
-x = ConvBN(64)(x)
-x = ConvBN(128)(x)
-x = ConvBN(1024)(x)
-
+x = tnet(NUM_POINTS, 3, "input_tnet")(inputs)
+x = conv_bn(x, 32)
+x = conv_bn(x, 32)
+x = tnet(NUM_POINTS, 32, "feat_tnet")(x)
+x = conv_bn(x, 32)
+x = conv_bn(x, 64)
+x = conv_bn(x, 512)
 x = layers.GlobalMaxPooling1D()(x)
-
-x = DenseBN(512)(x)
+x = dense_bn(x, 256)
 x = layers.Dropout(0.3)(x)
-
-x = DenseBN(256)(x)
+x = dense_bn(x, 128)
 x = layers.Dropout(0.3)(x)
 
 outputs = layers.Dense(NUM_CLASSES, activation="softmax")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
-
 model.summary()
 
 """
 ### Train model
-"""
 
-"""
 Once the model is defined it can be trained like any other standard classification model
 using `.compile()` and `.fit()`.
 """
@@ -292,4 +249,35 @@ model.compile(
     metrics=["sparse_categorical_accuracy"],
 )
 
-model.fit(train_dataset, epochs=10, validation_data=test_dataset)
+model.fit(train_dataset, epochs=20, validation_data=test_dataset)
+
+"""
+## Visualize predictions
+
+We can use matplotlib to visualize our trained model performance.
+"""
+
+data = test_dataset.take(1)
+
+points, labels = list(data)[0]
+points = points[:8, ...]
+labels = labels[:8, ...]
+
+# run test data through model
+preds = model.predict(points)
+preds = tf.math.argmax(preds, -1)
+
+points = points.numpy()
+
+# plot points with predicted class and label
+fig = plt.figure(figsize=(15, 10))
+for i in range(8):
+    ax = fig.add_subplot(2, 4, i + 1, projection="3d")
+    ax.scatter(points[i, :, 0], points[i, :, 1], points[i, :, 2])
+    ax.set_title(
+        "pred: {:}, label: {:}".format(
+            CLASS_MAP[preds[i].numpy()], CLASS_MAP[labels.numpy()[i]]
+        )
+    )
+    ax.set_axis_off()
+plt.show()
