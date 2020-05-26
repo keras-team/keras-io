@@ -3,26 +3,26 @@ Title: Collaborative Filtering for Movie Recommendations
 Author: [Siddhartha Banerjee](https://twitter.com/sidd2006)
 Date created: 2020/05/24
 Last modified: 2020/05/24
-Description: Recommending movies using embedding-based model on Movielens dataset.
+Description: Recommending movies using a model trained on Movielens dataset.
 """
 """
 ## Introduction
 
-This example looks at
+This example demonstrates
 [Collaborative filtering](https://en.wikipedia.org/wiki/Collaborative_filtering)
-using [Movielens dataset](https://www.kaggle.com/c/movielens-100k)
+using the [Movielens dataset](https://www.kaggle.com/c/movielens-100k)
 to recommend movies to users.
-The MovieLens ratings dataset includes users and movies with the corresponding ratings.
-The goal is to be able to predict ratings for movies an user has not yet watched.
-Thereafter, the movies with higher predicted ratings will be recommended to the user.
+The MovieLens ratings dataset lists the ratings given by a set of users to a set of movies.
+Our goal is to be able to predict ratings for movies an user has not yet watched.
+The movies with the highest predicted ratings can then be recommended to the user.
 
 The steps in the model are as follows:
 
-1. Feed user identifier and movie identifier to the model.
-2. Use an embedding matrix to obtain the corresponding user and movie embeddings.
-3. Obtain a dot product of the embeddings, the get a score and add bias.
-4. Use a sigmoid activation to scale the ratings between 0-1 scale.
-5. Convert the scaled output to a number between minimum and maximum rating.
+1. Map user ID to a "user vector" via an embedding matrix
+2. Map movie ID to a "movie vector" via an embedding matrix
+3. Compute the dot product between the user vector and movie vector, to obtain
+the a match score between the user and the movie (predicted rating).
+4. Train the embeddings via gradient descent using all known user-movie pairs.
 
 **References:**
 
@@ -40,11 +40,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 """
-## First, load the data and apply some pre-processing
+## First, load the data and apply preprocessing
 """
 
 # Download the actual data from http://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
-# use the ratings.csv file
+# Use the ratings.csv file
 movielens_data_file_url = (
     "http://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
 )
@@ -54,13 +54,10 @@ movielens_zipped_file = keras.utils.get_file(
 keras_datasets_path = Path(movielens_zipped_file).parents[0]
 movielens_dir = keras_datasets_path / "ml-latest-small"
 
-# Run the following piece only if it is the first time.
-# Otherwise, data should already be there.
-# In case the MovieLens 100k data has changed over time,
-# then please delete the folder in datasets manually and rerun.
+# Only extract the data the first time the script is run.
 if not movielens_dir.exists():
     with ZipFile(movielens_zipped_file, "r") as zip:
-        # extracting all the files
+        # Extract files
         print("Extracting all the files now...")
         zip.extractall(path=keras_datasets_path)
         print("Done!")
@@ -69,8 +66,7 @@ ratings_file = movielens_dir / "ratings.csv"
 df = pd.read_csv(ratings_file)
 
 """
-First, need to perform some preprocessing to encode users and movies to specific indices.
-This is done as the movieids and userids are non-sequential in nature.
+First, need to perform some preprocessing to encode users and movies as integer indices.
 """
 user_ids = df["userId"].unique().tolist()
 user2user_encoded = {x: i for i, x in enumerate(user_ids)}
@@ -111,11 +107,11 @@ x_train, x_test, y_train, y_test = (
 """
 ## Create the model
 
-Let's fix some parameters in the architecture. We will use user embeddings and movie
-embeddings, let's keep the dimensions as 50 for both.
-The model computes a score using dot product of user and movie embeddings.
-Thereafter, it uses a sigmoid activation on the sum over all the scores (including biases).
-Finally, the score is converted into the rating ranges based on this dataset.
+We embed both users and movies in to 50-dimensional vectors.
+
+The model computes a match score between user and movie embeddings via a dot product,
+and adds a per-movie and per-user bias. The match score is scaled to the `[0, 1]`
+interval via a sigmoid (since our ratings are normalized to this range).
 """
 EMBEDDING_SIZE = 50
 
@@ -214,13 +210,3 @@ recommended_movie_ids = [movie_encoded2movie.get(x) for x in top_ratings_indices
 print("Here are the top 10 movie recommendations for user: {}".format(user_id))
 print("*****" * 10)
 print("\n".join(movie_df[movie_df["movieId"].isin(recommended_movie_ids)].title.values))
-
-"""
-## Conclusions
-
-As can be seen from the final results, we can recommend new movies to an user.
-More improvements are possible, by adding checkpointing to store
-the best performing model.
-
-This is how online video streaming companies provide you recommendations.
-"""
