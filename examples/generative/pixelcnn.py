@@ -26,7 +26,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tqdm import tqdm
-import tensorflow_probability as tfp
 
 """
 ## Getting the Data
@@ -131,7 +130,9 @@ adam = keras.optimizers.Adam(learning_rate=0.0005)
 pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 
 pixel_cnn.summary()
-pixel_cnn.fit(x=data, y=data, batch_size=128, epochs=50, validation_split=0.1)
+pixel_cnn.fit(
+    x=data, y=data, batch_size=128, epochs=50, validation_split=0.1, verbose=2
+)
 
 """
 ## Demonstration
@@ -157,9 +158,9 @@ for row in tqdm(range(rows)):
             probs = pixel_cnn.predict(pixels)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
-            pixels[:, row, col, channel] = tfp.distributions.Bernoulli(
-                probs=probs
-            ).sample()
+            pixels[:, row, col, channel] = tf.math.ceil(
+                probs - tf.random.uniform(probs.shape)
+            )
 
 
 def deprocess_image(x):
