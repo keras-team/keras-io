@@ -36,6 +36,7 @@ prototype different research ideas in a flexible way with minimal code.
 ## Setup
 
 
+
 ```python
 import numpy as np
 import tensorflow as tf
@@ -65,6 +66,7 @@ and GRU.
 Here is a simple example of a `Sequential` model that processes sequences of integers,
 embeds each integer into a 64-dimensional vector, then processes the sequence of
 vectors using a `LSTM` layer.
+
 
 
 ```python
@@ -113,6 +115,7 @@ CPU), via the `unroll` argument
 For more information, see the
 [RNN API documentation](https://keras.io/api/layers/recurrent_layers/).
 
+
 ---
 ## Outputs and states
 
@@ -124,6 +127,7 @@ where `units` corresponds to the `units` argument passed to the layer's construc
 A RNN layer can also return the entire sequence of outputs for each sample (one vector
 per timestep per sample), if you set `return_sequences=True`. The shape of this output
 is `(batch_size, timesteps, units)`.
+
 
 
 ```python
@@ -180,6 +184,7 @@ Note that the shape of the state needs to match the unit size of the layer, like
 example below.
 
 
+
 ```python
 encoder_vocab = 1000
 decoder_vocab = 2000
@@ -213,7 +218,7 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "model"
+Model: "functional_1"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
 ==================================================================================================
@@ -339,6 +344,7 @@ lstm_layer.reset_states()
 ### RNN State Reuse
 <a id="rnn_state_reuse"></a>
 
+
 The recorded states of the RNN layer are not included in the `layer.weights()`. If you
 would like to reuse the state from a RNN layer, you can retrieve the states value by
 `layer.states` and use it as the
@@ -378,6 +384,7 @@ have the context around the word, not only just the words that come before it.
 
 Keras provides an easy API for you to build such bidirectional RNNs: the
 `keras.layers.Bidirectional` wrapper.
+
 
 
 ```python
@@ -420,7 +427,8 @@ The output of the `Bidirectional` RNN will be, by default, the sum of the forwar
 output and the backward layer output. If you need a different merging behavior, e.g.
 concatenation, change the `merge_mode` parameter in the `Bidirectional` wrapper
 constructor. For more details about `Bidirectional`, please check
-[the API docs](https://keras.io/api/layers/recurrent_layers/Bidirectional/).
+[the API docs](https://keras.io/api/layers/recurrent_layers/bidirectional/).
+
 
 ---
 ## Performance optimization and CuDNN kernels
@@ -445,8 +453,9 @@ corresponds to strictly right padded data, CuDNN can still be used. This is the 
 common case).
 
 For the detailed list of constraints, please see the documentation for the
-[LSTM](https://keras.io/api/layers/recurrent_layers/LSTM/) and
-[GRU](https://keras.io/api/layers/recurrent_layers/GRU/) layers.
+[LSTM](https://keras.io/api/layers/recurrent_layers/lstm/) and
+[GRU](https://keras.io/api/layers/recurrent_layers/gru/) layers.
+
 
 ### Using CuDNN kernels when available
 
@@ -494,6 +503,7 @@ def build_model(allow_cudnn_kernel=True):
 Let's load the MNIST dataset:
 
 
+
 ```python
 mnist = keras.datasets.mnist
 
@@ -508,6 +518,7 @@ Let's create a model instance and train it.
 We choose `sparse_categorical_crossentropy` as the loss function for the model. The
 output of the model has shape of `[batch_size, 10]`. The target for the model is a
 integer vector, each of the integer is in the range of 0 to 9.
+
 
 
 ```python
@@ -528,13 +539,14 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 10ms/step - loss: 0.9223 - accuracy: 0.7080 - val_loss: 0.5150 - val_accuracy: 0.8319
+938/938 [==============================] - 10s 10ms/step - loss: 0.9154 - accuracy: 0.7059 - val_loss: 0.5218 - val_accuracy: 0.8350
 
-<tensorflow.python.keras.callbacks.History at 0x16e18da90>
+<tensorflow.python.keras.callbacks.History at 0x16f7ffad0>
 
 ```
 </div>
 Now, let's compare to a model that does not use the CuDNN kernel:
+
 
 
 ```python
@@ -553,9 +565,9 @@ noncudnn_model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 11s 12ms/step - loss: 0.3512 - accuracy: 0.8960 - val_loss: 0.3156 - val_accuracy: 0.8976
+938/938 [==============================] - 10s 11ms/step - loss: 0.4161 - accuracy: 0.8717 - val_loss: 0.4139 - val_accuracy: 0.8614
 
-<tensorflow.python.keras.callbacks.History at 0x179bb72d0>
+<tensorflow.python.keras.callbacks.History at 0x16fd6c110>
 
 ```
 </div>
@@ -569,6 +581,7 @@ The model will run on CPU by default if no GPU is available.
 
 You simply don't have to worry about the hardware you're running on anymore. Isn't that
 pretty cool?
+
 
 
 ```python
@@ -615,8 +628,10 @@ such structured inputs.
 
 ### Define a custom cell that support nested input/output
 
+
 See [Making new Layers & Models via subclassing](/guides/making_new_layers_and_models_via_subclassing/)
 for details on writing your own layers.
+
 
 
 ```python
@@ -673,6 +688,7 @@ Let's build a Keras model that uses a `keras.layers.RNN` layer and the custom ce
 we just defined.
 
 
+
 ```python
 unit_1 = 10
 unit_2 = 20
@@ -705,6 +721,7 @@ Since there isn't a good candidate dataset for this model, we use random Numpy d
 demonstration.
 
 
+
 ```python
 input_1_data = np.random.random((batch_size * num_batches, timestep, i1))
 input_2_data = np.random.random((batch_size * num_batches, timestep, i2, i3))
@@ -719,9 +736,9 @@ model.fit(input_data, target_data, batch_size=batch_size)
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 2s 227ms/step - loss: 0.7864 - rnn_1_loss: 0.3061 - rnn_1_1_loss: 0.4803 - rnn_1_accuracy: 0.1109 - rnn_1_1_accuracy: 0.0344
+10/10 [==============================] - 2s 212ms/step - loss: 0.7551 - rnn_1_loss: 0.2712 - rnn_1_1_loss: 0.4839 - rnn_1_accuracy: 0.0922 - rnn_1_1_accuracy: 0.0319
 
-<tensorflow.python.keras.callbacks.History at 0x187e32b50>
+<tensorflow.python.keras.callbacks.History at 0x17e0f9310>
 
 ```
 </div>
@@ -731,3 +748,4 @@ will handle the sequence iteration for you. It's an incredibly powerful way to q
 prototype new kinds of RNNs (e.g. a LSTM variant).
 
 For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/RNN/).
+
