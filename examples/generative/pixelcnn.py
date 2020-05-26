@@ -10,7 +10,7 @@ Description: PixelCNN implemented in Keras.
 ## Introduction
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
-(reference: [https://arxiv.org/abs/1606.05328](https://arxiv.org/abs/1606.05328)).
+(reference: [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)).
 It is designed to generate images (or other data types) iteratively,
 from an input vector where the probability distribution of prior elements dictates the
 probability distribution of later elements. In the following example, images are generated
@@ -125,7 +125,7 @@ out = keras.layers.Conv2D(
 )(x)
 
 pixel_cnn = keras.Model(inputs, out)
-adam = keras.optimizers.Adam(learning_rate=0.0001)
+adam = keras.optimizers.Adam(learning_rate=0.0003)
 pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 
 pixel_cnn.summary()
