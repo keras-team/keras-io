@@ -1,39 +1,42 @@
 """
 Title: Collaborative Filtering for Movie Recommendations
-Author: Siddhartha Banerjee
+Author: [Siddhartha Banerjee](https://twitter.com/sidd2006)
 Date created: 2020/05/24
 Last modified: 2020/05/24
-Description: Recommending movies using user and movie embeddings trained using Movielens small dataset.
+Description: Recommending movies using embedding-based model on Movielens dataset.
 """
 """
 ## Introduction
 
 This example looks at
-[Collaborative filtering using Movielens dataset](https://www.kaggle.com/c/movielens-100k)
+[Collaborative filtering](https://en.wikipedia.org/wiki/Collaborative_filtering)
+using [Movielens dataset](https://www.kaggle.com/c/movielens-100k)
 to recommend movies to users.
+The MovieLens ratings dataset includes users and movies with the corresponding ratings.
+The goal is to be able to predict ratings for movies an user has not yet watched.
+Thereafter, the movies with higher predicted ratings will be recommended to the user.
+
+The steps in the model are as follows:
+
+1. Feed user identifier and movie identifier to the model.
+2. Use an embedding matrix to obtain the corresponding user and movie embeddings.
+3. Obtain a dot product of the embeddings, the get a score and add bias.
+4. Use a sigmoid activation to scale the ratings between 0-1 scale.
+5. Convert the scaled output to a number between minimum and maximum rating.
+
+**References:**
+
+- [Collaborative Filtering](https://dl.acm.org/doi/pdf/10.1145/371920.372071)
+- [Neural Collaborative Filtering](https://dl.acm.org/doi/pdf/10.1145/3038912.3052569)
 """
 
-import tensorflow as tf
 import pandas as pd
 import numpy as np
+from zipfile import ZipFile
+import tensorflow as tf
 from tensorflow import keras
-from pathlib import Path
 from tensorflow.keras import layers
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import (
-    Input,
-    Reshape,
-    Dot,
-    Add,
-    Embedding,
-    Activation,
-    Lambda,
-    Dense,
-)
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.regularizers import l2
+from pathlib import Path
 import matplotlib.pyplot as plt
 
 """
@@ -42,128 +45,135 @@ import matplotlib.pyplot as plt
 
 # Download the actual data from http://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
 # use the ratings.csv file
+movielens_data_file_url = (
+    "http://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
+)
+movielens_zipped_file = keras.utils.get_file(
+    "ml-latest-small.zip", movielens_data_file_url, extract=False
+)
+keras_datasets_path = Path(movielens_zipped_file).parents[0]
+movielens_dir = keras_datasets_path / "ml-latest-small"
 
-data_directory = Path("/Users/siddban/Documents/ml-latest-small/")
+# Run the following piece only if it is the first time.
+# Otherwise, data should already be there.
+# In case the MovieLens 100k data has changed over time,
+# then please delete the folder in datasets manually and rerun.
+if not movielens_dir.exists():
+    with ZipFile(movielens_zipped_file, "r") as zip:
+        # extracting all the files
+        print("Extracting all the files now...")
+        zip.extractall(path=keras_datasets_path)
+        print("Done!")
 
-ratings_file = data_directory / "ratings.csv"
-
+ratings_file = movielens_dir / "ratings.csv"
 df = pd.read_csv(ratings_file)
 
 """
 First, need to perform some preprocessing to encode users and movies to specific indices.
 This is done as the movieids and userids are non-sequential in nature.
 """
+user_ids = df["userId"].unique().tolist()
+user2user_encoded = {x: i for i, x in enumerate(user_ids)}
+userencoded2user = {i: x for i, x in enumerate(user_ids)}
+movie_ids = df["movieId"].unique().tolist()
+movie2movie_encoded = {x: i for i, x in enumerate(movie_ids)}
+movie_encoded2movie = {i: x for i, x in enumerate(movie_ids)}
+df["user"] = df["userId"].map(user2user_encoded)
+df["movie"] = df["movieId"].map(movie2movie_encoded)
 
-user_enc = LabelEncoder()
-df["user"] = user_enc.fit_transform(df["userId"].values)
-n_users = df["user"].nunique()
-movie_enc = LabelEncoder()
-df["movie"] = movie_enc.fit_transform(df["movieId"].values)
-n_movies = df["movie"].nunique()
+num_users = len(user2user_encoded)
+num_movies = len(movie_encoded2movie)
 df["rating"] = df["rating"].values.astype(np.float32)
 min_rating = min(df["rating"])
 max_rating = max(df["rating"])
 print(
     "Number of users: {}, Number of Movies: {}, Min rating: {}, Max rating: {}".format(
-        n_users, n_movies, min_rating, max_rating
+        num_users, num_movies, min_rating, max_rating
     )
 )
 
 """
 ## Prepare training and validation data
 """
-
-X = df[["user", "movie"]].values
-y = df["rating"].values
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.1, random_state=42
+df = df.sample(frac=1, random_state=42)
+x = df[["user", "movie"]].values
+# Normalize the targets between 0 and 1. Makes it easy to train.
+y = df["rating"].apply(lambda x: (x - min_rating) / (max_rating - min_rating)).values
+# Assuming training on 90% of the data and validating on 10%.
+train_indices = int(0.9 * df.shape[0])
+x_train, x_test, y_train, y_test = (
+    x[:train_indices],
+    x[train_indices:],
+    y[:train_indices],
+    y[train_indices:],
 )
-print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
 """
 ## Create the model
 
 Let's fix some parameters in the architecture. We will use user embeddings and movie
 embeddings, let's keep the dimensions as 50 for both.
+The model computes a score using dot product of user and movie embeddings.
+Thereafter, it uses a sigmoid activation on the sum over all the scores (including biases).
+Finally, the score is converted into the rating ranges based on this dataset.
 """
 EMBEDDING_SIZE = 50
 
 
-class EmbeddingLayer(layers.Layer):
-    def __init__(self, n_items, n_factors):
-        super(EmbeddingLayer, self).__init__()
-        self.n_items = n_items
-        self.n_factors = n_factors
-        self.emb = Embedding(
-            self.n_items,
-            self.n_factors,
-            embeddings_initializer="he_normal",
-            embeddings_regularizer=l2(1e-6),
-        )
-
-    def call(self, x):
-        x = self.emb(x)
-        x = Reshape((self.n_factors,))(x)
-        return x
-
-
 class RecommenderNet(keras.Model):
-    def __init__(self, n_users, n_movies, embedding_size, min_rating, max_rating):
-        super(RecommenderNet, self).__init__(name="recnet")
-        self.n_users = n_users
-        self.n_movies = n_movies
+    def __init__(
+        self, num_users, num_movies, embedding_size, min_rating, max_rating, **kwargs
+    ):
+        super(RecommenderNet, self).__init__(**kwargs)
+        self.num_users = num_users
+        self.num_movies = num_movies
         self.embedding_size = embedding_size
         self.min_rating = min_rating
         self.max_rating = max_rating
-        self.user_embedding = Embedding(
-            n_users,
+        self.user_embedding = layers.Embedding(
+            num_users,
             embedding_size,
             embeddings_initializer="he_normal",
-            embeddings_regularizer=l2(1e-6),
+            embeddings_regularizer=keras.regularizers.l2(1e-6),
         )
-        self.user_bias = Embedding(n_users, 1)
-        self.movie_embedding = Embedding(
-            n_movies,
+        self.user_bias = layers.Embedding(num_users, 1)
+        self.movie_embedding = layers.Embedding(
+            num_movies,
             embedding_size,
             embeddings_initializer="he_normal",
-            embeddings_regularizer=l2(1e-6),
+            embeddings_regularizer=keras.regularizers.l2(1e-6),
         )
-        self.movie_bias = Embedding(n_movies, 1)
+        self.movie_bias = layers.Embedding(num_movies, 1)
 
     def call(self, inputs):
-        u = self.user_embedding(inputs[:, 0])
-        ub = self.user_bias(inputs[:, 0])
-        m = self.movie_embedding(inputs[:, 1])
-        mb = self.movie_bias(inputs[:, 1])
-        x = Dot(axes=1)([u, m])
-        x = Add()([x, ub, mb])
-        x = Activation("sigmoid")(x)
-        x = Lambda(lambda x: x * (self.max_rating - self.min_rating) + self.min_rating)(
-            x
-        )
+        user_vector = self.user_embedding(inputs[:, 0])
+        user_bias = self.user_bias(inputs[:, 0])
+        movie_vector = self.movie_embedding(inputs[:, 1])
+        movie_bias = self.movie_bias(inputs[:, 1])
+        dot_user_movie = layers.Dot(axes=1)([user_vector, movie_vector])
+        # Add all the components (including bias)
+        x = dot_user_movie + user_bias + movie_bias
+        # The sigmoid activation forces the rating to between 0 and 1
+        x = tf.nn.sigmoid(x)
         return x
 
 
 inputs = layers.Input(shape=(2,))
-recommendation_layer = RecommenderNet(
-    n_users, n_movies, EMBEDDING_SIZE, min_rating, max_rating
-)
-outputs = recommendation_layer(inputs)
-model = keras.Model(inputs=inputs, outputs=outputs)
-opt = Adam(lr=0.001)
-model.compile(loss="mean_squared_error", optimizer=opt)
-model.summary()
+model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE, min_rating, max_rating)
+outputs = model(inputs)
+opt = keras.optimizers.Adam(lr=0.001)
+model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=opt)
 
 """
 ## Train the model based on the data split
 """
 history = model.fit(
-    x=X_train,
+    x=x_train,
     y=y_train,
-    batch_size=64,
+    batch_size=128,
     epochs=5,
     verbose=1,
-    validation_data=(X_test, y_test),
+    validation_data=(x_test, y_test),
 )
 
 """
@@ -180,7 +190,8 @@ plt.show()
 """
 ## Show top 10 movie recommendations to an user
 """
-movie_df = pd.read_csv(data_directory / "movies.csv")
+
+movie_df = pd.read_csv(movielens_dir / "movies.csv")
 
 # Let us get an user and see the top recommendations.
 user_id = df.userId.sample(1).iloc[0]
@@ -188,17 +199,17 @@ movies_watched_by_user = df[df.userId == user_id].movieId.values
 movies_not_watched = movie_df[~movie_df["movieId"].isin(movies_watched_by_user)][
     "movieId"
 ]
-movies_not_watched = list(set(movies_not_watched).intersection(set(movie_enc.classes_)))
-movies_not_watched = movie_enc.transform(movies_not_watched).reshape(
-    len(movies_not_watched), 1
+movies_not_watched = list(
+    set(movies_not_watched).intersection(set(movie2movie_encoded.keys()))
 )
-user_encoder = user_enc.transform([user_id])
+movies_not_watched = [[movie2movie_encoded.get(x)] for x in movies_not_watched]
+user_encoder = user2user_encoded.get(user_id)
 user_movie_array = np.hstack(
     ([[user_id]] * len(movies_not_watched), movies_not_watched)
 )
 ratings = model.predict(user_movie_array).flatten()
 top_ratings_indices = ratings.argsort()[-10:][::-1]
-recommended_movie_ids = movie_enc.inverse_transform(top_ratings_indices)
+recommended_movie_ids = [movie_encoded2movie.get(x) for x in top_ratings_indices]
 
 print("Here are the top 10 movie recommendations for user: {}".format(user_id))
 print("*****" * 10)
@@ -207,11 +218,9 @@ print("\n".join(movie_df[movie_df["movieId"].isin(recommended_movie_ids)].title.
 """
 ## Conclusions
 
-As can be seen from the final results, we can recommend new movies to an user
-
-- The validation loss dips until 3rd epoch
-- The model shows a validation loss around 0.75
-(although the lowest is 0.73 but we did not apply a callback here with Checkpointing) which is pretty good on this dataset.
+As can be seen from the final results, we can recommend new movies to an user.
+More improvements are possible, by adding checkpointing to store
+the best performing model.
 
 This is how online video streaming companies provide you recommendations.
 """
