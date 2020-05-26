@@ -25,6 +25,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tqdm import tqdm
+import tensorflow_probability as tfp
 
 """
 ## Getting the Data
@@ -125,11 +127,11 @@ out = keras.layers.Conv2D(
 )(x)
 
 pixel_cnn = keras.Model(inputs, out)
-adam = keras.optimizers.Adam(learning_rate=0.0003)
+adam = keras.optimizers.Adam(learning_rate=0.0005)
 pixel_cnn.compile(optimizer=adam, loss="binary_crossentropy")
 
 pixel_cnn.summary()
-pixel_cnn.fit(x=data, y=data, batch_size=64, epochs=50, validation_split=0.1)
+pixel_cnn.fit(x=data, y=data, batch_size=128, epochs=50, validation_split=0.1)
 
 """
 ## Demonstration
@@ -140,8 +142,6 @@ model to repeat the process.
 """
 
 from IPython.display import Image, display
-from tqdm import tqdm
-import tensorflow_probability as tfp
 
 # Create an empty array of pixels.
 batch = 4
