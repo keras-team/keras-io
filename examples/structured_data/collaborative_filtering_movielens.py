@@ -80,8 +80,10 @@ df["movie"] = df["movieId"].map(movie2movie_encoded)
 num_users = len(user2user_encoded)
 num_movies = len(movie_encoded2movie)
 df["rating"] = df["rating"].values.astype(np.float32)
+# min and max ratings will be used to normalize the ratings later
 min_rating = min(df["rating"])
 max_rating = max(df["rating"])
+
 print(
     "Number of users: {}, Number of Movies: {}, Min rating: {}, Max rating: {}".format(
         num_users, num_movies, min_rating, max_rating
@@ -113,19 +115,18 @@ The model computes a match score between user and movie embeddings via a dot pro
 and adds a per-movie and per-user bias. The match score is scaled to the `[0, 1]`
 interval via a sigmoid (since our ratings are normalized to this range).
 """
+# Setting a random seed for reproducibility
+tf.random.set_seed(1234)
+
 EMBEDDING_SIZE = 50
 
 
 class RecommenderNet(keras.Model):
-    def __init__(
-        self, num_users, num_movies, embedding_size, min_rating, max_rating, **kwargs
-    ):
+    def __init__(self, num_users, num_movies, embedding_size, **kwargs):
         super(RecommenderNet, self).__init__(**kwargs)
         self.num_users = num_users
         self.num_movies = num_movies
         self.embedding_size = embedding_size
-        self.min_rating = min_rating
-        self.max_rating = max_rating
         self.user_embedding = layers.Embedding(
             num_users,
             embedding_size,
@@ -146,16 +147,15 @@ class RecommenderNet(keras.Model):
         user_bias = self.user_bias(inputs[:, 0])
         movie_vector = self.movie_embedding(inputs[:, 1])
         movie_bias = self.movie_bias(inputs[:, 1])
-        dot_user_movie = layers.Dot(axes=1)([user_vector, movie_vector])
+        dot_user_movie = tf.tensordot(user_vector, movie_vector, 2)
         # Add all the components (including bias)
         x = dot_user_movie + user_bias + movie_bias
         # The sigmoid activation forces the rating to between 0 and 1
-        x = tf.nn.sigmoid(x)
-        return x
+        return tf.nn.sigmoid(x)
 
 
 inputs = layers.Input(shape=(2,))
-model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE, min_rating, max_rating)
+model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE)
 outputs = model(inputs)
 opt = keras.optimizers.Adam(lr=0.001)
 model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=opt)
@@ -166,7 +166,7 @@ model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=opt)
 history = model.fit(
     x=x_train,
     y=y_train,
-    batch_size=128,
+    batch_size=64,
     epochs=5,
     verbose=1,
     validation_data=(x_test, y_test),
