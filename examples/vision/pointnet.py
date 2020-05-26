@@ -5,10 +5,11 @@ Date created: 2020/05/25
 Last modified: 2020/05/26
 Description: Implementation of PointNet for ModelNet10 classification.
 """
-
 """
 # Point cloud classification
+"""
 
+"""
 ## Introduction
 
 Classification, detection and segmentation of unordered 3D point sets i.e. point clouds
@@ -21,8 +22,7 @@ post](https://medium.com/@luis_gonzales/an-in-depth-look-at-pointnet-111d7efdaa1
 """
 ## Setup
 
-Install trimesh for mesh processing and sampling
-If using colab run `!pip install trimesh`
+If using colab first run `!pip install trimesh`
 """
 
 import glob
@@ -148,10 +148,12 @@ Each convolution and fully-connected layer (with exception for end layers) consi
 Convolution / Dense -> Batch Normalization -> ReLU Activation.
 """
 
+
 def conv_bn(x, filters):
     x = layers.Conv1D(filters, kernel_size=1, padding="valid")(x)
     x = layers.BatchNormalization(momentum=0.0)(x)
     return layers.Activation("relu")(x)
+
 
 def dense_bn(x, filters):
     x = layers.Dense(filters)(x)
@@ -168,28 +170,26 @@ close to an orthogonal matrix (i.e. ||X*X^T - I|| = 0).
 """
 
 class OrthogonalRegularizer(keras.regularizers.Regularizer):
-    def __init__(self, k, l2reg=0.001):
-        self.k = k
+    def __init__(self, num_features, l2reg=0.001):
+        self.num_features = num_features
         self.l2reg = l2reg
-        self.eye = tf.eye(self.k)
+        self.eye = tf.eye(num_features)
 
     def __call__(self, x):
-        x = tf.reshape(x, (-1, self.k, self.k))
+        x = tf.reshape(x, (-1, self.num_features, self.num_features))
         xxt = tf.tensordot(x, x, axes=(2, 2))
-        xxt = tf.reshape(xxt, (-1, self.k, self.k))
+        xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.eye))
 
 """
- We can define the T-net as a functional model.
+ We can then define a general function to build T-net layers.
 """
 
-def tnet(num_points, k, name):
-
-    inputs = keras.Input(shape=(num_points, k))
+def tnet(inputs, num_features):
 
     # Initalise bias as the indentity matrix
-    bias = keras.initializers.Constant(np.eye(k).flatten())
-    reg = OrthogonalRegularizer(k)
+    bias = keras.initializers.Constant(np.eye(num_features).flatten())
+    reg = OrthogonalRegularizer(num_features)
 
     x = conv_bn(inputs, 32)
     x = conv_bn(x, 64)
@@ -198,16 +198,14 @@ def tnet(num_points, k, name):
     x = dense_bn(x, 256)
     x = dense_bn(x, 128)
     x = layers.Dense(
-        k * k,
+        num_features * num_features,
         kernel_initializer="zeros",
         bias_initializer=bias,
         activity_regularizer=reg,
     )(x)
-    feat_T = layers.Reshape((k, k))(x)
+    feat_T = layers.Reshape((num_features, num_features))(x)
     # Apply affine transformation to input features
-    outputs = layers.Dot(axes=(2, 1))([inputs, feat_T])
-
-    return keras.Model(inputs=inputs, outputs=outputs, name=name)
+    return layers.Dot(axes=(2, 1))([inputs, feat_T])
 
 """
 The main network can be then implemented in the same manner where the t-net mini models
@@ -218,10 +216,10 @@ are using the smaller 10 class ModelNet dataset.
 
 inputs = keras.Input(shape=(NUM_POINTS, 3))
 
-x = tnet(NUM_POINTS, 3, "input_tnet")(inputs)
+x = tnet(inputs, 3)
 x = conv_bn(x, 32)
 x = conv_bn(x, 32)
-x = tnet(NUM_POINTS, 32, "feat_tnet")(x)
+x = tnet(x, 32)
 x = conv_bn(x, 32)
 x = conv_bn(x, 64)
 x = conv_bn(x, 512)
