@@ -13,7 +13,7 @@ This example demonstrates
 using the [Movielens dataset](https://www.kaggle.com/c/movielens-100k)
 to recommend movies to users.
 The MovieLens ratings dataset lists the ratings given by a set of users to a set of movies.
-Our goal is to be able to predict ratings for movies an user has not yet watched.
+Our goal is to be able to predict ratings for movies a user has not yet watched.
 The movies with the highest predicted ratings can then be recommended to the user.
 
 The steps in the model are as follows:
@@ -169,7 +169,7 @@ history = model.fit(
 )
 
 """
-## Plot training and test loss
+## Plot training and validation loss
 """
 plt.plot(history.history["loss"])
 plt.plot(history.history["val_loss"])
@@ -180,12 +180,12 @@ plt.legend(["train", "test"], loc="upper left")
 plt.show()
 
 """
-## Show top 10 movie recommendations to an user
+## Show top 10 movie recommendations to a user
 """
 
 movie_df = pd.read_csv(movielens_dir / "movies.csv")
 
-# Let us get an user and see the top recommendations.
+# Let us get a user and see the top recommendations.
 user_id = df.userId.sample(1).iloc[0]
 movies_watched_by_user = df[df.userId == user_id]
 movies_not_watched = movie_df[
