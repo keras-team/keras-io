@@ -22,9 +22,11 @@ post](https://medium.com/@luis_gonzales/an-in-depth-look-at-pointnet-111d7efdaa1
 """
 ## Setup
 
-If using colab first run `!pip install trimesh`
+If using colab first install trimesh with `!pip install trimesh`.
 """
 
+
+import os
 import glob
 import trimesh
 import numpy as np
@@ -33,6 +35,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from matplotlib import pyplot as plt
 
+tf.random.set_seed(1234)
+
 """
 ## Load dataset
 
@@ -40,16 +44,18 @@ We use the ModelNet10 model dataset, the smaller 10 class version of the ModelNe
 dataset. First download the data:
 """
 
-"""shell
-!curl -O http://3dvision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip
-!unzip ModelNet10.zip
-"""
+DATA_DIR = tf.keras.utils.get_file(
+    "modelnet.zip",
+    "http://3dvision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip",
+    extract=True,
+)
+DATA_DIR = os.path.join(os.path.dirname(DATA_DIR), "ModelNet10")
 
 """
 We can use the `trimesh` package to read and visualize the `.off` mesh files.
 """
 
-mesh = trimesh.load("ModelNet10/chair/train/chair_0001.off")
+mesh = trimesh.load(os.path.join(DATA_DIR, "chair/train/chair_0001.off"))
 mesh.show()
 
 """
@@ -73,6 +79,7 @@ standard python list and converted to a `numpy` array. We also store the current
 enumerate index value as the object label and use a dictionary to recall this later.
 """
 
+
 def parse_dataset(num_points=2048):
 
     train_points = []
@@ -80,15 +87,15 @@ def parse_dataset(num_points=2048):
     test_points = []
     test_labels = []
     class_map = {}
-    folders = glob.glob("ModelNet10/[!README]*")
+    folders = glob.glob(os.path.join(DATA_DIR, "[!README]*"))
 
     for i, folder in enumerate(folders):
-        print("processing: %s" % folder)
+        print("processing class: {}".format(os.path.basename(folder)))
         # store folder name with ID so we can retrieve later
         class_map[i] = folder.split("/")[-1]
         # gather all files
-        train_files = glob.glob(folder + "/train/*")
-        test_files = glob.glob(folder + "/test/*")
+        train_files = glob.glob(os.path.join(folder, "train/*"))
+        test_files = glob.glob(os.path.join(folder, "test/*"))
 
         for f in train_files:
             train_points.append(trimesh.load(f).sample(num_points))
@@ -105,6 +112,7 @@ def parse_dataset(num_points=2048):
         np.array(test_labels),
         class_map,
     )
+
 
 """
 Set the number of points to sample and batch size and parse the dataset. This can take
@@ -126,6 +134,7 @@ Data augmentation is important when working with point cloud data. We create a
 augmentation function to jitter and shuffle the train dataset.
 """
 
+
 def augment(points, label):
     # jitter points
     points += tf.random.uniform(points.shape, -0.005, 0.005, dtype=tf.float64)
@@ -133,12 +142,11 @@ def augment(points, label):
     points = tf.random.shuffle(points)
     return points, label
 
-train_dataset = tf.data.Dataset.from_tensor_slices(
-    (train_points, train_labels))
+
+train_dataset = tf.data.Dataset.from_tensor_slices((train_points, train_labels))
 test_dataset = tf.data.Dataset.from_tensor_slices((test_points, test_labels))
 
-train_dataset = train_dataset.shuffle(
-    len(train_points)).map(augment).batch(BATCH_SIZE)
+train_dataset = train_dataset.shuffle(len(train_points)).map(augment).batch(BATCH_SIZE)
 test_dataset = test_dataset.shuffle(len(test_points)).batch(BATCH_SIZE)
 
 """
@@ -160,6 +168,7 @@ def dense_bn(x, filters):
     x = layers.BatchNormalization(momentum=0.0)(x)
     return layers.Activation("relu")(x)
 
+
 """
 PointNet consists of two core components. The primary MLP network, and the transformer
 net (T-net). The T-net aims to learn an affine transformation matrix by its own mini
@@ -168,6 +177,7 @@ into a canonical representation. The second is an affine transformation for alig
 feature space (n, 3). As per the original paper we constrain the transformation to be
 close to an orthogonal matrix (i.e. ||X*X^T - I|| = 0).
 """
+
 
 class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
@@ -181,9 +191,11 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.eye))
 
+
 """
  We can then define a general function to build T-net layers.
 """
+
 
 def tnet(inputs, num_features):
 
@@ -206,6 +218,7 @@ def tnet(inputs, num_features):
     feat_T = layers.Reshape((num_features, num_features))(x)
     # Apply affine transformation to input features
     return layers.Dot(axes=(2, 1))([inputs, feat_T])
+
 
 """
 The main network can be then implemented in the same manner where the t-net mini models
