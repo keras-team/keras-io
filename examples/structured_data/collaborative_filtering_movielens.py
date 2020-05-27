@@ -99,7 +99,7 @@ x = df[["user", "movie"]].values
 y = df["rating"].apply(lambda x: (x - min_rating) / (max_rating - min_rating)).values
 # Assuming training on 90% of the data and validating on 10%.
 train_indices = int(0.9 * df.shape[0])
-x_train, x_test, y_train, y_test = (
+x_train, x_val, y_train, y_val = (
     x[:train_indices],
     x[train_indices:],
     y[:train_indices],
@@ -165,7 +165,7 @@ history = model.fit(
     batch_size=64,
     epochs=5,
     verbose=1,
-    validation_data=(x_test, y_test),
+    validation_data=(x_val, y_val),
 )
 
 """
