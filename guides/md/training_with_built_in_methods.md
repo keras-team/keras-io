@@ -137,9 +137,9 @@ history = model.fit(
 ```
 Fit model on training data
 Epoch 1/2
-782/782 [==============================] - 1s 915us/step - loss: 0.3467 - sparse_categorical_accuracy: 0.9020 - val_loss: 0.1790 - val_sparse_categorical_accuracy: 0.9469
+782/782 [==============================] - 1s 1ms/step - loss: 0.3433 - sparse_categorical_accuracy: 0.9013 - val_loss: 0.2094 - val_sparse_categorical_accuracy: 0.9370
 Epoch 2/2
-782/782 [==============================] - 1s 776us/step - loss: 0.1628 - sparse_categorical_accuracy: 0.9517 - val_loss: 0.1358 - val_sparse_categorical_accuracy: 0.9611
+782/782 [==============================] - 1s 1ms/step - loss: 0.1594 - sparse_categorical_accuracy: 0.9520 - val_loss: 0.1372 - val_sparse_categorical_accuracy: 0.9586
 
 ```
 </div>
@@ -158,10 +158,10 @@ history.history
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.3466652035713196, 0.16277267038822174],
- 'sparse_categorical_accuracy': [0.901960015296936, 0.951740026473999],
- 'val_loss': [0.17900975048542023, 0.13576389849185944],
- 'val_sparse_categorical_accuracy': [0.9469000101089478, 0.9610999822616577]}
+{'loss': [0.34325557947158813, 0.15936172008514404],
+ 'sparse_categorical_accuracy': [0.9013199806213379, 0.9520000219345093],
+ 'val_loss': [0.2094312459230423, 0.13722778856754303],
+ 'val_sparse_categorical_accuracy': [0.9369999766349792, 0.9585999846458435]}
 
 ```
 </div>
@@ -186,8 +186,8 @@ print("predictions shape:", predictions.shape)
 <div class="k-default-codeblock">
 ```
 Evaluate on test data
-79/79 [==============================] - 0s 728us/step - loss: 0.1409 - sparse_categorical_accuracy: 0.9593
-test loss, test acc: [0.14094820618629456, 0.9592999815940857]
+79/79 [==============================] - 0s 780us/step - loss: 0.1357 - sparse_categorical_accuracy: 0.9581
+test loss, test acc: [0.13572055101394653, 0.9581000208854675]
 Generate predictions for 3 samples
 predictions shape: (3, 10)
 
@@ -215,9 +215,9 @@ model.compile(
 
 ```
 
-The `metrics` argument should be a list -- you model can have any number of metrics.
+The `metrics` argument should be a list -- your model can have any number of metrics.
 
-If your model has multiple outputs, your can specify different losses and metrics for
+If your model has multiple outputs, you can specify different losses and metrics for
 each output, and you can modulate the contribution of each output to the total loss of
 the model. You will find more details about this in the section **"Passing data to
 multi-input, multi-output models"**.
@@ -317,9 +317,9 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 654us/step - loss: 0.0162
+782/782 [==============================] - 1s 735us/step - loss: 0.0155
 
-<tensorflow.python.keras.callbacks.History at 0x151297ed0>
+<tensorflow.python.keras.callbacks.History at 0x157029310>
 
 ```
 </div>
@@ -363,9 +363,9 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 653us/step - loss: 0.0382
+782/782 [==============================] - 1s 769us/step - loss: 0.0390
 
-<tensorflow.python.keras.callbacks.History at 0x15fddb2d0>
+<tensorflow.python.keras.callbacks.History at 0x15786b210>
 
 ```
 </div>
@@ -386,7 +386,7 @@ State update and results computation are kept separate (in `update_state()` and
 expensive, and would only be done periodically.
 
 Here's a simple example showing how to implement a `CategoricalTruePositives` metric,
-that counts how many samples where correctly classified as belonging to a given class:
+that counts how many samples were correctly classified as belonging to a given class:
 
 
 
@@ -427,19 +427,19 @@ model.fit(x_train, y_train, batch_size=64, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-782/782 [==============================] - 1s 675us/step - loss: 0.3354 - categorical_true_positives: 45205.0000
+782/782 [==============================] - 1s 792us/step - loss: 0.3466 - categorical_true_positives: 45080.0000
 Epoch 2/3
-782/782 [==============================] - 1s 658us/step - loss: 0.1560 - categorical_true_positives: 47705.0000
+782/782 [==============================] - 1s 788us/step - loss: 0.1646 - categorical_true_positives: 47577.0000
 Epoch 3/3
-782/782 [==============================] - 1s 730us/step - loss: 0.1159 - categorical_true_positives: 48256.0000
+782/782 [==============================] - 1s 794us/step - loss: 0.1203 - categorical_true_positives: 48168.0000
 
-<tensorflow.python.keras.callbacks.History at 0x15ff29110>
+<tensorflow.python.keras.callbacks.History at 0x1579bb050>
 
 ```
 </div>
 ### Handling losses and metrics that don't fit the standard signature
 
-The overwhelming majority of losses and metrics can be computed from y_true and
+The overwhelming majority of losses and metrics can be computed from `y_true` and
 `y_pred`, where `y_pred` is an output of your model. But not all of them. For
 instance, a regularization loss may only require the activation of a layer (there are
 no targets in this case), and this activation may not be a model output.
@@ -483,9 +483,9 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 685us/step - loss: 2.4914
+782/782 [==============================] - 1s 840us/step - loss: 2.4625
 
-<tensorflow.python.keras.callbacks.History at 0x16007c550>
+<tensorflow.python.keras.callbacks.History at 0x157a729d0>
 
 ```
 </div>
@@ -527,9 +527,9 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 734us/step - loss: 0.3433 - std_of_activation: 1.0046
+782/782 [==============================] - 1s 1ms/step - loss: 0.3294 - std_of_activation: 0.9851
 
-<tensorflow.python.keras.callbacks.History at 0x1601e2c10>
+<tensorflow.python.keras.callbacks.History at 0x1578ac950>
 
 ```
 </div>
@@ -562,9 +562,9 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 737us/step - loss: 2.4678 - std_of_activation: 0.0018
+782/782 [==============================] - 1s 978us/step - loss: 2.4453 - std_of_activation: 0.0017
 
-<tensorflow.python.keras.callbacks.History at 0x160355290>
+<tensorflow.python.keras.callbacks.History at 0x157dedf90>
 
 ```
 </div>
@@ -628,9 +628,9 @@ model.fit(data)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 978us/step - loss: 1.0810 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 834us/step - loss: 1.1664 - binary_accuracy: 0.0000e+00
 
-<tensorflow.python.keras.callbacks.History at 0x1604aac90>
+<tensorflow.python.keras.callbacks.History at 0x157f36c90>
 
 ```
 </div>
@@ -647,7 +647,7 @@ and validation metrics at the end of each epoch.
 Here's another option: the argument `validation_split` allows you to automatically
 reserve part of your training data for validation. The argument value represents the
 fraction of the data to be reserved for validation, so it should be set to a number
-higher than 0 and lower than 1. For instance, validation_split=0.2`` means "use 20% of
+higher than 0 and lower than 1. For instance, `validation_split=0.2` means "use 20% of
 the data for validation", and `validation_split=0.6` means "use 60% of the data for
 validation".
 
@@ -666,9 +666,9 @@ model.fit(x_train, y_train, batch_size=64, validation_split=0.2, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-625/625 [==============================] - 1s 1ms/step - loss: 0.3748 - sparse_categorical_accuracy: 0.8946 - val_loss: 0.2769 - val_sparse_categorical_accuracy: 0.9111
+625/625 [==============================] - 1s 1ms/step - loss: 0.3691 - sparse_categorical_accuracy: 0.8949 - val_loss: 0.2339 - val_sparse_categorical_accuracy: 0.9290
 
-<tensorflow.python.keras.callbacks.History at 0x1605c57d0>
+<tensorflow.python.keras.callbacks.History at 0x158050f10>
 
 ```
 </div>
@@ -720,16 +720,16 @@ dict(zip(model.metrics_names, result))
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-782/782 [==============================] - 1s 951us/step - loss: 0.3355 - sparse_categorical_accuracy: 0.9051
+782/782 [==============================] - 1s 1ms/step - loss: 0.3425 - sparse_categorical_accuracy: 0.9035
 Epoch 2/3
-782/782 [==============================] - 1s 982us/step - loss: 0.1530 - sparse_categorical_accuracy: 0.9544
+782/782 [==============================] - 1s 1ms/step - loss: 0.1631 - sparse_categorical_accuracy: 0.9518
 Epoch 3/3
-782/782 [==============================] - 1s 1ms/step - loss: 0.1106 - sparse_categorical_accuracy: 0.9672
+782/782 [==============================] - 1s 1ms/step - loss: 0.1198 - sparse_categorical_accuracy: 0.9646
 Evaluate
-157/157 [==============================] - 0s 749us/step - loss: 0.1160 - sparse_categorical_accuracy: 0.9665
+157/157 [==============================] - 0s 707us/step - loss: 0.1248 - sparse_categorical_accuracy: 0.9636
 
-{'loss': 0.11599469184875488,
- 'sparse_categorical_accuracy': 0.9664999842643738}
+{'loss': 0.12476286292076111,
+ 'sparse_categorical_accuracy': 0.9635999798774719}
 
 ```
 </div>
@@ -761,13 +761,13 @@ model.fit(train_dataset, epochs=3, steps_per_epoch=100)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-100/100 [==============================] - 0s 1ms/step - loss: 0.7783 - sparse_categorical_accuracy: 0.7916
+100/100 [==============================] - 0s 995us/step - loss: 0.7954 - sparse_categorical_accuracy: 0.7883
 Epoch 2/3
-100/100 [==============================] - 0s 1ms/step - loss: 0.3731 - sparse_categorical_accuracy: 0.8952
+100/100 [==============================] - 0s 981us/step - loss: 0.3694 - sparse_categorical_accuracy: 0.8923
 Epoch 3/3
-100/100 [==============================] - 0s 1ms/step - loss: 0.3166 - sparse_categorical_accuracy: 0.9058
+100/100 [==============================] - 0s 1ms/step - loss: 0.3265 - sparse_categorical_accuracy: 0.9056
 
-<tensorflow.python.keras.callbacks.History at 0x15fd29910>
+<tensorflow.python.keras.callbacks.History at 0x16174c690>
 
 ```
 </div>
@@ -794,9 +794,9 @@ model.fit(train_dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.3268 - sparse_categorical_accuracy: 0.9069 - val_loss: 0.1796 - val_sparse_categorical_accuracy: 0.9459
+782/782 [==============================] - 1s 1ms/step - loss: 0.3530 - sparse_categorical_accuracy: 0.9017 - val_loss: 0.1993 - val_sparse_categorical_accuracy: 0.9423
 
-<tensorflow.python.keras.callbacks.History at 0x17339d050>
+<tensorflow.python.keras.callbacks.History at 0x16adf70d0>
 
 ```
 </div>
@@ -834,9 +834,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.3371 - sparse_categorical_accuracy: 0.9045 - val_loss: 0.3168 - val_sparse_categorical_accuracy: 0.9016
+782/782 [==============================] - 1s 1ms/step - loss: 0.3406 - sparse_categorical_accuracy: 0.9045 - val_loss: 0.2985 - val_sparse_categorical_accuracy: 0.9172
 
-<tensorflow.python.keras.callbacks.History at 0x173397810>
+<tensorflow.python.keras.callbacks.History at 0x16adf2bd0>
 
 ```
 </div>
@@ -970,9 +970,9 @@ model.fit(x_train, y_train, class_weight=class_weight, batch_size=64, epochs=1)
 <div class="k-default-codeblock">
 ```
 Fit with class weight
-782/782 [==============================] - 1s 890us/step - loss: 0.3686 - sparse_categorical_accuracy: 0.9052
+782/782 [==============================] - 1s 809us/step - loss: 0.3820 - sparse_categorical_accuracy: 0.8995
 
-<tensorflow.python.keras.callbacks.History at 0x173667c50>
+<tensorflow.python.keras.callbacks.History at 0x16b0c7c50>
 
 ```
 </div>
@@ -993,9 +993,9 @@ model.fit(x_train, y_train, sample_weight=sample_weight, batch_size=64, epochs=1
 <div class="k-default-codeblock">
 ```
 Fit with sample weight
-782/782 [==============================] - 1s 889us/step - loss: 0.3673 - sparse_categorical_accuracy: 0.9015
+782/782 [==============================] - 1s 891us/step - loss: 0.3727 - sparse_categorical_accuracy: 0.9028
 
-<tensorflow.python.keras.callbacks.History at 0x1737b4110>
+<tensorflow.python.keras.callbacks.History at 0x16b213290>
 
 ```
 </div>
@@ -1021,9 +1021,9 @@ model.fit(train_dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 1ms/step - loss: 0.3764 - sparse_categorical_accuracy: 0.9013
+782/782 [==============================] - 1s 1ms/step - loss: 0.3674 - sparse_categorical_accuracy: 0.9047
 
-<tensorflow.python.keras.callbacks.History at 0x1738e9a90>
+<tensorflow.python.keras.callbacks.History at 0x16b34be90>
 
 ```
 </div>
@@ -1219,10 +1219,10 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 5ms/step - loss: 6.3402 - score_output_loss: 0.7944 - class_output_loss: 5.5458
-4/4 [==============================] - 0s 4ms/step - loss: 5.7637 - score_output_loss: 0.3392 - class_output_loss: 5.4245
+4/4 [==============================] - 0s 4ms/step - loss: 7.6784 - score_output_loss: 3.1199 - class_output_loss: 4.5585
+4/4 [==============================] - 0s 3ms/step - loss: 6.4875 - score_output_loss: 2.0329 - class_output_loss: 4.4547
 
-<tensorflow.python.keras.callbacks.History at 0x173c9e790>
+<tensorflow.python.keras.callbacks.History at 0x16b71b8d0>
 
 ```
 </div>
@@ -1246,9 +1246,9 @@ model.fit(train_dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-2/2 [==============================] - 0s 5ms/step - loss: 5.5365 - score_output_loss: 0.2171 - class_output_loss: 5.3194
+2/2 [==============================] - 0s 4ms/step - loss: 5.9390 - score_output_loss: 1.5347 - class_output_loss: 4.4042
 
-<tensorflow.python.keras.callbacks.History at 0x173aff850>
+<tensorflow.python.keras.callbacks.History at 0x16b334490>
 
 ```
 </div>
@@ -1301,20 +1301,22 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.3621 - sparse_categorical_accuracy: 0.8988 - val_loss: 0.2416 - val_sparse_categorical_accuracy: 0.9290
+625/625 [==============================] - 1s 1ms/step - loss: 0.3623 - sparse_categorical_accuracy: 0.8980 - val_loss: 0.2259 - val_sparse_categorical_accuracy: 0.9310
 Epoch 2/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.1738 - sparse_categorical_accuracy: 0.9487 - val_loss: 0.1858 - val_sparse_categorical_accuracy: 0.9470
+625/625 [==============================] - 1s 1ms/step - loss: 0.1667 - sparse_categorical_accuracy: 0.9504 - val_loss: 0.1822 - val_sparse_categorical_accuracy: 0.9442
 Epoch 3/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.1266 - sparse_categorical_accuracy: 0.9622 - val_loss: 0.1609 - val_sparse_categorical_accuracy: 0.9550
+625/625 [==============================] - 1s 1ms/step - loss: 0.1212 - sparse_categorical_accuracy: 0.9640 - val_loss: 0.1572 - val_sparse_categorical_accuracy: 0.9534
 Epoch 4/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.1001 - sparse_categorical_accuracy: 0.9701 - val_loss: 0.1433 - val_sparse_categorical_accuracy: 0.9575
+625/625 [==============================] - 1s 1ms/step - loss: 0.0959 - sparse_categorical_accuracy: 0.9711 - val_loss: 0.1514 - val_sparse_categorical_accuracy: 0.9546
 Epoch 5/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.0817 - sparse_categorical_accuracy: 0.9754 - val_loss: 0.1483 - val_sparse_categorical_accuracy: 0.9571
+625/625 [==============================] - 1s 1ms/step - loss: 0.0798 - sparse_categorical_accuracy: 0.9761 - val_loss: 0.1389 - val_sparse_categorical_accuracy: 0.9616
 Epoch 6/20
-625/625 [==============================] - 1s 1ms/step - loss: 0.0689 - sparse_categorical_accuracy: 0.9789 - val_loss: 0.1421 - val_sparse_categorical_accuracy: 0.9605
-Epoch 00006: early stopping
+625/625 [==============================] - 1s 1ms/step - loss: 0.0684 - sparse_categorical_accuracy: 0.9798 - val_loss: 0.1408 - val_sparse_categorical_accuracy: 0.9615
+Epoch 7/20
+625/625 [==============================] - 1s 1ms/step - loss: 0.0583 - sparse_categorical_accuracy: 0.9829 - val_loss: 0.1502 - val_sparse_categorical_accuracy: 0.9605
+Epoch 00007: early stopping
 
-<tensorflow.python.keras.callbacks.History at 0x173a4cc50>
+<tensorflow.python.keras.callbacks.History at 0x157c6ffd0>
 
 ```
 </div>
@@ -1391,21 +1393,22 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-604/625 [===========================>..] - ETA: 0s - loss: 0.3703 - sparse_categorical_accuracy: 0.8945
-Epoch 00001: val_loss improved from inf to 0.21996, saving model to mymodel_1
+598/625 [===========================>..] - ETA: 0s - loss: 0.3742 - sparse_categorical_accuracy: 0.8939
 
-WARNING: Logging before flag parsing goes to stderr.
-W0509 18:04:15.106861 4639200704 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Network.state_updates (from tensorflow.python.keras.engine.network) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
 
-625/625 [==============================] - 1s 2ms/step - loss: 0.3646 - sparse_categorical_accuracy: 0.8960 - val_loss: 0.2200 - val_sparse_categorical_accuracy: 0.9328
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Epoch 00001: val_loss improved from inf to 0.23939, saving model to mymodel_1
+625/625 [==============================] - 1s 2ms/step - loss: 0.3677 - sparse_categorical_accuracy: 0.8956 - val_loss: 0.2394 - val_sparse_categorical_accuracy: 0.9288
 Epoch 2/2
-610/625 [============================>.] - ETA: 0s - loss: 0.1743 - sparse_categorical_accuracy: 0.9475
-Epoch 00002: val_loss improved from 0.21996 to 0.17685, saving model to mymodel_2
-625/625 [==============================] - 1s 2ms/step - loss: 0.1737 - sparse_categorical_accuracy: 0.9474 - val_loss: 0.1768 - val_sparse_categorical_accuracy: 0.9461
+597/625 [===========================>..] - ETA: 0s - loss: 0.1711 - sparse_categorical_accuracy: 0.9497
+Epoch 00002: val_loss improved from 0.23939 to 0.17413, saving model to mymodel_2
+625/625 [==============================] - 1s 2ms/step - loss: 0.1707 - sparse_categorical_accuracy: 0.9499 - val_loss: 0.1741 - val_sparse_categorical_accuracy: 0.9488
 
-<tensorflow.python.keras.callbacks.History at 0x16009d650>
+<tensorflow.python.keras.callbacks.History at 0x1579c2c50>
 
 ```
 </div>
@@ -1451,9 +1454,9 @@ model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
 <div class="k-default-codeblock">
 ```
 Creating a new model
-1563/1563 [==============================] - 7s 4ms/step - loss: 0.3063 - sparse_categorical_accuracy: 0.9128
+1563/1563 [==============================] - 8s 5ms/step - loss: 0.2950 - sparse_categorical_accuracy: 0.9151
 
-<tensorflow.python.keras.callbacks.History at 0x1776e9e10>
+<tensorflow.python.keras.callbacks.History at 0x16f30e810>
 
 ```
 </div>
@@ -1549,7 +1552,7 @@ keras.callbacks.TensorBoard(
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.keras.callbacks.TensorBoard at 0x173a369d0>
+<tensorflow.python.keras.callbacks.TensorBoard at 0x16b219f10>
 
 ```
 </div>
