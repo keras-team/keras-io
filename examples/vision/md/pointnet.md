@@ -1729,7 +1729,6 @@ model.fit(train_dataset, epochs=20, validation_data=test_dataset)
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-  2/125 [..............................] - ETA: 14s - loss: 4.8089 - sparse_categorical_accuracy: 0.0781WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time. Check your callbacks.
 125/125 [==============================] - 28s 221ms/step - loss: 3.5897 - sparse_categorical_accuracy: 0.2724 - val_loss: 5804697916006203392.0000 - val_sparse_categorical_accuracy: 0.3073
 Epoch 2/20
 125/125 [==============================] - 27s 215ms/step - loss: 3.1970 - sparse_categorical_accuracy: 0.3443 - val_loss: 836343949164544.0000 - val_sparse_categorical_accuracy: 0.3425
