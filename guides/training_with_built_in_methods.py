@@ -155,9 +155,9 @@ model.compile(
 )
 
 """
-The `metrics` argument should be a list -- you model can have any number of metrics.
+The `metrics` argument should be a list -- your model can have any number of metrics.
 
-If your model has multiple outputs, your can specify different losses and metrics for
+If your model has multiple outputs, you can specify different losses and metrics for
 each output, and you can modulate the contribution of each output to the total loss of
 the model. You will find more details about this in the section **"Passing data to
 multi-input, multi-output models"**.
@@ -299,7 +299,7 @@ State update and results computation are kept separate (in `update_state()` and
 expensive, and would only be done periodically.
 
 Here's a simple example showing how to implement a `CategoricalTruePositives` metric,
-that counts how many samples where correctly classified as belonging to a given class:
+that counts how many samples were correctly classified as belonging to a given class:
 """
 
 
@@ -336,7 +336,7 @@ model.fit(x_train, y_train, batch_size=64, epochs=3)
 """
 ### Handling losses and metrics that don't fit the standard signature
 
-The overwhelming majority of losses and metrics can be computed from y_true and
+The overwhelming majority of losses and metrics can be computed from `y_true` and
 `y_pred`, where `y_pred` is an output of your model. But not all of them. For
 instance, a regularization loss may only require the activation of a layer (there are
 no targets in this case), and this activation may not be a model output.
@@ -498,7 +498,7 @@ and validation metrics at the end of each epoch.
 Here's another option: the argument `validation_split` allows you to automatically
 reserve part of your training data for validation. The argument value represents the
 fraction of the data to be reserved for validation, so it should be set to a number
-higher than 0 and lower than 1. For instance, validation_split=0.2`` means "use 20% of
+higher than 0 and lower than 1. For instance, `validation_split=0.2` means "use 20% of
 the data for validation", and `validation_split=0.6` means "use 60% of the data for
 validation".
 
