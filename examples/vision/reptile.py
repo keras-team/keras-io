@@ -70,7 +70,7 @@ class Dataset:
 
         def extraction(image, label):
             # This function will shrink the omniglot images into the desired size,
-            # scale the pixel values and convert the RGB image to graysclae
+            # scale the pixel values and convert the RGB image to graysclae.
             image = tf.image.convert_image_dtype(image, tf.float32)
             image = tf.image.rgb_to_grayscale(image)
             image = tf.image.resize(image, [28, 28])
@@ -93,14 +93,14 @@ class Dataset:
         if split:
             test_labels = np.zeros(shape=(num_classes))
             test_images = np.zeros(shape=(num_classes, 28, 28, 1))
-        # get a random subset of labels from the entire label set
+        # Get a random subset of labels from the entire label set.
         label_subset = random.choices(self.labels, k=num_classes)
         for class_idx, class_obj in enumerate(label_subset):
-            # use enumerated index value as a temporary label for mini_batch in
-            # few shot learning
+            # Use enumerated index value as a temporary label for mini_batch in
+            # few shot learning.
             temp_labels[class_idx * shots : (class_idx + 1) * shots] = class_idx
-            # if creating a split dataset for testing, select an extra sample from each
-            # label to create the test dataset
+            # If creating a split dataset for testing, select an extra sample from each
+            # label to create the test dataset.
             if split:
                 test_labels[class_idx] = class_idx
                 images_to_split = random.choices(
@@ -111,9 +111,8 @@ class Dataset:
                     class_idx * shots : (class_idx + 1) * shots
                 ] = images_to_split[:-1]
             else:
-# for each index in the randomly selected label_subset, sample the
-necessary
-                # number of images
+		#For each index in the randomly selected label_subset, sample the
+		#necessary number of images.
                 temp_images[
                     class_idx * shots : (class_idx + 1) * shots
                 ] = random.choices(self.data[label_subset[class_idx]], k=shots)
