@@ -111,8 +111,8 @@ class Dataset:
                     class_idx * shots : (class_idx + 1) * shots
                 ] = images_to_split[:-1]
             else:
-		#For each index in the randomly selected label_subset, sample the
-		#necessary number of images.
+                # For each index in the randomly selected label_subset, sample the
+                # necessary number of images.
                 temp_images[
                     class_idx * shots : (class_idx + 1) * shots
                 ] = random.choices(self.data[label_subset[class_idx]], k=shots)
