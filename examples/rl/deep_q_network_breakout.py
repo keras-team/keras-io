@@ -14,12 +14,12 @@ This script shows an implementation of Deep Q-Learning on the
 ### Deep Q-Learning
 
 As an agent takes actions and moves through an environment, it learns to map
-the observed state of the environment to an action. An agent will choose an action 
-in a given state based on a "Q-value", which is a weighted reward based on the 
-expected highest long-term reward. A Q-Learning Agent learns to perform its 
+the observed state of the environment to an action. An agent will choose an action
+in a given state based on a "Q-value", which is a weighted reward based on the
+expected highest long-term reward. A Q-Learning Agent learns to perform its
 task such that the recommended action maximizes the potential future rewards.
-This method is considered an "Off-Policy" method, 
-meaning its Q values are updated assuming that the best action was chosen, even 
+This method is considered an "Off-Policy" method,
+meaning its Q values are updated assuming that the best action was chosen, even
 if the best action was not chosen.
 
 ### Atari Breakout
@@ -27,8 +27,8 @@ if the best action was not chosen.
 In this environment, a board moves along the bottom of the screen returning a ball that
 will destroy blocks at the top of the screen.
 The aim of the game is to remove all blocks and breakout of the
-level. The agent must learn to control the board by moving left and right, returning the 
-ball and removing all the blocks without the ball passing the board.   
+level. The agent must learn to control the board by moving left and right, returning the
+ball and removing all the blocks without the ball passing the board.
 
 ### References
 
@@ -86,8 +86,7 @@ layer3 = layers.Conv2D(64, 3, strides=1, activation="relu")(layer2)
 layer4 = layers.Flatten()(layer3)
 
 layer5 = layers.Dense(512, activation="relu")(layer4)
-layer6 = layers.Dense(512, activation="relu")(layer5)
-action = layers.Dense(num_actions, activation="linear")(layer6)
+action = layers.Dense(num_actions, activation="linear")(layer5)
 
 model = keras.Model(inputs=inputs, outputs=action)
 
@@ -96,15 +95,16 @@ model = keras.Model(inputs=inputs, outputs=action)
 """
 
 
-optimizer = keras.optimizers.RMSprop(learning_rate=0.00025, epsilon=1e-06, clipnorm=1, momentum=0.95)
-mse_loss = keras.losses.MeanSquaredError()
-model.compile(loss=mse_loss, optimizer=optimizer)
+optimizer = keras.optimizers.RMSprop(
+    learning_rate=0.00025, epsilon=1e-06, clipnorm=1, momentum=0.95
+)
 
 action_history = []
 state_history = []
 state_next_history = []
 rewards_history = []
 done_history = []
+episode_reward_history = []
 running_reward = 0
 episode_count = 0
 frame_count = 0
@@ -135,7 +135,7 @@ while True:  # Run until solved
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = model(state_tensor)
+            action_probs = model.predict(state_tensor)
             # Take best action
             action = np.argmax(action_probs[0])
 
@@ -154,7 +154,7 @@ while True:  # Run until solved
         state_history.append(state)
         state_next_history.append(state_next)
         done_history.append(done)
-        rewards_history.append(reward if not done else -1.0)
+        rewards_history.append(reward)
         state = state_next
 
         # Update every fourth frame and once batch size is over 32
@@ -169,35 +169,32 @@ while True:  # Run until solved
             done_sample = [done_history[i] for i in indices]
             action_sample = [action_history[i] for i in indices]
 
-            future_rewards = model(state_next_sample)
-            q_values = np.array(model(state_sample))
+            future_rewards = model.predict(state_next_sample)
 
-            history = zip(
-                rewards_sample, done_sample, action_sample, future_rewards, q_values
-            )
+            # Create a mask so we only calculate loss on the updated Q-values
+            masks = np.zeros((batch_size, num_actions))
+            masks[np.arange(batch_size), action_sample] = 1.0
 
-            # Build the new updated Q-values for the sampled states and actions
-            updated_q_values = []
-            for (
-                sampled_reward,
-                sampled_done,
-                sampled_action,
-                future_reward,
-                q_value,
-            ) in history:
-                # If final frame take the last reward as the new Q-value
-                q_update = sampled_reward
-                if not sampled_done:
-                    # Calculate the new Q-value
-                    # Q value = reward + discount factor * expected future reward
-                    q_update = sampled_reward + gamma * np.amax(future_reward)
+            # Build the updated Q-values for the sampled states and actions
+            # Q value = reward + discount factor * expected future reward
+            updated_q_values = rewards_sample + gamma * np.amax(future_rewards, axis=1)
 
-                # Replace old Q-value with the updated value
-                q_value[sampled_action] = q_update
-                updated_q_values.append(q_value)
+            # If final frame set the last value to -1
+            updated_q_values[done_sample] = -1
 
-            # Train the model on the states and updated Q-values
-            model.fit(state_sample, np.array(updated_q_values), verbose=0)
+            with tf.GradientTape() as tape:
+                # Train the model on the states and updated Q-values
+                q_values = model(state_sample)
+
+                # Calculate loss (MSE) between new Q-values and old Q-values
+                q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
+                loss = tf.reduce_mean(
+                    tf.square(tf.subtract(updated_q_values, q_action))
+                )
+
+                # Backpropagation
+                grads = tape.gradient(loss, model.trainable_variables)
+                optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
@@ -209,8 +206,12 @@ while True:  # Run until solved
 
         if done:
             break
+
     # Update running reward to check condition for solving
-    running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
+    episode_reward_history.append(episode_reward)
+    if len(episode_reward_history) > 100:
+        del episode_reward_history[:1]
+    running_reward = np.mean(episode_reward_history)
 
     # Log details
     episode_count += 1
