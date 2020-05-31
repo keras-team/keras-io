@@ -26,7 +26,7 @@ from the actor maximize the rewards.
 ### CartPole-V0
 
 A pole is attached to a cart placed on a frictionless track. The agent has to apply
-force to move the cart. It is rewarded for for every time step the pole
+force to move the cart. It is rewarded for every time step the pole
 remains upright. The agent, therefore, must learn to keep the pole from falling over.
 
 ### References
@@ -44,7 +44,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-# Configuration paramaters for the whole setup
+# Configuration of parameters for the whole setup
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000
