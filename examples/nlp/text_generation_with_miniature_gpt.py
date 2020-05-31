@@ -41,16 +41,6 @@ from future tokens by masking the upper half of the scaled dot product matrix.
 """
 
 
-def shape_list(x):
-    """
-    Returns shape of tensor as a List
-    Deals with dynamic shape in tensorflow cleanly.
-    """
-    static = x.shape.as_list()
-    dynamic = tf.shape(x)
-    return [dynamic[i] if s is None else s for i, s in enumerate(static)]
-
-
 class MultiHeadSelfAttention(layers.Layer):
     def __init__(self, embed_dim, num_heads=8):
         super(MultiHeadSelfAttention, self).__init__()
@@ -82,7 +72,8 @@ class MultiHeadSelfAttention(layers.Layer):
         scaled_score = score / tf.math.sqrt(dim_key)
 
         # prevent information flow from future tokens
-        _, _, dim_dest, dim_src = shape_list(scaled_score)
+        shape = tf.shape(scaled_score)
+        dim_dest, dim_src = shape[2], shape[3]
         attention_mask = self.causal_attention_mask(
             dim_dest, dim_src, scaled_score.dtype
         )
