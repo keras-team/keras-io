@@ -44,7 +44,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-# Configuration of parameters for the whole setup
+# Configuration parameters for the whole setup
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000
