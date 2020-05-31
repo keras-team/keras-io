@@ -133,12 +133,12 @@ class TransformerBlock(layers.Layer):
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
 
-    def call(self, inputs, training):
+    def call(self, inputs):
         attention_output = self.att(inputs)
-        attention_output = self.dropout1(attention_output, training=training)
+        attention_output = self.dropout1(attention_output)
         out1 = self.layernorm1(inputs + attention_output)
         ffn_output = self.ffn(out1)
-        ffn_output = self.dropout2(ffn_output, training=training)
+        ffn_output = self.dropout2(ffn_output)
         return self.layernorm2(out1 + ffn_output)
 
 
@@ -199,6 +199,7 @@ text generation task.
 !tar -xf aclImdb_v1.tar.gz
 """
 
+
 batch_size = 16
 
 # The dataset contains each review in a separate text file
@@ -255,8 +256,7 @@ text_ds = text_ds.repeat().prefetch(tf.data.experimental.AUTOTUNE)
 
 
 class TextGenerator(keras.callbacks.Callback):
-    """
-    Callback to generate text from trained model.
+    """Callback to generate text from trained model.
     1. Feed some starting prompt to the model
     2. Predict probabilities for next token
     3. Sample next token and add it to the next input
@@ -265,35 +265,31 @@ class TextGenerator(keras.callbacks.Callback):
         max_tokens: Integer, the number of tokens to be generated after prompt.
         start_tokens: List of integers, the token indices for the starting prompt.
         index_to_word: List of strings, obatined from TextVectorization layer.
-        temp: Float, dictates the variation during sampling.
+        temperature: Float, dictates the variation during sampling.
             high temp = less probable tokens are also likely to be sampled
             low temp = highly probable tokens get picked up
         print_every: Integer, print after this many epochs.
     """
 
     def __init__(
-        self, max_tokens, start_tokens, index_to_word, temp=1.0, print_every=5
+        self, max_tokens, start_tokens, index_to_word, temperature=1.0, print_every=5
     ):
         self.max_tokens = max_tokens
         self.start_tokens = start_tokens
         self.index_to_word = index_to_word
         self.print_every = print_every
-        self.temp = temp
+        self.temperature = temperature
 
     def sample_from(self, preds):
         preds = np.asarray(preds).astype("float64")
-        preds = np.log(preds) / self.temp
+        preds = np.log(preds) / self.temperature
         exp_preds = np.exp(preds)
         preds = exp_preds / np.sum(exp_preds)
         probas = np.random.multinomial(1, preds, 1)
         return np.argmax(probas)
 
     def detokenize(self, number):
-        if number == 0:
-            return "[PAD]"
-        if number == 1:
-            return "[OOV]"
-        return self.index_to_word[number - 2].decode("utf-8")
+        return self.index_to_word[number]
 
     def on_epoch_end(self, epoch, logs=None):
         if (epoch + 1) % self.print_every != 0:
@@ -325,7 +321,7 @@ class TextGenerator(keras.callbacks.Callback):
 # Tokenize starting prompt
 word_to_index = {}
 for index, word in enumerate(vocab):
-    word_to_index[word.decode("utf-8")] = index + 2  # PAD and OOV at index 0 and 1
+    word_to_index[word] = index  # PAD and OOV at index 0 and 1
 
 start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
