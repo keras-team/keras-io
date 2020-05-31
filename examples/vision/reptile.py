@@ -1,9 +1,9 @@
 """
-Title: REPTILE
-Author: ADMoreau  
+Title: Few-Shot learning with Reptile
+Author: [ADMoreau](https://github.com/ADMoreau)  
 Date Created: 2020/05/21  
 Last Modified: 2020/05/30  
-Description: Reptile meta-learning algorithm
+Description: Few-shot classification of the Omniglot dataset using Reptile
 
 """
 
