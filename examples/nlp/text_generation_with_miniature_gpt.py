@@ -182,7 +182,7 @@ def create_model():
     outputs = layers.Dense(vocab_size, activation="softmax")(x)
     model = keras.Model(inputs=inputs, outputs=[outputs, x])
     model.compile(
-        "adam", loss=["sparse_categorical_crossentropy", None],  
+        "adam", loss=["sparse_categorical_crossentropy", None],
     )  # No loss and optimization based on word embeddings from transformer block
     return model
 
@@ -194,9 +194,10 @@ We will download IMDB data, and combine training and validation sets for
 text generation task.
 """
 
-
+"""shell
 !curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 !tar -xf aclImdb_v1.tar.gz
+"""
 
 batch_size = 16
 
@@ -204,15 +205,17 @@ batch_size = 16
 # The text files are present in four different folders
 # Create a list all files
 filenames = []
-directories = ['aclImdb/train/pos', 
-               'aclImdb/train/neg', 
-               'aclImdb/test/pos', 
-               'aclImdb/test/neg']
+directories = [
+    "aclImdb/train/pos",
+    "aclImdb/train/neg",
+    "aclImdb/test/pos",
+    "aclImdb/test/neg",
+]
 for dir in directories:
     for f in os.listdir(dir):
         filenames.append(os.path.join(dir, f))
 
-print(f'{len(filenames)} files')
+print(f"{len(filenames)} files")
 
 # Create dataset from text files
 text_ds = tf.data.TextLineDataset(filenames)
@@ -221,9 +224,9 @@ text_ds = text_ds.batch(batch_size)
 # Create vectcorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
     standardize=None,
-    max_tokens=vocab_size-1,
+    max_tokens=vocab_size - 1,
     output_mode="int",
-    output_sequence_length=maxlen+1,
+    output_sequence_length=maxlen + 1,
 )
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
@@ -237,9 +240,10 @@ def prepare_lm_inputs_labels(text):
     """
     text = tf.expand_dims(text, -1)
     tokenized_sentences = vectorize_layer(text)
-    x = tokenized_sentences[:,:-1]
-    y = tokenized_sentences[:,1:]
+    x = tokenized_sentences[:, :-1]
+    y = tokenized_sentences[:, 1:]
     return x, y
+
 
 text_ds = text_ds.map(prepare_lm_inputs_labels)
 text_ds = text_ds.repeat().prefetch(tf.data.experimental.AUTOTUNE)
@@ -267,7 +271,9 @@ class TextGenerator(keras.callbacks.Callback):
         print_every: Integer, print after this many epochs.
     """
 
-    def __init__(self, max_tokens, start_tokens, index_to_word, temp=1.0, print_every=5):
+    def __init__(
+        self, max_tokens, start_tokens, index_to_word, temp=1.0, print_every=5
+    ):
         self.max_tokens = max_tokens
         self.start_tokens = start_tokens
         self.index_to_word = index_to_word
@@ -284,15 +290,15 @@ class TextGenerator(keras.callbacks.Callback):
 
     def detokenize(self, number):
         if number == 0:
-            return '[PAD]'
+            return "[PAD]"
         if number == 1:
-            return '[OOV]'
-        return self.index_to_word[number-2].decode("utf-8") 
+            return "[OOV]"
+        return self.index_to_word[number - 2].decode("utf-8")
 
     def on_epoch_end(self, epoch, logs=None):
         if (epoch + 1) % self.print_every != 0:
             return
-        print(f'\n\nepoch = {epoch+1}')
+        print(f"\n\nepoch = {epoch+1}")
         num_tokens_generated = 0
         tokens_generated = []
         while num_tokens_generated <= self.max_tokens:
@@ -304,22 +310,24 @@ class TextGenerator(keras.callbacks.Callback):
             else:
                 x = self.start_tokens
             x = np.array([x])
-            assert x.shape == (1,200), x.shape
-            y,_ = self.model.predict(x)
-            sample_token = self.sample_from(y[0][len(self.start_tokens)-1])
+            assert x.shape == (1, 200), x.shape
+            y, _ = self.model.predict(x)
+            sample_token = self.sample_from(y[0][len(self.start_tokens) - 1])
             tokens_generated.append(sample_token)
             self.start_tokens.append(sample_token)
             num_tokens_generated = len(tokens_generated)
-        txt = ' '.join([self.detokenize(_) for _ in self.start_tokens + tokens_generated])
-        print(f'{txt}\n\n')
+        txt = " ".join(
+            [self.detokenize(_) for _ in self.start_tokens + tokens_generated]
+        )
+        print(f"{txt}\n\n")
 
 
 # Tokenize starting prompt
 word_to_index = {}
 for index, word in enumerate(vocab):
-    word_to_index[word.decode('utf-8')] = index + 2  # PAD and OOV at index 0 and 1
+    word_to_index[word.decode("utf-8")] = index + 2  # PAD and OOV at index 0 and 1
 
-start_prompt = 'this movie is'
+start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
 num_tokens_generated = 20
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
