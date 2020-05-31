@@ -306,7 +306,6 @@ class TextGenerator(keras.callbacks.Callback):
             else:
                 x = self.start_tokens
             x = np.array([x])
-            assert x.shape == (1, 200), x.shape
             y, _ = self.model.predict(x)
             sample_token = self.sample_from(y[0][len(self.start_tokens) - 1])
             tokens_generated.append(sample_token)
@@ -321,7 +320,7 @@ class TextGenerator(keras.callbacks.Callback):
 # Tokenize starting prompt
 word_to_index = {}
 for index, word in enumerate(vocab):
-    word_to_index[word] = index  # PAD and OOV at index 0 and 1
+    word_to_index[word] = index
 
 start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
