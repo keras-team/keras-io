@@ -1,20 +1,22 @@
 """
-Title: Few-Shot learning with Reptile
-Author: [ADMoreau](https://github.com/ADMoreau)
-Date created: 2020/05/21
-Last modified: 2020/05/29
-Description: Reptile meta learning algorithm implemented in Keras
+Title: REPTILE
+Author: ADMoreau  
+Date Created: 2020/05/21  
+Last Modified: 2020/05/30  
+Description: Reptile meta-learning algorithm
 
 """
 
 """
-The Reptile algorithm (https://arxiv.org/abs/1803.02999) was developed by OpenAI to
+The [Reptile](https://arxiv.org/abs/1803.02999) algorithm was developed by OpenAI to
 perform model agnostic meta-learning. Specifically, this algorithm was designed to
 quickly learn to perform new tasks with minimal training, a task known as few-shot
-learning. The algorithm works by taking metagradients from the training of mini-batches
-representing new tasks, and using these gradients for a meta training step.
+learning. The algorithm works by performing Stochastic Gradient Descent using the
+difference between weights trained on a mini-batch of never before seen data and the
+model weights prior to training over a set number of meta-iterations.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import tensorflow as tf
@@ -23,7 +25,7 @@ from tensorflow.keras import layers
 import tensorflow_datasets as tfds
 
 """
-## Define the Parameters
+## Define the Hyperparameters
 """
 
 learning_rate = 0.003
@@ -43,6 +45,16 @@ classes = 5
 
 """
 ## Dataset Functions
+
+The [Omniglot dataset](https://github.com/brendenlake/omniglot/) is a dataset of 1623
+characters taken from 50 different alphabets with 20 representations for each character.
+The 20 samples for each character were drawn online via Amazon's Mechanical Turk. For the
+few shot learning task, k samples or shots are drawn randomly from n randomly chosen
+classes. These n numerical values are used to create a new set of temporary labels to use
+to test the models ability to learn a new task given few examples. In other words, if you
+are training on 5 classes, your new class labels will be either 0, 1, 2, 3, or 4.
+Omniglot is a great dataset for this task since there are many different classes to draw
+from with a reasonable number of samples for each class.
 """
 
 
@@ -58,27 +70,25 @@ class Dataset:
             ds = tfds.load(
                 "omniglot", split="train", as_supervised=True, shuffle_files=False
             )
-            ds = ds.batch(1)
         else:
             ds = tfds.load(
                 "omniglot", split="test", as_supervised=True, shuffle_files=False
             )
-            ds = ds.batch(1)
         # Iterate over the dataset to get each individual image and accompanying class
         # and put that data into a dictionary.
         self.data = {}
 
         def extraction(image, label):
             # This function will shrink the omniglot images into the desired size,
-            # scale the pixel values and convert the RGB image to graysclae.
+            # scale the pixel values and convert the RGB image to graysclae
             image = tf.image.convert_image_dtype(image, tf.float32)
             image = tf.image.rgb_to_grayscale(image)
             image = tf.image.resize(image, [28, 28])
             return image, label
 
         for image, label in ds.map(extraction):
-            image = image.numpy()[0]
-            label = str(label.numpy()[0])
+            image = image.numpy()
+            label = str(label.numpy())
             if label not in self.data:
                 self.data[label] = []
             self.data[label].append(image)
@@ -128,38 +138,51 @@ class Dataset:
 
 import urllib3
 
+# Disable warnings that downloading the omniglot dataset produces.
 urllib3.disable_warnings()
 train_dataset = Dataset(training=True)
 test_dataset = Dataset(training=False)
+
+"""
+## Visualize some examples from the dataset
+"""
+
+f, axarr = plt.subplots(nrows=5, ncols=5, figsize=(20, 20))
+
+sample_keys = list(train_dataset.data.keys())
+
+for a in range(5):
+    for b in range(5):
+        temp_image = train_dataset.data[sample_keys[a]][b]
+        temp_image = np.stack((temp_image[:, :, 0],) * 3, axis=2)
+        temp_image *= 255
+        temp_image = np.clip(temp_image, 0, 255).astype("uint8")
+        if b == 2:
+            axarr[a, b].set_title("Class : " + sample_keys[a])
+        axarr[a, b].imshow(temp_image, cmap="gray")
+        axarr[a, b].xaxis.set_visible(False)
+        axarr[a, b].yaxis.set_visible(False)
+plt.show()
 
 """
 ## Build the Model
 """
 
 
-class ModelLayer(layers.Layer):
-    def __init__(self, **kwargs):
-        super(ModelLayer, self).__init__(**kwargs)
-        self.conv = layers.Conv2D(filters=64, kernel_size=3, strides=2, padding="same")
-        self.bnorm = layers.BatchNormalization()
-        self.activation = layers.ReLU()
-
-    def call(self, inputs):
-        x = self.conv(inputs)
-        x = self.bnorm(x)
-        return self.activation(x)
+def conv_bn(x):
+    x = layers.Conv2D(filters=64, kernel_size=3, strides=2, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    return layers.ReLU()(x)
 
 
 inputs = layers.Input(shape=(28, 28, 1))
-layer1 = ModelLayer()(inputs)
-layer2 = ModelLayer()(layer1)
-layer3 = ModelLayer()(layer2)
-layer4 = ModelLayer()(layer3)
-flatten = layers.Flatten()(layer4)
-dense = layers.Dense(classes, activation="softmax")(flatten)
-# Log softmax
-outputs = tf.math.log(layers.Softmax()(dense))
-model = keras.Model(inputs=inputs, outputs=dense)
+x = conv_bn(inputs)
+x = conv_bn(x)
+x = conv_bn(x)
+x = conv_bn(x)
+x = layers.Flatten()(x)
+outputs = layers.Dense(classes, activation="softmax")(x)
+model = keras.Model(inputs=inputs, outputs=outputs)
 model.compile()
 optimizer = keras.optimizers.SGD(learning_rate=learning_rate)
 
@@ -180,10 +203,8 @@ for meta_iter in range(meta_iters):
     )
     for images, labels in mini_dataset:
         with tf.GradientTape() as tape:
-            logits = model(images)
-            loss = keras.losses.categorical_crossentropy(
-                tf.one_hot(labels, depth=classes), logits
-            )
+            preds = model(images)
+            loss = keras.losses.sparse_categorical_crossentropy(labels, preds)
         grads = tape.gradient(loss, model.trainable_weights)
         optimizer.apply_gradients(zip(grads, model.trainable_weights))
     new_vars = model.get_weights()
@@ -206,10 +227,8 @@ for meta_iter in range(meta_iters):
             # Train on the samples and get the resulting accuracies.
             for images, labels in train_set:
                 with tf.GradientTape() as tape:
-                    logits = model(images)
-                    loss = keras.losses.categorical_crossentropy(
-                        tf.one_hot(labels, depth=classes), logits
-                    )
+                    preds = model(images)
+                    loss = keras.losses.sparse_categorical_crossentropy(labels, preds)
                 grads = tape.gradient(loss, model.trainable_weights)
                 optimizer.apply_gradients(zip(grads, model.trainable_weights))
             test_preds = model.predict(test_images)
@@ -230,19 +249,47 @@ for meta_iter in range(meta_iters):
 """
 
 # First, some preprocessing to smooth the training and testing arrays for display.
-window_len = 100
-w = eval("np.hamming(window_len)")
+window_length = 100
+w = eval("np.hamming(window_length)")
 train_s = np.r_[
-    training[window_len - 1 : 0 : -1], training, training[-1:-window_len:-1]
+    training[window_length - 1 : 0 : -1], training, training[-1:-window_length:-1]
 ]
-test_s = np.r_[testing[window_len - 1 : 0 : -1], testing, testing[-1:-window_len:-1]]
+test_s = np.r_[
+    testing[window_length - 1 : 0 : -1], testing, testing[-1:-window_length:-1]
+]
 train_y = np.convolve(w / w.sum(), train_s, mode="valid")
 test_y = np.convolve(w / w.sum(), test_s, mode="valid")
-
-import matplotlib.pyplot as plt
 
 # And display the training accuracies.
 x = np.arange(0, len(test_y), 1)
 plt.plot(x, test_y, x, train_y)
 plt.legend(["test", "train"])
 plt.grid()
+
+train_set, test_images, test_labels = dataset.get_mini_dataset(
+    eval_batch_size, eval_iters, shots, classes, split=True
+)
+for images, labels in train_set:
+    with tf.GradientTape() as tape:
+        preds = model(images)
+        loss = keras.losses.sparse_categorical_crossentropy(labels, preds)
+    grads = tape.gradient(loss, model.trainable_weights)
+    optimizer.apply_gradients(zip(grads, model.trainable_weights))
+test_preds = model.predict(test_images)
+test_preds = tf.argmax(test_preds).numpy()
+
+f, axarr = plt.subplots(nrows=1, ncols=5, figsize=(20, 20))
+
+sample_keys = list(train_dataset.data.keys())
+
+for i, ax in zip(range(5), axarr):
+    temp_image = np.stack((test_images[i, :, :, 0],) * 3, axis=2)
+    temp_image *= 255
+    temp_image = np.clip(temp_image, 0, 255).astype("uint8")
+    ax.set_title(
+        "Label : {}, Prediction : {}".format(int(test_labels[i]), test_preds[i])
+    )
+    ax.imshow(temp_image, cmap="gray")
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+plt.show()
