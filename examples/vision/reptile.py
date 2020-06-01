@@ -68,9 +68,7 @@ class Dataset:
         # Download the tfrecord files containing the omniglot data and convert to a
         # dataset.
         split = "train" if training else "test"
-        ds = tfds.load(
-            "omniglot", split=split, as_supervised=True, shuffle_files=False
-        )
+        ds = tfds.load("omniglot", split=split, as_supervised=True, shuffle_files=False)
         # Iterate over the dataset to get each individual image and its class,
         # and put that data into a dictionary.
         self.data = {}
