@@ -8,12 +8,14 @@ Description: Few-shot classification of the Omniglot dataset using Reptile
 """
 
 """
+## Introduction
+
 The [Reptile](https://arxiv.org/abs/1803.02999) algorithm was developed by OpenAI to
 perform model agnostic meta-learning. Specifically, this algorithm was designed to
-quickly learn to perform new tasks with minimal training, a task known as few-shot
-learning. The algorithm works by performing Stochastic Gradient Descent using the
+quickly learn to perform new tasks with minimal training (few-shot learning).
+The algorithm works by performing Stochastic Gradient Descent using the
 difference between weights trained on a mini-batch of never before seen data and the
-model weights prior to training over a set number of meta-iterations.
+model weights prior to training over a fixed number of meta-iterations.
 """
 
 import matplotlib.pyplot as plt
@@ -44,43 +46,38 @@ shots = 5
 classes = 5
 
 """
-## Dataset Functions
+## Prepare the data
 
-The [Omniglot dataset](https://github.com/brendenlake/omniglot/) is a dataset of 1623
-characters taken from 50 different alphabets with 20 representations for each character.
+The [Omniglot dataset](https://github.com/brendenlake/omniglot/) is a dataset of 1,623
+characters taken from 50 different alphabets, with 20 examples for each character.
 The 20 samples for each character were drawn online via Amazon's Mechanical Turk. For the
-few shot learning task, k samples or shots are drawn randomly from n randomly chosen
-classes. These n numerical values are used to create a new set of temporary labels to use
-to test the models ability to learn a new task given few examples. In other words, if you
+few-shot learning task, `k` samples (or "shots") are drawn randomly from `n` randomly-chosen
+classes. These `n` numerical values are used to create a new set of temporary labels to use
+to test the model's ability to learn a new task given few examples. In other words, if you
 are training on 5 classes, your new class labels will be either 0, 1, 2, 3, or 4.
 Omniglot is a great dataset for this task since there are many different classes to draw
-from with a reasonable number of samples for each class.
+from, with a reasonable number of samples for each class.
 """
 
 
 class Dataset:
-    # This dataset function will fascilitate the creation of a few shot dataset
+    # This class will facilitate the creation of a few-shot dataset
     # from the Omniglot dataset that can be sampled from quickly while also
     # allowing to create new labels at the same time.
     def __init__(self, training):
-
         # Download the tfrecord files containing the omniglot data and convert to a
         # dataset.
-        if training:
-            ds = tfds.load(
-                "omniglot", split="train", as_supervised=True, shuffle_files=False
-            )
-        else:
-            ds = tfds.load(
-                "omniglot", split="test", as_supervised=True, shuffle_files=False
-            )
-        # Iterate over the dataset to get each individual image and accompanying class
+        split = "train" if training else "test"
+        ds = tfds.load(
+            "omniglot", split=split, as_supervised=True, shuffle_files=False
+        )
+        # Iterate over the dataset to get each individual image and its class,
         # and put that data into a dictionary.
         self.data = {}
 
         def extraction(image, label):
-            # This function will shrink the omniglot images into the desired size,
-            # scale the pixel values and convert the RGB image to graysclae
+            # This function will shrink the Omniglot images to the desired size,
+            # scale pixel values and convert the RGB image to grayscale
             image = tf.image.convert_image_dtype(image, tf.float32)
             image = tf.image.rgb_to_grayscale(image)
             image = tf.image.resize(image, [28, 28])
@@ -97,16 +94,16 @@ class Dataset:
     def get_mini_dataset(
         self, batch_size, repetitions, shots, num_classes, split=False
     ):
-
         temp_labels = np.zeros(shape=(num_classes * shots))
         temp_images = np.zeros(shape=(num_classes * shots, 28, 28, 1))
         if split:
             test_labels = np.zeros(shape=(num_classes))
             test_images = np.zeros(shape=(num_classes, 28, 28, 1))
+
         # Get a random subset of labels from the entire label set.
         label_subset = random.choices(self.labels, k=num_classes)
         for class_idx, class_obj in enumerate(label_subset):
-            # Use enumerated index value as a temporary label for mini_batch in
+            # Use enumerated index value as a temporary label for mini-batch in
             # few shot learning.
             temp_labels[class_idx * shots : (class_idx + 1) * shots] = class_idx
             # If creating a split dataset for testing, select an extra sample from each
@@ -138,8 +135,7 @@ class Dataset:
 
 import urllib3
 
-# Disable warnings that downloading the omniglot dataset produces.
-urllib3.disable_warnings()
+urllib3.disable_warnings()  # Disable SSL warnings that may happen during download.
 train_dataset = Dataset(training=True)
 test_dataset = Dataset(training=False)
 
@@ -147,7 +143,7 @@ test_dataset = Dataset(training=False)
 ## Visualize some examples from the dataset
 """
 
-f, axarr = plt.subplots(nrows=5, ncols=5, figsize=(20, 20))
+_, axarr = plt.subplots(nrows=5, ncols=5, figsize=(20, 20))
 
 sample_keys = list(train_dataset.data.keys())
 
@@ -165,7 +161,7 @@ for a in range(5):
 plt.show()
 
 """
-## Build the Model
+## Build the model
 """
 
 
@@ -187,7 +183,7 @@ model.compile()
 optimizer = keras.optimizers.SGD(learning_rate=learning_rate)
 
 """
-## Training Loop
+## Train the model
 """
 
 training = []
@@ -213,7 +209,7 @@ for meta_iter in range(meta_iters):
         new_vars[var] = old_vars[var] + (
             (new_vars[var] - old_vars[var]) * cur_meta_step_size
         )
-    # After the meta-learning step, reload the newly trained weights into the model.
+    # After the meta-learning step, reload the newly-trained weights into the model.
     model.set_weights(new_vars)
     # Evaluation loop
     if meta_iter % eval_interval == 0:
@@ -234,7 +230,7 @@ for meta_iter in range(meta_iters):
             test_preds = model.predict(test_images)
             test_preds = tf.argmax(test_preds).numpy()
             num_correct = (test_preds == test_labels).sum()
-            # And reset the weights after getting the evaluation accuracies.
+            # Reset the weights after getting the evaluation accuracies.
             model.set_weights(old_vars)
             accuracies.append(num_correct / classes)
         training.append(accuracies[0])
@@ -250,17 +246,17 @@ for meta_iter in range(meta_iters):
 
 # First, some preprocessing to smooth the training and testing arrays for display.
 window_length = 100
-w = eval("np.hamming(window_length)")
 train_s = np.r_[
     training[window_length - 1 : 0 : -1], training, training[-1:-window_length:-1]
 ]
 test_s = np.r_[
     testing[window_length - 1 : 0 : -1], testing, testing[-1:-window_length:-1]
 ]
+w = np.hamming(window_length)
 train_y = np.convolve(w / w.sum(), train_s, mode="valid")
 test_y = np.convolve(w / w.sum(), test_s, mode="valid")
 
-# And display the training accuracies.
+# Display the training accuracies.
 x = np.arange(0, len(test_y), 1)
 plt.plot(x, test_y, x, train_y)
 plt.legend(["test", "train"])
@@ -278,7 +274,7 @@ for images, labels in train_set:
 test_preds = model.predict(test_images)
 test_preds = tf.argmax(test_preds).numpy()
 
-f, axarr = plt.subplots(nrows=1, ncols=5, figsize=(20, 20))
+_, axarr = plt.subplots(nrows=1, ncols=5, figsize=(20, 20))
 
 sample_keys = list(train_dataset.data.keys())
 
