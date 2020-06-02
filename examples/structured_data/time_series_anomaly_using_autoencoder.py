@@ -10,11 +10,7 @@ Description: Detect anomalies in a timeseries using an Autoencoder.
 ## Introduction
 
 This script demonstrates how you can use a reconstruction convolutional autoencoder model
-to detect anomolies in timeseries data.
-
-We train the model on timeseries data which does not have any anomalies. We will use the
-[Numenta Anomaly Benchmark](https://www.kaggle.com/boltzmannbrain/nab?) dataset to
-demonstrate this.
+to detect anomalies in timeseries data.
 """
 
 """
@@ -36,20 +32,11 @@ from tensorflow.keras import layers
 from tensorflow.keras import Sequential
 
 """
-## Set random seed
-"""
-
-RANDOM_SEED = 2020
-seed(RANDOM_SEED)
-tf.random.set_seed(RANDOM_SEED)
-
-"""
 ## Load the data
 
-We will use the  dataset [Numenta Anomaly Benchmark
-(NAB)](https://www.kaggle.com/boltzmannbrain/nab?) dataset. We will use the
-`art_daily_small_noise.csv` file for training and the `art_daily_jumpsup.csv` file for
-testing anomaly detection.
+We will use the [Numenta Anomaly Benchmark(NAB)](https://www.kaggle.com/boltzmannbrain/nab) dataset. It provides artifical timeseries data containing labeled anomalous periods of behavior. Data are ordered, timestamped, single-valued metrics.
+
+We will use the `art_daily_small_noise.csv` file for training and the `art_daily_jumpsup.csv` file for testing. The simplicity of this dataset allows us to demonstrate anomaly detection effectively.
 """
 
 master_url_root = "https://raw.githubusercontent.com/numenta/NAB/master/data/"
@@ -66,9 +53,9 @@ df_daily_jumpsup = pd.read_csv(df_daily_jumpsup_url)
 ## Quick look at the data
 """
 
-df_small_noise.head()
+print(df_small_noise.head())
 
-df_daily_jumpsup.head()
+print(df_daily_jumpsup.head())
 
 """
 ## Visualize the data
@@ -152,7 +139,7 @@ def create_sequences(values, time_steps=TIME_STEPS):
 
 
 x_train = create_sequences(training_value)
-print(x_train.shape)
+print("Training input shape: ", x_train.shape)
 
 """
 ## Build a model
@@ -164,25 +151,19 @@ shape. In this case, `sequence_length` is 288 and `num_features` is 1.
 
 model = Sequential(
     [
-        layers.Conv1D(
-            filters=32,
-            kernel_size=7,
-            padding="same",
-            input_shape=(x_train.shape[1], x_train.shape[2]),
-        ),
-        layers.MaxPool1D(padding="same"),
+        layers.Input(shape=(x_train.shape[1], x_train.shape[2])),
+        layers.Conv1D(filters=32, kernel_size=7, padding="same", strides=2),
         layers.Dropout(rate=0.2),
-        layers.Conv1D(filters=16, kernel_size=7, padding="same"),
-        layers.MaxPool1D(padding="same"),
-        layers.Conv1D(filters=16, kernel_size=7, padding="same"),
+        layers.Conv1D(filters=16, kernel_size=7, padding="same", strides=2),
+        layers.Conv1DTranspose(filters=16, kernel_size=7, padding="same"),
         layers.UpSampling1D(),
         layers.Dropout(rate=0.2),
-        layers.Conv1D(filters=32, kernel_size=7, padding="same"),
+        layers.Conv1DTranspose(filters=32, kernel_size=7, padding="same"),
         layers.UpSampling1D(),
-        layers.Conv1D(filters=1, kernel_size=7, padding="same"),
+        layers.Conv1DTranspose(filters=1, kernel_size=7, padding="same"),
     ]
 )
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="mae")
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="mse")
 model.summary()
 
 """
@@ -196,7 +177,7 @@ history = model.fit(
     x_train,
     x_train,
     epochs=50,
-    batch_size=100,
+    batch_size=128,
     validation_split=0.1,
     callbacks=[
         tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, mode="min")
@@ -238,7 +219,7 @@ plt.show()
 
 # Get reconstruction loss threshold.
 threshold = np.max(train_mae_loss)
-print(threshold)
+print("Reconstruction error threshold: ", threshold)
 
 """
 ### Compare recontruction
@@ -271,7 +252,7 @@ plt.show()
 
 # Create sequences from test values.
 x_test = create_sequences(test_value)
-print(x_test.shape)
+print("Test input shape: ", x_test.shape)
 
 # Get test MAE loss.
 x_test_pred = model.predict(x_test)
@@ -338,7 +319,7 @@ plt.plot(dates, values, label="test data")
 dates = df_subset["timestamp"].to_list()
 dates = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in dates]
 values = df_subset["value"].to_list()
-plt.plot(dates, values, label="anomolies", color="r")
+plt.plot(dates, values, label="anomalies", color="r")
 
 plt.legend()
 plt.show()
