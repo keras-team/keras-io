@@ -459,12 +459,12 @@ img = get_img_array(img_path)
 orig_img = np.copy(img[0]).astype(np.uint8)
 
 # 3. Preprocess the image
-img_processed = tf.cast(preprocess_input(img), dtype=tf.float32)
+img_processed = tf.cast(xception.preprocess_input(img), dtype=tf.float32)
 
 # 4. Get model predictions
 preds = model.predict(img_processed)
 top_pred_idx = tf.argmax(preds[0])
-print("Predicted:", top_pred_idx, decode_predictions(preds, top=1)[0])
+print("Predicted:", top_pred_idx, xception.decode_predictions(preds, top=1)[0])
 
 # 5. Get the gradients of the last layer for the predicted label
 grads = get_gradients(img_processed, top_pred_idx=top_pred_idx)
