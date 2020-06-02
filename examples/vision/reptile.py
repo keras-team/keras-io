@@ -3,17 +3,17 @@ Title: Few-Shot learning with Reptile
 Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/21
 Last modified: 2020/05/30
-Description: Few-shot classification of the Omniglot dataset using Reptile.
+Description: Few-shot classification on the Omniglot dataset using Reptile.
 """
 
 """
 ## Introduction
 
 The [Reptile](https://arxiv.org/abs/1803.02999) algorithm was developed by OpenAI to
-perform model agnostic meta-learning. Specifically, this algorithm was designed to
+perform model-agnostic meta-learning. Specifically, this algorithm was designed to
 quickly learn to perform new tasks with minimal training (few-shot learning).
 The algorithm works by performing Stochastic Gradient Descent using the
-difference between weights trained on a mini-batch of never before seen data and the
+difference between weights trained on a mini-batch of never-seen-before data and the
 model weights prior to training over a fixed number of meta-iterations.
 """
 
