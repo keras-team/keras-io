@@ -1,12 +1,17 @@
-"""
-Title: Few-Shot learning with Reptile
-Author: [ADMoreau](https://github.com/ADMoreau)
-Date created: 2020/05/21
-Last modified: 2020/05/30
-Description: Few-shot classification of the Omniglot dataset using Reptile.
-"""
 
-"""
+# Few-Shot learning with Reptile
+
+**Author:** [ADMoreau](https://github.com/ADMoreau)<br>
+**Date created:** 2020/05/21<br>
+**Last modified:** 2020/05/30<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/reptile.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/reptile.py)
+
+
+**Description:** Few-shot classification of the Omniglot dataset using Reptile.
+
+---
 ## Introduction
 
 The [Reptile](https://arxiv.org/abs/1803.02999) algorithm was developed by OpenAI to
@@ -15,8 +20,10 @@ quickly learn to perform new tasks with minimal training (few-shot learning).
 The algorithm works by performing Stochastic Gradient Descent using the
 difference between weights trained on a mini-batch of never before seen data and the
 model weights prior to training over a fixed number of meta-iterations.
-"""
 
+
+
+```python
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -25,10 +32,14 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_datasets as tfds
 
-"""
-## Define the Hyperparameters
-"""
+```
 
+---
+## Define the Hyperparameters
+
+
+
+```python
 learning_rate = 0.003
 meta_step_size = 0.25
 
@@ -44,7 +55,9 @@ train_shots = 20
 shots = 5
 classes = 5
 
-"""
+```
+
+---
 ## Prepare the data
 
 The [Omniglot dataset](https://github.com/brendenlake/omniglot/) is a dataset of 1,623
@@ -56,8 +69,10 @@ to test the model's ability to learn a new task given few examples. In other wor
 are training on 5 classes, your new class labels will be either 0, 1, 2, 3, or 4.
 Omniglot is a great dataset for this task since there are many different classes to draw
 from, with a reasonable number of samples for each class.
-"""
 
+
+
+```python
 
 class Dataset:
     # This class will facilitate the creation of a few-shot dataset
@@ -136,10 +151,80 @@ urllib3.disable_warnings()  # Disable SSL warnings that may happen during downlo
 train_dataset = Dataset(training=True)
 test_dataset = Dataset(training=False)
 
-"""
-## Visualize some examples from the dataset
-"""
+```
 
+<div class="k-default-codeblock">
+```
+[1mDownloading and preparing dataset omniglot/3.0.0 (download: 17.95 MiB, generated: Unknown size, total: 17.95 MiB) to /root/tensorflow_datasets/omniglot/3.0.0...[0m
+
+HBox(children=(FloatProgress(value=1.0, bar_style='info', description='Dl Completed...', max=1.0, style=Progre…
+
+HBox(children=(FloatProgress(value=1.0, bar_style='info', description='Dl Size...', max=1.0, style=ProgressSty…
+
+HBox(children=(FloatProgress(value=1.0, bar_style='info', description='Extraction completed...', max=1.0, styl…
+
+```
+</div>
+    
+    
+    
+    
+    
+    
+
+
+
+<div class="k-default-codeblock">
+```
+HBox(children=(FloatProgress(value=1.0, bar_style='info', max=1.0), HTML(value='')))
+
+Shuffling and writing examples to /root/tensorflow_datasets/omniglot/3.0.0.incompleteXTNZJN/omniglot-train.tfrecord
+
+HBox(children=(FloatProgress(value=0.0, max=19280.0), HTML(value='')))
+
+```
+</div>
+    
+
+
+<div class="k-default-codeblock">
+```
+HBox(children=(FloatProgress(value=1.0, bar_style='info', max=1.0), HTML(value='')))
+
+Shuffling and writing examples to /root/tensorflow_datasets/omniglot/3.0.0.incompleteXTNZJN/omniglot-test.tfrecord
+
+HBox(children=(FloatProgress(value=0.0, max=13180.0), HTML(value='')))
+
+```
+</div>
+    
+
+
+<div class="k-default-codeblock">
+```
+HBox(children=(FloatProgress(value=1.0, bar_style='info', max=1.0), HTML(value='')))
+
+Shuffling and writing examples to /root/tensorflow_datasets/omniglot/3.0.0.incompleteXTNZJN/omniglot-small1.tfrecord
+
+HBox(children=(FloatProgress(value=0.0, max=2720.0), HTML(value='')))
+
+HBox(children=(FloatProgress(value=1.0, bar_style='info', max=1.0), HTML(value='')))
+
+Shuffling and writing examples to /root/tensorflow_datasets/omniglot/3.0.0.incompleteXTNZJN/omniglot-small2.tfrecord
+
+HBox(children=(FloatProgress(value=0.0, max=3120.0), HTML(value='')))
+
+[1mDataset omniglot downloaded and prepared to /root/tensorflow_datasets/omniglot/3.0.0. Subsequent calls will reuse this data.[0m
+```
+</div>
+    
+
+---
+## Visualize some examples from the dataset
+
+
+
+```python
 _, axarr = plt.subplots(nrows=5, ncols=5, figsize=(20, 20))
 
 sample_keys = list(train_dataset.data.keys())
@@ -157,10 +242,18 @@ for a in range(5):
         axarr[a, b].yaxis.set_visible(False)
 plt.show()
 
-"""
-## Build the model
-"""
+```
 
+
+![png](/img/examples/vision/reptile/reptile_8_0.png)
+
+
+---
+## Build the model
+
+
+
+```python
 
 def conv_bn(x):
     x = layers.Conv2D(filters=64, kernel_size=3, strides=2, padding="same")(x)
@@ -179,10 +272,14 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 model.compile()
 optimizer = keras.optimizers.SGD(learning_rate=learning_rate)
 
-"""
-## Train the model
-"""
+```
 
+---
+## Train the model
+
+
+
+```python
 training = []
 testing = []
 for meta_iter in range(meta_iters):
@@ -237,10 +334,39 @@ for meta_iter in range(meta_iters):
                 "batch %d: train=%f test=%f" % (meta_iter, accuracies[0], accuracies[1])
             )
 
-"""
-## Visualize Results
-"""
+```
 
+<div class="k-default-codeblock">
+```
+batch 0: train=0.000000 test=0.600000
+batch 100: train=0.600000 test=0.800000
+batch 200: train=1.000000 test=0.600000
+batch 300: train=0.600000 test=0.800000
+batch 400: train=0.800000 test=1.000000
+batch 500: train=1.000000 test=0.600000
+batch 600: train=1.000000 test=1.000000
+batch 700: train=1.000000 test=1.000000
+batch 800: train=1.000000 test=0.600000
+batch 900: train=1.000000 test=1.000000
+batch 1000: train=0.800000 test=1.000000
+batch 1100: train=1.000000 test=0.600000
+batch 1200: train=0.800000 test=1.000000
+batch 1300: train=0.800000 test=1.000000
+batch 1400: train=1.000000 test=1.000000
+batch 1500: train=0.800000 test=1.000000
+batch 1600: train=1.000000 test=1.000000
+batch 1700: train=1.000000 test=0.800000
+batch 1800: train=1.000000 test=1.000000
+batch 1900: train=0.800000 test=1.000000
+
+```
+</div>
+---
+## Visualize Results
+
+
+
+```python
 # First, some preprocessing to smooth the training and testing arrays for display.
 window_length = 100
 train_s = np.r_[
@@ -286,3 +412,13 @@ for i, ax in zip(range(5), axarr):
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
 plt.show()
+
+```
+
+
+![png](/img/examples/vision/reptile/reptile_14_0.png)
+
+
+
+![png](/img/examples/vision/reptile/reptile_14_1.png)
+
