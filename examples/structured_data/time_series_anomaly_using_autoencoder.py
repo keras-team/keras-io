@@ -155,11 +155,9 @@ model = Sequential(
         layers.Conv1D(filters=32, kernel_size=7, padding="same", strides=2),
         layers.Dropout(rate=0.2),
         layers.Conv1D(filters=16, kernel_size=7, padding="same", strides=2),
-        layers.Conv1DTranspose(filters=16, kernel_size=7, padding="same"),
-        layers.UpSampling1D(),
+        layers.Conv1DTranspose(filters=16, kernel_size=7, padding="same", strides=2),
         layers.Dropout(rate=0.2),
-        layers.Conv1DTranspose(filters=32, kernel_size=7, padding="same"),
-        layers.UpSampling1D(),
+        layers.Conv1DTranspose(filters=32, kernel_size=7, padding="same", strides=2),
         layers.Conv1DTranspose(filters=1, kernel_size=7, padding="same"),
     ]
 )
