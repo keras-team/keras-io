@@ -8,12 +8,12 @@ Description: How to obtain integrated gradients for a classification model.
 
 """
 ## Integrated Gradients
-[Integrated Gradients](https://arxiv.org/abs/1701.07875) is a technique for
+[Integrated Gradients](https://arxiv.org/abs/1703.01365) is a technique for
 attributing a classification model's prediction to its input features. It is
 a model interpretability technique: you can use it to visualize the relationship
 between input features and model predictions.
 
-[Integrated Gradients](https://arxiv.org/abs/1701.07875) is a variation on computing
+[Integrated Gradients](https://arxiv.org/abs/1703.01365) is a variation on computing
 the gradient of the prediction output w.r.t. features of the input. To compute
 integrated gradients, we need to perform the following steps:
 
@@ -38,7 +38,7 @@ To read in-depth about integrated gradients and why this method works,
 consider reading this excellent [article](https://distill.pub/2020/attribution-baselines/).
 
 Refrences:
-1. Integrated Gradients original [paper](https://arxiv.org/abs/1701.07875)
+1. Integrated Gradients original [paper](https://arxiv.org/abs/1703.01365)
 2. [Original implementation](https://github.com/ankurtaly/Integrated-Gradients)
 """
 
