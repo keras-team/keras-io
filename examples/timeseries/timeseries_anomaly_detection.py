@@ -17,19 +17,13 @@ autoencoder model to detect anomalies in timeseries data.
 ## Setup
 """
 
-import io
-import matplotlib
 import numpy as np
-import os
 import pandas as pd
-import tensorflow as tf
-
+from tensorflow import keras
+from tensorflow.keras import layers
 from datetime import datetime
 from matplotlib import pyplot as plt
 from matplotlib import dates as md
-from numpy.random import seed
-from tensorflow.keras import layers
-from tensorflow.keras import Sequential
 
 """
 ## Load the data
@@ -157,7 +151,7 @@ output of the same shape. In this case, `sequence_length` is 288 and
 `num_features` is 1.
 """
 
-model = Sequential(
+model = keras.Sequential(
     [
         layers.Input(shape=(x_train.shape[1], x_train.shape[2])),
         layers.Conv1D(
@@ -177,7 +171,7 @@ model = Sequential(
         layers.Conv1DTranspose(filters=1, kernel_size=7, padding="same"),
     ]
 )
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="mse")
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001), loss="mse")
 model.summary()
 
 """
@@ -194,7 +188,7 @@ history = model.fit(
     batch_size=128,
     validation_split=0.1,
     callbacks=[
-        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, mode="min")
+        keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, mode="min")
     ],
 )
 
