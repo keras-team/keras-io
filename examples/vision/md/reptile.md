@@ -1,15 +1,12 @@
 
-# Few-Shot learning with Reptile
 
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/21<br>
 **Last modified:** 2020/05/30<br>
+**Description:** Few-shot classification of the Omniglot dataset using Reptile.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/reptile.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/reptile.py)
-
-
-**Description:** Few-shot classification of the Omniglot dataset using Reptile.
 
 ---
 ## Introduction
