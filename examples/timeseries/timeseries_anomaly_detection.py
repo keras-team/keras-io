@@ -96,8 +96,9 @@ plot_dates_values(df_daily_jumpsup)
 
 Get data values from the training timeseries data file and normalize the
 `value` data. We have a `value` for every 5 mins for 14 days.
-*   24 * 60 / 5 = **288 timesteps per day**
-*   288 * 14 = **4032 data points** in total
+
+-   24 * 60 / 5 = **288 timesteps per day**
+-   288 * 14 = **4032 data points** in total
 """
 
 

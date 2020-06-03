@@ -1,4 +1,4 @@
-# Integrated Gradients
+# Model interpretability with Integrated Gradients
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
 **Date created:** 2020/06/02<br>
@@ -12,38 +12,42 @@
 
 ---
 ## Integrated Gradients
+
 [Integrated Gradients](https://arxiv.org/abs/1703.01365) is a technique for
 attributing a classification model's prediction to its input features. It is
 a model interpretability technique: you can use it to visualize the relationship
 between input features and model predictions.
 
-[Integrated Gradients](https://arxiv.org/abs/1703.01365) is a variation on computing
-the gradient of the prediction output w.r.t. features of the input. To compute
-integrated gradients, we need to perform the following steps:
+Integrated Gradients is a variation on computing
+the gradient of the prediction output with regard to features of the input.
+To compute integrated gradients, we need to perform the following steps:
 
 1. Identify the input and the output. In our case, the input is an image and the
-last layer of our model (dense layer with softmax activation) is the output.
+output is the last layer of our model (dense layer with softmax activation).
 
-2. Integrated gradients computes which features are important to a neural network
-when making a prediction on a particular data point. To know these features, we
+2. Compute which features are important to a neural network
+when making a prediction on a particular data point. To identify these features, we
 need to choose a baseline input. A baseline input can be a black image (all pixel
 values set to zero) or random noise. The shape of the baseline input needs to be
 the same as our input image, e.g. (299, 299, 3).
 
 3. Interpolate the baseline for a given number of steps. The number of steps represents
 the steps we need in the gradient approximation for a given input image. The number of
-steps is a hyperparameter. The authors recommend using steps anywhere between 20-1000.
+steps is a hyperparameter. The authors recommend using steps anywhere between
+20 and 1000 step.
 
 4. Preprocess these interpolated images and do a forward pass.
 5. Get the gradients for these interpolated images.
 6. Approximate the gradients integral using the trapezoidal rule.
 
 To read in-depth about integrated gradients and why this method works,
-consider reading this excellent [article](https://distill.pub/2020/attribution-baselines/).
+consider reading this excellent
+[article](https://distill.pub/2020/attribution-baselines/).
 
-Refrences:
-1. Integrated Gradients original [paper](https://arxiv.org/abs/1703.01365)
-2. [Original implementation](https://github.com/ankurtaly/Integrated-Gradients)
+**References:**
+
+- Integrated Gradients original [paper](https://arxiv.org/abs/1703.01365)
+- [Original implementation](https://github.com/ankurtaly/Integrated-Gradients)
 
 
 ---
@@ -56,7 +60,6 @@ Refrences:
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
-from pathlib import Path
 from IPython.display import Image
 
 import tensorflow as tf
@@ -76,8 +79,14 @@ display(Image(img_path))
 
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://i.imgur.com/Bvro0YD.png
+4218880/4217496 [==============================] - 0s 0us/step
 
-![jpeg](/img/examples/vision/integrated_gradients/integrated_gradients_3_0.jpg)
+```
+</div>
+![jpeg](/img/examples/vision/integrated_gradients/integrated_gradients_3_1.jpeg)
 
 
 ---
@@ -154,12 +163,10 @@ def get_integrated_gradients(img_input, top_pred_idx, baseline=None, num_steps=5
 
     # 3. Get the gradients
     grads = []
-
     for i, img in enumerate(interpolated_image):
         img = tf.expand_dims(img, axis=0)
         grad = get_gradients(img, top_pred_idx=top_pred_idx)
         grads.append(grad[0])
-
     grads = tf.convert_to_tensor(grads, dtype=tf.float32)
 
     # 4. Approximate the integral usiing the trapezoidal rule
@@ -316,7 +323,6 @@ class GradVisualizer:
         # 4. Sum up the attributions for each component
         total = np.sum(attributions[connected_components > 0])
         component_sums = []
-
         for comp in range(1, num_comp + 1):
             mask = connected_components == comp
             component_sum = np.sum(attributions[mask])
@@ -328,7 +334,6 @@ class GradVisualizer:
         cumulative_sorted_sums = np.cumsum(sorted_sums)
         cutoff_threshold = percentage * total / 100
         cutoff_idx = np.where(cumulative_sorted_sums >= cutoff_threshold)[0][0]
-
         if cutoff_idx > 2:
             cutoff_idx = 2
 
@@ -357,13 +362,11 @@ class GradVisualizer:
         outlines_component_percentage=90,
         overlay=True,
     ):
-
         if polarity not in ["positive", "negative"]:
             raise ValueError(
-                f""" Allowed polarity values: 'positive' or 'negatiive'
+                f""" Allowed polarity values: 'positive' or 'negative'
                                     but provided {polarity}"""
             )
-
         if clip_above_percentile < 0 or clip_above_percentile > 100:
             raise ValueError("clip_above_percentile must be in [0, 100]")
 
@@ -407,7 +410,6 @@ class GradVisualizer:
         # 7.Superimpose on the original image
         if overlay:
             attributions = np.clip((attributions * 0.8 + image), 0, 255)
-
         return attributions
 
     def visualize(
@@ -425,7 +427,6 @@ class GradVisualizer:
         overlay=True,
         figsize=(15, 8),
     ):
-
         # 1. Make two copies of the original image
         img1 = np.copy(image)
         img2 = np.copy(image)
@@ -507,7 +508,6 @@ vis.visualize(
     integrated_gradients=igrads.numpy(),
     clip_above_percentile=99,
     clip_below_percentile=0,
-    overlay=True,
 )
 
 vis.visualize(
@@ -518,15 +518,12 @@ vis.visualize(
     clip_below_percentile=28,
     morphological_cleanup=True,
     outlines=True,
-    overlay=True,
 )
 
 ```
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/download.tensorflow.org/data/imagenet_class_index.json
-40960/35363 [==================================] - 0s 1us/step
 Predicted: tf.Tensor(386, shape=(), dtype=int64) [('n02504458', 'African_elephant', 0.8871446)]
 
 ```
