@@ -27,8 +27,8 @@ values set to zero) or random noise. The shape of the baseline input needs to be
 the same as our input image, e.g. (299, 299, 3).
 
 3. Interpolate the baseline for a given number of steps. The number of steps represents
-the steps we need in the gradient approximation for a given input image. The number of 
-steps is a hyperparameter. The authors recommend using steps anywhere between 20-1000. 
+the steps we need in the gradient approximation for a given input image. The number of
+steps is a hyperparameter. The authors recommend using steps anywhere between 20-1000.
 
 4. Preprocess these interpolated images and do a forward pass.
 5. Get the gradients for these interpolated images.
@@ -78,6 +78,9 @@ def get_img_array(img_path, size=(299, 299)):
     img = keras.preprocessing.image.load_img(img_path, target_size=size)
     # `array` is a float32 Numpy array of shape (299, 299, 3)
     array = keras.preprocessing.image.img_to_array(img)
+    # We add a dimension to transform our array into a "batch"
+    # of size (1, 299, 299, 3)
+    array = np.expand_dims(array, axis=0)
     return array
 
 
@@ -87,7 +90,7 @@ def get_gradients(img_input, top_pred_idx):
     Args:
         img_input: 4D image tensor
         top_pred_idx: Predicted label for the input image
-    
+
     Returns:
         Gradients of the predictions w.r.t img_input
     """
@@ -106,14 +109,14 @@ def get_integrated_gradients(img_input, top_pred_idx, baseline=None, num_steps=5
     """Computes Integrated Gradients for a predicted label.
 
     Args:
-        img_input (ndarray): Original image 
+        img_input (ndarray): Original image
         top_pred_idx: Predicted label for the input image
-        baseline (ndarray): The baseline image to start with for interpolation 
+        baseline (ndarray): The baseline image to start with for interpolation
         num_steps: Number of interpolation steps between the baseline
             and the input used in the computation of integrated gradients. These
             steps along determine the integral approximation error. By default,
             num_steps is set to 50.
-    
+
     Returns:
         Integrated gradients w.r.t input image
     """
@@ -158,7 +161,7 @@ def random_baseline_integrated_gradients(
     img_input, top_pred_idx, num_steps=50, num_runs=2
 ):
     """Generates a number of random baseline images.
-    
+
     Args:
         img_input (ndarray): 3D image
         top_pred_idx: Predicted label for the input image
@@ -167,7 +170,7 @@ def random_baseline_integrated_gradients(
             steps along determine the integral approximation error. By default,
             num_steps is set to 50.
         num_runs: number of baseline images to generate
-    
+
     Returns:
         Averaged integrated gradients for `num_runs` baseline images
     """
