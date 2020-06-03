@@ -67,7 +67,8 @@ import random
 import shutil
 from pathlib import Path
 
-TIMEOUT = 2 * 60 * 60
+TIMEOUT = 60 * 60
+MAX_LOC = 300
 
 
 def nb_to_py(nb_path, py_path):
@@ -124,6 +125,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
     header, _, py, tag = _get_next_script_element(py)
     attributes = _parse_header(header)
     cells = []
+    loc = 0
     # Write first header cell
     header_cell = {
         "cell_type": "markdown",
@@ -160,6 +162,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
                 cell["outputs"] = []
                 cell["metadata"] = {"colab_type": "code"}
                 cell["execution_count"] = 0
+                loc += _count_locs(source)
             else:
                 cell["metadata"] = {"colab_type": "text"}
             cells.append(cell)
@@ -168,6 +171,11 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
         notebook[key] = NB_BASE[key]
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
     notebook["cells"] = cells
+    if loc > MAX_LOC:
+        raise ValueError(
+            'Found %d lines of code, but expected fewer than %d'
+            % (loc, MAX_LOC))
+
     f = open(nb_path, "w")
     f.write(json.dumps(notebook, indent=1, sort_keys=True))
     f.close()
@@ -313,6 +321,25 @@ def validate(py):
             "You python file did not follow `black` conventions. "
             "Run `black your_file.py` to autoformat it."
         )
+
+
+def _count_locs(lines):
+    loc = 0
+    string_open = False
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if not string_open:
+            if not line.startswith('"""'):
+                loc += 1
+            else:
+                if not line.endswith('"""'):
+                    string_open = True
+        else:
+            if line.startswith('"""'):
+                string_open = False
+    return loc
 
 
 def _shorten_lines(py):
