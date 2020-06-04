@@ -1,11 +1,17 @@
-"""
-Title: Text Generation with miniature GPT
-Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
-Date created: 2020/05/29
-Last modified: 2020/05/29
-Description: Implement miniature version of GPT and learn to generate text.
-"""
-"""
+
+# Text Generation with miniature GPT
+
+**Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
+**Date created:** 2020/05/29<br>
+**Last modified:** 2020/05/29<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/text_generation_with_miniature_gpt.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/text_generation_with_miniature_gpt.py)
+
+
+**Description:** Implement miniature version of GPT and learn to generate text.
+
+---
 ## Introduction
 
 This example demonstrates autoregressive language modelling using a
@@ -22,10 +28,14 @@ When using this script with your own data, make sure it has atleast
 - [GPT](https://www.semanticscholar.org/paper/Improving-Language-Understanding-by-Generative-Radford/cd18800a0fe0b668a1cc19f2ec95b5003d0a5035)
 - [GPT-2](https://www.semanticscholar.org/paper/Language-Models-are-Unsupervised-Multitask-Learners-Radford-Wu/9405cc0d6169988371b2755e573cc28650d14dfe)
 - [GPT-3](https://arxiv.org/abs/2005.14165)
-"""
-"""
+
+
+---
 ## Setup
-"""
+
+
+
+```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -33,13 +43,17 @@ from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 import numpy as np
 import os
 
-"""
+```
+
+---
 ## Self-attention with causal masking
 
 We compute self-attention as usual, but prevent any information to flow
 from future tokens by masking the upper half of the scaled dot product matrix.
-"""
 
+
+
+```python
 
 class MultiHeadSelfAttention(layers.Layer):
     def __init__(self, embed_dim, num_heads=8):
@@ -116,10 +130,14 @@ class MultiHeadSelfAttention(layers.Layer):
         return output
 
 
-"""
-## Implement a Transformer block as a layer
-"""
+```
 
+---
+## Implement a Transformer block as a layer
+
+
+
+```python
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
@@ -142,12 +160,16 @@ class TransformerBlock(layers.Layer):
         return self.layernorm2(out1 + ffn_output)
 
 
-"""
+```
+
+---
 ## Implement embedding layer
 
 Two seperate embedding layers, one for tokens, one for token index (positions).
-"""
 
+
+
+```python
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, emded_dim):
@@ -163,9 +185,14 @@ class TokenAndPositionEmbedding(layers.Layer):
         return x + positions
 
 
-"""
+```
+
+---
 ## Implement miniature GPT model
-"""
+
+
+
+```python
 vocab_size = 20000  # Only consider the top 20k words
 maxlen = 200  # Max sequence size
 embed_dim = 32  # Embedding size for each token
@@ -188,18 +215,26 @@ def create_model():
     return model
 
 
-"""
+```
+
+---
 ## Prepare data for word level language modelling
 
 We will download IMDB data, and combine training and validation sets for
 text generation task.
-"""
 
-"""shell
-!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-!tar -xf aclImdb_v1.tar.gz
-"""
 
+
+```python
+!!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+!!tar -xf aclImdb_v1.tar.gz
+
+```
+
+
+
+
+```python
 
 batch_size = 16
 
@@ -248,10 +283,21 @@ text_ds = text_ds.map(prepare_lm_inputs_labels)
 text_ds = text_ds.repeat().prefetch(tf.data.experimental.AUTOTUNE)
 
 
-"""
-## Callback for generating text
-"""
+```
+<div class="k-default-codeblock">
+```
+[]
 
+50000 files
+
+```
+</div>
+---
+## Callback for generating text
+
+
+
+```python
 
 class TextGenerator(keras.callbacks.Callback):
     """Callback to generate text from trained model.
@@ -325,14 +371,79 @@ num_tokens_generated = 20
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
-"""
+```
+
+---
 ## Train
 
 Note: This code should preferably be run on GPU.
-"""
 
+
+
+```python
 model = create_model()
 
 model.fit(
     text_ds, verbose=2, steps_per_epoch=781, epochs=15, callbacks=[text_gen_callback]
 )
+
+```
+
+<div class="k-default-codeblock">
+```
+Epoch 1/15
+781/781 - 19s - loss: 5.3161 - dense_6_loss: 5.3161
+Epoch 2/15
+781/781 - 19s - loss: 4.5371 - dense_6_loss: 4.5371
+Epoch 3/15
+781/781 - 19s - loss: 4.3928 - dense_6_loss: 4.3928
+Epoch 4/15
+781/781 - 19s - loss: 4.3695 - dense_6_loss: 4.3695
+Epoch 5/15
+generated text:
+the film is br not it a show is and it a dont a and that movies life when a dont at is a
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+781/781 - 21s - loss: 4.3358 - dense_6_loss: 4.3358
+Epoch 6/15
+781/781 - 19s - loss: 4.3073 - dense_6_loss: 4.3073
+Epoch 7/15
+781/781 - 20s - loss: 4.2244 - dense_6_loss: 4.2244
+Epoch 8/15
+781/781 - 20s - loss: 4.2383 - dense_6_loss: 4.2383
+Epoch 9/15
+781/781 - 20s - loss: 4.2266 - dense_6_loss: 4.2266
+Epoch 10/15
+generated text:
+the film is and i br it at is br film in story for to more for a each film your and that he
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+781/781 - 21s - loss: 4.2278 - dense_6_loss: 4.2278
+Epoch 11/15
+781/781 - 20s - loss: 4.1558 - dense_6_loss: 4.1558
+Epoch 12/15
+781/781 - 19s - loss: 4.1826 - dense_6_loss: 4.1826
+Epoch 13/15
+781/781 - 20s - loss: 4.1798 - dense_6_loss: 4.1798
+Epoch 14/15
+781/781 - 19s - loss: 4.1893 - dense_6_loss: 4.1893
+Epoch 15/15
+generated text:
+the film is br it from idea of that time one a show movie a show the the the the the the the the
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+781/781 - 20s - loss: 4.1217 - dense_6_loss: 4.1217
+
+<tensorflow.python.keras.callbacks.History at 0x7f3dbe1168d0>
+
+```
+</div>
