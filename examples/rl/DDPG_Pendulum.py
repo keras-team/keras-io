@@ -195,7 +195,7 @@ class Buffer:
         with tf.GradientTape() as tape:
 
             target_actions = target_actor(next_state_batch)
-            y = reward_batch + GAMMA * target_critic([next_state_batch, target_actions])
+            y = reward_batch + gamma * target_critic([next_state_batch, target_actions])
             critic_value = critic_model([state_batch, action_batch])
 
             critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
@@ -340,7 +340,7 @@ actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
 total_episodes = 100
 # Discount factor for future rewards
-GAMMA = 0.99
+gamma = 0.99
 # Used to update target networks
 tau = 0.005
 
