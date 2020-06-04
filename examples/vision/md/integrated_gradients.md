@@ -33,8 +33,8 @@ the same as our input image, e.g. (299, 299, 3).
 
 3. Interpolate the baseline for a given number of steps. The number of steps represents
 the steps we need in the gradient approximation for a given input image. The number of
-steps is a hyperparameter. The authors recommend using steps anywhere between
-20 and 1000 step.
+steps is a hyperparameter. The authors recommend using anywhere between
+20 and 1000 steps.
 
 4. Preprocess these interpolated images and do a forward pass.
 5. Get the gradients for these interpolated images.
@@ -169,7 +169,7 @@ def get_integrated_gradients(img_input, top_pred_idx, baseline=None, num_steps=5
         grads.append(grad[0])
     grads = tf.convert_to_tensor(grads, dtype=tf.float32)
 
-    # 4. Approximate the integral usiing the trapezoidal rule
+    # 4. Approximate the integral using the trapezoidal rule
     grads = (grads[:-1] + grads[1:]) / 2.0
     avg_grads = tf.reduce_mean(grads, axis=0)
 
