@@ -20,20 +20,15 @@ docker build -t keras-io . && docker run --rm -p 8000:8000 keras-io
 It will take a while the first time because it's going to pull the 
 image and the dependencies, but on the next times it'll be much faster.
 
+
 ## Call for examples
 
 Are you interested in submitting new examples for publication on keras.io?
 We welcome your contributions!
 Please read the information below about adding new code examples.
 
-We are currently interested in the following examples:
+We are currently interested in [the following examples](https://github.com/keras-team/keras-io/blob/master/call_for_contributions.md).
 
-- A3C and A2C RL
-- Retinanet
-- YoloV3
-- StyleGAN
-- BERT
-- End-to-end OCR (with CTC loss)
 
 
 ## Adding a new code example
