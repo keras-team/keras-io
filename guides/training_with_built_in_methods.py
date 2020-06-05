@@ -755,7 +755,7 @@ For fine grained control, or if you are not building a classifier,
 you can use "sample weights". 
 
 - When training from NumPy data: Pass the `sample_weight`
-  argument to `Model.fit`.
+  argument to `Model.fit()`.
 - When training from `tf.data` or any other sort of iterator:
   Yield `(input_batch, label_batch, sample_weight_batch)` tuples.
 
