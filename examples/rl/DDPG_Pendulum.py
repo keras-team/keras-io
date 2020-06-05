@@ -6,7 +6,8 @@ Last modified: 2020/06/04
 Description: Implementing DDPG algorithm with Experience Relay on the Inverted Pendulum Problem.
 """
 """
-# Introduction
+## Introduction
+
 **Deep Deterministic Policy Gradient (DDPG)** is a popular algorithm for learning **good
 actions** corresponding to agent's **State**.
 
@@ -14,41 +15,42 @@ This tutorial closely follow this paper -
 [Continuous control with deep reinforcement
 learning](https://arxiv.org/pdf/1509.02971.pdf)
 
-# Problem
-We are trying to solve classic control problem of **Inverted Pendulum**. In this we can
-take only two actions - Swing LEFT or Swing RIGHT. 
+## Problem
 
-Now what make this **problem challenging for Q-learning Algorithms** is that **actions
-are Continuous** instead of being Discrete. That is instead of using two discrete actions
-like [ -1 or +1] , we have to select from infinite actions ranging from -2 to +2.
+We are trying to solve the classic **Inverted Pendulum** control problem.
+In this setting, we can take only two actions: swing left or swing right. 
 
-# Quick Theory
+What make this problem challenging for Q-Learning Algorithms is that actions
+are **continuous** instead of being **discrete**. That is, instead of using two
+discrete actions like `-1` or `+1`, we have to select from infinite actions
+ranging from `-2` to `+2`.
 
-Just like A2C Method , we have two Networks -
+## Quick theory
 
-1. Actor - It just takes the action.
-2. Critic - It tell if action is good( gives +ve value) or   bad(-ve value)
+Just like the A2C method, we have two networks:
 
-But DDPG uses two more tricks -
+1. Actor - It proposes an action.
+2. Critic - It predicts if the action is good (positive value) or bad (negative value).
 
-**First, Uses two Target Networks.**
+However, DDPG uses two more tricks:
 
-**Why?** Because it add stability to training. In short , We are learning from estimated
-targets and Target Network are updated slowly hence keeping our estimated targets stable.
+**First, it uses two Target networks.**
 
-Conceptually it's like saying, "I have an idea of how to play this well, I'm going to try
-it out for a bit until I find something better" as opposed to saying "I'm going to
-retrain myself how to play this entire game after every move". See this answer -
-[stackoverflow](https://stackoverflow.com/a/54238556/13475679)
+**Why?** Because it add stability to training. In short, we are learning from estimated
+targets and Target networks are updated slowly, hence keeping our estimated targets stable.
 
-**Second , Uses Experience Relay.**
+Conceptually, this is like saying, "I have an idea of how to play this well, I'm going to try
+it out for a bit until I find something better", as opposed to saying "I'm going to
+re-learn how to play this entire game after every move".
+See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679)
 
-It is basically list of tuples of (state,action,reward,next_state). So instead of
-learning from recent experiences , **you learn from sample with fair amount of
-successful,  failed, early and recent experiences.**
+**Second, it uses Experience Relay.**
 
+We store list of tuples `(state, action, reward, next_state)`, and instead of
+learning only from recent experience, we learn from sampling all of our experience
+accumulated so far.
 
-Now lets see how is it implemented.
+Now, lets see how is it implemented.
 """
 
 # We use openai gym for Pendulum Env.
@@ -59,28 +61,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 """
-Standard Way of creating [GYM Environment](http://gym.openai.com/docs). We will use
-**upper_bound** to scale our actions later.
+We use [OpenAIGym](http://gym.openai.com/docs) to create the environment.
+We will use the `upper_bound` parameter to scale our actions later.
 """
 
 problem = "Pendulum-v0"
 env = gym.make(problem)
 
 num_states = env.observation_space.shape[0]
-print("Size of State Space = >  {}".format(num_states))
+print("Size of State Space ->  {}".format(num_states))
 num_actions = env.action_space.shape[0]
-print("Size of Action Space = >  {}".format(num_actions))
+print("Size of Action Space ->  {}".format(num_actions))
 
 upper_bound = env.action_space.high[0]
 lower_bound = env.action_space.low[0]
 
-print("Max Value of Action = >  {}".format(upper_bound))
-print("Min Value of Action = >  {}".format(lower_bound))
+print("Max Value of Action ->  {}".format(upper_bound))
+print("Min Value of Action ->  {}".format(lower_bound))
 
 """
-Now for Exploration by our Actor , we use noisy perturbation, specifically
-**Ornstein-Uhlenbeck process** as described in paper. Its basically sampling noise from a
-"correlated" normal distribution.
+To implement Actor exploration, we use noisy perturbations, specifically
+an **Ornstein-Uhlenbeck process**, as described in paper.
+It samples noise from a correlated normal distribution.
 """
 
 
@@ -94,14 +96,12 @@ class OUActionNoise:
         self.reset()
 
     def __call__(self):
-        # Its standard code for this process.
         # Formula taken from https://www.wikipedia.org/wiki/Ornstein-Uhlenbeck_process.
         x = (
             self.x_prev
             + self.theta * (self.mean - self.x_prev) * self.dt
             + self.std_dev * np.sqrt(self.dt) * np.random.normal(size=self.mean.shape)
         )
-
         # This makes this noise more correlated
         self.x_prev = x
         return x
@@ -114,31 +114,23 @@ class OUActionNoise:
 
 
 """
-**Buffer** class implements the Experience Relay Concept.
+The `Buffer` class implements Experience Replay.
 
 ---
-![Imgur](https://i.imgur.com/mS6iGyJ.jpg)
-
-
+![Algorithm](https://i.imgur.com/mS6iGyJ.jpg)
 ---
 
 
-**Critic Loss** - Mean Squared Error of **( y - Q(s,a) )**
-where **y** is expected return determined by target critic network and Q(s,a) is value of
-state-action given by critic network. We train our critic network using the computed
-loss. 
+**Critic loss** - Mean Squared Error of `y - Q(s, a)`
+where `y` is the expected action value as seen by the Target network,
+and `Q(s, a)` is action value predicted by the Critic network. `y` is a moving target that the critic model tries to achieve; we make this target
+stable by updating the target model slowly.
 
-**y** is a moving target that critic model tries to achieve, but we make this target
-stable by updating out target model slowly.
+**Actor loss** - This is computed using the mean of the value given by the Critic network
+for the actions taken by the Actor network. We seek to maximize this quantity.
 
-**Actor Loss** - This is computed using mean of value given by critic model for the
-actions taken by Actor network. We like to maximize this. So use negative sign before the
-computed mean and use this to do gradient descent.
-
-Hence we update Actor Network such that it produces actions that gets maximum value from
-critic , for a given state.
-
-
+Hence we update the Actor Network such that it produces actions that get
+the maximum predicted value as seen by the Critic, for a given state.
 
 """
 
@@ -156,16 +148,14 @@ class Buffer:
 
         # Instead of list of tuples as the exp.relay concept go
         # We use different np.arrays for each tuple element
-        # But is its more easy to convert and keeps thing clean.
         self.state_buff = np.zeros((self.buffer_capacity, num_states))
         self.action_buff = np.zeros((self.buffer_capacity, num_actions))
         self.reward_buff = np.zeros((self.buffer_capacity, 1))
         self.next_state_buff = np.zeros((self.buffer_capacity, num_states))
 
     def record(self, obs_tuple):
-
-        # To make index zero if buffer_capacity excedded
-        # Hence replacing old records
+        # Set index to zero if buffer_capacity is exceeded,
+        # replacing old records
         index = self.buffer_ctr % self.buffer_capacity
 
         self.state_buff[index] = obs_tuple[0]
@@ -175,12 +165,11 @@ class Buffer:
 
         self.buffer_ctr += 1
 
-    # We compute loss and update parameters
+    # We compute the loss and update parameters
     def learn(self):
-
-        # Get range upto which to sample
+        # Get sampling range
         record_range = min(self.buffer_ctr, self.buffer_capacity)
-        # Randomly sample indexes
+        # Randomly sample indices
         batch_idx = np.random.choice(record_range, self.batch_size)
 
         # Convert to tensors
@@ -190,14 +179,12 @@ class Buffer:
         reward_batch = tf.cast(reward_batch, dtype=tf.float32)
         next_state_batch = tf.convert_to_tensor(self.next_state_buff[batch_idx])
 
-        # Training and updating Actor - Critic Networks.
+        # Training and updating Actor & Critic networks.
         # See Pseudo Code.
         with tf.GradientTape() as tape:
-
             target_actions = target_actor(next_state_batch)
             y = reward_batch + gamma * target_critic([next_state_batch, target_actions])
             critic_value = critic_model([state_batch, action_batch])
-
             critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
 
         critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
@@ -206,10 +193,10 @@ class Buffer:
         )
 
         with tf.GradientTape() as tape:
-
             actions = actor_model(state_batch)
             critic_value = critic_model([state_batch, actions])
-            # Used -ve as we want to max the value given by critic on our actions
+            # Used `-value` as we want to maximize the value given
+            # by the critic for our actions
             actor_loss = -tf.math.reduce_mean(critic_value)
 
         actor_grad = tape.gradient(actor_loss, actor_model.trainable_variables)
@@ -217,15 +204,12 @@ class Buffer:
             zip(actor_grad, actor_model.trainable_variables)
         )
 
-
-# This update target Parameters slowly
-#  On basis of tau that is much less than one.
+# This update target parameters slowly
+# Based on tau which is much less than one.
 def update_target(tau):
-
     new_weights = []
     target_variables = target_critic.weights
     for i, variable in enumerate(critic_model.weights):
-
         new_weights.append(variable * tau + target_variables[i] * (1 - tau))
 
     target_critic.set_weights(new_weights)
@@ -240,17 +224,16 @@ def update_target(tau):
 
 
 """
-Here we declare Actor and Critic Networks. These are basic Multiple Dense layer Networks
-with 'ReLU' Activation.
+Here we define the Actor and Critic networks. These are basic Dense models
+with `ReLU` activation.
 
-NOTICE : We use initialization for last layer of actor to be between -0.003 to 0.003 as
-this prevents from reaching 1 or -1 value in initial stages which will cut off our
-Gradient to Zero, as 'tanh' is used
+Note: We need the initialization for last layer of the Actor to be between
+`-0.003` and `0.003` as this prevents us from reaching 1 or -1 value in
+the initial stages, which would squash our gradients to zero,
+as `tanh` activation is used
 """
 
-
 def get_actor():
-
     # Initialize weights between -3e-3 and 3-e3
     last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
 
@@ -262,14 +245,12 @@ def get_actor():
     outputs = layers.Dense(1, activation="tanh", kernel_initializer=last_init)(out)
 
     # Our upper bound is 2.0 for Pendulum.
-    # This scale out our Actions
     outputs = outputs * upper_bound
     model = tf.keras.Model(inputs, outputs)
     return model
 
 
 def get_critic():
-
     # State as input
     state_input = layers.Input(shape=(num_states))
     state_out = layers.Dense(16, activation="relu")(state_input)
@@ -298,12 +279,11 @@ def get_critic():
 
 
 """
-Policy( ) returns Action given by our Actor Network plus some Noise for exploration. 
+`policy()` returns an action sampled from our Actor network plus some noise for exploration. 
 """
 
 
 def policy(state, noise_object):
-
     sampled_actions = tf.squeeze(actor_model(state))
     noise = noise_object()
     sampled_actions = sampled_actions.numpy() + noise
@@ -315,7 +295,7 @@ def policy(state, noise_object):
 
 
 """
-HYPER PARAMETERS and OBJECT Declaration
+## Training hyperparameters
 """
 
 stddev = 0.2
@@ -347,18 +327,15 @@ tau = 0.005
 buffer = Buffer(50000, 64)
 
 """
-Now we implement our Main Loop , and iterate through episodes. We take action using
-policy() and learn() at each time step, along with updating target networks using 'tau'.
-
-
-
+Now we implement our main training loop, and iterate over episodes. We sample actions using
+`policy()` and train with `learn()` at each time step, along with updating the
+Target networks using `tau`.
 """
 
 ep_reward_list = []
 avg_reward_list = []
 
 with tf.device("/device:GPU:0"):
-
     # Takes about 20 min to train
     for ep in range(total_episodes):
 
@@ -366,7 +343,6 @@ with tf.device("/device:GPU:0"):
         episodic_r = 0
 
         while True:
-
             # Uncomment this to see the action
             # But not in notebook.
             # env.render()
@@ -407,16 +383,15 @@ plt.show()
 """
 
 """
-If Networks Learn properly , Average Episodic Reward wil increase with time.
+If training proceeds correctly, the average episodic reward wil increase with time.
 
-Feel Free to Try Different learning rates , tau and architectures for Actor - Critic
-Networks.
+Feel free to try different learning rates, `tau` values and architectures for the
+Actor and Critic Networks.
 
-The Inverted Pendulum problem has low complexity but DDPG work great on any problem.
+The Inverted Pendulum problem has low complexity, but DDPG work great on many other problems.
 
-Another Great Environment to try this on is 'LunarLandingContinuous' but will take more
-episodes than this but gives good results.
-
+Another great environment to try this on is `LunarLandingContinuous`, but it will take more
+episodes to obtain good results.
 """
 
 # Save the Weights
@@ -427,14 +402,13 @@ target_actor.save_weights("pendulum_t_actor.h5")
 target_critic.save_weights("pendulum_t_critic.h5")
 
 """
-Before Training :-
+Before Training:
 
 ![before_img](https://i.imgur.com/ox6b9rC.gif)
 """
 
 """
-After 100 episodes :-
+After 100 episodes:
 
 ![after_img](https://i.imgur.com/eEH8Cz6.gif)
-
 """
