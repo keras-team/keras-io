@@ -712,7 +712,7 @@ sample frequency:
 ### Class weights
 
 This is set by passing a dictionary to the `class_weight` argument to
-`Model.fit`. This dictionary maps class indices to the weight that should
+`Model.fit()`. This dictionary maps class indices to the weight that should
 be used for samples belonging to this class.  
 
 This can be used to balance classes without resampling, or to train a
@@ -723,7 +723,7 @@ you could use `Model.fit(..., class_weight={0: 1., 1: 0.5})`.
 """
 
 """
-Here's a Numpy example where we use class weights or sample weights to
+Here's a NumPy example where we use class weights or sample weights to
 give more importance to the correct classification of class #5 (which
 is the digit "5" in the MNIST dataset).
 """
@@ -754,7 +754,7 @@ model.fit(x_train, y_train, class_weight=class_weight, batch_size=64, epochs=1)
 For fine grained control, or if you are not building a classifier,
 you can use "sample weights". 
 
-- When training from Numpy data: Pass the `sample_weight`
+- When training from NumPy data: Pass the `sample_weight`
   argument to `Model.fit`.
 - When training from `tf.data` or any other sort of iterator:
   Yield `(input_batch, label_batch, sample_weight_batch)` tuples.
