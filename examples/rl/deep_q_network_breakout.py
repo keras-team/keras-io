@@ -30,6 +30,12 @@ The aim of the game is to remove all blocks and breakout of the
 level. The agent must learn to control the board by moving left and right, returning the
 ball and removing all the blocks without the ball passing the board.
 
+### Note
+
+The Deepmind paper trained for "a total of 50 million frames (that is, around 38 days of 
+game experience in total)". However this script will give good results at around 10
+million frames which are processed in less than 24 hours on a modern machine.
+
 ### References
 
 - [Q-Learning](https://link.springer.com/content/pdf/10.1007/BF00992698.pdf)
@@ -88,17 +94,23 @@ layer4 = layers.Flatten()(layer3)
 layer5 = layers.Dense(512, activation="relu")(layer4)
 action = layers.Dense(num_actions, activation="linear")(layer5)
 
+# The first model makes the predictions for Q-values which are used to
+# make a action.
 model = keras.Model(inputs=inputs, outputs=action)
+# Build a target model for the prediction of future rewards.
+# The weights of a target model get updated every 10000 steps thus when the
+# loss between the Q-values is calculated the target Q-value is stable.
+model_target = keras.Model(inputs=inputs, outputs=action)
+
 
 """
 ## Train
 """
+# In the Deepmind paper they use RMSProp however then Adam optimizer
+# improves training time
+optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-
-optimizer = keras.optimizers.RMSprop(
-    learning_rate=0.00025, epsilon=1e-06, clipnorm=1, momentum=0.95
-)
-
+# Experience replay buffers
 action_history = []
 state_history = []
 state_next_history = []
@@ -115,7 +127,10 @@ epsilon_greedy_frames = 1000000.0
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
 max_memory_length = 100000
+# Train the model after 4 actions
 update_after_actions = 4
+# How often to update the target network
+update_target_network = 10000
 
 while True:  # Run until solved
     state = np.array(env.reset())
@@ -135,9 +150,9 @@ while True:  # Run until solved
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = model.predict(state_tensor)
+            action_probs = model(state_tensor, training=False)
             # Take best action
-            action = np.argmax(action_probs[0])
+            action = tf.argmax(action_probs[0]).numpy()
 
         # Decay probability of taking random action
         epsilon -= epsilon_interval / epsilon_greedy_frames
@@ -159,6 +174,7 @@ while True:  # Run until solved
 
         # Update every fourth frame and once batch size is over 32
         if frame_count % update_after_actions == 0 and len(done_history) > batch_size:
+
             # Get indices of samples for replay buffers
             indices = np.random.choice(range(len(done_history)), size=batch_size)
 
@@ -166,35 +182,45 @@ while True:  # Run until solved
             state_sample = np.array([state_history[i] for i in indices])
             state_next_sample = np.array([state_next_history[i] for i in indices])
             rewards_sample = [rewards_history[i] for i in indices]
-            done_sample = [done_history[i] for i in indices]
             action_sample = [action_history[i] for i in indices]
+            done_sample = tf.convert_to_tensor(
+                [float(done_history[i]) for i in indices]
+            )
 
-            future_rewards = model.predict(state_next_sample)
-
-            # Create a mask so we only calculate loss on the updated Q-values
-            masks = np.zeros((batch_size, num_actions))
-            masks[np.arange(batch_size), action_sample] = 1.0
-
-            # Build the updated Q-values for the sampled states and actions
+            # Build the updated Q-values for the sampled future states
+            # Use the target model for stability
+            future_rewards = model_target.predict(state_next_sample)
             # Q value = reward + discount factor * expected future reward
-            updated_q_values = rewards_sample + gamma * np.amax(future_rewards, axis=1)
+            updated_q_values = rewards_sample + gamma * tf.reduce_max(
+                future_rewards, axis=1
+            )
 
             # If final frame set the last value to -1
-            updated_q_values[done_sample] = -1
+            updated_q_values = updated_q_values * (1 - done_sample) - done_sample
+
+            # Create a mask so we only calculate loss on the updated Q-values
+            masks = tf.one_hot(action_sample, num_actions)
 
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
                 q_values = model(state_sample)
 
-                # Calculate loss (MSE) between new Q-values and old Q-values
+                # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
-                loss = tf.reduce_mean(
-                    tf.square(tf.subtract(updated_q_values, q_action))
-                )
+                # Calculate loss between new Q-value and old Q-value
+                # Clip the deltas using huber loss for stability
+                loss = keras.losses.huber(updated_q_values, q_action)
 
-                # Backpropagation
-                grads = tape.gradient(loss, model.trainable_variables)
-                optimizer.apply_gradients(zip(grads, model.trainable_variables))
+            # Backpropagation
+            grads = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+        if frame_count % 10000 == 0:
+            # update the the target network with new weights
+            model_target.set_weights(model.get_weights())
+            # Log details
+            template = "running reward: {:.2f} at episode {}, frame count {}"
+            print(template.format(running_reward, episode_count, frame_count))
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
@@ -213,12 +239,17 @@ while True:  # Run until solved
         del episode_reward_history[:1]
     running_reward = np.mean(episode_reward_history)
 
-    # Log details
     episode_count += 1
-    if episode_count % 500 == 0:
-        template = "running reward: {:.2f} at episode {}, frame count {}, epsilon {}"
-        print(template.format(running_reward, episode_count, frame_count, epsilon))
 
-    if running_reward > 12:  # Condition to consider the task solved
+    if running_reward > 40:  # Condition to consider the task solved
         print("Solved at episode {}!".format(episode_count))
         break
+
+"""
+## Visualizations
+In early stages of training:
+![Imgur](https://i.imgur.com/X8ghdpL.gif)
+
+In later stages of training:
+![Imgur](https://i.imgur.com/Z1K6qBQ.gif)
+"""
