@@ -700,28 +700,32 @@ model.fit(sequence, epochs=10)
 """
 ## Using sample weighting and class weighting
 
-Besides input data and target data, it is possible to pass sample weights or class
-weights to a model when using fit:
+With the default settings the weight of a sample is decided by its frequency 
+in the dataset. There are two methods to weight the data, independent of
+sample frequency:
 
-- When training from NumPy data: via the `sample_weight` and `class_weight` arguments.
-- When training from `Dataset` objects: by having the `Dataset` return a tuple
-`(input_batch, target_batch, sample_weight_batch)`.
+* Class weights
+* Sample weights
+"""
 
-A "sample weights" array is an array of numbers that specify how much weight each
-sample in a batch should have in computing the total loss. It is commonly used in
-imbalanced classification problems (the idea being to give more weight to rarely-seen
-classes). When the weights used are ones and zeros, the array can be used as a mask
-for the loss function (entirely discarding the contribution of certain samples to the
-total loss).
+"""
+### Class weights
 
-A "class weights" dict is a more specific instance of the same concept: it maps class
-indices to the sample weight that should be used for samples belonging to this class.
-For instance, if class "0" is twice less represented than class "1" in your data, you
-could use `class_weight={0: 1., 1: 0.5}`.
+This is set by passing a dictionary to the `class_weight` argument to
+`Model.fit()`. This dictionary maps class indices to the weight that should
+be used for samples belonging to this class.  
 
-Here's a NumPy example where we use class weights or sample weights to give more
-importance to the correct classification of class #5 (which is the digit "5" in the
-MNIST dataset).
+This can be used to balance classes without resampling, or to train a
+model that has a gives more importance to a particular class.
+
+For instance, if class "0" is half as represented as class "1" in your data, 
+you could use `Model.fit(..., class_weight={0: 1., 1: 0.5})`.
+"""
+
+"""
+Here's a NumPy example where we use class weights or sample weights to
+give more importance to the correct classification of class #5 (which
+is the digit "5" in the MNIST dataset).
 """
 
 import numpy as np
@@ -746,7 +750,23 @@ model = get_compiled_model()
 model.fit(x_train, y_train, class_weight=class_weight, batch_size=64, epochs=1)
 
 """
-Here's the same example using `sample_weight` instead:
+### Sample weights
+For fine grained control, or if you are not building a classifier,
+you can use "sample weights". 
+
+- When training from NumPy data: Pass the `sample_weight`
+  argument to `Model.fit()`.
+- When training from `tf.data` or any other sort of iterator:
+  Yield `(input_batch, label_batch, sample_weight_batch)` tuples.
+
+A "sample weights" array is an array of numbers that specify how much weight
+each sample in a batch should have in computing the total loss. It is commonly
+used in imbalanced classification problems (the idea being to give more weight
+to rarely-seen classes).
+
+When the weights used are ones and zeros, the array can be used as a *mask* for
+the loss function (entirely discarding the contribution of certain samples to
+the total loss).
 """
 
 sample_weight = np.ones(shape=(len(y_train),))
