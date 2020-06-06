@@ -17,6 +17,9 @@ and generate new movie reviews for a given prompt.
 When using this script with your own data, make sure it has atleast
 1M words.
 
+This example should be run with `tf-nightly>=2.3.0-dev20200531` or
+with tensorflow 2.3 or higher.
+
 **References:**
 
 - [GPT](https://www.semanticscholar.org/paper/Improving-Language-Understanding-by-Generative-Radford/cd18800a0fe0b668a1cc19f2ec95b5003d0a5035)
@@ -229,11 +232,6 @@ vectorize_layer = TextVectorization(
 )
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
-
-# Add PAD and UNK tokens if not already present
-if len(vocab) == vocab_size - 2:
-    vocab.insert(0, "[UNK]")
-    vocab.insert(0, "[PAD]")
 
 
 def prepare_lm_inputs_labels(text):
