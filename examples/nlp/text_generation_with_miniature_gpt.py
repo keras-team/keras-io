@@ -167,10 +167,10 @@ class TokenAndPositionEmbedding(layers.Layer):
 ## Implement miniature GPT model
 """
 vocab_size = 20000  # Only consider the top 20k words
-maxlen = 200  # Max sequence size
-embed_dim = 32  # Embedding size for each token
+maxlen = 20  # Max sequence size
+embed_dim = 64  # Embedding size for each token
 num_heads = 2  # Number of attention heads
-feed_forward_dim = 32  # Hidden layer size in feed forward network inside transformer
+feed_forward_dim = 64  # Hidden layer size in feed forward network inside transformer
 
 
 def create_model():
@@ -196,12 +196,12 @@ text generation task.
 """
 
 """shell
-!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-!tar -xf aclImdb_v1.tar.gz
+curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+tar -xf aclImdb_v1.tar.gz
 """
 
 
-batch_size = 16
+batch_size = 32
 
 # The dataset contains each review in a separate text file
 # The text files are present in four different folders
@@ -230,6 +230,11 @@ vectorize_layer = TextVectorization(
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
 
+# Add PAD and UNK tokens if not already present
+if len(vocab) == vocab_size - 2:
+    vocab.insert(0, "[UNK]")
+    vocab.insert(0, "[PAD]")
+
 
 def prepare_lm_inputs_labels(text):
     """
@@ -245,7 +250,7 @@ def prepare_lm_inputs_labels(text):
 
 
 text_ds = text_ds.map(prepare_lm_inputs_labels)
-text_ds = text_ds.repeat().prefetch(tf.data.experimental.AUTOTUNE)
+text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 
 """
@@ -268,7 +273,7 @@ class TextGenerator(keras.callbacks.Callback):
     """
 
     def __init__(
-        self, max_tokens, start_tokens, index_to_word, top_k=10, print_every=5
+        self, max_tokens, start_tokens, index_to_word, top_k=10, print_every=1
     ):
         self.max_tokens = max_tokens
         self.start_tokens = start_tokens
@@ -319,9 +324,9 @@ word_to_index = {}
 for index, word in enumerate(vocab):
     word_to_index[word] = index
 
-start_prompt = "the film is"
+start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
-num_tokens_generated = 20
+num_tokens_generated = 10
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
@@ -333,6 +338,4 @@ Note: This code should preferably be run on GPU.
 
 model = create_model()
 
-model.fit(
-    text_ds, verbose=2, steps_per_epoch=781, epochs=15, callbacks=[text_gen_callback]
-)
+model.fit(text_ds, verbose=2, epochs=30, callbacks=[text_gen_callback])

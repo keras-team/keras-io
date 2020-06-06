@@ -194,10 +194,10 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 ```python
 vocab_size = 20000  # Only consider the top 20k words
-maxlen = 200  # Max sequence size
-embed_dim = 32  # Embedding size for each token
+maxlen = 20  # Max sequence size
+embed_dim = 64  # Embedding size for each token
 num_heads = 2  # Number of attention heads
-feed_forward_dim = 32  # Hidden layer size in feed forward network inside transformer
+feed_forward_dim = 64  # Hidden layer size in feed forward network inside transformer
 
 
 def create_model():
@@ -226,17 +226,14 @@ text generation task.
 
 
 ```python
-!!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-!!tar -xf aclImdb_v1.tar.gz
+!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+!tar -xf aclImdb_v1.tar.gz
 
 ```
 
-
-
-
 ```python
 
-batch_size = 16
+batch_size = 32
 
 # The dataset contains each review in a separate text file
 # The text files are present in four different folders
@@ -265,6 +262,11 @@ vectorize_layer = TextVectorization(
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
 
+# Add PAD and UNK tokens if not already present
+if len(vocab) == vocab_size - 2:
+    vocab.insert(0, "[UNK]")
+    vocab.insert(0, "[PAD]")
+
 
 def prepare_lm_inputs_labels(text):
     """
@@ -280,13 +282,15 @@ def prepare_lm_inputs_labels(text):
 
 
 text_ds = text_ds.map(prepare_lm_inputs_labels)
-text_ds = text_ds.repeat().prefetch(tf.data.experimental.AUTOTUNE)
+text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 
 ```
 <div class="k-default-codeblock">
 ```
-[]
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 80.2M  100 80.2M    0     0   9.7M      0  0:00:08  0:00:08 --:--:-- 18.0M
 
 50000 files
 
@@ -314,7 +318,7 @@ class TextGenerator(keras.callbacks.Callback):
     """
 
     def __init__(
-        self, max_tokens, start_tokens, index_to_word, top_k=10, print_every=5
+        self, max_tokens, start_tokens, index_to_word, top_k=10, print_every=1
     ):
         self.max_tokens = max_tokens
         self.start_tokens = start_tokens
@@ -365,9 +369,9 @@ word_to_index = {}
 for index, word in enumerate(vocab):
     word_to_index[word] = index
 
-start_prompt = "the film is"
+start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
-num_tokens_generated = 20
+num_tokens_generated = 10
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
@@ -383,67 +387,284 @@ Note: This code should preferably be run on GPU.
 ```python
 model = create_model()
 
-model.fit(
-    text_ds, verbose=2, steps_per_epoch=781, epochs=15, callbacks=[text_gen_callback]
-)
+model.fit(text_ds, verbose=2, epochs=30, callbacks=[text_gen_callback])
 
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/15
-781/781 - 19s - loss: 5.3161 - dense_6_loss: 5.3161
-Epoch 2/15
-781/781 - 19s - loss: 4.5371 - dense_6_loss: 4.5371
-Epoch 3/15
-781/781 - 19s - loss: 4.3928 - dense_6_loss: 4.3928
-Epoch 4/15
-781/781 - 19s - loss: 4.3695 - dense_6_loss: 4.3695
-Epoch 5/15
+Epoch 1/30
 generated text:
-the film is br not it a show is and it a dont a and that movies life when a dont at is a
+this movie is one thing it is a movie about a [UNK] [UNK] [UNK]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-781/781 - 21s - loss: 4.3358 - dense_6_loss: 4.3358
-Epoch 6/15
-781/781 - 19s - loss: 4.3073 - dense_6_loss: 4.3073
-Epoch 7/15
-781/781 - 20s - loss: 4.2244 - dense_6_loss: 4.2244
-Epoch 8/15
-781/781 - 20s - loss: 4.2383 - dense_6_loss: 4.2383
-Epoch 9/15
-781/781 - 20s - loss: 4.2266 - dense_6_loss: 4.2266
-Epoch 10/15
+1563/1563 - 17s - loss: 5.7165 - dense_6_loss: 5.7165
+Epoch 2/30
 generated text:
-the film is and i br it at is br film in story for to more for a each film your and that he
+this movie is so boring that it is one of the worst movie ever
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-781/781 - 21s - loss: 4.2278 - dense_6_loss: 4.2278
-Epoch 11/15
-781/781 - 20s - loss: 4.1558 - dense_6_loss: 4.1558
-Epoch 12/15
-781/781 - 19s - loss: 4.1826 - dense_6_loss: 4.1826
-Epoch 13/15
-781/781 - 20s - loss: 4.1798 - dense_6_loss: 4.1798
-Epoch 14/15
-781/781 - 19s - loss: 4.1893 - dense_6_loss: 4.1893
-Epoch 15/15
+1563/1563 - 16s - loss: 4.9898 - dense_6_loss: 4.9898
+Epoch 3/30
 generated text:
-the film is br it from idea of that time one a show movie a show the the the the the the the the
+this movie is terrible it is the worst movie of the actors are so
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-781/781 - 20s - loss: 4.1217 - dense_6_loss: 4.1217
+1563/1563 - 17s - loss: 4.7290 - dense_6_loss: 4.7290
+Epoch 4/30
+generated text:
+this movie is so stupid i love this movie i cant even say that
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.5652 - dense_6_loss: 4.5652
+Epoch 5/30
+generated text:
+this movie is so horrible the movie made and that makes the worst film
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.4481 - dense_6_loss: 4.4481
+Epoch 6/30
+generated text:
+this movie is not really a terrible plot for the acting but nothing is
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.3589 - dense_6_loss: 4.3589
+Epoch 7/30
+generated text:
+this movie is a [UNK] of the same film which is not only a
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.2889 - dense_6_loss: 4.2889
+Epoch 8/30
+generated text:
+this movie is a complete waste of time the celluloid it was made it
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.2309 - dense_6_loss: 4.2309
+Epoch 9/30
+generated text:
+this movie is about the most stupid i have ever seen it was on
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.1817 - dense_6_loss: 4.1817
+Epoch 10/30
+generated text:
+this movie is really bad i have the misfortune to watch this movie but
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 18s - loss: 4.1395 - dense_6_loss: 4.1395
+Epoch 11/30
+generated text:
+this movie is so bad that is the worst movie ever made it has
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 18s - loss: 4.1014 - dense_6_loss: 4.1014
+Epoch 12/30
+generated text:
+this movie is so bad it really is terrible its not the story is
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.0677 - dense_6_loss: 4.0677
+Epoch 13/30
+generated text:
+this movie is so stupid with a [UNK] of a movie that is not
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.0376 - dense_6_loss: 4.0376
+Epoch 14/30
+generated text:
+this movie is a complete waste of time and money on the plot is
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 4.0097 - dense_6_loss: 4.0097
+Epoch 15/30
+generated text:
+this movie is really a film with me that it has no idea how
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.9853 - dense_6_loss: 3.9853
+Epoch 16/30
+generated text:
+this movie is really bad i cant believe it i just finished watching it
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.9622 - dense_6_loss: 3.9622
+Epoch 17/30
+generated text:
+this movie is the best movie i have ever watched all it is a
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.9410 - dense_6_loss: 3.9410
+Epoch 18/30
+generated text:
+this movie is a bad movie that is so awful it was a terrible
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.9201 - dense_6_loss: 3.9201
+Epoch 19/30
+generated text:
+this movie is bad the acting of the main character in history for this
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 18s - loss: 3.9026 - dense_6_loss: 3.9026
+Epoch 20/30
+generated text:
+this movie is terrible for me in the 80s and i think the story
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 16s - loss: 3.8842 - dense_6_loss: 3.8842
+Epoch 21/30
+generated text:
+this movie is a horrible waste of your talent it is a [UNK] of
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.8681 - dense_6_loss: 3.8681
+Epoch 22/30
+generated text:
+this movie is not funny and it is not the plot or the film
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.8528 - dense_6_loss: 3.8528
+Epoch 23/30
+generated text:
+this movie is really a terrible piece of junk and the acting was bad
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 18s - loss: 3.8379 - dense_6_loss: 3.8379
+Epoch 24/30
+generated text:
+this movie is one of the worst movies i have ever seen it is
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 16s - loss: 3.8236 - dense_6_loss: 3.8236
+Epoch 25/30
+generated text:
+this movie is a waste of the time i dont know how it is
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.8097 - dense_6_loss: 3.8097
+Epoch 26/30
+generated text:
+this movie is not a film in a way too [UNK] of the movie
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.7975 - dense_6_loss: 3.7975
+Epoch 27/30
+generated text:
+this movie is not really bad but the movie is not funny in the
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.7852 - dense_6_loss: 3.7852
+Epoch 28/30
+generated text:
+this movie is not a [UNK] but it is really good i am a
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.7744 - dense_6_loss: 3.7744
+Epoch 29/30
+generated text:
+this movie is really bad i know what i do with its a movie
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 17s - loss: 3.7633 - dense_6_loss: 3.7633
+Epoch 30/30
+generated text:
+this movie is very interesting the first movie that is about a man whos
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+1563/1563 - 16s - loss: 3.7526 - dense_6_loss: 3.7526
 
-<tensorflow.python.keras.callbacks.History at 0x7f3dbe1168d0>
+<tensorflow.python.keras.callbacks.History at 0x7f76ee4172e8>
 
 ```
 </div>
