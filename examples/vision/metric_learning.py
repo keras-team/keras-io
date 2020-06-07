@@ -28,49 +28,37 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from collections import defaultdict
 from PIL import Image
+from sklearn.metrics import ConfusionMatrixDisplay
 from tensorflow import keras
 from tensorflow.keras import layers
 
 """
 ## Dataset
 
-For this example we will be using randomly generated coloured boxes. Toy data such as
-this has the benefit of being easy to generate in a controlled way while being simple
-enough that we can quickly demonstrate concepts.
+For this example we will be using the
+[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset.
 """
 
-# Height / Width of all images generated.
+from tensorflow.keras.datasets import cifar10
+
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+x_train = x_train.astype("float32") / 255.0
+y_train = np.squeeze(y_train)
+x_test = x_test.astype("float32") / 255.0
+y_test = np.squeeze(y_test)
+
+x_train.shape, y_train.shape, x_test.shape, y_test.shape
+
+"""
+To get a sense of the dataset we can visualise a grid of 25 random examples.
+
+
+"""
+
 height_width = 32
-
-
-def random_colour():
-    # Generate a random (red, green, blue) tuple,
-    return np.random.random(size=3)
-
-
-def random_instance(colour):
-    # Start with a black background.
-    img = np.zeros((height_width, height_width, 3), dtype=np.float32)
-    while True:
-        # Pick box extents, ensuring they are ordered.
-        x1, x2, y1, y2 = np.random.randint(0, height_width, 4)
-        if x1 > x2:
-            x1, x2 = x2, x1
-        if y1 > y2:
-            y1, y2 = y2, y1
-        # Ensure box isn't too small or too big.
-        area = (x2 - x1) * (y2 - y1)
-        if area > 50 and area < 300:
-            img[x1:x2, y1:y2] = colour
-            return img
-
-
-"""
-We can visualise a grid of 25 randomly generated examples to get a sense of these images.
-
-
-"""
 
 
 def show_collage(examples):
@@ -95,45 +83,72 @@ def show_collage(examples):
 
 
 # Show a collage of 5x5 random images.
-examples = [random_instance(random_colour()) for _ in range(25)]
-examples = np.stack(examples).reshape((5, 5, height_width, height_width, 3))
+sample_idxs = np.random.randint(0, 50000, size=(5, 5))
+examples = x_train[sample_idxs]
 show_collage(examples)
 
 """
 Metric learning provides training data not as explicit `(X, y)` pairs but instead uses
-multiple instances that are related in the way we want to express similarity.
-
-In our example the similarity we want to capture will be colour; a single training
-instance will not one image, but a pair of images of the same colour.
-Note that we could use other descriptions of similarity, for example the area of the
-boxes, but we use colour for this minimal version since it is something that is very
-quick to train with a small model.
-
-When referring to the images in this pair we'll use the common metric learning names of
-the `anchor` (a randomly chosen image) and the `positive` (another randomly chosen image
-of the same colour).
+multiple instances that are related in the way we want to express similarity. In our
+example we will use instances of the same class to represent similarity; a single
+training instance will not be one image, but a pair of images of the same class. When
+referring to the images in this pair we'll use the common metric learning names of the
+`anchor` (a randomly chosen image) and the `positive` (another randomly chosen image of
+the same class).
 
 """
 
+"""
+To facilitate this we need to build a form of lookup that maps from classes to the
+instances of that class. When generating data for training we will sample from this
+lookup.
+"""
 
-def build_dataset(batch_size, num_batchs):
+class_idx_to_train_idxs = defaultdict(list)
+for y_train_idx, y in enumerate(y_train):
+    class_idx_to_train_idxs[y].append(y_train_idx)
+
+class_idx_to_test_idxs = defaultdict(list)
+for y_test_idx, y in enumerate(y_test):
+    class_idx_to_test_idxs[y].append(y_test_idx)
+
+"""
+For this example we are using the simplest approach to training; a batch will consist of
+`(anchor, positive)` pairs spread across the classes. The goal of learning will be to
+move the anchor and positive pairs closer together and further away from other instances
+in the batch. In this case the batch size will be dictated by the number of classes; for
+CIFAR-10 this is 10.
+"""
+
+num_classes = 10
+
+
+def anchor_positive_pairs_dataset(num_batchs):
     def anchor_positive_pair():
-        for _ in range(batch_size * num_batchs):
-            colour = random_colour()
-            yield random_instance(colour), random_instance(colour)
+        for _ in range(num_batchs):
+            for class_idx in range(num_classes):
+                examples_for_class = class_idx_to_train_idxs[class_idx]
+                anchor_idx = random.choice(examples_for_class)
+                positive_idx = random.choice(examples_for_class)
+                while positive_idx == anchor_idx:
+                    positive_idx = random.choice(examples_for_class)
+                yield x_train[anchor_idx], x_train[positive_idx]
 
-    # Exclude optimisations such as prefetching for this simple example.
-    return tf.data.Dataset.from_generator(
-        anchor_positive_pair, output_types=(tf.float32, tf.float32)
-    ).batch(batch_size)
+    return (
+        tf.data.Dataset.from_generator(
+            anchor_positive_pair, output_types=(tf.float32, tf.float32)
+        )
+        .prefetch(tf.data.experimental.AUTOTUNE)
+        .batch(num_classes)
+    )
 
 
 """
-We can visualise a batch of this data in another collage. The top row shows six randomly
-chosen anchors, the bottom row shows the corresponding six positives.
+We can visualise a batch in another collage. The top row shows randomly chosen anchors
+from the 10 classes, the bottom row shows the corresponding 10 positives.
 """
 
-for anchors, positives in build_dataset(batch_size=6, num_batchs=1):
+for anchors, positives in anchor_positive_pairs_dataset(num_batchs=1):
     pass
 
 examples = np.stack([anchors, positives])
@@ -142,21 +157,14 @@ show_collage(examples)
 """
 ## Embedding model
 
-Next we define and train an image embedding model. This model is a minimal sequence of 2d
-convolutions followed by global pooling with a final linear projection to an embedding
-space. As is common in metric learning we normalise the embeddings so that we can use
-simple dot products to measure similarity.
-
-We train this model with a custom `train_step` that first embeds both anchors and
-positives and then uses their pairwise dot products as logits for a softmax. On a Google
-Colab CPU instance this step takes approximately 10 seconds.
+We define a custom model with a `train_step` that first embeds both anchors and positives
+and then uses their pairwise dot products as logits for a softmax.
 """
 
 
 class EmbeddingModel(keras.Model):
     def train_step(self, data):
         anchors, positives = data
-
         with tf.GradientTape() as tape:
             # Run both anchors and positives through model.
             anchor_embeddings = self(anchors, training=True)
@@ -174,37 +182,50 @@ class EmbeddingModel(keras.Model):
             similarities /= temperature
 
             # We use these similarities as logits for a softmax. The labels for
-            # this call are just the sequence 0, 1, 2, ... since we want the main
-            # diagonal values, which correspond to the anchor/positive pairs, to be
-            # high. This loss will move embeddings for the anchor/positive pairs
-            # together and move all other pairs apart.
-            labels = tf.range(tf.shape(similarities)[0])
-            loss = self.compiled_loss(labels, similarities)
+            # this call are just the sequence [0, 1, 2, ..., num_classes] since we
+            # want the main diagonal values, which correspond to the anchor/positive
+            # pairs, to be high. This loss will move embeddings for the
+            # anchor/positive pairs together and move all other pairs apart.
+            sparse_labels = tf.range(num_classes)
+            loss = self.compiled_loss(sparse_labels, similarities)
 
             # Calculate gradients and apply via optimizer.
             gradients = tape.gradient(loss, self.trainable_variables)
             self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-            # Update and return metrics (specifically the one for the loss value)
-            self.compiled_metrics.update_state(labels, similarities)
+            # Update and return metrics (specifically the one for the loss value).
+            self.compiled_metrics.update_state(sparse_labels, similarities)
             return {m.name: m.result() for m in self.metrics}
 
 
+"""
+Next we describe the architecture that maps from an image to an embedding. This model
+simply consists of a sequence of 2d convolutions followed by global pooling with a final
+linear projection to an embedding space. As is common in metric learning we normalise the
+embeddings so that we can use simple dot products to measure similarity. For simplicity
+this model is intentionally small.
+"""
+
 inputs = layers.Input(shape=(height_width, height_width, 3))
-x = layers.Conv2D(filters=4, kernel_size=3, strides=2, activation="relu")(inputs)
-x = layers.Conv2D(filters=8, kernel_size=3, strides=2, activation="relu")(x)
-x = layers.Conv2D(filters=16, kernel_size=3, strides=2, activation="relu")(x)
+x = layers.Conv2D(filters=32, kernel_size=3, strides=2, activation="relu")(inputs)
+x = layers.Conv2D(filters=64, kernel_size=3, strides=2, activation="relu")(x)
+x = layers.Conv2D(filters=128, kernel_size=3, strides=2, activation="relu")(x)
 x = layers.GlobalAveragePooling2D()(x)
-embeddings = layers.Dense(units=4, activation=None)(x)
+embeddings = layers.Dense(units=8, activation=None)(x)
 embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
 
 model = EmbeddingModel(inputs, embeddings)
+
+"""
+Finally we run the training. On a Google Colab GPU instance this takes under 2 minutes.
+"""
+
 model.compile(
-    optimizer="adam", loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
 )
 
-dataset = build_dataset(batch_size=32, num_batchs=30)
-history = model.fit(dataset, epochs=10)
+history = model.fit(anchor_positive_pairs_dataset(num_batchs=1000), epochs=20)
 
 plt.plot(history.history["loss"])
 plt.show()
@@ -212,31 +233,26 @@ plt.show()
 """
 ## Testing
 
-As a final step we can generate 100 random images across 10 random colours.
+We can review the quality of this model by applying it to the test set and considering
+near neighbours in the embedding space.
+
+First we embed the test set and calculate all near neighbours. Recall that since the
+embeddings are unit length we can calculate cosine similarity via dot products.
 """
 
-random_colours = [random_colour() for _ in range(10)]
+near_neighbours_per_example = 10
 
-random_dataset = []
-for _ in range(10):
-    for colour in random_colours:
-        random_dataset.append(random_instance(colour))
-random_dataset = np.stack(random_dataset)
+embeddings = model(x_test).numpy()
+gram_matrix = np.einsum("ae,be->ab", embeddings, embeddings)
+near_neighbours = np.argsort(gram_matrix.T)[:, -(near_neighbours_per_example + 1) :]
 
 """
-When we run these images through the model we can see that for randomly chosen anchors
-the near neighbours in the embedding space are the other images with the same colour.
-
-Below shows 5 examples; the first column is a randomly selected image with the following
-10 columns showing the nearest neighbours in order of similarity.
+As a visual check of these embeddings we can build a collage of the near neighbours for 5
+random examples. The first column of the image below is a randomly selected image, the
+following 10 columns show the nearest neighbours in order of similarity.
 """
 
 num_collage_examples = 5
-near_neighbours_per_example = 10
-
-embeddings = model(random_dataset).numpy()
-gram_matrix = np.einsum("ae,be->ab", embeddings, embeddings)
-near_neighbours = np.argsort(gram_matrix.T)[:, -(near_neighbours_per_example + 1) :]
 
 examples = np.empty(
     (
@@ -249,9 +265,50 @@ examples = np.empty(
     dtype=np.float32,
 )
 for row_idx in range(num_collage_examples):
-    examples[row_idx, 0] = random_dataset[row_idx]
+    examples[row_idx, 0] = x_test[row_idx]
     anchor_near_neighbours = reversed(near_neighbours[row_idx][:-1])
     for col_idx, nn_idx in enumerate(anchor_near_neighbours):
-        examples[row_idx, col_idx + 1] = random_dataset[nn_idx]
+        examples[row_idx, col_idx + 1] = x_test[nn_idx]
 
 show_collage(examples)
+
+"""
+We can also get a quantified view of the performance by considering the correctness of
+near neighbours in terms of a confusion matrix.
+
+Let us sample 10 examples from each of the 10 classes and consider their near neighbours
+as a form of prediction; that is, does the example and it's near neighbours share the
+same class?
+
+We observe that each animal class does generally well, and is confused the most with the
+other animal classes. The vehicle classes follow the same pattern.
+"""
+
+confusion_matrix = np.zeros((num_classes, num_classes))
+
+# For each class.
+for class_idx in range(num_classes):
+    # Consider 10 examples.
+    example_idxs = class_idx_to_test_idxs[class_idx][:10]
+    for y_test_idx in example_idxs:
+        # And count the classes of it's near neighbours.
+        for nn_idx in near_neighbours[y_test_idx][:-1]:
+            nn_class_idx = y_test[nn_idx]
+            confusion_matrix[class_idx, nn_class_idx] += 1
+
+# Display a confusion matrix.
+labels = [
+    "Airplane",
+    "Automobile",
+    "Bird",
+    "Cat",
+    "Deer",
+    "Dog",
+    "Frog",
+    "Horse",
+    "Ship",
+    "Truck",
+]
+disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
+disp.plot(include_values=True, cmap="viridis", ax=None, xticks_rotation="vertical")
+plt.show()
