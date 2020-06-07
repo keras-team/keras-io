@@ -1,25 +1,23 @@
 """
-Title: Metric learning using cross entropy.
+Title: Metric learning using crossentropy.
 Author: [Mat Kelcey](https://twitter.com/mat_kelcey)
 Date created: 2020/06/05
 Last modified: 2020/06/05
-Description: Example of using metric learning using cross entropy on synthetic data.
+Description: Example of using metric learning using crossentropy on synthetic data.
 """
 """
 ## Overview
 
-Metric learning aims to train models that can embed inputs into a high dimensional space
+Metric learning aims to train models that can embed inputs into a high-dimensional space
 such that "similar" inputs, as defined by the training scheme, are located close to each
 other. These models once trained can produce embeddings for downstream systems where such
 similarity is useful; examples include as a ranking signal for search or as a form of
 pretrained embedding model for another supervised problem.
 
-For a more detailed overview of metric learning see..
+For a more detailed overview of metric learning see:
 
-* [What is metric
-learning?](http://contrib.scikit-learn.org/metric-learn/introduction.html)
-* ["Using cross entropy for metric learning"
-tutorial](https://www.youtube.com/watch?v=Jb4Ewl5RzkI)
+* [What is metric learning?](http://contrib.scikit-learn.org/metric-learn/introduction.html)
+* ["Using crossentropy for metric learning" tutorial](https://www.youtube.com/watch?v=Jb4Ewl5RzkI)
 """
 
 """
@@ -31,10 +29,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-from tensorflow.keras.layers import *
-from tensorflow.keras.losses import binary_crossentropy
-from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
+from tensorflow import keras
+from tensorflow.keras import layers
 
 """
 ## Dataset
@@ -45,7 +41,7 @@ enough that we can quickly demonstrate concepts.
 """
 
 # Height / Width of all images generated.
-HW = 32
+height_width = 32
 
 
 def random_colour():
@@ -55,10 +51,10 @@ def random_colour():
 
 def random_instance(colour):
     # Start with a black background.
-    img = np.zeros((HW, HW, 3), dtype=np.float32)
+    img = np.zeros((height_width, height_width, 3), dtype=np.float32)
     while True:
         # Pick box extents, ensuring they are ordered.
-        x1, x2, y1, y2 = np.random.randint(0, HW, 4)
+        x1, x2, y1, y2 = np.random.randint(0, height_width, 4)
         if x1 > x2:
             x1, x2 = x2, x1
         if y1 > y2:
@@ -78,25 +74,29 @@ We can visualise a grid of 25 randomly generated examples to get a sense of thes
 
 
 def show_collage(examples):
-    HWB = HW + 2  # Box height / width plus a 2 pixel buffer.
-    n_rows, n_cols = examples.shape[:2]
+    box_size = height_width + 2
+    num_rows, num_cols = examples.shape[:2]
 
     collage = Image.new(
-        mode="RGB", size=(n_cols * HWB, n_rows * HWB), color=(250, 250, 250)
+        mode="RGB",
+        size=(num_cols * box_size, num_rows * box_size),
+        color=(250, 250, 250),
     )
-    for row_idx in range(n_rows):
-        for col_idx in range(n_cols):
+    for row_idx in range(num_rows):
+        for col_idx in range(num_cols):
             array = (np.array(examples[row_idx, col_idx]) * 255).astype(np.uint8)
-            collage.paste(Image.fromarray(array), (col_idx * HWB, row_idx * HWB))
+            collage.paste(
+                Image.fromarray(array), (col_idx * box_size, row_idx * box_size)
+            )
 
     # Double size for visualisation.
-    collage = collage.resize((2 * n_cols * HWB, 2 * n_rows * HWB))
+    collage = collage.resize((2 * num_cols * box_size, 2 * num_rows * box_size))
     return collage
 
 
 # Show a collage of 5x5 random images.
 examples = [random_instance(random_colour()) for _ in range(25)]
-examples = np.stack(examples).reshape((5, 5, HW, HW, 3))
+examples = np.stack(examples).reshape((5, 5, height_width, height_width, 3))
 show_collage(examples)
 
 """
@@ -148,23 +148,18 @@ space. As is common in metric learning we normalise the embeddings so that we ca
 simple dot products to measure similarity.
 """
 
-E = 4  # output embedding size.
-
-
-class NormaliseLayer(Layer):
-    def call(self, x):
-        return tf.nn.l2_normalize(x, axis=-1)
+embedding_size = 4
 
 
 def construct_model():
-    input = Input(shape=(HW, HW, 3))
-    model = Conv2D(filters=4, kernel_size=3, strides=2, activation="relu")(input)
-    model = Conv2D(filters=8, kernel_size=3, strides=2, activation="relu")(model)
-    model = Conv2D(filters=16, kernel_size=3, strides=2, activation="relu")(model)
-    model = GlobalAveragePooling2D()(model)
-    embeddings = Dense(units=E, activation=None, name="embedding")(model)
-    embeddings = NormaliseLayer()(embeddings)
-    return Model(input, embeddings)
+    inputs = layers.Input(shape=(height_width, height_width, 3))
+    x = layers.Conv2D(filters=4, kernel_size=3, strides=2, activation="relu")(inputs)
+    x = layers.Conv2D(filters=8, kernel_size=3, strides=2, activation="relu")(x)
+    x = layers.Conv2D(filters=16, kernel_size=3, strides=2, activation="relu")(x)
+    x = layers.GlobalAveragePooling2D()(x)
+    embeddings = layers.Dense(units=embedding_size, activation=None)(x)
+    embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
+    return keras.models.Model(inputs, embeddings)
 
 
 model = construct_model()
@@ -177,9 +172,10 @@ positives and then uses their pairwise dot products as logits for a softmax. On 
 Colab CPU instance this step takes approximately 10 seconds.
 """
 
-optimiser = Adam(learning_rate=1e-3)
+optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
-losses = []
+batch_losses = []
 for anchors, positives in build_dataset(batch_size=32, num_batchs=300):
 
     with tf.GradientTape() as tape:
@@ -202,18 +198,14 @@ for anchors, positives in build_dataset(batch_size=32, num_batchs=300):
         # high. This loss will move embeddings for the anchor/positive pairs
         # together and move all other pairs apart.
         labels = tf.range(similarities.shape[0])
-        loss = tf.reduce_mean(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(
-                labels=labels, logits=similarities
-            )
-        )
-        losses.append(loss)
+        loss = loss_fn(labels, similarities)
+        batch_losses.append(loss)
 
-        # Calculate gradients and apply via optimiser.
+        # Calculate gradients and apply via optimizer.
         gradients = tape.gradient(loss, model.trainable_variables)
-        optimiser.apply_gradients(zip(gradients, model.trainable_variables))
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-plt.plot(losses)
+plt.plot(batch_losses)
 plt.show()
 
 """
@@ -238,18 +230,27 @@ Below shows 5 examples; the first column is a randomly selected image with the f
 10 columns showing the nearest neighbours in order of similarity.
 """
 
-EGS = 5  # Show 5 example images ...
-NNS_PER_EG = 10  # .. with their 10 nearest neighbours
+num_collage_examples = 5
+near_neighbours_per_example = 10
 
 embeddings = model(random_dataset).numpy()
 gram_matrix = np.einsum("ae,be->ab", embeddings, embeddings)
-near_neighbours = np.argsort(gram_matrix.T)[:, -(NNS_PER_EG + 1) :]
+near_neighbours = np.argsort(gram_matrix.T)[:, -(near_neighbours_per_example + 1) :]
 
-examples = np.empty((EGS, NNS_PER_EG + 1, HW, HW, 3), dtype=np.float32)
-for r_idx in range(EGS):
-    examples[r_idx, 0] = random_dataset[r_idx]
-    anchor_near_neighbours = reversed(near_neighbours[r_idx][:-1])
-    for c_idx, nn_idx in enumerate(anchor_near_neighbours):
-        examples[r_idx, c_idx + 1] = random_dataset[nn_idx]
+examples = np.empty(
+    (
+        num_collage_examples,
+        near_neighbours_per_example + 1,
+        height_width,
+        height_width,
+        3,
+    ),
+    dtype=np.float32,
+)
+for row_idx in range(num_collage_examples):
+    examples[row_idx, 0] = random_dataset[row_idx]
+    anchor_near_neighbours = reversed(near_neighbours[row_idx][:-1])
+    for col_idx, nn_idx in enumerate(anchor_near_neighbours):
+        examples[row_idx, col_idx + 1] = random_dataset[nn_idx]
 
 show_collage(examples)
