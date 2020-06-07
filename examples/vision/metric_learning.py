@@ -1,5 +1,5 @@
 """
-Title: Metric learning using crossentropy.
+Title: Metric learning using crossentropy
 Author: [Mat Kelcey](https://twitter.com/mat_kelcey)
 Date created: 2020/06/05
 Last modified: 2020/06/05
@@ -95,7 +95,6 @@ training instance will not be one image, but a pair of images of the same class.
 referring to the images in this pair we'll use the common metric learning names of the
 `anchor` (a randomly chosen image) and the `positive` (another randomly chosen image of
 the same class).
-
 """
 
 """
@@ -123,24 +122,24 @@ CIFAR-10 this is 10.
 num_classes = 10
 
 
-def anchor_positive_pairs_dataset(num_batchs):
-    def anchor_positive_pair():
-        for _ in range(num_batchs):
-            for class_idx in range(num_classes):
-                examples_for_class = class_idx_to_train_idxs[class_idx]
-                anchor_idx = random.choice(examples_for_class)
-                positive_idx = random.choice(examples_for_class)
-                while positive_idx == anchor_idx:
-                    positive_idx = random.choice(examples_for_class)
-                yield x_train[anchor_idx], x_train[positive_idx]
+class AnchorPositivePairs(keras.utils.Sequence):
+    def __init__(self, num_batchs):
+        self.num_batchs = num_batchs
 
-    return (
-        tf.data.Dataset.from_generator(
-            anchor_positive_pair, output_types=(tf.float32, tf.float32)
-        )
-        .prefetch(tf.data.experimental.AUTOTUNE)
-        .batch(num_classes)
-    )
+    def __len__(self):
+        return self.num_batchs
+
+    def __getitem__(self, _idx):
+        x = np.empty((2, num_classes, height_width, height_width, 3), dtype=np.float32)
+        for class_idx in range(num_classes):
+            examples_for_class = class_idx_to_train_idxs[class_idx]
+            anchor_idx = random.choice(examples_for_class)
+            positive_idx = random.choice(examples_for_class)
+            while positive_idx == anchor_idx:
+                positive_idx = random.choice(examples_for_class)
+            x[0, class_idx] = x_train[anchor_idx]
+            x[1, class_idx] = x_train[positive_idx]
+        return x
 
 
 """
@@ -148,10 +147,9 @@ We can visualise a batch in another collage. The top row shows randomly chosen a
 from the 10 classes, the bottom row shows the corresponding 10 positives.
 """
 
-for anchors, positives in anchor_positive_pairs_dataset(num_batchs=1):
+for examples in AnchorPositivePairs(num_batchs=1):
     pass
 
-examples = np.stack([anchors, positives])
 show_collage(examples)
 
 """
@@ -164,7 +162,9 @@ and then uses their pairwise dot products as logits for a softmax.
 
 class EmbeddingModel(keras.Model):
     def train_step(self, data):
-        anchors, positives = data
+        data = tf.reshape(data, (2, num_classes, height_width, height_width, 3))
+        anchors, positives = data[0], data[1]
+
         with tf.GradientTape() as tape:
             # Run both anchors and positives through model.
             anchor_embeddings = self(anchors, training=True)
@@ -217,7 +217,7 @@ embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
 model = EmbeddingModel(inputs, embeddings)
 
 """
-Finally we run the training. On a Google Colab GPU instance this takes under 2 minutes.
+Finally we run the training. On a Google Colab GPU instance this takes about a minute.
 """
 
 model.compile(
@@ -225,7 +225,7 @@ model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
 )
 
-history = model.fit(anchor_positive_pairs_dataset(num_batchs=1000), epochs=20)
+history = model.fit(AnchorPositivePairs(num_batchs=1000), epochs=20)
 
 plt.plot(history.history["loss"])
 plt.show()
@@ -277,8 +277,8 @@ We can also get a quantified view of the performance by considering the correctn
 near neighbours in terms of a confusion matrix.
 
 Let us sample 10 examples from each of the 10 classes and consider their near neighbours
-as a form of prediction; that is, does the example and it's near neighbours share the
-same class?
+as a form of prediction; that is, does the example and its near neighbours share the same
+class?
 
 We observe that each animal class does generally well, and is confused the most with the
 other animal classes. The vehicle classes follow the same pattern.
@@ -291,7 +291,7 @@ for class_idx in range(num_classes):
     # Consider 10 examples.
     example_idxs = class_idx_to_test_idxs[class_idx][:10]
     for y_test_idx in example_idxs:
-        # And count the classes of it's near neighbours.
+        # And count the classes of its near neighbours.
         for nn_idx in near_neighbours[y_test_idx][:-1]:
             nn_class_idx = y_test[nn_idx]
             confusion_matrix[class_idx, nn_class_idx] += 1
