@@ -142,70 +142,71 @@ show_collage(examples)
 """
 ## Embedding model
 
-Next we define an image embedding model. This model is a minimal sequence of 2d
+Next we define and train an image embedding model. This model is a minimal sequence of 2d
 convolutions followed by global pooling with a final linear projection to an embedding
 space. As is common in metric learning we normalise the embeddings so that we can use
 simple dot products to measure similarity.
-"""
 
-embedding_size = 4
-
-
-def construct_model():
-    inputs = layers.Input(shape=(height_width, height_width, 3))
-    x = layers.Conv2D(filters=4, kernel_size=3, strides=2, activation="relu")(inputs)
-    x = layers.Conv2D(filters=8, kernel_size=3, strides=2, activation="relu")(x)
-    x = layers.Conv2D(filters=16, kernel_size=3, strides=2, activation="relu")(x)
-    x = layers.GlobalAveragePooling2D()(x)
-    embeddings = layers.Dense(units=embedding_size, activation=None)(x)
-    embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
-    return keras.models.Model(inputs, embeddings)
-
-
-model = construct_model()
-
-"""
-## Training loop
-
-We train this model with a custom training loop that first embeds both anchors and
+We train this model with a custom `train_step` that first embeds both anchors and
 positives and then uses their pairwise dot products as logits for a softmax. On a Google
 Colab CPU instance this step takes approximately 10 seconds.
 """
 
-optimizer = keras.optimizers.Adam(learning_rate=1e-3)
-loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
-batch_losses = []
-for anchors, positives in build_dataset(batch_size=32, num_batchs=300):
+class EmbeddingModel(keras.Model):
+    def train_step(self, data):
+        anchors, positives = data
 
-    with tf.GradientTape() as tape:
-        # Run anchors and positives through model.
-        anchor_embeddings = model(anchors)
-        positive_embeddings = model(positives)
+        with tf.GradientTape() as tape:
+            # Run both anchors and positives through model.
+            anchor_embeddings = self(anchors, training=True)
+            positive_embeddings = self(positives, training=True)
 
-        # Calculate cosine similarity between anchors and positives. As they have
-        # be normalised this is just the pair wise dot products.
-        similarities = tf.einsum("ae,pe->ap", anchor_embeddings, positive_embeddings)
+            # Calculate cosine similarity between anchors and positives. As they have
+            # been normalised this is just the pair wise dot products.
+            similarities = tf.einsum(
+                "ae,pe->ap", anchor_embeddings, positive_embeddings
+            )
 
-        # Since we intend to use these as logits we scale them by a temperature.
-        # This value would normally be chosen as a hyper parameter.
-        temperature = 0.2
-        similarities /= temperature
+            # Since we intend to use these as logits we scale them by a temperature.
+            # This value would normally be chosen as a hyper parameter.
+            temperature = 0.2
+            similarities /= temperature
 
-        # We use these similarities as logits for a softmax. The labels for
-        # this call are just the sequence 0, 1, 2, ... since we want the main
-        # diagonal values, which correspond to the anchor/positive pairs, to be
-        # high. This loss will move embeddings for the anchor/positive pairs
-        # together and move all other pairs apart.
-        labels = tf.range(similarities.shape[0])
-        loss = loss_fn(labels, similarities)
-        batch_losses.append(loss)
+            # We use these similarities as logits for a softmax. The labels for
+            # this call are just the sequence 0, 1, 2, ... since we want the main
+            # diagonal values, which correspond to the anchor/positive pairs, to be
+            # high. This loss will move embeddings for the anchor/positive pairs
+            # together and move all other pairs apart.
+            labels = tf.range(tf.shape(similarities)[0])
+            loss = self.compiled_loss(labels, similarities)
 
-        # Calculate gradients and apply via optimizer.
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+            # Calculate gradients and apply via optimizer.
+            gradients = tape.gradient(loss, self.trainable_variables)
+            self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-plt.plot(batch_losses)
+            # Update and return metrics (specifically the one for the loss value)
+            self.compiled_metrics.update_state(labels, similarities)
+            return {m.name: m.result() for m in self.metrics}
+
+
+inputs = layers.Input(shape=(height_width, height_width, 3))
+x = layers.Conv2D(filters=4, kernel_size=3, strides=2, activation="relu")(inputs)
+x = layers.Conv2D(filters=8, kernel_size=3, strides=2, activation="relu")(x)
+x = layers.Conv2D(filters=16, kernel_size=3, strides=2, activation="relu")(x)
+x = layers.GlobalAveragePooling2D()(x)
+embeddings = layers.Dense(units=4, activation=None)(x)
+embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
+
+model = EmbeddingModel(inputs, embeddings)
+model.compile(
+    optimizer="adam", loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+)
+
+dataset = build_dataset(batch_size=32, num_batchs=30)
+history = model.fit(dataset, epochs=10)
+
+plt.plot(history.history["loss"])
 plt.show()
 
 """
