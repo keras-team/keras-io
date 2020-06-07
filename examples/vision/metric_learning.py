@@ -162,7 +162,9 @@ and then uses their pairwise dot products as logits for a softmax.
 
 class EmbeddingModel(keras.Model):
     def train_step(self, data):
-        data = tf.reshape(data, (2, num_classes, height_width, height_width, 3))
+        # Note: Workaround for open issue, to be removed.
+        if isinstance(data, tuple):
+            data = data[0]
         anchors, positives = data[0], data[1]
 
         with tf.GradientTape() as tape:
