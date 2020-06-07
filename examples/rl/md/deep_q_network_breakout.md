@@ -1,11 +1,16 @@
-"""
-Title: Deep Q-Learning for Atari Breakout
-Author: [Jacob Chapman](https://twitter.com/jacoblchapman)
-Date created: 2020/05/23
-Last modified: 2020/05/23
-Description: Play Atari Breakout with a Deep Q-Network.
-"""
-"""
+# Deep Q-Learning for Atari Breakout
+
+**Author:** [Jacob Chapman](https://twitter.com/jacoblchapman)<br>
+**Date created:** 2020/05/23<br>
+**Last modified:** 2020/05/23<br>
+**Description:** Play Atari Breakout with a Deep Q-Network.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/rl/ipynb/deep_q_network_breakout.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/rl/deep_q_network_breakout.py)
+
+
+
+---
 ## Introduction
 
 This script shows an implementation of Deep Q-Learning on the
@@ -40,11 +45,14 @@ million frames which are processed in less than 24 hours on a modern machine.
 
 - [Q-Learning](https://link.springer.com/content/pdf/10.1007/BF00992698.pdf)
 - [Deep Q-Learning](https://deepmind.com/research/publications/human-level-control-through-deep-reinforcement-learning)
-"""
-"""
-## Setup
-"""
 
+
+---
+## Setup
+
+
+
+```python
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 import numpy as np
 import tensorflow as tf
@@ -69,7 +77,18 @@ env = make_atari("BreakoutNoFrameskip-v4")
 env = wrap_deepmind(env, frame_stack=True, scale=True)
 env.seed(seed)
 
-"""
+```
+
+<div class="k-default-codeblock">
+```
+/Users/jaccha/opt/anaconda3/envs/py37/lib/python3.7/site-packages/gym/logger.py:30: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  warnings.warn(colorize('%s: %s'%('WARN', msg % args), 'yellow'))
+
+[42, 742738649]
+
+```
+</div>
+---
 ## Implement the Deep Q-Network
 
 This network learns an approximation of the Q-table, which is a mapping between
@@ -77,8 +96,9 @@ the states and actions that an agent will take. For every state we'll have two
 actions, that can be taken. The environment provides the state, and the action
 is chosen by selecting the larger of the two Q-values predicted in the output layer.
 
-"""
 
+
+```python
 num_actions = 4
 
 # Network defined by the Deepmind paper
@@ -103,9 +123,14 @@ model = keras.Model(inputs=inputs, outputs=action)
 model_target = keras.Model(inputs=inputs, outputs=action)
 
 
-"""
+```
+
+---
 ## Train
-"""
+
+
+
+```python
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
@@ -245,11 +270,12 @@ while True:  # Run until solved
         print("Solved at episode {}!".format(episode_count))
         break
 
-"""
+```
+
+---
 ## Visualizations
 In early stages of training:
 ![Imgur](https://i.imgur.com/X8ghdpL.gif)
 
 In later stages of training:
 ![Imgur](https://i.imgur.com/Z1K6qBQ.gif)
-"""
