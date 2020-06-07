@@ -11,13 +11,12 @@ Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 **Deep Deterministic Policy Gradient (DDPG)** is a model-free off-policy algorithm for
 learning continous actions.
 
-It combines ideas from DPG ( Deterministic Policy Gradient ) and DQN ( Deep Q-Network ).
-It uses experience replay and slow learning target networks from DQN and is based on the
-deterministic policy gradient that can operate over continuous action spaces.
+It combines ideas from DPG (Deterministic Policy Gradient) and DQN (Deep Q-Network).
+It uses Experience Replay and slow-learning target networks from DQN, and it is based on DPG,
+which can operate over continuous action spaces.
 
 This tutorial closely follow this paper -  
-[Continuous control with deep reinforcement
-learning](https://arxiv.org/pdf/1509.02971.pdf)
+[Continuous control with deep reinforcement learning](https://arxiv.org/pdf/1509.02971.pdf)
 
 ## Problem
 
@@ -37,7 +36,7 @@ Just like the Actor-Critic method, we have two networks:
 2. Critic - It predicts if the action is good (positive value) or bad (negative value)
 given a state and an action.
 
-DDPG uses two more techniques from DQN :
+DDPG uses two more techniques not present in the original DQN:
 
 **First, it uses two Target networks.**
 
@@ -45,11 +44,10 @@ DDPG uses two more techniques from DQN :
 targets and Target networks are updated slowly, hence keeping our estimated targets
 stable.
 
-Conceptually, this is like saying, "I have an idea of how to play this well, I'm going to
-try
-it out for a bit until I find something better", as opposed to saying "I'm going to
-re-learn how to play this entire game after every move".
-See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679)
+Conceptually, this is like saying, "I have an idea of how to play this well,
+I'm going to try it out for a bit until I find something better",
+as opposed to saying "I'm going to re-learn how to play this entire game after every move".
+See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679).
 
 **Second, it uses Experience Replay.**
 
@@ -57,10 +55,8 @@ We store list of tuples `(state, action, reward, next_state)`, and instead of
 learning only from recent experience, we learn from sampling all of our experience
 accumulated so far.
 
-Now, lets see how is it implemented.
+Now, let's see how is it implemented.
 """
-
-# We use openai gym for Pendulum Env.
 import gym
 import tensorflow as tf
 from tensorflow.keras import layers
@@ -87,8 +83,8 @@ print("Max Value of Action ->  {}".format(upper_bound))
 print("Min Value of Action ->  {}".format(lower_bound))
 
 """
-To implement better exploration by Actor network, we use noisy perturbations, specifically
-an **Ornstein-Uhlenbeck process** for generating noise, as described in paper.
+To implement better exploration by the Actor network, we use noisy perturbations, specifically
+an **Ornstein-Uhlenbeck process** for generating noise, as described in the paper.
 It samples noise from a correlated normal distribution.
 """
 
@@ -133,12 +129,12 @@ The `Buffer` class implements Experience Replay.
 where `y` is the expected return as seen by the Target network,
 and `Q(s, a)` is action value predicted by the Critic network. `y` is a moving target
 that the critic model tries to achieve; we make this target
-stable by updating the target model slowly.
+stable by updating the Target model slowly.
 
 **Actor loss** - This is computed using the mean of the value given by the Critic network
 for the actions taken by the Actor network. We seek to maximize this quantity.
 
-Hence we update the Actor network such that it produces actions that get
+Hence we update the Actor network so that it produces actions that get
 the maximum predicted value as seen by the Critic, for a given state.
 """
 
@@ -215,7 +211,7 @@ class Buffer:
 
 
 # This update target parameters slowly
-# Based on `tau` which is much less than one.
+# Based on rate `tau`, which is much less than one.
 def update_target(tau):
     new_weights = []
     target_variables = target_critic.weights
@@ -239,9 +235,9 @@ samples in a mini-batch, as activations can vary a lot due to fluctuating values
 state and action.
 
 Note: We need the initialization for last layer of the Actor to be between
-`-0.003` and `0.003` as this prevents us from reaching 1 or -1 value in
+`-0.003` and `0.003` as this prevents us from getting `1` or `-1` output values in
 the initial stages, which would squash our gradients to zero,
-as `tanh` activation is used
+as we use the `tanh` activation.
 """
 
 
@@ -341,10 +337,9 @@ tau = 0.005
 buffer = Buffer(50000, 64)
 
 """
-Now we implement our main training loop, and iterate over episodes. We sample actions
-using
-`policy()` and train with `learn()` at each time step, along with updating the
-Target networks using `tau`.
+Now we implement our main training loop, and iterate over episodes.
+We sample actions using `policy()` and train with `learn()` at each time step,
+along with updating the Target networks at a rate `tau`.
 """
 
 # To store reward history of each episode
@@ -400,17 +395,16 @@ plt.show()
 """
 
 """
-If training proceeds correctly, the average episodic reward wil increase with time.
+If training proceeds correctly, the average episodic reward will increase with time.
 
-Feel free to try different learning rates, `tau` values and architectures for the
+Feel free to try different learning rates, `tau` values, and architectures for the
 Actor and Critic networks.
 
 The Inverted Pendulum problem has low complexity, but DDPG work great on many other
 problems.
 
 Another great environment to try this on is `LunarLandingContinuous-v2`, but it will take
-more
-episodes to obtain good results.
+more episodes to obtain good results.
 """
 
 # Save the weights
