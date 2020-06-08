@@ -39,6 +39,7 @@ Let's see how that works.
 
 """
 ## Setup
+Requires TensorFlow 2.2 or later.
 """
 
 import tensorflow as tf
