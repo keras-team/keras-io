@@ -35,6 +35,8 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 import numpy as np
 import os
+import re
+import string
 
 """
 ## Self-attention with causal masking
@@ -170,10 +172,10 @@ class TokenAndPositionEmbedding(layers.Layer):
 ## Implement miniature GPT model
 """
 vocab_size = 20000  # Only consider the top 20k words
-maxlen = 20  # Max sequence size
-embed_dim = 64  # Embedding size for each token
+maxlen = 100  # Max sequence size
+embed_dim = 256  # Embedding size for each token
 num_heads = 2  # Number of attention heads
-feed_forward_dim = 64  # Hidden layer size in feed forward network inside transformer
+feed_forward_dim = 256  # Hidden layer size in feed forward network inside transformer
 
 
 def create_model():
@@ -224,11 +226,23 @@ print(f"{len(filenames)} files")
 
 # Create dataset from text files
 text_ds = tf.data.TextLineDataset(filenames)
+text_ds = text_ds.shuffle(buffer_size=50000)
 text_ds = text_ds.batch(batch_size)
+
+
+def custom_standardization(input_string):
+    """ Remove html line-break tags and handle punctuation """
+    lowercased = tf.strings.lower(input_string)
+    stripped_html = tf.strings.regex_replace(lowercased, "<br />", " ")
+    return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
+
 
 # Create vectcorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
-    max_tokens=vocab_size - 1, output_mode="int", output_sequence_length=maxlen + 1,
+    standardize=custom_standardization,
+    max_tokens=vocab_size - 1,
+    output_mode="int",
+    output_sequence_length=maxlen + 1,
 )
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
@@ -324,7 +338,7 @@ for index, word in enumerate(vocab):
 
 start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
-num_tokens_generated = 10
+num_tokens_generated = 40
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 

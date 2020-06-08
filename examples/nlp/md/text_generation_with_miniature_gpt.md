@@ -45,6 +45,8 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 import numpy as np
 import os
+import re
+import string
 
 ```
 
@@ -197,10 +199,10 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 ```python
 vocab_size = 20000  # Only consider the top 20k words
-maxlen = 20  # Max sequence size
-embed_dim = 64  # Embedding size for each token
+maxlen = 100  # Max sequence size
+embed_dim = 256  # Embedding size for each token
 num_heads = 2  # Number of attention heads
-feed_forward_dim = 64  # Hidden layer size in feed forward network inside transformer
+feed_forward_dim = 256  # Hidden layer size in feed forward network inside transformer
 
 
 def create_model():
@@ -256,11 +258,23 @@ print(f"{len(filenames)} files")
 
 # Create dataset from text files
 text_ds = tf.data.TextLineDataset(filenames)
+text_ds = text_ds.shuffle(buffer_size=50000)
 text_ds = text_ds.batch(batch_size)
+
+
+def custom_standardization(input_string):
+    """ Remove html line-break tags and handle punctuation """
+    lowercased = tf.strings.lower(input_string)
+    stripped_html = tf.strings.regex_replace(lowercased, "<br />", " ")
+    return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
+
 
 # Create vectcorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
-    max_tokens=vocab_size - 1, output_mode="int", output_sequence_length=maxlen + 1,
+    standardize=custom_standardization,
+    max_tokens=vocab_size - 1,
+    output_mode="int",
+    output_sequence_length=maxlen + 1,
 )
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
@@ -288,7 +302,7 @@ text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0   9.9M      0  0:00:08  0:00:08 --:--:-- 17.6M
+100 80.2M  100 80.2M    0     0  10.6M      0  0:00:07  0:00:07 --:--:-- 17.0M
 
 50000 files
 
@@ -369,7 +383,7 @@ for index, word in enumerate(vocab):
 
 start_prompt = "this movie is"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
-num_tokens_generated = 10
+num_tokens_generated = 40
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
@@ -393,276 +407,276 @@ model.fit(text_ds, verbose=2, epochs=30, callbacks=[text_gen_callback])
 ```
 Epoch 1/30
 generated text:
-this movie is a movie a great idea of the movie ive ever seen
+this movie is the best of the funniest and i have seen , and have ever seen in this movie . i don 't know it just to watch the show . but i don 't like this movie for those movies that they
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 5.7170 - dense_6_loss: 5.7170
+1563/1563 - 146s - loss: 5.0624 - dense_6_loss: 5.0624
 Epoch 2/30
 generated text:
-this movie is so bad i was a big fan of the worst movie
+this movie is not a good drama . it is not the only thing about the way . the story is very basic but is not just so much as a kid i think it was a bit more than i have the chance
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 4.9930 - dense_6_loss: 4.9930
+1563/1563 - 146s - loss: 4.4791 - dense_6_loss: 4.4791
 Epoch 3/30
 generated text:
-this movie is terrible it is that its the worst movie ever made me
+this movie is the first movie it makes you wonder if you were going to watch and again . i can 't imagine how bad i felt like this , this movie wasn 't bad . i was expecting it a lot , but
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 4.7348 - dense_6_loss: 4.7348
+1563/1563 - 146s - loss: 4.2813 - dense_6_loss: 4.2813
 Epoch 4/30
 generated text:
-this movie is one of those films that makes me wonder that this has
+this movie is the first time capsule of all time . i think i would like to say this is a good movie . it was very entertaining because it was a lot more interesting . it was not a good movie , and
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 4.5729 - dense_6_loss: 4.5729
+1563/1563 - 146s - loss: 4.1470 - dense_6_loss: 4.1470
 Epoch 5/30
 generated text:
-this movie is so bad it could have been made for a movie with
+this movie is a wonderful family film . it is a beautiful movie . it is an example of how a man who is a good movie that i have to do . but it is really the best way to watch . it
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 4.4569 - dense_6_loss: 4.4569
+1563/1563 - 146s - loss: 4.0431 - dense_6_loss: 4.0431
 Epoch 6/30
 generated text:
-this movie is so awful i think that the [UNK] could have seen a
+this movie is very different than that it is very entertaining in it . but it is also an interesting plot , it 's very interesting to the end of wwii and the war . the story is also [UNK] " is a true
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 18s - loss: 4.3682 - dense_6_loss: 4.3682
+1563/1563 - 146s - loss: 3.9584 - dense_6_loss: 3.9584
 Epoch 7/30
 generated text:
-this movie is just a [UNK] movie the acting was a bit of the
+this movie is a good movie . it isn 't scary , but that is a movie with lots of blood . it 's a very good horror movie but it has a good time , but the plot of the movie is good
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 4.2981 - dense_6_loss: 4.2981
+1563/1563 - 146s - loss: 3.8868 - dense_6_loss: 3.8868
 Epoch 8/30
 generated text:
-this movie is one of the worst movies i have ever seenbr br it
+this movie is a great movie that has the plot . the acting is good . i have seen some bad movies from my list ! but this one is so bad that it has to be so bad i can watch it over
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 18s - loss: 4.2391 - dense_6_loss: 4.2391
+1563/1563 - 146s - loss: 3.8246 - dense_6_loss: 3.8246
 Epoch 9/30
 generated text:
-this movie is a waste of time i have never ever seen the story
+this movie is a good one and the most amazing thing i 've ever seen . the movie was good , and i was so excited that it wasn 't . i didn 't get much . there were some good actors in this
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 19s - loss: 4.1901 - dense_6_loss: 4.1901
+1563/1563 - 146s - loss: 3.7712 - dense_6_loss: 3.7712
 Epoch 10/30
 generated text:
-this movie is terrible to waste my money and time it is a waste
+this movie is a bit boring in a long way . i 've never heard of seeing such bad acting in this movie . i was just too long and boring . the music is awful , and the story , the story is
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 4.1467 - dense_6_loss: 4.1467
+1563/1563 - 146s - loss: 3.7230 - dense_6_loss: 3.7230
 Epoch 11/30
 generated text:
-this movie is one of my favorite actors i had all the script and
+this movie is a terrible movie , but it has its elements of [UNK] " and is [UNK] . . i 'm a big fan of this movie , i am a big fan of horror movies , but it is not scary at
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 18s - loss: 4.1099 - dense_6_loss: 4.1099
+1563/1563 - 146s - loss: 3.6805 - dense_6_loss: 3.6805
 Epoch 12/30
 generated text:
-this movie is one of the most boring movie of the most boring thing
+this movie is an absolute abomination . i don 't understand why it was a comedy , the characters , and i can 't believe it was meant to be , and it was a great comedy . there is something good . .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 4.0766 - dense_6_loss: 4.0766
+1563/1563 - 146s - loss: 3.6424 - dense_6_loss: 3.6424
 Epoch 13/30
 generated text:
-this movie is one of those movies that you can watch it is a
+this movie is a lot of fun watching the movie in its [UNK] -ness " . i was surprised to see a very good movie . it was a bit long , but it didn 't come across as good as the film .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 4.0464 - dense_6_loss: 4.0464
+1563/1563 - 146s - loss: 3.6081 - dense_6_loss: 3.6081
 Epoch 14/30
 generated text:
-this movie is a complete disaster of the movie which has no redeeming that
+this movie is about a man who is a [UNK] , and he does in an old house with the spirits of [UNK] and the dead . i 'm not kidding , the plot has a [UNK] of old man , the woman is
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 18s - loss: 4.0196 - dense_6_loss: 4.0196
+1563/1563 - 146s - loss: 3.5760 - dense_6_loss: 3.5760
 Epoch 15/30
 generated text:
-this movie is so terrible its hard to describe this film the plot of
+this movie is one of the most beautiful films of all time . it is one of the greatest movies ever created , and in the wilderness . this movie was made by a beautiful young woman who finds her way out her .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.9945 - dense_6_loss: 3.9945
+1563/1563 - 146s - loss: 3.5473 - dense_6_loss: 3.5473
 Epoch 16/30
 generated text:
-this movie is about a [UNK] br 1 if the makers of this movie
+this movie is really bad , and it is so terrible . it 's hard to make a movie and a whole lot better than i watched , but this wasn 't a bad movie , but it 's pretty damn good . i
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.9715 - dense_6_loss: 3.9715
+1563/1563 - 146s - loss: 3.5210 - dense_6_loss: 3.5210
 Epoch 17/30
 generated text:
-this movie is terrible it just plain awful it has got it to be
+this movie is great ! ! i am a big fan of [UNK] . i don 't like this movie because i don 't think i can 't think of it , but it 's got me wrong and i 'm not sure why
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 3.9498 - dense_6_loss: 3.9498
+1563/1563 - 146s - loss: 3.4966 - dense_6_loss: 3.4966
 Epoch 18/30
 generated text:
-this movie is very terrible it isnt so bad its so bad its just
+this movie is one of those awful movies that is one of the few [UNK] films that were the [UNK] . there is no real story , a young girl with a young girl , who 's been kidnapped by an evil witch .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 3.9304 - dense_6_loss: 3.9304
+1563/1563 - 146s - loss: 3.4731 - dense_6_loss: 3.4731
 Epoch 19/30
 generated text:
-this movie is a terrible film it doesnt know its a good movie and
+this movie is one of the greatest movies i have ever watched . i watched it . the movie is so funny , it is very good . it is a great movie with a great acting in this movie , and i loved
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.9122 - dense_6_loss: 3.9122
+1563/1563 - 146s - loss: 3.4519 - dense_6_loss: 3.4519
 Epoch 20/30
 generated text:
-this movie is bad i mean it was one of the most boring movie
+this movie is a pretty interesting , the characters are very good . the story line is so good and the plot is good as the main character of a good [UNK] [UNK] ) is a bit of [UNK] [UNK] for the first time
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 3.8945 - dense_6_loss: 3.8945
+1563/1563 - 146s - loss: 3.4321 - dense_6_loss: 3.4321
 Epoch 21/30
 generated text:
-this movie is so bad the only one thing you can watch a spoof
+this movie is not the worst movie ever . there is no emotion . this movie starts out on one of the most boring movies ever made . it doesn 't even come close to the conclusion of the director 's character [UNK] .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 16s - loss: 3.8776 - dense_6_loss: 3.8776
+1563/1563 - 146s - loss: 3.4133 - dense_6_loss: 3.4133
 Epoch 22/30
 generated text:
-this movie is a total waste of talent in the same time and was
+this movie is just plain awful . it 's just awful . it doesn 't have a shred of good dialogue . there isn 't enough action and the actors are good . the movie is just plain awful . the acting is bad
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.8618 - dense_6_loss: 3.8618
+1563/1563 - 146s - loss: 3.3956 - dense_6_loss: 3.3956
 Epoch 23/30
 generated text:
-this movie is really terrible its not a good [UNK] movie it should have
+this movie is very bad , if i 'm not sure what the makers hoped it was going to be . i was expecting it to be a bad movie . it was terrible and i was expecting that the actors had a great
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.8483 - dense_6_loss: 3.8483
+1563/1563 - 146s - loss: 3.3791 - dense_6_loss: 3.3791
 Epoch 24/30
 generated text:
-this movie is a [UNK] of orthodox lifestyle group miners like a young mother
+this movie is very entertaining to see . i am a big fan of the [UNK] " . it was also a very good movie for the first time , and for the [UNK] " [UNK] ' , and i 'm not really sure
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.8333 - dense_6_loss: 3.8333
+1563/1563 - 146s - loss: 3.3636 - dense_6_loss: 3.3636
 Epoch 25/30
 generated text:
-this movie is so bad it really creeped me and out that it was
+this movie is a great movie and its a good one . the only thing in those movies that are really great , it is not a great movie , but this is a great movie . . it is not that bad .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.8209 - dense_6_loss: 3.8209
+1563/1563 - 146s - loss: 3.3490 - dense_6_loss: 3.3490
 Epoch 26/30
 generated text:
-this movie is a great example of why why is a bad [UNK] i
+this movie is great to see , but it is a great movie . this is the story of juliette lewis character and is a woman . her acting is so good . she doesn 't want to see how many times she gets
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.8077 - dense_6_loss: 3.8077
+1563/1563 - 146s - loss: 3.3342 - dense_6_loss: 3.3342
 Epoch 27/30
 generated text:
-this movie is one of those films that can be [UNK] is really a
+this movie is very good , i have read a review for the fact that it was very good ! i am a christian [UNK] fan , and i must say that i am not a huge fan of the bible code of the
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 17s - loss: 3.7958 - dense_6_loss: 3.7958
+1563/1563 - 146s - loss: 3.3215 - dense_6_loss: 3.3215
 Epoch 28/30
 generated text:
-this movie is so boring the first movie was [UNK] [UNK] i know that
+this movie is really a great film , and it was really good . the story is about a girl named gerda and kai falling asleep . this one is a very well done and the rest of the cast is well written .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 19s - loss: 3.7841 - dense_6_loss: 3.7841
+1563/1563 - 146s - loss: 3.3086 - dense_6_loss: 3.3086
 Epoch 29/30
 generated text:
-this movie is a [UNK] with all the time the [UNK] in the way
+this movie is one of the best movies ever to win best movie ever and it is the first movie i ever saw . it was a very good movie . it 's really a lot of laughs and it 's funny . it
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 19s - loss: 3.7727 - dense_6_loss: 3.7727
+1563/1563 - 146s - loss: 3.2968 - dense_6_loss: 3.2968
 Epoch 30/30
 generated text:
-this movie is not a good movie the story of an [UNK] in which
+this movie is very interesting . i have no idea how the movie is . it 's just a little boring , confusing and pointless characters . it is also a good movie . i like the characters in the movie . i am
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1563/1563 - 20s - loss: 3.7622 - dense_6_loss: 3.7622
+1563/1563 - 146s - loss: 3.2849 - dense_6_loss: 3.2849
 
-<tensorflow.python.keras.callbacks.History at 0x7ff3b304a2e8>
+<tensorflow.python.keras.callbacks.History at 0x7f0da81a3e10>
 
 ```
 </div>
