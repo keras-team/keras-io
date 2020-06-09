@@ -50,8 +50,6 @@ y_train = np.squeeze(y_train)
 x_test = x_test.astype("float32") / 255.0
 y_test = np.squeeze(y_test)
 
-x_train.shape, y_train.shape, x_test.shape, y_test.shape
-
 """
 To get a sense of the dataset we can visualise a grid of 25 random examples.
 
@@ -95,9 +93,7 @@ training instance will not be one image, but a pair of images of the same class.
 referring to the images in this pair we'll use the common metric learning names of the
 `anchor` (a randomly chosen image) and the `positive` (another randomly chosen image of
 the same class).
-"""
 
-"""
 To facilitate this we need to build a form of lookup that maps from classes to the
 instances of that class. When generating data for training we will sample from this
 lookup.
@@ -147,8 +143,7 @@ We can visualise a batch in another collage. The top row shows randomly chosen a
 from the 10 classes, the bottom row shows the corresponding 10 positives.
 """
 
-for examples in AnchorPositivePairs(num_batchs=1):
-    pass
+examples = next(iter(AnchorPositivePairs(num_batchs=1)))
 
 show_collage(examples)
 
@@ -191,13 +186,13 @@ class EmbeddingModel(keras.Model):
             sparse_labels = tf.range(num_classes)
             loss = self.compiled_loss(sparse_labels, similarities)
 
-            # Calculate gradients and apply via optimizer.
-            gradients = tape.gradient(loss, self.trainable_variables)
-            self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        # Calculate gradients and apply via optimizer.
+        gradients = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-            # Update and return metrics (specifically the one for the loss value).
-            self.compiled_metrics.update_state(sparse_labels, similarities)
-            return {m.name: m.result() for m in self.metrics}
+        # Update and return metrics (specifically the one for the loss value).
+        self.compiled_metrics.update_state(sparse_labels, similarities)
+        return {m.name: m.result() for m in self.metrics}
 
 
 """
