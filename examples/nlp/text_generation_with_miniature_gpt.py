@@ -37,6 +37,7 @@ import numpy as np
 import os
 import re
 import string
+import random
 
 """
 ## Self-attention with causal masking
@@ -225,8 +226,9 @@ for dir in directories:
 print(f"{len(filenames)} files")
 
 # Create dataset from text files
+random.shuffle(filenames)
 text_ds = tf.data.TextLineDataset(filenames)
-text_ds = text_ds.shuffle(buffer_size=50000)
+text_ds = text_ds.shuffle(buffer_size=256)
 text_ds = text_ds.batch(batch_size)
 
 
