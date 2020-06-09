@@ -1,17 +1,11 @@
-
-# Text Generation with miniature GPT
-
-**Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
-**Date created:** 2020/05/29<br>
-**Last modified:** 2020/05/29<br>
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/text_generation_with_miniature_gpt.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/text_generation_with_miniature_gpt.py)
-
-
-**Description:** Implement miniature version of GPT and learn to generate text.
-
----
+"""
+Title: Text Generation with miniature GPT
+Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
+Date created: 2020/05/29
+Last modified: 2020/05/29
+Description: Implement miniature version of GPT and learn to generate text.
+"""
+"""
 ## Introduction
 
 This example demonstrates autoregressive language modelling using a
@@ -24,21 +18,17 @@ When using this script with your own data, make sure it has atleast
 1M words.
 
 This example should be run with `tf-nightly>=2.3.0-dev20200531` or
-with tensorflow 2.3 or higher.
+with TensorFlow 2.3 or higher.
 
 **References:**
 
 - [GPT](https://www.semanticscholar.org/paper/Improving-Language-Understanding-by-Generative-Radford/cd18800a0fe0b668a1cc19f2ec95b5003d0a5035)
 - [GPT-2](https://www.semanticscholar.org/paper/Language-Models-are-Unsupervised-Multitask-Learners-Radford-Wu/9405cc0d6169988371b2755e573cc28650d14dfe)
 - [GPT-3](https://arxiv.org/abs/2005.14165)
-
-
----
+"""
+"""
 ## Setup
-
-
-
-```python
+"""
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -49,17 +39,13 @@ import re
 import string
 import random
 
-```
-
----
+"""
 ## Self-attention with causal masking
 
 We compute self-attention as usual, but prevent any information to flow
 from future tokens by masking the upper half of the scaled dot product matrix.
+"""
 
-
-
-```python
 
 class MultiHeadSelfAttention(layers.Layer):
     def __init__(self, embed_dim, num_heads=8):
@@ -136,14 +122,10 @@ class MultiHeadSelfAttention(layers.Layer):
         return output
 
 
-```
-
----
+"""
 ## Implement a Transformer block as a layer
+"""
 
-
-
-```python
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
@@ -166,16 +148,12 @@ class TransformerBlock(layers.Layer):
         return self.layernorm2(out1 + ffn_output)
 
 
-```
-
----
+"""
 ## Implement embedding layer
 
 Two seperate embedding layers, one for tokens, one for token index (positions).
+"""
 
-
-
-```python
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, emded_dim):
@@ -191,14 +169,9 @@ class TokenAndPositionEmbedding(layers.Layer):
         return x + positions
 
 
-```
-
----
+"""
 ## Implement miniature GPT model
-
-
-
-```python
+"""
 vocab_size = 20000  # Only consider the top 20k words
 maxlen = 100  # Max sequence size
 embed_dim = 256  # Embedding size for each token
@@ -221,23 +194,18 @@ def create_model():
     return model
 
 
-```
-
----
+"""
 ## Prepare data for word level language modelling
 
 We will download IMDB data, and combine training and validation sets for
 text generation task.
+"""
 
+"""shell
+curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+tar -xf aclImdb_v1.tar.gz
+"""
 
-
-```python
-!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-!tar -xf aclImdb_v1.tar.gz
-
-```
-
-```python
 
 batch_size = 32
 
@@ -299,23 +267,10 @@ text_ds = text_ds.map(prepare_lm_inputs_labels)
 text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 
-```
-<div class="k-default-codeblock">
-```
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  10.6M      0  0:00:07  0:00:07 --:--:-- 17.0M
-
-50000 files
-
-```
-</div>
----
+"""
 ## Callback for generating text
+"""
 
-
-
-```python
 
 class TextGenerator(keras.callbacks.Callback):
     """Callback to generate text from trained model.
@@ -389,296 +344,12 @@ num_tokens_generated = 40
 text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
-```
-
----
+"""
 ## Train
 
 Note: This code should preferably be run on GPU.
+"""
 
-
-
-```python
 model = create_model()
 
 model.fit(text_ds, verbose=2, epochs=30, callbacks=[text_gen_callback])
-
-```
-
-<div class="k-default-codeblock">
-```
-Epoch 1/30
-generated text:
-this movie is the best of the funniest and i have seen , and have ever seen in this movie . i don 't know it just to watch the show . but i don 't like this movie for those movies that they
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 5.0624 - dense_6_loss: 5.0624
-Epoch 2/30
-generated text:
-this movie is not a good drama . it is not the only thing about the way . the story is very basic but is not just so much as a kid i think it was a bit more than i have the chance
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 4.4791 - dense_6_loss: 4.4791
-Epoch 3/30
-generated text:
-this movie is the first movie it makes you wonder if you were going to watch and again . i can 't imagine how bad i felt like this , this movie wasn 't bad . i was expecting it a lot , but
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 4.2813 - dense_6_loss: 4.2813
-Epoch 4/30
-generated text:
-this movie is the first time capsule of all time . i think i would like to say this is a good movie . it was very entertaining because it was a lot more interesting . it was not a good movie , and
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 4.1470 - dense_6_loss: 4.1470
-Epoch 5/30
-generated text:
-this movie is a wonderful family film . it is a beautiful movie . it is an example of how a man who is a good movie that i have to do . but it is really the best way to watch . it
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 4.0431 - dense_6_loss: 4.0431
-Epoch 6/30
-generated text:
-this movie is very different than that it is very entertaining in it . but it is also an interesting plot , it 's very interesting to the end of wwii and the war . the story is also [UNK] " is a true
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.9584 - dense_6_loss: 3.9584
-Epoch 7/30
-generated text:
-this movie is a good movie . it isn 't scary , but that is a movie with lots of blood . it 's a very good horror movie but it has a good time , but the plot of the movie is good
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.8868 - dense_6_loss: 3.8868
-Epoch 8/30
-generated text:
-this movie is a great movie that has the plot . the acting is good . i have seen some bad movies from my list ! but this one is so bad that it has to be so bad i can watch it over
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.8246 - dense_6_loss: 3.8246
-Epoch 9/30
-generated text:
-this movie is a good one and the most amazing thing i 've ever seen . the movie was good , and i was so excited that it wasn 't . i didn 't get much . there were some good actors in this
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.7712 - dense_6_loss: 3.7712
-Epoch 10/30
-generated text:
-this movie is a bit boring in a long way . i 've never heard of seeing such bad acting in this movie . i was just too long and boring . the music is awful , and the story , the story is
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.7230 - dense_6_loss: 3.7230
-Epoch 11/30
-generated text:
-this movie is a terrible movie , but it has its elements of [UNK] " and is [UNK] . . i 'm a big fan of this movie , i am a big fan of horror movies , but it is not scary at
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.6805 - dense_6_loss: 3.6805
-Epoch 12/30
-generated text:
-this movie is an absolute abomination . i don 't understand why it was a comedy , the characters , and i can 't believe it was meant to be , and it was a great comedy . there is something good . .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.6424 - dense_6_loss: 3.6424
-Epoch 13/30
-generated text:
-this movie is a lot of fun watching the movie in its [UNK] -ness " . i was surprised to see a very good movie . it was a bit long , but it didn 't come across as good as the film .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.6081 - dense_6_loss: 3.6081
-Epoch 14/30
-generated text:
-this movie is about a man who is a [UNK] , and he does in an old house with the spirits of [UNK] and the dead . i 'm not kidding , the plot has a [UNK] of old man , the woman is
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.5760 - dense_6_loss: 3.5760
-Epoch 15/30
-generated text:
-this movie is one of the most beautiful films of all time . it is one of the greatest movies ever created , and in the wilderness . this movie was made by a beautiful young woman who finds her way out her .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.5473 - dense_6_loss: 3.5473
-Epoch 16/30
-generated text:
-this movie is really bad , and it is so terrible . it 's hard to make a movie and a whole lot better than i watched , but this wasn 't a bad movie , but it 's pretty damn good . i
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.5210 - dense_6_loss: 3.5210
-Epoch 17/30
-generated text:
-this movie is great ! ! i am a big fan of [UNK] . i don 't like this movie because i don 't think i can 't think of it , but it 's got me wrong and i 'm not sure why
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.4966 - dense_6_loss: 3.4966
-Epoch 18/30
-generated text:
-this movie is one of those awful movies that is one of the few [UNK] films that were the [UNK] . there is no real story , a young girl with a young girl , who 's been kidnapped by an evil witch .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.4731 - dense_6_loss: 3.4731
-Epoch 19/30
-generated text:
-this movie is one of the greatest movies i have ever watched . i watched it . the movie is so funny , it is very good . it is a great movie with a great acting in this movie , and i loved
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.4519 - dense_6_loss: 3.4519
-Epoch 20/30
-generated text:
-this movie is a pretty interesting , the characters are very good . the story line is so good and the plot is good as the main character of a good [UNK] [UNK] ) is a bit of [UNK] [UNK] for the first time
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.4321 - dense_6_loss: 3.4321
-Epoch 21/30
-generated text:
-this movie is not the worst movie ever . there is no emotion . this movie starts out on one of the most boring movies ever made . it doesn 't even come close to the conclusion of the director 's character [UNK] .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.4133 - dense_6_loss: 3.4133
-Epoch 22/30
-generated text:
-this movie is just plain awful . it 's just awful . it doesn 't have a shred of good dialogue . there isn 't enough action and the actors are good . the movie is just plain awful . the acting is bad
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3956 - dense_6_loss: 3.3956
-Epoch 23/30
-generated text:
-this movie is very bad , if i 'm not sure what the makers hoped it was going to be . i was expecting it to be a bad movie . it was terrible and i was expecting that the actors had a great
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3791 - dense_6_loss: 3.3791
-Epoch 24/30
-generated text:
-this movie is very entertaining to see . i am a big fan of the [UNK] " . it was also a very good movie for the first time , and for the [UNK] " [UNK] ' , and i 'm not really sure
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3636 - dense_6_loss: 3.3636
-Epoch 25/30
-generated text:
-this movie is a great movie and its a good one . the only thing in those movies that are really great , it is not a great movie , but this is a great movie . . it is not that bad .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3490 - dense_6_loss: 3.3490
-Epoch 26/30
-generated text:
-this movie is great to see , but it is a great movie . this is the story of juliette lewis character and is a woman . her acting is so good . she doesn 't want to see how many times she gets
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3342 - dense_6_loss: 3.3342
-Epoch 27/30
-generated text:
-this movie is very good , i have read a review for the fact that it was very good ! i am a christian [UNK] fan , and i must say that i am not a huge fan of the bible code of the
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3215 - dense_6_loss: 3.3215
-Epoch 28/30
-generated text:
-this movie is really a great film , and it was really good . the story is about a girl named gerda and kai falling asleep . this one is a very well done and the rest of the cast is well written .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.3086 - dense_6_loss: 3.3086
-Epoch 29/30
-generated text:
-this movie is one of the best movies ever to win best movie ever and it is the first movie i ever saw . it was a very good movie . it 's really a lot of laughs and it 's funny . it
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.2968 - dense_6_loss: 3.2968
-Epoch 30/30
-generated text:
-this movie is very interesting . i have no idea how the movie is . it 's just a little boring , confusing and pointless characters . it is also a good movie . i like the characters in the movie . i am
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-1563/1563 - 146s - loss: 3.2849 - dense_6_loss: 3.2849
-
-<tensorflow.python.keras.callbacks.History at 0x7f0da81a3e10>
-
-```
-</div>
