@@ -209,7 +209,7 @@ while True:  # Run until solved
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
                 # Calculate loss between new Q-value and old Q-value
                 # Clip the deltas using huber loss for stability
-                loss = tf.compat.v1.losses.huber_loss(updated_q_values, q_action)
+                loss = tf.reduce_mean(keras.losses.huber(updated_q_values, q_action))
 
             # Backpropagation
             grads = tape.gradient(loss, model.trainable_variables)
