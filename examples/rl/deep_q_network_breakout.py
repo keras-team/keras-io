@@ -73,9 +73,9 @@ env.seed(seed)
 ## Implement the Deep Q-Network
 
 This network learns an approximation of the Q-table, which is a mapping between
-the states and actions that an agent will take. For every state we'll have two
+the states and actions that an agent will take. For every state we'll have four
 actions, that can be taken. The environment provides the state, and the action
-is chosen by selecting the larger of the two Q-values predicted in the output layer.
+is chosen by selecting the larger of the four Q-values predicted in the output layer.
 
 """
 
@@ -209,7 +209,7 @@ while True:  # Run until solved
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
                 # Calculate loss between new Q-value and old Q-value
                 # Clip the deltas using huber loss for stability
-                loss = keras.losses.huber(updated_q_values, q_action)
+                loss = tf.compat.v1.losses.huber_loss(updated_q_values, q_action)
 
             # Backpropagation
             grads = tape.gradient(loss, model.trainable_variables)
