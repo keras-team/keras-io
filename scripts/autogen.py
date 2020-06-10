@@ -93,6 +93,7 @@ class KerasIO:
             entry["children"] = children
 
     def make_md_sources(self):
+        print('Generating md sources')
         if os.path.exists(self.md_sources_dir):
             print("Clearing", self.md_sources_dir)
             shutil.rmtree(self.md_sources_dir)
@@ -508,6 +509,7 @@ class KerasIO:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
     def render_md_sources_to_html(self):
+        print('Rendering md sources to HTML')
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
@@ -527,7 +529,7 @@ class KerasIO:
                 if not fname.endswith(".md"):
                     continue
 
-                print("Rendering", Path(target_dir) / fname)
+                print("...Rendering", Path(target_dir) / fname)
 
                 # Load metadata for page
                 metadata_file = open(
@@ -587,7 +589,6 @@ class KerasIO:
                         "main": html_docs,
                     }
                 )
-                print("Writing", target_path)
                 save_file(target_path, html_page)
 
         # Images & css
