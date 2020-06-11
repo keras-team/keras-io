@@ -86,9 +86,7 @@ def nb_to_py(nb_path, py_path):
     for cell in nb["cells"]:
         if cell["cell_type"] == "code":
             # Is it a shell cell?
-            if (cell["source"] and
-                    cell["source"][0] and
-                    cell["source"][0][0] == "!"):
+            if cell["source"] and cell["source"][0] and cell["source"][0][0] == "!":
                 # It's a shell cell
                 py += '"""shell\n'
                 py += "".join(cell["source"]) + "\n"
@@ -173,8 +171,8 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
-            'Found %d lines of code, but expected fewer than %d'
-            % (loc, MAX_LOC))
+            "Found %d lines of code, but expected fewer than %d" % (loc, MAX_LOC)
+        )
 
     f = open(nb_path, "w")
     f.write(json.dumps(notebook, indent=1, sort_keys=True))
@@ -241,25 +239,38 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
         + " --ExecutePreprocessor.timeout="
         + str(TIMEOUT)
     )
-    tmp_img_dir = md_name + "_files"
-    if os.path.exists(tmp_img_dir):
-        for fname in os.listdir(tmp_img_dir):
-            if fname.endswith(img_exts):
-                src = Path(tmp_img_dir) / fname
-                target = Path(img_dir) / fname
-                print("copy", src, "to", target)
-                shutil.copyfile(src, target)
-    os.chdir(current_dir)
-    md_content = open(Path(working_dir) / (md_name + ".md")).read()
-    for ext in img_exts:
-        md_content = md_content.replace(
-            "![" + ext + "](" + md_name + "_files",
-            "![" + ext + "](" + original_img_dir + "/" + md_name,
-        )
-    md_content = _make_output_code_blocks(md_content)
-    open(md_path, "w").write(md_content)
+    if os.path.exists(md_name + ".md"):
+        success = True
+        tmp_img_dir = md_name + "_files"
+        if os.path.exists(tmp_img_dir):
+            for fname in os.listdir(tmp_img_dir):
+                if fname.endswith(img_exts):
+                    src = Path(tmp_img_dir) / fname
+                    target = Path(img_dir) / fname
+                    print("copy", src, "to", target)
+                    shutil.copyfile(src, target)
+
+        os.chdir(current_dir)
+        md_content = open(Path(working_dir) / (md_name + ".md")).read()
+        for ext in img_exts:
+            md_content = md_content.replace(
+                "![" + ext + "](" + md_name + "_files",
+                "![" + ext + "](" + original_img_dir + "/" + md_name,
+            )
+        md_content = _make_output_code_blocks(md_content)
+        open(md_path, "w").write(md_content)
+    else:
+        success = False
+        os.chdir(current_dir)
+
     if del_working_dir:
         shutil.rmtree(working_dir)
+
+    if not success:
+        raise RuntimeError(
+            "An error was encountered when attempting to run the notebook. "
+            "See logs for details."
+        )
 
 
 def py_to_md(py_path, nb_path, md_path, img_dir, working_dir=None):
@@ -328,7 +339,7 @@ def _count_locs(lines):
     string_open = False
     for line in lines:
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
         if not string_open:
             if not line.startswith('"""'):

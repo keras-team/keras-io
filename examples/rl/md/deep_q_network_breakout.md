@@ -79,15 +79,6 @@ env.seed(seed)
 
 ```
 
-<div class="k-default-codeblock">
-```
-/Users/jaccha/opt/anaconda3/envs/py37/lib/python3.7/site-packages/gym/logger.py:30: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
-  warnings.warn(colorize('%s: %s'%('WARN', msg % args), 'yellow'))
-
-[42, 742738649]
-
-```
-</div>
 ---
 ## Implement the Deep Q-Network
 
