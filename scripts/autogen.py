@@ -641,11 +641,11 @@ class KerasIO:
 
     def serve(self):
         os.chdir(self.site_dir)
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
         server = socketserver.ThreadingTCPServer(
             ("", 8000), http.server.SimpleHTTPRequestHandler
         )
         server.daemon_threads = True
-        server.allow_reuse_address = True
 
         def signal_handler(signal, frame):
             try:
