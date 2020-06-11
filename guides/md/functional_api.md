@@ -262,21 +262,6 @@ del model
 model = keras.models.load_model("path_to_my_model")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING: Logging before flag parsing goes to stderr.
-W0611 13:37:59.155939 4595353024 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/keras/backend.py:467: set_learning_phase (from tensorflow.python.keras.backend) is deprecated and will be removed after 2020-10-11.
-Instructions for updating:
-Simply pass a True/False value to the `training` argument of the `__call__` method of your layer or model.
-W0611 13:37:59.302999 4595353024 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Model.state_updates (from tensorflow.python.keras.engine.training) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
-W0611 13:37:59.306108 4595353024 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Layer.updates (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
-
-```
-</div>
 For details, read the model [serialization & saving](
     /guides/serialization_and_saving/) guide.
 

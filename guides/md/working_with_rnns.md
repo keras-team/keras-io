@@ -512,9 +512,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 10ms/step - loss: 0.9472 - accuracy: 0.7026 - val_loss: 0.6152 - val_accuracy: 0.7999
+938/938 [==============================] - 10s 11ms/step - loss: 0.9792 - accuracy: 0.6869 - val_loss: 0.5196 - val_accuracy: 0.8427
 
-<tensorflow.python.keras.callbacks.History at 0x170d69590>
+<tensorflow.python.keras.callbacks.History at 0x17c82e2d0>
 
 ```
 </div>
@@ -536,9 +536,9 @@ noncudnn_model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 11ms/step - loss: 0.3790 - accuracy: 0.8874 - val_loss: 0.3295 - val_accuracy: 0.8902
+938/938 [==============================] - 10s 11ms/step - loss: 0.3900 - accuracy: 0.8843 - val_loss: 0.4477 - val_accuracy: 0.8426
 
-<tensorflow.python.keras.callbacks.History at 0x1712b9390>
+<tensorflow.python.keras.callbacks.History at 0x17cef54d0>
 
 ```
 </div>
@@ -697,9 +697,9 @@ model.fit(input_data, target_data, batch_size=batch_size)
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 2s 237ms/step - loss: 0.7736 - rnn_1_loss: 0.2825 - rnn_1_1_loss: 0.4911 - rnn_1_accuracy: 0.1016 - rnn_1_1_accuracy: 0.0332
+10/10 [==============================] - 2s 222ms/step - loss: 0.7225 - rnn_1_loss: 0.2545 - rnn_1_1_loss: 0.4679 - rnn_1_accuracy: 0.1094 - rnn_1_1_accuracy: 0.0349
 
-<tensorflow.python.keras.callbacks.History at 0x17f6cb810>
+<tensorflow.python.keras.callbacks.History at 0x18b14b650>
 
 ```
 </div>
@@ -708,4 +708,4 @@ logic for individual step within the sequence, and the `keras.layers.RNN` layer
 will handle the sequence iteration for you. It's an incredibly powerful way to quickly
 prototype new kinds of RNNs (e.g. a LSTM variant).
 
-For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/RNN/).
+For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/rnn/).

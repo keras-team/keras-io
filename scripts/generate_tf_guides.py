@@ -1,6 +1,7 @@
 from pathlib import Path
 import copy
 import json
+import re
 
 CONFIG = [
     {
@@ -168,8 +169,8 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     header_cells.append(
         {
             "cell_type": "markdown",
-            "metadata": {"colab_type": "text",},
-            "source": ["# " + title,],
+            "metadata": {"colab_type": "text"},
+            "source": ["# " + title],
         }
     )
     buttons = copy.deepcopy(TF_BUTTONS_TEMPLATE)
@@ -186,7 +187,41 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     notebook["cells"] = cells
 
     f = open(Path(target_dir) / (target_name + ".ipynb"), "w")
-    f.write(json.dumps(notebook, indent=1, sort_keys=True))
+    json_st = json.dumps(notebook, indent=1, sort_keys=True)
+
+    # Apply link conversion
+    json_st = json_st.replace(
+        "(/api/callbacks/",
+        "(https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/",
+    )
+    json_st = json_st.replace(
+        "keras.io/api/layers/recurrent_layers/rnn/",
+        "https://www.tensorflow.org/api_docs/python/tf/keras/layers/RNN/",
+    )
+    json_st = json_st.replace(
+        "https://keras.io/api/layers/recurrent_layers/gru/",
+        "https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU/",
+    )
+    json_st = json_st.replace(
+        "https://keras.io/api/layers/recurrent_layers/lstm/",
+        "https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM/",
+    )
+    json_st = json_st.replace(
+        "https://keras.io/api/layers/recurrent_layers/bidirectional/",
+        "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Bidirectional/",
+    )
+    json_st = json_st.replace(
+        "https://keras.io/api/callbacks/",
+        "https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/",
+    )
+    for entry in CONFIG:
+        src = entry["source_name"]
+        dst = entry["target_name"]
+        json_st = re.sub(
+            r"(?is)]\((\s*)/guides/" + src, "](/guide/keras/" + dst, json_st
+        )
+        json_st = re.sub(r"(?is)(\s+)/guides/" + src, "/guide/keras/" + dst, json_st)
+    f.write(json_st)
     f.close()
 
 
