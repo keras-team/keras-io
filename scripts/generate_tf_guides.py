@@ -218,9 +218,15 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
         src = entry["source_name"]
         dst = entry["target_name"]
         json_st = re.sub(
-            r"(?is)]\((\s*)/guides/" + src, "](/guide/keras/" + dst, json_st
+            r"(?is)]\((\s*)/guides/" + src,
+            "](https://www.tensorflow.org/guide/keras/" + dst,
+            json_st,
         )
-        json_st = re.sub(r"(?is)(\s+)/guides/" + src, "/guide/keras/" + dst, json_st)
+        json_st = re.sub(
+            r"(?is)(\s+)/guides/" + src,
+            "https://www.tensorflow.org/guide/keras/" + dst,
+            json_st,
+        )
     f.write(json_st)
     f.close()
 
