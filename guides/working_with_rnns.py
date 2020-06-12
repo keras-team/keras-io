@@ -584,5 +584,5 @@ logic for individual step within the sequence, and the `keras.layers.RNN` layer
 will handle the sequence iteration for you. It's an incredibly powerful way to quickly
 prototype new kinds of RNNs (e.g. a LSTM variant).
 
-For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/RNN/).
+For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/rnn/).
 """
