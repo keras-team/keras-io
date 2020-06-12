@@ -1,6 +1,8 @@
 from pathlib import Path
 import copy
 import json
+import random
+import string
 import re
 
 CONFIG = [
@@ -179,11 +181,13 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
         buttons["source"][i] = buttons["source"][i].replace("SOURCE_NAME", source_name)
     header_cells.append(buttons)
     cells = header_cells + cells
+    for cell in cells:
+        cell['metadata']['id'] = random_id()
 
     notebook = {}
     for key in TF_IPYNB_BASE.keys():
         notebook[key] = TF_IPYNB_BASE[key]
-    notebook["metadata"]["colab"]["name"] = target_name
+    notebook["metadata"]["colab"]["name"] = target_name + '.ipynb'
     notebook["cells"] = cells
 
     f = open(Path(target_dir) / (target_name + ".ipynb"), "w")
@@ -229,6 +233,12 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
         )
     f.write(json_st)
     f.close()
+
+
+def random_id():
+    length = 12
+    letters = string.ascii_lowercase + string.ascii_uppercase + '0123456789'
+    return ''.join(random.choice(letters) for i in range(length))
 
 
 def generate_tf_guides():

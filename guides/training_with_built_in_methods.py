@@ -820,7 +820,7 @@ x2 = layers.GlobalMaxPooling1D()(x2)
 x = layers.concatenate([x1, x2])
 
 score_output = layers.Dense(1, name="score_output")(x)
-class_output = layers.Dense(5, activation="softmax", name="class_output")(x)
+class_output = layers.Dense(5, name="class_output")(x)
 
 model = keras.Model(
     inputs=[image_input, timeseries_input], outputs=[score_output, class_output]
