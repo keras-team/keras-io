@@ -14,12 +14,10 @@
 ## Setup
 
 
-
 ```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
@@ -29,7 +27,6 @@ A `Sequential` model is appropriate for **a plain stack of layers**
 where each layer has **exactly one input tensor and one output tensor**.
 
 Schematically, the following `Sequential` model:
-
 
 
 ```python
@@ -44,11 +41,9 @@ model = keras.Sequential(
 # Call model on a test input
 x = tf.ones((3, 3))
 y = model(x)
-
 ```
 
 is equivalent to this function:
-
 
 
 ```python
@@ -60,7 +55,6 @@ layer3 = layers.Dense(4, name="layer3")
 # Call layers on a test input
 x = tf.ones((3, 3))
 y = layer3(layer2(layer1(x)))
-
 ```
 
 A Sequential model is **not appropriate** when:
@@ -71,13 +65,11 @@ A Sequential model is **not appropriate** when:
 - You want non-linear topology (e.g. a residual connection, a multi-branch
 model)
 
-
 ---
 ## Creating a Sequential model
 
 You can create a Sequential model by passing a list of layers to the Sequential
 constructor:
-
 
 
 ```python
@@ -88,16 +80,13 @@ model = keras.Sequential(
         layers.Dense(4),
     ]
 )
-
 ```
 
 Its layers are accessible via the `layers` attribute:
 
 
-
 ```python
 model.layers
-
 ```
 
 
@@ -105,14 +94,13 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x1486a9c50>,
- <tensorflow.python.keras.layers.core.Dense at 0x1486b8c50>,
- <tensorflow.python.keras.layers.core.Dense at 0x1486b72d0>]
+[<tensorflow.python.keras.layers.core.Dense at 0x148873e90>,
+ <tensorflow.python.keras.layers.core.Dense at 0x14887ee10>,
+ <tensorflow.python.keras.layers.core.Dense at 0x148886490>]
 
 ```
 </div>
 You can also create a Sequential model incrementally via the `add()` method:
-
 
 
 ```python
@@ -120,18 +108,15 @@ model = keras.Sequential()
 model.add(layers.Dense(2, activation="relu"))
 model.add(layers.Dense(3, activation="relu"))
 model.add(layers.Dense(4))
-
 ```
 
 Note that there's also a corresponding `pop()` method to remove layers:
 a Sequential model behaves very much like a list of layers.
 
 
-
 ```python
 model.pop()
 print(len(model.layers))  # 2
-
 ```
 
 <div class="k-default-codeblock">
@@ -145,13 +130,11 @@ any layer or model in Keras. This is useful to annotate TensorBoard graphs
 with semantically meaningful names.
 
 
-
 ```python
 model = keras.Sequential(name="my_sequential")
 model.add(layers.Dense(2, activation="relu", name="layer1"))
 model.add(layers.Dense(3, activation="relu", name="layer2"))
 model.add(layers.Dense(4, name="layer3"))
-
 ```
 
 ---
@@ -162,11 +145,9 @@ in order to be able to create their weights. So when you create a layer like
 this, initially, it has no weights:
 
 
-
 ```python
 layer = layers.Dense(3)
 layer.weights  # Empty
-
 ```
 
 
@@ -182,13 +163,11 @@ It creates its weights the first time it is called on an input, since the shape
 of the weights depends on the shape of the inputs:
 
 
-
 ```python
 # Call layer on a test input
 x = tf.ones((1, 4))
 y = layer(x)
 layer.weights  # Now it has weights, of shape (4, 3) and (3,)
-
 ```
 
 
@@ -197,10 +176,10 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 <div class="k-default-codeblock">
 ```
 [<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[ 0.78764236, -0.02616894, -0.53216314],
-        [ 0.5338869 ,  0.84029853, -0.8019882 ],
-        [ 0.68069625,  0.57742643, -0.1713844 ],
-        [ 0.11814868, -0.87056077, -0.8873605 ]], dtype=float32)>,
+ array([[ 0.47175038,  0.0916599 , -0.7113838 ],
+        [ 0.4508165 ,  0.80212307,  0.54930305],
+        [ 0.47127366,  0.77359426,  0.6605067 ],
+        [ 0.28070033,  0.01403308, -0.62135905]], dtype=float32)>,
  <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
 
 ```
@@ -210,7 +189,6 @@ Sequential model without an input shape, it isn't "built": it has no weights
 (and calling
 `model.weights` results in an error stating just this). The weights are created
 when the model first sees some input data:
-
 
 
 ```python
@@ -232,7 +210,6 @@ model = keras.Sequential(
 x = tf.ones((1, 4))
 y = model(x)
 print("Number of weights after calling the model:", len(model.weights))  # 6
-
 ```
 
 <div class="k-default-codeblock">
@@ -245,10 +222,8 @@ Once a model is "built", you can call its `summary()` method to display its
 contents:
 
 
-
 ```python
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -276,14 +251,12 @@ output shape. In this case, you should start your model by passing an `Input`
 object to your model, so that it knows its input shape from the start:
 
 
-
 ```python
 model = keras.Sequential()
 model.add(keras.Input(shape=(4,)))
 model.add(layers.Dense(2, activation="relu"))
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -305,10 +278,8 @@ Note that the `Input` object is not displayed as part of `model.layers`, since
 it isn't a layer:
 
 
-
 ```python
 model.layers
-
 ```
 
 
@@ -316,7 +287,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x148c1ee90>]
+[<tensorflow.python.keras.layers.core.Dense at 0x14886eb10>]
 
 ```
 </div>
@@ -324,13 +295,11 @@ A simple alternative is to just pass an `input_shape` argument to your first
 layer:
 
 
-
 ```python
 model = keras.Sequential()
 model.add(layers.Dense(2, activation="relu", input_shape=(4,)))
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -354,7 +323,6 @@ before seeing any data) and always have a defined output shape.
 In general, it's a recommended best practice to always specify the input shape
 of a Sequential model in advance if you know what it is.
 
-
 ---
 ## A common debugging workflow: `add()` + `summary()`
 
@@ -362,7 +330,6 @@ When building a new Sequential architecture, it's useful to incrementally stack
 layers with `add()` and frequently print model summaries. For instance, this
 enables you to monitor how a stack of `Conv2D` and `MaxPooling2D` layers is
 downsampling image feature maps:
-
 
 
 ```python
@@ -393,7 +360,6 @@ model.add(layers.GlobalMaxPooling2D())
 
 # Finally, we add a classification layer.
 model.add(layers.Dense(10))
-
 ```
 
 <div class="k-default-codeblock">
@@ -444,7 +410,6 @@ _________________________________________________________________
 Very practical, right?
 
 
-
 ---
 ## What to do once you have a model
 
@@ -458,7 +423,6 @@ Once your model architecture is ready, you will want to:
 - Speed up model training by leveraging multiple GPUs. See our
 [guide to multi-GPU and distributed training](distributed_training).
 
-
 ---
 ## Feature extraction with a Sequential model
 
@@ -468,7 +432,6 @@ and `output` attribute. These attributes can be used to do neat things, like
 quickly
 creating a model that extracts the outputs of all intermediate layers in a
 Sequential model:
-
 
 
 ```python
@@ -488,11 +451,9 @@ feature_extractor = keras.Model(
 # Call feature extractor on test input.
 x = tf.ones((1, 250, 250, 3))
 features = feature_extractor(x)
-
 ```
 
 Here's a similar example that only extract features from one layer:
-
 
 
 ```python
@@ -511,7 +472,6 @@ feature_extractor = keras.Model(
 # Call feature extractor on test input.
 x = tf.ones((1, 250, 250, 3))
 features = feature_extractor(x)
-
 ```
 
 ---
@@ -576,7 +536,6 @@ model.fit(...)
 If you do transfer learning, you will probably find yourself frequently using
 these two patterns.
 
-
 That's about all you need to know about Sequential models!
 
 To find out more about building models in Keras, see:
@@ -584,4 +543,3 @@ To find out more about building models in Keras, see:
 - [Guide to the Functional API](/guides/functional_api/)
 - [Guide to making new Layers & Models via subclassing](
     /guides/making_new_layers_and_models_via_subclassing/)
-

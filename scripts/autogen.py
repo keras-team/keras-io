@@ -32,6 +32,7 @@ import requests
 
 from master import MASTER
 import tutobooks
+import generate_tf_guides
 
 
 EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
@@ -641,11 +642,11 @@ class KerasIO:
 
     def serve(self):
         os.chdir(self.site_dir)
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
         server = socketserver.ThreadingTCPServer(
             ("", 8000), http.server.SimpleHTTPRequestHandler
         )
         server.daemon_threads = True
-        server.allow_reuse_address = True
 
         def signal_handler(signal, frame):
             try:
@@ -887,7 +888,7 @@ if __name__ == "__main__":
     )
 
     cmd = sys.argv[1]
-    if cmd not in {"make", "serve", "add_example", "add_guide"}:
+    if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
         raise ValueError("Must specify command `make`, `serve`, or `add_example`.")
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
@@ -906,7 +907,10 @@ if __name__ == "__main__":
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
     elif cmd == "add_guide":
+        tutobooks.MAX_LOC = 500
         keras_io.add_guide(
             sys.argv[2],
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
+    elif cmd == "generate_tf_guides":
+        generate_tf_guides.generate_tf_guides()
