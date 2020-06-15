@@ -1,3 +1,4 @@
+toc:
 - heading: "Keras"
 - title: "Sequential API"
   path: /guide/keras/sequential_model
