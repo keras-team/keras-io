@@ -165,9 +165,9 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
             cell["source"] = new_lines
         elif cell["cell_type"] == "code":
           lines = cell["source"]
-          if lines[0] in ('\n', ' ', ''):
+          if not lines[0].strip():
             lines = lines[1:]
-          if lines[-1] in ('\n', ' ', ''):
+          if not lines[-1].strip():
             lines = lines[:-1]
           cell["source"] = lines
 
