@@ -136,9 +136,8 @@ TF_IPYNB_BASE = {
 
 
 def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_name):
-    f = open(Path(source_dir) / (source_name + ".ipynb"))
-    original_ipynb = json.loads(f.read())
-    f.close()
+    nb = (Path(source_dir) / source_name).with_suffix(".ipynb")
+    original_ipynb = json.loads(nb.read_text())
 
     # Skip first title cell
     cells = original_ipynb["cells"][1:]
@@ -164,6 +163,13 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
             if len(lines) < 2:
                 new_lines.append(lines[-1])
             cell["source"] = new_lines
+        elif cell["cell_type"] == "code":
+          lines = cell["source"]
+          if not lines[0].strip():
+            lines = lines[1:]
+          if not lines[-1].strip():
+            lines = lines[:-1]
+          cell["source"] = lines
 
     # Add header cells
     header_cells = copy.deepcopy(TF_IPYNB_CELLS_TEMPLATE)
