@@ -13,3 +13,5 @@ templates/examples/timeseries/*
 templates/guides/*.md
 
 *.ipynb_checkpoints
+.vs
+.vscode
