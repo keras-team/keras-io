@@ -17,7 +17,9 @@ Recommendations:
 [Reference TF implementation](https://github.com/NVlabs/stylegan2)
 
 
-## End-to-end OCR
+## End-to-end OCR (currently WIP)
+
+This example is currently being worked on by @parthivc and @joshuacwnewton through the MLH Fellowship
 
 [Old Keras example](https://github.com/keras-team/keras/blob/master/examples/image_ocr.py)
 
