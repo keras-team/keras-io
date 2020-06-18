@@ -136,6 +136,8 @@ max_memory_length = 100000
 update_after_actions = 4
 # How often to update the target network
 update_target_network = 10000
+# Using huber loss for stability
+loss_function = keras.losses.Huber()
 
 while True:  # Run until solved
     state = np.array(env.reset())
@@ -213,8 +215,7 @@ while True:  # Run until solved
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
                 # Calculate loss between new Q-value and old Q-value
-                # Clip the deltas using huber loss for stability
-                loss = tf.reduce_mean(keras.losses.Huber()(updated_q_values, q_action))
+                loss = loss_function(updated_q_values, q_action)
 
             # Backpropagation
             grads = tape.gradient(loss, model.trainable_variables)
