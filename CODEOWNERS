@@ -1,0 +1,5 @@
+# Default owners for everything in repo.
+*  @fchollet
+
+# Owners for /guides directory
+/guides/ @fchollet @MarkDaoust @yashk2810
