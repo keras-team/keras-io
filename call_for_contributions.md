@@ -10,6 +10,9 @@ Recommendations:
 - Single LSTM layer + classification layer, trained with `fit()`
 - Add nice visualizations
 
+## Transformer model for MIDI music generation
+
+[Reference TF/Keras implementation](https://github.com/jason9693/MusicTransformer-tensorflow2.0)
 
 ## StyleGAN / StyleGAN2
 
@@ -17,7 +20,7 @@ Recommendations:
 [Reference TF implementation](https://github.com/NVlabs/stylegan2)
 
 
-## End-to-end OCR
+## End-to-end OCR [in progress]
 
 [Old Keras example](https://github.com/keras-team/keras/blob/master/examples/image_ocr.py)
 
