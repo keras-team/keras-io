@@ -784,7 +784,7 @@ between the two setups. When training on GPU, however, doing asynchronous buffer
 preprocessing on the host CPU while the GPU is running the model itself can result in
  a significant speedup.
 
-After training, if you to export an end-to-end model that includes the preprocessing
+After training, if you want to export an end-to-end model that includes the preprocessing
  layer(s), this is easy to do, since `TextVectorization` is a layer:
 
 ```python
