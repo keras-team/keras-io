@@ -17,7 +17,6 @@
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -48,7 +47,6 @@ class Linear(keras.layers.Layer):
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
 
-
 ```
 
 You would use a layer by calling it on some tensor input(s), much like a Python
@@ -60,14 +58,13 @@ x = tf.ones((2, 2))
 linear_layer = Linear(4, 2)
 y = linear_layer(x)
 print(y)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[0.04719363 0.01185325 0.08139521 0.03705199]
- [0.04719363 0.01185325 0.08139521 0.03705199]], shape=(2, 4), dtype=float32)
+[[ 0.01013444 -0.01070027 -0.01888977  0.05208318]
+ [ 0.01013444 -0.01070027 -0.01888977  0.05208318]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -77,7 +74,6 @@ being set as layer attributes:
 
 ```python
 assert linear_layer.weights == [linear_layer.w, linear_layer.b]
-
 ```
 
 Note you also have access to a quicker shortcut for adding weight to a layer:
@@ -102,14 +98,13 @@ x = tf.ones((2, 2))
 linear_layer = Linear(4, 2)
 y = linear_layer(x)
 print(y)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.09742574 -0.05855173 -0.09288181 -0.06019699]
- [ 0.09742574 -0.05855173 -0.09288181 -0.06019699]], shape=(2, 4), dtype=float32)
+[[-0.01331179 -0.00605625 -0.01042787  0.17160884]
+ [-0.01331179 -0.00605625 -0.01042787  0.17160884]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -141,7 +136,6 @@ y = my_sum(x)
 print(y.numpy())
 y = my_sum(x)
 print(y.numpy())
-
 ```
 
 <div class="k-default-codeblock">
@@ -160,7 +154,6 @@ print("non-trainable weights:", len(my_sum.non_trainable_weights))
 
 # It's not included in the trainable weights:
 print("trainable_weights:", my_sum.trainable_weights)
-
 ```
 
 <div class="k-default-codeblock">
@@ -190,7 +183,6 @@ class Linear(keras.layers.Layer):
 
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
-
 
 ```
 
@@ -222,7 +214,6 @@ class Linear(keras.layers.Layer):
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
 
-
 ```
 
 The `__call__()` method of your layer will automatically run build the first time
@@ -235,7 +226,6 @@ linear_layer = Linear(32)
 
 # The layer's weights are created dynamically the first time the layer is called
 y = linear_layer(x)
-
 ```
 
 ---
@@ -273,7 +263,6 @@ mlp = MLPBlock()
 y = mlp(tf.ones(shape=(3, 64)))  # The first call to the `mlp` will create the weights
 print("weights:", len(mlp.weights))
 print("trainable weights:", len(mlp.trainable_weights))
-
 ```
 
 <div class="k-default-codeblock">
@@ -301,7 +290,6 @@ class ActivityRegularizationLayer(keras.layers.Layer):
     def call(self, inputs):
         self.add_loss(self.rate * tf.reduce_sum(inputs))
         return inputs
-
 
 ```
 
@@ -331,7 +319,6 @@ assert len(layer.losses) == 1  # We created one loss value
 # `layer.losses` gets reset at the start of each __call__
 _ = layer(tf.zeros(1, 1))
 assert len(layer.losses) == 1  # This is the loss created during the call above
-
 ```
 
 In addition, the `loss` property also contains regularization losses created
@@ -357,12 +344,11 @@ _ = layer(tf.zeros((1, 1)))
 # This is `1e-3 * sum(layer.dense.kernel ** 2)`,
 # created by the `kernel_regularizer` above.
 print(layer.losses)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.0016333066>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.0018842274>]
 
 ```
 </div>
@@ -411,15 +397,14 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 # call during the forward pass!
 model.compile(optimizer="adam")
 model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 658us/step - loss: 0.1063
-1/1 [==============================] - 0s 873us/step - loss: 0.0202
+1/1 [==============================] - 0s 1ms/step - loss: 0.1555
+1/1 [==============================] - 0s 927us/step - loss: 0.0336
 
-<tensorflow.python.keras.callbacks.History at 0x147cd9410>
+<tensorflow.python.keras.callbacks.History at 0x145bca6d0>
 
 ```
 </div>
@@ -457,7 +442,6 @@ class LogisticEndpoint(keras.layers.Layer):
         # Return the inference-time prediction tensor (for `.predict()`).
         return tf.nn.softmax(logits)
 
-
 ```
 
 Metrics tracked in this way are accessible via `layer.metrics`:
@@ -472,12 +456,11 @@ y = layer(targets, logits)
 
 print("layer.metrics:", layer.metrics)
 print("current accuracy value:", float(layer.metrics[0].result()))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-layer.metrics: [<tensorflow.python.keras.metrics.BinaryAccuracy object at 0x147e36d50>]
+layer.metrics: [<tensorflow.python.keras.metrics.BinaryAccuracy object at 0x145bccdd0>]
 current accuracy value: 1.0
 
 ```
@@ -499,14 +482,13 @@ data = {
     "targets": np.random.random((3, 10)),
 }
 model.fit(data)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 806us/step - loss: 1.0874 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 999us/step - loss: 1.0366 - binary_accuracy: 0.0000e+00
 
-<tensorflow.python.keras.callbacks.History at 0x147e89550>
+<tensorflow.python.keras.callbacks.History at 0x1452c7650>
 
 ```
 </div>
@@ -547,7 +529,6 @@ layer = Linear(64)
 config = layer.get_config()
 print(config)
 new_layer = Linear.from_config(config)
-
 ```
 
 <div class="k-default-codeblock">
@@ -592,7 +573,6 @@ layer = Linear(64)
 config = layer.get_config()
 print(config)
 new_layer = Linear.from_config(config)
-
 ```
 
 <div class="k-default-codeblock">
@@ -637,7 +617,6 @@ class CustomDropout(keras.layers.Layer):
         if training:
             return tf.nn.dropout(inputs, rate=self.rate)
         return inputs
-
 
 ```
 
@@ -810,7 +789,6 @@ class VariationalAutoEncoder(keras.Model):
         self.add_loss(kl_loss)
         return reconstructed
 
-
 ```
 
 Let's write a simple training loop on MNIST:
@@ -852,27 +830,26 @@ for epoch in range(epochs):
 
         if step % 100 == 0:
             print("step %d: mean loss = %.4f" % (step, loss_metric.result()))
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-step 0: mean loss = 0.3500
-step 100: mean loss = 0.1260
-step 200: mean loss = 0.0993
+step 0: mean loss = 0.3577
+step 100: mean loss = 0.1258
+step 200: mean loss = 0.0994
 step 300: mean loss = 0.0893
 step 400: mean loss = 0.0843
-step 500: mean loss = 0.0810
+step 500: mean loss = 0.0809
 step 600: mean loss = 0.0788
 step 700: mean loss = 0.0772
 step 800: mean loss = 0.0760
 step 900: mean loss = 0.0750
 Start of epoch 1
 step 0: mean loss = 0.0747
-step 100: mean loss = 0.0741
-step 200: mean loss = 0.0736
-step 300: mean loss = 0.0731
+step 100: mean loss = 0.0740
+step 200: mean loss = 0.0735
+step 300: mean loss = 0.0730
 step 400: mean loss = 0.0727
 step 500: mean loss = 0.0723
 step 600: mean loss = 0.0720
@@ -893,17 +870,16 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 
 vae.compile(optimizer, loss=tf.keras.losses.MeanSquaredError())
 vae.fit(x_train, x_train, epochs=2, batch_size=64)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.0746
+938/938 [==============================] - 1s 1ms/step - loss: 0.0745
 Epoch 2/2
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<tensorflow.python.keras.callbacks.History at 0x138a5ccd0>
+<tensorflow.python.keras.callbacks.History at 0x15f10e150>
 
 ```
 </div>
@@ -950,19 +926,18 @@ vae.add_loss(kl_loss)
 optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 vae.compile(optimizer, loss=tf.keras.losses.MeanSquaredError())
 vae.fit(x_train, x_train, epochs=3, batch_size=64)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-938/938 [==============================] - 1s 1ms/step - loss: 0.0749
+938/938 [==============================] - 1s 1ms/step - loss: 0.0747
 Epoch 2/3
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 Epoch 3/3
-938/938 [==============================] - 1s 1ms/step - loss: 0.0675
+938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<tensorflow.python.keras.callbacks.History at 0x147ceac90>
+<tensorflow.python.keras.callbacks.History at 0x15f3240d0>
 
 ```
 </div>

@@ -2,7 +2,7 @@
 Title: Text classification from scratch
 Authors: Mark Omernick, Francois Chollet
 Date created: 2019/11/06
-Last modified: 2020/04/19
+Last modified: 2020/05/17
 Description: Text sentiment classification starting from raw text files.
 """
 """
@@ -71,13 +71,19 @@ generate a labeled `tf.data.Dataset` object from a set of text files on disk fil
  into class-specific folders.
 
 Let's use it to generate the training, validation, and test datasets. The validation
- and training dataset are generate from two subsets of the `train`
-directory, with 20% of samples going to the validation dataset and 80% going to the
- training dataset.
+and training datasets are generated from two subsets of the `train` directory, with 20%
+of samples going to the validation dataset and 80% going to the training dataset.
+
+Having a validation dataset in addition to the test dataset is useful for tuning
+hyperparameters, such as the model architecture, for which the test dataset should not
+be used.
+
+Before putting the model out into the real world however, it should be retrained using all
+available training data (without creating a validation dataset), so its performance is maximized.
 
 When using the `validation_split` & `subset` arguments, make sure to either specify a
 random seed, or to pass `shuffle=False`, so that the validation & training splits you
- get have no overlap.
+get have no overlap.
 
 """
 
@@ -188,7 +194,6 @@ There are 2 ways we can use our text vectorization layer:
 
 """
 
-
 ```python
 text_input = tf.keras.Input(shape=(1,), dtype=tf.string, name='text')
 x = vectorize_layer(text_input)
@@ -239,9 +244,8 @@ from tensorflow.keras import layers
 inputs = tf.keras.Input(shape=(None,), dtype="int64")
 
 # Next, we add a layer to map those vocab indices into a space of dimensionality
-# 'embedding_dim'. Note that we're using max_features+1 here, since there's an
-# OOV token that gets added to the vocabulary in vectorize_layer.
-x = layers.Embedding(max_features + 1, embedding_dim)(inputs)
+# 'embedding_dim'.
+x = layers.Embedding(max_features, embedding_dim)(inputs)
 x = layers.Dropout(0.5)(x)
 
 # Conv1D + global max pooling

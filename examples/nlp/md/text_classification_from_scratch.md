@@ -2,7 +2,7 @@
 
 **Authors:** Mark Omernick, Francois Chollet<br>
 **Date created:** 2019/11/06<br>
-**Last modified:** 2020/04/19<br>
+**Last modified:** 2020/05/17<br>
 **Description:** Text sentiment classification starting from raw text files.
 
 
@@ -47,7 +47,7 @@ Let's download the data and inspect its structure.
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  56.4M      0  0:00:01  0:00:01 --:--:-- 56.4M
+100 80.2M  100 80.2M    0     0  6364k      0  0:00:12  0:00:12 --:--:-- 8940k
 
 ```
 </div>
@@ -70,12 +70,12 @@ The `aclImdb` folder contains a `train` and `test` subfolder:
 ```
 <div class="k-default-codeblock">
 ```
-imdbEr.txt  imdb.vocab	README	test  train
+README     imdb.vocab imdbEr.txt [34mtest[m[m       [34mtrain[m[m
 
-labeledBow.feat  neg  pos  urls_neg.txt  urls_pos.txt
+labeledBow.feat [34mneg[m[m             [34mpos[m[m             urls_neg.txt    urls_pos.txt
 
-labeledBow.feat  pos	unsupBow.feat  urls_pos.txt
-neg		 unsup	urls_neg.txt   urls_unsup.txt
+labeledBow.feat [34mpos[m[m             unsupBow.feat   urls_pos.txt
+[34mneg[m[m             [34munsup[m[m           urls_neg.txt    urls_unsup.txt
 
 ```
 </div>
@@ -109,13 +109,19 @@ generate a labeled `tf.data.Dataset` object from a set of text files on disk fil
  into class-specific folders.
 
 Let's use it to generate the training, validation, and test datasets. The validation
- and training dataset are generate from two subsets of the `train`
-directory, with 20% of samples going to the validation dataset and 80% going to the
- training dataset.
+and training datasets are generated from two subsets of the `train` directory, with 20%
+of samples going to the validation dataset and 80% going to the training dataset.
+
+Having a validation dataset in addition to the test dataset is useful for tuning
+hyperparameters, such as the model architecture, for which the test dataset should not
+be used.
+
+Before putting the model out into the real world however, it should be retrained using all
+available training data (without creating a validation dataset), so its performance is maximized.
 
 When using the `validation_split` & `subset` arguments, make sure to either specify a
 random seed, or to pass `shuffle=False`, so that the validation & training splits you
- get have no overlap.
+get have no overlap.
 
 
 
@@ -262,7 +268,6 @@ There are 2 ways we can use our text vectorization layer:
  strings, like this:
 
 
-
 ```python
 text_input = tf.keras.Input(shape=(1,), dtype=tf.string, name='text')
 x = vectorize_layer(text_input)
@@ -318,9 +323,8 @@ from tensorflow.keras import layers
 inputs = tf.keras.Input(shape=(None,), dtype="int64")
 
 # Next, we add a layer to map those vocab indices into a space of dimensionality
-# 'embedding_dim'. Note that we're using max_features+1 here, since there's an
-# OOV token that gets added to the vocabulary in vectorize_layer.
-x = layers.Embedding(max_features + 1, embedding_dim)(inputs)
+# 'embedding_dim'.
+x = layers.Embedding(max_features, embedding_dim)(inputs)
 x = layers.Dropout(0.5)(x)
 
 # Conv1D + global max pooling
@@ -358,13 +362,13 @@ model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-625/625 [==============================] - 18s 29ms/step - loss: 0.5149 - accuracy: 0.6987 - val_loss: 0.3200 - val_accuracy: 0.8644
+625/625 [==============================] - 35s 56ms/step - loss: 0.4867 - accuracy: 0.7309 - val_loss: 0.3271 - val_accuracy: 0.8622
 Epoch 2/3
-625/625 [==============================] - 16s 25ms/step - loss: 0.2228 - accuracy: 0.9126 - val_loss: 0.3138 - val_accuracy: 0.8764
+625/625 [==============================] - 40s 64ms/step - loss: 0.2197 - accuracy: 0.9126 - val_loss: 0.3265 - val_accuracy: 0.8706
 Epoch 3/3
-625/625 [==============================] - 16s 25ms/step - loss: 0.1122 - accuracy: 0.9593 - val_loss: 0.5598 - val_accuracy: 0.8538
+625/625 [==============================] - 41s 66ms/step - loss: 0.1107 - accuracy: 0.9606 - val_loss: 0.5312 - val_accuracy: 0.8448
 
-<tensorflow.python.keras.callbacks.History at 0x7f78183c76d8>
+<tensorflow.python.keras.callbacks.History at 0x147e64ed0>
 
 ```
 </div>
@@ -380,9 +384,9 @@ model.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 4s 5ms/step - loss: 0.5577 - accuracy: 0.8506
+782/782 [==============================] - 17s 21ms/step - loss: 0.5297 - accuracy: 0.8404
 
-[0.5577091574668884, 0.8506399989128113]
+[0.5296842455863953, 0.8404399752616882]
 
 ```
 </div>
@@ -415,9 +419,9 @@ end_to_end_model.evaluate(raw_test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 5s 7ms/step - loss: 0.5577 - accuracy: 0.8506
+782/782 [==============================] - 24s 30ms/step - loss: 0.5297 - accuracy: 0.8404
 
-[0.5577091574668884, 0.8506399989128113]
+[0.5296845436096191, 0.8404399752616882]
 
 ```
 </div>

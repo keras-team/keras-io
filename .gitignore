@@ -7,5 +7,7 @@ templates/examples/generative/*
 templates/examples/nlp/*
 templates/examples/vision/*
 templates/examples/structured_data/*
+templates/examples/rl/*
 templates/examples/keras_recipes/*
+templates/examples/timeseries/*
 templates/guides/*.md

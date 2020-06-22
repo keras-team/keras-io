@@ -406,7 +406,7 @@ disk (which is typically temporary), **except worker 0**, which would save Tenso
 logs checkpoints to a Cloud storage location for later access & reuse.
 
 The evaluator would simply use `MirroredStrategy` (since it runs on a single machine and
-does need to communicate with other machines) and call `model.evaluate()`. It would be
+does not need to communicate with other machines) and call `model.evaluate()`. It would be
 loading the latest checkpoint saved by the chief worker to a Cloud storage location, and
 would save evaluation logs to the same location as the chief logs.
 

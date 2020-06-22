@@ -14,6 +14,7 @@
 ## Setup
 
 
+
 ```python
 import numpy as np
 import tensorflow as tf
@@ -24,6 +25,7 @@ from tensorflow.keras import layers
 
 ---
 ## Create a sampling layer
+
 
 
 ```python
@@ -43,6 +45,7 @@ class Sampling(layers.Layer):
 
 ---
 ## Build the encoder
+
 
 
 ```python
@@ -95,6 +98,7 @@ ________________________________________________________________________________
 ## Build the decoder
 
 
+
 ```python
 latent_inputs = keras.Input(shape=(latent_dim,))
 x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
@@ -136,6 +140,7 @@ _________________________________________________________________
 ## Define the VAE as a `Model` with a custom `train_step`
 
 
+
 ```python
 
 class VAE(keras.Model):
@@ -145,7 +150,8 @@ class VAE(keras.Model):
         self.decoder = decoder
 
     def train_step(self, data):
-        data = data[0]
+        if isinstance(data, tuple):
+            data = data[0]
         with tf.GradientTape() as tape:
             z_mean, z_log_var, z = encoder(data)
             reconstruction = decoder(z)
@@ -172,6 +178,7 @@ class VAE(keras.Model):
 ## Train the VAE
 
 
+
 ```python
 (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
 mnist_digits = np.concatenate([x_train, x_test], axis=0)
@@ -186,24 +193,73 @@ vae.fit(mnist_digits, epochs=30, batch_size=128)
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-547/547 [==============================] - 30s 56ms/step - loss: 208.8172 - reconstruction_loss: 206.4144 - kl_loss: 2.4027
+547/547 [==============================] - 3s 5ms/step - loss: 202.1639 - reconstruction_loss: 199.6418 - kl_loss: 2.5221
 Epoch 2/30
-547/547 [==============================] - 35s 65ms/step - loss: 173.0523 - reconstruction_loss: 169.3694 - kl_loss: 3.6828
+547/547 [==============================] - 2s 4ms/step - loss: 161.9867 - reconstruction_loss: 158.9957 - kl_loss: 2.9910
 Epoch 3/30
-547/547 [==============================] - 34s 62ms/step - loss: 163.5822 - reconstruction_loss: 159.9738 - kl_loss: 3.6083
+547/547 [==============================] - 2s 4ms/step - loss: 157.0864 - reconstruction_loss: 153.9148 - kl_loss: 3.1716
 Epoch 4/30
-547/547 [==============================] - 36s 66ms/step - loss: 159.5133 - reconstruction_loss: 155.7664 - kl_loss: 3.7469
+547/547 [==============================] - 2s 5ms/step - loss: 154.6892 - reconstruction_loss: 151.4092 - kl_loss: 3.2800
 Epoch 5/30
-547/547 [==============================] - 40s 73ms/step - loss: 149.8828 - reconstruction_loss: 146.0466 - kl_loss: 3.8362
+547/547 [==============================] - 2s 4ms/step - loss: 153.1740 - reconstruction_loss: 149.8300 - kl_loss: 3.3441
+Epoch 6/30
+547/547 [==============================] - 2s 5ms/step - loss: 152.0346 - reconstruction_loss: 148.6590 - kl_loss: 3.3756
+Epoch 7/30
+547/547 [==============================] - 2s 5ms/step - loss: 151.2110 - reconstruction_loss: 147.7929 - kl_loss: 3.4181
+Epoch 8/30
+547/547 [==============================] - 2s 5ms/step - loss: 150.5230 - reconstruction_loss: 147.0933 - kl_loss: 3.4297
+Epoch 9/30
+547/547 [==============================] - 2s 5ms/step - loss: 149.9584 - reconstruction_loss: 146.5069 - kl_loss: 3.4515
+Epoch 10/30
+547/547 [==============================] - 2s 5ms/step - loss: 149.4152 - reconstruction_loss: 145.9451 - kl_loss: 3.4701
+Epoch 11/30
+547/547 [==============================] - 2s 5ms/step - loss: 149.0085 - reconstruction_loss: 145.5200 - kl_loss: 3.4885
+Epoch 12/30
+547/547 [==============================] - 2s 5ms/step - loss: 148.6831 - reconstruction_loss: 145.1854 - kl_loss: 3.4977
+Epoch 13/30
+547/547 [==============================] - 2s 4ms/step - loss: 148.3130 - reconstruction_loss: 144.7828 - kl_loss: 3.5302
+Epoch 14/30
+547/547 [==============================] - 2s 5ms/step - loss: 148.0216 - reconstruction_loss: 144.4819 - kl_loss: 3.5397
 Epoch 15/30
-547/547 [==============================] - 39s 71ms/step - loss: 146.8578 - reconstruction_loss: 143.0724 - kl_loss: 3.7855
+547/547 [==============================] - 2s 5ms/step - loss: 147.7056 - reconstruction_loss: 144.1588 - kl_loss: 3.5468
+Epoch 16/30
+547/547 [==============================] - 2s 5ms/step - loss: 147.4493 - reconstruction_loss: 143.8943 - kl_loss: 3.5549
+Epoch 17/30
+547/547 [==============================] - 2s 5ms/step - loss: 147.1656 - reconstruction_loss: 143.5847 - kl_loss: 3.5809
+Epoch 18/30
+547/547 [==============================] - 2s 5ms/step - loss: 147.0080 - reconstruction_loss: 143.4251 - kl_loss: 3.5829
+Epoch 19/30
+547/547 [==============================] - 2s 5ms/step - loss: 146.8182 - reconstruction_loss: 143.2218 - kl_loss: 3.5964
+Epoch 20/30
+547/547 [==============================] - 2s 5ms/step - loss: 146.5972 - reconstruction_loss: 142.9844 - kl_loss: 3.6128
+Epoch 21/30
+547/547 [==============================] - 2s 5ms/step - loss: 146.3822 - reconstruction_loss: 142.7513 - kl_loss: 3.6309
+Epoch 22/30
+547/547 [==============================] - 2s 5ms/step - loss: 146.1550 - reconstruction_loss: 142.5334 - kl_loss: 3.6215
+Epoch 23/30
+547/547 [==============================] - 2s 4ms/step - loss: 145.9934 - reconstruction_loss: 142.3690 - kl_loss: 3.6245
+Epoch 24/30
+547/547 [==============================] - 2s 5ms/step - loss: 145.8778 - reconstruction_loss: 142.2351 - kl_loss: 3.6426
+Epoch 25/30
+547/547 [==============================] - 2s 4ms/step - loss: 145.6936 - reconstruction_loss: 142.0350 - kl_loss: 3.6586
+Epoch 26/30
+547/547 [==============================] - 2s 4ms/step - loss: 145.5037 - reconstruction_loss: 141.8405 - kl_loss: 3.6633
+Epoch 27/30
+547/547 [==============================] - 2s 4ms/step - loss: 145.3262 - reconstruction_loss: 141.6582 - kl_loss: 3.6680
 Epoch 28/30
-288/547 [==============>...............] - ETA: 17s - loss: 146.5070 - reconstruction_loss: 142.7138 - kl_loss: 3.7932
+547/547 [==============================] - 2s 4ms/step - loss: 145.2551 - reconstruction_loss: 141.5739 - kl_loss: 3.6812
+Epoch 29/30
+547/547 [==============================] - 2s 5ms/step - loss: 145.1028 - reconstruction_loss: 141.4197 - kl_loss: 3.6831
+Epoch 30/30
+547/547 [==============================] - 2s 4ms/step - loss: 145.0274 - reconstruction_loss: 141.3409 - kl_loss: 3.6864
+
+<tensorflow.python.keras.callbacks.History at 0x7f74c83e79e8>
 
 ```
 </div>
 ---
 ## Display a grid of sampled digits
+
 
 
 ```python
@@ -256,6 +312,7 @@ plot_latent(encoder, decoder)
 
 ---
 ## Display how the latent space clusters different digit classes
+
 
 
 ```python

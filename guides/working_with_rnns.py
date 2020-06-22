@@ -317,7 +317,7 @@ The output of the `Bidirectional` RNN will be, by default, the sum of the forwar
 output and the backward layer output. If you need a different merging behavior, e.g.
 concatenation, change the `merge_mode` parameter in the `Bidirectional` wrapper
 constructor. For more details about `Bidirectional`, please check
-[the API docs](https://keras.io/api/layers/recurrent_layers/Bidirectional/).
+[the API docs](https://keras.io/api/layers/recurrent_layers/bidirectional/).
 """
 
 """
@@ -343,8 +343,8 @@ corresponds to strictly right padded data, CuDNN can still be used. This is the 
 common case).
 
 For the detailed list of constraints, please see the documentation for the
-[LSTM](https://keras.io/api/layers/recurrent_layers/LSTM/) and
-[GRU](https://keras.io/api/layers/recurrent_layers/GRU/) layers.
+[LSTM](https://keras.io/api/layers/recurrent_layers/lstm/) and
+[GRU](https://keras.io/api/layers/recurrent_layers/gru/) layers.
 """
 
 """
@@ -584,5 +584,5 @@ logic for individual step within the sequence, and the `keras.layers.RNN` layer
 will handle the sequence iteration for you. It's an incredibly powerful way to quickly
 prototype new kinds of RNNs (e.g. a LSTM variant).
 
-For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/RNN/).
+For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/rnn/).
 """

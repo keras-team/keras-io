@@ -261,6 +261,11 @@ LAYERS_MASTER = {
                     'title': 'ConvLSTM2D layer',
                     'generate': ['tensorflow.keras.layers.ConvLSTM2D']
                 },
+                {
+                    'path': 'rnn',
+                    'title': 'Base RNN layer',
+                    'generate': ['tensorflow.keras.layers.RNN']
+                },
             ]
         },
         {

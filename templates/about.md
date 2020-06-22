@@ -8,7 +8,7 @@ It was developed with a focus on enabling fast experimentation. *Being able to g
 ## Keras & TensorFlow 2.0
 
 [TensorFlow 2.0](https://www.tensorflow.org/) is an end-to-end, open-source machine learning platform. You can think of it as an infrastructure layer for
-[differentiable programming](https://en.wikipedia.org/wiki/Differentiable_programming). It combines three key abilities:
+[differentiable programming](https://en.wikipedia.org/wiki/Differentiable_programming). It combines four key abilities:
 
 - Efficiently executing low-level tensor operations on CPU, GPU, or TPU.
 - Computing the gradient of arbitrary differentiable expressions.
@@ -30,7 +30,7 @@ and you can export your Keras models to run in the browser or on a mobile device
 The core data structures of Keras are __layers__ and __models__.
 The simplest type of model is the [`Sequential` model](/guides/sequential_model/), a linear stack of layers.
 For more complex architectures, you should use the [Keras functional API](/guides/functional_api/),
-which allows to build arbitrary graphs of layers, or [write models entirely from scratch via subclasssing](/guides/model_subclassing/).
+which allows to build arbitrary graphs of layers, or [write models entirely from scratch via subclasssing](/guides/making_new_layers_and_models_via_subclassing/).
 
 Here is the `Sequential` model:
 
@@ -135,7 +135,7 @@ To start using Keras, simply [install TensorFlow 2.0](https://www.tensorflow.org
 
 Keras/TensorFlow are compatible with:
 
-- Python 3.5–3.7
+- Python 3.5–3.8
 - Ubuntu 16.04 or later
 - Windows 7 or later
 - macOS 10.12.6 (Sierra) or later.

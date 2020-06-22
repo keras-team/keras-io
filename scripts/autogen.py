@@ -32,6 +32,7 @@ import requests
 
 from master import MASTER
 import tutobooks
+import generate_tf_guides
 
 
 EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
@@ -71,25 +72,29 @@ class KerasIO:
             if entry["path"] == "examples/":
                 examples_entry = entry
                 break
-        for entry in examples_entry["children"]:
-            children = []
-            subdir = entry["path"]
+        for entry in examples_entry["children"]:  # e.g. {"path": "nlp", ...}
+            children = entry.get("children", [])
+            preexisting = [e["path"] for e in children]
+            subdir = entry["path"]  # e.g. nlp
             path = Path(self.examples_dir) / subdir  # e.g. examples/nlp
-            for fname in os.listdir(path):
+            for fname in sorted(os.listdir(path)):
                 if fname.endswith(".py"):  # e.g. examples/nlp/test.py
                     name = fname[:-3]
-                    f = open(path / fname)
-                    f.readline()
-                    title_line = f.readline()
-                    f.close()
-                    assert title_line.startswith("Title: ")
-                    title = title_line[len("Title: ") :]
-                    children.append(
-                        {"path": name, "title": title.strip(),}
-                    )
+                    example_path = name.split('/')[-1]
+                    if example_path not in preexisting:
+                        f = open(path / fname)
+                        f.readline()
+                        title_line = f.readline()
+                        f.close()
+                        assert title_line.startswith("Title: ")
+                        title = title_line[len("Title: ") :]
+                        children.append(
+                            {"path": example_path, "title": title.strip()}
+                        )
             entry["children"] = children
 
     def make_md_sources(self):
+        print('Generating md sources')
         if os.path.exists(self.md_sources_dir):
             print("Clearing", self.md_sources_dir)
             shutil.rmtree(self.md_sources_dir)
@@ -505,6 +510,7 @@ class KerasIO:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
     def render_md_sources_to_html(self):
+        print('Rendering md sources to HTML')
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
@@ -524,7 +530,7 @@ class KerasIO:
                 if not fname.endswith(".md"):
                     continue
 
-                print("Rendering", Path(target_dir) / fname)
+                print("...Rendering", Path(target_dir) / fname)
 
                 # Load metadata for page
                 metadata_file = open(
@@ -584,7 +590,6 @@ class KerasIO:
                         "main": html_docs,
                     }
                 )
-                print("Writing", target_path)
                 save_file(target_path, html_page)
 
         # Images & css
@@ -637,11 +642,11 @@ class KerasIO:
 
     def serve(self):
         os.chdir(self.site_dir)
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
         server = socketserver.ThreadingTCPServer(
             ("", 8000), http.server.SimpleHTTPRequestHandler
         )
         server.daemon_threads = True
-        server.allow_reuse_address = True
 
         def signal_handler(signal, frame):
             try:
@@ -883,7 +888,7 @@ if __name__ == "__main__":
     )
 
     cmd = sys.argv[1]
-    if cmd not in {"make", "serve", "add_example", "add_guide"}:
+    if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
         raise ValueError("Must specify command `make`, `serve`, or `add_example`.")
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
@@ -902,7 +907,10 @@ if __name__ == "__main__":
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
     elif cmd == "add_guide":
+        tutobooks.MAX_LOC = 500
         keras_io.add_guide(
             sys.argv[2],
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
+    elif cmd == "generate_tf_guides":
+        generate_tf_guides.generate_tf_guides()

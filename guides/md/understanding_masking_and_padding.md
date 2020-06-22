@@ -19,7 +19,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
@@ -88,7 +87,6 @@ padded_inputs = tf.keras.preprocessing.sequence.pad_sequences(
 )
 print(padded_inputs)
 
-
 ```
 
 <div class="k-default-codeblock">
@@ -135,7 +133,6 @@ unmasked_embedding = tf.cast(
 
 masked_embedding = masking_layer(unmasked_embedding)
 print(masked_embedding._keras_mask)
-
 ```
 
 <div class="k-default-codeblock">
@@ -171,7 +168,6 @@ receive a mask, which means it will ignore padded values:
 model = keras.Sequential(
     [layers.Embedding(input_dim=5000, output_dim=16, mask_zero=True), layers.LSTM(32),]
 )
-
 ```
 
 This is also the case for the following Functional API model:
@@ -183,7 +179,6 @@ x = layers.Embedding(input_dim=5000, output_dim=16, mask_zero=True)(inputs)
 outputs = layers.LSTM(32)(x)
 
 model = keras.Model(inputs, outputs)
-
 ```
 
 ---
@@ -197,7 +192,6 @@ previous_mask)` method which you can call.
 
 Thus, you can pass the output of the `compute_mask()` method of a mask-producing layer
 to the `__call__` method of a mask-consuming layer, like this:
-
 
 
 ```python
@@ -222,7 +216,6 @@ layer = MyLayer()
 x = np.random.random((32, 10)) * 100
 x = x.astype("int32")
 layer(x)
-
 ```
 
 
@@ -231,19 +224,19 @@ layer(x)
 <div class="k-default-codeblock">
 ```
 <tf.Tensor: shape=(32, 32), dtype=float32, numpy=
-array([[ 2.9689050e-03,  7.6725935e-03,  3.7014071e-04, ...,
-         2.0531523e-03, -3.4815564e-03,  6.9852998e-03],
-       [-4.0819575e-03, -6.3828002e-03, -3.6276649e-03, ...,
-        -6.8314276e-03,  7.4037584e-03,  9.5842748e-05],
-       [ 6.2505202e-03, -6.0553146e-03, -3.7398988e-03, ...,
-        -9.0137630e-04, -4.6996078e-03,  3.9660726e-03],
+array([[ 9.3598114e-03, -5.4868571e-03, -1.2649748e-02, ...,
+         1.3104092e-03, -1.8691338e-03,  1.6320259e-03],
+       [-6.0183648e-03, -4.9164523e-03,  3.0082103e-03, ...,
+         1.7394881e-03,  9.1036235e-04, -1.2966867e-02],
+       [ 6.0863183e-03,  1.3509918e-03, -7.1913302e-03, ...,
+         3.9419280e-03,  2.9930705e-03,  3.4562423e-04],
        ...,
-       [-7.8628846e-03, -1.1485812e-02,  7.4715482e-04, ...,
-         1.1998281e-03,  7.5307540e-03, -8.6027188e-03],
-       [ 1.4327462e-04,  6.0678725e-03, -5.3206878e-04, ...,
-        -4.9874024e-03, -6.6318538e-04, -1.1999717e-02],
-       [-1.2285335e-03, -2.2397542e-03, -2.4725969e-03, ...,
-         3.6184441e-03, -6.7308000e-03, -5.8892500e-03]], dtype=float32)>
+       [-5.7978416e-04, -1.8325391e-03, -2.0467002e-04, ...,
+        -3.9534271e-03, -2.2688047e-04,  1.2577593e-03],
+       [ 2.4689233e-03, -3.6403039e-04,  7.7487719e-05, ...,
+         1.0208538e-03,  2.3937733e-03, -4.4873711e-03],
+       [ 2.6551904e-03, -1.8738948e-03, -1.9827935e-04, ...,
+        -3.3328766e-03,  1.0988748e-06,  1.4491909e-04]], dtype=float32)>
 
 ```
 </div>
@@ -284,7 +277,6 @@ class TemporalSplit(keras.layers.Layer):
 first_half, second_half = TemporalSplit()(masked_embedding)
 print(first_half._keras_mask)
 print(second_half._keras_mask)
-
 ```
 
 <div class="k-default-codeblock">
@@ -337,15 +329,14 @@ y = layer(x)
 mask = layer.compute_mask(x)
 
 print(mask)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ True  True  True  True  True  True  True False  True  True]
+[[ True  True  True  True  True  True  True  True  True  True]
  [ True  True  True  True  True  True  True  True  True  True]
- [ True  True  True False  True False  True  True False  True]], shape=(3, 10), dtype=bool)
+ [ True  True  True  True  True  True  True  True  True  True]], shape=(3, 10), dtype=bool)
 
 ```
 </div>
@@ -366,7 +357,6 @@ to be able to propagate the current input mask, you should set `self.supports_ma
 Here's an example of a layer that is whitelisted for mask propagation:
 
 
-
 ```python
 
 class MyActivation(keras.layers.Layer):
@@ -377,7 +367,6 @@ class MyActivation(keras.layers.Layer):
 
     def call(self, inputs):
         return tf.nn.relu(inputs)
-
 
 ```
 
@@ -394,7 +383,6 @@ print("Mask found:", x._keras_mask)
 outputs = layers.LSTM(32)(x)  # Will receive the mask
 
 model = keras.Model(inputs, outputs)
-
 ```
 
 <div class="k-default-codeblock">
@@ -434,7 +422,6 @@ outputs = TemporalSoftmax()(x)
 
 model = keras.Model(inputs, outputs)
 y = model(np.random.randint(0, 10, size=(32, 100)), np.random.random((32, 100, 1)))
-
 ```
 
 ---
@@ -454,4 +441,3 @@ automatically.
 manually.
 - You can easily write layers that modify the current mask, that generate a new mask,
 or that consume the mask associated with the inputs.
-

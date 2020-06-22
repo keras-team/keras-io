@@ -67,7 +67,8 @@ import random
 import shutil
 from pathlib import Path
 
-TIMEOUT = 2 * 60 * 60
+TIMEOUT = 60 * 60
+MAX_LOC = 300
 
 
 def nb_to_py(nb_path, py_path):
@@ -85,9 +86,7 @@ def nb_to_py(nb_path, py_path):
     for cell in nb["cells"]:
         if cell["cell_type"] == "code":
             # Is it a shell cell?
-            if (cell["source"] and
-                    cell["source"][0] and
-                    cell["source"][0][0] == "!"):
+            if cell["source"] and cell["source"][0] and cell["source"][0][0] == "!":
                 # It's a shell cell
                 py += '"""shell\n'
                 py += "".join(cell["source"]) + "\n"
@@ -124,6 +123,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
     header, _, py, tag = _get_next_script_element(py)
     attributes = _parse_header(header)
     cells = []
+    loc = 0
     # Write first header cell
     header_cell = {
         "cell_type": "markdown",
@@ -151,6 +151,8 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
         # Drop last newline char
         if source and not source[-1].strip():
             source = source[:-1]
+        if source:
+            source[-1] = source[-1].rstrip()
         if tag == "shell":
             source = ["!" + l for l in source]
             cell_type = "code"
@@ -160,6 +162,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
                 cell["outputs"] = []
                 cell["metadata"] = {"colab_type": "code"}
                 cell["execution_count"] = 0
+                loc += _count_locs(source)
             else:
                 cell["metadata"] = {"colab_type": "text"}
             cells.append(cell)
@@ -168,6 +171,11 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
         notebook[key] = NB_BASE[key]
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
     notebook["cells"] = cells
+    if loc > MAX_LOC:
+        raise ValueError(
+            "Found %d lines of code, but expected fewer than %d" % (loc, MAX_LOC)
+        )
+
     f = open(nb_path, "w")
     f.write(json.dumps(notebook, indent=1, sort_keys=True))
     f.close()
@@ -233,25 +241,38 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
         + " --ExecutePreprocessor.timeout="
         + str(TIMEOUT)
     )
-    tmp_img_dir = md_name + "_files"
-    if os.path.exists(tmp_img_dir):
-        for fname in os.listdir(tmp_img_dir):
-            if fname.endswith(img_exts):
-                src = Path(tmp_img_dir) / fname
-                target = Path(img_dir) / fname
-                print("copy", src, "to", target)
-                shutil.copyfile(src, target)
-    os.chdir(current_dir)
-    md_content = open(Path(working_dir) / (md_name + ".md")).read()
-    for ext in img_exts:
-        md_content = md_content.replace(
-            "![" + ext + "](" + md_name + "_files",
-            "![" + ext + "](" + original_img_dir + "/" + md_name,
-        )
-    md_content = _make_output_code_blocks(md_content)
-    open(md_path, "w").write(md_content)
+    if os.path.exists(md_name + ".md"):
+        success = True
+        tmp_img_dir = md_name + "_files"
+        if os.path.exists(tmp_img_dir):
+            for fname in os.listdir(tmp_img_dir):
+                if fname.endswith(img_exts):
+                    src = Path(tmp_img_dir) / fname
+                    target = Path(img_dir) / fname
+                    print("copy", src, "to", target)
+                    shutil.copyfile(src, target)
+
+        os.chdir(current_dir)
+        md_content = open(Path(working_dir) / (md_name + ".md")).read()
+        for ext in img_exts:
+            md_content = md_content.replace(
+                "![" + ext + "](" + md_name + "_files",
+                "![" + ext + "](" + original_img_dir + "/" + md_name,
+            )
+        md_content = _make_output_code_blocks(md_content)
+        open(md_path, "w").write(md_content)
+    else:
+        success = False
+        os.chdir(current_dir)
+
     if del_working_dir:
         shutil.rmtree(working_dir)
+
+    if not success:
+        raise RuntimeError(
+            "An error was encountered when attempting to run the notebook. "
+            "See logs for details."
+        )
 
 
 def py_to_md(py_path, nb_path, md_path, img_dir, working_dir=None):
@@ -313,6 +334,25 @@ def validate(py):
             "You python file did not follow `black` conventions. "
             "Run `black your_file.py` to autoformat it."
         )
+
+
+def _count_locs(lines):
+    loc = 0
+    string_open = False
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if not string_open:
+            if not line.startswith('"""'):
+                loc += 1
+            else:
+                if not line.endswith('"""'):
+                    string_open = True
+        else:
+            if line.startswith('"""'):
+                string_open = False
+    return loc
 
 
 def _shorten_lines(py):

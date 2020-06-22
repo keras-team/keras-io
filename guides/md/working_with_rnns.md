@@ -31,7 +31,6 @@ part of the `for` loop) with custom behavior, and use it with the generic
 `keras.layers.RNN` layer (the `for` loop itself). This allows you to quickly
 prototype different research ideas in a flexible way with minimal code.
 
-
 ---
 ## Setup
 
@@ -41,12 +40,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
 ## Built-in RNN layers: a simple example
-
 
 There are three built-in RNN layers in Keras:
 
@@ -80,7 +77,6 @@ model.add(layers.LSTM(128))
 model.add(layers.Dense(10))
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -139,7 +135,6 @@ model.add(layers.SimpleRNN(128))
 model.add(layers.Dense(10))
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -208,12 +203,11 @@ output = layers.Dense(10)(decoder_output)
 
 model = keras.Model([encoder_input, decoder_input], output)
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Model: "model"
+Model: "functional_1"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
 ==================================================================================================
@@ -268,7 +262,6 @@ layer.
 The cell abstraction, together with the generic `keras.layers.RNN` class, make it
 very easy to implement custom RNN architectures for your research.
 
-
 ---
 ## Cross-batch statefulness
 
@@ -318,7 +311,6 @@ number of samples (batch size). E.g. if a batch contains `[sequence_A_from_t0_to
 Here is a complete example:
 
 
-
 ```python
 paragraph1 = np.random.random((20, 10, 50)).astype(np.float32)
 paragraph2 = np.random.random((20, 10, 50)).astype(np.float32)
@@ -332,7 +324,6 @@ output = lstm_layer(paragraph3)
 # reset_states() will reset the cached state to the original initial_state.
 # If no initial_state was provided, zero-states will be used by default.
 lstm_layer.reset_states()
-
 
 ```
 
@@ -350,7 +341,6 @@ supports layers with single input and output, the extra input of initial state m
 it impossible to use here.
 
 
-
 ```python
 paragraph1 = np.random.random((20, 10, 50)).astype(np.float32)
 paragraph2 = np.random.random((20, 10, 50)).astype(np.float32)
@@ -364,7 +354,6 @@ existing_state = lstm_layer.states
 
 new_lstm_layer = layers.LSTM(64)
 new_output = new_lstm_layer(paragraph3, initial_state=existing_state)
-
 
 ```
 
@@ -390,7 +379,6 @@ model.add(layers.Bidirectional(layers.LSTM(32)))
 model.add(layers.Dense(10))
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -420,7 +408,7 @@ The output of the `Bidirectional` RNN will be, by default, the sum of the forwar
 output and the backward layer output. If you need a different merging behavior, e.g.
 concatenation, change the `merge_mode` parameter in the `Bidirectional` wrapper
 constructor. For more details about `Bidirectional`, please check
-[the API docs](https://keras.io/api/layers/recurrent_layers/Bidirectional/).
+[the API docs](https://keras.io/api/layers/recurrent_layers/bidirectional/).
 
 ---
 ## Performance optimization and CuDNN kernels
@@ -445,8 +433,8 @@ corresponds to strictly right padded data, CuDNN can still be used. This is the 
 common case).
 
 For the detailed list of constraints, please see the documentation for the
-[LSTM](https://keras.io/api/layers/recurrent_layers/LSTM/) and
-[GRU](https://keras.io/api/layers/recurrent_layers/GRU/) layers.
+[LSTM](https://keras.io/api/layers/recurrent_layers/lstm/) and
+[GRU](https://keras.io/api/layers/recurrent_layers/gru/) layers.
 
 ### Using CuDNN kernels when available
 
@@ -454,7 +442,6 @@ Let's build a simple LSTM model to demonstrate the performance difference.
 
 We'll use as input sequences the sequence of rows of MNIST digits (treating each row of
 pixels as a timestep), and we'll predict the digit's label.
-
 
 
 ```python
@@ -488,7 +475,6 @@ def build_model(allow_cudnn_kernel=True):
     )
     return model
 
-
 ```
 
 Let's load the MNIST dataset:
@@ -500,7 +486,6 @@ mnist = keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train, x_test = x_train / 255.0, x_test / 255.0
 sample, sample_label = x_train[0], y_train[0]
-
 ```
 
 Let's create a model instance and train it.
@@ -523,14 +508,13 @@ model.compile(
 model.fit(
     x_train, y_train, validation_data=(x_test, y_test), batch_size=batch_size, epochs=1
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 10ms/step - loss: 0.9223 - accuracy: 0.7080 - val_loss: 0.5150 - val_accuracy: 0.8319
+938/938 [==============================] - 10s 11ms/step - loss: 0.9792 - accuracy: 0.6869 - val_loss: 0.5196 - val_accuracy: 0.8427
 
-<tensorflow.python.keras.callbacks.History at 0x16e18da90>
+<tensorflow.python.keras.callbacks.History at 0x17c82e2d0>
 
 ```
 </div>
@@ -548,14 +532,13 @@ noncudnn_model.compile(
 noncudnn_model.fit(
     x_train, y_train, validation_data=(x_test, y_test), batch_size=batch_size, epochs=1
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 11s 12ms/step - loss: 0.3512 - accuracy: 0.8960 - val_loss: 0.3156 - val_accuracy: 0.8976
+938/938 [==============================] - 10s 11ms/step - loss: 0.3900 - accuracy: 0.8843 - val_loss: 0.4477 - val_accuracy: 0.8426
 
-<tensorflow.python.keras.callbacks.History at 0x179bb72d0>
+<tensorflow.python.keras.callbacks.History at 0x17cef54d0>
 
 ```
 </div>
@@ -582,7 +565,6 @@ with tf.device("CPU:0"):
         "Predicted result is: %s, target result is: %s" % (result.numpy(), sample_label)
     )
     plt.imshow(sample, cmap=plt.get_cmap("gray"))
-
 ```
 
 <div class="k-default-codeblock">
@@ -611,7 +593,6 @@ representation could be:
 
 The following code provides an example of how to build a custom RNN cell that accepts
 such structured inputs.
-
 
 ### Define a custom cell that support nested input/output
 
@@ -664,7 +645,6 @@ class NestedCell(keras.layers.Layer):
     def get_config(self):
         return {"unit_1": self.unit_1, "unit_2": unit_2, "unit_3": self.unit_3}
 
-
 ```
 
 ### Build a RNN model with nested input/output
@@ -696,7 +676,6 @@ outputs = rnn((input_1, input_2))
 model = keras.models.Model([input_1, input_2], outputs)
 
 model.compile(optimizer="adam", loss="mse", metrics=["accuracy"])
-
 ```
 
 ### Train the model with randomly generated data
@@ -714,14 +693,13 @@ input_data = [input_1_data, input_2_data]
 target_data = [target_1_data, target_2_data]
 
 model.fit(input_data, target_data, batch_size=batch_size)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 2s 227ms/step - loss: 0.7864 - rnn_1_loss: 0.3061 - rnn_1_1_loss: 0.4803 - rnn_1_accuracy: 0.1109 - rnn_1_1_accuracy: 0.0344
+10/10 [==============================] - 2s 222ms/step - loss: 0.7225 - rnn_1_loss: 0.2545 - rnn_1_1_loss: 0.4679 - rnn_1_accuracy: 0.1094 - rnn_1_1_accuracy: 0.0349
 
-<tensorflow.python.keras.callbacks.History at 0x187e32b50>
+<tensorflow.python.keras.callbacks.History at 0x18b14b650>
 
 ```
 </div>
@@ -730,4 +708,4 @@ logic for individual step within the sequence, and the `keras.layers.RNN` layer
 will handle the sequence iteration for you. It's an incredibly powerful way to quickly
 prototype new kinds of RNNs (e.g. a LSTM variant).
 
-For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/RNN/).
+For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/rnn/).
