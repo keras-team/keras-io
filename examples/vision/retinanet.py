@@ -21,7 +21,7 @@ import tensorflow_datasets as tfds
 """
 
 url = "https://github.com/srihari-humbarwadi/datasets/releases/download/v0.1.0/data.zip"
-filename = os.path.join(os.getcwd(), "shapes_tfrecords.zip")
+filename = os.path.join(os.getcwd(), "data.zip")
 tf.keras.utils.get_file(filename, url, extract=True, archive_format="zip")
 
 
