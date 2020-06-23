@@ -1,8 +1,8 @@
 # Deep Q-Learning for Atari Breakout
 
-**Author:** [Jacob Chapman](https://twitter.com/jacoblchapman)<br>
+**Author:** [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner](https://twitter.com/MLech20)<br>
 **Date created:** 2020/05/23<br>
-**Last modified:** 2020/05/23<br>
+**Last modified:** 2020/06/17<br>
 **Description:** Play Atari Breakout with a Deep Q-Network.
 
 
@@ -46,10 +46,8 @@ million frames which are processed in less than 24 hours on a modern machine.
 - [Q-Learning](https://link.springer.com/content/pdf/10.1007/BF00992698.pdf)
 - [Deep Q-Learning](https://deepmind.com/research/publications/human-level-control-through-deep-reinforcement-learning)
 
-
 ---
 ## Setup
-
 
 
 ```python
@@ -83,42 +81,44 @@ env.seed(seed)
 ## Implement the Deep Q-Network
 
 This network learns an approximation of the Q-table, which is a mapping between
-the states and actions that an agent will take. For every state we'll have two
+the states and actions that an agent will take. For every state we'll have four
 actions, that can be taken. The environment provides the state, and the action
-is chosen by selecting the larger of the two Q-values predicted in the output layer.
-
+is chosen by selecting the larger of the four Q-values predicted in the output layer.
 
 
 ```python
 num_actions = 4
 
-# Network defined by the Deepmind paper
-inputs = layers.Input(shape=(84, 84, 4,))
 
-# Convolutions on the frames on the screen
-layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
-layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
-layer3 = layers.Conv2D(64, 3, strides=1, activation="relu")(layer2)
+def create_q_model():
+    # Network defined by the Deepmind paper
+    inputs = layers.Input(shape=(84, 84, 4,))
 
-layer4 = layers.Flatten()(layer3)
+    # Convolutions on the frames on the screen
+    layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
+    layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
+    layer3 = layers.Conv2D(64, 3, strides=1, activation="relu")(layer2)
 
-layer5 = layers.Dense(512, activation="relu")(layer4)
-action = layers.Dense(num_actions, activation="linear")(layer5)
+    layer4 = layers.Flatten()(layer3)
+
+    layer5 = layers.Dense(512, activation="relu")(layer4)
+    action = layers.Dense(num_actions, activation="linear")(layer5)
+
+    return keras.Model(inputs=inputs, outputs=action)
+
 
 # The first model makes the predictions for Q-values which are used to
 # make a action.
-model = keras.Model(inputs=inputs, outputs=action)
+model = create_q_model()
 # Build a target model for the prediction of future rewards.
 # The weights of a target model get updated every 10000 steps thus when the
 # loss between the Q-values is calculated the target Q-value is stable.
-model_target = keras.Model(inputs=inputs, outputs=action)
-
+model_target = create_q_model()
 
 ```
 
 ---
 ## Train
-
 
 
 ```python
@@ -147,6 +147,8 @@ max_memory_length = 100000
 update_after_actions = 4
 # How often to update the target network
 update_target_network = 10000
+# Using huber loss for stability
+loss_function = keras.losses.Huber()
 
 while True:  # Run until solved
     state = np.array(env.reset())
@@ -224,14 +226,13 @@ while True:  # Run until solved
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
                 # Calculate loss between new Q-value and old Q-value
-                # Clip the deltas using huber loss for stability
-                loss = keras.losses.huber(updated_q_values, q_action)
+                loss = loss_function(updated_q_values, q_action)
 
             # Backpropagation
             grads = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
-        if frame_count % 10000 == 0:
+        if frame_count % update_target_network == 0:
             # update the the target network with new weights
             model_target.set_weights(model.get_weights())
             # Log details
@@ -265,6 +266,9 @@ while True:  # Run until solved
 
 ---
 ## Visualizations
+Before any training:
+![Imgur](https://i.imgur.com/rRxXF4H.gif)
+
 In early stages of training:
 ![Imgur](https://i.imgur.com/X8ghdpL.gif)
 

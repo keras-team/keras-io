@@ -73,13 +73,13 @@ TF_BUTTONS_TEMPLATE = {
         '    <a target="_blank" href="https://www.tensorflow.org/guide/keras/TARGET_NAME"><img src="https://www.tensorflow.org/images/tf_logo_32px.png" />View on TensorFlow.org</a>\n',
         "  </td>\n",
         "  <td>\n",
-        '    <a target="_blank" href="https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/guide/keras/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png" />Run in Google Colab</a>\n',
+        '    <a target="_blank" href="https://colab.research.google.com/github/keras-team/keras-io/blob/master/tf/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png" />Run in Google Colab</a>\n',
         "  </td>\n",
         "  <td>\n",
         '    <a target="_blank" href="https://github.com/keras-team/keras-io/blob/master/guides/SOURCE_NAME.py"><img src="https://www.tensorflow.org/images/GitHub-Mark-32px.png" />View source on GitHub</a>\n',
         "  </td>\n",
         "  <td>\n",
-        '    <a href="https://storage.googleapis.com/tensorflow_docs/docs/site/en/guide/keras/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/download_logo_32px.png" />Download notebook</a>\n',
+        '    <a href="https://storage.googleapis.com/tensorflow_docs/keras-io/tf/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/download_logo_32px.png" />Download notebook</a>\n',
         "  </td>\n",
         "</table>",
     ],
@@ -136,9 +136,8 @@ TF_IPYNB_BASE = {
 
 
 def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_name):
-    f = open(Path(source_dir) / (source_name + ".ipynb"))
-    original_ipynb = json.loads(f.read())
-    f.close()
+    nb = (Path(source_dir) / source_name).with_suffix(".ipynb")
+    original_ipynb = json.loads(nb.read_text())
 
     # Skip first title cell
     cells = original_ipynb["cells"][1:]
@@ -164,6 +163,13 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
             if len(lines) < 2:
                 new_lines.append(lines[-1])
             cell["source"] = new_lines
+        elif cell["cell_type"] == "code":
+          lines = cell["source"]
+          if not lines[0].strip():
+            lines = lines[1:]
+          if not lines[-1].strip():
+            lines = lines[:-1]
+          cell["source"] = lines
 
     # Add header cells
     header_cells = copy.deepcopy(TF_IPYNB_CELLS_TEMPLATE)
@@ -242,6 +248,7 @@ def random_id():
 
 
 def generate_tf_guides():
+    random.seed(1337)
     for entry in CONFIG:
         generate_single_tf_guide(
             source_dir="../guides/ipynb/",
