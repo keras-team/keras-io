@@ -21,7 +21,7 @@ in the developer guides.
 ## Setup
 """
 
-
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -34,9 +34,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-seed = 1234
-np.random.seed(seed)
-tf.random.set_seed(seed)
 
 """
 ## Load the data: [Captcha Images](https://www.kaggle.com/fournierp/captcha-version-2-images)
@@ -52,11 +49,11 @@ tar -zxf captcha_images.tar.gz
 
 """
 The dataset contains 1070 captcha files as png images. The label for each sample is the
-name of the file (excluding the '.png' part). We will load the data as numpy arrays. The label
-for each sample is a string. We will map each character in the string to a number for training
-the model. Similary, we would be required to map the predictions of the model back to string.
-For this purpose would maintain two dictionary mapping characters to numbers and numbers to
-characters respectively.
+name of the file (excluding the '.png' part). The label for each sample is a string.
+We will map each character in the string to a number for training the model. Similary,
+we would be required to map the predictions of the model back to string. For this purpose
+would maintain two dictionary mapping characters to numbers and numbers to characters
+respectively.
 """
 
 
@@ -66,12 +63,7 @@ data_dir = Path("./captcha_images/samples/")
 # Get list of all the images
 images = sorted(list(map(str, list(data_dir.glob("*.png")))))
 labels = [img.split(os.path.sep)[-1].split(".png")[0] for img in images]
-characters = set()
-
-
-for label in labels:
-    for char in label:
-        characters.add(char)
+characters = set(char for label in labels for char in label)
 
 print("Number of images found: ", len(images))
 print("Number of labels found: ", len(labels))
@@ -93,7 +85,7 @@ img_height = 50
 downsample_factor = 4
 
 # Maximum length of any captcha in the dataset
-max_length = 5
+max_length = max([len(label) for label in labels])
 
 
 """
@@ -112,17 +104,16 @@ num_to_char = layers.experimental.preprocessing.StringLookup(
 )
 
 # Splitting data into training and validation sets
-X_train, X_valid, y_train, y_valid = train_test_split(
-    np.array(images), np.array(labels), test_size=0.1, random_state=seed, shuffle=True
+x_train, x_valid, y_train, y_valid = train_test_split(
+    np.array(images), np.array(labels), test_size=0.1, shuffle=True
 )
 
 
 def encode_single_sample(img_path, label):
     # 1. Read image
     img = tf.io.read_file(img_path)
-    img = tf.io.decode_png(img, channels=3)
-    # 2. Convert to grayscale
-    img = tf.image.rgb_to_grayscale(img)
+    # 2. Decode and convert to grayscale
+    img = tf.io.decode_png(img, channels=1)
     # 3. Convert to float32 in [0, 1] range
     img = tf.image.convert_image_dtype(img, tf.float32)
     # 4. Resize to the desired size
@@ -132,7 +123,7 @@ def encode_single_sample(img_path, label):
     # 6. Map the characters in label to numbers
     label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
     # 7. Return a dict as our model is expecting two inputs
-    return {"input_image": img, "input_label": label}
+    return {"image": img, "label": label}
 
 
 """
@@ -140,7 +131,7 @@ def encode_single_sample(img_path, label):
 """
 
 
-train_data_generator = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+train_data_generator = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_data_generator = (
     train_data_generator.map(
         encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
@@ -149,7 +140,7 @@ train_data_generator = (
     .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 )
 
-valid_data_generator = tf.data.Dataset.from_tensor_slices((X_valid, y_valid))
+valid_data_generator = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
 valid_data_generator = (
     valid_data_generator.map(
         encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
@@ -165,8 +156,8 @@ valid_data_generator = (
 
 _, ax = plt.subplots(4, 4, figsize=(10, 5))
 for batch in train_data_generator.take(1):
-    images = batch["input_image"]
-    labels = batch["input_label"]
+    images = batch["image"]
+    labels = batch["label"]
     for i in range(16):
         img = (images[i] * 255).numpy().astype("uint8")
         label = tf.strings.reduce_join(num_to_char(labels[i])).numpy().decode("utf-8")
@@ -205,9 +196,9 @@ class CTCLayer(layers.Layer):
 def build_model():
     # Inputs to the model
     input_img = layers.Input(
-        shape=(img_width, img_height, 1), name="input_image", dtype="float32"
+        shape=(img_width, img_height, 1), name="image", dtype="float32"
     )
-    labels = layers.Input(name="input_label", shape=(None,), dtype="float32")
+    labels = layers.Input(name="label", shape=(None,), dtype="float32")
 
     # First conv block
     x = layers.Conv2D(
@@ -270,16 +261,18 @@ print(model.summary())
 """
 
 
+epochs = 60
+es_patience = 10
 # Add early stopping
 es = keras.callbacks.EarlyStopping(
-    monitor="val_loss", patience=10, restore_best_weights=True
+    monitor="val_loss", patience=es_patience, restore_best_weights=True
 )
 
 # Train the model
 history = model.fit(
     train_data_generator,
     validation_data=valid_data_generator,
-    epochs=35,
+    epochs=epochs,
     callbacks=[es],
 )
 
@@ -290,8 +283,8 @@ history = model.fit(
 
 
 # Get the prediction model by extracting layers till the output layer
-pprediction_model = keras.models.Model(
-    model.get_layer(name="input_image").input, model.get_layer(name="dense2").output
+prediction_model = keras.models.Model(
+    model.get_layer(name="image").input, model.get_layer(name="dense2").output
 )
 print(prediction_model.summary())
 
@@ -312,20 +305,20 @@ def decode_batch_predictions(pred):
 
 #  Let's check results on some validation samples
 for batch in valid_data_generator.take(1):
-    X_data = batch["input_image"]
-    labels = batch["input_label"]
+    batch_images = batch["image"]
+    batch_labels = batch["label"]
 
-    preds = prediction_model.predict(X_data)
+    preds = prediction_model.predict(batch_images)
     pred_texts = decode_batch_predictions(preds)
 
     orig_texts = []
-    for label in labels:
+    for label in batch_labels:
         label = tf.strings.reduce_join(num_to_char(label)).numpy().decode("utf-8")
         orig_texts.append(label)
 
     _, ax = plt.subplots(4, 4, figsize=(15, 5))
     for i in range(len(pred_texts)):
-        img = (X_data[i, :, :, 0] * 255).numpy().astype(np.uint8)
+        img = (batch_images[i, :, :, 0] * 255).numpy().astype(np.uint8)
         img = img.T
         title = f"Prediction: {pred_texts[i]}"
         ax[i // 4, i % 4].imshow(img, cmap="gray")
