@@ -23,16 +23,6 @@ Recommendations:
 [Reference TF implementation](https://github.com/NVlabs/stylegan2)
 
 
-## End-to-end OCR [in progress]
-
-[Old Keras example](https://github.com/keras-team/keras/blob/master/examples/image_ocr.py)
-
-Recommendations:
-
-- Use CTC loss
-- Can use either Transformer model or recurrent model (whichever works best)
-
-
 
 ## Improve next-frame prediction with ConvLSTM
 
