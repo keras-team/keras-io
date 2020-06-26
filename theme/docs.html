@@ -11,6 +11,19 @@
               document.getElementById("dropdown-nav").style.display = "block";
             }
           }
+
+          function resetMobileUI() {
+            if (window.innerWidth <= 840) {
+              document.getElementById("nav-menu").style.display = "none";
+              document.getElementById("dropdown-nav").style.display = "block";
+            }
+            else {
+              document.getElementById("nav-menu").style.display = "block";
+              document.getElementById("dropdown-nav").style.display = "none";
+            }
+          }
+
+          window.onresize = resetMobileUI;
         </script>
         <div id='dropdown-nav' onclick="displayDropdownMenu();">
           <svg viewBox="-20 -20 120 120" width="60" height="60">

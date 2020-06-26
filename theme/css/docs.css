@@ -102,7 +102,7 @@ blockquote {
 @media screen and (max-width: 840px) {
   .k-page {
     width: 100%;
-    min-width: 440px;
+    min-width: 375px;
   }
   .k-nav {
     display: none;
