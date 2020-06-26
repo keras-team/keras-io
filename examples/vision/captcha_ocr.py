@@ -23,12 +23,10 @@ in the developer guides.
 
 import os
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 from pathlib import Path
 from collections import Counter
-from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 from tensorflow import keras
@@ -42,13 +40,13 @@ Let's download the data.
 
 
 """shell
-curl -LO https://github.com/AakashKumarNain/CaptchaCracker/raw/master/captcha_images.tar.gz
-tar -zxf captcha_images.tar.gz
+curl -LO https://github.com/AakashKumarNain/CaptchaCracker/raw/master/captcha_images_v2.zip
+unzip -qq captcha_images_v2.zip
 """
 
 
 """
-The dataset contains 1070 captcha files as png images. The label for each sample is the
+The dataset contains 1040 captcha files as png images. The label for each sample is the
 name of the file (excluding the '.png' part). The label for each sample is a string.
 We will map each character in the string to a number for training the model. Similary,
 we would be required to map the predictions of the model back to string. For this purpose
@@ -58,7 +56,7 @@ respectively.
 
 
 # Path to the data directory
-data_dir = Path("./captcha_images/samples/")
+data_dir = Path("./captcha_images_v2/")
 
 # Get list of all the images
 images = sorted(list(map(str, list(data_dir.glob("*.png")))))
@@ -93,7 +91,7 @@ max_length = max([len(label) for label in labels])
 """
 
 
-## Mapping characters to numbers
+# Mapping characters to numbers
 char_to_num = layers.experimental.preprocessing.StringLookup(
     vocabulary=list(characters), num_oov_indices=0, mask_token=None
 )
@@ -103,10 +101,24 @@ num_to_char = layers.experimental.preprocessing.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
 
+
+def split_data(images, labels, train_size=0.9, shuffle=True):
+    # 1. Get the total size of the dataset
+    size = len(images)
+    # 2. Make an indices array and shuffle it, if required
+    indices = np.arange(size)
+    if shuffle:
+        np.random.shuffle(indices)
+    # 3. Get the size of training samples
+    train_samples = int(size * train_size)
+    # 4. Split data into training and validation sets
+    x_train, y_train = images[indices[:train_samples]], labels[indices[:train_samples]]
+    x_valid, y_valid = images[indices[train_samples:]], labels[indices[train_samples:]]
+    return x_train, x_valid, y_train, y_valid
+
+
 # Splitting data into training and validation sets
-x_train, x_valid, y_train, y_valid = train_test_split(
-    np.array(images), np.array(labels), test_size=0.1, shuffle=True
-)
+x_train, x_valid, y_train, y_valid = split_data(np.array(images), np.array(labels))
 
 
 def encode_single_sample(img_path, label):
@@ -118,7 +130,8 @@ def encode_single_sample(img_path, label):
     img = tf.image.convert_image_dtype(img, tf.float32)
     # 4. Resize to the desired size
     img = tf.image.resize(img, [img_height, img_width])
-    # 5. Transpose the image
+    # 5. Transpose the image because we want the time
+    # dimension to correspond to the width of the image.
     img = tf.transpose(img, perm=[1, 0, 2])
     # 6. Map the characters in label to numbers
     label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
@@ -254,14 +267,14 @@ def build_model():
 
 # Get the model
 model = build_model()
-print(model.summary())
+model.summary()
 
 """
 ## Training
 """
 
 
-epochs = 60
+epochs = 100
 es_patience = 10
 # Add early stopping
 es = keras.callbacks.EarlyStopping(
@@ -286,7 +299,7 @@ history = model.fit(
 prediction_model = keras.models.Model(
     model.get_layer(name="image").input, model.get_layer(name="dense2").output
 )
-print(prediction_model.summary())
+prediction_model.summary()
 
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):
