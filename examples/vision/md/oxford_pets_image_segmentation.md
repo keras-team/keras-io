@@ -100,7 +100,7 @@ from PIL import ImageOps
 # Display input image #7
 display(Image(filename=input_img_paths[9]))
 
-# Display auto-constrast version of corresponding target (per-pixel categories)
+# Display auto-contrast version of corresponding target (per-pixel categories)
 img = PIL.ImageOps.autocontrast(load_img(target_img_paths[9]))
 display(img)
 
