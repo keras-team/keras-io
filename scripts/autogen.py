@@ -514,6 +514,8 @@ class KerasIO:
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
+        all_urls_list = []
+
         if os.path.exists(self.site_dir):
             print("Clearing", self.site_dir)
             shutil.rmtree(self.site_dir)
@@ -542,6 +544,7 @@ class KerasIO:
                     # Render as index.html
                     target_path = Path(target_dir) / "index.html"
                     relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
+                    relative_url = relative_url.replace('//', '/')
                 else:
                     # Render as fname_no_ext/index.tml
                     fname_no_ext = ".".join(fname.split(".")[:-1])
@@ -591,6 +594,7 @@ class KerasIO:
                     }
                 )
                 save_file(target_path, html_page)
+                all_urls_list.append('https://keras.io' + relative_url)
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -634,6 +638,8 @@ class KerasIO:
 
         # Tutobooks
         self.sync_tutobook_media()
+        sitemap = '\n'.join(all_urls_list) + '\n'
+        save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
     def make(self):
         self.make_md_sources()
