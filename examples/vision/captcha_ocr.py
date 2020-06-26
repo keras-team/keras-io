@@ -1,5 +1,5 @@
 """
-Title: OCR model for reading captcha
+Title: OCR model for reading Captchas
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/14
 Last modified: 2020/06/26

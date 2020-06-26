@@ -1,4 +1,4 @@
-# OCR model for reading captcha
+# OCR model for reading Captchas
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
 **Date created:** 2020/06/14<br>
