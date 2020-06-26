@@ -2,18 +2,18 @@
 Title: OCR model for reading captcha
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/14
-Last modified: 2020/06/14
+Last modified: 2020/06/26
 Description: How to implement an OCR model using CNNs, RNNs and CTC loss.
 """
 
 """
 ## Introduction
 
-This example demonstrates a simple OCR model using Functional API. Apart from
+This example demonstrates a simple OCR model built with the Functional API. Apart from
 combining CNN and RNN, it also illustrates how you can instantiate a new layer
-and use it as an `Endpoint` layer for implementing CTC loss. For a detailed
-description on layer subclassing, please check out this
-[example](https://keras.io/guides/making_new_layers_and_models_via_subclassing/#the-addmetric-method)
+and use it as an "Endpoint layer" for implementing CTC loss. For a detailed
+guide to layer subclassing, please check out
+[this page](https://keras.io/guides/making_new_layers_and_models_via_subclassing/
 in the developer guides.
 """
 
@@ -46,11 +46,11 @@ unzip -qq captcha_images_v2.zip
 
 
 """
-The dataset contains 1040 captcha files as png images. The label for each sample is the
-name of the file (excluding the '.png' part). The label for each sample is a string.
-We will map each character in the string to a number for training the model. Similary,
-we would be required to map the predictions of the model back to string. For this purpose
-would maintain two dictionary mapping characters to numbers and numbers to characters
+The dataset contains 1040 captcha files as `png` images. The label for each sample is a string,
+the name of the file (minus the file extension).
+We will map each character in the string to an integer for training the model. Similary,
+we will need to map the predictions of the model back to strings. For this purpose
+we will maintain two dictionaries, mapping characters to integers, and integers to characters,
 respectively.
 """
 
@@ -75,9 +75,9 @@ batch_size = 16
 img_width = 200
 img_height = 50
 
-# Factor  by which the image is going to be downsampled
+# Factor by which the image is going to be downsampled
 # by the convolutional blocks. We will be using two
-# convolution blocks and each convolution block will have
+# convolution blocks and each block will have
 # a pooling layer which downsample the features by a factor of 2.
 # Hence total downsampling factor would be 4.
 downsample_factor = 4
@@ -91,12 +91,12 @@ max_length = max([len(label) for label in labels])
 """
 
 
-# Mapping characters to numbers
+# Mapping characters to integers
 char_to_num = layers.experimental.preprocessing.StringLookup(
     vocabulary=list(characters), num_oov_indices=0, mask_token=None
 )
 
-# Mapping numbers back to original characters
+# Mapping integers back to original characters
 num_to_char = layers.experimental.preprocessing.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
@@ -140,22 +140,22 @@ def encode_single_sample(img_path, label):
 
 
 """
-## Data Generators
+## Create `Dataset` objects
 """
 
 
-train_data_generator = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_data_generator = (
-    train_data_generator.map(
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = (
+    train_dataset.map(
         encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
     .batch(batch_size)
     .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 )
 
-valid_data_generator = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
-valid_data_generator = (
-    valid_data_generator.map(
+validation_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
+validation_dataset = (
+    validation_dataset.map(
         encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
     .batch(batch_size)
@@ -168,7 +168,7 @@ valid_data_generator = (
 
 
 _, ax = plt.subplots(4, 4, figsize=(10, 5))
-for batch in train_data_generator.take(1):
+for batch in train_dataset.take(1):
     images = batch["image"]
     labels = batch["label"]
     for i in range(16):
@@ -202,7 +202,7 @@ class CTCLayer(layers.Layer):
         loss = self.loss_fn(y_true, y_pred, input_length, label_length)
         self.add_loss(loss)
 
-        # On test time, just return the computed loss
+        # At test time, just return the computed predictions
         return y_pred
 
 
@@ -235,17 +235,17 @@ def build_model():
     )(x)
     x = layers.MaxPooling2D((2, 2), name="pool2")(x)
 
-    # We have used two max pool with pool size and strides of 2.
+    # We have used two max pool with pool size and strides 2.
     # Hence, downsampled feature maps are 4x smaller. The number of
     # filters in the last layer is 64. Reshape accordingly before
-    # passing it to RNNs
+    # passing the output to the RNN part of the model
     new_shape = ((img_width // 4), (img_height // 4) * 64)
     x = layers.Reshape(target_shape=new_shape, name="reshape")(x)
     x = layers.Dense(64, activation="relu", name="dense1")(x)
     x = layers.Dropout(0.2)(x)
 
     # RNNs
-    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True, dropout=0.2))(x)
+    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True, dropout=0.25))(x)
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=True, dropout=0.25))(x)
 
     # Output layer
@@ -275,23 +275,23 @@ model.summary()
 
 
 epochs = 100
-es_patience = 10
+early_stopping_patience = 10
 # Add early stopping
-es = keras.callbacks.EarlyStopping(
-    monitor="val_loss", patience=es_patience, restore_best_weights=True
+early_stopping = keras.callbacks.EarlyStopping(
+    monitor="val_loss", patience=early_stopping_patience, restore_best_weights=True
 )
 
 # Train the model
 history = model.fit(
-    train_data_generator,
-    validation_data=valid_data_generator,
+    train_dataset,
+    validation_data=validation_dataset,
     epochs=epochs,
-    callbacks=[es],
+    callbacks=[early_stopping],
 )
 
 
 """
-## Let's test-drive it
+## Inference
 """
 
 
@@ -317,7 +317,7 @@ def decode_batch_predictions(pred):
 
 
 #  Let's check results on some validation samples
-for batch in valid_data_generator.take(1):
+for batch in validation_dataset.take(1):
     batch_images = batch["image"]
     batch_labels = batch["label"]
 
