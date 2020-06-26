@@ -13,7 +13,7 @@ This example demonstrates a simple OCR model built with the Functional API. Apar
 combining CNN and RNN, it also illustrates how you can instantiate a new layer
 and use it as an "Endpoint layer" for implementing CTC loss. For a detailed
 guide to layer subclassing, please check out
-[this page](https://keras.io/guides/making_new_layers_and_models_via_subclassing/
+[this page](https://keras.io/guides/making_new_layers_and_models_via_subclassing/)
 in the developer guides.
 """
 
