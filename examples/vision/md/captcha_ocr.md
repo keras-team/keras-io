@@ -2,7 +2,7 @@
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
 **Date created:** 2020/06/14<br>
-**Last modified:** 2020/06/14<br>
+**Last modified:** 2020/06/26<br>
 **Description:** How to implement an OCR model using CNNs, RNNs and CTC loss.
 
 
@@ -13,11 +13,11 @@
 ---
 ## Introduction
 
-This example demonstrates a simple OCR model using Functional API. Apart from
+This example demonstrates a simple OCR model built with the Functional API. Apart from
 combining CNN and RNN, it also illustrates how you can instantiate a new layer
-and use it as an `Endpoint` layer for implementing CTC loss. For a detailed
-description on layer subclassing, please check out this
-[example](https://keras.io/guides/making_new_layers_and_models_via_subclassing/#the-addmetric-method)
+and use it as an "Endpoint layer" for implementing CTC loss. For a detailed
+guide to layer subclassing, please check out
+[this page](https://keras.io/guides/making_new_layers_and_models_via_subclassing/
 in the developer guides.
 
 ---
@@ -52,16 +52,16 @@ Let's download the data.
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   159  100   159    0     0    200      0 --:--:-- --:--:-- --:--:--   200
-100 8863k  100 8863k    0     0  7620k      0  0:00:01  0:00:01 --:--:-- 7620k
+100   159  100   159    0     0    164      0 --:--:-- --:--:-- --:--:--   164
+100 8863k  100 8863k    0     0  4882k      0  0:00:01  0:00:01 --:--:-- 33.0M
 
 ```
 </div>
-The dataset contains 1040 captcha files as png images. The label for each sample is the
-name of the file (excluding the '.png' part). The label for each sample is a string.
-We will map each character in the string to a number for training the model. Similary,
-we would be required to map the predictions of the model back to string. For this purpose
-would maintain two dictionary mapping characters to numbers and numbers to characters
+The dataset contains 1040 captcha files as `png` images. The label for each sample is a string,
+the name of the file (minus the file extension).
+We will map each character in the string to an integer for training the model. Similary,
+we will need to map the predictions of the model back to strings. For this purpose
+we will maintain two dictionaries, mapping characters to integers, and integers to characters,
 respectively.
 
 
@@ -87,9 +87,9 @@ batch_size = 16
 img_width = 200
 img_height = 50
 
-# Factor  by which the image is going to be downsampled
+# Factor by which the image is going to be downsampled
 # by the convolutional blocks. We will be using two
-# convolution blocks and each convolution block will have
+# convolution blocks and each block will have
 # a pooling layer which downsample the features by a factor of 2.
 # Hence total downsampling factor would be 4.
 downsample_factor = 4
@@ -104,7 +104,7 @@ max_length = max([len(label) for label in labels])
 Number of images found:  1040
 Number of labels found:  1040
 Number of unique characters:  19
-Characters present:  {'7', 'y', 'd', '8', 'f', 'b', '5', 'c', '6', 'p', 'x', '4', '3', 'n', 'w', 'e', '2', 'm', 'g'}
+Characters present:  {'d', 'w', 'y', '4', 'f', '6', 'g', 'e', '3', '5', 'p', 'x', '2', 'c', '7', 'n', 'b', '8', 'm'}
 
 ```
 </div>
@@ -114,12 +114,12 @@ Characters present:  {'7', 'y', 'd', '8', 'f', 'b', '5', 'c', '6', 'p', 'x', '4'
 
 ```python
 
-# Mapping characters to numbers
+# Mapping characters to integers
 char_to_num = layers.experimental.preprocessing.StringLookup(
     vocabulary=list(characters), num_oov_indices=0, mask_token=None
 )
 
-# Mapping numbers back to original characters
+# Mapping integers back to original characters
 num_to_char = layers.experimental.preprocessing.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
@@ -164,23 +164,23 @@ def encode_single_sample(img_path, label):
 ```
 
 ---
-## Data Generators
+## Create `Dataset` objects
 
 
 ```python
 
-train_data_generator = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_data_generator = (
-    train_data_generator.map(
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = (
+    train_dataset.map(
         encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
     .batch(batch_size)
     .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 )
 
-valid_data_generator = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
-valid_data_generator = (
-    valid_data_generator.map(
+validation_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
+validation_dataset = (
+    validation_dataset.map(
         encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
     .batch(batch_size)
@@ -195,7 +195,7 @@ valid_data_generator = (
 ```python
 
 _, ax = plt.subplots(4, 4, figsize=(10, 5))
-for batch in train_data_generator.take(1):
+for batch in train_dataset.take(1):
     images = batch["image"]
     labels = batch["label"]
     for i in range(16):
@@ -235,7 +235,7 @@ class CTCLayer(layers.Layer):
         loss = self.loss_fn(y_true, y_pred, input_length, label_length)
         self.add_loss(loss)
 
-        # On test time, just return the computed loss
+        # At test time, just return the computed predictions
         return y_pred
 
 
@@ -268,17 +268,17 @@ def build_model():
     )(x)
     x = layers.MaxPooling2D((2, 2), name="pool2")(x)
 
-    # We have used two max pool with pool size and strides of 2.
+    # We have used two max pool with pool size and strides 2.
     # Hence, downsampled feature maps are 4x smaller. The number of
     # filters in the last layer is 64. Reshape accordingly before
-    # passing it to RNNs
+    # passing the output to the RNN part of the model
     new_shape = ((img_width // 4), (img_height // 4) * 64)
     x = layers.Reshape(target_shape=new_shape, name="reshape")(x)
     x = layers.Dense(64, activation="relu", name="dense1")(x)
     x = layers.Dropout(0.2)(x)
 
     # RNNs
-    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True, dropout=0.2))(x)
+    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True, dropout=0.25))(x)
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=True, dropout=0.25))(x)
 
     # Output layer
@@ -350,18 +350,18 @@ ________________________________________________________________________________
 ```python
 
 epochs = 100
-es_patience = 10
+early_stopping_patience = 10
 # Add early stopping
-es = keras.callbacks.EarlyStopping(
-    monitor="val_loss", patience=es_patience, restore_best_weights=True
+early_stopping = keras.callbacks.EarlyStopping(
+    monitor="val_loss", patience=early_stopping_patience, restore_best_weights=True
 )
 
 # Train the model
 history = model.fit(
-    train_data_generator,
-    validation_data=valid_data_generator,
+    train_dataset,
+    validation_data=validation_dataset,
     epochs=epochs,
-    callbacks=[es],
+    callbacks=[early_stopping],
 )
 
 ```
@@ -369,198 +369,210 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-59/59 [==============================] - 3s 55ms/step - loss: 20.4639 - val_loss: 16.4358
+59/59 [==============================] - 3s 53ms/step - loss: 21.5722 - val_loss: 16.3351
 Epoch 2/100
-59/59 [==============================] - 1s 24ms/step - loss: 16.3280 - val_loss: 16.4349
+59/59 [==============================] - 2s 27ms/step - loss: 16.3335 - val_loss: 16.3062
 Epoch 3/100
-59/59 [==============================] - 1s 25ms/step - loss: 16.3248 - val_loss: 16.4418
+59/59 [==============================] - 2s 27ms/step - loss: 16.3360 - val_loss: 16.3116
 Epoch 4/100
-59/59 [==============================] - 1s 25ms/step - loss: 16.3218 - val_loss: 16.4366
+59/59 [==============================] - 2s 27ms/step - loss: 16.3318 - val_loss: 16.3167
 Epoch 5/100
-59/59 [==============================] - 1s 24ms/step - loss: 16.3030 - val_loss: 16.4514
+59/59 [==============================] - 2s 27ms/step - loss: 16.3256 - val_loss: 16.3152
 Epoch 6/100
-59/59 [==============================] - 1s 24ms/step - loss: 16.2960 - val_loss: 16.3997
+59/59 [==============================] - 2s 29ms/step - loss: 16.3229 - val_loss: 16.3123
 Epoch 7/100
-59/59 [==============================] - 1s 24ms/step - loss: 16.2485 - val_loss: 16.3081
+59/59 [==============================] - 2s 30ms/step - loss: 16.3119 - val_loss: 16.3116
 Epoch 8/100
-59/59 [==============================] - 1s 25ms/step - loss: 16.1381 - val_loss: 16.0589
+59/59 [==============================] - 2s 27ms/step - loss: 16.2977 - val_loss: 16.3107
 Epoch 9/100
-59/59 [==============================] - 1s 24ms/step - loss: 15.8330 - val_loss: 15.6132
+59/59 [==============================] - 2s 28ms/step - loss: 16.2801 - val_loss: 16.2552
 Epoch 10/100
-59/59 [==============================] - 1s 24ms/step - loss: 15.3101 - val_loss: 14.6895
+59/59 [==============================] - 2s 28ms/step - loss: 16.2199 - val_loss: 16.1008
 Epoch 11/100
-59/59 [==============================] - 1s 24ms/step - loss: 13.2795 - val_loss: 10.7522
+59/59 [==============================] - 2s 28ms/step - loss: 16.1136 - val_loss: 15.9867
 Epoch 12/100
-59/59 [==============================] - 1s 25ms/step - loss: 9.2077 - val_loss: 5.4861
+59/59 [==============================] - 2s 30ms/step - loss: 16.0138 - val_loss: 15.8825
 Epoch 13/100
-59/59 [==============================] - 1s 25ms/step - loss: 4.8549 - val_loss: 2.0471
+59/59 [==============================] - 2s 29ms/step - loss: 15.9670 - val_loss: 15.8413
 Epoch 14/100
-59/59 [==============================] - 1s 25ms/step - loss: 2.3248 - val_loss: 0.8337
+59/59 [==============================] - 2s 29ms/step - loss: 15.9315 - val_loss: 15.8263
 Epoch 15/100
-59/59 [==============================] - 1s 24ms/step - loss: 1.4187 - val_loss: 0.5065
+59/59 [==============================] - 2s 31ms/step - loss: 15.9162 - val_loss: 15.7971
 Epoch 16/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.9633 - val_loss: 0.2598
+59/59 [==============================] - 2s 31ms/step - loss: 15.8916 - val_loss: 15.7844
 Epoch 17/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.6201 - val_loss: 0.1746
+59/59 [==============================] - 2s 31ms/step - loss: 15.8653 - val_loss: 15.7624
 Epoch 18/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.4828 - val_loss: 0.1050
+59/59 [==============================] - 2s 31ms/step - loss: 15.8543 - val_loss: 15.7620
 Epoch 19/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.3048 - val_loss: 0.0673
+59/59 [==============================] - 2s 28ms/step - loss: 15.8373 - val_loss: 15.7559
 Epoch 20/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.2504 - val_loss: 0.0470
+59/59 [==============================] - 2s 27ms/step - loss: 15.8319 - val_loss: 15.7495
 Epoch 21/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.2388 - val_loss: 0.0555
+59/59 [==============================] - 2s 27ms/step - loss: 15.8104 - val_loss: 15.7430
 Epoch 22/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1876 - val_loss: 0.0682
+59/59 [==============================] - 2s 29ms/step - loss: 15.8037 - val_loss: 15.7260
 Epoch 23/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1102 - val_loss: 0.0401
+59/59 [==============================] - 2s 29ms/step - loss: 15.8021 - val_loss: 15.7204
 Epoch 24/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.1279 - val_loss: 0.0243
+59/59 [==============================] - 2s 28ms/step - loss: 15.7901 - val_loss: 15.7174
 Epoch 25/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1413 - val_loss: 0.0503
+59/59 [==============================] - 2s 29ms/step - loss: 15.7851 - val_loss: 15.7074
 Epoch 26/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.1357 - val_loss: 0.0238
+59/59 [==============================] - 2s 27ms/step - loss: 15.7701 - val_loss: 15.7097
 Epoch 27/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1380 - val_loss: 0.0140
+59/59 [==============================] - 2s 28ms/step - loss: 15.7694 - val_loss: 15.7040
 Epoch 28/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1004 - val_loss: 0.0411
+59/59 [==============================] - 2s 28ms/step - loss: 15.7544 - val_loss: 15.7012
 Epoch 29/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1259 - val_loss: 0.0149
+59/59 [==============================] - 2s 31ms/step - loss: 15.7498 - val_loss: 15.7015
 Epoch 30/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0818 - val_loss: 0.0147
+59/59 [==============================] - 2s 31ms/step - loss: 15.7521 - val_loss: 15.6880
 Epoch 31/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0746 - val_loss: 0.0104
+59/59 [==============================] - 2s 29ms/step - loss: 15.7165 - val_loss: 15.6734
 Epoch 32/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1260 - val_loss: 0.0179
+59/59 [==============================] - 2s 27ms/step - loss: 15.6650 - val_loss: 15.5789
 Epoch 33/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1045 - val_loss: 0.0396
+59/59 [==============================] - 2s 27ms/step - loss: 15.5300 - val_loss: 15.4026
 Epoch 34/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0610 - val_loss: 0.0111
+59/59 [==============================] - 2s 27ms/step - loss: 15.3519 - val_loss: 15.2115
 Epoch 35/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0750 - val_loss: 0.0233
+59/59 [==============================] - 2s 27ms/step - loss: 15.1165 - val_loss: 14.7826
 Epoch 36/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0863 - val_loss: 0.0101
+59/59 [==============================] - 2s 27ms/step - loss: 14.7086 - val_loss: 14.4432
 Epoch 37/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0737 - val_loss: 0.0139
+59/59 [==============================] - 2s 29ms/step - loss: 14.3317 - val_loss: 13.9445
 Epoch 38/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0677 - val_loss: 0.0078
+59/59 [==============================] - 2s 29ms/step - loss: 13.9658 - val_loss: 13.6972
 Epoch 39/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0402 - val_loss: 0.0069
+59/59 [==============================] - 2s 29ms/step - loss: 13.6728 - val_loss: 13.3388
 Epoch 40/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0490 - val_loss: 0.0249
+59/59 [==============================] - 2s 28ms/step - loss: 13.3454 - val_loss: 13.0102
 Epoch 41/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0673 - val_loss: 0.0072
+59/59 [==============================] - 2s 27ms/step - loss: 13.0448 - val_loss: 12.8307
 Epoch 42/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0841 - val_loss: 0.0054
+59/59 [==============================] - 2s 28ms/step - loss: 12.7552 - val_loss: 12.6071
 Epoch 43/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0796 - val_loss: 0.0073
+59/59 [==============================] - 2s 29ms/step - loss: 12.4573 - val_loss: 12.2800
 Epoch 44/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0408 - val_loss: 0.0055
+59/59 [==============================] - 2s 31ms/step - loss: 12.1055 - val_loss: 11.9209
 Epoch 45/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0458 - val_loss: 0.0047
+59/59 [==============================] - 2s 28ms/step - loss: 11.8148 - val_loss: 11.9132
 Epoch 46/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0395 - val_loss: 0.0054
+59/59 [==============================] - 2s 28ms/step - loss: 11.4530 - val_loss: 11.4357
 Epoch 47/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0254 - val_loss: 0.0043
+59/59 [==============================] - 2s 29ms/step - loss: 11.0592 - val_loss: 11.1121
 Epoch 48/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0585 - val_loss: 0.0275
+59/59 [==============================] - 2s 27ms/step - loss: 10.7746 - val_loss: 10.8532
 Epoch 49/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0770 - val_loss: 0.0306
+59/59 [==============================] - 2s 28ms/step - loss: 10.2616 - val_loss: 10.3643
 Epoch 50/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0826 - val_loss: 0.0077
+59/59 [==============================] - 2s 28ms/step - loss: 9.8708 - val_loss: 10.0987
 Epoch 51/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0242 - val_loss: 0.0037
+59/59 [==============================] - 2s 30ms/step - loss: 9.4077 - val_loss: 9.6371
 Epoch 52/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0392 - val_loss: 0.0036
+59/59 [==============================] - 2s 29ms/step - loss: 9.0663 - val_loss: 9.2463
 Epoch 53/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1234 - val_loss: 0.0045
+59/59 [==============================] - 2s 28ms/step - loss: 8.4546 - val_loss: 8.7581
 Epoch 54/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0679 - val_loss: 0.0233
+59/59 [==============================] - 2s 28ms/step - loss: 7.9226 - val_loss: 8.1805
 Epoch 55/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0438 - val_loss: 0.0040
+59/59 [==============================] - 2s 27ms/step - loss: 7.4927 - val_loss: 7.8858
 Epoch 56/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0558 - val_loss: 0.0040
+59/59 [==============================] - 2s 28ms/step - loss: 7.0499 - val_loss: 7.3202
 Epoch 57/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0328 - val_loss: 0.0027
+59/59 [==============================] - 2s 27ms/step - loss: 6.6383 - val_loss: 7.0875
 Epoch 58/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0418 - val_loss: 0.0048
+59/59 [==============================] - 2s 28ms/step - loss: 6.1446 - val_loss: 6.9619
 Epoch 59/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0324 - val_loss: 0.0021
+59/59 [==============================] - 2s 28ms/step - loss: 5.8533 - val_loss: 6.3855
 Epoch 60/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0189 - val_loss: 0.0036
+59/59 [==============================] - 2s 28ms/step - loss: 5.5107 - val_loss: 5.9797
 Epoch 61/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0448 - val_loss: 0.0042
+59/59 [==============================] - 2s 31ms/step - loss: 5.1181 - val_loss: 5.7549
 Epoch 62/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0203 - val_loss: 0.0025
+59/59 [==============================] - 2s 31ms/step - loss: 4.6952 - val_loss: 5.5488
 Epoch 63/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0838 - val_loss: 0.0998
+59/59 [==============================] - 2s 29ms/step - loss: 4.4189 - val_loss: 5.3030
 Epoch 64/100
-59/59 [==============================] - 1s 25ms/step - loss: 0.0507 - val_loss: 0.0028
+59/59 [==============================] - 2s 28ms/step - loss: 4.1358 - val_loss: 5.1772
 Epoch 65/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0499 - val_loss: 0.0020
+59/59 [==============================] - 2s 28ms/step - loss: 3.8560 - val_loss: 5.1071
 Epoch 66/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0123 - val_loss: 0.0044
+59/59 [==============================] - 2s 28ms/step - loss: 3.5342 - val_loss: 4.6958
 Epoch 67/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0339 - val_loss: 0.0026
+59/59 [==============================] - 2s 28ms/step - loss: 3.3336 - val_loss: 4.5865
 Epoch 68/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0175 - val_loss: 0.0020
+59/59 [==============================] - 2s 27ms/step - loss: 3.0925 - val_loss: 4.3647
 Epoch 69/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0134 - val_loss: 0.0016
+59/59 [==============================] - 2s 28ms/step - loss: 2.8751 - val_loss: 4.3005
 Epoch 70/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0651 - val_loss: 0.0029
+59/59 [==============================] - 2s 27ms/step - loss: 2.7444 - val_loss: 4.0820
 Epoch 71/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0357 - val_loss: 0.0017
+59/59 [==============================] - 2s 27ms/step - loss: 2.5921 - val_loss: 4.1694
 Epoch 72/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0074 - val_loss: 0.0015
+59/59 [==============================] - 2s 28ms/step - loss: 2.3246 - val_loss: 3.9142
 Epoch 73/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0512 - val_loss: 0.0020
+59/59 [==============================] - 2s 28ms/step - loss: 2.0769 - val_loss: 3.9135
 Epoch 74/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0293 - val_loss: 0.0017
+59/59 [==============================] - 2s 29ms/step - loss: 2.0872 - val_loss: 3.9808
 Epoch 75/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0201 - val_loss: 0.0021
+59/59 [==============================] - 2s 29ms/step - loss: 1.9498 - val_loss: 3.9935
 Epoch 76/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0155 - val_loss: 0.0022
+59/59 [==============================] - 2s 28ms/step - loss: 1.8178 - val_loss: 3.7735
 Epoch 77/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.1752 - val_loss: 0.0062
+59/59 [==============================] - 2s 29ms/step - loss: 1.7661 - val_loss: 3.6309
 Epoch 78/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0369 - val_loss: 0.0022
+59/59 [==============================] - 2s 31ms/step - loss: 1.6236 - val_loss: 3.7410
 Epoch 79/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0332 - val_loss: 0.0015
+59/59 [==============================] - 2s 29ms/step - loss: 1.4652 - val_loss: 3.6756
 Epoch 80/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0104 - val_loss: 0.0024
+59/59 [==============================] - 2s 27ms/step - loss: 1.3552 - val_loss: 3.4979
 Epoch 81/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0089 - val_loss: 0.0011
+59/59 [==============================] - 2s 29ms/step - loss: 1.2655 - val_loss: 3.5306
 Epoch 82/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0124 - val_loss: 0.0043
+59/59 [==============================] - 2s 29ms/step - loss: 1.2632 - val_loss: 3.2885
 Epoch 83/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0293 - val_loss: 0.0030
+59/59 [==============================] - 2s 28ms/step - loss: 1.2316 - val_loss: 3.2482
 Epoch 84/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0186 - val_loss: 9.2171e-04
+59/59 [==============================] - 2s 30ms/step - loss: 1.1260 - val_loss: 3.4285
 Epoch 85/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0366 - val_loss: 0.0021
+59/59 [==============================] - 2s 28ms/step - loss: 1.0745 - val_loss: 3.2985
 Epoch 86/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0218 - val_loss: 0.0012
+59/59 [==============================] - 2s 29ms/step - loss: 1.0133 - val_loss: 3.2209
 Epoch 87/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0159 - val_loss: 0.0011
+59/59 [==============================] - 2s 31ms/step - loss: 0.9417 - val_loss: 3.2203
 Epoch 88/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0125 - val_loss: 9.5702e-04
+59/59 [==============================] - 2s 28ms/step - loss: 0.9104 - val_loss: 3.1121
 Epoch 89/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0372 - val_loss: 9.8982e-04
+59/59 [==============================] - 2s 30ms/step - loss: 0.8516 - val_loss: 3.2070
 Epoch 90/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0517 - val_loss: 0.0025
+59/59 [==============================] - 2s 28ms/step - loss: 0.8275 - val_loss: 3.0335
 Epoch 91/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0327 - val_loss: 0.0026
+59/59 [==============================] - 2s 28ms/step - loss: 0.8056 - val_loss: 3.2085
 Epoch 92/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0401 - val_loss: 0.0013
+59/59 [==============================] - 2s 28ms/step - loss: 0.7373 - val_loss: 3.0326
 Epoch 93/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0279 - val_loss: 0.0266
+59/59 [==============================] - 2s 28ms/step - loss: 0.7753 - val_loss: 2.9935
 Epoch 94/100
-59/59 [==============================] - 1s 24ms/step - loss: 0.0300 - val_loss: 0.0011
+59/59 [==============================] - 2s 28ms/step - loss: 0.7688 - val_loss: 2.9940
+Epoch 95/100
+59/59 [==============================] - 2s 27ms/step - loss: 0.6765 - val_loss: 3.0432
+Epoch 96/100
+59/59 [==============================] - 2s 29ms/step - loss: 0.6674 - val_loss: 3.1233
+Epoch 97/100
+59/59 [==============================] - 2s 29ms/step - loss: 0.6018 - val_loss: 2.8405
+Epoch 98/100
+59/59 [==============================] - 2s 28ms/step - loss: 0.6322 - val_loss: 2.8323
+Epoch 99/100
+59/59 [==============================] - 2s 29ms/step - loss: 0.5889 - val_loss: 2.8786
+Epoch 100/100
+59/59 [==============================] - 2s 28ms/step - loss: 0.5616 - val_loss: 2.9697
 
 ```
 </div>
 ---
-## Let's test-drive it
+## Inference
 
 
 ```python
@@ -587,7 +599,7 @@ def decode_batch_predictions(pred):
 
 
 #  Let's check results on some validation samples
-for batch in valid_data_generator.take(1):
+for batch in validation_dataset.take(1):
     batch_images = batch["image"]
     batch_labels = batch["label"]
 
@@ -642,7 +654,7 @@ Total params: 432,596
 Trainable params: 432,596
 Non-trainable params: 0
 _________________________________________________________________
-WARNING:tensorflow:From /home/nainaakash012/miniconda3/envs/tfnightly/lib/python3.7/site-packages/tensorflow/python/util/dispatch.py:201: sparse_to_dense (from tensorflow.python.ops.sparse_ops) is deprecated and will be removed in a future version.
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/tensorflow/python/util/dispatch.py:201: sparse_to_dense (from tensorflow.python.ops.sparse_ops) is deprecated and will be removed in a future version.
 Instructions for updating:
 Create a `tf.sparse.SparseTensor` and use `tf.sparse.to_dense` instead.
 
