@@ -543,7 +543,7 @@ extracted_features = feat_extraction_model(img)
 
 """
 This comes in handy for tasks like
-[neural style transfer](https://www.tensorflow.org/tutorials/generative/style_transfer),
+[neural style transfer](https://keras.io/examples/generative/neural_style_transfer/),
 among other things.
 """
 
