@@ -654,9 +654,6 @@ Total params: 432,596
 Trainable params: 432,596
 Non-trainable params: 0
 _________________________________________________________________
-WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/tensorflow/python/util/dispatch.py:201: sparse_to_dense (from tensorflow.python.ops.sparse_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Create a `tf.sparse.SparseTensor` and use `tf.sparse.to_dense` instead.
 
 ```
 </div>
