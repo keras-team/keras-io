@@ -68,27 +68,12 @@ blockquote {
   border-right: 1px solid #ccc;
   float: left;
   border-bottom: 1px solid #ccc;
+  display: block;
 }
 .k-main {
   width: 47rem;
   background: #fff;
   float: left;
-}
-.k-main-inner {
-  /*float: left;*/
-}
-.k-content img {
-  max-width: 90%;
-}
-.k-main-top {
-  float: left;
-  border-bottom: 1px solid #ccc;
-  background-color: white;
-}
-.k-location-slug {
-  width: 100%;
-  padding: 1rem;
-  border-top: 1px solid #ccc;
 }
 .k-content {
   width: 47rem;
@@ -96,12 +81,66 @@ blockquote {
   padding: 1.5rem;
   padding-top: 1rem;
 }
+.k-search-form {
+  width: 100%;
+  padding: 1rem;
+}
+#dropdown-nav {
+  display: none;
+}
 @media screen and (max-width: 1342px) {
+  .k-nav {
+    width: 16rem;
+  }
+}
+@media screen and (max-width: 1300px) {
     .k-outline {
         width: 0;
         display: none !important;
     }
 }
+@media screen and (max-width: 840px) {
+  .k-page {
+    width: 100%;
+    min-width: 440px;
+  }
+  .k-nav {
+    display: none;
+    position: fixed;
+    top: 62px;
+    left: 0;
+    width: 17rem;
+    background: white;
+    overflow-y: scroll;
+    bottom: 0;
+  }
+  #dropdown-nav {
+    display: block;
+    width: 70px;
+    float: left;
+    cursor: pointer;
+  }
+  .k-search-form {
+    width: 80%;
+  }
+  .k-main {
+    width: 100%;
+  }
+  .k-main-inner {
+    margin-top: 60px;
+  }
+  .k-main-top {
+    position: fixed;
+    background: white;
+    min-width: 357px;
+  }
+  .k-content {
+    width: 100%;
+    padding: 2%;
+    padding-top: 1%;
+  }
+}
+
 .k-outline {
   position: fixed;
   width: 18rem;
@@ -111,6 +150,25 @@ blockquote {
   margin-top: 7.25rem;
   border-top: 1px solid #ccc;
 }
+
+
+.k-content img {
+  max-width: 90%;
+}
+.k-main-top {
+  float: left;
+  width: 100%;
+  border-bottom: 1px solid #ccc;
+  background-color: white;
+}
+.k-location-slug {
+  width: 100%;
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
+  float: left;
+}
+
+
 .k-inline-icon {
   height: 1rem;
   padding-right: 0.5rem;
@@ -120,10 +178,6 @@ blockquote {
   padding-right: 1rem;
 }
 
-.k-search-form {
-  width: 47rem;
-  padding: 1rem;
-}
 .k-search-btn {
   margin-left: 0.8rem;
   border-color: #000000;
