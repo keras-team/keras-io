@@ -23,7 +23,7 @@ as your first introduction to core Keras API concepts.
 
 In this guide, you will learn about:
 
-- How to prepare you data before training a model (by turning it into either NumPy
+- How to prepare your data before training a model (by turning it into either NumPy
  arrays or `tf.data.Dataset` objects).
 - How to do data preprocessing, for instance feature normalization or vocabulary
  indexing.
@@ -52,7 +52,7 @@ At the end of this guide, you will get pointers to end-to-end examples to solidi
 Neural networks don't process raw data, like text files, encoded JPEG image files, or
  CSV files. They process **vectorized** & **standardized** representations.
 
-- Text files needs to be read into string tensors, then split into words. Finally, the
+- Text files need to be read into string tensors, then split into words. Finally, the
  words need to be indexed & turned into integer tensors.
 - Images need to be read and decoded into integer tensors, then converted to floating
  point and normalized to small values (usually between 0 and 1).
@@ -190,7 +190,7 @@ In Keras, you do in-model data preprocessing via **preprocessing layers**. This
 - Feature normalization via the `Normalization` layer
 - Image rescaling, cropping, or image data augmentation
 
-The key advatange of using Keras preprocessing layers is that **they can be included
+The key advantage of using Keras preprocessing layers is that **they can be included
  directly into your model**, either during training or after training,
 which makes your models portable.
 
@@ -199,7 +199,7 @@ Some preprocessing layers have a state:
 - `TextVectorization` holds an index mapping words or tokens to integer indices
 - `Normalization` holds the mean and variance of your features
 
-The state of a preprocessing layers is obtained by calling `layer.adapt(data)` on a
+The state of a preprocessing layer is obtained by calling `layer.adapt(data)` on a
  sample of the training data (or all of it).
 
 
@@ -364,8 +364,8 @@ print(processed_data.shape)
 You can print a summary of how your data gets transformed at each stage of the model.
  This is useful for debugging.
 
-Note that the output shape displayed for each layers includes the **batch size**. Here
- the batch size is None, which indicates our model can process batchs of any size.
+Note that the output shape displayed for each layer includes the **batch size**. Here
+ the batch size is None, which indicates our model can process batches of any size.
 """
 
 model.summary()
@@ -475,7 +475,7 @@ For a detailed overview of how to use `fit()`, see the
 """
 ### Keeping track of performance metrics
 
-As you're training a model, you want to keep of track of metrics such as classification
+As you're training a model, you want to keep track of metrics such as classification
 accuracy, precision, recall, AUC, etc. Besides, you want to monitor these metrics not
  only on the training data, but also on a validation set.
 
@@ -784,7 +784,7 @@ between the two setups. When training on GPU, however, doing asynchronous buffer
 preprocessing on the host CPU while the GPU is running the model itself can result in
  a significant speedup.
 
-After training, if you to export an end-to-end model that includes the preprocessing
+After training, if you want to export an end-to-end model that includes the preprocessing
  layer(s), this is easy to do, since `TextVectorization` is a layer:
 
 ```python

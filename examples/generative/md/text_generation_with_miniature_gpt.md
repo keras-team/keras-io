@@ -177,10 +177,10 @@ Two seperate embedding layers, one for tokens, one for token index (positions).
 ```python
 
 class TokenAndPositionEmbedding(layers.Layer):
-    def __init__(self, maxlen, vocab_size, emded_dim):
+    def __init__(self, maxlen, vocab_size, embed_dim):
         super(TokenAndPositionEmbedding, self).__init__()
-        self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=emded_dim)
-        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=emded_dim)
+        self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
+        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
     def call(self, x):
         maxlen = tf.shape(x)[-1]
@@ -411,7 +411,7 @@ generated text:
 this movie is the best of the funniest and i have seen , and have ever seen in this movie . i don 't know it just to watch the show . but i don 't like this movie for those movies that they
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 5.0624 - dense_6_loss: 5.0624
@@ -420,7 +420,7 @@ generated text:
 this movie is not a good drama . it is not the only thing about the way . the story is very basic but is not just so much as a kid i think it was a bit more than i have the chance
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 4.4791 - dense_6_loss: 4.4791
@@ -429,7 +429,7 @@ generated text:
 this movie is the first movie it makes you wonder if you were going to watch and again . i can 't imagine how bad i felt like this , this movie wasn 't bad . i was expecting it a lot , but
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 4.2813 - dense_6_loss: 4.2813
@@ -438,7 +438,7 @@ generated text:
 this movie is the first time capsule of all time . i think i would like to say this is a good movie . it was very entertaining because it was a lot more interesting . it was not a good movie , and
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 4.1470 - dense_6_loss: 4.1470
@@ -447,7 +447,7 @@ generated text:
 this movie is a wonderful family film . it is a beautiful movie . it is an example of how a man who is a good movie that i have to do . but it is really the best way to watch . it
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 4.0431 - dense_6_loss: 4.0431
@@ -456,7 +456,7 @@ generated text:
 this movie is very different than that it is very entertaining in it . but it is also an interesting plot , it 's very interesting to the end of wwii and the war . the story is also [UNK] " is a true
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.9584 - dense_6_loss: 3.9584
@@ -465,7 +465,7 @@ generated text:
 this movie is a good movie . it isn 't scary , but that is a movie with lots of blood . it 's a very good horror movie but it has a good time , but the plot of the movie is good
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.8868 - dense_6_loss: 3.8868
@@ -474,7 +474,7 @@ generated text:
 this movie is a great movie that has the plot . the acting is good . i have seen some bad movies from my list ! but this one is so bad that it has to be so bad i can watch it over
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.8246 - dense_6_loss: 3.8246
@@ -483,7 +483,7 @@ generated text:
 this movie is a good one and the most amazing thing i 've ever seen . the movie was good , and i was so excited that it wasn 't . i didn 't get much . there were some good actors in this
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.7712 - dense_6_loss: 3.7712
@@ -492,7 +492,7 @@ generated text:
 this movie is a bit boring in a long way . i 've never heard of seeing such bad acting in this movie . i was just too long and boring . the music is awful , and the story , the story is
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.7230 - dense_6_loss: 3.7230
@@ -501,7 +501,7 @@ generated text:
 this movie is a terrible movie , but it has its elements of [UNK] " and is [UNK] . . i 'm a big fan of this movie , i am a big fan of horror movies , but it is not scary at
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.6805 - dense_6_loss: 3.6805
@@ -510,7 +510,7 @@ generated text:
 this movie is an absolute abomination . i don 't understand why it was a comedy , the characters , and i can 't believe it was meant to be , and it was a great comedy . there is something good . .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.6424 - dense_6_loss: 3.6424
@@ -519,7 +519,7 @@ generated text:
 this movie is a lot of fun watching the movie in its [UNK] -ness " . i was surprised to see a very good movie . it was a bit long , but it didn 't come across as good as the film .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.6081 - dense_6_loss: 3.6081
@@ -528,7 +528,7 @@ generated text:
 this movie is about a man who is a [UNK] , and he does in an old house with the spirits of [UNK] and the dead . i 'm not kidding , the plot has a [UNK] of old man , the woman is
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.5760 - dense_6_loss: 3.5760
@@ -537,7 +537,7 @@ generated text:
 this movie is one of the most beautiful films of all time . it is one of the greatest movies ever created , and in the wilderness . this movie was made by a beautiful young woman who finds her way out her .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.5473 - dense_6_loss: 3.5473
@@ -546,7 +546,7 @@ generated text:
 this movie is really bad , and it is so terrible . it 's hard to make a movie and a whole lot better than i watched , but this wasn 't a bad movie , but it 's pretty damn good . i
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.5210 - dense_6_loss: 3.5210
@@ -555,7 +555,7 @@ generated text:
 this movie is great ! ! i am a big fan of [UNK] . i don 't like this movie because i don 't think i can 't think of it , but it 's got me wrong and i 'm not sure why
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.4966 - dense_6_loss: 3.4966
@@ -564,7 +564,7 @@ generated text:
 this movie is one of those awful movies that is one of the few [UNK] films that were the [UNK] . there is no real story , a young girl with a young girl , who 's been kidnapped by an evil witch .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.4731 - dense_6_loss: 3.4731
@@ -573,7 +573,7 @@ generated text:
 this movie is one of the greatest movies i have ever watched . i watched it . the movie is so funny , it is very good . it is a great movie with a great acting in this movie , and i loved
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.4519 - dense_6_loss: 3.4519
@@ -582,7 +582,7 @@ generated text:
 this movie is a pretty interesting , the characters are very good . the story line is so good and the plot is good as the main character of a good [UNK] [UNK] ) is a bit of [UNK] [UNK] for the first time
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.4321 - dense_6_loss: 3.4321
@@ -591,7 +591,7 @@ generated text:
 this movie is not the worst movie ever . there is no emotion . this movie starts out on one of the most boring movies ever made . it doesn 't even come close to the conclusion of the director 's character [UNK] .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.4133 - dense_6_loss: 3.4133
@@ -600,7 +600,7 @@ generated text:
 this movie is just plain awful . it 's just awful . it doesn 't have a shred of good dialogue . there isn 't enough action and the actors are good . the movie is just plain awful . the acting is bad
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3956 - dense_6_loss: 3.3956
@@ -609,7 +609,7 @@ generated text:
 this movie is very bad , if i 'm not sure what the makers hoped it was going to be . i was expecting it to be a bad movie . it was terrible and i was expecting that the actors had a great
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3791 - dense_6_loss: 3.3791
@@ -618,7 +618,7 @@ generated text:
 this movie is very entertaining to see . i am a big fan of the [UNK] " . it was also a very good movie for the first time , and for the [UNK] " [UNK] ' , and i 'm not really sure
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3636 - dense_6_loss: 3.3636
@@ -627,7 +627,7 @@ generated text:
 this movie is a great movie and its a good one . the only thing in those movies that are really great , it is not a great movie , but this is a great movie . . it is not that bad .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3490 - dense_6_loss: 3.3490
@@ -636,7 +636,7 @@ generated text:
 this movie is great to see , but it is a great movie . this is the story of juliette lewis character and is a woman . her acting is so good . she doesn 't want to see how many times she gets
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3342 - dense_6_loss: 3.3342
@@ -645,7 +645,7 @@ generated text:
 this movie is very good , i have read a review for the fact that it was very good ! i am a christian [UNK] fan , and i must say that i am not a huge fan of the bible code of the
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3215 - dense_6_loss: 3.3215
@@ -654,7 +654,7 @@ generated text:
 this movie is really a great film , and it was really good . the story is about a girl named gerda and kai falling asleep . this one is a very well done and the rest of the cast is well written .
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.3086 - dense_6_loss: 3.3086
@@ -663,7 +663,7 @@ generated text:
 this movie is one of the best movies ever to win best movie ever and it is the first movie i ever saw . it was a very good movie . it 's really a lot of laughs and it 's funny . it
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.2968 - dense_6_loss: 3.2968
@@ -672,7 +672,7 @@ generated text:
 this movie is very interesting . i have no idea how the movie is . it 's just a little boring , confusing and pointless characters . it is also a good movie . i like the characters in the movie . i am
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 1563/1563 - 146s - loss: 3.2849 - dense_6_loss: 3.2849

@@ -165,11 +165,6 @@ MASTER = {
                                     'title': 'InverseTimeDecay',
                                     'generate': ['tensorflow.keras.optimizers.schedules.InverseTimeDecay']
                                 },
-                                {
-                                    'path': 'exponential_decay',
-                                    'title': 'ExponentialDecay',
-                                    'generate': ['tensorflow.keras.optimizers.schedules.ExponentialDecay']
-                                },
                             ]
                         },
                     ]
