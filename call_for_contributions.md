@@ -43,3 +43,8 @@ Recommendations:
 ## Speech recognition
 
 [Example TF2/Keras implementation](https://github.com/rolczynski/Automatic-Speech-Recognition)
+
+
+## Learning to rank
+
+[Reference Kaggle competition](https://www.kaggle.com/c/wm-2017-learning-to-rank)
