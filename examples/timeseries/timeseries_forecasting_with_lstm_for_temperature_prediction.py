@@ -27,6 +27,7 @@ from matplotlib import pyplot as plt
 from tensorflow import keras
 from tensorflow.keras import layers
 
+import os
 import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
@@ -42,7 +43,9 @@ and date/ month features. The simplicity of this dataset allows us to
 demonstrate the time series use case of LSTM effectively.
 """
 
-! wget https://gist.githubusercontent.com/falaktheoptimist/de854aa32393600bfedd38d35419124e/raw/15fa2f9431910fddb74aecf6dd562db80425979a/austin_weather.csv
+os.system(
+    "wget https://gist.githubusercontent.com/falaktheoptimist/de854aa32393600bfedd38d35419124e/raw/15fa2f9431910fddb74aecf6dd562db80425979a/austin_weather.csv"
+)
 
 # Load the data
 df = pd.read_csv("austin_weather.csv")
