@@ -3,24 +3,33 @@ Title: Speaker Recognition Using a Convolutional Network
 Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 14/06/2020
 Last modified: 28/06/2020
-Description: A CNN to classify speakers using Fast Fourier Transformation.
+Description: Classify speakers using Fast Fourier Transform (FFT) and a 1D Convnet.
 """
 """
 ## Introduction
 
-This example demostrates how to create a model to classify speakers based on the
-transformation of their speech into the frequency domain using Fast Fourier
-Transformation.
+This example demonstrates how to create a model to classify speakers from the
+frequency domain representation of speech recordings, obtained via Fast Fourier
+Transform (FFT).
 
 It shows the following:
-- How to use tf.data to load, preprocess and feed audio stream into the model
-- How to create a convolutional model using Conv1D and Max1Pool along with residual
-connections.
+
+- How to use `tf.data` to load, preprocess and feed audio streams into a model
+- How to create a 1D convolutional network with residual
+connections for audio classification.
+
+Our process:
+
+- We prepare a dataset of speech samples from different speakers, with the speaker as label.
+- We add background noise to these samples to augment our data.
+- We take the FFT of these samples.
+- We train a 1D convnet to predict the correct speaker given a noisy FFT speech sample.
 
 Note:
-- This example should be run with `TensorFlow 2.3` or higher, or `tf-nightly`.
-- The noise samples in the dataset need to be resampled to a sampling rate of 16000
-before using the code in this example
+
+- This example should be run with TensorFlow 2.3 or higher, or `tf-nightly`.
+- The noise samples in the dataset need to be resampled to a sampling rate of 16000 Hz
+before using the code in this example.
 """
 
 """
@@ -36,12 +45,11 @@ from tensorflow import keras
 
 from IPython.display import display, Audio
 
-# Where the dataset is located
 # Get the data from https://www.kaggle.com/kongaevans/speaker-recognition-dataset/download
-# and save them into folder 'Downloads' in your HOME directory
+# and save it to the 'Downloads' folder in your HOME directory
 DATASET_ROOT = os.path.join(os.path.expanduser("~"), "Downloads/16000_pcm_speeches")
 
-# The folders to which we will put both the audio samples and the noise samples
+# The folders in which we will put the audio samples and the noise samples
 AUDIO_SUBFOLDER = "audio"
 NOISE_SUBFOLDER = "noise"
 
@@ -82,15 +90,15 @@ EPOCHS = 100
 
 
 def index_directory(directory, formats, shuffle=True, seed=SHUFFLE_SEED):
-    """
-    Function that reads directory and all its subdirectories
-    searching for files whose format is defined by `formats`
+    """Read directory searching for files whose format matches `formats`.
+
     Arguments:
         directory:  Root directory that contains all the files
         formats:    Files formats to look for in directory and
                     all its subdirectories
         shuffle:    Whether to shuffle the data. Default: True.
         seed:       Optional random seed for shuffling.
+
     Returns:
         - List of all file_paths
         - The corresponding labels
@@ -127,7 +135,6 @@ def index_directory(directory, formats, shuffle=True, seed=SHUFFLE_SEED):
             len(filenames), len(class_names)
         )
     )
-
     file_paths = [os.path.join(directory, fname) for fname in filenames]
 
     if shuffle:
@@ -162,30 +169,21 @@ def iter_valid_files(directory, formats):
 
 """
 ## Data Preparation
-"""
 
-"""
-The dataset is composed of 7 folders that can be divided into 2 groups:
-- One for the speeches containing 5 folders for 5 different speakers. Each folder contain
-1500 audio files each of which is 1 second long and sampled at 16000 samples per second
-- One for different noises containing 2 folders and an overall of 6 files. Those files
-are longer than 1 second (and originally not sampled at 16000, but we assume that by at
-this stage, you would have resampled them to 16000). We will use those 6 files to create
+The dataset is composed of 7 folders, divided into 2 groups:
+
+- Speech samples, with 5 folders for 5 different speakers. Each folder contain
+1500 audio files, each 1 second long and sampled at 16000 Hz
+- Background noise samples, with 2 folders and a total of 6 files. Those files
+are longer than 1 second (and originally not sampled at 16000 Hz, but we assume that by at
+this stage, you would have resampled them to 16000 Hz). We will use those 6 files to create
 354 1-second-long noise samples to be used for training
+
+Let's sort these 2 categories into 2 folders:
+
+- An `audio` folder which will contain all the per-speak speech sample folders
+- A `noise` folder which will contain all the noise samples
 """
-
-# The dataset is composed of 7 folders that can be divided into 2 groups:
-# - Speakers' audio folders:
-#   5 folders containing each 1500 audio files each of which is 1 second long
-#   and sampled at 16000 samples per second
-# - Noise folders:
-#   2 folders and an overall of 6 noise audio files.
-#   These files are longer than 1 second and not all of them sampled at 16000.
-#   We will use those 6 files to create 354 1-second-long noise samples
-
-# Let's separate these 2 categories into 2 folders:
-# - 'audio' which will contain all the speakers' audio folders and files
-# - 'noise' which will contain all the noise sounds and folders
 
 if os.path.exists(DATASET_AUDIO_PATH) is False:
     os.makedirs(DATASET_AUDIO_PATH)
@@ -213,20 +211,19 @@ if (
                 )
 
 """
-## Noise Preparation
+## Noise preparation
+
+In this section:
+
+- We load all noise samples (which should have been resampled to 16000)
+- We split those noise samples to chuncks of 16000 samples which
+correspond to 1 second duration each
 """
 
 # Let's first get the list of all noise files
-
 noise_paths, _, _ = index_directory(DATASET_NOISE_PATH, FILE_FORMATS, shuffle=False)
 
-# In this section:
-# - We load all noise samples which should have been resampled to 16000
-# - We split those noise samples to chuncks of 16000 samples which
-#   correspond to 1 second duration each
-
 index = tf.constant(0)
-
 noises = tf.Variable([])
 
 
@@ -248,7 +245,7 @@ def read_and_process_noise(index, noises):
                 axis=0,
             )
     else:
-        print("SR for {} is different than desired. Ignoring it".format(noise_paths[i]))
+        print("Sampling rate for {} is incorrect. Ignoring it".format(noise_paths[i]))
 
     return index + 1, noises
 
@@ -276,8 +273,8 @@ def audio_dataset_from_directory(
     validation_split=None,
     subset=None,
 ):
-    """
-    Generates a `tf.data.Dataset` from audio files in a directory.
+    """Generates a `tf.data.Dataset` from audio files in a directory.
+
     If your directory structure is:
     ```
     main_directory/
@@ -293,6 +290,7 @@ def audio_dataset_from_directory(
     together with labels 0 and 1 (0 corresponding to `class_a` and 1
     corresponding to `class_b`).
     Supported audio formats: wav.
+
     Arguments:
         directory: Directory where the data is located.
             It should contain subdirectories, each containing audios for a class.
@@ -304,6 +302,7 @@ def audio_dataset_from_directory(
             fraction of data to reserve for validation.
         subset: One of "training" or "validation".
             Only used if `validation_split` is set.
+
     Returns:
         A `tf.data.Dataset` object that yields a tuple (audios, labels)
         where audios have the shape (batch_size, DESIRED_SAMPLING_RATE, 1)
@@ -341,11 +340,8 @@ def audio_dataset_from_directory(
 def paths_and_labels_to_dataset(audio_paths, labels):
     """Constructs a dataset of audios and labels."""
     path_ds = tf.data.Dataset.from_tensor_slices(audio_paths)
-
     audio_ds = path_ds.map(lambda x: path_to_audio(x))
-
     label_ds = tf.data.Dataset.from_tensor_slices(labels)
-
     return tf.data.Dataset.zip((audio_ds, label_ds))
 
 
@@ -353,8 +349,6 @@ def path_to_audio(path):
     """Reads and decodes an audio file."""
     audio = tf.io.read_file(path)
     audio, _ = tf.audio.decode_wav(audio, 1, SAMPLING_RATE)
-    audio.set_shape((SAMPLING_RATE, 1))
-
     return audio
 
 
@@ -427,25 +421,15 @@ valid_ds = valid_ds.prefetch(tf.data.experimental.AUTOTUNE)
 ## Model Definition
 """
 
-keras.backend.clear_session()
-
-np.random.seed(42)
-tf.random.set_seed(42)
-
-
 def residual_block(x, filters, conv_num=3, activation="relu"):
     # Shortcut
     s = keras.layers.Conv1D(filters, 1, padding="same")(x)
-
     for i in range(conv_num - 1):
         x = keras.layers.Conv1D(filters, 3, padding="same")(x)
         x = keras.layers.Activation(activation)(x)
-
     x = keras.layers.Conv1D(filters, 3, padding="same")(x)
-
     x = keras.layers.Add()([x, s])
     x = keras.layers.Activation(activation)(x)
-
     return keras.layers.MaxPool1D(pool_size=2, strides=2)(x)
 
 
@@ -459,7 +443,6 @@ def build_model(input_shape, num_classes):
     x = residual_block(x, 128, 3)
 
     x = keras.layers.AveragePooling1D(pool_size=3, strides=3)(x)
-
     x = keras.layers.Flatten()(x)
     x = keras.layers.Dense(256, activation="relu")(x)
     x = keras.layers.Dense(128, activation="relu")(x)
@@ -507,15 +490,18 @@ history = model.fit(
 print(model.evaluate(valid_ds))
 
 """
-Excellent results! ~ 98% validation accuracy
+We get ~ 98% validation accuracy.
 """
 
 """
 ## Examples
-Let's take some examples:
-- predict the speaker
-- compare the prediction with the real speaker
-- listen to the audio to see that despite being noisy, the model is still quite accurate
+
+Let's take some examples and:
+
+- Predict the speaker
+- Compare the prediction with the real speaker
+- Listen to the audio to see that despite the samples being noisy,
+the model is still pretty accurate
 """
 
 SAMPLES_TO_DISPLAY = 10
