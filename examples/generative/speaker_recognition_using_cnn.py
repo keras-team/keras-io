@@ -181,7 +181,7 @@ this stage, you would have resampled them to 16000 Hz). We will use those 6 file
 
 Let's sort these 2 categories into 2 folders:
 
-- An `audio` folder which will contain all the per-speak speech sample folders
+- An `audio` folder which will contain all the per-speaker speech sample folders
 - A `noise` folder which will contain all the noise samples
 """
 
