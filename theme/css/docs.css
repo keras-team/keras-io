@@ -64,7 +64,7 @@ blockquote {
   float: left;
 }
 .k-nav {
-  width: 18.8rem;
+  width: 19rem;
   border-right: 1px solid #ccc;
   float: left;
   border-bottom: 1px solid #ccc;
@@ -90,7 +90,7 @@ blockquote {
 }
 @media screen and (max-width: 1342px) {
   .k-nav {
-    width: 16rem;
+    width: 17rem;
   }
 }
 @media screen and (max-width: 1300px) {
@@ -235,11 +235,11 @@ blockquote {
   color: #d00000;
 }
 .nav-pills .nav-sublink {
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   padding-left: 1.5rem;
   padding-right: 0.8rem;
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   background-color: white;
   color: black;
   text-decoration: none;
