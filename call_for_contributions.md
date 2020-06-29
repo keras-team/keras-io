@@ -37,3 +37,4 @@ Recommendations:
 - Find a better, more interesting dataset
 - Make it work better
 - Add detailed explanations
+- As of 6/23/20, this is being worked on. See [issue #112](https://github.com/keras-team/keras-io/issues/112)
