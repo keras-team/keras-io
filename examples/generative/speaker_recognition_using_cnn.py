@@ -43,6 +43,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
+from pathlib import Path
 from IPython.display import display, Audio
 
 # Get the data from https://www.kaggle.com/kongaevans/speaker-recognition-dataset/download
@@ -55,13 +56,6 @@ NOISE_SUBFOLDER = "noise"
 
 DATASET_AUDIO_PATH = os.path.join(DATASET_ROOT, AUDIO_SUBFOLDER)
 DATASET_NOISE_PATH = os.path.join(DATASET_ROOT, NOISE_SUBFOLDER)
-
-# Folders containing the noise samples in the
-# original dataset
-NOISE_FOLDERS = ["other", "_background_noise_"]
-
-# Supported audio file format
-FILE_FORMATS = ".wav"
 
 # Percentage of samples to use for validation
 VALID_SPLIT = 0.1
@@ -82,89 +76,7 @@ SAMPLING_RATE = 16000
 SCALE = 0.5
 
 BATCH_SIZE = 128
-EPOCHS = 100
-
-"""
-## Useful Functions
-"""
-
-
-def index_directory(directory, formats, shuffle=True, seed=SHUFFLE_SEED):
-    """Read directory searching for files whose format matches `formats`.
-
-    Arguments:
-        directory:  Root directory that contains all the files
-        formats:    Files formats to look for in directory and
-                    all its subdirectories
-        shuffle:    Whether to shuffle the data. Default: True.
-        seed:       Optional random seed for shuffling.
-
-    Returns:
-        - List of all file_paths
-        - The corresponding labels
-        - The different class names
-    """
-    class_names = []
-
-    for subdir in sorted(os.listdir(directory)):
-        if os.path.isdir(os.path.join(directory, subdir)):
-            class_names.append(subdir)
-
-    class_indices = dict(zip(class_names, range(len(class_names))))
-
-    results = []
-    filenames = []
-
-    for dirpath in (os.path.join(directory, subdir) for subdir in class_names):
-        results.append(index_subdirectory(dirpath, class_indices, formats))
-
-    labels_list = []
-    for res in results:
-        partial_filenames, partial_labels = res
-        labels_list.append(partial_labels)
-        filenames += partial_filenames
-
-    index = 0
-    labels = np.zeros((len(filenames),), dtype="int32")
-    for partial_labels in labels_list:
-        labels[index : index + len(partial_labels)] = partial_labels
-        index += len(partial_labels)
-
-    print(
-        "Found {} files belonging to {} classes.".format(
-            len(filenames), len(class_names)
-        )
-    )
-    file_paths = [os.path.join(directory, fname) for fname in filenames]
-
-    if shuffle:
-        rng = np.random.RandomState(seed)
-        rng.shuffle(file_paths)
-        rng = np.random.RandomState(seed)
-        rng.shuffle(labels)
-
-    return file_paths, labels, class_names
-
-
-def index_subdirectory(directory, class_indices, formats):
-    dirname = os.path.basename(directory)
-    valid_files = iter_valid_files(directory, formats)
-    labels = []
-    filenames = []
-    for root, fname in valid_files:
-        labels.append(class_indices[dirname])
-        absolute_path = os.path.join(root, fname)
-        relative_path = os.path.join(dirname, os.path.relpath(absolute_path, directory))
-        filenames.append(relative_path)
-    return filenames, labels
-
-
-def iter_valid_files(directory, formats):
-    walk = os.walk(directory)
-    for root, _, files in sorted(walk, key=lambda x: x[0]):
-        for fname in sorted(files):
-            if fname.lower().endswith(formats):
-                yield root, fname
+EPOCHS = 1
 
 
 """
@@ -185,30 +97,57 @@ Let's sort these 2 categories into 2 folders:
 - A `noise` folder which will contain all the noise samples
 """
 
+"""
+Before sorting the audio and noise categories into 2 folders,
+we have the following directory structure:
+    main_directory/
+    ...speaker_a/
+    ...speaker_b/
+    ...speaker_c/
+    ...speaker_d/
+    ...speaker_e/
+    ...other/
+    ..._background_noise_/
+After sorting, we end up with the following structure:
+    main_directory/
+    ...audio/
+    ......speaker_a/
+    ......speaker_b/
+    ......speaker_c/
+    ......speaker_d/
+    ......speaker_e/
+    ...noise/
+    ......other/
+    ......_background_noise_/
+"""
+
+# If folder `audio`, does not exist, create it, otherwise do nothing
 if os.path.exists(DATASET_AUDIO_PATH) is False:
     os.makedirs(DATASET_AUDIO_PATH)
 
+# If folder `noise`, does not exist, create it, otherwise do nothing
 if os.path.exists(DATASET_NOISE_PATH) is False:
     os.makedirs(DATASET_NOISE_PATH)
 
-if (
-    len(os.listdir(DATASET_AUDIO_PATH)) == 0
-    and len(os.listdir(DATASET_NOISE_PATH)) == 0
-):
-    for folder in os.listdir(DATASET_ROOT):
-        if os.path.isdir(os.path.join(DATASET_ROOT, folder)):
-            if folder in [AUDIO_SUBFOLDER, NOISE_SUBFOLDER]:
-                continue
-            elif folder in NOISE_FOLDERS:
-                shutil.move(
-                    os.path.join(DATASET_ROOT, folder),
-                    os.path.join(DATASET_NOISE_PATH, folder),
-                )
-            else:
-                shutil.move(
-                    os.path.join(DATASET_ROOT, folder),
-                    os.path.join(DATASET_AUDIO_PATH, folder),
-                )
+for folder in os.listdir(DATASET_ROOT):
+    if os.path.isdir(os.path.join(DATASET_ROOT, folder)):
+        if folder in [AUDIO_SUBFOLDER, NOISE_SUBFOLDER]:
+            # If folder is `audio` or `noise`, do nothing
+            continue
+        elif folder in ["other", "_background_noise_"]:
+            # If folder is one of the folders that contains noise samples,
+            # move it to the `noise` folder
+            shutil.move(
+                os.path.join(DATASET_ROOT, folder),
+                os.path.join(DATASET_NOISE_PATH, folder),
+            )
+        else:
+            # Otherwise, it should be a speaker folder, then move it to
+            # `audio` folder
+            shutil.move(
+                os.path.join(DATASET_ROOT, folder),
+                os.path.join(DATASET_AUDIO_PATH, folder),
+            )
 
 """
 ## Noise preparation
@@ -220,39 +159,64 @@ In this section:
 correspond to 1 second duration each
 """
 
-# Let's first get the list of all noise files
-noise_paths, _, _ = index_directory(DATASET_NOISE_PATH, FILE_FORMATS, shuffle=False)
+# Get the list of all noise files
+noise_paths = []
+for subdir in os.listdir(DATASET_NOISE_PATH):
+    subdir_path = Path(DATASET_NOISE_PATH) / subdir
+    noise_paths += [
+        os.path.join(subdir_path, filepath)
+        for filepath in os.listdir(subdir_path)
+        if filepath.endswith(".wav")
+    ]
 
-index = tf.constant(0)
-noises = tf.Variable([])
-
-
-def read_and_process_noise(index, noises):
-    noise, sampling_rate = tf.audio.decode_wav(
-        tf.io.read_file(noise_paths[index]), desired_channels=1
+print(
+    "Found {} files belonging to {} directories".format(
+        len(noise_paths), len(os.listdir(DATASET_NOISE_PATH))
     )
+)
 
+"""
+Resample all noise samples to 16000 Hz
+"""
+
+"""shell
+!dataset_noise_path=~/Downloads/16000_pcm_speeches/noise; \
+for dir in `ls -1 $dataset_noise_path`; do \
+for file in `ls -1 $dataset_noise_path/$dir/*.wav`; do \
+sample_rate=`ffprobe -hide_banner -loglevel panic -show_streams $file \
+| grep sample_rate | cut -f2 -d=`; \
+if [ $sample_rate -ne 16000 ]; then \
+echo "File $file is sampled at $sample_rate (Hz) ... must be resampled to 16000 (Hz)"; \
+ffmpeg -hide_banner -loglevel panic -y -i $file -ar 16000 temp.wav; \
+mv temp.wav $file; \
+else \
+echo "File $file is sampled at $sample_rate (Hz) ... no need to resample"; \
+fi; \
+done; \
+done
+"""
+
+# Split noise into chunks of 16000 each
+def load_noise_sample(path):
+    sample, sampling_rate = tf.audio.decode_wav(
+        tf.io.read_file(path), desired_channels=1
+    )
     if sampling_rate == SAMPLING_RATE:
         # Number of slices of 16000 each that can be generated from the noise sample
-        slices = int(noise.shape[0] / SAMPLING_RATE)
-
-        # Split the noise sample, stack and concatenate them
-        if noises.shape[0] == 0:
-            noises = tf.stack(tf.split(noise[: slices * SAMPLING_RATE], slices))
-        else:
-            noises = tf.concat(
-                [noises, tf.stack(tf.split(noise[: slices * SAMPLING_RATE], slices))],
-                axis=0,
-            )
+        slices = int(sample.shape[0] / SAMPLING_RATE)
+        sample = tf.split(sample[: slices * SAMPLING_RATE], slices)
+        return sample
     else:
-        print("Sampling rate for {} is incorrect. Ignoring it".format(noise_paths[i]))
+        print("Sampling rate for {} is incorrect. Ignoring it".format(path))
+        return None
 
-    return index + 1, noises
 
-
-cond = lambda index, noises: tf.less(index, len(noise_paths))
-
-_, noises = tf.while_loop(cond, read_and_process_noise, [index, noises])
+noises = []
+for path in noise_paths:
+    sample = load_noise_sample(path)
+    if sample:
+        noises.extend(sample)
+noises = tf.stack(noises)
 
 print(
     "{} noise files were split into {} noise samples where each is {} sec. long".format(
@@ -263,78 +227,6 @@ print(
 """
 ## Data Generation
 """
-
-
-def audio_dataset_from_directory(
-    directory,
-    batch_size=32,
-    shuffle=True,
-    seed=SHUFFLE_SEED,
-    validation_split=None,
-    subset=None,
-):
-    """Generates a `tf.data.Dataset` from audio files in a directory.
-
-    If your directory structure is:
-    ```
-    main_directory/
-    ...class_a/
-    ......a_audio_1.wav
-    ......a_audio_2.wav
-    ...class_b/
-    ......b_audio_1.wav
-    ......b_audio_2.wav
-    ```
-    Then calling `audio_dataset_from_directory` will return a `tf.data.Dataset`
-    that yields batches of audios from the subdirectories `class_a` and `class_b`
-    together with labels 0 and 1 (0 corresponding to `class_a` and 1
-    corresponding to `class_b`).
-    Supported audio formats: wav.
-
-    Arguments:
-        directory: Directory where the data is located.
-            It should contain subdirectories, each containing audios for a class.
-        batch_size: Size of the batches of data. Default: 32.
-        shuffle: Whether to shuffle the data. Default: True.
-            If set to False, sorts the data in alphanumeric order.
-        seed: Optional random seed for shuffling and transformations.
-        validation_split: Optional float between 0 and 1,
-            fraction of data to reserve for validation.
-        subset: One of "training" or "validation".
-            Only used if `validation_split` is set.
-
-    Returns:
-        A `tf.data.Dataset` object that yields a tuple (audios, labels)
-        where audios have the shape (batch_size, DESIRED_SAMPLING_RATE, 1)
-    """
-    # Get the list of audio file paths along with their corresponding labels
-    audio_paths, labels, class_names = index_directory(directory, FILE_FORMATS)
-
-    # Split into training or validation
-    if validation_split:
-        num_val_samples = int(validation_split * len(audio_paths))
-        if subset == "training":
-            num_train_samples = len(audio_paths) - num_val_samples
-            print("Using {} files for training.".format(num_train_samples))
-            audio_paths = audio_paths[:-num_val_samples]
-            labels = labels[:-num_val_samples]
-        elif subset == "validation":
-            print("Using {} files for validation.".format(num_val_samples))
-            audio_paths = audio_paths[-num_val_samples:]
-            labels = labels[-num_val_samples:]
-
-    # Create the dataset
-    dataset = paths_and_labels_to_dataset(audio_paths, labels)
-
-    # Shuffle
-    if shuffle:
-        dataset = dataset.shuffle(buffer_size=batch_size * 8, seed=seed)
-
-    dataset = dataset.batch(batch_size)
-
-    dataset.class_names = class_names
-
-    return dataset
 
 
 def paths_and_labels_to_dataset(audio_paths, labels):
@@ -386,19 +278,53 @@ def audio_to_fft(audio):
     return tf.math.abs(fft[:, : (audio.shape[1] // 2), :])
 
 
-# Let's now create 2 datasets, one for training and the other for validation
-train_ds = audio_dataset_from_directory(
-    DATASET_AUDIO_PATH,
-    batch_size=BATCH_SIZE,
-    validation_split=VALID_SPLIT,
-    subset="training",
+# Get the list of audio file paths along with their corresponding labels
+
+class_names = os.listdir(DATASET_AUDIO_PATH)
+print("Our class names: {}".format(class_names,))
+
+audio_paths = []
+labels = []
+for label, name in enumerate(class_names):
+    print("Processing speaker {}".format(name,))
+    dir_path = Path(DATASET_AUDIO_PATH) / name
+    speaker_sample_paths = [
+        os.path.join(dir_path, filepath)
+        for filepath in os.listdir(dir_path)
+        if filepath.endswith(".wav")
+    ]
+    audio_paths += speaker_sample_paths
+    labels += [label] * len(speaker_sample_paths)
+
+print(
+    "Found {} files belonging to {} classes.".format(len(audio_paths), len(class_names))
 )
 
-class_names = train_ds.class_names
+# Shuffle
+rng = np.random.RandomState(SHUFFLE_SEED)
+rng.shuffle(audio_paths)
+rng = np.random.RandomState(SHUFFLE_SEED)
+rng.shuffle(labels)
 
-valid_ds = audio_dataset_from_directory(
-    DATASET_AUDIO_PATH, validation_split=VALID_SPLIT, subset="validation",
+# Split into training and validation
+num_val_samples = int(VALID_SPLIT * len(audio_paths))
+print("Using {} files for training.".format(len(audio_paths) - num_val_samples))
+train_audio_paths = audio_paths[:-num_val_samples]
+train_labels = labels[:-num_val_samples]
+
+print("Using {} files for validation.".format(num_val_samples))
+valid_audio_paths = audio_paths[-num_val_samples:]
+valid_labels = labels[-num_val_samples:]
+
+# Create 2 datasets, one for training and the other for validation
+train_ds = paths_and_labels_to_dataset(train_audio_paths, train_labels)
+train_ds = train_ds.shuffle(buffer_size=BATCH_SIZE * 8, seed=SHUFFLE_SEED).batch(
+    BATCH_SIZE
 )
+
+valid_ds = paths_and_labels_to_dataset(valid_audio_paths, valid_labels)
+valid_ds = valid_ds.shuffle(buffer_size=32 * 8, seed=SHUFFLE_SEED).batch(32)
+
 
 # Add noise to the training set
 train_ds = train_ds.map(
@@ -420,6 +346,7 @@ valid_ds = valid_ds.prefetch(tf.data.experimental.AUTOTUNE)
 """
 ## Model Definition
 """
+
 
 def residual_block(x, filters, conv_num=3, activation="relu"):
     # Shortcut
@@ -461,9 +388,9 @@ model.compile(
     optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
-# Let's add callbacks to stop training when the model is not enhancing anymore
-# 'EarlyStopping' and always keep the model that has the best val_accuracy
-# 'ModelCheckPoint'
+# Add callbacks:
+# 'EarlyStopping' to stop training when the model is not enhancing anymore
+# 'ModelCheckPoint' to always keep the model that has the best val_accuracy
 model_save_filename = "model.h5"
 
 earlystopping_cb = keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
@@ -506,11 +433,9 @@ the model is still pretty accurate
 
 SAMPLES_TO_DISPLAY = 10
 
-test_ds = audio_dataset_from_directory(
-    DATASET_AUDIO_PATH,
-    batch_size=BATCH_SIZE,
-    validation_split=VALID_SPLIT,
-    subset="validation",
+test_ds = paths_and_labels_to_dataset(valid_audio_paths, valid_labels)
+test_ds = test_ds.shuffle(buffer_size=BATCH_SIZE * 8, seed=SHUFFLE_SEED).batch(
+    BATCH_SIZE
 )
 
 test_ds = test_ds.map(lambda x, y: (add_noise(x, noises, scale=SCALE), y))
