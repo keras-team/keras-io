@@ -19,7 +19,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
@@ -56,7 +55,6 @@ To build this model using the functional API, start by creating an input node:
 
 ```python
 inputs = keras.Input(shape=(784,))
-
 ```
 
 The shape of the data is set as a 784-dimensional vector.
@@ -69,7 +67,6 @@ you would use:
 ```python
 # Just for demonstration purposes.
 img_inputs = keras.Input(shape=(32, 32, 3))
-
 ```
 
 The `inputs` that is returned contains information about the shape and `dtype`
@@ -79,7 +76,6 @@ Here's the shape:
 
 ```python
 inputs.shape
-
 ```
 
 
@@ -96,7 +92,6 @@ Here's the dtype:
 
 ```python
 inputs.dtype
-
 ```
 
 
@@ -115,7 +110,6 @@ object:
 ```python
 dense = layers.Dense(64, activation="relu")
 x = dense(inputs)
-
 ```
 
 The "layer call" action is like drawing an arrow from "inputs" to this layer
@@ -128,7 +122,6 @@ Let's add a few more layers to the graph of layers:
 ```python
 x = layers.Dense(64, activation="relu")(x)
 outputs = layers.Dense(10)(x)
-
 ```
 
 At this point, you can create a `Model` by specifying its inputs and outputs
@@ -137,7 +130,6 @@ in the graph of layers:
 
 ```python
 model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model")
-
 ```
 
 Let's check out what the model summary looks like:
@@ -145,7 +137,6 @@ Let's check out what the model summary looks like:
 
 ```python
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -174,7 +165,6 @@ You can also plot the model as a graph:
 
 ```python
 keras.utils.plot_model(model, "my_first_model.png")
-
 ```
 
 
@@ -190,7 +180,6 @@ in the plotted graph:
 
 ```python
 keras.utils.plot_model(model, "my_first_model_with_shape_info.png", show_shapes=True)
-
 ```
 
 
@@ -234,18 +223,17 @@ history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=
 test_scores = model.evaluate(x_test, y_test, verbose=2)
 print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.3486 - accuracy: 0.9025 - val_loss: 0.2256 - val_accuracy: 0.9326
+750/750 [==============================] - 1s 1ms/step - loss: 0.3528 - accuracy: 0.9005 - val_loss: 0.1883 - val_accuracy: 0.9457
 Epoch 2/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.1718 - accuracy: 0.9496 - val_loss: 0.1468 - val_accuracy: 0.9576
-313/313 - 0s - loss: 0.1388 - accuracy: 0.9602
-Test loss: 0.13882307708263397
-Test accuracy: 0.9602000117301941
+750/750 [==============================] - 1s 1ms/step - loss: 0.1684 - accuracy: 0.9505 - val_loss: 0.1385 - val_accuracy: 0.9597
+313/313 - 0s - loss: 0.1361 - accuracy: 0.9605
+Test loss: 0.13611680269241333
+Test accuracy: 0.9605000019073486
 
 ```
 </div>
@@ -272,7 +260,6 @@ model.save("path_to_my_model")
 del model
 # Recreate the exact same model purely from the file:
 model = keras.models.load_model("path_to_my_model")
-
 ```
 
 For details, read the model [serialization & saving](
@@ -311,7 +298,6 @@ decoder_output = layers.Conv2DTranspose(1, 3, activation="relu")(x)
 
 autoencoder = keras.Model(encoder_input, decoder_output, name="autoencoder")
 autoencoder.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -422,7 +408,6 @@ encoded_img = encoder(autoencoder_input)
 decoded_img = decoder(encoded_img)
 autoencoder = keras.Model(autoencoder_input, decoded_img, name="autoencoder")
 autoencoder.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -477,9 +462,9 @@ Layer (type)                 Output Shape              Param #
 =================================================================
 img (InputLayer)             [(None, 28, 28, 1)]       0         
 _________________________________________________________________
-encoder (Model)              (None, 16)                18672     
+encoder (Functional)         (None, 16)                18672     
 _________________________________________________________________
-decoder (Model)              (None, 28, 28, 1)         9569      
+decoder (Functional)         (None, 28, 28, 1)         9569      
 =================================================================
 Total params: 28,241
 Trainable params: 28,241
@@ -513,7 +498,6 @@ y2 = model2(inputs)
 y3 = model3(inputs)
 outputs = layers.average([y1, y2, y3])
 ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
-
 ```
 
 ---
@@ -577,7 +561,6 @@ model = keras.Model(
     inputs=[title_input, body_input, tags_input],
     outputs=[priority_pred, department_pred],
 )
-
 ```
 
 Now plot the model:
@@ -585,7 +568,6 @@ Now plot the model:
 
 ```python
 keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=True)
-
 ```
 
 
@@ -609,7 +591,6 @@ model.compile(
     ],
     loss_weights=[1.0, 0.2],
 )
-
 ```
 
 Since the output layers have different names, you could also specify
@@ -625,7 +606,6 @@ model.compile(
     },
     loss_weights=[1.0, 0.2],
 )
-
 ```
 
 Train the model by passing lists of NumPy arrays of inputs and targets:
@@ -647,17 +627,16 @@ model.fit(
     epochs=2,
     batch_size=32,
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 1s 26ms/step - loss: 1.2709 - priority_loss: 0.7003 - department_loss: 2.8529
+40/40 [==============================] - 1s 27ms/step - loss: 1.3097 - priority_loss: 0.6958 - department_loss: 3.0697
 Epoch 2/2
-40/40 [==============================] - 1s 27ms/step - loss: 1.2632 - priority_loss: 0.6977 - department_loss: 2.8274
+40/40 [==============================] - 1s 27ms/step - loss: 1.2982 - priority_loss: 0.6946 - department_loss: 3.0178
 
-<tensorflow.python.keras.callbacks.History at 0x1622c0550>
+<tensorflow.python.keras.callbacks.History at 0x154d75c50>
 
 ```
 </div>
@@ -701,7 +680,6 @@ outputs = layers.Dense(10)(x)
 
 model = keras.Model(inputs, outputs, name="toy_resnet")
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -754,7 +732,6 @@ Plot the model:
 
 ```python
 keras.utils.plot_model(model, "mini_resnet.png", show_shapes=True)
-
 ```
 
 
@@ -783,14 +760,13 @@ model.compile(
 # We restrict the data to the first 1000 samples so as to limit execution time
 # on Colab. Try to train on the entire dataset until convergence!
 model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_split=0.2)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 1s 79ms/step - loss: 2.4461 - acc: 0.0962 - val_loss: 2.2925 - val_acc: 0.1450
+13/13 [==============================] - 1s 96ms/step - loss: 2.3007 - acc: 0.0950 - val_loss: 2.2903 - val_acc: 0.1150
 
-<tensorflow.python.keras.callbacks.History at 0x162a826d0>
+<tensorflow.python.keras.callbacks.History at 0x1559a2050>
 
 ```
 </div>
@@ -825,7 +801,6 @@ text_input_b = keras.Input(shape=(None,), dtype="int32")
 # Reuse the same layer to encode both inputs
 encoded_input_a = shared_embedding(text_input_a)
 encoded_input_b = shared_embedding(text_input_b)
-
 ```
 
 ---
@@ -844,7 +819,6 @@ Let's look at an example. This is a VGG19 model with weights pretrained on Image
 
 ```python
 vgg19 = tf.keras.applications.VGG19()
-
 ```
 
 And these are the intermediate activations of the model,
@@ -853,7 +827,6 @@ obtained by querying the graph data structure:
 
 ```python
 features_list = [layer.output for layer in vgg19.layers]
-
 ```
 
 Use these features to create a new feature-extraction model that returns
@@ -865,7 +838,6 @@ feat_extraction_model = keras.Model(inputs=vgg19.input, outputs=features_list)
 
 img = np.random.random((1, 224, 224, 3)).astype("float32")
 extracted_features = feat_extraction_model(img)
-
 ```
 
 This comes in handy for tasks like
@@ -920,7 +892,6 @@ inputs = keras.Input((4,))
 outputs = CustomDense(10)(inputs)
 
 model = keras.Model(inputs, outputs)
-
 ```
 
 For serialization support in your custom layer, define a `get_config`
@@ -958,7 +929,6 @@ model = keras.Model(inputs, outputs)
 config = model.get_config()
 
 new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
-
 ```
 
 Optionally, implement the classmethod `from_config(cls, config)` which is used
@@ -1072,7 +1042,6 @@ This is true for most deep learning architectures, but not all -- for example,
 recursive networks or Tree RNNs do not follow this assumption and cannot
 be implemented in the functional API.
 
-
 ---
 ## Mix-and-match API styles
 
@@ -1123,7 +1092,6 @@ class CustomRNN(layers.Layer):
 
 rnn_model = CustomRNN()
 _ = rnn_model(tf.zeros((1, timesteps, input_dim)))
-
 ```
 
 <div class="k-default-codeblock">
@@ -1192,5 +1160,4 @@ model = keras.Model(inputs, outputs)
 
 rnn_model = CustomRNN()
 _ = rnn_model(tf.zeros((1, 10, 5)))
-
 ```

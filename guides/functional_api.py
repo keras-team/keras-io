@@ -300,7 +300,7 @@ ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
 The functional API makes it easy to manipulate multiple inputs and outputs.
 This cannot be handled with the `Sequential` API.
 
-For example, if you're building a system for ranking custom issue tickets by
+For example, if you're building a system for ranking customer issue tickets by
 priority and routing them to the correct department,
 then the model will have three inputs:
 
@@ -543,7 +543,7 @@ extracted_features = feat_extraction_model(img)
 
 """
 This comes in handy for tasks like
-[neural style transfer](https://www.tensorflow.org/tutorials/generative/style_transfer),
+[neural style transfer](https://keras.io/examples/generative/neural_style_transfer/),
 among other things.
 """
 

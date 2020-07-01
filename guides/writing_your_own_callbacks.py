@@ -6,7 +6,7 @@ Last modified: 2020/04/15
 Description: Complete guide to writing new Keras callbacks.
 """
 """
-# Introduction
+## Introduction
 
 A callback is a powerful tool to customize the behavior of a Keras model during
 training, evaluation, or inference. Examples include `tf.keras.callbacks.TensorBoard`

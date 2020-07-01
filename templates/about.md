@@ -30,7 +30,7 @@ and you can export your Keras models to run in the browser or on a mobile device
 The core data structures of Keras are __layers__ and __models__.
 The simplest type of model is the [`Sequential` model](/guides/sequential_model/), a linear stack of layers.
 For more complex architectures, you should use the [Keras functional API](/guides/functional_api/),
-which allows to build arbitrary graphs of layers, or [write models entirely from scratch via subclasssing](/guides/model_subclassing/).
+which allows to build arbitrary graphs of layers, or [write models entirely from scratch via subclasssing](/guides/making_new_layers_and_models_via_subclassing/).
 
 Here is the `Sequential` model:
 
@@ -57,7 +57,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 ```
 
-If you need to, you can further configure your optimizer. The Keras philosophy is to simple things simple,
+If you need to, you can further configure your optimizer. The Keras philosophy is to keep simple things simple,
 while allowing the user to be fully in control when they need to (the ultimate control being the easy extensibility of the source code via subclassing).
 
 ```python
