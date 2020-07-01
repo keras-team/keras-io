@@ -15,13 +15,9 @@ preparing input data for the model.
 
 """
 ## Setup
-As of writing this tutorial, timeseries_dataset_from_array is available only
-in TF-nightly.
+This example requires TensorFlow 2.3 or higher.
 """
 
-# tf_nightly needed for timeseries_dataset_from_array
-#! pip uninstall -y tensorflow
-#! pip install tf-nightly
 
 from matplotlib import pyplot as plt
 from tensorflow import keras
@@ -35,6 +31,7 @@ import tensorflow as tf
 
 """
 ## Fetch the data
+
 We will use the [Austin weather data from ](https://www.kaggle.com/grubenm/austin-weather)
 dataset. It provides timeseries of weather related information for Austin.
 
@@ -43,17 +40,19 @@ and date/ month features. The simplicity of this dataset allows us to
 demonstrate the time series use case of LSTM effectively.
 """
 
-os.system(
-    "wget https://gist.githubusercontent.com/falaktheoptimist/de854aa32393600bfedd38d35419124e/raw/15fa2f9431910fddb74aecf6dd562db80425979a/austin_weather.csv"
+tf.keras.utils.get_file(
+    "/tmp/austin_weather.csv",
+    "https://gist.githubusercontent.com/falaktheoptimist/de854aa32393600bfedd38d35419124e/raw/15fa2f9431910fddb74aecf6dd562db80425979a/austin_weather.csv",
 )
 
 # Load the data
-df = pd.read_csv("austin_weather.csv")
+df = pd.read_csv("/tmp/austin_weather.csv")
 df["Date"] = pd.to_datetime(df["Date"])
 print(df.head(5))
 
 """
 ## Feature generation
+
 Since weather information is seasonal, features indicating the month
 and day of the month would be useful for prediction. Creating those additional
 features from the date.
@@ -83,11 +82,12 @@ fig.autofmt_xdate(rotation=90)
 
 """
 ## Input data preparation
-Given weather information till day d, The target is the temperature at day d+1
-The timeseries_dataset_from_array that we'll use below gathers samples
+
+Given weather information till day `d`, The target is the temperature at day d+1
+The `timeseries_dataset_from_array` that we'll use below gathers samples
 starting from day `d` to day `d + sequence_length - 1` in a sample.
 So, corresponding target is temperature on day `d + sequence_length`
-We use a sequence_length of 10.
+We use a `sequence_length` of 10.
 """
 data_df = df[["Date", "TempAvgF", "month", "day"]]
 data_df["Target"] = df["TempAvgF"].shift(-10)
@@ -106,7 +106,7 @@ X_validation = data_validation[feature_list].values
 y_validation = data_validation["Target"].values
 
 """
-Use timeseries_dataset_from_array for creating TF.data.dataset object from
+Use `timeseries_dataset_from_array` for creating `tf.data.dataset` object from
 the array. It creates batches of (batch_size, sequence_length, num_features)
 shape used in training. And corresponding (batch_size, 1) target.
 Feel free to increase stride to 10 if you do not want any
@@ -142,24 +142,32 @@ print("Targets: \n {}".format(targets))
 
 """
 ## Build the LSTM based model
+
 Single LSTM layer followed by a dense layer.
 """
-model = keras.Sequential(
-    [
-        layers.Input(shape=(inputs.shape[1], inputs.shape[2])),
-        # Uncomment below line if you want to use intermediate layers.
-        # layers.LSTM(20, return_sequences=True),
-        layers.LSTM(20, return_sequences=False),
-        layers.Dense(1),
-    ]
-)
+inputs = layers.Input(shape=(inputs.shape[1], inputs.shape[2]))
+lstm_out = layers.LSTM(20, return_sequences=False)(inputs)
+outputs = layers.Dense(1)(lstm_out)
+
+model = tf.keras.Model(inputs=inputs, outputs=outputs, name="lstm_ts")
 model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01), loss="mse")
-model.summary()
+print(model.summary())
 
 """
 ## Train the model
 """
-history = model.fit(dataset_train, epochs=200, validation_data=dataset_validation)
+es_callback = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss", min_delta=0, patience=5
+)
+modelckpt_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath="/tmp/lstm_ckpt", save_weights_only=True, save_best_only=True
+)
+history = model.fit(
+    dataset_train,
+    epochs=200,
+    validation_data=dataset_validation,
+    callbacks=[es_callback, modelckpt_callback],
+)
 
 """
 ## Training and validation losses
