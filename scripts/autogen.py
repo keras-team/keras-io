@@ -32,6 +32,7 @@ import requests
 
 from master import MASTER
 import tutobooks
+import generate_tf_guides
 
 
 EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
@@ -513,6 +514,8 @@ class KerasIO:
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
+        all_urls_list = []
+
         if os.path.exists(self.site_dir):
             print("Clearing", self.site_dir)
             shutil.rmtree(self.site_dir)
@@ -541,6 +544,7 @@ class KerasIO:
                     # Render as index.html
                     target_path = Path(target_dir) / "index.html"
                     relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
+                    relative_url = relative_url.replace('//', '/')
                 else:
                     # Render as fname_no_ext/index.tml
                     fname_no_ext = ".".join(fname.split(".")[:-1])
@@ -590,6 +594,7 @@ class KerasIO:
                     }
                 )
                 save_file(target_path, html_page)
+                all_urls_list.append('https://keras.io' + relative_url)
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -633,6 +638,8 @@ class KerasIO:
 
         # Tutobooks
         self.sync_tutobook_media()
+        sitemap = '\n'.join(all_urls_list) + '\n'
+        save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
     def make(self):
         self.make_md_sources()
@@ -641,11 +648,11 @@ class KerasIO:
 
     def serve(self):
         os.chdir(self.site_dir)
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
         server = socketserver.ThreadingTCPServer(
             ("", 8000), http.server.SimpleHTTPRequestHandler
         )
         server.daemon_threads = True
-        server.allow_reuse_address = True
 
         def signal_handler(signal, frame):
             try:
@@ -887,7 +894,7 @@ if __name__ == "__main__":
     )
 
     cmd = sys.argv[1]
-    if cmd not in {"make", "serve", "add_example", "add_guide"}:
+    if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
         raise ValueError("Must specify command `make`, `serve`, or `add_example`.")
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
@@ -906,7 +913,10 @@ if __name__ == "__main__":
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
     elif cmd == "add_guide":
+        tutobooks.MAX_LOC = 500
         keras_io.add_guide(
             sys.argv[2],
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
+    elif cmd == "generate_tf_guides":
+        generate_tf_guides.generate_tf_guides()

@@ -151,6 +151,8 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
         # Drop last newline char
         if source and not source[-1].strip():
             source = source[:-1]
+        if source:
+            source[-1] = source[-1].rstrip()
         if tag == "shell":
             source = ["!" + l for l in source]
             cell_type = "code"
