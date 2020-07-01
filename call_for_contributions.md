@@ -33,9 +33,7 @@ Recommendations:
 - Find a better, more interesting dataset
 - Make it work better
 - Add detailed explanations
-<<<<<<< HEAD
 - As of 6/23/20, this is being worked on. See [issue #112](https://github.com/keras-team/keras-io/issues/112)
-=======
 
 
 ## Text-to-speech
@@ -75,4 +73,3 @@ The model should use `Conv3D` layers.
 
 
 
->>>>>>> d622a14f9185794ef19640f261032c01fddb7fc9
