@@ -90,7 +90,9 @@ So, corresponding target is temperature on day `d + sequence_length`
 We use a `sequence_length` of 10.
 """
 data_df = df[["Date", "TempAvgF", "month", "day"]]
-data_df["Target"] = df["TempAvgF"].shift(-10)
+data_df["Target"] = df["TempAvgF"].shift(
+    -10
+)  # Moving target 10 days ahead to align with corresponding features
 data_df.dropna(inplace=True)
 print(data_df.head())
 
@@ -100,9 +102,9 @@ data_validation = data_df[data_df["Date"].dt.year > 2016]
 
 # Extract the required features and target from the dataframe
 feature_list = ["TempAvgF", "month", "day"]
-X_train = data_train[feature_list].values
+x_train = data_train[feature_list].values
 y_train = data_train["Target"].values
-X_validation = data_validation[feature_list].values
+x_validation = data_validation[feature_list].values
 y_validation = data_validation["Target"].values
 
 """
@@ -113,13 +115,13 @@ Feel free to increase stride to 10 if you do not want any
 overlap across samples
 """
 dataset_train = tf.keras.preprocessing.timeseries_dataset_from_array(
-    X_train, y_train, sequence_length=10, sequence_stride=1
+    x_train, y_train, sequence_length=10, sequence_stride=1
 )
 dataset_validation = tf.keras.preprocessing.timeseries_dataset_from_array(
-    X_validation,
+    x_validation,
     y_validation,
     sequence_length=10,
-    batch_size=X_validation.shape[0] - 10,
+    batch_size=x_validation.shape[0] - 10,
     sequence_stride=1,
 )
 
@@ -135,8 +137,8 @@ print("Sample of input:")
 print(inp_arr[0], "\n\n", inp_arr[1])
 
 """
- Note how the last temperature on the last timestamp of sample 2 (11th day)
- is the target for sample 1 which uses temperatures for day 1-10 as inputs.
+Note how the last temperature on the last timestamp of sample 2 (11th day)
+is the target for sample 1 which uses temperatures for day 1-10 as inputs.
 """
 print("Targets: \n {}".format(targets))
 
