@@ -35,8 +35,8 @@ import tutobooks
 import generate_tf_guides
 
 
-EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
-GUIDES_GH_LOCATION = "keras-team/keras-io/blob/master/guides/"
+EXAMPLES_GH_LOCATION = os.path.join("keras-team","keras-io","blob","master","examples")
+GUIDES_GH_LOCATION = os.path.join("keras-team","keras-io","blob","master","guides")
 
 
 class KerasIO:
@@ -210,8 +210,8 @@ class KerasIO:
 
     def add_example(self, path, working_dir=None):
         """e.g. add_example('vision/cats_and_dogs')"""
-        assert path.count("/") == 1
-        folder, name = path.split("/")
+        assert path.count(os.path.sep) == 1
+        folder, name = path.split(os.path.sep)
         if name.endswith(".py"):
             name = name[:-3]
 
@@ -233,8 +233,8 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = EXAMPLES_GH_LOCATION + folder + "/"
-        site_img_dir = "img/examples/" + folder + "/" + name
+        github_repo_dir = os.path.join(EXAMPLES_GH_LOCATION, folder)
+        site_img_dir = os.path.join("img", "examples", folder, name)
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
@@ -244,7 +244,6 @@ class KerasIO:
         """e.g. add_guide('functional_api')"""
         if name.endswith(".py"):
             name = name[:-3]
-
         ipynb_dir = Path(self.guides_dir) / "ipynb"
         if not os.path.exists(ipynb_dir):
             os.makedirs(ipynb_dir)
@@ -882,13 +881,13 @@ def get_working_dir(arg):
 if __name__ == "__main__":
     keras_io = KerasIO(
         master=MASTER,
-        url="/",
-        templates_dir="../templates/",
-        md_sources_dir="../sources/",
-        site_dir="../site/",
-        theme_dir="../theme/",
-        guides_dir="../guides/",
-        examples_dir="../examples/",
+        url= os.path.sep,
+        templates_dir=os.path.join("..", "templates"),
+        md_sources_dir=os.path.join("..", "sources"),
+        site_dir=os.path.join("..", "site"),
+        theme_dir=os.path.join("..", "theme"),
+        guides_dir=os.path.join("..", "guides"),
+        examples_dir=os.path.join("..", "examples"),
         refresh_guides=False,
         refresh_examples=False,
     )

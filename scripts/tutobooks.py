@@ -65,6 +65,7 @@ import sys
 import json
 import random
 import shutil
+import tempfile
 from pathlib import Path
 
 TIMEOUT = 60 * 60
@@ -214,7 +215,7 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
         original_img_dir = original_img_dir[:-1]
     img_dir = os.path.abspath(img_dir)
     nb_path = os.path.abspath(nb_path)
-    nb_fname = str(nb_path).split("/")[-1]
+    nb_fname = str(nb_path).split(os.path.sep)[-1]
 
     del_working_dir = False
     if working_dir is None:
@@ -319,7 +320,9 @@ def validate(py):
         if line.endswith(" "):
             raise ValueError("Found trailing space on line %d; line: `%s`" % (i, line))
     # Validate style with black
-    fpath = "/tmp/" + str(random.randint(1e6, 1e7)) + ".py"
+
+    tmp = tempfile.gettempdir()
+    fpath = os.path.join(tmp,  str(random.randint(1e6, 1e7)) + ".py")
     f = open(fpath, "w")
     pre_formatting = "\n".join(lines)
     f.write(pre_formatting)
