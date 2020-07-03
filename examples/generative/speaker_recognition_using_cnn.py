@@ -179,15 +179,17 @@ print(
 Resample all noise samples to 16000 Hz
 """
 
-command = "for dir in `ls -1 " + DATASET_NOISE_PATH + "`; do "
-command = command + "for file in `ls -1 " + DATASET_NOISE_PATH + "/$dir/*.wav`; do "
-command = command + "sample_rate=`ffprobe -hide_banner -loglevel panic -show_streams "
-command = command + "$file | grep sample_rate | cut -f2 -d=`; "
-command = command + "if [ $sample_rate -ne 16000 ]; then "
-command = command + "ffmpeg -hide_banner -loglevel panic -y "
-command = command + "-i $file -ar 16000 temp.wav; "
-command = command + "mv temp.wav $file; "
-command = command + "fi; done; done"
+command = (
+    "for dir in `ls -1 " + DATASET_NOISE_PATH + "`; do "
+    "for file in `ls -1 " + DATASET_NOISE_PATH + "/$dir/*.wav`; do "
+    "sample_rate=`ffprobe -hide_banner -loglevel panic -show_streams "
+    "$file | grep sample_rate | cut -f2 -d=`; "
+    "if [ $sample_rate -ne 16000 ]; then "
+    "ffmpeg -hide_banner -loglevel panic -y "
+    "-i $file -ar 16000 temp.wav; "
+    "mv temp.wav $file; "
+    "fi; done; done"
+)
 
 os.system(command)
 
