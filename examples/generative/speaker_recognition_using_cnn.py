@@ -2,7 +2,7 @@
 Title: Speaker Recognition Using a Convolutional Network
 Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 14/06/2020
-Last modified: 28/06/2020
+Last modified: 03/07/2020
 Description: Classify speakers using Fast Fourier Transform (FFT) and a 1D Convnet.
 """
 """
@@ -76,7 +76,7 @@ SAMPLING_RATE = 16000
 SCALE = 0.5
 
 BATCH_SIZE = 128
-EPOCHS = 1
+EPOCHS = 100
 
 
 """
@@ -179,22 +179,17 @@ print(
 Resample all noise samples to 16000 Hz
 """
 
-"""shell
-!dataset_noise_path=~/Downloads/16000_pcm_speeches/noise; \
-for dir in `ls -1 $dataset_noise_path`; do \
-for file in `ls -1 $dataset_noise_path/$dir/*.wav`; do \
-sample_rate=`ffprobe -hide_banner -loglevel panic -show_streams $file \
-| grep sample_rate | cut -f2 -d=`; \
-if [ $sample_rate -ne 16000 ]; then \
-echo "File $file is sampled at $sample_rate (Hz) ... must be resampled to 16000 (Hz)"; \
-ffmpeg -hide_banner -loglevel panic -y -i $file -ar 16000 temp.wav; \
-mv temp.wav $file; \
-else \
-echo "File $file is sampled at $sample_rate (Hz) ... no need to resample"; \
-fi; \
-done; \
-done
-"""
+command = "for dir in `ls -1 " + DATASET_NOISE_PATH + "`; do "
+command = command + "for file in `ls -1 " + DATASET_NOISE_PATH + "/$dir/*.wav`; do "
+command = command + "sample_rate=`ffprobe -hide_banner -loglevel panic -show_streams "
+command = command + "$file | grep sample_rate | cut -f2 -d=`; "
+command = command + "if [ $sample_rate -ne 16000 ]; then "
+command = command + "ffmpeg -hide_banner -loglevel panic -y "
+command = command + "-i $file -ar 16000 temp.wav; "
+command = command + "mv temp.wav $file; "
+command = command + "fi; done; done"
+
+os.system(command)
 
 # Split noise into chunks of 16000 each
 def load_noise_sample(path):
@@ -225,7 +220,7 @@ print(
 )
 
 """
-## Data Generation
+## Dataset Generation
 """
 
 
