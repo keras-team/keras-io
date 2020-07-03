@@ -261,7 +261,7 @@ movies_not_watched = list(
 movies_not_watched = [[movie2movie_encoded.get(x)] for x in movies_not_watched]
 user_encoder = user2user_encoded.get(user_id)
 user_movie_array = np.hstack(
-    ([[user_id]] * len(movies_not_watched), movies_not_watched)
+    ([[user_encoder]] * len(movies_not_watched), movies_not_watched)
 )
 ratings = model.predict(user_movie_array).flatten()
 top_ratings_indices = ratings.argsort()[-10:][::-1]
