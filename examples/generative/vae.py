@@ -76,8 +76,8 @@ class VAE(keras.Model):
         if isinstance(data, tuple):
             data = data[0]
         with tf.GradientTape() as tape:
-            z_mean, z_log_var, z = encoder(data)
-            reconstruction = decoder(z)
+            z_mean, z_log_var, z = self.encoder(data)
+            reconstruction = self.decoder(z)
             reconstruction_loss = tf.reduce_mean(
                 keras.losses.binary_crossentropy(data, reconstruction)
             )
