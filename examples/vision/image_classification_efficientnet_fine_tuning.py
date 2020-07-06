@@ -2,14 +2,11 @@
 Title: Image classification using EfficientNet and fine-tuning
 Author: Yixing Fu
 Date created: 2020/06/30
-Last modified: 2020/06/30
+Last modified: 2020/07/06
 Description: Use EfficientNet with weights pre-trained on imagenet for CIFAR-100 classification.
 """
 """
-# image classification using EfficientNet and fine-tuning
-"""
 
-"""
 ## What is EfficientNet
 EfficientNet, first introduced in https://arxiv.org/abs/1905.11946 is among the most
 efficient models (i.e. requiring least FLOPS for inference) that reaches SOTA in both
@@ -102,9 +99,6 @@ alter loaded weights.
 
 
 
-"""
-
-"""
 ## Example: EfficientNetB0 for CIFAR-100.
 
 As an architecture, EfficientNet is capable of a wide range of image classification
@@ -124,9 +118,10 @@ IMG_SIZE = 224
 !pip install --quiet cloud-tpu-client
 """
 import tensorflow as tf
-from cloud_tpu_client import Client
 
 try:
+    from cloud_tpu_client import Client
+
     c = Client()
     c.configure_tpu_version(tf.__version__, restart_type="always")
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
@@ -183,8 +178,7 @@ ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
 ### training from scratch
 To build model that use EfficientNetB0 with 100 classes that is initiated from scratch:
 
-Note: to better see validation peeling off from training accuracy, try increasing epochs
-to ~20
+Note: to better see validation peeling off from training accuracy, run ~20 epochs.
 """
 
 from tensorflow.keras.applications import EfficientNetB0
@@ -217,7 +211,7 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=5, min_lr=0.005, verbose=2
 )
 
-epochs = 30  # @param {type: "slider", min:5, max:50}
+epochs = 20  # @param {type: "slider", min:5, max:50}
 hist = model.fit(
     ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
@@ -309,7 +303,7 @@ while applying some learning rate decay (either ExponentialDecay or use ReduceLR
 callback). On CIFAR-100 with EfficientNetB0, this step will take validation accuracy to
 ~70% with suitable (but not absolutely optimal) image augmentation. For this stage, using
 EfficientNetB0, validation accuracy and loss will be consistently better than training
-accuracy and loss. This is because the regularization is relatively strong, and it only
+accuracy and loss. This is because the regularization is strong, which only
 suppresses train time metrics.
 
 Note that the convergence may take up to 50 epochs. If no data augmentation layer is
@@ -325,7 +319,7 @@ reduce_lr = ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001, verbose=2
 )
 
-epochs = 30  # @param {type: "slider", min:8, max:80}
+epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
     ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2,
 )
@@ -360,10 +354,11 @@ model = unfreeze_model(model)
 reduce_lr = ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001, verbose=2
 )
-epochs = 30  # @param {type: "slider", min:8, max:80}
-hist3 = model.fit(
+epochs = 25  # @param {type: "slider", min:8, max:80}
+hist = model.fit(
     ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2,
 )
+plot_hist(hist)
 
 """
 ### tips for fine tuning EfficientNet
@@ -393,9 +388,7 @@ cross entropy) is getting significantly larger than log(NUM_CLASSES) after the s
 epoch. If so, the initial learning rate/momentum is too high.
 - Smaller batch size benefit validation accuracy, possibly due to effectively providing
 regularization.
-"""
 
-"""
 ## Using the latest EfficientNet weights
 
 Since the initial paper, the EfficientNet has been improved by various methods for data
@@ -408,25 +401,20 @@ To use a checkpoint provided at
 (https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
 download the checkpoint. As example, here we download noisy-student version of B1
 
-"""
 
-"""shell
+```
 !wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet\
        /noisystudent/noisy_student_efficientnet-b1.tar.gz
 !tar -xf noisy_student_efficientnet-b1.tar.gz
-"""
+```
 
-"""
 Then use the script efficientnet_weight_update_util.py to convert ckpt file to h5 file.
 
-"""
-
-"""shell
+```
 !python efficientnet_weight_update_util.py --model b1 --notop --ckpt \
         efficientnet-b1/model.ckpt --o efficientnetb1_notop.h5
-"""
+```
 
-"""
 When creating model, use the following to load new weight:
 
 ```
