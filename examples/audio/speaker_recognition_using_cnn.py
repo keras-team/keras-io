@@ -1,5 +1,5 @@
 """
-Title: Speaker Recognition Using a Convolutional Network
+Title: Speaker Recognition
 Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 14/06/2020
 Last modified: 03/07/2020
@@ -29,7 +29,8 @@ Note:
 
 - This example should be run with TensorFlow 2.3 or higher, or `tf-nightly`.
 - The noise samples in the dataset need to be resampled to a sampling rate of 16000 Hz
-before using the code in this example.
+before using the code in this example. In order to do this, you will need to have
+installed `ffmpg`.
 """
 
 """
@@ -80,16 +81,15 @@ EPOCHS = 100
 
 
 """
-## Data Preparation
+## Data preparation
 
 The dataset is composed of 7 folders, divided into 2 groups:
 
-- Speech samples, with 5 folders for 5 different speakers. Each folder contain
-1500 audio files, each 1 second long and sampled at 16000 Hz
-- Background noise samples, with 2 folders and a total of 6 files. Those files
-are longer than 1 second (and originally not sampled at 16000 Hz, but we assume that by at
-this stage, you would have resampled them to 16000 Hz). We will use those 6 files to create
-354 1-second-long noise samples to be used for training
+- Speech samples, with 5 folders for 5 different speakers. Each folder contains
+1500 audio files, each 1 second long and sampled at 16000 Hz.
+- Background noise samples, with 2 folders and a total of 6 files. These files
+are longer than 1 second (and originally not sampled at 16000 Hz, but we will resample them to 16000 Hz).
+We will use those 6 files to create 354 1-second-long noise samples to be used for training.
 
 Let's sort these 2 categories into 2 folders:
 
@@ -100,25 +100,32 @@ Let's sort these 2 categories into 2 folders:
 """
 Before sorting the audio and noise categories into 2 folders,
 we have the following directory structure:
-    main_directory/
-    ...speaker_a/
-    ...speaker_b/
-    ...speaker_c/
-    ...speaker_d/
-    ...speaker_e/
-    ...other/
-    ..._background_noise_/
+
+```
+main_directory/
+...speaker_a/
+...speaker_b/
+...speaker_c/
+...speaker_d/
+...speaker_e/
+...other/
+..._background_noise_/
+```
+
 After sorting, we end up with the following structure:
-    main_directory/
-    ...audio/
-    ......speaker_a/
-    ......speaker_b/
-    ......speaker_c/
-    ......speaker_d/
-    ......speaker_e/
-    ...noise/
-    ......other/
-    ......_background_noise_/
+
+```
+main_directory/
+...audio/
+......speaker_a/
+......speaker_b/
+......speaker_c/
+......speaker_d/
+......speaker_e/
+...noise/
+......other/
+......_background_noise_/
+```
 """
 
 # If folder `audio`, does not exist, create it, otherwise do nothing
@@ -163,11 +170,12 @@ correspond to 1 second duration each
 noise_paths = []
 for subdir in os.listdir(DATASET_NOISE_PATH):
     subdir_path = Path(DATASET_NOISE_PATH) / subdir
-    noise_paths += [
-        os.path.join(subdir_path, filepath)
-        for filepath in os.listdir(subdir_path)
-        if filepath.endswith(".wav")
-    ]
+    if os.path.isdir(subdir_path):
+        noise_paths += [
+            os.path.join(subdir_path, filepath)
+            for filepath in os.listdir(subdir_path)
+            if filepath.endswith(".wav")
+        ]
 
 print(
     "Found {} files belonging to {} directories".format(
@@ -190,10 +198,9 @@ command = (
     "mv temp.wav $file; "
     "fi; done; done"
 )
-
 os.system(command)
 
-# Split noise into chunks of 16000 each
+# Split noise into chunks of 16,000 steps each
 def load_noise_sample(path):
     sample, sampling_rate = tf.audio.decode_wav(
         tf.io.read_file(path), desired_channels=1
@@ -222,7 +229,7 @@ print(
 )
 
 """
-## Dataset Generation
+## Dataset generation
 """
 
 
@@ -399,7 +406,6 @@ mdlcheckpoint_cb = keras.callbacks.ModelCheckpoint(
 ## Training
 """
 
-# Time to train the model
 history = model.fit(
     train_ds,
     epochs=EPOCHS,
@@ -418,9 +424,9 @@ We get ~ 98% validation accuracy.
 """
 
 """
-## Examples
+## Demonstration
 
-Let's take some examples and:
+Let's take some samples and:
 
 - Predict the speaker
 - Compare the prediction with the real speaker

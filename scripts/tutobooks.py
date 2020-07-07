@@ -114,7 +114,7 @@ def nb_to_py(nb_path, py_path):
         f.close()
 
 
-def py_to_nb(py_path, nb_path, fill_outputs=True):
+def py_to_nb(py_path, nb_path, fill_outputs=False):
     f = open(py_path)
     py = f.read()
     f.close()
