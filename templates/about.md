@@ -57,7 +57,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 ```
 
-If you need to, you can further configure your optimizer. The Keras philosophy is to simple things simple,
+If you need to, you can further configure your optimizer. The Keras philosophy is to keep simple things simple,
 while allowing the user to be fully in control when they need to (the ultimate control being the easy extensibility of the source code via subclassing).
 
 ```python
