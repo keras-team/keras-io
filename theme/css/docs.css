@@ -1,6 +1,6 @@
 body {
   font-family: 'Open Sans', sans-serif;
-  font-size: 0.93rem
+  font-size: 0.95rem
 }
 
 h1,
@@ -88,6 +88,14 @@ blockquote {
 #dropdown-nav {
   display: none;
 }
+.nav-link {
+  font-size: 1rem;
+}
+.nav-sublink {
+  font-size: 0.9rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
 @media screen and (max-width: 1342px) {
   .k-nav {
     width: 17rem;
@@ -100,6 +108,12 @@ blockquote {
     }
 }
 @media screen and (max-width: 840px) {
+  body {
+    font-size: 1rem;
+  }
+  pre {
+    font-size: 100%;
+  }
   .k-page {
     width: 100%;
     min-width: 375px;
@@ -138,6 +152,14 @@ blockquote {
     width: 100%;
     padding: 2%;
     padding-top: 1%;
+  }
+  .nav-link {
+    font-size: 1.1rem;
+  }
+  .nav-sublink {
+    font-size: 1rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
   }
 }
 
@@ -230,16 +252,12 @@ blockquote {
 .nav-pills .nav-link {
   border-radius: 0;
   border-top: 1px solid #ddd;
-  font-size: 1rem;
   background-color: #f7f6f6;
   color: #d00000;
 }
 .nav-pills .nav-sublink {
-  font-size: 0.85rem;
   padding-left: 1.5rem;
   padding-right: 0.8rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
   background-color: white;
   color: black;
   text-decoration: none;

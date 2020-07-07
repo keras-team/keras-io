@@ -158,7 +158,12 @@ model.compile(optimizer="adam")
 # Just use `fit` as usual -- you can use callbacks, etc.
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.fit(x, y, epochs=3)
+model.fit(x, y, epochs=1)
+
+"""
+Note that with this setup, you will need to manually call `reset_states()` on your
+metrics after each epoch, or between training and evaluation.
+"""
 
 """
 ## Supporting `sample_weight` & `class_weight`
