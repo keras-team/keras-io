@@ -5,7 +5,7 @@
 **Last modified:** 03/07/2020<br>
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/speaker_recognition_using_cnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/speaker_recognition_using_cnn.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/audio/ipynb/speaker_recognition_using_cnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/audio/speaker_recognition_using_cnn.py)
 
 
 **Description:** Classify speakers using Fast Fourier Transform (FFT) and a 1D Convnet.
@@ -444,106 +444,106 @@ mdlcheckpoint_cb = keras.callbacks.ModelCheckpoint(
 ```
 Model: "model"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+Layer (type)                    Output Shape         Param #     Connected to
 ==================================================================================================
-input (InputLayer)              [(None, 8000, 1)]    0                                            
+input (InputLayer)              [(None, 8000, 1)]    0
 __________________________________________________________________________________________________
-conv1d_1 (Conv1D)               (None, 8000, 16)     64          input[0][0]                      
+conv1d_1 (Conv1D)               (None, 8000, 16)     64          input[0][0]
 __________________________________________________________________________________________________
-activation (Activation)         (None, 8000, 16)     0           conv1d_1[0][0]                   
+activation (Activation)         (None, 8000, 16)     0           conv1d_1[0][0]
 __________________________________________________________________________________________________
-conv1d_2 (Conv1D)               (None, 8000, 16)     784         activation[0][0]                 
+conv1d_2 (Conv1D)               (None, 8000, 16)     784         activation[0][0]
 __________________________________________________________________________________________________
-conv1d (Conv1D)                 (None, 8000, 16)     32          input[0][0]                      
+conv1d (Conv1D)                 (None, 8000, 16)     32          input[0][0]
 __________________________________________________________________________________________________
-add (Add)                       (None, 8000, 16)     0           conv1d_2[0][0]                   
-                                                                 conv1d[0][0]                     
+add (Add)                       (None, 8000, 16)     0           conv1d_2[0][0]
+                                                                 conv1d[0][0]
 __________________________________________________________________________________________________
-activation_1 (Activation)       (None, 8000, 16)     0           add[0][0]                        
+activation_1 (Activation)       (None, 8000, 16)     0           add[0][0]
 __________________________________________________________________________________________________
-max_pooling1d (MaxPooling1D)    (None, 4000, 16)     0           activation_1[0][0]               
+max_pooling1d (MaxPooling1D)    (None, 4000, 16)     0           activation_1[0][0]
 __________________________________________________________________________________________________
-conv1d_4 (Conv1D)               (None, 4000, 32)     1568        max_pooling1d[0][0]              
+conv1d_4 (Conv1D)               (None, 4000, 32)     1568        max_pooling1d[0][0]
 __________________________________________________________________________________________________
-activation_2 (Activation)       (None, 4000, 32)     0           conv1d_4[0][0]                   
+activation_2 (Activation)       (None, 4000, 32)     0           conv1d_4[0][0]
 __________________________________________________________________________________________________
-conv1d_5 (Conv1D)               (None, 4000, 32)     3104        activation_2[0][0]               
+conv1d_5 (Conv1D)               (None, 4000, 32)     3104        activation_2[0][0]
 __________________________________________________________________________________________________
-conv1d_3 (Conv1D)               (None, 4000, 32)     544         max_pooling1d[0][0]              
+conv1d_3 (Conv1D)               (None, 4000, 32)     544         max_pooling1d[0][0]
 __________________________________________________________________________________________________
-add_1 (Add)                     (None, 4000, 32)     0           conv1d_5[0][0]                   
-                                                                 conv1d_3[0][0]                   
+add_1 (Add)                     (None, 4000, 32)     0           conv1d_5[0][0]
+                                                                 conv1d_3[0][0]
 __________________________________________________________________________________________________
-activation_3 (Activation)       (None, 4000, 32)     0           add_1[0][0]                      
+activation_3 (Activation)       (None, 4000, 32)     0           add_1[0][0]
 __________________________________________________________________________________________________
-max_pooling1d_1 (MaxPooling1D)  (None, 2000, 32)     0           activation_3[0][0]               
+max_pooling1d_1 (MaxPooling1D)  (None, 2000, 32)     0           activation_3[0][0]
 __________________________________________________________________________________________________
-conv1d_7 (Conv1D)               (None, 2000, 64)     6208        max_pooling1d_1[0][0]            
+conv1d_7 (Conv1D)               (None, 2000, 64)     6208        max_pooling1d_1[0][0]
 __________________________________________________________________________________________________
-activation_4 (Activation)       (None, 2000, 64)     0           conv1d_7[0][0]                   
+activation_4 (Activation)       (None, 2000, 64)     0           conv1d_7[0][0]
 __________________________________________________________________________________________________
-conv1d_8 (Conv1D)               (None, 2000, 64)     12352       activation_4[0][0]               
+conv1d_8 (Conv1D)               (None, 2000, 64)     12352       activation_4[0][0]
 __________________________________________________________________________________________________
-activation_5 (Activation)       (None, 2000, 64)     0           conv1d_8[0][0]                   
+activation_5 (Activation)       (None, 2000, 64)     0           conv1d_8[0][0]
 __________________________________________________________________________________________________
-conv1d_9 (Conv1D)               (None, 2000, 64)     12352       activation_5[0][0]               
+conv1d_9 (Conv1D)               (None, 2000, 64)     12352       activation_5[0][0]
 __________________________________________________________________________________________________
-conv1d_6 (Conv1D)               (None, 2000, 64)     2112        max_pooling1d_1[0][0]            
+conv1d_6 (Conv1D)               (None, 2000, 64)     2112        max_pooling1d_1[0][0]
 __________________________________________________________________________________________________
-add_2 (Add)                     (None, 2000, 64)     0           conv1d_9[0][0]                   
-                                                                 conv1d_6[0][0]                   
+add_2 (Add)                     (None, 2000, 64)     0           conv1d_9[0][0]
+                                                                 conv1d_6[0][0]
 __________________________________________________________________________________________________
-activation_6 (Activation)       (None, 2000, 64)     0           add_2[0][0]                      
+activation_6 (Activation)       (None, 2000, 64)     0           add_2[0][0]
 __________________________________________________________________________________________________
-max_pooling1d_2 (MaxPooling1D)  (None, 1000, 64)     0           activation_6[0][0]               
+max_pooling1d_2 (MaxPooling1D)  (None, 1000, 64)     0           activation_6[0][0]
 __________________________________________________________________________________________________
-conv1d_11 (Conv1D)              (None, 1000, 128)    24704       max_pooling1d_2[0][0]            
+conv1d_11 (Conv1D)              (None, 1000, 128)    24704       max_pooling1d_2[0][0]
 __________________________________________________________________________________________________
-activation_7 (Activation)       (None, 1000, 128)    0           conv1d_11[0][0]                  
+activation_7 (Activation)       (None, 1000, 128)    0           conv1d_11[0][0]
 __________________________________________________________________________________________________
-conv1d_12 (Conv1D)              (None, 1000, 128)    49280       activation_7[0][0]               
+conv1d_12 (Conv1D)              (None, 1000, 128)    49280       activation_7[0][0]
 __________________________________________________________________________________________________
-activation_8 (Activation)       (None, 1000, 128)    0           conv1d_12[0][0]                  
+activation_8 (Activation)       (None, 1000, 128)    0           conv1d_12[0][0]
 __________________________________________________________________________________________________
-conv1d_13 (Conv1D)              (None, 1000, 128)    49280       activation_8[0][0]               
+conv1d_13 (Conv1D)              (None, 1000, 128)    49280       activation_8[0][0]
 __________________________________________________________________________________________________
-conv1d_10 (Conv1D)              (None, 1000, 128)    8320        max_pooling1d_2[0][0]            
+conv1d_10 (Conv1D)              (None, 1000, 128)    8320        max_pooling1d_2[0][0]
 __________________________________________________________________________________________________
-add_3 (Add)                     (None, 1000, 128)    0           conv1d_13[0][0]                  
-                                                                 conv1d_10[0][0]                  
+add_3 (Add)                     (None, 1000, 128)    0           conv1d_13[0][0]
+                                                                 conv1d_10[0][0]
 __________________________________________________________________________________________________
-activation_9 (Activation)       (None, 1000, 128)    0           add_3[0][0]                      
+activation_9 (Activation)       (None, 1000, 128)    0           add_3[0][0]
 __________________________________________________________________________________________________
-max_pooling1d_3 (MaxPooling1D)  (None, 500, 128)     0           activation_9[0][0]               
+max_pooling1d_3 (MaxPooling1D)  (None, 500, 128)     0           activation_9[0][0]
 __________________________________________________________________________________________________
-conv1d_15 (Conv1D)              (None, 500, 128)     49280       max_pooling1d_3[0][0]            
+conv1d_15 (Conv1D)              (None, 500, 128)     49280       max_pooling1d_3[0][0]
 __________________________________________________________________________________________________
-activation_10 (Activation)      (None, 500, 128)     0           conv1d_15[0][0]                  
+activation_10 (Activation)      (None, 500, 128)     0           conv1d_15[0][0]
 __________________________________________________________________________________________________
-conv1d_16 (Conv1D)              (None, 500, 128)     49280       activation_10[0][0]              
+conv1d_16 (Conv1D)              (None, 500, 128)     49280       activation_10[0][0]
 __________________________________________________________________________________________________
-activation_11 (Activation)      (None, 500, 128)     0           conv1d_16[0][0]                  
+activation_11 (Activation)      (None, 500, 128)     0           conv1d_16[0][0]
 __________________________________________________________________________________________________
-conv1d_17 (Conv1D)              (None, 500, 128)     49280       activation_11[0][0]              
+conv1d_17 (Conv1D)              (None, 500, 128)     49280       activation_11[0][0]
 __________________________________________________________________________________________________
-conv1d_14 (Conv1D)              (None, 500, 128)     16512       max_pooling1d_3[0][0]            
+conv1d_14 (Conv1D)              (None, 500, 128)     16512       max_pooling1d_3[0][0]
 __________________________________________________________________________________________________
-add_4 (Add)                     (None, 500, 128)     0           conv1d_17[0][0]                  
-                                                                 conv1d_14[0][0]                  
+add_4 (Add)                     (None, 500, 128)     0           conv1d_17[0][0]
+                                                                 conv1d_14[0][0]
 __________________________________________________________________________________________________
-activation_12 (Activation)      (None, 500, 128)     0           add_4[0][0]                      
+activation_12 (Activation)      (None, 500, 128)     0           add_4[0][0]
 __________________________________________________________________________________________________
-max_pooling1d_4 (MaxPooling1D)  (None, 250, 128)     0           activation_12[0][0]              
+max_pooling1d_4 (MaxPooling1D)  (None, 250, 128)     0           activation_12[0][0]
 __________________________________________________________________________________________________
-average_pooling1d (AveragePooli (None, 83, 128)      0           max_pooling1d_4[0][0]            
+average_pooling1d (AveragePooli (None, 83, 128)      0           max_pooling1d_4[0][0]
 __________________________________________________________________________________________________
-flatten (Flatten)               (None, 10624)        0           average_pooling1d[0][0]          
+flatten (Flatten)               (None, 10624)        0           average_pooling1d[0][0]
 __________________________________________________________________________________________________
-dense (Dense)                   (None, 256)          2720000     flatten[0][0]                    
+dense (Dense)                   (None, 256)          2720000     flatten[0][0]
 __________________________________________________________________________________________________
-dense_1 (Dense)                 (None, 128)          32896       dense[0][0]                      
+dense_1 (Dense)                 (None, 128)          32896       dense[0][0]
 __________________________________________________________________________________________________
-output (Dense)                  (None, 5)            645         dense_1[0][0]                    
+output (Dense)                  (None, 5)            645         dense_1[0][0]
 ==================================================================================================
 Total params: 3,088,597
 Trainable params: 3,088,597
