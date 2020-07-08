@@ -86,7 +86,7 @@ The recommended format is SavedModel. It is the default when you use `model.save
 
 You can switch to the H5 format by:
 
-- Passing `format='h5'` to `save()`.
+- Passing `save_format='h5'` to `save()`.
 - Passing a filename that ends in `.h5` or `.keras` to `save()`.
 
 ### SavedModel format
@@ -130,22 +130,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 670us/step - loss: 1.3573
+4/4 [==============================] - 0s 664us/step - loss: 2.3807
+4/4 [==============================] - 0s 591us/step - loss: 2.1872
 
-WARNING: Logging before flag parsing goes to stderr.
-W0611 15:19:08.423139 4624426432 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/keras/backend.py:467: set_learning_phase (from tensorflow.python.keras.backend) is deprecated and will be removed after 2020-10-11.
-Instructions for updating:
-Simply pass a True/False value to the `training` argument of the `__call__` method of your layer or model.
-W0611 15:19:08.460778 4624426432 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Model.state_updates (from tensorflow.python.keras.engine.training) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
-W0611 15:19:08.463594 4624426432 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Layer.updates (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
-
-4/4 [==============================] - 0s 705us/step - loss: 1.2203
-
-<tensorflow.python.keras.callbacks.History at 0x14b57e050>
+<tensorflow.python.keras.callbacks.History at 0x14829a950>
 
 ```
 </div>
@@ -227,10 +215,11 @@ print("Loaded model:", loaded)
 
 <div class="k-default-codeblock">
 ```
-W0611 15:19:09.533702 4624426432 load.py:128] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+WARNING: Logging before flag parsing goes to stderr.
+W0708 14:12:24.803453 4591322560 load.py:134] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
 
-Original model: <__main__.CustomModel object at 0x14b574b90>
-Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x14b712490>
+Original model: <__main__.CustomModel object at 0x14771b390>
+Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x1483c3a10>
 
 ```
 </div>
@@ -272,10 +261,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 650us/step - loss: 0.3729
-4/4 [==============================] - 0s 599us/step - loss: 0.3210
+4/4 [==============================] - 0s 708us/step - loss: 4.1519
+4/4 [==============================] - 0s 594us/step - loss: 3.8899
 
-<tensorflow.python.keras.callbacks.History at 0x14b8b01d0>
+<tensorflow.python.keras.callbacks.History at 0x14857d950>
 
 ```
 </div>
@@ -705,7 +694,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14bad4390>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148694c90>
 
 ```
 </div>
@@ -865,7 +854,7 @@ Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14ba1f910>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148787950>
 
 ```
 </div>
@@ -916,11 +905,11 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-W0611 15:19:10.748379 4624426432 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+W0708 14:12:25.969697 4591322560 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
 Instructions for updating:
 Please use `layer.add_weight` method instead.
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14bb3e190>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148775710>
 
 ```
 </div>
