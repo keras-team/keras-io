@@ -82,7 +82,7 @@ The recommended format is SavedModel. It is the default when you use `model.save
 
 You can switch to the H5 format by:
 
-- Passing `format='h5'` to `save()`.
+- Passing `save_format='h5'` to `save()`.
 - Passing a filename that ends in `.h5` or `.keras` to `save()`.
 """
 
