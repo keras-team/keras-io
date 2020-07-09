@@ -60,7 +60,7 @@ from tensorflow.keras import layers
 Let's download the data and load it into a Pandas dataframe:
 """
 
-file_url = "https://storage.googleapis.com/applied-dl/heart.csv"
+file_url = "http://storage.googleapis.com/download.tensorflow.org/data/heart.csv"
 dataframe = pd.read_csv(file_url)
 
 """
@@ -356,9 +356,9 @@ sample = {
 }
 
 input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.items()}
-model.predict(input_dict)
+predictions = model.predict(input_dict)
 
-"""
-This particular patient had a 31% probability of having a heart disease, as evaluated by
-our model.
-"""
+print(
+    "This particular patient had a %.1f percent probability "
+    "of having a heart disease, as evaluated by our model." % (100 * predictions[0][0],)
+)

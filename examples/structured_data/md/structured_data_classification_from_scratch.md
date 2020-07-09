@@ -48,10 +48,8 @@ CA | Number of major vessels (0-3) colored by fluoroscopy | Both numerical & cat
 Thal | 3 = normal; 6 = fixed defect; 7 = reversible defect | Categorical
 Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 
-
 ---
 ## Setup
-
 
 
 ```python
@@ -60,7 +58,6 @@ import numpy as np
 import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
@@ -69,21 +66,17 @@ from tensorflow.keras import layers
 Let's download the data and load it into a Pandas dataframe:
 
 
-
 ```python
-file_url = "https://storage.googleapis.com/applied-dl/heart.csv"
+file_url = "http://storage.googleapis.com/download.tensorflow.org/data/heart.csv"
 dataframe = pd.read_csv(file_url)
-
 ```
 
 The dataset includes 303 samples with 14 columns per sample (13 features, plus the target
 label):
 
 
-
 ```python
 dataframe.shape
-
 ```
 
 
@@ -98,10 +91,8 @@ dataframe.shape
 Here's a preview of a few samples:
 
 
-
 ```python
 dataframe.head()
-
 ```
 
 
@@ -243,7 +234,6 @@ The last column, "target", indicates whether the patient has a heart disease (1)
 Let's split the data into a training and validation set:
 
 
-
 ```python
 val_dataframe = dataframe.sample(frac=0.2, random_state=1337)
 train_dataframe = dataframe.drop(val_dataframe.index)
@@ -252,7 +242,6 @@ print(
     "Using %d samples for training and %d for validation"
     % (len(train_dataframe), len(val_dataframe))
 )
-
 ```
 
 <div class="k-default-codeblock">
@@ -262,7 +251,6 @@ Using 242 samples for training and 61 for validation
 ```
 </div>
 Let's generate `tf.data.Dataset` objects for each dataframe:
-
 
 
 ```python
@@ -277,24 +265,21 @@ def dataframe_to_dataset(dataframe):
 
 train_ds = dataframe_to_dataset(train_dataframe)
 val_ds = dataframe_to_dataset(val_dataframe)
-
 ```
 
 Each `Dataset` yields a tuple `(input, target)` where `input` is a dictionary of features
 and `target` is the value `0` or `1`:
 
 
-
 ```python
 for x, y in train_ds.take(1):
     print("Input:", x)
     print("Target:", y)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=61>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=4>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=130>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=330>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=169>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=0.0>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'normal'>}
+Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=57>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=140>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=241>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=123>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=0.2>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'normal'>}
 Target: tf.Tensor(0, shape=(), dtype=int64)
 
 ```
@@ -302,11 +287,9 @@ Target: tf.Tensor(0, shape=(), dtype=int64)
 Let's batch the datasets:
 
 
-
 ```python
 train_ds = train_ds.batch(32)
 val_ds = val_ds.batch(32)
-
 ```
 
 ---
@@ -347,7 +330,6 @@ Below, we define 3 utility functions to do the operations:
 - `encode_string_categorical_feature` to first turn string inputs into integer indices,
 then one-hot encode these integer indices.
 - `encode_integer_categorical_feature` to one-hot encode integer categorical features.
-
 
 
 ```python
@@ -415,14 +397,12 @@ def encode_integer_categorical_feature(feature, name, dataset):
     encoded_feature = encoder(feature)
     return encoded_feature
 
-
 ```
 
 ---
 ## Build a model
 
 With this done, we can create our end-to-end model:
-
 
 
 ```python
@@ -502,17 +482,14 @@ x = layers.Dropout(0.5)(x)
 output = layers.Dense(1, activation="sigmoid")(x)
 model = keras.Model(all_inputs, output)
 model.compile("adam", "binary_crossentropy", metrics=["accuracy"])
-
 ```
 
 Let's visualize our connectivity graph:
 
 
-
 ```python
 # `rankdir='LR'` is to make the graph horizontal.
 keras.utils.plot_model(model, show_shapes=True, rankdir="LR")
-
 ```
 
 
@@ -526,121 +503,118 @@ keras.utils.plot_model(model, show_shapes=True, rankdir="LR")
 ## Train the model
 
 
-
 ```python
 model.fit(train_ds, epochs=50, validation_data=val_ds)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-8/8 [==============================] - 0s 30ms/step - loss: 0.9853 - accuracy: 0.3512 - val_loss: 0.9087 - val_accuracy: 0.2295
+8/8 [==============================] - 0s 28ms/step - loss: 0.7561 - accuracy: 0.5992 - val_loss: 0.5802 - val_accuracy: 0.6885
 Epoch 2/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.8248 - accuracy: 0.4835 - val_loss: 0.7935 - val_accuracy: 0.3443
+8/8 [==============================] - 0s 2ms/step - loss: 0.7136 - accuracy: 0.6322 - val_loss: 0.5368 - val_accuracy: 0.7705
 Epoch 3/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.7475 - accuracy: 0.5413 - val_loss: 0.7041 - val_accuracy: 0.5082
+8/8 [==============================] - 0s 3ms/step - loss: 0.6649 - accuracy: 0.6694 - val_loss: 0.5011 - val_accuracy: 0.8197
 Epoch 4/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.6736 - accuracy: 0.5992 - val_loss: 0.6385 - val_accuracy: 0.6066
+8/8 [==============================] - 0s 3ms/step - loss: 0.6005 - accuracy: 0.6694 - val_loss: 0.4728 - val_accuracy: 0.8197
 Epoch 5/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.6410 - accuracy: 0.6488 - val_loss: 0.5891 - val_accuracy: 0.7377
+8/8 [==============================] - 0s 2ms/step - loss: 0.6148 - accuracy: 0.6983 - val_loss: 0.4503 - val_accuracy: 0.8197
 Epoch 6/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.6123 - accuracy: 0.6612 - val_loss: 0.5486 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.5836 - accuracy: 0.6942 - val_loss: 0.4330 - val_accuracy: 0.8197
 Epoch 7/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.5268 - accuracy: 0.7438 - val_loss: 0.5173 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.5158 - accuracy: 0.7314 - val_loss: 0.4182 - val_accuracy: 0.8361
 Epoch 8/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.5165 - accuracy: 0.7355 - val_loss: 0.4918 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 2ms/step - loss: 0.5251 - accuracy: 0.7479 - val_loss: 0.4067 - val_accuracy: 0.8197
 Epoch 9/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4879 - accuracy: 0.7231 - val_loss: 0.4727 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 2ms/step - loss: 0.5136 - accuracy: 0.7479 - val_loss: 0.3973 - val_accuracy: 0.8197
 Epoch 10/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.5266 - accuracy: 0.7438 - val_loss: 0.4573 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.5068 - accuracy: 0.7397 - val_loss: 0.3898 - val_accuracy: 0.8197
 Epoch 11/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4802 - accuracy: 0.7727 - val_loss: 0.4447 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.4652 - accuracy: 0.7479 - val_loss: 0.3832 - val_accuracy: 0.8197
 Epoch 12/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4117 - accuracy: 0.8099 - val_loss: 0.4343 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.4665 - accuracy: 0.7769 - val_loss: 0.3775 - val_accuracy: 0.8033
 Epoch 13/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4464 - accuracy: 0.7810 - val_loss: 0.4267 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 2ms/step - loss: 0.4555 - accuracy: 0.7851 - val_loss: 0.3728 - val_accuracy: 0.7869
 Epoch 14/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4233 - accuracy: 0.8099 - val_loss: 0.4196 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 2ms/step - loss: 0.4347 - accuracy: 0.7975 - val_loss: 0.3691 - val_accuracy: 0.7869
 Epoch 15/50
-8/8 [==============================] - 0s 2ms/step - loss: 0.4255 - accuracy: 0.8099 - val_loss: 0.4145 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.4524 - accuracy: 0.7603 - val_loss: 0.3662 - val_accuracy: 0.8033
 Epoch 16/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4226 - accuracy: 0.7851 - val_loss: 0.4103 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.4526 - accuracy: 0.7934 - val_loss: 0.3645 - val_accuracy: 0.8033
 Epoch 17/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4284 - accuracy: 0.8058 - val_loss: 0.4065 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 2ms/step - loss: 0.4029 - accuracy: 0.8223 - val_loss: 0.3630 - val_accuracy: 0.8361
 Epoch 18/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.4030 - accuracy: 0.8223 - val_loss: 0.4038 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 2ms/step - loss: 0.3908 - accuracy: 0.8140 - val_loss: 0.3615 - val_accuracy: 0.8361
 Epoch 19/50
-8/8 [==============================] - 0s 2ms/step - loss: 0.3819 - accuracy: 0.8099 - val_loss: 0.4023 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 3ms/step - loss: 0.3715 - accuracy: 0.8306 - val_loss: 0.3603 - val_accuracy: 0.8361
 Epoch 20/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3547 - accuracy: 0.8223 - val_loss: 0.4018 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3736 - accuracy: 0.8264 - val_loss: 0.3590 - val_accuracy: 0.8361
 Epoch 21/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3840 - accuracy: 0.8347 - val_loss: 0.4004 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3887 - accuracy: 0.8264 - val_loss: 0.3585 - val_accuracy: 0.8361
 Epoch 22/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3688 - accuracy: 0.8182 - val_loss: 0.3995 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3933 - accuracy: 0.7810 - val_loss: 0.3582 - val_accuracy: 0.8361
 Epoch 23/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3687 - accuracy: 0.8388 - val_loss: 0.3990 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3740 - accuracy: 0.8471 - val_loss: 0.3575 - val_accuracy: 0.8361
 Epoch 24/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3731 - accuracy: 0.8306 - val_loss: 0.3987 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3661 - accuracy: 0.8347 - val_loss: 0.3576 - val_accuracy: 0.8361
 Epoch 25/50
-8/8 [==============================] - 0s 2ms/step - loss: 0.3537 - accuracy: 0.8512 - val_loss: 0.3978 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3649 - accuracy: 0.8430 - val_loss: 0.3582 - val_accuracy: 0.8361
 Epoch 26/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3535 - accuracy: 0.8512 - val_loss: 0.3967 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 2ms/step - loss: 0.3339 - accuracy: 0.8554 - val_loss: 0.3581 - val_accuracy: 0.8361
 Epoch 27/50
-8/8 [==============================] - 0s 2ms/step - loss: 0.3656 - accuracy: 0.8223 - val_loss: 0.3974 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.3539 - accuracy: 0.8223 - val_loss: 0.3586 - val_accuracy: 0.8361
 Epoch 28/50
-8/8 [==============================] - 0s 2ms/step - loss: 0.3243 - accuracy: 0.8884 - val_loss: 0.3977 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.3412 - accuracy: 0.8471 - val_loss: 0.3597 - val_accuracy: 0.8361
 Epoch 29/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3408 - accuracy: 0.8760 - val_loss: 0.3969 - val_accuracy: 0.7869
+8/8 [==============================] - 0s 3ms/step - loss: 0.3243 - accuracy: 0.8554 - val_loss: 0.3611 - val_accuracy: 0.8361
 Epoch 30/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3281 - accuracy: 0.8347 - val_loss: 0.3975 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 2ms/step - loss: 0.3282 - accuracy: 0.8512 - val_loss: 0.3620 - val_accuracy: 0.8361
 Epoch 31/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3338 - accuracy: 0.8595 - val_loss: 0.3988 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 2ms/step - loss: 0.3120 - accuracy: 0.8554 - val_loss: 0.3621 - val_accuracy: 0.8361
 Epoch 32/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3136 - accuracy: 0.8802 - val_loss: 0.3998 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3153 - accuracy: 0.8760 - val_loss: 0.3626 - val_accuracy: 0.8361
 Epoch 33/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3091 - accuracy: 0.8678 - val_loss: 0.4011 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 2ms/step - loss: 0.3404 - accuracy: 0.8554 - val_loss: 0.3636 - val_accuracy: 0.8361
 Epoch 34/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3300 - accuracy: 0.8595 - val_loss: 0.4030 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3462 - accuracy: 0.8306 - val_loss: 0.3646 - val_accuracy: 0.8361
 Epoch 35/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3166 - accuracy: 0.8471 - val_loss: 0.4032 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3055 - accuracy: 0.8636 - val_loss: 0.3660 - val_accuracy: 0.8361
 Epoch 36/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3100 - accuracy: 0.8760 - val_loss: 0.4028 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3220 - accuracy: 0.8554 - val_loss: 0.3673 - val_accuracy: 0.8361
 Epoch 37/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3238 - accuracy: 0.8554 - val_loss: 0.4034 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3080 - accuracy: 0.8843 - val_loss: 0.3694 - val_accuracy: 0.8361
 Epoch 38/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3154 - accuracy: 0.8347 - val_loss: 0.4042 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3105 - accuracy: 0.8471 - val_loss: 0.3702 - val_accuracy: 0.8361
 Epoch 39/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3024 - accuracy: 0.8760 - val_loss: 0.4046 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3254 - accuracy: 0.8554 - val_loss: 0.3709 - val_accuracy: 0.8361
 Epoch 40/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2964 - accuracy: 0.8678 - val_loss: 0.4051 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3227 - accuracy: 0.8512 - val_loss: 0.3719 - val_accuracy: 0.8361
 Epoch 41/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3200 - accuracy: 0.8595 - val_loss: 0.4066 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3240 - accuracy: 0.8636 - val_loss: 0.3730 - val_accuracy: 0.8361
 Epoch 42/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3088 - accuracy: 0.8595 - val_loss: 0.4059 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3166 - accuracy: 0.8554 - val_loss: 0.3732 - val_accuracy: 0.8361
 Epoch 43/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.3075 - accuracy: 0.8554 - val_loss: 0.4055 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3128 - accuracy: 0.8554 - val_loss: 0.3736 - val_accuracy: 0.8361
 Epoch 44/50
-8/8 [==============================] - 0s 2ms/step - loss: 0.2918 - accuracy: 0.8636 - val_loss: 0.4064 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.3010 - accuracy: 0.8719 - val_loss: 0.3722 - val_accuracy: 0.8361
 Epoch 45/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.2782 - accuracy: 0.8843 - val_loss: 0.4070 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.2848 - accuracy: 0.8884 - val_loss: 0.3719 - val_accuracy: 0.8361
 Epoch 46/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.2988 - accuracy: 0.8636 - val_loss: 0.4068 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.2946 - accuracy: 0.8802 - val_loss: 0.3714 - val_accuracy: 0.8361
 Epoch 47/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3085 - accuracy: 0.8760 - val_loss: 0.4061 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3013 - accuracy: 0.8719 - val_loss: 0.3720 - val_accuracy: 0.8361
 Epoch 48/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.2692 - accuracy: 0.9008 - val_loss: 0.4064 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3165 - accuracy: 0.8388 - val_loss: 0.3727 - val_accuracy: 0.8361
 Epoch 49/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.2663 - accuracy: 0.8926 - val_loss: 0.4068 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3102 - accuracy: 0.8636 - val_loss: 0.3725 - val_accuracy: 0.8361
 Epoch 50/50
-8/8 [==============================] - 0s 3ms/step - loss: 0.2834 - accuracy: 0.8884 - val_loss: 0.4078 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 2ms/step - loss: 0.2908 - accuracy: 0.8678 - val_loss: 0.3724 - val_accuracy: 0.8361
 
-<tensorflow.python.keras.callbacks.History at 0x15177eb50>
+<tensorflow.python.keras.callbacks.History at 0x1500eb510>
 
 ```
 </div>
 We quickly get to 80% validation accuracy.
-
 
 ---
 ## Inference on new data
@@ -651,7 +625,6 @@ just two things you need to do:
 1. wrap scalars into a list so as to have a batch dimension (models only process batches
 of data, not single samples)
 2. Call `convert_to_tensor` on each feature
-
 
 
 ```python
@@ -672,19 +645,17 @@ sample = {
 }
 
 input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.items()}
-model.predict(input_dict)
+predictions = model.predict(input_dict)
 
+print(
+    "This particular patient had a %.1f percent probability "
+    "of having a heart disease, as evaluated by our model." % (100 * predictions[0][0],)
+)
 ```
-
-
-
 
 <div class="k-default-codeblock">
 ```
-array([[0.3153328]], dtype=float32)
+This particular patient had a 31.0 percent probability of having a heart disease, as evaluated by our model.
 
 ```
 </div>
-This particular patient had a 31% probability of having a heart disease, as evaluated by
-our model.
-
