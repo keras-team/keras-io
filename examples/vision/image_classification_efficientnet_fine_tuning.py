@@ -1,27 +1,28 @@
 """
 Title: Image classification using EfficientNet and fine-tuning
-Author: Yixing Fu
+Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
-Last modified: 2020/07/06
+Last modified: 2020/07/08
 Description: Use EfficientNet with weights pre-trained on imagenet for CIFAR-100 classification.
 """
 """
 
 ## What is EfficientNet
-EfficientNet, first introduced in https://arxiv.org/abs/1905.11946 is among the most
-efficient models (i.e. requiring least FLOPS for inference) that reaches SOTA in both
+EfficientNet, first introduced in [Tan and Le, 2019](https://arxiv.org/abs/1905.11946)
+is among the most
+efficient models (i.e. requiring least FLOPS for inference) that reaches State-of-the-Art accuracy on both
 imagenet and common image classification transfer learning tasks.
 
-The smallest base model is similar to MnasNet (https://arxiv.org/abs/1807.11626), which
+The smallest base model is similar to [MnasNet](https://arxiv.org/abs/1807.11626), which
 reached near-SOTA with a significantly smaller model. By introducing a heuristic way to
 scale the model, EfficientNet provides a family of models (B0 to B7) that represents a
 good combination of efficiency and accuracy on a variety of scales. Such a scaling
-heuristics (compound-scaling, details see https://arxiv.org/abs/1905.11946) allows the
+heuristics (compound-scaling, details see [Tan and Le, 2019](https://arxiv.org/abs/1905.11946)) allows the
 efficiency-oriented base model (B0) to surpass models at every scale, while avoiding
 extensive grid-search of hyperparameters.
 
 A summary of the latest updates on the model is available at
-https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet, where various
+[here](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), where various
 augmentation schemes and semi-supervised learning approaches are applied to further
 improve the imagenet performance of the models. These extensions of the model can be used
 by updating weights without changing model architecture.
@@ -35,17 +36,21 @@ three dimensions to grow at the same power of a set of fixed ratios.
 
 However, it must be noted that the ratios are not taken accurately. A few points need to
 be taken into account:
-Resolution. Resolutions not divisible by 8, 16, etc. cause zero-padding near boundaries
+
+1. Resolution: Resolutions not divisible by 8, 16, etc. cause zero-padding near boundaries
 of some layers which wastes computational resources. This especially applies to smaller
 variants of the model, hence the input resolution for B0 and B1 are chosen as 224 and
 240.
-Depth and width. Channel size is always rounded to 8/16/32 because of the architecture.
-Resource limit. Perfect compound scaling would assume spatial (memory) and time allowance
+
+2. Depth and width: Channel size is always rounded to 8/16/32 because of the architecture.
+
+3. Resource limit: Perfect compound scaling would assume spatial (memory) and time allowance
 for the computation to grow simultaneously, but OOM may further bottleneck the scaling of
 resolution.
 
-As a result, compound scaling factor is significantly off from
-https://arxiv.org/abs/1905.11946. Hence it is important to understand the compound
+As a result, compound scaling factor is significantly off from mathematical formula (Eq. 3) in
+[Tan and Le, 2019](https://arxiv.org/abs/1905.11946).
+ Hence it is important to understand the compound
 scaling as a rule of thumb that leads to this family of base models, rather than an exact
 optimization scheme. This also justifies that in the keras implementation (detailed
 below), only these 8 models, B0 to B7, are exposed to the user and arbitrary width /
@@ -61,12 +66,11 @@ model = EfficientNetB0(weights='imagenet')
 ```
 
 This model takes input images of shape (224, 224, 3), and the input data should range
-[0,255]. Resizing and normalization are included as part of the model.
+[0, 255]. Resizing and normalization are included as part of the model.
 
 Because training EfficientNet on imagenet takes a tremendous amount of resources and
 several techniques that are not a part of the model architecture itself. Hence the Keras
-implementation by default loads pre-trained weights with AutoAugment
-(https://arxiv.org/abs/1805.09501).
+implementation by default loads pre-trained weights with [AutoAugment](https://arxiv.org/abs/1805.09501).
 
 For B0 to B7 base models, the input shapes are different. Here is a list of input shape
 expected for each model:
@@ -93,7 +97,7 @@ layers allows using EfficientNet as a feature extractor and transfers the pretra
 weights to other tasks.
 
 Another keyword in the model builder worth noticing is `drop_connect_rate` which controls
-the dropout rate responsible for stochastic depth (https://arxiv.org/abs/1603.09382).
+the dropout rate responsible for [stochastic depth](https://arxiv.org/abs/1603.09382).
 This parameter serves as a toggle for extra regularization in finetuning, but does not
 alter loaded weights.
 
@@ -110,13 +114,12 @@ EfficientNetB0, image size is 224.
 IMG_SIZE = 224
 
 """
-### prepare
+### Prepare
+
+This example requires TensorFlow 2.3 or above. To use TPU, cloud-tpu-client is
+also needed to ensure matching TPU runtime version.
 """
 
-"""shell
-!pip install --quiet tensorflow==2.3.0rc0
-!pip install --quiet cloud-tpu-client
-"""
 import tensorflow as tf
 
 try:
@@ -154,6 +157,7 @@ NUM_CLASSES = 100
 x_train = tf.cast(x_train, tf.int32)
 x_test = tf.cast(x_test, tf.int32)
 
+# Use entire dataset or only use 5000 examples for quick testing
 truncate_data = False  # @param {type: "boolean"}
 if truncate_data:
     x_train = x_train[0:5000]
@@ -162,7 +166,7 @@ if truncate_data:
     y_test = y_test[0:1000]
 
 
-# one-hot / categorical
+# One-hot / categorical encoding
 y_train = to_categorical(y_train, NUM_CLASSES)
 y_test = to_categorical(y_test, NUM_CLASSES)
 
@@ -175,7 +179,7 @@ ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
 
 """
-### training from scratch
+### Training from scratch
 To build model that use EfficientNetB0 with 100 classes that is initiated from scratch:
 
 Note: to better see validation peeling off from training accuracy, run ~20 epochs.
@@ -186,7 +190,6 @@ from tensorflow.keras.layers.experimental.preprocessing import (
     Resizing,
     RandomFlip,
     RandomContrast,
-    # RandomHeight,
 )
 from tensorflow.keras.optimizers import SGD
 
@@ -196,10 +199,9 @@ with strategy.scope():
 
     x = RandomFlip()(x)
     x = RandomContrast(0.1)(x)
-    # x = RandomHeight(0.1)(x)
     x = Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
 
-    x = EfficientNetB0(include_top=True, weights=None, classes=100)(x)
+    x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
     model = keras.Model(inputs, x)
 
@@ -245,35 +247,31 @@ def plot_hist(hist):
 plot_hist(hist)
 
 """
-### transfer learning from pretrained weight
+### Transfer learning from pretrained weight
 Using pre-trained imagenet weights and only transfer learn (fine-tune) the model allows
 utilizing the power of EfficientNet much easier. To use pretrained weight, the model can
 be initiated through
 """
 
 from tensorflow import keras
-from tensorflow.keras.layers.experimental.preprocessing import (
-    Resizing,
-    RandomContrast,
-)
+from tensorflow.keras.layers.experimental import preprocessing
 
 
 def build_model(n_classes):
     inputs = keras.layers.Input(shape=(32, 32, 3))
     x = inputs
 
-    x = RandomFlip()(x)
-    x = RandomContrast(0.1)(x)
-    x = Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
-    # other preprocessing layers can be used similar to Resizing and RandomRotation
+    x = preprocessing.RandomFlip()(x)
+    x = preprocessing.RandomContrast(0.1)(x)
+    x = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
+    # Other preprocessing layers can be used similar to Resizing and RandomRotation
 
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
-    # freeze the pretrained weights
-    for l in model.layers:
-        l.trainable = False
+    # Freeze the pretrained weights
+    model.trainable = False
 
-    # rebuild top
+    # Rebuild top
     x = keras.layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
     x = keras.layers.BatchNormalization()(x)
 
@@ -281,21 +279,14 @@ def build_model(n_classes):
     x = keras.layers.Dropout(top_dropout_rate, name="top_dropout")(x)
     x = keras.layers.Dense(100, activation="softmax", name="pred")(x)
 
-    # compile
+    # Compile
     model = keras.Model(inputs, x, name="EfficientNet")
     sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
-    # sgd = tfa.optimizers.MovingAverage(sgd)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
 """
-Note that it is also possible to freeze pre-trained part entirely by
-```
-model.trainable = False
-```
-instead of setting each layer separately.
-
 
 The first step to transfer learning is to freeze all layers and train only the top
 layers. For this step a relatively large learning rate (~0.1) can be used to start with,
@@ -361,11 +352,10 @@ hist = model.fit(
 plot_hist(hist)
 
 """
-### tips for fine tuning EfficientNet
+### Tips for fine tuning EfficientNet
 
 On unfreezing layers:
-- The batch normalization layers need to be kept untrainable
-(https://keras.io/guides/transfer_learning/). If they are also turned to trainable, the
+- The batch normalization layers need to be kept frozen ( [more details](https://keras.io/guides/transfer_learning/) ). If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.
 - In some cases it may be beneficial to open up only a portion of layers instead of
 unfreezing all. This will make fine tuning much faster when going to larger models like
@@ -376,6 +366,7 @@ also significantly harms the final performance.
 
 
 Some other tips for utilizing EfficientNet
+
 - Larger variants of EfficientNet do not guarantee improved performance, especially for
 tasks with less data or fewer classes. In such a case, the larger variant of EfficientNet
 chosen, the harder it is to tune hyperparameters.
@@ -397,8 +388,8 @@ improvements are relatively hard and computationally costly to reproduce, and re
 extra code; but the weights are readily available in the form of TF checkpoint files. The
 model architecture has not changed, so loading the improved checkpoints is possible.
 
-To use a checkpoint provided at
-(https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
+To use a checkpoint provided at 
+[the official model repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
 download the checkpoint. As example, here we download noisy-student version of B1
 
 
