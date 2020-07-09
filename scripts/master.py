@@ -141,7 +141,7 @@ MASTER = {
                         },
                         {
                             'path': 'learning_rate_schedules/',
-                            'title': 'Learning rate schedules API',  # TODO
+                            'title': 'Learning rate schedules API',
                             'toc': True,
                             'skip_from_toc': True,
                             'children': [
@@ -226,7 +226,7 @@ MASTER = {
                             ]
                         },
                         {
-                            'path': 'segmentation_metrics',  # MeanIoU
+                            'path': 'segmentation_metrics',
                             'title': 'Image segmentation metrics',
                             'generate': ['tensorflow.keras.metrics.MeanIoU']
                         },
