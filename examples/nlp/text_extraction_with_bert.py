@@ -48,7 +48,7 @@ from tokenizers import BertWordPieceTokenizer
 from transformers import BertTokenizer, TFBertModel, BertConfig
 
 max_len = 384
-configuration = BertConfig()  # default paramters and configuration for BERT
+configuration = BertConfig()  # default parameters and configuration for BERT
 
 """
 ## Set-up BERT tokenizer
