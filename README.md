@@ -20,14 +20,14 @@ docker build -t keras-io . && docker run --rm -p 8000:8000 keras-io
 It will take a while the first time because it's going to pull the
 image and the dependencies, but on the next times it'll be much faster.
 
-Another way of testing using docker is using `Makefile` with following command:
+Another way of testing using Docker is via our Makefile:
 
 ```
 make container-test
 ```
 
-The aforementioned command will build Dockerimage and then run it, thus it will make
-sure the documentation can be served.
+This command will build a Docker image with a documentation server and run it.
+
 
 ## Call for examples
 
