@@ -17,12 +17,11 @@ from tensorflow.keras import layers
 """
 ## Introduction
 
-The Keras *functional API* is a way to create models that is more flexible
+The Keras *functional API* is a way to create models that are more flexible
 than the `tf.keras.Sequential` API. The functional API can handle models
-with non-linear topology, models with shared layers, and models
-with multiple inputs or outputs.
+with non-linear topology, shared layers, and even multiple inputs or outputs.
 
-The main idea that a deep learning model is usually
+The main idea is that a deep learning model is usually
 a directed acyclic graph (DAG) of layers.
 So the functional API is a way to build *graphs of layers*.
 
@@ -84,7 +83,7 @@ x = dense(inputs)
 """
 The "layer call" action is like drawing an arrow from "inputs" to this layer
 you created.
-You're "passing" the inputs to the `dense` layer, and out you get `x`.
+You're "passing" the inputs to the `dense` layer, and you get `x` as the output.
 
 Let's add a few more layers to the graph of layers:
 """
@@ -123,7 +122,7 @@ This figure and the code are almost identical. In the code version,
 the connection arrows are replaced by the call operation.
 
 A "graph of layers" is an intuitive mental image for a deep learning model,
-and the functional API is a way to create models that closely mirror this.
+and the functional API is a way to create models that closely mirrors this.
 """
 
 """
@@ -298,7 +297,7 @@ ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
 ### Models with multiple inputs and outputs
 
 The functional API makes it easy to manipulate multiple inputs and outputs.
-This cannot be handled with the `Sequential` API.
+This cannot be handled by the `Sequential` API.
 
 For example, if you're building a system for ranking customer issue tickets by
 priority and routing them to the correct department,
@@ -423,7 +422,7 @@ For more detailed explanation, refer to the [training and evaluation](/guides/tr
 In addition to models with multiple inputs and outputs,
 the functional API makes it easy to manipulate non-linear connectivity
 topologies -- these are models with layers that are not connected sequentially,
-which the `Sequential` API can not handle.
+which the `Sequential` API cannot handle.
 
 A common use case for this is residual connections.
 Let's build a toy ResNet model for CIFAR10 to demonstrate this:
@@ -480,7 +479,7 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 """
 ## Shared layers
 
-Another good use for the functional API are for models that use *shared layers*.
+Another good use for the functional API are models that use *shared layers*.
 Shared layers are layer instances that are reused multiple times in a same model --
 they learn features that correspond to multiple paths in the graph-of-layers.
 
@@ -645,7 +644,7 @@ def from_config(cls, config):
 """
 ## When to use the functional API
 
-When should you use the Keras functional API to create a new model,
+Should you use the Keras functional API to create a new model,
 or just subclass the `Model` class directly? In general, the functional API
 is higher-level, easier and safer, and has a number of
 features that subclassed models do not support.
