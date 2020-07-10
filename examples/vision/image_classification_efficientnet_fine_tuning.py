@@ -116,18 +116,20 @@ IMG_SIZE = 224
 """
 ## Setup and data loading
 
-This example requires TensorFlow 2.3 or above. To use TPU,
-the `cloud-tpu-client` package is
-also needed to ensure matching TPU runtime version.
+This example requires TensorFlow 2.3 or above.
+
+To use TPU, the TPU runtime must match current running TensorFlow
+version. If there is a mismatch, try
+```
+from cloud_tpu_client import Client
+c = Client()
+c.configure_tpu_version(tf.__version__, restart_type="always")
+```
 """
 
 import tensorflow as tf
 
 try:
-    from cloud_tpu_client import Client
-
-    c = Client()
-    c.configure_tpu_version(tf.__version__, restart_type="always")
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
     print("Running on TPU ", tpu.cluster_spec().as_dict()["worker"])
     tf.config.experimental_connect_to_cluster(tpu)
@@ -139,45 +141,115 @@ except ValueError:
 
 
 """
-Below is example code for loading data.
-To see sensible result, you need to load entire dataset and adjust epochs for
-training; but you may truncate data for a quick verification of the workflow.
-Expect the notebook to run at least an hour for GPU, while much faster on TPU if
-using hosted Colab session.
+### Loading data
+
+Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets).
+
+[CIFAR-100](https://www.cs.toronto.edu/~kriz/cifar.html) dataset is used to generate
+the example. By simply changing `dataset_name` below, this notebook can be used for
+other datasets in TFDS such as [food101](https://www.tensorflow.org/datasets/catalog/food101),
+[stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs), etc.
+
+Using TPU will be significantly faster. However, if using TFDS datasets,
+a GCS bucket location is required to save the datasets. For example,
+```
+tfds.load(dataset_name, data_dir="gs://example-bucket/datapath")
+```
+and make sure both the current environment and the TPU service account have
+proper [access](https://cloud.google.com/tpu/docs/storage-buckets#authorize_the_service_account)
+to the bucket.
 """
 
-from tensorflow import keras
-from tensorflow.keras.datasets import cifar100
-from tensorflow.keras.utils import to_categorical
+import tensorflow_datasets as tfds
 
 batch_size = 64
 
-(x_train, y_train), (x_test, y_test) = cifar100.load_data()
-NUM_CLASSES = 100
+dataset_name = "cifar10"
+(ds_train, ds_test), ds_info = tfds.load(
+    dataset_name, split=["train", "test"], with_info=True, as_supervised=True
+)
+NUM_CLASSES = ds_info.features["label"].num_classes
 
-x_train = tf.cast(x_train, tf.int32)
-x_test = tf.cast(x_test, tf.int32)
 
-# Use entire dataset or only use 5000 examples for quick testing
-truncate_data = False  # @param {type: "boolean"}
-if truncate_data:
-    x_train = x_train[0:5000]
-    y_train = y_train[0:5000]
-    x_test = x_test[0:1000]
-    y_test = y_test[0:1000]
+"""
+### Visualizing the data
 
+The following code shows the first 9 images with their labels both
+in numeric form and text.
+"""
+from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+import matplotlib.pyplot as plt
+
+label_info = ds_info.features["label"]
+for i, (image, label) in enumerate(ds_train.take(9)):
+    ax = plt.subplot(3, 3, i + 1)
+    plt.imshow(image)
+    plt.title("{}, {}".format((label), label_info.int2str(label)))
+    plt.axis("off")
+
+
+"""
+### Data augmentation
+
+We can use preprocessing layers APIs for image augmentation.
+"""
+
+from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+
+img_augmentation = Sequential(
+    [
+        preprocessing.RandomRotation(0.15),
+        preprocessing.RandomFlip(),
+        preprocessing.RandomContrast(0.1),
+    ],
+    name="img_augmentation",
+)
+
+"""
+This `Sequential` model object can be used both as a part of
+the model we later build, and as a function to preprocess
+data before feeding into the model. Using them as function makes
+it easy to visualize the augmented images. Here we plot 9 examples
+of augmentation result of a given figure.
+"""
+
+for image, label in ds_train.take(1):
+    for i in range(9):
+        ax = plt.subplot(3, 3, i + 1)
+        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
+        plt.imshow(aug_img[0].numpy().astype("uint8"))
+        plt.title("{}, {}".format((label), label_info.int2str(label)))
+        plt.axis("off")
+
+
+"""
+Once we verify the input data and augmentation are working correctly,
+we prepare dataset for training. The labels are put into one-hot
+(a.k.a. categorical) encoding. The dataset is batched.
+
+Using `cache`, `prefetch` and `AUTOTUNE` may in some situation improve
+performance, but depends on environment and the specific dataset used.
+See this [guide](https://www.tensorflow.org/guide/data_performance)
+for more information on data pipeline performance.
+"""
 
 # One-hot / categorical encoding
-y_train = to_categorical(y_train, NUM_CLASSES)
-y_test = to_categorical(y_test, NUM_CLASSES)
+def apply_one_hot(image, label):
+    return image, tf.one_hot(label, NUM_CLASSES)
 
-ds_train = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+
+ds_train = ds_train.map(apply_one_hot, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 ds_train = ds_train.cache()
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
-ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+ds_test = ds_test.map(apply_one_hot)
 ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
+
 
 """
 ## Training a model from scratch
@@ -196,29 +268,29 @@ from tensorflow.keras.layers.experimental.preprocessing import (
 )
 from tensorflow.keras.optimizers import SGD
 
+
 with strategy.scope():
-    inputs = keras.layers.Input(shape=(32, 32, 3))
+    inputs = layers.Input(shape=(None, None, 3))
     x = inputs
 
-    x = RandomFlip()(x)
-    x = RandomContrast(0.1)(x)
-    x = Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
+    x = img_augmentation(x)
+    x = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
 
     x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
-    model = keras.Model(inputs, x)
+    model = tf.keras.Model(inputs, x)
 
     sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
 
 model.summary()
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.005, verbose=2
+    monitor="val_loss", factor=0.2, patience=5, min_lr=0.005
 )
 
 epochs = 20  # @param {type: "slider", min:5, max:50}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr]
 )
 
 
@@ -256,18 +328,15 @@ Here we initialize the model with pre-trained ImageNet weights,
 and we fine-tune it on our own dataset.
 """
 
-from tensorflow import keras
 from tensorflow.keras.layers.experimental import preprocessing
 
 
 def build_model(n_classes):
-    inputs = keras.layers.Input(shape=(32, 32, 3))
+    inputs = layers.Input(shape=(None, None, 3))
     x = inputs
 
-    x = preprocessing.RandomFlip()(x)
-    x = preprocessing.RandomContrast(0.1)(x)
+    x = img_augmentation(x)
     x = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
-    # Other preprocessing layers can be used similar to Resizing and RandomRotation
 
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
@@ -275,15 +344,15 @@ def build_model(n_classes):
     model.trainable = False
 
     # Rebuild top
-    x = keras.layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
-    x = keras.layers.BatchNormalization()(x)
+    x = layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
+    x = layers.BatchNormalization()(x)
 
     top_dropout_rate = 0.2
-    x = keras.layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-    x = keras.layers.Dense(100, activation="softmax", name="pred")(x)
+    x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
+    x = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
 
     # Compile
-    model = keras.Model(inputs, x, name="EfficientNet")
+    model = tf.keras.Model(inputs, x, name="EfficientNet")
     sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
     return model
@@ -308,13 +377,11 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 with strategy.scope():
     model = build_model(n_classes=NUM_CLASSES)
 
-reduce_lr = ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001, verbose=2
-)
+reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001)
 
 epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2,
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr]
 )
 plot_hist(hist)
 
@@ -345,11 +412,11 @@ def unfreeze_model(model):
 model = unfreeze_model(model)
 
 reduce_lr = ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001, verbose=2
+    monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001
 )
 epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2,
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr],
 )
 plot_hist(hist)
 
@@ -392,7 +459,7 @@ improvements are relatively hard and computationally costly to reproduce, and re
 extra code; but the weights are readily available in the form of TF checkpoint files. The
 model architecture has not changed, so loading the improved checkpoints is possible.
 
-To use a checkpoint provided at 
+To use a checkpoint provided at
 [the official model repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
 download the checkpoint. As example, here we download noisy-student version of B1:
 
