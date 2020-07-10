@@ -1,5 +1,5 @@
 """
-Title: Image classification using EfficientNet and fine-tuning
+Title: Image classification via fine-tuning with EfficientNet
 Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
 Last modified: 2020/07/08
@@ -7,17 +7,19 @@ Description: Use EfficientNet with weights pre-trained on imagenet for CIFAR-100
 """
 """
 
-## What is EfficientNet
+## Introduction: what is EfficientNet
+
 EfficientNet, first introduced in [Tan and Le, 2019](https://arxiv.org/abs/1905.11946)
-is among the most
-efficient models (i.e. requiring least FLOPS for inference) that reaches State-of-the-Art accuracy on both
+is among the most efficient models (i.e. requiring least FLOPS for inference)
+that reaches State-of-the-Art accuracy on both
 imagenet and common image classification transfer learning tasks.
 
 The smallest base model is similar to [MnasNet](https://arxiv.org/abs/1807.11626), which
 reached near-SOTA with a significantly smaller model. By introducing a heuristic way to
 scale the model, EfficientNet provides a family of models (B0 to B7) that represents a
 good combination of efficiency and accuracy on a variety of scales. Such a scaling
-heuristics (compound-scaling, details see [Tan and Le, 2019](https://arxiv.org/abs/1905.11946)) allows the
+heuristics (compound-scaling, details see
+[Tan and Le, 2019](https://arxiv.org/abs/1905.11946)) allows the
 efficiency-oriented base model (B0) to surpass models at every scale, while avoiding
 extensive grid-search of hyperparameters.
 
@@ -50,7 +52,7 @@ resolution.
 
 As a result, compound scaling factor is significantly off from mathematical formula (Eq. 3) in
 [Tan and Le, 2019](https://arxiv.org/abs/1905.11946).
- Hence it is important to understand the compound
+Hence it is important to understand the compound
 scaling as a rule of thumb that leads to this family of base models, rather than an exact
 optimization scheme. This also justifies that in the keras implementation (detailed
 below), only these 8 models, B0 to B7, are exposed to the user and arbitrary width /
@@ -68,9 +70,10 @@ model = EfficientNetB0(weights='imagenet')
 This model takes input images of shape (224, 224, 3), and the input data should range
 [0, 255]. Resizing and normalization are included as part of the model.
 
-Because training EfficientNet on imagenet takes a tremendous amount of resources and
+Because training EfficientNet on ImageNet takes a tremendous amount of resources and
 several techniques that are not a part of the model architecture itself. Hence the Keras
-implementation by default loads pre-trained weights with [AutoAugment](https://arxiv.org/abs/1805.09501).
+implementation by default loads pre-trained weights obtained via training with
+[AutoAugment](https://arxiv.org/abs/1805.09501).
 
 For B0 to B7 base models, the input shapes are different. Here is a list of input shape
 expected for each model:
@@ -86,20 +89,19 @@ expected for each model:
 | EfficientNetB6 | 528 |
 | EfficientNetB7 | 600 |
 
-When the use of the model is intended for transfer learning, the Keras implementation
+When the model is intended for transfer learning, the Keras implementation
 provides a option to remove the top layers:
 ```
 model = EfficientNetB0(include_top=False, weights='imagenet')
 ```
-This option excludes the final Dense layer that turns 1280 features on the penultimate
-layer into prediction of the 1000 classes in imagenet. Replacing the top with custom
-layers allows using EfficientNet as a feature extractor and transfers the pretrained
-weights to other tasks.
+This option excludes the final `Dense` layer that turns 1280 features on the penultimate
+layer into prediction of the 1000 ImageNet classes. Replacing the top layer with custom
+layers allows using EfficientNet as a feature extractor in a transfer learning workflow.
 
-Another keyword in the model builder worth noticing is `drop_connect_rate` which controls
+Another argument in the model constructor worth noticing is `drop_connect_rate` which controls
 the dropout rate responsible for [stochastic depth](https://arxiv.org/abs/1603.09382).
 This parameter serves as a toggle for extra regularization in finetuning, but does not
-alter loaded weights.
+affect loaded weights.
 
 ## Example: EfficientNetB0 for CIFAR-100.
 
@@ -112,7 +114,7 @@ EfficientNetB0, image size is 224.
 IMG_SIZE = 224
 
 """
-### Prepare
+## Setup and data loading
 
 This example requires TensorFlow 2.3 or above.
 
@@ -250,16 +252,15 @@ ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
 
 
 """
-### Training from scratch
+## Training a model from scratch
 
-Here we show training EfficientNetB0 initiated from scratch.
-For many smaller datasets, the validation accuracy can be seen clearly to
-grow much slower than training accuracy.
+We build an EfficientNetB0 with 100 output classes, that is initialized from scratch:
+
+Note: the model will start noticeably overfitting after ~20 epochs.
 """
 
 from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.optimizers import SGD
-
 
 with strategy.scope():
     inputs = layers.Input(shape=(None, None, 3))
@@ -314,11 +315,10 @@ def plot_hist(hist):
 plot_hist(hist)
 
 """
-### Transfer learning from pretrained weight
+## Transfer learning from pre-trained weights
 
-Using pre-trained imagenet weights and only transfer learn (fine-tune) the model allows
-utilizing the power of EfficientNet much easier. To use pretrained weight, the model can
-be initiated through
+Here we initialize the model with pre-trained ImageNet weights,
+and we fine-tune it on our own dataset.
 """
 
 from tensorflow.keras.layers.experimental import preprocessing
@@ -352,13 +352,12 @@ def build_model(n_classes):
 
 
 """
-
 The first step to transfer learning is to freeze all layers and train only the top
-layers. For this step a relatively large learning rate (~0.1) can be used to start with,
-while applying some learning rate decay (either ExponentialDecay or use ReduceLROnPlateau
-callback). On CIFAR-100 with EfficientNetB0, this step will take validation accuracy to
-~70% with suitable (but not absolutely optimal) image augmentation. For this stage, using
-EfficientNetB0, validation accuracy and loss will be consistently better than training
+layers. For this step, a relatively large learning rate (~0.1) can be used to start with,
+while applying some learning rate decay (either `ExponentialDecay` or use the `ReduceLROnPlateau`
+callback). On CIFAR-100 with `EfficientNetB0`, this step will take validation accuracy to
+~70% with suitable image augmentation. For this stage, using
+`EfficientNetB0`, validation accuracy and loss will be consistently better than training
 accuracy and loss. This is because the regularization is strong, which only
 suppresses train time metrics.
 
@@ -380,9 +379,9 @@ hist = model.fit(
 plot_hist(hist)
 
 """
-The second step is to unfreeze a number of layers. Unfreezing layers and fine tuning is
+The second step is to unfreeze a number of layers. Unfreezing layers and fine-tuning them is
 usually thought to only provide incremental improvements on validation accuracy, but for
-the case of EfficientNetB0 it boosts validation accuracy by about 10% to pass 80%
+the case of `EfficientNetB0` it boosts validation accuracy by about 10% to pass 80%
 (reaching ~87% as in the original paper requires including AutoAugmentation or Random
 Augmentaion).
 
@@ -418,7 +417,9 @@ plot_hist(hist)
 ### Tips for fine tuning EfficientNet
 
 On unfreezing layers:
-- The batch normalization layers need to be kept frozen ( [more details](https://keras.io/guides/transfer_learning/) ). If they are also turned to trainable, the
+
+- The `BathcNormalization` layers need to be kept frozen ([more details](https://keras.io/guides/transfer_learning/)).
+If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.
 - In some cases it may be beneficial to open up only a portion of layers instead of
 unfreezing all. This will make fine tuning much faster when going to larger models like
@@ -428,7 +429,7 @@ a shortcut from the first layer to the last layer for each block. Not respecting
 also significantly harms the final performance.
 
 
-Some other tips for utilizing EfficientNet
+Some other tips for utilizing EfficientNet:
 
 - Larger variants of EfficientNet do not guarantee improved performance, especially for
 tasks with less data or fewer classes. In such a case, the larger variant of EfficientNet
@@ -453,8 +454,7 @@ model architecture has not changed, so loading the improved checkpoints is possi
 
 To use a checkpoint provided at
 [the official model repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
-download the checkpoint. As example, here we download noisy-student version of B1
-
+download the checkpoint. As example, here we download noisy-student version of B1:
 
 ```
 !wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet\
