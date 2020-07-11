@@ -297,7 +297,7 @@ ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
 ### Models with multiple inputs and outputs
 
 The functional API makes it easy to manipulate multiple inputs and outputs.
-This cannot be handled by the `Sequential` API.
+This cannot be handled with the `Sequential` API.
 
 For example, if you're building a system for ranking customer issue tickets by
 priority and routing them to the correct department,
