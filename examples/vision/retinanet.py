@@ -8,20 +8,22 @@ Description: Implementing RetinaNet: Focal Loss for Dense Object Detection.
 
 """
 ## Introduction
-Object detection is an interesting and very important problem in computer
+
+Object detection a very important problem in computer
 vision. Here the model is tasked with localizing the objects present in an
-image and, at the same time, classifying them into different categories.
-Object detection models can be broadly classified into single stage and two
-stage detectors. Two stage detectors are often more accurate but at the cost of
-being slower. Here in this example, we will implement RetinaNet, a popular
-single stage detector, which is accurate and runs fast.
+image, and at the same time, classifying them into different categories.
+Object detection models can be broadly classified into "single-stage" and
+"two- stage" detectors. Two-stage detectors are often more accurate but at the
+cost of being slower. Here in this example, we will implement RetinaNet,
+a popular single-stage detector, which is accurate and runs fast.
 RetinaNet uses a feature pyramid network to efficiently detect objects at
-multiple scales and introduces a new loss - Focal loss function to alleviate
+multiple scales and introduces a new loss, the Focal loss function, to alleviate
 the problem of the extreme foreground-background class imbalance.
 
 **References:**
- - [RetinaNet Paper](https://arxiv.org/abs/1708.02002)
- - [Feature Pyramid Network Paper] (https://arxiv.org/abs/1612.03144)
+
+- [RetinaNet Paper](https://arxiv.org/abs/1708.02002)
+- [Feature Pyramid Network Paper] (https://arxiv.org/abs/1612.03144)
 """
 
 
@@ -39,6 +41,7 @@ import tensorflow_datasets as tfds
 
 """
 ## Downloading the COCO2017 dataset
+
 Training on the entire COCO2017 dataset which has around 118k images takes a
 lot of time, hence we will be using a smaller subset of the dataset for
 training in this example.
@@ -55,10 +58,13 @@ with zipfile.ZipFile("data.zip", "r") as z_fp:
 
 """
 ## Implementing utility functions
-Bounding boxes can be represented in multiple ways, the common formats are
- - Storing the coordinates of the corners `[xmin, ymin, xmax, ymax]`
- - Storing the coordinates of the center and the box dimensions
- `[x, y, width, height]`
+
+Bounding boxes can be represented in multiple ways, the most common formats are:
+
+- Storing the coordinates of the corners `[xmin, ymin, xmax, ymax]`
+- Storing the coordinates of the center and the box dimensions
+`[x, y, width, height]`
+
 Since we require both formats, we will be implementing functions for converting
 between the formats.
 """
@@ -111,10 +117,12 @@ def convert_to_corners(boxes):
 
 
 """
-## Computing pairwise IOU
+## Computing pairwise Intersection Over Union (IOU)
+
 As we will see later in the example, we would be assigning ground truth boxes
 to anchor boxes based on the extent of overlapping. This will require us to
-calculate the IOU between all the anchor boxes and ground truth boxes pairs.
+calculate the Intersection Over Union (IOU) between all the anchor
+boxes and ground truth boxes pairs.
 """
 
 
@@ -177,6 +185,7 @@ def visualize_detections(
 
 """
 ## Implementing Anchor generator
+
 Anchor boxes are fixed sized boxes that the model uses to predict the bounding
 box for an object. It does this by regressing the offset between the location
 of the object's center and the center of an anchor box, and then uses the width
@@ -282,12 +291,15 @@ class AnchorBox:
 
 """
 ## Preprocessing data
-Preprocessing the images involves two steps
- - Resizing the image: Images are resized such that the shortest size is equal
- to 800 px, after resizing if the longest side of the image exceeds 1333 px,
- the image is resized such that the longest size is now capped at 1333 px.
- - Applying augmentation: Random scale jittering  and random horizontal flipping
- are the only augmentations applied to the images.
+
+Preprocessing the images involves two steps:
+
+- Resizing the image: Images are resized such that the shortest size is equal
+to 800 px, after resizing if the longest side of the image exceeds 1333 px,
+the image is resized such that the longest size is now capped at 1333 px.
+- Applying augmentation: Random scale jittering  and random horizontal flipping
+are the only augmentations applied to the images.
+
 Along with the images, bounding boxes are rescaled and flipped if required.
 """
 
@@ -394,14 +406,16 @@ def preprocess_data(sample):
 
 """
 ## Encoding labels
+
 The raw labels, consisting of bounding boxes and class ids need to be
 transformed into targets for training. This transformation consists of
-the following steps
- - Generating anchor boxes for the given image dimensions
- - Assigning ground truth boxes to the anchor boxes
- - The anchor boxes that are not assigned any objects, are either assigned the
- background class or ignored depending on the IOU
- - Generating the classification and regression targets using anchor boxes
+the following steps:
+
+- Generating anchor boxes for the given image dimensions
+- Assigning ground truth boxes to the anchor boxes
+- The anchor boxes that are not assigned any objects, are either assigned the
+background class or ignored depending on the IOU
+- Generating the classification and regression targets using anchor boxes
 """
 
 
@@ -513,6 +527,7 @@ class LabelEncoder:
 
 """
 ## Building the ResNet50 backbone
+
 RetinaNet uses a ResNet based backbone, using which a feature pyramid network
 is constructed. In the example we use ResNet50 as the backbone, and return the
 feature maps at strides 8, 16 and 32.
@@ -872,16 +887,18 @@ callbacks_list = [
 )
 
 """
-## Setting up tf.data pipeline
+## Setting up a `tf.data` pipeline
+
 To ensure that the model is fed with data efficiently we will be using
 `tf.data` API to create our input pipeline. The input pipeline
 consists for the following major processing steps:
- - Apply the preprocessing function to the samples
- - Create batches with fixed batch size. Since images in the batch can
- have different dimensions, and can also have different number of
- objects, we use `padded_batch` to the add the necessary padding to create
- rectangular tensors
- - Create targets for each sample in the batch using `LabelEncoder`
+
+- Apply the preprocessing function to the samples
+- Create batches with fixed batch size. Since images in the batch can
+have different dimensions, and can also have different number of
+objects, we use `padded_batch` to the add the necessary padding to create
+rectangular tensors
+- Create targets for each sample in the batch using `LabelEncoder`
 """
 
 autotune = tf.data.experimental.AUTOTUNE
