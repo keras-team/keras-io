@@ -53,7 +53,7 @@ width but keep resolution can still improve performance.
 
 As a result, the depth, width and resolution of each variant of the EfficientNet models
 are hand-picked and proven to produce good results, though they may be significantly
-off from the compound scaling formula. 
+off from the compound scaling formula.
 Therefore, the keras implementation (detailed below) only provide these 8 models, B0 to B7,
 instead of allowing arbitray choice of width / depth / resolution parameters.
 
@@ -117,7 +117,7 @@ the intended input resolution (224x224) for EfficientNetB0.
 When fine-tuning a model that has been pre-trained on higher resolution dataset for
 application to lower resolution image, we must up-sample the image.
 When the up-sampling ratio is so large, fine-tuning show significant advantage over
-training from scratch, and fine-tuning in the right way becomes important. 
+training from scratch, and fine-tuning in the right way becomes important.
 
 """
 # IMG_SIZE is determined by EfficientNet model choice
@@ -221,7 +221,7 @@ from tensorflow.keras import layers
 img_augmentation = Sequential(
     [
         preprocessing.RandomRotation(factor=0.15),
-        preprocessing.RandomTranslation(height_factor=0.1, width_factor=0.1)
+        preprocessing.RandomTranslation(height_factor=0.1, width_factor=0.1),
         preprocessing.RandomFlip(),
         preprocessing.RandomContrast(factor=0.1),
     ],
@@ -267,7 +267,9 @@ def input_preprocess(image, label):
     return image, label
 
 
-ds_train = ds_train.map(input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+ds_train = ds_train.map(
+    input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
+)
 ds_train = ds_train.cache()
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
