@@ -287,7 +287,14 @@ Note: the model will start noticeably overfitting after ~20 epochs.
 """
 
 from tensorflow.keras.applications import EfficientNetB0
+
+from tensorflow.keras.layers.experimental.preprocessing import (
+    Resizing,
+    RandomFlip,
+    RandomContrast,
+)
 from tensorflow.keras.optimizers import SGD
+
 
 with strategy.scope():
     inputs = layers.Input(shape=(None, None, 3))
