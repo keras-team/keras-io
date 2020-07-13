@@ -22,7 +22,7 @@ Recommendations:
 [Reference paper 1](https://arxiv.org/abs/1812.04948) [2](https://arxiv.org/abs/1912.04958)
 [Reference TF implementation](https://github.com/NVlabs/stylegan2)
 
-
+ - Currently being worked on by @parthivc and @Korusuke as of 07/14/20. See [issue #144](https://github.com/keras-team/keras-io/issues/144)
 
 ## Improve next-frame prediction with ConvLSTM
 
