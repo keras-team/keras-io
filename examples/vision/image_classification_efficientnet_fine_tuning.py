@@ -29,34 +29,33 @@ augmentation schemes and semi-supervised learning approaches are applied to furt
 improve the imagenet performance of the models. These extensions of the model can be used
 by updating weights without changing model architecture.
 
-## Compound scaling
+## B0 to B7 variants of EfficientNet
 
-The EfficientNet models are approximately created using compound scaling. Starting from
-the base model B0, as model size scales from B0 to B7, the extra computational resource
-is proportioned into width, depth and resolution of the model by requiring each of the
-three dimensions to grow at the same power of a set of fixed ratios.
+*(This section provides some details on the compound scaling, and can be skipped
+if only interested in using the models)*
 
-However, it must be noted that the ratios are not taken accurately. A few points need to
-be taken into account:
+Based on the [original paper](https://arxiv.org/abs/1905.11946) people may have the
+impression that EfficientNet is a continuous family of models created by arbitrarily
+choosing scaling factor in as Eq.(3) of the paper.  However, choice of resolution,
+depth and width are also restricted by many factors:
 
-1. Resolution: Resolutions not divisible by 8, 16, etc. cause zero-padding near boundaries
+- Resolution: Resolutions not divisible by 8, 16, etc. cause zero-padding near boundaries
 of some layers which wastes computational resources. This especially applies to smaller
 variants of the model, hence the input resolution for B0 and B1 are chosen as 224 and
 240.
 
-2. Depth and width: Channel size is always rounded to 8/16/32 because of the architecture.
+- Depth and width: The building blocks of EfficientNet demands channel size to be
+multiples of 8.
 
-3. Resource limit: Perfect compound scaling would assume spatial (memory) and time allowance
-for the computation to grow simultaneously, but OOM may further bottleneck the scaling of
-resolution.
+- Resource limit: Memory limitation may bottleneck resolution when depth
+and width can still increase. In such a situation, increasing depth and/or
+width but keep resolution can still improve performance.
 
-As a result, compound scaling factor is significantly off from mathematical formula (Eq. 3) in
-[Tan and Le, 2019](https://arxiv.org/abs/1905.11946).
-Hence it is important to understand the compound
-scaling as a rule of thumb that leads to this family of base models, rather than an exact
-optimization scheme. This also justifies that in the keras implementation (detailed
-below), only these 8 models, B0 to B7, are exposed to the user and arbitrary width /
-depth / resolution is not allowed.
+As a result, the depth, width and resolution of each variant of the EfficientNet models
+are hand-picked and proven to produce good results, though they may be significantly
+off from the compound scaling formula. 
+Therefore, the keras implementation (detailed below) only provide these 8 models, B0 to B7,
+instead of allowing arbitray choice of width / depth / resolution parameters.
 
 ## Keras implementation of EfficientNet
 
@@ -68,7 +67,7 @@ model = EfficientNetB0(weights='imagenet')
 ```
 
 This model takes input images of shape (224, 224, 3), and the input data should range
-[0, 255]. Resizing and normalization are included as part of the model.
+[0, 255]. Normalization is included as part of the model.
 
 Because training EfficientNet on ImageNet takes a tremendous amount of resources and
 several techniques that are not a part of the model architecture itself. Hence the Keras
@@ -101,19 +100,30 @@ layers allows using EfficientNet as a feature extractor in a transfer learning w
 Another argument in the model constructor worth noticing is `drop_connect_rate` which controls
 the dropout rate responsible for [stochastic depth](https://arxiv.org/abs/1603.09382).
 This parameter serves as a toggle for extra regularization in finetuning, but does not
-affect loaded weights.
+affect loaded weights. For example, when stronger regularization is desired, try:
+```
+model = EfficientNetB0(weights='imagenet', drop_connect_rate=0.4)
+```
+The default value is 0.2.
 
 ## Example: EfficientNetB0 for CIFAR-100.
 
-As an architecture, EfficientNet is capable of a wide range of image classification
-tasks. For example, we will show using pre-trained EfficientNetB0 on CIFAR-100. For
-EfficientNetB0, image size is 224.
-"""
+EfficientNet is capable of a wide range of image classification tasks.
+This makes it a good model for transfer learning.
+As an end-to-end example, we will show using pre-trained EfficientNetB0 on CIFAR-100.
 
+Notice that CIFAR-100 dataset has image size 32x32. This is much smaller than
+the intended input resolution (224x224) for EfficientNetB0.
+When fine-tuning a model that has been pre-trained on higher resolution dataset for
+application to lower resolution image, we must up-sample the image.
+When the up-sampling ratio is so large, fine-tuning show significant advantage over
+training from scratch, and fine-tuning in the right way becomes important. 
+
+"""
 # IMG_SIZE is determined by EfficientNet model choice
 IMG_SIZE = 224
-
 """
+
 ## Setup and data loading
 
 This example requires TensorFlow 2.3 or above.
@@ -143,28 +153,36 @@ except ValueError:
 """
 ### Loading data
 
-Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets).
+Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets)
+(hereafter TFDS).
+[CIFAR-100](https://www.cs.toronto.edu/~kriz/cifar.html) dataset is provided in
+TFDS as [cifar100](https://www.tensorflow.org/datasets/catalog/cifar100).
 
-[CIFAR-100](https://www.cs.toronto.edu/~kriz/cifar.html) dataset is used to generate
-the example. By simply changing `dataset_name` below, this notebook can be used for
-other datasets in TFDS such as [food101](https://www.tensorflow.org/datasets/catalog/food101),
-[stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs), etc.
+By simply changing `dataset_name` below, you may also try this notebook for
+other datasets in TFDS such as
+[cifar10](https://www.tensorflow.org/datasets/catalog/cifar10),
+[food101](https://www.tensorflow.org/datasets/catalog/food101),
+[stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs),
+etc.
 
-Using TPU will be significantly faster. However, if using TFDS datasets,
-a GCS bucket location is required to save the datasets. For example,
+For TPU: if using TFDS datasets,
+a [GCS bucket](https://cloud.google.com/storage/docs/key-terms#buckets)
+location is required to save the datasets. For example,
 ```
 tfds.load(dataset_name, data_dir="gs://example-bucket/datapath")
 ```
-and make sure both the current environment and the TPU service account have
+Also, both the current environment and the TPU service account have
 proper [access](https://cloud.google.com/tpu/docs/storage-buckets#authorize_the_service_account)
-to the bucket.
+to the bucket. Alternatively, for small datasets you may try loading data
+into the memory and use `tf.data.Dataset.from_tensor_slices()`.
 """
+
 
 import tensorflow_datasets as tfds
 
 batch_size = 64
 
-dataset_name = "cifar10"
+dataset_name = "cifar100"
 (ds_train, ds_test), ds_info = tfds.load(
     dataset_name, split=["train", "test"], with_info=True, as_supervised=True
 )
@@ -202,9 +220,10 @@ from tensorflow.keras import layers
 
 img_augmentation = Sequential(
     [
-        preprocessing.RandomRotation(0.15),
+        preprocessing.RandomRotation(factor=0.15),
+        preprocessing.RandomTranslation(height_factor=0.1, width_factor=0.1)
         preprocessing.RandomFlip(),
-        preprocessing.RandomContrast(0.1),
+        preprocessing.RandomContrast(factor=0.1),
     ],
     name="img_augmentation",
 )
@@ -227,27 +246,33 @@ for image, label in ds_train.take(1):
 
 
 """
+### Prepare inputs
+
 Once we verify the input data and augmentation are working correctly,
-we prepare dataset for training. The labels are put into one-hot
+we prepare dataset for training. The input data are resized to uniform
+`IMG_SIZE`. The labels are put into one-hot
 (a.k.a. categorical) encoding. The dataset is batched.
 
-Using `cache`, `prefetch` and `AUTOTUNE` may in some situation improve
+Note: `cache`, `prefetch` and `AUTOTUNE` may in some situation improve
 performance, but depends on environment and the specific dataset used.
 See this [guide](https://www.tensorflow.org/guide/data_performance)
 for more information on data pipeline performance.
 """
 
 # One-hot / categorical encoding
-def apply_one_hot(image, label):
-    return image, tf.one_hot(label, NUM_CLASSES)
+def input_preprocess(image, label):
+    resize = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")
+    image = resize(image)
+    label = tf.one_hot(label, NUM_CLASSES)
+    return image, label
 
 
-ds_train = ds_train.map(apply_one_hot, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+ds_train = ds_train.map(input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 ds_train = ds_train.cache()
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
-ds_test = ds_test.map(apply_one_hot)
+ds_test = ds_test.map(input_preprocess)
 ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
 
 
@@ -274,7 +299,6 @@ with strategy.scope():
     x = inputs
 
     x = img_augmentation(x)
-    x = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
 
     x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
@@ -336,7 +360,6 @@ def build_model(n_classes):
     x = inputs
 
     x = img_augmentation(x)
-    x = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
 
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
@@ -404,7 +427,7 @@ def unfreeze_model(model):
         else:
             l.trainable = True
 
-    sgd = SGD(learning_rate=0.005)
+    sgd = SGD(learning_rate=0.0004)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 
