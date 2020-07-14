@@ -2,7 +2,7 @@
 Title: Object Detection with RetinaNet
 Author: [Srihari Humbarwadi](https://twitter.com/srihari_rh)
 Date created: 2020/05/17
-Last modified: 2020/07/13
+Last modified: 2020/07/14
 Description: Implementing RetinaNet: Focal Loss for Dense Object Detection.
 """
 
@@ -13,7 +13,7 @@ Object detection a very important problem in computer
 vision. Here the model is tasked with localizing the objects present in an
 image, and at the same time, classifying them into different categories.
 Object detection models can be broadly classified into "single-stage" and
-"two- stage" detectors. Two-stage detectors are often more accurate but at the
+"two-stage" detectors. Two-stage detectors are often more accurate but at the
 cost of being slower. Here in this example, we will implement RetinaNet,
 a popular single-stage detector, which is accurate and runs fast.
 RetinaNet uses a feature pyramid network to efficiently detect objects at
@@ -23,7 +23,7 @@ the problem of the extreme foreground-background class imbalance.
 **References:**
 
 - [RetinaNet Paper](https://arxiv.org/abs/1708.02002)
-- [Feature Pyramid Network Paper] (https://arxiv.org/abs/1612.03144)
+- [Feature Pyramid Network Paper](https://arxiv.org/abs/1612.03144)
 """
 
 
@@ -43,7 +43,7 @@ import tensorflow_datasets as tfds
 ## Downloading the COCO2017 dataset
 
 Training on the entire COCO2017 dataset which has around 118k images takes a
-lot of time, hence we will be using a smaller subset of the dataset for
+lot of time, hence we will be using a smaller subset of ~500 images for
 training in this example.
 """
 
@@ -819,16 +819,6 @@ class RetinaNetLoss(tf.losses.Loss):
         return loss
 
 
-def add_l2_regularization(weight, alpha=0.0001):
-    """Utility function to add l2 regularization"""
-
-    def _add_l2_regularization():
-        l2_reg = tf.keras.regularizers.l2(alpha)
-        return l2_reg(weight)
-
-    return _add_l2_regularization
-
-
 """
 ## Setting up training parameters
 """
@@ -852,12 +842,6 @@ learning_rate_fn = tf.optimizers.schedules.PiecewiseConstantDecay(
 resnet50_backbone = get_backbone()
 loss_fn = RetinaNetLoss(num_classes)
 model = RetinaNet(num_classes, resnet50_backbone)
-
-
-#  Add L2 regularization to all Conv2d filters
-for weight in model.trainable_weights:
-    if re.search(r"^(conv).*(kernel:0)$", weight.name) is not None:
-        model.add_loss(add_l2_regularization(weight))
 
 optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
 model.compile(loss=loss_fn, optimizer=optimizer)
@@ -911,7 +895,6 @@ train_dataset = train_dataset.map(
     label_encoder.encode_batch, num_parallel_calls=autotune
 )
 train_dataset = train_dataset.apply(tf.data.experimental.ignore_errors())
-train_dataset = train_dataset.repeat()
 train_dataset = train_dataset.prefetch(autotune)
 
 val_dataset = val_dataset.map(preprocess_data, num_parallel_calls=autotune)
@@ -933,22 +916,18 @@ val_dataset = val_dataset.prefetch(autotune)
 
 # train_steps = 4 * 100000
 # epochs = train_steps // train_steps_per_epoch
-# validation_freq = 5,
 
 epochs = 1
-train_steps_per_epoch = 100
-val_steps_per_epoch = 100
-validation_freq = 1
+
+# Running 100 training and 50 validation steps,
+# remove `.take` when training on the full dataset
 
 model.fit(
-    train_dataset,
-    steps_per_epoch=train_steps_per_epoch,
-    validation_data=val_dataset,
-    validation_steps=val_steps_per_epoch,
+    train_dataset.take(100),
+    validation_data=val_dataset.take(50),
     epochs=epochs,
     callbacks=callbacks_list,
     verbose=1,
-    validation_freq=validation_freq,
 )
 
 """
