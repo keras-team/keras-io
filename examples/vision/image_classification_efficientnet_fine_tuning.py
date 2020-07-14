@@ -195,9 +195,6 @@ NUM_CLASSES = ds_info.features["label"].num_classes
 The following code shows the first 9 images with their labels both
 in numeric form and text.
 """
-from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.keras.models import Sequential
-from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
 label_info = ds_info.features["label"]
@@ -327,7 +324,6 @@ makes it clear that validation accuracy stagnates at very low value.
 
 import matplotlib.pyplot as plt
 
-
 def plot_hist(hist):
     plt.plot(hist.history["accuracy"])
     plt.plot(hist.history["val_accuracy"])
@@ -336,7 +332,6 @@ def plot_hist(hist):
     plt.xlabel("epoch")
     plt.legend(["train", "validation"], loc="upper left")
     plt.show()
-
 
 plot_hist(hist)
 
@@ -414,7 +409,6 @@ Note that the convergence may take more than 50 epochs. If no data augmentation 
 applied, expect the validation accuracy to reach only ~70% even for many epochs.
 """
 
-
 def unfreeze_model(model):
     for l in model.layers:
         if "bn" in l.name:
@@ -425,7 +419,6 @@ def unfreeze_model(model):
     sgd = SGD(learning_rate=0.0004)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
     return model
-
 
 model = unfreeze_model(model)
 
