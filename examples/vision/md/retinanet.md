@@ -981,10 +981,6 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
-
-WARNING:tensorflow:Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
-
 100/100 [==============================] - ETA: 0s - loss: 4.0953
 Epoch 00001: saving model to retinanet/weights_epoch_1
 100/100 [==============================] - 68s 679ms/step - loss: 4.0953 - val_loss: 4.0821
