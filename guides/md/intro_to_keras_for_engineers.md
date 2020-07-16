@@ -27,20 +27,20 @@ Are you a machine learning engineer looking to use Keras
 to ship deep-learning powered features in real products? This guide will serve
 as your first introduction to core Keras API concepts.
 
-In this guide, you will learn about:
+In this guide, you will learn how to:
 
-- How to prepare your data before training a model (by turning it into either NumPy
+- Prepare your data before training a model (by turning it into either NumPy
  arrays or `tf.data.Dataset` objects).
-- How to do data preprocessing, for instance feature normalization or vocabulary
+- Do data preprocessing, for instance feature normalization or vocabulary
  indexing.
-- How to build a model that turns your data into useful predictions,
+- Build a model that turns your data into useful predictions,
 using the Keras Functional API.
-- How to train your model with the built-in Keras `fit()` method, while being
+- Train your model with the built-in Keras `fit()` method, while being
 mindful of checkpointing, metrics monitoring, and fault tolerance.
-- How to evaluate your model on a test data and how to use it for inference on new data.
-- How to customize what `fit()` does, for instance to build a GAN.
-- How to speed up training by leveraging multiple GPUs.
-- How to refine your model through hyperparameter tuning.
+- Evaluate your model on a test data and how to use it for inference on new data.
+- Customize what `fit()` does, for instance to build a GAN.
+- Speed up training by leveraging multiple GPUs.
+- Refine your model through hyperparameter tuning.
 
 At the end of this guide, you will get pointers to end-to-end examples to solidify
  these concepts:
