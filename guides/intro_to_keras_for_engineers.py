@@ -25,7 +25,7 @@ In this guide, you will learn how to:
 
 - Prepare your data before training a model (by turning it into either NumPy
  arrays or `tf.data.Dataset` objects).
-- Data preprocessing, for instance feature normalization or vocabulary
+- Do data preprocessing, for instance feature normalization or vocabulary
  indexing.
 - Build a model that turns your data into useful predictions,
 using the Keras Functional API.
