@@ -2,8 +2,8 @@
 Title: Image classification via fine-tuning with EfficientNet
 Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
-Last modified: 2020/07/08
-Description: Use EfficientNet with weights pre-trained on imagenet for CIFAR-100 classification.
+Last modified: 2020/07/16
+Description: Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 """
 """
 
@@ -106,18 +106,12 @@ model = EfficientNetB0(weights='imagenet', drop_connect_rate=0.4)
 ```
 The default value is 0.2.
 
-## Example: EfficientNetB0 for CIFAR-100.
+## Example: EfficientNetB0 for Stanford Dogs.
 
 EfficientNet is capable of a wide range of image classification tasks.
 This makes it a good model for transfer learning.
-As an end-to-end example, we will show using pre-trained EfficientNetB0 on CIFAR-100.
-
-Notice that CIFAR-100 dataset has image size 32x32. This is much smaller than
-the intended input resolution (224x224) for EfficientNetB0.
-When fine-tuning a model that has been pre-trained on higher resolution dataset for
-application to lower resolution image, we must up-sample the image.
-When the up-sampling ratio is so large, fine-tuning show significant advantage over
-training from scratch, and fine-tuning in the right way becomes important.
+As an end-to-end example, we will show using pre-trained EfficientNetB0 on
+[Stanford Dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/main.html) dataset.
 
 """
 # IMG_SIZE is determined by EfficientNet model choice
@@ -155,15 +149,18 @@ except ValueError:
 
 Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets)
 (hereafter TFDS).
-[CIFAR-100](https://www.cs.toronto.edu/~kriz/cifar.html) dataset is provided in
-TFDS as [cifar100](https://www.tensorflow.org/datasets/catalog/cifar100).
+Stanford Dogs dataset is provided in
+TFDS as [stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs).
 
 By simply changing `dataset_name` below, you may also try this notebook for
 other datasets in TFDS such as
 [cifar10](https://www.tensorflow.org/datasets/catalog/cifar10),
+[cifar100](https://www.tensorflow.org/datasets/catalog/cifar100),
 [food101](https://www.tensorflow.org/datasets/catalog/food101),
-[stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs),
-etc.
+etc. When the images are much smaller than the size of EfficientNet input,
+we can simply upsample the input images. It has been shown in
+[Tan and Le, 2019](https://arxiv.org/abs/1905.11946) that transfer learning
+result is better for increased resolution even if input images remain small.
 
 For TPU: if using TFDS datasets,
 a [GCS bucket](https://cloud.google.com/storage/docs/key-terms#buckets)
@@ -177,12 +174,11 @@ to the bucket. Alternatively, for small datasets you may try loading data
 into the memory and use `tf.data.Dataset.from_tensor_slices()`.
 """
 
-
 import tensorflow_datasets as tfds
 
 batch_size = 64
 
-dataset_name = "cifar100"
+dataset_name = "stanford_dogs"
 (ds_train, ds_test), ds_info = tfds.load(
     dataset_name, split=["train", "test"], with_info=True, as_supervised=True
 )
@@ -190,19 +186,30 @@ NUM_CLASSES = ds_info.features["label"].num_classes
 
 
 """
+When the dataset include images with various size, we need to resize them into a
+shared size. This is done with `smart_resize` which respects the aspect ratio
+of the images. The Stanford Dogs dataset includes only images at least (200, 200)
+pixels. Here we resize it directly to the input size needed for EfficientNet.
+"""
+
+size = (IMG_SIZE, IMG_SIZE)
+ds_train = ds_train.map(lambda image, label: (tf.image.resize(image, size), label))
+ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label))
+
+"""
 ### Visualizing the data
 
 The following code shows the first 9 images with their labels both
 in numeric form and text.
 """
-import matplotlib.pyplot as plt
-
-label_info = ds_info.features["label"]
-for i, (image, label) in enumerate(ds_train.take(9)):
-    ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(image)
-    plt.title("{}, {}".format((label), label_info.int2str(label)))
-    plt.axis("off")
+# import matplotlib.pyplot as plt
+#
+# label_info = ds_info.features["label"]
+# for i, (image, label) in enumerate(ds_train.take(9)):
+#    ax = plt.subplot(3, 3, i + 1)
+#    plt.imshow(image)
+#    plt.title("{}, {}".format((label), label_info.int2str(label)))
+#    plt.axis("off")
 
 
 """
@@ -233,13 +240,13 @@ it easy to visualize the augmented images. Here we plot 9 examples
 of augmentation result of a given figure.
 """
 
-for image, label in ds_train.take(1):
-    for i in range(9):
-        ax = plt.subplot(3, 3, i + 1)
-        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
-        plt.imshow(aug_img[0].numpy().astype("uint8"))
-        plt.title("{}, {}".format((label), label_info.int2str(label)))
-        plt.axis("off")
+# for image, label in ds_train.take(1):
+#    for i in range(9):
+#        ax = plt.subplot(3, 3, i + 1)
+#        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
+#        plt.imshow(aug_img[0].numpy().astype("uint8"))
+#        plt.title("{}, {}".format((label), label_info.int2str(label)))
+#        plt.axis("off")
 
 
 """
@@ -258,8 +265,6 @@ for more information on data pipeline performance.
 
 # One-hot / categorical encoding
 def input_preprocess(image, label):
-    resize = preprocessing.Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")
-    image = resize(image)
     label = tf.one_hot(label, NUM_CLASSES)
     return image, label
 
@@ -278,19 +283,18 @@ ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
 """
 ## Training a model from scratch
 
-We build an EfficientNetB0 with 100 output classes, that is initialized from scratch:
+We build an EfficientNetB0 with 120 output classes, that is initialized from scratch:
 
-Note: the model will start noticeably overfitting after ~20 epochs.
+Note: the accuracy will increase very slowly and may overfit.
 """
 
 from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.optimizers import SGD
 
 with strategy.scope():
-    inputs = layers.Input(shape=(None, None, 3))
-    x = inputs
+    inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
 
-    x = img_augmentation(x)
+    x = img_augmentation(inputs)
 
     x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
@@ -318,11 +322,13 @@ especially those with lower resolution like CIFAR-100, faces the significant cha
 overfitting or getting trapped in local extrema.
 
 Hence traning from scratch requires very careful choice of hyperparameters and is
-difficult to find suitable regularization. Plotting the training and validation accuracy
+difficult to find suitable regularization. It would also be much more demanding in resources.
+Plotting the training and validation accuracy
 makes it clear that validation accuracy stagnates at very low value.
 """
 
 import matplotlib.pyplot as plt
+
 
 def plot_hist(hist):
     plt.plot(hist.history["accuracy"])
@@ -332,6 +338,7 @@ def plot_hist(hist):
     plt.xlabel("epoch")
     plt.legend(["train", "validation"], loc="upper left")
     plt.show()
+
 
 plot_hist(hist)
 
@@ -345,11 +352,10 @@ and we fine-tune it on our own dataset.
 from tensorflow.keras.layers.experimental import preprocessing
 
 
-def build_model(n_classes):
-    inputs = layers.Input(shape=(None, None, 3))
-    x = inputs
+def build_model(num_classes):
+    inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
 
-    x = img_augmentation(x)
+    x = img_augmentation(inputs)
 
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
@@ -375,20 +381,20 @@ def build_model(n_classes):
 The first step to transfer learning is to freeze all layers and train only the top
 layers. For this step, a relatively large learning rate (~0.1) can be used to start with,
 while applying some learning rate decay (either `ExponentialDecay` or use the `ReduceLROnPlateau`
-callback). On CIFAR-100 with `EfficientNetB0`, this step will take validation accuracy to
-~70% with suitable image augmentation. For this stage, using
-`EfficientNetB0`, validation accuracy and loss will be consistently better than training
+callback).  For this stage, using
+`EfficientNetB0`, validation accuracy and loss will usually be better than training
 accuracy and loss. This is because the regularization is strong, which only
 suppresses train time metrics.
 
-Note that the convergence may take up to 50 epochs. If no data augmentation layer is
-applied, expect the validation accuracy to reach only ~60% even for many epochs.
+Note that the convergence may take up to 50 epochs depending on choice of learning rate.
+If image augmentation layers were not
+applied, the validation accuracy may only reach ~60%.
 """
 
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 with strategy.scope():
-    model = build_model(n_classes=NUM_CLASSES)
+    model = build_model(num_classes=NUM_CLASSES)
 
 reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001)
 
@@ -399,28 +405,45 @@ hist = model.fit(
 plot_hist(hist)
 
 """
-The second step is to unfreeze a number of layers. Unfreezing layers and fine-tuning them is
-usually thought to only provide incremental improvements on validation accuracy, but for
-the case of `EfficientNetB0` it boosts validation accuracy by about 10% to pass 80%
-(reaching ~87% as in the original paper requires including AutoAugmentation or Random
-Augmentaion).
+The second step is to unfreeze a number of layers and fit the model using smaller
+learning rate. In this example we show unfreezing all layers, but depending on
+specific dataset it may be desireble to only unfreeze a fraction of all layers.
 
-Note that the convergence may take more than 50 epochs. If no data augmentation layer is
-applied, expect the validation accuracy to reach only ~70% even for many epochs.
+When the feature extraction with
+pretrained model works good enough, this step would give a very limited gain on
+validation accuracy. The example we show does not see significant improvement
+as ImageNet pretraining already exposed the model to a good amount of dogs.
+
+On the other hand, when we use pretrained weights on a dataset that is more different
+from ImageNet, this fine-tuning step can be crucial as the feature extractor also
+needs to be adjusted by a considerable amount. Such a situation can be demonstrated
+if choosing CIFAR-100 dataset instead, where fine-tuning boosts validation accuracy
+by about 10% to pass 80% on `EfficientNetB0`.
+In such a case the convergence may take more than 50 epochs. 
+
+A side note on freezing/unfreezing models: setting `trainable` of a `Model` will
+simultaneously set all layers belonging to the `Model` to the same `trainable`
+attribute. Each layer is trainable only if both the layer itself and the model
+containing it are trainable. Hence when we need to partially freeze/unfreeze
+a model, we need to make sure the `trainable` attribute of the model is set
+to `True`.
+
+
 """
 
+
 def unfreeze_model(model):
+    model.trainable = True
     for l in model.layers:
-        if "bn" in l.name:
+        if isinstance(l, layers.BatchNormalization):
             print(f"{l.name} is staying untrainable")
-        else:
-            l.trainable = True
+            l.trainable = False
 
     sgd = SGD(learning_rate=0.0004)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
-    return model
 
-model = unfreeze_model(model)
+
+unfreeze_model(model)
 
 reduce_lr = ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001
