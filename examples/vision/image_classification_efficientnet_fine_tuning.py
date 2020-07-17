@@ -202,14 +202,14 @@ ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label)
 The following code shows the first 9 images with their labels both
 in numeric form and text.
 """
-# import matplotlib.pyplot as plt
-#
-# label_info = ds_info.features["label"]
-# for i, (image, label) in enumerate(ds_train.take(9)):
-#    ax = plt.subplot(3, 3, i + 1)
-#    plt.imshow(image)
-#    plt.title("{}, {}".format((label), label_info.int2str(label)))
-#    plt.axis("off")
+import matplotlib.pyplot as plt
+
+label_info = ds_info.features["label"]
+for i, (image, label) in enumerate(ds_train.take(9)):
+   ax = plt.subplot(3, 3, i + 1)
+   plt.imshow(image)
+   plt.title("{}, {}".format((label), label_info.int2str(label)))
+   plt.axis("off")
 
 
 """
@@ -240,13 +240,13 @@ it easy to visualize the augmented images. Here we plot 9 examples
 of augmentation result of a given figure.
 """
 
-# for image, label in ds_train.take(1):
-#    for i in range(9):
-#        ax = plt.subplot(3, 3, i + 1)
-#        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
-#        plt.imshow(aug_img[0].numpy().astype("uint8"))
-#        plt.title("{}, {}".format((label), label_info.int2str(label)))
-#        plt.axis("off")
+for image, label in ds_train.take(1):
+   for i in range(9):
+       ax = plt.subplot(3, 3, i + 1)
+       aug_img = img_augmentation(tf.expand_dims(image, axis=0))
+       plt.imshow(aug_img[0].numpy().astype("uint8"))
+       plt.title("{}, {}".format((label), label_info.int2str(label)))
+       plt.axis("off")
 
 
 """
@@ -459,7 +459,8 @@ plot_hist(hist)
 
 On unfreezing layers:
 
-- The `BathcNormalization` layers need to be kept frozen ([more details](https://keras.io/guides/transfer_learning/)).
+- The `BathcNormalization` layers need to be kept frozen
+([more details](https://keras.io/guides/transfer_learning/)).
 If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.
 - In some cases it may be beneficial to open up only a portion of layers instead of
