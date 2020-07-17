@@ -62,6 +62,7 @@ The dataset should have at least 50k samples and there should be at least a doze
 ## DETR: End-to-End Object Detection with Transformers
 
 [Reference implementation](https://github.com/facebookresearch/detr)
+[TF/Keras implementation](https://github.com/auvisusAI/detr-tensorflow)
 
 
 ## 3D image classification
@@ -69,7 +70,6 @@ The dataset should have at least 50k samples and there should be at least a doze
 Using a dataset of CT scans (a few are available on Kaggle).
 
 The model should use `Conv3D` layers.
-
 
 
 
