@@ -92,9 +92,9 @@ blockquote {
   font-size: 1rem;
 }
 .nav-sublink {
-  font-size: 0.9rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  font-size: 0.85rem;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
 }
 @media screen and (max-width: 1342px) {
   .k-nav {
