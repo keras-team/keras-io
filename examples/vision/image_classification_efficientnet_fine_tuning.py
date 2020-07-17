@@ -31,8 +31,8 @@ by updating weights without changing model architecture.
 
 ## B0 to B7 variants of EfficientNet
 
-*(This section provides some details on the compound scaling, and can be skipped
-if only interested in using the models)*
+*(This section provides some details on "compound scaling", and can be skipped
+if you're only interested in using the models)*
 
 Based on the [original paper](https://arxiv.org/abs/1905.11946) people may have the
 impression that EfficientNet is a continuous family of models created by arbitrarily
@@ -60,8 +60,9 @@ instead of allowing arbitray choice of width / depth / resolution parameters.
 ## Keras implementation of EfficientNet
 
 An implementation of EfficientNet B0 to B7 has been shipped with tf.keras since TF2.3. To
-use EfficientNetB0 for classifying 1000 classes of images from imagenet, run
-```
+use EfficientNetB0 for classifying 1000 classes of images from imagenet, run:
+
+```python
 from tensorflow.keras.applications import EfficientNetB0
 model = EfficientNetB0(weights='imagenet')
 ```
@@ -101,7 +102,8 @@ Another argument in the model constructor worth noticing is `drop_connect_rate` 
 the dropout rate responsible for [stochastic depth](https://arxiv.org/abs/1603.09382).
 This parameter serves as a toggle for extra regularization in finetuning, but does not
 affect loaded weights. For example, when stronger regularization is desired, try:
-```
+
+```python
 model = EfficientNetB0(weights='imagenet', drop_connect_rate=0.4)
 ```
 The default value is 0.2.
@@ -123,8 +125,9 @@ IMG_SIZE = 224
 This example requires TensorFlow 2.3 or above.
 
 To use TPU, the TPU runtime must match current running TensorFlow
-version. If there is a mismatch, try
-```
+version. If there is a mismatch, try:
+
+```python
 from cloud_tpu_client import Client
 c = Client()
 c.configure_tpu_version(tf.__version__, restart_type="always")
@@ -151,6 +154,8 @@ Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets
 (hereafter TFDS).
 Stanford Dogs dataset is provided in
 TFDS as [stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs).
+It features 20,580 images that belong to 120 classes of dog breeds
+(12,000 for training and 8,580 for testing).
 
 By simply changing `dataset_name` below, you may also try this notebook for
 other datasets in TFDS such as
@@ -164,10 +169,12 @@ result is better for increased resolution even if input images remain small.
 
 For TPU: if using TFDS datasets,
 a [GCS bucket](https://cloud.google.com/storage/docs/key-terms#buckets)
-location is required to save the datasets. For example,
-```
+location is required to save the datasets. For example:
+
+```python
 tfds.load(dataset_name, data_dir="gs://example-bucket/datapath")
 ```
+
 Also, both the current environment and the TPU service account have
 proper [access](https://cloud.google.com/tpu/docs/storage-buckets#authorize_the_service_account)
 to the bucket. Alternatively, for small datasets you may try loading data
@@ -187,9 +194,8 @@ NUM_CLASSES = ds_info.features["label"].num_classes
 
 """
 When the dataset include images with various size, we need to resize them into a
-shared size. This is done with `smart_resize` which respects the aspect ratio
-of the images. The Stanford Dogs dataset includes only images at least (200, 200)
-pixels. Here we resize it directly to the input size needed for EfficientNet.
+shared size. The Stanford Dogs dataset includes only images at least 200x200
+pixels in size. Here we resize the images to the input size needed for EfficientNet.
 """
 
 size = (IMG_SIZE, IMG_SIZE)
@@ -427,8 +433,6 @@ attribute. Each layer is trainable only if both the layer itself and the model
 containing it are trainable. Hence when we need to partially freeze/unfreeze
 a model, we need to make sure the `trainable` attribute of the model is set
 to `True`.
-
-
 """
 
 
@@ -469,7 +473,6 @@ B7.
 - Each block needs to be all turned on or off. This is because the architecture includes
 a shortcut from the first layer to the last layer for each block. Not respecting blocks
 also significantly harms the final performance.
-
 
 Some other tips for utilizing EfficientNet:
 
@@ -513,7 +516,7 @@ Then use the script efficientnet_weight_update_util.py to convert ckpt file to h
 
 When creating model, use the following to load new weight:
 
-```
+```python
 model = EfficientNetB0(weights="efficientnetb1_notop.h5", include_top=False)
 ```
 """
