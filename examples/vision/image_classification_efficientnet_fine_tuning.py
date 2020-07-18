@@ -425,10 +425,10 @@ to `True`.
 
 
 def unfreeze_model(model):
-    model.trainable = True
-    for l in model.layers:
-        if isinstance(l, layers.BatchNormalization):
-            l.trainable = False
+    # We unfreeze the top 50 layers while leaving BatchNorm layers frozen
+    for layer in model.layers[-50:]:
+        if not isinstance(layer, layers.BatchNormalization):
+            layer.trainable = True
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
     model.compile(
