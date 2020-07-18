@@ -312,7 +312,7 @@ with strategy.scope():
 
 model.summary()
 
-epochs = 20  # @param {type: "slider", min:5, max:50}
+epochs = 40  # @param {type: "slider", min:10, max:100}
 hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
 
 
@@ -321,7 +321,7 @@ Training the model is relatively fast (takes only 20 seconds per epoch on TPUv2 
 available on Colab). This might make it sounds easy to simply train EfficientNet on any
 dataset wanted from scratch. However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
-overfitting or getting trapped in local extrema.
+overfitting.
 
 Hence training from scratch requires very careful choice of hyperparameters and is
 difficult to find suitable regularization. It would also be much more demanding in resources.
