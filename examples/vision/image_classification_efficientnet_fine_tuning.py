@@ -212,10 +212,10 @@ import matplotlib.pyplot as plt
 
 label_info = ds_info.features["label"]
 for i, (image, label) in enumerate(ds_train.take(9)):
-   ax = plt.subplot(3, 3, i + 1)
-   plt.imshow(image)
-   plt.title("{}, {}".format((label), label_info.int2str(label)))
-   plt.axis("off")
+    ax = plt.subplot(3, 3, i + 1)
+    plt.imshow(image)
+    plt.title("{}, {}".format((label), label_info.int2str(label)))
+    plt.axis("off")
 
 
 """
@@ -247,12 +247,12 @@ of augmentation result of a given figure.
 """
 
 for image, label in ds_train.take(1):
-   for i in range(9):
-       ax = plt.subplot(3, 3, i + 1)
-       aug_img = img_augmentation(tf.expand_dims(image, axis=0))
-       plt.imshow(aug_img[0].numpy().astype("uint8"))
-       plt.title("{}, {}".format((label), label_info.int2str(label)))
-       plt.axis("off")
+    for i in range(9):
+        ax = plt.subplot(3, 3, i + 1)
+        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
+        plt.imshow(aug_img[0].numpy().astype("uint8"))
+        plt.title("{}, {}".format((label), label_info.int2str(label)))
+        plt.axis("off")
 
 
 """
@@ -316,7 +316,7 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
 
 epochs = 20  # @param {type: "slider", min:5, max:50}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr]
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
 
 
@@ -406,7 +406,7 @@ reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=5, min_lr
 
 epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr]
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
 plot_hist(hist)
 
@@ -425,7 +425,7 @@ from ImageNet, this fine-tuning step can be crucial as the feature extractor als
 needs to be adjusted by a considerable amount. Such a situation can be demonstrated
 if choosing CIFAR-100 dataset instead, where fine-tuning boosts validation accuracy
 by about 10% to pass 80% on `EfficientNetB0`.
-In such a case the convergence may take more than 50 epochs. 
+In such a case the convergence may take more than 50 epochs.
 
 A side note on freezing/unfreezing models: setting `trainable` of a `Model` will
 simultaneously set all layers belonging to the `Model` to the same `trainable`
@@ -454,7 +454,7 @@ reduce_lr = ReduceLROnPlateau(
 )
 epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr],
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
 plot_hist(hist)
 

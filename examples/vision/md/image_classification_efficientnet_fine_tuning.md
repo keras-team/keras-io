@@ -1,9 +1,9 @@
-# Image classification using EfficientNet and fine-tuning
+# Image classification via fine-tuning with EfficientNet
 
-**Author:** Yixing Fu<br>
+**Author:** [Yixing Fu](https://github.com/yixingfu)<br>
 **Date created:** 2020/06/30<br>
-**Last modified:** 2020/07/06<br>
-**Description:** Use EfficientNet with weights pre-trained on imagenet for CIFAR-100 classification.
+**Last modified:** 2020/07/16<br>
+**Description:** Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/image_classification_efficientnet_fine_tuning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/image_classification_efficientnet_fine_tuning.py)
@@ -11,68 +11,75 @@
 
 
 ---
-## What is EfficientNet
-EfficientNet, first introduced in https://arxiv.org/abs/1905.11946 is among the most
-efficient models (i.e. requiring least FLOPS for inference) that reaches SOTA in both
+## Introduction: what is EfficientNet
+
+EfficientNet, first introduced in [Tan and Le, 2019](https://arxiv.org/abs/1905.11946)
+is among the most efficient models (i.e. requiring least FLOPS for inference)
+that reaches State-of-the-Art accuracy on both
 imagenet and common image classification transfer learning tasks.
 
-The smallest base model is similar to MnasNet (https://arxiv.org/abs/1807.11626), which
+The smallest base model is similar to [MnasNet](https://arxiv.org/abs/1807.11626), which
 reached near-SOTA with a significantly smaller model. By introducing a heuristic way to
 scale the model, EfficientNet provides a family of models (B0 to B7) that represents a
 good combination of efficiency and accuracy on a variety of scales. Such a scaling
-heuristics (compound-scaling, details see https://arxiv.org/abs/1905.11946) allows the
+heuristics (compound-scaling, details see
+[Tan and Le, 2019](https://arxiv.org/abs/1905.11946)) allows the
 efficiency-oriented base model (B0) to surpass models at every scale, while avoiding
 extensive grid-search of hyperparameters.
 
 A summary of the latest updates on the model is available at
-https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet, where various
+[here](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), where various
 augmentation schemes and semi-supervised learning approaches are applied to further
 improve the imagenet performance of the models. These extensions of the model can be used
 by updating weights without changing model architecture.
 
 ---
-## Compound scaling
+## B0 to B7 variants of EfficientNet
 
-The EfficientNet models are approximately created using compound scaling. Starting from
-the base model B0, as model size scales from B0 to B7, the extra computational resource
-is proportioned into width, depth and resolution of the model by requiring each of the
-three dimensions to grow at the same power of a set of fixed ratios.
+*(This section provides some details on "compound scaling", and can be skipped
+if you're only interested in using the models)*
 
-However, it must be noted that the ratios are not taken accurately. A few points need to
-be taken into account:
-Resolution. Resolutions not divisible by 8, 16, etc. cause zero-padding near boundaries
+Based on the [original paper](https://arxiv.org/abs/1905.11946) people may have the
+impression that EfficientNet is a continuous family of models created by arbitrarily
+choosing scaling factor in as Eq.(3) of the paper.  However, choice of resolution,
+depth and width are also restricted by many factors:
+
+- Resolution: Resolutions not divisible by 8, 16, etc. cause zero-padding near boundaries
 of some layers which wastes computational resources. This especially applies to smaller
 variants of the model, hence the input resolution for B0 and B1 are chosen as 224 and
 240.
-Depth and width. Channel size is always rounded to 8/16/32 because of the architecture.
-Resource limit. Perfect compound scaling would assume spatial (memory) and time allowance
-for the computation to grow simultaneously, but OOM may further bottleneck the scaling of
-resolution.
 
-As a result, compound scaling factor is significantly off from
-https://arxiv.org/abs/1905.11946. Hence it is important to understand the compound
-scaling as a rule of thumb that leads to this family of base models, rather than an exact
-optimization scheme. This also justifies that in the keras implementation (detailed
-below), only these 8 models, B0 to B7, are exposed to the user and arbitrary width /
-depth / resolution is not allowed.
+- Depth and width: The building blocks of EfficientNet demands channel size to be
+multiples of 8.
+
+- Resource limit: Memory limitation may bottleneck resolution when depth
+and width can still increase. In such a situation, increasing depth and/or
+width but keep resolution can still improve performance.
+
+As a result, the depth, width and resolution of each variant of the EfficientNet models
+are hand-picked and proven to produce good results, though they may be significantly
+off from the compound scaling formula.
+Therefore, the keras implementation (detailed below) only provide these 8 models, B0 to B7,
+instead of allowing arbitray choice of width / depth / resolution parameters.
 
 ---
 ## Keras implementation of EfficientNet
 
 An implementation of EfficientNet B0 to B7 has been shipped with tf.keras since TF2.3. To
-use EfficientNetB0 for classifying 1000 classes of images from imagenet, run
-```
+use EfficientNetB0 for classifying 1000 classes of images from imagenet, run:
+
+```python
 from tensorflow.keras.applications import EfficientNetB0
 model = EfficientNetB0(weights='imagenet')
 ```
 
 This model takes input images of shape (224, 224, 3), and the input data should range
-[0,255]. Resizing and normalization are included as part of the model.
+[0, 255]. Normalization is included as part of the model.
 
-Because training EfficientNet on imagenet takes a tremendous amount of resources and
+Because training EfficientNet on ImageNet takes a tremendous amount of resources and
 several techniques that are not a part of the model architecture itself. Hence the Keras
-implementation by default loads pre-trained weights with AutoAugment
-(https://arxiv.org/abs/1805.09501).
+implementation by default loads pre-trained weights obtained via training with
+[AutoAugment](https://arxiv.org/abs/1805.09501).
 
 For B0 to B7 base models, the input shapes are different. Here is a list of input shape
 expected for each model:
@@ -88,29 +95,32 @@ expected for each model:
 | EfficientNetB6 | 528 |
 | EfficientNetB7 | 600 |
 
-When the use of the model is intended for transfer learning, the Keras implementation
+When the model is intended for transfer learning, the Keras implementation
 provides a option to remove the top layers:
 ```
 model = EfficientNetB0(include_top=False, weights='imagenet')
 ```
-This option excludes the final Dense layer that turns 1280 features on the penultimate
-layer into prediction of the 1000 classes in imagenet. Replacing the top with custom
-layers allows using EfficientNet as a feature extractor and transfers the pretrained
-weights to other tasks.
+This option excludes the final `Dense` layer that turns 1280 features on the penultimate
+layer into prediction of the 1000 ImageNet classes. Replacing the top layer with custom
+layers allows using EfficientNet as a feature extractor in a transfer learning workflow.
 
-Another keyword in the model builder worth noticing is `drop_connect_rate` which controls
-the dropout rate responsible for stochastic depth (https://arxiv.org/abs/1603.09382).
+Another argument in the model constructor worth noticing is `drop_connect_rate` which controls
+the dropout rate responsible for [stochastic depth](https://arxiv.org/abs/1603.09382).
 This parameter serves as a toggle for extra regularization in finetuning, but does not
-alter loaded weights.
+affect loaded weights. For example, when stronger regularization is desired, try:
 
-
+```python
+model = EfficientNetB0(weights='imagenet', drop_connect_rate=0.4)
+```
+The default value is 0.2.
 
 ---
-## Example: EfficientNetB0 for CIFAR-100.
+## Example: EfficientNetB0 for Stanford Dogs.
 
-As an architecture, EfficientNet is capable of a wide range of image classification
-tasks. For example, we will show using pre-trained EfficientNetB0 on CIFAR-100. For
-EfficientNetB0, image size is 224.
+EfficientNet is capable of a wide range of image classification tasks.
+This makes it a good model for transfer learning.
+As an end-to-end example, we will show using pre-trained EfficientNetB0 on
+[Stanford Dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/main.html) dataset.
 
 
 ```python
@@ -118,25 +128,25 @@ EfficientNetB0, image size is 224.
 IMG_SIZE = 224
 ```
 
-### prepare
+---
+## Setup and data loading
 
+This example requires TensorFlow 2.3 or above.
+
+To use TPU, the TPU runtime must match current running TensorFlow
+version. If there is a mismatch, try:
 
 ```python
-!!pip install --quiet tensorflow==2.3.0rc0
-!!pip install --quiet cloud-tpu-client
+from cloud_tpu_client import Client
+c = Client()
+c.configure_tpu_version(tf.__version__, restart_type="always")
 ```
-
-
 
 
 ```python
 import tensorflow as tf
 
 try:
-    from cloud_tpu_client import Client
-
-    c = Client()
-    c.configure_tpu_version(tf.__version__, restart_type="always")
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
     print("Running on TPU ", tpu.cluster_spec().as_dict()["worker"])
     tf.config.experimental_connect_to_cluster(tpu)
@@ -147,171 +157,208 @@ except ValueError:
     strategy = tf.distribute.MirroredStrategy()
 
 ```
+
 <div class="k-default-codeblock">
 ```
-['WARNING: You are using pip version 20.1; however, version 20.1.1 is available.',
- "You should consider upgrading via the '/usr/bin/python -m pip install --upgrade pip' command."]
-
-Running on TPU  ['10.240.1.2:8470']
-INFO:tensorflow:Initializing the TPU system: tpututorial
-
-INFO:tensorflow:Initializing the TPU system: tpututorial
-
-INFO:tensorflow:Clearing out eager caches
-
-INFO:tensorflow:Clearing out eager caches
-
-INFO:tensorflow:Finished initializing TPU system.
-
-INFO:tensorflow:Finished initializing TPU system.
-WARNING:absl:`tf.distribute.experimental.TPUStrategy` is deprecated, please use  the non experimental symbol `tf.distribute.TPUStrategy` instead.
-
-INFO:tensorflow:Found TPU system:
-
-INFO:tensorflow:Found TPU system:
-
-INFO:tensorflow:*** Num TPU Cores: 8
-
-INFO:tensorflow:*** Num TPU Cores: 8
-
-INFO:tensorflow:*** Num TPU Workers: 1
-
-INFO:tensorflow:*** Num TPU Workers: 1
-
-INFO:tensorflow:*** Num TPU Cores Per Worker: 8
-
-INFO:tensorflow:*** Num TPU Cores Per Worker: 8
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
-
-INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+Not connected to a TPU runtime. Using CPU/GPU strategy
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
 
 ```
 </div>
-Below is example code for loading data.
-To see sensible result, you need to load entire dataset and adjust epochs for
-training; but you may truncate data for a quick verification of the workflow.
-Expect the notebook to run at least an hour for GPU, while much faster on TPU if
-using hosted Colab session.
+### Loading data
+
+Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets)
+(hereafter TFDS).
+Stanford Dogs dataset is provided in
+TFDS as [stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs).
+It features 20,580 images that belong to 120 classes of dog breeds
+(12,000 for training and 8,580 for testing).
+
+By simply changing `dataset_name` below, you may also try this notebook for
+other datasets in TFDS such as
+[cifar10](https://www.tensorflow.org/datasets/catalog/cifar10),
+[cifar100](https://www.tensorflow.org/datasets/catalog/cifar100),
+[food101](https://www.tensorflow.org/datasets/catalog/food101),
+etc. When the images are much smaller than the size of EfficientNet input,
+we can simply upsample the input images. It has been shown in
+[Tan and Le, 2019](https://arxiv.org/abs/1905.11946) that transfer learning
+result is better for increased resolution even if input images remain small.
+
+For TPU: if using TFDS datasets,
+a [GCS bucket](https://cloud.google.com/storage/docs/key-terms#buckets)
+location is required to save the datasets. For example:
+
+```python
+tfds.load(dataset_name, data_dir="gs://example-bucket/datapath")
+```
+
+Also, both the current environment and the TPU service account have
+proper [access](https://cloud.google.com/tpu/docs/storage-buckets#authorize_the_service_account)
+to the bucket. Alternatively, for small datasets you may try loading data
+into the memory and use `tf.data.Dataset.from_tensor_slices()`.
 
 
 ```python
-from tensorflow import keras
-from tensorflow.keras.datasets import cifar100
-from tensorflow.keras.utils import to_categorical
+import tensorflow_datasets as tfds
 
 batch_size = 64
 
-(x_train, y_train), (x_test, y_test) = cifar100.load_data()
-NUM_CLASSES = 100
+dataset_name = "stanford_dogs"
+(ds_train, ds_test), ds_info = tfds.load(
+    dataset_name, split=["train", "test"], with_info=True, as_supervised=True
+)
+NUM_CLASSES = ds_info.features["label"].num_classes
 
-x_train = tf.cast(x_train, tf.int32)
-x_test = tf.cast(x_test, tf.int32)
+```
 
-truncate_data = False  # @param {type: "boolean"}
-if truncate_data:
-    x_train = x_train[0:5000]
-    y_train = y_train[0:5000]
-    x_test = x_test[0:1000]
-    y_test = y_test[0:1000]
+When the dataset include images with various size, we need to resize them into a
+shared size. The Stanford Dogs dataset includes only images at least 200x200
+pixels in size. Here we resize the images to the input size needed for EfficientNet.
 
 
-# one-hot / categorical
-y_train = to_categorical(y_train, NUM_CLASSES)
-y_test = to_categorical(y_test, NUM_CLASSES)
+```python
+size = (IMG_SIZE, IMG_SIZE)
+ds_train = ds_train.map(lambda image, label: (tf.image.resize(image, size), label))
+ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label))
+```
 
-ds_train = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+### Visualizing the data
+
+The following code shows the first 9 images with their labels both
+in numeric form and text.
+
+
+```python
+import matplotlib.pyplot as plt
+
+label_info = ds_info.features["label"]
+for i, (image, label) in enumerate(ds_train.take(9)):
+    ax = plt.subplot(3, 3, i + 1)
+    plt.imshow(image)
+    plt.title("{}, {}".format((label), label_info.int2str(label)))
+    plt.axis("off")
+
+```
+
+<div class="k-default-codeblock">
+```
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+
+```
+</div>
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_10_1.png)
+
+
+### Data augmentation
+
+We can use preprocessing layers APIs for image augmentation.
+
+
+```python
+from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+
+img_augmentation = Sequential(
+    [
+        preprocessing.RandomRotation(factor=0.15),
+        preprocessing.RandomTranslation(height_factor=0.1, width_factor=0.1),
+        preprocessing.RandomFlip(),
+        preprocessing.RandomContrast(factor=0.1),
+    ],
+    name="img_augmentation",
+)
+```
+
+This `Sequential` model object can be used both as a part of
+the model we later build, and as a function to preprocess
+data before feeding into the model. Using them as function makes
+it easy to visualize the augmented images. Here we plot 9 examples
+of augmentation result of a given figure.
+
+
+```python
+for image, label in ds_train.take(1):
+    for i in range(9):
+        ax = plt.subplot(3, 3, i + 1)
+        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
+        plt.imshow(aug_img[0].numpy().astype("uint8"))
+        plt.title("{}, {}".format((label), label_info.int2str(label)))
+        plt.axis("off")
+
+```
+
+
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_14_0.png)
+
+
+### Prepare inputs
+
+Once we verify the input data and augmentation are working correctly,
+we prepare dataset for training. The input data are resized to uniform
+`IMG_SIZE`. The labels are put into one-hot
+(a.k.a. categorical) encoding. The dataset is batched.
+
+Note: `cache`, `prefetch` and `AUTOTUNE` may in some situation improve
+performance, but depends on environment and the specific dataset used.
+See this [guide](https://www.tensorflow.org/guide/data_performance)
+for more information on data pipeline performance.
+
+
+```python
+# One-hot / categorical encoding
+def input_preprocess(image, label):
+    label = tf.one_hot(label, NUM_CLASSES)
+    return image, label
+
+
+ds_train = ds_train.map(
+    input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
+)
 ds_train = ds_train.cache()
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
-ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+ds_test = ds_test.map(input_preprocess)
 ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
+
 ```
 
-### training from scratch
-To build model that use EfficientNetB0 with 100 classes that is initiated from scratch:
+---
+## Training a model from scratch
 
-Note: to better see validation peeling off from training accuracy, run ~20 epochs.
+We build an EfficientNetB0 with 120 output classes, that is initialized from scratch:
+
+Note: the accuracy will increase very slowly and may overfit.
 
 
 ```python
 from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.layers.experimental.preprocessing import (
-    Resizing,
-    RandomFlip,
-    RandomContrast,
-    # RandomHeight,
-)
 from tensorflow.keras.optimizers import SGD
 
 with strategy.scope():
-    inputs = keras.layers.Input(shape=(32, 32, 3))
-    x = inputs
+    inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
 
-    x = RandomFlip()(x)
-    x = RandomContrast(0.1)(x)
-    # x = RandomHeight(0.1)(x)
-    x = Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
+    x = img_augmentation(inputs)
 
-    x = EfficientNetB0(include_top=True, weights=None, classes=100)(x)
+    x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
-    model = keras.Model(inputs, x)
+    model = tf.keras.Model(inputs, x)
 
     sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
 
 model.summary()
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.005, verbose=2
+    monitor="val_loss", factor=0.2, patience=5, min_lr=0.005
 )
 
 epochs = 20  # @param {type: "slider", min:5, max:50}
@@ -323,72 +370,104 @@ hist = model.fit(
 
 <div class="k-default-codeblock">
 ```
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
 Model: "functional_1"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 32, 32, 3)]       0         
+input_1 (InputLayer)         [(None, 224, 224, 3)]     0         
 _________________________________________________________________
-random_flip (RandomFlip)     (None, 32, 32, 3)         0         
+img_augmentation (Sequential (None, 224, 224, 3)       0         
 _________________________________________________________________
-random_contrast (RandomContr (None, 32, 32, 3)         0         
-_________________________________________________________________
-resizing (Resizing)          (None, 224, 224, 3)       0         
-_________________________________________________________________
-efficientnetb0 (Functional)  (None, 100)               4177671   
+efficientnetb0 (Functional)  (None, 120)               4203291   
 =================================================================
-Total params: 4,177,671
-Trainable params: 4,135,648
+Total params: 4,203,291
+Trainable params: 4,161,268
 Non-trainable params: 42,023
 _________________________________________________________________
 Epoch 1/20
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0091s vs `on_train_batch_end` time: 0.0426s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0919s vs `on_train_batch_end` time: 0.1893s). Check your callbacks.
 
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0091s vs `on_train_batch_end` time: 0.0426s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0919s vs `on_train_batch_end` time: 0.1893s). Check your callbacks.
 
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0073s vs `on_test_batch_end` time: 0.0213s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0073s vs `on_test_batch_end` time: 0.0213s). Check your callbacks.
-
-781/781 - 51s - loss: 4.0524 - accuracy: 0.0782 - val_loss: 3.7740 - val_accuracy: 0.1373
+187/187 - 62s - loss: 4.9634 - accuracy: 0.0128 - val_loss: 4.8171 - val_accuracy: 0.0139
 Epoch 2/20
-781/781 - 42s - loss: 3.2597 - accuracy: 0.1983 - val_loss: 2.7339 - val_accuracy: 0.3057
+187/187 - 59s - loss: 4.5712 - accuracy: 0.0260 - val_loss: 4.7677 - val_accuracy: 0.0206
 Epoch 3/20
-781/781 - 44s - loss: 2.8151 - accuracy: 0.2848 - val_loss: 2.5497 - val_accuracy: 0.3458
+187/187 - 60s - loss: 4.3928 - accuracy: 0.0377 - val_loss: 4.4246 - val_accuracy: 0.0351
 Epoch 4/20
-781/781 - 42s - loss: 2.5210 - accuracy: 0.3480 - val_loss: 2.3207 - val_accuracy: 0.3932
+187/187 - 59s - loss: 4.2694 - accuracy: 0.0460 - val_loss: 4.4778 - val_accuracy: 0.0393
 Epoch 5/20
-781/781 - 43s - loss: 2.2938 - accuracy: 0.3978 - val_loss: 2.1789 - val_accuracy: 0.4312
+187/187 - 59s - loss: 4.1732 - accuracy: 0.0548 - val_loss: 4.2238 - val_accuracy: 0.0532
 Epoch 6/20
-781/781 - 45s - loss: 2.1156 - accuracy: 0.4350 - val_loss: 2.1087 - val_accuracy: 0.4514
+187/187 - 59s - loss: 4.0941 - accuracy: 0.0652 - val_loss: 4.0877 - val_accuracy: 0.0648
 Epoch 7/20
-781/781 - 45s - loss: 1.9626 - accuracy: 0.4706 - val_loss: 2.0596 - val_accuracy: 0.4624
+187/187 - 59s - loss: 4.0204 - accuracy: 0.0705 - val_loss: 4.0757 - val_accuracy: 0.0716
 Epoch 8/20
-781/781 - 43s - loss: 1.8248 - accuracy: 0.5040 - val_loss: 1.8574 - val_accuracy: 0.5069
+187/187 - 59s - loss: 3.9521 - accuracy: 0.0818 - val_loss: 3.9778 - val_accuracy: 0.0806
 Epoch 9/20
-781/781 - 45s - loss: 1.7056 - accuracy: 0.5312 - val_loss: 1.8604 - val_accuracy: 0.5112
+187/187 - 59s - loss: 3.8764 - accuracy: 0.0905 - val_loss: 3.9885 - val_accuracy: 0.0914
 Epoch 10/20
-781/781 - 45s - loss: 1.5971 - accuracy: 0.5553 - val_loss: 1.8866 - val_accuracy: 0.5125
+187/187 - 59s - loss: 3.8021 - accuracy: 0.1029 - val_loss: 3.9583 - val_accuracy: 0.0906
 Epoch 11/20
-781/781 - 46s - loss: 1.4993 - accuracy: 0.5820 - val_loss: 1.8002 - val_accuracy: 0.5268
+187/187 - 59s - loss: 3.7328 - accuracy: 0.1131 - val_loss: 4.0107 - val_accuracy: 0.0842
 Epoch 12/20
-781/781 - 44s - loss: 1.4071 - accuracy: 0.6038 - val_loss: 1.8472 - val_accuracy: 0.5356
+187/187 - 59s - loss: 3.6606 - accuracy: 0.1226 - val_loss: 3.9239 - val_accuracy: 0.0997
 Epoch 13/20
-781/781 - 45s - loss: 1.3200 - accuracy: 0.6253 - val_loss: 1.7777 - val_accuracy: 0.5474
+187/187 - 59s - loss: 3.5945 - accuracy: 0.1359 - val_loss: 4.1540 - val_accuracy: 0.0861
 Epoch 14/20
-781/781 - 45s - loss: 1.2380 - accuracy: 0.6438 - val_loss: 1.7694 - val_accuracy: 0.5518
+187/187 - 59s - loss: 3.5346 - accuracy: 0.1444 - val_loss: 3.9642 - val_accuracy: 0.1062
 Epoch 15/20
-781/781 - 44s - loss: 1.1666 - accuracy: 0.6633 - val_loss: 1.7883 - val_accuracy: 0.5597
+187/187 - 58s - loss: 3.4544 - accuracy: 0.1579 - val_loss: 3.7911 - val_accuracy: 0.1236
 Epoch 16/20
-781/781 - 44s - loss: 1.0872 - accuracy: 0.6859 - val_loss: 1.7724 - val_accuracy: 0.5678
+187/187 - 59s - loss: 3.3867 - accuracy: 0.1680 - val_loss: 3.7947 - val_accuracy: 0.1154
 Epoch 17/20
-781/781 - 43s - loss: 1.0258 - accuracy: 0.7002 - val_loss: 1.7608 - val_accuracy: 0.5672
+187/187 - 59s - loss: 3.3279 - accuracy: 0.1755 - val_loss: 3.8368 - val_accuracy: 0.1196
 Epoch 18/20
-781/781 - 45s - loss: 0.9678 - accuracy: 0.7154 - val_loss: 1.7667 - val_accuracy: 0.5756
+187/187 - 59s - loss: 3.2456 - accuracy: 0.1944 - val_loss: 3.6632 - val_accuracy: 0.1409
 Epoch 19/20
-781/781 - 46s - loss: 0.9077 - accuracy: 0.7294 - val_loss: 1.7843 - val_accuracy: 0.5742
+187/187 - 59s - loss: 3.1877 - accuracy: 0.2048 - val_loss: 3.9556 - val_accuracy: 0.1224
 Epoch 20/20
-781/781 - 45s - loss: 0.8556 - accuracy: 0.7439 - val_loss: 1.8463 - val_accuracy: 0.5807
+187/187 - 59s - loss: 3.1292 - accuracy: 0.2132 - val_loss: 3.6958 - val_accuracy: 0.1470
 
 ```
 </div>
@@ -399,7 +478,8 @@ especially those with lower resolution like CIFAR-100, faces the significant cha
 overfitting or getting trapped in local extrema.
 
 Hence traning from scratch requires very careful choice of hyperparameters and is
-difficult to find suitable regularization. Plotting the training and validation accuracy
+difficult to find suitable regularization. It would also be much more demanding in resources.
+Plotting the training and validation accuracy
 makes it clear that validation accuracy stagnates at very low value.
 
 
@@ -421,88 +501,70 @@ plot_hist(hist)
 ```
 
 
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_11_0.png)
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_20_0.png)
 
 
-### transfer learning from pretrained weight
-Using pre-trained imagenet weights and only transfer learn (fine-tune) the model allows
-utilizing the power of EfficientNet much easier. To use pretrained weight, the model can
-be initiated through
+---
+## Transfer learning from pre-trained weights
+
+Here we initialize the model with pre-trained ImageNet weights,
+and we fine-tune it on our own dataset.
 
 
 ```python
-from tensorflow import keras
-from tensorflow.keras.layers.experimental.preprocessing import (
-    Resizing,
-    RandomContrast,
-)
+from tensorflow.keras.layers.experimental import preprocessing
 
 
-def build_model(n_classes):
-    inputs = keras.layers.Input(shape=(32, 32, 3))
-    x = inputs
+def build_model(num_classes):
+    inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
 
-    x = RandomFlip()(x)
-    x = RandomContrast(0.1)(x)
-    x = Resizing(IMG_SIZE, IMG_SIZE, interpolation="bilinear")(x)
-    # other preprocessing layers can be used similar to Resizing and RandomRotation
+    x = img_augmentation(inputs)
 
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
-    # freeze the pretrained weights
-    for l in model.layers:
-        l.trainable = False
+    # Freeze the pretrained weights
+    model.trainable = False
 
-    # rebuild top
-    x = keras.layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
-    x = keras.layers.BatchNormalization()(x)
+    # Rebuild top
+    x = layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
+    x = layers.BatchNormalization()(x)
 
     top_dropout_rate = 0.2
-    x = keras.layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-    x = keras.layers.Dense(100, activation="softmax", name="pred")(x)
+    x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
+    x = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
 
-    # compile
-    model = keras.Model(inputs, x, name="EfficientNet")
+    # Compile
+    model = tf.keras.Model(inputs, x, name="EfficientNet")
     sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
-    # sgd = tfa.optimizers.MovingAverage(sgd)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 
 ```
 
-Note that it is also possible to freeze pre-trained part entirely by
-```
-model.trainable = False
-```
-instead of setting each layer separately.
-
-
 The first step to transfer learning is to freeze all layers and train only the top
-layers. For this step a relatively large learning rate (~0.1) can be used to start with,
-while applying some learning rate decay (either ExponentialDecay or use ReduceLROnPlateau
-callback). On CIFAR-100 with EfficientNetB0, this step will take validation accuracy to
-~70% with suitable (but not absolutely optimal) image augmentation. For this stage, using
-EfficientNetB0, validation accuracy and loss will be consistently better than training
+layers. For this step, a relatively large learning rate (~0.1) can be used to start with,
+while applying some learning rate decay (either `ExponentialDecay` or use the `ReduceLROnPlateau`
+callback).  For this stage, using
+`EfficientNetB0`, validation accuracy and loss will usually be better than training
 accuracy and loss. This is because the regularization is strong, which only
 suppresses train time metrics.
 
-Note that the convergence may take up to 50 epochs. If no data augmentation layer is
-applied, expect the validation accuracy to reach only ~60% even for many epochs.
+Note that the convergence may take up to 50 epochs depending on choice of learning rate.
+If image augmentation layers were not
+applied, the validation accuracy may only reach ~60%.
 
 
 ```python
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 with strategy.scope():
-    model = build_model(n_classes=NUM_CLASSES)
+    model = build_model(num_classes=NUM_CLASSES)
 
-reduce_lr = ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001, verbose=2
-)
+reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001)
 
 epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2,
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
 plot_hist(hist)
 ```
@@ -510,101 +572,106 @@ plot_hist(hist)
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0055s vs `on_train_batch_end` time: 0.0227s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0055s vs `on_train_batch_end` time: 0.0227s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0076s vs `on_test_batch_end` time: 0.0226s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0076s vs `on_test_batch_end` time: 0.0226s). Check your callbacks.
-
-781/781 - 31s - loss: 2.3805 - accuracy: 0.4403 - val_loss: 1.5734 - val_accuracy: 0.6037
+187/187 - 20s - loss: 2.6554 - accuracy: 0.3859 - val_loss: 0.9579 - val_accuracy: 0.7206
 Epoch 2/25
-781/781 - 25s - loss: 1.8293 - accuracy: 0.5397 - val_loss: 1.4319 - val_accuracy: 0.6242
+187/187 - 19s - loss: 1.9079 - accuracy: 0.5206 - val_loss: 0.8153 - val_accuracy: 0.7556
 Epoch 3/25
-781/781 - 24s - loss: 1.6594 - accuracy: 0.5684 - val_loss: 1.3463 - val_accuracy: 0.6377
+187/187 - 18s - loss: 1.6656 - accuracy: 0.5688 - val_loss: 0.8125 - val_accuracy: 0.7696
 Epoch 4/25
-781/781 - 25s - loss: 1.5293 - accuracy: 0.5893 - val_loss: 1.2889 - val_accuracy: 0.6501
+187/187 - 18s - loss: 1.5515 - accuracy: 0.5900 - val_loss: 0.8203 - val_accuracy: 0.7704
 Epoch 5/25
-781/781 - 24s - loss: 1.4747 - accuracy: 0.5993 - val_loss: 1.2679 - val_accuracy: 0.6539
+187/187 - 18s - loss: 1.4354 - accuracy: 0.6136 - val_loss: 0.8245 - val_accuracy: 0.7690
 Epoch 6/25
-781/781 - 24s - loss: 1.4256 - accuracy: 0.6109 - val_loss: 1.2539 - val_accuracy: 0.6541
+187/187 - 18s - loss: 1.3539 - accuracy: 0.6314 - val_loss: 0.8022 - val_accuracy: 0.7725
 Epoch 7/25
-781/781 - 25s - loss: 1.4071 - accuracy: 0.6139 - val_loss: 1.2367 - val_accuracy: 0.6586
+187/187 - 18s - loss: 1.2835 - accuracy: 0.6451 - val_loss: 0.8010 - val_accuracy: 0.7732
 Epoch 8/25
-781/781 - 25s - loss: 1.3694 - accuracy: 0.6206 - val_loss: 1.2173 - val_accuracy: 0.6638
+187/187 - 18s - loss: 1.2237 - accuracy: 0.6527 - val_loss: 0.8027 - val_accuracy: 0.7737
 Epoch 9/25
-781/781 - 24s - loss: 1.3479 - accuracy: 0.6266 - val_loss: 1.2174 - val_accuracy: 0.6603
+187/187 - 18s - loss: 1.2011 - accuracy: 0.6639 - val_loss: 0.8053 - val_accuracy: 0.7674
 Epoch 10/25
-781/781 - 25s - loss: 1.3418 - accuracy: 0.6295 - val_loss: 1.2127 - val_accuracy: 0.6646
+187/187 - 18s - loss: 1.1383 - accuracy: 0.6788 - val_loss: 0.8098 - val_accuracy: 0.7722
 Epoch 11/25
-781/781 - 25s - loss: 1.3347 - accuracy: 0.6288 - val_loss: 1.2062 - val_accuracy: 0.6666
+187/187 - 18s - loss: 1.1208 - accuracy: 0.6770 - val_loss: 0.8016 - val_accuracy: 0.7724
 Epoch 12/25
-781/781 - 24s - loss: 1.3233 - accuracy: 0.6316 - val_loss: 1.2018 - val_accuracy: 0.6687
+187/187 - 18s - loss: 1.0814 - accuracy: 0.6831 - val_loss: 0.7903 - val_accuracy: 0.7766
 Epoch 13/25
-781/781 - 26s - loss: 1.3147 - accuracy: 0.6333 - val_loss: 1.2025 - val_accuracy: 0.6674
+187/187 - 18s - loss: 1.0567 - accuracy: 0.6919 - val_loss: 0.7604 - val_accuracy: 0.7824
 Epoch 14/25
-781/781 - 25s - loss: 1.3042 - accuracy: 0.6358 - val_loss: 1.1976 - val_accuracy: 0.6686
+187/187 - 18s - loss: 1.0335 - accuracy: 0.6937 - val_loss: 0.7665 - val_accuracy: 0.7826
 Epoch 15/25
-781/781 - 24s - loss: 1.2929 - accuracy: 0.6370 - val_loss: 1.1899 - val_accuracy: 0.6703
+187/187 - 18s - loss: 0.9805 - accuracy: 0.7085 - val_loss: 0.7424 - val_accuracy: 0.7879
 Epoch 16/25
-781/781 - 24s - loss: 1.2998 - accuracy: 0.6375 - val_loss: 1.1880 - val_accuracy: 0.6702
+187/187 - 18s - loss: 0.9999 - accuracy: 0.7060 - val_loss: 0.7794 - val_accuracy: 0.7831
 Epoch 17/25
-781/781 - 24s - loss: 1.2855 - accuracy: 0.6385 - val_loss: 1.1901 - val_accuracy: 0.6707
+187/187 - 18s - loss: 0.9654 - accuracy: 0.7122 - val_loss: 0.7722 - val_accuracy: 0.7789
 Epoch 18/25
-781/781 - 25s - loss: 1.2831 - accuracy: 0.6373 - val_loss: 1.1825 - val_accuracy: 0.6709
+187/187 - 18s - loss: 0.9491 - accuracy: 0.7185 - val_loss: 0.7470 - val_accuracy: 0.7875
 Epoch 19/25
-781/781 - 23s - loss: 1.2779 - accuracy: 0.6417 - val_loss: 1.1843 - val_accuracy: 0.6714
+187/187 - 18s - loss: 0.9724 - accuracy: 0.7184 - val_loss: 0.7660 - val_accuracy: 0.7851
 Epoch 20/25
-781/781 - 24s - loss: 1.2765 - accuracy: 0.6392 - val_loss: 1.1883 - val_accuracy: 0.6706
+187/187 - 18s - loss: 0.9349 - accuracy: 0.7212 - val_loss: 0.7337 - val_accuracy: 0.7936
 Epoch 21/25
-781/781 - 24s - loss: 1.2670 - accuracy: 0.6428 - val_loss: 1.1849 - val_accuracy: 0.6747
+187/187 - 18s - loss: 0.9045 - accuracy: 0.7260 - val_loss: 0.7735 - val_accuracy: 0.7829
 Epoch 22/25
-781/781 - 25s - loss: 1.2673 - accuracy: 0.6428 - val_loss: 1.1878 - val_accuracy: 0.6711
+187/187 - 18s - loss: 0.8963 - accuracy: 0.7247 - val_loss: 0.7823 - val_accuracy: 0.7783
 Epoch 23/25
-781/781 - 25s - loss: 1.2580 - accuracy: 0.6484 - val_loss: 1.1808 - val_accuracy: 0.6719
+187/187 - 18s - loss: 0.8994 - accuracy: 0.7274 - val_loss: 0.7566 - val_accuracy: 0.7840
 Epoch 24/25
-781/781 - 25s - loss: 1.2620 - accuracy: 0.6442 - val_loss: 1.1875 - val_accuracy: 0.6707
+187/187 - 18s - loss: 0.8735 - accuracy: 0.7335 - val_loss: 0.7457 - val_accuracy: 0.7912
 Epoch 25/25
-781/781 - 24s - loss: 1.2658 - accuracy: 0.6438 - val_loss: 1.1895 - val_accuracy: 0.6697
+187/187 - 18s - loss: 0.8691 - accuracy: 0.7345 - val_loss: 0.7428 - val_accuracy: 0.7929
 
 ```
 </div>
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_15_5.png)
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_24_1.png)
 
 
-The second step is to unfreeze a number of layers. Unfreezing layers and fine tuning is
-usually thought to only provide incremental improvements on validation accuracy, but for
-the case of EfficientNetB0 it boosts validation accuracy by about 10% to pass 80%
-(reaching ~87% as in the original paper requires including AutoAugmentation or Random
-Augmentaion).
+The second step is to unfreeze a number of layers and fit the model using smaller
+learning rate. In this example we show unfreezing all layers, but depending on
+specific dataset it may be desireble to only unfreeze a fraction of all layers.
 
-Note that the convergence may take more than 50 epochs. If no data augmentation layer is
-applied, expect the validation accuracy to reach only ~70% even for many epochs.
+When the feature extraction with
+pretrained model works good enough, this step would give a very limited gain on
+validation accuracy. The example we show does not see significant improvement
+as ImageNet pretraining already exposed the model to a good amount of dogs.
+
+On the other hand, when we use pretrained weights on a dataset that is more different
+from ImageNet, this fine-tuning step can be crucial as the feature extractor also
+needs to be adjusted by a considerable amount. Such a situation can be demonstrated
+if choosing CIFAR-100 dataset instead, where fine-tuning boosts validation accuracy
+by about 10% to pass 80% on `EfficientNetB0`.
+In such a case the convergence may take more than 50 epochs.
+
+A side note on freezing/unfreezing models: setting `trainable` of a `Model` will
+simultaneously set all layers belonging to the `Model` to the same `trainable`
+attribute. Each layer is trainable only if both the layer itself and the model
+containing it are trainable. Hence when we need to partially freeze/unfreeze
+a model, we need to make sure the `trainable` attribute of the model is set
+to `True`.
 
 
 ```python
 
 def unfreeze_model(model):
+    model.trainable = True
     for l in model.layers:
-        if "bn" in l.name:
+        if isinstance(l, layers.BatchNormalization):
             print(f"{l.name} is staying untrainable")
-        else:
-            l.trainable = True
+            l.trainable = False
 
-    sgd = SGD(learning_rate=0.005)
+    sgd = SGD(learning_rate=0.0004)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
-    return model
 
 
-model = unfreeze_model(model)
+unfreeze_model(model)
 
 reduce_lr = ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001, verbose=2
+    monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001
 )
 epochs = 25  # @param {type: "slider", min:8, max:80}
 hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2,
+    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
 plot_hist(hist)
 ```
@@ -660,75 +727,74 @@ block7a_expand_bn is staying untrainable
 block7a_bn is staying untrainable
 block7a_project_bn is staying untrainable
 top_bn is staying untrainable
+batch_normalization is staying untrainable
 Epoch 1/25
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0052s vs `on_train_batch_end` time: 0.0326s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0933s vs `on_train_batch_end` time: 0.1810s). Check your callbacks.
 
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0052s vs `on_train_batch_end` time: 0.0326s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0933s vs `on_train_batch_end` time: 0.1810s). Check your callbacks.
 
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0056s vs `on_test_batch_end` time: 0.0223s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0056s vs `on_test_batch_end` time: 0.0223s). Check your callbacks.
-
-781/781 - 38s - loss: 1.1118 - accuracy: 0.6843 - val_loss: 0.9062 - val_accuracy: 0.7412
+187/187 - 64s - loss: 0.7429 - accuracy: 0.7724 - val_loss: 0.7360 - val_accuracy: 0.7970
 Epoch 2/25
-781/781 - 31s - loss: 0.9105 - accuracy: 0.7319 - val_loss: 0.8623 - val_accuracy: 0.7543
+187/187 - 61s - loss: 0.6910 - accuracy: 0.7815 - val_loss: 0.7471 - val_accuracy: 0.7947
 Epoch 3/25
-781/781 - 32s - loss: 0.8261 - accuracy: 0.7544 - val_loss: 0.8047 - val_accuracy: 0.7662
+187/187 - 61s - loss: 0.6713 - accuracy: 0.7908 - val_loss: 0.7570 - val_accuracy: 0.7948
 Epoch 4/25
-781/781 - 32s - loss: 0.7714 - accuracy: 0.7681 - val_loss: 0.8077 - val_accuracy: 0.7680
+187/187 - 62s - loss: 0.6540 - accuracy: 0.7955 - val_loss: 0.7491 - val_accuracy: 0.7947
 Epoch 5/25
-781/781 - 32s - loss: 0.7204 - accuracy: 0.7827 - val_loss: 0.8034 - val_accuracy: 0.7710
+187/187 - 61s - loss: 0.6439 - accuracy: 0.7979 - val_loss: 0.7550 - val_accuracy: 0.7937
 Epoch 6/25
-781/781 - 32s - loss: 0.6885 - accuracy: 0.7906 - val_loss: 0.7699 - val_accuracy: 0.7757
+187/187 - 62s - loss: 0.6248 - accuracy: 0.8034 - val_loss: 0.7805 - val_accuracy: 0.7894
 Epoch 7/25
-781/781 - 32s - loss: 0.6576 - accuracy: 0.7979 - val_loss: 0.7785 - val_accuracy: 0.7775
+187/187 - 61s - loss: 0.6072 - accuracy: 0.8102 - val_loss: 0.7701 - val_accuracy: 0.7905
 Epoch 8/25
-781/781 - 32s - loss: 0.6249 - accuracy: 0.8105 - val_loss: 0.7680 - val_accuracy: 0.7785
+187/187 - 62s - loss: 0.6150 - accuracy: 0.8061 - val_loss: 0.7752 - val_accuracy: 0.7889
 Epoch 9/25
-781/781 - 33s - loss: 0.5929 - accuracy: 0.8196 - val_loss: 0.7495 - val_accuracy: 0.7849
+187/187 - 61s - loss: 0.6000 - accuracy: 0.8092 - val_loss: 0.7706 - val_accuracy: 0.7899
 Epoch 10/25
-781/781 - 34s - loss: 0.5666 - accuracy: 0.8249 - val_loss: 0.7364 - val_accuracy: 0.7874
+187/187 - 59s - loss: 0.5896 - accuracy: 0.8122 - val_loss: 0.7658 - val_accuracy: 0.7902
 Epoch 11/25
-781/781 - 34s - loss: 0.5482 - accuracy: 0.8311 - val_loss: 0.7419 - val_accuracy: 0.7889
+187/187 - 61s - loss: 0.6067 - accuracy: 0.8102 - val_loss: 0.7726 - val_accuracy: 0.7898
 Epoch 12/25
-781/781 - 32s - loss: 0.5244 - accuracy: 0.8380 - val_loss: 0.7304 - val_accuracy: 0.7916
+187/187 - 61s - loss: 0.5889 - accuracy: 0.8171 - val_loss: 0.7687 - val_accuracy: 0.7905
 Epoch 13/25
-781/781 - 32s - loss: 0.5037 - accuracy: 0.8443 - val_loss: 0.7240 - val_accuracy: 0.7928
+187/187 - 61s - loss: 0.5807 - accuracy: 0.8168 - val_loss: 0.7693 - val_accuracy: 0.7903
 Epoch 14/25
-781/781 - 34s - loss: 0.4816 - accuracy: 0.8484 - val_loss: 0.7234 - val_accuracy: 0.7937
+187/187 - 61s - loss: 0.5644 - accuracy: 0.8204 - val_loss: 0.7687 - val_accuracy: 0.7905
 Epoch 15/25
-781/781 - 33s - loss: 0.4683 - accuracy: 0.8543 - val_loss: 0.7181 - val_accuracy: 0.7938
+187/187 - 62s - loss: 0.5875 - accuracy: 0.8163 - val_loss: 0.7667 - val_accuracy: 0.7908
 Epoch 16/25
-781/781 - 33s - loss: 0.4451 - accuracy: 0.8603 - val_loss: 0.7072 - val_accuracy: 0.7989
+187/187 - 61s - loss: 0.5977 - accuracy: 0.8051 - val_loss: 0.7685 - val_accuracy: 0.7909
 Epoch 17/25
-781/781 - 33s - loss: 0.4304 - accuracy: 0.8659 - val_loss: 0.6935 - val_accuracy: 0.8019
+187/187 - 61s - loss: 0.5978 - accuracy: 0.8141 - val_loss: 0.7671 - val_accuracy: 0.7909
 Epoch 18/25
-781/781 - 32s - loss: 0.4137 - accuracy: 0.8711 - val_loss: 0.7098 - val_accuracy: 0.8005
+187/187 - 61s - loss: 0.5835 - accuracy: 0.8154 - val_loss: 0.7667 - val_accuracy: 0.7909
 Epoch 19/25
-781/781 - 32s - loss: 0.4063 - accuracy: 0.8731 - val_loss: 0.6853 - val_accuracy: 0.8061
+187/187 - 62s - loss: 0.5998 - accuracy: 0.8112 - val_loss: 0.7666 - val_accuracy: 0.7908
 Epoch 20/25
-781/781 - 33s - loss: 0.3839 - accuracy: 0.8811 - val_loss: 0.7232 - val_accuracy: 0.7994
+187/187 - 61s - loss: 0.5990 - accuracy: 0.8123 - val_loss: 0.7679 - val_accuracy: 0.7910
 Epoch 21/25
-781/781 - 34s - loss: 0.3735 - accuracy: 0.8845 - val_loss: 0.7016 - val_accuracy: 0.8043
+187/187 - 61s - loss: 0.5860 - accuracy: 0.8168 - val_loss: 0.7698 - val_accuracy: 0.7901
 Epoch 22/25
-781/781 - 33s - loss: 0.3617 - accuracy: 0.8888 - val_loss: 0.6951 - val_accuracy: 0.8048
+187/187 - 61s - loss: 0.5989 - accuracy: 0.8080 - val_loss: 0.7694 - val_accuracy: 0.7910
 Epoch 23/25
-781/781 - 32s - loss: 0.3481 - accuracy: 0.8914 - val_loss: 0.6822 - val_accuracy: 0.8075
+187/187 - 61s - loss: 0.5778 - accuracy: 0.8171 - val_loss: 0.7686 - val_accuracy: 0.7909
 Epoch 24/25
-781/781 - 32s - loss: 0.3379 - accuracy: 0.8956 - val_loss: 0.6938 - val_accuracy: 0.8050
+187/187 - 60s - loss: 0.5885 - accuracy: 0.8174 - val_loss: 0.7685 - val_accuracy: 0.7915
 Epoch 25/25
-781/781 - 32s - loss: 0.3275 - accuracy: 0.8972 - val_loss: 0.6968 - val_accuracy: 0.8072
+187/187 - 61s - loss: 0.5785 - accuracy: 0.8158 - val_loss: 0.7688 - val_accuracy: 0.7907
 
 ```
 </div>
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_17_5.png)
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_26_3.png)
 
 
-### tips for fine tuning EfficientNet
+### Tips for fine tuning EfficientNet
 
 On unfreezing layers:
-- The batch normalization layers need to be kept untrainable
-(https://keras.io/guides/transfer_learning/). If they are also turned to trainable, the
+
+- The `BathcNormalization` layers need to be kept frozen
+([more details](https://keras.io/guides/transfer_learning/)).
+If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.
 - In some cases it may be beneficial to open up only a portion of layers instead of
 unfreezing all. This will make fine tuning much faster when going to larger models like
@@ -737,8 +803,8 @@ B7.
 a shortcut from the first layer to the last layer for each block. Not respecting blocks
 also significantly harms the final performance.
 
+Some other tips for utilizing EfficientNet:
 
-Some other tips for utilizing EfficientNet
 - Larger variants of EfficientNet do not guarantee improved performance, especially for
 tasks with less data or fewer classes. In such a case, the larger variant of EfficientNet
 chosen, the harder it is to tune hyperparameters.
@@ -762,9 +828,8 @@ extra code; but the weights are readily available in the form of TF checkpoint f
 model architecture has not changed, so loading the improved checkpoints is possible.
 
 To use a checkpoint provided at
-(https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
-download the checkpoint. As example, here we download noisy-student version of B1
-
+[the official model repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
+download the checkpoint. As example, here we download noisy-student version of B1:
 
 ```
 !wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet\
@@ -781,6 +846,6 @@ Then use the script efficientnet_weight_update_util.py to convert ckpt file to h
 
 When creating model, use the following to load new weight:
 
-```
+```python
 model = EfficientNetB0(weights="efficientnetb1_notop.h5", include_top=False)
 ```
