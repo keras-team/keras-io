@@ -205,16 +205,21 @@ ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label)
 """
 ### Visualizing the data
 
-The following code shows the first 9 images with their labels both
-in numeric form and text.
+The following code shows the first 9 images with their labels.
 """
 import matplotlib.pyplot as plt
+
+
+def format_label(label):
+    string_label = label_info.int2str(label)
+    return string_label.split("-")[1]
+
 
 label_info = ds_info.features["label"]
 for i, (image, label) in enumerate(ds_train.take(9)):
     ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(image)
-    plt.title("{}, {}".format((label), label_info.int2str(label)))
+    plt.imshow(image.numpy().astype("uint8"))
+    plt.title("{}".format(format_label(label)))
     plt.axis("off")
 
 
@@ -251,7 +256,7 @@ for image, label in ds_train.take(1):
         ax = plt.subplot(3, 3, i + 1)
         aug_img = img_augmentation(tf.expand_dims(image, axis=0))
         plt.imshow(aug_img[0].numpy().astype("uint8"))
-        plt.title("{}, {}".format((label), label_info.int2str(label)))
+        plt.title("{}".format(format_label(label)))
         plt.axis("off")
 
 
@@ -299,9 +304,7 @@ from tensorflow.keras.optimizers import SGD
 
 with strategy.scope():
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-
     x = img_augmentation(inputs)
-
     x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
     model = tf.keras.Model(inputs, x)
@@ -360,9 +363,7 @@ from tensorflow.keras.layers.experimental import preprocessing
 
 def build_model(num_classes):
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-
     x = img_augmentation(inputs)
-
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
     # Freeze the pretrained weights
@@ -440,10 +441,9 @@ def unfreeze_model(model):
     model.trainable = True
     for l in model.layers:
         if isinstance(l, layers.BatchNormalization):
-            print(f"{l.name} is staying untrainable")
             l.trainable = False
 
-    sgd = SGD(learning_rate=0.0004)
+    sgd = SGD(learning_rate=0.0002)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
 
 
@@ -452,7 +452,7 @@ unfreeze_model(model)
 reduce_lr = ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001
 )
-epochs = 25  # @param {type: "slider", min:8, max:80}
+epochs = 10  # @param {type: "slider", min:8, max:50}
 hist = model.fit(
     ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
