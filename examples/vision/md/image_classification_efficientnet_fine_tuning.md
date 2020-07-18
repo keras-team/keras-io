@@ -408,89 +408,85 @@ Trainable params: 4,161,268
 Non-trainable params: 42,023
 _________________________________________________________________
 Epoch 1/40
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0947s vs `on_train_batch_end` time: 0.1790s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0947s vs `on_train_batch_end` time: 0.1790s). Check your callbacks.
-
-187/187 - 66s - loss: 4.9429 - accuracy: 0.0133 - val_loss: 5.2106 - val_accuracy: 0.0059
+187/187 - 66s - loss: 4.9221 - accuracy: 0.0119 - val_loss: 4.9835 - val_accuracy: 0.0104
 Epoch 2/40
-187/187 - 64s - loss: 4.6114 - accuracy: 0.0236 - val_loss: 5.3730 - val_accuracy: 0.0162
+187/187 - 63s - loss: 4.5652 - accuracy: 0.0243 - val_loss: 5.1626 - val_accuracy: 0.0145
 Epoch 3/40
-187/187 - 63s - loss: 4.4569 - accuracy: 0.0336 - val_loss: 4.4777 - val_accuracy: 0.0318
+187/187 - 63s - loss: 4.4179 - accuracy: 0.0337 - val_loss: 4.7597 - val_accuracy: 0.0237
 Epoch 4/40
-187/187 - 63s - loss: 4.3158 - accuracy: 0.0436 - val_loss: 4.2851 - val_accuracy: 0.0420
+187/187 - 63s - loss: 4.2964 - accuracy: 0.0421 - val_loss: 4.4028 - val_accuracy: 0.0378
 Epoch 5/40
-187/187 - 63s - loss: 4.2200 - accuracy: 0.0506 - val_loss: 4.3940 - val_accuracy: 0.0420
+187/187 - 63s - loss: 4.1951 - accuracy: 0.0540 - val_loss: 4.3048 - val_accuracy: 0.0443
 Epoch 6/40
-187/187 - 62s - loss: 4.1251 - accuracy: 0.0590 - val_loss: 4.3120 - val_accuracy: 0.0409
+187/187 - 63s - loss: 4.1025 - accuracy: 0.0596 - val_loss: 4.1918 - val_accuracy: 0.0526
 Epoch 7/40
-187/187 - 64s - loss: 4.0193 - accuracy: 0.0721 - val_loss: 4.1186 - val_accuracy: 0.0642
+187/187 - 63s - loss: 4.0157 - accuracy: 0.0728 - val_loss: 4.1482 - val_accuracy: 0.0591
 Epoch 8/40
-187/187 - 63s - loss: 3.9211 - accuracy: 0.0880 - val_loss: 4.1713 - val_accuracy: 0.0617
+187/187 - 62s - loss: 3.9344 - accuracy: 0.0844 - val_loss: 4.1088 - val_accuracy: 0.0638
 Epoch 9/40
-187/187 - 64s - loss: 3.8596 - accuracy: 0.0929 - val_loss: 3.9628 - val_accuracy: 0.0796
+187/187 - 63s - loss: 3.8529 - accuracy: 0.0951 - val_loss: 4.0692 - val_accuracy: 0.0770
 Epoch 10/40
-187/187 - 64s - loss: 3.7631 - accuracy: 0.1090 - val_loss: 3.9563 - val_accuracy: 0.0926
+187/187 - 63s - loss: 3.7650 - accuracy: 0.1040 - val_loss: 4.1468 - val_accuracy: 0.0719
 Epoch 11/40
-187/187 - 64s - loss: 3.6673 - accuracy: 0.1232 - val_loss: 4.1761 - val_accuracy: 0.0722
+187/187 - 63s - loss: 3.6858 - accuracy: 0.1185 - val_loss: 4.0484 - val_accuracy: 0.0913
 Epoch 12/40
-187/187 - 64s - loss: 3.5783 - accuracy: 0.1353 - val_loss: 3.9438 - val_accuracy: 0.0942
+187/187 - 63s - loss: 3.5942 - accuracy: 0.1326 - val_loss: 3.8047 - val_accuracy: 0.1072
 Epoch 13/40
-187/187 - 64s - loss: 3.5005 - accuracy: 0.1476 - val_loss: 3.9076 - val_accuracy: 0.1090
+187/187 - 63s - loss: 3.5028 - accuracy: 0.1447 - val_loss: 3.9513 - val_accuracy: 0.0933
 Epoch 14/40
-187/187 - 64s - loss: 3.4029 - accuracy: 0.1645 - val_loss: 4.2099 - val_accuracy: 0.0870
+187/187 - 63s - loss: 3.4295 - accuracy: 0.1604 - val_loss: 3.7738 - val_accuracy: 0.1220
 Epoch 15/40
-187/187 - 64s - loss: 3.2997 - accuracy: 0.1786 - val_loss: 3.6182 - val_accuracy: 0.1424
+187/187 - 63s - loss: 3.3410 - accuracy: 0.1735 - val_loss: 3.9104 - val_accuracy: 0.1104
 Epoch 16/40
-187/187 - 69s - loss: 3.2280 - accuracy: 0.1899 - val_loss: 3.7401 - val_accuracy: 0.1353
+187/187 - 63s - loss: 3.2511 - accuracy: 0.1890 - val_loss: 3.6904 - val_accuracy: 0.1264
 Epoch 17/40
-187/187 - 65s - loss: 3.1240 - accuracy: 0.2126 - val_loss: 4.0326 - val_accuracy: 0.1095
+187/187 - 63s - loss: 3.1624 - accuracy: 0.2076 - val_loss: 3.4026 - val_accuracy: 0.1769
 Epoch 18/40
-187/187 - 63s - loss: 3.0372 - accuracy: 0.2246 - val_loss: 3.5171 - val_accuracy: 0.1698
+187/187 - 63s - loss: 3.0825 - accuracy: 0.2229 - val_loss: 3.4627 - val_accuracy: 0.1744
 Epoch 19/40
-187/187 - 63s - loss: 2.9607 - accuracy: 0.2389 - val_loss: 3.5527 - val_accuracy: 0.1706
+187/187 - 63s - loss: 3.0041 - accuracy: 0.2355 - val_loss: 3.6061 - val_accuracy: 0.1542
 Epoch 20/40
-187/187 - 64s - loss: 2.8683 - accuracy: 0.2597 - val_loss: 3.5016 - val_accuracy: 0.1733
+187/187 - 64s - loss: 2.8945 - accuracy: 0.2552 - val_loss: 3.2769 - val_accuracy: 0.2036
 Epoch 21/40
-187/187 - 64s - loss: 2.7838 - accuracy: 0.2764 - val_loss: 3.3646 - val_accuracy: 0.1958
+187/187 - 63s - loss: 2.8054 - accuracy: 0.2710 - val_loss: 3.5355 - val_accuracy: 0.1834
 Epoch 22/40
-187/187 - 64s - loss: 2.6932 - accuracy: 0.2924 - val_loss: 3.3625 - val_accuracy: 0.1987
+187/187 - 63s - loss: 2.7342 - accuracy: 0.2904 - val_loss: 3.3540 - val_accuracy: 0.1973
 Epoch 23/40
-187/187 - 63s - loss: 2.6073 - accuracy: 0.3161 - val_loss: 3.6400 - val_accuracy: 0.1690
+187/187 - 62s - loss: 2.6258 - accuracy: 0.3042 - val_loss: 3.2608 - val_accuracy: 0.2217
 Epoch 24/40
-187/187 - 63s - loss: 2.5183 - accuracy: 0.3284 - val_loss: 3.4461 - val_accuracy: 0.1969
+187/187 - 62s - loss: 2.5453 - accuracy: 0.3218 - val_loss: 3.4611 - val_accuracy: 0.1941
 Epoch 25/40
-187/187 - 64s - loss: 2.4168 - accuracy: 0.3493 - val_loss: 3.5591 - val_accuracy: 0.1778
+187/187 - 63s - loss: 2.4585 - accuracy: 0.3356 - val_loss: 3.4163 - val_accuracy: 0.2070
 Epoch 26/40
-187/187 - 63s - loss: 2.3308 - accuracy: 0.3650 - val_loss: 3.3599 - val_accuracy: 0.2162
+187/187 - 62s - loss: 2.3606 - accuracy: 0.3647 - val_loss: 3.2558 - val_accuracy: 0.2392
 Epoch 27/40
-187/187 - 64s - loss: 2.2457 - accuracy: 0.3917 - val_loss: 3.5468 - val_accuracy: 0.2009
+187/187 - 63s - loss: 2.2819 - accuracy: 0.3801 - val_loss: 3.3676 - val_accuracy: 0.2222
 Epoch 28/40
-187/187 - 64s - loss: 2.1452 - accuracy: 0.4148 - val_loss: 3.4418 - val_accuracy: 0.2231
+187/187 - 62s - loss: 2.2114 - accuracy: 0.3933 - val_loss: 3.6578 - val_accuracy: 0.2022
 Epoch 29/40
-187/187 - 64s - loss: 2.0703 - accuracy: 0.4287 - val_loss: 3.4543 - val_accuracy: 0.2306
+187/187 - 62s - loss: 2.0964 - accuracy: 0.4215 - val_loss: 3.5366 - val_accuracy: 0.2186
 Epoch 30/40
-187/187 - 64s - loss: 1.9466 - accuracy: 0.4517 - val_loss: 3.4762 - val_accuracy: 0.2326
+187/187 - 63s - loss: 1.9931 - accuracy: 0.4459 - val_loss: 3.5612 - val_accuracy: 0.2310
 Epoch 31/40
-187/187 - 64s - loss: 1.8885 - accuracy: 0.4746 - val_loss: 3.8991 - val_accuracy: 0.2009
+187/187 - 63s - loss: 1.8924 - accuracy: 0.4657 - val_loss: 3.4780 - val_accuracy: 0.2359
 Epoch 32/40
-187/187 - 63s - loss: 1.7984 - accuracy: 0.4939 - val_loss: 3.7480 - val_accuracy: 0.2192
+187/187 - 63s - loss: 1.8095 - accuracy: 0.4874 - val_loss: 3.5776 - val_accuracy: 0.2403
 Epoch 33/40
-187/187 - 64s - loss: 1.6957 - accuracy: 0.5161 - val_loss: 3.7242 - val_accuracy: 0.2394
+187/187 - 63s - loss: 1.7126 - accuracy: 0.5086 - val_loss: 3.6865 - val_accuracy: 0.2316
 Epoch 34/40
-187/187 - 63s - loss: 1.6105 - accuracy: 0.5379 - val_loss: 4.3845 - val_accuracy: 0.1919
+187/187 - 63s - loss: 1.6117 - accuracy: 0.5373 - val_loss: 3.6419 - val_accuracy: 0.2513
 Epoch 35/40
-187/187 - 64s - loss: 1.5278 - accuracy: 0.5567 - val_loss: 4.1898 - val_accuracy: 0.2008
+187/187 - 63s - loss: 1.5532 - accuracy: 0.5514 - val_loss: 3.8050 - val_accuracy: 0.2415
 Epoch 36/40
-187/187 - 64s - loss: 1.4331 - accuracy: 0.5806 - val_loss: 4.2426 - val_accuracy: 0.2108
+187/187 - 63s - loss: 1.4479 - accuracy: 0.5809 - val_loss: 4.0113 - val_accuracy: 0.2299
 Epoch 37/40
-187/187 - 63s - loss: 1.3563 - accuracy: 0.6032 - val_loss: 4.2700 - val_accuracy: 0.2027
+187/187 - 62s - loss: 1.3885 - accuracy: 0.5939 - val_loss: 4.1262 - val_accuracy: 0.2158
 Epoch 38/40
-187/187 - 64s - loss: 1.2668 - accuracy: 0.6248 - val_loss: 4.0390 - val_accuracy: 0.2312
+187/187 - 63s - loss: 1.2979 - accuracy: 0.6217 - val_loss: 4.2519 - val_accuracy: 0.2344
 Epoch 39/40
-187/187 - 64s - loss: 1.1917 - accuracy: 0.6506 - val_loss: 4.3676 - val_accuracy: 0.2130
+187/187 - 62s - loss: 1.2066 - accuracy: 0.6413 - val_loss: 4.3924 - val_accuracy: 0.2169
 Epoch 40/40
-187/187 - 63s - loss: 1.1322 - accuracy: 0.6575 - val_loss: 4.2741 - val_accuracy: 0.2310
+187/187 - 62s - loss: 1.1348 - accuracy: 0.6618 - val_loss: 4.2216 - val_accuracy: 0.2374
 
 ```
 </div>
@@ -587,55 +583,55 @@ plot_hist(hist)
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-187/187 - 34s - loss: 3.5312 - accuracy: 0.3681 - val_loss: 0.9583 - val_accuracy: 0.7200
+187/187 - 33s - loss: 3.5673 - accuracy: 0.3624 - val_loss: 1.0288 - val_accuracy: 0.6957
 Epoch 2/25
-187/187 - 32s - loss: 1.8542 - accuracy: 0.5243 - val_loss: 0.7978 - val_accuracy: 0.7576
+187/187 - 31s - loss: 1.8503 - accuracy: 0.5232 - val_loss: 0.8439 - val_accuracy: 0.7484
 Epoch 3/25
-187/187 - 32s - loss: 1.5332 - accuracy: 0.5735 - val_loss: 0.7768 - val_accuracy: 0.7655
+187/187 - 31s - loss: 1.5511 - accuracy: 0.5772 - val_loss: 0.7953 - val_accuracy: 0.7563
 Epoch 4/25
-187/187 - 32s - loss: 1.4653 - accuracy: 0.5869 - val_loss: 0.7922 - val_accuracy: 0.7618
+187/187 - 31s - loss: 1.4660 - accuracy: 0.5878 - val_loss: 0.8061 - val_accuracy: 0.7535
 Epoch 5/25
-187/187 - 32s - loss: 1.3851 - accuracy: 0.6094 - val_loss: 0.7849 - val_accuracy: 0.7698
+187/187 - 31s - loss: 1.4143 - accuracy: 0.6034 - val_loss: 0.7850 - val_accuracy: 0.7569
 Epoch 6/25
-187/187 - 32s - loss: 1.3779 - accuracy: 0.6125 - val_loss: 0.7551 - val_accuracy: 0.7743
+187/187 - 31s - loss: 1.4000 - accuracy: 0.6054 - val_loss: 0.7846 - val_accuracy: 0.7646
 Epoch 7/25
-187/187 - 32s - loss: 1.3498 - accuracy: 0.6142 - val_loss: 0.7820 - val_accuracy: 0.7639
+187/187 - 31s - loss: 1.3678 - accuracy: 0.6173 - val_loss: 0.7850 - val_accuracy: 0.7682
 Epoch 8/25
-187/187 - 32s - loss: 1.3550 - accuracy: 0.6168 - val_loss: 0.8196 - val_accuracy: 0.7586
+187/187 - 31s - loss: 1.3286 - accuracy: 0.6222 - val_loss: 0.8142 - val_accuracy: 0.7608
 Epoch 9/25
-187/187 - 32s - loss: 1.3335 - accuracy: 0.6223 - val_loss: 0.8514 - val_accuracy: 0.7576
+187/187 - 31s - loss: 1.3210 - accuracy: 0.6245 - val_loss: 0.7890 - val_accuracy: 0.7669
 Epoch 10/25
-187/187 - 32s - loss: 1.2962 - accuracy: 0.6315 - val_loss: 0.8611 - val_accuracy: 0.7575
+187/187 - 31s - loss: 1.3086 - accuracy: 0.6278 - val_loss: 0.8368 - val_accuracy: 0.7575
 Epoch 11/25
-187/187 - 32s - loss: 1.2961 - accuracy: 0.6303 - val_loss: 0.8240 - val_accuracy: 0.7656
+187/187 - 31s - loss: 1.2877 - accuracy: 0.6315 - val_loss: 0.8309 - val_accuracy: 0.7599
 Epoch 12/25
-187/187 - 32s - loss: 1.2982 - accuracy: 0.6308 - val_loss: 0.8727 - val_accuracy: 0.7564
+187/187 - 31s - loss: 1.2918 - accuracy: 0.6308 - val_loss: 0.8319 - val_accuracy: 0.7535
 Epoch 13/25
-187/187 - 32s - loss: 1.2829 - accuracy: 0.6410 - val_loss: 0.8177 - val_accuracy: 0.7663
+187/187 - 31s - loss: 1.2738 - accuracy: 0.6373 - val_loss: 0.8567 - val_accuracy: 0.7576
 Epoch 14/25
-187/187 - 32s - loss: 1.2776 - accuracy: 0.6385 - val_loss: 0.8002 - val_accuracy: 0.7717
+187/187 - 31s - loss: 1.2837 - accuracy: 0.6410 - val_loss: 0.8004 - val_accuracy: 0.7697
 Epoch 15/25
-187/187 - 32s - loss: 1.2914 - accuracy: 0.6380 - val_loss: 0.8370 - val_accuracy: 0.7613
+187/187 - 31s - loss: 1.2828 - accuracy: 0.6403 - val_loss: 0.8364 - val_accuracy: 0.7625
 Epoch 16/25
-187/187 - 32s - loss: 1.2883 - accuracy: 0.6388 - val_loss: 0.8462 - val_accuracy: 0.7611
+187/187 - 31s - loss: 1.2749 - accuracy: 0.6405 - val_loss: 0.8558 - val_accuracy: 0.7565
 Epoch 17/25
-187/187 - 32s - loss: 1.2700 - accuracy: 0.6393 - val_loss: 0.8654 - val_accuracy: 0.7557
+187/187 - 31s - loss: 1.3022 - accuracy: 0.6352 - val_loss: 0.8361 - val_accuracy: 0.7551
 Epoch 18/25
-187/187 - 32s - loss: 1.2513 - accuracy: 0.6484 - val_loss: 0.8444 - val_accuracy: 0.7659
+187/187 - 31s - loss: 1.2848 - accuracy: 0.6394 - val_loss: 0.8958 - val_accuracy: 0.7479
 Epoch 19/25
-187/187 - 32s - loss: 1.3034 - accuracy: 0.6348 - val_loss: 0.8649 - val_accuracy: 0.7583
+187/187 - 31s - loss: 1.2791 - accuracy: 0.6420 - val_loss: 0.8875 - val_accuracy: 0.7509
 Epoch 20/25
-187/187 - 32s - loss: 1.2572 - accuracy: 0.6461 - val_loss: 0.8921 - val_accuracy: 0.7543
+187/187 - 30s - loss: 1.2834 - accuracy: 0.6416 - val_loss: 0.8653 - val_accuracy: 0.7607
 Epoch 21/25
-187/187 - 32s - loss: 1.2986 - accuracy: 0.6426 - val_loss: 0.8980 - val_accuracy: 0.7545
+187/187 - 30s - loss: 1.2608 - accuracy: 0.6435 - val_loss: 0.8451 - val_accuracy: 0.7612
 Epoch 22/25
-187/187 - 32s - loss: 1.2734 - accuracy: 0.6431 - val_loss: 0.8824 - val_accuracy: 0.7603
+187/187 - 30s - loss: 1.2780 - accuracy: 0.6390 - val_loss: 0.9035 - val_accuracy: 0.7486
 Epoch 23/25
-187/187 - 32s - loss: 1.2580 - accuracy: 0.6531 - val_loss: 0.9005 - val_accuracy: 0.7591
+187/187 - 30s - loss: 1.2742 - accuracy: 0.6473 - val_loss: 0.8837 - val_accuracy: 0.7556
 Epoch 24/25
-187/187 - 31s - loss: 1.2607 - accuracy: 0.6458 - val_loss: 0.8893 - val_accuracy: 0.7563
+187/187 - 30s - loss: 1.2609 - accuracy: 0.6434 - val_loss: 0.9233 - val_accuracy: 0.7524
 Epoch 25/25
-187/187 - 31s - loss: 1.2653 - accuracy: 0.6462 - val_loss: 0.8996 - val_accuracy: 0.7579
+187/187 - 31s - loss: 1.2630 - accuracy: 0.6496 - val_loss: 0.9116 - val_accuracy: 0.7584
 
 ```
 </div>
@@ -669,10 +665,10 @@ to `True`.
 ```python
 
 def unfreeze_model(model):
-    model.trainable = True
-    for l in model.layers:
-        if isinstance(l, layers.BatchNormalization):
-            l.trainable = False
+    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
+    for layer in model.layers[-20:]:
+        if not isinstance(layer, layers.BatchNormalization):
+            layer.trainable = True
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
     model.compile(
@@ -690,33 +686,29 @@ plot_hist(hist)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0870s vs `on_train_batch_end` time: 0.1970s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0870s vs `on_train_batch_end` time: 0.1970s). Check your callbacks.
-
-187/187 - 68s - loss: 0.8779 - accuracy: 0.7368 - val_loss: 0.8819 - val_accuracy: 0.7632
+187/187 - 33s - loss: 0.9956 - accuracy: 0.7080 - val_loss: 0.7644 - val_accuracy: 0.7856
 Epoch 2/10
-187/187 - 65s - loss: 0.6701 - accuracy: 0.7904 - val_loss: 0.8961 - val_accuracy: 0.7656
+187/187 - 31s - loss: 0.8885 - accuracy: 0.7352 - val_loss: 0.7696 - val_accuracy: 0.7866
 Epoch 3/10
-187/187 - 65s - loss: 0.5687 - accuracy: 0.8169 - val_loss: 1.0059 - val_accuracy: 0.7500
+187/187 - 31s - loss: 0.8059 - accuracy: 0.7533 - val_loss: 0.7659 - val_accuracy: 0.7885
 Epoch 4/10
-187/187 - 65s - loss: 0.5003 - accuracy: 0.8370 - val_loss: 0.9159 - val_accuracy: 0.7631
+187/187 - 32s - loss: 0.7648 - accuracy: 0.7675 - val_loss: 0.7730 - val_accuracy: 0.7866
 Epoch 5/10
-187/187 - 65s - loss: 0.4289 - accuracy: 0.8588 - val_loss: 1.0163 - val_accuracy: 0.7483
+187/187 - 32s - loss: 0.6982 - accuracy: 0.7833 - val_loss: 0.7691 - val_accuracy: 0.7858
 Epoch 6/10
-187/187 - 66s - loss: 0.3918 - accuracy: 0.8709 - val_loss: 1.0123 - val_accuracy: 0.7492
+187/187 - 31s - loss: 0.6823 - accuracy: 0.7880 - val_loss: 0.7814 - val_accuracy: 0.7872
 Epoch 7/10
-187/187 - 65s - loss: 0.3449 - accuracy: 0.8857 - val_loss: 0.9954 - val_accuracy: 0.7548
+187/187 - 31s - loss: 0.6536 - accuracy: 0.7953 - val_loss: 0.7850 - val_accuracy: 0.7873
 Epoch 8/10
-187/187 - 65s - loss: 0.3163 - accuracy: 0.8951 - val_loss: 1.0964 - val_accuracy: 0.7369
+187/187 - 31s - loss: 0.6104 - accuracy: 0.8111 - val_loss: 0.7774 - val_accuracy: 0.7879
 Epoch 9/10
-187/187 - 66s - loss: 0.2803 - accuracy: 0.9056 - val_loss: 1.0566 - val_accuracy: 0.7458
+187/187 - 32s - loss: 0.5990 - accuracy: 0.8067 - val_loss: 0.7925 - val_accuracy: 0.7870
 Epoch 10/10
-187/187 - 66s - loss: 0.2560 - accuracy: 0.9146 - val_loss: 1.0665 - val_accuracy: 0.7408
+187/187 - 31s - loss: 0.5531 - accuracy: 0.8239 - val_loss: 0.7870 - val_accuracy: 0.7836
 
 ```
 </div>
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_26_3.png)
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_26_1.png)
 
 
 ### Tips for fine tuning EfficientNet
