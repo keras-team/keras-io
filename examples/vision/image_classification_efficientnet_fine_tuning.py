@@ -299,27 +299,21 @@ Note: the accuracy will increase very slowly and may overfit.
 """
 
 from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.optimizers import SGD
 
 with strategy.scope():
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
     x = img_augmentation(inputs)
-    x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
+    outputs = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
-    model = tf.keras.Model(inputs, x)
-
-    sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
-    model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
+    model = tf.keras.Model(inputs, outputs)
+    model.compile(
+        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
 
 model.summary()
-reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.005
-)
 
 epochs = 20  # @param {type: "slider", min:5, max:50}
-hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
-)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
 
 
 """
@@ -329,10 +323,10 @@ dataset wanted from scratch. However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
 overfitting or getting trapped in local extrema.
 
-Hence traning from scratch requires very careful choice of hyperparameters and is
+Hence training from scratch requires very careful choice of hyperparameters and is
 difficult to find suitable regularization. It would also be much more demanding in resources.
 Plotting the training and validation accuracy
-makes it clear that validation accuracy stagnates at very low value.
+makes it clear that validation accuracy stagnates at a low value.
 """
 
 import matplotlib.pyplot as plt
@@ -374,40 +368,34 @@ def build_model(num_classes):
 
     top_dropout_rate = 0.2
     x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-    x = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
+    outputs = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
 
     # Compile
-    model = tf.keras.Model(inputs, x, name="EfficientNet")
-    sgd = SGD(learning_rate=0.2, momentum=0.1, nesterov=True)
-    model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
+    model = tf.keras.Model(inputs, outputs, name="EfficientNet")
+    optimizer = keras.optimizers.Adam(learning_rate=1e-2)
+    model.compile(
+        optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
 """
 The first step to transfer learning is to freeze all layers and train only the top
-layers. For this step, a relatively large learning rate (~0.1) can be used to start with,
-while applying some learning rate decay (either `ExponentialDecay` or use the `ReduceLROnPlateau`
-callback).  For this stage, using
-`EfficientNetB0`, validation accuracy and loss will usually be better than training
+layers. For this step, a relatively large learning rate (1e-2) can be used.
+Note that validation accuracy and loss will usually be better than training
 accuracy and loss. This is because the regularization is strong, which only
-suppresses train time metrics.
+suppresses training-time metrics.
 
 Note that the convergence may take up to 50 epochs depending on choice of learning rate.
 If image augmentation layers were not
 applied, the validation accuracy may only reach ~60%.
 """
 
-from tensorflow.keras.callbacks import ReduceLROnPlateau
-
 with strategy.scope():
     model = build_model(num_classes=NUM_CLASSES)
 
-reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001)
-
 epochs = 25  # @param {type: "slider", min:8, max:80}
-hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
-)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
 plot_hist(hist)
 
 """
@@ -442,19 +430,16 @@ def unfreeze_model(model):
         if isinstance(l, layers.BatchNormalization):
             l.trainable = False
 
-    sgd = SGD(learning_rate=0.0002)
-    model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
+    optimizer = keras.optimizers.Adam(learning_rate=1e-4)
+    model.compile(
+        optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
+    )
 
 
 unfreeze_model(model)
 
-reduce_lr = ReduceLROnPlateau(
-    monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001
-)
 epochs = 10  # @param {type: "slider", min:8, max:50}
-hist = model.fit(
-    ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
-)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
 plot_hist(hist)
 
 """
