@@ -372,7 +372,7 @@ def build_model(num_classes):
 
     # Compile
     model = tf.keras.Model(inputs, outputs, name="EfficientNet")
-    optimizer = keras.optimizers.Adam(learning_rate=1e-2)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-2)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -430,7 +430,7 @@ def unfreeze_model(model):
         if isinstance(l, layers.BatchNormalization):
             l.trainable = False
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-4)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
