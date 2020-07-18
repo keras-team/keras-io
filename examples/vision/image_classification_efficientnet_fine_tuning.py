@@ -405,7 +405,7 @@ specific dataset it may be desireble to only unfreeze a fraction of all layers.
 
 When the feature extraction with
 pretrained model works good enough, this step would give a very limited gain on
-validation accuracy. The example we show does not see significant improvement
+validation accuracy. In our case we only see a small improvement,
 as ImageNet pretraining already exposed the model to a good amount of dogs.
 
 On the other hand, when we use pretrained weights on a dataset that is more different
