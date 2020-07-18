@@ -268,7 +268,7 @@ we prepare dataset for training. The input data are resized to uniform
 `IMG_SIZE`. The labels are put into one-hot
 (a.k.a. categorical) encoding. The dataset is batched.
 
-Note: `cache`, `prefetch` and `AUTOTUNE` may in some situation improve
+Note: `prefetch` and `AUTOTUNE` may in some situation improve
 performance, but depends on environment and the specific dataset used.
 See this [guide](https://www.tensorflow.org/guide/data_performance)
 for more information on data pipeline performance.
@@ -283,7 +283,6 @@ def input_preprocess(image, label):
 ds_train = ds_train.map(
     input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
 )
-ds_train = ds_train.cache()
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
@@ -325,7 +324,7 @@ hist = model.fit(
 
 """
 Training the model is relatively fast (takes only 20 seconds per epoch on TPUv2 that is
-available on colab). This might make it sounds easy to simply train EfficientNet on any
+available on Colab). This might make it sounds easy to simply train EfficientNet on any
 dataset wanted from scratch. However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
 overfitting or getting trapped in local extrema.
