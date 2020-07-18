@@ -425,8 +425,8 @@ to `True`.
 
 
 def unfreeze_model(model):
-    # We unfreeze the top 50 layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-50:]:
+    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
+    for layer in model.layers[-20:]:
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
