@@ -224,37 +224,29 @@ ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label)
 
 ### Visualizing the data
 
-The following code shows the first 9 images with their labels both
-in numeric form and text.
+The following code shows the first 9 images with their labels.
 
 
 ```python
 import matplotlib.pyplot as plt
 
+
+def format_label(label):
+    string_label = label_info.int2str(label)
+    return string_label.split("-")[1]
+
+
 label_info = ds_info.features["label"]
 for i, (image, label) in enumerate(ds_train.take(9)):
     ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(image)
-    plt.title("{}, {}".format((label), label_info.int2str(label)))
+    plt.imshow(image.numpy().astype("uint8"))
+    plt.title("{}".format(format_label(label)))
     plt.axis("off")
 
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 
-```
-</div>
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_10_1.png)
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_10_0.png)
 
 
 ### Data augmentation
@@ -291,7 +283,7 @@ for image, label in ds_train.take(1):
         ax = plt.subplot(3, 3, i + 1)
         aug_img = img_augmentation(tf.expand_dims(image, axis=0))
         plt.imshow(aug_img[0].numpy().astype("uint8"))
-        plt.title("{}, {}".format((label), label_info.int2str(label)))
+        plt.title("{}".format(format_label(label)))
         plt.axis("off")
 
 ```
@@ -307,7 +299,7 @@ we prepare dataset for training. The input data are resized to uniform
 `IMG_SIZE`. The labels are put into one-hot
 (a.k.a. categorical) encoding. The dataset is batched.
 
-Note: `cache`, `prefetch` and `AUTOTUNE` may in some situation improve
+Note: `prefetch` and `AUTOTUNE` may in some situation improve
 performance, but depends on environment and the specific dataset used.
 See this [guide](https://www.tensorflow.org/guide/data_performance)
 for more information on data pipeline performance.
@@ -323,7 +315,6 @@ def input_preprocess(image, label):
 ds_train = ds_train.map(
     input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
 )
-ds_train = ds_train.cache()
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
@@ -346,9 +337,7 @@ from tensorflow.keras.optimizers import SGD
 
 with strategy.scope():
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-
     x = img_augmentation(inputs)
-
     x = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
 
     model = tf.keras.Model(inputs, x)
@@ -425,54 +414,54 @@ Trainable params: 4,161,268
 Non-trainable params: 42,023
 _________________________________________________________________
 Epoch 1/20
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0919s vs `on_train_batch_end` time: 0.1893s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0846s vs `on_train_batch_end` time: 0.1706s). Check your callbacks.
 
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0919s vs `on_train_batch_end` time: 0.1893s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0846s vs `on_train_batch_end` time: 0.1706s). Check your callbacks.
 
-187/187 - 62s - loss: 4.9634 - accuracy: 0.0128 - val_loss: 4.8171 - val_accuracy: 0.0139
+187/187 - 66s - loss: 4.9980 - accuracy: 0.0100 - val_loss: 4.8065 - val_accuracy: 0.0139
 Epoch 2/20
-187/187 - 59s - loss: 4.5712 - accuracy: 0.0260 - val_loss: 4.7677 - val_accuracy: 0.0206
+187/187 - 63s - loss: 4.6442 - accuracy: 0.0221 - val_loss: 4.5969 - val_accuracy: 0.0168
 Epoch 3/20
-187/187 - 60s - loss: 4.3928 - accuracy: 0.0377 - val_loss: 4.4246 - val_accuracy: 0.0351
+187/187 - 63s - loss: 4.5119 - accuracy: 0.0267 - val_loss: 4.7934 - val_accuracy: 0.0208
 Epoch 4/20
-187/187 - 59s - loss: 4.2694 - accuracy: 0.0460 - val_loss: 4.4778 - val_accuracy: 0.0393
+187/187 - 63s - loss: 4.4043 - accuracy: 0.0357 - val_loss: 5.0532 - val_accuracy: 0.0132
 Epoch 5/20
-187/187 - 59s - loss: 4.1732 - accuracy: 0.0548 - val_loss: 4.2238 - val_accuracy: 0.0532
+187/187 - 63s - loss: 4.2961 - accuracy: 0.0445 - val_loss: 4.2348 - val_accuracy: 0.0500
 Epoch 6/20
-187/187 - 59s - loss: 4.0941 - accuracy: 0.0652 - val_loss: 4.0877 - val_accuracy: 0.0648
+187/187 - 63s - loss: 4.1896 - accuracy: 0.0563 - val_loss: 4.1920 - val_accuracy: 0.0585
 Epoch 7/20
-187/187 - 59s - loss: 4.0204 - accuracy: 0.0705 - val_loss: 4.0757 - val_accuracy: 0.0716
+187/187 - 63s - loss: 4.1092 - accuracy: 0.0639 - val_loss: 4.1783 - val_accuracy: 0.0601
 Epoch 8/20
-187/187 - 59s - loss: 3.9521 - accuracy: 0.0818 - val_loss: 3.9778 - val_accuracy: 0.0806
+187/187 - 63s - loss: 4.0228 - accuracy: 0.0730 - val_loss: 4.2203 - val_accuracy: 0.0612
 Epoch 9/20
-187/187 - 59s - loss: 3.8764 - accuracy: 0.0905 - val_loss: 3.9885 - val_accuracy: 0.0914
+187/187 - 63s - loss: 3.9411 - accuracy: 0.0873 - val_loss: 4.0484 - val_accuracy: 0.0770
 Epoch 10/20
-187/187 - 59s - loss: 3.8021 - accuracy: 0.1029 - val_loss: 3.9583 - val_accuracy: 0.0906
+187/187 - 63s - loss: 3.8646 - accuracy: 0.0971 - val_loss: 3.9113 - val_accuracy: 0.0865
 Epoch 11/20
-187/187 - 59s - loss: 3.7328 - accuracy: 0.1131 - val_loss: 4.0107 - val_accuracy: 0.0842
+187/187 - 63s - loss: 3.7850 - accuracy: 0.1038 - val_loss: 3.9488 - val_accuracy: 0.0891
 Epoch 12/20
-187/187 - 59s - loss: 3.6606 - accuracy: 0.1226 - val_loss: 3.9239 - val_accuracy: 0.0997
+187/187 - 63s - loss: 3.7124 - accuracy: 0.1186 - val_loss: 3.8743 - val_accuracy: 0.1049
 Epoch 13/20
-187/187 - 59s - loss: 3.5945 - accuracy: 0.1359 - val_loss: 4.1540 - val_accuracy: 0.0861
+187/187 - 63s - loss: 3.6694 - accuracy: 0.1228 - val_loss: 4.1978 - val_accuracy: 0.0777
 Epoch 14/20
-187/187 - 59s - loss: 3.5346 - accuracy: 0.1444 - val_loss: 3.9642 - val_accuracy: 0.1062
+187/187 - 63s - loss: 3.5858 - accuracy: 0.1359 - val_loss: 3.9157 - val_accuracy: 0.1013
 Epoch 15/20
-187/187 - 58s - loss: 3.4544 - accuracy: 0.1579 - val_loss: 3.7911 - val_accuracy: 0.1236
+187/187 - 63s - loss: 3.5006 - accuracy: 0.1466 - val_loss: 3.8554 - val_accuracy: 0.1157
 Epoch 16/20
-187/187 - 59s - loss: 3.3867 - accuracy: 0.1680 - val_loss: 3.7947 - val_accuracy: 0.1154
+187/187 - 63s - loss: 3.4252 - accuracy: 0.1628 - val_loss: 3.7769 - val_accuracy: 0.1302
 Epoch 17/20
-187/187 - 59s - loss: 3.3279 - accuracy: 0.1755 - val_loss: 3.8368 - val_accuracy: 0.1196
+187/187 - 63s - loss: 3.3525 - accuracy: 0.1740 - val_loss: 4.1482 - val_accuracy: 0.1168
 Epoch 18/20
-187/187 - 59s - loss: 3.2456 - accuracy: 0.1944 - val_loss: 3.6632 - val_accuracy: 0.1409
+187/187 - 62s - loss: 3.2918 - accuracy: 0.1892 - val_loss: 3.7054 - val_accuracy: 0.1411
 Epoch 19/20
-187/187 - 59s - loss: 3.1877 - accuracy: 0.2048 - val_loss: 3.9556 - val_accuracy: 0.1224
+187/187 - 63s - loss: 3.2250 - accuracy: 0.1941 - val_loss: 3.5320 - val_accuracy: 0.1620
 Epoch 20/20
-187/187 - 59s - loss: 3.1292 - accuracy: 0.2132 - val_loss: 3.6958 - val_accuracy: 0.1470
+187/187 - 63s - loss: 3.1402 - accuracy: 0.2121 - val_loss: 3.6828 - val_accuracy: 0.1472
 
 ```
 </div>
 Training the model is relatively fast (takes only 20 seconds per epoch on TPUv2 that is
-available on colab). This might make it sounds easy to simply train EfficientNet on any
+available on Colab). This might make it sounds easy to simply train EfficientNet on any
 dataset wanted from scratch. However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
 overfitting or getting trapped in local extrema.
@@ -517,9 +506,7 @@ from tensorflow.keras.layers.experimental import preprocessing
 
 def build_model(num_classes):
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-
     x = img_augmentation(inputs)
-
     model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
 
     # Freeze the pretrained weights
@@ -571,56 +558,58 @@ plot_hist(hist)
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://storage.googleapis.com/keras-applications/efficientnetb0_notop.h5
+16711680/16705208 [==============================] - 0s 0us/step
 Epoch 1/25
-187/187 - 20s - loss: 2.6554 - accuracy: 0.3859 - val_loss: 0.9579 - val_accuracy: 0.7206
+187/187 - 35s - loss: 2.6811 - accuracy: 0.3722 - val_loss: 0.9412 - val_accuracy: 0.7228
 Epoch 2/25
-187/187 - 19s - loss: 1.9079 - accuracy: 0.5206 - val_loss: 0.8153 - val_accuracy: 0.7556
+187/187 - 32s - loss: 1.9275 - accuracy: 0.5181 - val_loss: 0.7923 - val_accuracy: 0.7589
 Epoch 3/25
-187/187 - 18s - loss: 1.6656 - accuracy: 0.5688 - val_loss: 0.8125 - val_accuracy: 0.7696
+187/187 - 33s - loss: 1.6592 - accuracy: 0.5678 - val_loss: 0.8338 - val_accuracy: 0.7657
 Epoch 4/25
-187/187 - 18s - loss: 1.5515 - accuracy: 0.5900 - val_loss: 0.8203 - val_accuracy: 0.7704
+187/187 - 32s - loss: 1.5191 - accuracy: 0.5998 - val_loss: 0.8086 - val_accuracy: 0.7703
 Epoch 5/25
-187/187 - 18s - loss: 1.4354 - accuracy: 0.6136 - val_loss: 0.8245 - val_accuracy: 0.7690
+187/187 - 33s - loss: 1.4391 - accuracy: 0.6161 - val_loss: 0.8176 - val_accuracy: 0.7664
 Epoch 6/25
-187/187 - 18s - loss: 1.3539 - accuracy: 0.6314 - val_loss: 0.8022 - val_accuracy: 0.7725
+187/187 - 32s - loss: 1.3538 - accuracy: 0.6315 - val_loss: 0.8607 - val_accuracy: 0.7629
 Epoch 7/25
-187/187 - 18s - loss: 1.2835 - accuracy: 0.6451 - val_loss: 0.8010 - val_accuracy: 0.7732
+187/187 - 33s - loss: 1.2788 - accuracy: 0.6474 - val_loss: 0.7846 - val_accuracy: 0.7734
 Epoch 8/25
-187/187 - 18s - loss: 1.2237 - accuracy: 0.6527 - val_loss: 0.8027 - val_accuracy: 0.7737
+187/187 - 32s - loss: 1.2502 - accuracy: 0.6557 - val_loss: 0.8364 - val_accuracy: 0.7654
 Epoch 9/25
-187/187 - 18s - loss: 1.2011 - accuracy: 0.6639 - val_loss: 0.8053 - val_accuracy: 0.7674
+187/187 - 32s - loss: 1.1967 - accuracy: 0.6600 - val_loss: 0.7759 - val_accuracy: 0.7754
 Epoch 10/25
-187/187 - 18s - loss: 1.1383 - accuracy: 0.6788 - val_loss: 0.8098 - val_accuracy: 0.7722
+187/187 - 32s - loss: 1.1372 - accuracy: 0.6737 - val_loss: 0.7883 - val_accuracy: 0.7769
 Epoch 11/25
-187/187 - 18s - loss: 1.1208 - accuracy: 0.6770 - val_loss: 0.8016 - val_accuracy: 0.7724
+187/187 - 32s - loss: 1.1171 - accuracy: 0.6799 - val_loss: 0.7726 - val_accuracy: 0.7829
 Epoch 12/25
-187/187 - 18s - loss: 1.0814 - accuracy: 0.6831 - val_loss: 0.7903 - val_accuracy: 0.7766
+187/187 - 33s - loss: 1.0858 - accuracy: 0.6831 - val_loss: 0.7729 - val_accuracy: 0.7786
 Epoch 13/25
-187/187 - 18s - loss: 1.0567 - accuracy: 0.6919 - val_loss: 0.7604 - val_accuracy: 0.7824
+187/187 - 32s - loss: 1.0487 - accuracy: 0.6967 - val_loss: 0.7879 - val_accuracy: 0.7773
 Epoch 14/25
-187/187 - 18s - loss: 1.0335 - accuracy: 0.6937 - val_loss: 0.7665 - val_accuracy: 0.7826
+187/187 - 33s - loss: 1.0505 - accuracy: 0.6929 - val_loss: 0.7602 - val_accuracy: 0.7815
 Epoch 15/25
-187/187 - 18s - loss: 0.9805 - accuracy: 0.7085 - val_loss: 0.7424 - val_accuracy: 0.7879
+187/187 - 33s - loss: 0.9991 - accuracy: 0.7041 - val_loss: 0.7349 - val_accuracy: 0.7916
 Epoch 16/25
-187/187 - 18s - loss: 0.9999 - accuracy: 0.7060 - val_loss: 0.7794 - val_accuracy: 0.7831
+187/187 - 33s - loss: 0.9754 - accuracy: 0.7121 - val_loss: 0.7645 - val_accuracy: 0.7832
 Epoch 17/25
-187/187 - 18s - loss: 0.9654 - accuracy: 0.7122 - val_loss: 0.7722 - val_accuracy: 0.7789
+187/187 - 32s - loss: 0.9599 - accuracy: 0.7124 - val_loss: 0.7822 - val_accuracy: 0.7790
 Epoch 18/25
-187/187 - 18s - loss: 0.9491 - accuracy: 0.7185 - val_loss: 0.7470 - val_accuracy: 0.7875
+187/187 - 32s - loss: 0.9514 - accuracy: 0.7156 - val_loss: 0.7648 - val_accuracy: 0.7865
 Epoch 19/25
-187/187 - 18s - loss: 0.9724 - accuracy: 0.7184 - val_loss: 0.7660 - val_accuracy: 0.7851
+187/187 - 32s - loss: 0.9352 - accuracy: 0.7216 - val_loss: 0.7475 - val_accuracy: 0.7909
 Epoch 20/25
-187/187 - 18s - loss: 0.9349 - accuracy: 0.7212 - val_loss: 0.7337 - val_accuracy: 0.7936
+187/187 - 32s - loss: 0.9208 - accuracy: 0.7231 - val_loss: 0.7444 - val_accuracy: 0.7910
 Epoch 21/25
-187/187 - 18s - loss: 0.9045 - accuracy: 0.7260 - val_loss: 0.7735 - val_accuracy: 0.7829
+187/187 - 32s - loss: 0.8298 - accuracy: 0.7473 - val_loss: 0.6925 - val_accuracy: 0.8035
 Epoch 22/25
-187/187 - 18s - loss: 0.8963 - accuracy: 0.7247 - val_loss: 0.7823 - val_accuracy: 0.7783
+187/187 - 32s - loss: 0.7953 - accuracy: 0.7569 - val_loss: 0.6766 - val_accuracy: 0.8063
 Epoch 23/25
-187/187 - 18s - loss: 0.8994 - accuracy: 0.7274 - val_loss: 0.7566 - val_accuracy: 0.7840
+187/187 - 32s - loss: 0.7796 - accuracy: 0.7609 - val_loss: 0.6737 - val_accuracy: 0.8068
 Epoch 24/25
-187/187 - 18s - loss: 0.8735 - accuracy: 0.7335 - val_loss: 0.7457 - val_accuracy: 0.7912
+187/187 - 32s - loss: 0.7551 - accuracy: 0.7674 - val_loss: 0.6761 - val_accuracy: 0.8033
 Epoch 25/25
-187/187 - 18s - loss: 0.8691 - accuracy: 0.7345 - val_loss: 0.7428 - val_accuracy: 0.7929
+187/187 - 32s - loss: 0.7690 - accuracy: 0.7685 - val_loss: 0.6731 - val_accuracy: 0.8088
 
 ```
 </div>
@@ -657,10 +646,9 @@ def unfreeze_model(model):
     model.trainable = True
     for l in model.layers:
         if isinstance(l, layers.BatchNormalization):
-            print(f"{l.name} is staying untrainable")
             l.trainable = False
 
-    sgd = SGD(learning_rate=0.0004)
+    sgd = SGD(learning_rate=0.0002)
     model.compile(optimizer=sgd, loss="categorical_crossentropy", metrics=["accuracy"])
 
 
@@ -669,7 +657,7 @@ unfreeze_model(model)
 reduce_lr = ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=5, min_lr=0.00001
 )
-epochs = 25  # @param {type: "slider", min:8, max:80}
+epochs = 10  # @param {type: "slider", min:8, max:50}
 hist = model.fit(
     ds_train, epochs=epochs, validation_data=ds_test, callbacks=[reduce_lr], verbose=2
 )
@@ -678,110 +666,30 @@ plot_hist(hist)
 
 <div class="k-default-codeblock">
 ```
-stem_bn is staying untrainable
-block1a_bn is staying untrainable
-block1a_project_bn is staying untrainable
-block2a_expand_bn is staying untrainable
-block2a_bn is staying untrainable
-block2a_project_bn is staying untrainable
-block2b_expand_bn is staying untrainable
-block2b_bn is staying untrainable
-block2b_project_bn is staying untrainable
-block3a_expand_bn is staying untrainable
-block3a_bn is staying untrainable
-block3a_project_bn is staying untrainable
-block3b_expand_bn is staying untrainable
-block3b_bn is staying untrainable
-block3b_project_bn is staying untrainable
-block4a_expand_bn is staying untrainable
-block4a_bn is staying untrainable
-block4a_project_bn is staying untrainable
-block4b_expand_bn is staying untrainable
-block4b_bn is staying untrainable
-block4b_project_bn is staying untrainable
-block4c_expand_bn is staying untrainable
-block4c_bn is staying untrainable
-block4c_project_bn is staying untrainable
-block5a_expand_bn is staying untrainable
-block5a_bn is staying untrainable
-block5a_project_bn is staying untrainable
-block5b_expand_bn is staying untrainable
-block5b_bn is staying untrainable
-block5b_project_bn is staying untrainable
-block5c_expand_bn is staying untrainable
-block5c_bn is staying untrainable
-block5c_project_bn is staying untrainable
-block6a_expand_bn is staying untrainable
-block6a_bn is staying untrainable
-block6a_project_bn is staying untrainable
-block6b_expand_bn is staying untrainable
-block6b_bn is staying untrainable
-block6b_project_bn is staying untrainable
-block6c_expand_bn is staying untrainable
-block6c_bn is staying untrainable
-block6c_project_bn is staying untrainable
-block6d_expand_bn is staying untrainable
-block6d_bn is staying untrainable
-block6d_project_bn is staying untrainable
-block7a_expand_bn is staying untrainable
-block7a_bn is staying untrainable
-block7a_project_bn is staying untrainable
-top_bn is staying untrainable
-batch_normalization is staying untrainable
-Epoch 1/25
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0933s vs `on_train_batch_end` time: 0.1810s). Check your callbacks.
+Epoch 1/10
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0863s vs `on_train_batch_end` time: 0.1814s). Check your callbacks.
 
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0933s vs `on_train_batch_end` time: 0.1810s). Check your callbacks.
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0863s vs `on_train_batch_end` time: 0.1814s). Check your callbacks.
 
-187/187 - 64s - loss: 0.7429 - accuracy: 0.7724 - val_loss: 0.7360 - val_accuracy: 0.7970
-Epoch 2/25
-187/187 - 61s - loss: 0.6910 - accuracy: 0.7815 - val_loss: 0.7471 - val_accuracy: 0.7947
-Epoch 3/25
-187/187 - 61s - loss: 0.6713 - accuracy: 0.7908 - val_loss: 0.7570 - val_accuracy: 0.7948
-Epoch 4/25
-187/187 - 62s - loss: 0.6540 - accuracy: 0.7955 - val_loss: 0.7491 - val_accuracy: 0.7947
-Epoch 5/25
-187/187 - 61s - loss: 0.6439 - accuracy: 0.7979 - val_loss: 0.7550 - val_accuracy: 0.7937
-Epoch 6/25
-187/187 - 62s - loss: 0.6248 - accuracy: 0.8034 - val_loss: 0.7805 - val_accuracy: 0.7894
-Epoch 7/25
-187/187 - 61s - loss: 0.6072 - accuracy: 0.8102 - val_loss: 0.7701 - val_accuracy: 0.7905
-Epoch 8/25
-187/187 - 62s - loss: 0.6150 - accuracy: 0.8061 - val_loss: 0.7752 - val_accuracy: 0.7889
-Epoch 9/25
-187/187 - 61s - loss: 0.6000 - accuracy: 0.8092 - val_loss: 0.7706 - val_accuracy: 0.7899
-Epoch 10/25
-187/187 - 59s - loss: 0.5896 - accuracy: 0.8122 - val_loss: 0.7658 - val_accuracy: 0.7902
-Epoch 11/25
-187/187 - 61s - loss: 0.6067 - accuracy: 0.8102 - val_loss: 0.7726 - val_accuracy: 0.7898
-Epoch 12/25
-187/187 - 61s - loss: 0.5889 - accuracy: 0.8171 - val_loss: 0.7687 - val_accuracy: 0.7905
-Epoch 13/25
-187/187 - 61s - loss: 0.5807 - accuracy: 0.8168 - val_loss: 0.7693 - val_accuracy: 0.7903
-Epoch 14/25
-187/187 - 61s - loss: 0.5644 - accuracy: 0.8204 - val_loss: 0.7687 - val_accuracy: 0.7905
-Epoch 15/25
-187/187 - 62s - loss: 0.5875 - accuracy: 0.8163 - val_loss: 0.7667 - val_accuracy: 0.7908
-Epoch 16/25
-187/187 - 61s - loss: 0.5977 - accuracy: 0.8051 - val_loss: 0.7685 - val_accuracy: 0.7909
-Epoch 17/25
-187/187 - 61s - loss: 0.5978 - accuracy: 0.8141 - val_loss: 0.7671 - val_accuracy: 0.7909
-Epoch 18/25
-187/187 - 61s - loss: 0.5835 - accuracy: 0.8154 - val_loss: 0.7667 - val_accuracy: 0.7909
-Epoch 19/25
-187/187 - 62s - loss: 0.5998 - accuracy: 0.8112 - val_loss: 0.7666 - val_accuracy: 0.7908
-Epoch 20/25
-187/187 - 61s - loss: 0.5990 - accuracy: 0.8123 - val_loss: 0.7679 - val_accuracy: 0.7910
-Epoch 21/25
-187/187 - 61s - loss: 0.5860 - accuracy: 0.8168 - val_loss: 0.7698 - val_accuracy: 0.7901
-Epoch 22/25
-187/187 - 61s - loss: 0.5989 - accuracy: 0.8080 - val_loss: 0.7694 - val_accuracy: 0.7910
-Epoch 23/25
-187/187 - 61s - loss: 0.5778 - accuracy: 0.8171 - val_loss: 0.7686 - val_accuracy: 0.7909
-Epoch 24/25
-187/187 - 60s - loss: 0.5885 - accuracy: 0.8174 - val_loss: 0.7685 - val_accuracy: 0.7915
-Epoch 25/25
-187/187 - 61s - loss: 0.5785 - accuracy: 0.8158 - val_loss: 0.7688 - val_accuracy: 0.7907
+187/187 - 66s - loss: 0.7042 - accuracy: 0.7831 - val_loss: 0.6712 - val_accuracy: 0.8098
+Epoch 2/10
+187/187 - 65s - loss: 0.6822 - accuracy: 0.7890 - val_loss: 0.6750 - val_accuracy: 0.8092
+Epoch 3/10
+187/187 - 65s - loss: 0.6570 - accuracy: 0.7965 - val_loss: 0.6805 - val_accuracy: 0.8056
+Epoch 4/10
+187/187 - 64s - loss: 0.6394 - accuracy: 0.8018 - val_loss: 0.6904 - val_accuracy: 0.8039
+Epoch 5/10
+187/187 - 66s - loss: 0.6317 - accuracy: 0.7985 - val_loss: 0.6903 - val_accuracy: 0.8049
+Epoch 6/10
+187/187 - 66s - loss: 0.6137 - accuracy: 0.8049 - val_loss: 0.6949 - val_accuracy: 0.8045
+Epoch 7/10
+187/187 - 65s - loss: 0.6225 - accuracy: 0.8080 - val_loss: 0.6916 - val_accuracy: 0.8047
+Epoch 8/10
+187/187 - 66s - loss: 0.6162 - accuracy: 0.8097 - val_loss: 0.6922 - val_accuracy: 0.8053
+Epoch 9/10
+187/187 - 66s - loss: 0.6176 - accuracy: 0.8061 - val_loss: 0.6908 - val_accuracy: 0.8046
+Epoch 10/10
+187/187 - 66s - loss: 0.5967 - accuracy: 0.8095 - val_loss: 0.6913 - val_accuracy: 0.8048
 
 ```
 </div>
