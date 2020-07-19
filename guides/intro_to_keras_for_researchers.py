@@ -412,7 +412,7 @@ for epoch in range(2):
             print("Epoch:", epoch, "Step:", step)
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
-    # Result the metric's state at the end of an epoch
+    # Reset the metric's state at the end of an epoch
     accuracy.reset_states()
 
 """
