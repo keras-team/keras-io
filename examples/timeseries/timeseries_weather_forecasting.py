@@ -69,7 +69,6 @@ csv_path = keras.utils.get_file(
 
 # checking out the first 5 rows of the dataset
 df = pd.read_csv(csv_path)
-df = df.iloc[:-1]
 df.head()
 
 """
@@ -209,39 +208,38 @@ show_time_based_visualizations(df, 8)
 """
 ## Data Preprocessing
 
-Here we are picking 300000 data points for training. The observation is recorded every
-10 mins, that means 6 times in an hour. Thus STEP is equal to 6. We are tracking data
-from past 720 timestamps(i.e. 720/6=120 hours) and this will be used to predict the
-temperature after 72 timestamps(i.e. 76/6=12 hours).
+Here we are picking ~300000 data points for training. The observation is recorded every
+10 mins, that means 6 times in an hour. The sampling is done every one hour since a
+drastic change is not expected within 60 minutes. Thus step variable is equal to 6.
+
+We are tracking data from past 720 timestamps (i.e. 720/6=120 hours) and this will be
+used to predict the temperature after 72 timestamps(i.e. 76/6=12 hours).
 
 Raw data is normalized using a z score formula. Since every feature has values with
 varying ranges, normalization is done to confine the values in a range of [0,1] before
 training a neural network.
 It is done by subtracting the mean and dividing by the standard deviation of each feature
 
-71.5 % of the data will be used to train the model, i.e. 300693 rows.
-"""
+71.5 % of the data will be used to train the model, i.e. 300693 rows. split_fraction can
+be changed to alter this percentage.
 
-split_fraction = 0.715
-train_split = int(split_fraction * int(df.shape[0]))
-
-"""
 The model is shown data for first 5 days i.e. 720 observations, that are sampled every
 hour. The temperature after 72 (12 hours * 6 observation per hour) observation will be
 used as a label.
 
-The sampling is done every one hour since a drastic change is not expected within
-60 minutes. Variable step defines this sampling.
-
-Learning rate is used for Adam optimizer.
+We are using 0.001 as learning rate which default for the Adam optimizer. It is a
+hyperparamater can be tuned to improve results.
 
 We are selecting 256 as number of examples i.e. batch_size for 10 epochs.
 """
 
+split_fraction = 0.715
+train_split = int(split_fraction * int(df.shape[0]))
+step = 6
+
 past = 720
 future = 72
-step = 6
-learning_rate = 0.005
+learning_rate = 0.001
 batch_size = 256
 epochs = 10
 
@@ -303,7 +301,7 @@ dataset_train = keras.preprocessing.timeseries_dataset_from_array(
 )
 
 """
-# Validation dataset
+## Validation dataset
 
 The validation dataset must not contain the last 792 rows as we won't have label data for
 those records, hence 792 must be subtracted from the x_end.
