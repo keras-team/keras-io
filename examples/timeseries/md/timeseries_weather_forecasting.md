@@ -1,22 +1,28 @@
-"""
-Title: Timeseries forecasting for weather prediction
-Authors: [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](https://github.com/yashika51), [Kristi Takach](https://github.com/ktakattack), [Falak Shah](https://github.com/falaktheoptimist)
-Date created: 2020/06/23
-Last modified: 2020/07/20
-Description: This notebook demonstrates how to do timeseries forecasting using a LSTM model.
-"""
+# Timeseries forecasting for weather prediction
 
-"""
+**Authors:** [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](https://github.com/yashika51), [Kristi Takach](https://github.com/ktakattack), [Falak Shah](https://github.com/falaktheoptimist)<br>
+**Date created:** 2020/06/23<br>
+**Last modified:** 2020/07/20<br>
+**Description:** This notebook demonstrates how to do timeseries forecasting using a LSTM model.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/timeseries/ipynb/timeseries_weather_forecasting.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/timeseries/timeseries_weather_forecasting.py)
+
+
+
+---
 ## Setup
 This example requires TensorFlow 2.3 or higher.
-"""
 
+
+```python
 import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
+```
 
-"""
+---
 ## Climate Data Time-Series
 
 We will be using Jena Climate dataset recorded by the
@@ -49,8 +55,9 @@ Index| Features      |Format             |Description
 13   |wv (m/s)       |1.03               |Wind speed
 14   |max. wv (m/s)  |1.75               |Maximum wind speed
 15   |wd (deg)       |152.3              |Wind direction in degrees
-"""
 
+
+```python
 from zipfile import ZipFile
 import os
 
@@ -61,15 +68,17 @@ zip_file.extractall()
 csv_path = "jena_climate_2009_2016.csv"
 
 df = pd.read_csv(csv_path)
+```
 
-"""
+---
 ## Raw Data Visualization
 
 To give us a sense of the data we are working with, each feature has been plotted below.
 This shows the distinct pattern of each feature over the time period from 2009 to 2016.
 It also shows where anomalies are present, which will be addressed during normalization.
-"""
 
+
+```python
 titles = [
     "Pressure",
     "Temperature",
@@ -142,11 +151,15 @@ def show_raw_visualization(data):
 
 
 show_raw_visualization(df)
+```
 
-"""
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_6_1.png)
+
+
 This heat map shows the correlation between different features.
-"""
 
+
+```python
 
 def show_heatmap(data):
     plt.matshow(data.corr())
@@ -162,8 +175,13 @@ def show_heatmap(data):
 
 show_heatmap(df)
 
+```
 
-"""
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_8_0.png)
+
+
+---
 ## Data Preprocessing
 
 Here we are picking ~300,000 data points for training. Observation is recorded every
@@ -185,8 +203,9 @@ be changed to alter this percentage.
 The model is shown data for first 5 days i.e. 720 observations, that are sampled every
 hour. The temperature after 72 (12 hours * 6 observation per hour) observation will be
 used as a label.
-"""
 
+
+```python
 split_fraction = 0.715
 train_split = int(split_fraction * int(df.shape[0]))
 step = 6
@@ -203,12 +222,13 @@ def normalize(data, train_split):
     data_std = data[:train_split].std(axis=0)
     return (data - data_mean) / data_std
 
+```
 
-"""
 We can see from the correlation heatmap, few parameters like Relative Humidity and
 Specific Humidity are redundant. Hence we will be using select features, not all.
-"""
 
+
+```python
 print(
     "The selected parameters are:",
     ", ".join([titles[i] for i in [0, 1, 5, 7, 8, 10, 11]]),
@@ -224,13 +244,20 @@ features.head()
 
 train_data = features.loc[0 : train_split - 1]
 val_data = features.loc[train_split:]
+```
 
-"""
+<div class="k-default-codeblock">
+```
+The selected parameters are: Pressure, Temperature, Saturation vapor pressure, Vapor pressure deficit, Specific humidity, Airtight, Wind speed
+
+```
+</div>
 # Training dataset
 
 The training dataset labels starts from the 792nd observation (720 + 72).
-"""
 
+
+```python
 start = past + future
 end = start + train_split
 
@@ -238,14 +265,15 @@ x_train = train_data[[i for i in range(7)]].values
 y_train = features.iloc[start:end][[1]]
 
 sequence_length = int(past / step)
+```
 
-"""
 The `timeseries_dataset_from_array` function takes in a sequence of data-points gathered at
 equal intervals, along with time series parameters such as length of the
 sequences/windows, spacing between two sequence/windows, etc., to produce batches of
 sub-timeseries inputs and targets sampled from the main timeseries.
-"""
 
+
+```python
 dataset_train = keras.preprocessing.timeseries_dataset_from_array(
     x_train,
     y_train,
@@ -253,8 +281,9 @@ dataset_train = keras.preprocessing.timeseries_dataset_from_array(
     sampling_rate=step,
     batch_size=batch_size,
 )
+```
 
-"""
+---
 ## Validation dataset
 
 The validation dataset must not contain the last 792 rows as we won't have label data for
@@ -262,8 +291,9 @@ those records, hence 792 must be subtracted from the end of the data.
 
 The validation label dataset must start from 792 after train_split, hence we must add
 past + future (792) to label_start.
-"""
 
+
+```python
 x_end = len(val_data) - past - future
 
 label_start = train_split + past + future
@@ -285,11 +315,20 @@ for batch in dataset_train.take(1):
 
 print("Input shape:", inputs.numpy().shape)
 print("Target shape:", targets.numpy().shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Input shape: (256, 120, 7)
+Target shape: (256, 1)
+
+```
+</div>
+---
 ## Training
-"""
 
+
+```python
 inputs = keras.layers.Input(shape=(inputs.shape[1], inputs.shape[2]))
 lstm_out = keras.layers.LSTM(32)(inputs)
 outputs = keras.layers.Dense(1)(lstm_out)
@@ -297,13 +336,33 @@ outputs = keras.layers.Dense(1)(lstm_out)
 model = keras.Model(inputs=inputs, outputs=outputs)
 model.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate), loss="mse")
 model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "functional_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         [(None, 120, 7)]          0         
+_________________________________________________________________
+lstm (LSTM)                  (None, 32)                5120      
+_________________________________________________________________
+dense (Dense)                (None, 1)                 33        
+=================================================================
+Total params: 5,153
+Trainable params: 5,153
+Non-trainable params: 0
+_________________________________________________________________
+
+```
+</div>
 We'll use the `ModelCheckpoint` callback to regualrly save checkpoints, and
 the `EarlyStopping` callback to interrupt training when the validation loss
 is not longer improving.
-"""
 
+
+```python
 path_checkpoint = "model_checkpoint.h5"
 es_callback = keras.callbacks.EarlyStopping(monitor="val_loss", min_delta=0, patience=5)
 
@@ -321,12 +380,32 @@ history = model.fit(
     validation_data=dataset_val,
     callbacks=[es_callback, modelckpt_callback],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.2059
+Epoch 00001: val_loss improved from inf to 0.16357, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 101s 86ms/step - loss: 0.2059 - val_loss: 0.1636
+Epoch 2/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.1271
+Epoch 00002: val_loss improved from 0.16357 to 0.13362, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 107s 92ms/step - loss: 0.1271 - val_loss: 0.1336
+Epoch 3/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.1089
+Epoch 00005: val_loss did not improve from 0.13362
+1172/1172 [==============================] - 110s 94ms/step - loss: 0.1089 - val_loss: 0.1481
+Epoch 6/10
+ 271/1172 [=====>........................] - ETA: 1:12 - loss: 0.1117
+
+```
+</div>
 We can visualize the loss with the function below. After one point, the loss stops
 decreasing.
-"""
 
+
+```python
 
 def visualize_loss(history, title):
     loss = history.history["loss"]
@@ -343,14 +422,20 @@ def visualize_loss(history, title):
 
 
 visualize_loss(history, "Training and Validation Loss")
+```
 
-"""
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_0.png)
+
+
+---
 ## Prediction
 
 The trained model above is now able to make predictions for 5 sets of values from
 validation set.
-"""
 
+
+```python
 
 def show_plot(plot_data, delta, title):
     labels = ["History", "True Future", "Model Prediction"]
@@ -380,3 +465,24 @@ for x, y in dataset_val.take(5):
         12,
         "Single Step Prediction",
     )
+```
+
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_0.png)
+
+
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_1.png)
+
+
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_2.png)
+
+
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_3.png)
+
+
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_4.png)
+

@@ -6,7 +6,7 @@
 **Description:** Everything you need to know to use Keras & TF 2.0 for deep learning research.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_researchers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_researchers.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_researchers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_researchers.py)
 
 
 
@@ -17,7 +17,6 @@
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -38,7 +37,7 @@ In this guide, you will learn about:
 - The Keras Functional API
 
 You will also see the Keras API in action in two end-to-end research examples:
-a Variational Autoencoder, an a Hypernetwork.
+a Variational Autoencoder, and a Hypernetwork.
 
 ---
 ## The `Layer` class
@@ -70,7 +69,6 @@ class Linear(keras.layers.Layer):
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
 
-
 ```
 
 You would use a `Layer` instance much like a Python function:
@@ -84,7 +82,6 @@ linear_layer = Linear(units=4, input_dim=2)
 # Here we call it on some data.
 y = linear_layer(tf.ones((2, 2)))
 assert y.shape == (2, 4)
-
 ```
 
 The weight variables (created in `__init__`) are automatically
@@ -93,7 +90,6 @@ tracked under the `weights` property:
 
 ```python
 assert linear_layer.weights == [linear_layer.w, linear_layer.b]
-
 ```
 
 You have many built-in layers available, from `Dense` to `Conv2D` to `LSTM` to
@@ -134,7 +130,6 @@ linear_layer = Linear(4)
 
 # This will also call `build(input_shape)` and create the weights.
 y = linear_layer(tf.ones((2, 2)))
-
 ```
 
 ---
@@ -184,21 +179,20 @@ for step, (x, y) in enumerate(dataset):
     # Logging.
     if step % 100 == 0:
         print("Step:", step, "Loss:", float(loss))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.3826446533203125
-Step: 100 Loss: 2.267599582672119
-Step: 200 Loss: 2.1371021270751953
-Step: 300 Loss: 2.0780434608459473
-Step: 400 Loss: 1.9888293743133545
-Step: 500 Loss: 1.887470006942749
-Step: 600 Loss: 1.8170452117919922
-Step: 700 Loss: 1.694450855255127
-Step: 800 Loss: 1.653834581375122
-Step: 900 Loss: 1.6181517839431763
+Step: 0 Loss: 2.456793785095215
+Step: 100 Loss: 2.2678098678588867
+Step: 200 Loss: 2.196652412414551
+Step: 300 Loss: 2.132258892059326
+Step: 400 Loss: 2.0797274112701416
+Step: 500 Loss: 1.9761338233947754
+Step: 600 Loss: 1.7839593887329102
+Step: 700 Loss: 1.8158284425735474
+Step: 800 Loss: 1.7084990739822388
+Step: 900 Loss: 1.6562185287475586
 
 ```
 </div>
@@ -237,7 +231,6 @@ print(y.numpy())  # [4. 4.]
 assert my_sum.weights == [my_sum.total]
 assert my_sum.non_trainable_weights == [my_sum.total]
 assert my_sum.trainable_weights == []
-
 ```
 
 <div class="k-default-codeblock">
@@ -284,7 +277,6 @@ y = mlp(tf.ones(shape=(3, 64)))
 
 # Weights are recursively tracked.
 assert len(mlp.weights) == 6
-
 ```
 
 Note that our manually-created MLP above is equivalent to the following
@@ -299,7 +291,6 @@ mlp = keras.Sequential(
         keras.layers.Dense(10),
     ]
 )
-
 ```
 
 ---
@@ -326,7 +317,6 @@ class ActivityRegularization(keras.layers.Layer):
         # that depends on the inputs.
         self.add_loss(self.rate * tf.reduce_sum(inputs))
         return inputs
-
 
 ```
 
@@ -357,12 +347,11 @@ mlp = SparseMLP()
 y = mlp(tf.ones((10, 10)))
 
 print(mlp.losses)  # List containing one float32 scalar
-
 ```
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.21055736>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.23114467>]
 
 ```
 </div>
@@ -370,7 +359,6 @@ These losses are cleared by the top-level layer at the start of each forward
 pass -- they don't accumulate. `layer.losses` always contains only the losses
 created during the last forward pass. You would typically use these losses by
 summing them before computing your gradients when writing a training loop.
-
 
 
 ```python
@@ -418,21 +406,20 @@ for step, (x, y) in enumerate(dataset):
     # Logging.
     if step % 100 == 0:
         print("Step:", step, "Loss:", float(loss))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 6.011272430419922
-Step: 100 Loss: 2.6576173305511475
-Step: 200 Loss: 2.4374217987060547
-Step: 300 Loss: 2.3680849075317383
-Step: 400 Loss: 2.360743999481201
-Step: 500 Loss: 2.3423142433166504
-Step: 600 Loss: 2.313633680343628
-Step: 700 Loss: 2.3257956504821777
-Step: 800 Loss: 2.306140661239624
-Step: 900 Loss: 2.321286201477051
+Step: 0 Loss: 5.991635799407959
+Step: 100 Loss: 2.6379199028015137
+Step: 200 Loss: 2.39302921295166
+Step: 300 Loss: 2.3888492584228516
+Step: 400 Loss: 2.356649160385132
+Step: 500 Loss: 2.3454649448394775
+Step: 600 Loss: 2.327338695526123
+Step: 700 Loss: 2.3245863914489746
+Step: 800 Loss: 2.3086981773376465
+Step: 900 Loss: 2.3108632564544678
 
 ```
 </div>
@@ -489,31 +476,30 @@ for epoch in range(2):
             print("Epoch:", epoch, "Step:", step)
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
-    # Result the metric's state at the end of an epoch
+    # Reset the metric's state at the end of an epoch
     accuracy.reset_states()
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.109
+Total running accuracy so far: 0.047
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.745
+Total running accuracy so far: 0.760
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.819
+Total running accuracy so far: 0.831
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.850
+Total running accuracy so far: 0.859
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.867
+Total running accuracy so far: 0.875
 Epoch: 1 Step: 0
 Total running accuracy so far: 0.938
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.936
+Total running accuracy so far: 0.938
 Epoch: 1 Step: 400
 Total running accuracy so far: 0.939
 Epoch: 1 Step: 600
-Total running accuracy so far: 0.940
+Total running accuracy so far: 0.941
 Epoch: 1 Step: 800
 Total running accuracy so far: 0.941
 
@@ -569,21 +555,20 @@ for step, (x, y) in enumerate(dataset):
     loss = train_on_batch(x, y)
     if step % 100 == 0:
         print("Step:", step, "Loss:", float(loss))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.372758388519287
-Step: 100 Loss: 0.6940608620643616
-Step: 200 Loss: 0.2873537838459015
-Step: 300 Loss: 0.4446139931678772
-Step: 400 Loss: 0.583051860332489
-Step: 500 Loss: 0.32000404596328735
-Step: 600 Loss: 0.265232115983963
-Step: 700 Loss: 0.12978266179561615
-Step: 800 Loss: 0.3476303219795227
-Step: 900 Loss: 0.24191027879714966
+Step: 0 Loss: 2.4244790077209473
+Step: 100 Loss: 0.6268073320388794
+Step: 200 Loss: 0.5352152585983276
+Step: 300 Loss: 0.18634426593780518
+Step: 400 Loss: 0.2614487111568451
+Step: 500 Loss: 0.5878333449363708
+Step: 600 Loss: 0.392818808555603
+Step: 700 Loss: 0.24846115708351135
+Step: 800 Loss: 0.1844426691532135
+Step: 900 Loss: 0.1664549559354782
 
 ```
 </div>
@@ -630,7 +615,6 @@ class MLPWithDropout(keras.layers.Layer):
 mlp = MLPWithDropout()
 y_train = mlp(tf.ones((2, 2)), training=True)
 y_test = mlp(tf.ones((2, 2)), training=False)
-
 ```
 
 ---
@@ -671,7 +655,6 @@ assert y.shape == (2, 10)
 # You can pass a `training` argument in `__call__`
 # (it will get passed down to the Dropout layer).
 y = model(tf.ones((2, 16)), training=True)
-
 ```
 
 The Functional API tends to be more concise than subclassing, and provides a few other
@@ -748,7 +731,6 @@ class Encoder(layers.Layer):
         z = self.sampling((z_mean, z_log_var))
         return z_mean, z_log_var, z
 
-
 ```
 
 Next, we have a `Decoder` class, which maps the probabilistic latent space coordinates
@@ -768,7 +750,6 @@ class Decoder(layers.Layer):
     def call(self, inputs):
         x = self.dense_proj(inputs)
         return self.dense_output(x)
-
 
 ```
 
@@ -796,7 +777,6 @@ class VariationalAutoEncoder(layers.Layer):
         )
         self.add_loss(kl_loss)
         return reconstructed
-
 
 ```
 
@@ -846,22 +826,21 @@ for step, x in enumerate(dataset):
     # as an exercise to the reader.
     if step >= 1000:
         break
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.38399988412857056
-Step: 100 Loss: 0.12813832219874505
-Step: 200 Loss: 0.10099794645214555
-Step: 300 Loss: 0.09052002512883903
-Step: 400 Loss: 0.08532035229100551
-Step: 500 Loss: 0.08204194844631615
-Step: 600 Loss: 0.07955289975478129
-Step: 700 Loss: 0.07817310818634428
-Step: 800 Loss: 0.07688544124606694
-Step: 900 Loss: 0.07589594667134486
-Step: 1000 Loss: 0.07492802400778342
+Step: 0 Loss: 0.34360969066619873
+Step: 100 Loss: 0.1268921259901311
+Step: 200 Loss: 0.10019794225099668
+Step: 300 Loss: 0.08994597142122909
+Step: 400 Loss: 0.08490597068371618
+Step: 500 Loss: 0.08168080423822897
+Step: 600 Loss: 0.07927437018162994
+Step: 700 Loss: 0.07791767667941803
+Step: 800 Loss: 0.07669395401832019
+Step: 900 Loss: 0.07571622215781969
+Step: 1000 Loss: 0.07479669768121336
 
 ```
 </div>
@@ -901,7 +880,6 @@ vae = tf.keras.Model(inputs=original_inputs, outputs=outputs, name="vae")
 # Add KL divergence regularization loss.
 kl_loss = -0.5 * tf.reduce_mean(z_log_var - tf.square(z_mean) - tf.exp(z_log_var) + 1)
 vae.add_loss(kl_loss)
-
 ```
 
 Much more concise, right?
@@ -928,14 +906,13 @@ vae.compile(optimizer, loss=loss_fn)
 
 # Actually training the model.
 vae.fit(dataset, epochs=1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 2s 962us/step - loss: 0.0713
+1875/1875 [==============================] - 2s 980us/step - loss: 0.0713
 
-<tensorflow.python.keras.callbacks.History at 0x15fcd8c10>
+<tensorflow.python.keras.callbacks.History at 0x167c2cd50>
 
 ```
 </div>
@@ -956,7 +933,6 @@ A hypernetwork is a deep neural network whose weights are generated by another n
 
 Let's implement a really trivial hypernetwork: we'll use a small 2-layer network  to
 generate the weights of a larger 3-layer network.
-
 
 
 
@@ -987,7 +963,6 @@ inner_model = keras.Sequential(
         keras.layers.Dense(num_weights_to_generate, activation=tf.nn.sigmoid),
     ]
 )
-
 ```
 
 This is our training loop. For each batch of data:
@@ -1073,22 +1048,21 @@ for step, (x, y) in enumerate(dataset):
     # as an exercise to the reader.
     if step >= 1000:
         break
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 1.8061305284500122
-Step: 100 Loss: 2.430531589701624
-Step: 200 Loss: 2.1146517871364727
-Step: 300 Loss: 1.9503340735858263
-Step: 400 Loss: 1.8750596672872504
-Step: 500 Loss: 1.81695979083944
-Step: 600 Loss: 1.7097562247230214
-Step: 700 Loss: 1.642795581991716
-Step: 800 Loss: 1.6287533775725223
-Step: 900 Loss: 1.6253980021383934
-Step: 1000 Loss: 1.5546919323841977
+Step: 0 Loss: 4.737176418304443
+Step: 100 Loss: 2.6431594647393366
+Step: 200 Loss: 2.3565089883495918
+Step: 300 Loss: 2.1680791037268565
+Step: 400 Loss: 2.044000819636662
+Step: 500 Loss: 2.01625633314475
+Step: 600 Loss: 1.9379815768527302
+Step: 700 Loss: 1.855055329773368
+Step: 800 Loss: 1.7896285848904616
+Step: 900 Loss: 1.69601594678629
+Step: 1000 Loss: 1.6704652742821007
 
 ```
 </div>

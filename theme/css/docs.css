@@ -387,3 +387,19 @@ blockquote {
   width: 28rem;
   margin-bottom: 1rem;
 }
+
+table {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  border: solid 2px gray;
+}
+tr {
+  border: solid 1px gray;
+}
+th {
+  border: solid 1px gray;
+}
+td {
+  border: solid 1px gray;
+}
