@@ -3,15 +3,6 @@
 This is a constantly-updated list of code examples that we're currently interested in.
 
 
-## Timeseries forecasting with LSTM for weather prediction
-
-Recommendations:
-
-- Use `timeseries_dataset_from_array` for data processing
-- Single LSTM layer + classification layer, trained with `fit()`
-- Add nice visualizations
-
-
 ## Transformer model for MIDI music generation
 
 [Reference TF/Keras implementation](https://github.com/jason9693/MusicTransformer-tensorflow2.0)
