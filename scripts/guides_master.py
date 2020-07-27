@@ -44,10 +44,10 @@ GUIDES_MASTER = {
         #     'path': 'writing_your_own_losses',
         #     'title': 'Writing your own Losses',
         # },
-        # {
-        #     'path': 'working_with_preprocessing_layers',
-        #     'title': 'Working with Preprocessing Layers',
-        # },
+        {
+            'path': 'preprocessing_layers',
+            'title': 'Working with preprocessing Layers',
+        },
         {
             'path': 'working_with_rnns',
             'title': 'Working with recurrent neural networks',
