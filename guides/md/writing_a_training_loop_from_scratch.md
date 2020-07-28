@@ -72,7 +72,7 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
-x_test = np.reshape(x_train, (-1, 784))
+x_test = np.reshape(x_test, (-1, 784))
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
 ```
@@ -131,15 +131,15 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 138.9553
+Training loss (for one batch) at step 0: 97.3328
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 2.0124
+Training loss (for one batch) at step 200: 1.3363
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6247
+Training loss (for one batch) at step 400: 1.2435
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.9244
+Training loss (for one batch) at step 600: 0.9772
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.4198
+Training loss (for one batch) at step 800: 0.6763
 Seen so far: 51264 samples
 ```
 </div>
@@ -147,15 +147,15 @@ Seen so far: 51264 samples
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.6736
+Training loss (for one batch) at step 0: 0.6312
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.6869
+Training loss (for one batch) at step 200: 0.4847
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.5578
+Training loss (for one batch) at step 400: 0.5155
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.3697
+Training loss (for one batch) at step 600: 0.3894
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.0953
+Training loss (for one batch) at step 800: 0.4914
 Seen so far: 51264 samples
 
 ```
@@ -262,38 +262,38 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 103.4554
+Training loss (for one batch) at step 0: 83.1239
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.5734
+Training loss (for one batch) at step 200: 2.4446
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.7797
+Training loss (for one batch) at step 400: 1.3355
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.2821
+Training loss (for one batch) at step 600: 1.0067
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3632
+Training loss (for one batch) at step 800: 0.5941
 Seen so far: 51264 samples
-Training acc over epoch: 0.7958
-Validation acc: 0.8843
-Time taken: 3.78s
+Training acc over epoch: 0.7184
+Validation acc: 0.8099
+Time taken: 3.99s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.7340
+Training loss (for one batch) at step 0: 0.6010
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5991
+Training loss (for one batch) at step 200: 0.8994
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.8521
+Training loss (for one batch) at step 400: 0.3894
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.6446
+Training loss (for one batch) at step 600: 0.9923
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.5393
+Training loss (for one batch) at step 800: 0.3522
 Seen so far: 51264 samples
-Training acc over epoch: 0.8817
-Validation acc: 0.9163
-Time taken: 4.31s
+Training acc over epoch: 0.8205
+Validation acc: 0.8681
+Time taken: 4.00s
 
 ```
 </div>
@@ -384,38 +384,38 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.2797
+Training loss (for one batch) at step 0: 0.7456
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5493
+Training loss (for one batch) at step 200: 0.4579
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.3036
+Training loss (for one batch) at step 400: 0.5318
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.4908
+Training loss (for one batch) at step 600: 0.9282
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3206
+Training loss (for one batch) at step 800: 0.4210
 Seen so far: 51264 samples
-Training acc over epoch: 0.9060
-Validation acc: 0.9191
-Time taken: 1.00s
+Training acc over epoch: 0.8569
+Validation acc: 0.8882
+Time taken: 1.20s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.3756
+Training loss (for one batch) at step 0: 0.2207
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.2454
+Training loss (for one batch) at step 200: 0.2255
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.4296
+Training loss (for one batch) at step 400: 0.3687
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.2993
+Training loss (for one batch) at step 600: 0.4691
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.6099
+Training loss (for one batch) at step 800: 0.4616
 Seen so far: 51264 samples
-Training acc over epoch: 0.9174
-Validation acc: 0.9326
-Time taken: 0.67s
+Training acc over epoch: 0.8776
+Validation acc: 0.9027
+Time taken: 0.70s
 
 ```
 </div>
@@ -688,8 +688,8 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.71
-adversarial loss at step 0: 0.73
+discriminator loss at step 0: 0.69
+adversarial loss at step 0: 0.66
 
 ```
 </div>
