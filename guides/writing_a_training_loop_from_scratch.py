@@ -65,7 +65,7 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
-x_test = np.reshape(x_train, (-1, 784))
+x_test = np.reshape(x_test, (-1, 784))
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
 
