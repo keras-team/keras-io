@@ -80,7 +80,7 @@ class KerasIO:
             for fname in sorted(os.listdir(path)):
                 if fname.endswith(".py"):  # e.g. examples/nlp/test.py
                     name = fname[:-3]
-                    example_path = name.split('/')[-1]
+                    example_path = name.split("/")[-1]
                     if example_path not in preexisting:
                         f = open(path / fname)
                         f.readline()
@@ -88,13 +88,11 @@ class KerasIO:
                         f.close()
                         assert title_line.startswith("Title: ")
                         title = title_line[len("Title: ") :]
-                        children.append(
-                            {"path": example_path, "title": title.strip()}
-                        )
+                        children.append({"path": example_path, "title": title.strip()})
             entry["children"] = children
 
     def make_md_sources(self):
-        print('Generating md sources')
+        print("Generating md sources")
         if os.path.exists(self.md_sources_dir):
             print("Clearing", self.md_sources_dir)
             shutil.rmtree(self.md_sources_dir)
@@ -137,7 +135,8 @@ class KerasIO:
             "[**View in Colab**](https://colab.research.google.com/github/"
             + github_repo_dir
             + "ipynb/"
-            + name + ".ipynb"
+            + name
+            + ".ipynb"
             + ")  "
             '<span class="k-dot">•</span>'
             '<img class="k-inline-icon" src="https://github.com/favicon.ico"/> '
@@ -510,7 +509,7 @@ class KerasIO:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
     def render_md_sources_to_html(self):
-        print('Rendering md sources to HTML')
+        print("Rendering md sources to HTML")
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
@@ -544,7 +543,7 @@ class KerasIO:
                     # Render as index.html
                     target_path = Path(target_dir) / "index.html"
                     relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
-                    relative_url = relative_url.replace('//', '/')
+                    relative_url = relative_url.replace("//", "/")
                 else:
                     # Render as fname_no_ext/index.tml
                     fname_no_ext = ".".join(fname.split(".")[:-1])
@@ -594,7 +593,7 @@ class KerasIO:
                     }
                 )
                 save_file(target_path, html_page)
-                all_urls_list.append('https://keras.io' + relative_url)
+                all_urls_list.append("https://keras.io" + relative_url)
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -631,14 +630,14 @@ class KerasIO:
                         "content": "<h1>404: Page not found</h1>",
                         "base_url": self.url,
                     }
-                )
+                ),
             }
         )
         save_file(Path(self.site_dir) / "404.html", page404)
 
         # Tutobooks
         self.sync_tutobook_media()
-        sitemap = '\n'.join(all_urls_list) + '\n'
+        sitemap = "\n".join(all_urls_list) + "\n"
         save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
     def make(self):
@@ -788,15 +787,15 @@ def insert_title_ids_in_html(html):
     for i in range(1, 5):
         match = "<h" + str(i) + ">(.*?)</h" + str(i) + ">"
         replace = (
-            "<h" +
-            str(i) +
-            r' id="' +
-            marker +
-            r"\1" +
-            marker_end +
-            r'">\1</h' +
-            str(i) +
-            ">"
+            "<h"
+            + str(i)
+            + r' id="'
+            + marker
+            + r"\1"
+            + marker_end
+            + r'">\1</h'
+            + str(i)
+            + ">"
         )
         html = re.sub(match, replace, html)
 
@@ -847,7 +846,8 @@ def generate_md_toc(entries, url, depth=2):
         else:
             title_prefix = "- "
         generated += title_prefix + "[{title}]({full_url})\n".format(
-            title=title, full_url=full_url)
+            title=title, full_url=full_url
+        )
         if children:
             assert path.endswith("/")
             for child in children:
@@ -857,7 +857,8 @@ def generate_md_toc(entries, url, depth=2):
                 child_path = child["path"]
                 child_url = full_url + child_path
                 generated += "- [{child_title}]({child_url})\n".format(
-                    child_title=child_title, child_url=child_url)
+                    child_title=child_title, child_url=child_url
+                )
             generated += "\n"
         elif generate and print_generate:
             for gen in generate:
@@ -865,10 +866,12 @@ def generate_md_toc(entries, url, depth=2):
                 obj_name = docstrings.get_name(obj)
                 obj_type = docstrings.get_type(obj)
                 link = "{full_url}/#{obj_name}-{obj_type}".format(
-                    full_url=full_url, obj_name=obj_name, obj_type=obj_type).lower()
+                    full_url=full_url, obj_name=obj_name, obj_type=obj_type
+                ).lower()
                 name = gen.split(".")[-1]
                 generated += "- [{name} {obj_type}]({link})\n".format(
-                    name=name, obj_type=obj_type, link=link)
+                    name=name, obj_type=obj_type, link=link
+                )
             generated += "\n"
     return generated
 
@@ -882,7 +885,7 @@ def get_working_dir(arg):
 if __name__ == "__main__":
     keras_io = KerasIO(
         master=MASTER,
-        url= os.path.sep,
+        url=os.path.sep,
         templates_dir=os.path.join("..", "templates"),
         md_sources_dir=os.path.join("..", "sources"),
         site_dir=os.path.join("..", "site"),
