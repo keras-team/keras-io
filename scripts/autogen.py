@@ -35,8 +35,8 @@ import tutobooks
 import generate_tf_guides
 
 
-EXAMPLES_GH_LOCATION = os.path.join("keras-team","keras-io","blob","master","examples")
-GUIDES_GH_LOCATION = os.path.join("keras-team","keras-io","blob","master","guides")
+EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
+GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 
 
 class KerasIO:
@@ -233,7 +233,7 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = os.path.join(EXAMPLES_GH_LOCATION, folder)
+        github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
         site_img_dir = os.path.join("img", "examples", folder, name)
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
@@ -263,7 +263,7 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = GUIDES_GH_LOCATION
+        github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
@@ -296,7 +296,7 @@ class KerasIO:
                 target_dir=target_dir,
                 img_dir=img_dir,
                 site_img_dir="img/guides/",
-                github_repo_dir=GUIDES_GH_LOCATION,
+                github_repo_dir=str(GUIDES_GH_LOCATION),
             )
 
         # Examples
@@ -317,7 +317,7 @@ class KerasIO:
                         target_dir=target_dir,  # e.g. examples/nlp/md
                         img_dir=img_dir,  # e.g. examples/nlp/img
                         site_img_dir="img/examples/" + name,  # e.g. img/examples/nlp
-                        github_repo_dir=EXAMPLES_GH_LOCATION + name + "/",
+                        github_repo_dir=str(EXAMPLES_GH_LOCATION / name),
                     )
 
     def sync_tutobook_templates(self):
@@ -436,7 +436,8 @@ class KerasIO:
             template_path = template_path.with_suffix(".md")
 
         if os.path.exists(template_path):
-            template_file = open(template_path)
+            template_file = open(template_path, encoding="utf8")
+            print(template_path)
             template = template_file.read()
             template_file.close()
         else:
@@ -671,7 +672,7 @@ class KerasIO:
 
 
 def save_file(path, content):
-    f = open(path, "w")
+    f = open(path, "w", encoding="utf8")
     f.write(content)
     f.close()
 
