@@ -53,7 +53,7 @@ variables instead of hard-coding numbers.
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-GCS_PATH = 'gs://kds-63fdbf6403ae1d5e971e6cdbd4104b02e914cf6e90a178bd0e3990a8'
+GCS_PATH = "gs://kds-63fdbf6403ae1d5e971e6cdbd4104b02e914cf6e90a178bd0e3990a8"
 BATCH_SIZE = 16 * strategy.num_replicas_in_sync
 IMAGE_SIZE = [180, 180]
 EPOCHS = 25
