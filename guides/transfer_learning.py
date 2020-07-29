@@ -25,7 +25,7 @@ Transfer learning is usually done for tasks where your dataset has too little da
  train a full-scale model from scratch.
 
 The most common incarnation of transfer learning in the context of deep learning is the
- following worfklow:
+ following workflow:
 
 1. Take layers from a previously trained model.
 2. Freeze them, so as to avoid destroying any of the information they contain during
@@ -380,7 +380,7 @@ you'll probably want to use the utility
 `tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
-Tansfer learning is most useful when working with very small datases. To keep our
+Transfer learning is most useful when working with very small datasets. To keep our
 dataset small, we will use 40% of the original training data (25,000 images) for
  training, 10% for validation, and 10% for testing.
 """
