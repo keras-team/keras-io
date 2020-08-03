@@ -16,7 +16,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 # Display
-from IPython.display import Image
+from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
