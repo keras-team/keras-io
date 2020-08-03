@@ -2,8 +2,8 @@
 Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
 Date created: 2020/07/28
-Last modified: 2020/07/31
-Description: Meical image classification on TPU
+Last modified: 2020/08/03
+Description: Medical image classification on TPU
 """
 """
 ## Introduction + Set-up
@@ -18,7 +18,6 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 
 try:
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
@@ -30,9 +29,6 @@ except:
     strategy = tf.distribute.get_strategy()
 print("Number of replicas:", strategy.num_replicas_in_sync)
 
-print(tf.__version__)
-
-
 """
 We need a Google Cloud link to our data to load the data using a TPU. While we're at it,
 we instantiate constant variables. It is generally better practice to use constant
@@ -40,7 +36,7 @@ variables instead of hard-coding numbers.
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-GCS_PATH = "gs://kds-63fdbf6403ae1d5e971e6cdbd4104b02e914cf6e90a178bd0e3990a8"
+GCS_PATH = "gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307"
 BATCH_SIZE = 16 * strategy.num_replicas_in_sync
 IMAGE_SIZE = [180, 180]
 
@@ -58,7 +54,11 @@ We will append the validation files and create a new split that resembes the sta
 filenames = tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*/*"))
 filenames.extend(tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/val/*/*")))
 
-train_filenames, val_filenames = train_test_split(filenames, test_size=0.2)
+filenames = np.array(filenames)
+np.random.shuffle(filenames)
+split_ind = int(0.8 * len(filenames))
+
+train_filenames, val_filenames = filenames[:split_ind], filenames[split_ind:]
 
 """
 Run the following cell to see how many healthy/normal chest X-rays we have and how many
@@ -106,7 +106,7 @@ CLASS_NAMES = np.array(
         for item in tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*"))
     ]
 )
-CLASS_NAMES
+print("Class names: %s" % (CLASS_NAMES,))
 
 """
 Currently our dataset is just a list of filenames. We want to map each filename to the
@@ -162,17 +162,20 @@ Load and format the test data as well.
 """
 
 test_list_ds = tf.data.Dataset.list_files(str(GCS_PATH + "/chest_xray/test/*/*"))
-TEST_IMAGE_COUNT = tf.data.experimental.cardinality(test_list_ds).numpy()
+TEST_IMG_COUNT = tf.data.experimental.cardinality(test_list_ds).numpy()
 test_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 test_ds = test_ds.batch(BATCH_SIZE)
 
-TEST_IMAGE_COUNT
+print("Testing images count: " + str(TEST_IMG_COUNT))
 
 """
 ## Visualize the dataset
 
 First, let's use buffered prefetching so we can yield data from disk without having I/O
 become blocking.
+
+Please note that large image datasets should not be cached in memory. We do it here
+because the dataset is not very large and we want to train on TPU.
 """
 
 
@@ -315,7 +318,7 @@ as pneumonia than normal. We will correct for that in this following section.
 """
 
 initial_bias = np.log([COUNT_PNEUMONIA / COUNT_NORMAL])
-initial_bias
+print("Initial bias: {:.5f}".format(initial_bias[0]))
 
 weight_for_0 = (1 / COUNT_NORMAL) * (TRAIN_IMG_COUNT) / 2.0
 weight_for_1 = (1 / COUNT_PNEUMONIA) * (TRAIN_IMG_COUNT) / 2.0
