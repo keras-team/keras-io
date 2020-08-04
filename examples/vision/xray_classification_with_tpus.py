@@ -2,7 +2,7 @@
 Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
 Date created: 2020/07/28
-Last modified: 2020/08/03
+Last modified: 2020/08/04
 Description: Medical image classification on TPU
 """
 """
@@ -14,6 +14,7 @@ to predict whether an X-ray scan shows presence of pneumonia.
 
 import re
 import os
+import random
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -47,15 +48,14 @@ The Chest X-ray data we are using from
 [*Cell*](https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia) divides the data
 into train, val, and test files. There are only 16 files in the validation folder, and we
 would prefer to have a less extreme division between the training and the validation set.
-We will append the validation files and create a new split that resembes the standard
+We will append the validation files and create a new split that resembles the standard
 80:20 division instead.
 """
 
 filenames = tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*/*"))
 filenames.extend(tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/val/*/*")))
 
-filenames = np.array(filenames)
-np.random.shuffle(filenames)
+random.shuffle(filenames)
 split_ind = int(0.8 * len(filenames))
 
 train_filenames, val_filenames = filenames[:split_ind], filenames[split_ind:]
@@ -74,9 +74,9 @@ COUNT_PNEUMONIA = len(
 print("Pneumonia images count in training set: " + str(COUNT_PNEUMONIA))
 
 """
-Notice that the there are way more images that are classified as pneumonia than normal.
-This shows that we have a imbalance in our data. We will correct for this imbalance later
-on in our notebook.
+Notice that there are way more images that are classified as pneumonia than normal. This
+shows that we have a imbalance in our data. We will correct for this imbalance later on
+in our notebook.
 """
 
 train_list_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
@@ -100,12 +100,10 @@ print("Validating images count: " + str(VAL_IMG_COUNT))
 As expected, we have two labels for our images.
 """
 
-CLASS_NAMES = np.array(
-    [
-        str(tf.strings.split(item, os.path.sep)[-1].numpy())[2:-1]
-        for item in tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*"))
-    ]
-)
+CLASS_NAMES = [
+    str(tf.strings.split(item, os.path.sep)[-1].numpy())[2:-1]
+    for item in tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*"))
+]
 print("Class names: %s" % (CLASS_NAMES,))
 
 """
@@ -122,12 +120,6 @@ def get_label(file_path):
     parts = tf.strings.split(file_path, os.path.sep)
     # The second to last is the class-directory
     return parts[-2] == "PNEUMONIA"
-
-
-"""
-The images originally have values that range from [0, 255]. CNNs work better with smaller
-numbers so we will scale this down.
-"""
 
 
 def decode_img(img):
@@ -162,7 +154,7 @@ Load and format the test data as well.
 """
 
 test_list_ds = tf.data.Dataset.list_files(str(GCS_PATH + "/chest_xray/test/*/*"))
-TEST_IMG_COUNT = tf.data.experimental.cardinality(test_list_ds).numpy()
+TEST_IMG_COUNT = test_list_ds.cardinality().numpy()
 test_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 test_ds = test_ds.batch(BATCH_SIZE)
 
@@ -241,21 +233,19 @@ layer block.
 
 The architecture for this CNN has been inspired by this
 [article](https://towardsdatascience.com/deep-learning-for-detecting-pneumonia-from-x-ray-images-fc9a3d9fdba8).
-[article](https://towardsdatascience.com/deep-learning-for-detecting-pneumonia-from-x-ray-images-fc9a3d9fdba8).
 """
+
+from tensorflow.keras import layers
+from tensorflow.keras.layers.experimental import preprocessing
 
 
 def conv_block(filters):
     block = tf.keras.Sequential(
         [
-            tf.keras.layers.SeparableConv2D(
-                filters, 3, activation="relu", padding="same"
-            ),
-            tf.keras.layers.SeparableConv2D(
-                filters, 3, activation="relu", padding="same"
-            ),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.MaxPool2D(),
+            layers.SeparableConv2D(filters, 3, activation="relu", padding="same"),
+            layers.SeparableConv2D(filters, 3, activation="relu", padding="same"),
+            layers.BatchNormalization(),
+            layers.MaxPool2D(),
         ]
     )
 
@@ -265,9 +255,9 @@ def conv_block(filters):
 def dense_block(units, dropout_rate):
     block = tf.keras.Sequential(
         [
-            tf.keras.layers.Dense(units, activation="relu"),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Dropout(dropout_rate),
+            layers.Dense(units, activation="relu"),
+            layers.BatchNormalization(),
+            layers.Dropout(dropout_rate),
         ]
     )
 
@@ -275,35 +265,40 @@ def dense_block(units, dropout_rate):
 
 
 """
-The following method will define the function to build our model for us. The Dropout
-layers are important as they "drop out," hence the name, certain nodes to reduce the
-likelikhood of the model overfitting. We want to end the model with a Dense layer of one
-node, as this will be the output that determines if an X-ray shows an image of pneumonia.
+The following method will define the function to build our model for us.
+
+The images originally have values that range from [0, 255]. CNNs work better with smaller
+numbers so we will scale this down for our input.
+
+The Dropout layers are important as they "drop out," hence the name, certain nodes to
+reduce the likelikhood of the model overfitting. We want to end the model with a Dense
+layer of one node, as this will be the output that determines if an X-ray shows presence
+of pneumonia.
 """
 
 
 def build_model():
     inputs = (tf.keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3)),)
-    x = tf.keras.layers.experimental.preprocessing.Rescaling(1.0 / 255)(inputs)[0]
-    x = tf.keras.layers.Conv2D(16, 3, activation="relu", padding="same")(x)
-    x = tf.keras.layers.Conv2D(16, 3, activation="relu", padding="same")(x)
-    x = tf.keras.layers.MaxPool2D()(x)
+    x = preprocessing.Rescaling(1.0 / 255)(inputs)[0]
+    x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
+    x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
+    x = layers.MaxPool2D()(x)
 
     x = conv_block(32)(x)
     x = conv_block(64)(x)
 
     x = conv_block(128)(x)
-    x = tf.keras.layers.Dropout(0.2)(x)
+    x = layers.Dropout(0.2)(x)
 
     x = conv_block(256)(x)
-    x = tf.keras.layers.Dropout(0.2)(x)
+    x = layers.Dropout(0.2)(x)
 
-    x = tf.keras.layers.Flatten()(x)
+    x = layers.Flatten()(x)
     x = dense_block(512, 0.7)(x)
     x = dense_block(128, 0.5)(x)
     x = dense_block(64, 0.3)(x)
 
-    outputs = tf.keras.layers.Dense(1, activation="sigmoid")(x)
+    outputs = layers.Dense(1, activation="sigmoid")(x)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
@@ -337,13 +332,9 @@ more to balance the data as the CNN works best when the training data is balance
 """
 ## Train the model
 
-Since there are only two possible labels for the image, we will be using the
-`binary_crossentropy` loss. When we fit the model, identify the class weights. Because we
-are using a TPU, training will be relatively quick.
-
 For our metrics, we want to include precision and recall as they will provide use with a
-more informed picture of how good our model is. Accuracy tells us what fractions are the
-labels are correct. Since our data is not balanced, accuracy might give a skewed sense of
+more informed picture of how good our model is. Accuracy tells us what fraction of the
+labels is correct. Since our data is not balanced, accuracy might give a skewed sense of
 a good model (i.e. a model that always predicts PNEUMONIA will be 74% accurate but is not
 a good model).
 
@@ -366,26 +357,18 @@ with strategy.scope():
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=METRICS)
 
 """
-From exploring the data and the model, I noticed that the training for the model has a
-slow start. However, after 25 epochs, the model slowly starts to converge.
-"""
+### Adjusting hyperparameters
 
-"""
-## Finetune the model
+Tuning is an art when it comes to Machine Learning, and there are ways to adjust the
+hyperparameters of a model in efforts to improve it. Tuning is beyond the scope of this
+notebook, but check out this
+[article](https://medium.com/@jorgesleonel/hyperparameters-in-machine-deep-learning-ca69ad10b981) for more information.
 
-Finetuning is an art when it comes to Machine Learning, and there are many ways to adjust
-the model in efforts to improve it. Finetuning is beyond the scope of this notebook, but
-check out this
-[article](https://www.pyimagesearch.com/2019/06/03/fine-tuning-with-keras-and-deep-learnin
-g/) for more information.
-
-For our purposes, we'll use Keras callbacks to further finetune our model. The checkpoint
+For our purposes, we'll use Keras callbacks to adjust our hyperparameters. The checkpoint
 callback saves the best weights of the model, so next time we want to use the model, we
 do not have to spend time training it. The early stopping callback stops the training
 process when the model starts becoming stagnant, or even worse, when the model starts
-overfitting. Since we set `restore_best_weights` to `True`, the returned model at the end
-of the training process will be the model with the best weights (i.e. low loss and high
-accuracy).
+overfitting. It adjusts the number of epochs.
 """
 
 checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
@@ -395,29 +378,37 @@ early_stopping_cb = tf.keras.callbacks.EarlyStopping(
 )
 
 """
-We also want to finetune our learning rate. Too high of a learning rate will cause the
-model to diverge. Too small of a learning rate will cause the model to be too slow. We
+We also want to tune our learning rate. Too high of a learning rate will cause the model
+to diverge. Too small of a learning rate will cause the model to be too slow. We
 implement the exponential learning rate scheduling method below.
 """
 
+initial_learning_rate = 0.015
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
+)
 
-def exponential_decay(lr0, s):
-    def exponential_decay_fn(epoch):
-        return lr0 * 0.1 ** (epoch / s)
+"""
+### Fit the model
 
-    return exponential_decay_fn
+Since there are only two possible labels for the image, we will be using the
+`binary_crossentropy` loss. When we fit the model, identify the class weights. Because we
+are using a TPU, training will be relatively quick.
+"""
 
-
-exponential_decay_fn = exponential_decay(0.015, 20)
-
-lr_scheduler = tf.keras.callbacks.LearningRateScheduler(exponential_decay_fn)
+with strategy.scope():
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
+        loss="binary_crossentropy",
+        metrics=METRICS,
+    )
 
 history = model.fit(
     train_ds,
     epochs=100,
     validation_data=val_ds,
     class_weight=class_weight,
-    callbacks=[checkpoint_cb, early_stopping_cb, lr_scheduler],
+    callbacks=[checkpoint_cb, early_stopping_cb],
 )
 
 """
@@ -440,8 +431,8 @@ for i, met in enumerate(["precision", "recall", "accuracy", "loss"]):
     ax[i].legend(["train", "val"])
 
 """
-We see that the accuracy for our model is around 98%. Finetune the model further to see
-if we can achieve a higher accuracy.
+We see that the accuracy for our model is around 95%. Tune the model further to see if we
+can achieve a higher score.
 """
 
 """
@@ -453,7 +444,7 @@ Let's evaluate the model on our test data!
 model.evaluate(test_ds, return_dict=True)
 
 """
-We see that our accuracy on our test data is ~80%, which is lower than the accuracy for
+We see that our accuracy on our test data is ~87%, which is lower than the accuracy for
 our validating set. This may indicate overfitting.
 
 Our recall is greater than our precision, indicating that almost all pneumonia images are
@@ -470,9 +461,11 @@ plt.imshow(img / 255)
 img_array = tf.keras.preprocessing.image.img_to_array(img)
 img_array = tf.expand_dims(img_array, 0)  # Create batch axis
 
-predictions = model.predict(img_array)
-score = predictions[0]
-print("This scan is %.2f percent pneumonia." % (100 * score))
+prediction = model.predict(img_array)[0]
+scores = [1 - prediction, prediction]
+
+for score, name in zip(scores, CLASS_NAMES):
+    print("This image is %.2f percent %s" % ((100 * score), name))
 
 """
 Our model could accurately classify this image.
