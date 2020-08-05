@@ -31,9 +31,8 @@ except:
 print("Number of replicas:", strategy.num_replicas_in_sync)
 
 """
-We need a Google Cloud link to our data to load the data using a TPU. While we're at it,
-we instantiate constant variables. It is generally better practice to use constant
-variables instead of hard-coding numbers.
+We need a Google Cloud link to our data to load the data using a TPU.
+Below, we define key configuration parameters we'll use in this example.
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
@@ -46,8 +45,8 @@ IMAGE_SIZE = [180, 180]
 
 The Chest X-ray data we are using from
 [*Cell*](https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia) divides the data
-into train, val, and test files. There are only 16 files in the validation folder, and we
-would prefer to have a less extreme division between the training and the validation set.
+into training, validation, and test files. There are only 16 files in the validation folder,
+and we would prefer to have a less extreme division between the training and the validation set.
 We will append the validation files and create a new split that resembles the standard
 80:20 division instead.
 """
@@ -61,8 +60,8 @@ split_ind = int(0.8 * len(filenames))
 train_filenames, val_filenames = filenames[:split_ind], filenames[split_ind:]
 
 """
-Run the following cell to see how many healthy/normal chest X-rays we have and how many
-pneumonia chest X-rays we have.
+Let's count how many healthy/normal chest X-rays we have and how many
+pneumonia chest X-rays we have:
 """
 
 COUNT_NORMAL = len([filename for filename in train_filenames if "NORMAL" in filename])
@@ -107,10 +106,10 @@ CLASS_NAMES = [
 print("Class names: %s" % (CLASS_NAMES,))
 
 """
-Currently our dataset is just a list of filenames. We want to map each filename to the
+Currently, our dataset is just a list of filenames. We want to map each filename to the
 corresponding (image, label) pair. The following methods will help us do that.
 
-As we only have two labels, we will rewrite the label so that `1` or `True` indicates
+As we only have two labels, we will encode the label so that `1` or `True` indicates
 pneumonia and `0` or `False` indicates normal.
 """
 
@@ -219,7 +218,7 @@ def show_batch(image_batch, label_batch):
 
 """
 As the method takes in numpy arrays as its parameters, call the numpy function on the
-batches to return the tensor in numpy array form.
+batches to return the tensor in NumPy array form.
 """
 
 show_batch(image_batch.numpy(), label_batch.numpy())
@@ -270,10 +269,10 @@ The following method will define the function to build our model for us.
 The images originally have values that range from [0, 255]. CNNs work better with smaller
 numbers so we will scale this down for our input.
 
-The Dropout layers are important as they "drop out," hence the name, certain nodes to
-reduce the likelikhood of the model overfitting. We want to end the model with a Dense
-layer of one node, as this will be the output that determines if an X-ray shows presence
-of pneumonia.
+The Dropout layers are important, as they reduce
+reduce the likelikhood of the model overfitting. We want to end the model with a `Dense`
+layer with one node, as this will be the binary output that determines if an X-ray shows
+presence of pneumonia.
 """
 
 
@@ -301,15 +300,14 @@ def build_model():
     outputs = layers.Dense(1, activation="sigmoid")(x)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
-
     return model
 
 
 """
 ## Correct for data imbalance
 
-We saw earlier in this notebook that the data was imbalanced, with more images classified
-as pneumonia than normal. We will correct for that in this following section.
+We saw earlier in this example that the data was imbalanced, with more images classified
+as pneumonia than normal. We will correct for that by using class weighting:
 """
 
 initial_bias = np.log([COUNT_PNEUMONIA / COUNT_NORMAL])
@@ -367,8 +365,8 @@ notebook, but check out this
 For our purposes, we'll use Keras callbacks to adjust our hyperparameters. The checkpoint
 callback saves the best weights of the model, so next time we want to use the model, we
 do not have to spend time training it. The early stopping callback stops the training
-process when the model starts becoming stagnant, or even worse, when the model starts
-overfitting. It adjusts the number of epochs.
+process when the model starts becoming stagnant, or when the model starts
+overfitting.
 """
 
 checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
@@ -392,7 +390,7 @@ lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
 ### Fit the model
 
 Since there are only two possible labels for the image, we will be using the
-`binary_crossentropy` loss. When we fit the model, identify the class weights. Because we
+binary crossentropy loss. When we fit the model, identify the class weights. Because we
 are using a TPU, training will be relatively quick.
 """
 
