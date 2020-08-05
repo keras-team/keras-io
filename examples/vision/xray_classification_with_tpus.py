@@ -2,7 +2,7 @@
 Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
 Date created: 2020/07/28
-Last modified: 2020/08/04
+Last modified: 2020/08/05
 Description: Medical image classification on TPU
 """
 """
@@ -31,8 +31,9 @@ except:
 print("Number of replicas:", strategy.num_replicas_in_sync)
 
 """
-We need a Google Cloud link to our data to load the data using a TPU.
-Below, we define key configuration parameters we'll use in this example.
+We need a Google Cloud link to our data to load the data using a TPU. While we're at it,
+we instantiate constant variables. It is generally better practice to use constant
+variables instead of hard-coding numbers.
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
@@ -45,8 +46,8 @@ IMAGE_SIZE = [180, 180]
 
 The Chest X-ray data we are using from
 [*Cell*](https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia) divides the data
-into training, validation, and test files. There are only 16 files in the validation folder,
-and we would prefer to have a less extreme division between the training and the validation set.
+into train, val, and test files. There are only 16 files in the validation folder, and we
+would prefer to have a less extreme division between the training and the validation set.
 We will append the validation files and create a new split that resembles the standard
 80:20 division instead.
 """
@@ -60,8 +61,8 @@ split_ind = int(0.8 * len(filenames))
 train_filenames, val_filenames = filenames[:split_ind], filenames[split_ind:]
 
 """
-Let's count how many healthy/normal chest X-rays we have and how many
-pneumonia chest X-rays we have:
+Run the following cell to see how many healthy/normal chest X-rays we have and how many
+pneumonia chest X-rays we have.
 """
 
 COUNT_NORMAL = len([filename for filename in train_filenames if "NORMAL" in filename])
@@ -74,7 +75,7 @@ print("Pneumonia images count in training set: " + str(COUNT_PNEUMONIA))
 
 """
 Notice that there are way more images that are classified as pneumonia than normal. This
-shows that we have a imbalance in our data. We will correct for this imbalance later on
+shows that we have an imbalance in our data. We will correct for this imbalance later on
 in our notebook.
 """
 
@@ -106,10 +107,10 @@ CLASS_NAMES = [
 print("Class names: %s" % (CLASS_NAMES,))
 
 """
-Currently, our dataset is just a list of filenames. We want to map each filename to the
+Currently our dataset is just a list of filenames. We want to map each filename to the
 corresponding (image, label) pair. The following methods will help us do that.
 
-As we only have two labels, we will encode the label so that `1` or `True` indicates
+As we only have two labels, we will rewrite the label so that `1` or `True` indicates
 pneumonia and `0` or `False` indicates normal.
 """
 
@@ -218,7 +219,7 @@ def show_batch(image_batch, label_batch):
 
 """
 As the method takes in numpy arrays as its parameters, call the numpy function on the
-batches to return the tensor in NumPy array form.
+batches to return the tensor in numpy array form.
 """
 
 show_batch(image_batch.numpy(), label_batch.numpy())
@@ -234,33 +235,26 @@ The architecture for this CNN has been inspired by this
 [article](https://towardsdatascience.com/deep-learning-for-detecting-pneumonia-from-x-ray-images-fc9a3d9fdba8).
 """
 
+from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 
 
-def conv_block(filters):
-    block = tf.keras.Sequential(
-        [
-            layers.SeparableConv2D(filters, 3, activation="relu", padding="same"),
-            layers.SeparableConv2D(filters, 3, activation="relu", padding="same"),
-            layers.BatchNormalization(),
-            layers.MaxPool2D(),
-        ]
-    )
+def conv_block(filters, inputs):
+    x = layers.SeparableConv2D(filters, 3, activation="relu", padding="same")(inputs)
+    x = layers.SeparableConv2D(filters, 3, activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    outputs = layers.MaxPool2D()(x)
 
-    return block
+    return outputs
 
 
-def dense_block(units, dropout_rate):
-    block = tf.keras.Sequential(
-        [
-            layers.Dense(units, activation="relu"),
-            layers.BatchNormalization(),
-            layers.Dropout(dropout_rate),
-        ]
-    )
+def dense_block(units, dropout_rate, inputs):
+    x = layers.Dense(units, activation="relu")(inputs)
+    x = layers.BatchNormalization()(x)
+    outputs = layers.Dropout(dropout_rate)(x)
 
-    return block
+    return outputs
 
 
 """
@@ -269,45 +263,46 @@ The following method will define the function to build our model for us.
 The images originally have values that range from [0, 255]. CNNs work better with smaller
 numbers so we will scale this down for our input.
 
-The Dropout layers are important, as they reduce
-reduce the likelikhood of the model overfitting. We want to end the model with a `Dense`
-layer with one node, as this will be the binary output that determines if an X-ray shows
-presence of pneumonia.
+The Dropout layers are important as they "drop out," hence the name, certain nodes to
+reduce the likelikhood of the model overfitting. We want to end the model with a Dense
+layer of one node, as this will be the output that determines if an X-ray shows presence
+of pneumonia.
 """
 
 
 def build_model():
-    inputs = (tf.keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3)),)
-    x = preprocessing.Rescaling(1.0 / 255)(inputs)[0]
+    inputs = keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
+    x = preprocessing.Rescaling(1.0 / 255)(inputs)
     x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
     x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
     x = layers.MaxPool2D()(x)
 
-    x = conv_block(32)(x)
-    x = conv_block(64)(x)
+    x = conv_block(32, x)
+    x = conv_block(64, x)
 
-    x = conv_block(128)(x)
+    x = conv_block(128, x)
     x = layers.Dropout(0.2)(x)
 
-    x = conv_block(256)(x)
+    x = conv_block(256, x)
     x = layers.Dropout(0.2)(x)
 
     x = layers.Flatten()(x)
-    x = dense_block(512, 0.7)(x)
-    x = dense_block(128, 0.5)(x)
-    x = dense_block(64, 0.3)(x)
+    x = dense_block(512, 0.7, x)
+    x = dense_block(128, 0.5, x)
+    x = dense_block(64, 0.3, x)
 
     outputs = layers.Dense(1, activation="sigmoid")(x)
 
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    model = keras.Model(inputs=inputs, outputs=outputs)
+
     return model
 
 
 """
 ## Correct for data imbalance
 
-We saw earlier in this example that the data was imbalanced, with more images classified
-as pneumonia than normal. We will correct for that by using class weighting:
+We saw earlier in this notebook that the data was imbalanced, with more images classified
+as pneumonia than normal. We will correct for that in this following section.
 """
 
 initial_bias = np.log([COUNT_PNEUMONIA / COUNT_NORMAL])
@@ -329,44 +324,15 @@ more to balance the data as the CNN works best when the training data is balance
 
 """
 ## Train the model
-
-For our metrics, we want to include precision and recall as they will provide use with a
-more informed picture of how good our model is. Accuracy tells us what fraction of the
-labels is correct. Since our data is not balanced, accuracy might give a skewed sense of
-a good model (i.e. a model that always predicts PNEUMONIA will be 74% accurate but is not
-a good model).
-
-Precision is the number of true positives (TP) over the sum of TP and false positives
-(FP). It shows what fraction of labeled positives are actually correct.
-
-Recall is the number of TP over the sum of TP and false negatves (FN). It shows what
-fraction of actual positives are correct.
 """
 
-with strategy.scope():
-    model = build_model()
-
-    METRICS = [
-        "accuracy",
-        tf.keras.metrics.Precision(name="precision"),
-        tf.keras.metrics.Recall(name="recall"),
-    ]
-
-    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=METRICS)
-
 """
-### Adjusting hyperparameters
+### Defining callbacks
 
-Tuning is an art when it comes to Machine Learning, and there are ways to adjust the
-hyperparameters of a model in efforts to improve it. Tuning is beyond the scope of this
-notebook, but check out this
-[article](https://medium.com/@jorgesleonel/hyperparameters-in-machine-deep-learning-ca69ad10b981) for more information.
-
-For our purposes, we'll use Keras callbacks to adjust our hyperparameters. The checkpoint
-callback saves the best weights of the model, so next time we want to use the model, we
-do not have to spend time training it. The early stopping callback stops the training
-process when the model starts becoming stagnant, or when the model starts
-overfitting.
+The checkpoint callback saves the best weights of the model, so next time we want to use
+the model, we do not have to spend time training it. The early stopping callback stops
+the training process when the model starts becoming stagnant, or even worse, when the
+model starts overfitting.
 """
 
 checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
@@ -389,12 +355,32 @@ lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
 """
 ### Fit the model
 
+For our metrics, we want to include precision and recall as they will provide use with a
+more informed picture of how good our model is. Accuracy tells us what fraction of the
+labels is correct. Since our data is not balanced, accuracy might give a skewed sense of
+a good model (i.e. a model that always predicts PNEUMONIA will be 74% accurate but is not
+a good model).
+
+Precision is the number of true positives (TP) over the sum of TP and false positives
+(FP). It shows what fraction of labeled positives are actually correct.
+
+Recall is the number of TP over the sum of TP and false negatves (FN). It shows what
+fraction of actual positives are correct.
+
 Since there are only two possible labels for the image, we will be using the
-binary crossentropy loss. When we fit the model, identify the class weights. Because we
-are using a TPU, training will be relatively quick.
+`binary_crossentropy` loss. When we fit the model, remember to specify the class weights,
+which we defined earlier. Because we are using a TPU, training will be quick - less than
+2 minutes.
 """
 
 with strategy.scope():
+    model = build_model()
+
+    METRICS = [
+        tf.keras.metrics.BinaryAccuracy(),
+        tf.keras.metrics.Precision(name="precision"),
+        tf.keras.metrics.Recall(name="recall"),
+    ]
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
         loss="binary_crossentropy",
@@ -420,7 +406,7 @@ variance.
 fig, ax = plt.subplots(1, 4, figsize=(20, 3))
 ax = ax.ravel()
 
-for i, met in enumerate(["precision", "recall", "accuracy", "loss"]):
+for i, met in enumerate(["precision", "recall", "binary_accuracy", "loss"]):
     ax[i].plot(history.history[met])
     ax[i].plot(history.history["val_" + met])
     ax[i].set_title("Model {}".format(met))
@@ -429,8 +415,7 @@ for i, met in enumerate(["precision", "recall", "accuracy", "loss"]):
     ax[i].legend(["train", "val"])
 
 """
-We see that the accuracy for our model is around 95%. Tune the model further to see if we
-can achieve a higher score.
+We see that the accuracy for our model is around 95%.
 """
 
 """
@@ -442,8 +427,8 @@ Let's evaluate the model on our test data!
 model.evaluate(test_ds, return_dict=True)
 
 """
-We see that our accuracy on our test data is ~87%, which is lower than the accuracy for
-our validating set. This may indicate overfitting.
+We see that our accuracy on our test data is lower than the accuracy for our validating
+set. This may indicate overfitting.
 
 Our recall is greater than our precision, indicating that almost all pneumonia images are
 correctly identified but some normal images are falsely identified. We should aim to
