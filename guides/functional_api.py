@@ -233,7 +233,7 @@ on the output of another layer. By calling a model you aren't just reusing
 the architecture of the model, you're also reusing its weights.
 
 To see this in action, here's a different take on the autoencoder example that
-creates an encoder model, a decoder model, and chain them in two calls
+creates an encoder model, a decoder model, and chains them in two calls
 to obtain the autoencoder model:
 """
 
@@ -480,7 +480,7 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 ## Shared layers
 
 Another good use for the functional API are models that use *shared layers*.
-Shared layers are layer instances that are reused multiple times in a same model --
+Shared layers are layer instances that are reused multiple times in the same model --
 they learn features that correspond to multiple paths in the graph-of-layers.
 
 Shared layers are often used to encode inputs from similar spaces
@@ -654,7 +654,7 @@ that are not easily expressible as directed acyclic graphs of layers.
 For example, you could not implement a Tree-RNN with the functional API
 and would have to subclass `Model` directly.
 
-For in-depth look at the differences between the functional API and
+For an in-depth look at the differences between the functional API and
 model subclassing, read
 [What are Symbolic and Imperative APIs in TensorFlow 2.0?](https://blog.tensorflow.org/2019/01/what-are-symbolic-and-imperative-apis.html).
 
