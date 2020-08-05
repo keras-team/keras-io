@@ -39,7 +39,7 @@ All built-in loss functions may also be passed via their string identifier:
 
 ```python
 # pass optimizer by name: default parameters will be used
-model.compile(loss='sparse_categorical_crossenropy', optimizer='adam')
+model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
 ```
 
 Loss functions are typically created by instantiating a loss class (e.g. `keras.losses.SparseCategoricalCrossentropy`).
