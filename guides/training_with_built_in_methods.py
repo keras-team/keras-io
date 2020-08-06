@@ -970,7 +970,7 @@ model.fit(train_dataset, epochs=1)
 """
 ## Using callbacks
 
-Callbacks in Keras are objects that are called at a different point during training (at
+Callbacks in Keras are objects that are called at different points during training (at
 the start of an epoch, at the end of a batch, at the end of an epoch, etc.) and which
 can be used to implement behaviors such as:
 
