@@ -626,7 +626,7 @@ Note that the validation dataset will be reset after each use (so that you will 
 be evaluating on the same samples from epoch to epoch).
 
 The argument `validation_split` (generating a holdout set from the training data) is
-not supported when training from `Dataset` objects, since this features requires the
+not supported when training from `Dataset` objects, since this feature requires the
 ability to index the samples of the datasets, which is not possible in general with
 the `Dataset` API.
 """
@@ -716,7 +716,7 @@ This is set by passing a dictionary to the `class_weight` argument to
 be used for samples belonging to this class.
 
 This can be used to balance classes without resampling, or to train a
-model that has a gives more importance to a particular class.
+model that gives more importance to a particular class.
 
 For instance, if class "0" is half as represented as class "1" in your data,
 you could use `Model.fit(..., class_weight={0: 1., 1: 0.5})`.
@@ -970,7 +970,7 @@ model.fit(train_dataset, epochs=1)
 """
 ## Using callbacks
 
-Callbacks in Keras are objects that are called at different point during training (at
+Callbacks in Keras are objects that are called at different points during training (at
 the start of an epoch, at the end of a batch, at the end of an epoch, etc.) and which
 can be used to implement behaviors such as:
 
