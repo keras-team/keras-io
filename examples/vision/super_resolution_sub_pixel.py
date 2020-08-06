@@ -3,16 +3,16 @@ Title: Image Super-Resolution Using an Efficient Sub-Pixel CNN
 Author: [Xingyu Long](https://github.com/xingyu-long)
 Date created: 2020/07/28
 Last modified: 2020/07/30
-Description: Implementing Super-Resoluion using Efficient sub-pixel model on BSDS500.
+Description: Implementing Super-Resolution using Efficient sub-pixel model on BSDS500.
 """
 
 """
 ## Introduction
 
-ESPCN (Efficient Sub-Pixel CNN), proposed by [Shi, W.2016](https://arxiv.org/abs/1609.05158)
-is used to reconstruct the image from low resolution (lowres) to high resolution (highres).
-In this paper, they introduce an efficient sub-pixel convolution layers which learns an array of
-upscaling filter to upscale the final lowres feature maps into the highres output. This post will
+ESPCN (Efficient Sub-Pixel CNN), proposed by [Shi, W.2016](https://arxiv.org/abs/1609.05158) 
+is used to reconstruct the image from low resolution (lowres) to high resolution (highres). 
+In this paper, they introduce an efficient sub-pixel convolution layers which learns an array of 
+upscaling filter to upscale the final lowres feature maps into the highres output. This post will 
 implement the model in this paper and train it with small dataset
 [BSDS500](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/BSR/BSR_bsds500.tgz).
 """
@@ -21,10 +21,18 @@ implement the model in this paper and train it with small dataset
 ## Setup
 """
 
+
 import tensorflow as tf
+
+import os
+import numpy as np
 
 from tensorflow import keras
 from tensorflow.keras import layers
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import array_to_img
+from keras.preprocessing.image import img_to_array
+from IPython.display import display
 
 """
 ## Load data: BSDS500 dataset
@@ -40,8 +48,6 @@ data_dir = keras.utils.get_file(origin=dataset_url, fname="BSR", untar=True)
 """
 Check the `data_dir` and build data path.
 """
-
-import os
 
 root_dir = os.path.join(data_dir, "BSDS500/data")
 print(root_dir)
@@ -88,9 +94,6 @@ print("Number of validation samples: ", len(valid_img_paths))
 ## Visualize the data
 """
 
-from IPython.display import display
-from keras.preprocessing.image import load_img
-
 display(load_img(input_img_paths[0]))
 
 """
@@ -127,11 +130,7 @@ We luminance in `YCbCr` color space for images because the changes in that space
 to see.
 """
 
-from keras.preprocessing.image import array_to_img
-from keras.preprocessing.image import img_to_array
-import numpy as np
-
-img = load_img(input_img_paths[0])
+img = load_img(test_img_paths[0])
 ycbcr = img.convert("YCbCr")
 # Split into y, cr and cr channel and we will put y into model.
 # And we can restore image by other two channels at the end of this tutorial.
@@ -146,6 +145,7 @@ input = img_to_array(y)
 print("Actual image size is ", input.shape)
 
 input_transform = process_input(y, crop_size, upscale_factor)
+
 print("Input image size after transformation is ", input_transform.size)
 display(input_transform)
 
@@ -185,6 +185,18 @@ class BSDS500(tf.keras.utils.Sequence):
     def __len__(self):
         return len(self.input_img_paths) // self.batch_size
 
+    def process_img(self, path, process_name):
+        """Process target or input image and normalize the data."""
+        img, _, _ = load_img(path).convert("YCbCr").split()
+        if process_name == "target":
+            img = self.process_target(img, self.crop_size)
+        elif process_name == "input":
+            img = self.process_input(img, self.crop_size, self.upscale_factor)
+        img = img_to_array(img)
+        img /= 255.0
+
+        return img
+
     def __getitem__(self, idx):
         """Return tuple (input, target) with corresponding #idx"""
         i = idx * self.batch_size
@@ -195,24 +207,14 @@ class BSDS500(tf.keras.utils.Sequence):
             (self.batch_size,) + self.input_img_size + (self.channels,), dtype="float32"
         )
         for j, path in enumerate(batch_input_img_paths):
-            img, _, _ = load_img(path).convert("YCbCr").split()
-            img = self.process_input(img, self.crop_size, self.upscale_factor)
-            img = img_to_array(img)
-            # Scale to [0, 1]
-            img /= 255.0
-            x[j] = img
+            x[j] = self.process_img(path, "input")
 
         y = np.zeros(
             (self.batch_size,) + self.target_img_size + (self.channels,),
             dtype="float32",
         )
         for j, path in enumerate(batch_target_img_paths):
-            img, _, _ = load_img(path).convert("YCbCr").split()
-            img = self.process_target(img, self.crop_size)
-            img = img_to_array(img)
-            # Scale to [0, 1]
-            img /= 255.0
-            y[j] = img
+            y[j] = self.process_img(path, "target")
 
         return x, y
 
@@ -229,6 +231,11 @@ target_img_size = (crop_size, crop_size)
 channels = 1
 
 batch_size = 4
+
+"""
+For the model, we add one more layer and use `relu` activation function instead of `tanh`
+in paper, it gives us better performance even though we train model in small epochs.
+"""
 
 
 def get_model(upscale_factor=3, channels=1):
@@ -278,75 +285,7 @@ valid_gen = BSDS500(
 )
 
 """
-## Train the model with custom callback and perform evaluation
-"""
-
-"""
-### Define callback
-"""
-import math
-
-
-class ESPCNCallback(keras.callbacks.Callback):
-    # Store PSNR value in each epoch.
-    def on_epoch_begin(self, epoch, logs=None):
-        self.psnr = []
-
-    def on_epoch_end(self, epoch, logs=None):
-        print(
-            "End epoch {} of training and loss is {:7.4f} "
-            "and the average PSNR is {:7.4f}".format(
-                epoch, logs["loss"], sum(self.psnr) / len(self.psnr)
-            )
-        )
-
-    def on_train_batch_end(self, batch, logs=None):
-        print(
-            "...Training: end of batch {} and loss is {:7.4f}".format(
-                batch, logs["loss"]
-            )
-        )
-
-    def on_test_batch_end(self, batch, logs=None):
-        self.psnr.append(10 * math.log10(1 / logs["loss"]))
-        print(
-            "...Evaluating: end of batch {} and loss is {:7.4f}".format(
-                batch, logs["loss"]
-            )
-        )
-
-
-model = get_model(upscale_factor=upscale_factor, channels=channels)
-model.summary()
-
-callbacks = [ESPCNCallback()]
-loss_fn = tf.keras.losses.MeanSquaredError()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-
-"""
-### Train model
-"""
-
-epochs = 100
-
-model.compile(
-    optimizer=optimizer, loss=loss_fn,
-)
-
-model.fit(
-    train_gen, epochs=epochs, validation_data=valid_gen, callbacks=callbacks, verbose=0
-)
-
-"""
-Save model by `model.save()`.
-"""
-
-model_path = os.path.join(os.getcwd(), "models")
-
-model.save(model_path)
-
-"""
-## Run model prediction and plot the results.
+## Train the model with custom callbacks
 """
 
 """
@@ -354,10 +293,13 @@ Import `mpl_tookit` to help us zoom in the image and compared with specific area
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+
+"""
+Plot image and save it.
+"""
 
 
 def plot_results(img, prefix, title):
@@ -439,14 +381,103 @@ def get_lr_hr_predict(model, upscale_factor, img_path):
 
 
 """
-Let's predict a few images and save the results. The dataset they use to train in
+### Define callbacks to monitor training
+
+PSNR: We use PSNR to evaluate our model and please check it from
+[here](https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio) for more details.
+"""
+
+import math
+
+
+class ESPCNCallback(keras.callbacks.Callback):
+    def __init__(self):
+        super(ESPCNCallback, self).__init__()
+        self.test_img = test_img_paths[0]
+
+    # Store PSNR value in each epoch.
+    def on_epoch_begin(self, epoch, logs=None):
+        self.psnr = []
+
+    def on_epoch_end(self, epoch, logs=None):
+        print(
+            "End epoch {} of training and loss is {:7.4f} "
+            "and the average PSNR is {:7.4f}".format(
+                epoch, logs["loss"], sum(self.psnr) / len(self.psnr)
+            )
+        )
+        _, _, predict = get_lr_hr_predict(self.model, upscale_factor, self.test_img)
+        plot_results(predict, "epoch-" + str(epoch), "prediction")
+
+    def on_train_batch_end(self, batch, logs=None):
+        print(
+            "...Training: end of batch {} and loss is {:7.4f}".format(
+                batch, logs["loss"]
+            )
+        )
+
+    def on_test_batch_end(self, batch, logs=None):
+        self.psnr.append(10 * math.log10(1 / logs["loss"]))
+        print(
+            "...Evaluating: end of batch {} and loss is {:7.4f}".format(
+                batch, logs["loss"]
+            )
+        )
+
+
+"""
+Define `ModelCheckpoint` and `EarlyStopping` callbacks.
+"""
+
+early_stop_callback = keras.callbacks.EarlyStopping(monitor="loss", patience=10)
+
+checkpoint_filepath = "/tmp/checkpoint"
+
+model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,
+    save_weights_only=True,
+    monitor="loss",
+    mode="min",
+    save_best_only=True,
+)
+
+model = get_model(upscale_factor=upscale_factor, channels=channels)
+model.summary()
+
+callbacks = [ESPCNCallback(), early_stop_callback, model_checkpoint_callback]
+loss_fn = tf.keras.losses.MeanSquaredError()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+"""
+### Train model
+"""
+
+epochs = 50
+
+model.compile(
+    optimizer=optimizer, loss=loss_fn,
+)
+
+model.fit(
+    train_gen, epochs=epochs, validation_data=valid_gen, callbacks=callbacks, verbose=0
+)
+
+# The model weights (that are considered the best) are loaded into the model.
+model.load_weights(checkpoint_filepath)
+
+"""
+## Run model prediction and plot the results.
+"""
+
+"""
+Let's predict a few images and save the results. <br> The dataset they use to train in
 paper is ImageNet, you can try it and it should give better performance.
 """
 
 total_bicubic_psnr = 0.0
 total_test_psnr = 0.0
 
-for index, test_img_path in enumerate(test_img_paths[40:45]):
+for index, test_img_path in enumerate(test_img_paths[50:60]):
     lowres_img, highres_img, predict = get_lr_hr_predict(
         model, upscale_factor, test_img_path
     )
@@ -467,5 +498,5 @@ for index, test_img_path in enumerate(test_img_paths[40:45]):
     plot_results(highres_img, index, "highres")
     plot_results(predict, index, "prediction")
 
-print("Avg. PSNR of lr is %.4f" % (total_bicubic_psnr / 5))
-print("Avg. PSNR of predict is %.4f" % (total_test_psnr / 5))
+print("Avg. PSNR of lr is %.4f" % (total_bicubic_psnr / 10))
+print("Avg. PSNR of predict is %.4f" % (total_test_psnr / 10))
