@@ -217,7 +217,7 @@ def show_batch(image_batch, label_batch):
 
 
 """
-As the method takes in numpy arrays as its parameters, call the numpy function on the
+As the method takes in NumPy arrays as its parameters, call the numpy function on the
 batches to return the tensor in NumPy array form.
 """
 
@@ -366,7 +366,7 @@ Recall is the number of TP over the sum of TP and false negatves (FN). It shows 
 fraction of actual positives are correct.
 
 Since there are only two possible labels for the image, we will be using the
-binary_crossentropy loss. When we fit the model, remember to specify the class weights,
+binary crossentropy loss. When we fit the model, remember to specify the class weights,
 which we defined earlier. Because we are using a TPU, training will be quick - less than
 2 minutes.
 """
