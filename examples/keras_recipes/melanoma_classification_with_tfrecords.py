@@ -2,56 +2,35 @@
 Title: How to train a Keras model on TFRecord files
 Author: Amy MiHyun Jang
 Date created: 2020/07/29
-Last modified: 2020/08/06
-Description: Loading TFRecords for computer vision models
+Last modified: 2020/08/07
+Description: Loading TFRecords for computer vision models.
 """
 """
 ## Introduction + Set Up
 
 TFRecords store a sequence of binary records, read linearly. They are useful format for
-storing data because they can be read efficiently. We'll explore how we can easily load
-in TFRecords for our melanoma classifier.
+storing data because they can be read efficiently. Learn more about TFRecords
+[here](https://www.tensorflow.org/tutorials/load_data/tfrecord).
+
+We'll explore how we can easily load in TFRecords for our melanoma classifier.
 """
 
-"""shell
-! pip install gcsfs -q
-"""
-
-import re
-import numpy as np
-import pandas as pd
 import tensorflow as tf
 from functools import partial
 import matplotlib.pyplot as plt
 
-try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
-    print("Device:", tpu.master())
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
-    strategy = tf.distribute.experimental.TPUStrategy(tpu)
-except:
-    strategy = tf.distribute.get_strategy()
-print("Number of replicas:", strategy.num_replicas_in_sync)
-
 """
-Running the following cell will save time in loading the data as it allows for parallel
-processing. TPU can only work with Google Cloud files and cannot be run with local files.
 We want a bigger batch size as our data is not balanced.
 
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 GCS_PATH = "gs://kds-f809fea39df606e89617cd8d8e4cacc083fb6e176982f0e5d69215a8"
-BATCH_SIZE = 16 * strategy.num_replicas_in_sync
+BATCH_SIZE = 64
 IMAGE_SIZE = [1024, 1024]
 
 """
 ## Load the data
-
-Now we will load in our data. For this notebook, we will be importing the TFRecord files.
-It is good practice to divide the training set data into two. The smaller dataset will be
-the validation set. Having a validation set is useful to slow down overfitting.
 """
 
 FILENAMES = tf.io.gfile.glob(GCS_PATH + "/tfrecords/train*.tfrec")
@@ -69,29 +48,22 @@ print("Test TFRecord Files:", len(TEST_FILENAMES))
 The images have to be converted to tensors so that it will be a valid input in our model.
 As images utilize an RBG scale, we specify 3 channels.
 
-It is also best practice to normalize data before it is is fed into the model. For our
-image data, we will scale it down so that the value of each pixel will range from [0, 1]
-instead of [0, 255].
-
-We also reshape our data so that all of the images will be the same shape. Although the
-TFRecord files have already been reshaped for us, it is best practice to reshape the
-input so that we know exactly what's going in to our model.
+We also reshape our data so that all of the images will be the same shape.
 """
 
 
 def decode_image(image):
     image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.cast(image, tf.float32) / 255.0
+    image = tf.cast(image, tf.float32)
     image = tf.reshape(image, [*IMAGE_SIZE, 3])
     return image
 
 
 """
-As we load in our data, we need both our ```X``` and our ```Y```. The X is our image; the
-model will find features and patterns in our image dataset. We want to predict Y, the
-probability that the lesion in the image is malignant. When we input our training dataset
-into the model, it is necessary to know what the labels of our images are. We will to
-through our TFRecords and parse out the image and the target values.
+As we load in our data, we need both our `X` and our `Y`. The X is our image; the model
+will find features and patterns in our image dataset. We want to predict Y, the
+probability that the lesion in the image is malignant. We will to through our TFRecords
+and parse out the image and the target values.
 """
 
 
@@ -125,7 +97,7 @@ def load_dataset(filenames, labeled=True):
     ignore_order = tf.data.Options()
     ignore_order.experimental_deterministic = False  # disable order, increase speed
     dataset = tf.data.TFRecordDataset(
-        filenames, num_parallel_reads=AUTOTUNE
+        filenames
     )  # automatically interleaves reads from multiple files
     dataset = dataset.with_options(
         ignore_order
@@ -145,8 +117,8 @@ We define the following function to get our different datasets.
 def get_dataset(filenames, labeled=True):
     dataset = load_dataset(filenames, labeled=labeled)
     dataset = dataset.shuffle(2048)
+    dataset = dataset.prefetch(buffer_size=AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
 
@@ -165,7 +137,7 @@ def show_batch(image_batch, label_batch):
     plt.figure(figsize=(10, 10))
     for n in range(25):
         ax = plt.subplot(5, 5, n + 1)
-        plt.imshow(image_batch[n])
+        plt.imshow(image_batch[n] / 255.0)
         if label_batch[n]:
             plt.title("MALIGNANT")
         else:
@@ -174,57 +146,6 @@ def show_batch(image_batch, label_batch):
 
 
 show_batch(image_batch.numpy(), label_batch.numpy())
-
-"""
-## Explore our data
-
-Our data is imbalanced. When we look at our data, we see that only 1.76% of the images
-are images of malignant lesions while 98.24% of the images are benign.
-"""
-
-train_csv = pd.read_csv(GCS_PATH + "/train.csv")
-
-total_img = train_csv["target"].size
-
-malignant = np.count_nonzero(train_csv["target"])
-benign = total_img - malignant
-
-print(
-    "Examples:\n    Total: {}\n    Positive: {} ({:.2f}% of total)\n".format(
-        total_img, malignant, 100 * malignant / total_img
-    )
-)
-
-"""
-### Correcting for data inbalance
-"""
-
-"""
-#### Set initial bias
-
-We want to set the correct initial bias for our model so that it will not waste time
-figuring out that there are not many malignant images in our dataset. We want our output
-layer to reflect the inbalance that we have in our data.
-"""
-
-initial_bias = np.log([malignant / benign])
-print("Initial bias: %.4f" % initial_bias)
-
-"""
-#### Set class weights
-
-Since there are not enough malignant images, we want these malignant images to have more
-weight in our model. By increasing the weight of these malignant images, the model will
-pay more attention to them, and this will help balance out the difference in quantity.
-"""
-
-weight_for_0 = (1 / benign) * (total_img) / 2.0
-weight_for_1 = (1 / malignant) * (total_img) / 2.0
-
-class_weight = {0: weight_for_0, 1: weight_for_1}
-
-print("Weight for class 0: {:.2f}".format(weight_for_0))
-print("Weight for class 1: {:.2f}".format(weight_for_1))
 
 """
 ## Building our model
@@ -267,27 +188,21 @@ example, we will be looking at the area under a ROC curve.
 
 
 def make_model():
-    output_bias = tf.keras.initializers.Constant(initial_bias)
-
     base_model = tf.keras.applications.Xception(
         input_shape=(*IMAGE_SIZE, 3), include_top=False, weights="imagenet"
     )
 
     base_model.trainable = False
 
-    model = tf.keras.Sequential(
-        [
-            base_model,
-            tf.keras.layers.GlobalAveragePooling2D(),
-            tf.keras.layers.Dense(
-                8, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(0.001)
-            ),
-            tf.keras.layers.Dropout(0.7),
-            tf.keras.layers.Dense(
-                1, activation="sigmoid", bias_initializer=output_bias
-            ),
-        ]
-    )
+    inputs = tf.keras.layers.Input([*IMAGE_SIZE, 3])
+    x = tf.keras.applications.xception.preprocess_input(inputs)
+    x = base_model(x)
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    x = tf.keras.layers.Dense(8, activation="relu")(x)
+    x = tf.keras.layers.Dropout(0.7)(x)
+    outputs = tf.keras.layers.Dense(1, activation="sigmoid")(x)
+
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
@@ -298,19 +213,17 @@ def make_model():
     return model
 
 
-with strategy.scope():
-    model = make_model()
-
 """
 ## Train the model
 """
+
+model = make_model()
 
 history = model.fit(
     train_dataset,
     epochs=2,
     validation_data=valid_dataset,
     callbacks=[checkpoint_cb, early_stopping_cb],
-    class_weight=class_weight,
 )
 
 """
@@ -325,7 +238,7 @@ def show_batch_predictions(image_batch):
     plt.figure(figsize=(10, 10))
     for n in range(25):
         ax = plt.subplot(5, 5, n + 1)
-        plt.imshow(image_batch[n])
+        plt.imshow(image_batch[n] / 255.0)
         img_array = tf.expand_dims(image_batch[n], axis=0)
         plt.title(model.predict(img_array)[0])
         plt.axis("off")
