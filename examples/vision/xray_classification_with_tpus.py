@@ -3,7 +3,7 @@ Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
 Date created: 2020/07/28
 Last modified: 2020/08/05
-Description: Medical image classification on TPU
+Description: Medical image classification on TPU.
 """
 """
 ## Introduction + Set-up
@@ -33,11 +33,12 @@ print("Number of replicas:", strategy.num_replicas_in_sync)
 """
 We need a Google Cloud link to our data to load the data using a TPU.
 Below, we define key configuration parameters we'll use in this example.
+To run on TPU, this example must be on Colab with the TPU runtime selected.
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 GCS_PATH = "gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307"
-BATCH_SIZE = 16 * strategy.num_replicas_in_sync
+BATCH_SIZE = 25 * strategy.num_replicas_in_sync
 IMAGE_SIZE = [180, 180]
 
 """
