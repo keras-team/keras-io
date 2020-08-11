@@ -1,5 +1,5 @@
 """
-Title: Training Keras models on Cloud
+Title: Training Keras models with TensorFlow Cloud
 Authors: [Jonah Kohn](https://jonahkohn.com)
 Date created: 2020/08/11
 Last modified: 2020/08/11
@@ -21,6 +21,7 @@ with the simplest use-case.
 
 """
 ## Setup
+
 We'll get started by installing TensorFlow Cloud, and importing the packages we
 will need in this guide.
 """
@@ -36,7 +37,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-##API overview: a first end-to-end example
+## API overview: a first end-to-end example
 
 Let's begin with a Keras model training script, such as the following CNN:
 
@@ -73,7 +74,8 @@ model.fit(x_train, y_train, epochs=20, batch_size=128, validation_split=0.1)
 """
 
 """
-To train this model on Gooogle Cloud we just need to add:
+To train this model on Gooogle Cloud we just need to add a call to `run()` at
+the beginning of the script, before the imports:
 ```python
 tfc.run()
 ```
@@ -97,7 +99,7 @@ The default VM configuration is 1 chief and 0 workers with 8 CPU cores and
 """
 
 """
-##Google Cloud configuration
+## Google Cloud configuration
 
 In order to facilitate the proper pathways for Cloud training, we will need to
 do some first-time setup. If you're a new Google Cloud user, there are a few
@@ -114,7 +116,7 @@ Detailed first-time setup instructions can be found in the
 and an additional setup example is shown on the
 [TensorFlow Blog](https://blog.tensorflow.org/2020/08/train-your-tensorflow-model-on-google.html).
 
-##Common workflows and Cloud storage
+## Common workflows and Cloud storage
 
 In most cases, you'll want to retrieve your model after training on Google Cloud.
 For this, it's crucial to redirect saving and loading to Cloud Storage while
@@ -300,7 +302,7 @@ GPUs, it becomes critical to choose a fitting
 [distribution strategy](https://www.tensorflow.org/guide/distributed_training).
 Here, we outline a few possible configurations:
 
-###Multi-worker distribution
+### Multi-worker distribution
 Here, we can use `COMMON_MACHINE_CONFIGS` to designate 1 chief CPU and 4 worker GPUs.
 
 ```python
@@ -321,7 +323,7 @@ configuration with a simple formula using the `chief_config`, `worker_config` an
 """
 
 """
-###TPU distribution
+### TPU distribution
 Let's train the same model on TPU, as shown:
 ```python
 tfc.run(
@@ -334,7 +336,7 @@ tfc.run(
 """
 
 """
-###Custom distribution strategy
+### Custom distribution strategy
 To specify a custom distribution strategy, format your code normally as you would
 according to the
 [distributed training guide](https://www.tensorflow.org/guide/distributed_training)
@@ -385,7 +387,7 @@ tfc.run(
 """
 
 """
-##Additional metrics
+## Additional metrics
 
 You may find it useful to tag your Cloud jobs with specific labels, or to stream
 your model's logs during Cloud training.
@@ -405,7 +407,7 @@ tfc.run(
 ```
 """
 """
-##Putting it all together
+## Putting it all together
 
 For an in-depth Colab which uses many of the features described in this guide,
 follow along
