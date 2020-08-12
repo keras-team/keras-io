@@ -1,9 +1,9 @@
 """
-Title: Serialization and saving
+Title: Save and Load Models
 Authors: Kathy Wu, Francois Chollet
 Date created: 2020/04/28
 Last modified: 2020/04/28
-Description: Complete guide to saving & serializing models.
+Description: Complete guide to saving & loading models.
 """
 
 """
@@ -11,45 +11,42 @@ Description: Complete guide to saving & serializing models.
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifyies what layers the model
-contain, and how they're connected.
-- A set of weights values (the "state of the model").
-- An optimizer (defined by compiling the model).
-- A set of losses and metrics (defined by compiling the model or calling
-`add_loss()` or `add_metric()`).
+- An architecture, that specifies the layers and how they're connected.
+- A set of trained parameters, such as weights and biases.
+- The compilation information, that includes an optimizer, losses and metrics.
 
-The Keras API makes it possible to save all of these pieces to disk at once,
-or to only selectively save some of them:
+The Keras API makes it possible to save and load all or selectively some of these parts:
 
-- Saving everything into a single archive in the TensorFlow SavedModel format
-(or in the older Keras H5 format). This is the standard practice.
-- Saving the architecture / configuration only, typically as a JSON file.
-- Saving the weights values only. This is generally used when training the model.
+- Save and Load model (**recommended**), i.e, everything in the SavedModel format (or the older H5 format).
+- Save and Load architecture only, typically as a JSON file.
+- Save and Load trained parameters only, typically as checkpoints.
 
-Let's take a look at each of these options: when would you use one or the other?
-How do they work?
+Let's take a look at each of these options in detail:
 """
 
 """
-## The short answer to saving & loading
+## Save and Load Model
 
-If you only have 10 seconds to read this guide, here's what you need to know.
+#### If you only have 10 seconds to read this guide, here's what you need to know.
 
-**Saving a Keras model:**
+**Save model:**
 
 ```python
-model = ...  # Get model (Sequential, Functional Model, or Model subclass)
-model.save('path/to/location')
+from tensorflow import keras
+model = ...  # Define model (Sequential, Functional Model, or Model subclass)
+keras.models.save_model(model, 'path/to/location') # or `model.save('path/to/location')`
+
 ```
 
-**Loading the model back:**
+**Load model:**
 
 ```python
 from tensorflow import keras
 model = keras.models.load_model('path/to/location')
 ```
 
-Now, let's look at the details.
+Note: These APIs use the recommended **SavedModel** format by default. However, in order to use the older H5 format,
+use a filename that ends in `.h5` or pass `save_format='h5'` to `save()`. 
 """
 
 """
@@ -61,32 +58,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 """
-## Whole-model saving & loading
 
-You can save an entire model to a single artifact. It will include:
-
-- The model's architecture/config
-- The model's weight values (which were learned during training)
-- The model's compilation information (if `compile()`) was called
-- The optimizer and its state, if any (this enables you to restart training
-where you left)
-
-#### APIs
-
-- `model.save()` or `tf.keras.models.save_model()`
-- `tf.keras.models.load_model()`
-
-There are two formats you can use to save an entire model to disk:
-**the TensorFlow SavedModel format**, and **the older Keras H5 format**.
-The recommended format is SavedModel. It is the default when you use `model.save()`.
-
-You can switch to the H5 format by:
-
-- Passing `save_format='h5'` to `save()`.
-- Passing a filename that ends in `.h5` or `.keras` to `save()`.
-"""
-
-"""
 ### SavedModel format
 
 **Example:**
