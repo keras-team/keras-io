@@ -222,18 +222,18 @@ We can also use this storage bucket for Docker image building, instead of your l
 Docker instance. For this, just add your bucket to the `docker_image_bucket_name` parameter.
 """
 
-# tfc.run(docker_image_bucket_name=gcp_bucket)
+tfc.run(docker_image_bucket_name=gcp_bucket)
 
 """
 After training the model, we can load the saved model and view our TensorBoard logs
 to monitor performance.
 """
 
-# model = keras.models.load_model(save_path)
+model = keras.models.load_model(save_path)
 
-# """shell
-# tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
-# """   
+"""shell
+tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
+"""   
 
 """
 ## Large-scale projects
