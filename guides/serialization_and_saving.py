@@ -50,7 +50,7 @@ use a filename that ends in `.h5` or pass `save_format='h5'` to `save()`.
 """
 
 """
-## Setup
+#### Setup
 """
 
 import numpy as np
