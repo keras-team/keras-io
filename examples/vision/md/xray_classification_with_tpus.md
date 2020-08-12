@@ -42,6 +42,7 @@ print("Number of replicas:", strategy.num_replicas_in_sync)
 Number of replicas: 8
 ```
 </div>
+
 We need a Google Cloud link to our data to load the data using a TPU.
 Below, we define key configuration parameters we'll use in this example.
 To run on TPU, this example must be on Colab with the TPU runtime selected.
@@ -484,22 +485,6 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow/python/data/ops/multi_device_iterator_ops.py:601: get_next_as_optional (from tensorflow.python.data.ops.iterator_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use `tf.data.Iterator.get_next_as_optional()` instead.
-
-WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow/python/data/ops/multi_device_iterator_ops.py:601: get_next_as_optional (from tensorflow.python.data.ops.iterator_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use `tf.data.Iterator.get_next_as_optional()` instead.
-
- 2/21 [=>............................] - ETA: 4:40 - loss: 0.8468 - binary_accuracy: 0.5725 - precision: 0.8088 - recall: 0.5556WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0039s vs `on_train_batch_end` time: 29.5466s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0039s vs `on_train_batch_end` time: 29.5466s). Check your callbacks.
-
-21/21 [==============================] - ETA: 0s - loss: 0.5928 - binary_accuracy: 0.6671 - precision: 0.8861 - recall: 0.6333 WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0026s vs `on_test_batch_end` time: 0.0369s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0026s vs `on_test_batch_end` time: 0.0369s). Check your callbacks.
-
 21/21 [==============================] - 744s 35s/step - loss: 0.5928 - binary_accuracy: 0.6671 - precision: 0.8861 - recall: 0.6333 - val_loss: 0.9497 - val_binary_accuracy: 0.7393 - val_precision: 0.7393 - val_recall: 1.0000
 Epoch 2/100
 21/21 [==============================] - 3s 165ms/step - loss: 0.2691 - binary_accuracy: 0.8961 - precision: 0.9636 - recall: 0.8939 - val_loss: 0.6038 - val_binary_accuracy: 0.7383 - val_precision: 0.7395 - val_recall: 0.9974
@@ -599,10 +584,6 @@ model.evaluate(test_ds, return_dict=True)
 
 <div class="k-default-codeblock">
 ```
-2/4 [==============>...............] - ETA: 1:12 - loss: 2.4281 - binary_accuracy: 0.8250 - precision: 0.8025 - recall: 0.9734WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0025s vs `on_test_batch_end` time: 32.3267s). Check your callbacks.
-
-WARNING:tensorflow:Callbacks method `on_test_batch_end` is slow compared to the batch time (batch time: 0.0025s vs `on_test_batch_end` time: 32.3267s). Check your callbacks.
-
 4/4 [==============================] - 113s 28s/step - loss: 2.7205 - binary_accuracy: 0.8141 - precision: 0.7807 - recall: 0.9769
 
 {'binary_accuracy': 0.8141025900840759,
@@ -644,6 +625,7 @@ This image is 100.00 percent PNEUMONIA
 
 ```
 </div>
+
 ![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_49_1.png)
 
 
