@@ -1,6 +1,6 @@
 """
 Title: Training Keras models with TensorFlow Cloud
-Authors: [Jonah Kohn](https://jonahkohn.com)
+Author: [Jonah Kohn](https://jonahkohn.com)
 Date created: 2020/08/11
 Last modified: 2020/08/11
 Description: In-depth usage guide for TensorFlow Cloud.
