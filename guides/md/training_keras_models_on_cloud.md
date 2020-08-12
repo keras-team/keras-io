@@ -201,16 +201,7 @@ else:
 model.fit(x_train, y_train, epochs=epochs, callbacks=callbacks, batch_size=batch_size)
 ```
 
-<div class="k-default-codeblock">
-```
-1875/1875 [==============================] - 34s 18ms/step - loss: 0.1530 - sparse_categorical_accuracy: 0.9528
-
-<tensorflow.python.keras.callbacks.History at 0x7ab534468748>
-
-```
-</div>
 Let's save the model in GCS after the training is complete.
-
 
 ```python
 save_path = os.path.join("gs://", gcp_bucket, "mnist_example")
@@ -233,10 +224,10 @@ to monitor performance.
 
 ```python
 model = keras.models.load_model(save_path)
+```
 
-"""shell
-tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
-"""
+```python
+!tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
 ```
 
 ---
