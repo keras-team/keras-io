@@ -283,7 +283,7 @@ class ActivityRegularization(keras.layers.Layer):
 Any model incorporating this layer will track this regularization loss:
 """
 
-# Let's use the loss layer in a MLP block.
+# Let's use the loss layer in an MLP block.
 
 
 class SparseMLP(keras.layers.Layer):
@@ -570,7 +570,7 @@ for your OO models.
 
 Here are some of things you've learned so far:
 
-- A `Layer` encapsulate a state (created in `__init__` or `build`) and some computation
+- A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
 - Layers can be recursively nested to create new, bigger computation blocks.
 - You can easily write highly hackable training loops by opening a
@@ -590,7 +590,7 @@ subclass `Layer`. It will feature a regularization loss (KL divergence).
 """
 Below is our model definition.
 
-First, we have an `Encoder` class, which uses a `Sampling` layer to map a MNIST digit to
+First, we have an `Encoder` class, which uses a `Sampling` layer to map an MNIST digit to
 a latent-space triplet `(z_mean, z_log_var, z)`.
 """
 
@@ -628,7 +628,7 @@ class Encoder(layers.Layer):
 
 """
 Next, we have a `Decoder` class, which maps the probabilistic latent space coordinates
-back to a MNIST digit.
+back to an MNIST digit.
 """
 
 
