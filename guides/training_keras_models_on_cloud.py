@@ -74,7 +74,7 @@ model.fit(x_train, y_train, epochs=20, batch_size=128, validation_split=0.1)
 """
 
 """
-To train this model on Gooogle Cloud we just need to add a call to `run()` at
+To train this model on Google Cloud we just need to add a call to `run()` at
 the beginning of the script, before the imports:
 ```python
 tfc.run()
