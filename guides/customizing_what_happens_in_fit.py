@@ -400,5 +400,5 @@ gan.compile(
 gan.fit(dataset.take(100), epochs=1)
 
 """
-The idea behind deep learning is simple, so why should their implementation be painful?
+The ideas behind deep learning are simple, so why should their implementation be painful?
 """
