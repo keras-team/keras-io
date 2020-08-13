@@ -295,7 +295,7 @@ tfc.run(
 By default, TensorFlow Cloud chooses the best distribution strategy for your machine
 configuration with a simple formula using the `chief_config`, `worker_config` and
 `worker_count` parameters provided.
-- If the number of GPUs specified is greater than zero, `tf.distribute.MirroredStrategy`will be chosen.
+- If the number of GPUs specified is greater than zero, `tf.distribute.MirroredStrategy` will be chosen.
 - If the number of workers is greater than zero, `tf.distribute.experimental.MultiWorkerMirroredStrategy` or `tf.distribute.experimental.TPUStrategy` will be chosen based on the accelerator type.
 - Otherwise, `tf.distribute.OneDeviceStrategy` will be chosen.
 
