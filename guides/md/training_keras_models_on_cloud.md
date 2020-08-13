@@ -83,10 +83,12 @@ and distribution strategies when using TensorFlow Cloud.
 The API includes intelligent defaults for all the parameters -- everything is
 configurable, but many models can rely on these defaults.
 Upon calling `run()`, TensorFlow Cloud will:
+
 - Make your Python script or notebook distribution-ready.
 - Convert it into a Docker image with required dependencies.
 - Run the training job on a GCP GPU-powered VM.
 - Stream relevant logs and job information.
+
 The default VM configuration is 1 chief and 0 workers with 8 CPU cores and
 1 Tesla T4 GPU.
 
@@ -95,11 +97,13 @@ The default VM configuration is 1 chief and 0 workers with 8 CPU cores and
 In order to facilitate the proper pathways for Cloud training, we will need to
 do some first-time setup. If you're a new Google Cloud user, there are a few
 preliminary steps you will need to take:
+
 1. Create a GCP Project;
 2. Enable AI Platform Services;
 3. Create a Service Account;
 4. Download an authorization key;
 5. Create a Cloud Storage bucket.
+
 Detailed first-time setup instructions can be found in the
 [TensorFlow Cloud README](https://github.com/tensorflowcloud#setup-instructions),
 and an additional setup example is shown on the
@@ -251,10 +255,13 @@ handle integrating these into your cloud build.
 TensorFlow Cloud is also runnable from Python notebooks. Additionally, your specified
 `entry_point` can be a notebook if needed. There are two key differences to keep
 in mind between TensorFlow Cloud on notebooks compared to scripts:
+
 - When calling `run()` from within a notebook, a Cloud Storage bucket must be specified
 for building and storing your Docker image.
 - GCloud authentication happens entirely through your authentication key, without
-project specification. An example workflow using TensorFlow Cloud from a notebook
+project specification. 
+
+An example workflow using TensorFlow Cloud from a notebook
 is provided in the "Putting it all together" section of this guide.
 ### Multi-file projects
 If your model depends on additional files, you only need to ensure that these files
@@ -295,6 +302,7 @@ tfc.run(
 By default, TensorFlow Cloud chooses the best distribution strategy for your machine
 configuration with a simple formula using the `chief_config`, `worker_config` and
 `worker_count` parameters provided.
+
 - If the number of GPUs specified is greater than zero, `tf.distribute.MirroredStrategy` will be chosen.
 - If the number of workers is greater than zero, `tf.distribute.experimental.MultiWorkerMirroredStrategy` or `tf.distribute.experimental.TPUStrategy` will be chosen based on the accelerator type.
 - Otherwise, `tf.distribute.OneDeviceStrategy` will be chosen.
