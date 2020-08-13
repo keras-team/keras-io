@@ -72,7 +72,7 @@ model.compile(
 model.fit(x_train, y_train, epochs=20, batch_size=128, validation_split=0.1)
 ```
 
-To train this model on Gooogle Cloud we just need to add a call to `run()` at
+To train this model on Google Cloud we just need to add a call to `run()` at
 the beginning of the script, before the imports:
 ```python
 tfc.run()
@@ -95,11 +95,11 @@ The default VM configuration is 1 chief and 0 workers with 8 CPU cores and
 In order to facilitate the proper pathways for Cloud training, we will need to
 do some first-time setup. If you're a new Google Cloud user, there are a few
 preliminary steps you will need to take:
-1. Create a GCP Project
-2. Enable AI Platform Services
-3. Create a Service Account
-4. Download an authorization key
-5. Create a Cloud Storage bucket
+1. Create a GCP Project;
+2. Enable AI Platform Services;
+3. Create a Service Account;
+4. Download an authorization key;
+5. Create a Cloud Storage bucket.
 Detailed first-time setup instructions can be found in the
 [TensorFlow Cloud README](https://github.com/tensorflowcloud#setup-instructions),
 and an additional setup example is shown on the
