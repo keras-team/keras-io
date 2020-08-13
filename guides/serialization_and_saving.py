@@ -12,22 +12,30 @@ Description: Complete guide to saving & loading models.
 A Keras model consists of multiple components:
 
 - An architecture, that specifies the layers and how they're connected.
-- A set of trained parameters, such as weights and biases.
+- A set of weights, i.e, trained parameters that includes biases.
 - The compilation information, that includes an optimizer, losses and metrics.
 
 The Keras API makes it possible to save and load all or selectively some of these parts:
 
-- Save and Load model (**recommended**), i.e, everything in the SavedModel format (or the older H5 format).
-- Save and Load architecture only, typically as a JSON file.
-- Save and Load trained parameters only, typically as checkpoints.
+- Save and load a model (**recommended**), i.e, everything in the SavedModel format (or the older H5 format).
+- Save and load the architecture only, typically as a JSON file.
+- Save and load the weights only, typically as checkpoints.
 
 Let's take a look at each of these options in detail:
 """
 
 """
-## Save and Load Model
+## Setup
+"""
 
-#### If you only have 10 seconds to read this guide, here's what you need to know.
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+
+"""
+## Save and load a model
+
+**If you only have 10 seconds to read this guide, here's what you need to know.**
 
 **Save model:**
 
@@ -50,15 +58,6 @@ use a filename that ends in `.h5` or pass `save_format='h5'` to `save()`.
 """
 
 """
-#### Setup
-"""
-
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-
-"""
-
 ### SavedModel format
 
 **Example:**
@@ -226,7 +225,7 @@ See [Custom objects](save_and_serialize.ipynb#custom-objects).
 """
 
 """
-## Saving the architecture
+## Save and load the architecture only
 
 The model's configuration (or architecture) specifies what layers the model
 contains, and how these layers are connected*. If you have the configuration of a model,
@@ -474,7 +473,7 @@ with keras.utils.custom_object_scope(custom_objects):
     new_model = keras.models.clone_model(model)
 
 """
-## Saving & loading only the model's weights values
+## Save and load the weights only.
 
 You can choose to only save & load a model's weights. This can be useful if:
 
