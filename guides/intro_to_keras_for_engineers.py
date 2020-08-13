@@ -80,7 +80,7 @@ these formats. If you have a large dataset and you are training on GPU(s), consi
 using `Dataset` objects, since they will take care of performance-critical details,
  such as:
 
-- Asynchronously preprocessing your data on CPU while your GPU is busy, and bufferring
+- Asynchronously preprocessing your data on CPU while your GPU is busy, and buffering
  it into a queue.
 - Prefetching data on GPU memory so it's immediately available when the GPU has
  finished processing the previous batch, so you can reach full GPU utilization.
@@ -424,7 +424,7 @@ Here's what fitting a model looks like with a dataset:
 model.fit(dataset_of_samples_and_labels, epochs=10)
 ```
 
-Since the data yielded by a dataset is expect to be already batched, you don't need to
+Since the data yielded by a dataset is expected to be already batched, you don't need to
  specify the batch size here.
 
 Let's look at it in practice with a toy example model that learns to classify MNIST
@@ -831,7 +831,7 @@ def build_model(hp):
 
 The function should return a compiled model.
 
-Next, instantiate a tuner object specifying your optimiation objective and other search
+Next, instantiate a tuner object specifying your optimization objective and other search
  parameters:
 
 
