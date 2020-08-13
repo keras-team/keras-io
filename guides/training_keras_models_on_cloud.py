@@ -105,11 +105,11 @@ In order to facilitate the proper pathways for Cloud training, we will need to
 do some first-time setup. If you're a new Google Cloud user, there are a few
 preliminary steps you will need to take:
 
-1. Create a GCP Project
-2. Enable AI Platform Services
-3. Create a Service Account
-4. Download an authorization key
-5. Create a Cloud Storage bucket
+1. Create a GCP Project;
+2. Enable AI Platform Services;
+3. Create a Service Account;
+4. Download an authorization key;
+5. Create a Cloud Storage bucket.
 
 Detailed first-time setup instructions can be found in the
 [TensorFlow Cloud README](https://github.com/tensorflowcloud#setup-instructions),
