@@ -310,7 +310,7 @@ But the two are tied in the case of the `BatchNormalization` layer.
 fine-tuning, you should keep the `BatchNormalization` layers in inference mode by
  passing `training=False` when calling the base model.
 Otherwise the updates applied to the non-trainable weights will suddenly destroy
-what the model the model has learned.
+what the model has learned.
 
 You'll see this pattern in action in the end-to-end example at the end of this guide.
 
