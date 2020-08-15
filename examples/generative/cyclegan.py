@@ -142,20 +142,19 @@ plt.show()
 """
 
 
-# Reflecting padding was used for  padding the images. We will wrap
-# the tf.pad functionality in a keras layer.
 class ReflectionPadding2D(layers.Layer):
+    """Implements Reflection Padding as a layer.
+
+    Args:
+        padding(tuple): Amount of padding for the
+        spatial dimensions.
+    Returns:
+        A padded tensor with the same type as the input tensor. 
+    """
+
     def __init__(self, padding=(1, 1), **kwargs):
         self.padding = tuple(padding)
         super(ReflectionPadding2D, self).__init__(**kwargs)
-
-    def compute_output_shape(self, input_shape):
-        return (
-            input_shape[0],
-            input_shape[1] + 2 * self.padding[0],
-            input_shape[2] + 2 * self.padding[1],
-            input_shape[3],
-        )
 
     def call(self, input_tensor, mask=None):
         padding_width, padding_height = self.padding
@@ -260,7 +259,7 @@ def upsample(
 """
 ## Build the generators
 
-The generator consists of downsampling blocks, two residual blocks
+The generator consists of downsampling blocks, nine residual blocks
 and upsampling blocks. The structure of the generator is like this:
 
 c7s1-64 ==> Conv block with `relu` activation, filter size of 7
@@ -344,29 +343,25 @@ def get_discriminator(
     )(img_input)
     x = layers.LeakyReLU(0.2)(x)
 
-    x = downsample(
-        x,
-        filters=128,
-        activation=layers.LeakyReLU(0.2),
-        kernel_size=(4, 4),
-        strides=(2, 2),
-    )
-
-    x = downsample(
-        x,
-        filters=256,
-        activation=layers.LeakyReLU(0.2),
-        kernel_size=(4, 4),
-        strides=(2, 2),
-    )
-
-    x = downsample(
-        x,
-        filters=512,
-        activation=layers.LeakyReLU(0.2),
-        kernel_size=(4, 4),
-        strides=(1, 1),
-    )
+    num_filters = filters
+    for num_downsample_block in range(3):
+        num_filters *= 2
+        if num_downsample_block < 2:
+            x = downsample(
+                x,
+                filters=num_filters,
+                activation=layers.LeakyReLU(0.2),
+                kernel_size=(4, 4),
+                strides=(2, 2),
+            )
+        else:
+            x = downsample(
+                x,
+                filters=num_filters,
+                activation=layers.LeakyReLU(0.2),
+                kernel_size=(4, 4),
+                strides=(1, 1),
+            )
 
     x = layers.Conv2D(
         1, (4, 4), strides=(1, 1), padding="same", kernel_initializer=kernel_initializer
@@ -565,48 +560,11 @@ class GANMonitor(keras.callbacks.Callback):
 
 
 """
-## Create a callback that periodically saves the models and optimizers
-"""
-
-
-class ModelCheckpointer(keras.callbacks.Callback):
-    """Saves model weights and optimizers"""
-
-    def __init__(self, checkpoint_path, save_freq=5):
-        self.checkpoint_path = checkpoint_path
-        self.save_freq = save_freq
-
-    def on_epoch_end(self, epoch, logs=None):
-        if epoch == 0:
-            ckpt = tf.train.Checkpoint(
-                generator_g=self.model.gen_G,
-                generator_f=self.model.gen_F,
-                discriminator_x=self.model.disc_X,
-                discriminator_y=self.model.disc_Y,
-                generator_g_optimizer=self.model.gen_G_optimizer,
-                generator_f_optimizer=self.model.gen_F_optimizer,
-                discriminator_x_optimizer=self.model.disc_X_optimizer,
-                discriminator_y_optimizer=self.model.disc_Y_optimizer,
-            )
-            self.ckpt_manager = tf.train.CheckpointManager(
-                ckpt, self.checkpoint_path, max_to_keep=5
-            )
-
-            if self.ckpt_manager.latest_checkpoint:
-                ckpt.restore(self.ckpt_manager.latest_checkpoint)
-                print("Latest checkpoint restored successfully!")
-        ckpt_save_path = self.ckpt_manager.save()
-        print(
-            "\nSaving checkpoint for epoch {} at {}".format(epoch + 1, ckpt_save_path)
-        )
-
-
-"""
 ## Train the end-to-end model
 """
 
 
-# Loss function for evaluating adverserial loss
+# Loss function for evaluating adversarial loss
 adv_loss_fn = keras.losses.MeanSquaredError()
 
 # Define the loss function for the generators
@@ -622,13 +580,6 @@ def discriminator_loss_fn(real, fake):
     return (real_loss + fake_loss) * 0.5
 
 
-# Optimizers with parameters values as recommended
-gen_G_optimizer = keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5)
-gen_F_optimizer = keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5)
-disc_X_optimizer = keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5)
-disc_Y_optimizer = keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5)
-
-
 # Create cycle gan model
 cycle_gan_model = CycleGan(
     generator_G=gen_G, generator_F=gen_F, discriminator_X=disc_X, discriminator_Y=disc_Y
@@ -636,23 +587,26 @@ cycle_gan_model = CycleGan(
 
 # Compile the model
 cycle_gan_model.compile(
-    gen_G_optimizer=gen_G_optimizer,
-    gen_F_optimizer=gen_F_optimizer,
-    disc_X_optimizer=disc_X_optimizer,
-    disc_Y_optimizer=disc_Y_optimizer,
+    gen_G_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    gen_F_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    disc_X_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    disc_Y_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
     gen_loss_fn=generator_loss_fn,
     disc_loss_fn=discriminator_loss_fn,
 )
 # Callbacks
 plotter = GANMonitor()
-checkpointer = ModelCheckpointer(checkpoint_path="./checkpoints_cyclegan/")
+checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints.{epoch:03d}"
+model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath
+)
 
 # Here we will train the model for just one epoch as each epoch takes around
 # 7 minutes on a single P100 backed machine.
 cycle_gan_model.fit(
     tf.data.Dataset.zip((train_horses, train_zebras)),
     epochs=1,
-    callbacks=[plotter, checkpointer],
+    callbacks=[plotter, model_checkpoint_callback],
 )
 
 """
@@ -660,26 +614,16 @@ Test the performance of the model.
 """
 
 
-# The same model was trained for 112 epochs. We will be loading those weights
+# This model was trained for 90 epochs. We will be loading those weights
 # here. Once the weights are loaded, we will take a few samples from the test
 # data and check the model's performance.
 
-ckpt = tf.train.Checkpoint(
-    generator_g=gen_G,
-    generator_f=gen_F,
-    discriminator_x=disc_X,
-    discriminator_y=disc_Y,
-    generator_g_optimizer=gen_G_optimizer,
-    generator_f_optimizer=gen_F_optimizer,
-    discriminator_x_optimizer=disc_X_optimizer,
-    discriminator_y_optimizer=disc_Y_optimizer,
-)
+# TODO: Add link to download the checkpoint and load the weights here
 
-ckpt.restore("./checkpoints_cyclegan/ckpt-112").expect_partial()
 
 _, ax = plt.subplots(4, 2, figsize=(12, 12))
-for i, img in enumerate(test_horses.take(8)):
-    prediction = gen_G(img, training=False)[0].numpy()
+for i, img in enumerate(test_horses.take(4)):
+    prediction = cycle_gan_model.gen_G(img, training=False)[0].numpy()
     prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
     img = (img[0] * 127.5 + 127.5).numpy().astype(np.uint8)
 
