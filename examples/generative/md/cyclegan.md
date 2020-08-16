@@ -1,12 +1,16 @@
-"""
-Title: CycleGAN
-Author: [A_K_Nain](https://twitter.com/A_K_Nain)
-Date created: 2020/08/12
-Last modified: 2020/08/12
-Description: Implementation of CycleGAN.
-"""
+# CycleGAN
 
-"""
+**Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
+**Date created:** 2020/08/12<br>
+**Last modified:** 2020/08/12<br>
+**Description:** Implementation of CycleGAN.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/cyclegan.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/cyclegan.py)
+
+
+
+---
 ## CycleGAN
 CycleGAN is a model that aims to solve the image-to-image translation
 problem. The goal of the image-to-image translation problem is to learn the
@@ -16,12 +20,12 @@ CycleGAN tries to learn this mapping without requiring paired input-output image
 using cycle-consistent adversarial networks.
 - [Paper](https://arxiv.org/pdf/1703.10593.pdf)
 - [Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,14 +40,16 @@ import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 autotune = tf.data.experimental.AUTOTUNE
 
+```
 
-"""
+---
 ## Prepare the dataset
 In this example, we will be using the
 [horse to zebra](https://www.tensorflow.org/datasets/catalog/cycle_gan#cycle_ganhorse2zebra)
 dataset.
-"""
 
+
+```python
 # Load the horse-zebra dataset using tensorflow-datasets.
 dataset, _ = tfds.load("cycle_gan/horse2zebra", with_info=True, as_supervised=True)
 train_horses, train_zebras = dataset["trainA"], dataset["trainB"]
@@ -86,11 +92,13 @@ def preprocess_test_image(img, label):
     img = normalize_img(img)
     return img
 
+```
 
-"""
+---
 ## Create `Dataset` objects
-"""
 
+
+```python
 
 # Apply the preprocessing operations to the training data
 train_horses = (
@@ -120,11 +128,13 @@ test_zebras = (
     .batch(batch_size)
 )
 
+```
 
-"""
+---
 ## Visualize some samples
-"""
 
+
+```python
 
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
 for i, samples in enumerate(zip(train_horses.take(4), train_zebras.take(4))):
@@ -134,11 +144,17 @@ for i, samples in enumerate(zip(train_horses.take(4), train_zebras.take(4))):
     ax[i, 1].imshow(zebra)
 plt.show()
 
+```
 
-"""
+
+![png](/img/examples/generative/cyclegan/cyclegan_9_0.png)
+
+
+---
 ## Building blocks used in the CycleGAN generators and discriminators
-"""
 
+
+```python
 
 class ReflectionPadding2D(layers.Layer):
     """Implements Reflection Padding as a layer.
@@ -252,8 +268,9 @@ def upsample(
         x = activation(x)
     return x
 
+```
 
-"""
+---
 ## Build the generators
 The generator consists of downsampling blocks: nine residual blocks
 and upsampling blocks. The structure of the generator is the following:
@@ -274,8 +291,9 @@ u128 ====|
          |-> 2 upsampling blocks
 u64  ====|
 c7s1-3 => Last conv block with `tanh` activation, filter size of 1.
-"""
 
+
+```python
 
 def get_resnet_generator(
     filters=64,
@@ -315,13 +333,15 @@ def get_resnet_generator(
     model = keras.models.Model(img_input, x, name=name)
     return model
 
+```
 
-"""
+---
 ## Build the discriminators
 The discriminators implement the following architecture:
 `C64->C128->C256->C512`
-"""
 
+
+```python
 
 def get_discriminator(
     filters=64, kernel_initializer=kernel_init, num_downsampling=3, name=None
@@ -372,13 +392,15 @@ gen_F = get_resnet_generator(name="generator_F")
 disc_X = get_discriminator(name="discriminator_X")
 disc_Y = get_discriminator(name="discriminator_Y")
 
+```
 
-"""
+---
 ## Build the CycleGAN model
 We will override the `train_step()` method of the `Model` class
 for training via `fit()`.
-"""
 
+
+```python
 
 class CycleGan(keras.Model):
     def __init__(
@@ -517,11 +539,13 @@ class CycleGan(keras.Model):
             "D_Y_loss": disc_Y_loss,
         }
 
+```
 
-"""
+---
 ## Create a callback that periodically saves generated images
-"""
 
+
+```python
 
 class GANMonitor(keras.callbacks.Callback):
     """A callback to generate and save images after each epoch"""
@@ -550,11 +574,13 @@ class GANMonitor(keras.callbacks.Callback):
         plt.show()
         plt.close()
 
+```
 
-"""
+---
 ## Train the end-to-end model
-"""
 
+
+```python
 
 # Loss function for evaluating adversarial loss
 adv_loss_fn = keras.losses.MeanSquaredError()
@@ -600,21 +626,42 @@ cycle_gan_model.fit(
     epochs=1,
     callbacks=[plotter, model_checkpoint_callback],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1067/1067 [==============================] - ETA: 0s - G_loss: 4.3869 - F_loss: 4.0490 - D_X_loss: 0.1764 - D_Y_loss: 0.1340
+
+```
+</div>
+![png](/img/examples/generative/cyclegan/cyclegan_21_1.png)
+
+
+<div class="k-default-codeblock">
+```
+1067/1067 [==============================] - 391s 366ms/step - G_loss: 4.3864 - F_loss: 4.0488 - D_X_loss: 0.1764 - D_Y_loss: 0.1339
+
+<tensorflow.python.keras.callbacks.History at 0x7f453c361c90>
+
+```
+</div>
 Test the performance of the model.
-"""
 
+
+```python
 
 # This model was trained for 90 epochs. We will be loading those weights
 # here. Once the weights are loaded, we will take a few samples from the test
 # data and check the model's performance.
+```
 
-"""shell
-curl -LO https://github.com/AakashKumarNain/CycleGAN_TF2/releases/download/v1.0/saved_checkpoints.zip
-unzip -qq saved_checkpoints.zip
-"""
 
+```python
+!curl -LO https://github.com/AakashKumarNain/CycleGAN_TF2/releases/download/v1.0/saved_checkpoints.zip
+!unzip -qq saved_checkpoints.zip
+```
+
+```python
 
 # Load the checkpoints
 weight_file = "./saved_checkpoints/cyclegan_checkpoints.090"
@@ -639,3 +686,17 @@ for i, img in enumerate(test_horses.take(4)):
     prediction.save("predicted_img_{i}.png".format(i=i))
 plt.tight_layout()
 plt.show()
+```
+<div class="k-default-codeblock">
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   634  100   634    0     0   2413      0 --:--:-- --:--:-- --:--:--  2419
+100  273M  100  273M    0     0  21.8M      0  0:00:12  0:00:12 --:--:-- 21.1M
+
+Weights loaded successfully
+
+```
+</div>
+![png](/img/examples/generative/cyclegan/cyclegan_25_1.png)
+
