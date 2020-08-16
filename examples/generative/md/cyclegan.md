@@ -281,6 +281,7 @@ def upsample(
 The generator consists of downsampling blocks: nine residual blocks
 and upsampling blocks. The structure of the generator is the following:
 
+```
 c7s1-64 ==> Conv block with `relu` activation, filter size of 7
 d128 ====|
          |-> 2 downsampling blocks
@@ -298,6 +299,7 @@ u128 ====|
          |-> 2 upsampling blocks
 u64  ====|
 c7s1-3 => Last conv block with `tanh` activation, filter size of 1.
+```
 
 
 ```python
@@ -639,7 +641,7 @@ cycle_gan_model.fit(
 
 <div class="k-default-codeblock">
 ```
-1067/1067 [==============================] - ETA: 0s - G_loss: 4.4775 - F_loss: 4.0671 - D_X_loss: 0.1924 - D_Y_loss: 0.1249
+1067/1067 [==============================] - ETA: 0s - G_loss: 4.4794 - F_loss: 4.1048 - D_X_loss: 0.1584 - D_Y_loss: 0.1233
 
 ```
 </div>
@@ -648,9 +650,9 @@ cycle_gan_model.fit(
 
 <div class="k-default-codeblock">
 ```
-1067/1067 [==============================] - 390s 366ms/step - G_loss: 4.4804 - F_loss: 4.0666 - D_X_loss: 0.1925 - D_Y_loss: 0.1248
+1067/1067 [==============================] - 390s 366ms/step - G_loss: 4.4783 - F_loss: 4.1035 - D_X_loss: 0.1584 - D_Y_loss: 0.1232
 
-<tensorflow.python.keras.callbacks.History at 0x7f35701c3ad0>
+<tensorflow.python.keras.callbacks.History at 0x7f4184326e90>
 
 ```
 </div>
@@ -700,8 +702,8 @@ plt.show()
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   634  100   634    0     0   3038      0 --:--:-- --:--:-- --:--:--  3048
-100  273M  100  273M    0     0  39.8M      0  0:00:06  0:00:06 --:--:-- 47.0M
+100   634  100   634    0     0   2874      0 --:--:-- --:--:-- --:--:--  2881
+100  273M  100  273M    0     0  1736k      0  0:02:41  0:02:41 --:--:-- 2049k
 
 Weights loaded successfully
 

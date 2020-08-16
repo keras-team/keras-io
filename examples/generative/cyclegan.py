@@ -264,6 +264,7 @@ def upsample(
 The generator consists of downsampling blocks: nine residual blocks
 and upsampling blocks. The structure of the generator is the following:
 
+```
 c7s1-64 ==> Conv block with `relu` activation, filter size of 7
 d128 ====|
          |-> 2 downsampling blocks
@@ -281,6 +282,7 @@ u128 ====|
          |-> 2 upsampling blocks
 u64  ====|
 c7s1-3 => Last conv block with `tanh` activation, filter size of 1.
+```
 """
 
 
