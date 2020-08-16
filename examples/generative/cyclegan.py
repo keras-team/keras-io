@@ -10,14 +10,14 @@ Description: Implementation of CycleGAN.
 ## CycleGAN
 
 CycleGAN is a model that aims to solve the image-to-image translation
-problem. The goal of an image-to-image translation problem is to learn the
+problem. The goal of the image-to-image translation problem is to learn the
 mapping between an input image and an output image using a training set of
 aligned image pairs. However, obtaining paired examples isn't always feasible.
-CycleGAN tries to learn this mapping without requiring paired input-output images
+CycleGAN tries to learn this mapping without requiring paired input-output images,
 using cycle-consistent adversarial networks.
 
-[Paper](https://arxiv.org/pdf/1703.10593.pdf)
-[Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
+- [Paper](https://arxiv.org/pdf/1703.10593.pdf)
+- [Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
 """
 
 """
@@ -42,22 +42,23 @@ autotune = tf.data.experimental.AUTOTUNE
 """
 ## Prepare the dataset
 
-We will be using the [horse to zebra](https://www.tensorflow.org/datasets/catalog/cycle_gan#cycle_ganhorse2zebra)
-in this example to demonstrate the training of CycleGAN.
+In this example, we will be using the
+[horse to zebra](https://www.tensorflow.org/datasets/catalog/cycle_gan#cycle_ganhorse2zebra)
+dataset.
 """
 
-# Load the horse-zebra dataset using tensorflow datasets
+# Load the horse-zebra dataset using tensorflow-datasets.
 dataset, _ = tfds.load("cycle_gan/horse2zebra", with_info=True, as_supervised=True)
 train_horses, train_zebras = dataset["trainA"], dataset["trainB"]
 test_horses, test_zebras = dataset["testA"], dataset["testB"]
 
-# Load the image and resize it to this size
+# Define the standard image size.
 orig_img_size = (286, 286)
-# Size of the random crops to be used
+# Size of the random crops to be used during training.
 input_img_size = (256, 256, 3)
-# Weights initializer for the layers
+# Weights initializer for the layers.
 kernel_init = keras.initializers.RandomNormal(mean=0.0, stddev=0.02)
-# Gamma initializer for instance norm
+# Gamma initializer for instance normalization.
 gamma_init = keras.initializers.RandomNormal(mean=0.0, stddev=0.02)
 
 buffer_size = 256
@@ -83,7 +84,7 @@ def preprocess_train_image(img, label):
 
 
 def preprocess_test_image(img, label):
-    # Only resizing and normalization ops for the test images.
+    # Only resizing and normalization for the test images.
     img = tf.image.resize(img, [input_img_size[0], input_img_size[1]])
     img = normalize_img(img)
     return img
@@ -94,7 +95,7 @@ def preprocess_test_image(img, label):
 """
 
 
-# Apply the desired operations to the training data
+# Apply the preprocessing operations to the training data
 train_horses = (
     train_horses.map(preprocess_train_image, num_parallel_calls=autotune)
     .cache()
@@ -108,7 +109,7 @@ train_zebras = (
     .batch(batch_size)
 )
 
-# Apply the desired operations to the test data
+# Apply the preprocessing operations to the test data
 test_horses = (
     test_horses.map(preprocess_test_image, num_parallel_calls=autotune)
     .cache()
@@ -148,6 +149,7 @@ class ReflectionPadding2D(layers.Layer):
     Args:
         padding(tuple): Amount of padding for the
         spatial dimensions.
+
     Returns:
         A padded tensor with the same type as the input tensor. 
     """
@@ -259,8 +261,8 @@ def upsample(
 """
 ## Build the generators
 
-The generator consists of downsampling blocks, nine residual blocks
-and upsampling blocks. The structure of the generator is like this:
+The generator consists of downsampling blocks: nine residual blocks
+and upsampling blocks. The structure of the generator is the following:
 
 c7s1-64 ==> Conv block with `relu` activation, filter size of 7
 d128 ====|
@@ -291,7 +293,6 @@ def get_resnet_generator(
     name=None,
 ):
     img_input = layers.Input(shape=input_img_size, name=name + "_img_input")
-
     x = ReflectionPadding2D(padding=(3, 3))(img_input)
     x = layers.Conv2D(filters, (7, 7), kernel_initializer=kernel_init, use_bias=False)(
         x
@@ -325,7 +326,7 @@ def get_resnet_generator(
 """
 ## Build the discriminators
 
-The discriminators have the following architecture:
+The discriminators implement the following architecture:
 `C64->C128->C256->C512`
 """
 
@@ -383,7 +384,8 @@ disc_Y = get_discriminator(name="discriminator_Y")
 """
 ## Build the CycleGAN model
 
-We will override the `train_step` for training.
+We will override the `train_step()` method of the `Model` class
+for training via `fit()`.
 """
 
 
@@ -429,7 +431,7 @@ class CycleGan(keras.Model):
         # x is Horse and y is zebra
         real_x, real_y = batch_data
 
-        # For cyclegan, we need to calculate different
+        # For CycleGAN, we need to calculate different
         # kinds of losses for the generators and discriminators.
         # We will perform the following steps here:
         #
