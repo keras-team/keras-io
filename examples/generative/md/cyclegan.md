@@ -12,12 +12,14 @@
 
 ---
 ## CycleGAN
+
 CycleGAN is a model that aims to solve the image-to-image translation
 problem. The goal of the image-to-image translation problem is to learn the
 mapping between an input image and an output image using a training set of
 aligned image pairs. However, obtaining paired examples isn't always feasible.
 CycleGAN tries to learn this mapping without requiring paired input-output images,
 using cycle-consistent adversarial networks.
+
 - [Paper](https://arxiv.org/pdf/1703.10593.pdf)
 - [Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
 
@@ -44,6 +46,7 @@ autotune = tf.data.experimental.AUTOTUNE
 
 ---
 ## Prepare the dataset
+
 In this example, we will be using the
 [horse to zebra](https://www.tensorflow.org/datasets/catalog/cycle_gan#cycle_ganhorse2zebra)
 dataset.
@@ -158,9 +161,11 @@ plt.show()
 
 class ReflectionPadding2D(layers.Layer):
     """Implements Reflection Padding as a layer.
+
     Args:
         padding(tuple): Amount of padding for the
         spatial dimensions.
+
     Returns:
         A padded tensor with the same type as the input tensor.
     """
@@ -272,8 +277,10 @@ def upsample(
 
 ---
 ## Build the generators
+
 The generator consists of downsampling blocks: nine residual blocks
 and upsampling blocks. The structure of the generator is the following:
+
 c7s1-64 ==> Conv block with `relu` activation, filter size of 7
 d128 ====|
          |-> 2 downsampling blocks
@@ -337,6 +344,7 @@ def get_resnet_generator(
 
 ---
 ## Build the discriminators
+
 The discriminators implement the following architecture:
 `C64->C128->C256->C512`
 
@@ -396,6 +404,7 @@ disc_Y = get_discriminator(name="discriminator_Y")
 
 ---
 ## Build the CycleGAN model
+
 We will override the `train_step()` method of the `Model` class
 for training via `fit()`.
 
@@ -630,7 +639,7 @@ cycle_gan_model.fit(
 
 <div class="k-default-codeblock">
 ```
-1067/1067 [==============================] - ETA: 0s - G_loss: 4.3869 - F_loss: 4.0490 - D_X_loss: 0.1764 - D_Y_loss: 0.1340
+1067/1067 [==============================] - ETA: 0s - G_loss: 4.4775 - F_loss: 4.0671 - D_X_loss: 0.1924 - D_Y_loss: 0.1249
 
 ```
 </div>
@@ -639,9 +648,9 @@ cycle_gan_model.fit(
 
 <div class="k-default-codeblock">
 ```
-1067/1067 [==============================] - 391s 366ms/step - G_loss: 4.3864 - F_loss: 4.0488 - D_X_loss: 0.1764 - D_Y_loss: 0.1339
+1067/1067 [==============================] - 390s 366ms/step - G_loss: 4.4804 - F_loss: 4.0666 - D_X_loss: 0.1925 - D_Y_loss: 0.1248
 
-<tensorflow.python.keras.callbacks.History at 0x7f453c361c90>
+<tensorflow.python.keras.callbacks.History at 0x7f35701c3ad0>
 
 ```
 </div>
@@ -691,8 +700,8 @@ plt.show()
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   634  100   634    0     0   2413      0 --:--:-- --:--:-- --:--:--  2419
-100  273M  100  273M    0     0  21.8M      0  0:00:12  0:00:12 --:--:-- 21.1M
+100   634  100   634    0     0   3038      0 --:--:-- --:--:-- --:--:--  3048
+100  273M  100  273M    0     0  39.8M      0  0:00:06  0:00:06 --:--:-- 47.0M
 
 Weights loaded successfully
 
