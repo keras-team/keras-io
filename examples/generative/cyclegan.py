@@ -8,12 +8,14 @@ Description: Implementation of CycleGAN.
 
 """
 ## CycleGAN
+
 CycleGAN is a model that aims to solve the image-to-image translation
 problem. The goal of the image-to-image translation problem is to learn the
 mapping between an input image and an output image using a training set of
 aligned image pairs. However, obtaining paired examples isn't always feasible.
 CycleGAN tries to learn this mapping without requiring paired input-output images,
 using cycle-consistent adversarial networks.
+
 - [Paper](https://arxiv.org/pdf/1703.10593.pdf)
 - [Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
 """
@@ -39,6 +41,7 @@ autotune = tf.data.experimental.AUTOTUNE
 
 """
 ## Prepare the dataset
+
 In this example, we will be using the
 [horse to zebra](https://www.tensorflow.org/datasets/catalog/cycle_gan#cycle_ganhorse2zebra)
 dataset.
@@ -142,12 +145,13 @@ plt.show()
 
 class ReflectionPadding2D(layers.Layer):
     """Implements Reflection Padding as a layer.
+
     Args:
         padding(tuple): Amount of padding for the
         spatial dimensions.
 
     Returns:
-        A padded tensor with the same type as the input tensor.
+        A padded tensor with the same type as the input tensor. 
     """
 
     def __init__(self, padding=(1, 1), **kwargs):
@@ -321,6 +325,7 @@ def get_resnet_generator(
 
 """
 ## Build the discriminators
+
 The discriminators implement the following architecture:
 `C64->C128->C256->C512`
 """
@@ -378,6 +383,7 @@ disc_Y = get_discriminator(name="discriminator_Y")
 
 """
 ## Build the CycleGAN model
+
 We will override the `train_step()` method of the `Model` class
 for training via `fit()`.
 """
