@@ -145,6 +145,7 @@ class ReflectionPadding2D(layers.Layer):
     Args:
         padding(tuple): Amount of padding for the
         spatial dimensions.
+
     Returns:
         A padded tensor with the same type as the input tensor.
     """
@@ -255,8 +256,10 @@ def upsample(
 
 """
 ## Build the generators
+
 The generator consists of downsampling blocks: nine residual blocks
 and upsampling blocks. The structure of the generator is the following:
+
 c7s1-64 ==> Conv block with `relu` activation, filter size of 7
 d128 ====|
          |-> 2 downsampling blocks
