@@ -114,6 +114,15 @@ the number of classes beforehand.
 nb_classes = len(np.unique(y_train))
 
 """
+Now we shuffle the training set because we will be using the `validation_split` option
+later when training.
+"""
+
+idx = np.random.permutation(len(x_train))
+x_train = x_train[idx]
+y_train = y_train[idx]
+
+"""
 ## Build a model
 
 We build a Fully Convolutional Neural Network originally proposed in
@@ -195,7 +204,7 @@ hist = model.fit(
     batch_size=mini_batch_size,
     epochs=epochs,
     callbacks=callbacks,
-    validation_data=(x_test, y_test),
+    validation_split=0.2,
     verbose=False,
 )
 
@@ -210,12 +219,7 @@ y_pred = model.predict(x_test).argmax(axis=1)
 print("Test accuracy", accuracy_score(y_pred, y_test))
 
 """
-## Plot the model's train and test loss
-In this example we have set the validation set to be the test set to monitor the
-performance on the test during training. Note that the validation set (the test in set in
-this case) is not used to select the best model nor to tune any other hyperparameter, it
-is only used to monitor the generalization performance of the model on the test for
-vizualisation purposes.
+## Plot the model's training and validation loss
 """
 
 metric = "loss"
@@ -225,13 +229,13 @@ plt.plot(hist.history["val_" + metric])
 plt.title("model " + metric)
 plt.ylabel(metric, fontsize="large")
 plt.xlabel("epoch", fontsize="large")
-plt.legend(["train", "test"], loc="upper left")
+plt.legend(["train", "val"], loc="upper left")
 plt.show()
 plt.close()
 
 """
 We can see how the training loss decreases and reaches almost zero after 100 epochs.
-Nevertheless, by observing the test loss we can see how the network still needs training
-until it reaches almost perfect loss on both the test and the training loss after 400
-epochs.
+Nevertheless, by observing the validation loss we can see how the network still needs
+training until it reaches almost perfect loss on both the validation and the training
+loss after 400 epochs.
 """
