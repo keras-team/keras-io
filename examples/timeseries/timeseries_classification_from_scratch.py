@@ -28,8 +28,17 @@ from sklearn import preprocessing
 
 """
 ## Load the data: the Coffee dataset
-The description of this dataset can be found
-[here](https://archive.uea.ac.uk/~ajb/Papers/BagnallSDM2012.pdf).
+
+### Description
+The dataset we are using here is called Coffee.
+The data comes from the UCR archive.
+The dataset contains 28 training instances and another 28 testing instances.
+Each time series corresponds to coffee beans spectrograph that are used in chemometrics
+to classify food types. For this task, the goal is to automatically determine if the
+time series corresponds to readings from Arabica or Robusta coffee variants. For the
+training as well as the testing set, the two classes are balanced: 14 Arabica and
+14 Robusta. The full description of this dataset can be found
+[here](https://pubs.acs.org/doi/pdf/10.1021/jf950305a).
 
 ### Read the TSV data online
 We will use the `Coffee_TRAIN` file for training and the
