@@ -50,9 +50,9 @@ In this file, the first column corresponds to the label.
 
 def readucr(filename):
     data = np.loadtxt(filename, delimiter="\t")
-    Y = data[:, 0]
-    X = data[:, 1:]
-    return X, Y
+    y = data[:, 0]
+    x = data[:, 1:]
+    return x, y.astype(int)
 
 
 root_url = "https://germain-forestier.info/dataset/UCRArchive_2018/Coffee/"
