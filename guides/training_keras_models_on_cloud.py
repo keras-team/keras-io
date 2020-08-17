@@ -223,6 +223,7 @@ We can also use this storage bucket for Docker image building, instead of your l
 Docker instance. For this, just add your bucket to the `docker_image_bucket_name` parameter.
 """
 
+#docs_infra: no_execute
 tfc.run(docker_image_bucket_name=gcp_bucket)
 
 """
@@ -230,6 +231,7 @@ After training the model, we can load the saved model and view our TensorBoard l
 to monitor performance.
 """
 
+#docs_infra: no_execute
 model = keras.models.load_model(save_path)
 
 """shell
