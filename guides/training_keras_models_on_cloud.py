@@ -161,7 +161,8 @@ in our cloud storage bucket.
 import datetime
 import os
 
-gcp_bucket = "keras-examples-jonah"
+# Note: Please change the gcp_bucket to your bucket name.
+gcp_bucket = "keras-examples"
 
 checkpoint_path = os.path.join("gs://", gcp_bucket, "mnist_example", "save_at_{epoch}")
 
@@ -202,9 +203,9 @@ if tfc.remote():
     callbacks = callbacks
     batch_size = 128
 else:
-    epochs = 10
+    epochs = 5
     batch_size = 64
-    callback = None
+    callbacks = None
 
 model.fit(x_train, y_train, epochs=epochs, callbacks=callbacks, batch_size=batch_size)
 
