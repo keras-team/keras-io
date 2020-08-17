@@ -185,8 +185,9 @@ callbacks = [
     ),
 ]
 model.compile(
-    optimizer=keras.optimizers.Adam(), loss=keras.losses.sparse_categorical_crossentropy,
-    metrics=["accuracy"]
+    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.sparse_categorical_crossentropy,
+    metrics=["accuracy"],
 )
 hist = model.fit(
     x_train,
@@ -202,11 +203,11 @@ hist = model.fit(
 ## Evaluate model on test data
 """
 
-model = keras.models.load_model('best_model.h5')
+model = keras.models.load_model("best_model.h5")
 
 y_pred = model.predict(x_test).argmax(axis=1)
 
-print('Test accuracy', accuracy_score(y_pred, y_test))
+print("Test accuracy", accuracy_score(y_pred, y_test))
 
 """
 ## Plot the model's train and test loss
