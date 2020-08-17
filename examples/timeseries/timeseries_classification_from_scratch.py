@@ -127,41 +127,41 @@ The implementation is based on the TF2.0 version provided
 def make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
-    # this is the first 1D convolutional block
-    # first a linear convolution is applied by sliding a certain number of filters
-    # on the input time series to transform it into a multivariate time series
-    # whose number of dimensions is equal to the number of filters used here
+    # This is the first 1D convolutional block.
+    # First a linear convolution is applied by sliding a certain number of filters
+    # on the input time series to transform it into a multivariate time series,
+    # whose number of dimensions is equal to the number of filters used here.
     conv1 = keras.layers.Conv1D(filters=128, kernel_size=8, padding="same")(input_layer)
-    # following the convolution, we apply a batchnormalization in order to
-    # help the network converge quickly while adding an implicit regularization
+    # Following the convolution, we apply a batchnormalization in order to
+    # help the network converge quickly while adding an implicit regularization.
     conv1 = keras.layers.BatchNormalization()(conv1)
-    # finally we add the relu activation function to inject some non-linearity
-    # to the convolutions' output
+    # Finally we add the relu activation function to inject some non-linearity
+    # to the convolutions' output.
     conv1 = keras.layers.Activation(activation="relu")(conv1)
 
-    # a second convolutional block is applied
+    # A second convolutional block is applied.
     conv2 = keras.layers.Conv1D(filters=256, kernel_size=5, padding="same")(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
     conv2 = keras.layers.Activation("relu")(conv2)
 
-    # a third convolutional block is applied
+    # A third convolutional block is applied.
     conv3 = keras.layers.Conv1D(128, kernel_size=3, padding="same")(conv2)
     conv3 = keras.layers.BatchNormalization()(conv3)
     conv3 = keras.layers.Activation("relu")(conv3)
 
-    # a global average pooling layer is used here
-    # we average the time series over the whole time dimension
-    # this would reduce drastically the number of parameters
-    # while enabling the use of the class activation map method for interpretability
+    # A global average pooling layer is used here.
+    # We average the time series over the whole time dimension.
+    # This would reduce drastically the number of parameters,
+    # while enabling the use of the class activation map method for interpretability.
     # In fact the input time series with m dimensions is averaged
-    # resulting in a vector of m dimensions
+    # resulting in a vector of m dimensions.
     gap_layer = keras.layers.GlobalAveragePooling1D()(conv3)
 
-    # the final softmax traditional classifier with a number of neurons equal
-    # to the number of classes in the dataset
+    # The final softmax traditional classifier is used,
+    # with a number of neurons equal to the number of classes.
     output_layer = keras.layers.Dense(num_classes, activation="softmax")(gap_layer)
 
-    # we link the input and output layer by constructing the keras model
+    # We link the input and output layer by constructing the keras model.
     return keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 
