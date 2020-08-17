@@ -2,16 +2,15 @@
 Title: Time series classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
-Last modified: 2020/07/21
+Last modified: 2020/08/17
 Description: Training a time series classifier from scratch on the Coffee dataset from the UCR/UEA archive.
 """
 """
 ## Introduction
 
 This example shows how to do time series classification from scratch, starting from raw
-CSV time series files on disk, without leveraging pre-trained weights or a pre-made Keras
-Application model. We demonstrate the workflow on Coffee dataset from the [UCR/UEA
-dataset](https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/).
+CSV time series files on disk. We demonstrate the workflow on Coffee dataset from the 
+[UCR/UEA archive](https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/).
 
 """
 
