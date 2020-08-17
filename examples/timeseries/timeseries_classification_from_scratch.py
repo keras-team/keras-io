@@ -116,8 +116,8 @@ nb_classes = len(np.unique(y_train))
 """
 ## Build a model
 
-We build a Fully Convolutonal Neural Network originally proposed in [this
-paper](https://arxiv.org/abs/1611.06455).
+We build a Fully Convolutional Neural Network originally proposed in
+[this paper](https://arxiv.org/abs/1611.06455).
 The implementation is based on the TF2.0 version provided
 [here](https://github.com/hfawaz/dl-4-tsc/).
 
