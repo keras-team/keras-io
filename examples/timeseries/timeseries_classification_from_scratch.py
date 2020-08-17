@@ -183,7 +183,7 @@ keras.utils.plot_model(model, show_shapes=True)
 """
 
 epochs = 1000
-mini_batch_size = 8
+batch_size = 12
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
@@ -201,7 +201,7 @@ model.compile(
 hist = model.fit(
     x_train,
     y_train,
-    batch_size=mini_batch_size,
+    batch_size=batch_size,
     epochs=epochs,
     callbacks=callbacks,
     validation_split=0.2,
