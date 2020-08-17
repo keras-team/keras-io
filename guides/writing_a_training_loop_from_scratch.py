@@ -18,7 +18,7 @@ import numpy as np
 ## Introduction
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
-Their usage is coverered in the guide
+Their usage is covered in the guide
 [Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
@@ -90,7 +90,7 @@ for epoch in range(epochs):
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
 
         # Open a GradientTape to record the operations run
-        # during the forward pass, which enables autodifferentiation.
+        # during the forward pass, which enables auto differentiation.
         with tf.GradientTape() as tape:
 
             # Run the forward pass of the layer.
@@ -124,7 +124,7 @@ for epoch in range(epochs):
 Let's add metrics monitoring to this basic loop.
 
 You can readily reuse the built-in metrics (or custom ones you wrote) in such training
-loops written from scratch. Here's the flow:
+loops are written from scratch. Here's the flow:
 
 - Instantiate the metric at the start of the loop
 - Call `metric.update_state()` after each batch
@@ -221,12 +221,12 @@ The default runtime in TensorFlow 2.0 is
 above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
-advantage. Decribing your computation as a static graph enables the framework
+advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
 the framework is constrained to greedly execute one operation after another,
 with no knowledge of what comes next.
 
-You can compile into a static graph any function that take tensors as input.
+You can compile into a static graph any function that takes tensors as input.
 Just add a `@tf.function` decorator on it, like this:
 """
 
@@ -367,8 +367,8 @@ images that look almost real, by learning the latent distribution of a training
 dataset of images (the "latent space" of the images).
 
 A GAN is made of two parts: a "generator" model that maps points in the latent
-space to points in image space, an a "discriminator" model, a classifier
-that can tell the difference between real imagees (from the training dataset)
+space to points in image space, a "discriminator" model, a classifier
+that can tell the difference between real images (from the training dataset)
 and fake images (the output of the generator network).
 
 A GAN training loop looks like this:
