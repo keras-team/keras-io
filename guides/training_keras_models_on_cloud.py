@@ -82,7 +82,7 @@ tfc.run()
 """
 
 """
-We don’t need to worry about cloud-specific tasks such as creating VM instances
+You don’t need to worry about cloud-specific tasks such as creating VM instances
 and distribution strategies when using TensorFlow Cloud.
 The API includes intelligent defaults for all the parameters -- everything is
 configurable, but many models can rely on these defaults.
@@ -101,7 +101,7 @@ The default VM configuration is 1 chief and 0 workers with 8 CPU cores and
 """
 ## Google Cloud configuration
 
-In order to facilitate the proper pathways for Cloud training, we will need to
+In order to facilitate the proper pathways for Cloud training, you will need to
 do some first-time setup. If you're a new Google Cloud user, there are a few
 preliminary steps you will need to take:
 
@@ -202,9 +202,9 @@ if tfc.remote():
     callbacks = callbacks
     batch_size = 128
 else:
-    epochs = 1
-    callbacks = None
-    batch_size = None
+    epochs = 10
+    batch_size = 64
+    callback = None
 
 model.fit(x_train, y_train, epochs=epochs, callbacks=callbacks, batch_size=batch_size)
 
@@ -232,8 +232,9 @@ to monitor performance.
 model = keras.models.load_model(save_path)
 
 """shell
+#docs-infra: no_execute
 tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
-"""   
+"""
 
 """
 ## Large-scale projects
@@ -353,9 +354,9 @@ if tfc.remote():
     epochs = 100
     batch_size = 128
 else:
-    epochs = 1
+    epochs = 10
+    batch_size = 64
     callbacks = None
-    batch_size = None
 
 model.fit(
     x_train, y_train, epochs=epochs, callbacks=callbacks, batch_size=batch_size
