@@ -3,7 +3,8 @@ Title: Time series classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
 Last modified: 2020/08/17
-Description: Training a time series classifier from scratch on the Coffee dataset from the UCR/UEA archive.
+Description: Training a time series classifier from scratch on the Coffee dataset from
+the UCR/UEA archive.
 """
 """
 ## Introduction
@@ -21,10 +22,9 @@ CSV time series files on disk. We demonstrate the workflow on Coffee dataset fro
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import preprocessing
+from sklearn.metrics import accuracy_score
 
 """
 ## Load the data: the Coffee dataset
@@ -107,15 +107,11 @@ x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
 x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
 """
-Finally, in order to have a standard labeling of the data we will use the enconding from
-sklearn to transform the labels into one-hot encoded vectors.
+Finally, in order to use `sparse_categorical_crossentropy`, we will have to count
+the number of classes beforehand.
 """
 
-enc = preprocessing.OneHotEncoder(categories="auto")
-
-enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
-y_train = enc.transform(y_train.reshape(-1, 1)).toarray()
-y_test = enc.transform(y_test.reshape(-1, 1)).toarray()
+nb_classes = len(np.unique(y_train))
 
 """
 ## Build a model
@@ -169,7 +165,7 @@ def make_model(input_shape, num_classes):
     return keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 
-model = make_model(input_shape=x_train.shape[1:], num_classes=y_train.shape[1])
+model = make_model(input_shape=x_train.shape[1:], num_classes=nb_classes)
 keras.utils.plot_model(model, show_shapes=True)
 
 """
@@ -189,7 +185,8 @@ callbacks = [
     ),
 ]
 model.compile(
-    optimizer=keras.optimizers.Adam(), loss="binary_crossentropy", metrics=["accuracy"],
+    optimizer=keras.optimizers.Adam(), loss=keras.losses.sparse_categorical_crossentropy,
+    metrics=["accuracy"]
 )
 hist = model.fit(
     x_train,
@@ -205,11 +202,11 @@ hist = model.fit(
 ## Evaluate model on test data
 """
 
-model = keras.models.load_model("best_model.h5")
+model = keras.models.load_model('best_model.h5')
 
-loss, acc = model.evaluate(x_test, y_test, verbose=False)
+y_pred = model.predict(x_test).argmax(axis=1)
 
-print("Test accuracy", acc)
+print('Test accuracy', accuracy_score(y_pred, y_test))
 
 """
 ## Plot the model's train and test loss
