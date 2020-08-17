@@ -112,7 +112,7 @@ preliminary steps you will need to take:
 5. Create a Cloud Storage bucket.
 
 Detailed first-time setup instructions can be found in the
-[TensorFlow Cloud README](https://github.com/tensorflowcloud#setup-instructions),
+[TensorFlow Cloud README](https://github.com/tensorflow/cloud#setup-instructions),
 and an additional setup example is shown on the
 [TensorFlow Blog](https://blog.tensorflow.org/2020/08/train-your-tensorflow-model-on-google.html).
 
