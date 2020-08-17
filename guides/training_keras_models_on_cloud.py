@@ -235,7 +235,7 @@ to monitor performance.
 model = keras.models.load_model(save_path)
 
 """shell
-#docs-infra: no_execute
+#docs_infra: no_execute
 tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
 """
 

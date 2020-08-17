@@ -220,7 +220,7 @@ Docker instance. For this, just add your bucket to the `docker_image_bucket_name
 
 
 ```python
-#docs-infra: no_execute
+#docs_infra: no_execute
 tfc.run(docker_image_bucket_name=gcp_bucket)
 ```
 
@@ -229,7 +229,7 @@ to monitor performance.
 
 
 ```python
-#docs-infra: no_execute
+#docs_infra: no_execute
 model = keras.models.load_model(save_path)
 ```
 
