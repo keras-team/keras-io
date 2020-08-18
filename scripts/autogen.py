@@ -898,7 +898,9 @@ if __name__ == "__main__":
 
     cmd = sys.argv[1]
     if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
-        raise ValueError("Must specify command `make`, `serve`, or `add_example`.")
+        raise ValueError(
+            "Must specify command `make`, `serve`, `add_example`, `add_guide` or `generate_tf_guides`."
+        )
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
             raise ValueError(
