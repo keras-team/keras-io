@@ -6,7 +6,7 @@
 **Description:** Everything you need to know to use Keras to build real-world machine learning solutions.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_engineers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_engineers.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/intro_to_keras_for_engineers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesintro_to_keras_for_engineers.py)
 
 
 
@@ -85,7 +85,7 @@ these formats. If you have a large dataset and you are training on GPU(s), consi
 using `Dataset` objects, since they will take care of performance-critical details,
  such as:
 
-- Asynchronously preprocessing your data on CPU while your GPU is busy, and bufferring
+- Asynchronously preprocessing your data on CPU while your GPU is busy, and buffering
  it into a queue.
 - Prefetching data on GPU memory so it's immediately available when the GPU has
  finished processing the previous batch, so you can reach full GPU utilization.
@@ -504,7 +504,7 @@ Here's what fitting a model looks like with a dataset:
 model.fit(dataset_of_samples_and_labels, epochs=10)
 ```
 
-Since the data yielded by a dataset is expect to be already batched, you don't need to
+Since the data yielded by a dataset is expected to be already batched, you don't need to
  specify the batch size here.
 
 Let's look at it in practice with a toy example model that learns to classify MNIST
@@ -562,9 +562,9 @@ Trainable params: 118,282
 Non-trainable params: 0
 _________________________________________________________________
 Fit on NumPy data
-938/938 [==============================] - 1s 804us/step - loss: 0.2696
+938/938 [==============================] - 1s 886us/step - loss: 0.2598
 Fit on Dataset
-938/938 [==============================] - 1s 964us/step - loss: 0.1162
+938/938 [==============================] - 1s 1ms/step - loss: 0.1116
 
 ```
 </div>
@@ -580,7 +580,7 @@ print(history.history)
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.11615095287561417]}
+{'loss': [0.1116277277469635]}
 
 ```
 </div>
@@ -611,7 +611,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 928us/step - loss: 0.0809 - acc: 0.9753
+938/938 [==============================] - 1s 1ms/step - loss: 0.0779 - acc: 0.9760
 
 ```
 </div>
@@ -628,7 +628,7 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0556 - acc: 0.9829 - val_loss: 0.1163 - val_acc: 0.9670
+938/938 [==============================] - 1s 1ms/step - loss: 0.0537 - acc: 0.9836 - val_loss: 0.0925 - val_acc: 0.9734
 
 ```
 </div>
@@ -713,8 +713,8 @@ print("acc: %.2f" % acc)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 907us/step - loss: 0.1163 - acc: 0.9670
-loss: 0.12
+157/157 [==============================] - 0s 676us/step - loss: 0.0925 - acc: 0.9734
+loss: 0.09
 acc: 0.97
 
 ```
@@ -899,9 +899,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 1ms/step - loss: 0.4867
+1/1 [==============================] - 0s 1ms/step - loss: 0.5341
 
-<tensorflow.python.keras.callbacks.History at 0x17ef6d290>
+<tensorflow.python.keras.callbacks.History at 0x1484c74d0>
 
 ```
 </div>
@@ -925,9 +925,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 967us/step - loss: 0.4994
+1/1 [==============================] - 0s 827us/step - loss: 0.5420
 
-<tensorflow.python.keras.callbacks.History at 0x17efe1190>
+<tensorflow.python.keras.callbacks.History at 0x148517b50>
 
 ```
 </div>
@@ -982,7 +982,7 @@ def build_model(hp):
 
 The function should return a compiled model.
 
-Next, instantiate a tuner object specifying your optimiation objective and other search
+Next, instantiate a tuner object specifying your optimization objective and other search
  parameters:
 
 

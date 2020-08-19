@@ -149,7 +149,7 @@ containing the following:
 
 <div class="k-default-codeblock">
 ```
-[34massets[m[m         saved_model.pb [34mvariables[m[m
+assets	saved_model.pb	variables
 
 ```
 </div>

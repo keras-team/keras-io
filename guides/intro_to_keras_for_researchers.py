@@ -570,7 +570,7 @@ for your OO models.
 
 Here are some of things you've learned so far:
 
-- A `Layer` encapsulate a state (created in `__init__` or `build`) and some computation
+- A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
 - Layers can be recursively nested to create new, bigger computation blocks.
 - You can easily write highly hackable training loops by opening a

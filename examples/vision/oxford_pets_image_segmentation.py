@@ -141,8 +141,6 @@ def get_model(img_size, num_classes):
 
     ### [Second half of the network: upsampling inputs] ###
 
-    previous_block_activation = x  # Set aside residual
-
     for filters in [256, 128, 64, 32]:
         x = layers.Activation("relu")(x)
         x = layers.Conv2DTranspose(filters, 3, padding="same")(x)

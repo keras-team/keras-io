@@ -61,6 +61,11 @@ CONFIG = [
         "source_name": "customizing_what_happens_in_fit",
         "target_name": "customizing_what_happens_in_fit",
     },
+    {
+        "title": "Training Keras models with TensorFlow Cloud",
+        "source_name": "training_keras_models_on_cloud",
+        "target_name": "training_keras_models_on_cloud",
+    },
 ]
 
 
@@ -164,12 +169,12 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
                 new_lines.append(lines[-1])
             cell["source"] = new_lines
         elif cell["cell_type"] == "code":
-          lines = cell["source"]
-          if not lines[0].strip():
-            lines = lines[1:]
-          if not lines[-1].strip():
-            lines = lines[:-1]
-          cell["source"] = lines
+            lines = cell["source"]
+            if not lines[0].strip():
+                lines = lines[1:]
+            if not lines[-1].strip():
+                lines = lines[:-1]
+            cell["source"] = lines
 
     # Add header cells
     header_cells = copy.deepcopy(TF_IPYNB_CELLS_TEMPLATE)
@@ -188,12 +193,12 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     header_cells.append(buttons)
     cells = header_cells + cells
     for cell in cells:
-        cell['metadata']['id'] = random_id()
+        cell["metadata"]["id"] = random_id()
 
     notebook = {}
     for key in TF_IPYNB_BASE.keys():
         notebook[key] = TF_IPYNB_BASE[key]
-    notebook["metadata"]["colab"]["name"] = target_name + '.ipynb'
+    notebook["metadata"]["colab"]["name"] = target_name + ".ipynb"
     notebook["cells"] = cells
 
     f = open(Path(target_dir) / (target_name + ".ipynb"), "w")
@@ -243,8 +248,8 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
 
 def random_id():
     length = 12
-    letters = string.ascii_lowercase + string.ascii_uppercase + '0123456789'
-    return ''.join(random.choice(letters) for i in range(length))
+    letters = string.ascii_lowercase + string.ascii_uppercase + "0123456789"
+    return "".join(random.choice(letters) for i in range(length))
 
 
 def generate_tf_guides():
