@@ -291,7 +291,7 @@ new_output = new_lstm_layer(paragraph3, initial_state=existing_state)
 
 For sequences other than time series (e.g. text), it is often the case that a RNN model
 can perform better if it not only processes sequence from start to end, but also
-backward. For example, to predict the next word in a sentence, it is often useful to
+backwards. For example, to predict the next word in a sentence, it is often useful to
 have the context around the word, not only just the words that come before it.
 
 Keras provides an easy API for you to build such bidirectional RNNs: the
