@@ -276,7 +276,7 @@ the mask is safe to do).
 If you have a custom layer that does not modify the time dimension, and if you want it
 to be able to propagate the current input mask, you should set `self.supports_masking
 = True` in the layer constructor. In this case, the default behavior of
-`compute_mask()` is just pass the current mask through.
+`compute_mask()` is to just pass the current mask through.
 
 Here's an example of a layer that is whitelisted for mask propagation:
 
@@ -296,7 +296,7 @@ class MyActivation(keras.layers.Layer):
 """
 You can now use this custom layer in-between a mask-generating layer (like `Embedding`)
 and a mask-consuming layer (like `LSTM`), and it will pass the mask along so that it
-reachs the mask-consuming layer.
+reaches the mask-consuming layer.
 """
 
 inputs = keras.Input(shape=(None,), dtype="int32")

@@ -192,7 +192,7 @@ Note that an alternative, more lightweight workflow could also be:
  from the base model. This is called **feature extraction**.
 3. Use that output as input data for a new, smaller model.
 
-A key advantage of that second workflow is that you only run the base model once one
+A key advantage of that second workflow is that you only run the base model once on
  your data, rather than once per epoch of training. So it's a lot faster & cheaper.
 
 An issue with that second workflow, though, is that it doesn't allow you to dynamically
@@ -204,7 +204,7 @@ such scenarios data augmentation is very important. So in what follows, we will 
 
 Here's what the first workflow looks like in Keras:
 
-First, instantiate a base model with pre-trained weigts.
+First, instantiate a base model with pre-trained weights.
 
 ```python
 base_model = keras.applications.Xception(
@@ -435,7 +435,7 @@ In general, it's a good practice to develop models that take raw data as input, 
 opposed to models that take already-preprocessed data. The reason being that, if your
 model expects preprocessed data, any time you export your model to use it elsewhere
 (in a web browser, in a mobile app), you'll need to reimplement the exact same
-preprocessing pipeline. This get very tricky very quickly. So we should do the least
+preprocessing pipeline. This gets very tricky very quickly. So we should do the least
  possible amount of preprocessing before hitting the model.
 
 Here, we'll do image resizing in the data pipeline (because a deep neural network can
