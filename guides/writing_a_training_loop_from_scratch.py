@@ -90,7 +90,7 @@ for epoch in range(epochs):
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
 
         # Open a GradientTape to record the operations run
-        # during the forward pass, which enables auto differentiation.
+        # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
 
             # Run the forward pass of the layer.
@@ -124,7 +124,7 @@ for epoch in range(epochs):
 Let's add metrics monitoring to this basic loop.
 
 You can readily reuse the built-in metrics (or custom ones you wrote) in such training
-loops are written from scratch. Here's the flow:
+loops written from scratch. Here's the flow:
 
 - Instantiate the metric at the start of the loop
 - Call `metric.update_state()` after each batch
