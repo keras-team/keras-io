@@ -6,7 +6,7 @@
 **Description:** Complete guide to using & customizing RNN layers.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/working_with_rnns.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/working_with_rnns.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/working_with_rnns.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesworking_with_rnns.py)
 
 
 
@@ -112,7 +112,7 @@ For more information, see the
 ---
 ## Outputs and states
 
-By default, the output of a RNN layer contain a single vector per sample. This vector
+By default, the output of a RNN layer contains a single vector per sample. This vector
 is the RNN cell output corresponding to the last timestep, containing information
 about the entire input sequence. The shape of this output is `(batch_size, units)`
 where `units` corresponds to the `units` argument passed to the layer's constructor.
@@ -248,7 +248,7 @@ sequences, e.g. `RNN(LSTMCell(10))`.
 Mathematically, `RNN(LSTMCell(10))` produces the same result as `LSTM(10)`. In fact,
 the implementation of this layer in TF v1.x was just creating the corresponding RNN
 cell and wrapping it in a RNN layer.  However using the built-in `GRU` and `LSTM`
-layers enables the use of CuDNN and you may see better performance.
+layers enable the use of CuDNN and you may see better performance.
 
 There are three built-in RNN cells, each of them corresponding to the matching RNN
 layer.
@@ -269,7 +269,7 @@ When processing very long sequences (possibly infinite), you may want to use the
 pattern of **cross-batch statefulness**.
 
 Normally, the internal state of a RNN layer is reset every time it sees a new batch
-(i.e. every sample seen by the layer is assume to be independent from the past). The
+(i.e. every sample seen by the layer is assumed to be independent of the past). The
 layer will only maintain a state while processing a given sample.
 
 If you have very long sequences though, it is useful to break them into shorter
@@ -491,7 +491,7 @@ sample, sample_label = x_train[0], y_train[0]
 Let's create a model instance and train it.
 
 We choose `sparse_categorical_crossentropy` as the loss function for the model. The
-output of the model has shape of `[batch_size, 10]`. The target for the model is a
+output of the model has shape of `[batch_size, 10]`. The target for the model is an
 integer vector, each of the integer is in the range of 0 to 9.
 
 
@@ -512,9 +512,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 11ms/step - loss: 0.9792 - accuracy: 0.6869 - val_loss: 0.5196 - val_accuracy: 0.8427
+938/938 [==============================] - 10s 11ms/step - loss: 0.9289 - accuracy: 0.7052 - val_loss: 0.5966 - val_accuracy: 0.7880
 
-<tensorflow.python.keras.callbacks.History at 0x17c82e2d0>
+<tensorflow.python.keras.callbacks.History at 0x14d861bd0>
 
 ```
 </div>
@@ -536,17 +536,17 @@ noncudnn_model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 11ms/step - loss: 0.3900 - accuracy: 0.8843 - val_loss: 0.4477 - val_accuracy: 0.8426
+938/938 [==============================] - 10s 11ms/step - loss: 0.4060 - accuracy: 0.8745 - val_loss: 0.2860 - val_accuracy: 0.9120
 
-<tensorflow.python.keras.callbacks.History at 0x17cef54d0>
+<tensorflow.python.keras.callbacks.History at 0x14df32350>
 
 ```
 </div>
 When running on a machine with a NVIDIA GPU and CuDNN installed,
 the model built with CuDNN is much faster to train compared to the
-model that use the regular TensorFlow kernel.
+model that uses the regular TensorFlow kernel.
 
-The same CuDNN-enabled model can also be use to run inference in a CPU-only
+The same CuDNN-enabled model can also be used to run inference in a CPU-only
 environment. The `tf.device` annotation below is just forcing the device placement.
 The model will run on CPU by default if no GPU is available.
 
@@ -594,7 +594,7 @@ representation could be:
 The following code provides an example of how to build a custom RNN cell that accepts
 such structured inputs.
 
-### Define a custom cell that support nested input/output
+### Define a custom cell that supports nested input/output
 
 See [Making new Layers & Models via subclassing](/guides/making_new_layers_and_models_via_subclassing/)
 for details on writing your own layers.
@@ -697,9 +697,9 @@ model.fit(input_data, target_data, batch_size=batch_size)
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 2s 222ms/step - loss: 0.7225 - rnn_1_loss: 0.2545 - rnn_1_1_loss: 0.4679 - rnn_1_accuracy: 0.1094 - rnn_1_1_accuracy: 0.0349
+10/10 [==============================] - 2s 215ms/step - loss: 0.7898 - rnn_1_loss: 0.3148 - rnn_1_1_loss: 0.4750 - rnn_1_accuracy: 0.0953 - rnn_1_1_accuracy: 0.0316
 
-<tensorflow.python.keras.callbacks.History at 0x18b14b650>
+<tensorflow.python.keras.callbacks.History at 0x150de0d10>
 
 ```
 </div>
