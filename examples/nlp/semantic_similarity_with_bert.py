@@ -2,7 +2,7 @@
 Title: Semantic Similarity with BERT
 Author: [Mohamad Merchant](https://twitter.com/mohmadmerchant1)
 Date created: 2020/08/15
-Last modified: 2020/08/20
+Last modified: 2020/08/21
 Description: Natural Language Inference by Fine-tuning BERT model on SNLI Corpus.
 """
 """
@@ -22,13 +22,13 @@ probability of the similarity between sentences.
 
 """
 ## Setup
-"""
 
+# Install huggingface transformers with !pip install transformers==2.11.0.
+"""
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import transformers
-from transformers import BertTokenizer, TFBertModel
 
 """
 ## Configurations
@@ -38,7 +38,8 @@ max_length = 128  # Maximum length of input sentence to the model.
 batch_size = 32
 epochs = 4
 learning_rate = 3e-5
-np.random.seed(42)
+# Labels in our dataset.
+labels = ["contradiction", "entailment", "neutral"]
 
 """
 ## Load the Data
@@ -86,10 +87,23 @@ print(f"Similarity: {train_df.loc[1, 'similarity']}")
 """
 
 # We have some nan in our train data, we will simply drop them.
+print("Number of Missing Values")
 print(train_df.isnull().sum())
 train_df.dropna(axis=0, inplace=True)
 
-# We have some "-" in our train and validation targets, so we will not use those.
+"""
+Distribution of our training targets.
+"""
+print("Train Target Distribution")
+print(train_df.similarity.value_counts())
+
+"""
+Distribution of our validation targets.
+"""
+print("Validation Target Distribution")
+print(valid_df.similarity.value_counts())
+
+# We have some "-" in our train and validation targets, we will not use those.
 train_df = (
     train_df[train_df.similarity != "-"]
     .sample(frac=1.0, random_state=42)
@@ -100,13 +114,6 @@ valid_df = (
     .sample(frac=1.0, random_state=42)
     .reset_index(drop=True)
 )
-
-"""
-Distribution of our training and validation targets.
-"""
-print(train_df.similarity.value_counts())
-
-print(valid_df.similarity.value_counts())
 
 """
 One hot encoding training, validation and test labels
@@ -141,7 +148,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
             labels:             Array of labels.
             batch_size:         Integer size of the batch.
             shuffle:            boolean shuffle data or not.
-            include_targets:    boolean generate data for train or test purpose.
+            include_targets:    boolean generate data for train/test purpose.
         Returns:
             encoded_features:   input_ids,
                                 attention_mask,
@@ -166,7 +173,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         self.include_targets = include_targets
         # Load our BERT Tokenizer to encode the text.
         # We will use base-base-uncased pretrained model.
-        self.tokenizer = BertTokenizer.from_pretrained(
+        self.tokenizer = transformers.BertTokenizer.from_pretrained(
             "bert-base-uncased", do_lower_case=True
         )
         self.on_epoch_end()
@@ -196,7 +203,6 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
                 return_token_type_ids=True,
                 padding=True,
                 pad_to_max_length=True,
-                pad_to_multiple_of=max_length,
                 return_tensors="tf",
             )
             batch_input_ids.extend(encoded["input_ids"])
@@ -219,7 +225,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         # Shuffle indexes after each epoch if shuffle is set to True.
         self.indexes = np.arange(len(self.sentence1))
         if self.shuffle:
-            np.random.shuffle(self.indexes)
+            np.random.RandomState(42).shuffle(self.indexes)
 
 
 """
@@ -241,7 +247,7 @@ def build_model():
         shape=(max_length,), dtype=tf.int32, name="tt_ids"
     )
     # Loading pretrained BERT model.
-    bert_model = TFBertModel.from_pretrained("bert-base-uncased")
+    bert_model = transformers.TFBertModel.from_pretrained("bert-base-uncased")
     sequence_output, pooled_output = bert_model(
         input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids
     )
@@ -303,7 +309,6 @@ history = model.fit_generator(
     validation_steps=len(valid_data) // batch_size,
     epochs=epochs,
 )
-
 """
 ## Evaluate model on test set
 """
@@ -319,7 +324,6 @@ model.evaluate_generator(test_data, steps=len(test_data) // batch_size, verbose=
 """
 ## Inference on custom sentences
 """
-labels = ["CONTRADICTION", "ENTAILMENT", "NEUTRAL"]
 
 
 def check_similarity(sentence1, sentence2):
