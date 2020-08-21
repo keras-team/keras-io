@@ -95,7 +95,7 @@ Being an Austrian myself this has been a straight knock in my face. Fortunately 
 
 ```
 </div>
-We are only interest in the `pos` and `neg` subfolders, so let's delete the rest:
+We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
 
 
 
