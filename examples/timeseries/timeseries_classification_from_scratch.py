@@ -2,15 +2,15 @@
 Title: Time series classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
-Last modified: 2020/08/17
-Description: Training a time series classifier from scratch on the Coffee dataset from
+Last modified: 2020/08/21
+Description: Training a time series classifier from scratch on the FordA dataset from
 the UCR/UEA archive.
 """
 """
 ## Introduction
 
 This example shows how to do time series classification from scratch, starting from raw
-CSV time series files on disk. We demonstrate the workflow on Coffee dataset from the 
+CSV time series files on disk. We demonstrate the workflow on the FordA dataset from the 
 [UCR/UEA archive](https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/).
 
 """
@@ -27,22 +27,21 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 
 """
-## Load the data: the Coffee dataset
+## Load the data: the FordA dataset
 
 ### Description
-The dataset we are using here is called Coffee.
+The dataset we are using here is called FordA.
 The data comes from the UCR archive.
-The dataset contains 28 training instances and another 28 testing instances.
-Each time series corresponds to coffee beans spectrograph that are used in chemometrics
-to classify food types. For this task, the goal is to automatically determine if the
-time series corresponds to readings from Arabica or Robusta coffee variants. For the
-training as well as the testing set, the two classes are balanced: 14 Arabica and
-14 Robusta. The full description of this dataset can be found
-[here](https://pubs.acs.org/doi/pdf/10.1021/jf950305a).
+The dataset contains 3601 training instances and another 1320 testing instances.
+Each time series corresponds to a measurement of engine noise captured by a motor sensor.
+For this task, the goal is to automatically determine whether a certain symptom
+exists or not in an automotive system. The problem is a balanced binary classification
+task. The full description of
+this dataset can be found [here](http://www.j-wichard.de/publications/FordPaper.pdf).
 
 ### Read the TSV data online
-We will use the `Coffee_TRAIN` file for training and the
-`Coffee_TEST` file for testing. The simplicity of this dataset
+We will use the `FordA_TRAIN` file for training and the
+`FordA_TEST` file for testing. The simplicity of this dataset
 allows us to demonstrate effectively how to use ConvNets for time series classification.
 In this file, the first column corresponds to the label.
 """
@@ -55,10 +54,10 @@ def readucr(filename):
     return x, y.astype(int)
 
 
-root_url = "https://germain-forestier.info/dataset/UCRArchive_2018/Coffee/"
+root_url = "https://raw.githubusercontent.com/hfawaz/cd-diagram/master/FordA/"
 
-x_train, y_train = readucr(root_url + "Coffee_TRAIN")
-x_test, y_test = readucr(root_url + "Coffee_TEST")
+x_train, y_train = readucr(root_url + "FordA_TRAIN.tsv")
+x_test, y_test = readucr(root_url + "FordA_TEST.tsv")
 
 """
 ## Visualize the data
@@ -71,7 +70,7 @@ classes = np.unique(np.concatenate((y_train, y_test), axis=0))
 plt.figure()
 for c in classes:
     c_x_train = x_train[y_train == c]
-    plt.plot(c_x_train[0], label="class" + str(c))
+    plt.plot(c_x_train[0], label="class " + str(c))
 plt.legend(loc="best")
 plt.show()
 plt.close()
@@ -121,6 +120,13 @@ later when training.
 idx = np.random.permutation(len(x_train))
 x_train = x_train[idx]
 y_train = y_train[idx]
+
+"""
+Standardize the labels to positive integers.
+"""
+
+y_train[y_train == -1] = 0
+y_test[y_test == -1] = 0
 
 """
 ## Build a model
@@ -182,8 +188,8 @@ keras.utils.plot_model(model, show_shapes=True)
 
 """
 
-epochs = 1000
-batch_size = 12
+epochs = 100
+batch_size = 128
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
@@ -222,20 +228,20 @@ print("Test accuracy", accuracy_score(y_pred, y_test))
 ## Plot the model's training and validation loss
 """
 
-metric = "loss"
+metric = "accuracy"
 plt.figure()
 plt.plot(hist.history[metric])
 plt.plot(hist.history["val_" + metric])
 plt.title("model " + metric)
 plt.ylabel(metric, fontsize="large")
 plt.xlabel("epoch", fontsize="large")
-plt.legend(["train", "val"], loc="upper left")
+plt.legend(["train", "val"], loc="best")
 plt.show()
 plt.close()
 
 """
-We can see how the training loss decreases and reaches almost zero after 100 epochs.
+We can see how the training accuracy increases and reaches almost 0.9 after 10 epochs. 
 Nevertheless, by observing the validation loss we can see how the network still needs
-training until it reaches almost perfect loss on both the validation and the training
-loss after 400 epochs.
+training until it reaches almost 0.9 for both the validation and the training loss 
+after 100 epochs. 
 """
