@@ -241,7 +241,7 @@ plt.close()
 
 """
 We can see how the training accuracy increases and reaches almost 0.9 after 10 epochs. 
-Nevertheless, by observing the validation loss we can see how the network still needs
+Nevertheless, by observing the validation accuracy we can see how the network still needs
 training until it reaches almost 0.9 for both the validation and the training accuracy 
 after 100 epochs. 
 """
