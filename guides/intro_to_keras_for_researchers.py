@@ -781,7 +781,7 @@ vae.compile(optimizer, loss=loss_fn)
 vae.fit(dataset, epochs=1)
 
 """
-The use of the Functional API and `fit` reduce our example from 65 lines to 25 lines
+The use of the Functional API and `fit` reduces our example from 65 lines to 25 lines
 (including model definition & training). The Keras philosophy is to offer you
 productivity-boosting features like
 these, while simultaneously empowering you to write everything yourself to gain absolute
