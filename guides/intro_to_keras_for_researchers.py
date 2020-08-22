@@ -568,7 +568,7 @@ for your OO models.
 """
 ## End-to-end experiment example 1: variational autoencoders.
 
-Here are some of things you've learned so far:
+Here are some of the things you've learned so far:
 
 - A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
