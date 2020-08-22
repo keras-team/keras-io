@@ -11,7 +11,7 @@ Description: Complete guide to saving & serializing models.
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifyies what layers the model
+- An architecture, or configuration, which specifies what layers the model
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
@@ -432,7 +432,7 @@ generates a serialized form of the custom layer:
 
 Keras keeps a master list of all built-in layer, model, optimizer,
 and metric classes, which is used to find the correct class to call `from_config`.
-If the  class can't be found, than an error is raised (`Value Error: Unknown layer`).
+If the  class can't be found, then an error is raised (`Value Error: Unknown layer`).
 There are a few ways to register custom classes to this list:
 
 1. Setting `custom_objects` argument in the loading function. (see the example
@@ -631,7 +631,7 @@ then the HDF5 format is used. Other suffixes will result in a TensorFlow
 checkpoint unless `save_format` is set.
 
 There is also an option of retrieving weights as in-memory numpy arrays.
-Each API has their pros and cons which are detailed below .
+Each API has its pros and cons which are detailed below.
 
 """
 
