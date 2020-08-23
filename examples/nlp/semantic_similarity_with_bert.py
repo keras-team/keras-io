@@ -303,11 +303,7 @@ valid_data = BertSemanticDataGenerator(
 """
 ## Train the Model
 """
-history = model.fit_generator(
-    train_data,
-    validation_data=valid_data,
-    epochs=epochs,
-)
+history = model.fit_generator(train_data, validation_data=valid_data, epochs=epochs,)
 """
 ## Evaluate model on test set
 """
