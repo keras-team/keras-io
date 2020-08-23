@@ -36,7 +36,7 @@ import transformers
 
 max_length = 128  # Maximum length of input sentence to the model.
 batch_size = 32
-epochs = 4
+epochs = 2
 learning_rate = 3e-5
 # Labels in our dataset.
 labels = ["contradiction", "entailment", "neutral"]
