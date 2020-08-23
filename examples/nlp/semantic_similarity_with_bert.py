@@ -49,8 +49,8 @@ labels = ["contradiction", "entailment", "neutral"]
 curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
 tar -xvzf data.tar.gz
 """
-
-train_df = pd.read_csv("SNLI_Corpus/snli_1.0_train.csv")
+# We have more than 550k samples, we will use 100k for this example.
+train_df = pd.read_csv("SNLI_Corpus/snli_1.0_train.csv", nrows=100000)
 valid_df = pd.read_csv("SNLI_Corpus/snli_1.0_dev.csv")
 test_df = pd.read_csv("SNLI_Corpus/snli_1.0_test.csv")
 
@@ -102,8 +102,9 @@ Distribution of our validation targets.
 """
 print("Validation Target Distribution")
 print(valid_df.similarity.value_counts())
-
-# We have some "-" in our train and validation targets, we will not use those.
+"""
+ We have some "-" in our train and validation targets, we will not use those.
+"""
 train_df = (
     train_df[train_df.similarity != "-"]
     .sample(frac=1.0, random_state=42)
@@ -244,7 +245,7 @@ def build_model():
     )
     # Token type ids are binary masks identifying different sequences in the model.
     token_type_ids = tf.keras.layers.Input(
-        shape=(max_length,), dtype=tf.int32, name="tt_ids"
+        shape=(max_length,), dtype=tf.int32, name="token_type_ids"
     )
     # Loading pretrained BERT model.
     bert_model = transformers.TFBertModel.from_pretrained("bert-base-uncased")
@@ -255,7 +256,7 @@ def build_model():
     avg_pool = tf.keras.layers.GlobalAveragePooling1D()(sequence_output)
     max_pool = tf.keras.layers.GlobalMaxPooling1D()(sequence_output)
     concat = tf.keras.layers.concatenate([avg_pool, max_pool])
-    dropout = tf.keras.layers.Dropout(0.1)(concat)
+    dropout = tf.keras.layers.Dropout(0.3)(concat)
     output = tf.keras.layers.Dense(3, activation="softmax")(dropout)
 
     model = tf.keras.models.Model(
@@ -304,9 +305,7 @@ valid_data = BertSemanticDataGenerator(
 """
 history = model.fit_generator(
     train_data,
-    steps_per_epoch=len(train_data) // batch_size,
     validation_data=valid_data,
-    validation_steps=len(valid_data) // batch_size,
     epochs=epochs,
 )
 """
@@ -319,7 +318,7 @@ test_data = BertSemanticDataGenerator(
     batch_size=batch_size,
     shuffle=False,
 )
-model.evaluate_generator(test_data, steps=len(test_data) // batch_size, verbose=1)
+model.evaluate_generator(test_data, verbose=1)
 
 """
 ## Inference on custom sentences
