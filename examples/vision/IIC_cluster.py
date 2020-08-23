@@ -1,9 +1,17 @@
 """
+<<<<<<< HEAD
 Title: Invariant Information Clusering(IIC)
 Author: [Anish Josh](https://twitter.com/anishhacko)
 Date created: 2020/08/12
 Last modified: 2020/08/19
 Description: Implementation of unsupervised learning algorithm using IIC.
+=======
+Title: Invariant Information Clustering(IIC)
+Author: [Anish Josh](https://twitter.com/anishhacko)
+Date created: 2020/08/05
+Last modified: 2020/06/18
+Description: Implementation of unsupervised learning example using IIC algorithm.
+>>>>>>> 8b685b388d2b9d1c6cccaf83b4809bf3e829af95
 """
 """
 
@@ -48,7 +56,11 @@ batch_size = 8
 learning_rate = 5e-6
 epochs = 200
 dataset = "toy_data"
+<<<<<<< HEAD
 logdir = "./logs"  # Tensorboard directory
+=======
+logdir = "./logs" #tensorboard directory path
+>>>>>>> 8b685b388d2b9d1c6cccaf83b4809bf3e829af95
 
 """
 ## Downloading Dataset
@@ -89,12 +101,20 @@ scaled).
 #### 3 - Defining Clustering Network.
 """
 
+<<<<<<< HEAD
 # Source augument has only normalizing effect
+=======
+# Source augument has only normalizing effect.
+>>>>>>> 8b685b388d2b9d1c6cccaf83b4809bf3e829af95
 source_augument = keras.Sequential(
     [keras.layers.experimental.preprocessing.Rescaling(1.0 / 255),]
 )
 
+<<<<<<< HEAD
 # Target augment can be augmented with respect to the dataset pattern
+=======
+# Target augment can contain multiple augumentations with respect to the dataset.
+>>>>>>> 8b685b388d2b9d1c6cccaf83b4809bf3e829af95
 target_augment = keras.Sequential(
     [
         keras.layers.experimental.preprocessing.RandomFlip("horizontal"),
@@ -128,7 +148,11 @@ def resnet_backbone(subheads, classes, auxilary_branch=True, auxilary_classes=10
         return fmodel, auxilary_branch
 
 
+<<<<<<< HEAD
 # Clustering network
+=======
+# Clustering Network
+>>>>>>> 8b685b388d2b9d1c6cccaf83b4809bf3e829af95
 class cluster_IIC(keras.models.Model):
     def __init__(self, backbone, auxilary_flag=False):
         super(cluster_IIC, self).__init__()
