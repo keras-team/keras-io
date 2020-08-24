@@ -170,11 +170,11 @@ def make_model(input_shape, num_classes):
     # while enabling the use of the class activation map method for interpretability.
     # In fact the input time series with m dimensions is averaged
     # resulting in a vector of m dimensions.
-    gap_layer = keras.layers.GlobalAveragePooling1D()(conv3)
+    gap = keras.layers.GlobalAveragePooling1D()(conv3)
 
     # The final softmax traditional classifier is used,
     # with a number of neurons equal to the number of classes.
-    output_layer = keras.layers.Dense(num_classes, activation="softmax")(gap_layer)
+    output_layer = keras.layers.Dense(num_classes, activation="softmax")(gap)
 
     # We link the input and output layer by constructing the keras model.
     return keras.models.Model(inputs=input_layer, outputs=output_layer)
