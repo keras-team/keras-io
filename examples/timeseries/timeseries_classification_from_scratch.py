@@ -151,15 +151,15 @@ def make_model(input_shape):
     conv1 = keras.layers.BatchNormalization()(conv1)
     # Finally we add the relu activation function to inject some non-linearity
     # to the convolutions' output.
-    conv1 = keras.layers.Activation(activation="relu")(conv1)
+    conv1 = keras.layers.ReLU()(conv1)
 
     conv2 = keras.layers.Conv1D(filters=256, kernel_size=5, padding="same")(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
-    conv2 = keras.layers.Activation("relu")(conv2)
+    conv2 = keras.layers.ReLU()(conv2)
 
     conv3 = keras.layers.Conv1D(128, kernel_size=3, padding="same")(conv2)
     conv3 = keras.layers.BatchNormalization()(conv3)
-    conv3 = keras.layers.Activation("relu")(conv3)
+    conv3 = keras.layers.ReLU()(conv3)
 
     # A global average pooling is used here.
     # We average the time series over the whole time dimension.
