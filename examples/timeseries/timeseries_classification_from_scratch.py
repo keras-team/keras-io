@@ -202,7 +202,7 @@ model.compile(
     loss=keras.losses.sparse_categorical_crossentropy,
     metrics=["accuracy"],
 )
-hist = model.fit(
+history = model.fit(
     x_train,
     y_train,
     batch_size=batch_size,
@@ -228,8 +228,8 @@ print("Test accuracy", accuracy_score(y_pred, y_test))
 
 metric = "accuracy"
 plt.figure()
-plt.plot(hist.history[metric])
-plt.plot(hist.history["val_" + metric])
+plt.plot(history.history[metric])
+plt.plot(history.history["val_" + metric])
 plt.title("model " + metric)
 plt.ylabel(metric, fontsize="large")
 plt.xlabel("epoch", fontsize="large")
