@@ -1,27 +1,29 @@
 """
 Title: Density estimation using Real NVP
 Authors: [Mandolini Giorgio Maria](https://www.linkedin.com/in/giorgio-maria-mandolini-a2a1b71b4/), [Sanna Daniele](https://www.linkedin.com/in/daniele-sanna-338629bb/), [Zannini Quirini Giorgio](https://www.linkedin.com/in/giorgio-zannini-quirini-16ab181a0/)
-Date created: 2020/08/10
-Last modified: 2020/08/10
-Description: Estimating the density distribution of multi-cluster datasets.
+Date created: 2020/8/10
+Last modified: 2020/8/10
+Description: Estimating the density distribution of double moon dataset.
 """
 
 """
 ## Introduction
-The aim of this work is to map a simple distribution - which is easy to sample
-and whose density is simple to estimate - to a more complex one learned from the data.
-This kind of generative model is also known as "normalizing flow".
-In order to do this, the model is trained via the maximum
-likelihood principle, using the "change of variable formula".
-We will use an affine coupling function. We create it such that its inverse, as well as
-the determinant of the Jacobian, are easy to obtain (more details in the referenced paper).
+The aim of this work consists in mapping a simple distribution - which is easy to sample
+and whose density is simple to estimate - to a more complex one learned from the data;
+these kind of generative models is also knowm as "normalizing flows".
 
-**Requirements:**
+In order to obtain the aforementioned result the model is trained by means of the maximum
+likelihood principle, resorting to the "change of variable formula".
 
-* Tensorflow 2.3
+An affine coupling layer function is built. It is created such that its inverse and the determinant
+of the jacobian is easy to obtain (more details in the referenced paper).
+
+requirements:
+
+* Tensorflow 2.3.0
 * Tensorflow probability 0.11.0
 
-**Reference:**
+References:
 [Density estimation using Real NVP](https://arxiv.org/pdf/1605.08803.pdf)
 """
 
@@ -33,6 +35,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
+from sklearn.datasets import make_moons
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow_probability as tfp
@@ -41,9 +44,7 @@ import tensorflow_probability as tfp
 ## Load the data
 """
 
-url = "http://cs.joensuu.fi/sipu/datasets/s1.txt"
-path = tf.keras.utils.get_file("dataset", url)
-data = np.loadtxt(path)
+data = make_moons(3000, noise=0.05)[0].astype("float32")
 norm = layers.experimental.preprocessing.Normalization()
 norm.adapt(data)
 normalized_data = norm(data)
@@ -102,24 +103,30 @@ Coupling(2).summary()
 
 
 class RealNVP(keras.Model):
-    def __init__(self, layers_list, masks, distribution, loss_tracker):
+    def __init__(self, num_coupling_layers):
         super(RealNVP, self).__init__()
 
-        self.coupling_layers_num = len(masks)
+        self.num_coupling_layers = num_coupling_layers
 
         # Distribution of the latent space.
-        self.distribution = distribution
+        self.distribution = tfp.distributions.MultivariateNormalDiag(
+            loc=[0.0, 0.0], scale_diag=[1.0, 1.0]
+        )
 
-        self.masks = masks
-        self.layers_list = layers_list
-        self.loss_tracker = loss_tracker
+        self.masks = np.array(
+            [[0, 1], [1, 0]] * (num_coupling_layers // 2), dtype="float32"
+        )
+
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+
+        self.layers_list = [Coupling(2) for i in range(num_coupling_layers)]
 
     def call(self, x, training=True):
         log_det_inv = 0
         direction = 1
         if training:
             direction = -1
-        for i in range(self.coupling_layers_num)[::direction]:
+        for i in range(self.num_coupling_layers)[::direction]:
             x_masked = x * self.masks[i]
             reversed_mask = 1 - self.masks[i]
             s, t = self.layers_list[i](x_masked)
@@ -136,13 +143,15 @@ class RealNVP(keras.Model):
         return x, log_det_inv
 
     # Log likelihood of the normal distribution plus the log determinant of the jacobian.
+
     def log_loss(self, x):
-        y, logdet = self(x)
+        y, logdet = self.call(x)
         log_likelihood = self.distribution.log_prob(y) + logdet
         return -tf.reduce_mean(log_likelihood)
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
+
             loss = self.log_loss(data)
 
         g = tape.gradient(loss, self.trainable_variables)
@@ -151,35 +160,23 @@ class RealNVP(keras.Model):
 
         return {"loss": self.loss_tracker.result()}
 
+    def test_step(self, data):
+        loss = self.log_loss(data)
+        self.loss_tracker.update_state(loss)
 
-"""
-## Initialization
-"""
+        return {"loss": self.loss_tracker.result()}
 
-# Initializing the masks, the layers and the prior distribution for the RealNVP.
-coupling_layers_num = 6
-
-masks = np.array([[0, 1], [1, 0]] * (coupling_layers_num // 2), dtype="float32")
-
-layers_list = [Coupling(2) for i in range(coupling_layers_num)]
-
-distribution = tfp.distributions.MultivariateNormalDiag(
-    loc=[0.0, 0.0], scale_diag=[1.0, 1.0]
-)
 
 """
 ## Model training
 """
-loss_tracker = keras.metrics.Mean(name="loss")
 
-optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+model = RealNVP(num_coupling_layers=6)
 
-model = RealNVP(layers_list, masks, distribution, loss_tracker)
-
-model.compile(optimizer=optimizer)
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001))
 
 history = model.fit(
-    normalized_data, batch_size=len(normalized_data), epochs=2000, verbose=2
+    normalized_data, batch_size=256, epochs=300, verbose=2, validation_split=0.2
 )
 
 """
@@ -196,7 +193,7 @@ plt.xlabel("epoch")
 z, _ = model(normalized_data)
 
 # From latent space to data.
-samples = distribution.sample(3000)
+samples = model.distribution.sample(3000)
 x, _ = model.predict(samples)
 
 f, axes = plt.subplots(2, 2)
