@@ -198,8 +198,8 @@ callbacks = [
     ),
 ]
 model.compile(
-    optimizer=keras.optimizers.Adam(),
-    loss=keras.losses.sparse_categorical_crossentropy,
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
     metrics=["accuracy"],
 )
 history = model.fit(
