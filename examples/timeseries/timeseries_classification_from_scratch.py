@@ -110,7 +110,7 @@ Finally, in order to use `sparse_categorical_crossentropy`, we will have to coun
 the number of classes beforehand.
 """
 
-nb_classes = len(np.unique(y_train))
+num_classes = len(np.unique(y_train))
 
 """
 Now we shuffle the training set because we will be using the `validation_split` option
@@ -139,7 +139,7 @@ The implementation is based on the TF2.0 version provided
 """
 
 
-def make_model(input_shape, num_classes):
+def make_model(input_shape):
     input_layer = keras.layers.Input(input_shape)
 
     # This is the first 1D convolutional block.
@@ -178,7 +178,7 @@ def make_model(input_shape, num_classes):
     return keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 
-model = make_model(input_shape=x_train.shape[1:], num_classes=nb_classes)
+model = make_model(input_shape=x_train.shape[1:])
 keras.utils.plot_model(model, show_shapes=True)
 
 """
