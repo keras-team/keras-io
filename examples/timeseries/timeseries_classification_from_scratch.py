@@ -162,7 +162,7 @@ def make_model(input_shape, num_classes):
     conv3 = keras.layers.BatchNormalization()(conv3)
     conv3 = keras.layers.Activation("relu")(conv3)
 
-    # A global average pooling layer is used here.
+    # A global average pooling is used here.
     # We average the time series over the whole time dimension.
     # This would reduce drastically the number of parameters,
     # while enabling the use of the class activation map method for interpretability.
@@ -209,7 +209,7 @@ hist = model.fit(
     epochs=epochs,
     callbacks=callbacks,
     validation_split=0.2,
-    verbose=False,
+    verbose=1,
 )
 
 """
