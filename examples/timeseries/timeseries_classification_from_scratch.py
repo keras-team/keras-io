@@ -198,9 +198,7 @@ callbacks = [
     ),
 ]
 model.compile(
-    optimizer="adam",
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 history = model.fit(
     x_train,
