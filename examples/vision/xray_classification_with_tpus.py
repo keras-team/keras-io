@@ -1,7 +1,7 @@
 """
 Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
-Date created: 2020/07/28
+Date created: 220/07/28
 Last modified: 2020/08/24
 Description: Medical image classification on TPU.
 """
@@ -92,6 +92,7 @@ As we only have two labels, we will encode the label so that `1` or `True` indic
 pneumonia and `0` or `False` indicates normal.
 """
 
+
 def get_label(file_path):
     # convert the path to a list of path components
     parts = tf.strings.split(file_path, "/")
@@ -111,6 +112,7 @@ def process_path(image, path):
     # load the raw data from the file as a string
     img = decode_img(image)
     return img, label
+
 
 ds = ds.map(process_path, num_parallel_calls=AUTOTUNE)
 
@@ -155,6 +157,7 @@ Please note that large image datasets should not be cached in memory. We do it h
 because the dataset is not very large and we want to train on TPU.
 """
 
+
 def prepare_for_training(ds, cache=True):
     # This is a small dataset, only load it once, and keep it in memory.
     # use `.cache(filename)` to cache preprocessing work for datasets that don't
@@ -173,6 +176,7 @@ def prepare_for_training(ds, cache=True):
 
     return ds
 
+
 """
 Call the next batch iteration of the training data.
 """
@@ -186,6 +190,7 @@ image_batch, label_batch = next(iter(train_ds))
 Define the method to show the images in the batch.
 """
 
+
 def show_batch(image_batch, label_batch):
     plt.figure(figsize=(10, 10))
     for n in range(25):
@@ -196,6 +201,7 @@ def show_batch(image_batch, label_batch):
         else:
             plt.title("NORMAL")
         plt.axis("off")
+
 
 """
 As the method takes in NumPy arrays as its parameters, call the numpy function on the
@@ -236,6 +242,7 @@ def dense_block(units, dropout_rate, inputs):
 
     return outputs
 
+
 """
 The following method will define the function to build our model for us.
 
@@ -247,6 +254,7 @@ reduce the likelikhood of the model overfitting. We want to end the model with a
 layer with one node, as this will be the binary output that determines if an X-ray shows
 presence of pneumonia.
 """
+
 
 def build_model():
     inputs = keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
@@ -273,6 +281,7 @@ def build_model():
 
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
+
 
 """
 ## Correct for data imbalance
