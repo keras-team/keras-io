@@ -1,8 +1,8 @@
 """
 Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
-Date created: 2020/07/28
-Last modified: 2020/08/05
+Date created: 220/07/28
+Last modified: 2020/08/24
 Description: Medical image classification on TPU.
 """
 """
@@ -37,39 +37,44 @@ To run on TPU, this example must be on Colab with the TPU runtime selected.
 """
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-GCS_PATH = "gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307"
 BATCH_SIZE = 25 * strategy.num_replicas_in_sync
 IMAGE_SIZE = [180, 180]
+CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
 
 """
 ## Load the data
 
 The Chest X-ray data we are using from
-[*Cell*](https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia) divides the data
-into training, validation, and test files. There are only 16 files in the validation folder,
-and we would prefer to have a less extreme division between the training and the validation set.
-We will append the validation files and create a new split that resembles the standard
-80:20 division instead.
+[*Cell*](https://www.cell.com/cell/fulltext/S0092-8674(18)30154-5) divides the data into
+training and test files. Let's first load in the training TFRecords.
+
+Note: The TFRecord contains a DS_Store file that is not part of the X-ray dataset. Let's
+remove that file while we're loading in the data.
 """
 
-filenames = tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*/*"))
-filenames.extend(tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/val/*/*")))
+images = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/train/images.tfrec"
+)
+train_images = images.take(1349).concatenate(images.skip(1350))
+paths = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/train/paths.tfrec"
+)
+train_paths = paths.take(1349).concatenate(paths.skip(1350))
 
-random.shuffle(filenames)
-split_ind = int(0.8 * len(filenames))
-
-train_filenames, val_filenames = filenames[:split_ind], filenames[split_ind:]
+ds = tf.data.Dataset.zip((train_images, train_paths))
 
 """
 Let's count how many healthy/normal chest X-rays we have and how many
 pneumonia chest X-rays we have:
 """
 
-COUNT_NORMAL = len([filename for filename in train_filenames if "NORMAL" in filename])
+COUNT_NORMAL = len(
+    [filename for filename in paths if "NORMAL" in filename.numpy().decode("utf-8")]
+)
 print("Normal images count in training set: " + str(COUNT_NORMAL))
 
 COUNT_PNEUMONIA = len(
-    [filename for filename in train_filenames if "PNEUMONIA" in filename]
+    [filename for filename in paths if "PNEUMONIA" in filename.numpy().decode("utf-8")]
 )
 print("Pneumonia images count in training set: " + str(COUNT_PNEUMONIA))
 
@@ -79,45 +84,17 @@ shows that we have an imbalance in our data. We will correct for this imbalance 
 in our notebook.
 """
 
-train_list_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
-val_list_ds = tf.data.Dataset.from_tensor_slices(val_filenames)
-
-for f in train_list_ds.take(5):
-    print(f.numpy())
-
 """
-Run the following cell to see how many images we have in our training dataset and how
-many images we have in our validation set. Verify that the ratio of images is 80:20.
-"""
-
-TRAIN_IMG_COUNT = tf.data.experimental.cardinality(train_list_ds).numpy()
-print("Training images count: " + str(TRAIN_IMG_COUNT))
-
-VAL_IMG_COUNT = tf.data.experimental.cardinality(val_list_ds).numpy()
-print("Validating images count: " + str(VAL_IMG_COUNT))
-
-"""
-As expected, we have two labels for our images.
-"""
-
-CLASS_NAMES = [
-    str(tf.strings.split(item, os.path.sep)[-1].numpy())[2:-1]
-    for item in tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*"))
-]
-print("Class names: %s" % (CLASS_NAMES,))
-
-"""
-Currently, our dataset is just a list of filenames. We want to map each filename to the
-corresponding (image, label) pair. The following methods will help us do that.
+We want to map each filename to the corresponding (image, label) pair. The following
+methods will help us do that.
 
 As we only have two labels, we will encode the label so that `1` or `True` indicates
 pneumonia and `0` or `False` indicates normal.
 """
 
-
 def get_label(file_path):
     # convert the path to a list of path components
-    parts = tf.strings.split(file_path, os.path.sep)
+    parts = tf.strings.split(file_path, "/")
     # The second to last is the class-directory
     return parts[-2] == "PNEUMONIA"
 
@@ -129,17 +106,21 @@ def decode_img(img):
     return tf.image.resize(img, IMAGE_SIZE)
 
 
-def process_path(file_path):
-    label = get_label(file_path)
+def process_path(image, path):
+    label = get_label(path)
     # load the raw data from the file as a string
-    img = tf.io.read_file(file_path)
-    img = decode_img(img)
+    img = decode_img(image)
     return img, label
 
+ds = ds.map(process_path, num_parallel_calls=AUTOTUNE)
 
-train_ds = train_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+"""
+Let's split the data into a training and validation datasets.
+"""
 
-val_ds = val_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+ds = ds.shuffle(10000)
+train_ds = ds.take(4200)
+val_ds = ds.skip(4200)
 
 """
 Let's visualize the shape of an (image, label) pair.
@@ -153,12 +134,16 @@ for image, label in train_ds.take(1):
 Load and format the test data as well.
 """
 
-test_list_ds = tf.data.Dataset.list_files(str(GCS_PATH + "/chest_xray/test/*/*"))
-TEST_IMG_COUNT = test_list_ds.cardinality().numpy()
-test_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-test_ds = test_ds.batch(BATCH_SIZE)
+test_images = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/test/images.tfrec"
+)
+test_paths = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/test/paths.tfrec"
+)
+test_ds = tf.data.Dataset.zip((test_images, test_paths))
 
-print("Testing images count: " + str(TEST_IMG_COUNT))
+test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+test_ds = test_ds.batch(1)
 
 """
 ## Visualize the dataset
@@ -170,8 +155,7 @@ Please note that large image datasets should not be cached in memory. We do it h
 because the dataset is not very large and we want to train on TPU.
 """
 
-
-def prepare_for_training(ds, cache=True, shuffle_buffer_size=1000):
+def prepare_for_training(ds, cache=True):
     # This is a small dataset, only load it once, and keep it in memory.
     # use `.cache(filename)` to cache preprocessing work for datasets that don't
     # fit in memory.
@@ -181,7 +165,6 @@ def prepare_for_training(ds, cache=True, shuffle_buffer_size=1000):
         else:
             ds = ds.cache()
 
-    ds = ds.shuffle(buffer_size=shuffle_buffer_size)
     ds = ds.batch(BATCH_SIZE)
 
     # `prefetch` lets the dataset fetch batches in the background while the model
@@ -189,7 +172,6 @@ def prepare_for_training(ds, cache=True, shuffle_buffer_size=1000):
     ds = ds.prefetch(buffer_size=AUTOTUNE)
 
     return ds
-
 
 """
 Call the next batch iteration of the training data.
@@ -204,7 +186,6 @@ image_batch, label_batch = next(iter(train_ds))
 Define the method to show the images in the batch.
 """
 
-
 def show_batch(image_batch, label_batch):
     plt.figure(figsize=(10, 10))
     for n in range(25):
@@ -215,7 +196,6 @@ def show_batch(image_batch, label_batch):
         else:
             plt.title("NORMAL")
         plt.axis("off")
-
 
 """
 As the method takes in NumPy arrays as its parameters, call the numpy function on the
@@ -256,7 +236,6 @@ def dense_block(units, dropout_rate, inputs):
 
     return outputs
 
-
 """
 The following method will define the function to build our model for us.
 
@@ -268,7 +247,6 @@ reduce the likelikhood of the model overfitting. We want to end the model with a
 layer with one node, as this will be the binary output that determines if an X-ray shows
 presence of pneumonia.
 """
-
 
 def build_model():
     inputs = keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
@@ -296,7 +274,6 @@ def build_model():
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
 
-
 """
 ## Correct for data imbalance
 
@@ -307,6 +284,7 @@ as pneumonia than normal. We will correct for that by using class weighting:
 initial_bias = np.log([COUNT_PNEUMONIA / COUNT_NORMAL])
 print("Initial bias: {:.5f}".format(initial_bias[0]))
 
+TRAIN_IMG_COUNT = COUNT_NORMAL + COUNT_PNEUMONIA
 weight_for_0 = (1 / COUNT_NORMAL) * (TRAIN_IMG_COUNT) / 2.0
 weight_for_1 = (1 / COUNT_PNEUMONIA) * (TRAIN_IMG_COUNT) / 2.0
 
@@ -434,21 +412,12 @@ correctly identified but some normal images are falsely identified. We should ai
 increase our precision.
 """
 
-img = tf.io.read_file(
-    str(GCS_PATH + "/chest_xray/test/PNEUMONIA/person100_bacteria_475.jpeg")
-)
-img = decode_img(img)
-plt.imshow(img / 255)
+for image, label in test_ds.take(1):
+    plt.imshow(image[0] / 255.0)
+    plt.title(CLASS_NAMES[label[0].numpy()])
 
-img_array = tf.keras.preprocessing.image.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0)  # Create batch axis
-
-prediction = model.predict(img_array)[0]
+prediction = model.predict(test_ds.take(1))[0]
 scores = [1 - prediction, prediction]
 
 for score, name in zip(scores, CLASS_NAMES):
     print("This image is %.2f percent %s" % ((100 * score), name))
-
-"""
-Our model could accurately classify this image.
-"""
