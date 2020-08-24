@@ -399,7 +399,9 @@ tr {
 }
 th {
   border: solid 1px gray;
+  padding: 0.3rem;
 }
 td {
   border: solid 1px gray;
+  padding: 0.3rem;
 }

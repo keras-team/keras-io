@@ -19,9 +19,9 @@ handle feature normalization or feature value indexing on their own.
 """
 
 """
-## Available preprocesssing layers
+## Available preprocessing layers
 
-### Core preprocesssing layers
+### Core preprocessing layers
 
 - `TextVectorization` layer: turns raw strings into an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
@@ -39,7 +39,7 @@ trick".
 features.
 - `StringLookup` layer: turns string categorical values into integers indices.
 - `IntegerLookup` layer: turns integer categorical values into integers indices.
-- `CategoryCrossing` layer: combines categorical features into co-occurence features.
+- `CategoryCrossing` layer: combines categorical features into co-occurrence features.
 E.g. if you have feature values "a" and "b", it can provide with the combination feature
 "a and b are present at the same time".
 
