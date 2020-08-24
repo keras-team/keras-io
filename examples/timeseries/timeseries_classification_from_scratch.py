@@ -154,12 +154,10 @@ def make_model(input_shape, num_classes):
     # to the convolutions' output.
     conv1 = keras.layers.Activation(activation="relu")(conv1)
 
-    # A second convolutional block is applied.
     conv2 = keras.layers.Conv1D(filters=256, kernel_size=5, padding="same")(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
     conv2 = keras.layers.Activation("relu")(conv2)
 
-    # A third convolutional block is applied.
     conv3 = keras.layers.Conv1D(128, kernel_size=3, padding="same")(conv2)
     conv3 = keras.layers.BatchNormalization()(conv3)
     conv3 = keras.layers.Activation("relu")(conv3)
