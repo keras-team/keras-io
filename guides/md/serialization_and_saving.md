@@ -6,7 +6,7 @@
 **Description:** Complete guide to saving & serializing models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/serialization_and_saving.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesserialization_and_saving.py)
 
 
 
@@ -15,14 +15,14 @@
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifyies what layers the model
+- An architecture, or configuration, which specifies what layers the model
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
 - A set of losses and metrics (defined by compiling the model or calling
 `add_loss()` or `add_metric()`).
 
-The Keras API makes it possible to save of these pieces to disk at once,
+The Keras API makes it possible to save all of these pieces to disk at once,
 or to only selectively save some of them:
 
 - Saving everything into a single archive in the TensorFlow SavedModel format
@@ -130,10 +130,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 664us/step - loss: 2.3807
-4/4 [==============================] - 0s 591us/step - loss: 2.1872
+4/4 [==============================] - 0s 769us/step - loss: 1.5762
+4/4 [==============================] - 0s 757us/step - loss: 1.4288
 
-<tensorflow.python.keras.callbacks.History at 0x14829a950>
+<tensorflow.python.keras.callbacks.History at 0x1481567d0>
 
 ```
 </div>
@@ -149,7 +149,7 @@ containing the following:
 
 <div class="k-default-codeblock">
 ```
-assets	saved_model.pb	variables
+[34massets[m[m         saved_model.pb [34mvariables[m[m
 
 ```
 </div>
@@ -216,10 +216,10 @@ print("Loaded model:", loaded)
 <div class="k-default-codeblock">
 ```
 WARNING: Logging before flag parsing goes to stderr.
-W0708 14:12:24.803453 4591322560 load.py:134] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+W0824 11:47:23.519001 4547915200 load.py:134] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
 
-Original model: <__main__.CustomModel object at 0x14771b390>
-Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x1483c3a10>
+Original model: <__main__.CustomModel object at 0x1481ff610>
+Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x1482ab110>
 
 ```
 </div>
@@ -261,10 +261,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 708us/step - loss: 4.1519
-4/4 [==============================] - 0s 594us/step - loss: 3.8899
+4/4 [==============================] - 0s 761us/step - loss: 0.2099
+4/4 [==============================] - 0s 700us/step - loss: 0.1912
 
-<tensorflow.python.keras.callbacks.History at 0x14857d950>
+<tensorflow.python.keras.callbacks.History at 0x148424d10>
 
 ```
 </div>
@@ -464,7 +464,7 @@ generates a serialized form of the custom layer:
 
 Keras keeps a master list of all built-in layer, model, optimizer,
 and metric classes, which is used to find the correct class to call `from_config`.
-If the  class can't be found, than an error is raised (`Value Error: Unknown layer`).
+If the  class can't be found, then an error is raised (`Value Error: Unknown layer`).
 There are a few ways to register custom classes to this list:
 
 1. Setting `custom_objects` argument in the loading function. (see the example
@@ -663,7 +663,7 @@ then the HDF5 format is used. Other suffixes will result in a TensorFlow
 checkpoint unless `save_format` is set.
 
 There is also an option of retrieving weights as in-memory numpy arrays.
-Each API has their pros and cons which are detailed below .
+Each API has its pros and cons which are detailed below.
 
 ### TF Checkpoint format
 
@@ -694,7 +694,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148694c90>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x1484ed210>
 
 ```
 </div>
@@ -854,7 +854,7 @@ Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148787950>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14799c790>
 
 ```
 </div>
@@ -905,11 +905,11 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-W0708 14:12:25.969697 4591322560 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+W0824 11:47:24.883770 4547915200 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
 Instructions for updating:
 Please use `layer.add_weight` method instead.
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148775710>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148638750>
 
 ```
 </div>

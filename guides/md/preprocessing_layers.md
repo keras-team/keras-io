@@ -6,7 +6,7 @@
 **Description:** Overview of how to leverage preprocessing layers to create end-to-end models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/preprocessing_layers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/preprocessing_layers.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/preprocessing_layers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidespreprocessing_layers.py)
 
 
 
@@ -23,9 +23,9 @@ end-to-end: models that accept raw images or raw structured data as input; model
 handle feature normalization or feature value indexing on their own.
 
 ---
-## Available preprocesssing layers
+## Available preprocessing layers
 
-### Core preprocesssing layers
+### Core preprocessing layers
 
 - `TextVectorization` layer: turns raw strings into an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
@@ -43,7 +43,7 @@ trick".
 features.
 - `StringLookup` layer: turns string categorical values into integers indices.
 - `IntegerLookup` layer: turns integer categorical values into integers indices.
-- `CategoryCrossing` layer: combines categorical features into co-occurence features.
+- `CategoryCrossing` layer: combines categorical features into co-occurrence features.
 E.g. if you have feature values "a" and "b", it can provide with the combination feature
 "a and b are present at the same time".
 
@@ -303,9 +303,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 1s 626us/step - loss: 2.1207
+1563/1563 [==============================] - 1s 753us/step - loss: 2.1225
 
-<tensorflow.python.keras.callbacks.History at 0x1622bc410>
+<tensorflow.python.keras.callbacks.History at 0x14fc2c0d0>
 
 ```
 </div>
