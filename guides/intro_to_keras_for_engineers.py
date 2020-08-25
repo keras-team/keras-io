@@ -319,7 +319,7 @@ specify it as `None`. For instance, an input for 200x200 RGB image would have sh
 inputs = keras.Input(shape=(None, None, 3))
 
 """
-After defining your input(s), you chain layer transformations on top of your inputs,
+After defining your input(s), you can chain layer transformations on top of your inputs,
  until your final output:
 """
 
