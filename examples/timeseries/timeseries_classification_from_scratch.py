@@ -79,20 +79,12 @@ plt.close()
 
 Our time series are already in a single length (176). However, their values are
 usually in various ranges. This is not ideal for a neural network;
-in general we should seek to make the input values normalized. Here, we will
-standardize values to have a mean equal to zero and a standard deviation equal to one.
-We perform this step for each train and test set.
-"""
+in general we should seek to make the input values normalized.
+For this specific dataset, the data is already z-normalized: each time series sample
+have a mean equal to zero and a standard deviation equal to one. This type of
+normalization is very common for time series classification problems, see
+[Bagnall et al. (2016)](https://link.springer.com/article/10.1007/s10618-016-0483-9).
 
-std_ = x_train.std(axis=1, keepdims=True)
-std_[std_ == 0] = 1.0
-x_train = (x_train - x_train.mean(axis=1, keepdims=True)) / std_
-
-std_ = x_test.std(axis=1, keepdims=True)
-std_[std_ == 0] = 1.0
-x_test = (x_test - x_test.mean(axis=1, keepdims=True)) / std_
-
-"""
 Note that the time series data used here are univariate, meaning we only have one channel
 per time series example.
 We will therefore transform the time series into a multivariate one with one channel
