@@ -76,8 +76,8 @@ data_path = "fra.txt"
 # Vectorize the data.
 input_texts = []
 target_texts = []
-input_characters = set()
-target_characters = set()
+input_characters = []
+target_characters = []
 with open(data_path, "r", encoding="utf-8") as f:
     lines = f.read().split("\n")
 for line in lines[: min(num_samples, len(lines) - 1)]:
@@ -89,13 +89,13 @@ for line in lines[: min(num_samples, len(lines) - 1)]:
     target_texts.append(target_text)
     for char in input_text:
         if char not in input_characters:
-            input_characters.add(char)
+            input_characters.append(char)
     for char in target_text:
         if char not in target_characters:
-            target_characters.add(char)
+            target_characters.append(char)
 
-input_characters = sorted(list(input_characters))
-target_characters = sorted(list(target_characters))
+input_characters = sorted(input_characters)
+target_characters = sorted(target_characters)
 num_encoder_tokens = len(input_characters)
 num_decoder_tokens = len(target_characters)
 max_encoder_seq_length = max([len(txt) for txt in input_texts])
