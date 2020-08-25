@@ -52,14 +52,12 @@ Note: The TFRecord contains a DS_Store file that is not part of the X-ray datase
 remove that file while we're loading in the data.
 """
 
-images = tf.data.TFRecordDataset(
+train_images = tf.data.TFRecordDataset(
     "gs://download.tensorflow.org/data/ChestXRay2017/train/images.tfrec"
 )
-train_images = images.take(1349).concatenate(images.skip(1350))
-paths = tf.data.TFRecordDataset(
+train_paths = tf.data.TFRecordDataset(
     "gs://download.tensorflow.org/data/ChestXRay2017/train/paths.tfrec"
 )
-train_paths = paths.take(1349).concatenate(paths.skip(1350))
 
 ds = tf.data.Dataset.zip((train_images, train_paths))
 
@@ -69,12 +67,12 @@ pneumonia chest X-rays we have:
 """
 
 COUNT_NORMAL = len(
-    [filename for filename in paths if "NORMAL" in filename.numpy().decode("utf-8")]
+    [filename for filename in train_paths if "NORMAL" in filename.numpy().decode("utf-8")]
 )
 print("Normal images count in training set: " + str(COUNT_NORMAL))
 
 COUNT_PNEUMONIA = len(
-    [filename for filename in paths if "PNEUMONIA" in filename.numpy().decode("utf-8")]
+    [filename for filename in train_paths if "PNEUMONIA" in filename.numpy().decode("utf-8")]
 )
 print("Pneumonia images count in training set: " + str(COUNT_PNEUMONIA))
 
