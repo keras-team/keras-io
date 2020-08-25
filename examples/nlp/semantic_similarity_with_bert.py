@@ -8,14 +8,15 @@ Description: Natural Language Inference by Fine-tuning BERT model on SNLI Corpus
 """
 ## Introduction
 
-Semantic Similarity or Natural Languauge Inference is the task of determining how two
-sentences are similar to each other in terms of their meaning.
+Semantic Similarity is the task of determining how similar
+two sentences are, in terms of what they mean.
 This example demonstrates the use of SNLI (Standford Natural Language Inference) Corpus
-to perform semantic similarity with Transformers.
-We will fine-tune BERT model by providing two sentences as inputs and it outputs the
-probability of the similarity between sentences.
+to predict sentence semantic similarity with Transformers.
+We will fine-tune a BERT model that takes two sentences as inputs
+and that outputs a similarity score for these two sentences.
 
 ### References
+
 * [BERT](https://arxiv.org/pdf/1810.04805.pdf)
 * [SNLI](https://nlp.stanford.edu/projects/snli/)
 """
@@ -23,7 +24,7 @@ probability of the similarity between sentences.
 """
 ## Setup
 
-# Install huggingface transformers with !pip install transformers==2.11.0.
+Note: install HuggingFace `transformers` via `!pip install transformers==2.11.0`.
 """
 import numpy as np
 import pandas as pd
@@ -49,7 +50,7 @@ labels = ["contradiction", "entailment", "neutral"]
 curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
 tar -xvzf data.tar.gz
 """
-# We have more than 550k samples, we will use 100k for this example.
+# There are more than 550k samples in total; we will use 100k for this example.
 train_df = pd.read_csv("SNLI_Corpus/snli_1.0_train.csv", nrows=100000)
 valid_df = pd.read_csv("SNLI_Corpus/snli_1.0_dev.csv")
 test_df = pd.read_csv("SNLI_Corpus/snli_1.0_test.csv")
@@ -62,21 +63,20 @@ print(f"Total test samples: {valid_df.shape[0]}")
 """
 Dataset Overview:
 
-sentence1: The premise caption that was supplied to the author of the pair.
+- sentence1: The premise caption that was supplied to the author of the pair.
+- sentence2: The hypothesis caption that was written by the author of the pair.
+- similarity: This is the label chosen by the majority of annotators.
+Where no majority exists, the label "-" is used (we will skip such samples here).
 
-sentence2: The hypothesis caption that was written by the author of the pair.
+Here are the "similarity" label values in our dataset:
 
-similarity: This is the label chosen by the majority of annotators.
-            Where no majority exists, this is '-' which we will not use in our task.
-
-Types of similarity/labels in our dataset:
-Contradiction: The sentences have no similarity or different from each other.
-Entailment:    The sentences have similar meaning.
-Neutral:       The sentences are neutral.
+- Contradiction: The sentences share no similarity.
+- Entailment: The sentences have similar meaning.
+- Neutral: The sentences are neutral.
 """
 
 """
-Lets look at one sample of data:
+Let's look at one sample from the dataset:
 """
 print(f"Sentence1: {train_df.loc[1, 'sentence1']}")
 print(f"Sentence2: {train_df.loc[1, 'sentence2']}")
@@ -86,7 +86,7 @@ print(f"Similarity: {train_df.loc[1, 'similarity']}")
 ## Preprocessing
 """
 
-# We have some nan in our train data, we will simply drop them.
+# We have some NaN entries in our train data, we will simply drop them.
 print("Number of Missing Values")
 print(train_df.isnull().sum())
 train_df.dropna(axis=0, inplace=True)
@@ -102,8 +102,10 @@ Distribution of our validation targets.
 """
 print("Validation Target Distribution")
 print(valid_df.similarity.value_counts())
+      
 """
- We have some "-" in our train and validation targets, we will not use those.
+The value "-" appears as part of our training and validation targets.
+We will skip these samples.
 """
 train_df = (
     train_df[train_df.similarity != "-"]
@@ -117,7 +119,7 @@ valid_df = (
 )
 
 """
-One hot encoding training, validation and test labels
+One-hot encode training, validation, and test labels.
 """
 train_df["label"] = train_df["similarity"].apply(
     lambda x: 0 if x == "contradiction" else 1 if x == "entailment" else 2
@@ -138,23 +140,21 @@ y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=3)
 ## Keras Custom Data Generator
 """
 
-
 class BertSemanticDataGenerator(tf.keras.utils.Sequence):
-    """
-        Generates batch data for Keras.
+    """Generates batches of data.
 
-        Args:
-            sentence1:          Array of premise input sentences.
-            sentence2:          Array of the hypothesis input sentences.
-            labels:             Array of labels.
-            batch_size:         Integer size of the batch.
-            shuffle:            boolean shuffle data or not.
-            include_targets:    boolean generate data for train/test purpose.
-        Returns:
-            encoded_features:   input_ids,
-                                attention_mask,
-                                token_type_ids,
-                                labels if include_targets is set to true.
+    Args:
+        sentence1: Array of premise input sentences.
+        sentence2: Array of the hypothesis input sentences.
+        labels: Array of labels.
+        batch_size: Integer batch size.
+        shuffle: boolean, whether to shuffle the data.
+        include_targets: boolean, whether to incude the labels.
+
+    Returns:
+        Tuples `([input_ids, attention_mask, `token_type_ids], labels)`
+        (or just `[input_ids, attention_mask, `token_type_ids]`
+         if `include_targets=False`)
     """
 
     def __init__(
@@ -272,7 +272,7 @@ def build_model():
 
 
 """
-Recommended training on GPU Runtime
+Create the model under a distribution strategy scope.
 """
 # Build model with distributed strategy.
 strategy = tf.distribute.MirroredStrategy()
@@ -305,7 +305,7 @@ valid_data = BertSemanticDataGenerator(
 """
 history = model.fit_generator(train_data, validation_data=valid_data, epochs=epochs,)
 """
-## Evaluate model on test set
+## Evaluate model on the test set
 """
 test_data = BertSemanticDataGenerator(
     test_df.sentence1.astype("str"),
@@ -341,14 +341,14 @@ def check_similarity(sentence1, sentence2):
 
 
 """
-Check results on some example sentence pairs
+Check results on some example sentence pairs.
 """
 sentence1 = "The man is sleeping"
 sentence2 = "A man inspects the uniform"
 print(check_similarity(sentence1, sentence2))
 
 """
-Check results on some example sentence pairs
+Check results on some example sentence pairs.
 """
 sentence1 = "A smiling costumed woman is holding an umbrella"
 sentence2 = "A happy woman in a fairy costume holds an umbrella"
