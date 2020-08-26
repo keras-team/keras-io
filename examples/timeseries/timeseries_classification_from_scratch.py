@@ -126,6 +126,8 @@ We build a Fully Convolutional Neural Network originally proposed in
 [this paper](https://arxiv.org/abs/1611.06455).
 The implementation is based on the TF2.0 version provided
 [here](https://github.com/hfawaz/dl-4-tsc/).
+The following hyperparameters (kernel_size, filters, the usage of BatchNorm) were found
+using the random search from [KerasTuner](https://github.com/keras-team/keras-tuner).
 
 """
 
@@ -137,7 +139,7 @@ def make_model(input_shape):
     # First a linear convolution is applied by sliding a certain number of filters
     # on the input time series to transform it into a multivariate time series,
     # whose number of dimensions is equal to the number of filters used here.
-    conv1 = keras.layers.Conv1D(filters=128, kernel_size=8, padding="same")(input_layer)
+    conv1 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(input_layer)
     # Following the convolution, we apply a batchnormalization in order to
     # help the network converge quickly while adding an implicit regularization.
     conv1 = keras.layers.BatchNormalization()(conv1)
@@ -145,11 +147,11 @@ def make_model(input_shape):
     # to the convolutions' output.
     conv1 = keras.layers.ReLU()(conv1)
 
-    conv2 = keras.layers.Conv1D(filters=256, kernel_size=5, padding="same")(conv1)
+    conv2 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
     conv2 = keras.layers.ReLU()(conv2)
 
-    conv3 = keras.layers.Conv1D(128, kernel_size=3, padding="same")(conv2)
+    conv3 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(conv2)
     conv3 = keras.layers.BatchNormalization()(conv3)
     conv3 = keras.layers.ReLU()(conv3)
 
@@ -182,7 +184,7 @@ batch_size = 128
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
-        "best_model.h5", save_best_only=True, monitor="loss"
+        "best_model.h5", save_best_only=True, monitor="val_loss"
     ),
     keras.callbacks.ReduceLROnPlateau(
         monitor="loss", factor=0.5, patience=50, min_lr=0.0001
