@@ -67,12 +67,20 @@ pneumonia chest X-rays we have:
 """
 
 COUNT_NORMAL = len(
-    [filename for filename in train_paths if "NORMAL" in filename.numpy().decode("utf-8")]
+    [
+        filename
+        for filename in train_paths
+        if "NORMAL" in filename.numpy().decode("utf-8")
+    ]
 )
 print("Normal images count in training set: " + str(COUNT_NORMAL))
 
 COUNT_PNEUMONIA = len(
-    [filename for filename in train_paths if "PNEUMONIA" in filename.numpy().decode("utf-8")]
+    [
+        filename
+        for filename in train_paths
+        if "PNEUMONIA" in filename.numpy().decode("utf-8")
+    ]
 )
 print("Pneumonia images count in training set: " + str(COUNT_PNEUMONIA))
 
