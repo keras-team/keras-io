@@ -102,7 +102,7 @@ Distribution of our validation targets.
 """
 print("Validation Target Distribution")
 print(valid_df.similarity.value_counts())
-      
+
 """
 The value "-" appears as part of our training and validation targets.
 We will skip these samples.
@@ -139,6 +139,7 @@ y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=3)
 """
 ## Keras Custom Data Generator
 """
+
 
 class BertSemanticDataGenerator(tf.keras.utils.Sequence):
     """Generates batches of data.
@@ -184,7 +185,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         return len(self.sentence1) // self.batch_size
 
     def __getitem__(self, idx):
-        # Generates batch of data.
+        # Retrieves the batch of index.
         indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
         sentence1 = self.sentence1[indexes]
         sentence2 = self.sentence2[indexes]
@@ -303,7 +304,13 @@ valid_data = BertSemanticDataGenerator(
 """
 ## Train the Model
 """
-history = model.fit_generator(train_data, validation_data=valid_data, epochs=epochs,)
+history = model.fit(
+    train_data,
+    validation_data=valid_data,
+    epochs=epochs,
+    use_multiprocessing=True,
+    workers=-1,
+)
 """
 ## Evaluate model on the test set
 """
@@ -314,7 +321,7 @@ test_data = BertSemanticDataGenerator(
     batch_size=batch_size,
     shuffle=False,
 )
-model.evaluate_generator(test_data, verbose=1)
+model.evaluate(test_data, verbose=1)
 
 """
 ## Inference on custom sentences
