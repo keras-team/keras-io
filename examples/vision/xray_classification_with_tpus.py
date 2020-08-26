@@ -1,7 +1,7 @@
 """
 Title: Pneumonia Classification on TPU
 Author: Amy MiHyun Jang
-Date created: 220/07/28
+Date created: 2020/07/28
 Last modified: 2020/08/24
 Description: Medical image classification on TPU.
 """
@@ -47,9 +47,6 @@ CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
 The Chest X-ray data we are using from
 [*Cell*](https://www.cell.com/cell/fulltext/S0092-8674(18)30154-5) divides the data into
 training and test files. Let's first load in the training TFRecords.
-
-Note: The TFRecord contains a DS_Store file that is not part of the X-ray dataset. Let's
-remove that file while we're loading in the data.
 """
 
 train_images = tf.data.TFRecordDataset(
