@@ -27,7 +27,8 @@ import matplotlib.pyplot as plt
 """
 ## Load the data: the FordA dataset
 
-### Description
+### Dataset description
+
 The dataset we are using here is called FordA.
 The data comes from the UCR archive.
 The dataset contains 3601 training instances and another 1320 testing instances.
@@ -36,7 +37,8 @@ For this task, the goal is to automatically detect the presence of a specific is
 the engine. The problem is a balanced binary classification task. The full description of
 this dataset can be found [here](http://www.j-wichard.de/publications/FordPaper.pdf).
 
-### Read the TSV data online
+### Read the TSV data
+
 We will use the `FordA_TRAIN` file for training and the
 `FordA_TEST` file for testing. The simplicity of this dataset
 allows us to demonstrate effectively how to use ConvNets for timeseries classification.
@@ -58,6 +60,7 @@ x_test, y_test = readucr(root_url + "FordA_TEST.tsv")
 
 """
 ## Visualize the data
+
 Here we visualize one timeseries example for each class in the dataset.
 
 """
@@ -73,7 +76,7 @@ plt.show()
 plt.close()
 
 """
-## Standardizing the data
+## Standardize the data
 
 Our timeseries are already in a single length (176). However, their values are
 usually in various ranges. This is not ideal for a neural network;
@@ -215,12 +218,10 @@ plt.show()
 plt.close()
 
 """
-We can see how the training accuracy increases and reaches almost 0.95 after 100 epochs.
-Nevertheless, by observing the validation accuracy we can see how the network still needs
+We can see how the training accuracy reaches almost 0.95 after 100 epochs.
+However, by observing the validation accuracy we can see how the network still needs
 training until it reaches almost 0.97 for both the validation and the training accuracy
-after 200 epochs. Beyond the 200th epoch, if we continue on training the validation
-accuracy will start decreasing while the training accuracy will continue on increasing.
-Suggesting that overfitting starts around the 200th epoch.
-Note that in order to better observe the overfitting phenomena,
-you should consider removing the early stopping callback.
+after 200 epochs. Beyond the 200th epoch, if we continue on training, the validation
+accuracy will start decreasing while the training accuracy will continue on increasing:
+the model starts overfitting.
 """
