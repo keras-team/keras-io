@@ -1,4 +1,4 @@
-# Image Super-Resolution Using an Efficient Sub-Pixel CNN
+# Image Super-Resolution using an Efficient Sub-Pixel CNN
 
 **Author:** [Xingyu Long](https://github.com/xingyu-long)<br>
 **Date created:** 2020/07/28<br>
