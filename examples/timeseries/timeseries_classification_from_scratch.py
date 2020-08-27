@@ -1,16 +1,16 @@
 """
-Title: Time series classification from scratch
+Title: Timeseries classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
 Last modified: 2020/08/21
-Description: Training a time series classifier from scratch on the FordA dataset from
+Description: Training a timeseries classifier from scratch on the FordA dataset from
 the UCR/UEA archive.
 """
 """
 ## Introduction
 
-This example shows how to do time series classification from scratch, starting from raw
-CSV time series files on disk. We demonstrate the workflow on the FordA dataset from the 
+This example shows how to do timeseries classification from scratch, starting from raw
+CSV timeseries files on disk. We demonstrate the workflow on the FordA dataset from the 
 [UCR/UEA archive](https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/).
 
 """
@@ -33,7 +33,7 @@ from sklearn.metrics import accuracy_score
 The dataset we are using here is called FordA.
 The data comes from the UCR archive.
 The dataset contains 3601 training instances and another 1320 testing instances.
-Each time series corresponds to a measurement of engine noise captured by a motor sensor.
+Each timeseries corresponds to a measurement of engine noise captured by a motor sensor.
 For this task, the goal is to automatically detect the presence of a specific issue with
 the engine. The problem is a balanced binary classification task. The full description of
 this dataset can be found [here](http://www.j-wichard.de/publications/FordPaper.pdf).
@@ -41,7 +41,7 @@ this dataset can be found [here](http://www.j-wichard.de/publications/FordPaper.
 ### Read the TSV data online
 We will use the `FordA_TRAIN` file for training and the
 `FordA_TEST` file for testing. The simplicity of this dataset
-allows us to demonstrate effectively how to use ConvNets for time series classification.
+allows us to demonstrate effectively how to use ConvNets for timeseries classification.
 In this file, the first column corresponds to the label.
 """
 
@@ -60,7 +60,7 @@ x_test, y_test = readucr(root_url + "FordA_TEST.tsv")
 
 """
 ## Visualize the data
-Here we visualize one time series example for each class in the dataset.
+Here we visualize one timeseries example for each class in the dataset.
 
 """
 
@@ -77,17 +77,17 @@ plt.close()
 """
 ## Standardizing the data
 
-Our time series are already in a single length (176). However, their values are
+Our timeseries are already in a single length (176). However, their values are
 usually in various ranges. This is not ideal for a neural network;
 in general we should seek to make the input values normalized.
-For this specific dataset, the data is already z-normalized: each time series sample
+For this specific dataset, the data is already z-normalized: each timeseries sample
 have a mean equal to zero and a standard deviation equal to one. This type of
-normalization is very common for time series classification problems, see
+normalization is very common for timeseries classification problems, see
 [Bagnall et al. (2016)](https://link.springer.com/article/10.1007/s10618-016-0483-9).
 
-Note that the time series data used here are univariate, meaning we only have one channel
-per time series example.
-We will therefore transform the time series into a multivariate one with one channel
+Note that the timeseries data used here are univariate, meaning we only have one channel
+per timeseries example.
+We will therefore transform the timeseries into a multivariate one with one channel
 using a simple reshaping via numpy.
 This will allow us to construct a model that is easily applicable to multivariate time
 series.
@@ -137,7 +137,7 @@ def make_model(input_shape):
 
     # This is the first 1D convolutional block.
     # First a linear convolution is applied by sliding a certain number of filters
-    # on the input time series to transform it into a multivariate time series,
+    # on the input timeseries to transform it into a multivariate timeseries,
     # whose number of dimensions is equal to the number of filters used here.
     conv1 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(input_layer)
     # Following the convolution, we apply a batchnormalization in order to
@@ -156,10 +156,10 @@ def make_model(input_shape):
     conv3 = keras.layers.ReLU()(conv3)
 
     # A global average pooling is used here.
-    # We average the time series over the whole time dimension.
+    # We average the timeseries over the whole time dimension.
     # This would reduce drastically the number of parameters,
     # while enabling the use of the class activation map method for interpretability.
-    # In fact the input time series with m dimensions is averaged
+    # In fact the input timeseries with m dimensions is averaged
     # resulting in a vector of m dimensions.
     gap = keras.layers.GlobalAveragePooling1D()(conv3)
 
