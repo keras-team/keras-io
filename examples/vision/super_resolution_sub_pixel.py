@@ -345,7 +345,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 ### Train model
 """
 
-epochs = 5
+epochs = 50
 
 model.compile(
     optimizer=optimizer, loss=loss_fn,
