@@ -2,7 +2,7 @@
 Title: Image Super-Resolution Using an Efficient Sub-Pixel CNN
 Author: [Xingyu Long](https://github.com/xingyu-long)
 Date created: 2020/07/28
-Last modified: 2020/07/30
+Last modified: 2020/08/27
 Description: Implementing Super-Resolution using Efficient sub-pixel model on BSDS500.
 """
 
@@ -24,6 +24,7 @@ implement the model in this paper and train it with small dataset
 import tensorflow as tf
 
 import os
+import math
 import numpy as np
 
 from tensorflow import keras
@@ -47,11 +48,10 @@ dataset_url = "http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping
 data_dir = keras.utils.get_file(origin=dataset_url, fname="BSR", untar=True)
 
 """
-Check the `data_dir` and build data path.
+Check the `data_dir` and build root path.
 """
 
 root_dir = os.path.join(data_dir, "BSDS500/data")
-print(root_dir)
 
 """
 Load train and validation dataset by using `image_dataset_from_directory`.
@@ -82,29 +82,29 @@ valid_ds = image_dataset_from_directory(
 )
 
 """
-Normalization
+Scaling dataset.
 """
 
 
-def normalize(input_image):
+def scaling(input_image):
     input_image = input_image / 255.0
     return input_image
 
 
-# Normalize from (0, 255) to (0, 1)
-train_ds = train_ds.map(normalize)
-valid_ds = valid_ds.map(normalize)
+# Scale from (0, 255) to (0, 1)
+train_ds = train_ds.map(scaling)
+valid_ds = valid_ds.map(scaling)
 
 """
-Data visualization
+Data visualization.
 """
 
-for ds_batch in train_ds.take(1):
-    for img in ds_batch:
+for batch in train_ds.take(1):
+    for img in batch:
         display(array_to_img(img))
 
 """
-Prepare test dataset.
+Prepare test dataset paths.
 """
 
 dataset = os.path.join(root_dir, "images")
@@ -123,14 +123,17 @@ test_img_paths = sorted(
 
 Let's process image data. For the input data, we crop the image and blur it with `area`
 method (use `BICUBIC` if you use PIL); For the target data, we only do the crop
-operation.
+operation. </br>
+
+We convert RGB colour space to YUV colour space and blur it in `y` channel. In this case, we only
+consider the luminance channel in YUV colour space because humans are more sensitive to
+luminance change.
 """
 
-from tensorflow.image import rgb_to_yuv
 
 # Use TF Ops to process.
 def process_input(input, crop_size, upscale_factor):
-    input = rgb_to_yuv(input)
+    input = tf.image.rgb_to_yuv(input)
     last_dimension_axis = len(input.shape) - 1
     y, u, v = tf.split(input, 3, axis=last_dimension_axis)
     crop_size = crop_size // upscale_factor
@@ -138,14 +141,14 @@ def process_input(input, crop_size, upscale_factor):
 
 
 def process_target(input):
-    input = rgb_to_yuv(input)
+    input = tf.image.rgb_to_yuv(input)
     last_dimension_axis = len(input.shape) - 1
     y, u, v = tf.split(input, 3, axis=last_dimension_axis)
     return y
 
 
 """
-Apply map function on `train_ds` and `vali_ds`.
+Apply map function on `train_ds` and `valid_ds`.
 """
 
 train_ds = train_ds.map(
@@ -160,10 +163,10 @@ valid_ds = valid_ds.map(
 Let's take a look for input and target data.
 """
 
-for ds_batch in train_ds.take(1):
-    for img in ds_batch[0]:
+for batch in train_ds.take(1):
+    for img in batch[0]:
         display(array_to_img(img))
-    for img in ds_batch[1]:
+    for img in batch[1]:
         display(array_to_img(img))
 
 """
@@ -249,7 +252,12 @@ def plot_results(img, prefix, title):
     plt.show()
 
 
-def predict_result(model, img):
+"""
+Build `upscale_image`, `get_resized_image` and `get_lowres_image` methods to process image.
+"""
+
+
+def upscale_image(model, img):
     """Predict the result based on input image and restore the image as RGB."""
     ycbcr = img.convert("YCbCr")
     y, cb, cr = ycbcr.split()
@@ -275,22 +283,19 @@ def predict_result(model, img):
     return out_img
 
 
-def get_lr_hr_predict(model, upscale_factor, img_path):
-    """Build low-resolution input and high-resolution original
-  image and prediction result to compare."""
-    img = load_img(img_path)
-    img_arr = img_to_array(img)
-    lowres_input = img.resize(
+def get_resized_image(img, w, h):
+    """"Return high-resolution original image"""
+    highres_img = img.resize((w, h))
+    return highres_img
+
+
+def get_lowres_image(img, upscale_factor):
+    """Return low-resolution image and will use it as input."""
+    lowres_img = img.resize(
         (img.size[0] // upscale_factor, img.size[1] // upscale_factor),
         PIL.Image.BICUBIC,
     )
-    w = lowres_input.size[0] * upscale_factor
-    h = lowres_input.size[1] * upscale_factor
-
-    lowres_img = lowres_input.resize((w, h))
-    highres_img = img.resize((w, h))
-    out_img = predict_result(model, lowres_input)
-    return lowres_img, highres_img, out_img
+    return lowres_img
 
 
 """
@@ -300,48 +305,33 @@ PSNR: We use PSNR to evaluate our model and please check it from
 [here](https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio) for more details.
 """
 
-import math
-
 
 class ESPCNCallback(keras.callbacks.Callback):
+    def __init__(self):
+        super(ESPCNCallback, self).__init__()
+        self.psnr_tracker = keras.metrics.Mean("psnr")
+        self.test_img = get_lowres_image(load_img(test_img_paths[0]), upscale_factor)
+
     # Store PSNR value in each epoch.
     def on_epoch_begin(self, epoch, logs=None):
         self.psnr = []
-        self.test_img = test_img_paths[0]
 
     def on_epoch_end(self, epoch, logs=None):
-        print(
-            "End epoch {} of training and loss is {:7.4f} "
-            "and the average PSNR is {:7.4f}".format(
-                epoch + 1, logs["loss"], sum(self.psnr) / len(self.psnr)
-            )
-        )
-        _, _, predict = get_lr_hr_predict(self.model, upscale_factor, self.test_img)
-        plot_results(predict, "epoch-" + str(epoch), "prediction")
-
-    def on_train_batch_end(self, batch, logs=None):
-        if batch % 50 == 0:
-            print(
-                "...Training: end of batch {} and loss is {:7.4f}".format(
-                    batch, logs["loss"]
-                )
-            )
+        self.psnr_tracker.update_state(self.psnr)
+        print("Mean PSNR for epoch: %.2f" % (self.psnr_tracker.result(),))
+        self.psnr_tracker.reset_states()
+        prediction = upscale_image(self.model, self.test_img)
+        plot_results(prediction, "epoch-" + str(epoch), "prediction")
 
     def on_test_batch_end(self, batch, logs=None):
         self.psnr.append(10 * math.log10(1 / logs["loss"]))
-        if batch % 20 == 0:
-            print(
-                "...Evaluating: end of batch {} and loss is {:7.4f}".format(
-                    batch, logs["loss"]
-                )
-            )
 
 
 """
 Define `ModelCheckpoint` and `EarlyStopping` callbacks.
 """
 
-early_stop_callback = keras.callbacks.EarlyStopping(monitor="loss", patience=10)
+early_stopping_callback = keras.callbacks.EarlyStopping(monitor="loss", patience=10)
 
 checkpoint_filepath = "/tmp/checkpoint"
 
@@ -356,7 +346,7 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 model = get_model(upscale_factor=upscale_factor, channels=channels)
 model.summary()
 
-callbacks = [ESPCNCallback(), early_stop_callback, model_checkpoint_callback]
+callbacks = [ESPCNCallback(), early_stopping_callback, model_checkpoint_callback]
 loss_fn = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
@@ -371,7 +361,7 @@ model.compile(
 )
 
 model.fit(
-    train_ds, epochs=epochs, callbacks=callbacks, validation_data=valid_ds, verbose=0
+    train_ds, epochs=epochs, callbacks=callbacks, validation_data=valid_ds, verbose=2
 )
 
 # The model weights (that are considered the best) are loaded into the model.
@@ -390,12 +380,16 @@ total_bicubic_psnr = 0.0
 total_test_psnr = 0.0
 
 for index, test_img_path in enumerate(test_img_paths[50:60]):
-    lowres_img, highres_img, predict = get_lr_hr_predict(
-        model, upscale_factor, test_img_path
-    )
+    img = load_img(test_img_path)
+    lowres_input = get_lowres_image(img, upscale_factor)
+    w = lowres_input.size[0] * upscale_factor
+    h = lowres_input.size[1] * upscale_factor
+    highres_img = get_resized_image(img, w, h)
+    prediction = upscale_image(model, lowres_input)
+    lowres_img = lowres_input.resize((w, h))
     lowres_img_arr = img_to_array(lowres_img)
     highres_img_arr = img_to_array(highres_img)
-    predict_img_arr = img_to_array(predict)
+    predict_img_arr = img_to_array(prediction)
     bicubic_psnr = tf.image.psnr(lowres_img_arr, highres_img_arr, max_val=255)
     test_psnr = tf.image.psnr(predict_img_arr, highres_img_arr, max_val=255)
 
@@ -408,7 +402,7 @@ for index, test_img_path in enumerate(test_img_paths[50:60]):
     print("PSNR of predict and high resolution is %.4f" % test_psnr)
     plot_results(lowres_img, index, "lowres")
     plot_results(highres_img, index, "highres")
-    plot_results(predict, index, "prediction")
+    plot_results(prediction, index, "prediction")
 
 print("Avg. PSNR of lr is %.4f" % (total_bicubic_psnr / 10))
 print("Avg. PSNR of predict is %.4f" % (total_test_psnr / 10))
