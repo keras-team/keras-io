@@ -164,16 +164,16 @@ keras.utils.plot_model(model, show_shapes=True)
 """
 
 epochs = 500
-batch_size = 128
+batch_size = 32
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
         "best_model.h5", save_best_only=True, monitor="val_loss"
     ),
     keras.callbacks.ReduceLROnPlateau(
-        monitor="loss", factor=0.5, patience=50, min_lr=0.0001
+        monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001
     ),
-    keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=50, verbose=1),
+    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=1),
 ]
 model.compile(
     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
@@ -214,8 +214,12 @@ plt.show()
 plt.close()
 
 """
-We can see how the training accuracy increases and reaches almost 0.9 after 10 epochs. 
+We can see how the training accuracy increases and reaches almost 0.95 after 100 epochs.
 Nevertheless, by observing the validation accuracy we can see how the network still needs
-training until it reaches almost 0.9 for both the validation and the training accuracy 
-after 100 epochs. 
+training until it reaches almost 0.97 for both the validation and the training accuracy
+after 200 epochs. Beyond the 200th epoch, if we continue on training the validation
+accuracy will start decreasing while the training accuracy will continue on increasing.
+Suggesting that overfitting starts around the 200th epoch.
+Note that in order to better observe the overfitting phenomena,
+you should consider removing the early stopping callback.
 """
