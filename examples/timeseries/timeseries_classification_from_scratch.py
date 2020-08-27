@@ -114,6 +114,7 @@ y_train = y_train[idx]
 
 """
 Standardize the labels to positive integers.
+The expected labels will then be 0 and 1.
 """
 
 y_train[y_train == -1] = 0
