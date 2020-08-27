@@ -253,7 +253,10 @@ def plot_results(img, prefix, title):
 
 
 """
-Build `upscale_image` and `get_lowres_image` method to process image.
+Create `upscale_image` and `get_lowres_image` method to process image. For `upscale_image`, we
+use the `y` as input for the model and then combine with other channels to restore as RGB image.
+For `get_lowres_image`, we resize the image with specific upscale_factor and also blur it and we will
+use it as input later.
 """
 
 
@@ -338,8 +341,8 @@ model = get_model(upscale_factor=upscale_factor, channels=channels)
 model.summary()
 
 callbacks = [ESPCNCallback(), early_stopping_callback, model_checkpoint_callback]
-loss_fn = tf.keras.losses.MeanSquaredError()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+loss_fn = keras.losses.MeanSquaredError()
+optimizer = keras.optimizers.Adam(learning_rate=0.001)
 
 """
 ### Train model
