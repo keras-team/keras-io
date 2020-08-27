@@ -154,7 +154,7 @@ class RealNVP(keras.Model):
     # Log likelihood of the normal distribution plus the log determinant of the jacobian.
 
     def log_loss(self, x):
-        y, logdet = self.call(x)
+        y, logdet = self(x)
         log_likelihood = self.distribution.log_prob(y) + logdet
         return -tf.reduce_mean(log_likelihood)
 
