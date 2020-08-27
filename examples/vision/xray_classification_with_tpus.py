@@ -148,7 +148,7 @@ test_paths = tf.data.TFRecordDataset(
 test_ds = tf.data.Dataset.zip((test_images, test_paths))
 
 test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-test_ds = test_ds.batch(1)
+test_ds = test_ds.batch(BATCH_SIZE)
 
 """
 ## Visualize the dataset
