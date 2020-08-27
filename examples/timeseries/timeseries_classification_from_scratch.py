@@ -125,7 +125,7 @@ y_test[y_test == -1] = 0
 
 We build a Fully Convolutional Neural Network originally proposed in
 [this paper](https://arxiv.org/abs/1611.06455).
-The implementation is based on the TF2.0 version provided
+The implementation is based on the TF 2 version provided
 [here](https://github.com/hfawaz/dl-4-tsc/).
 The following hyperparameters (kernel_size, filters, the usage of BatchNorm) were found
 using the random search from [KerasTuner](https://github.com/keras-team/keras-tuner).
