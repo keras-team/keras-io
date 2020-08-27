@@ -253,7 +253,7 @@ def plot_results(img, prefix, title):
 
 
 """
-Build `upscale_image`, `get_resized_image` and `get_lowres_image` methods to process image.
+Build `upscale_image` and `get_lowres_image` method to process image.
 """
 
 
@@ -283,12 +283,6 @@ def upscale_image(model, img):
     return out_img
 
 
-def get_resized_image(img, w, h):
-    """"Return high-resolution original image"""
-    highres_img = img.resize((w, h))
-    return highres_img
-
-
 def get_lowres_image(img, upscale_factor):
     """Return low-resolution image and will use it as input."""
     lowres_img = img.resize(
@@ -309,7 +303,6 @@ PSNR: We use PSNR to evaluate our model and please check it from
 class ESPCNCallback(keras.callbacks.Callback):
     def __init__(self):
         super(ESPCNCallback, self).__init__()
-        self.psnr_tracker = keras.metrics.Mean("psnr")
         self.test_img = get_lowres_image(load_img(test_img_paths[0]), upscale_factor)
 
     # Store PSNR value in each epoch.
@@ -317,9 +310,7 @@ class ESPCNCallback(keras.callbacks.Callback):
         self.psnr = []
 
     def on_epoch_end(self, epoch, logs=None):
-        self.psnr_tracker.update_state(self.psnr)
-        print("Mean PSNR for epoch: %.2f" % (self.psnr_tracker.result(),))
-        self.psnr_tracker.reset_states()
+        print("Mean PSNR for epoch: %.2f" % (np.mean(self.psnr)))
         prediction = upscale_image(self.model, self.test_img)
         plot_results(prediction, "epoch-" + str(epoch), "prediction")
 
@@ -354,7 +345,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 ### Train model
 """
 
-epochs = 50
+epochs = 5
 
 model.compile(
     optimizer=optimizer, loss=loss_fn,
@@ -384,7 +375,7 @@ for index, test_img_path in enumerate(test_img_paths[50:60]):
     lowres_input = get_lowres_image(img, upscale_factor)
     w = lowres_input.size[0] * upscale_factor
     h = lowres_input.size[1] * upscale_factor
-    highres_img = get_resized_image(img, w, h)
+    highres_img = img.resize((w, h))
     prediction = upscale_image(model, lowres_input)
     lowres_img = lowres_input.resize((w, h))
     lowres_img_arr = img_to_array(lowres_img)
