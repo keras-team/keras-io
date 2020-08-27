@@ -254,9 +254,9 @@ def plot_results(img, prefix, title):
 
 """
 Create `upscale_image` and `get_lowres_image` method to process image. For `upscale_image`, we
-use the `y` as input for the model and then combine with other channels to restore as RGB image.
-For `get_lowres_image`, we resize the image with specific upscale_factor and also blur it and we will
-use it as input later.
+use the `y` channel from YUV colour space as input for the model and then combine with
+other channels to restore as RGB image. For `get_lowres_image`, we resize the image with
+specific upscale_factor and blur it and we will use it as input later.
 """
 
 
