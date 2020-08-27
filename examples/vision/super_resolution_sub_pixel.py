@@ -9,10 +9,10 @@ Description: Implementing Super-Resolution using Efficient sub-pixel model on BS
 """
 ## Introduction
 
-ESPCN (Efficient Sub-Pixel CNN), proposed by [Shi, W.2016](https://arxiv.org/abs/1609.05158) 
-is used to reconstruct the image from low resolution (lowres) to high resolution (highres). 
-In this paper, they introduce an efficient sub-pixel convolution layers which learns an array of 
-upscaling filter to upscale the final lowres feature maps into the highres output. This post will 
+ESPCN (Efficient Sub-Pixel CNN), proposed by [Shi, W.2016](https://arxiv.org/abs/1609.05158)
+is used to reconstruct the image from low resolution (lowres) to high resolution (highres).
+In this paper, they introduce an efficient sub-pixel convolution layers which learns an array of
+upscaling filter to upscale the final lowres feature maps into the highres output. This post will
 implement the model in this paper and train it with small dataset
 [BSDS500](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/BSR/BSR_bsds500.tgz).
 """
@@ -20,7 +20,6 @@ implement the model in this paper and train it with small dataset
 """
 ## Setup
 """
-
 
 import tensorflow as tf
 
@@ -32,6 +31,8 @@ from tensorflow.keras import layers
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import array_to_img
 from keras.preprocessing.image import img_to_array
+from keras.preprocessing import image_dataset_from_directory
+
 from IPython.display import display
 
 """
@@ -53,22 +54,61 @@ root_dir = os.path.join(data_dir, "BSDS500/data")
 print(root_dir)
 
 """
-Prepare train and test dataset path and check the number of train, test and validation
-samples.
+Load train and validation dataset by using `image_dataset_from_directory`.
+"""
+
+crop_size = 300
+upscale_factor = 3
+batch_size = 4
+
+train_ds = image_dataset_from_directory(
+    root_dir,
+    batch_size=batch_size,
+    image_size=(crop_size, crop_size),
+    validation_split=0.2,
+    subset="training",
+    seed=1337,
+    label_mode=None,
+)
+
+valid_ds = image_dataset_from_directory(
+    root_dir,
+    batch_size=batch_size,
+    image_size=(crop_size, crop_size),
+    validation_split=0.2,
+    subset="validation",
+    seed=1337,
+    label_mode=None,
+)
+
+"""
+Normalization
+"""
+
+
+def normalize(input_image):
+    input_image = input_image / 255.0
+    return input_image
+
+
+# Normalize from (0, 255) to (0, 1)
+train_ds = train_ds.map(normalize)
+valid_ds = valid_ds.map(normalize)
+
+"""
+Data visualization
+"""
+
+for ds_batch in train_ds.take(1):
+    for img in ds_batch:
+        display(array_to_img(img))
+
+"""
+Prepare test dataset.
 """
 
 dataset = os.path.join(root_dir, "images")
-train_path = os.path.join(dataset, "train")
 test_path = os.path.join(dataset, "test")
-valid_path = os.path.join(dataset, "val")
-
-input_img_paths = sorted(
-    [
-        os.path.join(train_path, fname)
-        for fname in os.listdir(train_path)
-        if fname.endswith(".jpg")
-    ]
-)
 
 test_img_paths = sorted(
     [
@@ -78,159 +118,62 @@ test_img_paths = sorted(
     ]
 )
 
-valid_img_paths = sorted(
-    [
-        os.path.join(valid_path, fname)
-        for fname in os.listdir(valid_path)
-        if fname.endswith(".jpg")
-    ]
-)
-
-print("Number of train samples: ", len(input_img_paths))
-print("Number of test samples: ", len(test_img_paths))
-print("Number of validation samples: ", len(valid_img_paths))
-
-"""
-## Visualize the data
-"""
-
-display(load_img(input_img_paths[0]))
-
 """
 ## Crop and resize images.
 
-Let's process image data. For the input data, we crop the image and blur it with
-`bicubic` method; For the target data, we only do the crop operation.
+Let's process image data. For the input data, we crop the image and blur it with `area`
+method (use `BICUBIC` if you use PIL); For the target data, we only do the crop
+operation.
 """
 
-import PIL
+from tensorflow.image import rgb_to_yuv
 
-
-def calculate_crop_size(crop_size, upscale_factor):
-    return crop_size - (crop_size % upscale_factor)
-
-
+# Use TF Ops to process.
 def process_input(input, crop_size, upscale_factor):
-    input = input.crop((0, 0, crop_size, crop_size))
+    input = rgb_to_yuv(input)
+    last_dimension_axis = len(input.shape) - 1
+    y, u, v = tf.split(input, 3, axis=last_dimension_axis)
     crop_size = crop_size // upscale_factor
-    return input.resize((crop_size, crop_size), PIL.Image.BICUBIC)
+    return tf.image.resize(y, [crop_size, crop_size], method="area")
 
 
-def process_target(input, crop_size):
-    input = input.crop((0, 0, crop_size, crop_size))
-    return input
+def process_target(input):
+    input = rgb_to_yuv(input)
+    last_dimension_axis = len(input.shape) - 1
+    y, u, v = tf.split(input, 3, axis=last_dimension_axis)
+    return y
 
 
 """
-## Visualize input and target data in YCbCr color space.
+Apply map function on `train_ds` and `vali_ds`.
 """
 
-"""
-We luminance in `YCbCr` color space for images because the changes in that space are easy
-to see.
-"""
+train_ds = train_ds.map(
+    lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
+)
 
-img = load_img(test_img_paths[0])
-ycbcr = img.convert("YCbCr")
-# Split into y, cr and cr channel and we will put y into model.
-# And we can restore image by other two channels at the end of this tutorial.
-y, _, _ = ycbcr.split()
-
-upscale_factor = 3
-crop_size = 300
-
-crop_size = calculate_crop_size(crop_size, upscale_factor)
-print("crop_size is ", crop_size)
-input = img_to_array(y)
-print("Actual image size is ", input.shape)
-
-input_transform = process_input(y, crop_size, upscale_factor)
-
-print("Input image size after transformation is ", input_transform.size)
-display(input_transform)
-
-target_transform = process_target(y, crop_size)
-print("Target image size after transformation is ", target_transform.size)
-display(target_transform)
+valid_ds = valid_ds.map(
+    lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
+)
 
 """
-## Use `Sequence` class to load and vectorize batches of data.
+Let's take a look for input and target data.
 """
 
-
-class BSDS500(tf.keras.utils.Sequence):
-    def __init__(
-        self,
-        input_img_size,
-        target_img_size,
-        crop_size,
-        batch_size,
-        input_img_paths,
-        upscale_factor=3,
-        process_target=None,
-        process_input=None,
-        channels=1,
-    ):
-        super(BSDS500).__init__()
-        self.batch_size = batch_size
-        self.input_img_size = input_img_size
-        self.target_img_size = target_img_size
-        self.crop_size = crop_size
-        self.upscale_factor = upscale_factor
-        self.input_img_paths = input_img_paths
-        self.process_input = process_input
-        self.process_target = process_target
-        self.channels = channels
-
-    def __len__(self):
-        return len(self.input_img_paths) // self.batch_size
-
-    def process_img(self, path, process_name):
-        """Process target or input image and normalize the data."""
-        img, _, _ = load_img(path).convert("YCbCr").split()
-        if process_name == "target":
-            img = self.process_target(img, self.crop_size)
-        elif process_name == "input":
-            img = self.process_input(img, self.crop_size, self.upscale_factor)
-        img = img_to_array(img)
-        img /= 255.0
-
-        return img
-
-    def __getitem__(self, idx):
-        """Return tuple (input, target) with corresponding #idx"""
-        i = idx * self.batch_size
-        batch_input_img_paths = self.input_img_paths[i : i + self.batch_size]
-        batch_target_img_paths = self.input_img_paths[i : i + self.batch_size]
-        # Build the dataset as `batch_size, img_size[0], img_size[1], channels`
-        x = np.zeros(
-            (self.batch_size,) + self.input_img_size + (self.channels,), dtype="float32"
-        )
-        for j, path in enumerate(batch_input_img_paths):
-            x[j] = self.process_img(path, "input")
-
-        y = np.zeros(
-            (self.batch_size,) + self.target_img_size + (self.channels,),
-            dtype="float32",
-        )
-        for j, path in enumerate(batch_target_img_paths):
-            y[j] = self.process_img(path, "target")
-
-        return x, y
-
+for ds_batch in train_ds.take(1):
+    for img in ds_batch[0]:
+        display(array_to_img(img))
+    for img in ds_batch[1]:
+        display(array_to_img(img))
 
 """
 ## Build a model
 """
 
-crop_size = calculate_crop_size(crop_size, upscale_factor)
-
 input_img_size = (crop_size // upscale_factor, crop_size // upscale_factor)
 target_img_size = (crop_size, crop_size)
 
 channels = 1
-
-batch_size = 4
 
 """
 For the model, we add one more layer and use `relu` activation function instead of `tanh`
@@ -257,35 +200,7 @@ def get_model(upscale_factor=3, channels=1):
 
 
 """
-### Prepare train and test data sequences.
-"""
-
-train_gen = BSDS500(
-    input_img_size=input_img_size,
-    target_img_size=target_img_size,
-    crop_size=crop_size,
-    input_img_paths=input_img_paths,
-    process_input=process_input,
-    process_target=process_target,
-    batch_size=batch_size,
-    upscale_factor=upscale_factor,
-    channels=channels,
-)
-
-valid_gen = BSDS500(
-    input_img_size=input_img_size,
-    target_img_size=target_img_size,
-    crop_size=crop_size,
-    input_img_paths=valid_img_paths,
-    process_input=process_input,
-    process_target=process_target,
-    batch_size=batch_size,
-    upscale_factor=upscale_factor,
-    channels=channels,
-)
-
-"""
-## Train the model with custom callbacks
+## Train the model with custom callback
 """
 
 """
@@ -300,6 +215,8 @@ from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 """
 Plot image and save it.
 """
+
+import PIL
 
 
 def plot_results(img, prefix, title):
@@ -360,24 +277,20 @@ def predict_result(model, img):
 
 def get_lr_hr_predict(model, upscale_factor, img_path):
     """Build low-resolution input and high-resolution original
-    image and prediction result to compare."""
-    test_img = load_img(img_path)
-
-    lowres_img = test_img.resize(
-        (test_img.size[0] // upscale_factor, test_img.size[1] // upscale_factor),
+  image and prediction result to compare."""
+    img = load_img(img_path)
+    img_arr = img_to_array(img)
+    lowres_input = img.resize(
+        (img.size[0] // upscale_factor, img.size[1] // upscale_factor),
         PIL.Image.BICUBIC,
     )
+    w = lowres_input.size[0] * upscale_factor
+    h = lowres_input.size[1] * upscale_factor
 
-    highres_img_size_h = lowres_img.size[0] * upscale_factor
-    highres_img_size_w = lowres_img.size[1] * upscale_factor
-
-    lowres_img_bic = lowres_img.resize((highres_img_size_h, highres_img_size_w))
-
-    out_img = predict_result(model, lowres_img)
-
-    highres_img = test_img.resize((highres_img_size_h, highres_img_size_w))
-
-    return lowres_img_bic, highres_img, out_img
+    lowres_img = lowres_input.resize((w, h))
+    highres_img = img.resize((w, h))
+    out_img = predict_result(model, lowres_input)
+    return lowres_img, highres_img, out_img
 
 
 """
@@ -391,38 +304,37 @@ import math
 
 
 class ESPCNCallback(keras.callbacks.Callback):
-    def __init__(self):
-        super(ESPCNCallback, self).__init__()
-        self.test_img = test_img_paths[0]
-
     # Store PSNR value in each epoch.
     def on_epoch_begin(self, epoch, logs=None):
         self.psnr = []
+        self.test_img = test_img_paths[0]
 
     def on_epoch_end(self, epoch, logs=None):
         print(
             "End epoch {} of training and loss is {:7.4f} "
             "and the average PSNR is {:7.4f}".format(
-                epoch, logs["loss"], sum(self.psnr) / len(self.psnr)
+                epoch + 1, logs["loss"], sum(self.psnr) / len(self.psnr)
             )
         )
         _, _, predict = get_lr_hr_predict(self.model, upscale_factor, self.test_img)
         plot_results(predict, "epoch-" + str(epoch), "prediction")
 
     def on_train_batch_end(self, batch, logs=None):
-        print(
-            "...Training: end of batch {} and loss is {:7.4f}".format(
-                batch, logs["loss"]
+        if batch % 50 == 0:
+            print(
+                "...Training: end of batch {} and loss is {:7.4f}".format(
+                    batch, logs["loss"]
+                )
             )
-        )
 
     def on_test_batch_end(self, batch, logs=None):
         self.psnr.append(10 * math.log10(1 / logs["loss"]))
-        print(
-            "...Evaluating: end of batch {} and loss is {:7.4f}".format(
-                batch, logs["loss"]
+        if batch % 20 == 0:
+            print(
+                "...Evaluating: end of batch {} and loss is {:7.4f}".format(
+                    batch, logs["loss"]
+                )
             )
-        )
 
 
 """
@@ -459,7 +371,7 @@ model.compile(
 )
 
 model.fit(
-    train_gen, epochs=epochs, validation_data=valid_gen, callbacks=callbacks, verbose=0
+    train_ds, epochs=epochs, callbacks=callbacks, validation_data=valid_ds, verbose=0
 )
 
 # The model weights (that are considered the best) are loaded into the model.
