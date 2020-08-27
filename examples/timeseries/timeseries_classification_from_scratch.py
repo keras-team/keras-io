@@ -20,11 +20,9 @@ CSV timeseries files on disk. We demonstrate the workflow on the FordA dataset f
 
 """
 
-import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
 
 """
 ## Load the data: the FordA dataset
@@ -176,7 +174,9 @@ callbacks = [
     keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=1),
 ]
 model.compile(
-    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["sparse_categorical_accuracy"],
 )
 history = model.fit(
     x_train,
@@ -194,15 +194,16 @@ history = model.fit(
 
 model = keras.models.load_model("best_model.h5")
 
-y_pred = model.predict(x_test).argmax(axis=1)
+test_loss, test_acc = model.evaluate(x_test, y_test)
 
-print("Test accuracy", accuracy_score(y_pred, y_test))
+print("Test accuracy", test_acc)
+print("Test loss", test_loss)
 
 """
 ## Plot the model's training and validation loss
 """
 
-metric = "accuracy"
+metric = "sparse_categorical_accuracy"
 plt.figure()
 plt.plot(history.history[metric])
 plt.plot(history.history["val_" + metric])
