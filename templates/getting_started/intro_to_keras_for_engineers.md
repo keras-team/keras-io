@@ -295,7 +295,7 @@ print("mean: %.4f" % np.mean(normalized_data))
 <div class="k-default-codeblock">
 ```
 var: 1.0000
-mean: 0.0000
+mean: -0.0000
 
 ```
 </div>
@@ -357,7 +357,7 @@ specify it as `None`. For instance, an input for 200x200 RGB image would have sh
 inputs = keras.Input(shape=(None, None, 3))
 ```
 
-After defining your input(s), you chain layer transformations on top of your inputs,
+After defining your input(s), you can chain layer transformations on top of your inputs,
  until your final output:
 
 
@@ -562,9 +562,9 @@ Trainable params: 118,282
 Non-trainable params: 0
 _________________________________________________________________
 Fit on NumPy data
-938/938 [==============================] - 1s 886us/step - loss: 0.2598
+938/938 [==============================] - 1s 758us/step - loss: 0.2614
 Fit on Dataset
-938/938 [==============================] - 1s 1ms/step - loss: 0.1116
+938/938 [==============================] - 1s 838us/step - loss: 0.1131
 
 ```
 </div>
@@ -580,7 +580,7 @@ print(history.history)
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.1116277277469635]}
+{'loss': [0.11306042224168777]}
 
 ```
 </div>
@@ -611,7 +611,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0779 - acc: 0.9760
+938/938 [==============================] - 1s 875us/step - loss: 0.0775 - acc: 0.9765
 
 ```
 </div>
@@ -628,7 +628,7 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0537 - acc: 0.9836 - val_loss: 0.0925 - val_acc: 0.9734
+938/938 [==============================] - 1s 1ms/step - loss: 0.0516 - acc: 0.9840 - val_loss: 0.1186 - val_acc: 0.9629
 
 ```
 </div>
@@ -713,9 +713,9 @@ print("acc: %.2f" % acc)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 676us/step - loss: 0.0925 - acc: 0.9734
-loss: 0.09
-acc: 0.97
+157/157 [==============================] - 0s 647us/step - loss: 0.1186 - acc: 0.9629
+loss: 0.12
+acc: 0.96
 
 ```
 </div>
@@ -899,9 +899,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 1ms/step - loss: 0.5341
+1/1 [==============================] - 0s 580us/step - loss: 0.4718
 
-<tensorflow.python.keras.callbacks.History at 0x1484c74d0>
+<tensorflow.python.keras.callbacks.History at 0x150fcead0>
 
 ```
 </div>
@@ -925,9 +925,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 827us/step - loss: 0.5420
+1/1 [==============================] - 0s 725us/step - loss: 0.4867
 
-<tensorflow.python.keras.callbacks.History at 0x148517b50>
+<tensorflow.python.keras.callbacks.History at 0x151061c50>
 
 ```
 </div>

@@ -63,4 +63,11 @@ Using a dataset of CT scans (a few are available on Kaggle).
 The model should use `Conv3D` layers.
 
 
+## Image similarity search engine using triplet loss
+
+A convnet trained with a triplet loss to estimate image similarity.
+It could be trained on something like [this dataset](https://sites.google.com/view/totally-looks-like-dataset)
+(other datasets are also possible).
+
+
 
