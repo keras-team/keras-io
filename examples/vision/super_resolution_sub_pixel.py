@@ -9,12 +9,13 @@ Description: Implementing Super-Resolution using Efficient sub-pixel model on BS
 """
 ## Introduction
 
-ESPCN (Efficient Sub-Pixel CNN), proposed by [Shi, W.2016](https://arxiv.org/abs/1609.05158)
-is used to reconstruct the image from low resolution (lowres) to high resolution (highres).
-In this paper, they introduce an efficient sub-pixel convolution layers which learns an array of
-upscaling filter to upscale the final lowres feature maps into the highres output. This post will
-implement the model in this paper and train it with small dataset
-[BSDS500](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/BSR/BSR_bsds500.tgz).
+ESPCN (Efficient Sub-Pixel CNN), proposed by [Shi, 2016](https://arxiv.org/abs/1609.05158)
+is a model that reconstructs a high-resolution version of an image given a low-resolution version.
+It leverages efficient "sub-pixel convolution" layers, which learns an array of
+image upscaling filters.
+
+In this code example, we will implement the model from the paper and train it on a small dataset,
+[BSDS500](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html).
 """
 
 """
@@ -41,20 +42,15 @@ from IPython.display import display
 
 ### Download dataset
 
-We use Keras built-in util `keras.utils.get_file` to get the dataset.
+We use the built-in `keras.utils.get_file` utility to retrieve the dataset.
 """
 
 dataset_url = "http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/BSR/BSR_bsds500.tgz"
 data_dir = keras.utils.get_file(origin=dataset_url, fname="BSR", untar=True)
-
-"""
-Check the `data_dir` and build root path.
-"""
-
 root_dir = os.path.join(data_dir, "BSDS500/data")
 
 """
-Load train and validation dataset by using `image_dataset_from_directory`.
+We create training and validation datasets via `image_dataset_from_directory`.
 """
 
 crop_size = 300
@@ -82,7 +78,7 @@ valid_ds = image_dataset_from_directory(
 )
 
 """
-Scaling dataset.
+We rescale the images to take values in the range [0, 1].
 """
 
 
@@ -96,7 +92,7 @@ train_ds = train_ds.map(scaling)
 valid_ds = valid_ds.map(scaling)
 
 """
-Data visualization.
+Let's visualize a few sample images:
 """
 
 for batch in train_ds.take(1):
@@ -104,7 +100,8 @@ for batch in train_ds.take(1):
         display(array_to_img(img))
 
 """
-Prepare test dataset paths.
+We prepare a dataset of test image paths that we will use for
+visual evaluation at the end of this example.
 """
 
 dataset = os.path.join(root_dir, "images")
@@ -119,15 +116,21 @@ test_img_paths = sorted(
 )
 
 """
-## Crop and resize images.
+## Crop and resize images
 
-Let's process image data. For the input data, we crop the image and blur it with `area`
-method (use `BICUBIC` if you use PIL); For the target data, we only do the crop
-operation. </br>
+Let's process image data.
+First, we convert our images from the RGB color space to the
+[YUV colour space](https://en.wikipedia.org/wiki/YUV).
 
-We convert RGB colour space to YUV colour space and blur it in `y` channel. In this case, we only
-consider the luminance channel in YUV colour space because humans are more sensitive to
+For the input data (low-resolution images),
+we crop the image, retrieve the `y` channel (luninance),
+and resize it with the `area` method (use `BICUBIC` if you use PIL).
+We only consider the luminance channel
+in the YUV color space because humans are more sensitive to
 luminance change.
+
+For the target data (high-resolution images), we just crop the image
+and retrieve the `y` channel.
 """
 
 
@@ -146,11 +149,6 @@ def process_target(input):
     y, u, v = tf.split(input, 3, axis=last_dimension_axis)
     return y
 
-
-"""
-Apply map function on `train_ds` and `valid_ds`.
-"""
-
 train_ds = train_ds.map(
     lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
 )
@@ -160,7 +158,7 @@ valid_ds = valid_ds.map(
 )
 
 """
-Let's take a look for input and target data.
+Let's take a look at the input and target data.
 """
 
 for batch in train_ds.take(1):
@@ -171,18 +169,15 @@ for batch in train_ds.take(1):
 
 """
 ## Build a model
+
+Compared to the paper, we add one more layer and we use the `relu` activation function
+instead of `tanh`.
+It achieves better performance even though we train the model for fewer epochs.
 """
 
 input_img_size = (crop_size // upscale_factor, crop_size // upscale_factor)
 target_img_size = (crop_size, crop_size)
-
 channels = 1
-
-"""
-For the model, we add one more layer and use `relu` activation function instead of `tanh`
-in paper, it gives us better performance even though we train model in small epochs.
-"""
-
 
 def get_model(upscale_factor=3, channels=1):
     conv_args = {
@@ -197,28 +192,26 @@ def get_model(upscale_factor=3, channels=1):
     x = layers.Conv2D(channels * (upscale_factor ** 2), 3, **conv_args)(x)
     outputs = tf.nn.depth_to_space(x, upscale_factor)
 
-    model = keras.Model(inputs, outputs)
-
-    return model
+    return keras.Model(inputs, outputs)
 
 
 """
-## Train the model with custom callback
-"""
+## Define utility functions
 
-"""
-Import `mpl_tookit` to help us zoom in the image and compared with specific area.
+We need to define several utility functions to monitor our results:
+
+- `plot_results` to plot an save an image.
+- `get_lowres_image` to convert an image to its low-resolution version.
+- `upscale_image` to turn a low-resolution image to
+a high-resolution version reconstructed by the model.
+In this function, we use the `y` channel from the YUV color space
+as input to the model and then combine the output with the
+other channels to obtain an RGB image.
 """
 
 import matplotlib.pyplot as plt
-
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-
-"""
-Plot image and save it.
-"""
-
 import PIL
 
 
@@ -250,14 +243,15 @@ def plot_results(img, prefix, title):
     mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="blue")
     plt.savefig(str(prefix) + "-" + title + ".png")
     plt.show()
+    
 
-
-"""
-Create `upscale_image` and `get_lowres_image` method to process image. For `upscale_image`, we
-use the `y` channel from YUV colour space as input for the model and then combine with
-other channels to restore as RGB image. For `get_lowres_image`, we resize the image with
-specific upscale_factor and blur it and we will use it as input later.
-"""
+def get_lowres_image(img, upscale_factor):
+    """Return low-resolution image and will use it as input."""
+    lowres_img = img.resize(
+        (img.size[0] // upscale_factor, img.size[1] // upscale_factor),
+        PIL.Image.BICUBIC,
+    )
+    return lowres_img
 
 
 def upscale_image(model, img):
@@ -282,24 +276,14 @@ def upscale_image(model, img):
     out_img = PIL.Image.merge("YCbCr", (out_img_y, out_img_cb, out_img_cr)).convert(
         "RGB"
     )
-
     return out_img
 
-
-def get_lowres_image(img, upscale_factor):
-    """Return low-resolution image and will use it as input."""
-    lowres_img = img.resize(
-        (img.size[0] // upscale_factor, img.size[1] // upscale_factor),
-        PIL.Image.BICUBIC,
-    )
-    return lowres_img
-
-
 """
-### Define callbacks to monitor training
+## Define callbacks to monitor training
 
-PSNR: We use PSNR to evaluate our model and please check it from
-[here](https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio) for more details.
+The `ESPCNCallback` object will compute and display
+the [PSNR](https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio) metric.
+This is the main metric we use to evaluate super-resolution performance.
 """
 
 
@@ -345,7 +329,7 @@ loss_fn = keras.losses.MeanSquaredError()
 optimizer = keras.optimizers.Adam(learning_rate=0.001)
 
 """
-### Train model
+## Train the model
 """
 
 epochs = 50
@@ -362,12 +346,9 @@ model.fit(
 model.load_weights(checkpoint_filepath)
 
 """
-## Run model prediction and plot the results.
-"""
+## Run model prediction and plot the results
 
-"""
-Let's predict a few images and save the results. <br> The dataset they use to train in
-paper is ImageNet, you can try it and it should give better performance.
+Let's compute the reconstructed version of a few images and save the results.
 """
 
 total_bicubic_psnr = 0.0
@@ -398,5 +379,5 @@ for index, test_img_path in enumerate(test_img_paths[50:60]):
     plot_results(highres_img, index, "highres")
     plot_results(prediction, index, "prediction")
 
-print("Avg. PSNR of lr is %.4f" % (total_bicubic_psnr / 10))
-print("Avg. PSNR of predict is %.4f" % (total_test_psnr / 10))
+print("Avg. PSNR of lowres images is %.4f" % (total_bicubic_psnr / 10))
+print("Avg. PSNR of reconstructions is %.4f" % (total_test_psnr / 10))
