@@ -81,7 +81,7 @@ Our timeseries are already in a single length (176). However, their values are
 usually in various ranges. This is not ideal for a neural network;
 in general we should seek to make the input values normalized.
 For this specific dataset, the data is already z-normalized: each timeseries sample
-have a mean equal to zero and a standard deviation equal to one. This type of
+has a mean equal to zero and a standard deviation equal to one. This type of
 normalization is very common for timeseries classification problems, see
 [Bagnall et al. (2016)](https://link.springer.com/article/10.1007/s10618-016-0483-9).
 
