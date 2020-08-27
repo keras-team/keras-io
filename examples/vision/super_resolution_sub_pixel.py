@@ -149,6 +149,7 @@ def process_target(input):
     y, u, v = tf.split(input, 3, axis=last_dimension_axis)
     return y
 
+
 train_ds = train_ds.map(
     lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
 )
@@ -178,6 +179,7 @@ It achieves better performance even though we train the model for fewer epochs.
 input_img_size = (crop_size // upscale_factor, crop_size // upscale_factor)
 target_img_size = (crop_size, crop_size)
 channels = 1
+
 
 def get_model(upscale_factor=3, channels=1):
     conv_args = {
@@ -243,7 +245,7 @@ def plot_results(img, prefix, title):
     mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="blue")
     plt.savefig(str(prefix) + "-" + title + ".png")
     plt.show()
-    
+
 
 def get_lowres_image(img, upscale_factor):
     """Return low-resolution image and will use it as input."""
@@ -277,6 +279,7 @@ def upscale_image(model, img):
         "RGB"
     )
     return out_img
+
 
 """
 ## Define callbacks to monitor training
