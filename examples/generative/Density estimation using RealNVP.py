@@ -123,13 +123,12 @@ class RealNVP(keras.Model):
 
     @property
     def metrics(self):
-       """List of the model's metrics.
-
-       We make sure the loss tracker is listed as part of `model.metrics`
-       so that `fit()` and `evaluate()` are able to `reset()` the loss tracker
-       at the start of each epoch and at the start of an `evaluate()` call.
-       """
-       return [self.loss_tracker]
+        """List of the model's metrics.
+        We make sure the loss tracker is listed as part of `model.metrics`
+        so that `fit()` and `evaluate()` are able to `reset()` the loss tracker
+        at the start of each epoch and at the start of an `evaluate()` call.
+        """
+        return [self.loss_tracker]
 
     def call(self, x, training=True):
         log_det_inv = 0
@@ -186,7 +185,7 @@ model = RealNVP(num_coupling_layers=6)
 model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001))
 
 history = model.fit(
-    normalized_data, batch_size=256, epochs=300, verbose=2, validation_split=0.2
+    normalized_data, batch_size=256, epochs=1, verbose=2, validation_split=0.2
 )
 
 """
