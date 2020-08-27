@@ -123,7 +123,13 @@ class RealNVP(keras.Model):
 
     @property
     def metrics(self):
-        return [self.loss_tracker]
+       """List of the model's metrics.
+
+       We make sure the loss tracker is listed as part of `model.metrics`
+       so that `fit()` and `evaluate()` are able to `reset()` the loss tracker
+       at the start of each epoch and at the start of an `evaluate()` call.
+       """
+       return [self.loss_tracker]
 
     def call(self, x, training=True):
         log_det_inv = 0
