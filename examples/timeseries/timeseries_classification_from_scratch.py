@@ -3,14 +3,13 @@ Title: Timeseries classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
 Last modified: 2020/08/21
-Description: Training a timeseries classifier from scratch on the FordA dataset from
-the UCR/UEA archive.
+Description: Training a timeseries classifier from scratch on the FordA dataset from the UCR/UEA archive.
 """
 """
 ## Introduction
 
 This example shows how to do timeseries classification from scratch, starting from raw
-CSV timeseries files on disk. We demonstrate the workflow on the FordA dataset from the 
+CSV timeseries files on disk. We demonstrate the workflow on the FordA dataset from the
 [UCR/UEA archive](https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/).
 
 """
