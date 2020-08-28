@@ -56,7 +56,7 @@ We create training and validation datasets via `image_dataset_from_directory`.
 crop_size = 300
 upscale_factor = 3
 input_size = crop_size // upscale_factor
-batch_size = 4
+batch_size = 8
 
 train_ds = image_dataset_from_directory(
     root_dir,
@@ -333,7 +333,7 @@ optimizer = keras.optimizers.Adam(learning_rate=0.001)
 ## Train the model
 """
 
-epochs = 500
+epochs = 100
 
 model.compile(
     optimizer=optimizer, loss=loss_fn,
