@@ -95,8 +95,6 @@ def Coupling(input_shape):
 
     return keras.Model(inputs=input, outputs=[s_layer_5, t_layer_5])
 
-
-Coupling(2).summary()
 """
 ## Real NVP
 """
