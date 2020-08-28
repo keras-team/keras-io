@@ -55,6 +55,7 @@ We create training and validation datasets via `image_dataset_from_directory`.
 
 crop_size = 300
 upscale_factor = 3
+input_size = crop_size // upscale_factor
 batch_size = 4
 
 train_ds = image_dataset_from_directory(
@@ -135,12 +136,11 @@ and retrieve the `y` channel.
 
 
 # Use TF Ops to process.
-def process_input(input, crop_size, upscale_factor):
+def process_input(input, input_size, upscale_factor):
     input = tf.image.rgb_to_yuv(input)
     last_dimension_axis = len(input.shape) - 1
     y, u, v = tf.split(input, 3, axis=last_dimension_axis)
-    crop_size = crop_size // upscale_factor
-    return tf.image.resize(y, [crop_size, crop_size], method="area")
+    return tf.image.resize(y, [input_size, input_size], method="area")
 
 
 def process_target(input):
@@ -151,11 +151,11 @@ def process_target(input):
 
 
 train_ds = train_ds.map(
-    lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
+    lambda x: (process_input(x, input_size, upscale_factor), process_target(x))
 )
 
 valid_ds = valid_ds.map(
-    lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
+    lambda x: (process_input(x, input_size, upscale_factor), process_target(x))
 )
 
 """
@@ -176,10 +176,6 @@ instead of `tanh`.
 It achieves better performance even though we train the model for fewer epochs.
 """
 
-input_img_size = (crop_size // upscale_factor, crop_size // upscale_factor)
-target_img_size = (crop_size, crop_size)
-channels = 1
-
 
 def get_model(upscale_factor=3, channels=1):
     conv_args = {
@@ -187,7 +183,7 @@ def get_model(upscale_factor=3, channels=1):
         "kernel_initializer": "Orthogonal",
         "padding": "same",
     }
-    inputs = keras.Input(shape=input_img_size + (channels,))
+    inputs = keras.Input(shape=(None, None, channels))
     x = layers.Conv2D(64, 5, **conv_args)(inputs)
     x = layers.Conv2D(64, 3, **conv_args)(x)
     x = layers.Conv2D(32, 3, **conv_args)(x)
@@ -248,12 +244,11 @@ def plot_results(img, prefix, title):
 
 
 def get_lowres_image(img, upscale_factor):
-    """Return low-resolution image and will use it as input."""
-    lowres_img = img.resize(
+    """Return low-resolution image to use as model input."""
+    return img.resize(
         (img.size[0] // upscale_factor, img.size[1] // upscale_factor),
         PIL.Image.BICUBIC,
     )
-    return lowres_img
 
 
 def upscale_image(model, img):
@@ -324,7 +319,7 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     save_best_only=True,
 )
 
-model = get_model(upscale_factor=upscale_factor, channels=channels)
+model = get_model(upscale_factor=upscale_factor, channels=1)
 model.summary()
 
 callbacks = [ESPCNCallback(), early_stopping_callback, model_checkpoint_callback]

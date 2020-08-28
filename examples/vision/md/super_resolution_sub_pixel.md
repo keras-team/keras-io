@@ -62,6 +62,7 @@ We create training and validation datasets via `image_dataset_from_directory`.
 ```python
 crop_size = 300
 upscale_factor = 3
+input_size = crop_size // upscale_factor
 batch_size = 4
 
 train_ds = image_dataset_from_directory(
@@ -172,12 +173,11 @@ and retrieve the `y` channel.
 ```python
 
 # Use TF Ops to process.
-def process_input(input, crop_size, upscale_factor):
+def process_input(input, input_size, upscale_factor):
     input = tf.image.rgb_to_yuv(input)
     last_dimension_axis = len(input.shape) - 1
     y, u, v = tf.split(input, 3, axis=last_dimension_axis)
-    crop_size = crop_size // upscale_factor
-    return tf.image.resize(y, [crop_size, crop_size], method="area")
+    return tf.image.resize(y, [input_size, input_size], method="area")
 
 
 def process_target(input):
@@ -188,11 +188,11 @@ def process_target(input):
 
 
 train_ds = train_ds.map(
-    lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
+    lambda x: (process_input(x, input_size, upscale_factor), process_target(x))
 )
 
 valid_ds = valid_ds.map(
-    lambda x: (process_input(x, crop_size, upscale_factor), process_target(x))
+    lambda x: (process_input(x, input_size, upscale_factor), process_target(x))
 )
 ```
 
@@ -248,10 +248,6 @@ It achieves better performance even though we train the model for fewer epochs.
 
 
 ```python
-input_img_size = (crop_size // upscale_factor, crop_size // upscale_factor)
-target_img_size = (crop_size, crop_size)
-channels = 1
-
 
 def get_model(upscale_factor=3, channels=1):
     conv_args = {
@@ -259,7 +255,7 @@ def get_model(upscale_factor=3, channels=1):
         "kernel_initializer": "Orthogonal",
         "padding": "same",
     }
-    inputs = keras.Input(shape=input_img_size + (channels,))
+    inputs = keras.Input(shape=(None, None, channels))
     x = layers.Conv2D(64, 5, **conv_args)(inputs)
     x = layers.Conv2D(64, 3, **conv_args)(x)
     x = layers.Conv2D(32, 3, **conv_args)(x)
@@ -322,12 +318,11 @@ def plot_results(img, prefix, title):
 
 
 def get_lowres_image(img, upscale_factor):
-    """Return low-resolution image and will use it as input."""
-    lowres_img = img.resize(
+    """Return low-resolution image to use as model input."""
+    return img.resize(
         (img.size[0] // upscale_factor, img.size[1] // upscale_factor),
         PIL.Image.BICUBIC,
     )
-    return lowres_img
 
 
 def upscale_image(model, img):
@@ -401,7 +396,7 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     save_best_only=True,
 )
 
-model = get_model(upscale_factor=upscale_factor, channels=channels)
+model = get_model(upscale_factor=upscale_factor, channels=1)
 model.summary()
 
 callbacks = [ESPCNCallback(), early_stopping_callback, model_checkpoint_callback]
@@ -411,21 +406,21 @@ optimizer = keras.optimizers.Adam(learning_rate=0.001)
 
 <div class="k-default-codeblock">
 ```
-Model: "functional_1"
+Model: "model"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 100, 100, 1)]     0         
+input_1 (InputLayer)         [(None, None, None, 1)]   0         
 _________________________________________________________________
-conv2d (Conv2D)              (None, 100, 100, 64)      1664      
+conv2d (Conv2D)              (None, None, None, 64)    1664      
 _________________________________________________________________
-conv2d_1 (Conv2D)            (None, 100, 100, 64)      36928     
+conv2d_1 (Conv2D)            (None, None, None, 64)    36928     
 _________________________________________________________________
-conv2d_2 (Conv2D)            (None, 100, 100, 32)      18464     
+conv2d_2 (Conv2D)            (None, None, None, 32)    18464     
 _________________________________________________________________
-conv2d_3 (Conv2D)            (None, 100, 100, 9)       2601      
+conv2d_3 (Conv2D)            (None, None, None, 9)     2601      
 _________________________________________________________________
-tf_op_layer_DepthToSpace (Te [(None, 300, 300, 1)]     0         
+tf.nn.depth_to_space (TFOpLa (None, None, None, 1)     0         
 =================================================================
 Total params: 59,657
 Trainable params: 59,657
@@ -456,558 +451,557 @@ model.load_weights(checkpoint_filepath)
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-Mean PSNR for epoch: 24.26
-WARNING:tensorflow:Model was constructed with shape (None, 100, 100, 1) for input Tensor("input_1:0", shape=(None, 100, 100, 1), dtype=float32), but it was called on an input with incompatible shape (None, 107, 160, 1).
+Mean PSNR for epoch: 24.73
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_1.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_2.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0276 - val_loss: 0.0038
+100/100 - 16s - loss: 0.0115 - val_loss: 0.0034
 Epoch 2/50
 Mean PSNR for epoch: 26.05
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_3.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_4.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0035 - val_loss: 0.0027
+100/100 - 15s - loss: 0.0033 - val_loss: 0.0027
 Epoch 3/50
-Mean PSNR for epoch: 25.96
+Mean PSNR for epoch: 26.04
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_5.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_6.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 17s - loss: 0.0032 - val_loss: 0.0026
+100/100 - 15s - loss: 0.0029 - val_loss: 0.0025
 Epoch 4/50
+Mean PSNR for epoch: 26.23
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_8.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 15s - loss: 0.0031 - val_loss: 0.0025
+Epoch 5/50
+Mean PSNR for epoch: 26.68
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_10.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 15s - loss: 0.0028 - val_loss: 0.0025
+Epoch 6/50
+Mean PSNR for epoch: 26.29
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_12.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0028 - val_loss: 0.0024
+Epoch 7/50
+Mean PSNR for epoch: 26.71
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_14.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0027 - val_loss: 0.0024
+Epoch 8/50
 Mean PSNR for epoch: 26.27
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_7.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_16.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0029 - val_loss: 0.0025
-Epoch 5/50
-Mean PSNR for epoch: 26.67
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_9.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 18s - loss: 0.0028 - val_loss: 0.0025
-Epoch 6/50
-Mean PSNR for epoch: 26.26
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_11.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 18s - loss: 0.0027 - val_loss: 0.0024
-Epoch 7/50
-Mean PSNR for epoch: 26.75
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_13.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0028 - val_loss: 0.0024
-Epoch 8/50
-Mean PSNR for epoch: 25.46
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_15.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0030 - val_loss: 0.0029
+100/100 - 16s - loss: 0.0027 - val_loss: 0.0024
 Epoch 9/50
-Mean PSNR for epoch: 26.35
+Mean PSNR for epoch: 26.32
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_17.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_18.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0028 - val_loss: 0.0024
+100/100 - 15s - loss: 0.0027 - val_loss: 0.0024
 Epoch 10/50
-Mean PSNR for epoch: 26.73
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_19.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0027 - val_loss: 0.0024
-Epoch 11/50
 Mean PSNR for epoch: 26.62
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_21.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_20.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0027 - val_loss: 0.0024
-Epoch 12/50
-Mean PSNR for epoch: 26.33
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_23.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0024
-Epoch 13/50
+100/100 - 15s - loss: 0.0027 - val_loss: 0.0024
+Epoch 11/50
 Mean PSNR for epoch: 26.58
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_25.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_22.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0028 - val_loss: 0.0024
+Epoch 12/50
+Mean PSNR for epoch: 26.21
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_24.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0028 - val_loss: 0.0024
+Epoch 13/50
+Mean PSNR for epoch: 26.50
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_26.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0028 - val_loss: 0.0024
 Epoch 14/50
-Mean PSNR for epoch: 26.42
+Mean PSNR for epoch: 26.38
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_27.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_28.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0027 - val_loss: 0.0024
 Epoch 15/50
-Mean PSNR for epoch: 26.67
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_29.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 20s - loss: 0.0026 - val_loss: 0.0023
-Epoch 16/50
-Mean PSNR for epoch: 26.60
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_31.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0023
-Epoch 17/50
-Mean PSNR for epoch: 26.26
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_33.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 20s - loss: 0.0028 - val_loss: 0.0024
-Epoch 18/50
 Mean PSNR for epoch: 26.63
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_35.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_30.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0027 - val_loss: 0.0023
+Epoch 16/50
+Mean PSNR for epoch: 26.58
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_32.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
+Epoch 17/50
+Mean PSNR for epoch: 26.44
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_34.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
+Epoch 18/50
+Mean PSNR for epoch: 26.41
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_36.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0024
 Epoch 19/50
-Mean PSNR for epoch: 26.73
+Mean PSNR for epoch: 26.57
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_37.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_38.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0028 - val_loss: 0.0024
 Epoch 20/50
-Mean PSNR for epoch: 26.77
+Mean PSNR for epoch: 26.65
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_39.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_40.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0024
 Epoch 21/50
-Mean PSNR for epoch: 26.90
+Mean PSNR for epoch: 26.86
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_41.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_42.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
 Epoch 22/50
-Mean PSNR for epoch: 26.77
+Mean PSNR for epoch: 26.76
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_43.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_44.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
+Epoch 23/50
+Mean PSNR for epoch: 26.59
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_46.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
+Epoch 24/50
+Mean PSNR for epoch: 26.86
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_48.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
+Epoch 25/50
+Mean PSNR for epoch: 26.70
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_50.png)
 
 
 <div class="k-default-codeblock">
 ```
 100/100 - 17s - loss: 0.0026 - val_loss: 0.0023
-Epoch 23/50
-Mean PSNR for epoch: 25.86
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_45.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 18s - loss: 0.0028 - val_loss: 0.0027
-Epoch 24/50
-Mean PSNR for epoch: 26.89
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_47.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 18s - loss: 0.0026 - val_loss: 0.0023
-Epoch 25/50
-Mean PSNR for epoch: 26.84
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_49.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 18s - loss: 0.0026 - val_loss: 0.0023
 Epoch 26/50
+Mean PSNR for epoch: 26.65
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_52.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
+Epoch 27/50
 Mean PSNR for epoch: 26.67
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_51.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_54.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0025 - val_loss: 0.0023
-Epoch 27/50
-Mean PSNR for epoch: 26.73
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_53.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 18s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
 Epoch 28/50
-Mean PSNR for epoch: 26.76
+Mean PSNR for epoch: 26.71
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_55.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_56.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
 Epoch 29/50
-Mean PSNR for epoch: 26.57
+Mean PSNR for epoch: 26.43
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_57.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_58.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0025 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
 Epoch 30/50
-Mean PSNR for epoch: 24.39
+Mean PSNR for epoch: 26.19
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_59.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_60.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0036
+100/100 - 16s - loss: 0.0030 - val_loss: 0.0024
 Epoch 31/50
-Mean PSNR for epoch: 26.42
+Mean PSNR for epoch: 26.44
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_61.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_62.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0033 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0026 - val_loss: 0.0023
 Epoch 32/50
 Mean PSNR for epoch: 26.61
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_63.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_64.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
 Epoch 33/50
-Mean PSNR for epoch: 26.85
+Mean PSNR for epoch: 26.83
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_65.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_66.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0025 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
 Epoch 34/50
 Mean PSNR for epoch: 26.81
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_67.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_68.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0025 - val_loss: 0.0023
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0023
 Epoch 35/50
-Mean PSNR for epoch: 26.74
+Mean PSNR for epoch: 26.73
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_69.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_70.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0023
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
 Epoch 36/50
-Mean PSNR for epoch: 26.80
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_71.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 37/50
-Mean PSNR for epoch: 26.67
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_73.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 38/50
-Mean PSNR for epoch: 26.68
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_75.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 39/50
-Mean PSNR for epoch: 26.61
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_77.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 40/50
 Mean PSNR for epoch: 26.76
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_79.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_72.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 41/50
-Mean PSNR for epoch: 26.98
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
+Epoch 37/50
+Mean PSNR for epoch: 26.64
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_81.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_74.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 42/50
-Mean PSNR for epoch: 26.91
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_83.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 43/50
-Mean PSNR for epoch: 26.84
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_85.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
-Epoch 44/50
-Mean PSNR for epoch: 26.87
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_87.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 20s - loss: 0.0025 - val_loss: 0.0022
-Epoch 45/50
-Mean PSNR for epoch: 26.59
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_89.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0023
-Epoch 46/50
-Mean PSNR for epoch: 26.62
-
-```
-</div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_91.png)
-
-
-<div class="k-default-codeblock">
-```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0023
-Epoch 47/50
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
+Epoch 38/50
 Mean PSNR for epoch: 26.63
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_93.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_76.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0025 - val_loss: 0.0022
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
+Epoch 39/50
+Mean PSNR for epoch: 26.53
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_78.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 16s - loss: 0.0025 - val_loss: 0.0023
+Epoch 40/50
+Mean PSNR for epoch: 26.71
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_80.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0028 - val_loss: 0.0023
+Epoch 41/50
+Mean PSNR for epoch: 26.96
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_82.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
+Epoch 42/50
+Mean PSNR for epoch: 26.88
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_84.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
+Epoch 43/50
+Mean PSNR for epoch: 26.83
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_86.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
+Epoch 44/50
+Mean PSNR for epoch: 26.83
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_88.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0023
+Epoch 45/50
+Mean PSNR for epoch: 25.78
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_90.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0028
+Epoch 46/50
+Mean PSNR for epoch: 26.65
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_92.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0026 - val_loss: 0.0022
+Epoch 47/50
+Mean PSNR for epoch: 26.61
+
+```
+</div>
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_94.png)
+
+
+<div class="k-default-codeblock">
+```
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
 Epoch 48/50
-Mean PSNR for epoch: 26.60
+Mean PSNR for epoch: 26.61
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_95.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_96.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 19s - loss: 0.0026 - val_loss: 0.0022
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
 Epoch 49/50
-Mean PSNR for epoch: 26.80
+Mean PSNR for epoch: 26.79
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_97.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_98.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0025 - val_loss: 0.0022
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
 Epoch 50/50
-Mean PSNR for epoch: 26.55
+Mean PSNR for epoch: 26.53
 
 ```
 </div>
-![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_99.png)
+![png](/img/examples/vision/super_resolution_sub_pixel/super_resolution_sub_pixel_27_100.png)
 
 
 <div class="k-default-codeblock">
 ```
-100/100 - 18s - loss: 0.0025 - val_loss: 0.0022
+100/100 - 17s - loss: 0.0025 - val_loss: 0.0022
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7fec2047cd90>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148905290>
 
 ```
 </div>
@@ -1052,8 +1046,8 @@ print("Avg. PSNR of reconstructions is %.4f" % (total_test_psnr / 10))
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 29.8502
-PSNR of predict and high resolution is 30.3193
+PSNR of low resolution image and high resolution image is 28.2682
+PSNR of predict and high resolution is 29.6172
 
 ```
 </div>
@@ -1070,8 +1064,8 @@ PSNR of predict and high resolution is 30.3193
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 24.9783
-PSNR of predict and high resolution is 25.8983
+PSNR of low resolution image and high resolution image is 23.0465
+PSNR of predict and high resolution is 25.0810
 
 ```
 </div>
@@ -1088,9 +1082,8 @@ PSNR of predict and high resolution is 25.8983
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Model was constructed with shape (None, 100, 100, 1) for input Tensor("input_1:0", shape=(None, 100, 100, 1), dtype=float32), but it was called on an input with incompatible shape (None, 160, 107, 1).
-PSNR of low resolution image and high resolution image is 27.7724
-PSNR of predict and high resolution is 28.3171
+PSNR of low resolution image and high resolution image is 25.4113
+PSNR of predict and high resolution is 27.3526
 
 ```
 </div>
@@ -1107,8 +1100,8 @@ PSNR of predict and high resolution is 28.3171
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 28.0314
-PSNR of predict and high resolution is 28.2335
+PSNR of low resolution image and high resolution image is 26.5175
+PSNR of predict and high resolution is 27.0681
 
 ```
 </div>
@@ -1125,8 +1118,8 @@ PSNR of predict and high resolution is 28.2335
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 25.7630
-PSNR of predict and high resolution is 26.3181
+PSNR of low resolution image and high resolution image is 24.2559
+PSNR of predict and high resolution is 25.7258
 
 ```
 </div>
@@ -1143,8 +1136,8 @@ PSNR of predict and high resolution is 26.3181
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 25.7874
-PSNR of predict and high resolution is 26.5331
+PSNR of low resolution image and high resolution image is 23.9661
+PSNR of predict and high resolution is 25.9397
 
 ```
 </div>
@@ -1161,8 +1154,8 @@ PSNR of predict and high resolution is 26.5331
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 26.2512
-PSNR of predict and high resolution is 27.1049
+PSNR of low resolution image and high resolution image is 24.3061
+PSNR of predict and high resolution is 26.3467
 
 ```
 </div>
@@ -1179,8 +1172,8 @@ PSNR of predict and high resolution is 27.1049
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 23.3820
-PSNR of predict and high resolution is 24.6607
+PSNR of low resolution image and high resolution image is 21.7309
+PSNR of predict and high resolution is 23.8774
 
 ```
 </div>
@@ -1197,8 +1190,8 @@ PSNR of predict and high resolution is 24.6607
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 29.8914
-PSNR of predict and high resolution is 30.0392
+PSNR of low resolution image and high resolution image is 28.8549
+PSNR of predict and high resolution is 29.5483
 
 ```
 </div>
@@ -1215,8 +1208,8 @@ PSNR of predict and high resolution is 30.0392
 
 <div class="k-default-codeblock">
 ```
-PSNR of low resolution image and high resolution image is 25.1712
-PSNR of predict and high resolution is 25.6792
+PSNR of low resolution image and high resolution image is 23.9198
+PSNR of predict and high resolution is 25.2281
 
 ```
 </div>
@@ -1233,8 +1226,8 @@ PSNR of predict and high resolution is 25.6792
 
 <div class="k-default-codeblock">
 ```
-Avg. PSNR of lowres images is 26.6879
-Avg. PSNR of reconstructions is 27.3103
+Avg. PSNR of lowres images is 25.0277
+Avg. PSNR of reconstructions is 26.5785
 
 ```
 </div>
