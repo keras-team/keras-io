@@ -296,8 +296,9 @@ class ESPCNCallback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         print("Mean PSNR for epoch: %.2f" % (np.mean(self.psnr)))
-        prediction = upscale_image(self.model, self.test_img)
-        plot_results(prediction, "epoch-" + str(epoch), "prediction")
+        if epoch % 20 == 0:
+            prediction = upscale_image(self.model, self.test_img)
+            plot_results(prediction, "epoch-" + str(epoch), "prediction")
 
     def on_test_batch_end(self, batch, logs=None):
         self.psnr.append(10 * math.log10(1 / logs["loss"]))
@@ -330,7 +331,7 @@ optimizer = keras.optimizers.Adam(learning_rate=0.001)
 ## Train the model
 """
 
-epochs = 50
+epochs = 500
 
 model.compile(
     optimizer=optimizer, loss=loss_fn,
