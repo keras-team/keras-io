@@ -153,10 +153,12 @@ def process_target(input):
 train_ds = train_ds.map(
     lambda x: (process_input(x, input_size, upscale_factor), process_target(x))
 )
+train_ds = train_ds.prefetch(buffer_size=32)
 
 valid_ds = valid_ds.map(
     lambda x: (process_input(x, input_size, upscale_factor), process_target(x))
 )
+valid_ds = valid_ds.prefetch(buffer_size=32)
 
 """
 Let's take a look at the input and target data.
