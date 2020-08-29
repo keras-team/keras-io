@@ -44,8 +44,6 @@ data_path = keras.utils.get_file(
 import os
 import pathlib
 
-os.listdir(pathlib.Path(data_path).parent)
-
 data_dir = pathlib.Path(data_path).parent / "20_newsgroup"
 dirnames = os.listdir(data_dir)
 print("Number of directories:", len(dirnames))
