@@ -2,7 +2,7 @@
 Title: Semantic Similarity with BERT
 Author: [Mohamad Merchant](https://twitter.com/mohmadmerchant1)
 Date created: 2020/08/15
-Last modified: 2020/08/21
+Last modified: 2020/08/29
 Description: Natural Language Inference by Fine-tuning BERT model on SNLI Corpus.
 """
 """
@@ -35,10 +35,10 @@ import transformers
 ## Configurations
 """
 
-max_length = 128  # Maximum length of input sentence to the model.
+max_length = 192  # Maximum length of input sentence to the model.
 batch_size = 32
 epochs = 2
-learning_rate = 3e-5
+
 # Labels in our dataset.
 labels = ["contradiction", "entailment", "neutral"]
 
@@ -145,8 +145,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
     """Generates batches of data.
 
     Args:
-        sentence1: Array of premise input sentences.
-        sentence2: Array of the hypothesis input sentences.
+        sentence_pairs: Array of premise and hypothesis input sentences.
         labels: Array of labels.
         batch_size: Integer batch size.
         shuffle: boolean, whether to shuffle the data.
@@ -160,15 +159,13 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 
     def __init__(
         self,
-        sentence1,
-        sentence2,
+        sentence_pairs,
         labels,
         batch_size=batch_size,
         shuffle=True,
         include_targets=True,
     ):
-        self.sentence1 = sentence1
-        self.sentence2 = sentence2
+        self.sentence_pairs = sentence_pairs
         self.labels = labels
         self.shuffle = shuffle
         self.batch_size = batch_size
@@ -178,71 +175,62 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
             "bert-base-uncased", do_lower_case=True
         )
+        self.indexes = np.arange(len(self.sentence_pairs))
         self.on_epoch_end()
 
     def __len__(self):
         # Denotes the number of batches per epoch.
-        return len(self.sentence1) // self.batch_size
+        return len(self.sentence_pairs) // self.batch_size
 
     def __getitem__(self, idx):
         # Retrieves the batch of index.
         indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
-        sentence1 = self.sentence1[indexes]
-        sentence2 = self.sentence2[indexes]
-        batch_input_ids = []
-        batch_attention_masks = []
-        batch_token_type_ids = []
-        # With BERT tokenizer's encode plus both the sentences are
+        sentence_pairs = self.sentence_pairs[indexes]
+
+        # With BERT tokenizer's batch_encode_plus batch of both the sentences are
         # encoded together and separated by [SEP] token.
-        # Here we are encoding batch of sentences together.
-        for s1, s2 in zip(sentence1, sentence2):
-            encoded = self.tokenizer.encode_plus(
-                s1,
-                s2,
-                add_special_tokens=True,
-                max_length=max_length,
-                return_attention_mask=True,
-                return_token_type_ids=True,
-                padding=True,
-                pad_to_max_length=True,
-                return_tensors="tf",
-            )
-            batch_input_ids.extend(encoded["input_ids"])
-            batch_attention_masks.extend(encoded["attention_mask"])
-            batch_token_type_ids.extend(encoded["token_type_ids"])
+        encoded = self.tokenizer.batch_encode_plus(
+            sentence_pairs.tolist(),
+            add_special_tokens=True,
+            max_length=max_length,
+            return_attention_mask=True,
+            return_token_type_ids=True,
+            pad_to_max_length=True,
+            return_tensors="tf",
+        )
 
         # Convert batch of encoded features to numpy array.
-        input_ids = np.array(batch_input_ids, dtype="int32")
-        masks = np.array(batch_attention_masks, dtype="int32")
-        token_type_ids = np.array(batch_token_type_ids, dtype="int32")
+        input_ids = np.array(encoded["input_ids"], dtype="int32")
+        attention_masks = np.array(encoded["attention_mask"], dtype="int32")
+        token_type_ids = np.array(encoded["token_type_ids"], dtype="int32")
 
-        # set to true if data generator is used for training/validation
+        # Set to true if data generator is used for training/validation.
         if self.include_targets:
             labels = np.array(self.labels[indexes], dtype="int32")
-            return [input_ids, masks, token_type_ids], labels
+            return [input_ids, attention_masks, token_type_ids], labels
         else:
-            return [input_ids, masks, token_type_ids]
+            return [input_ids, attention_masks, token_type_ids]
 
     def on_epoch_end(self):
         # Shuffle indexes after each epoch if shuffle is set to True.
-        self.indexes = np.arange(len(self.sentence1))
         if self.shuffle:
             np.random.RandomState(42).shuffle(self.indexes)
 
 
 """
-## Build The Model
+## Build the model.
 """
+# Create the model under a distribution strategy scope.
+strategy = tf.distribute.MirroredStrategy()
 
-
-def build_model():
+with strategy.scope():
     # Encoded token ids from BERT tokenizer.
     input_ids = tf.keras.layers.Input(
         shape=(max_length,), dtype=tf.int32, name="input_ids"
     )
     # Attention masks indicates to the model which tokens should be attended to.
     attention_masks = tf.keras.layers.Input(
-        shape=(max_length,), dtype=tf.int32, name="att_mask"
+        shape=(max_length,), dtype=tf.int32, name="attention_masks"
     )
     # Token type ids are binary masks identifying different sequences in the model.
     token_type_ids = tf.keras.layers.Input(
@@ -250,35 +238,32 @@ def build_model():
     )
     # Loading pretrained BERT model.
     bert_model = transformers.TFBertModel.from_pretrained("bert-base-uncased")
+    # Freeze the bert model to reuse the pretrained features without modifying them.
+    bert_model.trainable = False
+
     sequence_output, pooled_output = bert_model(
         input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids
     )
-    # Applying hybrid pooling approach to bert sequence output.
-    avg_pool = tf.keras.layers.GlobalAveragePooling1D()(sequence_output)
-    max_pool = tf.keras.layers.GlobalMaxPooling1D()(sequence_output)
+    # Add trainable layers on top of frozen layers to adapt the pretrained features on the new data.
+    bi_lstm = tf.keras.layers.Bidirectional(
+        tf.keras.layers.LSTM(128, return_sequences=True)
+    )(sequence_output)
+    # Applying hybrid pooling approach to bi_lstm sequence output.
+    avg_pool = tf.keras.layers.GlobalAveragePooling1D()(bi_lstm)
+    max_pool = tf.keras.layers.GlobalMaxPooling1D()(bi_lstm)
     concat = tf.keras.layers.concatenate([avg_pool, max_pool])
     dropout = tf.keras.layers.Dropout(0.3)(concat)
     output = tf.keras.layers.Dense(3, activation="softmax")(dropout)
-
     model = tf.keras.models.Model(
         inputs=[input_ids, attention_masks, token_type_ids], outputs=output
     )
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        optimizer=tf.keras.optimizers.Adam(),
         loss="categorical_crossentropy",
         metrics=["acc"],
     )
-    return model
 
-
-"""
-Create the model under a distribution strategy scope.
-"""
-# Build model with distributed strategy.
-strategy = tf.distribute.MirroredStrategy()
-with strategy.scope():
-    model = build_model()
 
 print(f"Strategy: {strategy}")
 model.summary()
@@ -287,15 +272,13 @@ model.summary()
 Create train and validation data generators
 """
 train_data = BertSemanticDataGenerator(
-    train_df.sentence1.astype("str"),
-    train_df.sentence2.astype("str"),
+    train_df[["sentence1", "sentence2"]].values.astype("str"),
     y_train,
     batch_size=batch_size,
     shuffle=True,
 )
 valid_data = BertSemanticDataGenerator(
-    valid_df.sentence1.astype("str"),
-    valid_df.sentence2.astype("str"),
+    valid_df[["sentence1", "sentence2"]].values.astype("str"),
     y_val,
     batch_size=batch_size,
     shuffle=False,
@@ -303,6 +286,9 @@ valid_data = BertSemanticDataGenerator(
 
 """
 ## Train the Model
+
+Training is done only on the top layers to perform `feature_extraction`
+that will allow the model to use the representations of the pretrained model.
 """
 history = model.fit(
     train_data,
@@ -311,12 +297,44 @@ history = model.fit(
     use_multiprocessing=True,
     workers=-1,
 )
+
+"""
+## Fine-tuning
+
+This step must be performed only after the model has been converged on the new data.
+As without convergence, the pretrained model will lose its representation due to the presence of untrained layers.
+
+This is an optional last step where the `bert_model` is unfreezed and retrained
+with a very `low learning rate`, that can give meaningful improvements by
+incrementally adapting the pretrained features to the new data.
+"""
+
+# Unfreeze the bert_model.
+bert_model.trainable = True
+# Always recompile the model to apply effective changes to the model.
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(1e-5),
+    loss="categorical_crossentropy",
+    metrics=["accuracy"],
+)
+model.summary()
+
+"""
+# Train the entire model end-to-end.
+"""
+history = model.fit(
+    train_data,
+    validation_data=valid_data,
+    epochs=epochs,
+    use_multiprocessing=True,
+    workers=-1,
+)
+
 """
 ## Evaluate model on the test set
 """
 test_data = BertSemanticDataGenerator(
-    test_df.sentence1.astype("str"),
-    test_df.sentence2.astype("str"),
+    test_df[["sentence1", "sentence2"]].values.astype("str"),
     y_test,
     batch_size=batch_size,
     shuffle=False,
@@ -329,15 +347,9 @@ model.evaluate(test_data, verbose=1)
 
 
 def check_similarity(sentence1, sentence2):
-    sentence1 = np.array([str(sentence1)])
-    sentence2 = np.array([str(sentence2)])
+    sentence_pairs = np.array([[str(sentence1), str(sentence2)]])
     test_data = BertSemanticDataGenerator(
-        sentence1,
-        sentence2,
-        labels=None,
-        batch_size=1,
-        shuffle=False,
-        include_targets=False,
+        sentence_pairs, labels=None, batch_size=1, shuffle=False, include_targets=False,
     )
 
     proba = model.predict(test_data)[0]
@@ -350,20 +362,19 @@ def check_similarity(sentence1, sentence2):
 """
 Check results on some example sentence pairs.
 """
-sentence1 = "The man is sleeping"
-sentence2 = "A man inspects the uniform"
-print(check_similarity(sentence1, sentence2))
-
+sentence1 = "Two women are observing something together."
+sentence2 = "Two women are standing with their eyes closed."
+check_similarity(sentence1, sentence2)
 """
 Check results on some example sentence pairs.
 """
 sentence1 = "A smiling costumed woman is holding an umbrella"
 sentence2 = "A happy woman in a fairy costume holds an umbrella"
-print(check_similarity(sentence1, sentence2))
+check_similarity(sentence1, sentence2)
 
 """
 Check results on some example sentence pairs
 """
 sentence1 = "A soccer game with multiple males playing"
 sentence2 = "Some men are playing a sport"
-print(check_similarity(sentence1, sentence2))
+check_similarity(sentence1, sentence2)
