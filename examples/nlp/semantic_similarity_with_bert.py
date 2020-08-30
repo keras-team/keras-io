@@ -3,14 +3,14 @@ Title: Semantic Similarity with BERT
 Author: [Mohamad Merchant](https://twitter.com/mohmadmerchant1)
 Date created: 2020/08/15
 Last modified: 2020/08/29
-Description: Natural Language Inference by Fine-tuning BERT model on SNLI Corpus.
+Description: Natural Language Inference by fine-tuning BERT model on SNLI Corpus.
 """
 """
 ## Introduction
 
 Semantic Similarity is the task of determining how similar
 two sentences are, in terms of what they mean.
-This example demonstrates the use of SNLI (Standford Natural Language Inference) Corpus
+This example demonstrates the use of SNLI (Stanford Natural Language Inference) Corpus
 to predict sentence semantic similarity with Transformers.
 We will fine-tune a BERT model that takes two sentences as inputs
 and that outputs a similarity score for these two sentences.
@@ -24,7 +24,7 @@ and that outputs a similarity score for these two sentences.
 """
 ## Setup
 
-Note: install HuggingFace `transformers` via `!pip install transformers==2.11.0`.
+Note: install HuggingFace `transformers` via `pip install transformers` (version >= 2.11.0).
 """
 import numpy as np
 import pandas as pd
@@ -32,7 +32,7 @@ import tensorflow as tf
 import transformers
 
 """
-## Configurations
+## Configuration
 """
 
 max_length = 192  # Maximum length of input sentence to the model.
@@ -87,7 +87,7 @@ print(f"Similarity: {train_df.loc[1, 'similarity']}")
 """
 
 # We have some NaN entries in our train data, we will simply drop them.
-print("Number of Missing Values")
+print("Number of missing values")
 print(train_df.isnull().sum())
 train_df.dropna(axis=0, inplace=True)
 
@@ -238,7 +238,7 @@ with strategy.scope():
     )
     # Loading pretrained BERT model.
     bert_model = transformers.TFBertModel.from_pretrained("bert-base-uncased")
-    # Freeze the bert model to reuse the pretrained features without modifying them.
+    # Freeze the BERT model to reuse the pretrained features without modifying them.
     bert_model.trainable = False
 
     sequence_output, pooled_output = bert_model(
@@ -287,8 +287,8 @@ valid_data = BertSemanticDataGenerator(
 """
 ## Train the Model
 
-Training is done only on the top layers to perform `feature_extraction`
-that will allow the model to use the representations of the pretrained model.
+Training is done only for the top layers to perform "feature extraction",
+which will allow the model to use the representations of the pretrained model.
 """
 history = model.fit(
     train_data,
@@ -301,17 +301,17 @@ history = model.fit(
 """
 ## Fine-tuning
 
-This step must be performed only after the model has been converged on the new data.
-As without convergence, the pretrained model will lose its representation due to the presence of untrained layers.
+This step must only be performed after the feature extraction model has
+been trained to convergence on the new data.
 
-This is an optional last step where the `bert_model` is unfreezed and retrained
-with a very `low learning rate`, that can give meaningful improvements by
+This is an optional last step where `bert_model` is unfreezed and retrained
+with a very low learning rate. This can deliver meaningful improvement by
 incrementally adapting the pretrained features to the new data.
 """
 
 # Unfreeze the bert_model.
 bert_model.trainable = True
-# Always recompile the model to apply effective changes to the model.
+# Recompile the model to make the change effective.
 model.compile(
     optimizer=tf.keras.optimizers.Adam(1e-5),
     loss="categorical_crossentropy",
