@@ -867,7 +867,8 @@ callbacks_list = [
 #  set `data_dir=None` to load the complete dataset
 
 (train_dataset, val_dataset), dataset_info = tfds.load(
-    "coco/2017", split=["train", "validation"], with_info=True, data_dir="data"
+    "coco/2017", split=["train", "validation"], download=False, 
+    with_info=True, data_dir="data"
 )
 
 """
