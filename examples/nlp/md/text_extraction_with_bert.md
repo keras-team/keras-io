@@ -1,4 +1,4 @@
-# BERT (from HuggingFace Transformers) for Text Extraction
+# Text Extraction with BERT
 
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2020/05/23<br>

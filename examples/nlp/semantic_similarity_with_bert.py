@@ -218,7 +218,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 
 
 """
-## Build the model.
+## Build the model
 """
 # Create the model under a distribution strategy scope.
 strategy = tf.distribute.MirroredStrategy()
@@ -320,7 +320,7 @@ model.compile(
 model.summary()
 
 """
-# Train the entire model end-to-end.
+# Train the entire model end-to-end
 """
 history = model.fit(
     train_data,

@@ -6,7 +6,7 @@
 **Description:** Natural Language Inference by fine-tuning BERT model on SNLI Corpus.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlpipynb/semantic_similarity_with_bert.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlpsemantic_similarity_with_bert.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/semantic_similarity_with_bert.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/semantic_similarity_with_bert.py)
 
 
 
@@ -38,12 +38,6 @@ import tensorflow as tf
 import transformers
 ```
 
-<div class="k-default-codeblock">
-```
-[34m[1mwandb[0m: [33mWARNING[0m W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.
-
-```
-</div>
 ---
 ## Configuration
 
@@ -303,7 +297,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 ```
 
 ---
-## Build the model.
+## Build the model
 
 
 ```python
@@ -524,7 +518,7 @@ ________________________________________________________________________________
 
 ```
 </div>
-# Train the entire model end-to-end.
+# Train the entire model end-to-end
 
 
 ```python
