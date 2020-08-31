@@ -1,29 +1,30 @@
 """
 Title: Density estimation using Real NVP
 Authors: [Mandolini Giorgio Maria](https://www.linkedin.com/in/giorgio-maria-mandolini-a2a1b71b4/), [Sanna Daniele](https://www.linkedin.com/in/daniele-sanna-338629bb/), [Zannini Quirini Giorgio](https://www.linkedin.com/in/giorgio-zannini-quirini-16ab181a0/)
-Date created: 2020/8/10
-Last modified: 2020/8/10
+Date created: 2020/08/10
+Last modified: 2020/08/10
 Description: Estimating the density distribution of double moon dataset.
 """
 
 """
 ## Introduction
-The aim of this work consists in mapping a simple distribution - which is easy to sample
-and whose density is simple to estimate - to a more complex one learned from the data;
-these kind of generative models is also knowm as "normalizing flows".
+The aim of this work is to map a simple distribution - which is easy to sample
+and whose density is simple to estimate - to a more complex one learned from the data.
+This kind of generative model is also known as "normalizing flow".
 
-In order to obtain the aforementioned result the model is trained by means of the maximum
-likelihood principle, resorting to the "change of variable formula".
+In order to do this, the model is trained via the maximum
+likelihood principle, using the "change of variable formula".
 
-An affine coupling layer function is built. It is created such that its inverse and the determinant
-of the jacobian is easy to obtain (more details in the referenced paper).
+We will use an affine coupling function. We create it such that its inverse, as well as
+the determinant of the Jacobian, are easy to obtain (more details in the referenced paper).
 
-requirements:
+**Requirements:**
 
-* Tensorflow 2.3.0
+* Tensorflow 2.3
 * Tensorflow probability 0.11.0
 
-References:
+**Reference:**
+
 [Density estimation using Real NVP](https://arxiv.org/pdf/1605.08803.pdf)
 """
 
@@ -74,7 +75,7 @@ def Coupling(input_shape):
         output_dim, activation="relu", kernel_regularizer=regularizers.l2(reg)
     )(t_layer_3)
     t_layer_5 = keras.layers.Dense(
-        2, activation="linear", kernel_regularizer=regularizers.l2(reg)
+        input_shape, activation="linear", kernel_regularizer=regularizers.l2(reg)
     )(t_layer_4)
 
     s_layer_1 = keras.layers.Dense(
@@ -90,7 +91,7 @@ def Coupling(input_shape):
         output_dim, activation="relu", kernel_regularizer=regularizers.l2(reg)
     )(s_layer_3)
     s_layer_5 = keras.layers.Dense(
-        2, activation="tanh", kernel_regularizer=regularizers.l2(reg)
+        input_shape, activation="tanh", kernel_regularizer=regularizers.l2(reg)
     )(s_layer_4)
 
     return keras.Model(inputs=input, outputs=[s_layer_5, t_layer_5])
@@ -123,6 +124,7 @@ class RealNVP(keras.Model):
     @property
     def metrics(self):
         """List of the model's metrics.
+
         We make sure the loss tracker is listed as part of `model.metrics`
         so that `fit()` and `evaluate()` are able to `reset()` the loss tracker
         at the start of each epoch and at the start of an `evaluate()` call.
@@ -184,7 +186,7 @@ model = RealNVP(num_coupling_layers=6)
 model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001))
 
 history = model.fit(
-    normalized_data, batch_size=256, epochs=1, verbose=2, validation_split=0.2
+    normalized_data, batch_size=256, epochs=300, verbose=2, validation_split=0.2
 )
 
 """
@@ -193,7 +195,9 @@ history = model.fit(
 
 plt.figure(figsize=(15, 10))
 plt.plot(history.history["loss"])
+plt.plot(history.history["val_loss"])
 plt.title("model loss")
+plt.legend(["train", "validation"], loc="upper right")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 
