@@ -3,17 +3,18 @@ Title: Density estimation using Real NVP
 Authors: [Mandolini Giorgio Maria](https://www.linkedin.com/in/giorgio-maria-mandolini-a2a1b71b4/), [Sanna Daniele](https://www.linkedin.com/in/daniele-sanna-338629bb/), [Zannini Quirini Giorgio](https://www.linkedin.com/in/giorgio-zannini-quirini-16ab181a0/)
 Date created: 2020/08/10
 Last modified: 2020/08/10
-Description: Estimating the density distribution of double moon dataset.
+Description: Estimating the density distribution of the "double moon" dataset.
 """
 
 """
 ## Introduction
+
 The aim of this work is to map a simple distribution - which is easy to sample
 and whose density is simple to estimate - to a more complex one learned from the data.
 This kind of generative model is also known as "normalizing flow".
 
 In order to do this, the model is trained via the maximum
-likelihood principle, using the "change of variable formula".
+likelihood principle, using the "change of variable" formula.
 
 We will use an affine coupling function. We create it such that its inverse, as well as
 the determinant of the Jacobian, are easy to obtain (more details in the referenced paper).
@@ -112,13 +113,10 @@ class RealNVP(keras.Model):
         self.distribution = tfp.distributions.MultivariateNormalDiag(
             loc=[0.0, 0.0], scale_diag=[1.0, 1.0]
         )
-
         self.masks = np.array(
             [[0, 1], [1, 0]] * (num_coupling_layers // 2), dtype="float32"
         )
-
         self.loss_tracker = keras.metrics.Mean(name="loss")
-
         self.layers_list = [Coupling(2) for i in range(num_coupling_layers)]
 
     @property
