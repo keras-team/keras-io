@@ -6,7 +6,7 @@
 **Description:** Complete guide to the functional API.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/functional_api.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesfunctional_api.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/functional_api.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/functional_api.py)
 
 
 
@@ -227,12 +227,12 @@ print("Test accuracy:", test_scores[1])
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.3457 - accuracy: 0.9008 - val_loss: 0.2066 - val_accuracy: 0.9397
+750/750 [==============================] - 1s 1ms/step - loss: 0.5778 - accuracy: 0.8391 - val_loss: 0.1893 - val_accuracy: 0.9440
 Epoch 2/2
-750/750 [==============================] - 1s 888us/step - loss: 0.1622 - accuracy: 0.9523 - val_loss: 0.1413 - val_accuracy: 0.9602
-313/313 - 0s - loss: 0.1371 - accuracy: 0.9586
-Test loss: 0.1370706558227539
-Test accuracy: 0.9585999846458435
+750/750 [==============================] - 1s 832us/step - loss: 0.1739 - accuracy: 0.9476 - val_loss: 0.1564 - val_accuracy: 0.9528
+313/313 - 0s - loss: 0.1497 - accuracy: 0.9528
+Test loss: 0.14971688389778137
+Test accuracy: 0.9527999758720398
 
 ```
 </div>
@@ -631,11 +631,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 1s 27ms/step - loss: 1.3267 - priority_loss: 0.6982 - department_loss: 3.1425
+40/40 [==============================] - 3s 23ms/step - loss: 1.2998 - priority_loss: 0.7066 - department_loss: 2.9655
 Epoch 2/2
-40/40 [==============================] - 1s 26ms/step - loss: 1.3180 - priority_loss: 0.6966 - department_loss: 3.1070
+40/40 [==============================] - 1s 24ms/step - loss: 1.2969 - priority_loss: 0.6979 - department_loss: 2.9950
 
-<tensorflow.python.keras.callbacks.History at 0x1507d4710>
+<tensorflow.python.keras.callbacks.History at 0x147518210>
 
 ```
 </div>
@@ -763,9 +763,9 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 1s 86ms/step - loss: 2.3197 - acc: 0.1100 - val_loss: 2.3009 - val_acc: 0.0900
+13/13 [==============================] - 2s 87ms/step - loss: 2.3145 - acc: 0.1124 - val_loss: 2.3046 - val_acc: 0.1150
 
-<tensorflow.python.keras.callbacks.History at 0x150fb1390>
+<tensorflow.python.keras.callbacks.History at 0x147c01650>
 
 ```
 </div>

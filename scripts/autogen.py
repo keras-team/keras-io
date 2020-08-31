@@ -134,13 +134,13 @@ class KerasIO:
             '<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> '
             "[**View in Colab**](https://colab.research.google.com/github/"
             + github_repo_dir
-            + "ipynb/"
+            + "/ipynb/"
             + name
             + ".ipynb"
             + ")  "
             '<span class="k-dot">•</span>'
             '<img class="k-inline-icon" src="https://github.com/favicon.ico"/> '
-            "[**GitHub source**](https://github.com/" + github_repo_dir + fname + ")",
+            "[**GitHub source**](https://github.com/" + github_repo_dir + "/" + fname + ")",
             "\n",
         ]
         md_content_lines = md_content_lines[:6] + button_lines + md_content_lines[6:]

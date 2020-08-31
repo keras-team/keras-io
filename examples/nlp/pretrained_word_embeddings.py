@@ -151,7 +151,7 @@ Here's a dict mapping words to their indices:
 """
 
 voc = vectorizer.get_vocabulary()
-word_index = dict(zip(voc, range(2, len(voc))))
+word_index = dict(zip(voc, range(len(voc))))
 
 """
 As you can see, we obtain the same encoding as above for our test sentence:

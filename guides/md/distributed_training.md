@@ -6,7 +6,7 @@
 **Description:** Guide to multi-GPU & distributed training for Keras models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/distributed_training.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesdistributed_training.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/distributed_training.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/distributed_training.py)
 
 
 
@@ -181,21 +181,16 @@ model.evaluate(test_dataset)
 <div class="k-default-codeblock">
 ```
 WARNING: Logging before flag parsing goes to stderr.
-W0814 09:55:55.262259 4750663104 cross_device_ops.py:1202] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+W0829 16:54:57.025418 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
 
 Number of devices: 1
-
-W0814 09:55:55.961071 4750663104 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/data/ops/multi_device_iterator_ops.py:601: get_next_as_optional (from tensorflow.python.data.ops.iterator_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use `tf.data.Iterator.get_next_as_optional()` instead.
-
 Epoch 1/2
-1563/1563 [==============================] - 3s 2ms/step - loss: 0.2290 - sparse_categorical_accuracy: 0.9323 - val_loss: 0.1623 - val_sparse_categorical_accuracy: 0.9498
+1563/1563 [==============================] - 3s 2ms/step - loss: 0.3767 - sparse_categorical_accuracy: 0.8889 - val_loss: 0.1257 - val_sparse_categorical_accuracy: 0.9623
 Epoch 2/2
-1563/1563 [==============================] - 2s 1ms/step - loss: 0.0946 - sparse_categorical_accuracy: 0.9709 - val_loss: 0.1025 - val_sparse_categorical_accuracy: 0.9683
-313/313 [==============================] - 0s 802us/step - loss: 0.1029 - sparse_categorical_accuracy: 0.9677
+1563/1563 [==============================] - 2s 2ms/step - loss: 0.1053 - sparse_categorical_accuracy: 0.9678 - val_loss: 0.0944 - val_sparse_categorical_accuracy: 0.9710
+313/313 [==============================] - 0s 779us/step - loss: 0.0900 - sparse_categorical_accuracy: 0.9723
 
-[0.1029156744480133, 0.9677000045776367]
+[0.08995261788368225, 0.9722999930381775]
 
 ```
 </div>
@@ -266,15 +261,21 @@ run_training(epochs=1)
 
 <div class="k-default-codeblock">
 ```
-W0814 09:56:01.662528 4750663104 cross_device_ops.py:1202] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+W0829 16:55:03.609519 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
 
 Creating a new model
-1563/1563 - 3s - loss: 0.2276 - sparse_categorical_accuracy: 0.9320 - val_loss: 0.1319 - val_sparse_categorical_accuracy: 0.9579
 
-W0814 09:56:04.756444 4750663104 cross_device_ops.py:1202] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+W0829 16:55:03.708506 4592479680 callbacks.py:1270] Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
+
+1563/1563 - 4s - loss: 0.2242 - sparse_categorical_accuracy: 0.9321 - val_loss: 0.1243 - val_sparse_categorical_accuracy: 0.9647
+
+W0829 16:55:07.981292 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
 
 Restoring from ./ckpt/ckpt-1
-1563/1563 - 3s - loss: 0.0976 - sparse_categorical_accuracy: 0.9698 - val_loss: 0.1005 - val_sparse_categorical_accuracy: 0.9690
+
+W0829 16:55:08.245935 4592479680 callbacks.py:1270] Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
+
+1563/1563 - 4s - loss: 0.0948 - sparse_categorical_accuracy: 0.9709 - val_loss: 0.1006 - val_sparse_categorical_accuracy: 0.9699
 
 ```
 </div>

@@ -6,7 +6,7 @@
 **Description:** Overview of how to leverage preprocessing layers to create end-to-end models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/preprocessing_layers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidespreprocessing_layers.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/preprocessing_layers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/preprocessing_layers.py)
 
 
 
@@ -303,9 +303,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 1s 753us/step - loss: 2.1225
+1563/1563 [==============================] - 1s 687us/step - loss: 2.1805
 
-<tensorflow.python.keras.callbacks.History at 0x14fc2c0d0>
+<tensorflow.python.keras.callbacks.History at 0x154d5c490>
 
 ```
 </div>

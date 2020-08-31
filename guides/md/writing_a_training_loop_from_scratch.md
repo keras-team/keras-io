@@ -6,7 +6,7 @@
 **Description:** Complete guide to writing low-level training & evaluation loops.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/writing_a_training_loop_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guideswriting_a_training_loop_from_scratch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/writing_a_training_loop_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/writing_a_training_loop_from_scratch.py)
 
 
 
@@ -131,15 +131,15 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 113.8568
+Training loss (for one batch) at step 0: 76.3562
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.8656
+Training loss (for one batch) at step 200: 1.3921
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.9388
+Training loss (for one batch) at step 400: 1.0018
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5900
+Training loss (for one batch) at step 600: 0.8904
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.6859
+Training loss (for one batch) at step 800: 0.8393
 Seen so far: 51264 samples
 ```
 </div>
@@ -147,15 +147,15 @@ Seen so far: 51264 samples
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.6952
+Training loss (for one batch) at step 0: 0.8572
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.9020
+Training loss (for one batch) at step 200: 0.7616
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.3637
+Training loss (for one batch) at step 400: 0.8453
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5506
+Training loss (for one batch) at step 600: 0.4959
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.4058
+Training loss (for one batch) at step 800: 0.9363
 Seen so far: 51264 samples
 
 ```
@@ -262,38 +262,38 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 113.7423
+Training loss (for one batch) at step 0: 134.3001
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.3798
+Training loss (for one batch) at step 200: 1.3430
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.1403
+Training loss (for one batch) at step 400: 1.3557
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.2430
+Training loss (for one batch) at step 600: 0.8682
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 1.3247
+Training loss (for one batch) at step 800: 0.5862
 Seen so far: 51264 samples
-Training acc over epoch: 0.6776
-Validation acc: 0.8365
-Time taken: 4.62s
+Training acc over epoch: 0.7176
+Validation acc: 0.8403
+Time taken: 4.65s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.6545
+Training loss (for one batch) at step 0: 0.4264
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5363
+Training loss (for one batch) at step 200: 0.4168
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.7577
+Training loss (for one batch) at step 400: 0.6106
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.9408
+Training loss (for one batch) at step 600: 0.4762
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 1.0253
+Training loss (for one batch) at step 800: 0.4031
 Seen so far: 51264 samples
-Training acc over epoch: 0.8417
-Validation acc: 0.8878
-Time taken: 4.95s
+Training acc over epoch: 0.8429
+Validation acc: 0.8774
+Time taken: 5.07s
 
 ```
 </div>
@@ -384,38 +384,38 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 1.1119
+Training loss (for one batch) at step 0: 0.6483
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3739
+Training loss (for one batch) at step 200: 0.5966
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6159
+Training loss (for one batch) at step 400: 0.5951
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5043
+Training loss (for one batch) at step 600: 1.3830
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3522
+Training loss (for one batch) at step 800: 0.2758
 Seen so far: 51264 samples
-Training acc over epoch: 0.8737
-Validation acc: 0.9044
-Time taken: 1.12s
+Training acc over epoch: 0.8756
+Validation acc: 0.8955
+Time taken: 1.18s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 1.0275
+Training loss (for one batch) at step 0: 0.4447
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3680
+Training loss (for one batch) at step 200: 0.3794
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6758
+Training loss (for one batch) at step 400: 0.4636
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.2383
+Training loss (for one batch) at step 600: 0.3694
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3972
+Training loss (for one batch) at step 800: 0.2763
 Seen so far: 51264 samples
-Training acc over epoch: 0.8899
-Validation acc: 0.9160
-Time taken: 0.78s
+Training acc over epoch: 0.8926
+Validation acc: 0.9078
+Time taken: 0.71s
 
 ```
 </div>
@@ -689,7 +689,7 @@ for epoch in range(epochs):
 ```
 Start epoch 0
 discriminator loss at step 0: 0.70
-adversarial loss at step 0: 0.72
+adversarial loss at step 0: 0.68
 
 ```
 </div>

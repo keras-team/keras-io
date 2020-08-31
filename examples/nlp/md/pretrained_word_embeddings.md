@@ -6,7 +6,7 @@
 **Description:** Text classification on the Newsgroup20 dataset using pre-trained GloVe word embeddings.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlpipynb/pretrained_word_embeddings.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlppretrained_word_embeddings.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/pretrained_word_embeddings.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/pretrained_word_embeddings.py)
 
 
 
@@ -257,7 +257,7 @@ Here's a dict mapping words to their indices:
 
 ```python
 voc = vectorizer.get_vocabulary()
-word_index = dict(zip(voc, range(2, len(voc))))
+word_index = dict(zip(voc, range(len(voc))))
 ```
 
 As you can see, we obtain the same encoding as above for our test sentence:
@@ -273,7 +273,7 @@ test = ["the", "cat", "sat", "on", "the", "mat"]
 
 <div class="k-default-codeblock">
 ```
-[4, 3699, 1688, 17, 4, 5945]
+[2, 3697, 1686, 15, 2, 5943]
 
 ```
 </div>
@@ -344,7 +344,7 @@ print("Converted %d words (%d misses)" % (hits, misses))
 
 <div class="k-default-codeblock">
 ```
-Converted 17997 words (2001 misses)
+Converted 17999 words (2001 misses)
 
 ```
 </div>
@@ -453,45 +453,47 @@ model.fit(x_train, y_train, batch_size=128, epochs=20, validation_data=(x_val, y
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-125/125 [==============================] - 8s 59ms/step - loss: 3.0124 - acc: 0.0669 - val_loss: 2.9522 - val_acc: 0.0725
+125/125 [==============================] - 8s 57ms/step - loss: 2.8766 - acc: 0.0945 - val_loss: 2.0770 - val_acc: 0.2956
 Epoch 2/20
-125/125 [==============================] - 7s 58ms/step - loss: 2.9439 - acc: 0.0888 - val_loss: 2.9447 - val_acc: 0.0818
+125/125 [==============================] - 7s 58ms/step - loss: 2.0792 - acc: 0.2887 - val_loss: 1.6626 - val_acc: 0.4076
 Epoch 3/20
-125/125 [==============================] - 8s 60ms/step - loss: 2.8670 - acc: 0.1072 - val_loss: 2.8869 - val_acc: 0.1015
+125/125 [==============================] - 7s 60ms/step - loss: 1.5632 - acc: 0.4527 - val_loss: 1.3000 - val_acc: 0.5609
 Epoch 4/20
-125/125 [==============================] - 8s 61ms/step - loss: 2.7579 - acc: 0.1387 - val_loss: 2.7014 - val_acc: 0.1370
+125/125 [==============================] - 8s 60ms/step - loss: 1.2945 - acc: 0.5612 - val_loss: 1.2282 - val_acc: 0.5944
 Epoch 5/20
-125/125 [==============================] - 8s 61ms/step - loss: 2.6353 - acc: 0.1703 - val_loss: 2.5607 - val_acc: 0.1870
+125/125 [==============================] - 8s 61ms/step - loss: 1.1137 - acc: 0.6209 - val_loss: 1.0695 - val_acc: 0.6409
 Epoch 6/20
-125/125 [==============================] - 8s 63ms/step - loss: 2.4557 - acc: 0.2215 - val_loss: 2.4721 - val_acc: 0.2081
+125/125 [==============================] - 8s 61ms/step - loss: 0.9556 - acc: 0.6718 - val_loss: 1.1743 - val_acc: 0.6124
 Epoch 7/20
-125/125 [==============================] - 8s 64ms/step - loss: 2.3065 - acc: 0.2597 - val_loss: 2.3387 - val_acc: 0.2478
+125/125 [==============================] - 8s 61ms/step - loss: 0.8235 - acc: 0.7172 - val_loss: 1.0126 - val_acc: 0.6602
 Epoch 8/20
-125/125 [==============================] - 8s 65ms/step - loss: 2.1402 - acc: 0.3081 - val_loss: 2.5133 - val_acc: 0.2226
+125/125 [==============================] - 8s 65ms/step - loss: 0.7268 - acc: 0.7475 - val_loss: 1.0608 - val_acc: 0.6632
 Epoch 9/20
-125/125 [==============================] - 8s 64ms/step - loss: 1.9627 - acc: 0.3493 - val_loss: 2.2369 - val_acc: 0.2806
+125/125 [==============================] - 8s 63ms/step - loss: 0.6441 - acc: 0.7759 - val_loss: 1.0606 - val_acc: 0.6664
 Epoch 10/20
-125/125 [==============================] - 8s 66ms/step - loss: 1.8266 - acc: 0.3889 - val_loss: 2.2180 - val_acc: 0.3103
+125/125 [==============================] - 8s 63ms/step - loss: 0.5409 - acc: 0.8120 - val_loss: 1.0380 - val_acc: 0.6884
 Epoch 11/20
-125/125 [==============================] - 8s 67ms/step - loss: 1.6598 - acc: 0.4411 - val_loss: 2.2910 - val_acc: 0.2988
+125/125 [==============================] - 8s 65ms/step - loss: 0.4846 - acc: 0.8273 - val_loss: 1.1073 - val_acc: 0.6729
 Epoch 12/20
-125/125 [==============================] - 8s 68ms/step - loss: 1.5119 - acc: 0.4961 - val_loss: 2.3962 - val_acc: 0.3083
+125/125 [==============================] - 8s 62ms/step - loss: 0.4173 - acc: 0.8553 - val_loss: 1.1256 - val_acc: 0.6864
 Epoch 13/20
-125/125 [==============================] - 8s 68ms/step - loss: 1.3293 - acc: 0.5510 - val_loss: 2.6619 - val_acc: 0.2941
+125/125 [==============================] - 8s 63ms/step - loss: 0.3419 - acc: 0.8808 - val_loss: 1.1576 - val_acc: 0.6979
 Epoch 14/20
-125/125 [==============================] - 9s 70ms/step - loss: 1.2461 - acc: 0.5798 - val_loss: 2.5586 - val_acc: 0.2968
+125/125 [==============================] - 8s 68ms/step - loss: 0.2869 - acc: 0.9053 - val_loss: 1.1381 - val_acc: 0.6974
 Epoch 15/20
-125/125 [==============================] - 10s 76ms/step - loss: 1.0760 - acc: 0.6296 - val_loss: 2.4376 - val_acc: 0.3443
+125/125 [==============================] - 8s 67ms/step - loss: 0.2617 - acc: 0.9118 - val_loss: 1.3850 - val_acc: 0.6747
 Epoch 16/20
-125/125 [==============================] - 10s 78ms/step - loss: 0.9680 - acc: 0.6772 - val_loss: 2.9347 - val_acc: 0.3233
+125/125 [==============================] - 8s 67ms/step - loss: 0.2543 - acc: 0.9152 - val_loss: 1.3119 - val_acc: 0.6972
 Epoch 17/20
-125/125 [==============================] - 10s 79ms/step - loss: 0.8464 - acc: 0.7164 - val_loss: 2.4003 - val_acc: 0.3903
+125/125 [==============================] - 8s 66ms/step - loss: 0.2109 - acc: 0.9267 - val_loss: 1.3145 - val_acc: 0.6954
 Epoch 18/20
-125/125 [==============================] - 9s 74ms/step - loss: 0.7512 - acc: 0.7500 - val_loss: 2.8509 - val_acc: 0.3223
+125/125 [==============================] - 8s 64ms/step - loss: 0.1939 - acc: 0.9364 - val_loss: 1.4054 - val_acc: 0.7009
 Epoch 19/20
-125/125 [==============================] - 8s 68ms/step - loss: 0.6477 - acc: 0.7852 - val_loss: 3.6992 - val_acc: 0.3081
+125/125 [==============================] - 8s 67ms/step - loss: 0.1873 - acc: 0.9379 - val_loss: 1.7441 - val_acc: 0.6667
 Epoch 20/20
- 71/125 [================>.............] - ETA: 3s - loss: 0.5732 - acc: 0.8188
+125/125 [==============================] - 9s 70ms/step - loss: 0.1762 - acc: 0.9420 - val_loss: 1.5269 - val_acc: 0.6927
+
+<tensorflow.python.keras.callbacks.History at 0x157134890>
 
 ```
 </div>

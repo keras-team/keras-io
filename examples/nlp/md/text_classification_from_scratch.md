@@ -6,7 +6,7 @@
 **Description:** Text sentiment classification starting from raw text files.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlpipynb/text_classification_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlptext_classification_from_scratch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/text_classification_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/text_classification_from_scratch.py)
 
 
 
@@ -42,7 +42,7 @@ Let's download the data and inspect its structure.
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  51.5M      0  0:00:01  0:00:01 --:--:-- 51.5M
+100 80.2M  100 80.2M    0     0  45.3M      0  0:00:01  0:00:01 --:--:-- 45.3M
 
 ```
 </div>
@@ -336,13 +336,13 @@ model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-625/625 [==============================] - 33s 52ms/step - loss: 0.6070 - accuracy: 0.6100 - val_loss: 0.3287 - val_accuracy: 0.8582
+625/625 [==============================] - 32s 51ms/step - loss: 0.6288 - accuracy: 0.5835 - val_loss: 0.3283 - val_accuracy: 0.8610
 Epoch 2/3
-625/625 [==============================] - 34s 54ms/step - loss: 0.2665 - accuracy: 0.8930 - val_loss: 0.3320 - val_accuracy: 0.8676
+625/625 [==============================] - 31s 50ms/step - loss: 0.2808 - accuracy: 0.8859 - val_loss: 0.3005 - val_accuracy: 0.8796
 Epoch 3/3
-625/625 [==============================] - 34s 55ms/step - loss: 0.1360 - accuracy: 0.9505 - val_loss: 0.3847 - val_accuracy: 0.8672
+625/625 [==============================] - 31s 50ms/step - loss: 0.1450 - accuracy: 0.9467 - val_loss: 0.3795 - val_accuracy: 0.8726
 
-<tensorflow.python.keras.callbacks.History at 0x14bd13c50>
+<tensorflow.python.keras.callbacks.History at 0x137444c90>
 
 ```
 </div>
@@ -356,9 +356,9 @@ model.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 8s 10ms/step - loss: 0.3904 - accuracy: 0.8614
+782/782 [==============================] - 7s 9ms/step - loss: 0.3999 - accuracy: 0.8650
 
-[0.3903675377368927, 0.8613600134849548]
+[0.39986345171928406, 0.8649600148200989]
 
 ```
 </div>
@@ -389,9 +389,9 @@ end_to_end_model.evaluate(raw_test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 13s 16ms/step - loss: 0.3903 - accuracy: 0.8608
+782/782 [==============================] - 11s 13ms/step - loss: 0.4062 - accuracy: 0.8630
 
-[0.39036768674850464, 0.8613600134849548]
+[0.3998638987541199, 0.8649600148200989]
 
 ```
 </div>

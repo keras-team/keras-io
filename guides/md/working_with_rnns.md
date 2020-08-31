@@ -6,7 +6,7 @@
 **Description:** Complete guide to using & customizing RNN layers.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/working_with_rnns.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesworking_with_rnns.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/working_with_rnns.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/working_with_rnns.py)
 
 
 
@@ -207,7 +207,7 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "functional_1"
+Model: "model"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
 ==================================================================================================
@@ -512,9 +512,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 11ms/step - loss: 0.9289 - accuracy: 0.7052 - val_loss: 0.5966 - val_accuracy: 0.7880
+938/938 [==============================] - 14s 13ms/step - loss: 1.3533 - accuracy: 0.5564 - val_loss: 0.5511 - val_accuracy: 0.8226
 
-<tensorflow.python.keras.callbacks.History at 0x14d861bd0>
+<tensorflow.python.keras.callbacks.History at 0x149134bd0>
 
 ```
 </div>
@@ -536,9 +536,9 @@ noncudnn_model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 10s 11ms/step - loss: 0.4060 - accuracy: 0.8745 - val_loss: 0.2860 - val_accuracy: 0.9120
+938/938 [==============================] - 12s 12ms/step - loss: 0.4240 - accuracy: 0.8740 - val_loss: 0.2870 - val_accuracy: 0.9101
 
-<tensorflow.python.keras.callbacks.History at 0x14df32350>
+<tensorflow.python.keras.callbacks.History at 0x148fc0a50>
 
 ```
 </div>
@@ -697,9 +697,9 @@ model.fit(input_data, target_data, batch_size=batch_size)
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 2s 215ms/step - loss: 0.7898 - rnn_1_loss: 0.3148 - rnn_1_1_loss: 0.4750 - rnn_1_accuracy: 0.0953 - rnn_1_1_accuracy: 0.0316
+10/10 [==============================] - 3s 243ms/step - loss: 0.8848 - rnn_1_loss: 0.2835 - rnn_1_1_loss: 0.6013 - rnn_1_accuracy: 0.1175 - rnn_1_1_accuracy: 0.0328
 
-<tensorflow.python.keras.callbacks.History at 0x150de0d10>
+<tensorflow.python.keras.callbacks.History at 0x14c077a50>
 
 ```
 </div>

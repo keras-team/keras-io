@@ -6,7 +6,7 @@
 **Description:** Everything you need to know to use Keras to build real-world machine learning solutions.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/intro_to_keras_for_engineers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesintro_to_keras_for_engineers.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_engineers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_engineers.py)
 
 
 
@@ -421,7 +421,7 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "functional_1"
+Model: "model"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
@@ -541,7 +541,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-Model: "functional_3"
+Model: "model_1"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
@@ -562,9 +562,9 @@ Trainable params: 118,282
 Non-trainable params: 0
 _________________________________________________________________
 Fit on NumPy data
-938/938 [==============================] - 1s 758us/step - loss: 0.2614
+938/938 [==============================] - 1s 940us/step - loss: 0.4771
 Fit on Dataset
-938/938 [==============================] - 1s 838us/step - loss: 0.1131
+938/938 [==============================] - 1s 942us/step - loss: 0.1138
 
 ```
 </div>
@@ -580,7 +580,7 @@ print(history.history)
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.11306042224168777]}
+{'loss': [0.11384169012308121]}
 
 ```
 </div>
@@ -611,7 +611,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 875us/step - loss: 0.0775 - acc: 0.9765
+938/938 [==============================] - 1s 929us/step - loss: 0.0835 - acc: 0.9748
 
 ```
 </div>
@@ -628,7 +628,7 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0516 - acc: 0.9840 - val_loss: 0.1186 - val_acc: 0.9629
+938/938 [==============================] - 1s 1ms/step - loss: 0.0563 - acc: 0.9829 - val_loss: 0.1041 - val_acc: 0.9692
 
 ```
 </div>
@@ -713,9 +713,9 @@ print("acc: %.2f" % acc)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 647us/step - loss: 0.1186 - acc: 0.9629
-loss: 0.12
-acc: 0.96
+157/157 [==============================] - 0s 688us/step - loss: 0.1041 - acc: 0.9692
+loss: 0.10
+acc: 0.97
 
 ```
 </div>
@@ -899,9 +899,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 580us/step - loss: 0.4718
+1/1 [==============================] - 0s 13ms/step - loss: 0.5028
 
-<tensorflow.python.keras.callbacks.History at 0x150fcead0>
+<tensorflow.python.keras.callbacks.History at 0x147777490>
 
 ```
 </div>
@@ -925,9 +925,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 725us/step - loss: 0.4867
+1/1 [==============================] - 0s 16ms/step - loss: 0.5258
 
-<tensorflow.python.keras.callbacks.History at 0x151061c50>
+<tensorflow.python.keras.callbacks.History at 0x1477b1910>
 
 ```
 </div>

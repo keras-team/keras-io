@@ -6,7 +6,7 @@
 **Description:** Complete guide to saving & serializing models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesserialization_and_saving.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/serialization_and_saving.py)
 
 
 
@@ -130,10 +130,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 769us/step - loss: 1.5762
-4/4 [==============================] - 0s 757us/step - loss: 1.4288
+4/4 [==============================] - 0s 807us/step - loss: 0.3797
+4/4 [==============================] - 0s 776us/step - loss: 0.2899
 
-<tensorflow.python.keras.callbacks.History at 0x1481567d0>
+<tensorflow.python.keras.callbacks.History at 0x1545a8790>
 
 ```
 </div>
@@ -216,10 +216,10 @@ print("Loaded model:", loaded)
 <div class="k-default-codeblock">
 ```
 WARNING: Logging before flag parsing goes to stderr.
-W0824 11:47:23.519001 4547915200 load.py:134] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+W0829 16:56:16.310727 4621667776 load.py:133] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
 
-Original model: <__main__.CustomModel object at 0x1481ff610>
-Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x1482ab110>
+Original model: <__main__.CustomModel object at 0x15464c990>
+Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x1547cf410>
 
 ```
 </div>
@@ -261,10 +261,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 761us/step - loss: 0.2099
-4/4 [==============================] - 0s 700us/step - loss: 0.1912
+4/4 [==============================] - 0s 842us/step - loss: 0.2525
+4/4 [==============================] - 0s 728us/step - loss: 0.2452
 
-<tensorflow.python.keras.callbacks.History at 0x148424d10>
+<tensorflow.python.keras.callbacks.History at 0x15488dfd0>
 
 ```
 </div>
@@ -694,7 +694,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x1484ed210>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x154a14c90>
 
 ```
 </div>
@@ -854,7 +854,7 @@ Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14799c790>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x15498b7d0>
 
 ```
 </div>
@@ -905,11 +905,11 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-W0824 11:47:24.883770 4547915200 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+W0829 16:56:17.601102 4621667776 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
 Instructions for updating:
 Please use `layer.add_weight` method instead.
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x148638750>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x154867190>
 
 ```
 </div>
