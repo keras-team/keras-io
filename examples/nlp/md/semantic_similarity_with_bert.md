@@ -1,11 +1,16 @@
-"""
-Title: Semantic Similarity with BERT
-Author: [Mohamad Merchant](https://twitter.com/mohmadmerchant1)
-Date created: 2020/08/15
-Last modified: 2020/08/29
-Description: Natural Language Inference by fine-tuning BERT model on SNLI Corpus.
-"""
-"""
+# Semantic Similarity with BERT
+
+**Author:** [Mohamad Merchant](https://twitter.com/mohmadmerchant1)<br>
+**Date created:** 2020/08/15<br>
+**Last modified:** 2020/08/29<br>
+**Description:** Natural Language Inference by fine-tuning BERT model on SNLI Corpus.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlpipynb/semantic_similarity_with_bert.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlpsemantic_similarity_with_bert.py)
+
+
+
+---
 ## Introduction
 
 Semantic Similarity is the task of determining how similar
@@ -19,37 +24,49 @@ and that outputs a similarity score for these two sentences.
 
 * [BERT](https://arxiv.org/pdf/1810.04805.pdf)
 * [SNLI](https://nlp.stanford.edu/projects/snli/)
-"""
 
-"""
+---
 ## Setup
 
 Note: install HuggingFace `transformers` via `pip install transformers` (version >= 2.11.0).
-"""
+
+
+```python
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import transformers
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[34m[1mwandb[0m: [33mWARNING[0m W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.
+
+```
+</div>
+---
 ## Configuration
-"""
 
+
+```python
 max_length = 128  # Maximum length of input sentence to the model.
 batch_size = 32
 epochs = 2
 
 # Labels in our dataset.
 labels = ["contradiction", "entailment", "neutral"]
+```
 
-"""
+---
 ## Load the Data
-"""
 
-"""shell
-curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
-tar -xvzf data.tar.gz
-"""
+
+```python
+!curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
+!tar -xvzf data.tar.gz
+```
+
+```python
 # There are more than 550k samples in total; we will use 100k for this example.
 train_df = pd.read_csv("SNLI_Corpus/snli_1.0_train.csv", nrows=100000)
 valid_df = pd.read_csv("SNLI_Corpus/snli_1.0_dev.csv")
@@ -59,8 +76,23 @@ test_df = pd.read_csv("SNLI_Corpus/snli_1.0_test.csv")
 print(f"Total train samples : {train_df.shape[0]}")
 print(f"Total validation samples: {valid_df.shape[0]}")
 print(f"Total test samples: {valid_df.shape[0]}")
+```
+<div class="k-default-codeblock">
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 11.1M  100 11.1M    0     0  5231k      0  0:00:02  0:00:02 --:--:-- 5231k
+SNLI_Corpus/
+SNLI_Corpus/snli_1.0_dev.csv
+SNLI_Corpus/snli_1.0_train.csv
+SNLI_Corpus/snli_1.0_test.csv
 
-"""
+Total train samples : 100000
+Total validation samples: 10000
+Total test samples: 10000
+
+```
+</div>
 Dataset Overview:
 
 - sentence1: The premise caption that was supplied to the author of the pair.
@@ -73,40 +105,88 @@ Here are the "similarity" label values in our dataset:
 - Contradiction: The sentences share no similarity.
 - Entailment: The sentences have similar meaning.
 - Neutral: The sentences are neutral.
-"""
 
-"""
 Let's look at one sample from the dataset:
-"""
+
+
+```python
 print(f"Sentence1: {train_df.loc[1, 'sentence1']}")
 print(f"Sentence2: {train_df.loc[1, 'sentence2']}")
 print(f"Similarity: {train_df.loc[1, 'similarity']}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Sentence1: A person on a horse jumps over a broken down airplane.
+Sentence2: A person is at a diner, ordering an omelette.
+Similarity: contradiction
+
+```
+</div>
+---
 ## Preprocessing
-"""
 
+
+```python
 # We have some NaN entries in our train data, we will simply drop them.
 print("Number of missing values")
 print(train_df.isnull().sum())
 train_df.dropna(axis=0, inplace=True)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Number of missing values
+similarity    0
+sentence1     0
+sentence2     3
+dtype: int64
+
+```
+</div>
 Distribution of our training targets.
-"""
+
+
+```python
 print("Train Target Distribution")
 print(train_df.similarity.value_counts())
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Train Target Distribution
+entailment       33384
+contradiction    33310
+neutral          33193
+-                  110
+Name: similarity, dtype: int64
+
+```
+</div>
 Distribution of our validation targets.
-"""
+
+
+```python
 print("Validation Target Distribution")
 print(valid_df.similarity.value_counts())
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Validation Target Distribution
+entailment       3329
+contradiction    3278
+neutral          3235
+-                 158
+Name: similarity, dtype: int64
+
+```
+</div>
 The value "-" appears as part of our training and validation targets.
 We will skip these samples.
-"""
+
+
+```python
 train_df = (
     train_df[train_df.similarity != "-"]
     .sample(frac=1.0, random_state=42)
@@ -117,10 +197,12 @@ valid_df = (
     .sample(frac=1.0, random_state=42)
     .reset_index(drop=True)
 )
+```
 
-"""
 One-hot encode training, validation, and test labels.
-"""
+
+
+```python
 train_df["label"] = train_df["similarity"].apply(
     lambda x: 0 if x == "contradiction" else 1 if x == "entailment" else 2
 )
@@ -135,11 +217,13 @@ test_df["label"] = test_df["similarity"].apply(
     lambda x: 0 if x == "contradiction" else 1 if x == "entailment" else 2
 )
 y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=3)
+```
 
-"""
+---
 ## Keras Custom Data Generator
-"""
 
+
+```python
 
 class BertSemanticDataGenerator(tf.keras.utils.Sequence):
     """Generates batches of data.
@@ -216,10 +300,13 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         if self.shuffle:
             np.random.RandomState(42).shuffle(self.indexes)
 
+```
 
-"""
+---
 ## Build the model.
-"""
+
+
+```python
 # Create the model under a distribution strategy scope.
 strategy = tf.distribute.MirroredStrategy()
 
@@ -267,10 +354,67 @@ with strategy.scope():
 
 print(f"Strategy: {strategy}")
 model.summary()
+```
 
-"""
+
+<div class="k-default-codeblock">
+```
+HBox(children=(FloatProgress(value=0.0, description='Downloading', max=433.0, style=ProgressStyle(description_…
+
+```
+</div>
+    
+
+
+
+<div class="k-default-codeblock">
+```
+HBox(children=(FloatProgress(value=0.0, description='Downloading', max=536063208.0, style=ProgressStyle(descri…
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Strategy: <tensorflow.python.distribute.mirrored_strategy.MirroredStrategy object at 0x7faf9dc63a90>
+Model: "functional_1"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_ids (InputLayer)          [(None, 128)]        0                                            
+__________________________________________________________________________________________________
+attention_masks (InputLayer)    [(None, 128)]        0                                            
+__________________________________________________________________________________________________
+token_type_ids (InputLayer)     [(None, 128)]        0                                            
+__________________________________________________________________________________________________
+tf_bert_model (TFBertModel)     ((None, 128, 768), ( 109482240   input_ids[0][0]                  
+                                                                 attention_masks[0][0]            
+                                                                 token_type_ids[0][0]             
+__________________________________________________________________________________________________
+bidirectional (Bidirectional)   (None, 128, 128)     426496      tf_bert_model[0][0]              
+__________________________________________________________________________________________________
+global_average_pooling1d (Globa (None, 128)          0           bidirectional[0][0]              
+__________________________________________________________________________________________________
+global_max_pooling1d (GlobalMax (None, 128)          0           bidirectional[0][0]              
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 256)          0           global_average_pooling1d[0][0]   
+                                                                 global_max_pooling1d[0][0]       
+__________________________________________________________________________________________________
+dropout_37 (Dropout)            (None, 256)          0           concatenate[0][0]                
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 3)            771         dropout_37[0][0]                 
+==================================================================================================
+Total params: 109,909,507
+Trainable params: 427,267
+Non-trainable params: 109,482,240
+__________________________________________________________________________________________________
+
+```
+</div>
 Create train and validation data generators
-"""
+
+
+```python
 train_data = BertSemanticDataGenerator(
     train_df[["sentence1", "sentence2"]].values.astype("str"),
     y_train,
@@ -283,13 +427,26 @@ valid_data = BertSemanticDataGenerator(
     batch_size=batch_size,
     shuffle=False,
 )
+```
 
-"""
+
+<div class="k-default-codeblock">
+```
+HBox(children=(FloatProgress(value=0.0, description='Downloading', max=231508.0, style=ProgressStyle(descripti…
+
+```
+</div>
+    
+
+
+---
 ## Train the Model
 
 Training is done only for the top layers to perform "feature extraction",
 which will allow the model to use the representations of the pretrained model.
-"""
+
+
+```python
 history = model.fit(
     train_data,
     validation_data=valid_data,
@@ -297,8 +454,18 @@ history = model.fit(
     use_multiprocessing=True,
     workers=-1,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+3121/3121 [==============================] - 666s 213ms/step - loss: 0.6925 - acc: 0.7049 - val_loss: 0.5294 - val_acc: 0.7899
+Epoch 2/2
+3121/3121 [==============================] - 661s 212ms/step - loss: 0.5917 - acc: 0.7587 - val_loss: 0.4955 - val_acc: 0.8052
+
+```
+</div>
+---
 ## Fine-tuning
 
 This step must only be performed after the feature extraction model has
@@ -307,8 +474,9 @@ been trained to convergence on the new data.
 This is an optional last step where `bert_model` is unfreezed and retrained
 with a very low learning rate. This can deliver meaningful improvement by
 incrementally adapting the pretrained features to the new data.
-"""
 
+
+```python
 # Unfreeze the bert_model.
 bert_model.trainable = True
 # Recompile the model to make the change effective.
@@ -318,10 +486,48 @@ model.compile(
     metrics=["accuracy"],
 )
 model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "functional_1"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_ids (InputLayer)          [(None, 128)]        0                                            
+__________________________________________________________________________________________________
+attention_masks (InputLayer)    [(None, 128)]        0                                            
+__________________________________________________________________________________________________
+token_type_ids (InputLayer)     [(None, 128)]        0                                            
+__________________________________________________________________________________________________
+tf_bert_model (TFBertModel)     ((None, 128, 768), ( 109482240   input_ids[0][0]                  
+                                                                 attention_masks[0][0]            
+                                                                 token_type_ids[0][0]             
+__________________________________________________________________________________________________
+bidirectional (Bidirectional)   (None, 128, 128)     426496      tf_bert_model[0][0]              
+__________________________________________________________________________________________________
+global_average_pooling1d (Globa (None, 128)          0           bidirectional[0][0]              
+__________________________________________________________________________________________________
+global_max_pooling1d (GlobalMax (None, 128)          0           bidirectional[0][0]              
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 256)          0           global_average_pooling1d[0][0]   
+                                                                 global_max_pooling1d[0][0]       
+__________________________________________________________________________________________________
+dropout_37 (Dropout)            (None, 256)          0           concatenate[0][0]                
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 3)            771         dropout_37[0][0]                 
+==================================================================================================
+Total params: 109,909,507
+Trainable params: 109,909,507
+Non-trainable params: 0
+__________________________________________________________________________________________________
+
+```
+</div>
 # Train the entire model end-to-end.
-"""
+
+
+```python
 history = model.fit(
     train_data,
     validation_data=valid_data,
@@ -329,10 +535,22 @@ history = model.fit(
     use_multiprocessing=True,
     workers=-1,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+3121/3121 [==============================] - 1574s 504ms/step - loss: 0.4698 - accuracy: 0.8181 - val_loss: 0.3787 - val_accuracy: 0.8598
+Epoch 2/2
+3121/3121 [==============================] - 1569s 503ms/step - loss: 0.3516 - accuracy: 0.8702 - val_loss: 0.3416 - val_accuracy: 0.8757
+
+```
+</div>
+---
 ## Evaluate model on the test set
-"""
+
+
+```python
 test_data = BertSemanticDataGenerator(
     test_df[["sentence1", "sentence2"]].values.astype("str"),
     y_test,
@@ -340,11 +558,21 @@ test_data = BertSemanticDataGenerator(
     shuffle=False,
 )
 model.evaluate(test_data, verbose=1)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+312/312 [==============================] - 55s 177ms/step - loss: 0.3697 - accuracy: 0.8629
+
+[0.3696725070476532, 0.8628805875778198]
+
+```
+</div>
+---
 ## Inference on custom sentences
-"""
 
+
+```python
 
 def check_similarity(sentence1, sentence2):
     sentence_pairs = np.array([[str(sentence1), str(sentence2)]])
@@ -358,23 +586,59 @@ def check_similarity(sentence1, sentence2):
     pred = labels[idx]
     return pred, proba
 
+```
 
-"""
 Check results on some example sentence pairs.
-"""
+
+
+```python
 sentence1 = "Two women are observing something together."
 sentence2 = "Two women are standing with their eyes closed."
 check_similarity(sentence1, sentence2)
-"""
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+('contradiction', ' 0.91%')
+
+```
+</div>
 Check results on some example sentence pairs.
-"""
+
+
+```python
 sentence1 = "A smiling costumed woman is holding an umbrella"
 sentence2 = "A happy woman in a fairy costume holds an umbrella"
 check_similarity(sentence1, sentence2)
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+('neutral', ' 0.88%')
+
+```
+</div>
 Check results on some example sentence pairs
-"""
+
+
+```python
 sentence1 = "A soccer game with multiple males playing"
 sentence2 = "Some men are playing a sport"
 check_similarity(sentence1, sentence2)
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+('entailment', ' 0.94%')
+
+```
+</div>
