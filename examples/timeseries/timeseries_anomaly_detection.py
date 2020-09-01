@@ -92,7 +92,7 @@ Get data values from the training timeseries data file and normalize the
 training_mean = df_small_noise.mean()
 training_std = df_small_noise.std()
 df_training_value = (df_small_noise - training_mean) / training_std
-len(df_training_value)
+print("Length of the trining sample: ", len(df_training_value))
 
 """
 ### Create sequences
@@ -102,13 +102,11 @@ training data.
 
 TIME_STEPS = 288
 
-
+# Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []
     for i in range(len(values) - time_steps):
         output.append(values[i : (i + time_steps)])
-    # Convert 2D sequences into 3D as we will be feeding this into
-    # a convolutional layer.
     return np.stack(output)
 
 
