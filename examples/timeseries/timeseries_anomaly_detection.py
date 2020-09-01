@@ -92,7 +92,7 @@ Get data values from the training timeseries data file and normalize the
 training_mean = df_small_noise.mean()
 training_std = df_small_noise.std()
 df_training_value = (df_small_noise - training_mean) / training_std
-print("Length of the trining sample: ", len(df_training_value))
+print("Number of training samples:", len(df_training_value))
 
 """
 ### Create sequences
