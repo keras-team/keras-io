@@ -152,7 +152,7 @@ for data, labels in dataset:
 """
 ## Data preprocessing with Keras
 
-Once your data is in the form of string/int/float NumpPy arrays, or a `Dataset` object
+Once your data is in the form of string/int/float NumPy arrays, or a `Dataset` object
  (or Python generator) that yields batches of string/int/float tensors,
 it is time to **preprocess** the data. This can mean:
 
