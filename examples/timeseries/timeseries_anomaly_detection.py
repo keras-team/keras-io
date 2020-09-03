@@ -64,8 +64,9 @@ print(df_daily_jumpsup.head())
 
 We will use the following data for training.
 """
-
-df_small_noise.plot(legend=False)
+fig, ax = plt.subplots()
+df_small_noise.plot(legend=False, ax=ax)
+plt.show()
 
 """
 ### Timeseries data with anomalies
@@ -73,8 +74,9 @@ df_small_noise.plot(legend=False)
 We will use the following data for testing and see if the sudden jump up in the
 data is detected as an anomaly.
 """
-
-df_daily_jumpsup.plot(legend=False)
+fig, ax = plt.subplots()
+df_daily_jumpsup.plot(legend=False, ax=ax)
+plt.show()
 
 """
 ## Prepare training data
@@ -170,6 +172,7 @@ Let's plot training and validation loss to see how the training went.
 plt.plot(history.history["loss"], label="Training Loss")
 plt.plot(history.history["val_loss"], label="Validation Loss")
 plt.legend()
+plt.show()
 
 """
 ## Detecting anomalies
@@ -211,7 +214,6 @@ This is the 288 timesteps from day 1 of our training dataset.
 
 # Checking how the first sequence is learnt
 plt.plot(x_train[0])
-plt.show()
 plt.plot(x_train_pred[0])
 plt.show()
 
@@ -227,7 +229,9 @@ def normalize_test(values, mean, std):
 
 
 df_test_value = (df_daily_jumpsup - training_mean) / training_std
-df_test_value.plot(legend=False)
+fig, ax = plt.subplots()
+df_test_value.plot(legend=False, ax=ax)
+plt.show()
 
 # Create sequences from test values.
 x_test = create_sequences(df_test_value.values)
@@ -284,5 +288,7 @@ Let's overlay the anomalies on the original test data plot.
 """
 
 df_subset = df_daily_jumpsup.iloc[anomalous_data_indices]
-ax = df_daily_jumpsup.plot(legend=False)
+fig, ax = plt.subplots()
+df_daily_jumpsup.plot(legend=False, ax=ax)
 df_subset.plot(legend=False, ax=ax, color="r")
+plt.show()
