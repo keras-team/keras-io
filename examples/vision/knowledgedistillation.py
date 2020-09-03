@@ -18,7 +18,9 @@ The logits are softened by applying a temperature in the softmax, effectively sm
 out the probability distribution and revealing inter-class relationships learned by the
 teacher.
 
-- [Paper](https://arxiv.org/abs/1503.02531)
+**Reference:**
+
+- [Hinton et al. (2015)](https://arxiv.org/abs/1503.02531)
 """
 
 """
@@ -30,24 +32,26 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
 
+tf.random.set_seed(0)
+np.random.seed(0)
+
 """
 ## Construct `Distiller()` class
 The custom `Distiller()` class, merges custom `train_step` and `test_step` with classical
 and custom Keras `compile()` elements. In order to apply the distiller, we need:
-
 - A trained teacher model
 - A student model to train
 - A student loss function on the difference between student predictions and ground-truth
-- A distillation loss function, along with a temperature `T`, on the difference between
-the soft student predictions and the soft teacher labels
+- A distillation loss function, along with a `temperature`, on the difference between the
+soft student predictions and the soft teacher labels
 - `alpha` to weight the student and distillation loss
 - An optimizer for the student and (optional) metrics to evaluate performance
 
 In `train_step` we perform a forward pass of both the teacher and student, calculate the
-loss with weighting of the student loss `s_loss` and distillation loss `d_loss` by
-`alpha` and `1-alpha`, respectively, and update weights. Note, only the student weights
-are updated and therefore, we merely calculate the gradients for the student weights. In
-the `test_step` we evaluate the student model on the provided dataset as usual.
+loss with weighting of the `student_loss` and `distillation_loss` by `alpha` and
+`1-alpha`, respectively, and update weights. Note, only the student weights are updated
+and therefore, we merely calculate the gradients for the student weights. In the
+`test_step` we evaluate the student model on the provided dataset as usual.
 """
 
 
@@ -57,31 +61,51 @@ class Distiller(keras.Model):
         self.teacher = student
         self.student = teacher
 
-    def compile(self, optimizer, metrics, s_loss_fn, d_loss_fn, alpha, T):
+    def compile(
+        self,
+        optimizer,
+        metrics,
+        student_loss_fn,
+        distillation_loss_fn,
+        alpha=0.1,
+        temperature=3,
+    ):
+        """ Configure the distiller.
+        Args:
+            optimizer: Keras optimizer for the student weights
+            metrics: Keras metrics for evaluation
+            student_loss_fn: loss function of difference between student
+                predictions and ground-truth
+            distillation_loss_fn: loss function of difference between soft
+                student predictions and soft teacher predictions
+            alpha: weight to student_loss_fn and 1-alpha to distillation_loss_fn
+            temperature: temperature for softening probability distributions.
+                Larger tamperature gives softer distributions
+        """
         super(Distiller, self).compile(optimizer=optimizer, metrics=metrics)
-        self.s_loss_fn = s_loss_fn
-        self.d_loss_fn = d_loss_fn
+        self.student_loss_fn = student_loss_fn
+        self.distillation_loss_fn = distillation_loss_fn
         self.alpha = alpha
-        self.T = T
+        self.temperature = temperature
 
     def train_step(self, data):
         # Unpack data
         x, y = data
 
         # Forward pass of teacher
-        t_pred = self.teacher(x, training=False)
+        teacher_predictions = self.teacher(x, training=False)
 
         with tf.GradientTape() as tape:
             # Forward pass of student
-            s_pred = self.student(x, training=True)
+            student_predictions = self.student(x, training=True)
 
             # Compute losses
-            s_loss = self.s_loss_fn(y, s_pred)
-            d_loss = self.d_loss_fn(
-                tf.nn.softmax(t_pred / self.T, axis=1),
-                tf.nn.softmax(s_pred / self.T, axis=1),
+            student_loss = self.student_loss_fn(y, student_predictions)
+            distillation_loss = self.distillation_loss_fn(
+                tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
+                tf.nn.softmax(student_predictions / self.temperature, axis=1),
             )
-            loss = self.alpha * s_loss + (1 - self.alpha) * d_loss
+            loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
 
         # Compute gradients
         trainable_vars = self.student.trainable_variables
@@ -91,29 +115,32 @@ class Distiller(keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Update the metrics configured in `compile()`.
-        self.compiled_metrics.update_state(y, s_pred)
+        self.compiled_metrics.update_state(y, student_predictions)
 
         # Return a dict of performance
-        return {
-            **{"s_loss": s_loss, "d_loss": d_loss},
-            **{m.name: m.result() for m in self.metrics},
-        }
+        results = {m.name: m.result() for m in self.metrics}
+        results.update(
+            {"student_loss": student_loss, "distillation_loss": distillation_loss}
+        )
+        return results
 
     def test_step(self, data):
         # Unpack the data
         x, y = data
 
         # Compute predictions
-        y_pred = self.student(x, training=False)
+        y_prediction = self.student(x, training=False)
 
         # Calculate the loss
-        s_loss = self.s_loss_fn(y, y_pred)
+        student_loss = self.student_loss_fn(y, y_prediction)
 
         # Update the metrics.
-        self.compiled_metrics.update_state(y, y_pred)
+        self.compiled_metrics.update_state(y, y_prediction)
 
         # Return a dict of performance
-        return {**{"s_loss": s_loss}, **{m.name: m.result() for m in self.metrics}}
+        results = {m.name: m.result() for m in self.metrics}
+        results.update({"student_loss": student_loss})
+        return results
 
 
 """
@@ -151,11 +178,16 @@ student = keras.Sequential(
     name="student",
 )
 
+# Clone student for later comparison
+student_scratch = keras.models.clone_model(student)
+
 """
 ## Prepare dataset
 The dataset used for training the teacher and distilling the teacher is
-[MNIST](https://keras.io/api/datasets/mnist/). Both the student and teacher are trained
-on the training set and evaluated on the test set.
+[MNIST](https://keras.io/api/datasets/mnist/), and the procedure is equivalent for other
+dataset, e.g. [CIFAR-10](https://keras.io/api/datasets/cifar10/), with a suitable choice
+of models. Both the student and teacher are trained on the training set and evaluated on
+the test set.
 """
 
 # Prepare the train and test dataset.
@@ -184,14 +216,14 @@ by training the teacher model on the training set in the usual way.
 
 # Train teacher as usual
 teacher.compile(
-    optimizer="adam",
+    optimizer=keras.optimizers.Adam(),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=["accuracy"],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 # Train and evaluate on subset of data to reduce computations.
-teacher.fit(train_dataset.take(10), epochs=1)
-loss, accuracy = teacher.evaluate(test_dataset.take(10))
+teacher.fit(train_dataset.take(10), epochs=5)
+teacher.evaluate(test_dataset)
 
 """
 ## Distill teacher to student
@@ -203,22 +235,42 @@ hyperparameters and optimizer, and distill the teacher to the student.
 # Initialize and compile distiller
 distiller = Distiller(student=student, teacher=teacher)
 distiller.compile(
-    optimizer="adam",
-    metrics=["accuracy"],
-    s_loss_fn=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    d_loss_fn=keras.losses.KLDivergence(),
+    optimizer=keras.optimizers.Adam(),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+    student_loss_fn=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    distillation_loss_fn=keras.losses.KLDivergence(),
     alpha=0.1,
-    T=3,
+    temperature=10,
 )
 
 # Distill teacher to student
-distiller.fit(train_dataset.take(10), epochs=1)
+distiller.fit(train_dataset.take(10), epochs=3)
 
 # Evaluate student on test dataset
-accuracy = distiller.evaluate(test_dataset.take(10))
+distiller.evaluate(test_dataset)
+
+"""
+## Train student from scratch
+We can also train an equivalent student model from scratch without the teacher, in order
+to evaluate the performance gain obtained by knowledge distillation.
+"""
+
+# Train student as doen usually
+student_scratch.compile(
+    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+)
+
+# Train and evaluate on subset of data to reduce computations.
+student_scratch.fit(train_dataset.take(10), epochs=3)
+student_scratch.evaluate(test_dataset)
 
 """
 If the teacher is trained for 5 full epochs and the student is distilled on this teacher
-for 5 epochs, you should experience a performance boost compared to training the same
-student model from scratch, i.e. in the classical manner.
+for 3 full epochs, you should in this example experience a performance boost compared to
+training the same student model from scratch, and even compared to the teacher itself.
+You should expect the teacher to have accuracy around 97.6%, the student trained from
+scratch should be around 97.6%, and the distilled student should be around 98.1%. Remove
+or try out different seeds to use different weight initializations.
 """
