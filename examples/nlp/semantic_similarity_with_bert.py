@@ -137,7 +137,7 @@ test_df["label"] = test_df["similarity"].apply(
 y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=3)
 
 """
-## Keras Custom Data Generator
+## Create a custom data generator
 """
 
 
@@ -320,7 +320,7 @@ model.compile(
 model.summary()
 
 """
-# Train the entire model end-to-end
+## Train the entire model end-to-end
 """
 history = model.fit(
     train_data,
