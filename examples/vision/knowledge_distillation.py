@@ -215,7 +215,7 @@ teacher.compile(
     metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
-# Train and evaluate on subset of data to reduce computations.
+# Train and evaluate teacher on data.
 teacher.fit(x_train, y_train, epochs=5)
 teacher.evaluate(x_test, y_test)
 
@@ -256,7 +256,7 @@ student_scratch.compile(
     metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
-# Train and evaluate on subset of data to reduce computations.
+# Train and evaluate student trained from scratch.
 student_scratch.fit(x_train, y_train, epochs=3)
 student_scratch.evaluate(x_test, y_test)
 
