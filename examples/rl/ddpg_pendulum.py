@@ -189,7 +189,7 @@ class Buffer:
         with tf.GradientTape() as tape:
             target_actions = target_actor(next_state_batch,training=True)
             y = reward_batch + gamma * target_critic([next_state_batch, target_actions],training=True)
-            critic_value = critic_model([state_batch, action_batch],,training=True)
+            critic_value = critic_model([state_batch, action_batch],training=True)
             critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
 
         critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
