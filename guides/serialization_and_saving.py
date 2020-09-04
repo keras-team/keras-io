@@ -11,14 +11,14 @@ Description: Complete guide to saving & serializing models.
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifyies what layers the model
+- An architecture, or configuration, which specifies what layers the model
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
 - A set of losses and metrics (defined by compiling the model or calling
 `add_loss()` or `add_metric()`).
 
-The Keras API makes it possible to save of these pieces to disk at once,
+The Keras API makes it possible to save all of these pieces to disk at once,
 or to only selectively save some of them:
 
 - Saving everything into a single archive in the TensorFlow SavedModel format
@@ -82,7 +82,7 @@ The recommended format is SavedModel. It is the default when you use `model.save
 
 You can switch to the H5 format by:
 
-- Passing `format='h5'` to `save()`.
+- Passing `save_format='h5'` to `save()`.
 - Passing a filename that ends in `.h5` or `.keras` to `save()`.
 """
 
@@ -432,7 +432,7 @@ generates a serialized form of the custom layer:
 
 Keras keeps a master list of all built-in layer, model, optimizer,
 and metric classes, which is used to find the correct class to call `from_config`.
-If the  class can't be found, than an error is raised (`Value Error: Unknown layer`).
+If the  class can't be found, then an error is raised (`Value Error: Unknown layer`).
 There are a few ways to register custom classes to this list:
 
 1. Setting `custom_objects` argument in the loading function. (see the example
@@ -631,7 +631,7 @@ then the HDF5 format is used. Other suffixes will result in a TensorFlow
 checkpoint unless `save_format` is set.
 
 There is also an option of retrieving weights as in-memory numpy arrays.
-Each API has their pros and cons which are detailed below .
+Each API has its pros and cons which are detailed below.
 
 """
 

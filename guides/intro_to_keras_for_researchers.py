@@ -412,7 +412,7 @@ for epoch in range(2):
             print("Epoch:", epoch, "Step:", step)
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
-    # Result the metric's state at the end of an epoch
+    # Reset the metric's state at the end of an epoch
     accuracy.reset_states()
 
 """
@@ -568,9 +568,9 @@ for your OO models.
 """
 ## End-to-end experiment example 1: variational autoencoders.
 
-Here are some of things you've learned so far:
+Here are some of the things you've learned so far:
 
-- A `Layer` encapsulate a state (created in `__init__` or `build`) and some computation
+- A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
 - Layers can be recursively nested to create new, bigger computation blocks.
 - You can easily write highly hackable training loops by opening a

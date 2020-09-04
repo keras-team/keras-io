@@ -1,4 +1,4 @@
-# BERT (from HuggingFace Transformers) for Text Extraction
+# Text Extraction with BERT
 
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2020/05/23<br>
@@ -55,7 +55,7 @@ from tokenizers import BertWordPieceTokenizer
 from transformers import BertTokenizer, TFBertModel, BertConfig
 
 max_len = 384
-configuration = BertConfig()  # default paramters and configuration for BERT
+configuration = BertConfig()  # default parameters and configuration for BERT
 
 ```
 

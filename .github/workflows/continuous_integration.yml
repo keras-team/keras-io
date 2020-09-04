@@ -21,8 +21,4 @@ jobs:
     - uses: actions/checkout@v2
     - name: Ensure the docker image works and can start.
       run: |
-        docker build -t keras-io .
-        docker run --rm -d -p 8000:8000 --name keras-io-server keras-io
-        sleep 10
-        docker exec keras-io-server echo I am alive
-        docker kill keras-io-server
+        make container-test

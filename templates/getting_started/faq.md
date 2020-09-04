@@ -139,6 +139,8 @@ Importantly, you should:
 TPUs are a fast & efficient hardware accelerator for deep learning that is publicly available on Google Cloud.
 You can use TPUs via Colab, AI Platform (ML Engine), and Deep Learning VMs (provided the `TPU_NAME` environment variable is set on the VM).
 
+Make sure to read the [TPU usage guide](https://www.tensorflow.org/guide/tpu) first. Here's a quick summary:
+
 After connecting to a TPU runtime (e.g. by selecting the TPU runtime in Colab), you will need to detect your TPU using a `TPUClusterResolver`, which automatically detects a linked TPU on all supported platforms:
 
 ```python
@@ -162,7 +164,7 @@ Importantly, you should:
 
 - Make sure your dataset yields batches with a fixed static shape. A TPU graph can only process inputs with a constant shape.
 - Make sure you are able to read your data fast enough to keep the TPU utilized. Using the [TFRecord format](https://www.tensorflow.org/tutorials/load_data/tfrecord) to store your data may be a good idea.
-
+- Consider running multiple steps of gradient descent per graph execution in order to keep the TPU utilized. You can do this via the `experimental_steps_per_execution` argument `compile()`. It will yield a significant speed up for small models.
 
 ---
 

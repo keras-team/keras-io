@@ -19,14 +19,13 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
-
 ```
 
 ---
 ## Introduction
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
-Their usage is coverered in the guide
+Their usage is covered in the guide
 [Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
@@ -50,14 +49,12 @@ retrieve using `model.trainable_weights`).
 Let's consider a simple MNIST model:
 
 
-
 ```python
 inputs = keras.Input(shape=(784,), name="digits")
 x1 = layers.Dense(64, activation="relu")(inputs)
 x2 = layers.Dense(64, activation="relu")(x1)
 outputs = layers.Dense(10, name="predictions")(x2)
 model = keras.Model(inputs=inputs, outputs=outputs)
-
 ```
 
 Let's train it using mini-batch gradient with a custom training loop.
@@ -75,10 +72,9 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
-x_test = np.reshape(x_train, (-1, 784))
+x_test = np.reshape(x_test, (-1, 784))
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
-
 ```
 
 Here's our training loop:
@@ -102,7 +98,7 @@ for epoch in range(epochs):
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
 
         # Open a GradientTape to record the operations run
-        # during the forward pass, which enables autodifferentiation.
+        # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
 
             # Run the forward pass of the layer.
@@ -129,22 +125,21 @@ for epoch in range(epochs):
                 % (step, float(loss_value))
             )
             print("Seen so far: %s samples" % ((step + 1) * 64))
-
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 111.6209
+Training loss (for one batch) at step 0: 76.3562
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 2.0270
+Training loss (for one batch) at step 200: 1.3921
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6650
+Training loss (for one batch) at step 400: 1.0018
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.4232
+Training loss (for one batch) at step 600: 0.8904
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.8876
+Training loss (for one batch) at step 800: 0.8393
 Seen so far: 51264 samples
 ```
 </div>
@@ -152,15 +147,15 @@ Seen so far: 51264 samples
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 1.1270
+Training loss (for one batch) at step 0: 0.8572
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5749
+Training loss (for one batch) at step 200: 0.7616
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.9260
+Training loss (for one batch) at step 400: 0.8453
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.6680
+Training loss (for one batch) at step 600: 0.4959
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.7342
+Training loss (for one batch) at step 800: 0.9363
 Seen so far: 51264 samples
 
 ```
@@ -213,7 +208,6 @@ x_train = x_train[:-10000]
 y_train = y_train[:-10000]
 val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 val_dataset = val_dataset.batch(64)
-
 ```
 
 Here's our training & evaluation loop:
@@ -262,45 +256,44 @@ for epoch in range(epochs):
     val_acc_metric.reset_states()
     print("Validation acc: %.4f" % (float(val_acc),))
     print("Time taken: %.2fs" % (time.time() - start_time))
-
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 98.7654
+Training loss (for one batch) at step 0: 134.3001
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.6912
+Training loss (for one batch) at step 200: 1.3430
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.8003
+Training loss (for one batch) at step 400: 1.3557
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5667
+Training loss (for one batch) at step 600: 0.8682
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3703
+Training loss (for one batch) at step 800: 0.5862
 Seen so far: 51264 samples
-Training acc over epoch: 0.7895
-Validation acc: 0.8839
-Time taken: 4.00s
+Training acc over epoch: 0.7176
+Validation acc: 0.8403
+Time taken: 4.65s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.4217
+Training loss (for one batch) at step 0: 0.4264
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.6494
+Training loss (for one batch) at step 200: 0.4168
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.3163
+Training loss (for one batch) at step 400: 0.6106
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5749
+Training loss (for one batch) at step 600: 0.4762
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.7743
+Training loss (for one batch) at step 800: 0.4031
 Seen so far: 51264 samples
-Training acc over epoch: 0.8796
-Validation acc: 0.9109
-Time taken: 4.12s
+Training acc over epoch: 0.8429
+Validation acc: 0.8774
+Time taken: 5.07s
 
 ```
 </div>
@@ -312,12 +305,12 @@ The default runtime in TensorFlow 2.0 is
 above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
-advantage. Decribing your computation as a static graph enables the framework
+advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
 the framework is constrained to greedly execute one operation after another,
 with no knowledge of what comes next.
 
-You can compile into a static graph any function that take tensors as input.
+You can compile into a static graph any function that takes tensors as input.
 Just add a `@tf.function` decorator on it, like this:
 
 
@@ -333,7 +326,6 @@ def train_step(x, y):
     train_acc_metric.update_state(y, logits)
     return loss_value
 
-
 ```
 
 Let's do the same with the evaluation step:
@@ -345,7 +337,6 @@ Let's do the same with the evaluation step:
 def test_step(x, y):
     val_logits = model(x, training=False)
     val_acc_metric.update_state(y, val_logits)
-
 
 ```
 
@@ -387,45 +378,44 @@ for epoch in range(epochs):
     val_acc_metric.reset_states()
     print("Validation acc: %.4f" % (float(val_acc),))
     print("Time taken: %.2fs" % (time.time() - start_time))
-
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.4031
+Training loss (for one batch) at step 0: 0.6483
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5389
+Training loss (for one batch) at step 200: 0.5966
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.2882
+Training loss (for one batch) at step 400: 0.5951
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.1869
+Training loss (for one batch) at step 600: 1.3830
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.2242
+Training loss (for one batch) at step 800: 0.2758
 Seen so far: 51264 samples
-Training acc over epoch: 0.9021
-Validation acc: 0.9245
-Time taken: 0.94s
+Training acc over epoch: 0.8756
+Validation acc: 0.8955
+Time taken: 1.18s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.5663
+Training loss (for one batch) at step 0: 0.4447
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4330
+Training loss (for one batch) at step 200: 0.3794
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.2152
+Training loss (for one batch) at step 400: 0.4636
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.3243
+Training loss (for one batch) at step 600: 0.3694
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.2464
+Training loss (for one batch) at step 800: 0.2763
 Seen so far: 51264 samples
-Training acc over epoch: 0.9143
-Validation acc: 0.9327
-Time taken: 0.67s
+Training acc over epoch: 0.8926
+Validation acc: 0.9078
+Time taken: 0.71s
 
 ```
 </div>
@@ -445,14 +435,12 @@ and add them to the main loss in your training step.
 Consider this layer, that creates an activity regularization loss:
 
 
-
 ```python
 
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
         self.add_loss(1e-2 * tf.reduce_sum(inputs))
         return inputs
-
 
 ```
 
@@ -468,7 +456,6 @@ x = layers.Dense(64, activation="relu")(x)
 outputs = layers.Dense(10, name="predictions")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
-
 ```
 
 Here's what our training step should look like now:
@@ -487,7 +474,6 @@ def train_step(x, y):
     optimizer.apply_gradients(zip(grads, model.trainable_weights))
     train_acc_metric.update_state(y, logits)
     return loss_value
-
 
 ```
 
@@ -508,8 +494,8 @@ images that look almost real, by learning the latent distribution of a training
 dataset of images (the "latent space" of the images).
 
 A GAN is made of two parts: a "generator" model that maps points in the latent
-space to points in image space, an a "discriminator" model, a classifier
-that can tell the difference between real imagees (from the training dataset)
+space to points in image space, a "discriminator" model, a classifier
+that can tell the difference between real images (from the training dataset)
 and fake images (the output of the generator network).
 
 A GAN training loop looks like this:
@@ -548,7 +534,6 @@ discriminator = keras.Sequential(
     name="discriminator",
 )
 discriminator.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -599,7 +584,6 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-
 ```
 
 Here's the key bit: the training loop. As you can see it is quite straightforward. The
@@ -652,7 +636,6 @@ def train_step(real_images):
     g_optimizer.apply_gradients(zip(grads, generator.trainable_weights))
     return d_loss, g_loss, generated_images
 
-
 ```
 
 Let's train our GAN, by repeatedly calling `train_step` on batches of images.
@@ -699,15 +682,14 @@ for epoch in range(epochs):
         # Remove the lines below to actually train the model!
         if step > 10:
             break
-
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.68
-adversarial loss at step 0: 0.69
+discriminator loss at step 0: 0.70
+adversarial loss at step 0: 0.68
 
 ```
 </div>

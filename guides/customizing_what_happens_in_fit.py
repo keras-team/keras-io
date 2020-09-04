@@ -22,7 +22,7 @@ or step fusing?
 A core principle of Keras is **progressive disclosure of complexity**. You should
 always be able to get into lower-level workflows in a gradual way. You shouldn't fall
 off a cliff if the high-level functionality doesn't exactly match your use case. You
-should be able to gain more control over the small details while retaing a
+should be able to gain more control over the small details while retaining a
 commensurate amount of high-level convenience.
 
 When you need to customize what `fit()` does, you should **override the training step
@@ -39,6 +39,7 @@ Let's see how that works.
 
 """
 ## Setup
+Requires TensorFlow 2.2 or later.
 """
 
 import tensorflow as tf
@@ -157,7 +158,12 @@ model.compile(optimizer="adam")
 # Just use `fit` as usual -- you can use callbacks, etc.
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.fit(x, y, epochs=3)
+model.fit(x, y, epochs=1)
+
+"""
+Note that with this setup, you will need to manually call `reset_states()` on your
+metrics after each epoch, or between training and evaluation.
+"""
 
 """
 ## Supporting `sample_weight` & `class_weight`
@@ -389,10 +395,10 @@ gan.compile(
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-# To limit execution time, we only train on 100 batches. You can train on
+# To limit the execution time, we only train on 100 batches. You can train on
 # the entire dataset. You will need about 20 epochs to get nice results.
 gan.fit(dataset.take(100), epochs=1)
 
 """
-The idea behind deep learning are simple, so why should their implementation be painful?
+The ideas behind deep learning are simple, so why should their implementation be painful?
 """

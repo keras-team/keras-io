@@ -40,16 +40,14 @@ models, or subclassed models.
 
 Let's see how that works.
 
-
 ---
 ## Setup
-
+Requires TensorFlow 2.2 or later.
 
 
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -79,7 +77,6 @@ of the metrics that were passed in `compile()`, and we query results from
 `self.metrics` at the end to retrieve their current value.
 
 
-
 ```python
 
 class CustomModel(keras.Model):
@@ -104,11 +101,9 @@ class CustomModel(keras.Model):
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
-
 ```
 
 Let's try this out:
-
 
 
 ```python
@@ -124,19 +119,18 @@ model.compile(optimizer="adam", loss="mse", metrics=["mae"])
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.fit(x, y, epochs=3)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.3701 - mae: 0.4972
+32/32 [==============================] - 0s 610us/step - loss: 0.3650 - mae: 0.4867
 Epoch 2/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2283 - mae: 0.3842
+32/32 [==============================] - 0s 500us/step - loss: 0.2719 - mae: 0.4231
 Epoch 3/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2193 - mae: 0.3759
+32/32 [==============================] - 0s 421us/step - loss: 0.2630 - mae: 0.4156
 
-<tensorflow.python.keras.callbacks.History at 0x7f3bfc41c0f0>
+<tensorflow.python.keras.callbacks.History at 0x1124199d0>
 
 ```
 </div>
@@ -146,7 +140,6 @@ Epoch 3/3
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
 everything *manually* in `train_step`. Likewise for metrics. Here's a lower-level
 example, that only uses `compile()` to configure the optimizer:
-
 
 
 ```python
@@ -187,23 +180,20 @@ model.compile(optimizer="adam")
 # Just use `fit` as usual -- you can use callbacks, etc.
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.fit(x, y, epochs=3)
-
+model.fit(x, y, epochs=1)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.3244 - mae: 0.4531
-Epoch 2/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2864 - mae: 0.4263
-Epoch 3/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2715 - mae: 0.4145
+32/32 [==============================] - 0s 550us/step - loss: 0.2319 - mae: 0.3889
 
-<tensorflow.python.keras.callbacks.History at 0x7f3b9c048390>
+<tensorflow.python.keras.callbacks.History at 0x153a95350>
 
 ```
 </div>
+Note that with this setup, you will need to manually call `reset_states()` on your
+metrics after each epoch, or between training and evaluation.
+
 ---
 ## Supporting `sample_weight` & `class_weight`
 
@@ -215,7 +205,6 @@ weighting. If you want to support the `fit()` arguments `sample_weight` and
 - Pass it to `compiled_loss` & `compiled_metrics` (of course, you could also just apply
 it manually if you don't rely on `compile()` for losses & metrics)
 - That's it. That's the list.
-
 
 
 ```python
@@ -267,19 +256,18 @@ x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 sw = np.random.random((1000, 1))
 model.fit(x, y, sample_weight=sw, epochs=3)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 2ms/step - loss: 1.0058 - mae: 1.3402
+32/32 [==============================] - 0s 546us/step - loss: 0.2295 - mae: 0.5567
 Epoch 2/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.4708 - mae: 0.8719
+32/32 [==============================] - 0s 452us/step - loss: 0.1311 - mae: 0.4185
 Epoch 3/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2220 - mae: 0.5591
+32/32 [==============================] - 0s 420us/step - loss: 0.1247 - mae: 0.4071
 
-<tensorflow.python.keras.callbacks.History at 0x7f3b7c7efc50>
+<tensorflow.python.keras.callbacks.History at 0x153b18910>
 
 ```
 </div>
@@ -288,7 +276,6 @@ Epoch 3/3
 
 What if you want to do the same for calls to `model.evaluate()`? Then you would
 override `test_step` in exactly the same way. Here's what it looks like:
-
 
 
 ```python
@@ -318,14 +305,13 @@ model.compile(loss="mse", metrics=["mae"])
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.evaluate(x, y)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 1ms/step - loss: 0.8495 - mae: 0.8096
+32/32 [==============================] - 0s 457us/step - loss: 1.6966 - mae: 1.2076
 
-[0.849469780921936, 0.8096422553062439]
+[1.6965508460998535, 1.2076295614242554]
 
 ```
 </div>
@@ -341,7 +327,6 @@ Let's consider:
 "real").
 - One optimizer for each.
 - A loss function to train the discriminator.
-
 
 
 
@@ -379,12 +364,10 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-
 ```
 
 Here's a feature-complete GAN class, overriding `compile()` to use its own signature,
 and implementing the entire GAN algorithm in 17 lines in `train_step`:
-
 
 
 ```python
@@ -446,11 +429,9 @@ class GAN(keras.Model):
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
         return {"d_loss": d_loss, "g_loss": g_loss}
 
-
 ```
 
 Let's test-drive it:
-
 
 
 ```python
@@ -473,18 +454,14 @@ gan.compile(
 # To limit execution time, we only train on 100 batches. You can train on
 # the entire dataset. You will need about 20 epochs to get nice results.
 gan.fit(dataset.take(100), epochs=1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11493376/11490434 [==============================] - 0s 0us/step
-100/100 [==============================] - 1s 11ms/step - d_loss: 0.4090 - g_loss: 0.8741
+100/100 [==============================] - 56s 557ms/step - d_loss: 0.4902 - g_loss: 0.8928
 
-<tensorflow.python.keras.callbacks.History at 0x7f3b7c735c88>
+<tensorflow.python.keras.callbacks.History at 0x153cb1810>
 
 ```
 </div>
 The idea behind deep learning are simple, so why should their implementation be painful?
-

@@ -1,5 +1,37 @@
 
       <div class='k-main-top'>
+        <script>
+          function displayDropdownMenu() {
+            e = document.getElementById("nav-menu");
+            if (e.style.display == "block") {
+              e.style.display = "none";
+            }
+            else {
+              e.style.display = "block";
+              document.getElementById("dropdown-nav").style.display = "block";
+            }
+          }
+
+          function resetMobileUI() {
+            if (window.innerWidth <= 840) {
+              document.getElementById("nav-menu").style.display = "none";
+              document.getElementById("dropdown-nav").style.display = "block";
+            }
+            else {
+              document.getElementById("nav-menu").style.display = "block";
+              document.getElementById("dropdown-nav").style.display = "none";
+            }
+          }
+
+          window.onresize = resetMobileUI;
+        </script>
+        <div id='dropdown-nav' onclick="displayDropdownMenu();">
+          <svg viewBox="-20 -20 120 120" width="60" height="60">
+            <rect width="100" height="20"></rect>
+            <rect y="30" width="100" height="20"></rect>
+            <rect y="60" width="100" height="20"></rect>
+          </svg>
+        </div>
 
         <form class="bd-search d-flex align-items-center k-search-form" id="search-form">
           <input type="search" class="k-search-input" id="search-input" placeholder="Search Keras documentation..." aria-label="Search Keras documentation..." autocomplete="off">
@@ -17,14 +49,13 @@
           }
         </script>
 
+      </div>
+      <div class='k-main-inner'>
         <div class='k-location-slug'>
             » {% for part in location_history %}
                 <a href='{{part.url}}'>{{part.title}}</a> /
               {% endfor %} {{title}}
         </div>
-
-      </div>
-      <div class='k-main-inner'>
         <div class='k-content'>
           {{content}}
         </div>

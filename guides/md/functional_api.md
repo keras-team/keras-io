@@ -19,18 +19,16 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
 ## Introduction
 
-The Keras *functional API* is a way to create models that is more flexible
+The Keras *functional API* is a way to create models that are more flexible
 than the `tf.keras.Sequential` API. The functional API can handle models
-with non-linear topology, models with shared layers, and models
-with multiple inputs or outputs.
+with non-linear topology, shared layers, and even multiple inputs or outputs.
 
-The main idea that a deep learning model is usually
+The main idea is that a deep learning model is usually
 a directed acyclic graph (DAG) of layers.
 So the functional API is a way to build *graphs of layers*.
 
@@ -56,7 +54,6 @@ To build this model using the functional API, start by creating an input node:
 
 ```python
 inputs = keras.Input(shape=(784,))
-
 ```
 
 The shape of the data is set as a 784-dimensional vector.
@@ -69,7 +66,6 @@ you would use:
 ```python
 # Just for demonstration purposes.
 img_inputs = keras.Input(shape=(32, 32, 3))
-
 ```
 
 The `inputs` that is returned contains information about the shape and `dtype`
@@ -79,7 +75,6 @@ Here's the shape:
 
 ```python
 inputs.shape
-
 ```
 
 
@@ -96,7 +91,6 @@ Here's the dtype:
 
 ```python
 inputs.dtype
-
 ```
 
 
@@ -115,12 +109,11 @@ object:
 ```python
 dense = layers.Dense(64, activation="relu")
 x = dense(inputs)
-
 ```
 
 The "layer call" action is like drawing an arrow from "inputs" to this layer
 you created.
-You're "passing" the inputs to the `dense` layer, and out you get `x`.
+You're "passing" the inputs to the `dense` layer, and you get `x` as the output.
 
 Let's add a few more layers to the graph of layers:
 
@@ -128,7 +121,6 @@ Let's add a few more layers to the graph of layers:
 ```python
 x = layers.Dense(64, activation="relu")(x)
 outputs = layers.Dense(10)(x)
-
 ```
 
 At this point, you can create a `Model` by specifying its inputs and outputs
@@ -137,7 +129,6 @@ in the graph of layers:
 
 ```python
 model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model")
-
 ```
 
 Let's check out what the model summary looks like:
@@ -145,7 +136,6 @@ Let's check out what the model summary looks like:
 
 ```python
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -174,7 +164,6 @@ You can also plot the model as a graph:
 
 ```python
 keras.utils.plot_model(model, "my_first_model.png")
-
 ```
 
 
@@ -190,7 +179,6 @@ in the plotted graph:
 
 ```python
 keras.utils.plot_model(model, "my_first_model_with_shape_info.png", show_shapes=True)
-
 ```
 
 
@@ -204,7 +192,7 @@ This figure and the code are almost identical. In the code version,
 the connection arrows are replaced by the call operation.
 
 A "graph of layers" is an intuitive mental image for a deep learning model,
-and the functional API is a way to create models that closely mirror this.
+and the functional API is a way to create models that closely mirrors this.
 
 ---
 ## Training, evaluation, and inference
@@ -234,18 +222,17 @@ history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=
 test_scores = model.evaluate(x_test, y_test, verbose=2)
 print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.3486 - accuracy: 0.9025 - val_loss: 0.2256 - val_accuracy: 0.9326
+750/750 [==============================] - 1s 1ms/step - loss: 0.5778 - accuracy: 0.8391 - val_loss: 0.1893 - val_accuracy: 0.9440
 Epoch 2/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.1718 - accuracy: 0.9496 - val_loss: 0.1468 - val_accuracy: 0.9576
-313/313 - 0s - loss: 0.1388 - accuracy: 0.9602
-Test loss: 0.13882307708263397
-Test accuracy: 0.9602000117301941
+750/750 [==============================] - 1s 832us/step - loss: 0.1739 - accuracy: 0.9476 - val_loss: 0.1564 - val_accuracy: 0.9528
+313/313 - 0s - loss: 0.1497 - accuracy: 0.9528
+Test loss: 0.14971688389778137
+Test accuracy: 0.9527999758720398
 
 ```
 </div>
@@ -255,7 +242,7 @@ For further reading, see the [training and evaluation](/guides/training_with_bui
 ## Save and serialize
 
 Saving the model and serialization work the same way for models built using
-the functional API as they do for `Sequential` models. To standard way
+the functional API as they do for `Sequential` models. The standard way
 to save a functional model is to call `model.save()`
 to save the entire model as a single file. You can later recreate the same model
 from this file, even if the code that built the model is no longer available.
@@ -272,7 +259,6 @@ model.save("path_to_my_model")
 del model
 # Recreate the exact same model purely from the file:
 model = keras.models.load_model("path_to_my_model")
-
 ```
 
 For details, read the model [serialization & saving](
@@ -311,7 +297,6 @@ decoder_output = layers.Conv2DTranspose(1, 3, activation="relu")(x)
 
 autoencoder = keras.Model(encoder_input, decoder_output, name="autoencoder")
 autoencoder.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -390,7 +375,7 @@ on the output of another layer. By calling a model you aren't just reusing
 the architecture of the model, you're also reusing its weights.
 
 To see this in action, here's a different take on the autoencoder example that
-creates an encoder model, a decoder model, and chain them in two calls
+creates an encoder model, a decoder model, and chains them in two calls
 to obtain the autoencoder model:
 
 
@@ -422,7 +407,6 @@ encoded_img = encoder(autoencoder_input)
 decoded_img = decoder(encoded_img)
 autoencoder = keras.Model(autoencoder_input, decoded_img, name="autoencoder")
 autoencoder.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -477,9 +461,9 @@ Layer (type)                 Output Shape              Param #
 =================================================================
 img (InputLayer)             [(None, 28, 28, 1)]       0         
 _________________________________________________________________
-encoder (Model)              (None, 16)                18672     
+encoder (Functional)         (None, 16)                18672     
 _________________________________________________________________
-decoder (Model)              (None, 28, 28, 1)         9569      
+decoder (Functional)         (None, 28, 28, 1)         9569      
 =================================================================
 Total params: 28,241
 Trainable params: 28,241
@@ -513,7 +497,6 @@ y2 = model2(inputs)
 y3 = model3(inputs)
 outputs = layers.average([y1, y2, y3])
 ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
-
 ```
 
 ---
@@ -524,7 +507,7 @@ ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
 The functional API makes it easy to manipulate multiple inputs and outputs.
 This cannot be handled with the `Sequential` API.
 
-For example, if you're building a system for ranking custom issue tickets by
+For example, if you're building a system for ranking customer issue tickets by
 priority and routing them to the correct department,
 then the model will have three inputs:
 
@@ -577,7 +560,6 @@ model = keras.Model(
     inputs=[title_input, body_input, tags_input],
     outputs=[priority_pred, department_pred],
 )
-
 ```
 
 Now plot the model:
@@ -585,7 +567,6 @@ Now plot the model:
 
 ```python
 keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=True)
-
 ```
 
 
@@ -609,7 +590,6 @@ model.compile(
     ],
     loss_weights=[1.0, 0.2],
 )
-
 ```
 
 Since the output layers have different names, you could also specify
@@ -625,7 +605,6 @@ model.compile(
     },
     loss_weights=[1.0, 0.2],
 )
-
 ```
 
 Train the model by passing lists of NumPy arrays of inputs and targets:
@@ -647,17 +626,16 @@ model.fit(
     epochs=2,
     batch_size=32,
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 1s 26ms/step - loss: 1.2709 - priority_loss: 0.7003 - department_loss: 2.8529
+40/40 [==============================] - 3s 23ms/step - loss: 1.2998 - priority_loss: 0.7066 - department_loss: 2.9655
 Epoch 2/2
-40/40 [==============================] - 1s 27ms/step - loss: 1.2632 - priority_loss: 0.6977 - department_loss: 2.8274
+40/40 [==============================] - 1s 24ms/step - loss: 1.2969 - priority_loss: 0.6979 - department_loss: 2.9950
 
-<tensorflow.python.keras.callbacks.History at 0x1622c0550>
+<tensorflow.python.keras.callbacks.History at 0x147518210>
 
 ```
 </div>
@@ -672,8 +650,8 @@ For more detailed explanation, refer to the [training and evaluation](/guides/tr
 
 In addition to models with multiple inputs and outputs,
 the functional API makes it easy to manipulate non-linear connectivity
-topologies -- these are models with layers that are not connected sequentially.
-Something the `Sequential` API can not handle.
+topologies -- these are models with layers that are not connected sequentially,
+which the `Sequential` API cannot handle.
 
 A common use case for this is residual connections.
 Let's build a toy ResNet model for CIFAR10 to demonstrate this:
@@ -701,7 +679,6 @@ outputs = layers.Dense(10)(x)
 
 model = keras.Model(inputs, outputs, name="toy_resnet")
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -754,7 +731,6 @@ Plot the model:
 
 ```python
 keras.utils.plot_model(model, "mini_resnet.png", show_shapes=True)
-
 ```
 
 
@@ -783,22 +759,21 @@ model.compile(
 # We restrict the data to the first 1000 samples so as to limit execution time
 # on Colab. Try to train on the entire dataset until convergence!
 model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_split=0.2)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 1s 79ms/step - loss: 2.4461 - acc: 0.0962 - val_loss: 2.2925 - val_acc: 0.1450
+13/13 [==============================] - 2s 87ms/step - loss: 2.3145 - acc: 0.1124 - val_loss: 2.3046 - val_acc: 0.1150
 
-<tensorflow.python.keras.callbacks.History at 0x162a826d0>
+<tensorflow.python.keras.callbacks.History at 0x147c01650>
 
 ```
 </div>
 ---
 ## Shared layers
 
-Another good use for the functional API are for models that use *shared layers*.
-Shared layers are layer instances that are reused multiple times in a same model --
+Another good use for the functional API are models that use *shared layers*.
+Shared layers are layer instances that are reused multiple times in the same model --
 they learn features that correspond to multiple paths in the graph-of-layers.
 
 Shared layers are often used to encode inputs from similar spaces
@@ -825,7 +800,6 @@ text_input_b = keras.Input(shape=(None,), dtype="int32")
 # Reuse the same layer to encode both inputs
 encoded_input_a = shared_embedding(text_input_a)
 encoded_input_b = shared_embedding(text_input_b)
-
 ```
 
 ---
@@ -844,7 +818,6 @@ Let's look at an example. This is a VGG19 model with weights pretrained on Image
 
 ```python
 vgg19 = tf.keras.applications.VGG19()
-
 ```
 
 And these are the intermediate activations of the model,
@@ -853,7 +826,6 @@ obtained by querying the graph data structure:
 
 ```python
 features_list = [layer.output for layer in vgg19.layers]
-
 ```
 
 Use these features to create a new feature-extraction model that returns
@@ -865,11 +837,10 @@ feat_extraction_model = keras.Model(inputs=vgg19.input, outputs=features_list)
 
 img = np.random.random((1, 224, 224, 3)).astype("float32")
 extracted_features = feat_extraction_model(img)
-
 ```
 
 This comes in handy for tasks like
-[neural style transfer](https://www.tensorflow.org/tutorials/generative/style_transfer),
+[neural style transfer](https://keras.io/examples/generative/neural_style_transfer/),
 among other things.
 
 ---
@@ -920,7 +891,6 @@ inputs = keras.Input((4,))
 outputs = CustomDense(10)(inputs)
 
 model = keras.Model(inputs, outputs)
-
 ```
 
 For serialization support in your custom layer, define a `get_config`
@@ -958,10 +928,9 @@ model = keras.Model(inputs, outputs)
 config = model.get_config()
 
 new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
-
 ```
 
-Optionally, implement the classmethod `from_config(cls, config)` which is used
+Optionally, implement the class method `from_config(cls, config)` which is used
 when recreating a layer instance given its config dictionary.
 The default implementation of `from_config` is:
 
@@ -973,7 +942,7 @@ def from_config(cls, config):
 ---
 ## When to use the functional API
 
-When should you use the Keras functional API to create a new model,
+Should you use the Keras functional API to create a new model,
 or just subclass the `Model` class directly? In general, the functional API
 is higher-level, easier and safer, and has a number of
 features that subclassed models do not support.
@@ -983,7 +952,7 @@ that are not easily expressible as directed acyclic graphs of layers.
 For example, you could not implement a Tree-RNN with the functional API
 and would have to subclass `Model` directly.
 
-For in-depth look at the differences between the functional API and
+For an in-depth look at the differences between the functional API and
 model subclassing, read
 [What are Symbolic and Imperative APIs in TensorFlow 2.0?](https://blog.tensorflow.org/2019/01/what-are-symbolic-and-imperative-apis.html).
 
@@ -1072,7 +1041,6 @@ This is true for most deep learning architectures, but not all -- for example,
 recursive networks or Tree RNNs do not follow this assumption and cannot
 be implemented in the functional API.
 
-
 ---
 ## Mix-and-match API styles
 
@@ -1123,7 +1091,6 @@ class CustomRNN(layers.Layer):
 
 rnn_model = CustomRNN()
 _ = rnn_model(tf.zeros((1, timesteps, input_dim)))
-
 ```
 
 <div class="k-default-codeblock">
@@ -1192,5 +1159,4 @@ model = keras.Model(inputs, outputs)
 
 rnn_model = CustomRNN()
 _ = rnn_model(tf.zeros((1, 10, 5)))
-
 ```
