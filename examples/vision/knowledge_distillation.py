@@ -32,13 +32,13 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
 
-tf.random.set_seed(0)
-np.random.seed(0)
 
 """
 ## Construct `Distiller()` class
+
 The custom `Distiller()` class, merges custom `train_step` and `test_step` with classical
 and custom Keras `compile()` elements. In order to apply the distiller, we need:
+
 - A trained teacher model
 - A student model to train
 - A student loss function on the difference between student predictions and ground-truth
@@ -201,12 +201,6 @@ x_train = np.reshape(x_train, (-1, 28, 28, 1))
 x_test = x_test.astype("float32") / 255.0
 x_test = np.reshape(x_test, (-1, 28, 28, 1))
 
-# Construct datasets
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
-
-test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-test_dataset = test_dataset.shuffle(buffer_size=1024).batch(batch_size)
 
 """
 ## Train teacher
@@ -222,8 +216,8 @@ teacher.compile(
 )
 
 # Train and evaluate on subset of data to reduce computations.
-teacher.fit(train_dataset.take(10), epochs=5)
-teacher.evaluate(test_dataset)
+teacher.fit(x_train, y_train, epochs=5)
+teacher.evaluate(x_test, y_test)
 
 """
 ## Distill teacher to student
@@ -244,10 +238,10 @@ distiller.compile(
 )
 
 # Distill teacher to student
-distiller.fit(train_dataset.take(10), epochs=3)
+distiller.fit(x_train, y_train, epochs=3)
 
 # Evaluate student on test dataset
-distiller.evaluate(test_dataset)
+distiller.evaluate(x_test, y_test)
 
 """
 ## Train student from scratch
@@ -263,8 +257,8 @@ student_scratch.compile(
 )
 
 # Train and evaluate on subset of data to reduce computations.
-student_scratch.fit(train_dataset.take(10), epochs=3)
-student_scratch.evaluate(test_dataset)
+student_scratch.fit(x_train, y_train, epochs=3)
+student_scratch.evaluate(x_test, y_test)
 
 """
 If the teacher is trained for 5 full epochs and the student is distilled on this teacher
