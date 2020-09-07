@@ -2,7 +2,7 @@
 Title: Deep Deterministic Policy Gradient (DDPG)
 Author: [amifunny](https://github.com/amifunny)
 Date created: 2020/06/04
-Last modified: 2020/06/06
+Last modified: 2020/09/07
 Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 """
 """
@@ -12,11 +12,13 @@ Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 learning continous actions.
 
 It combines ideas from DPG (Deterministic Policy Gradient) and DQN (Deep Q-Network).
-It uses Experience Replay and slow-learning target networks from DQN, and it is based on DPG,
+It uses Experience Replay and slow-learning target networks from DQN, and it is based on
+DPG,
 which can operate over continuous action spaces.
 
 This tutorial closely follow this paper -
-[Continuous control with deep reinforcement learning](https://arxiv.org/pdf/1509.02971.pdf)
+[Continuous control with deep reinforcement
+learning](https://arxiv.org/pdf/1509.02971.pdf)
 
 ## Problem
 
@@ -46,7 +48,8 @@ stable.
 
 Conceptually, this is like saying, "I have an idea of how to play this well,
 I'm going to try it out for a bit until I find something better",
-as opposed to saying "I'm going to re-learn how to play this entire game after every move".
+as opposed to saying "I'm going to re-learn how to play this entire game after every
+move".
 See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679).
 
 **Second, it uses Experience Replay.**
@@ -56,16 +59,20 @@ learning only from recent experience, we learn from sampling all of our experien
 accumulated so far.
 
 Now, let's see how is it implemented.
+
 """
+
 import gym
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 """
 We use [OpenAIGym](http://gym.openai.com/docs) to create the environment.
 We will use the `upper_bound` parameter to scale our actions later.
+
 """
 
 problem = "Pendulum-v0"
@@ -82,10 +89,13 @@ lower_bound = env.action_space.low[0]
 print("Max Value of Action ->  {}".format(upper_bound))
 print("Min Value of Action ->  {}".format(lower_bound))
 
+
 """
-To implement better exploration by the Actor network, we use noisy perturbations, specifically
+To implement better exploration by the Actor network, we use noisy perturbations,
+specifically
 an **Ornstein-Uhlenbeck process** for generating noise, as described in the paper.
 It samples noise from a correlated normal distribution.
+
 """
 
 
@@ -136,6 +146,7 @@ for the actions taken by the Actor network. We seek to maximize this quantity.
 
 Hence we update the Actor network so that it produces actions that get
 the maximum predicted value as seen by the Critic, for a given state.
+
 """
 
 
@@ -187,9 +198,11 @@ class Buffer:
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
         with tf.GradientTape() as tape:
-            target_actions = target_actor(next_state_batch,training=True)
-            y = reward_batch + gamma * target_critic([next_state_batch, target_actions],training=True)
-            critic_value = critic_model([state_batch, action_batch],training=True)
+            target_actions = target_actor(next_state_batch, training=True)
+            y = reward_batch + gamma * target_critic(
+                [next_state_batch, target_actions], training=True
+            )
+            critic_value = critic_model([state_batch, action_batch], training=True)
             critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
 
         critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
@@ -198,8 +211,8 @@ class Buffer:
         )
 
         with tf.GradientTape() as tape:
-            actions = actor_model(state_batch)
-            critic_value = critic_model([state_batch, actions],training=True)
+            actions = actor_model(state_batch, training=True)
+            critic_value = critic_model([state_batch, actions], training=True)
             # Used `-value` as we want to maximize the value given
             # by the critic for our actions
             actor_loss = -tf.math.reduce_mean(critic_value)
@@ -238,6 +251,7 @@ Note: We need the initialization for last layer of the Actor to be between
 `-0.003` and `0.003` as this prevents us from getting `1` or `-1` output values in
 the initial stages, which would squash our gradients to zero,
 as we use the `tanh` activation.
+
 """
 
 
@@ -289,11 +303,12 @@ def get_critic():
 """
 `policy()` returns an action sampled from our Actor network plus some noise for
 exploration.
+
 """
 
 
 def policy(state, noise_object):
-    sampled_actions = tf.squeeze(actor_model(state,training=True))
+    sampled_actions = tf.squeeze(actor_model(state))
     noise = noise_object()
     # Adding noise to action
     sampled_actions = sampled_actions.numpy() + noise
@@ -306,6 +321,7 @@ def policy(state, noise_object):
 
 """
 ## Training hyperparameters
+
 """
 
 std_dev = 0.2
@@ -336,10 +352,12 @@ tau = 0.005
 
 buffer = Buffer(50000, 64)
 
+
 """
 Now we implement our main training loop, and iterate over episodes.
 We sample actions using `policy()` and train with `learn()` at each time step,
 along with updating the Target networks at a rate `tau`.
+
 """
 
 # To store reward history of each episode
@@ -390,8 +408,10 @@ plt.xlabel("Episode")
 plt.ylabel("Avg. Epsiodic Reward")
 plt.show()
 
+
 """
 ![Graph](https://i.imgur.com/sqEtM6M.png)
+
 """
 
 """
@@ -405,6 +425,7 @@ problems.
 
 Another great environment to try this on is `LunarLandingContinuous-v2`, but it will take
 more episodes to obtain good results.
+
 """
 
 # Save the weights
@@ -414,14 +435,17 @@ critic_model.save_weights("pendulum_critic.h5")
 target_actor.save_weights("pendulum_target_actor.h5")
 target_critic.save_weights("pendulum_target_critic.h5")
 
+
 """
 Before Training:
 
 ![before_img](https://i.imgur.com/ox6b9rC.gif)
+
 """
 
 """
 After 100 episodes:
 
 ![after_img](https://i.imgur.com/eEH8Cz6.gif)
+
 """
