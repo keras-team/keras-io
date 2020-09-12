@@ -2,18 +2,16 @@
 Title: Masked Language Modeling with BERT
 Author: [Ankur Singh](https://twitter.com/ankur310794)
 Date created: 2020/09/03
-Last modified: 2020/09/03
+Last modified: 2020/12/03
 Description: Implement a Masked Language Modeling with BERT and train on TPU
 """
 """
 ## Introduction
-
 Masked language modeling is a fill-in-the-blank task, where a model uses the context words surrounding a [MASK] token to try to predict what the [MASK] word should be.
 """
 
 """
 ## Setup
-
 Install HuggingFace transformers via pip install transformers (version >= 3.1.0).
 """
 
@@ -40,7 +38,7 @@ class Config:
     TOTAL_STEPS = 2000  # thats approx 4 epochs
     EVALUATE_EVERY = 200
     LR = 1e-5
-    PRETRAINED_MODEL = "bert-base-uncased"
+    PRETRAINED_MODEL = "bert-base-uncased"  # huggingface bert model
 
 
 flags = Config()
@@ -78,103 +76,70 @@ def connect_to_TPU():
 tpu, strategy, global_batch_size = connect_to_TPU()
 print("REPLICAS: ", strategy.num_replicas_in_sync)
 
-
 """
-## Prepare Masked Language Dataset
+## Load Data
 """
-
-
-class Dataset:
-    def __init__(self, tokenizer, strategy):
-
-        if isinstance(tokenizer, str):
-            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
-        else:
-            self.tokenizer = tokenizer
-
-        self.strategy = strategy
-
-    def get_processed_dataset(self, texts, maxlen):
-
-        # encode
-        X_data = self.encode(texts, maxlen=maxlen)
-
-        X_train_mlm, y_train_mlm = self.prepare_mlm_input_and_labels(X_data)
-
-        train_dist_dataset = self.create_dist_dataset(X_train_mlm, y_train_mlm, True)
-
-        return train_dist_dataset
-
-    def encode(self, texts, maxlen=512):
-        enc_di = self.tokenizer.batch_encode_plus(
-            texts,
-            return_attention_mask=False,
-            return_token_type_ids=False,
-            pad_to_max_length=True,
-            max_length=maxlen,
-            truncation=True,
-        )
-
-        return np.array(enc_di["input_ids"])
-
-    def prepare_mlm_input_and_labels(self, X):
-
-        # 15% BERT masking
-        inp_mask = np.random.rand(*X.shape) < 0.15
-        # do not mask special tokens
-        inp_mask[X <= 2] = False
-        # set targets to -1 by default, it means ignore
-        labels = -1 * np.ones(X.shape, dtype=int)
-        # set labels for masked tokens
-        labels[inp_mask] = X[inp_mask]
-
-        # prepare input
-        X_mlm = np.copy(X)
-        # set input to [MASK] which is the last token for the 90% of tokens
-        # this means leaving 10% unchanged
-        inp_mask_2mask = inp_mask & (np.random.rand(*X.shape) < 0.90)
-        X_mlm[
-            inp_mask_2mask
-        ] = self.tokenizer.mask_token_id  # mask token is the last in the dict
-
-        # set 10% to a random token
-        inp_mask_2random = inp_mask_2mask & (np.random.rand(*X.shape) < 1 / 9)
-        X_mlm[inp_mask_2random] = np.random.randint(
-            3, self.tokenizer.mask_token_id, inp_mask_2random.sum()
-        )
-
-        return X_mlm, labels
-
-    def create_dist_dataset(self, X, y=None, training=False):
-
-        dataset = tf.data.Dataset.from_tensor_slices(X)
-
-        ### Add y if present ###
-        if y is not None:
-            dataset_y = tf.data.Dataset.from_tensor_slices(y)
-            dataset = tf.data.Dataset.zip((dataset, dataset_y))
-
-        ### Repeat if training ###
-        if training:
-            dataset = dataset.shuffle(len(X)).repeat()
-
-        dataset = dataset.batch(global_batch_size).prefetch(AUTO)
-
-        ### make it distributed  ###
-        dist_dataset = self.strategy.experimental_distribute_dataset(dataset)
-
-        return dist_dataset
-
 
 """shell
 wget https://raw.githubusercontent.com/SrinidhiRaghavan/AI-Sentiment-Analysis-on-IMDB-Dataset/master/imdb_tr.csv
 """
 
 data = pd.read_csv("imdb_tr.csv", encoding="ISO-8859-1")
+
+"""
+## Prepare Masked Language Dataset
+"""
+
+
+def regular_encode(texts, tokenizer, maxlen=512):
+    enc_di = tokenizer.batch_encode_plus(
+        texts,
+        return_attention_mask=False,
+        return_token_type_ids=False,
+        pad_to_max_length=True,
+        max_length=maxlen,
+        truncation=True,
+    )
+
+    return np.array(enc_di["input_ids"])
+
+
 tokenizer = AutoTokenizer.from_pretrained(flags.PRETRAINED_MODEL)
-dataset = Dataset(tokenizer, strategy)
-texts = data.text.values
-train_dist_dataset = dataset.get_processed_dataset(texts, flags.MAX_LEN)
+X_data = regular_encode(data.text.values, tokenizer, maxlen=flags.MAX_LEN)
+
+
+def prepare_mlm_input_and_labels(X):
+    # 15% BERT masking
+    inp_mask = np.random.rand(*X.shape) < 0.15
+    # do not mask special tokens
+    inp_mask[X <= 2] = False
+    # set targets to -1 by default, it means ignore
+    labels = -1 * np.ones(X.shape, dtype=int)
+    # set labels for masked tokens
+    labels[inp_mask] = X[inp_mask]
+
+    # prepare input
+    X_mlm = np.copy(X)
+    # set input to [MASK] which is the last token for the 90% of tokens
+    # this means leaving 10% unchanged
+    inp_mask_2mask = inp_mask & (np.random.rand(*X.shape) < 0.90)
+    X_mlm[
+        inp_mask_2mask
+    ] = tokenizer.mask_token_id  # mask token is the last in the dict
+
+    # set 10% to a random token
+    inp_mask_2random = inp_mask_2mask & (np.random.rand(*X.shape) < 1 / 9)
+    X_mlm[inp_mask_2random] = np.random.randint(
+        3, tokenizer.mask_token_id, inp_mask_2random.sum()
+    )
+
+    return X_mlm, labels
+
+
+# use validation and test data for mlm
+X_train_mlm = np.vstack(X_data)
+# masks and labels
+X_train_mlm, y_train_mlm = prepare_mlm_input_and_labels(X_train_mlm)
 
 
 """
@@ -182,86 +147,58 @@ train_dist_dataset = dataset.get_processed_dataset(texts, flags.MAX_LEN)
 """
 
 
-class MaskedLanguageModel:
-    def __init__(self, strategy, model_name):
+def masked_sparse_categorical_crossentropy(y_true, y_pred):
+    y_true_masked = tf.boolean_mask(y_true, tf.not_equal(y_true, -1))
+    y_pred_masked = tf.boolean_mask(y_pred, tf.not_equal(y_true, -1))
+    loss = tf.keras.losses.sparse_categorical_crossentropy(
+        y_true_masked, y_pred_masked, from_logits=True
+    )
+    return loss
 
-        self.strategy = strategy
-        with self.strategy.scope():
-            self.model = TFAutoModelWithLMHead.from_pretrained(model_name)
-            self.optimizer = tf.keras.optimizers.Adam(learning_rate=flags.LR)
 
-        (
-            self.compute_mlm_loss,
-            self.train_mlm_loss_metric,
-        ) = self.get_mlm_loss_and_metrics()
-
-    def get_mlm_loss_and_metrics(self):
-
-        with self.strategy.scope():
-            mlm_loss_object = self.masked_sparse_categorical_crossentropy
-
-            def compute_mlm_loss(labels, predictions):
-                per_example_loss = mlm_loss_object(labels, predictions)
-                loss = tf.nn.compute_average_loss(
-                    per_example_loss, global_batch_size=global_batch_size
-                )
-                return loss
-
-            train_mlm_loss_metric = tf.keras.metrics.Mean()
-
-        return compute_mlm_loss, train_mlm_loss_metric
-
-    def masked_sparse_categorical_crossentropy(self, y_true, y_pred):
-        y_true_masked = tf.boolean_mask(y_true, tf.not_equal(y_true, -1))
-        y_pred_masked = tf.boolean_mask(y_pred, tf.not_equal(y_true, -1))
-        loss = tf.keras.losses.sparse_categorical_crossentropy(
-            y_true_masked, y_pred_masked, from_logits=True
-        )
-        return loss
-
-    def train_mlm(self, train_dist_dataset, total_steps=2000, evaluate_every=200):
-        step = 0
-        ### Training lopp ###
-        for batch in train_dist_dataset:
-            self.distributed_mlm_train_step(batch)
-            step += 1
-
-            if step % evaluate_every == 0:
-                ### Print train metrics ###
-                train_metric = self.train_mlm_loss_metric.result().numpy()
-                print("Step %d, train loss: %.2f" % (step, train_metric))
-
-                ### Reset  metrics ###
-                self.train_mlm_loss_metric.reset_states()
-
-            if step == total_steps:
-                break
-
-    @tf.function
-    def distributed_mlm_train_step(self, data):
-        strategy.experimental_run_v2(self.mlm_train_step, args=(data,))
-
-    @tf.function
-    def mlm_train_step(self, inputs):
+class MaskedLanguageModel(tf.keras.Model):
+    def train_step(self, inputs):
         features, labels = inputs
 
         with tf.GradientTape() as tape:
-            predictions = self.model(features, training=True)[0]
-            loss = self.compute_mlm_loss(labels, predictions)
 
-        gradients = tape.gradient(loss, self.model.trainable_variables)
-        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+            predictions = self(features, training=True)[0]
+            loss = masked_sparse_categorical_crossentropy(labels, predictions)
 
-        self.train_mlm_loss_metric.update_state(loss)
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
 
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+
+        # Compute our own metrics
+        loss_tracker.update_state(loss)
+
+        # Return a dict mapping metric names to current value
+        return {"loss": loss_tracker.result()}
+
+
+with strategy.scope():
+    loss_tracker = tf.keras.metrics.Mean(name="loss")
+    input_layer = tf.keras.layers.Input((flags.MAX_LEN,), dtype=tf.int32)
+    bert_model = TFAutoModelWithLMHead.from_pretrained(flags.PRETRAINED_MODEL)
+    output_layer = bert_model(input_layer)
+    mlm_model = MaskedLanguageModel(input_layer, output_layer)
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate=flags.LR)
+    mlm_model.compile(optimizer=optimizer)
+
+mlm_model.summary()
 
 """
 ## Train and Save
 """
 
-mlm_model = MaskedLanguageModel(strategy, flags.PRETRAINED_MODEL)
-mlm_model.train_mlm(train_dist_dataset, flags.TOTAL_STEPS, flags.EVALUATE_EVERY)
-mlm_model.model.save_pretrained("imdb_bert_uncased")
+mlm_model.fit(X_train_mlm, y_train_mlm, epochs=3, batch_size=global_batch_size)
+
+# Save trained model using transfomers .save_pretrained()
+bert_model.save_pretrained("imdb_bert_uncased")
 
 """
 ## Load and Test
@@ -269,4 +206,4 @@ mlm_model.model.save_pretrained("imdb_bert_uncased")
 
 imdb_bert_model = TFAutoModelWithLMHead.from_pretrained("imdb_bert_uncased")
 nlp = pipeline("fill-mask", model=imdb_bert_model, tokenizer=tokenizer, framework="tf")
-pprint(nlp(f"I watched {nlp.tokenizer.mask_token} and that was awesome"))
+pprint(nlp(f"I have watched this {nlp.tokenizer.mask_token} and it was awesome"))
