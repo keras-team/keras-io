@@ -237,19 +237,20 @@ as we use the `tanh` activation.
 class Actor(tf.keras.Model):
     def __init__(self):
         super(Actor, self).__init__()
+        # Initialize weights between -3e-3 and 3-e3
         last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
-        self.l1 = layers.Dense(512, activation="relu")
-        self.b1 = layers.BatchNormalization()
-        self.l2 = layers.Dense(512, activation="relu")
-        self.b2 = layers.BatchNormalization()
-        self.tanh = layers.Dense(1, activation="tanh", kernel_initializer=last_init)
+        self.layer_1 = layers.Dense(512, activation="relu")
+        self.batch_norm_1 = layers.BatchNormalization()
+        self.layer_2 = layers.Dense(512, activation="relu")
+        self.batch_norm_2 = layers.BatchNormalization()
+        self.action_pred = layers.Dense(1, activation="tanh", kernel_initializer=last_init)
 
     def call(self, inputs, training=None, mask=None):
-        out = self.l1(inputs)
-        out = self.b1(out)
-        out = self.l2(out)
-        out = self.b2(out)
-        return self.tanh(out)
+        out = self.layer_1(inputs)
+        out = self.batch_norm_1(out)
+        out = self.layer_2(out)
+        out = self.batch_norm_2(out)
+        return self.action_pred(out)
 
 
 class Critic(tf.keras.Model):
