@@ -171,11 +171,7 @@ class Buffer:
 
     @tf.function
     def update(
-        self,
-        state_batch,
-        action_batch,
-        reward_batch,
-        next_state_batch,
+        self, state_batch, action_batch, reward_batch, next_state_batch,
     ):
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
