@@ -101,9 +101,9 @@ class OUActionNoise:
     def __call__(self):
         # Formula taken from https://www.wikipedia.org/wiki/Ornstein-Uhlenbeck_process.
         x = (
-            self.x_prev
-            + self.theta * (self.mean - self.x_prev) * self.dt
-            + self.std_dev * np.sqrt(self.dt) * np.random.normal(size=self.mean.shape)
+                self.x_prev
+                + self.theta * (self.mean - self.x_prev) * self.dt
+                + self.std_dev * np.sqrt(self.dt) * np.random.normal(size=self.mean.shape)
         )
         # Store x into x_prev
         # Makes next noise dependent on current one
@@ -141,7 +141,6 @@ the maximum predicted value as seen by the Critic, for a given state.
 
 class Buffer:
     def __init__(self, buffer_capacity=100000, batch_size=64):
-
         # Number of "experiences" to store at max
         self.buffer_capacity = buffer_capacity
         # Num of tuples to train on.
@@ -170,20 +169,8 @@ class Buffer:
 
         self.buffer_counter += 1
 
-    # We compute the loss and update parameters
-    def learn(self):
-        # Get sampling range
-        record_range = min(self.buffer_counter, self.buffer_capacity)
-        # Randomly sample indices
-        batch_indices = np.random.choice(record_range, self.batch_size)
-
-        # Convert to tensors
-        state_batch = tf.convert_to_tensor(self.state_buffer[batch_indices])
-        action_batch = tf.convert_to_tensor(self.action_buffer[batch_indices])
-        reward_batch = tf.convert_to_tensor(self.reward_buffer[batch_indices])
-        reward_batch = tf.cast(reward_batch, dtype=tf.float32)
-        next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
-
+    @tf.function
+    def update(self, state_batch, action_batch, reward_batch, next_state_batch, ):
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
         with tf.GradientTape() as tape:
@@ -209,23 +196,29 @@ class Buffer:
             zip(actor_grad, actor_model.trainable_variables)
         )
 
+    # We compute the loss and update parameters
+    def learn(self):
+        # Get sampling range
+        record_range = min(self.buffer_counter, self.buffer_capacity)
+        # Randomly sample indices
+        batch_indices = np.random.choice(record_range, self.batch_size)
+
+        # Convert to tensors
+        state_batch = tf.convert_to_tensor(self.state_buffer[batch_indices])
+        action_batch = tf.convert_to_tensor(self.action_buffer[batch_indices])
+        reward_batch = tf.convert_to_tensor(self.reward_buffer[batch_indices])
+        reward_batch = tf.cast(reward_batch, dtype=tf.float32)
+        next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
+
+        self.update(state_batch, action_batch, reward_batch, next_state_batch)
+
 
 # This update target parameters slowly
 # Based on rate `tau`, which is much less than one.
-def update_target(tau):
-    new_weights = []
-    target_variables = target_critic.weights
-    for i, variable in enumerate(critic_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_critic.set_weights(new_weights)
-
-    new_weights = []
-    target_variables = target_actor.weights
-    for i, variable in enumerate(actor_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_actor.set_weights(new_weights)
+@tf.function
+def update_target(target_weights, weights, tau):
+    for (a, b) in zip(target_weights, weights):
+        tf.compat.v1.assign(a, b * tau + a * (1 - tau))
 
 
 """
@@ -241,16 +234,69 @@ as we use the `tanh` activation.
 """
 
 
-def get_actor():
-    # Initialize weights between -3e-3 and 3-e3
-    last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
+class Actor(tf.keras.Model):
+    def __init__(self):
+        super(Actor, self).__init__()
+        last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
+        self.l1 = layers.Dense(512, activation="relu")
+        self.b1 = layers.BatchNormalization()
+        self.l2 = layers.Dense(512, activation="relu")
+        self.b2 = layers.BatchNormalization()
+        self.tanh = layers.Dense(1, activation="tanh", kernel_initializer=last_init)
 
+    def call(self, inputs, training=None, mask=None):
+        out = self.l1(inputs)
+        out = self.b1(out)
+        out = self.l2(out)
+        out = self.b2(out)
+        return self.tanh(out)
+
+
+class Critic(tf.keras.Model):
+    def __init__(self):
+        super(Critic, self).__init__()
+        self.layer_1 = layers.Dense(16, activation="relu")
+        self.layer_2 = layers.Dense(32, activation="relu")
+        self.layer_3 = layers.Dense(32, activation="relu")
+        self.layer_4 = layers.Dense(512, activation="relu")
+        self.layer_5 = layers.Dense(512, activation="relu")
+
+        self.batch_norm_1 = layers.BatchNormalization()
+        self.batch_norm_2 = layers.BatchNormalization()
+        self.batch_norm_3 = layers.BatchNormalization()
+        self.batch_norm_4 = layers.BatchNormalization()
+        self.batch_norm_5 = layers.BatchNormalization()
+
+        self.concat = layers.Concatenate()
+        self.q_value_pred = layers.Dense(1)
+
+    def call(self, inputs, training=None, mask=None):
+        state_input, action_input = inputs
+
+        # State as input
+        state_out = self.layer_1(state_input)
+        state_out = self.batch_norm_1(state_out)
+        state_out = self.layer_2(state_out)
+        state_out = self.batch_norm_2(state_out)
+
+        # Action as input
+        action_out = self.layer_3(action_input)
+        action_out = self.batch_norm_3(action_out)
+
+        # Both are passed through separate layer before concatenating
+        concat = self.concat([state_out, action_out])
+
+        out = self.layer_4(concat)
+        out = self.batch_norm_4(out)
+        out = self.layer_5(out)
+        out = self.batch_norm_5(out)
+
+        return self.q_value_pred(out)  # Outputs single value for given state-action
+
+
+def get_actor():
     inputs = layers.Input(shape=(num_states,))
-    out = layers.Dense(512, activation="relu")(inputs)
-    out = layers.BatchNormalization()(out)
-    out = layers.Dense(512, activation="relu")(out)
-    out = layers.BatchNormalization()(out)
-    outputs = layers.Dense(1, activation="tanh", kernel_initializer=last_init)(out)
+    outputs = Actor()(inputs)
 
     # Our upper bound is 2.0 for Pendulum.
     outputs = outputs * upper_bound
@@ -260,29 +306,12 @@ def get_actor():
 
 def get_critic():
     # State as input
-    state_input = layers.Input(shape=(num_states))
-    state_out = layers.Dense(16, activation="relu")(state_input)
-    state_out = layers.BatchNormalization()(state_out)
-    state_out = layers.Dense(32, activation="relu")(state_out)
-    state_out = layers.BatchNormalization()(state_out)
+    state_input = layers.Input(shape=num_states)
+    action_input = layers.Input(shape=num_actions)
 
-    # Action as input
-    action_input = layers.Input(shape=(num_actions))
-    action_out = layers.Dense(32, activation="relu")(action_input)
-    action_out = layers.BatchNormalization()(action_out)
+    outputs = Critic()([state_input, action_input])
 
-    # Both are passed through seperate layer before concatenating
-    concat = layers.Concatenate()([state_out, action_out])
-
-    out = layers.Dense(512, activation="relu")(concat)
-    out = layers.BatchNormalization()(out)
-    out = layers.Dense(512, activation="relu")(out)
-    out = layers.BatchNormalization()(out)
-    outputs = layers.Dense(1)(out)
-
-    # Outputs single value for give state-action
     model = tf.keras.Model([state_input, action_input], outputs)
-
     return model
 
 
@@ -368,7 +397,8 @@ for ep in range(total_episodes):
         episodic_reward += reward
 
         buffer.learn()
-        update_target(tau)
+        update_target(target_actor.variables, actor_model.variables, tau)
+        update_target(target_critic.variables, critic_model.variables, tau)
 
         # End this episode when `done` is True
         if done:
