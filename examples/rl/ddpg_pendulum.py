@@ -101,9 +101,9 @@ class OUActionNoise:
     def __call__(self):
         # Formula taken from https://www.wikipedia.org/wiki/Ornstein-Uhlenbeck_process.
         x = (
-                self.x_prev
-                + self.theta * (self.mean - self.x_prev) * self.dt
-                + self.std_dev * np.sqrt(self.dt) * np.random.normal(size=self.mean.shape)
+            self.x_prev
+            + self.theta * (self.mean - self.x_prev) * self.dt
+            + self.std_dev * np.sqrt(self.dt) * np.random.normal(size=self.mean.shape)
         )
         # Store x into x_prev
         # Makes next noise dependent on current one
@@ -170,7 +170,13 @@ class Buffer:
         self.buffer_counter += 1
 
     @tf.function
-    def update(self, state_batch, action_batch, reward_batch, next_state_batch, ):
+    def update(
+        self,
+        state_batch,
+        action_batch,
+        reward_batch,
+        next_state_batch,
+    ):
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
         with tf.GradientTape() as tape:
@@ -243,7 +249,9 @@ class Actor(tf.keras.Model):
         self.batch_norm_1 = layers.BatchNormalization()
         self.layer_2 = layers.Dense(512, activation="relu")
         self.batch_norm_2 = layers.BatchNormalization()
-        self.action_pred = layers.Dense(1, activation="tanh", kernel_initializer=last_init)
+        self.action_pred = layers.Dense(
+            1, activation="tanh", kernel_initializer=last_init
+        )
 
     def call(self, inputs, training=None, mask=None):
         out = self.layer_1(inputs)
