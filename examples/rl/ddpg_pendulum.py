@@ -220,7 +220,7 @@ class Buffer:
 @tf.function
 def update_target(target_weights, weights, tau):
     for (a, b) in zip(target_weights, weights):
-        tf.compat.v1.assign(a, b * tau + a * (1 - tau))
+        a.assign(b * tau + a * (1 - tau))
 
 
 """
