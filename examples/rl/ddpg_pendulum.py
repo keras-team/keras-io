@@ -141,7 +141,6 @@ the maximum predicted value as seen by the Critic, for a given state.
 
 class Buffer:
     def __init__(self, buffer_capacity=100000, batch_size=64):
-
         # Number of "experiences" to store at max
         self.buffer_capacity = buffer_capacity
         # Num of tuples to train on.
@@ -170,20 +169,13 @@ class Buffer:
 
         self.buffer_counter += 1
 
-    # We compute the loss and update parameters
-    def learn(self):
-        # Get sampling range
-        record_range = min(self.buffer_counter, self.buffer_capacity)
-        # Randomly sample indices
-        batch_indices = np.random.choice(record_range, self.batch_size)
-
-        # Convert to tensors
-        state_batch = tf.convert_to_tensor(self.state_buffer[batch_indices])
-        action_batch = tf.convert_to_tensor(self.action_buffer[batch_indices])
-        reward_batch = tf.convert_to_tensor(self.reward_buffer[batch_indices])
-        reward_batch = tf.cast(reward_batch, dtype=tf.float32)
-        next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
-
+    # Eager execution is turned on by default in TensorFlow 2. Decorating with tf.function allows
+    # TensorFlow to build a static graph out of the logic and computations in our function.
+    # This provides a large speed up for blocks of code that contain many small TensorFlow operations such as this one.
+    @tf.function
+    def update(
+        self, state_batch, action_batch, reward_batch, next_state_batch,
+    ):
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
         with tf.GradientTape() as tape:
@@ -209,23 +201,29 @@ class Buffer:
             zip(actor_grad, actor_model.trainable_variables)
         )
 
+    # We compute the loss and update parameters
+    def learn(self):
+        # Get sampling range
+        record_range = min(self.buffer_counter, self.buffer_capacity)
+        # Randomly sample indices
+        batch_indices = np.random.choice(record_range, self.batch_size)
+
+        # Convert to tensors
+        state_batch = tf.convert_to_tensor(self.state_buffer[batch_indices])
+        action_batch = tf.convert_to_tensor(self.action_buffer[batch_indices])
+        reward_batch = tf.convert_to_tensor(self.reward_buffer[batch_indices])
+        reward_batch = tf.cast(reward_batch, dtype=tf.float32)
+        next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
+
+        self.update(state_batch, action_batch, reward_batch, next_state_batch)
+
 
 # This update target parameters slowly
 # Based on rate `tau`, which is much less than one.
-def update_target(tau):
-    new_weights = []
-    target_variables = target_critic.weights
-    for i, variable in enumerate(critic_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_critic.set_weights(new_weights)
-
-    new_weights = []
-    target_variables = target_actor.weights
-    for i, variable in enumerate(actor_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_actor.set_weights(new_weights)
+@tf.function
+def update_target(target_weights, weights, tau):
+    for (a, b) in zip(target_weights, weights):
+        a.assign(b * tau + a * (1 - tau))
 
 
 """
@@ -347,7 +345,7 @@ ep_reward_list = []
 # To store average reward history of last few episodes
 avg_reward_list = []
 
-# Takes about 20 min to train
+# Takes about 4 min to train
 for ep in range(total_episodes):
 
     prev_state = env.reset()
@@ -368,7 +366,8 @@ for ep in range(total_episodes):
         episodic_reward += reward
 
         buffer.learn()
-        update_target(tau)
+        update_target(target_actor.variables, actor_model.variables, tau)
+        update_target(target_critic.variables, critic_model.variables, tau)
 
         # End this episode when `done` is True
         if done:
