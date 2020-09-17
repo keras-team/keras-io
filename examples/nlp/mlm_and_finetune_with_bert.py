@@ -66,15 +66,15 @@ data = pd.read_csv("IMDb_Reviews.csv")
 def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
     """Build Text vectorization layer
 
-    Args:
-        texts (list): List of String i.e input texts
-        vocab_size (int): vocab size
-        max_seq (int): maximum sequence len
-        special_tokens (list, optional): List of special tokens. Defaults to ['[MASK]'].
+  Args:
+      texts (list): List of String i.e input texts
+      vocab_size (int): vocab size
+      max_seq (int): maximum sequence len
+      special_tokens (list, optional): List of special tokens. Defaults to ['[MASK]'].
 
-    Returns:
-        layers.Layer: Return TextVectorization Keras Layer
-    """
+  Returns:
+      layers.Layer: Return TextVectorization Keras Layer
+  """
     vectorize_layer = TextVectorization(
         max_tokens=vocab_size,
         output_mode="int",
@@ -190,10 +190,7 @@ def create_masked_language_bert_model():
 
     # Feed-forward layer
     ffn = keras.Sequential(
-        [
-            layers.Dense(flags.FF_DIM, activation="relu"),
-            layers.Dense(flags.EMBED_DIM),
-        ]
+        [layers.Dense(flags.FF_DIM, activation="relu"), layers.Dense(flags.EMBED_DIM),]
     )
     ffn_output = ffn(attention_output)
     ffn_output = layers.Dropout(0.1)(ffn_output)
