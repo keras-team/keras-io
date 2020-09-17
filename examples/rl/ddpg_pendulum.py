@@ -345,7 +345,7 @@ ep_reward_list = []
 # To store average reward history of last few episodes
 avg_reward_list = []
 
-# Takes about 20 min to train
+# Takes about 4 min to train
 for ep in range(total_episodes):
 
     prev_state = env.reset()
