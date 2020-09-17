@@ -169,6 +169,9 @@ class Buffer:
 
         self.buffer_counter += 1
 
+    # Eager execution is turned on by default in TensorFlow 2. Decorating with tf.function allows
+    # TensorFlow to build a static graph out of the logic and computations in our function.
+    # This provides a large speed up for blocks of code that contain many small TensorFlow operations such as this one.
     @tf.function
     def update(
         self, state_batch, action_batch, reward_batch, next_state_batch,
@@ -236,72 +239,16 @@ as we use the `tanh` activation.
 """
 
 
-class Actor(tf.keras.Model):
-    def __init__(self):
-        super(Actor, self).__init__()
-        # Initialize weights between -3e-3 and 3-e3
-        last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
-        self.layer_1 = layers.Dense(512, activation="relu")
-        self.batch_norm_1 = layers.BatchNormalization()
-        self.layer_2 = layers.Dense(512, activation="relu")
-        self.batch_norm_2 = layers.BatchNormalization()
-        self.action_pred = layers.Dense(
-            1, activation="tanh", kernel_initializer=last_init
-        )
-
-    def call(self, inputs, training=None, mask=None):
-        out = self.layer_1(inputs)
-        out = self.batch_norm_1(out)
-        out = self.layer_2(out)
-        out = self.batch_norm_2(out)
-        return self.action_pred(out)
-
-
-class Critic(tf.keras.Model):
-    def __init__(self):
-        super(Critic, self).__init__()
-        self.layer_1 = layers.Dense(16, activation="relu")
-        self.layer_2 = layers.Dense(32, activation="relu")
-        self.layer_3 = layers.Dense(32, activation="relu")
-        self.layer_4 = layers.Dense(512, activation="relu")
-        self.layer_5 = layers.Dense(512, activation="relu")
-
-        self.batch_norm_1 = layers.BatchNormalization()
-        self.batch_norm_2 = layers.BatchNormalization()
-        self.batch_norm_3 = layers.BatchNormalization()
-        self.batch_norm_4 = layers.BatchNormalization()
-        self.batch_norm_5 = layers.BatchNormalization()
-
-        self.concat = layers.Concatenate()
-        self.q_value_pred = layers.Dense(1)
-
-    def call(self, inputs, training=None, mask=None):
-        state_input, action_input = inputs
-
-        # State as input
-        state_out = self.layer_1(state_input)
-        state_out = self.batch_norm_1(state_out)
-        state_out = self.layer_2(state_out)
-        state_out = self.batch_norm_2(state_out)
-
-        # Action as input
-        action_out = self.layer_3(action_input)
-        action_out = self.batch_norm_3(action_out)
-
-        # Both are passed through separate layer before concatenating
-        concat = self.concat([state_out, action_out])
-
-        out = self.layer_4(concat)
-        out = self.batch_norm_4(out)
-        out = self.layer_5(out)
-        out = self.batch_norm_5(out)
-
-        return self.q_value_pred(out)  # Outputs single value for given state-action
-
-
 def get_actor():
+    # Initialize weights between -3e-3 and 3-e3
+    last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
+
     inputs = layers.Input(shape=(num_states,))
-    outputs = Actor()(inputs)
+    out = layers.Dense(512, activation="relu")(inputs)
+    out = layers.BatchNormalization()(out)
+    out = layers.Dense(512, activation="relu")(out)
+    out = layers.BatchNormalization()(out)
+    outputs = layers.Dense(1, activation="tanh", kernel_initializer=last_init)(out)
 
     # Our upper bound is 2.0 for Pendulum.
     outputs = outputs * upper_bound
@@ -311,12 +258,29 @@ def get_actor():
 
 def get_critic():
     # State as input
-    state_input = layers.Input(shape=num_states)
-    action_input = layers.Input(shape=num_actions)
+    state_input = layers.Input(shape=(num_states))
+    state_out = layers.Dense(16, activation="relu")(state_input)
+    state_out = layers.BatchNormalization()(state_out)
+    state_out = layers.Dense(32, activation="relu")(state_out)
+    state_out = layers.BatchNormalization()(state_out)
 
-    outputs = Critic()([state_input, action_input])
+    # Action as input
+    action_input = layers.Input(shape=(num_actions))
+    action_out = layers.Dense(32, activation="relu")(action_input)
+    action_out = layers.BatchNormalization()(action_out)
 
+    # Both are passed through seperate layer before concatenating
+    concat = layers.Concatenate()([state_out, action_out])
+
+    out = layers.Dense(512, activation="relu")(concat)
+    out = layers.BatchNormalization()(out)
+    out = layers.Dense(512, activation="relu")(out)
+    out = layers.BatchNormalization()(out)
+    outputs = layers.Dense(1)(out)
+
+    # Outputs single value for give state-action
     model = tf.keras.Model([state_input, action_input], outputs)
+
     return model
 
 
