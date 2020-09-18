@@ -2,19 +2,22 @@
 Title: End to End Masked Language Modeling & Fine-Tuning with BERT from Scratch
 Author: [Ankur Singh](https://twitter.com/ankur310794)
 Date created: 2020/09/03
-Last modified: 2020/17/03
+Last modified: 2020/18/03
 Description: Implement a Masked Language Modeling with BERT and fine-tune on IMDB Reviews dataset
 """
 """
 ## Introduction
-Masked language modeling is a fill-in-the-blank task, where a model uses the context words surrounding a [MASK] token to try to predict what the [MASK] word should be. We will use IMDB Reviews raw text to pretrain and then use pretrained model weights to fine-tune sentiment classification.
+Masked language modeling is a fill-in-the-blank task, where a model uses the context words surrounding a [MASK] token to try to predict what the [MASK] word should be.
+Input one or more "[MASK]" tokens and the model will generate the most likely substitution for each.
+Example: 
+    Input - I have watched this [MASK] and it was awesome.
+    Output - I have watched this {movie} and it was awesome.
 
-Steps:
-    1. Take raw text
-    2. Build pretraining BERT model from scratch using masked language model approach
-    3. Save pretrained model into .h5 file
-    4. Build classification model using BERT pretrained model (from step 3)
-    5. Evaluate classification model using end to end workflow
+This example shows how to build masked language model from scratch, to represent contextual information and then fine-tune the model on a downstream task of sentiment classification.
+
+We will use Keras TextVectorization and  MultiHeadAttention layer to model BERT/Transformer-Encoder like network architecture.
+
+Note: This example should be run with tf-nightly.
 """
 
 """
@@ -29,6 +32,7 @@ from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
+import glob
 
 """
 ## Set-up Configuration
@@ -50,16 +54,61 @@ flags = Config()
 
 """
 ## Load Data
+
+We will first download IMDB data and load into pandas dataframe.
 """
 
 """shell
-wget https://github.com/LawrenceDuan/IMDb-Review-Analysis/raw/master/IMDb_Reviews.csv
+curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+tar -xf aclImdb_v1.tar.gz
 """
 
-data = pd.read_csv("IMDb_Reviews.csv")
+
+def get_text_list_from_files(files):
+    text_list = []
+    for name in files:
+        with open(name) as f:
+            for line in f:
+                text_list.append(line)
+
+    return text_list
+
+
+def get_data():
+    pos_files = glob.glob("aclImdb/train/pos/*.txt") + glob.glob(
+        "aclImdb/test/pos/*.txt"
+    )
+    pos_texts = get_text_list_from_files(pos_files)
+
+    neg_files = glob.glob("aclImdb/train/neg/*.txt") + glob.glob(
+        "aclImdb/test/neg/*.txt"
+    )
+    neg_texts = get_text_list_from_files(neg_files)
+
+    data = pd.DataFrame(
+        {
+            "text": pos_texts + neg_texts,
+            "sentiment": [0] * len(pos_texts) + [1] * len(neg_texts),
+        }
+    )
+    data = data.sample(len(data)).reset_index(drop=True)
+    return data
+
+
+data = get_data()
 
 """
 ## Dataset Preparation
+
+We will use TextVectorization to vectorize text into token id. This layer gives flexibilty to manage text in Keras model.
+It transforms a batch of strings into either a list of token indices (one sample = 1D tensor of integer token indices) or a dense representation (one sample = 1D tensor of float values representing data about the sample’s tokens).
+
+Below, there will be 3 preprocessing functions. 
+
+1.  get_vectorize_layer function will use to build TextVectorization layer.
+2.  encode function will use to encode raw text into integer token ids
+3.  get_masked_input_and_labels function will use to mask input token ids. It masks 15% of all input tokens in each sequence at random. 
+
 """
 
 
@@ -141,23 +190,40 @@ def get_masked_input_and_labels(encoded_texts):
     return encoded_texts_masked, y_labels, sample_weights
 
 
-# Subset first 25000 examples for classification training
-x_train = encode(data.review.values[0:25000])  # encode reviews with vectorizer
-y_train = data.sentiment.values[0:25000]
+# Subset first 20000 examples for training
+x_train = encode(data.review.values[0:20000])  # encode reviews with vectorizer
+y_train = data.sentiment.values[0:20000]
+train_classifier_ds = (
+    tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    .shuffle(1000)
+    .batch(flags.BATCH_SIZE)
+)
 
-train_classifier_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_classifier_ds = train_classifier_ds.shuffle(1000).batch(flags.BATCH_SIZE)
+# Subset first 5000 examples for evaluation
+x_eval = encode(data.review.values[20000:25000])  # encode reviews with vectorizer
+y_eval = data.sentiment.values[20000:25000]
+eval_classifier_ds = (
+    tf.data.Dataset.from_tensor_slices((x_eval, y_eval))
+    .shuffle(1000)
+    .batch(flags.BATCH_SIZE)
+)
 
-# Subset rest 25000 examples for classification evaluation
 
-x_eval = data.review.values[25000:]  # take raw text
-y_eval = data.sentiment.values[25000:]
+# Subset rest 25000 examples for testing
+x_test = data.review.values[25000:]  # take raw text for end to end model evaluation
+y_test = data.sentiment.values[25000:]
 
-eval_classifier_ds = tf.data.Dataset.from_tensor_slices((x_eval, y_eval))
-eval_classifier_ds = eval_classifier_ds.shuffle(1000).batch(flags.BATCH_SIZE)
+test_classifier_ds = (
+    tf.data.Dataset.from_tensor_slices((x_eval, y_eval))
+    .shuffle(1000)
+    .batch(flags.BATCH_SIZE)
+)
 
 # Prepare data for masked language model
-x_masked_train, y_masked_labels, sample_weights = get_masked_input_and_labels(x_train)
+x_all_review = encode(data.review.values)
+x_masked_train, y_masked_labels, sample_weights = get_masked_input_and_labels(
+    x_all_review
+)
 
 mlm_ds = tf.data.Dataset.from_tensor_slices(
     (x_masked_train, y_masked_labels, sample_weights)
@@ -166,6 +232,8 @@ mlm_ds = mlm_ds.shuffle(1000).batch(flags.BATCH_SIZE)
 
 """
 ## Create Masked Language BERT Model From Scratch
+
+We will create BERT like pretraining model architecture using Keras MultiHeadAttention layer. It will take masked input token ids and predict the correct label for masked input tokens.
 """
 
 
@@ -211,7 +279,7 @@ mlm_model = create_masked_language_bert_model()
 mlm_model.summary()
 
 """
-## Train and Save 
+## Train and Save
 """
 
 mlm_model.fit(mlm_ds, epochs=3)
@@ -219,6 +287,9 @@ mlm_model.save("bert_mlm_model.h5")
 
 """
 ## Create Classification Model
+
+We will create fine-tune downstream task of sentiment classification model and use weights of previously trained model/pretraining-model (masked language model).
+
 """
 
 # Load pretrained bert model
@@ -244,9 +315,11 @@ classifer_model.summary()
 
 """
 ## Train and Evaluate
+
+We will train classification model and then will use Keras capability of processing raw strings as model input to evaluate our sentiment model.
 """
 
-classifer_model.fit(train_classifier_ds, epochs=5)
+classifer_model.fit(train_classifier_ds, epochs=5, validation_data=eval_classifier_ds)
 
 
 def get_end_to_end(model):
@@ -262,4 +335,4 @@ def get_end_to_end(model):
 
 
 end_to_end_classification_model = get_end_to_end(classifer_model)
-end_to_end_classification_model.evaluate(eval_classifier_ds)
+end_to_end_classification_model.evaluate(test_classifier_ds)
