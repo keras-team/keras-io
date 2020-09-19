@@ -1,28 +1,44 @@
 """
-Title: End to End Masked Language Modeling & Fine-Tuning with BERT from Scratch
+Title: End-to-end Masked Language Modeling with BERT
 Author: [Ankur Singh](https://twitter.com/ankur310794)
-Date created: 2020/09/03
-Last modified: 2020/18/03
-Description: Implement a Masked Language Modeling with BERT and fine-tune on IMDB Reviews dataset
+Date created: 2020/09/18
+Last modified: 2020/09/18
+Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
 """
 """
 ## Introduction
-Masked language modeling is a fill-in-the-blank task, where a model uses the context words surrounding a [MASK] token to try to predict what the [MASK] word should be.
-Input one or more "[MASK]" tokens and the model will generate the most likely substitution for each.
+
+Masked Language Modeling is a fill-in-the-blank task,
+where a model uses the context words surrounding a mask token to try to predict what the
+masked word should be.
+
+For an input that contains one or more mask tokens,
+the model will generate the most likely substitution for each.
+
 Example: 
-    Input - I have watched this [MASK] and it was awesome.
-    Output - I have watched this {movie} and it was awesome.
 
-This example shows how to build masked language model from scratch, to represent contextual information and then fine-tune the model on a downstream task of sentiment classification.
+- Input: "I have watched this [MASK] and it was awesome."
+- Output: "I have watched this movie and it was awesome."
 
-We will use Keras TextVectorization and  MultiHeadAttention layer to model BERT/Transformer-Encoder like network architecture.
+Masked language modeling is a great way to train a language
+model in a self-supervised setting (without human-annotated labels).
+Such a model can then be fine-tuned to accomplish various supervised
+NLP tasks.
 
-Note: This example should be run with tf-nightly.
+This example teaches you how to build a BERT model from scratch,
+train it with the mask language modeling task,
+and then fine-tune this model on a sentiment classification task.
+
+We will use the Keras `TextVectorization` and `MultiHeadAttention` layers
+to create a BERT Transformer-Encoder network architecture.
+
+Note: This example should be run with `tf-nightly`.
 """
 
 """
 ## Setup
-Install tf-nightly via pip install tf-nightly.
+
+Install `tf-nightly` via `pip install tf-nightly`.
 """
 
 import tensorflow as tf
@@ -70,7 +86,6 @@ def get_text_list_from_files(files):
         with open(name) as f:
             for line in f:
                 text_list.append(line)
-
     return text_list
 
 
@@ -115,15 +130,15 @@ Below, there will be 3 preprocessing functions.
 def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
     """Build Text vectorization layer
 
-  Args:
+    Args:
       texts (list): List of String i.e input texts
       vocab_size (int): vocab size
       max_seq (int): maximum sequence len
       special_tokens (list, optional): List of special tokens. Defaults to ['[MASK]'].
 
-  Returns:
+    Returns:
       layers.Layer: Return TextVectorization Keras Layer
-  """
+    """
     vectorize_layer = TextVectorization(
         max_tokens=vocab_size,
         output_mode="int",
@@ -231,9 +246,12 @@ mlm_ds = tf.data.Dataset.from_tensor_slices(
 mlm_ds = mlm_ds.shuffle(1000).batch(flags.BATCH_SIZE)
 
 """
-## Create Masked Language BERT Model From Scratch
+## Create BERT model for masked language modeling
 
-We will create BERT like pretraining model architecture using Keras MultiHeadAttention layer. It will take masked input token ids and predict the correct label for masked input tokens.
+We will create a BERT-like pretraining model architecture
+using the `MultiHeadAttention` layer.
+It will take token ids as inputs (including masked tokens)
+and it will predict the correct ids for the masked input tokens.
 """
 
 
@@ -286,14 +304,18 @@ mlm_model.fit(mlm_ds, epochs=3)
 mlm_model.save("bert_mlm_model.h5")
 
 """
-## Create Classification Model
+## Fine-tune a sentiment classification model
 
-We will create fine-tune downstream task of sentiment classification model and use weights of previously trained model/pretraining-model (masked language model).
+We will fine-tune our self-supervised model on a downstream task of sentiment classification.
+To do this, let's create a classifier by adding a pooling layer and a `Dense` layer on top of the
+pretrained BERT features.
 
 """
 
-# Load pretrained bert model
+# Load pretrained BERT model
 pretrained_bert_model = keras.models.load_model("bert_mlm_model.h5")
+# Freeze it
+pretrained_bert_model.trainable = False
 
 
 def create_classifier_bert_model():
@@ -312,15 +334,26 @@ def create_classifier_bert_model():
 classifer_model = create_classifier_bert_model()
 classifer_model.summary()
 
-
-"""
-## Train and Evaluate
-
-We will train classification model and then will use Keras capability of processing raw strings as model input to evaluate our sentiment model.
-"""
-
+# Train the classifier with frozen BERT stage
 classifer_model.fit(train_classifier_ds, epochs=5, validation_data=eval_classifier_ds)
 
+# Unfreeze the BERT model for fine-tuning
+pretrained_bert_model.trainable = True
+classifer_model.compile(
+    optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
+)
+classifer_model.fit(train_classifier_ds, epochs=5, validation_data=eval_classifier_ds)
+
+
+"""
+## Create an end-to-end model and evaluate it
+
+When you want to deploy a model, it's best if it already includes its preprocessing
+pipeline, so that you don't have to reimplement the preprocessing logic in your
+production environment. Let's create an end-to-end model that incorporates
+the `TextVectorization` layer, and let's evaluate. Our model will accept raw strings
+as input.
+"""
 
 def get_end_to_end(model):
     inputs_string = keras.Input(shape=(1,), dtype="string")
