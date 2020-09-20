@@ -58,9 +58,8 @@ classifier to predict cancerious regions (left or right). Hence, the task is
 a binary classification problem.
 """
 
-url =
-"https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
-"https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
+url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
+
 filename = os.path.join(os.getcwd(), "NSCLC-Radiomics-Genomics.zip")
 keras.utils.get_file(filename, url)
 
