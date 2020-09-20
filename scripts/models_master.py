@@ -45,6 +45,7 @@ MODELS_MASTER = {
                 'tensorflow.keras.models.load_model',
                 'tensorflow.keras.Model.get_weights',
                 'tensorflow.keras.Model.set_weights',
+                'tensorflow.keras.Model.save_weights',
                 'tensorflow.keras.Model.load_weights',
                 'tensorflow.keras.Model.get_config',
                 'tensorflow.keras.Model.from_config',
