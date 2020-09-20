@@ -1,19 +1,16 @@
 """
 Title: 3D Image Classification from CT Scans
-Author: [Hasib Zunair](https://hasibzunair.github.io/)
+Author: [Hasib Zunair](https://twitter.com/hasibzunair)
 Date created: 2020/09/10
 Last modified: 2020/09/17
 Description: Train a 3D convolutional neural network to classify location of cancer.
 """
 """
 ## Introduction
-
 This example will show the steps needed to build a 3D image classification
 model using a 3D convolutional neural network (CNN) to predict the location
 of cancerous regions in CT scans.
-
 ## Why 3D CNNs at all?
-
 Traditional use-cases of CNNs are RGB images (3 channels). The goal of
 a 3D CNN is to take as input a 3D volume or a sequence of frames
 (e.g. slices in a CT scan) and extract features from it. A traditional CNN
@@ -23,18 +20,36 @@ which is required to make predictions from volumetric data (e.g. CT scans).
 A 3D CNN takes the temporal dimension (e.g. 3D context) into account. This way
 of learning representations from a volumetric data is useful to find the right
 label. This is achieved by using 3D convolutions.
+
+## References
+
+- [A survey on Deep Learning Advances on Different 3D
+DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
+
+- [VoxNet: A 3D Convolutional Neural Network for Real-Time
+ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
+ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
+
+- [FusionNet: 3D Object Classification Using MultipleData
+Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
+
+- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis
+Prediction](https://arxiv.org/abs/2007.13224)
+
+
 """
 
 import os
 import zipfile
 import numpy as np
+import tensorflow as tf
 
 from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-## Downloading the  NSCLC-Radiomics-Genomics dataset
 
+## Downloading the  NSCLC-Radiomics-Genomics dataset
 Since training 3D convolutional neural network are time consuming, a subset of the
 NSCLC-Radiomics-Genomics dataset is used which consists of CT scans
 with gene expression and relevant clinical data. In this example, we will be
@@ -43,7 +58,9 @@ classifier to predict cancerious regions (left or right). Hence, the task is
 a binary classification problem.
 """
 
-url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
+url =
+"https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
+"https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
 filename = os.path.join(os.getcwd(), "NSCLC-Radiomics-Genomics.zip")
 keras.utils.get_file(filename, url)
 
@@ -52,11 +69,9 @@ with zipfile.ZipFile("NSCLC-Radiomics-Genomics.zip", "r") as z_fp:
 
 """
 ## Load data
-
 The files are provided in Nifti format with the extension .nii. To read the
 scans, the nibabel package is used. To process the data, the following
 is done:
-
 * Volumes are originally rotated by 90 degress, so the orientation is fixed
 * Resize width, height and depth
 
@@ -134,12 +149,13 @@ print("CT scans with cancerous regions in left side: " + str(len(left_scan_paths
 print("CT scans with cancerous regions in right side: " + str(len(right_scan_paths)))
 
 """
-Let's visualize a CT scan and also look at it's dimensions.
+Let's visualize a CT scan and it's shape.
 """
 
 import matplotlib.pyplot as plt
 
-img = read_nifti_file(right_scan_paths[2])
+# read a scan
+img = read_nifti_file(right_scan_paths[10])
 print("Dimension of the CT scan is:", img.shape)
 plt.imshow(img[:, :, 5], cmap="gray")
 
@@ -148,44 +164,43 @@ Since a CT scan has many slices, let's visualize a montage of the slices.
 """
 
 
-def plot_slices(data):
+def plot_slices(num_rows, num_columns, width, height, data):
     # plot a montage of 20 CT slices
-    a, b = 2, 10
     data = np.rot90(np.array(data))
     data = np.transpose(data)
-    data = np.reshape(data, (a, b, 512, 512))
-    test_data = data
-    r, c = test_data.shape[0], test_data.shape[1]
-
-    heights = [a[0].shape[0] for a in test_data]
-    widths = [a.shape[1] for a in test_data[0]]
-
+    data = np.reshape(data, (num_rows, num_columns, width, height))
+    rows_data, columns_data = data.shape[0], data.shape[1]
+    heights = [slc[0].shape[0] for slc in data]
+    widths = [slc.shape[1] for slc in data[0]]
     fig_width = 12.0
     fig_height = fig_width * sum(heights) / sum(widths)
-
     f, axarr = plt.subplots(
-        r, c, figsize=(fig_width, fig_height), gridspec_kw={"height_ratios": heights}
+        rows_data,
+        columns_data,
+        figsize=(fig_width, fig_height),
+        gridspec_kw={"height_ratios": heights},
     )
-
-    for i in range(r):
-        for j in range(c):
-            axarr[i, j].imshow(test_data[i][j], cmap="gray")
+    for i in range(rows_data):
+        for j in range(columns_data):
+            axarr[i, j].imshow(data[i][j], cmap="gray")
             axarr[i, j].axis("off")
-
     plt.subplots_adjust(wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
     plt.show()
 
 
-plot_slices(img[:, :, :20])
+# display 20 slices from the CT scan
+# here we visualize 20 slices, 2 rows and 10 columns
+# adapt it according to your need
+plot_slices(2, 10, 512, 512, img[:, :, :20])
 
 """
 ## Build train and test datasets
-
 Read the scans from the class directories and assign labels.
 Lastly, split the dataset into train and test subsets.
 """
 
 # read and process the scans
+# each scan is resized across width, height, and depth
 right_scans = np.array([process_scan(path) for path in right_scan_paths])
 left_scans = np.array([process_scan(path) for path in left_scan_paths])
 
@@ -194,36 +209,25 @@ left_scans = np.array([process_scan(path) for path in left_scan_paths])
 right_labels = np.array([1 for _ in range(len(right_scans))])
 left_labels = np.array([0 for _ in range(len(left_scans))])
 
-# merge classes
-inputs = np.concatenate((right_scans, left_scans), axis=0)
-labels = np.concatenate((right_labels, left_labels), axis=0)
-labels = keras.utils.to_categorical(labels, 2)
-print("Size of raw data and labels:", inputs.shape, labels.shape)
-
 # split data in the ratio 70-30 for training and testing
-from sklearn.model_selection import train_test_split
-
-x_train, x_test, y_train, y_test = train_test_split(
-    inputs, labels, stratify=labels, test_size=0.3, random_state=1
-)
+x_train = np.concatenate((right_scans[:14], left_scans[:14]), axis=0)
+y_train = np.concatenate((right_labels[:14], left_labels[:14]), axis=0)
+x_test = np.concatenate((right_scans[14:], left_scans[14:]), axis=0)
+y_test = np.concatenate((right_labels[14:], left_labels[14:]), axis=0)
 print(
-    "After train and test split:",
-    x_train.shape,
-    y_train.shape,
-    x_test.shape,
-    y_test.shape,
+    "Number of samples in train and test are %d and %d."
+    % (x_train.shape[0], x_test.shape[0])
 )
 
 """
 ## Preprocessing and data augmentation
-
 CT scans store raw voxel intensity in Hounsfield units (HU). They range from
 -1024 to above 2000 in this dataset. Above 400 are bones with different
 radiointensity, so this is used as a higher bound. A threshold between
 -1000 and 400 are commonly used to normalize CT scans. The CT scans are
 also augmented by rotating and blurring. There are different kinds of
-preprocessing and augmentation techniques, this example shows a few
-simple ones.
+preprocessing and augmentation techniques out there, this example shows a few
+simple ones to get started.
 """
 
 import random
@@ -232,13 +236,21 @@ from scipy import ndimage
 from scipy.ndimage import gaussian_filter
 
 
-def normalize(array):
+def normalize(volume):
     min = -1000
     max = 400
-    array = (array - min) / (max - min)
-    array[array > 1] = 1.0
-    array[array < 0] = 0.0
-    return array
+    volume = (volume - min) / (max - min)
+    # rescale between 0-1
+    volume[volume > 1] = 1.0
+    volume[volume < 0] = 0.0
+    volume = np.expand_dims(volume, axis=3)
+    return volume
+
+
+@tf.function(input_signature=[tf.TensorSpec((128, 128, 128), tf.float64)])
+def tf_normalize(volume):
+    normalized_volume = tf.numpy_function(normalize, [volume], tf.float64)
+    return normalized_volume
 
 
 def rotate(volume):
@@ -251,57 +263,71 @@ def rotate(volume):
     return volume
 
 
+@tf.function(input_signature=[tf.TensorSpec((128, 128, 128), tf.float64)])
+def tf_rotate(volume):
+    augmented_volume = tf.numpy_function(rotate, [volume], tf.float64)
+    return augmented_volume
+
+
 def blur(volume):
     # gaussian blur
     volume = gaussian_filter(volume, sigma=1)
     return volume
 
 
-def augment_data(volume, label, func_name):
-    # augment the volume
-    volume = func_name(volume)
+@tf.function(input_signature=[tf.TensorSpec((128, 128, 128), tf.float64)])
+def tf_blur(volume):
+    augmented_volume = tf.numpy_function(blur, [volume], tf.float64)
+    return augmented_volume
+
+
+def train_augment(volume, label):
+    # define the augmentation functions
+    augmentations = ["rotate", "blur", "normal"]
+    # pick an augmentation at random
+    augmentation = random.choice(augmentations)
+    # augment data
+    if augmentation == "rotate":
+        volume = tf_rotate(volume)
+    elif augmentation == "blur":
+        volume = tf_blur(volume)
+    elif augmentation == "normal":
+        pass
+    else:
+        print("No augmentation selected!")
+    # normalize
+    volume = tf_normalize(volume)
     return volume, label
 
 
-def get_augmented_data(inputs, labels):
-    # augment all the input volumes and keep track of the labels
-    # since the number of samples are small, load it once and keep it in memory
-    x_train_aug = []
-    y_train_aug = []
-
-    # rotate all scans
-    for volume, label in zip(inputs, labels):
-        volume, label = augment_data(volume, label, rotate)
-        volume = normalize(volume)
-        x_train_aug.append(volume)
-        y_train_aug.append(label)
-
-    # gaussian Blur all scans
-    for volume, label in zip(inputs, labels):
-        volume, label = augment_data(volume, label, blur)
-        volume = normalize(volume)
-        x_train_aug.append(volume)
-        y_train_aug.append(label)
-
-    x_train_aug = np.array(x_train_aug)
-    y_train_aug = np.array(y_train_aug)
-    return x_train_aug, y_train_aug
+def test_augment(volume, label):
+    # normalize
+    volume = tf_normalize(volume)
+    return volume, label
 
 
 """
-Augmented the training data
+While defining the train and test data loader, the training data is passed through and
+augmentation function which randomly rotates or blurs the volume and finally rescales it
+to have values between 0 to 1. 
+
+For the test data, the volumes are only rescaled.
 """
 
-x_train_aug, y_train_aug = get_augmented_data(x_train, y_train)
-print(x_train_aug.shape, y_train_aug.shape)
+# define data loaders
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
-"""
-Normalize the training and test data subsets
-"""
+batch_size = 2
+# augment the on the fly during training
+train_dataset = train_dataset.shuffle(len(x_train)).map(train_augment).batch(batch_size)
+# only rescale
+test_dataset = test_dataset.shuffle(len(x_test)).map(test_augment).batch(batch_size)
 
-# Normalize data
-x_train = np.array([normalize(x) for x in x_train])
-x_test = np.array([normalize(x) for x in x_test])
+# data = train_dataset.take(1)
+# print(data)
+# images, labels = list(data)[0]
+# images.shape, labels.shape
 
 """
 Visualize an augmented CT scan
@@ -309,24 +335,21 @@ Visualize an augmented CT scan
 
 import matplotlib.pyplot as plt
 
-img = x_train_aug[20]
-print("Dimension of the CT scan is:", img.shape)
-print(np.max(img), np.min(img))
-plt.imshow(img[:, :, 80], cmap="gray")
+data = train_dataset.take(1)
+images, labels = list(data)[0]
+images = images.numpy()
+image = images[0]
+print("Dimension of the CT scan is:", image.shape)
+plt.imshow(np.squeeze(image[:, :, 80]), cmap="gray")
 
-"""
-Merge the augmented and training data. Note that the augmented data is not normalize
-here, as it was already normalized right after the augmentation.
-"""
-
-# Merge raw data and augmented data
-x_all = np.concatenate((x_train_aug, x_train), axis=0)
-x_all = np.expand_dims(x_all, axis=4)
-y_all = np.concatenate((y_train_aug, y_train), axis=0)
-print("Shape of upsampled training data inputs and labels: ", x_all.shape, y_all.shape)
+# visualize montage of slices
+# 10 rows and 10 columns for 100 slices of the CT scan
+plot_slices(10, 10, 128, 128, image[:, :, :100])
 
 """
 ## Define 3D convolutional neural network
+
+
 
 To make the model easier to understand, blocks are defined. Since this is a
 3D CNN, 3D convolutions are used. The architecture of the 3D CNN used in this example
@@ -336,6 +359,7 @@ is based on this [paper](https://arxiv.org/abs/2007.13224).
 
 def get_model(img_size, num_classes):
     # build a 3D convolutional neural network model
+
     inputs = keras.Input(img_size)
 
     x = layers.Conv3D(filters=16, kernel_size=3, activation="relu")(inputs)
@@ -356,17 +380,14 @@ def get_model(img_size, num_classes):
 
     x = layers.Flatten()(x)
     x = layers.Dense(units=256, activation="relu")(x)
-    x = layers.Dropout(0.1)(x)
+    x = layers.Dropout(0.3)(x)
 
-    outputs = layers.Dense(units=2, activation="softmax")(x)
+    outputs = layers.Dense(units=1, activation="sigmoid")(x)
 
     # define the model
-    model = keras.Model(inputs, outputs)
+    model = keras.Model(inputs, outputs, name="3dcnn")
     return model
 
-
-# free up RAM
-keras.backend.clear_session()
 
 # build model
 model = get_model((128, 128, 128, 1), 2)
@@ -377,28 +398,31 @@ model.summary()
 """
 
 # compile model
-# use the "binary_crossentropy"
-# for the binary classification problem
+initial_learning_rate = 0.0001
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
+)
 model.compile(
-    loss="binary_crossentropy", optimizer=keras.optimizers.Adam(1e-6), metrics=["acc"]
+    loss="binary_crossentropy",
+    optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
+    metrics=["acc"],
 )
 
-callbacks = [
-    keras.callbacks.ModelCheckpoint("3d_image_classification.h5", save_best_only=True),
-    keras.callbacks.EarlyStopping(monitor="val_acc", patience=8),
-]
+# define callbacks
+checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
+    "3d_image_classification.h5", save_best_only=True
+)
+early_stopping_cb = tf.keras.callbacks.EarlyStopping(monitor="val_acc", patience=10)
 
 # train the model, doing validation at the end of each epoch.
 epochs = 100
 model.fit(
-    x_all,
-    y_all,
-    validation_data=(x_test, y_test),
-    batch_size=2,
+    train_dataset,
+    validation_data=test_dataset,
     epochs=epochs,
     shuffle=True,
     verbose=2,
-    callbacks=callbacks,
+    callbacks=[checkpoint_cb, early_stopping_cb],
 )
 
 """
@@ -410,7 +434,9 @@ exersize to try other parameters and see what works!
 """
 ## Visualizing model performance
 
-Here the model accuracy and loss for the training and the validation sets are plotted. Since
+
+Here the model accuracy and loss for the training and the validation sets are plotted.
+Since
 the test set is class-balanced, accuracy provides an unbiased representation of the
 errors.
 """
@@ -428,23 +454,13 @@ for i, met in enumerate(["acc", "loss"]):
 
 
 """
-## Predict and evaluate results
+### Make predictions on a single CT scan
 """
 
 # load best weights
 model.load_weights("3d_image_classification.h5")
-# evaluate model
-score = model.evaluate(x_test, y_test, verbose=0)
-# prin loss and accuracy on the test set
-print("Test loss: %.2f" % (score[0]))
-print("Test accuracy: %.2f" % (100 * score[1]))
-
-"""
-Make predictions on a single CT scan
-"""
-
 prediction = model.predict(np.expand_dims(x_test[0], axis=0))[0]
-scores = [prediction[0], prediction[1]]
+scores = [1 - prediction[0], prediction[0]]
 
 CLASS_NAMES = ["left", "right"]
 for score, name in zip(scores, CLASS_NAMES):
