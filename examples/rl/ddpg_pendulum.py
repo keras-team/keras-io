@@ -2,7 +2,7 @@
 Title: Deep Deterministic Policy Gradient (DDPG)
 Author: [amifunny](https://github.com/amifunny)
 Date created: 2020/06/04
-Last modified: 2020/09/07
+Last modified: 2020/09/21
 Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 """
 """
@@ -59,20 +59,16 @@ learning only from recent experience, we learn from sampling all of our experien
 accumulated so far.
 
 Now, let's see how is it implemented.
-
 """
-
 import gym
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 """
 We use [OpenAIGym](http://gym.openai.com/docs) to create the environment.
 We will use the `upper_bound` parameter to scale our actions later.
-
 """
 
 problem = "Pendulum-v0"
@@ -89,13 +85,11 @@ lower_bound = env.action_space.low[0]
 print("Max Value of Action ->  {}".format(upper_bound))
 print("Min Value of Action ->  {}".format(lower_bound))
 
-
 """
 To implement better exploration by the Actor network, we use noisy perturbations,
 specifically
 an **Ornstein-Uhlenbeck process** for generating noise, as described in the paper.
 It samples noise from a correlated normal distribution.
-
 """
 
 
@@ -146,7 +140,6 @@ for the actions taken by the Actor network. We seek to maximize this quantity.
 
 Hence we update the Actor network so that it produces actions that get
 the maximum predicted value as seen by the Critic, for a given state.
-
 """
 
 
@@ -251,7 +244,6 @@ Note: We need the initialization for last layer of the Actor to be between
 `-0.003` and `0.003` as this prevents us from getting `1` or `-1` output values in
 the initial stages, which would squash our gradients to zero,
 as we use the `tanh` activation.
-
 """
 
 
@@ -303,7 +295,6 @@ def get_critic():
 """
 `policy()` returns an action sampled from our Actor network plus some noise for
 exploration.
-
 """
 
 
@@ -321,7 +312,6 @@ def policy(state, noise_object):
 
 """
 ## Training hyperparameters
-
 """
 
 std_dev = 0.2
@@ -352,12 +342,10 @@ tau = 0.005
 
 buffer = Buffer(50000, 64)
 
-
 """
 Now we implement our main training loop, and iterate over episodes.
 We sample actions using `policy()` and train with `learn()` at each time step,
 along with updating the Target networks at a rate `tau`.
-
 """
 
 # To store reward history of each episode
@@ -408,10 +396,8 @@ plt.xlabel("Episode")
 plt.ylabel("Avg. Epsiodic Reward")
 plt.show()
 
-
 """
 ![Graph](https://i.imgur.com/sqEtM6M.png)
-
 """
 
 """
@@ -425,7 +411,6 @@ problems.
 
 Another great environment to try this on is `LunarLandingContinuous-v2`, but it will take
 more episodes to obtain good results.
-
 """
 
 # Save the weights
@@ -435,17 +420,14 @@ critic_model.save_weights("pendulum_critic.h5")
 target_actor.save_weights("pendulum_target_actor.h5")
 target_critic.save_weights("pendulum_target_critic.h5")
 
-
 """
 Before Training:
 
 ![before_img](https://i.imgur.com/ox6b9rC.gif)
-
 """
 
 """
 After 100 episodes:
 
 ![after_img](https://i.imgur.com/eEH8Cz6.gif)
-
 """
