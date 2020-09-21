@@ -17,8 +17,7 @@ DPG,
 which can operate over continuous action spaces.
 
 This tutorial closely follow this paper -
-[Continuous control with deep reinforcement
-learning](https://arxiv.org/pdf/1509.02971.pdf)
+[Continuous control with deep reinforcement learning](https://arxiv.org/pdf/1509.02971.pdf)
 
 ## Problem
 
