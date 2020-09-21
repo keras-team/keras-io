@@ -2,7 +2,7 @@
 Title: Deep Deterministic Policy Gradient (DDPG)
 Author: [amifunny](https://github.com/amifunny)
 Date created: 2020/06/04
-Last modified: 2020/06/06
+Last modified: 2020/09/21
 Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 """
 """
@@ -12,7 +12,8 @@ Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 learning continous actions.
 
 It combines ideas from DPG (Deterministic Policy Gradient) and DQN (Deep Q-Network).
-It uses Experience Replay and slow-learning target networks from DQN, and it is based on DPG,
+It uses Experience Replay and slow-learning target networks from DQN, and it is based on
+DPG,
 which can operate over continuous action spaces.
 
 This tutorial closely follow this paper -
@@ -46,7 +47,8 @@ stable.
 
 Conceptually, this is like saying, "I have an idea of how to play this well,
 I'm going to try it out for a bit until I find something better",
-as opposed to saying "I'm going to re-learn how to play this entire game after every move".
+as opposed to saying "I'm going to re-learn how to play this entire game after every
+move".
 See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679).
 
 **Second, it uses Experience Replay.**
@@ -83,7 +85,8 @@ print("Max Value of Action ->  {}".format(upper_bound))
 print("Min Value of Action ->  {}".format(lower_bound))
 
 """
-To implement better exploration by the Actor network, we use noisy perturbations, specifically
+To implement better exploration by the Actor network, we use noisy perturbations,
+specifically
 an **Ornstein-Uhlenbeck process** for generating noise, as described in the paper.
 It samples noise from a correlated normal distribution.
 """
@@ -179,9 +182,11 @@ class Buffer:
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
         with tf.GradientTape() as tape:
-            target_actions = target_actor(next_state_batch)
-            y = reward_batch + gamma * target_critic([next_state_batch, target_actions])
-            critic_value = critic_model([state_batch, action_batch])
+            target_actions = target_actor(next_state_batch, training=True)
+            y = reward_batch + gamma * target_critic(
+                [next_state_batch, target_actions], training=True
+            )
+            critic_value = critic_model([state_batch, action_batch], training=True)
             critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
 
         critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
@@ -190,8 +195,8 @@ class Buffer:
         )
 
         with tf.GradientTape() as tape:
-            actions = actor_model(state_batch)
-            critic_value = critic_model([state_batch, actions])
+            actions = actor_model(state_batch, training=True)
+            critic_value = critic_model([state_batch, actions], training=True)
             # Used `-value` as we want to maximize the value given
             # by the critic for our actions
             actor_loss = -tf.math.reduce_mean(critic_value)
