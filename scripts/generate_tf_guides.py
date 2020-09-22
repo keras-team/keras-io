@@ -1,4 +1,5 @@
 from pathlib import Path
+import tutobooks
 import copy
 import json
 import random
@@ -141,7 +142,11 @@ TF_IPYNB_BASE = {
 
 
 def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_name):
-    nb = (Path(source_dir) / source_name).with_suffix(".ipynb")
+    # Before we start, regenerate the ipynb.
+    py_path = (Path(source_dir).parent / source_name).with_suffix(".py")
+    nb_path = (Path(source_dir) / source_name).with_suffix(".ipynb")
+    tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
+
     original_ipynb = json.loads(nb.read_text())
 
     # Skip first title cell
