@@ -67,6 +67,11 @@ CONFIG = [
         "source_name": "training_keras_models_on_cloud",
         "target_name": "training_keras_models_on_cloud",
     },
+    {
+        "title": "Working with preprocessing layers",
+        "source_name": "preprocessing_layers",
+        "target_name": "preprocessing_layers",
+    },
 ]
 
 
@@ -147,7 +152,7 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     nb_path = (Path(source_dir) / source_name).with_suffix(".ipynb")
     tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
 
-    original_ipynb = json.loads(nb.read_text())
+    original_ipynb = json.loads(nb_path.read_text())
 
     # Skip first title cell
     cells = original_ipynb["cells"][1:]
