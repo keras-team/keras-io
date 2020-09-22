@@ -143,11 +143,14 @@ TF_IPYNB_BASE = {
 
 def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_name):
     # Before we start, regenerate the ipynb.
+    max_loc = tutobooks.MAX_LOC
+    tutobooks.MAX_LOC = 400
     py_path = (Path(source_dir).parent / source_name).with_suffix(".py")
     nb_path = (Path(source_dir) / source_name).with_suffix(".ipynb")
     tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
+    tutobooks.MAX_LOC = max_loc
 
-    original_ipynb = json.loads(nb.read_text())
+    original_ipynb = json.loads(nb_path.read_text())
 
     # Skip first title cell
     cells = original_ipynb["cells"][1:]

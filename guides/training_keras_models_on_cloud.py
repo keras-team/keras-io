@@ -82,7 +82,7 @@ tfc.run()
 """
 
 """
-You don’t need to worry about cloud-specific tasks such as creating VM instances
+You don't need to worry about cloud-specific tasks such as creating VM instances
 and distribution strategies when using TensorFlow Cloud.
 The API includes intelligent defaults for all the parameters -- everything is
 configurable, but many models can rely on these defaults.
