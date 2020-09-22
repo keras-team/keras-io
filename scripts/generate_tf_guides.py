@@ -67,6 +67,11 @@ CONFIG = [
         "source_name": "training_keras_models_on_cloud",
         "target_name": "training_keras_models_on_cloud",
     },
+    {
+        "title": "Working with preprocessing layers",
+        "source_name": "preprocessing_layers",
+        "target_name": "preprocessing_layers",
+    },
 ]
 
 
