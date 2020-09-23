@@ -1,11 +1,17 @@
-"""
-Title: End-to-end Masked Language Modeling with BERT
-Author: [Ankur Singh](https://twitter.com/ankur310794)
-Date created: 2020/09/18
-Last modified: 2020/09/18
-Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
-"""
-"""
+
+# End-to-end Masked Language Modeling with BERT
+
+**Author:** [Ankur Singh](https://twitter.com/ankur310794)<br>
+**Date created:** 2020/09/18<br>
+**Last modified:** 2020/09/18<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/mlm_and_finetune_with_bert.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/mlm_and_finetune_with_bert.py)
+
+
+**Description:** Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
+
+---
 ## Introduction
 
 Masked Language Modeling is a fill-in-the-blank task,
@@ -33,14 +39,14 @@ We will use the Keras `TextVectorization` and `MultiHeadAttention` layers
 to create a BERT Transformer-Encoder network architecture.
 
 Note: This example should be run with `tf-nightly`.
-"""
 
-"""
+---
 ## Setup
 
 Install `tf-nightly` via `pip install tf-nightly`.
-"""
 
+
+```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -51,11 +57,13 @@ import numpy as np
 import glob
 import re
 from pprint import pprint
+```
 
-"""
+---
 ## Set-up Configuration
-"""
 
+
+```python
 
 @dataclass
 class Config:
@@ -70,18 +78,20 @@ class Config:
 
 
 config = Config()
+```
 
-"""
+---
 ## Load the data
 
 We will first download the IMDB data and load into a Pandas dataframe.
-"""
 
-"""shell
-curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-tar -xf aclImdb_v1.tar.gz
-"""
 
+```python
+!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+!tar -xf aclImdb_v1.tar.gz
+```
+
+```python
 
 def get_text_list_from_files(files):
     text_list = []
@@ -112,8 +122,16 @@ train_df = get_data_from_text_files("train")
 test_df = get_data_from_text_files("test")
 
 all_data = train_df.append(test_df)
+```
+<div class="k-default-codeblock">
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 80.2M  100 80.2M    0     0  45.3M      0  0:00:01  0:00:01 --:--:-- 45.3M
 
-"""
+```
+</div>
+---
 ## Dataset preparation
 
 We will use the `TextVectorization` layer to vectorize the text into integer token ids.
@@ -127,8 +145,9 @@ Below, we define 3 preprocessing functions.
 2.  The `encode` function encodes raw text into integer token ids.
 3.  The `get_masked_input_and_labels` function will mask input token ids.
 It masks 15% of all input tokens in each sequence at random.
-"""
 
+
+```python
 
 def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
@@ -247,16 +266,18 @@ mlm_ds = tf.data.Dataset.from_tensor_slices(
     (x_masked_train, y_masked_labels, sample_weights)
 )
 mlm_ds = mlm_ds.shuffle(1000).batch(config.BATCH_SIZE)
+```
 
-"""
+---
 ## Create BERT model (Pretraining Model) for masked language modeling
 
 We will create a BERT-like pretraining model architecture
 using the `MultiHeadAttention` layer.
 It will take token ids as inputs (including masked tokens)
 and it will predict the correct ids for the masked input tokens.
-"""
 
+
+```python
 
 def bert_module(query, key, value, i):
     # Multi headed self-attention
@@ -417,23 +438,140 @@ generator_callback = MaskedTextGenerator(sample_tokens.numpy())
 
 bert_masked_model = create_masked_language_bert_model()
 bert_masked_model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "masked_bert_model"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 256)]        0                                            
+__________________________________________________________________________________________________
+word_embedding (Embedding)      (None, 256, 128)     3840000     input_1[0][0]                    
+__________________________________________________________________________________________________
+tf.__operators__.add (TFOpLambd (None, 256, 128)     0           word_embedding[0][0]             
+__________________________________________________________________________________________________
+encoder_0/multiheadattention (M (None, 256, 128)     66048       tf.__operators__.add[0][0]       
+                                                                 tf.__operators__.add[0][0]       
+                                                                 tf.__operators__.add[0][0]       
+__________________________________________________________________________________________________
+encoder_0/att_dropout (Dropout) (None, 256, 128)     0           encoder_0/multiheadattention[0][0
+__________________________________________________________________________________________________
+tf.__operators__.add_1 (TFOpLam (None, 256, 128)     0           tf.__operators__.add[0][0]       
+                                                                 encoder_0/att_dropout[0][0]      
+__________________________________________________________________________________________________
+encoder_0/att_layernormalizatio (None, 256, 128)     256         tf.__operators__.add_1[0][0]     
+__________________________________________________________________________________________________
+encoder_0/ffn (Sequential)      (None, 256, 128)     33024       encoder_0/att_layernormalization[
+__________________________________________________________________________________________________
+encoder_0/ffn_dropout (Dropout) (None, 256, 128)     0           encoder_0/ffn[0][0]              
+__________________________________________________________________________________________________
+tf.__operators__.add_2 (TFOpLam (None, 256, 128)     0           encoder_0/att_layernormalization[
+                                                                 encoder_0/ffn_dropout[0][0]      
+__________________________________________________________________________________________________
+encoder_0/ffn_layernormalizatio (None, 256, 128)     256         tf.__operators__.add_2[0][0]     
+__________________________________________________________________________________________________
+mlm_cls (Dense)                 (None, 256, 30000)   3870000     encoder_0/ffn_layernormalization[
+==================================================================================================
+Total params: 7,809,584
+Trainable params: 7,809,584
+Non-trainable params: 0
+__________________________________________________________________________________________________
+
+```
+</div>
+---
 ## Train and Save
-"""
 
+
+```python
 bert_masked_model.fit(mlm_ds, epochs=5, callbacks=[generator_callback])
 bert_masked_model.save("bert_mlm_imdb.h5")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+1563/1563 [==============================] - ETA: 0s - loss: 7.0111{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'this',
+ 'prediction': 'i have watched this this and it was awesome',
+ 'probability': 0.086307295}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'i',
+ 'prediction': 'i have watched this i and it was awesome',
+ 'probability': 0.066265985}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'movie',
+ 'prediction': 'i have watched this movie and it was awesome',
+ 'probability': 0.044195656}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'a',
+ 'prediction': 'i have watched this a and it was awesome',
+ 'probability': 0.04020928}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'was',
+ 'prediction': 'i have watched this was and it was awesome',
+ 'probability': 0.027878676}
+1563/1563 [==============================] - 661s 423ms/step - loss: 7.0111
+Epoch 2/5
+1563/1563 [==============================] - ETA: 0s - loss: 6.4498{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'movie',
+ 'prediction': 'i have watched this movie and it was awesome',
+ 'probability': 0.44448906}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'film',
+ 'prediction': 'i have watched this film and it was awesome',
+ 'probability': 0.1507494}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'is',
+ 'prediction': 'i have watched this is and it was awesome',
+ 'probability': 0.06385628}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'one',
+ 'prediction': 'i have watched this one and it was awesome',
+ 'probability': 0.023549262}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'was',
+ 'prediction': 'i have watched this was and it was awesome',
+ 'probability': 0.022277055}
+1563/1563 [==============================] - 660s 422ms/step - loss: 6.4498
+Epoch 3/5
+1563/1563 [==============================] - ETA: 0s - loss: 5.8709{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'movie',
+ 'prediction': 'i have watched this movie and it was awesome',
+ 'probability': 0.4759983}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'film',
+ 'prediction': 'i have watched this film and it was awesome',
+ 'probability': 0.18642229}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'one',
+ 'prediction': 'i have watched this one and it was awesome',
+ 'probability': 0.045611132}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'is',
+ 'prediction': 'i have watched this is and it was awesome',
+ 'probability': 0.028308254}
+{'input_text': 'i have watched this [mask] and it was awesome',
+ 'predicted mask token': 'series',
+ 'prediction': 'i have watched this series and it was awesome',
+ 'probability': 0.027862877}
+1563/1563 [==============================] - 661s 423ms/step - loss: 5.8709
+Epoch 4/5
+ 771/1563 [=============>................] - ETA: 5:35 - loss: 5.3782
+
+```
+</div>
+---
 ## Fine-tune a sentiment classification model
 
 We will fine-tune our self-supervised model on a downstream task of sentiment classification.
 To do this, let's create a classifier by adding a pooling layer and a `Dense` layer on top of the
 pretrained BERT features.
 
-"""
 
+```python
 # Load pretrained bert model
 mlm_model = keras.models.load_model(
     "bert_mlm_imdb.h5", custom_objects={"MaskedLanguageModel": MaskedLanguageModel}
@@ -481,8 +619,54 @@ classifer_model.fit(
     epochs=5,
     validation_data=test_classifier_ds,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "classification"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_2 (InputLayer)         [(None, 256)]             0         
+_________________________________________________________________
+model (Functional)           (None, 256, 128)          3939584   
+_________________________________________________________________
+global_max_pooling1d (Global (None, 128)               0         
+_________________________________________________________________
+dense_2 (Dense)              (None, 64)                8256      
+_________________________________________________________________
+dense_3 (Dense)              (None, 1)                 65        
+=================================================================
+Total params: 3,947,905
+Trainable params: 8,321
+Non-trainable params: 3,939,584
+_________________________________________________________________
+Epoch 1/5
+782/782 [==============================] - 15s 19ms/step - loss: 0.8096 - accuracy: 0.5498 - val_loss: 0.6406 - val_accuracy: 0.6329
+Epoch 2/5
+782/782 [==============================] - 14s 18ms/step - loss: 0.6551 - accuracy: 0.6220 - val_loss: 0.6423 - val_accuracy: 0.6338
+Epoch 3/5
+782/782 [==============================] - 14s 18ms/step - loss: 0.6473 - accuracy: 0.6310 - val_loss: 0.6380 - val_accuracy: 0.6350
+Epoch 4/5
+782/782 [==============================] - 14s 18ms/step - loss: 0.6307 - accuracy: 0.6471 - val_loss: 0.6432 - val_accuracy: 0.6312
+Epoch 5/5
+782/782 [==============================] - 14s 18ms/step - loss: 0.6278 - accuracy: 0.6465 - val_loss: 0.6107 - val_accuracy: 0.6678
+Epoch 1/5
+782/782 [==============================] - 46s 59ms/step - loss: 0.5234 - accuracy: 0.7373 - val_loss: 0.3533 - val_accuracy: 0.8427
+Epoch 2/5
+782/782 [==============================] - 45s 57ms/step - loss: 0.2808 - accuracy: 0.8814 - val_loss: 0.3252 - val_accuracy: 0.8633
+Epoch 3/5
+782/782 [==============================] - 43s 55ms/step - loss: 0.1493 - accuracy: 0.9413 - val_loss: 0.4374 - val_accuracy: 0.8486
+Epoch 4/5
+782/782 [==============================] - 43s 55ms/step - loss: 0.0600 - accuracy: 0.9803 - val_loss: 0.6422 - val_accuracy: 0.8380
+Epoch 5/5
+782/782 [==============================] - 43s 55ms/step - loss: 0.0305 - accuracy: 0.9893 - val_loss: 0.6064 - val_accuracy: 0.8440
+
+<tensorflow.python.keras.callbacks.History at 0x7f35af4367f0>
+
+```
+</div>
+---
 ## Create an end-to-end model and evaluate it
 
 When you want to deploy a model, it's best if it already includes its preprocessing
@@ -490,8 +674,9 @@ pipeline, so that you don't have to reimplement the preprocessing logic in your
 production environment. Let's create an end-to-end model that incorporates
 the `TextVectorization` layer, and let's evaluate. Our model will accept raw strings
 as input.
-"""
 
+
+```python
 
 def get_end_to_end(model):
     inputs_string = keras.Input(shape=(1,), dtype="string")
@@ -507,3 +692,13 @@ def get_end_to_end(model):
 
 end_to_end_classification_model = get_end_to_end(classifer_model)
 end_to_end_classification_model.evaluate(test_raw_classifier_ds)
+```
+
+<div class="k-default-codeblock">
+```
+782/782 [==============================] - 8s 11ms/step - loss: 0.5967 - accuracy: 0.8446
+
+[0.6064175963401794, 0.8439599871635437]
+
+```
+</div>
