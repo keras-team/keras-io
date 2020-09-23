@@ -416,6 +416,12 @@ text_vectorizer = preprocessing.TextVectorization(output_mode="binary", ngrams=2
 # Index the bigrams via `adapt()`
 text_vectorizer.adapt(data)
 
+print(
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "\n",
+)
+
 # Create a Dense model
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -425,6 +431,8 @@ model = keras.Model(inputs, outputs)
 # Call the model on test data (which includes unknown tokens)
 test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
+
+print("Model output:", test_output)
 
 """
 ### Encoding text as a dense matrix of ngrams with TF-IDF weighting
@@ -447,6 +455,12 @@ text_vectorizer = preprocessing.TextVectorization(output_mode="tf-idf", ngrams=2
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
 text_vectorizer.adapt(data)
 
+print(
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "\n",
+)
+
 # Create a Dense model
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -456,3 +470,4 @@ model = keras.Model(inputs, outputs)
 # Call the model on test data (which includes unknown tokens)
 test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
+print("Model output:", test_output)
