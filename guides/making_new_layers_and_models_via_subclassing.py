@@ -550,6 +550,14 @@ Effectively, the `Layer` class corresponds to what we refer to in the
 literature as a "layer" (as in "convolution layer" or "recurrent layer") or as
 a "block" (as in "ResNet block" or "Inception block").
 
+Similarly to `Layer` class, when subclassing `Model`, it is recommended to redefine
+`model.call()` function which specifies interaction of the layers. One may notice
+that in some examples, including ones provided in 
+[Keras examples section](https://keras.io/examples/) `Model` is successfully subclassed 
+without update of `model.call()` definition. However, to ensure that the subclassed model
+is robust and works with wide range of data sources it is recommended to always 
+define `model.call()` in subclassed models.
+
 Meanwhile, the `Model` class corresponds to what is referred to in the
 literature as a "model" (as in "deep learning model") or as a "network" (as in
 "deep neural network").
