@@ -303,11 +303,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-170500096/170498071 [==============================] - 283s 2us/step
-1563/1563 [==============================] - 3s 2ms/step - loss: 2.1234
+1563/1563 [==============================] - 4s 2ms/step - loss: 2.1193
 
-<tensorflow.python.keras.callbacks.History at 0x7ff7d44f8040>
+<tensorflow.python.keras.callbacks.History at 0x7f5b1409a250>
 
 ```
 </div>
@@ -493,6 +491,12 @@ text_vectorizer = preprocessing.TextVectorization(output_mode="binary", ngrams=2
 # Index the bigrams via `adapt()`
 text_vectorizer.adapt(data)
 
+print(
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "\n",
+)
+
 # Create a Dense model
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -502,8 +506,24 @@ model = keras.Model(inputs, outputs)
 # Call the model on test data (which includes unknown tokens)
 test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
+
+print("Model output:", test_output)
 ```
 
+<div class="k-default-codeblock">
+```
+Encoded text:
+ [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
+  0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]] 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model output: tf.Tensor([[0.8250091]], shape=(1, 1), dtype=float32)
+
+```
+</div>
 ### Encoding text as a dense matrix of ngrams with TF-IDF weighting
 
 This is an alternative way of preprocessing text before passing it to a `Dense` layer.
@@ -525,6 +545,12 @@ text_vectorizer = preprocessing.TextVectorization(output_mode="tf-idf", ngrams=2
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
 text_vectorizer.adapt(data)
 
+print(
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "\n",
+)
+
 # Create a Dense model
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -534,4 +560,24 @@ model = keras.Model(inputs, outputs)
 # Call the model on test data (which includes unknown tokens)
 test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
+print("Model output:", test_output)
 ```
+
+<div class="k-default-codeblock">
+```
+Encoded text:
+ [[8.04719   1.6945957 0.        0.        0.        0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.        1.0986123 1.0986123 1.0986123 0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  1.0986123 0.        0.        0.        0.        0.        0.
+  0.        1.0986123 1.0986123 0.        0.        0.       ]] 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model output: tf.Tensor([[-2.3685102]], shape=(1, 1), dtype=float32)
+
+```
+</div>
