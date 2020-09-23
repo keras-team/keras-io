@@ -1,4 +1,3 @@
-
 # End-to-end Masked Language Modeling with BERT
 
 **Author:** [Ankur Singh](https://twitter.com/ankur310794)<br>
