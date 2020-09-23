@@ -303,7 +303,6 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-A local file was found, but it seems to be incomplete or outdated because the auto file hash does not match the original value of 6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce so we will re-download the data.
 Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
 170500096/170498071 [==============================] - 283s 2us/step
 1563/1563 [==============================] - 3s 2ms/step - loss: 2.1234
