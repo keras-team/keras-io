@@ -2,7 +2,7 @@
 Title: 3D Image Classification from CT Scans
 Author: [Hasib Zunair](https://twitter.com/hasibzunair)
 Date created: 2020/09/10
-Last modified: 2020/09/17
+Last modified: 2020/09/23
 Description: Train a 3D convolutional neural network to classify location of cancer.
 """
 """
@@ -22,7 +22,6 @@ of learning representations from a volumetric data is useful to find the right
 label. This is achieved by using 3D convolutions.
 
 ## References
-
 - [A survey on Deep Learning Advances on Different 3D
 DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
 
@@ -35,8 +34,6 @@ Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
 
 - [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis
 Prediction](https://arxiv.org/abs/2007.13224)
-
-
 """
 
 import os
@@ -48,10 +45,11 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-
 ## Downloading the  NSCLC-Radiomics-Genomics dataset
+
 Since training 3D convolutional neural network are time consuming, a subset of the
-NSCLC-Radiomics-Genomics dataset is used which consists of CT scans
+[NSCLC-Radiomics-Genomics](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7
+290889feefad66) dataset is used which consists of CT scans
 with gene expression and relevant clinical data. In this example, we will be
 using the "location" attribtute among the available clinical data to build a
 classifier to predict cancerious regions (left or right). Hence, the task is
@@ -59,7 +57,6 @@ a binary classification problem.
 """
 
 url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
-
 filename = os.path.join(os.getcwd(), "NSCLC-Radiomics-Genomics.zip")
 keras.utils.get_file(filename, url)
 
@@ -69,7 +66,10 @@ with zipfile.ZipFile("NSCLC-Radiomics-Genomics.zip", "r") as z_fp:
 """
 ## Load data
 The files are provided in Nifti format with the extension .nii. To read the
-scans, the nibabel package is used. To process the data, the following
+scans, the nibabel package is used. You can install the package using `pip install
+nibabel`.
+
+In order to process the data, the following
 is done:
 * Volumes are originally rotated by 90 degress, so the orientation is fixed
 * Resize width, height and depth
@@ -239,8 +239,8 @@ from scipy import ndimage
 from scipy.ndimage import gaussian_filter
 
 
-@tf.function(input_signature=[tf.TensorSpec(None, tf.float64)])
-def tf_normalize(volume):
+@tf.function()
+def normalize(volume):
     """Normalize the volume"""
     min = -1000
     max = 400
@@ -252,11 +252,11 @@ def tf_normalize(volume):
     return normalized_volume
 
 
-@tf.function(input_signature=[tf.TensorSpec(None, tf.float64)])
-def tf_rotate(volume):
+@tf.function()
+def rotate(volume):
     """Rotate the volume by some degrees"""
 
-    def rotate(volume):
+    def scipy_rotate(volume):
         # define some rotation angles
         angles = [-20, -10, -5, 5, 10, 20]
         # pick angles at random
@@ -265,39 +265,37 @@ def tf_rotate(volume):
         volume = ndimage.rotate(volume, angle, reshape=False)
         return volume
 
-    augmented_volume = tf.numpy_function(rotate, [volume], tf.float64)
+    augmented_volume = tf.numpy_function(scipy_rotate, [volume], tf.float64)
     return augmented_volume
 
 
-@tf.function(input_signature=[tf.TensorSpec(None, tf.float64)])
-def tf_blur(volume):
+@tf.function()
+def blur(volume):
     """Blur the volume"""
 
-    def blur(volume):
+    def scipy_blur(volume):
         # gaussian blur
         volume = gaussian_filter(volume, sigma=1)
         return volume
 
-    augmented_volume = tf.numpy_function(blur, [volume], tf.float64)
+    augmented_volume = tf.numpy_function(scipy_blur, [volume], tf.float64)
     return augmented_volume
 
 
 def train_preprocessing(volume, label):
     "Process training data by rotating, blur and normalizing"
-    # define the augmentation functions
-    augmentations = [tf_rotate, tf_blur]
-    # pick an augmentation at random
-    augmentation = random.choice(augmentations)
-    # augment data
-    volume = augmentation(volume)
+    # rotate data
+    volume = rotate(volume)
+    # blur data
+    volume = blur(volume)
     # normalize
-    volume = tf_normalize(volume)
+    volume = normalize(volume)
     return volume, label
 
 
 def test_preprocessing(volume, label):
     "Process test data by only normalizing"
-    volume = tf_normalize(volume)
+    volume = normalize(volume)
     return volume, label
 
 
@@ -342,9 +340,6 @@ plot_slices(10, 10, 128, 128, image[:, :, :100])
 
 """
 ## Define 3D convolutional neural network
-
-
-
 To make the model easier to understand, blocks are defined. Since this is a
 3D CNN, 3D convolutions are used. The architecture of the 3D CNN used in this example
 is based on this [paper](https://arxiv.org/abs/2007.13224).
@@ -425,15 +420,15 @@ model.fit(
 
 """
 It is important to note that the number of sample are really small (only 40) and no
-random seed is specified. You can expect large variances in your results. It is also a
-good
+random seed is specified. You can expect large variances in the results. The full dataset
+can be found
+[here](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7290889feefad66). It
+is also a good
 exersize to try other parameters and see what works!
 """
 
 """
 ## Visualizing model performance
-
-
 Here the model accuracy and loss for the training and the validation sets are plotted.
 Since
 the test set is class-balanced, accuracy provides an unbiased representation of the
@@ -443,17 +438,17 @@ errors.
 fig, ax = plt.subplots(1, 2, figsize=(20, 3))
 ax = ax.ravel()
 
-for i, met in enumerate(["acc", "loss"]):
-    ax[i].plot(model.history.history[met])
-    ax[i].plot(model.history.history["val_" + met])
-    ax[i].set_title("Model {}".format(met))
+for i, metric in enumerate(["acc", "loss"]):
+    ax[i].plot(model.history.history[metric])
+    ax[i].plot(model.history.history["val_" + metric])
+    ax[i].set_title("Model {}".format(metric))
     ax[i].set_xlabel("epochs")
-    ax[i].set_ylabel(met)
+    ax[i].set_ylabel(metric)
     ax[i].legend(["train", "val"])
 
 
 """
-### Make predictions on a single CT scan
+## Make predictions on a single CT scan
 """
 
 # load best weights
@@ -461,8 +456,8 @@ model.load_weights("3d_image_classification.h5")
 prediction = model.predict(np.expand_dims(x_test[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
-CLASS_NAMES = ["left", "right"]
-for score, name in zip(scores, CLASS_NAMES):
+class_names = ["left", "right"]
+for score, name in zip(scores, class_names):
     print(
         "This model is %.2f percent confident that cancer in the %s side"
         % ((100 * score), name)
