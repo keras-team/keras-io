@@ -86,6 +86,7 @@ from scipy.ndimage import zoom
 
 
 def read_nifti_file(filepath):
+    """Read and load volume"""
     # read file
     scan = nib.load(filepath)
     # get raw data
@@ -96,6 +97,7 @@ def read_nifti_file(filepath):
 
 
 def resize_slices(img):
+    """Resize width and height"""
     # resize all slices
     flatten = [
         cv2.resize(img[:, :, i], (128, 128), interpolation=cv2.INTER_CUBIC)
@@ -107,6 +109,7 @@ def resize_slices(img):
 
 
 def resize_depth(img):
+    """Resize across z-axis"""
     # set the desired depth
     desired_depth = 128
     # get current depth
@@ -120,6 +123,7 @@ def resize_depth(img):
 
 
 def process_scan(path):
+    """Read and resize volume"""
     # read scan
     volume = read_nifti_file(path)
     # resize width and height
@@ -154,9 +158,9 @@ Let's visualize a CT scan and it's shape.
 import matplotlib.pyplot as plt
 
 # read a scan
-img = read_nifti_file(right_scan_paths[10])
+img = read_nifti_file(right_scan_paths[15])
 print("Dimension of the CT scan is:", img.shape)
-plt.imshow(img[:, :, 5], cmap="gray")
+plt.imshow(img[:, :, 150], cmap="gray")
 
 """
 Since a CT scan has many slices, let's visualize a montage of the slices.
@@ -164,7 +168,7 @@ Since a CT scan has many slices, let's visualize a montage of the slices.
 
 
 def plot_slices(num_rows, num_columns, width, height, data):
-    # plot a montage of 20 CT slices
+    """Plot a montage of 20 CT slices"""
     data = np.rot90(np.array(data))
     data = np.transpose(data)
     data = np.reshape(data, (num_rows, num_columns, width, height))
@@ -235,72 +239,64 @@ from scipy import ndimage
 from scipy.ndimage import gaussian_filter
 
 
-def normalize(volume):
+@tf.function(input_signature=[tf.TensorSpec(None, tf.float64)])
+def tf_normalize(volume):
+    """Normalize the volume"""
     min = -1000
     max = 400
-    volume = (volume - min) / (max - min)
-    # rescale between 0-1
-    volume[volume > 1] = 1.0
-    volume[volume < 0] = 0.0
-    volume = np.expand_dims(volume, axis=3)
-    return volume
-
-
-@tf.function(input_signature=[tf.TensorSpec((128, 128, 128), tf.float64)])
-def tf_normalize(volume):
-    normalized_volume = tf.numpy_function(normalize, [volume], tf.float64)
+    volume = volume - min / max - min
+    volume_min = tf.reduce_min(volume)
+    volume_max = tf.reduce_max(volume)
+    normalized_volume = (volume - volume_min) / (volume_max - volume_min)
+    normalized_volume = tf.expand_dims(normalized_volume, axis=3)
     return normalized_volume
 
 
-def rotate(volume):
-    # define some rotation angles
-    angles = [-20, -10, -5, 5, 10, 20]
-    # pick angles at random
-    angle = random.choice(angles)
-    # rotate volume
-    volume = ndimage.rotate(volume, angle, reshape=False)
-    return volume
-
-
-@tf.function(input_signature=[tf.TensorSpec((128, 128, 128), tf.float64)])
+@tf.function(input_signature=[tf.TensorSpec(None, tf.float64)])
 def tf_rotate(volume):
+    """Rotate the volume by some degrees"""
+
+    def rotate(volume):
+        # define some rotation angles
+        angles = [-20, -10, -5, 5, 10, 20]
+        # pick angles at random
+        angle = random.choice(angles)
+        # rotate volume
+        volume = ndimage.rotate(volume, angle, reshape=False)
+        return volume
+
     augmented_volume = tf.numpy_function(rotate, [volume], tf.float64)
     return augmented_volume
 
 
-def blur(volume):
-    # gaussian blur
-    volume = gaussian_filter(volume, sigma=1)
-    return volume
-
-
-@tf.function(input_signature=[tf.TensorSpec((128, 128, 128), tf.float64)])
+@tf.function(input_signature=[tf.TensorSpec(None, tf.float64)])
 def tf_blur(volume):
+    """Blur the volume"""
+
+    def blur(volume):
+        # gaussian blur
+        volume = gaussian_filter(volume, sigma=1)
+        return volume
+
     augmented_volume = tf.numpy_function(blur, [volume], tf.float64)
     return augmented_volume
 
 
-def train_augment(volume, label):
+def train_preprocessing(volume, label):
+    "Process training data by rotating, blur and normalizing"
     # define the augmentation functions
-    augmentations = ["rotate", "blur", "normal"]
+    augmentations = [tf_rotate, tf_blur]
     # pick an augmentation at random
     augmentation = random.choice(augmentations)
     # augment data
-    if augmentation == "rotate":
-        volume = tf_rotate(volume)
-    elif augmentation == "blur":
-        volume = tf_blur(volume)
-    elif augmentation == "normal":
-        pass
-    else:
-        print("No augmentation selected!")
+    volume = augmentation(volume)
     # normalize
     volume = tf_normalize(volume)
     return volume, label
 
 
-def test_augment(volume, label):
-    # normalize
+def test_preprocessing(volume, label):
+    "Process test data by only normalizing"
     volume = tf_normalize(volume)
     return volume, label
 
@@ -314,19 +310,18 @@ For the test data, the volumes are only rescaled.
 """
 
 # define data loaders
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+train_loader = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_loader = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
 batch_size = 2
 # augment the on the fly during training
-train_dataset = train_dataset.shuffle(len(x_train)).map(train_augment).batch(batch_size)
+train_dataset = (
+    train_loader.shuffle(len(x_train)).map(train_preprocessing).batch(batch_size)
+)
 # only rescale
-test_dataset = test_dataset.shuffle(len(x_test)).map(test_augment).batch(batch_size)
-
-# data = train_dataset.take(1)
-# print(data)
-# images, labels = list(data)[0]
-# images.shape, labels.shape
+test_dataset = (
+    test_loader.shuffle(len(x_test)).map(test_preprocessing).batch(batch_size)
+)
 
 """
 Visualize an augmented CT scan
@@ -356,20 +351,12 @@ is based on this [paper](https://arxiv.org/abs/2007.13224).
 """
 
 
-def get_model(img_size, num_classes):
-    # build a 3D convolutional neural network model
+def get_model(width=128, height=128, depth=128):
+    """build a 3D convolutional neural network model"""
 
-    inputs = keras.Input(img_size)
+    inputs = keras.Input((width, height, depth, 1))
 
-    x = layers.Conv3D(filters=16, kernel_size=3, activation="relu")(inputs)
-    x = layers.MaxPool3D(pool_size=2)(x)
-    x = layers.BatchNormalization()(x)
-
-    x = layers.Conv3D(filters=32, kernel_size=3, activation="relu")(x)
-    x = layers.MaxPool3D(pool_size=2)(x)
-    x = layers.BatchNormalization()(x)
-
-    x = layers.Conv3D(filters=64, kernel_size=3, activation="relu")(x)
+    x = layers.Conv3D(filters=64, kernel_size=3, activation="relu")(inputs)
     x = layers.MaxPool3D(pool_size=2)(x)
     x = layers.BatchNormalization()(x)
 
@@ -377,8 +364,20 @@ def get_model(img_size, num_classes):
     x = layers.MaxPool3D(pool_size=2)(x)
     x = layers.BatchNormalization()(x)
 
-    x = layers.Flatten()(x)
-    x = layers.Dense(units=256, activation="relu")(x)
+    x = layers.Conv3D(filters=256, kernel_size=3, activation="relu")(x)
+    x = layers.MaxPool3D(pool_size=2)(x)
+    x = layers.BatchNormalization()(x)
+
+    x = layers.Conv3D(filters=512, kernel_size=3, activation="relu")(x)
+    x = layers.MaxPool3D(pool_size=2)(x)
+    x = layers.BatchNormalization()(x)
+
+    x = layers.Conv3D(filters=512, kernel_size=3, activation="relu")(x)
+    x = layers.MaxPool3D(pool_size=2)(x)
+    x = layers.BatchNormalization()(x)
+
+    x = layers.GlobalAveragePooling3D()(x)
+    x = layers.Dense(units=512, activation="relu")(x)
     x = layers.Dropout(0.3)(x)
 
     outputs = layers.Dense(units=1, activation="sigmoid")(x)
@@ -389,7 +388,7 @@ def get_model(img_size, num_classes):
 
 
 # build model
-model = get_model((128, 128, 128, 1), 2)
+model = get_model(width=128, height=128, depth=128)
 model.summary()
 
 """
@@ -398,7 +397,7 @@ model.summary()
 
 # compile model
 initial_learning_rate = 0.0001
-lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
 )
 model.compile(
@@ -408,10 +407,10 @@ model.compile(
 )
 
 # define callbacks
-checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
+checkpoint_cb = keras.callbacks.ModelCheckpoint(
     "3d_image_classification.h5", save_best_only=True
 )
-early_stopping_cb = tf.keras.callbacks.EarlyStopping(monitor="val_acc", patience=10)
+early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=10)
 
 # train the model, doing validation at the end of each epoch.
 epochs = 100
@@ -426,7 +425,8 @@ model.fit(
 
 """
 It is important to note that the number of sample are really small (only 40) and no
-random seed is specified. You can expect variances in your results. It is also a good
+random seed is specified. You can expect large variances in your results. It is also a
+good
 exersize to try other parameters and see what works!
 """
 
