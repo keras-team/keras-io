@@ -164,9 +164,9 @@ def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
 
 
 vectorize_layer = get_vectorize_layer(
-    data.review.values.tolist(),
-    flags.VOCAB_SIZE,
-    flags.MAX_LEN,
+    all_data.review.values.tolist(),
+    config.VOCAB_SIZE,
+    config.MAX_LEN,
     special_tokens=["[mask]"],
 )
 
@@ -220,20 +220,20 @@ y_train = train_df.sentiment.values
 train_classifier_ds = (
     tf.data.Dataset.from_tensor_slices((x_train, y_train))
     .shuffle(1000)
-    .batch(flags.BATCH_SIZE)
+    .batch(config.BATCH_SIZE)
 )
 
 # We have 25000 examples for testing
 x_test = encode(test_df.review.values)
 y_test = test_df.sentiment.values
 test_classifier_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(
-    flags.BATCH_SIZE
+    config.BATCH_SIZE
 )
 
 # Build dataset for end to end model input (will be used at the end)
 test_raw_classifier_ds = tf.data.Dataset.from_tensor_slices(
     (test_df.review.values, y_test)
-).batch(flags.BATCH_SIZE)
+).batch(config.BATCH_SIZE)
 
 # Prepare data for masked language model
 x_all_review = encode(all_data.review.values)
@@ -244,7 +244,7 @@ x_masked_train, y_masked_labels, sample_weights = get_masked_input_and_labels(
 mlm_ds = tf.data.Dataset.from_tensor_slices(
     (x_masked_train, y_masked_labels, sample_weights)
 )
-mlm_ds = mlm_ds.shuffle(1000).batch(flags.BATCH_SIZE)
+mlm_ds = mlm_ds.shuffle(1000).batch(config.BATCH_SIZE)
 
 """
 ## Create BERT model (Pretraining Model) for masked language modeling
@@ -256,116 +256,64 @@ and it will predict the correct ids for the masked input tokens.
 """
 
 
-class BERTLayer(layers.Layer):
-    def __init__(self, config, **kwargs):
-        super().__init__(**kwargs)
+def bert_module(query, key, value, i):
+    # Multi headed self-attention
+    attention_output = layers.MultiHeadAttention(
+        num_heads=config.NUM_HEAD,
+        key_dim=config.EMBED_DIM // config.NUM_HEAD,
+        name="encoder_{}/multiheadattention".format(i),
+    )(query, key, value)
+    attention_output = layers.Dropout(0.1, name="encoder_{}/att_dropout".format(i))(
+        attention_output
+    )
+    attention_output = layers.LayerNormalization(
+        epsilon=1e-6, name="encoder_{}/att_layernormalization".format(i)
+    )(query + attention_output)
 
-        # Multi headed self-attention
-        self.attention = layers.MultiHeadAttention(
-            num_heads=config.NUM_HEAD,
-            key_dim=config.EMBED_DIM // config.NUM_HEAD,
-            name="multiheadattention",
-        )
-        # Feed-forward layer
-        self.ffn = keras.Sequential(
-            [
-                layers.Dense(config.FF_DIM, activation="relu"),
-                layers.Dense(config.EMBED_DIM),
-            ],
-            name="feedforwardnetwork",
-        )
-        self.dropout1 = layers.Dropout(0.1)
-        self.dropout2 = layers.Dropout(0.1)
-
-        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
-
-    def call(self, inputs):
-        query, key, value = inputs, inputs, inputs
-        attention_output = self.attention(inputs, inputs, inputs)
-        attention_output = self.dropout1(attention_output)
-        attention_output = self.layernorm1(inputs + attention_output)
-
-        ffn_output = self.ffn(attention_output)
-        fnn_output = self.dropout2(ffn_output)
-        sequence_output = self.layernorm2(attention_output + ffn_output)
-
-        return sequence_output
+    # Feed-forward layer
+    ffn = keras.Sequential(
+        [
+            layers.Dense(config.FF_DIM, activation="relu"),
+            layers.Dense(config.EMBED_DIM),
+        ],
+        name="encoder_{}/ffn".format(i),
+    )
+    ffn_output = ffn(attention_output)
+    ffn_output = layers.Dropout(0.1, name="encoder_{}/ffn_dropout".format(i))(
+        ffn_output
+    )
+    sequence_output = layers.LayerNormalization(
+        epsilon=1e-6, name="encoder_{}/ffn_layernormalization".format(i)
+    )(attention_output + ffn_output)
+    return sequence_output
 
 
-class Encoder(layers.Layer):
-    def __init__(self, config, **kwargs):
-        super().__init__(**kwargs)
-        # Create BERTLayer
-        self.layer = [
-            BERTLayer(config, name="layer_._{}".format(i))
-            for i in range(config.NUM_LAYERS)
+def get_pos_encoding_matrix(max_len, d_emb):
+    pos_enc = np.array(
+        [
+            [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
+            if pos != 0
+            else np.zeros(d_emb)
+            for pos in range(max_len)
         ]
-
-    def call(self, inputs):
-        outputs = inputs
-        for layer_module in self.layer:
-            outputs = layer_module(outputs)
-
-        return outputs
+    )
+    pos_enc[1:, 0::2] = np.sin(pos_enc[1:, 0::2])  # dim 2i
+    pos_enc[1:, 1::2] = np.cos(pos_enc[1:, 1::2])  # dim 2i+1
+    return pos_enc
 
 
-# Loss metric to track masked language model loss
-loss_tracker = keras.metrics.Mean(name="mlm_loss")
+def masked_sparse_categorical_crossentropy(y_true, y_pred, sample_weight):
+
+    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
+        reduction=tf.keras.losses.Reduction.NONE
+    )
+    return loss_fn(y_true, y_pred, sample_weight=sample_weight)
 
 
-class BERTPreTraining(keras.Model):
-    def __init__(self, config, *inputs, **kwargs):
-        super().__init__(*inputs, **kwargs)
-        # Create Word Embedding
-        self.word_embeddings = layers.Embedding(
-            config.VOCAB_SIZE, config.EMBED_DIM, name="word_embedding"
-        )
-        # Create Position Embedding
-        self.position_embeddings = layers.Embedding(
-            input_dim=config.MAX_LEN,
-            output_dim=config.EMBED_DIM,
-            weights=[self.get_pos_encoding_matrix(config.MAX_LEN, config.EMBED_DIM)],
-            name="position_embedding",
-        )
-        # Create Encoder
-        self.encoder = Encoder(config)
-        # Create Masked Model output layer
-        self.mlm_output = layers.Dense(config.VOCAB_SIZE, name="mlm_cls")
+loss_tracker = tf.keras.metrics.Mean(name="loss")
 
-    def get_pos_encoding_matrix(self, max_len, d_emb):
-        pos_enc = np.array(
-            [
-                [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
-                if pos != 0
-                else np.zeros(d_emb)
-                for pos in range(max_len)
-            ]
-        )
-        pos_enc[1:, 0::2] = np.sin(pos_enc[1:, 0::2])  # dim 2i
-        pos_enc[1:, 1::2] = np.cos(pos_enc[1:, 1::2])  # dim 2i+1
-        return pos_enc
 
-    def masked_sparse_categorical_crossentropy(self, y_true, y_pred, sample_weight):
-        loss_fn = keras.losses.SparseCategoricalCrossentropy(
-            reduction=keras.losses.Reduction.NONE, from_logits=True
-        )
-        return loss_fn(y_true, y_pred, sample_weight=sample_weight)
-
-    def call(self, inputs):
-        word_embeddings_output = self.word_embeddings(inputs)
-        position_embeddings_output = self.position_embeddings(
-            tf.range(start=0, limit=config.MAX_LEN, delta=1)
-        )
-
-        embeddings = word_embeddings_output + position_embeddings_output
-
-        encoder_output = self.encoder(embeddings)
-
-        output_cls = self.mlm_output(encoder_output)
-
-        return output_cls, encoder_output
-
+class MaskedLanguageModel(tf.keras.Model):
     def train_step(self, inputs):
         if len(inputs) == 3:
             features, labels, sample_weight = inputs
@@ -375,8 +323,8 @@ class BERTPreTraining(keras.Model):
 
         with tf.GradientTape() as tape:
 
-            predictions, _ = self(features, training=True)
-            loss = self.masked_sparse_categorical_crossentropy(
+            predictions = self(features, training=True)
+            loss = masked_sparse_categorical_crossentropy(
                 labels, predictions, sample_weight=sample_weight
             )
 
@@ -403,6 +351,38 @@ class BERTPreTraining(keras.Model):
         return [loss_tracker]
 
 
+def create_masked_language_bert_model():
+    inputs = layers.Input((config.MAX_LEN,), dtype=tf.int64)
+
+    word_embeddings = layers.Embedding(
+        config.VOCAB_SIZE, config.EMBED_DIM, name="word_embedding"
+    )(inputs)
+    position_embeddings = layers.Embedding(
+        input_dim=config.MAX_LEN,
+        output_dim=config.EMBED_DIM,
+        weights=[get_pos_encoding_matrix(config.MAX_LEN, config.EMBED_DIM)],
+        name="position_embedding",
+    )(tf.range(start=0, limit=config.MAX_LEN, delta=1))
+
+    embeddings = word_embeddings + position_embeddings
+
+    encoder_output = embeddings
+
+    for i in range(config.NUM_LAYERS):
+        encoder_output = bert_module(encoder_output, encoder_output, encoder_output, i)
+
+    mlm_output = layers.Dense(config.VOCAB_SIZE, name="mlm_cls", activation="softmax")(
+        encoder_output
+    )
+
+    mlm_model = MaskedLanguageModel(inputs, mlm_output, name="masked_bert_model")
+
+    optimizer = keras.optimizers.Adam(learning_rate=config.LR)
+
+    mlm_model.compile(optimizer=optimizer)
+    return mlm_model
+
+
 id2token = dict(enumerate(vectorize_layer.get_vocabulary()))
 token2id = {y: x for x, y in id2token.items()}
 
@@ -419,20 +399,18 @@ class MaskedTextGenerator(keras.callbacks.Callback):
         return id2token[id]
 
     def on_epoch_end(self, epoch, logs=None):
-        prediction, _ = self.model.predict(self.sample_tokens)
-        prediction = tf.convert_to_tensor(prediction)
-        prediction = tf.nn.softmax(prediction)
+        prediction = self.model.predict(self.sample_tokens)
 
         masked_index = np.where(self.sample_tokens == mask_token_id)
         masked_index = masked_index[1]
-        mask_prediction = prediction.numpy()[0][masked_index]
+        mask_prediction = prediction[0][masked_index]
 
-        topk = tf.math.top_k(mask_prediction, k=self.k)
-        values, predictions = topk.values.numpy(), topk.indices.numpy()
+        top_indices = mask_prediction[0].argsort()[-self.k :][::-1]
+        values = mask_prediction[0][top_indices]
 
-        for i in range(len(predictions[0])):
-            p = predictions[0][i]
-            v = values[0][i]
+        for i in range(len(top_indices)):
+            p = top_indices[i]
+            v = values[i]
             tokens = np.copy(sample_tokens[0])
             tokens[masked_index[0]] = p
             result = {
@@ -441,24 +419,21 @@ class MaskedTextGenerator(keras.callbacks.Callback):
                 "probability": v,
                 "predicted mask token": self.convert_ids_to_tokens(p),
             }
-
-            print()
             pprint(result)
 
 
 sample_tokens = vectorize_layer(["I have watched this [mask] and it was awesome"])
 generator_callback = MaskedTextGenerator(sample_tokens.numpy())
 
-bert_pretraining = BERTPreTraining(config)
-optimizer = keras.optimizers.Adam(learning_rate=config.LR)
-bert_pretraining.compile(optimizer=optimizer)
+bert_masked_model = create_masked_language_bert_model()
+bert_masked_model.summary()
 
 """
 ## Train and Save
 """
 
-bert_pretraining.fit(mlm_ds, epochs=2, callbacks=[generator_callback])
-bert_pretraining.save("mlm_imdb_bert.h5py")
+bert_masked_model.fit(mlm_ds, epochs=5, callbacks=[generator_callback])
+bert_masked_model.save("bert_mlm_imdb.h5")
 
 """
 ## Fine-tune a sentiment classification model
@@ -470,19 +445,25 @@ pretrained BERT features.
 """
 
 # Load pretrained bert model
-BERT_MODEL = keras.models.load_model("mlm_imdb_bert.h5py")
+mlm_model = keras.models.load_model(
+    "bert_mlm_imdb.h5", custom_objects={"MaskedLanguageModel": MaskedLanguageModel}
+)
+pretrained_bert_model = tf.keras.Model(
+    mlm_model.input, mlm_model.get_layer("encoder_0/ffn_layernormalization").output
+)
+
 # Freeze it
-BERT_MODEL.trainable = False
+pretrained_bert_model.trainable = False
 
 
 def create_classifier_bert_model():
-    inputs = layers.Input((flags.MAX_LEN,), dtype=tf.int64)
-    _, sequence_output = BERT_MODEL(inputs)
+    inputs = layers.Input((config.MAX_LEN,), dtype=tf.int64)
+    sequence_output = pretrained_bert_model(inputs)
     pooled_output = layers.GlobalMaxPooling1D()(sequence_output)
     hidden_layer = layers.Dense(64, activation="relu")(pooled_output)
     outputs = layers.Dense(1, activation="sigmoid")(hidden_layer)
     classifer_model = keras.Model(inputs, outputs, name="classification")
-    optimizer = keras.optimizers.Adam(0.0001)
+    optimizer = keras.optimizers.Adam()
     classifer_model.compile(
         optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
     )
@@ -496,12 +477,11 @@ classifer_model.summary()
 classifer_model.fit(train_classifier_ds, epochs=5, validation_data=test_classifier_ds)
 
 # Unfreeze the BERT model for fine-tuning
-BERT_MODEL.trainable = True
-optimizer = keras.optimizers.Adam(0.0001)
+pretrained_bert_model.trainable = True
+optimizer = keras.optimizers.Adam()
 classifer_model.compile(
     optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
 )
-print(classifer_model.summary())
 classifer_model.fit(train_classifier_ds, epochs=5, validation_data=test_classifier_ds)
 
 """
