@@ -15,7 +15,7 @@ masked word should be.
 For an input that contains one or more mask tokens,
 the model will generate the most likely substitution for each.
 
-Example: 
+Example:
 
 - Input: "I have watched this [MASK] and it was awesome."
 - Output: "I have watched this movie and it was awesome."
@@ -26,7 +26,7 @@ Such a model can then be fine-tuned to accomplish various supervised
 NLP tasks.
 
 This example teaches you how to build a BERT model from scratch,
-train it with the mask language modeling task,
+train it with the masked language modeling task,
 and then fine-tune this model on a sentiment classification task.
 
 We will use the Keras `TextVectorization` and `MultiHeadAttention` layers
@@ -72,9 +72,9 @@ class Config:
 config = Config()
 
 """
-## Load Data
+## Load the data
 
-We will first download IMDB data and load into pandas dataframe.
+We will first download the IMDB data and load into a Pandas dataframe.
 """
 
 """shell
@@ -114,19 +114,20 @@ test_df = get_data_from_text_files("test")
 all_data = train_df.append(test_df)
 
 """
-## Dataset Preparation
+## Dataset preparation
 
-We will use TextVectorization to vectorize text into token id. This layer gives flexibilty to manage text in Keras model.
-It transforms a batch of strings into either a list of token indices (one sample = 1D tensor of integer token indices) or a dense representation (one sample = 1D tensor of float values representing data about the sample’s tokens).
+We will use the `TextVectorization` layer to vectorize the text into integer token ids.
+It transforms a batch of strings into either
+a sequence of token indices (one sample = 1D array of integer token indices, in order)
+or a dense representation (one sample = 1D array of float values encoding an unordered set of tokens).
 
-Below, there will be 3 preprocessing functions. 
+Below, we define 3 preprocessing functions. 
 
-1.  get_vectorize_layer function will use to build TextVectorization layer.
-2.  encode function will use to encode raw text into integer token ids
-3.  get_masked_input_and_labels function will use to mask input token ids. It masks 15% of all input tokens in each sequence at random. 
-
+1.  The `get_vectorize_layer` function builds the `TextVectorization` layer.
+2.  The `encode` function encodes raw text into integer token ids
+3.  The `get_masked_input_and_labels` function will mask input token ids.
+It masks 15% of all input tokens in each sequence at random. 
 """
-
 
 def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
@@ -139,24 +140,24 @@ def custom_standardization(input_data):
 def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
     """Build Text vectorization layer
 
-  Args:
-      texts (list): List of String i.e input texts
+    Args:
+      texts (list): List of string i.e input texts
       vocab_size (int): vocab size
-      max_seq (int): maximum sequence len
+      max_seq (int): Maximum sequence lenght.
       special_tokens (list, optional): List of special tokens. Defaults to ['[MASK]'].
 
-  Returns:
-      layers.Layer: Return TextVectorization Keras Layer
-  """
+    Returns:
+        layers.Layer: Return TextVectorization Keras Layer
+    """
     vectorize_layer = TextVectorization(
         max_tokens=vocab_size,
         output_mode="int",
         standardize=custom_standardization,
         output_sequence_length=max_seq,
     )
-
     vectorize_layer.adapt(texts)
 
+    # Insert mask token in vocabulary
     vocab = vectorize_layer.get_vocabulary()
     vocab = vocab[2 : vocab_size - len(special_tokens)] + ["[mask]"]
     vectorize_layer.set_vocabulary(vocab)
@@ -302,14 +303,9 @@ def get_pos_encoding_matrix(max_len, d_emb):
     return pos_enc
 
 
-def masked_sparse_categorical_crossentropy(y_true, y_pred, sample_weight):
-
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
-        reduction=tf.keras.losses.Reduction.NONE
-    )
-    return loss_fn(y_true, y_pred, sample_weight=sample_weight)
-
-
+loss_fn = keras.losses.SparseCategoricalCrossentropy(
+    reduction=tf.keras.losses.Reduction.NONE
+)
 loss_tracker = tf.keras.metrics.Mean(name="loss")
 
 
@@ -322,9 +318,8 @@ class MaskedLanguageModel(tf.keras.Model):
             sample_weight = None
 
         with tf.GradientTape() as tape:
-
             predictions = self(features, training=True)
-            loss = masked_sparse_categorical_crossentropy(
+            loss = loss_fn(
                 labels, predictions, sample_weight=sample_weight
             )
 
@@ -363,22 +358,18 @@ def create_masked_language_bert_model():
         weights=[get_pos_encoding_matrix(config.MAX_LEN, config.EMBED_DIM)],
         name="position_embedding",
     )(tf.range(start=0, limit=config.MAX_LEN, delta=1))
-
     embeddings = word_embeddings + position_embeddings
 
     encoder_output = embeddings
-
     for i in range(config.NUM_LAYERS):
         encoder_output = bert_module(encoder_output, encoder_output, encoder_output, i)
 
     mlm_output = layers.Dense(config.VOCAB_SIZE, name="mlm_cls", activation="softmax")(
         encoder_output
     )
-
     mlm_model = MaskedLanguageModel(inputs, mlm_output, name="masked_bert_model")
 
     optimizer = keras.optimizers.Adam(learning_rate=config.LR)
-
     mlm_model.compile(optimizer=optimizer)
     return mlm_model
 
