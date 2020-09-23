@@ -303,14 +303,16 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 1s 687us/step - loss: 2.1805
+A local file was found, but it seems to be incomplete or outdated because the auto file hash does not match the original value of 6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce so we will re-download the data.
+Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+170500096/170498071 [==============================] - 283s 2us/step
+1563/1563 [==============================] - 3s 2ms/step - loss: 2.1234
 
-<tensorflow.python.keras.callbacks.History at 0x154d5c490>
+<tensorflow.python.keras.callbacks.History at 0x7ff7d44f8040>
 
 ```
 </div>
----
-## Encoding string categorical features via one-hot encoding
+### Encoding string categorical features via one-hot encoding
 
 
 ```python
@@ -392,8 +394,7 @@ constructor arguments  of `IntegerLookup`.
 You can see the `IntegerLookup` and `CategoryEncoding` layers in action in the example
 [structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/).
 
----
-## Applying the hashing trick to an integer categorical feature
+### Applying the hashing trick to an integer categorical feature
 
 If you have a categorical feature that can take many different values (on the order of
 10e3 or higher), where each value only appears a few times in the data,
@@ -422,8 +423,7 @@ print(encoded_data.shape)
 
 ```
 </div>
----
-## Encoding text as a sequence of token indices
+### Encoding text as a sequence of token indices
 
 This is how you should preprocess text to be passed to an `Embedding` layer.
 
@@ -473,8 +473,7 @@ Note that when training such a model, for best performance, you should
 use the `TextVectorization` layer as part of the input pipeline (which is what we
 do in the text classification example above).
 
----
-## Encoding text as a dense matrix of ngrams with multi-hot encoding
+### Encoding text as a dense matrix of ngrams with multi-hot encoding
 
 This is how you should preprocess text to be passed to a `Dense` layer.
 
@@ -506,8 +505,7 @@ test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
 ```
 
----
-## Encoding text as a dense matrix of ngrams with TF-IDF weighting
+### Encoding text as a dense matrix of ngrams with TF-IDF weighting
 
 This is an alternative way of preprocessing text before passing it to a `Dense` layer.
 
