@@ -64,7 +64,7 @@ To process the data, we do the following:
 * We resize width, height and depth.
 
 Here we define several helper functions to process the data. These functions
-will be used when building training and test datasets.
+will be used when building training and validation datasets.
 """
 
 import numpy as np
@@ -186,9 +186,9 @@ def plot_slices(num_rows, num_columns, width, height, data):
 plot_slices(2, 10, 512, 512, img[:, :, :20])
 
 """
-## Build train and test datasets
+## Build train and validation datasets
 Read the scans from the class directories and assign labels.
-Lastly, split the dataset into train and test subsets.
+Lastly, split the dataset into train and validation subsets.
 """
 
 # read and process the scans
@@ -201,14 +201,14 @@ left_scans = np.array([process_scan(path) for path in left_scan_paths])
 right_labels = np.array([1 for _ in range(len(right_scans))])
 left_labels = np.array([0 for _ in range(len(left_scans))])
 
-# split data in the ratio 70-30 for training and testing
+# split data in the ratio 70-30 for training and validation
 x_train = np.concatenate((right_scans[:14], left_scans[:14]), axis=0)
 y_train = np.concatenate((right_labels[:14], left_labels[:14]), axis=0)
-x_test = np.concatenate((right_scans[14:], left_scans[14:]), axis=0)
-y_test = np.concatenate((right_labels[14:], left_labels[14:]), axis=0)
+x_val = np.concatenate((right_scans[14:], left_scans[14:]), axis=0)
+y_val = np.concatenate((right_labels[14:], left_labels[14:]), axis=0)
 print(
-    "Number of samples in train and test are %d and %d."
-    % (x_train.shape[0], x_test.shape[0])
+    "Number of samples in train and validation are %d and %d."
+    % (x_train.shape[0], x_val.shape[0])
 )
 
 """
@@ -283,32 +283,38 @@ def train_preprocessing(volume, label):
     return volume, label
 
 
-def test_preprocessing(volume, label):
-    """Process test data by only normalizing."""
+def validation_preprocessing(volume, label):
+    """Process validation data by only normalizing."""
     volume = normalize(volume)
     return volume, label
 
 
 """
-While defining the train and test data loader, the training data is passed through and
+While defining the train and validation data loader, the training data is passed through and
 augmentation function which randomly rotates or blurs the volume and finally normalizes it
 to have values between 0 and 1. 
 
-For the test data, the volumes are only normalized.
+For the validation data, the volumes are only normalized.
 """
 
 # define data loaders
 train_loader = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-test_loader = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+validation_loader = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 
 batch_size = 2
 # augment the on the fly during training
 train_dataset = (
-    train_loader.shuffle(len(x_train)).map(train_preprocessing).batch(batch_size)
+    train_loader.shuffle(len(x_train))
+    .map(train_preprocessing)
+    .batch(batch_size)
+    .prefetch(2)
 )
 # only rescale
-test_dataset = (
-    test_loader.shuffle(len(x_test)).map(test_preprocessing).batch(batch_size)
+validation_dataset = (
+    validation_loader.shuffle(len(x_val))
+    .map(validation_preprocessing)
+    .batch(batch_size)
+    .prefetch(2)
 )
 
 """
@@ -402,7 +408,7 @@ early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=10
 epochs = 100
 model.fit(
     train_dataset,
-    validation_data=test_dataset,
+    validation_data=validation_dataset,
     epochs=epochs,
     shuffle=True,
     verbose=2,
@@ -420,7 +426,7 @@ can be found
 ## Visualizing model performance
 
 Here the model accuracy and loss for the training and the validation sets are plotted.
-Since the test set is class-balanced, accuracy provides an unbiased representation of the
+Since the validation set is class-balanced, accuracy provides an unbiased representation of the
 model's performance.
 """
 
@@ -442,7 +448,7 @@ for i, metric in enumerate(["acc", "loss"]):
 
 # load best weights
 model.load_weights("3d_image_classification.h5")
-prediction = model.predict(np.expand_dims(x_test[0], axis=0))[0]
+prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
 class_names = ["left", "right"]
