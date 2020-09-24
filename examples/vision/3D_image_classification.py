@@ -9,24 +9,21 @@ Description: Train a 3D convolutional neural network to predict presence of pneu
 ## Introduction
 
 This example will show the steps needed to build a 3D convolutional neural network (CNN)
-to predict the presence of viral pneumonia in computer tomography (CT) scans.
-
-2D CNNs are commonly used to process RGB images (3 channels). A 3D CNN is simply the 3D
-equivalent:
-it takes as input a 3D volume or a sequence of 2D frames (e.g. slices in a CT scan),
+to predict the presence of viral pneumonia in computer tomography (CT) scans. 2D CNNs are 
+commonly used to process RGB images (3 channels). A 3D CNN is simply the 3D
+equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slices in a CT scan),
 3D CNNs are a powerful model for learning representations for volumetric data.
 
 ## References
 
-- [A survey on Deep Learning Advances on Different 3D
-DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
-- [VoxNet: A 3D Convolutional Neural Network for Real-Time
-ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
-ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
-- [FusionNet: 3D Object Classification Using MultipleData
-Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
-- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis
-Prediction](https://arxiv.org/abs/2007.13224)
+- [A survey on Deep Learning Advances on Different 3D DataRepresentations]
+(https://arxiv.org/pdf/1808.01462.pdf)
+- [VoxNet: A 3D Convolutional Neural Network for Real-Time Object Recognition]
+(https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
+- [FusionNet: 3D Object Classification Using MultipleData Representations]
+(http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
+- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction]
+(https://arxiv.org/abs/2007.13224)
 """
 
 import os
@@ -51,20 +48,20 @@ a classifier to predict presence of viral pneumonia.
 Hence, the task is a binary classification problem.
 """
 
-# download url of normal CT scans
+# Download url of normal CT scans.
 url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-0.zip"
 filename = os.path.join(os.getcwd(), "CT-0.zip")
 keras.utils.get_file(filename, url)
 
-# download url of abnormal CT scans
+# Download url of abnormal CT scans.
 url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-1.zip"
 filename = os.path.join(os.getcwd(), "CT-1.zip")
 keras.utils.get_file(filename, url)
 
-# make a directory to store the data
+# Make a directory to store the data.
 os.makedirs("MosMedData")
 
-# unzip data in the newly created directory
+# Unzip data in the newly created directory.
 with zipfile.ZipFile("CT-0.zip", "r") as z_fp:
     z_fp.extractall("./MosMedData/")
 
@@ -146,14 +143,14 @@ def process_scan(path):
 Let's read the paths of the CT scans from the class directories.
 """
 
-# folder "CT-0" consist of CT scans having normal lung tissue,
-# no CT-signs of viral pneumonia
+# Folder "CT-0" consist of CT scans having normal lung tissue,
+# no CT-signs of viral pneumonia.
 normal_scan_paths = [
     os.path.join(os.getcwd(), "MosMedData/CT-0", x)
     for x in os.listdir("MosMedData/CT-0")
 ]
-# folder "CT-1" consist of CT scans having several ground-glass opacifications,
-# involvement of lung parenchyma
+# Folder "CT-1" consist of CT scans having several ground-glass opacifications,
+# involvement of lung parenchyma.
 abnormal_scan_paths = [
     os.path.join(os.getcwd(), "MosMedData/CT-1", x)
     for x in os.listdir("MosMedData/CT-1")
@@ -202,29 +199,29 @@ def plot_slices(num_rows, num_columns, width, height, data):
     plt.show()
 
 
-# display 20 slices from the CT scan
-# here we visualize 20 slices, 2 rows and 10 columns
-# adapt it according to your need
+# Display 20 slices from the CT scan.
+# Here we visualize 20 slices, 2 rows and 10 columns
+# adapt it according to your need.
 plot_slices(2, 10, 512, 512, img[:, :, :20])
 
 """
 ## Build train and validation datasets
 Read the scans from the class directories and assign labels. Downsample the scans to have
-shape of 128x128x40.
+shape of 128x128x64.
 Lastly, split the dataset into train and validation subsets.
 """
 
-# read and process the scans
-# each scan is resized across width, height, and depth
+# Read and process the scans
+# each scan is resized across width, height, and depth.
 abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
 normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
 
-# for the CT scans having presence of viral pneumonia
+# For the CT scans having presence of viral pneumonia
 # assign 1, for the normal ones assign 0.
 abnormal_labels = np.array([1 for _ in range(len(abnormal_scans))])
 normal_labels = np.array([0 for _ in range(len(normal_scans))])
 
-# split data in the ratio 70-30 for training and validation
+# Split data in the ratio 70-30 for training and validation.
 x_train = np.concatenate((abnormal_scans[:70], normal_scans[:70]), axis=0)
 y_train = np.concatenate((abnormal_labels[:70], normal_labels[:70]), axis=0)
 x_val = np.concatenate((abnormal_scans[70:], normal_scans[70:]), axis=0)
@@ -314,26 +311,25 @@ def validation_preprocessing(volume, label):
 
 """
 While defining the train and validation data loader, the training data is passed through
-and
-augmentation function which randomly rotates or blurs the volume and finally normalizes it
+and augmentation function which randomly rotates or blurs the volume and finally normalizes it
 to have values between 0 and 1. 
 
 For the validation data, the volumes are only normalized.
 """
 
-# define data loaders
+# Define data loaders.
 train_loader = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 validation_loader = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 
 batch_size = 2
-# augment the on the fly during training
+# Augment the on the fly during training.
 train_dataset = (
     train_loader.shuffle(len(x_train))
     .map(train_preprocessing)
     .batch(batch_size)
     .prefetch(2)
 )
-# only rescale
+# Only rescale.
 validation_dataset = (
     validation_loader.shuffle(len(x_val))
     .map(validation_preprocessing)
@@ -354,8 +350,8 @@ image = images[0]
 print("Dimension of the CT scan is:", image.shape)
 plt.imshow(np.squeeze(image[:, :, 30]), cmap="gray")
 
-# visualize montage of slices
-# 10 rows and 10 columns for 100 slices of the CT scan
+# Visualize montage of slices.
+# 10 rows and 10 columns for 100 slices of the CT scan.
 plot_slices(4, 10, 128, 128, image[:, :, :40])
 
 """
@@ -394,12 +390,12 @@ def get_model(width=128, height=128, depth=64):
 
     outputs = layers.Dense(units=1, activation="sigmoid")(x)
 
-    # define the model
+    # Define the model.
     model = keras.Model(inputs, outputs, name="3dcnn")
     return model
 
 
-# build model
+# Build model.
 model = get_model(width=128, height=128, depth=64)
 model.summary()
 
@@ -407,7 +403,7 @@ model.summary()
 ## Train model
 """
 
-# compile model
+# Compile model.
 initial_learning_rate = 0.0001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
@@ -418,13 +414,13 @@ model.compile(
     metrics=["acc"],
 )
 
-# define callbacks
+# Define callbacks.
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
     "3d_image_classification.h5", save_best_only=True
 )
 early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=10)
 
-# train the model, doing validation at the end of each epoch.
+# Train the model, doing validation at the end of each epoch.
 epochs = 100
 model.fit(
     train_dataset,
@@ -437,10 +433,9 @@ model.fit(
 
 """
 It is important to note that the number of samples is very small (only 200) and we don't
-specify a random seed.
-As such, you can expect significant variance in the results. The full dataset
-which consists of over 1000 CT scans can be found
-[here](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
+specify a random seed. As such, you can expect significant variance in the results. The full dataset
+which consists of over 1000 CT scans can be found [here]
+(https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
 dataset, an accuracy of 83% was achieved. A variability of 6-7% in the classification
 performance is observed in both cases.
 """
@@ -450,8 +445,7 @@ performance is observed in both cases.
 
 Here the model accuracy and loss for the training and the validation sets are plotted.
 Since the validation set is class-balanced, accuracy provides an unbiased representation
-of the
-model's performance.
+of the model's performance.
 """
 
 fig, ax = plt.subplots(1, 2, figsize=(20, 3))
@@ -466,10 +460,10 @@ for i, metric in enumerate(["acc", "loss"]):
     ax[i].legend(["train", "val"])
 
 """
-## Make predictions on a single CT scan
+## Make predictions on a single CT scan.
 """
 
-# load best weights
+# Load best weights.
 model.load_weights("3d_image_classification.h5")
 prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
