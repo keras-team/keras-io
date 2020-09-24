@@ -1,11 +1,16 @@
-"""
-Title: 3D Image Classification from CT Scans
-Author: [Hasib Zunair](https://twitter.com/hasibzunair)
-Date created: 2020/09/23
-Last modified: 2020/09/23
-Description: Train a 3D convolutional neural network to predict presence of pneumonia.
-"""
-"""
+# 3D Image Classification from CT Scans
+
+**Author:** [Hasib Zunair](https://twitter.com/hasibzunair)<br>
+**Date created:** 2020/09/23<br>
+**Last modified:** 2020/09/23<br>
+**Description:** Train a 3D convolutional neural network to predict presence of pneumonia.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/3D_image_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/3D_image_classification.py)
+
+
+
+---
 ## Introduction
 
 This example will show the steps needed to build a 3D convolutional neural network (CNN)
@@ -14,14 +19,16 @@ commonly used to process RGB images (3 channels). A 3D CNN is simply the 3D
 equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slices in a CT scan),
 3D CNNs are a powerful model for learning representations for volumetric data.
 
+---
 ## References
 
 - [A survey on Deep Learning Advances on Different 3D DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
 - [VoxNet: A 3D Convolutional Neural Network for Real-Time Object Recognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
 - [FusionNet: 3D Object Classification Using MultipleData Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
 - [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction](https://arxiv.org/abs/2007.13224)
-"""
 
+
+```python
 import os
 import zipfile
 import numpy as np
@@ -29,8 +36,9 @@ import tensorflow as tf
 
 from tensorflow import keras
 from tensorflow.keras import layers
+```
 
-"""
+---
 ## Downloading the MosMedData:Chest CT Scans with COVID-19 Related Findings
 
 In this example, we use a subset of the
@@ -42,8 +50,9 @@ findings.
 We will be using the associated radiological findings of the CT scans as labels to build
 a classifier to predict presence of viral pneumonia.
 Hence, the task is a binary classification problem.
-"""
 
+
+```python
 # Download url of normal CT scans.
 url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-0.zip"
 filename = os.path.join(os.getcwd(), "CT-0.zip")
@@ -63,8 +72,18 @@ with zipfile.ZipFile("CT-0.zip", "r") as z_fp:
 
 with zipfile.ZipFile("CT-1.zip", "r") as z_fp:
     z_fp.extractall("./MosMedData/")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-0.zip
+1065476096/1065471431 [==============================] - 231s 0us/step
+Downloading data from https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-1.zip
+ 293462016/1050898487 [=======>......................] - ETA: 2:52
+
+```
+</div>
+---
 ## Load data
 
 The files are provided in Nifti format with the extension .nii. To read the
@@ -78,8 +97,9 @@ To process the data, we do the following:
 
 Here we define several helper functions to process the data. These functions
 will be used when building training and validation datasets.
-"""
 
+
+```python
 import numpy as np
 import nibabel as nib
 import cv2
@@ -134,11 +154,12 @@ def process_scan(path):
     volume = resize_depth(volume)
     return volume
 
+```
 
-"""
 Let's read the paths of the CT scans from the class directories.
-"""
 
+
+```python
 # Folder "CT-0" consist of CT scans having normal lung tissue,
 # no CT-signs of viral pneumonia.
 normal_scan_paths = [
@@ -154,22 +175,42 @@ abnormal_scan_paths = [
 
 print("CT scans with normal lung tissue: " + str(len(normal_scan_paths)))
 print("CT scans with abnormal lung tissue: " + str(len(abnormal_scan_paths)))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+CT scans with normal lung tissue: 100
+CT scans with abnormal lung tissue: 100
+
+```
+</div>
 Let's visualize a CT scan and it's shape.
-"""
 
+
+```python
 import matplotlib.pyplot as plt
 
 # Read a scan.
 img = read_nifti_file(normal_scan_paths[15])
 print("Dimension of the CT scan is:", img.shape)
 plt.imshow(img[:, :, 15], cmap="gray")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Dimension of the CT scan is: (512, 512, 38)
+
+<matplotlib.image.AxesImage at 0x7fd81e987a20>
+
+```
+</div>
+![png](/img/examples/vision/3D_image_classification/3D_image_classification_10_2.png)
+
+
 Since a CT scan has many slices, let's visualize a montage of the slices.
-"""
 
+
+```python
 
 def plot_slices(num_rows, num_columns, width, height, data):
     """Plot a montage of 20 CT slices"""
@@ -199,14 +240,20 @@ def plot_slices(num_rows, num_columns, width, height, data):
 # Here we visualize 20 slices, 2 rows and 10 columns
 # adapt it according to your need.
 plot_slices(2, 10, 512, 512, img[:, :, :20])
+```
 
-"""
+
+![png](/img/examples/vision/3D_image_classification/3D_image_classification_12_0.png)
+
+
+---
 ## Build train and validation datasets
 Read the scans from the class directories and assign labels. Downsample the scans to have
 shape of 128x128x64.
 Lastly, split the dataset into train and validation subsets.
-"""
 
+
+```python
 # Read and process the scans.
 # Each scan is resized across width, height, and depth.
 abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
@@ -226,8 +273,15 @@ print(
     "Number of samples in train and validation are %d and %d."
     % (x_train.shape[0], x_val.shape[0])
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Number of samples in train and validation are 140 and 60.
+
+```
+</div>
+---
 ## Preprocessing and data augmentation
 
 CT scans store raw voxel intensity in Hounsfield units (HU). They range from
@@ -237,8 +291,9 @@ radiointensity, so this is used as a higher bound. A threshold between
 also augmented by rotating and blurring. There are different kinds of
 preprocessing and augmentation techniques out there, this example shows a few
 simple ones to get started.
-"""
 
+
+```python
 import random
 
 from scipy import ndimage
@@ -304,13 +359,14 @@ def validation_preprocessing(volume, label):
     volume = normalize(volume)
     return volume, label
 
+```
 
-"""
 While defining the train and validation data loader, the training data is passed through
 and augmentation function which randomly rotates or blurs the volume and finally normalizes
 it to have values between 0 and 1. For the validation data, the volumes are only normalized.
-"""
 
+
+```python
 # Define data loaders.
 train_loader = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 validation_loader = tf.data.Dataset.from_tensor_slices((x_val, y_val))
@@ -330,11 +386,12 @@ validation_dataset = (
     .batch(batch_size)
     .prefetch(2)
 )
+```
 
-"""
 Visualize an augmented CT scan.
-"""
 
+
+```python
 import matplotlib.pyplot as plt
 
 data = train_dataset.take(1)
@@ -347,15 +404,30 @@ plt.imshow(np.squeeze(image[:, :, 30]), cmap="gray")
 # Visualize montage of slices.
 # 10 rows and 10 columns for 100 slices of the CT scan.
 plot_slices(4, 10, 128, 128, image[:, :, :40])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Dimension of the CT scan is: (128, 128, 64, 1)
+
+```
+</div>
+![png](/img/examples/vision/3D_image_classification/3D_image_classification_20_1.png)
+
+
+
+![png](/img/examples/vision/3D_image_classification/3D_image_classification_20_2.png)
+
+
+---
 ## Define a 3D convolutional neural network
 
 To make the model easier to understand, we structure it into blocks.
 The architecture of the 3D CNN used in this example
 is based on [this paper](https://arxiv.org/abs/2007.13224).
-"""
 
+
+```python
 
 def get_model(width=128, height=128, depth=64):
     """build a 3D convolutional neural network model"""
@@ -392,11 +464,60 @@ def get_model(width=128, height=128, depth=64):
 # Build model.
 model = get_model(width=128, height=128, depth=64)
 model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "3dcnn"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         [(None, 128, 128, 64, 1)] 0         
+_________________________________________________________________
+conv3d (Conv3D)              (None, 126, 126, 62, 64)  1792      
+_________________________________________________________________
+max_pooling3d (MaxPooling3D) (None, 63, 63, 31, 64)    0         
+_________________________________________________________________
+batch_normalization (BatchNo (None, 63, 63, 31, 64)    256       
+_________________________________________________________________
+conv3d_1 (Conv3D)            (None, 61, 61, 29, 64)    110656    
+_________________________________________________________________
+max_pooling3d_1 (MaxPooling3 (None, 30, 30, 14, 64)    0         
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 30, 30, 14, 64)    256       
+_________________________________________________________________
+conv3d_2 (Conv3D)            (None, 28, 28, 12, 128)   221312    
+_________________________________________________________________
+max_pooling3d_2 (MaxPooling3 (None, 14, 14, 6, 128)    0         
+_________________________________________________________________
+batch_normalization_2 (Batch (None, 14, 14, 6, 128)    512       
+_________________________________________________________________
+conv3d_3 (Conv3D)            (None, 12, 12, 4, 256)    884992    
+_________________________________________________________________
+max_pooling3d_3 (MaxPooling3 (None, 6, 6, 2, 256)      0         
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 6, 6, 2, 256)      1024      
+_________________________________________________________________
+global_average_pooling3d (Gl (None, 256)               0         
+_________________________________________________________________
+dense (Dense)                (None, 512)               131584    
+_________________________________________________________________
+dropout (Dropout)            (None, 512)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 513       
+=================================================================
+Total params: 1,352,897
+Trainable params: 1,351,873
+Non-trainable params: 1,024
+_________________________________________________________________
+
+```
+</div>
+---
 ## Train model
-"""
 
+
+```python
 # Compile model.
 initial_learning_rate = 0.0001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(
@@ -424,24 +545,82 @@ model.fit(
     verbose=2,
     callbacks=[checkpoint_cb, early_stopping_cb],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/100
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0231s vs `on_train_batch_end` time: 0.0452s). Check your callbacks.
+70/70 - 15s - loss: 0.7343 - acc: 0.5429 - val_loss: 0.7332 - val_acc: 0.5000
+Epoch 2/100
+70/70 - 15s - loss: 0.7268 - acc: 0.6143 - val_loss: 0.7015 - val_acc: 0.5000
+Epoch 3/100
+70/70 - 15s - loss: 0.7231 - acc: 0.5286 - val_loss: 0.9828 - val_acc: 0.5000
+Epoch 4/100
+70/70 - 15s - loss: 0.6864 - acc: 0.6143 - val_loss: 0.7150 - val_acc: 0.4667
+Epoch 5/100
+70/70 - 15s - loss: 0.6807 - acc: 0.5643 - val_loss: 0.7138 - val_acc: 0.5167
+Epoch 6/100
+70/70 - 15s - loss: 0.6624 - acc: 0.6429 - val_loss: 0.8380 - val_acc: 0.4667
+Epoch 7/100
+70/70 - 15s - loss: 0.6461 - acc: 0.5929 - val_loss: 1.4891 - val_acc: 0.5000
+Epoch 8/100
+70/70 - 15s - loss: 0.6595 - acc: 0.6357 - val_loss: 1.1630 - val_acc: 0.4667
+Epoch 9/100
+70/70 - 15s - loss: 0.6612 - acc: 0.6071 - val_loss: 1.4532 - val_acc: 0.5000
+Epoch 10/100
+70/70 - 15s - loss: 0.6417 - acc: 0.6571 - val_loss: 0.9743 - val_acc: 0.5333
+Epoch 11/100
+70/70 - 15s - loss: 0.6323 - acc: 0.6286 - val_loss: 0.8485 - val_acc: 0.5167
+Epoch 12/100
+70/70 - 15s - loss: 0.6648 - acc: 0.6071 - val_loss: 0.9023 - val_acc: 0.4500
+Epoch 13/100
+70/70 - 15s - loss: 0.6124 - acc: 0.6643 - val_loss: 1.6494 - val_acc: 0.5000
+Epoch 14/100
+70/70 - 15s - loss: 0.6185 - acc: 0.6429 - val_loss: 1.2332 - val_acc: 0.4667
+Epoch 15/100
+70/70 - 15s - loss: 0.5969 - acc: 0.6714 - val_loss: 0.8176 - val_acc: 0.5833
+Epoch 16/100
+70/70 - 15s - loss: 0.6850 - acc: 0.5643 - val_loss: 0.8145 - val_acc: 0.5667
+Epoch 17/100
+70/70 - 15s - loss: 0.6059 - acc: 0.6429 - val_loss: 1.5250 - val_acc: 0.5000
+Epoch 18/100
+70/70 - 15s - loss: 0.6379 - acc: 0.6071 - val_loss: 1.0994 - val_acc: 0.4500
+Epoch 19/100
+70/70 - 15s - loss: 0.6225 - acc: 0.6286 - val_loss: 1.4499 - val_acc: 0.5000
+Epoch 20/100
+70/70 - 15s - loss: 0.6090 - acc: 0.6643 - val_loss: 0.8167 - val_acc: 0.5833
+Epoch 21/100
+70/70 - 15s - loss: 0.6173 - acc: 0.6214 - val_loss: 0.9629 - val_acc: 0.5167
+Epoch 22/100
+70/70 - 15s - loss: 0.5811 - acc: 0.6857 - val_loss: 0.8936 - val_acc: 0.5000
+Epoch 23/100
+70/70 - 15s - loss: 0.5917 - acc: 0.6929 - val_loss: 0.9793 - val_acc: 0.5500
+Epoch 24/100
+70/70 - 15s - loss: 0.5846 - acc: 0.6929 - val_loss: 0.8928 - val_acc: 0.4833
+Epoch 25/100
+70/70 - 15s - loss: 0.6066 - acc: 0.6571 - val_loss: 0.8708 - val_acc: 0.5667
+
+<tensorflow.python.keras.callbacks.History at 0x7fd81c03dd68>
+
+```
+</div>
 It is important to note that the number of samples is very small (only 200) and we don't
 specify a random seed. As such, you can expect significant variance in the results. The full dataset
 which consists of over 1000 CT scans can be found [here]
 (https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
 dataset, an accuracy of 83% was achieved. A variability of 6-7% in the classification
 performance is observed in both cases.
-"""
 
-"""
+---
 ## Visualizing model performance
 
 Here the model accuracy and loss for the training and the validation sets are plotted.
 Since the validation set is class-balanced, accuracy provides an unbiased representation
 of the model's performance.
-"""
 
+
+```python
 fig, ax = plt.subplots(1, 2, figsize=(20, 3))
 ax = ax.ravel()
 
@@ -452,11 +631,17 @@ for i, metric in enumerate(["acc", "loss"]):
     ax[i].set_xlabel("epochs")
     ax[i].set_ylabel(metric)
     ax[i].legend(["train", "val"])
+```
 
-"""
+
+![png](/img/examples/vision/3D_image_classification/3D_image_classification_27_0.png)
+
+
+---
 ## Make predictions on a single CT scan.
-"""
 
+
+```python
 # Load best weights.
 model.load_weights("3d_image_classification.h5")
 prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
@@ -468,3 +653,12 @@ for score, name in zip(scores, class_names):
         "This model is %.2f percent confident that CT scan is %s"
         % ((100 * score), name)
     )
+```
+
+<div class="k-default-codeblock">
+```
+This model is 0.00 percent confident that CT scan is normal
+This model is 100.00 percent confident that CT scan is abnormal
+
+```
+</div>
