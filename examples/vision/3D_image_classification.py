@@ -3,24 +3,30 @@ Title: 3D Image Classification from CT Scans
 Author: [Hasib Zunair](https://twitter.com/hasibzunair)
 Date created: 2020/09/23
 Last modified: 2020/09/23
-Description: Train a 3D convolutional neural network to classify location of cancer.
+Description: Train a 3D convolutional neural network to predict presence of pneumonia.
 """
 """
 ## Introduction
 
 This example will show the steps needed to build a 3D convolutional neural network (CNN)
-to predict the location of cancerous regions in CT scans (left or right).
+to predict the presence of viral pneumonia in computer tomography (CT) scans.
 
-2D CNNs are commonly used to process RGB images (3 channels). A 3D CNN is simply the 3D equivalent:
+2D CNNs are commonly used to process RGB images (3 channels). A 3D CNN is simply the 3D
+equivalent:
 it takes as input a 3D volume or a sequence of 2D frames (e.g. slices in a CT scan),
 3D CNNs are a powerful model for learning representations for volumetric data.
 
 ## References
 
-- [A survey on Deep Learning Advances on Different 3D DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
-- [VoxNet: A 3D Convolutional Neural Network for Real-Time ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
-- [FusionNet: 3D Object Classification Using MultipleData Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
-- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction](https://arxiv.org/abs/2007.13224)
+- [A survey on Deep Learning Advances on Different 3D
+DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
+- [VoxNet: A 3D Convolutional Neural Network for Real-Time
+ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
+ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
+- [FusionNet: 3D Object Classification Using MultipleData
+Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
+- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis
+Prediction](https://arxiv.org/abs/2007.13224)
 """
 
 import os
@@ -32,24 +38,38 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-## Downloading the  NSCLC-Radiomics-Genomics dataset
+## Downloading the MosMedData:Chest CT Scans with COVID-19 Related Findings
 
-Since training a 3D convolutional neural network is time consuming, we only use a subset of the
-[NSCLC-Radiomics-Genomics](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7290889feefad66)
-dataset. This dataset consists of CT scans with gene expression and relevant clinical data.
+In this example, we use a subset of the
+[MosMedData: Chest CT Scans with COVID-19 Related
+Findings](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). This dataset
+consists of lung CT scans with COVID-19 related findings, as well as without such
+findings.
 
-In this example, we will be
-using as label the "location" attribute of the scans to build a
-classifier to predict the location of cancerous regions (left or right).
+We will be using the associated radiological findings of the CT scans as labels to build
+a classifier to predict presence of viral pneumonia.
 Hence, the task is a binary classification problem.
 """
 
-url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
-filename = os.path.join(os.getcwd(), "NSCLC-Radiomics-Genomics.zip")
+# download url of normal CT scans
+url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-0.zip"
+filename = os.path.join(os.getcwd(), "CT-0.zip")
 keras.utils.get_file(filename, url)
 
-with zipfile.ZipFile("NSCLC-Radiomics-Genomics.zip", "r") as z_fp:
-    z_fp.extractall("./")
+# download url of abnormal CT scans
+url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-1.zip"
+filename = os.path.join(os.getcwd(), "CT-1.zip")
+keras.utils.get_file(filename, url)
+
+# make a directory to store the data
+os.makedirs("MosMedData")
+
+# unzip data in the newly created directory
+with zipfile.ZipFile("CT-0.zip", "r") as z_fp:
+    z_fp.extractall("./MosMedData/")
+
+with zipfile.ZipFile("CT-1.zip", "r") as z_fp:
+    z_fp.extractall("./MosMedData/")
 
 """
 ## Load data
@@ -100,7 +120,7 @@ def resize_slices(img):
 def resize_depth(img):
     """Resize across z-axis"""
     # set the desired depth
-    desired_depth = 128
+    desired_depth = 64
     # get current depth
     current_depth = img.shape[-1]
     # compute depth factor
@@ -126,19 +146,21 @@ def process_scan(path):
 Let's read the paths of the CT scans from the class directories.
 """
 
-# folder "1" consist of right CT scans
-right_scan_paths = [
-    os.path.join(os.getcwd(), "NSCLC-Radiomics-Genomics/1", x)
-    for x in os.listdir("NSCLC-Radiomics-Genomics/1")
+# folder "CT-0" consist of CT scans having normal lung tissue,
+# no CT-signs of viral pneumonia
+normal_scan_paths = [
+    os.path.join(os.getcwd(), "MosMedData/CT-0", x)
+    for x in os.listdir("MosMedData/CT-0")
 ]
-# folder "2" consist of left CT scans
-left_scan_paths = [
-    os.path.join(os.getcwd(), "NSCLC-Radiomics-Genomics/2", x)
-    for x in os.listdir("NSCLC-Radiomics-Genomics/2")
+# folder "CT-1" consist of CT scans having several ground-glass opacifications,
+# involvement of lung parenchyma
+abnormal_scan_paths = [
+    os.path.join(os.getcwd(), "MosMedData/CT-1", x)
+    for x in os.listdir("MosMedData/CT-1")
 ]
 
-print("CT scans with cancerous regions in left side: " + str(len(left_scan_paths)))
-print("CT scans with cancerous regions in right side: " + str(len(right_scan_paths)))
+print("CT scans with normal lung tissue: " + str(len(normal_scan_paths)))
+print("CT scans with abnormal lung tissue: " + str(len(abnormal_scan_paths)))
 
 """
 Let's visualize a CT scan and it's shape.
@@ -147,9 +169,9 @@ Let's visualize a CT scan and it's shape.
 import matplotlib.pyplot as plt
 
 # read a scan
-img = read_nifti_file(right_scan_paths[15])
+img = read_nifti_file(normal_scan_paths[15])
 print("Dimension of the CT scan is:", img.shape)
-plt.imshow(img[:, :, 150], cmap="gray")
+plt.imshow(img[:, :, 15], cmap="gray")
 
 """
 Since a CT scan has many slices, let's visualize a montage of the slices.
@@ -187,25 +209,26 @@ plot_slices(2, 10, 512, 512, img[:, :, :20])
 
 """
 ## Build train and validation datasets
-Read the scans from the class directories and assign labels.
+Read the scans from the class directories and assign labels. Downsample the scans to have
+shape of 128x128x40.
 Lastly, split the dataset into train and validation subsets.
 """
 
 # read and process the scans
 # each scan is resized across width, height, and depth
-right_scans = np.array([process_scan(path) for path in right_scan_paths])
-left_scans = np.array([process_scan(path) for path in left_scan_paths])
+abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
+normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
 
-# for the CT scans having cancerous regions in the right side
-# assign 1, similarly for left assign 0.
-right_labels = np.array([1 for _ in range(len(right_scans))])
-left_labels = np.array([0 for _ in range(len(left_scans))])
+# for the CT scans having presence of viral pneumonia
+# assign 1, for the normal ones assign 0.
+abnormal_labels = np.array([1 for _ in range(len(abnormal_scans))])
+normal_labels = np.array([0 for _ in range(len(normal_scans))])
 
 # split data in the ratio 70-30 for training and validation
-x_train = np.concatenate((right_scans[:14], left_scans[:14]), axis=0)
-y_train = np.concatenate((right_labels[:14], left_labels[:14]), axis=0)
-x_val = np.concatenate((right_scans[14:], left_scans[14:]), axis=0)
-y_val = np.concatenate((right_labels[14:], left_labels[14:]), axis=0)
+x_train = np.concatenate((abnormal_scans[:70], normal_scans[:70]), axis=0)
+y_train = np.concatenate((abnormal_labels[:70], normal_labels[:70]), axis=0)
+x_val = np.concatenate((abnormal_scans[70:], normal_scans[70:]), axis=0)
+y_val = np.concatenate((abnormal_labels[70:], normal_labels[70:]), axis=0)
 print(
     "Number of samples in train and validation are %d and %d."
     % (x_train.shape[0], x_val.shape[0])
@@ -290,7 +313,8 @@ def validation_preprocessing(volume, label):
 
 
 """
-While defining the train and validation data loader, the training data is passed through and
+While defining the train and validation data loader, the training data is passed through
+and
 augmentation function which randomly rotates or blurs the volume and finally normalizes it
 to have values between 0 and 1. 
 
@@ -318,7 +342,7 @@ validation_dataset = (
 )
 
 """
-Visualize an augmented CT scan
+Visualize an augmented CT scan.
 """
 
 import matplotlib.pyplot as plt
@@ -328,11 +352,11 @@ images, labels = list(data)[0]
 images = images.numpy()
 image = images[0]
 print("Dimension of the CT scan is:", image.shape)
-plt.imshow(np.squeeze(image[:, :, 80]), cmap="gray")
+plt.imshow(np.squeeze(image[:, :, 30]), cmap="gray")
 
 # visualize montage of slices
 # 10 rows and 10 columns for 100 slices of the CT scan
-plot_slices(10, 10, 128, 128, image[:, :, :100])
+plot_slices(4, 10, 128, 128, image[:, :, :40])
 
 """
 ## Define a 3D convolutional neural network
@@ -343,7 +367,7 @@ is based on [this paper](https://arxiv.org/abs/2007.13224).
 """
 
 
-def get_model(width=128, height=128, depth=128):
+def get_model(width=128, height=128, depth=64):
     """build a 3D convolutional neural network model"""
 
     inputs = keras.Input((width, height, depth, 1))
@@ -352,19 +376,15 @@ def get_model(width=128, height=128, depth=128):
     x = layers.MaxPool3D(pool_size=2)(x)
     x = layers.BatchNormalization()(x)
 
+    x = layers.Conv3D(filters=64, kernel_size=3, activation="relu")(x)
+    x = layers.MaxPool3D(pool_size=2)(x)
+    x = layers.BatchNormalization()(x)
+
     x = layers.Conv3D(filters=128, kernel_size=3, activation="relu")(x)
     x = layers.MaxPool3D(pool_size=2)(x)
     x = layers.BatchNormalization()(x)
 
     x = layers.Conv3D(filters=256, kernel_size=3, activation="relu")(x)
-    x = layers.MaxPool3D(pool_size=2)(x)
-    x = layers.BatchNormalization()(x)
-
-    x = layers.Conv3D(filters=512, kernel_size=3, activation="relu")(x)
-    x = layers.MaxPool3D(pool_size=2)(x)
-    x = layers.BatchNormalization()(x)
-
-    x = layers.Conv3D(filters=512, kernel_size=3, activation="relu")(x)
     x = layers.MaxPool3D(pool_size=2)(x)
     x = layers.BatchNormalization()(x)
 
@@ -380,7 +400,7 @@ def get_model(width=128, height=128, depth=128):
 
 
 # build model
-model = get_model(width=128, height=128, depth=128)
+model = get_model(width=128, height=128, depth=64)
 model.summary()
 
 """
@@ -416,17 +436,21 @@ model.fit(
 )
 
 """
-It is important to note that the number of samples is very small (only 40) and we don't specify a random seed.
+It is important to note that the number of samples is very small (only 200) and we don't
+specify a random seed.
 As such, you can expect significant variance in the results. The full dataset
-can be found
-[here](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7290889feefad66).
+which consists of over 1000 CT scans can be found
+[here](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
+dataset, an accuracy of 83% was achieved. A variability of 6-7% in the classification
+performance is observed in both cases.
 """
 
 """
 ## Visualizing model performance
 
 Here the model accuracy and loss for the training and the validation sets are plotted.
-Since the validation set is class-balanced, accuracy provides an unbiased representation of the
+Since the validation set is class-balanced, accuracy provides an unbiased representation
+of the
 model's performance.
 """
 
@@ -441,7 +465,6 @@ for i, metric in enumerate(["acc", "loss"]):
     ax[i].set_ylabel(metric)
     ax[i].legend(["train", "val"])
 
-
 """
 ## Make predictions on a single CT scan
 """
@@ -451,9 +474,9 @@ model.load_weights("3d_image_classification.h5")
 prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
-class_names = ["left", "right"]
+class_names = ["normal", "abnormal"]
 for score, name in zip(scores, class_names):
     print(
-        "This model is %.2f percent confident that cancer in the %s side"
+        "This model is %.2f percent confident that CT scan is %s"
         % ((100 * score), name)
     )
