@@ -1,39 +1,26 @@
 """
 Title: 3D Image Classification from CT Scans
 Author: [Hasib Zunair](https://twitter.com/hasibzunair)
-Date created: 2020/09/10
+Date created: 2020/09/23
 Last modified: 2020/09/23
 Description: Train a 3D convolutional neural network to classify location of cancer.
 """
 """
 ## Introduction
-This example will show the steps needed to build a 3D image classification
-model using a 3D convolutional neural network (CNN) to predict the location
-of cancerous regions in CT scans.
-## Why 3D CNNs at all?
-Traditional use-cases of CNNs are RGB images (3 channels). The goal of
-a 3D CNN is to take as input a 3D volume or a sequence of frames
-(e.g. slices in a CT scan) and extract features from it. A traditional CNN
-extract representations of a single image and puts them in a vector state
-(latent space), whereas a 3D CNN extracts representations of a set of images
-which is required to make predictions from volumetric data (e.g. CT scans).
-A 3D CNN takes the temporal dimension (e.g. 3D context) into account. This way
-of learning representations from a volumetric data is useful to find the right
-label. This is achieved by using 3D convolutions.
+
+This example will show the steps needed to build a 3D convolutional neural network (CNN)
+to predict the location of cancerous regions in CT scans (left or right).
+
+2D CNNs are commonly used to process RGB images (3 channels). A 3D CNN is simply the 3D equivalent:
+it takes as input a 3D volume or a sequence of 2D frames (e.g. slices in a CT scan),
+3D CNNs are a powerful model for learning representations for volumetric data.
 
 ## References
-- [A survey on Deep Learning Advances on Different 3D
-DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
 
-- [VoxNet: A 3D Convolutional Neural Network for Real-Time
-ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
-ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
-
-- [FusionNet: 3D Object Classification Using MultipleData
-Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
-
-- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis
-Prediction](https://arxiv.org/abs/2007.13224)
+- [A survey on Deep Learning Advances on Different 3D DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
+- [VoxNet: A 3D Convolutional Neural Network for Real-Time ObjectRecognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
+- [FusionNet: 3D Object Classification Using MultipleData Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
+- [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction](https://arxiv.org/abs/2007.13224)
 """
 
 import os
@@ -47,13 +34,14 @@ from tensorflow.keras import layers
 """
 ## Downloading the  NSCLC-Radiomics-Genomics dataset
 
-Since training 3D convolutional neural network are time consuming, a subset of the
-[NSCLC-Radiomics-Genomics](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7
-290889feefad66) dataset is used which consists of CT scans
-with gene expression and relevant clinical data. In this example, we will be
-using the "location" attribtute among the available clinical data to build a
-classifier to predict cancerious regions (left or right). Hence, the task is
-a binary classification problem.
+Since training a 3D convolutional neural network is time consuming, we only use a subset of the
+[NSCLC-Radiomics-Genomics](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7290889feefad66)
+dataset. This dataset consists of CT scans with gene expression and relevant clinical data.
+
+In this example, we will be
+using as label the "location" attribute of the scans to build a
+classifier to predict the location of cancerous regions (left or right).
+Hence, the task is a binary classification problem.
 """
 
 url = "https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.1/NSCLC-Radiomics-Genomics.zip"
@@ -65,16 +53,17 @@ with zipfile.ZipFile("NSCLC-Radiomics-Genomics.zip", "r") as z_fp:
 
 """
 ## Load data
+
 The files are provided in Nifti format with the extension .nii. To read the
-scans, the nibabel package is used. You can install the package using `pip install
-nibabel`.
+scans, we use the `nibabel` package.
+You can install the package via `pip install nibabel`.
 
-In order to process the data, the following
-is done:
-* Volumes are originally rotated by 90 degress, so the orientation is fixed
-* Resize width, height and depth
+To process the data, we do the following:
 
-Here several helper functions are defined to process the data. These functions
+* We first rotate the volumes by 90 degrees, so the orientation is fixed
+* We resize width, height and depth.
+
+Here we define several helper functions to process the data. These functions
 will be used when building training and test datasets.
 """
 
@@ -134,7 +123,7 @@ def process_scan(path):
 
 
 """
-Let's read the paths of the CT scans from the class directories
+Let's read the paths of the CT scans from the class directories.
 """
 
 # folder "1" consist of right CT scans
@@ -224,10 +213,11 @@ print(
 
 """
 ## Preprocessing and data augmentation
+
 CT scans store raw voxel intensity in Hounsfield units (HU). They range from
 -1024 to above 2000 in this dataset. Above 400 are bones with different
 radiointensity, so this is used as a higher bound. A threshold between
--1000 and 400 are commonly used to normalize CT scans. The CT scans are
+-1000 and 400 is commonly used to normalize CT scans. The CT scans are
 also augmented by rotating and blurring. There are different kinds of
 preprocessing and augmentation techniques out there, this example shows a few
 simple ones to get started.
@@ -239,7 +229,7 @@ from scipy import ndimage
 from scipy.ndimage import gaussian_filter
 
 
-@tf.function()
+@tf.function
 def normalize(volume):
     """Normalize the volume"""
     min = -1000
@@ -252,9 +242,9 @@ def normalize(volume):
     return normalized_volume
 
 
-@tf.function()
+@tf.function
 def rotate(volume):
-    """Rotate the volume by some degrees"""
+    """Rotate the volume by a few degrees"""
 
     def scipy_rotate(volume):
         # define some rotation angles
@@ -269,7 +259,7 @@ def rotate(volume):
     return augmented_volume
 
 
-@tf.function()
+@tf.function
 def blur(volume):
     """Blur the volume"""
 
@@ -283,7 +273,7 @@ def blur(volume):
 
 
 def train_preprocessing(volume, label):
-    "Process training data by rotating, blur and normalizing"
+    """Process training data by rotating, blur and normalizing."""
     # rotate data
     volume = rotate(volume)
     # blur data
@@ -294,17 +284,17 @@ def train_preprocessing(volume, label):
 
 
 def test_preprocessing(volume, label):
-    "Process test data by only normalizing"
+    """Process test data by only normalizing."""
     volume = normalize(volume)
     return volume, label
 
 
 """
 While defining the train and test data loader, the training data is passed through and
-augmentation function which randomly rotates or blurs the volume and finally rescales it
-to have values between 0 to 1. 
+augmentation function which randomly rotates or blurs the volume and finally normalizes it
+to have values between 0 and 1. 
 
-For the test data, the volumes are only rescaled.
+For the test data, the volumes are only normalized.
 """
 
 # define data loaders
@@ -339,10 +329,11 @@ plt.imshow(np.squeeze(image[:, :, 80]), cmap="gray")
 plot_slices(10, 10, 128, 128, image[:, :, :100])
 
 """
-## Define 3D convolutional neural network
-To make the model easier to understand, blocks are defined. Since this is a
-3D CNN, 3D convolutions are used. The architecture of the 3D CNN used in this example
-is based on this [paper](https://arxiv.org/abs/2007.13224).
+## Define a 3D convolutional neural network
+
+To make the model easier to understand, we structure it into blocks.
+The architecture of the 3D CNN used in this example
+is based on [this paper](https://arxiv.org/abs/2007.13224).
 """
 
 
@@ -419,20 +410,18 @@ model.fit(
 )
 
 """
-It is important to note that the number of sample are really small (only 40) and no
-random seed is specified. You can expect large variances in the results. The full dataset
+It is important to note that the number of samples is very small (only 40) and we don't specify a random seed.
+As such, you can expect significant variance in the results. The full dataset
 can be found
-[here](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7290889feefad66). It
-is also a good
-exersize to try other parameters and see what works!
+[here](https://academictorrents.com/details/95b58ebfc1952780cfe2102dd7290889feefad66).
 """
 
 """
 ## Visualizing model performance
+
 Here the model accuracy and loss for the training and the validation sets are plotted.
-Since
-the test set is class-balanced, accuracy provides an unbiased representation of the
-errors.
+Since the test set is class-balanced, accuracy provides an unbiased representation of the
+model's performance.
 """
 
 fig, ax = plt.subplots(1, 2, figsize=(20, 3))
