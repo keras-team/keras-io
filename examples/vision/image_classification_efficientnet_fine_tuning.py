@@ -491,7 +491,7 @@ download the checkpoint. As example, here we download noisy-student version of B
 !tar -xf noisy_student_efficientnet-b1.tar.gz
 ```
 
-Then use the script efficientnet_weight_update_util.py to convert ckpt file to h5 file.
+Then use the script [efficientnet_weight_update_util.py](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet_weight_update_util.py) to convert ckpt file to h5 file.
 
 ```
 !python efficientnet_weight_update_util.py --model b1 --notop --ckpt \
@@ -501,6 +501,6 @@ Then use the script efficientnet_weight_update_util.py to convert ckpt file to h
 When creating model, use the following to load new weight:
 
 ```python
-model = EfficientNetB0(weights="efficientnetb1_notop.h5", include_top=False)
+model = EfficientNetB1(weights="efficientnetb1_notop.h5", include_top=False)
 ```
 """
