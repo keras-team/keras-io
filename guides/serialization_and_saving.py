@@ -11,7 +11,7 @@ Description: Complete guide to saving & serializing models.
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifies what layers the model
+- The architecture, or configuration, which specifies what layers the model
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
@@ -26,12 +26,12 @@ or to only selectively save some of them:
 - Saving the architecture / configuration only, typically as a JSON file.
 - Saving the weights values only. This is generally used when training the model.
 
-Let's take a look at each of these options: when would you use one or the other?
-How do they work?
+Let's take a look at each of these options. When would you use one or the other,
+and how do they work?
 """
 
 """
-## The short answer to saving & loading
+## How to save and load a model
 
 If you only have 10 seconds to read this guide, here's what you need to know.
 
@@ -77,7 +77,7 @@ where you left)
 - `tf.keras.models.load_model()`
 
 There are two formats you can use to save an entire model to disk:
-**the TensorFlow SavedModel format**, and **the older Keras H5 format**.
+**the TensorFlow SavedModel format**, and the older Keras **H5 format**.
 The recommended format is SavedModel. It is the default when you use `model.save()`.
 
 You can switch to the H5 format by:
@@ -88,6 +88,10 @@ You can switch to the H5 format by:
 
 """
 ### SavedModel format
+
+SavedModel is the more comprehensive save format that saves the model architecture,
+weights, and the traced Tensorflow subgraphs of the call functions. This enables
+Keras to restore both built-in layers as well as custom objects.
 
 **Example:**
 """
@@ -161,14 +165,14 @@ This allows you to easily update the computation later if needed.
 See the section about [Custom objects](save_and_serialize.ipynb#custom-objects)
 for more information.
 
-Below is an example of what happens when loading custom layers from
-he SavedModel format **without** overwriting the config methods.
+Example:
 """
 
 
 class CustomModel(keras.Model):
     def __init__(self, hidden_units):
         super(CustomModel, self).__init__()
+        self.hidden_units = hidden_units
         self.dense_layers = [keras.layers.Dense(u) for u in hidden_units]
 
     def call(self, inputs):
@@ -177,6 +181,12 @@ class CustomModel(keras.Model):
             x = layer(x)
         return x
 
+    def get_config(self):
+      return {"hidden_units": self.hidden_units}
+
+    @classmethod
+    def from_config(cls, config):
+      return cls(**config)
 
 model = CustomModel([16, 16, 10])
 # Build the model by calling it
@@ -184,19 +194,38 @@ input_arr = tf.random.uniform((1, 5))
 outputs = model(input_arr)
 model.save("my_model")
 
+# Option 1: Load with the custom_object argument.
+loaded_1 = keras.models.load_model(
+    "my_model", custom_objects={"CustomModel": CustomModel})
+
+# Option 2: Load without the CustomModel class.
+
 # Delete the custom-defined model class to ensure that the loader does not have
 # access to it.
 del CustomModel
 
-loaded = keras.models.load_model("my_model")
-np.testing.assert_allclose(loaded(input_arr), outputs)
+loaded_2 = keras.models.load_model("my_model")
+np.testing.assert_allclose(loaded_1(input_arr), outputs)
+np.testing.assert_allclose(loaded_2(input_arr), outputs)
 
 print("Original model:", model)
-print("Loaded model:", loaded)
+print("Model Loaded with custom objects:", loaded_1)
+print("Model loaded without the custom object class:", loaded_2)
+
 
 """
-As seen in the example above, the loader dynamically creates a new model class
-that acts like the original model.
+The first loaded model is loaded using the config and `CustomModel` class. The second
+model is loaded by dynamically creating the model class that acts like the original model.
+"""
+
+
+"""
+#### Configuring the SavedModel
+
+You can use the `tf.keras.utils.SaveOptions` object when saving to SavedModel.
+For instance, if you have the custom classes available, you can save your model
+by calling `model.save(path, options=tf.keras.utils.SaveOptions(config_only=True))`.
+The model will save faster while using less space.
 """
 
 """
