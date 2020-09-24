@@ -77,9 +77,9 @@ with zipfile.ZipFile("CT-1.zip", "r") as z_fp:
 <div class="k-default-codeblock">
 ```
 Downloading data from https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-0.zip
-1065476096/1065471431 [==============================] - 231s 0us/step
+1065476096/1065471431 [==============================] - 234s 0us/step
 Downloading data from https://github.com/hasibzunair/3D-image-classification-tutorial/releases/download/v0.2/CT-1.zip
- 293462016/1050898487 [=======>......................] - ETA: 2:52
+ 275013632/1050898487 [======>.......................] - ETA: 2:49
 
 ```
 </div>
@@ -200,7 +200,7 @@ plt.imshow(img[:, :, 15], cmap="gray")
 ```
 Dimension of the CT scan is: (512, 512, 38)
 
-<matplotlib.image.AxesImage at 0x7fd81e987a20>
+<matplotlib.image.AxesImage at 0x7f1230297a20>
 
 ```
 </div>
@@ -550,65 +550,62 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0231s vs `on_train_batch_end` time: 0.0452s). Check your callbacks.
-70/70 - 15s - loss: 0.7343 - acc: 0.5429 - val_loss: 0.7332 - val_acc: 0.5000
+WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0231s vs `on_train_batch_end` time: 0.0455s). Check your callbacks.
+70/70 - 15s - loss: 0.7226 - acc: 0.5214 - val_loss: 0.7367 - val_acc: 0.5000
 Epoch 2/100
-70/70 - 15s - loss: 0.7268 - acc: 0.6143 - val_loss: 0.7015 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6928 - acc: 0.5500 - val_loss: 0.7400 - val_acc: 0.5000
 Epoch 3/100
-70/70 - 15s - loss: 0.7231 - acc: 0.5286 - val_loss: 0.9828 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6758 - acc: 0.5929 - val_loss: 0.9405 - val_acc: 0.5000
 Epoch 4/100
-70/70 - 15s - loss: 0.6864 - acc: 0.6143 - val_loss: 0.7150 - val_acc: 0.4667
+70/70 - 15s - loss: 0.7240 - acc: 0.5000 - val_loss: 0.7072 - val_acc: 0.5000
 Epoch 5/100
-70/70 - 15s - loss: 0.6807 - acc: 0.5643 - val_loss: 0.7138 - val_acc: 0.5167
+70/70 - 15s - loss: 0.6943 - acc: 0.5214 - val_loss: 0.7686 - val_acc: 0.5000
 Epoch 6/100
-70/70 - 15s - loss: 0.6624 - acc: 0.6429 - val_loss: 0.8380 - val_acc: 0.4667
+70/70 - 15s - loss: 0.6796 - acc: 0.6500 - val_loss: 0.7111 - val_acc: 0.5500
 Epoch 7/100
-70/70 - 15s - loss: 0.6461 - acc: 0.5929 - val_loss: 1.4891 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6764 - acc: 0.5286 - val_loss: 1.0334 - val_acc: 0.4833
 Epoch 8/100
-70/70 - 15s - loss: 0.6595 - acc: 0.6357 - val_loss: 1.1630 - val_acc: 0.4667
+70/70 - 15s - loss: 0.6250 - acc: 0.6429 - val_loss: 0.8498 - val_acc: 0.5000
 Epoch 9/100
-70/70 - 15s - loss: 0.6612 - acc: 0.6071 - val_loss: 1.4532 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6483 - acc: 0.6000 - val_loss: 1.9208 - val_acc: 0.4833
 Epoch 10/100
-70/70 - 15s - loss: 0.6417 - acc: 0.6571 - val_loss: 0.9743 - val_acc: 0.5333
+70/70 - 15s - loss: 0.6567 - acc: 0.6000 - val_loss: 1.1385 - val_acc: 0.4667
 Epoch 11/100
-70/70 - 15s - loss: 0.6323 - acc: 0.6286 - val_loss: 0.8485 - val_acc: 0.5167
+70/70 - 15s - loss: 0.6444 - acc: 0.6214 - val_loss: 0.9513 - val_acc: 0.4500
 Epoch 12/100
-70/70 - 15s - loss: 0.6648 - acc: 0.6071 - val_loss: 0.9023 - val_acc: 0.4500
+70/70 - 15s - loss: 0.5996 - acc: 0.6643 - val_loss: 1.1083 - val_acc: 0.4667
 Epoch 13/100
-70/70 - 15s - loss: 0.6124 - acc: 0.6643 - val_loss: 1.6494 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6515 - acc: 0.6286 - val_loss: 0.8650 - val_acc: 0.4333
 Epoch 14/100
-70/70 - 15s - loss: 0.6185 - acc: 0.6429 - val_loss: 1.2332 - val_acc: 0.4667
+70/70 - 15s - loss: 0.6304 - acc: 0.6357 - val_loss: 0.7985 - val_acc: 0.5833
 Epoch 15/100
-70/70 - 15s - loss: 0.5969 - acc: 0.6714 - val_loss: 0.8176 - val_acc: 0.5833
+70/70 - 15s - loss: 0.6293 - acc: 0.6429 - val_loss: 0.9456 - val_acc: 0.4833
 Epoch 16/100
-70/70 - 15s - loss: 0.6850 - acc: 0.5643 - val_loss: 0.8145 - val_acc: 0.5667
+70/70 - 15s - loss: 0.6008 - acc: 0.6429 - val_loss: 0.8814 - val_acc: 0.5667
 Epoch 17/100
-70/70 - 15s - loss: 0.6059 - acc: 0.6429 - val_loss: 1.5250 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6184 - acc: 0.6214 - val_loss: 1.2379 - val_acc: 0.5333
 Epoch 18/100
-70/70 - 15s - loss: 0.6379 - acc: 0.6071 - val_loss: 1.0994 - val_acc: 0.4500
+70/70 - 15s - loss: 0.6186 - acc: 0.6500 - val_loss: 1.2624 - val_acc: 0.5667
 Epoch 19/100
-70/70 - 15s - loss: 0.6225 - acc: 0.6286 - val_loss: 1.4499 - val_acc: 0.5000
+70/70 - 15s - loss: 0.6292 - acc: 0.6571 - val_loss: 0.9592 - val_acc: 0.4833
 Epoch 20/100
-70/70 - 15s - loss: 0.6090 - acc: 0.6643 - val_loss: 0.8167 - val_acc: 0.5833
+70/70 - 15s - loss: 0.6073 - acc: 0.6500 - val_loss: 1.2174 - val_acc: 0.4833
 Epoch 21/100
-70/70 - 15s - loss: 0.6173 - acc: 0.6214 - val_loss: 0.9629 - val_acc: 0.5167
+70/70 - 15s - loss: 0.6238 - acc: 0.6571 - val_loss: 1.8992 - val_acc: 0.5000
 Epoch 22/100
-70/70 - 15s - loss: 0.5811 - acc: 0.6857 - val_loss: 0.8936 - val_acc: 0.5000
+70/70 - 15s - loss: 0.5788 - acc: 0.7071 - val_loss: 0.9556 - val_acc: 0.5333
 Epoch 23/100
-70/70 - 15s - loss: 0.5917 - acc: 0.6929 - val_loss: 0.9793 - val_acc: 0.5500
+70/70 - 15s - loss: 0.5416 - acc: 0.6929 - val_loss: 1.3784 - val_acc: 0.5000
 Epoch 24/100
-70/70 - 15s - loss: 0.5846 - acc: 0.6929 - val_loss: 0.8928 - val_acc: 0.4833
-Epoch 25/100
-70/70 - 15s - loss: 0.6066 - acc: 0.6571 - val_loss: 0.8708 - val_acc: 0.5667
+70/70 - 15s - loss: 0.6038 - acc: 0.6571 - val_loss: 1.5250 - val_acc: 0.5000
 
-<tensorflow.python.keras.callbacks.History at 0x7fd81c03dd68>
+<tensorflow.python.keras.callbacks.History at 0x7f122d8dfc50>
 
 ```
 </div>
 It is important to note that the number of samples is very small (only 200) and we don't
 specify a random seed. As such, you can expect significant variance in the results. The full dataset
-which consists of over 1000 CT scans can be found [here]
-(https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
+which consists of over 1000 CT scans can be found [here](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
 dataset, an accuracy of 83% was achieved. A variability of 6-7% in the classification
 performance is observed in both cases.
 
@@ -657,8 +654,8 @@ for score, name in zip(scores, class_names):
 
 <div class="k-default-codeblock">
 ```
-This model is 0.00 percent confident that CT scan is normal
-This model is 100.00 percent confident that CT scan is abnormal
+This model is 100.00 percent confident that CT scan is normal
+This model is 0.00 percent confident that CT scan is abnormal
 
 ```
 </div>

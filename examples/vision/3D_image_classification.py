@@ -428,8 +428,7 @@ model.fit(
 """
 It is important to note that the number of samples is very small (only 200) and we don't
 specify a random seed. As such, you can expect significant variance in the results. The full dataset
-which consists of over 1000 CT scans can be found [here]
-(https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
+which consists of over 1000 CT scans can be found [here](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). Using the full
 dataset, an accuracy of 83% was achieved. A variability of 6-7% in the classification
 performance is observed in both cases.
 """
