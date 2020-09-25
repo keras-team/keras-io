@@ -2,7 +2,7 @@ from pathlib import Path
 import tutobooks
 import copy
 import json
-import random
+import hashlib
 import string
 import re
 import yaml
@@ -207,8 +207,13 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
         buttons["source"][i] = buttons["source"][i].replace("SOURCE_NAME", source_name)
     header_cells.append(buttons)
     cells = header_cells + cells
+
+    cell_count = 0
     for cell in cells:
-        cell["metadata"]["id"] = random_id()
+        cell_count += 1
+        str_to_hash = f"{cell_count} {cell['source']}"
+        hash_str = hashlib.sha256(str_to_hash.encode('utf-8')).hexdigest()
+        cell["metadata"]["id"] = hash_str[:12]
 
     notebook = {}
     for key in TF_IPYNB_BASE.keys():
@@ -261,12 +266,6 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     f.close()
 
 
-def random_id():
-    length = 12
-    letters = string.ascii_lowercase + string.ascii_uppercase + "0123456789"
-    return "".join(random.choice(letters) for i in range(length))
-
-
 def generate_toc(target_dir):
     target_dir = Path(target_dir)
 
@@ -285,8 +284,6 @@ def generate_toc(target_dir):
 
 
 def generate_tf_guides():
-    random.seed(1337)
-
     generate_toc(target_dir="../tf")
 
     for entry in CONFIG:
