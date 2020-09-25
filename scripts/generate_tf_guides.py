@@ -212,8 +212,8 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     for cell in cells:
         cell_count += 1
         str_to_hash = f"{cell_count} {cell['source']}"
-        hash_str = hashlib.sha256(str_to_hash.encode('utf-8')).hexdigest()
-        cell["metadata"]["id"] = hash_str[:12]
+        cell_id = hashlib.sha256(str_to_hash.encode('utf-8')).hexdigest()
+        cell["metadata"]["id"] = cell_id[:12]
 
     notebook = {}
     for key in TF_IPYNB_BASE.keys():
