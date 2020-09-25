@@ -5,8 +5,15 @@ import json
 import random
 import string
 import re
+import yaml
 
+# The order of CONFIG is also used to generate the _toc.yaml for tensorflow.org.
 CONFIG = [
+    {
+        "title": "The Sequential model",
+        "source_name": "sequential_model",
+        "target_name": "sequential_model",
+    },
     {
         "title": "The Functional API",
         "source_name": "functional_api",
@@ -23,6 +30,26 @@ CONFIG = [
         "target_name": "custom_layers_and_models",
     },
     {
+        "title": "Save and load Keras models",
+        "source_name": "serialization_and_saving",
+        "target_name": "save_and_serialize",
+    },
+    {
+        "title": "Working with preprocessing layers",
+        "source_name": "preprocessing_layers",
+        "target_name": "preprocessing_layers",
+    },
+    {
+        "title": "Customizing what happens in `fit()`",
+        "source_name": "customizing_what_happens_in_fit",
+        "target_name": "customizing_what_happens_in_fit",
+    },
+    {
+        "title": "Writing a training loop from scratch",
+        "source_name": "writing_a_training_loop_from_scratch",
+        "target_name": "writing_a_training_loop_from_scratch",
+    },
+    {
         "title": "Recurrent Neural Networks (RNN) with Keras",
         "source_name": "working_with_rnns",
         "target_name": "rnn",
@@ -33,19 +60,9 @@ CONFIG = [
         "target_name": "masking_and_padding",
     },
     {
-        "title": "Save and load Keras models",
-        "source_name": "serialization_and_saving",
-        "target_name": "save_and_serialize",
-    },
-    {
         "title": "Writing your own callbacks",
         "source_name": "writing_your_own_callbacks",
         "target_name": "custom_callback",
-    },
-    {
-        "title": "Writing a training loop from scratch",
-        "source_name": "writing_a_training_loop_from_scratch",
-        "target_name": "writing_a_training_loop_from_scratch",
     },
     {
         "title": "Transfer learning & fine-tuning",
@@ -53,24 +70,9 @@ CONFIG = [
         "target_name": "transfer_learning",
     },
     {
-        "title": "The Sequential model",
-        "source_name": "sequential_model",
-        "target_name": "sequential_model",
-    },
-    {
-        "title": "Customizing what happens in `fit()`",
-        "source_name": "customizing_what_happens_in_fit",
-        "target_name": "customizing_what_happens_in_fit",
-    },
-    {
         "title": "Training Keras models with TensorFlow Cloud",
         "source_name": "training_keras_models_on_cloud",
         "target_name": "training_keras_models_on_cloud",
-    },
-    {
-        "title": "Working with preprocessing layers",
-        "source_name": "preprocessing_layers",
-        "target_name": "preprocessing_layers",
     },
 ]
 
@@ -265,8 +267,28 @@ def random_id():
     return "".join(random.choice(letters) for i in range(length))
 
 
+def generate_toc(target_dir):
+    target_dir = Path(target_dir)
+
+    toc = []
+    for config in CONFIG:
+        toc.append(
+            {
+                "title": config["title"],
+                "path": str(Path("/guide/keras") / config["target_name"]),
+            }
+        )
+    toc_dict = {"toc": toc}
+
+    with open(str(target_dir / "_toc_yaml"), "w") as toc_file:
+        yaml.dump(toc_dict, toc_file, sort_keys=False)
+
+
 def generate_tf_guides():
     random.seed(1337)
+
+    generate_toc(target_dir="../tf")
+
     for entry in CONFIG:
         generate_single_tf_guide(
             source_dir="../guides/ipynb/",
