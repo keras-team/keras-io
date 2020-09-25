@@ -21,6 +21,9 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 - [FusionNet: 3D Object Classification Using MultipleData Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
 - [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction](https://arxiv.org/abs/2007.13224)
 """
+"""
+## Setup
+"""
 
 import os
 import zipfile
@@ -34,10 +37,8 @@ from tensorflow.keras import layers
 ## Downloading the MosMedData:Chest CT Scans with COVID-19 Related Findings
 
 In this example, we use a subset of the
-[MosMedData: Chest CT Scans with COVID-19 Related
-Findings](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). This dataset
-consists of lung CT scans with COVID-19 related findings, as well as without such
-findings.
+[MosMedData: Chest CT Scans with COVID-19 Related Findings](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1).
+This dataset consists of lung CT scans with COVID-19 related findings, as well as without such findings.
 
 We will be using the associated radiological findings of the CT scans as labels to build
 a classifier to predict presence of viral pneumonia.
@@ -89,48 +90,48 @@ from scipy.ndimage import zoom
 
 def read_nifti_file(filepath):
     """Read and load volume"""
-    # read file
+    # Read file
     scan = nib.load(filepath)
-    # get raw data
+    # Get raw data
     scan = scan.get_fdata()
-    # rotate
+    # Rotate
     scan = np.rot90(np.array(scan))
     return scan
 
 
 def resize_slices(img):
     """Resize width and height"""
-    # resize all slices
+    # Resize all slices
     flatten = [
         cv2.resize(img[:, :, i], (128, 128), interpolation=cv2.INTER_CUBIC)
         for i in range(img.shape[-1])
     ]
-    # stack along the z-axis
+    # Stack along the z-axis
     img = np.array(np.dstack(flatten))
     return img
 
 
 def resize_depth(img):
     """Resize across z-axis"""
-    # set the desired depth
+    # Set the desired depth
     desired_depth = 64
-    # get current depth
+    # Get current depth
     current_depth = img.shape[-1]
-    # compute depth factor
+    # Compute depth factor
     depth = current_depth / desired_depth
     depth_factor = 1 / depth
-    # resize across z-axis
+    # Resize across z-axis
     img_new = zoom(img, (1, 1, depth_factor), mode="nearest")
     return img_new
 
 
 def process_scan(path):
     """Read and resize volume"""
-    # read scan
+    # Read scan
     volume = read_nifti_file(path)
-    # resize width and height
+    # Resize width and height
     volume = resize_slices(volume)
-    # resize across z-axis
+    # Resize across z-axis
     volume = resize_depth(volume)
     return volume
 
@@ -414,7 +415,7 @@ checkpoint_cb = keras.callbacks.ModelCheckpoint(
 )
 early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=10)
 
-# Train the model, doing validation at the end of each epoch.
+# Train the model, doing validation at the end of each epoch
 epochs = 100
 model.fit(
     train_dataset,
@@ -453,7 +454,7 @@ for i, metric in enumerate(["acc", "loss"]):
     ax[i].legend(["train", "val"])
 
 """
-## Make predictions on a single CT scan.
+## Make predictions on a single CT scan
 """
 
 # Load best weights.

@@ -27,6 +27,8 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 - [FusionNet: 3D Object Classification Using MultipleData Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
 - [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction](https://arxiv.org/abs/2007.13224)
 
+---
+## Setup
 
 ```python
 import os
@@ -42,8 +44,8 @@ from tensorflow.keras import layers
 ## Downloading the MosMedData:Chest CT Scans with COVID-19 Related Findings
 
 In this example, we use a subset of the
-[MosMedData: Chest CT Scans with COVID-19 Related
-Findings](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1). This dataset
+[MosMedData: Chest CT Scans with COVID-19 Related Findings](https://www.medrxiv.org/content/10.1101/2020.05.20.20100362v1).
+This dataset
 consists of lung CT scans with COVID-19 related findings, as well as without such
 findings.
 
@@ -318,11 +320,11 @@ def rotate(volume):
     """Rotate the volume by a few degrees"""
 
     def scipy_rotate(volume):
-        # define some rotation angles
+        # Define some rotation angles
         angles = [-20, -10, -5, 5, 10, 20]
-        # pick angles at random
+        # Pick angles at random
         angle = random.choice(angles)
-        # rotate volume
+        # Rotate volume
         volume = ndimage.rotate(volume, angle, reshape=False)
         return volume
 
@@ -335,7 +337,7 @@ def blur(volume):
     """Blur the volume"""
 
     def scipy_blur(volume):
-        # gaussian blur
+        # Gaussian blur
         volume = gaussian_filter(volume, sigma=1)
         return volume
 
@@ -345,11 +347,11 @@ def blur(volume):
 
 def train_preprocessing(volume, label):
     """Process training data by rotating, blur and normalizing."""
-    # rotate data
+    # Rotate data
     volume = rotate(volume)
-    # blur data
+    # Blur data
     volume = blur(volume)
-    # normalize
+    # Normalize
     volume = normalize(volume)
     return volume, label
 
@@ -550,7 +552,6 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0231s vs `on_train_batch_end` time: 0.0455s). Check your callbacks.
 70/70 - 15s - loss: 0.7226 - acc: 0.5214 - val_loss: 0.7367 - val_acc: 0.5000
 Epoch 2/100
 70/70 - 15s - loss: 0.6928 - acc: 0.5500 - val_loss: 0.7400 - val_acc: 0.5000
@@ -635,7 +636,7 @@ for i, metric in enumerate(["acc", "loss"]):
 
 
 ---
-## Make predictions on a single CT scan.
+## Make predictions on a single CT scan
 
 
 ```python
