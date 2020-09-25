@@ -2,25 +2,52 @@ from pathlib import Path
 import tutobooks
 import copy
 import json
-import random
+import hashlib
 import string
 import re
+import yaml
 
+# The order of CONFIG is also used to generate the _toc.yaml for tensorflow.org.
 CONFIG = [
+    {
+        "title": "The Sequential model",
+        "source_name": "sequential_model",
+        "target_name": "sequential_model",
+    },
     {
         "title": "The Functional API",
         "source_name": "functional_api",
         "target_name": "functional",
     },
     {
-        "title": "Training & evaluation with the built-in methods",
+        "title": "Training and evaluation with the built-in methods",
         "source_name": "training_with_built_in_methods",
         "target_name": "train_and_evaluate",
     },
     {
-        "title": "Making new Layers & Models via subclassing",
+        "title": "Making new Layers and Models via subclassing",
         "source_name": "making_new_layers_and_models_via_subclassing",
         "target_name": "custom_layers_and_models",
+    },
+    {
+        "title": "Save and load Keras models",
+        "source_name": "serialization_and_saving",
+        "target_name": "save_and_serialize",
+    },
+    {
+        "title": "Working with preprocessing layers",
+        "source_name": "preprocessing_layers",
+        "target_name": "preprocessing_layers",
+    },
+    {
+        "title": "Customize what happens in Model.fit",
+        "source_name": "customizing_what_happens_in_fit",
+        "target_name": "customizing_what_happens_in_fit",
+    },
+    {
+        "title": "Writing a training loop from scratch",
+        "source_name": "writing_a_training_loop_from_scratch",
+        "target_name": "writing_a_training_loop_from_scratch",
     },
     {
         "title": "Recurrent Neural Networks (RNN) with Keras",
@@ -33,44 +60,19 @@ CONFIG = [
         "target_name": "masking_and_padding",
     },
     {
-        "title": "Save and load Keras models",
-        "source_name": "serialization_and_saving",
-        "target_name": "save_and_serialize",
-    },
-    {
         "title": "Writing your own callbacks",
         "source_name": "writing_your_own_callbacks",
         "target_name": "custom_callback",
     },
     {
-        "title": "Writing a training loop from scratch",
-        "source_name": "writing_a_training_loop_from_scratch",
-        "target_name": "writing_a_training_loop_from_scratch",
-    },
-    {
-        "title": "Transfer learning & fine-tuning",
+        "title": "Transfer learning and fine-tuning",
         "source_name": "transfer_learning",
         "target_name": "transfer_learning",
-    },
-    {
-        "title": "The Sequential model",
-        "source_name": "sequential_model",
-        "target_name": "sequential_model",
-    },
-    {
-        "title": "Customizing what happens in `fit()`",
-        "source_name": "customizing_what_happens_in_fit",
-        "target_name": "customizing_what_happens_in_fit",
     },
     {
         "title": "Training Keras models with TensorFlow Cloud",
         "source_name": "training_keras_models_on_cloud",
         "target_name": "training_keras_models_on_cloud",
-    },
-    {
-        "title": "Working with preprocessing layers",
-        "source_name": "preprocessing_layers",
-        "target_name": "preprocessing_layers",
     },
 ]
 
@@ -205,8 +207,13 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
         buttons["source"][i] = buttons["source"][i].replace("SOURCE_NAME", source_name)
     header_cells.append(buttons)
     cells = header_cells + cells
+
+    cell_count = 0
     for cell in cells:
-        cell["metadata"]["id"] = random_id()
+        cell_count += 1
+        str_to_hash = f"{cell_count} {cell['source']}"
+        cell_id = hashlib.sha256(str_to_hash.encode('utf-8')).hexdigest()
+        cell["metadata"]["id"] = cell_id[:12]
 
     notebook = {}
     for key in TF_IPYNB_BASE.keys():
@@ -259,14 +266,26 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     f.close()
 
 
-def random_id():
-    length = 12
-    letters = string.ascii_lowercase + string.ascii_uppercase + "0123456789"
-    return "".join(random.choice(letters) for i in range(length))
+def generate_toc(target_dir):
+    target_dir = Path(target_dir)
+
+    toc = []
+    for config in CONFIG:
+        toc.append(
+            {
+                "title": config["title"],
+                "path": str(Path("/guide/keras") / config["target_name"]),
+            }
+        )
+    toc_dict = {"toc": toc}
+
+    with open(str(target_dir / "_toc.yaml"), "w") as toc_file:
+        yaml.dump(toc_dict, toc_file, sort_keys=False)
 
 
 def generate_tf_guides():
-    random.seed(1337)
+    generate_toc(target_dir="../tf")
+
     for entry in CONFIG:
         generate_single_tf_guide(
             source_dir="../guides/ipynb/",
