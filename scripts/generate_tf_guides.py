@@ -274,7 +274,7 @@ def generate_toc(target_dir):
     for config in CONFIG:
         toc.append(
             {
-                "title": f"{config['title']}",
+                "title": config["title"],
                 "path": str(Path("/guide/keras") / config["target_name"]),
             }
         )
