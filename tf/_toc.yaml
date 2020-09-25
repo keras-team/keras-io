@@ -3,15 +3,15 @@ toc:
   path: /guide/keras/sequential_model
 - title: The Functional API
   path: /guide/keras/functional
-- title: Training & evaluation with the built-in methods
+- title: Training and evaluation with the built-in methods
   path: /guide/keras/train_and_evaluate
-- title: Making new Layers & Models via subclassing
+- title: Making new Layers and Models via subclassing
   path: /guide/keras/custom_layers_and_models
 - title: Save and load Keras models
   path: /guide/keras/save_and_serialize
 - title: Working with preprocessing layers
   path: /guide/keras/preprocessing_layers
-- title: Customizing what happens in `fit()`
+- title: Customize what happens in Model.fit
   path: /guide/keras/customizing_what_happens_in_fit
 - title: Writing a training loop from scratch
   path: /guide/keras/writing_a_training_loop_from_scratch
@@ -21,7 +21,7 @@ toc:
   path: /guide/keras/masking_and_padding
 - title: Writing your own callbacks
   path: /guide/keras/custom_callback
-- title: Transfer learning & fine-tuning
+- title: Transfer learning and fine-tuning
   path: /guide/keras/transfer_learning
 - title: Training Keras models with TensorFlow Cloud
   path: /guide/keras/training_keras_models_on_cloud

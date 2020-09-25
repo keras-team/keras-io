@@ -20,12 +20,12 @@ CONFIG = [
         "target_name": "functional",
     },
     {
-        "title": "Training & evaluation with the built-in methods",
+        "title": "Training and evaluation with the built-in methods",
         "source_name": "training_with_built_in_methods",
         "target_name": "train_and_evaluate",
     },
     {
-        "title": "Making new Layers & Models via subclassing",
+        "title": "Making new Layers and Models via subclassing",
         "source_name": "making_new_layers_and_models_via_subclassing",
         "target_name": "custom_layers_and_models",
     },
@@ -40,7 +40,7 @@ CONFIG = [
         "target_name": "preprocessing_layers",
     },
     {
-        "title": "Customizing what happens in `fit()`",
+        "title": "Customize what happens in Model.fit",
         "source_name": "customizing_what_happens_in_fit",
         "target_name": "customizing_what_happens_in_fit",
     },
@@ -65,7 +65,7 @@ CONFIG = [
         "target_name": "custom_callback",
     },
     {
-        "title": "Transfer learning & fine-tuning",
+        "title": "Transfer learning and fine-tuning",
         "source_name": "transfer_learning",
         "target_name": "transfer_learning",
     },
