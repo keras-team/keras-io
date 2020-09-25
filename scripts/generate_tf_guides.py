@@ -280,7 +280,7 @@ def generate_toc(target_dir):
         )
     toc_dict = {"toc": toc}
 
-    with open(str(target_dir / "_toc_yaml"), "w") as toc_file:
+    with open(str(target_dir / "_toc.yaml"), "w") as toc_file:
         yaml.dump(toc_dict, toc_file, sort_keys=False)
 
 
