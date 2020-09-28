@@ -504,7 +504,6 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0223s vs `on_train_batch_end` time: 0.0464s). Check your callbacks.
 70/70 - 12s - loss: 0.7031 - acc: 0.5286 - val_loss: 1.1421 - val_acc: 0.5000
 Epoch 2/100
 70/70 - 12s - loss: 0.6769 - acc: 0.5929 - val_loss: 1.3491 - val_acc: 0.5000
