@@ -175,7 +175,7 @@ Lastly, split the dataset into train and validation subsets.
 """
 
 # Read and process the scans.
-# Each scan is resized across width, height, and depth and rescaled.
+# Each scan is resized across height, width, and depth and rescaled.
 abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
 normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
 
@@ -197,9 +197,11 @@ print(
 """
 ## Data augmentation
 
-The CT scans also augmented by rotating at random angles during training. Since there are
-no channels present in the data, a channel of 1 is added to perform 3D convolutions on the data.
-There are different kinds of preprocessing and augmentation techniques out there,
+The CT scans also augmented by rotating at random angles during training. Since
+the data is stored in rank-3 tensors of shape `(samples, height, width, depth)`,
+we add a dimension of size 1 at axis 4 to be able to perform 3D convolutions on
+the data. The new shape is thus `(samples, height, width, depth, 1)`. There are
+different kinds of preprocessing and augmentation techniques out there,
 this example shows a few simple ones to get started.
 """
 
