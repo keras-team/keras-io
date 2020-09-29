@@ -222,6 +222,7 @@ model is loaded by dynamically creating the model class that acts like the origi
 """
 #### Configuring the SavedModel
 
+*New in TensoFlow 2.4*
 You can use the `tf.keras.utils.SaveOptions` object when saving to SavedModel.
 For instance, if you have the custom classes available, you can save your model
 by calling `model.save(path, options=tf.keras.utils.SaveOptions(config_only=True))`.
