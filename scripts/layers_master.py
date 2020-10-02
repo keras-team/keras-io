@@ -270,7 +270,7 @@ LAYERS_MASTER = {
         },
         {
             'path': 'preprocessing_layers/',
-            'title': 'Preprocessing layers',  # TODO
+            'title': 'Preprocessing layers',
             'toc': True,
             'children': [
                 {
@@ -455,6 +455,11 @@ LAYERS_MASTER = {
             'title': 'Attention layers',
             'toc': True,
             'children': [
+                {
+                    'path': 'multi_head_attention',
+                    'title': 'MultiHeadAttention layer',
+                    'generate': ['tensorflow.keras.layers.MultiHeadAttention']
+                },
                 {
                     'path': 'attention',
                     'title': 'Attention layer',

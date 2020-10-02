@@ -467,7 +467,10 @@ Within Keras, there is the ability to add [callbacks](/api/callbacks/) specifica
 A Keras model has two modes: training and testing. Regularization mechanisms, such as Dropout and L1/L2 weight regularization, are turned off at testing time.
 They are reflected in the training time loss but not in the test time loss.
 
-Besides, the training loss is the average of the losses over each batch of training data. Because your model is changing over time, the loss over the first batches of an epoch is generally higher than over the last batches. On the other hand, the testing loss for an epoch is computed using the model as it is at the end of the epoch, resulting in a lower loss.
+Besides, the training loss that Keras displays is the average of the losses for each batch of training data, **over the current epoch**.
+Because your model is changing over time, the loss over the first batches of an epoch is generally higher than over the last batches.
+This can bring the epoch-wise average down.
+On the other hand, the testing loss for an epoch is computed using the model as it is at the end of the epoch, resulting in a lower loss.
 
 
 ---
@@ -477,12 +480,15 @@ Besides, the training loss is the average of the losses over each batch of train
 You should use the [`tf.data` API](https://www.tensorflow.org/guide/data) to create `tf.data.Dataset` objects -- an abstraction over a data pipeline
 that can pull data from local disk, from a distribtued filesystem, from GCS, etc., as well as efficiently apply various data transformations.
 
-For instance, the utility `tf.keras.preprocessing.image_dataset_from_directory` will create a dataset that reads image data from a local directory.
+For instance, the utility [`tf.keras.preprocessing.image_dataset_from_directory`](https://keras.io/api/preprocessing/image/#imagedatasetfromdirectory-function)
+will create a dataset that reads image data from a local directory.
+Likewise, the utility [`tf.keras.preprocessing.text_dataset_from_directory`](https://keras.io/api/preprocessing/text/#textdatasetfromdirectory-function)
+will create a dataset that reads text files from a local directory.
 
 Dataset objects can be directly passed to `fit()`, or can be iterated over in a custom low-level training loop.
 
 ```python
-model.fit(dataset, epochs=10)
+model.fit(dataset, epochs=10, validation_data=val_dataset)
 ```
 
 ---
