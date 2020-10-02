@@ -3,7 +3,7 @@
 A metric is a function that is used to judge the performance of your model.
 
 Metric functions are similar to loss functions, except that the results from evaluating a metric are not used when training the model.
-Note that you may use any loss functions as a metric function.
+Note that you may use any loss function as a metric.
 
 
 ## Available metrics
@@ -176,7 +176,7 @@ class BinaryTruePositives(tf.keras.metrics.Metric):
     return self.true_positives
 
   def reset_states(self):
-    self.true_positive.assign(0)
+    self.true_positives.assign(0)
 
 m = BinaryTruePositives()
 m.update_state([0, 1, 1, 1], [0, 1, 0, 0])

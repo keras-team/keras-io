@@ -18,16 +18,13 @@ a set of text files on disk). We demonstrate the workflow on the IMDB sentiment
 classification dataset (unprocessed version). We use the `TextVectorization` layer for
  word splitting & indexing.
 
-
 ---
 ## Setup
-
 
 
 ```python
 import tensorflow as tf
 import numpy as np
-
 ```
 
 ---
@@ -36,37 +33,31 @@ import numpy as np
 Let's download the data and inspect its structure.
 
 
-
 ```python
 !curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 !tar -xf aclImdb_v1.tar.gz
-
 ```
 
 <div class="k-default-codeblock">
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  6364k      0  0:00:12  0:00:12 --:--:-- 8940k
+100 80.2M  100 80.2M    0     0  45.3M      0  0:00:01  0:00:01 --:--:-- 45.3M
 
 ```
 </div>
 The `aclImdb` folder contains a `train` and `test` subfolder:
 
 
-
 ```python
 !ls aclImdb
-
 ```
 
 ```python
 !ls aclImdb/test
-
 ```
 ```python
 !ls aclImdb/train
-
 ```
 <div class="k-default-codeblock">
 ```
@@ -83,10 +74,8 @@ The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each
  which represents on review (either positive or negative):
 
 
-
 ```python
 !cat aclImdb/train/pos/6248_7.txt
-
 ```
 
 <div class="k-default-codeblock">
@@ -95,13 +84,11 @@ Being an Austrian myself this has been a straight knock in my face. Fortunately 
 
 ```
 </div>
-We are only interest in the `pos` and `neg` subfolders, so let's delete the rest:
-
+We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
 
 
 ```python
 !rm -r aclImdb/train/unsup
-
 ```
 
 You can use the utility `tf.keras.preprocessing.text_dataset_from_directory` to
@@ -122,7 +109,6 @@ available training data (without creating a validation dataset), so its performa
 When using the `validation_split` & `subset` arguments, make sure to either specify a
 random seed, or to pass `shuffle=False`, so that the validation & training splits you
 get have no overlap.
-
 
 
 ```python
@@ -156,7 +142,6 @@ print(
     "Number of batches in raw_test_ds: %d"
     % tf.data.experimental.cardinality(raw_test_ds)
 )
-
 ```
 
 <div class="k-default-codeblock">
@@ -175,7 +160,6 @@ Number of batches in raw_test_ds: 782
 Let's preview a few samples:
 
 
-
 ```python
 # It's important to take a look at your raw data to ensure your normalization
 # and tokenization will work as expected. We can do that by taking a few
@@ -187,7 +171,6 @@ for text_batch, label_batch in raw_train_ds.take(1):
     for i in range(5):
         print(text_batch.numpy()[i])
         print(label_batch.numpy()[i])
-
 ```
 
 <div class="k-default-codeblock">
@@ -209,7 +192,6 @@ b"Michelle Rodriguez is the defining actress who could be the charging force for
 ## Prepare the data
 
 In particular, we remove `<br />` tags.
-
 
 
 ```python
@@ -256,7 +238,6 @@ vectorize_layer = TextVectorization(
 text_ds = raw_train_ds.map(lambda x, y: x)
 # Let's call `adapt`:
 vectorize_layer.adapt(text_ds)
-
 ```
 
 ---
@@ -266,7 +247,6 @@ There are 2 ways we can use our text vectorization layer:
 
 **Option 1: Make it part of the model**, so as to obtain a model that processes raw
  strings, like this:
-
 
 ```python
 text_input = tf.keras.Input(shape=(1,), dtype=tf.string, name='text')
@@ -289,7 +269,6 @@ strings as input, like in the code snippet for option 1 above. This can be done 
 
 
 
-
 ```python
 
 def vectorize_text(text, label):
@@ -306,14 +285,12 @@ test_ds = raw_test_ds.map(vectorize_text)
 train_ds = train_ds.cache().prefetch(buffer_size=10)
 val_ds = val_ds.cache().prefetch(buffer_size=10)
 test_ds = test_ds.cache().prefetch(buffer_size=10)
-
 ```
 
 ---
 ## Build a model
 
 We choose a simple 1D convnet starting with an `Embedding` layer.
-
 
 
 ```python
@@ -343,12 +320,10 @@ model = tf.keras.Model(inputs, predictions)
 
 # Compile the model with binary crossentropy loss and an adam optimizer.
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
-
 ```
 
 ---
 ## Train the model
-
 
 
 ```python
@@ -356,19 +331,18 @@ epochs = 3
 
 # Fit the model using the train and test datasets.
 model.fit(train_ds, validation_data=val_ds, epochs=epochs)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-625/625 [==============================] - 35s 56ms/step - loss: 0.4867 - accuracy: 0.7309 - val_loss: 0.3271 - val_accuracy: 0.8622
+625/625 [==============================] - 32s 51ms/step - loss: 0.6288 - accuracy: 0.5835 - val_loss: 0.3283 - val_accuracy: 0.8610
 Epoch 2/3
-625/625 [==============================] - 40s 64ms/step - loss: 0.2197 - accuracy: 0.9126 - val_loss: 0.3265 - val_accuracy: 0.8706
+625/625 [==============================] - 31s 50ms/step - loss: 0.2808 - accuracy: 0.8859 - val_loss: 0.3005 - val_accuracy: 0.8796
 Epoch 3/3
-625/625 [==============================] - 41s 66ms/step - loss: 0.1107 - accuracy: 0.9606 - val_loss: 0.5312 - val_accuracy: 0.8448
+625/625 [==============================] - 31s 50ms/step - loss: 0.1450 - accuracy: 0.9467 - val_loss: 0.3795 - val_accuracy: 0.8726
 
-<tensorflow.python.keras.callbacks.History at 0x147e64ed0>
+<tensorflow.python.keras.callbacks.History at 0x137444c90>
 
 ```
 </div>
@@ -376,17 +350,15 @@ Epoch 3/3
 ## Evaluate the model on the test set
 
 
-
 ```python
 model.evaluate(test_ds)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 17s 21ms/step - loss: 0.5297 - accuracy: 0.8404
+782/782 [==============================] - 7s 9ms/step - loss: 0.3999 - accuracy: 0.8650
 
-[0.5296842455863953, 0.8404399752616882]
+[0.39986345171928406, 0.8649600148200989]
 
 ```
 </div>
@@ -395,7 +367,6 @@ model.evaluate(test_ds)
 
 If you want to obtain a model capable of processing raw strings, you can simply
 create a new model (using the weights we just trained):
-
 
 
 ```python
@@ -414,14 +385,13 @@ end_to_end_model.compile(
 
 # Test it with `raw_test_ds`, which yields raw strings
 end_to_end_model.evaluate(raw_test_ds)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 24s 30ms/step - loss: 0.5297 - accuracy: 0.8404
+782/782 [==============================] - 11s 13ms/step - loss: 0.4062 - accuracy: 0.8630
 
-[0.5296845436096191, 0.8404399752616882]
+[0.3998638987541199, 0.8649600148200989]
 
 ```
 </div>

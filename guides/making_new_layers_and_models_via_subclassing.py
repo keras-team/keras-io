@@ -181,7 +181,7 @@ y = linear_layer(x)
 """
 ## Layers are recursively composable
 
-If you assign a Layer instance as attribute of another Layer, the outer layer
+If you assign a Layer instance as an attribute of another Layer, the outer layer
 will start tracking the weights of the inner layer.
 
 We recommend creating such sublayers in the `__init__()` method (since the

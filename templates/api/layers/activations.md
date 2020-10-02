@@ -50,7 +50,7 @@ model.add(layers.Dense(64, activation=tf.nn.tanh))
 ## About "advanced activation" layers
 
 Activations that are more complex than a simple TensorFlow function (eg. learnable activations, which maintain a state)
-are available as [Advanced Activation layers](/api/layers/advanced_activations),
+are available as [Advanced Activation layers](/api/layers/activation_layers/),
 and can be found in the module `tf.keras.layers.advanced_activations`. These include `PReLU` and `LeakyReLU`.
 If you need a custom activation that requires a state, you should implement it as a custom layer.
 
