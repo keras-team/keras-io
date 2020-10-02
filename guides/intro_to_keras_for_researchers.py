@@ -170,7 +170,7 @@ with tf.GradientTape() as outer_tape:
 
 
 """
-## Keras
+## Keras layers
 
 While TensorFlow is an **infrastructure layer for differentiable programming**,
 dealing with tensors, variables, and gradients,
@@ -233,7 +233,7 @@ built-in functionality.
 """
 
 """
-## Weight creation
+## Layer weight creation
 
 The `self.add_weight()` method gives you a shortcut for creating weights:
 """
