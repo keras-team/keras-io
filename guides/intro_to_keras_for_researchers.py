@@ -43,9 +43,9 @@ much like NumPy.
 
 However, there are three key differences between NumPy and TensorFlow:
 
-- TensorFlow can execute tensor expressions on hardware accelerators such as GPUs and TPUs.
+- TensorFlow can leverage hardware accelerators such as GPUs and TPUs.
 - TensorFlow can automatically compute the gradient of arbitrary differentiable tensor expressions.
-- TensorFlow computation be distributed to large numbers of devices on a single machine, and large number of
+- TensorFlow computation can be distributed to large numbers of devices on a single machine, and large number of
 machines (potentially with multiple devices each).
 
 Let's take a look at the object that is at the core of TensorFlow: the Tensor.
@@ -88,7 +88,7 @@ x = tf.random.uniform(shape=(2, 2), minval=0, maxval=10, dtype="int32")
 """
 ## Variables
 
-Variables are special tensors used to store mutable state (like the weights of a neural network).
+Variables are special tensors used to store mutable state (such as the weights of a neural network).
 You create a `Variable` using some initial value:
 """
 
@@ -132,7 +132,8 @@ e = tf.exp(d)
 
 Here's another big difference with NumPy: you can automatically retrieve the gradient of any differentiable expression.
 
-Just open a `GradientTape`, start "watching" a tensor via `tape.watch()`, and compose a differentiable expression using this tensor as input:
+Just open a `GradientTape`, start "watching" a tensor via `tape.watch()`,
+and compose a differentiable expression using this tensor as input:
 """
 
 a = tf.random.normal(shape=(2, 2))
