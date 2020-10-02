@@ -66,8 +66,8 @@ In the `test_step` method, we evaluate the student model on the provided dataset
 class Distiller(keras.Model):
     def __init__(self, student, teacher):
         super(Distiller, self).__init__()
-        self.teacher = student
-        self.student = teacher
+        self.teacher = teacher
+        self.student = student
 
     def compile(
         self,
