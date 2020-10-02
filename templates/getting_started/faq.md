@@ -16,7 +16,7 @@ A list of frequently Asked Keras Questions.
 
 ## Training-related questions
 
-- [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-epoch-mean)
+- [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-and-epoch-mean)
 - [Why is my training loss much higher than my testing loss?](#why-is-my-training-loss-much-higher-than-my-testing-loss)
 - [How can I use Keras with datasets that don't fit in memory?](#how-can-i-use-keras-with-datasets-that-dont-fit-in-memory)
 - [How can I regularly save Keras models during training?](#how-can-i-regularly-save-keras-models-during-training)
