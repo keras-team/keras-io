@@ -62,4 +62,8 @@ x = layers.Dense(10)(x)
 x = layers.LeakyReLU()(x)
 ```
 
+When setting the `activation` argument of a layer, simply specify the activation's name as a lowercase string, e.g.:
 
+```python
+x = layers.Conv2D(2, 3, activation='relu')
+```
