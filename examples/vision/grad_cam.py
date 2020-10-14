@@ -43,7 +43,7 @@ classifier_layer_names = [
 
 # The local path to our target image
 img_path = keras.utils.get_file(
-    "african_elephant.jpg", " https://i.imgur.com/Bvro0YD.png"
+    "african_elephant.jpg", "https://i.imgur.com/Bvro0YD.png"
 )
 
 display(Image(img_path))
