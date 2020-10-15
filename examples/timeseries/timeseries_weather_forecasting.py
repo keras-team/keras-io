@@ -299,7 +299,7 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate), loss
 model.summary()
 
 """
-We'll use the `ModelCheckpoint` callback to regualrly save checkpoints, and
+We'll use the `ModelCheckpoint` callback to regularly save checkpoints, and
 the `EarlyStopping` callback to interrupt training when the validation loss
 is not longer improving.
 """
