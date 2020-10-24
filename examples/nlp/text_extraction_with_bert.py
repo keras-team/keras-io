@@ -1,5 +1,5 @@
 """
-Title: BERT (from HuggingFace Transformers) for Text Extraction
+Title: Text Extraction with BERT
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/23
 Last modified: 2020/05/23

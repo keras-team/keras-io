@@ -2,8 +2,8 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/01<br>
-**Last modified:** 2020/04/28<br>
-**Description:** Everything you need to know to use Keras & TF 2.0 for deep learning research.
+**Last modified:** 2020/10/02<br>
+**Description:** Everything you need to know to use Keras & TensorFlow for deep learning research.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_researchers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_researchers.py)
@@ -24,12 +24,13 @@ from tensorflow import keras
 
 Are you a machine learning researcher? Do you publish at NeurIPS and push the
 state-of-the-art in CV and NLP? This guide will serve as your first introduction to core
-Keras API concepts.
+Keras & TensorFlow API concepts.
 
 In this guide, you will learn about:
 
+- Tensors, variables, and gradients in TensorFlow
 - Creating layers by subclassing the `Layer` class
-- Computing gradients with a `GradientTape` and writing low-level training loops
+- Writing low-level training loops
 - Tracking losses created by layers via the `add_loss()` method
 - Tracking metrics in a low-level training loop
 - Speeding up execution with a compiled `tf.function`
@@ -40,9 +41,236 @@ You will also see the Keras API in action in two end-to-end research examples:
 a Variational Autoencoder, and a Hypernetwork.
 
 ---
-## The `Layer` class
+## Tensors
 
-The `Layer` is the fundamental abstraction in Keras.
+TensorFlow is an infrastructure layer for differentiable programming.
+At its heart, it's a framework for manipulating N-dimensional arrays (tensors),
+much like NumPy.
+
+However, there are three key differences between NumPy and TensorFlow:
+
+- TensorFlow can leverage hardware accelerators such as GPUs and TPUs.
+- TensorFlow can automatically compute the gradient of arbitrary differentiable tensor expressions.
+- TensorFlow computation can be distributed to large numbers of devices on a single machine, and large number of
+machines (potentially with multiple devices each).
+
+Let's take a look at the object that is at the core of TensorFlow: the Tensor.
+
+Here's a constant tensor:
+
+
+```python
+x = tf.constant([[5, 2], [1, 3]])
+print(x)
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[5 2]
+ [1 3]], shape=(2, 2), dtype=int32)
+
+```
+</div>
+You can get its value as a NumPy array by calling `.numpy()`:
+
+
+```python
+x.numpy()
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+array([[5, 2],
+       [1, 3]], dtype=int32)
+
+```
+</div>
+Much like a NumPy array, it features the attributes `dtype` and `shape`:
+
+
+```python
+print("dtype:", x.dtype)
+print("shape:", x.shape)
+```
+
+<div class="k-default-codeblock">
+```
+dtype: <dtype: 'int32'>
+shape: (2, 2)
+
+```
+</div>
+A common way to create constant tensors is via `tf.ones` and `tf.zeros` (just like `np.ones` and `np.zeros`):
+
+
+```python
+print(tf.ones(shape=(2, 1)))
+print(tf.zeros(shape=(2, 1)))
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[1.]
+ [1.]], shape=(2, 1), dtype=float32)
+tf.Tensor(
+[[0.]
+ [0.]], shape=(2, 1), dtype=float32)
+
+```
+</div>
+You can also create random constant tensors:
+
+
+```python
+x = tf.random.normal(shape=(2, 2), mean=0.0, stddev=1.0)
+
+x = tf.random.uniform(shape=(2, 2), minval=0, maxval=10, dtype="int32")
+
+```
+
+---
+## Variables
+
+Variables are special tensors used to store mutable state (such as the weights of a neural network).
+You create a `Variable` using some initial value:
+
+
+```python
+initial_value = tf.random.normal(shape=(2, 2))
+a = tf.Variable(initial_value)
+print(a)
+
+```
+
+<div class="k-default-codeblock">
+```
+<tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
+array([[ 0.6405563 ,  0.03973103],
+       [-0.6126285 , -0.71384406]], dtype=float32)>
+
+```
+</div>
+You update the value of a `Variable` by using the methods `.assign(value)`, `.assign_add(increment)`, or `.assign_sub(decrement)`:
+
+
+```python
+new_value = tf.random.normal(shape=(2, 2))
+a.assign(new_value)
+for i in range(2):
+    for j in range(2):
+        assert a[i, j] == new_value[i, j]
+
+added_value = tf.random.normal(shape=(2, 2))
+a.assign_add(added_value)
+for i in range(2):
+    for j in range(2):
+        assert a[i, j] == new_value[i, j] + added_value[i, j]
+```
+
+---
+## Doing math in TensorFlow
+
+If you've used NumPy, doing math in TensorFlow will look very familiar.
+The main difference is that your TensorFlow code can run on GPU and TPU.
+
+
+```python
+a = tf.random.normal(shape=(2, 2))
+b = tf.random.normal(shape=(2, 2))
+
+c = a + b
+d = tf.square(c)
+e = tf.exp(d)
+```
+
+---
+## Gradients
+
+Here's another big difference with NumPy: you can automatically retrieve the gradient of any differentiable expression.
+
+Just open a `GradientTape`, start "watching" a tensor via `tape.watch()`,
+and compose a differentiable expression using this tensor as input:
+
+
+```python
+a = tf.random.normal(shape=(2, 2))
+b = tf.random.normal(shape=(2, 2))
+
+with tf.GradientTape() as tape:
+    tape.watch(a)  # Start recording the history of operations applied to `a`
+    c = tf.sqrt(tf.square(a) + tf.square(b))  # Do some math using `a`
+    # What's the gradient of `c` with respect to `a`?
+    dc_da = tape.gradient(c, a)
+    print(dc_da)
+
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[-0.3224076   0.69120544]
+ [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+
+```
+</div>
+By default, variables are watched automatically, so you don't need to manually `watch` them:
+
+
+```python
+a = tf.Variable(a)
+
+with tf.GradientTape() as tape:
+    c = tf.sqrt(tf.square(a) + tf.square(b))
+    dc_da = tape.gradient(c, a)
+    print(dc_da)
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[-0.3224076   0.69120544]
+ [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+
+```
+</div>
+Note that you can compute higher-order derivatives by nesting tapes:
+
+
+```python
+with tf.GradientTape() as outer_tape:
+    with tf.GradientTape() as tape:
+        c = tf.sqrt(tf.square(a) + tf.square(b))
+        dc_da = tape.gradient(c, a)
+    d2c_da2 = outer_tape.gradient(dc_da, a)
+    print(d2c_da2)
+
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[1.6652625  0.6523223 ]
+ [0.20117798 0.41852283]], shape=(2, 2), dtype=float32)
+
+```
+</div>
+---
+## Keras layers
+
+While TensorFlow is an **infrastructure layer for differentiable programming**,
+dealing with tensors, variables, and gradients,
+Keras is a **user interface for deep learning**, dealing with
+layers, models, optimizers, loss functions, metrics, and more.
+
+Keras serves as the high-level API for TensorFlow:
+Keras is what makes TensorFlow simple and productive.
+
+The `Layer` class is the fundamental abstraction in Keras.
 A `Layer` encapsulates a state (weights) and some computation
 (defined in the call method).
 
@@ -97,9 +325,9 @@ fancier ones like `Conv3DTranspose` or `ConvLSTM2D`. Be smart about reusing
 built-in functionality.
 
 ---
-## Weight creation
+## Layer weight creation
 
-The add_weight method gives you a shortcut for creating weights:
+The `self.add_weight()` method gives you a shortcut for creating weights:
 
 
 ```python
@@ -133,7 +361,7 @@ y = linear_layer(tf.ones((2, 2)))
 ```
 
 ---
-## Gradients
+## Layer gradients
 
 You can automatically retrieve the gradients of the weights of a layer by
 calling it inside a `GradientTape`. Using these gradients, you can update the
@@ -183,16 +411,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.456793785095215
-Step: 100 Loss: 2.2678098678588867
-Step: 200 Loss: 2.196652412414551
-Step: 300 Loss: 2.132258892059326
-Step: 400 Loss: 2.0797274112701416
-Step: 500 Loss: 1.9761338233947754
-Step: 600 Loss: 1.7839593887329102
-Step: 700 Loss: 1.8158284425735474
-Step: 800 Loss: 1.7084990739822388
-Step: 900 Loss: 1.6562185287475586
+Step: 0 Loss: 2.386174201965332
+Step: 100 Loss: 2.22518253326416
+Step: 200 Loss: 2.1162631511688232
+Step: 300 Loss: 2.047822952270508
+Step: 400 Loss: 2.025263547897339
+Step: 500 Loss: 1.9544496536254883
+Step: 600 Loss: 1.8216196298599243
+Step: 700 Loss: 1.7630621194839478
+Step: 800 Loss: 1.756800651550293
+Step: 900 Loss: 1.6689152717590332
 
 ```
 </div>
@@ -351,7 +579,7 @@ print(mlp.losses)  # List containing one float32 scalar
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.23114467>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.16569461>]
 
 ```
 </div>
@@ -410,16 +638,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 5.991635799407959
-Step: 100 Loss: 2.6379199028015137
-Step: 200 Loss: 2.39302921295166
-Step: 300 Loss: 2.3888492584228516
-Step: 400 Loss: 2.356649160385132
-Step: 500 Loss: 2.3454649448394775
-Step: 600 Loss: 2.327338695526123
-Step: 700 Loss: 2.3245863914489746
-Step: 800 Loss: 2.3086981773376465
-Step: 900 Loss: 2.3108632564544678
+Step: 0 Loss: 6.238003730773926
+Step: 100 Loss: 2.5299227237701416
+Step: 200 Loss: 2.435337543487549
+Step: 300 Loss: 2.3858678340911865
+Step: 400 Loss: 2.3544323444366455
+Step: 500 Loss: 2.3284459114074707
+Step: 600 Loss: 2.3211910724639893
+Step: 700 Loss: 2.3177292346954346
+Step: 800 Loss: 2.322242259979248
+Step: 900 Loss: 2.310494899749756
 
 ```
 </div>
@@ -485,23 +713,23 @@ for epoch in range(2):
 Epoch: 0 Step: 0
 Total running accuracy so far: 0.047
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.760
+Total running accuracy so far: 0.755
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.831
+Total running accuracy so far: 0.826
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.859
+Total running accuracy so far: 0.855
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.875
+Total running accuracy so far: 0.872
 Epoch: 1 Step: 0
 Total running accuracy so far: 0.938
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.938
+Total running accuracy so far: 0.941
 Epoch: 1 Step: 400
-Total running accuracy so far: 0.939
+Total running accuracy so far: 0.943
 Epoch: 1 Step: 600
-Total running accuracy so far: 0.941
+Total running accuracy so far: 0.944
 Epoch: 1 Step: 800
-Total running accuracy so far: 0.941
+Total running accuracy so far: 0.943
 
 ```
 </div>
@@ -559,16 +787,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.4244790077209473
-Step: 100 Loss: 0.6268073320388794
-Step: 200 Loss: 0.5352152585983276
-Step: 300 Loss: 0.18634426593780518
-Step: 400 Loss: 0.2614487111568451
-Step: 500 Loss: 0.5878333449363708
-Step: 600 Loss: 0.392818808555603
-Step: 700 Loss: 0.24846115708351135
-Step: 800 Loss: 0.1844426691532135
-Step: 900 Loss: 0.1664549559354782
+Step: 0 Loss: 2.307070016860962
+Step: 100 Loss: 0.7121144533157349
+Step: 200 Loss: 0.45566993951797485
+Step: 300 Loss: 0.47507303953170776
+Step: 400 Loss: 0.23864206671714783
+Step: 500 Loss: 0.2954753041267395
+Step: 600 Loss: 0.31291744112968445
+Step: 700 Loss: 0.15316027402877808
+Step: 800 Loss: 0.32832837104797363
+Step: 900 Loss: 0.10866784304380417
 
 ```
 </div>
@@ -675,9 +903,9 @@ for your OO models.
 ---
 ## End-to-end experiment example 1: variational autoencoders.
 
-Here are some of things you've learned so far:
+Here are some of the things you've learned so far:
 
-- A `Layer` encapsulate a state (created in `__init__` or `build`) and some computation
+- A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
 - Layers can be recursively nested to create new, bigger computation blocks.
 - You can easily write highly hackable training loops by opening a
@@ -830,17 +1058,17 @@ for step, x in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.34360969066619873
-Step: 100 Loss: 0.1268921259901311
-Step: 200 Loss: 0.10019794225099668
-Step: 300 Loss: 0.08994597142122909
-Step: 400 Loss: 0.08490597068371618
-Step: 500 Loss: 0.08168080423822897
-Step: 600 Loss: 0.07927437018162994
-Step: 700 Loss: 0.07791767667941803
-Step: 800 Loss: 0.07669395401832019
-Step: 900 Loss: 0.07571622215781969
-Step: 1000 Loss: 0.07479669768121336
+Step: 0 Loss: 0.3283705711364746
+Step: 100 Loss: 0.12607811022512982
+Step: 200 Loss: 0.09977191104669476
+Step: 300 Loss: 0.0897256354383654
+Step: 400 Loss: 0.08479013259608549
+Step: 500 Loss: 0.08158575140400799
+Step: 600 Loss: 0.07913740716886997
+Step: 700 Loss: 0.07780108796950753
+Step: 800 Loss: 0.07658983394503593
+Step: 900 Loss: 0.07564939806583057
+Step: 1000 Loss: 0.0746984266928145
 
 ```
 </div>
@@ -910,9 +1138,9 @@ vae.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 2s 980us/step - loss: 0.0713
+1875/1875 [==============================] - 2s 999us/step - loss: 0.0838
 
-<tensorflow.python.keras.callbacks.History at 0x167c2cd50>
+<tensorflow.python.keras.callbacks.History at 0x1456bf250>
 
 ```
 </div>
@@ -1052,17 +1280,17 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 4.737176418304443
-Step: 100 Loss: 2.6431594647393366
-Step: 200 Loss: 2.3565089883495918
-Step: 300 Loss: 2.1680791037268565
-Step: 400 Loss: 2.044000819636662
-Step: 500 Loss: 2.01625633314475
-Step: 600 Loss: 1.9379815768527302
-Step: 700 Loss: 1.855055329773368
-Step: 800 Loss: 1.7896285848904616
-Step: 900 Loss: 1.69601594678629
-Step: 1000 Loss: 1.6704652742821007
+Step: 0 Loss: 3.346794843673706
+Step: 100 Loss: 2.5347713479901306
+Step: 200 Loss: 2.3532673210943518
+Step: 300 Loss: 2.105134464552208
+Step: 400 Loss: 1.9224171297462687
+Step: 500 Loss: 1.8143611295096513
+Step: 600 Loss: 1.7148052298323655
+Step: 700 Loss: 1.6695872197209294
+Step: 800 Loss: 1.616796940164684
+Step: 900 Loss: 1.5303113453757042
+Step: 1000 Loss: 1.4919751342148413
 
 ```
 </div>

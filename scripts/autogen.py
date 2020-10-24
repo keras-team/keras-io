@@ -82,7 +82,7 @@ class KerasIO:
                     name = fname[:-3]
                     example_path = name.split("/")[-1]
                     if example_path not in preexisting:
-                        f = open(path / fname)
+                        f = open(path / fname, encoding="utf-8")
                         f.readline()
                         title_line = f.readline()
                         f.close()
@@ -134,13 +134,13 @@ class KerasIO:
             '<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> '
             "[**View in Colab**](https://colab.research.google.com/github/"
             + github_repo_dir
-            + "ipynb/"
+            + "/ipynb/"
             + name
             + ".ipynb"
             + ")  "
             '<span class="k-dot">•</span>'
             '<img class="k-inline-icon" src="https://github.com/favicon.ico"/> '
-            "[**GitHub source**](https://github.com/" + github_repo_dir + fname + ")",
+            "[**GitHub source**](https://github.com/" + github_repo_dir + "/" + fname + ")",
             "\n",
         ]
         md_content_lines = md_content_lines[:6] + button_lines + md_content_lines[6:]
@@ -554,7 +554,7 @@ class KerasIO:
                         self.site_dir, "/"
                     )
 
-                md_file = open(src_dir / fname)
+                md_file = open(src_dir / fname, encoding="utf-8")
                 md_content = md_file.read()
                 md_file.close()
                 md_content = replace_links(md_content)
@@ -898,7 +898,9 @@ if __name__ == "__main__":
 
     cmd = sys.argv[1]
     if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
-        raise ValueError("Must specify command `make`, `serve`, or `add_example`.")
+        raise ValueError(
+            "Must specify command `make`, `serve`, `add_example`, `add_guide` or `generate_tf_guides`."
+        )
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
             raise ValueError(

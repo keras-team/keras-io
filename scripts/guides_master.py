@@ -72,10 +72,10 @@ GUIDES_MASTER = {
         #     'path': 'hyperparameter_optimization',
         #     'title': 'Hyperparameter optimization',
         # },
-        # {
-        #     'path': 'cloud_keras',
-        #     'title': 'Full-managed training on GCP',
-        # },
+        {
+            'path': 'training_keras_models_on_cloud',
+            'title': 'Training Keras models with TensorFlow Cloud',
+        },
 
         # TODO: mixed precision
     ]

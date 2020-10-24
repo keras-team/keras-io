@@ -6,7 +6,7 @@
 **Description:** Complete guide to writing low-level training & evaluation loops.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/writing_a_training_loop_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guideswriting_a_training_loop_from_scratch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/writing_a_training_loop_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/writing_a_training_loop_from_scratch.py)
 
 
 
@@ -25,7 +25,7 @@ import numpy as np
 ## Introduction
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
-Their usage is coverered in the guide
+Their usage is covered in the guide
 [Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
@@ -98,7 +98,7 @@ for epoch in range(epochs):
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
 
         # Open a GradientTape to record the operations run
-        # during the forward pass, which enables autodifferentiation.
+        # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
 
             # Run the forward pass of the layer.
@@ -131,15 +131,15 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 119.8720
+Training loss (for one batch) at step 0: 76.3562
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.1735
+Training loss (for one batch) at step 200: 1.3921
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6155
+Training loss (for one batch) at step 400: 1.0018
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.3904
+Training loss (for one batch) at step 600: 0.8904
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 1.4754
+Training loss (for one batch) at step 800: 0.8393
 Seen so far: 51264 samples
 ```
 </div>
@@ -147,15 +147,15 @@ Seen so far: 51264 samples
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.5125
+Training loss (for one batch) at step 0: 0.8572
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4399
+Training loss (for one batch) at step 200: 0.7616
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.5925
+Training loss (for one batch) at step 400: 0.8453
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.4633
+Training loss (for one batch) at step 600: 0.4959
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.4456
+Training loss (for one batch) at step 800: 0.9363
 Seen so far: 51264 samples
 
 ```
@@ -262,38 +262,38 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 108.8760
+Training loss (for one batch) at step 0: 134.3001
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.4859
+Training loss (for one batch) at step 200: 1.3430
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.9848
+Training loss (for one batch) at step 400: 1.3557
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.9015
+Training loss (for one batch) at step 600: 0.8682
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 1.0246
+Training loss (for one batch) at step 800: 0.5862
 Seen so far: 51264 samples
-Training acc over epoch: 0.6713
-Validation acc: 0.8270
-Time taken: 4.80s
+Training acc over epoch: 0.7176
+Validation acc: 0.8403
+Time taken: 4.65s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 1.5046
+Training loss (for one batch) at step 0: 0.4264
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.6526
+Training loss (for one batch) at step 200: 0.4168
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6984
+Training loss (for one batch) at step 400: 0.6106
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.3193
+Training loss (for one batch) at step 600: 0.4762
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.7149
+Training loss (for one batch) at step 800: 0.4031
 Seen so far: 51264 samples
-Training acc over epoch: 0.8310
-Validation acc: 0.8753
-Time taken: 4.25s
+Training acc over epoch: 0.8429
+Validation acc: 0.8774
+Time taken: 5.07s
 
 ```
 </div>
@@ -305,12 +305,12 @@ The default runtime in TensorFlow 2.0 is
 above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
-advantage. Decribing your computation as a static graph enables the framework
+advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
 the framework is constrained to greedly execute one operation after another,
 with no knowledge of what comes next.
 
-You can compile into a static graph any function that take tensors as input.
+You can compile into a static graph any function that takes tensors as input.
 Just add a `@tf.function` decorator on it, like this:
 
 
@@ -384,38 +384,38 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.9850
+Training loss (for one batch) at step 0: 0.6483
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.6637
+Training loss (for one batch) at step 200: 0.5966
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6874
+Training loss (for one batch) at step 400: 0.5951
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.7002
+Training loss (for one batch) at step 600: 1.3830
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.1703
+Training loss (for one batch) at step 800: 0.2758
 Seen so far: 51264 samples
-Training acc over epoch: 0.8647
-Validation acc: 0.8946
-Time taken: 1.09s
+Training acc over epoch: 0.8756
+Validation acc: 0.8955
+Time taken: 1.18s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.3653
+Training loss (for one batch) at step 0: 0.4447
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3731
+Training loss (for one batch) at step 200: 0.3794
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.4726
+Training loss (for one batch) at step 400: 0.4636
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.6408
+Training loss (for one batch) at step 600: 0.3694
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3048
+Training loss (for one batch) at step 800: 0.2763
 Seen so far: 51264 samples
-Training acc over epoch: 0.8841
-Validation acc: 0.9063
-Time taken: 0.66s
+Training acc over epoch: 0.8926
+Validation acc: 0.9078
+Time taken: 0.71s
 
 ```
 </div>
@@ -494,8 +494,8 @@ images that look almost real, by learning the latent distribution of a training
 dataset of images (the "latent space" of the images).
 
 A GAN is made of two parts: a "generator" model that maps points in the latent
-space to points in image space, an a "discriminator" model, a classifier
-that can tell the difference between real imagees (from the training dataset)
+space to points in image space, a "discriminator" model, a classifier
+that can tell the difference between real images (from the training dataset)
 and fake images (the output of the generator network).
 
 A GAN training loop looks like this:
@@ -688,7 +688,7 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.67
+discriminator loss at step 0: 0.70
 adversarial loss at step 0: 0.68
 
 ```

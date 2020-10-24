@@ -23,9 +23,9 @@ end-to-end: models that accept raw images or raw structured data as input; model
 handle feature normalization or feature value indexing on their own.
 
 ---
-## Available preprocesssing layers
+## Available preprocessing layers
 
-### Core preprocesssing layers
+### Core preprocessing layers
 
 - `TextVectorization` layer: turns raw strings into an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
@@ -43,7 +43,7 @@ trick".
 features.
 - `StringLookup` layer: turns string categorical values into integers indices.
 - `IntegerLookup` layer: turns integer categorical values into integers indices.
-- `CategoryCrossing` layer: combines categorical features into co-occurence features.
+- `CategoryCrossing` layer: combines categorical features into co-occurrence features.
 E.g. if you have feature values "a" and "b", it can provide with the combination feature
 "a and b are present at the same time".
 
@@ -303,14 +303,13 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 1s 626us/step - loss: 2.1207
+1563/1563 [==============================] - 4s 2ms/step - loss: 2.1193
 
-<tensorflow.python.keras.callbacks.History at 0x1622bc410>
+<tensorflow.python.keras.callbacks.History at 0x7f5b1409a250>
 
 ```
 </div>
----
-## Encoding string categorical features via one-hot encoding
+### Encoding string categorical features via one-hot encoding
 
 
 ```python
@@ -392,8 +391,7 @@ constructor arguments  of `IntegerLookup`.
 You can see the `IntegerLookup` and `CategoryEncoding` layers in action in the example
 [structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/).
 
----
-## Applying the hashing trick to an integer categorical feature
+### Applying the hashing trick to an integer categorical feature
 
 If you have a categorical feature that can take many different values (on the order of
 10e3 or higher), where each value only appears a few times in the data,
@@ -422,8 +420,7 @@ print(encoded_data.shape)
 
 ```
 </div>
----
-## Encoding text as a sequence of token indices
+### Encoding text as a sequence of token indices
 
 This is how you should preprocess text to be passed to an `Embedding` layer.
 
@@ -473,8 +470,7 @@ Note that when training such a model, for best performance, you should
 use the `TextVectorization` layer as part of the input pipeline (which is what we
 do in the text classification example above).
 
----
-## Encoding text as a dense matrix of ngrams with multi-hot encoding
+### Encoding text as a dense matrix of ngrams with multi-hot encoding
 
 This is how you should preprocess text to be passed to a `Dense` layer.
 
@@ -495,6 +491,12 @@ text_vectorizer = preprocessing.TextVectorization(output_mode="binary", ngrams=2
 # Index the bigrams via `adapt()`
 text_vectorizer.adapt(data)
 
+print(
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "\n",
+)
+
 # Create a Dense model
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -504,10 +506,25 @@ model = keras.Model(inputs, outputs)
 # Call the model on test data (which includes unknown tokens)
 test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
+
+print("Model output:", test_output)
 ```
 
----
-## Encoding text as a dense matrix of ngrams with TF-IDF weighting
+<div class="k-default-codeblock">
+```
+Encoded text:
+ [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
+  0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]] 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model output: tf.Tensor([[0.8250091]], shape=(1, 1), dtype=float32)
+
+```
+</div>
+### Encoding text as a dense matrix of ngrams with TF-IDF weighting
 
 This is an alternative way of preprocessing text before passing it to a `Dense` layer.
 
@@ -528,6 +545,12 @@ text_vectorizer = preprocessing.TextVectorization(output_mode="tf-idf", ngrams=2
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
 text_vectorizer.adapt(data)
 
+print(
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "\n",
+)
+
 # Create a Dense model
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -537,4 +560,24 @@ model = keras.Model(inputs, outputs)
 # Call the model on test data (which includes unknown tokens)
 test_data = tf.constant(["The Brain is deeper than the sea"])
 test_output = model(test_data)
+print("Model output:", test_output)
 ```
+
+<div class="k-default-codeblock">
+```
+Encoded text:
+ [[8.04719   1.6945957 0.        0.        0.        0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.        1.0986123 1.0986123 1.0986123 0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  1.0986123 0.        0.        0.        0.        0.        0.
+  0.        1.0986123 1.0986123 0.        0.        0.       ]] 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model output: tf.Tensor([[-2.3685102]], shape=(1, 1), dtype=float32)
+
+```
+</div>

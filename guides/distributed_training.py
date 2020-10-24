@@ -68,7 +68,7 @@ replicas. Because this is done at the end of every step, the replicas always sta
 sync.
 
 In practice, the process of synchronously updating the weights of the model replicas is
-handled at level of each individual weight variable. This is done through a **mirrored
+handled at the level of each individual weight variable. This is done through a **mirrored
 variable** object.
 
 **How to use it**

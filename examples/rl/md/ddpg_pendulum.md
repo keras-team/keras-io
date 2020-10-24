@@ -2,7 +2,7 @@
 
 **Author:** [amifunny](https://github.com/amifunny)<br>
 **Date created:** 2020/06/04<br>
-**Last modified:** 2020/06/06<br>
+**Last modified:** 2020/09/21<br>
 **Description:** Implementing DDPG algorithm on the Inverted Pendulum Problem.
 
 
@@ -17,7 +17,8 @@
 learning continous actions.
 
 It combines ideas from DPG (Deterministic Policy Gradient) and DQN (Deep Q-Network).
-It uses Experience Replay and slow-learning target networks from DQN, and it is based on DPG,
+It uses Experience Replay and slow-learning target networks from DQN, and it is based on
+DPG,
 which can operate over continuous action spaces.
 
 This tutorial closely follow this paper -
@@ -53,7 +54,8 @@ stable.
 
 Conceptually, this is like saying, "I have an idea of how to play this well,
 I'm going to try it out for a bit until I find something better",
-as opposed to saying "I'm going to re-learn how to play this entire game after every move".
+as opposed to saying "I'm going to re-learn how to play this entire game after every
+move".
 See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679).
 
 **Second, it uses Experience Replay.**
@@ -65,19 +67,16 @@ accumulated so far.
 Now, let's see how is it implemented.
 
 
-
 ```python
 import gym
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
-
 ```
 
 We use [OpenAIGym](http://gym.openai.com/docs) to create the environment.
 We will use the `upper_bound` parameter to scale our actions later.
-
 
 
 ```python
@@ -94,7 +93,6 @@ lower_bound = env.action_space.low[0]
 
 print("Max Value of Action ->  {}".format(upper_bound))
 print("Min Value of Action ->  {}".format(lower_bound))
-
 ```
 
 <div class="k-default-codeblock">
@@ -106,10 +104,10 @@ Min Value of Action ->  -2.0
 
 ```
 </div>
-To implement better exploration by the Actor network, we use noisy perturbations, specifically
+To implement better exploration by the Actor network, we use noisy perturbations,
+specifically
 an **Ornstein-Uhlenbeck process** for generating noise, as described in the paper.
 It samples noise from a correlated normal distribution.
-
 
 
 ```python
@@ -141,7 +139,6 @@ class OUActionNoise:
         else:
             self.x_prev = np.zeros_like(self.mean)
 
-
 ```
 
 The `Buffer` class implements Experience Replay.
@@ -164,12 +161,10 @@ Hence we update the Actor network so that it produces actions that get
 the maximum predicted value as seen by the Critic, for a given state.
 
 
-
 ```python
 
 class Buffer:
     def __init__(self, buffer_capacity=100000, batch_size=64):
-
         # Number of "experiences" to store at max
         self.buffer_capacity = buffer_capacity
         # Num of tuples to train on.
@@ -198,6 +193,40 @@ class Buffer:
 
         self.buffer_counter += 1
 
+    # Eager execution is turned on by default in TensorFlow 2. Decorating with tf.function allows
+    # TensorFlow to build a static graph out of the logic and computations in our function.
+    # This provides a large speed up for blocks of code that contain many small TensorFlow operations such as this one.
+    @tf.function
+    def update(
+        self, state_batch, action_batch, reward_batch, next_state_batch,
+    ):
+        # Training and updating Actor & Critic networks.
+        # See Pseudo Code.
+        with tf.GradientTape() as tape:
+            target_actions = target_actor(next_state_batch, training=True)
+            y = reward_batch + gamma * target_critic(
+                [next_state_batch, target_actions], training=True
+            )
+            critic_value = critic_model([state_batch, action_batch], training=True)
+            critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
+
+        critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
+        critic_optimizer.apply_gradients(
+            zip(critic_grad, critic_model.trainable_variables)
+        )
+
+        with tf.GradientTape() as tape:
+            actions = actor_model(state_batch, training=True)
+            critic_value = critic_model([state_batch, actions], training=True)
+            # Used `-value` as we want to maximize the value given
+            # by the critic for our actions
+            actor_loss = -tf.math.reduce_mean(critic_value)
+
+        actor_grad = tape.gradient(actor_loss, actor_model.trainable_variables)
+        actor_optimizer.apply_gradients(
+            zip(actor_grad, actor_model.trainable_variables)
+        )
+
     # We compute the loss and update parameters
     def learn(self):
         # Get sampling range
@@ -212,62 +241,25 @@ class Buffer:
         reward_batch = tf.cast(reward_batch, dtype=tf.float32)
         next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
 
-        # Training and updating Actor & Critic networks.
-        # See Pseudo Code.
-        with tf.GradientTape() as tape:
-            target_actions = target_actor(next_state_batch)
-            y = reward_batch + gamma * target_critic([next_state_batch, target_actions])
-            critic_value = critic_model([state_batch, action_batch])
-            critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
-
-        critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
-        critic_optimizer.apply_gradients(
-            zip(critic_grad, critic_model.trainable_variables)
-        )
-
-        with tf.GradientTape() as tape:
-            actions = actor_model(state_batch)
-            critic_value = critic_model([state_batch, actions])
-            # Used `-value` as we want to maximize the value given
-            # by the critic for our actions
-            actor_loss = -tf.math.reduce_mean(critic_value)
-
-        actor_grad = tape.gradient(actor_loss, actor_model.trainable_variables)
-        actor_optimizer.apply_gradients(
-            zip(actor_grad, actor_model.trainable_variables)
-        )
+        self.update(state_batch, action_batch, reward_batch, next_state_batch)
 
 
 # This update target parameters slowly
 # Based on rate `tau`, which is much less than one.
-def update_target(tau):
-    new_weights = []
-    target_variables = target_critic.weights
-    for i, variable in enumerate(critic_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_critic.set_weights(new_weights)
-
-    new_weights = []
-    target_variables = target_actor.weights
-    for i, variable in enumerate(actor_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_actor.set_weights(new_weights)
-
+@tf.function
+def update_target(target_weights, weights, tau):
+    for (a, b) in zip(target_weights, weights):
+        a.assign(b * tau + a * (1 - tau))
 
 ```
 
 Here we define the Actor and Critic networks. These are basic Dense models
-with `ReLU` activation. `BatchNormalization` is used to normalize dimensions across
-samples in a mini-batch, as activations can vary a lot due to fluctuating values of input
-state and action.
+with `ReLU` activation.
 
 Note: We need the initialization for last layer of the Actor to be between
 `-0.003` and `0.003` as this prevents us from getting `1` or `-1` output values in
 the initial stages, which would squash our gradients to zero,
 as we use the `tanh` activation.
-
 
 
 ```python
@@ -277,10 +269,8 @@ def get_actor():
     last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
 
     inputs = layers.Input(shape=(num_states,))
-    out = layers.Dense(512, activation="relu")(inputs)
-    out = layers.BatchNormalization()(out)
-    out = layers.Dense(512, activation="relu")(out)
-    out = layers.BatchNormalization()(out)
+    out = layers.Dense(256, activation="relu")(inputs)
+    out = layers.Dense(256, activation="relu")(out)
     outputs = layers.Dense(1, activation="tanh", kernel_initializer=last_init)(out)
 
     # Our upper bound is 2.0 for Pendulum.
@@ -293,22 +283,17 @@ def get_critic():
     # State as input
     state_input = layers.Input(shape=(num_states))
     state_out = layers.Dense(16, activation="relu")(state_input)
-    state_out = layers.BatchNormalization()(state_out)
     state_out = layers.Dense(32, activation="relu")(state_out)
-    state_out = layers.BatchNormalization()(state_out)
 
     # Action as input
     action_input = layers.Input(shape=(num_actions))
     action_out = layers.Dense(32, activation="relu")(action_input)
-    action_out = layers.BatchNormalization()(action_out)
 
     # Both are passed through seperate layer before concatenating
     concat = layers.Concatenate()([state_out, action_out])
 
-    out = layers.Dense(512, activation="relu")(concat)
-    out = layers.BatchNormalization()(out)
-    out = layers.Dense(512, activation="relu")(out)
-    out = layers.BatchNormalization()(out)
+    out = layers.Dense(256, activation="relu")(concat)
+    out = layers.Dense(256, activation="relu")(out)
     outputs = layers.Dense(1)(out)
 
     # Outputs single value for give state-action
@@ -316,12 +301,10 @@ def get_critic():
 
     return model
 
-
 ```
 
 `policy()` returns an action sampled from our Actor network plus some noise for
 exploration.
-
 
 
 ```python
@@ -337,12 +320,10 @@ def policy(state, noise_object):
 
     return [np.squeeze(legal_action)]
 
-
 ```
 
 ---
 ## Training hyperparameters
-
 
 
 ```python
@@ -373,13 +354,11 @@ gamma = 0.99
 tau = 0.005
 
 buffer = Buffer(50000, 64)
-
 ```
 
 Now we implement our main training loop, and iterate over episodes.
 We sample actions using `policy()` and train with `learn()` at each time step,
 along with updating the Target networks at a rate `tau`.
-
 
 
 ```python
@@ -388,7 +367,7 @@ ep_reward_list = []
 # To store average reward history of last few episodes
 avg_reward_list = []
 
-# Takes about 20 min to train
+# Takes about 4 min to train
 for ep in range(total_episodes):
 
     prev_state = env.reset()
@@ -409,7 +388,8 @@ for ep in range(total_episodes):
         episodic_reward += reward
 
         buffer.learn()
-        update_target(tau)
+        update_target(target_actor.variables, actor_model.variables, tau)
+        update_target(target_critic.variables, critic_model.variables, tau)
 
         # End this episode when `done` is True
         if done:
@@ -430,118 +410,114 @@ plt.plot(avg_reward_list)
 plt.xlabel("Episode")
 plt.ylabel("Avg. Epsiodic Reward")
 plt.show()
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Episode * 0 * Avg Reward is ==> -1649.7749136222078
-Episode * 1 * Avg Reward is ==> -1517.4486184149769
-Episode * 2 * Avg Reward is ==> -1531.5183006979476
-Episode * 3 * Avg Reward is ==> -1506.074787052287
-Episode * 4 * Avg Reward is ==> -1504.6124802159331
-Episode * 5 * Avg Reward is ==> -1503.1880302718955
-Episode * 6 * Avg Reward is ==> -1483.5610245534192
-Episode * 7 * Avg Reward is ==> -1452.5994030901663
-Episode * 8 * Avg Reward is ==> -1413.587287561734
-Episode * 9 * Avg Reward is ==> -1393.8817512718601
-Episode * 10 * Avg Reward is ==> -1410.349519023605
-Episode * 11 * Avg Reward is ==> -1358.854013961542
-Episode * 12 * Avg Reward is ==> -1380.754239815423
-Episode * 13 * Avg Reward is ==> -1321.0171154888974
-Episode * 14 * Avg Reward is ==> -1335.969721110595
-Episode * 15 * Avg Reward is ==> -1284.3939065233806
-Episode * 16 * Avg Reward is ==> -1232.349914217674
-Episode * 17 * Avg Reward is ==> -1239.743740482351
-Episode * 18 * Avg Reward is ==> -1253.9743119057596
-Episode * 19 * Avg Reward is ==> -1230.9121098540822
-Episode * 20 * Avg Reward is ==> -1190.9498301655674
-Episode * 21 * Avg Reward is ==> -1142.757838899654
-Episode * 22 * Avg Reward is ==> -1093.1678664448343
-Episode * 23 * Avg Reward is ==> -1052.9458864153005
-Episode * 24 * Avg Reward is ==> -1021.1097011419374
-Episode * 25 * Avg Reward is ==> -986.6825261932893
-Episode * 26 * Avg Reward is ==> -954.5402236501969
-Episode * 27 * Avg Reward is ==> -925.0348865931173
-Episode * 28 * Avg Reward is ==> -897.4755330588606
-Episode * 29 * Avg Reward is ==> -871.7011232982851
-Episode * 30 * Avg Reward is ==> -851.5790517288391
-Episode * 31 * Avg Reward is ==> -828.946333400579
-Episode * 32 * Avg Reward is ==> -807.3604217875239
-Episode * 33 * Avg Reward is ==> -790.4487656493948
-Episode * 34 * Avg Reward is ==> -771.4249213043466
-Episode * 35 * Avg Reward is ==> -750.1303874575156
-Episode * 36 * Avg Reward is ==> -738.2276258453605
-Episode * 37 * Avg Reward is ==> -722.0546722693595
-Episode * 38 * Avg Reward is ==> -709.4768424005381
-Episode * 39 * Avg Reward is ==> -691.8656751237129
-Episode * 40 * Avg Reward is ==> -653.6442340446984
-Episode * 41 * Avg Reward is ==> -625.1913416053745
-Episode * 42 * Avg Reward is ==> -589.3207093465375
-Episode * 43 * Avg Reward is ==> -556.4814070749678
-Episode * 44 * Avg Reward is ==> -528.6240783303273
-Episode * 45 * Avg Reward is ==> -500.64554392182106
-Episode * 46 * Avg Reward is ==> -472.3086153334718
-Episode * 47 * Avg Reward is ==> -441.48035712393704
-Episode * 48 * Avg Reward is ==> -417.0529339923727
-Episode * 49 * Avg Reward is ==> -389.6036227296889
-Episode * 50 * Avg Reward is ==> -355.8528469187061
-Episode * 51 * Avg Reward is ==> -336.08246667891524
-Episode * 52 * Avg Reward is ==> -298.19811993533585
-Episode * 53 * Avg Reward is ==> -290.69553241501654
-Episode * 54 * Avg Reward is ==> -255.2182523956195
-Episode * 55 * Avg Reward is ==> -248.5643067912606
-Episode * 56 * Avg Reward is ==> -241.7973891355776
-Episode * 57 * Avg Reward is ==> -210.82587994100126
-Episode * 58 * Avg Reward is ==> -182.3478247995969
-Episode * 59 * Avg Reward is ==> -168.89420457723676
-Episode * 60 * Avg Reward is ==> -165.11645307026401
-Episode * 61 * Avg Reward is ==> -164.98917005538596
-Episode * 62 * Avg Reward is ==> -174.07929741173712
-Episode * 63 * Avg Reward is ==> -170.9146870099085
-Episode * 64 * Avg Reward is ==> -164.53580505104134
-Episode * 65 * Avg Reward is ==> -164.51637155969624
-Episode * 66 * Avg Reward is ==> -167.30951143288934
-Episode * 67 * Avg Reward is ==> -167.37242062147388
-Episode * 68 * Avg Reward is ==> -173.1032030183493
-Episode * 69 * Avg Reward is ==> -175.9730148726038
-Episode * 70 * Avg Reward is ==> -175.8748322010726
-Episode * 71 * Avg Reward is ==> -178.90670223775666
-Episode * 72 * Avg Reward is ==> -181.86622241941095
-Episode * 73 * Avg Reward is ==> -182.1962236992579
-Episode * 74 * Avg Reward is ==> -185.2912374892455
-Episode * 75 * Avg Reward is ==> -194.4832442136879
-Episode * 76 * Avg Reward is ==> -186.779488251999
-Episode * 77 * Avg Reward is ==> -183.73585590806175
-Episode * 78 * Avg Reward is ==> -181.2475970989047
-Episode * 79 * Avg Reward is ==> -181.17939386667186
-Episode * 80 * Avg Reward is ==> -181.42752243523327
-Episode * 81 * Avg Reward is ==> -178.39111106351203
-Episode * 82 * Avg Reward is ==> -178.18967199129696
-Episode * 83 * Avg Reward is ==> -178.19995434343437
-Episode * 84 * Avg Reward is ==> -171.58622544456907
-Episode * 85 * Avg Reward is ==> -165.34379188265922
-Episode * 86 * Avg Reward is ==> -165.818479166733
-Episode * 87 * Avg Reward is ==> -168.77470830644293
-Episode * 88 * Avg Reward is ==> -171.58145877011208
-Episode * 89 * Avg Reward is ==> -168.7177824041847
-Episode * 90 * Avg Reward is ==> -166.24676261409203
-Episode * 91 * Avg Reward is ==> -169.45257585773433
-Episode * 92 * Avg Reward is ==> -169.4489017594307
-Episode * 93 * Avg Reward is ==> -163.40315682462477
-Episode * 94 * Avg Reward is ==> -163.3605953522997
-Episode * 95 * Avg Reward is ==> -163.2997607563818
-Episode * 96 * Avg Reward is ==> -166.2461479056317
-Episode * 97 * Avg Reward is ==> -163.1364838325657
-Episode * 98 * Avg Reward is ==> -156.82625141684883
-Episode * 99 * Avg Reward is ==> -150.5283724694878
+Episode * 0 * Avg Reward is ==> -1269.3278950595395
+Episode * 1 * Avg Reward is ==> -1528.3008939716287
+Episode * 2 * Avg Reward is ==> -1511.1737868279706
+Episode * 3 * Avg Reward is ==> -1512.8568141261057
+Episode * 4 * Avg Reward is ==> -1386.054573343386
+Episode * 5 * Avg Reward is ==> -1411.4818856846339
+Episode * 6 * Avg Reward is ==> -1431.6790621961388
+Episode * 7 * Avg Reward is ==> -1427.9515009474867
+Episode * 8 * Avg Reward is ==> -1392.9313930075857
+Episode * 9 * Avg Reward is ==> -1346.6839043846012
+Episode * 10 * Avg Reward is ==> -1325.5818224096574
+Episode * 11 * Avg Reward is ==> -1271.778361283553
+Episode * 12 * Avg Reward is ==> -1194.0784354001732
+Episode * 13 * Avg Reward is ==> -1137.1096928093427
+Episode * 14 * Avg Reward is ==> -1087.2426176918214
+Episode * 15 * Avg Reward is ==> -1043.5265287176114
+Episode * 16 * Avg Reward is ==> -990.0857409180443
+Episode * 17 * Avg Reward is ==> -949.0661362879348
+Episode * 18 * Avg Reward is ==> -906.1744575963231
+Episode * 19 * Avg Reward is ==> -914.0098344966382
+Episode * 20 * Avg Reward is ==> -886.8905055354011
+Episode * 21 * Avg Reward is ==> -859.3416389004793
+Episode * 22 * Avg Reward is ==> -827.5405203616622
+Episode * 23 * Avg Reward is ==> -798.3875178404127
+Episode * 24 * Avg Reward is ==> -771.289491103158
+Episode * 25 * Avg Reward is ==> -741.6622445749622
+Episode * 26 * Avg Reward is ==> -727.7080867854874
+Episode * 27 * Avg Reward is ==> -710.485046117201
+Episode * 28 * Avg Reward is ==> -690.3850022530833
+Episode * 29 * Avg Reward is ==> -671.3205042911178
+Episode * 30 * Avg Reward is ==> -653.4475135842247
+Episode * 31 * Avg Reward is ==> -637.0057392119055
+Episode * 32 * Avg Reward is ==> -629.2474166794424
+Episode * 33 * Avg Reward is ==> -614.4655398230501
+Episode * 34 * Avg Reward is ==> -603.3854873345723
+Episode * 35 * Avg Reward is ==> -589.86534490467
+Episode * 36 * Avg Reward is ==> -577.1806480684269
+Episode * 37 * Avg Reward is ==> -565.1365286280546
+Episode * 38 * Avg Reward is ==> -550.6647028563134
+Episode * 39 * Avg Reward is ==> -540.0095147571197
+Episode * 40 * Avg Reward is ==> -517.3861294233157
+Episode * 41 * Avg Reward is ==> -478.705352005952
+Episode * 42 * Avg Reward is ==> -444.8350788756713
+Episode * 43 * Avg Reward is ==> -409.85293165991334
+Episode * 44 * Avg Reward is ==> -390.83984710631546
+Episode * 45 * Avg Reward is ==> -360.88156865913675
+Episode * 46 * Avg Reward is ==> -325.26685315168595
+Episode * 47 * Avg Reward is ==> -290.2315644399411
+Episode * 48 * Avg Reward is ==> -268.0351126010609
+Episode * 49 * Avg Reward is ==> -247.8952699063706
+Episode * 50 * Avg Reward is ==> -222.99123461788048
+Episode * 51 * Avg Reward is ==> -209.0830401020491
+Episode * 52 * Avg Reward is ==> -205.65143423678765
+Episode * 53 * Avg Reward is ==> -201.8910585767988
+Episode * 54 * Avg Reward is ==> -192.18560466037357
+Episode * 55 * Avg Reward is ==> -189.43475813660137
+Episode * 56 * Avg Reward is ==> -191.92700535454787
+Episode * 57 * Avg Reward is ==> -188.5196218645745
+Episode * 58 * Avg Reward is ==> -188.17872234729674
+Episode * 59 * Avg Reward is ==> -167.33043921566485
+Episode * 60 * Avg Reward is ==> -165.01361185173954
+Episode * 61 * Avg Reward is ==> -164.5316658073024
+Episode * 62 * Avg Reward is ==> -164.4025677076815
+Episode * 63 * Avg Reward is ==> -167.27842005634784
+Episode * 64 * Avg Reward is ==> -167.12049955654845
+Episode * 65 * Avg Reward is ==> -170.02761731078783
+Episode * 66 * Avg Reward is ==> -167.56039601863873
+Episode * 67 * Avg Reward is ==> -164.60482495249738
+Episode * 68 * Avg Reward is ==> -167.45278232469394
+Episode * 69 * Avg Reward is ==> -167.42407364484592
+Episode * 70 * Avg Reward is ==> -167.57794933965346
+Episode * 71 * Avg Reward is ==> -170.6408611483338
+Episode * 72 * Avg Reward is ==> -163.96954092530822
+Episode * 73 * Avg Reward is ==> -160.82007525469245
+Episode * 74 * Avg Reward is ==> -158.38239222565778
+Episode * 75 * Avg Reward is ==> -158.3554729720654
+Episode * 76 * Avg Reward is ==> -158.51036948298994
+Episode * 77 * Avg Reward is ==> -158.68906473090686
+Episode * 78 * Avg Reward is ==> -164.60260866654318
+Episode * 79 * Avg Reward is ==> -161.5493472156026
+Episode * 80 * Avg Reward is ==> -152.48077012719403
+Episode * 81 * Avg Reward is ==> -149.52532010375975
+Episode * 82 * Avg Reward is ==> -149.61942419730423
+Episode * 83 * Avg Reward is ==> -149.82443455067468
+Episode * 84 * Avg Reward is ==> -149.80009937226978
+Episode * 85 * Avg Reward is ==> -144.51659331262107
+Episode * 86 * Avg Reward is ==> -150.7545561142967
+Episode * 87 * Avg Reward is ==> -153.84772667131307
+Episode * 88 * Avg Reward is ==> -151.35200443047225
+Episode * 89 * Avg Reward is ==> -148.30392250041828
+Episode * 90 * Avg Reward is ==> -151.33886235855053
+Episode * 91 * Avg Reward is ==> -151.153096135589
+Episode * 92 * Avg Reward is ==> -151.19626034791332
+Episode * 93 * Avg Reward is ==> -151.15870791946685
+Episode * 94 * Avg Reward is ==> -154.2673372216281
+Episode * 95 * Avg Reward is ==> -150.40737651480134
+Episode * 96 * Avg Reward is ==> -147.7969116731913
+Episode * 97 * Avg Reward is ==> -147.88640802454557
+Episode * 98 * Avg Reward is ==> -144.88997165191319
+Episode * 99 * Avg Reward is ==> -142.22158276699662
 
 ```
 </div>
 ![png](/img/examples/rl/ddpg_pendulum/ddpg_pendulum_16_1.png)
-
-
-![Graph](https://i.imgur.com/sqEtM6M.png)
 
 
 If training proceeds correctly, the average episodic reward will increase with time.
@@ -556,7 +532,6 @@ Another great environment to try this on is `LunarLandingContinuous-v2`, but it 
 more episodes to obtain good results.
 
 
-
 ```python
 # Save the weights
 actor_model.save_weights("pendulum_actor.h5")
@@ -564,15 +539,12 @@ critic_model.save_weights("pendulum_critic.h5")
 
 target_actor.save_weights("pendulum_target_actor.h5")
 target_critic.save_weights("pendulum_target_critic.h5")
-
 ```
 
 Before Training:
 
 ![before_img](https://i.imgur.com/ox6b9rC.gif)
 
-
 After 100 episodes:
 
 ![after_img](https://i.imgur.com/eEH8Cz6.gif)
-

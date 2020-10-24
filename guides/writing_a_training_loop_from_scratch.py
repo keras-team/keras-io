@@ -18,7 +18,7 @@ import numpy as np
 ## Introduction
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
-Their usage is coverered in the guide
+Their usage is covered in the guide
 [Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
@@ -66,8 +66,20 @@ batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
 x_test = np.reshape(x_test, (-1, 784))
+
+# Reserve 10,000 samples for validation.
+x_val = x_train[-10000:]
+y_val = y_train[-10000:]
+x_train = x_train[:-10000]
+y_train = y_train[:-10000]
+
+# Prepare the training dataset.
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
+
+# Prepare the validation dataset.
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(batch_size)
 
 """
 Here's our training loop:
@@ -90,7 +102,7 @@ for epoch in range(epochs):
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
 
         # Open a GradientTape to record the operations run
-        # during the forward pass, which enables autodifferentiation.
+        # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
 
             # Run the forward pass of the layer.
@@ -152,20 +164,6 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
 val_acc_metric = keras.metrics.SparseCategoricalAccuracy()
 
-# Prepare the training dataset.
-batch_size = 64
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
-
-# Prepare the validation dataset.
-# Reserve 10,000 samples for validation.
-x_val = x_train[-10000:]
-y_val = y_train[-10000:]
-x_train = x_train[:-10000]
-y_train = y_train[:-10000]
-val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_dataset = val_dataset.batch(64)
-
 """
 Here's our training & evaluation loop:
 """
@@ -221,12 +219,12 @@ The default runtime in TensorFlow 2.0 is
 above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
-advantage. Decribing your computation as a static graph enables the framework
+advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
 the framework is constrained to greedly execute one operation after another,
 with no knowledge of what comes next.
 
-You can compile into a static graph any function that take tensors as input.
+You can compile into a static graph any function that takes tensors as input.
 Just add a `@tf.function` decorator on it, like this:
 """
 
@@ -367,8 +365,8 @@ images that look almost real, by learning the latent distribution of a training
 dataset of images (the "latent space" of the images).
 
 A GAN is made of two parts: a "generator" model that maps points in the latent
-space to points in image space, an a "discriminator" model, a classifier
-that can tell the difference between real imagees (from the training dataset)
+space to points in image space, a "discriminator" model, a classifier
+that can tell the difference between real images (from the training dataset)
 and fake images (the output of the generator network).
 
 A GAN training loop looks like this:

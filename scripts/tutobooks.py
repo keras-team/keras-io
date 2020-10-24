@@ -322,7 +322,7 @@ def validate(py):
     # Validate style with black
 
     tmp = tempfile.gettempdir()
-    fpath = os.path.join(tmp,  str(random.randint(1e6, 1e7)) + ".py")
+    fpath = os.path.join(tmp, str(random.randint(1e6, 1e7)) + ".py")
     f = open(fpath, "w")
     pre_formatting = "\n".join(lines)
     f.write(pre_formatting)

@@ -18,7 +18,6 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -43,7 +42,6 @@ data_path = keras.utils.get_file(
     "http://www.cs.cmu.edu/afs/cs.cmu.edu/project/theo-20/www/data/news20.tar.gz",
     untar=True,
 )
-
 ```
 
 ---
@@ -54,8 +52,6 @@ data_path = keras.utils.get_file(
 import os
 import pathlib
 
-os.listdir(pathlib.Path(data_path).parent)
-
 data_dir = pathlib.Path(data_path).parent / "20_newsgroup"
 dirnames = os.listdir(data_dir)
 print("Number of directories:", len(dirnames))
@@ -64,7 +60,6 @@ print("Directory names:", dirnames)
 fnames = os.listdir(data_dir / "comp.graphics")
 print("Number of files in comp.graphics:", len(fnames))
 print("Some example filenames:", fnames[:5])
-
 ```
 
 <div class="k-default-codeblock">
@@ -81,7 +76,6 @@ Here's a example of what one file contains:
 
 ```python
 print(open(data_dir / "comp.graphics" / "38987").read())
-
 ```
 
 <div class="k-default-codeblock">
@@ -149,7 +143,6 @@ for dirname in sorted(os.listdir(data_dir)):
 
 print("Classes:", class_names)
 print("Number of samples:", len(samples))
-
 ```
 
 <div class="k-default-codeblock">
@@ -201,7 +194,6 @@ train_samples = samples[:-num_validation_samples]
 val_samples = samples[-num_validation_samples:]
 train_labels = labels[:-num_validation_samples]
 val_labels = labels[-num_validation_samples:]
-
 ```
 
 ---
@@ -220,7 +212,6 @@ from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 vectorizer = TextVectorization(max_tokens=20000, output_sequence_length=200)
 text_ds = tf.data.Dataset.from_tensor_slices(train_samples).batch(128)
 vectorizer.adapt(text_ds)
-
 ```
 
 You can retrieve the computed vocabulary used via `vectorizer.get_vocabulary()`. Let's
@@ -229,7 +220,6 @@ print the top 5 words:
 
 ```python
 vectorizer.get_vocabulary()[:5]
-
 ```
 
 
@@ -237,7 +227,7 @@ vectorizer.get_vocabulary()[:5]
 
 <div class="k-default-codeblock">
 ```
-[b'the', b'to', b'of', b'a', b'and']
+['', '[UNK]', 'the', 'to', 'of']
 
 ```
 </div>
@@ -245,9 +235,8 @@ Let's vectorize a test sentence:
 
 
 ```python
-output = vectorizer(np.array([["the cat sat on the mat"]]))
+output = vectorizer([["the cat sat on the mat"]])
 output.numpy()[0, :6]
-
 ```
 
 
@@ -268,17 +257,15 @@ Here's a dict mapping words to their indices:
 
 ```python
 voc = vectorizer.get_vocabulary()
-word_index = dict(zip(voc, range(2, len(voc))))
-
+word_index = dict(zip(voc, range(len(voc))))
 ```
 
 As you can see, we obtain the same encoding as above for our test sentence:
 
 
 ```python
-test = [b"the", b"cat", b"sat", b"on", b"the", b"mat"]
+test = ["the", "cat", "sat", "on", "the", "mat"]
 [word_index[w] for w in test]
-
 ```
 
 
@@ -321,7 +308,6 @@ with open(path_to_glove_file) as f:
         embeddings_index[word] = coefs
 
 print("Found %s word vectors." % len(embeddings_index))
-
 ```
 
 <div class="k-default-codeblock">
@@ -334,10 +320,6 @@ Now, let's prepare a corresponding embedding matrix that we can use in a Keras
 `Embedding` layer. It's a simple NumPy matrix where entry at index `i` is the pre-trained
 vector for the word of index `i` in our `vectorizer`'s vocabulary.
 
-**Note:** the `TextVectorization` layer stores tokens as bytes, not `str` types.
-This means that you need to decode them to `utf-8` before doing string comparisons, like
-the below: `embeddings_index.get(word.decode('utf-8'))`
-
 
 ```python
 num_tokens = len(voc) + 2
@@ -348,7 +330,7 @@ misses = 0
 # Prepare embedding matrix
 embedding_matrix = np.zeros((num_tokens, embedding_dim))
 for word, i in word_index.items():
-    embedding_vector = embeddings_index.get(word.decode("utf-8"))
+    embedding_vector = embeddings_index.get(word)
     if embedding_vector is not None:
         # Words not found in embedding index will be all-zeros.
         # This includes the representation for "padding" and "OOV"
@@ -358,12 +340,11 @@ for word, i in word_index.items():
         misses += 1
 print("Converted %d words (%d misses)" % (hits, misses))
 
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Converted 17998 words (1999 misses)
+Converted 17999 words (2001 misses)
 
 ```
 </div>
@@ -382,7 +363,6 @@ embedding_layer = Embedding(
     embeddings_initializer=keras.initializers.Constant(embedding_matrix),
     trainable=False,
 )
-
 ```
 
 ---
@@ -407,7 +387,6 @@ x = layers.Dropout(0.5)(x)
 preds = layers.Dense(len(class_names), activation="softmax")(x)
 model = keras.Model(int_sequences_input, preds)
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -418,7 +397,7 @@ Layer (type)                 Output Shape              Param #
 =================================================================
 input_1 (InputLayer)         [(None, None)]            0         
 _________________________________________________________________
-embedding (Embedding)        (None, None, 100)         2000100   
+embedding (Embedding)        (None, None, 100)         2000200   
 _________________________________________________________________
 conv1d (Conv1D)              (None, None, 128)         64128     
 _________________________________________________________________
@@ -438,9 +417,9 @@ dropout (Dropout)            (None, 128)               0
 _________________________________________________________________
 dense_1 (Dense)              (None, 20)                2580      
 =================================================================
-Total params: 2,247,416
+Total params: 2,247,516
 Trainable params: 247,316
-Non-trainable params: 2,000,100
+Non-trainable params: 2,000,200
 _________________________________________________________________
 
 ```
@@ -458,7 +437,6 @@ x_val = vectorizer(np.array([[s] for s in val_samples])).numpy()
 
 y_train = np.array(train_labels)
 y_val = np.array(val_labels)
-
 ```
 
 We use categorical crossentropy as our loss since we're doing softmax classification.
@@ -470,51 +448,52 @@ model.compile(
     loss="sparse_categorical_crossentropy", optimizer="rmsprop", metrics=["acc"]
 )
 model.fit(x_train, y_train, batch_size=128, epochs=20, validation_data=(x_val, y_val))
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-125/125 [==============================] - 8s 64ms/step - loss: 2.6467 - acc: 0.1403 - val_loss: 2.0737 - val_acc: 0.2796
+125/125 [==============================] - 8s 57ms/step - loss: 2.8766 - acc: 0.0945 - val_loss: 2.0770 - val_acc: 0.2956
 Epoch 2/20
-125/125 [==============================] - 8s 65ms/step - loss: 1.9139 - acc: 0.3422 - val_loss: 1.5841 - val_acc: 0.4689
+125/125 [==============================] - 7s 58ms/step - loss: 2.0792 - acc: 0.2887 - val_loss: 1.6626 - val_acc: 0.4076
 Epoch 3/20
-125/125 [==============================] - 8s 65ms/step - loss: 1.4909 - acc: 0.4915 - val_loss: 1.3311 - val_acc: 0.5649
+125/125 [==============================] - 7s 60ms/step - loss: 1.5632 - acc: 0.4527 - val_loss: 1.3000 - val_acc: 0.5609
 Epoch 4/20
-125/125 [==============================] - 8s 67ms/step - loss: 1.2629 - acc: 0.5631 - val_loss: 1.3060 - val_acc: 0.5571
+125/125 [==============================] - 8s 60ms/step - loss: 1.2945 - acc: 0.5612 - val_loss: 1.2282 - val_acc: 0.5944
 Epoch 5/20
-125/125 [==============================] - 9s 69ms/step - loss: 1.1007 - acc: 0.6231 - val_loss: 1.0992 - val_acc: 0.6302
+125/125 [==============================] - 8s 61ms/step - loss: 1.1137 - acc: 0.6209 - val_loss: 1.0695 - val_acc: 0.6409
 Epoch 6/20
-125/125 [==============================] - 8s 68ms/step - loss: 0.9657 - acc: 0.6690 - val_loss: 1.2182 - val_acc: 0.6062
+125/125 [==============================] - 8s 61ms/step - loss: 0.9556 - acc: 0.6718 - val_loss: 1.1743 - val_acc: 0.6124
 Epoch 7/20
-125/125 [==============================] - 9s 73ms/step - loss: 0.8474 - acc: 0.7097 - val_loss: 1.1390 - val_acc: 0.6297
+125/125 [==============================] - 8s 61ms/step - loss: 0.8235 - acc: 0.7172 - val_loss: 1.0126 - val_acc: 0.6602
 Epoch 8/20
-125/125 [==============================] - 10s 79ms/step - loss: 0.7485 - acc: 0.7388 - val_loss: 0.9862 - val_acc: 0.6784
+125/125 [==============================] - 8s 65ms/step - loss: 0.7268 - acc: 0.7475 - val_loss: 1.0608 - val_acc: 0.6632
 Epoch 9/20
-125/125 [==============================] - 10s 77ms/step - loss: 0.6623 - acc: 0.7714 - val_loss: 1.0549 - val_acc: 0.6562
+125/125 [==============================] - 8s 63ms/step - loss: 0.6441 - acc: 0.7759 - val_loss: 1.0606 - val_acc: 0.6664
 Epoch 10/20
-125/125 [==============================] - 10s 78ms/step - loss: 0.5723 - acc: 0.7983 - val_loss: 1.3427 - val_acc: 0.6164
+125/125 [==============================] - 8s 63ms/step - loss: 0.5409 - acc: 0.8120 - val_loss: 1.0380 - val_acc: 0.6884
 Epoch 11/20
-125/125 [==============================] - 9s 75ms/step - loss: 0.5030 - acc: 0.8283 - val_loss: 1.1039 - val_acc: 0.6739
+125/125 [==============================] - 8s 65ms/step - loss: 0.4846 - acc: 0.8273 - val_loss: 1.1073 - val_acc: 0.6729
 Epoch 12/20
-125/125 [==============================] - 10s 83ms/step - loss: 0.4420 - acc: 0.8483 - val_loss: 1.1172 - val_acc: 0.6899
+125/125 [==============================] - 8s 62ms/step - loss: 0.4173 - acc: 0.8553 - val_loss: 1.1256 - val_acc: 0.6864
 Epoch 13/20
-125/125 [==============================] - 10s 81ms/step - loss: 0.3761 - acc: 0.8697 - val_loss: 1.3080 - val_acc: 0.6612
+125/125 [==============================] - 8s 63ms/step - loss: 0.3419 - acc: 0.8808 - val_loss: 1.1576 - val_acc: 0.6979
 Epoch 14/20
-125/125 [==============================] - 9s 75ms/step - loss: 0.3404 - acc: 0.8852 - val_loss: 1.5581 - val_acc: 0.6192
+125/125 [==============================] - 8s 68ms/step - loss: 0.2869 - acc: 0.9053 - val_loss: 1.1381 - val_acc: 0.6974
 Epoch 15/20
-125/125 [==============================] - 10s 77ms/step - loss: 0.2835 - acc: 0.9042 - val_loss: 1.2626 - val_acc: 0.7079
+125/125 [==============================] - 8s 67ms/step - loss: 0.2617 - acc: 0.9118 - val_loss: 1.3850 - val_acc: 0.6747
 Epoch 16/20
-125/125 [==============================] - 10s 77ms/step - loss: 0.2653 - acc: 0.9099 - val_loss: 1.3099 - val_acc: 0.7052
+125/125 [==============================] - 8s 67ms/step - loss: 0.2543 - acc: 0.9152 - val_loss: 1.3119 - val_acc: 0.6972
 Epoch 17/20
-125/125 [==============================] - 10s 81ms/step - loss: 0.2528 - acc: 0.9176 - val_loss: 1.2101 - val_acc: 0.7047
+125/125 [==============================] - 8s 66ms/step - loss: 0.2109 - acc: 0.9267 - val_loss: 1.3145 - val_acc: 0.6954
 Epoch 18/20
-125/125 [==============================] - 10s 76ms/step - loss: 0.2156 - acc: 0.9299 - val_loss: 1.4729 - val_acc: 0.6844
+125/125 [==============================] - 8s 64ms/step - loss: 0.1939 - acc: 0.9364 - val_loss: 1.4054 - val_acc: 0.7009
 Epoch 19/20
-125/125 [==============================] - 10s 79ms/step - loss: 0.2010 - acc: 0.9343 - val_loss: 1.4224 - val_acc: 0.6969
+125/125 [==============================] - 8s 67ms/step - loss: 0.1873 - acc: 0.9379 - val_loss: 1.7441 - val_acc: 0.6667
 Epoch 20/20
- 37/125 [=======>......................] - ETA: 5s - loss: 0.2082 - acc: 0.9335
+125/125 [==============================] - 9s 70ms/step - loss: 0.1762 - acc: 0.9420 - val_loss: 1.5269 - val_acc: 0.6927
+
+<tensorflow.python.keras.callbacks.History at 0x157134890>
 
 ```
 </div>
@@ -539,7 +518,6 @@ probabilities = end_to_end_model.predict(
 )
 
 class_names[np.argmax(probabilities[0])]
-
 ```
 
 

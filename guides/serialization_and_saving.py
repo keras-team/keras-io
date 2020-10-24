@@ -11,10 +11,6 @@ Description: Complete guide to saving & loading models.
 
 A Keras model consists of multiple components:
 
-- An architecture, that specifies the layers and how they're connected.
-- A set of weights, i.e, trained parameters that includes biases.
-- The compilation information, that includes an optimizer, losses and metrics.
-
 The Keras API makes it possible to save and load all or selectively some of these parts:
 
 - Save and load a model (**recommended**), i.e, everything in the SavedModel format (or the older H5 format).
@@ -403,7 +399,7 @@ generates a serialized form of the custom layer:
 
 Keras keeps a master list of all built-in layer, model, optimizer,
 and metric classes, which is used to find the correct class to call `from_config`.
-If the  class can't be found, than an error is raised (`Value Error: Unknown layer`).
+If the  class can't be found, then an error is raised (`Value Error: Unknown layer`).
 There are a few ways to register custom classes to this list:
 
 1. Setting `custom_objects` argument in the loading function. (see the example
@@ -602,7 +598,7 @@ then the HDF5 format is used. Other suffixes will result in a TensorFlow
 checkpoint unless `save_format` is set.
 
 There is also an option of retrieving weights as in-memory numpy arrays.
-Each API has their pros and cons which are detailed below .
+Each API has its pros and cons which are detailed below.
 
 """
 

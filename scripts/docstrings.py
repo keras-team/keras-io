@@ -26,6 +26,7 @@ class TFKerasDocumentationGenerator:
         docstring = docstring.replace("Input shape:", "# Input shape")
         docstring = docstring.replace("Output shape:", "# Output shape")
         docstring = docstring.replace("Call arguments:", "# Call arguments")
+        docstring = docstring.replace("Returns:", "# Returns")
         docstring = docstring.replace("Example:", "# Example\n")
         docstring = docstring.replace("Examples:", "# Examples\n")
 
@@ -287,7 +288,13 @@ def to_markdown(google_style_section: str) -> str:
     section_title = google_style_section[2:end_first_line]
     section_body = google_style_section[end_first_line:]
     section_body = remove_indentation(section_body)
-    if section_title in ("Arguments", "Attributes", "Raises", "Call arguments"):
+    if section_title in (
+        "Arguments",
+        "Attributes",
+        "Raises",
+        "Call arguments",
+        "Returns",
+    ):
         section_body = format_as_markdown_list(section_body)
     if section_body:
         return f"__{section_title}__\n\n{section_body}\n"
