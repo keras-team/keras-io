@@ -10,6 +10,9 @@ Description: Complete guide to saving & loading models.
 ## Introduction
 
 A Keras model consists of multiple components:
+- An architecture, that specifies the layers and how they're connected.
+- A set of weights, i.e, trained parameters that includes biases.
+- The compilation information, that includes an optimizer, losses and metrics.
 
 The Keras API makes it possible to save and load all or selectively some of these parts:
 
