@@ -281,7 +281,7 @@ R256 ====|
 u128 ====|
          |-> 2 upsampling blocks
 u64  ====|
-c7s1-3 => Last conv block with `tanh` activation, filter size of 1.
+c7s1-3 => Last conv block with `tanh` activation, filter size of 7.
 ```
 """
 
