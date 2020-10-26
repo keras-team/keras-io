@@ -4,13 +4,13 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/11/01
 Last modified: 2020/11/01
 Description: Using supervised contrastive learning for image classification.
-"""
+
 
 ## Introduction
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362) (Prannay Khosla et al.) is a training methodology that outperforms cross-entropy on supervised learning tasks. 
 
-Essentially, training an image classification model with Supervised Contrastive Learning is peformed in two phases: 
+Essentially, training an image classification model with Supervised Contrastive Learning is performed in two phases: 
 
 1. Pre-training an encoder to generate feature vectors for input images such that feature vectors of images in the same class will be more similar compared feature vectors of images in other classes.
 2. Training a classifier on top of the freezed encoder.
@@ -18,14 +18,15 @@ Essentially, training an image classification model with Supervised Contrastive 
 ## Setup
 """
 
-!pip install tensorflow-addons
+"""shell
+pip install -q tensorflow-addons
+"""
 
 import tensorflow as tf
 import tensorflow_addons as tfa
 import numpy as np
 import keras
 from keras import layers
-from keras.losses import Loss
 
 """## Prepare the data"""
 
@@ -34,9 +35,6 @@ input_shape = (32, 32, 3)
 
 # Load the train and test data splits
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
-
-# Convert the shape of the y_train and y_test from (50000, 1) to (50000, )
-y_train, y_test = tf.squeeze(y_train), tf.squeeze(y_test)
 
 # Scale images to the [0, 1] range
 x_train = x_train.astype("float32") / 255
@@ -94,17 +92,15 @@ def create_classifier(encoder, trainable=True):
   for layer in encoder.layers:
     layer.trainable = trainable
 
-  inputs = tf.keras.Input(shape=input_shape)
+  inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
-  features = tf.keras.layers.Dropout(dropout_rate)(features)
-  features = tf.keras.layers.Dense(64)(features)
-  features = tf.keras.layers.Dropout(dropout_rate)(features)
-  outputs =  tf.keras.layers.Dense(num_classes, activation="softmax")(features)
-  model = tf.keras.Model(inputs=inputs, outputs=outputs, name="cifar10-classifier")
+  features = layers.Dropout(dropout_rate)(features)
+  outputs =  layers.Dense(num_classes, activation="softmax")(features)
+  model = keras.Model(inputs=inputs, outputs=outputs, name="cifar10-classifier")
   model.compile(
-    optimizer=tf.keras.optimizers.Adam(),
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=tf.keras.metrics.SparseCategoricalAccuracy()
+    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    metrics=keras.metrics.SparseCategoricalAccuracy()
   )
   return model
 
@@ -121,13 +117,12 @@ history = classifier.fit(
     x=x_train, 
     y=y_train, 
     batch_size=batch_size, 
-    epochs=num_epochs, 
-    validation_split=0.1)
+    epochs=num_epochs)
 
 accuracy = classifier.evaluate(x_test, y_test)[1]
-print(f'Test accuracy: {round(accuracy*100, 2)}%')
+print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
-"""We get to ~69.8% validation accuracy.
+"""We get to ~70.5% test accuracy.
 
 ## Experiment 2: Use supervised contrastive learning
 In this experiment, the model is trained in two phases. In the first phase, the encoder is pretrained to optimize the supervised contrastive loss, described in [Prannay Khosla et al.](https://arxiv.org/abs/2004.11362). In the second phase, the classifier is trained using the trained encoder with its weights freezed; only the weights of fully-connected layers with the softmax are optimized.
@@ -135,16 +130,14 @@ In this experiment, the model is trained in two phases. In the first phase, the 
 ### 1. Supervised contrastive learning loss function
 """
 
-class SupervisedContrastiveLoss(Loss):
+class SupervisedContrastiveLoss(keras.losses.Loss):
   def __init__(self, temperature=1, name=None):
     super(SupervisedContrastiveLoss,self).__init__(name=name)
     self.temperature = temperature
     
   def __call__(self, labels, feature_vectors, sample_weight=None):
-
     # Normalize feature vectors
     feature_vectors_normalized = tf.math.l2_normalize(feature_vectors, axis=1)
-
     # Compute logits 
     logits = tf.divide(
         tf.matmul(
@@ -152,14 +145,13 @@ class SupervisedContrastiveLoss(Loss):
             tf.transpose(feature_vectors_normalized)),
         temperature
     )
-
     return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
 
 """### 2. Pretrain the encoder"""
 
 encoder = create_encoder()
 encoder.compile(
-    optimizer=tf.keras.optimizers.Adam(),
+    optimizer=keras.optimizers.Adam(),
     loss=SupervisedContrastiveLoss(temperature)
 )
 
@@ -176,11 +168,10 @@ history = classifier.fit(
     x=x_train, 
     y=y_train, 
     batch_size=batch_size, 
-    epochs=num_epochs, 
-    validation_split=0.1)
+    epochs=num_epochs)
 
 accuracy = classifier.evaluate(x_test, y_test)[1]
-print(f'Test accuracy: {round(accuracy*100, 2)}%')
+print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
-"""We get to ~79.1% validation accuracy."""
+"""We get to ~79.1% test accuracy."""
 
