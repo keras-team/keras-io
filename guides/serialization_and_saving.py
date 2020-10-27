@@ -162,7 +162,7 @@ See the section about [Custom objects](save_and_serialize.ipynb#custom-objects)
 for more information.
 
 Below is an example of what happens when loading custom layers from
-he SavedModel format **without** overwriting the config methods.
+the SavedModel format **without** overwriting the config methods.
 """
 
 
