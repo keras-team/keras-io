@@ -497,7 +497,7 @@ for images, labels in train_ds.take(1):
             tf.expand_dims(first_image, 0), training=True
         )
         plt.imshow(augmented_image[0].numpy().astype("int32"))
-        plt.title(int(labels[i]))
+        plt.title(int(labels[0]))
         plt.axis("off")
 
 """
