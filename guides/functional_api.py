@@ -323,7 +323,9 @@ num_departments = 4  # Number of departments for predictions
 title_input = keras.Input(
     shape=(None,), name="title"
 )  # Variable-length sequence of ints
-body_input = keras.Input(shape=(None,), name="body")  # Variable-length sequence of ints
+body_input = keras.Input(
+    shape=(None,), name="body"
+)  # Variable-length sequence of ints
 tags_input = keras.Input(
     shape=(num_tags,), name="tags"
 )  # Binary vectors of size `num_tags`
