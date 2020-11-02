@@ -175,7 +175,7 @@ and used for inference.
 Nevertheless, it is always a good practice to define the `get_config`
 and `from_config` methods when writing a custom model or layer class.
 This allows you to easily update the computation later if needed.
-See the section about [Custom objects](save_and_serialize.ipynb#custom-objects)
+See the section about [Custom objects](#custom-objects)
 for more information.
 
 Below is an example of what happens when loading custom layers from
@@ -283,7 +283,7 @@ these losses & metrics are kept, since they are part of the `call` method of the
 - The **computation graph of custom objects** such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
-See [Custom objects](save_and_serialize.ipynb#custom-objects).
+See [Custom objects](#custom-objects).
 
 
 ---
