@@ -209,7 +209,7 @@ class MLPBlock(keras.layers.Layer):
 
 
 mlp = MLPBlock()
-y = mlp(tf.ones(shape=(3, 64)))  # The first call to the `mlp` will create the weights
+y = mlp(tf.ones(shape=(3, 32)))  # The first call to the `mlp` will create the weights
 print("weights:", len(mlp.weights))
 print("trainable weights:", len(mlp.trainable_weights))
 
