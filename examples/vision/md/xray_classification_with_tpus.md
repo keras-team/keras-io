@@ -1,4 +1,3 @@
-
 # Pneumonia Classification on TPU
 
 **Author:** Amy MiHyun Jang<br>

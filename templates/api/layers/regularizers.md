@@ -85,7 +85,7 @@ class MyRegularizer(regularizers.Regularizer):
         return self.strength * tf.reduce_sum(tf.square(x))
 ```
 
-Optionally, you an also implement the method `get_config` and the class
+Optionally, you can also implement the method `get_config` and the class
 method `from_config` in order to support serialization -- just like with
 any Keras object. Example:
 

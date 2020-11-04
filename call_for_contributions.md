@@ -56,12 +56,6 @@ The dataset should have at least 50k samples and there should be at least a doze
 [TF/Keras implementation](https://github.com/auvisusAI/detr-tensorflow)
 
 
-## 3D image classification
-
-Using a dataset of CT scans (a few are available on Kaggle).
-
-The model should use `Conv3D` layers.
-
 
 ## Image similarity search engine using triplet loss
 
