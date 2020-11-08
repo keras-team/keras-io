@@ -182,11 +182,12 @@ class CustomModel(keras.Model):
         return x
 
     def get_config(self):
-      return {"hidden_units": self.hidden_units}
+        return {"hidden_units": self.hidden_units}
 
     @classmethod
     def from_config(cls, config):
-      return cls(**config)
+        return cls(**config)
+
 
 model = CustomModel([16, 16, 10])
 # Build the model by calling it
@@ -196,7 +197,8 @@ model.save("my_model")
 
 # Option 1: Load with the custom_object argument.
 loaded_1 = keras.models.load_model(
-    "my_model", custom_objects={"CustomModel": CustomModel})
+    "my_model", custom_objects={"CustomModel": CustomModel}
+)
 
 # Option 2: Load without the CustomModel class.
 
