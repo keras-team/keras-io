@@ -13,7 +13,7 @@
 ---
 ## Introduction
 
-This example demonstrates autoregressive language modelling using a
+This example demonstrates autoregressive language modelling using
 a miniature version of GPT model.
 The model consists of a single transformer block with causal masking
 in the its attention layer.
