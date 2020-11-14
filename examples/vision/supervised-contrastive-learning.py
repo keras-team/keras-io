@@ -5,29 +5,28 @@ Date created: 2020/11/01
 Last modified: 2020/11/01
 Description: Using supervised contrastive learning for image classification.
 
-
 ## Introduction
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 (Prannay Khosla et al.) is a training methodology that outperforms
- cross-entropy on supervised learning tasks.
+plain crossentropy-supervised training on classification tasks.
 
 Essentially, training an image classification model with Supervised Contrastive
 Learning is performed in two phases:
 
-1. Pre-training an encoder to generate feature vectors for input images such
-that feature vectors of images in the same class will be more similar compared
-feature vectors of images in other classes.
+1. Training an encoder to learn to produce vector representations of input images such
+that representations of images in the same class will be more similar compared to
+representations of images in different classes.
 2. Training a classifier on top of the frozen encoder.
+
+Note that this example requires TensorFlow Addons, which you can install via:
+
+```python
+pip install tensorflow-addons
+```
 
 ## Setup
 """
-
-"""shell
-pip install -q tensorflow-addons
-"""
-
-!pip install -q tensorflow-addons
 
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -36,7 +35,9 @@ import keras
 from keras import layers
 from keras.preprocessing.image import ImageDataGenerator
 
-"""## Prepare the data"""
+"""
+## Prepare the data
+"""
 
 num_classes = 10
 input_shape = (32, 32, 3)
@@ -61,9 +62,10 @@ data_generator = ImageDataGenerator(
 
 data_generator.fit(x_train)
 
-"""## Build the encoder model
+"""
+## Build the encoder model
 
-The encoder model takes the image as an input and produce a 128-dimension
+The encoder model takes the image as input and turns it into a 128-dimensional
 feature vector.
 """
 
@@ -118,11 +120,12 @@ def create_classifier(encoder, trainable=True):
   )
   return model
 
-"""## Experiment 1: Train the baseline classification model 
+"""
+## Experiment 1: Train the baseline classification model 
 
-In this experiment, a baseline classifier is trained normally, i.e., the
+In this experiment, a baseline classifier is trained as usual, i.e., the
 encoder and the classifier parts are trained together as a single model
-to minimize cross-entropy loss.
+to minimize the crossentropy loss.
 """
 
 encoder = create_encoder()
@@ -136,12 +139,15 @@ history = classifier.fit(
 accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
 print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
-"""We get to ~76.5% test accuracy.
+"""
+We get to ~76.5% test accuracy.
 
 ## Experiment 2: Use supervised contrastive learning
+
 In this experiment, the model is trained in two phases. In the first phase,
 the encoder is pretrained to optimize the supervised contrastive loss,
 described in [Prannay Khosla et al.](https://arxiv.org/abs/2004.11362).
+
 In the second phase, the classifier is trained using the trained encoder with
 its weights freezed; only the weights of fully-connected layers with the
 softmax are optimized.
@@ -175,7 +181,9 @@ def add_projection_head(encoder):
                       name='cifar-encoder_with_projection-head')
   return model
 
-"""### 2. Pretrain the encoder"""
+"""
+### 2. Pretrain the encoder
+"""
 
 encoder = create_encoder()
 
@@ -191,14 +199,16 @@ history = encoder_with_projection_head.fit(
   data_generator.flow(x_train, y_train, batch_size),
   epochs=num_epochs)
 
-"""### 3. Train the classifier with the frozen encoder"""
+"""
+### 3. Train the classifier with the frozen encoder
+"""
 
 classifier = create_classifier(encoder, trainable=False)
 
 history = classifier.fit(
   data_generator.flow(x_train, y_train, batch_size), 
-  epochs=num_epochs,
-  )
+  epochs=num_epochs
+)
 
 accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
 print(f'Test accuracy: {round(accuracy * 100, 2)}%')
