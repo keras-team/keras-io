@@ -11,14 +11,14 @@ Description: PixelCNN implemented in Keras.
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
 (reference: [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)).
-It is designed to generate images (or other data types) iteratively,
+It is designed to generate images (or other data types) iteratively
 from an input vector where the probability distribution of prior elements dictates the
 probability distribution of later elements. In the following example, images are generated
 in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
 from previously generated pixels (origin at the top left) to generate later pixels.
-During inference, the output of the network is used as a probability ditribution
+During inference, the output of the network is used as a probability distribution
 from which new pixel values are sampled to generate a new image
-(here, with MNIST, the pixels values are either black or white).
+(here, with MNIST, the pixel values range from white (0) to black (255).
 """
 
 import numpy as np
@@ -28,7 +28,7 @@ from tensorflow.keras import layers
 from tqdm import tqdm
 
 """
-## Getting the Data
+## Getting the data
 """
 
 # Model / data parameters
@@ -137,7 +137,7 @@ pixel_cnn.fit(
 """
 ## Demonstration
 
-The PixelCNN cannot generate the full image at once, and must instead generate each pixel in
+The PixelCNN cannot generate the full image at once and must instead generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
 """
@@ -164,7 +164,7 @@ for row in tqdm(range(rows)):
 
 
 def deprocess_image(x):
-    # Stack the single channeled black and white image to rgb values.
+    # Stack the single channeled black and white image to RGB values.
     x = np.stack((x, x, x), 2)
     # Undo preprocessing
     x *= 255.0
