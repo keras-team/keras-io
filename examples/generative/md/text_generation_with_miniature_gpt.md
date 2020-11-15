@@ -13,13 +13,13 @@
 ---
 ## Introduction
 
-This example demonstrates autoregressive language modelling using a
+This example demonstrates autoregressive language modelling using
 a miniature version of GPT model.
 The model consists of a single transformer block with causal masking
-in the its attention layer.
+in its attention layer.
 We use the text from IMDB sentiment classification dataset for training
 and generate new movie reviews for a given prompt.
-When using this script with your own data, make sure it has atleast
+When using this script with your own data, make sure it has at least
 1M words.
 
 This example should be run with `tf-nightly>=2.3.0-dev20200531` or
