@@ -267,7 +267,7 @@ class WGAN(keras.Model):
         This loss is calculated on an interpolated image
         and added to the discriminator loss.
         """
-        # get the interplated image
+        # get the interpolated image
         alpha = tf.random.normal([batch_size, 1, 1, 1], 0.0, 1.0)
         diff = fake_images - real_images
         interpolated = real_images + alpha * diff
@@ -279,7 +279,7 @@ class WGAN(keras.Model):
 
         # 2. Calculate the gradients w.r.t to this interpolated image.
         grads = gp_tape.gradient(pred, [interpolated])[0]
-        # 3. Calcuate the norm of the gradients
+        # 3. Calculate the norm of the gradients
         norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
         gp = tf.reduce_mean((norm - 1.0) ** 2)
         return gp
@@ -377,7 +377,7 @@ class GANMonitor(keras.callbacks.Callback):
 """
 
 # Optimizer for both the networks
-# learning_rate=0.0002, beta_1=0.5 are recommened
+# learning_rate=0.0002, beta_1=0.5 are recommended
 generator_optimizer = keras.optimizers.Adam(
     learning_rate=0.0002, beta_1=0.5, beta_2=0.9
 )
@@ -385,7 +385,7 @@ discriminator_optimizer = keras.optimizers.Adam(
     learning_rate=0.0002, beta_1=0.5, beta_2=0.9
 )
 
-# Define the loss functions to be used for discrimiator
+# Define the loss functions to be used for discriminator
 # This should be (fake_loss - real_loss)
 # We will add the gradient penalty later to this loss function
 def discriminator_loss(real_img, fake_img):
