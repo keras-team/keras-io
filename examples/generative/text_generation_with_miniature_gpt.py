@@ -1,21 +1,21 @@
 """
-Title: Text Generation with miniature GPT
+Title: Text generation with a miniature GPT
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/29
 Last modified: 2020/05/29
-Description: Implement miniature version of GPT and learn to generate text.
+Description: Implement a miniature version of GPT and learn to generate text.
 """
 """
 ## Introduction
 
-This example demonstrates autoregressive language modelling using
-a miniature version of GPT model.
-The model consists of a single transformer block with causal masking
+This example demonstrates how to implement an autoregressive language model
+using a miniature version of the GPT model.
+The model consists of a single Transformer block with causal masking
 in its attention layer.
-We use the text from IMDB sentiment classification dataset for training
+We use the text from the IMDB sentiment classification dataset for training
 and generate new movie reviews for a given prompt.
-When using this script with your own data, make sure it has at least
-1M words.
+When using this script with your own dataset, make sure it has at least
+1 million words.
 
 This example should be run with `tf-nightly>=2.3.0-dev20200531` or
 with TensorFlow 2.3 or higher.
@@ -149,9 +149,9 @@ class TransformerBlock(layers.Layer):
 
 
 """
-## Implement embedding layer
+## Implement an embedding layer
 
-Two seperate embedding layers, one for tokens, one for token index (positions).
+Two seperate embedding layers: one for tokens and one for token index (positions).
 """
 
 
@@ -170,7 +170,7 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 """
-## Implement miniature GPT model
+## Implement a miniature GPT model
 """
 vocab_size = 20000  # Only consider the top 20k words
 maxlen = 100  # Max sequence size
@@ -195,10 +195,10 @@ def create_model():
 
 
 """
-## Prepare data for word level language modelling
+## Prepare data for word-level language modelling
 
-We will download IMDB data, and combine training and validation sets for
-text generation task.
+We will download the IMDB data and combine training and validation sets for
+a text generation task.
 """
 
 """shell
@@ -239,7 +239,7 @@ def custom_standardization(input_string):
     return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
 
 
-# Create vectcorization layer and adapt it to the text
+# Create a vectorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
     standardize=custom_standardization,
     max_tokens=vocab_size - 1,
@@ -273,15 +273,15 @@ text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 
 class TextGenerator(keras.callbacks.Callback):
-    """Callback to generate text from trained model.
+    """A callback to generate text from a trained model.
     1. Feed some starting prompt to the model
-    2. Predict probabilities for next token
-    3. Sample next token and add it to the next input
+    2. Predict probabilities for the next token
+    3. Sample the next token and add it to the next input
 
     # Arguments
         max_tokens: Integer, the number of tokens to be generated after prompt.
         start_tokens: List of integers, the token indices for the starting prompt.
-        index_to_word: List of strings, obtained from TextVectorization layer.
+        index_to_word: List of strings, obtained from the TextVectorization layer.
         top_k: Integer, sample from the `top_k` token predictions.
         print_every: Integer, print after this many epochs.
     """
@@ -347,7 +347,7 @@ text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 """
 ## Train
 
-Note: This code should preferably be run on GPU.
+Note: This code should preferably be run on a GPU.
 """
 
 model = create_model()
