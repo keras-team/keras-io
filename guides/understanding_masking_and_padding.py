@@ -19,8 +19,8 @@ from tensorflow.keras import layers
 **Masking** is a way to tell sequence-processing layers that certain timesteps
 in an input are missing, and thus should be skipped when processing the data.
 
-**Padding** is a special form of masking where the masked steps are at the start or at
-the beginning of a sequence. Padding comes from the need to encode sequence data into
+**Padding** is a special form of masking where the masked steps are at the start or
+the end of a sequence. Padding comes from the need to encode sequence data into
 contiguous batches: in order to make all sequences in a batch fit a given standard
 length, it is necessary to pad or truncate some sequences.
 
