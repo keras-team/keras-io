@@ -105,9 +105,11 @@ def create_classifier(encoder, trainable=True):
 
   inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
+  features = layers.ReLU()(features)
   features = layers.BatchNormalization()(features)
   features = layers.Dropout(dropout_rate)(features)
-  features = layers.Dense(hidden_units, 'relu')(features)
+  features = layers.Dense(hidden_units)(features)
+  features = layers.ReLU()(features)
   features = layers.BatchNormalization()(features)
   features = layers.Dropout(dropout_rate)(features)
   outputs =  layers.Dense(num_classes, activation="softmax")(features)
@@ -116,7 +118,7 @@ def create_classifier(encoder, trainable=True):
   model.compile(
     optimizer=keras.optimizers.Adam(learning_rate),
     loss=keras.losses.SparseCategoricalCrossentropy(),
-    metrics=keras.metrics.SparseCategoricalAccuracy()
+    metrics=[keras.metrics.SparseCategoricalAccuracy()]
   )
   return model
 
@@ -175,8 +177,9 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
 def add_projection_head(encoder):
   inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
-  outputs = layers.Dense(projection_units, 'relu')(features)
-  outputs = layers.BatchNormalization()(features)
+  projected = layers.Dense(projection_units)(features)
+  normalized = layers.BatchNormalization()(projected)
+  outputs = layers.ReLU()(normalized)
   model = keras.Model(inputs=inputs, outputs=outputs, 
                       name='cifar-encoder_with_projection-head')
   return model
