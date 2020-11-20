@@ -217,3 +217,16 @@ accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
 print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
 """We get to ~81.3% test accuracy."""
+
+"""## Conclusion
+
+As shown in the experiments, using the supervised contrastive learning technique
+outperformed the conventional technique in terms of the test accuracy. Note that
+the same training budget (i.e., number of epochs) was given to each technique.
+Supervised contrastive learning pays off when the encoder involves a complex
+architecture, like RestNet, and multi-class problems with many labels. 
+In addition, large batch sizes and multi-layer projection heads
+improve its effectiveness. See the [Supervised Conrastive Learning](https://arxiv.org/abs/2004.11362]
+paper for more details.
+
+"""
