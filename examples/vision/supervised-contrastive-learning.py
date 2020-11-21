@@ -135,7 +135,9 @@ classifier = create_classifier(encoder)
 classifier.summary()
 
 history = classifier.fit(
-  data_generator.flow(x_train, y_train, batch_size),
+  x=x_train, 
+  y=y_train, 
+  batch_size=batch_size,
   epochs=num_epochs)
 
 accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
@@ -199,7 +201,9 @@ encoder_with_projection_head.compile(
 encoder_with_projection_head.summary()
 
 history = encoder_with_projection_head.fit(
-  data_generator.flow(x_train, y_train, batch_size),
+  x=x_train, 
+  y=y_train, 
+  batch_size=batch_size,
   epochs=num_epochs)
 
 """
@@ -209,11 +213,12 @@ history = encoder_with_projection_head.fit(
 classifier = create_classifier(encoder, trainable=False)
 
 history = classifier.fit(
-  data_generator.flow(x_train, y_train, batch_size), 
-  epochs=num_epochs
-)
+  x=x_train, 
+  y=y_train, 
+  batch_size=batch_size,
+  epochs=num_epochs)
 
-accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
+accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
 """We get to ~81.3% test accuracy."""
