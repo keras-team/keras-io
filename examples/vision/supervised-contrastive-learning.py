@@ -105,12 +105,8 @@ def create_classifier(encoder, trainable=True):
 
   inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
-  features = layers.ReLU()(features)
-  features = layers.BatchNormalization()(features)
   features = layers.Dropout(dropout_rate)(features)
-  features = layers.Dense(hidden_units)(features)
-  features = layers.ReLU()(features)
-  features = layers.BatchNormalization()(features)
+  features = layers.Dense(hidden_units, 'relu')(features)
   features = layers.Dropout(dropout_rate)(features)
   outputs =  layers.Dense(num_classes, activation="softmax")(features)
   
@@ -144,7 +140,7 @@ accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
 print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
 """
-We get to ~76.5% test accuracy.
+We get to ~78.4% test accuracy.
 
 ## Experiment 2: Use supervised contrastive learning
 
@@ -179,9 +175,7 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
 def add_projection_head(encoder):
   inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
-  projected = layers.Dense(projection_units)(features)
-  normalized = layers.BatchNormalization()(projected)
-  outputs = layers.ReLU()(normalized)
+  outputs = layers.Dense(projection_units, 'relu')(features)
   model = keras.Model(inputs=inputs, outputs=outputs, 
                       name='cifar-encoder_with_projection-head')
   return model
@@ -221,7 +215,7 @@ history = classifier.fit(
 accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f'Test accuracy: {round(accuracy * 100, 2)}%')
 
-"""We get to ~81.3% test accuracy."""
+"""We get to ~82.6% test accuracy."""
 
 """## Conclusion
 
