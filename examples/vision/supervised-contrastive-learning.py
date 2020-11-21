@@ -210,8 +210,7 @@ history = encoder_with_projection_head.fit(
 ### 3. Train the classifier with the frozen encoder
 """
 
-classifier = create_classifier(
-  encoder_with_projection_head, trainable=False)
+classifier = create_classifier(encoder, trainable=False)
 
 history = classifier.fit(
   x=x_train, 
