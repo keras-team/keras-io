@@ -1,8 +1,8 @@
 """
 Title: Supervised Contrastive Learning
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2020/11/01
-Last modified: 2020/11/01
+Date created: 2020/11/30
+Last modified: 2020/11/30
 Description: Using supervised contrastive learning for image classification.
 
 ## Introduction
