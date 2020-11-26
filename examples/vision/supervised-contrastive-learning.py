@@ -51,16 +51,18 @@ print(f'x_test shape: {x_test.shape} - y_test shape: {y_test.shape}')
 
 """## Using image data augmentation"""
 
-data_generator = ImageDataGenerator(
-  featurewise_center=True,
-  featurewise_std_normalization=True,
-  rotation_range=20,
-  horizontal_flip=True,
-  width_shift_range=0.2,
-  height_shift_range=0.2
+data_augmentation = keras.Sequential(
+  [
+    layers.experimental.preprocessing.Normalization(),
+    layers.experimental.preprocessing.RandomFlip("horizontal"),
+    layers.experimental.preprocessing.RandomRotation(0.02),
+    layers.experimental.preprocessing.RandomWidth(0.2),
+    layers.experimental.preprocessing.RandomHeight(0.2)
+  ]
 )
 
-data_generator.fit(x_train)
+# Setting the state of the normalization layer.
+data_augmentation.layers[0].adapt(x_train)
 
 """
 ## Build the encoder model
