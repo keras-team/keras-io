@@ -67,16 +67,16 @@ data_augmentation.layers[0].adapt(x_train)
 """
 ## Build the encoder model
 
-The encoder model takes the image as input and turns it into a 128-dimensional
+The encoder model takes the image as input and turns it into a 2048-dimensional
 feature vector.
 """
 
 def create_encoder():
   densenet = keras.applications.ResNet50V2(
-      include_top=False,
-      weights=None,
-      input_shape=input_shape,
-      pooling='avg')
+    include_top=False,
+    weights=None,
+    input_shape=input_shape,
+    pooling='avg')
 
   inputs = keras.Input(shape=input_shape)
   outputs = densenet(inputs)
@@ -167,10 +167,10 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
     feature_vectors_normalized = tf.math.l2_normalize(feature_vectors, axis=1)
     # Compute logits 
     logits = tf.divide(
-        tf.matmul(
-            feature_vectors_normalized, 
-            tf.transpose(feature_vectors_normalized)),
-        temperature
+      tf.matmul(
+        feature_vectors_normalized, 
+        tf.transpose(feature_vectors_normalized)),
+      temperature
     )
     return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
 
@@ -190,8 +190,8 @@ encoder = create_encoder()
 
 encoder_with_projection_head = add_projection_head(encoder)
 encoder_with_projection_head.compile(
-    optimizer=keras.optimizers.Adam(learning_rate),
-    loss=SupervisedContrastiveLoss(temperature)
+  optimizer=keras.optimizers.Adam(learning_rate),
+  loss=SupervisedContrastiveLoss(temperature)
 )
 
 encoder_with_projection_head.summary()
