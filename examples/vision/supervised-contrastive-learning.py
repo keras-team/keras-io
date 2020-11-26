@@ -79,7 +79,8 @@ def create_encoder():
     pooling='avg')
 
   inputs = keras.Input(shape=input_shape)
-  outputs = densenet(inputs)
+  augmented = data_augmentation(inputs)
+  outputs = resnet(augmented)
   model = keras.Model(inputs=inputs, outputs=outputs, name="cifar10-encoder")
   return model
 
