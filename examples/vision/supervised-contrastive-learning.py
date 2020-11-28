@@ -31,7 +31,7 @@ pip install tensorflow-addons
 import tensorflow as tf
 import tensorflow_addons as tfa
 import numpy as np
-import keras 
+import keras
 from keras import layers
 
 """
@@ -45,19 +45,22 @@ input_shape = (32, 32, 3)
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 
 # Display shapes of train and test datasets
-print(f'x_train shape: {x_train.shape} - y_train shape: {y_train.shape}')
-print(f'x_test shape: {x_test.shape} - y_test shape: {y_test.shape}')
+print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
+print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
-"""## Using image data augmentation"""
+
+"""
+## Using image data augmentation
+"""
 
 data_augmentation = keras.Sequential(
-  [
-    layers.experimental.preprocessing.Normalization(),
-    layers.experimental.preprocessing.RandomFlip("horizontal"),
-    layers.experimental.preprocessing.RandomRotation(0.02),
-    layers.experimental.preprocessing.RandomWidth(0.2),
-    layers.experimental.preprocessing.RandomHeight(0.2)
-  ]
+    [
+        layers.experimental.preprocessing.Normalization(),
+        layers.experimental.preprocessing.RandomFlip("horizontal"),
+        layers.experimental.preprocessing.RandomRotation(0.02),
+        layers.experimental.preprocessing.RandomWidth(0.2),
+        layers.experimental.preprocessing.RandomHeight(0.2),
+    ]
 )
 
 # Setting the state of the normalization layer.
@@ -70,18 +73,18 @@ The encoder model takes the image as input and turns it into a 2048-dimensional
 feature vector.
 """
 
-def create_encoder():
-  densenet = keras.applications.ResNet50V2(
-    include_top=False,
-    weights=None,
-    input_shape=input_shape,
-    pooling='avg')
 
-  inputs = keras.Input(shape=input_shape)
-  augmented = data_augmentation(inputs)
-  outputs = resnet(augmented)
-  model = keras.Model(inputs=inputs, outputs=outputs, name="cifar10-encoder")
-  return model
+def create_encoder():
+    resnet = keras.applications.ResNet50V2(
+        include_top=False, weights=None, input_shape=input_shape, pooling="avg"
+    )
+
+    inputs = keras.Input(shape=input_shape)
+    augmented = data_augmentation(inputs)
+    outputs = resnet(augmented)
+    model = keras.Model(inputs=inputs, outputs=outputs, name="cifar10-encoder")
+    return model
+
 
 encoder = create_encoder()
 encoder.summary()
@@ -94,34 +97,37 @@ num_epochs = 50
 dropout_rate = 0.5
 temperature = 0.05
 
-"""## Build the classification model
+"""
+## Build the classification model
 
 The classification model adds a fully-connected layer on top of the encoder,
 plus a softmax layer with the target classes.
 """
 
+
 def create_classifier(encoder, trainable=True):
 
-  for layer in encoder.layers:
-    layer.trainable = trainable
+    for layer in encoder.layers:
+        layer.trainable = trainable
 
-  inputs = keras.Input(shape=input_shape)
-  features = encoder(inputs)
-  features = layers.Dropout(dropout_rate)(features)
-  features = layers.Dense(hidden_units, activation='relu')(features)
-  features = layers.Dropout(dropout_rate)(features)
-  outputs =  layers.Dense(num_classes, activation="softmax")(features)
-  
-  model = keras.Model(inputs=inputs, outputs=outputs, name="cifar10-classifier")
-  model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate),
-    loss=keras.losses.SparseCategoricalCrossentropy(),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()]
-  )
-  return model
+    inputs = keras.Input(shape=input_shape)
+    features = encoder(inputs)
+    features = layers.Dropout(dropout_rate)(features)
+    features = layers.Dense(hidden_units, activation="relu")(features)
+    features = layers.Dropout(dropout_rate)(features)
+    outputs = layers.Dense(num_classes, activation="softmax")(features)
+
+    model = keras.Model(inputs=inputs, outputs=outputs, name="cifar10-classifier")
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate),
+        loss=keras.losses.SparseCategoricalCrossentropy(),
+        metrics=[keras.metrics.SparseCategoricalAccuracy()],
+    )
+    return model
+
 
 """
-## Experiment 1: Train the baseline classification model 
+## Experiment 1: Train the baseline classification model
 
 In this experiment, a baseline classifier is trained as usual, i.e., the
 encoder and the classifier parts are trained together as a single model
@@ -132,18 +138,16 @@ encoder = create_encoder()
 classifier = create_classifier(encoder)
 classifier.summary()
 
-history = classifier.fit(
-  x=x_train, 
-  y=y_train, 
-  batch_size=batch_size,
-  epochs=num_epochs)
+history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs)
 
 accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
-print(f'Test accuracy: {round(accuracy * 100, 2)}%')
+print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 """
 We get to ~78.4% test accuracy.
+"""
 
+"""
 ## Experiment 2: Use supervised contrastive learning
 
 In this experiment, the model is trained in two phases. In the first phase,
@@ -157,30 +161,34 @@ softmax are optimized.
 ### 1. Supervised contrastive learning loss function
 """
 
+
 class SupervisedContrastiveLoss(keras.losses.Loss):
-  def __init__(self, temperature=1, name=None):
-    super(SupervisedContrastiveLoss,self).__init__(name=name)
-    self.temperature = temperature
-    
-  def __call__(self, labels, feature_vectors, sample_weight=None):
-    # Normalize feature vectors
-    feature_vectors_normalized = tf.math.l2_normalize(feature_vectors, axis=1)
-    # Compute logits 
-    logits = tf.divide(
-      tf.matmul(
-        feature_vectors_normalized, 
-        tf.transpose(feature_vectors_normalized)),
-      temperature
-    )
-    return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
+    def __init__(self, temperature=1, name=None):
+        super(SupervisedContrastiveLoss, self).__init__(name=name)
+        self.temperature = temperature
+
+    def __call__(self, labels, feature_vectors, sample_weight=None):
+        # Normalize feature vectors
+        feature_vectors_normalized = tf.math.l2_normalize(feature_vectors, axis=1)
+        # Compute logits
+        logits = tf.divide(
+            tf.matmul(
+                feature_vectors_normalized, tf.transpose(feature_vectors_normalized)
+            ),
+            temperature,
+        )
+        return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
+
 
 def add_projection_head(encoder):
-  inputs = keras.Input(shape=input_shape)
-  features = encoder(inputs)
-  outputs = layers.Dense(projection_units, activation='relu')(features)
-  model = keras.Model(inputs=inputs, outputs=outputs, 
-                      name='cifar-encoder_with_projection-head')
-  return model
+    inputs = keras.Input(shape=input_shape)
+    features = encoder(inputs)
+    outputs = layers.Dense(projection_units, activation="relu")(features)
+    model = keras.Model(
+        inputs=inputs, outputs=outputs, name="cifar-encoder_with_projection-head"
+    )
+    return model
+
 
 """
 ### 2. Pretrain the encoder
@@ -190,17 +198,15 @@ encoder = create_encoder()
 
 encoder_with_projection_head = add_projection_head(encoder)
 encoder_with_projection_head.compile(
-  optimizer=keras.optimizers.Adam(learning_rate),
-  loss=SupervisedContrastiveLoss(temperature)
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=SupervisedContrastiveLoss(temperature),
 )
 
 encoder_with_projection_head.summary()
 
 history = encoder_with_projection_head.fit(
-  x=x_train, 
-  y=y_train, 
-  batch_size=batch_size,
-  epochs=num_epochs)
+    x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs
+)
 
 """
 ### 3. Train the classifier with the frozen encoder
@@ -208,24 +214,23 @@ history = encoder_with_projection_head.fit(
 
 classifier = create_classifier(encoder, trainable=False)
 
-history = classifier.fit(
-  x=x_train, 
-  y=y_train, 
-  batch_size=batch_size,
-  epochs=num_epochs)
+history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs)
 
 accuracy = classifier.evaluate(x_test, y_test)[1]
-print(f'Test accuracy: {round(accuracy * 100, 2)}%')
+print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
-"""We get to ~82.6% test accuracy."""
+"""
+We get to ~82.6% test accuracy.
+"""
 
-"""## Conclusion
+"""
+## Conclusion
 
 As shown in the experiments, using the supervised contrastive learning technique
 outperformed the conventional technique in terms of the test accuracy. Note that
 the same training budget (i.e., number of epochs) was given to each technique.
 Supervised contrastive learning pays off when the encoder involves a complex
-architecture, like RestNet, and multi-class problems with many labels. 
+architecture, like RestNet, and multi-class problems with many labels.
 In addition, large batch sizes and multi-layer projection heads
 improve its effectiveness. See the [Supervised Conrastive Learning](https://arxiv.org/abs/2004.11362]
 paper for more details.
