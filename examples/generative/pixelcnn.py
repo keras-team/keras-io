@@ -16,9 +16,9 @@ from an input vector where the probability distribution of prior elements dictat
 probability distribution of later elements. In the following example, images are generated
 in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
 from previously generated pixels (origin at the top left) to generate later pixels.
-During inference, the output of the network is used as a probability distribution
+During inference, the output of the network is used as a probability ditribution
 from which new pixel values are sampled to generate a new image
-(here, with MNIST, the pixel values range from white (0) to black (255).
+(here, with MNIST, the pixels values are either black or white).
 """
 
 import numpy as np
@@ -28,7 +28,7 @@ from tensorflow.keras import layers
 from tqdm import tqdm
 
 """
-## Getting the data
+## Getting the Data
 """
 
 # Model / data parameters
@@ -137,7 +137,7 @@ pixel_cnn.fit(
 """
 ## Demonstration
 
-The PixelCNN cannot generate the full image at once and must instead generate each pixel in
+The PixelCNN cannot generate the full image at once. Instead, it must generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
 """
@@ -149,7 +149,7 @@ batch = 4
 pixels = np.zeros(shape=(batch,) + (pixel_cnn.input_shape)[1:])
 batch, rows, cols, channels = pixels.shape
 
-# Iterate the pixels because generation has to be done sequentially pixel by pixel.
+# Iterate over the pixels because generation has to be done sequentially pixel by pixel.
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
@@ -164,7 +164,7 @@ for row in tqdm(range(rows)):
 
 
 def deprocess_image(x):
-    # Stack the single channeled black and white image to RGB values.
+    # Stack the single channeled black and white image to rgb values.
     x = np.stack((x, x, x), 2)
     # Undo preprocessing
     x *= 255.0
@@ -173,7 +173,7 @@ def deprocess_image(x):
     return x
 
 
-# Iterate the generated images and plot them with matplotlib.
+# Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
     keras.preprocessing.image.save_img(
         "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
