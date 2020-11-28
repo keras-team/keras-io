@@ -33,7 +33,6 @@ import tensorflow_addons as tfa
 import numpy as np
 import keras 
 from keras import layers
-from keras.preprocessing.image import ImageDataGenerator
 
 """
 ## Prepare the data
@@ -109,7 +108,7 @@ def create_classifier(encoder, trainable=True):
   inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
   features = layers.Dropout(dropout_rate)(features)
-  features = layers.Dense(hidden_units, 'relu')(features)
+  features = layers.Dense(hidden_units, activation='relu')(features)
   features = layers.Dropout(dropout_rate)(features)
   outputs =  layers.Dense(num_classes, activation="softmax")(features)
   
@@ -178,7 +177,7 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
 def add_projection_head(encoder):
   inputs = keras.Input(shape=input_shape)
   features = encoder(inputs)
-  outputs = layers.Dense(projection_units, 'relu')(features)
+  outputs = layers.Dense(projection_units, activation='relu')(features)
   model = keras.Model(inputs=inputs, outputs=outputs, 
                       name='cifar-encoder_with_projection-head')
   return model
