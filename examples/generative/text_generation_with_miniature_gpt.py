@@ -3,7 +3,7 @@ Title: Text generation with a miniature GPT
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/29
 Last modified: 2020/05/29
-Description: Implement a miniature version of GPT and learn to generate text.
+Description: Implement a miniature version of GPT and train it to generate text.
 """
 """
 ## Introduction
@@ -42,8 +42,9 @@ import random
 """
 ## Self-attention with causal masking
 
-We compute self-attention as usual, but prevent any information to flow
-from future tokens by masking the upper half of the scaled dot product matrix.
+First, implement self-attention block where information is prevented from
+flowing from future tokens. This is achieved by masking the upper half of the
+scaled dot product matrix.
 """
 
 
@@ -151,7 +152,8 @@ class TransformerBlock(layers.Layer):
 """
 ## Implement an embedding layer
 
-Two seperate embedding layers: one for tokens and one for token index (positions).
+Create two seperate embedding layers: one for tokens and one for token index
+(positions).
 """
 
 
@@ -170,7 +172,7 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 """
-## Implement a miniature GPT model
+## Implement the miniature GPT model
 """
 vocab_size = 20000  # Only consider the top 20k words
 maxlen = 100  # Max sequence size
@@ -195,10 +197,10 @@ def create_model():
 
 
 """
-## Prepare data for word-level language modelling
+## Prepare the data for word-level language modelling
 
-We will download the IMDB data and combine training and validation sets for
-a text generation task.
+Download the IMDB dataset and combine training and validation sets for a text
+generation task.
 """
 
 """shell
@@ -225,7 +227,7 @@ for dir in directories:
 
 print(f"{len(filenames)} files")
 
-# Create dataset from text files
+# Create a dataset from text files
 random.shuffle(filenames)
 text_ds = tf.data.TextLineDataset(filenames)
 text_ds = text_ds.shuffle(buffer_size=256)
@@ -268,7 +270,7 @@ text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 
 """
-## Callback for generating text
+## Implement a Keras callback for generating text
 """
 
 
@@ -278,7 +280,7 @@ class TextGenerator(keras.callbacks.Callback):
     2. Predict probabilities for the next token
     3. Sample the next token and add it to the next input
 
-    # Arguments
+    Arguments:
         max_tokens: Integer, the number of tokens to be generated after prompt.
         start_tokens: List of integers, the token indices for the starting prompt.
         index_to_word: List of strings, obtained from the TextVectorization layer.
@@ -345,9 +347,9 @@ text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
 """
-## Train
+## Train the model
 
-Note: This code should preferably be run on a GPU.
+Note: This code should preferably be run on GPU.
 """
 
 model = create_model()
