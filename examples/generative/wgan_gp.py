@@ -239,6 +239,7 @@ Now that we have defined our generator and discriminator, it's time to implement
 the WGAN-GP model. We will also override the `train_step` for training.
 """
 
+
 class WGAN(keras.Model):
     def __init__(
         self,
@@ -263,7 +264,7 @@ class WGAN(keras.Model):
         self.g_loss_fn = g_loss_fn
 
     def gradient_penalty(self, batch_size, real_images, fake_images):
-        """ Calculates the gradient penalty.
+        """Calculates the gradient penalty.
 
         This loss is calculated on an interpolated image
         and added to the discriminator loss.
