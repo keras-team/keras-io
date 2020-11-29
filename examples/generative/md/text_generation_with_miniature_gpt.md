@@ -8,19 +8,20 @@
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/text_generation_with_miniature_gpt.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/text_generation_with_miniature_gpt.py)
 
 
-**Description:** Implement miniature version of GPT and learn to generate text.
+**Description:** Implement a miniature version of GPT and train it to generate text.
 
 ---
+
 ## Introduction
 
-This example demonstrates autoregressive language modelling using
-a miniature version of GPT model.
-The model consists of a single transformer block with causal masking
+This example demonstrates how to implement an autoregressive language model
+using a miniature version of the GPT model.
+The model consists of a single Transformer block with causal masking
 in its attention layer.
-We use the text from IMDB sentiment classification dataset for training
+We use the text from the IMDB sentiment classification dataset for training
 and generate new movie reviews for a given prompt.
-When using this script with your own data, make sure it has at least
-1M words.
+When using this script with your own dataset, make sure it has at least
+1 million words.
 
 This example should be run with `tf-nightly>=2.3.0-dev20200531` or
 with TensorFlow 2.3 or higher.
@@ -51,12 +52,12 @@ import random
 ```
 
 ---
+
 ## Self-attention with causal masking
 
-We compute self-attention as usual, but prevent any information to flow
-from future tokens by masking the upper half of the scaled dot product matrix.
-
-
+First, implement self-attention block where information is prevented from
+flowing from future tokens. This is achieved by masking the upper half of the
+scaled dot product matrix.
 
 ```python
 
@@ -138,9 +139,8 @@ class MultiHeadSelfAttention(layers.Layer):
 ```
 
 ---
+
 ## Implement a Transformer block as a layer
-
-
 
 ```python
 
@@ -168,11 +168,11 @@ class TransformerBlock(layers.Layer):
 ```
 
 ---
-## Implement embedding layer
 
-Two seperate embedding layers, one for tokens, one for token index (positions).
+## Implement an embedding layer
 
-
+Create two seperate embedding layers: one for tokens and one for token index
+(positions).
 
 ```python
 
@@ -193,9 +193,8 @@ class TokenAndPositionEmbedding(layers.Layer):
 ```
 
 ---
-## Implement miniature GPT model
 
-
+## Implement the miniature GPT model
 
 ```python
 vocab_size = 20000  # Only consider the top 20k words
@@ -218,26 +217,21 @@ def create_model():
         "adam", loss=[loss_fn, None],
     )  # No loss and optimization based on word embeddings from transformer block
     return model
-
-
 ```
 
 ---
-## Prepare data for word level language modelling
 
-We will download IMDB data, and combine training and validation sets for
-text generation task.
+## Prepare the data for word-level language modelling
 
-
+Download the IMDB dataset and combine training and validation sets for a text
+generation task.
 
 ```python
 !curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 !tar -xf aclImdb_v1.tar.gz
-
 ```
 
 ```python
-
 batch_size = 32
 
 # The dataset contains each review in a separate text file
@@ -256,7 +250,7 @@ for dir in directories:
 
 print(f"{len(filenames)} files")
 
-# Create dataset from text files
+# Create a dataset from text files
 random.shuffle(filenames)
 text_ds = tf.data.TextLineDataset(filenames)
 text_ds = text_ds.shuffle(buffer_size=256)
@@ -270,7 +264,7 @@ def custom_standardization(input_string):
     return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
 
 
-# Create vectcorization layer and adapt it to the text
+# Create a ectorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
     standardize=custom_standardization,
     max_tokens=vocab_size - 1,
@@ -309,23 +303,22 @@ text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 ```
 </div>
+
 ---
-## Callback for generating text
 
-
+## Implement a Keras callback for generating text
 
 ```python
-
 class TextGenerator(keras.callbacks.Callback):
-    """Callback to generate text from trained model.
+    """A callback to generate text from a trained model.
     1. Feed some starting prompt to the model
-    2. Predict probabilities for next token
-    3. Sample next token and add it to the next input
+    2. Predict probabilities for the next token
+    3. Sample the next token and add it to the next input
 
-    # Arguments
+    Arguments:
         max_tokens: Integer, the number of tokens to be generated after prompt.
         start_tokens: List of integers, the token indices for the starting prompt.
-        index_to_word: List of strings, obtained from TextVectorization layer.
+        index_to_word: List of strings, obtained from the TextVectorization layer.
         top_k: Integer, sample from the `top_k` token predictions.
         print_every: Integer, print after this many epochs.
     """
@@ -391,11 +384,10 @@ text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 ```
 
 ---
-## Train
+
+## Train the model
 
 Note: This code should preferably be run on GPU.
-
-
 
 ```python
 model = create_model()
