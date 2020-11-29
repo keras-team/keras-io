@@ -493,7 +493,7 @@ class GANMonitor(keras.callbacks.Callback):
 ## Train the end-to-end model
 
 ```python
-# Instatiate the optimizer for both the networks
+# Instantiate the optimizer for both networks
 # (learning_rate=0.0002, beta_1=0.5 are recommended)
 generator_optimizer = keras.optimizers.Adam(
     learning_rate=0.0002, beta_1=0.5, beta_2=0.9
