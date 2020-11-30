@@ -140,7 +140,7 @@ classifier.summary()
 
 history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs)
 
-accuracy = classifier.evaluate(data_generator.flow(x_test, y_test))[1]
+accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 """
