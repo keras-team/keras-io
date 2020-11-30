@@ -71,7 +71,7 @@ You can save an entire model to a single artifact. It will include:
 
 - The model's architecture/config
 - The model's weight values (which were learned during training)
-- The model's compilation information (if `compile()`) was called
+- The model's compilation information (if `compile()` was called)
 - The optimizer and its state, if any (this enables you to restart training
 where you left)
 
@@ -608,7 +608,7 @@ def create_layer():
 layer_1 = create_layer()
 layer_2 = create_layer()
 
-# Copy weights from layer 2 to layer 1
+# Copy weights from layer 1 to layer 2
 layer_2.set_weights(layer_1.get_weights())
 ```
 
