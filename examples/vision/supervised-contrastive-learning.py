@@ -232,7 +232,7 @@ the same training budget (i.e., number of epochs) was given to each technique.
 Supervised contrastive learning pays off when the encoder involves a complex
 architecture, like ResNet, and multi-class problems with many labels.
 In addition, large batch sizes and multi-layer projection heads
-improve its effectiveness. See the [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362]
+improve its effectiveness. See the [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 paper for more details.
 
 """
