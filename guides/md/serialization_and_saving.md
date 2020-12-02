@@ -15,7 +15,7 @@
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifies what layers the model
+- The architecture, or configuration, which specifies what layers the model
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
@@ -30,11 +30,11 @@ or to only selectively save some of them:
 - Saving the architecture / configuration only, typically as a JSON file.
 - Saving the weights values only. This is generally used when training the model.
 
-Let's take a look at each of these options: when would you use one or the other?
-How do they work?
+Let's take a look at each of these options. When would you use one or the other,
+and how do they work?
 
 ---
-## The short answer to saving & loading
+## How to save and load a model
 
 If you only have 10 seconds to read this guide, here's what you need to know.
 
@@ -71,7 +71,7 @@ You can save an entire model to a single artifact. It will include:
 
 - The model's architecture/config
 - The model's weight values (which were learned during training)
-- The model's compilation information (if `compile()`) was called
+- The model's compilation information (if `compile()` was called)
 - The optimizer and its state, if any (this enables you to restart training
 where you left)
 
@@ -81,7 +81,7 @@ where you left)
 - `tf.keras.models.load_model()`
 
 There are two formats you can use to save an entire model to disk:
-**the TensorFlow SavedModel format**, and **the older Keras H5 format**.
+**the TensorFlow SavedModel format**, and the older Keras **H5 format**.
 The recommended format is SavedModel. It is the default when you use `model.save()`.
 
 You can switch to the H5 format by:
@@ -90,6 +90,10 @@ You can switch to the H5 format by:
 - Passing a filename that ends in `.h5` or `.keras` to `save()`.
 
 ### SavedModel format
+
+SavedModel is the more comprehensive save format that saves the model architecture,
+weights, and the traced Tensorflow subgraphs of the call functions. This enables
+Keras to restore both built-in layers as well as custom objects.
 
 **Example:**
 
@@ -130,10 +134,9 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 807us/step - loss: 0.3797
-4/4 [==============================] - 0s 776us/step - loss: 0.2899
+4/4 [==============================] - 0s 833us/step - loss: 0.2464
 
-<tensorflow.python.keras.callbacks.History at 0x1545a8790>
+<tensorflow.python.keras.callbacks.History at 0x1511b87d0>
 
 ```
 </div>
@@ -175,11 +178,10 @@ and used for inference.
 Nevertheless, it is always a good practice to define the `get_config`
 and `from_config` methods when writing a custom model or layer class.
 This allows you to easily update the computation later if needed.
-See the section about [Custom objects](save_and_serialize.ipynb#custom-objects)
+See the section about [Custom objects](#custom-objects)
 for more information.
 
-Below is an example of what happens when loading custom layers from
-he SavedModel format **without** overwriting the config methods.
+Example:
 
 
 ```python
@@ -187,6 +189,7 @@ he SavedModel format **without** overwriting the config methods.
 class CustomModel(keras.Model):
     def __init__(self, hidden_units):
         super(CustomModel, self).__init__()
+        self.hidden_units = hidden_units
         self.dense_layers = [keras.layers.Dense(u) for u in hidden_units]
 
     def call(self, inputs):
@@ -195,6 +198,13 @@ class CustomModel(keras.Model):
             x = layer(x)
         return x
 
+    def get_config(self):
+        return {"hidden_units": self.hidden_units}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 
 model = CustomModel([16, 16, 10])
 # Build the model by calling it
@@ -202,29 +212,50 @@ input_arr = tf.random.uniform((1, 5))
 outputs = model(input_arr)
 model.save("my_model")
 
+# Option 1: Load with the custom_object argument.
+loaded_1 = keras.models.load_model(
+    "my_model", custom_objects={"CustomModel": CustomModel}
+)
+
+# Option 2: Load without the CustomModel class.
+
 # Delete the custom-defined model class to ensure that the loader does not have
 # access to it.
 del CustomModel
 
-loaded = keras.models.load_model("my_model")
-np.testing.assert_allclose(loaded(input_arr), outputs)
+loaded_2 = keras.models.load_model("my_model")
+np.testing.assert_allclose(loaded_1(input_arr), outputs)
+np.testing.assert_allclose(loaded_2(input_arr), outputs)
 
 print("Original model:", model)
-print("Loaded model:", loaded)
+print("Model Loaded with custom objects:", loaded_1)
+print("Model loaded without the custom object class:", loaded_2)
+
 ```
 
 <div class="k-default-codeblock">
 ```
-WARNING: Logging before flag parsing goes to stderr.
-W0829 16:56:16.310727 4621667776 load.py:133] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-
-Original model: <__main__.CustomModel object at 0x15464c990>
-Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x1547cf410>
+INFO:tensorflow:Assets written to: my_model/assets
+WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+Original model: <__main__.CustomModel object at 0x151ad0990>
+Model Loaded with custom objects: <__main__.CustomModel object at 0x151b03850>
+Model loaded without the custom object class: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x151bb0310>
 
 ```
 </div>
-As seen in the example above, the loader dynamically creates a new model class
-that acts like the original model.
+The first loaded model is loaded using the config and `CustomModel` class. The second
+model is loaded by dynamically creating the model class that acts like the original model.
+
+#### Configuring the SavedModel
+
+*New in TensoFlow 2.4*
+The argument `save_traces` has been added to `model.save`, which allows you to toggle
+SavedModel function tracing. Functions are saved to allow the Keras to re-load custom
+objects without the original class definitons, so when `save_traces=False`, all custom
+objects must have defined `get_config`/`from_config` methods. When loading, the custom
+objects must be passed to the `custom_objects` argument. `save_traces=False` reduces the
+disk space used by the SavedModel and saving time.
 
 ### Keras H5 format
 
@@ -261,10 +292,10 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 842us/step - loss: 0.2525
-4/4 [==============================] - 0s 728us/step - loss: 0.2452
+4/4 [==============================] - 0s 967us/step - loss: 0.8106
+4/4 [==============================] - 0s 1ms/step - loss: 0.7184
 
-<tensorflow.python.keras.callbacks.History at 0x15488dfd0>
+<tensorflow.python.keras.callbacks.History at 0x151d5ac90>
 
 ```
 </div>
@@ -283,7 +314,7 @@ these losses & metrics are kept, since they are part of the `call` method of the
 - The **computation graph of custom objects** such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
-See [Custom objects](save_and_serialize.ipynb#custom-objects).
+See [Custom objects](#custom-objects).
 
 
 ---
@@ -394,6 +425,12 @@ x = np.random.uniform(size=(4, 32)).astype(np.float32)
 predicted = tensorflow_graph(x).numpy()
 ```
 
+<div class="k-default-codeblock">
+```
+INFO:tensorflow:Assets written to: my_model/assets
+
+```
+</div>
 Note that this method has several drawbacks:
 * For traceability reasons, you should always have access to the custom
 objects that were used. You wouldn't want to put in production a model
@@ -571,7 +608,7 @@ def create_layer():
 layer_1 = create_layer()
 layer_2 = create_layer()
 
-# Copy weights from layer 2 to layer 1
+# Copy weights from layer 1 to layer 2
 layer_2.set_weights(layer_1.get_weights())
 ```
 
@@ -694,7 +731,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x154a14c90>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x151f01150>
 
 ```
 </div>
@@ -854,7 +891,7 @@ Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x15498b7d0>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x10e58f3d0>
 
 ```
 </div>
@@ -905,11 +942,7 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-W0829 16:56:17.601102 4621667776 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
-Instructions for updating:
-Please use `layer.add_weight` method instead.
-
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x154867190>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x151ed1110>
 
 ```
 </div>

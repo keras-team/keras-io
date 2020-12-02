@@ -11,7 +11,7 @@ Description: PixelCNN implemented in Keras.
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
 (reference: [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)).
-It is designed to generate images (or other data types) iteratively,
+It is designed to generate images (or other data types) iteratively
 from an input vector where the probability distribution of prior elements dictates the
 probability distribution of later elements. In the following example, images are generated
 in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
@@ -137,7 +137,7 @@ pixel_cnn.fit(
 """
 ## Demonstration
 
-The PixelCNN cannot generate the full image at once, and must instead generate each pixel in
+The PixelCNN cannot generate the full image at once. Instead, it must generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
 """
@@ -149,7 +149,7 @@ batch = 4
 pixels = np.zeros(shape=(batch,) + (pixel_cnn.input_shape)[1:])
 batch, rows, cols, channels = pixels.shape
 
-# Iterate the pixels because generation has to be done sequentially pixel by pixel.
+# Iterate over the pixels because generation has to be done sequentially pixel by pixel.
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
@@ -173,7 +173,7 @@ def deprocess_image(x):
     return x
 
 
-# Iterate the generated images and plot them with matplotlib.
+# Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
     keras.preprocessing.image.save_img(
         "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))

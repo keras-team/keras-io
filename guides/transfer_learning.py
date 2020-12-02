@@ -364,8 +364,7 @@ Likewise for fine-tuning.
 """
 
 """
-## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs
- dataset
+## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs dataset
 
 To solidify these concepts, let's walk you through a concrete end-to-end transfer
 learning & fine-tuning example. We will load the Xception model, pre-trained on
@@ -497,7 +496,7 @@ for images, labels in train_ds.take(1):
             tf.expand_dims(first_image, 0), training=True
         )
         plt.imshow(augmented_image[0].numpy().astype("int32"))
-        plt.title(int(labels[i]))
+        plt.title(int(labels[0]))
         plt.axis("off")
 
 """

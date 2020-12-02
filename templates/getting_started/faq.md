@@ -21,7 +21,7 @@ A list of frequently Asked Keras Questions.
 - [How can I use Keras with datasets that don't fit in memory?](#how-can-i-use-keras-with-datasets-that-dont-fit-in-memory)
 - [How can I regularly save Keras models during training?](#how-can-i-regularly-save-keras-models-during-training)
 - [How can I interrupt training when the validation loss isn't decreasing anymore?](#how-can-i-interrupt-training-when-the-validation-loss-isnt-decreasing-anymore)
-- [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-fine-tuning)
+- [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-finetuning)
 - [What's the difference between the `training` argument in `call()` and the `trainable` attribute?](#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute)
 - [In `fit()`, how is the validation split computed?](#in-fit-how-is-the-validation-split-computed)
 - [In `fit()`, is the data shuffled during training?](#in-fit-is-the-data-shuffled-during-training)
@@ -671,7 +671,6 @@ discriminator.compile(...)  # the weights of `discriminator` should be updated w
 discriminator.trainable = False
 gan.compile(...)  # `discriminator` is a submodel of `gan`, which should not be updated when `gan` is trained
 ```
-
 
 
 ---
