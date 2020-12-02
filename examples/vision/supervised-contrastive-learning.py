@@ -144,9 +144,6 @@ history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num
 accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
-"""
-We get to ~78.4% test accuracy.
-"""
 
 """
 ## Experiment 2: Use supervised contrastive learning
@@ -221,7 +218,7 @@ accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 """
-We get to ~82.6% test accuracy.
+We get to an improved test accuracy.
 """
 
 """
