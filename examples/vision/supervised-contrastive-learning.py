@@ -4,7 +4,8 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/11/30
 Last modified: 2020/11/30
 Description: Using supervised contrastive learning for image classification.
-
+"""
+"""
 ## Introduction
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
@@ -31,8 +32,8 @@ pip install tensorflow-addons
 import tensorflow as tf
 import tensorflow_addons as tfa
 import numpy as np
-import keras
-from keras import layers
+from tensorflow import keras
+from tensorflow.keras import layers
 
 """
 ## Prepare the data
@@ -143,9 +144,6 @@ history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num
 accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
-"""
-We get to ~78.4% test accuracy.
-"""
 
 """
 ## Experiment 2: Use supervised contrastive learning
@@ -220,7 +218,7 @@ accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 """
-We get to ~82.6% test accuracy.
+We get to an improved test accuracy.
 """
 
 """
