@@ -73,7 +73,7 @@ between the formats.
 def swap_xy(boxes):
     """Swaps order the of x and y coordinates of the boxes.
 
-    Arguments:
+    Args:
       boxes: A tensor with shape `(num_boxes, 4)` representing bounding boxes.
 
     Returns:
@@ -85,7 +85,7 @@ def swap_xy(boxes):
 def convert_to_xywh(boxes):
     """Changes the box format to center, width and height.
 
-    Arguments:
+    Args:
       boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
         representing bounding boxes where each box is of the format
         `[xmin, ymin, xmax, ymax]`.
@@ -102,7 +102,7 @@ def convert_to_xywh(boxes):
 def convert_to_corners(boxes):
     """Changes the box format to corner coordinates
 
-    Arguments:
+    Args:
       boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
         representing bounding boxes where each box is of the format
         `[x, y, width, height]`.
@@ -129,7 +129,7 @@ boxes and ground truth boxes pairs.
 def compute_iou(boxes1, boxes2):
     """Computes pairwise IOU matrix for given two sets of boxes
 
-    Arguments:
+    Args:
       boxes1: A tensor with shape `(N, 4)` representing bounding boxes
         where each box is of the format `[x, y, width, height]`.
         boxes2: A tensor with shape `(M, 4)` representing bounding boxes
@@ -244,7 +244,7 @@ class AnchorBox:
     def _get_anchors(self, feature_height, feature_width, level):
         """Generates anchor boxes for a given feature map size and level
 
-        Arguments:
+        Args:
           feature_height: An integer representing the height of the feature map.
           feature_width: An integer representing the width of the feature map.
           level: An integer representing the level of the feature map in the
@@ -270,7 +270,7 @@ class AnchorBox:
     def get_anchors(self, image_height, image_width):
         """Generates anchor boxes for all the feature maps of the feature pyramid.
 
-        Arguments:
+        Args:
           image_height: Height of the input image.
           image_width: Width of the input image.
 
@@ -307,7 +307,7 @@ Along with the images, bounding boxes are rescaled and flipped if required.
 def random_flip_horizontal(image, boxes):
     """Flips image and boxes horizontally with 50% chance
 
-    Arguments:
+    Args:
       image: A 3-D tensor of shape `(height, width, channels)` representing an
         image.
       boxes: A tensor with shape `(num_boxes, 4)` representing bounding boxes,
@@ -335,7 +335,7 @@ def resize_and_pad_image(
     3. Pad with zeros on right and bottom to make the image shape divisible by
     `stride`
 
-    Arguments:
+    Args:
       image: A 3-D tensor of shape `(height, width, channels)` representing an
         image.
       min_side: The shorter side of the image is resized to this value, if
@@ -374,7 +374,7 @@ def resize_and_pad_image(
 def preprocess_data(sample):
     """Applies preprocessing step to a single sample
 
-    Arguments:
+    Args:
       sample: A dict representing a single training sample.
 
     Returns:
@@ -451,7 +451,7 @@ class LabelEncoder:
         4. The remaining anchor boxes that do not have any class assigned are
           ignored during training.
 
-        Arguments:
+        Args:
           anchor_boxes: A float tensor with the shape `(total_anchors, 4)`
             representing all the anchor boxes for a given input image shape,
             where each anchor box is of the format `[x, y, width, height]`.
@@ -601,7 +601,7 @@ between all the feature maps of the feature pyramid.
 def build_head(output_filters, bias_init):
     """Builds the class/box predictions head.
 
-    Arguments:
+    Args:
       output_filters: Number of convolution filters in the final layer.
       bias_init: Bias Initializer for the final convolution layer.
 

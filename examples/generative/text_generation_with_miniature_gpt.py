@@ -280,7 +280,7 @@ class TextGenerator(keras.callbacks.Callback):
     2. Predict probabilities for the next token
     3. Sample the next token and add it to the next input
 
-    Arguments:
+    Args:
         max_tokens: Integer, the number of tokens to be generated after prompt.
         start_tokens: List of integers, the token indices for the starting prompt.
         index_to_word: List of strings, obtained from the TextVectorization layer.

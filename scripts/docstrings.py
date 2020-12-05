@@ -19,7 +19,7 @@ class TFKerasDocumentationGenerator:
 
     def process_docstring(self, docstring):
         docstring = docstring.replace("Args:", "# Arguments")
-        docstring = docstring.replace("Arguments:", "# Arguments")
+        docstring = docstring.replace("Args:", "# Arguments")
         docstring = docstring.replace("Attributes:", "# Attributes")
         docstring = docstring.replace("Returns:", "# Returns")
         docstring = docstring.replace("Raises:", "# Raises")
