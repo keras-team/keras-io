@@ -326,7 +326,7 @@ class TemporalSoftmax(keras.layers.Layer):
     def call(self, inputs, mask=None):
         broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
         inputs_exp = tf.exp(inputs) * broadcast_float_mask
-        inputs_sum = tf.reduce_sum(inputs * broadcast_float_mask, axis=1, keepdims=True)
+        inputs_sum = tf.reduce_sum(inputs_exp * broadcast_float_mask, axis=-1, keepdims=True)
         return inputs_exp / inputs_sum
 
 
