@@ -13,7 +13,7 @@
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 (Prannay Khosla et al.) is a training methodology that outperforms
-supervised training on classification tasks with crossentropy.
+supervised training with crossentropy on classification tasks.
 
 Essentially, training an image classification model with Supervised Contrastive
 Learning is performed in two phases:
