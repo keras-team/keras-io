@@ -9,13 +9,11 @@
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/supervised-contrastive-learning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/supervised-contrastive-learning.py)
 
 
-
----
 ## Introduction
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 (Prannay Khosla et al.) is a training methodology that outperforms
-plain crossentropy-supervised training on classification tasks.
+supervised training with crossentropy on classification tasks.
 
 Essentially, training an image classification model with Supervised Contrastive
 Learning is performed in two phases:
@@ -25,15 +23,16 @@ that representations of images in the same class will be more similar compared t
 representations of images in different classes.
 2. Training a classifier on top of the frozen encoder.
 
-Note that this example requires TensorFlow Addons, which you can install via:
+
+Note that this example requires [TensorFlow Addons](https://www.tensorflow.org/addons), which you can install using 
+the following command:
 
 ```python
 pip install tensorflow-addons
 ```
 
----
-## Setup
 
+## Setup
 
 ```python
 import tensorflow as tf
@@ -43,7 +42,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 ```
 
----
 ## Prepare the data
 
 

@@ -10,7 +10,7 @@ Description: Using supervised contrastive learning for image classification.
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 (Prannay Khosla et al.) is a training methodology that outperforms
-plain crossentropy-supervised training on classification tasks.
+supervised training with crossentropy on classification tasks.
 
 Essentially, training an image classification model with Supervised Contrastive
 Learning is performed in two phases:
@@ -20,7 +20,8 @@ that representations of images in the same class will be more similar compared t
 representations of images in different classes.
 2. Training a classifier on top of the frozen encoder.
 
-Note that this example requires TensorFlow Addons, which you can install via:
+Note that this example requires [TensorFlow Addons](https://www.tensorflow.org/addons),
+which you can install using the following command:
 
 ```python
 pip install tensorflow-addons
