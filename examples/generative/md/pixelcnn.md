@@ -5,26 +5,22 @@
 **Last modified:** 2020/05/26<br>
 **Description:** PixelCNN implemented in Keras.
 
-
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
 
-
-
 ---
+
 ## Introduction
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
 (reference: [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)).
-It is designed to generate images (or other data types) iteratively,
+It is designed to generate images (or other data types) iteratively
 from an input vector where the probability distribution of prior elements dictates the
 probability distribution of later elements. In the following example, images are generated
 in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
 from previously generated pixels (origin at the top left) to generate later pixels.
-During inference, the output of the network is used as a probability ditribution
+During inference, the output of the network is used as a probability distribution
 from which new pixel values are sampled to generate a new image
-(here, with MNIST, the pixels values are either black or white).
-
-
+(here, with MNIST, the pixel values range from white (0) to black (255)).
 
 ```python
 import numpy as np
@@ -36,9 +32,8 @@ from tqdm import tqdm
 ```
 
 ---
-## Getting the Data
 
-
+## Getting the data
 
 ```python
 # Model / data parameters
@@ -54,13 +49,11 @@ data = np.concatenate((x, y), axis=0)
 # 0 or 1
 data = np.where(data < (0.33 * 256), 0, 1)
 data = data.astype(np.float32)
-
 ```
 
 ---
+
 ## Create two classes for the requisite Layers for the model
-
-
 
 ```python
 # The first layer is the PixelCNN layer. This layer simply
@@ -111,14 +104,11 @@ class ResidualBlock(keras.layers.Layer):
         x = self.pixel_conv(x)
         x = self.conv2(x)
         return keras.layers.add([inputs, x])
-
-
 ```
 
 ---
+
 ## Build the model based on the original paper
-
-
 
 ```python
 inputs = keras.Input(shape=input_shape)
@@ -151,7 +141,6 @@ pixel_cnn.summary()
 pixel_cnn.fit(
     x=data, y=data, batch_size=128, epochs=50, validation_split=0.1, verbose=2
 )
-
 ```
 
 <div class="k-default-codeblock">
@@ -289,14 +278,14 @@ Epoch 50/50
 
 ```
 </div>
+
 ---
+
 ## Demonstration
 
-The PixelCNN cannot generate the full image at once, and must instead generate each pixel in
+The PixelCNN cannot generate the full image at once. Instead, it must generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
-
-
 
 ```python
 from IPython.display import Image, display
@@ -306,7 +295,7 @@ batch = 4
 pixels = np.zeros(shape=(batch,) + (pixel_cnn.input_shape)[1:])
 batch, rows, cols, channels = pixels.shape
 
-# Iterate the pixels because generation has to be done sequentially pixel by pixel.
+# Iterate over the pixels because generation has to be done sequentially pixel by pixel.
 for row in tqdm(range(rows)):
     for col in range(cols):
         for channel in range(channels):
@@ -319,9 +308,8 @@ for row in tqdm(range(rows)):
                 probs - tf.random.uniform(probs.shape)
             )
 
-
 def deprocess_image(x):
-    # Stack the single channeled black and white image to rgb values.
+    # Stack the single channeled black and white image to RGB values.
     x = np.stack((x, x, x), 2)
     # Undo preprocessing
     x *= 255.0
@@ -329,8 +317,7 @@ def deprocess_image(x):
     x = np.clip(x, 0, 255).astype("uint8")
     return x
 
-
-# Iterate the generated images and plot them with matplotlib.
+# Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
     keras.preprocessing.image.save_img(
         "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
@@ -340,7 +327,6 @@ display(Image("generated_image_0.png"))
 display(Image("generated_image_1.png"))
 display(Image("generated_image_2.png"))
 display(Image("generated_image_3.png"))
-
 ```
 
 <div class="k-default-codeblock">
@@ -362,4 +348,3 @@ display(Image("generated_image_3.png"))
 
 
 ![png](/img/examples/generative/pixelcnn/pixelcnn_10_4.png)
-

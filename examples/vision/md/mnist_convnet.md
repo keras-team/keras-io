@@ -15,11 +15,9 @@
 
 
 ```python
-
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
@@ -27,7 +25,6 @@ from tensorflow.keras import layers
 
 
 ```python
-
 # Model / data parameters
 num_classes = 10
 input_shape = (28, 28, 1)
@@ -49,7 +46,6 @@ print(x_test.shape[0], "test samples")
 # convert class vectors to binary class matrices
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
-
 ```
 
 <div class="k-default-codeblock">
@@ -65,7 +61,6 @@ x_train shape: (60000, 28, 28, 1)
 
 
 ```python
-
 model = keras.Sequential(
     [
         keras.Input(shape=input_shape),
@@ -80,7 +75,6 @@ model = keras.Sequential(
 )
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -115,42 +109,40 @@ _________________________________________________________________
 
 
 ```python
-
 batch_size = 128
 epochs = 15
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
 model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
-422/422 [==============================] - 13s 30ms/step - loss: 0.3697 - accuracy: 0.8900 - val_loss: 0.0869 - val_accuracy: 0.9768
+422/422 [==============================] - 13s 29ms/step - loss: 0.7840 - accuracy: 0.7643 - val_loss: 0.0780 - val_accuracy: 0.9780
 Epoch 2/15
-422/422 [==============================] - 13s 32ms/step - loss: 0.1178 - accuracy: 0.9637 - val_loss: 0.0612 - val_accuracy: 0.9835
+422/422 [==============================] - 13s 31ms/step - loss: 0.1199 - accuracy: 0.9639 - val_loss: 0.0559 - val_accuracy: 0.9843
 Epoch 3/15
-422/422 [==============================] - 15s 35ms/step - loss: 0.0865 - accuracy: 0.9730 - val_loss: 0.0501 - val_accuracy: 0.9857
+422/422 [==============================] - 14s 33ms/step - loss: 0.0845 - accuracy: 0.9737 - val_loss: 0.0469 - val_accuracy: 0.9877
 Epoch 4/15
-422/422 [==============================] - 15s 36ms/step - loss: 0.0723 - accuracy: 0.9779 - val_loss: 0.0456 - val_accuracy: 0.9877
+422/422 [==============================] - 14s 33ms/step - loss: 0.0762 - accuracy: 0.9756 - val_loss: 0.0398 - val_accuracy: 0.9895
 Epoch 5/15
-422/422 [==============================] - 16s 39ms/step - loss: 0.0653 - accuracy: 0.9793 - val_loss: 0.0394 - val_accuracy: 0.9892
+422/422 [==============================] - 15s 35ms/step - loss: 0.0621 - accuracy: 0.9812 - val_loss: 0.0378 - val_accuracy: 0.9890
 Epoch 6/15
-422/422 [==============================] - 17s 41ms/step - loss: 0.0562 - accuracy: 0.9823 - val_loss: 0.0409 - val_accuracy: 0.9875
+422/422 [==============================] - 17s 40ms/step - loss: 0.0547 - accuracy: 0.9825 - val_loss: 0.0360 - val_accuracy: 0.9910
 Epoch 7/15
-422/422 [==============================] - 17s 41ms/step - loss: 0.0527 - accuracy: 0.9841 - val_loss: 0.0397 - val_accuracy: 0.9895
+422/422 [==============================] - 17s 41ms/step - loss: 0.0497 - accuracy: 0.9840 - val_loss: 0.0311 - val_accuracy: 0.9920
 Epoch 8/15
-422/422 [==============================] - 17s 40ms/step - loss: 0.0485 - accuracy: 0.9848 - val_loss: 0.0367 - val_accuracy: 0.9897
+422/422 [==============================] - 16s 39ms/step - loss: 0.0443 - accuracy: 0.9862 - val_loss: 0.0346 - val_accuracy: 0.9910
 Epoch 9/15
-422/422 [==============================] - 17s 39ms/step - loss: 0.0464 - accuracy: 0.9851 - val_loss: 0.0358 - val_accuracy: 0.9888
+422/422 [==============================] - 17s 39ms/step - loss: 0.0436 - accuracy: 0.9860 - val_loss: 0.0325 - val_accuracy: 0.9915
 Epoch 10/15
-422/422 [==============================] - 17s 40ms/step - loss: 0.0416 - accuracy: 0.9868 - val_loss: 0.0322 - val_accuracy: 0.9910
+422/422 [==============================] - 16s 38ms/step - loss: 0.0407 - accuracy: 0.9865 - val_loss: 0.0301 - val_accuracy: 0.9920
 Epoch 11/15
-422/422 [==============================] - 17s 41ms/step - loss: 0.0417 - accuracy: 0.9864 - val_loss: 0.0306 - val_accuracy: 0.9925
+422/422 [==============================] - 16s 37ms/step - loss: 0.0406 - accuracy: 0.9874 - val_loss: 0.0303 - val_accuracy: 0.9920
 Epoch 12/15
-197/422 [=============>................] - ETA: 9s - loss: 0.0418 - accuracy: 0.9859
+237/422 [===============>..............] - ETA: 7s - loss: 0.0398 - accuracy: 0.9877
 
 ```
 </div>
@@ -159,17 +151,15 @@ Epoch 12/15
 
 
 ```python
-
 score = model.evaluate(x_test, y_test, verbose=0)
 print("Test loss:", score[0])
 print("Test accuracy:", score[1])
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Test loss: 0.026443352922797203
-Test accuracy: 0.9900000095367432
+Test loss: 0.023950600996613503
+Test accuracy: 0.9922000169754028
 
 ```
 </div>

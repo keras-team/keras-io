@@ -677,7 +677,7 @@ a `Model` that we could train with `fit()`, and that we could save with
 ```python
 class ResNet(tf.keras.Model):
 
-    def __init__(self):
+    def __init__(self, num_classes=1000):
         super(ResNet, self).__init__()
         self.block_1 = ResNetBlock()
         self.block_2 = ResNetBlock()

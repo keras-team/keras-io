@@ -14,29 +14,26 @@
 ## Download the data
 
 
-
 ```python
 !curl -O http://www.robots.ox.ac.uk/~vgg/data/pets/data/images.tar.gz
 !curl -O http://www.robots.ox.ac.uk/~vgg/data/pets/data/annotations.tar.gz
 !tar -xf images.tar.gz
 !tar -xf annotations.tar.gz
-
 ```
 
 <div class="k-default-codeblock">
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  755M  100  755M    0     0  19.7M      0  0:00:38  0:00:38 --:--:-- 14.0M
+100  755M  100  755M    0     0  6943k      0  0:01:51  0:01:51 --:--:-- 7129k
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 18.2M  100 18.2M    0     0  9162k      0  0:00:02  0:00:02 --:--:-- 9164k
+100 18.2M  100 18.2M    0     0  5692k      0  0:00:03  0:00:03 --:--:-- 5692k
 
 ```
 </div>
 ---
 ## Prepare paths of input images and target segmentation masks
-
 
 
 ```python
@@ -45,7 +42,7 @@ import os
 input_dir = "images/"
 target_dir = "annotations/trimaps/"
 img_size = (160, 160)
-num_classes = 4
+num_classes = 3
 batch_size = 32
 
 input_img_paths = sorted(
@@ -67,7 +64,6 @@ print("Number of samples:", len(input_img_paths))
 
 for input_path, target_path in zip(input_img_paths[:10], target_img_paths[:10]):
     print(input_path, "|", target_path)
-
 ```
 
 <div class="k-default-codeblock">
@@ -90,7 +86,6 @@ images/Abyssinian_107.jpg | annotations/trimaps/Abyssinian_107.png
 ## What does one input image and corresponding segmentation mask look like?
 
 
-
 ```python
 from IPython.display import Image, display
 from tensorflow.keras.preprocessing.image import load_img
@@ -103,20 +98,22 @@ display(Image(filename=input_img_paths[9]))
 # Display auto-contrast version of corresponding target (per-pixel categories)
 img = PIL.ImageOps.autocontrast(load_img(target_img_paths[9]))
 display(img)
-
 ```
 
 
+    
 ![jpeg](/img/examples/vision/oxford_pets_image_segmentation/oxford_pets_image_segmentation_6_0.jpeg)
+    
 
 
 
+    
 ![png](/img/examples/vision/oxford_pets_image_segmentation/oxford_pets_image_segmentation_6_1.png)
+    
 
 
 ---
 ## Prepare `Sequence` class to load & vectorize batches of data
-
 
 
 ```python
@@ -142,22 +139,22 @@ class OxfordPets(keras.utils.Sequence):
         i = idx * self.batch_size
         batch_input_img_paths = self.input_img_paths[i : i + self.batch_size]
         batch_target_img_paths = self.target_img_paths[i : i + self.batch_size]
-        x = np.zeros((batch_size,) + self.img_size + (3,), dtype="float32")
+        x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="float32")
         for j, path in enumerate(batch_input_img_paths):
             img = load_img(path, target_size=self.img_size)
             x[j] = img
-        y = np.zeros((batch_size,) + self.img_size + (1,), dtype="uint8")
+        y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
         for j, path in enumerate(batch_target_img_paths):
             img = load_img(path, target_size=self.img_size, color_mode="grayscale")
             y[j] = np.expand_dims(img, 2)
+            # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
+            y[j] -= 1
         return x, y
-
 
 ```
 
 ---
 ## Perpare U-Net Xception-style model
-
 
 
 ```python
@@ -228,12 +225,11 @@ keras.backend.clear_session()
 # Build model
 model = get_model(img_size, num_classes)
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Model: "model"
+Model: "functional_1"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
 ==================================================================================================
@@ -386,10 +382,10 @@ ________________________________________________________________________________
 add_6 (Add)                     (None, 160, 160, 32) 0           up_sampling2d_6[0][0]            
                                                                  conv2d_7[0][0]                   
 __________________________________________________________________________________________________
-conv2d_8 (Conv2D)               (None, 160, 160, 4)  1156        add_6[0][0]                      
+conv2d_8 (Conv2D)               (None, 160, 160, 3)  867         add_6[0][0]                      
 ==================================================================================================
-Total params: 2,059,268
-Trainable params: 2,055,492
+Total params: 2,058,979
+Trainable params: 2,055,203
 Non-trainable params: 3,776
 __________________________________________________________________________________________________
 
@@ -397,7 +393,6 @@ ________________________________________________________________________________
 </div>
 ---
 ## Set aside a validation split
-
 
 
 ```python
@@ -417,12 +412,10 @@ train_gen = OxfordPets(
     batch_size, img_size, train_input_img_paths, train_target_img_paths
 )
 val_gen = OxfordPets(batch_size, img_size, val_input_img_paths, val_target_img_paths)
-
 ```
 
 ---
 ## Train the model
-
 
 
 ```python
@@ -438,49 +431,48 @@ callbacks = [
 # Train the model, doing validation at the end of each epoch.
 epochs = 15
 model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.9539 - val_loss: 13.5056
+  2/199 [..............................] - ETA: 13s - loss: 5.4602WARNING:tensorflow:Callbacks method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0462s vs `on_train_batch_end` time: 0.0935s). Check your callbacks.
+199/199 [==============================] - 32s 161ms/step - loss: 0.9396 - val_loss: 3.7159
 Epoch 2/15
-199/199 [==============================] - 44s 221ms/step - loss: 0.5145 - val_loss: 2.2228
+199/199 [==============================] - 32s 159ms/step - loss: 0.4911 - val_loss: 2.2709
 Epoch 3/15
-199/199 [==============================] - 44s 222ms/step - loss: 0.4318 - val_loss: 0.4182
+199/199 [==============================] - 32s 160ms/step - loss: 0.4205 - val_loss: 0.5184
 Epoch 4/15
-199/199 [==============================] - 44s 221ms/step - loss: 0.4027 - val_loss: 0.4100
+199/199 [==============================] - 32s 159ms/step - loss: 0.3739 - val_loss: 0.4584
 Epoch 5/15
-199/199 [==============================] - 44s 223ms/step - loss: 0.3551 - val_loss: 0.3894
+199/199 [==============================] - 32s 160ms/step - loss: 0.3416 - val_loss: 0.3968
 Epoch 6/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.3226 - val_loss: 0.4020
+199/199 [==============================] - 32s 159ms/step - loss: 0.3131 - val_loss: 0.4059
 Epoch 7/15
-199/199 [==============================] - 44s 219ms/step - loss: 0.3195 - val_loss: 0.4273
+199/199 [==============================] - 31s 157ms/step - loss: 0.2895 - val_loss: 0.3963
 Epoch 8/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.2789 - val_loss: 0.3707
+199/199 [==============================] - 31s 156ms/step - loss: 0.2695 - val_loss: 0.4035
 Epoch 9/15
-199/199 [==============================] - 43s 219ms/step - loss: 0.2599 - val_loss: 0.4059
+199/199 [==============================] - 31s 157ms/step - loss: 0.2528 - val_loss: 0.4184
 Epoch 10/15
-199/199 [==============================] - 44s 222ms/step - loss: 0.2440 - val_loss: 0.3799
+199/199 [==============================] - 31s 157ms/step - loss: 0.2360 - val_loss: 0.3950
 Epoch 11/15
-199/199 [==============================] - 43s 218ms/step - loss: 0.2297 - val_loss: 0.4244
+199/199 [==============================] - 31s 157ms/step - loss: 0.2247 - val_loss: 0.4139
 Epoch 12/15
-199/199 [==============================] - 43s 218ms/step - loss: 0.2179 - val_loss: 0.4320
+199/199 [==============================] - 31s 157ms/step - loss: 0.2126 - val_loss: 0.3861
 Epoch 13/15
-199/199 [==============================] - 43s 218ms/step - loss: 0.2081 - val_loss: 0.4034
+199/199 [==============================] - 31s 157ms/step - loss: 0.2026 - val_loss: 0.4138
 Epoch 14/15
-199/199 [==============================] - 44s 220ms/step - loss: 0.1977 - val_loss: 0.4034
+199/199 [==============================] - 31s 156ms/step - loss: 0.1932 - val_loss: 0.4265
 Epoch 15/15
-199/199 [==============================] - 44s 222ms/step - loss: 0.1901 - val_loss: 0.4150
+199/199 [==============================] - 31s 157ms/step - loss: 0.1857 - val_loss: 0.3959
 
-<tensorflow.python.keras.callbacks.History at 0x7f0e18087898>
+<tensorflow.python.keras.callbacks.History at 0x7f6e11107b70>
 
 ```
 </div>
 ---
 ## Visualize predictions
-
 
 
 ```python
@@ -510,17 +502,22 @@ display(img)
 
 # Display mask predicted by our model
 display_mask(i)  # Note that the model only sees inputs at 150x150.
-
 ```
 
 
+    
 ![jpeg](/img/examples/vision/oxford_pets_image_segmentation/oxford_pets_image_segmentation_16_0.jpeg)
+    
 
 
 
+    
 ![png](/img/examples/vision/oxford_pets_image_segmentation/oxford_pets_image_segmentation_16_1.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/oxford_pets_image_segmentation/oxford_pets_image_segmentation_16_2.png)
+    
 

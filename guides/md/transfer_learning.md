@@ -415,8 +415,7 @@ Likewise for fine-tuning.
 
 
 ---
-## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs
- dataset
+## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs dataset
 
 To solidify these concepts, let's walk you through a concrete end-to-end transfer
 learning & fine-tuning example. We will load the Xception model, pre-trained on

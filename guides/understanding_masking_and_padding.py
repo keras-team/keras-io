@@ -19,8 +19,8 @@ from tensorflow.keras import layers
 **Masking** is a way to tell sequence-processing layers that certain timesteps
 in an input are missing, and thus should be skipped when processing the data.
 
-**Padding** is a special form of masking where the masked steps are at the start or at
-the beginning of a sequence. Padding comes from the need to encode sequence data into
+**Padding** is a special form of masking where the masked steps are at the start or
+the end of a sequence. Padding comes from the need to encode sequence data into
 contiguous batches: in order to make all sequences in a batch fit a given standard
 length, it is necessary to pad or truncate some sequences.
 
@@ -326,7 +326,7 @@ class TemporalSoftmax(keras.layers.Layer):
     def call(self, inputs, mask=None):
         broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
         inputs_exp = tf.exp(inputs) * broadcast_float_mask
-        inputs_sum = tf.reduce_sum(inputs * broadcast_float_mask, axis=1, keepdims=True)
+        inputs_sum = tf.reduce_sum(inputs_exp * broadcast_float_mask, axis=-1, keepdims=True)
         return inputs_exp / inputs_sum
 
 

@@ -422,6 +422,8 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
+    if len(lines) != 5:
+        raise ValueError("Invalid header, it should be only 5 lines.")
     title = lines[0][len("Title: ") :]
     author_line = lines[1]
     if author_line.startswith("Authors"):

@@ -15,7 +15,6 @@ A Keras model consists of multiple components:
 - The compilation information, that includes an optimizer, losses and metrics.
 
 The Keras API makes it possible to save and load all or selectively some of these parts:
-
 - Save and load a model (**recommended**), i.e, everything in the SavedModel format (or the older H5 format).
 - Save and load the architecture only, typically as a JSON file.
 - Save and load the weights only, typically as checkpoints.
@@ -42,7 +41,6 @@ from tensorflow import keras
 from tensorflow import keras
 model = ...  # Define model (Sequential, Functional Model, or Model subclass)
 keras.models.save_model(model, 'path/to/location') # or `model.save('path/to/location')`
-
 ```
 
 **Load model:**
@@ -58,6 +56,10 @@ use a filename that ends in `.h5` or pass `save_format='h5'` to `save()`.
 
 """
 ### SavedModel format
+
+SavedModel is the more comprehensive save format that saves the model architecture,
+weights, and the traced Tensorflow subgraphs of the call functions. This enables
+Keras to restore both built-in layers as well as custom objects.
 
 **Example:**
 """
@@ -128,17 +130,17 @@ and used for inference.
 Nevertheless, it is always a good practice to define the `get_config`
 and `from_config` methods when writing a custom model or layer class.
 This allows you to easily update the computation later if needed.
-See the section about [Custom objects](save_and_serialize.ipynb#custom-objects)
+See the section about [Custom objects](#custom-objects)
 for more information.
 
-Below is an example of what happens when loading custom layers from
-he SavedModel format **without** overwriting the config methods.
+Example:
 """
 
 
 class CustomModel(keras.Model):
     def __init__(self, hidden_units):
         super(CustomModel, self).__init__()
+        self.hidden_units = hidden_units
         self.dense_layers = [keras.layers.Dense(u) for u in hidden_units]
 
     def call(self, inputs):
@@ -147,6 +149,13 @@ class CustomModel(keras.Model):
             x = layer(x)
         return x
 
+    def get_config(self):
+        return {"hidden_units": self.hidden_units}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 
 model = CustomModel([16, 16, 10])
 # Build the model by calling it
@@ -154,19 +163,42 @@ input_arr = tf.random.uniform((1, 5))
 outputs = model(input_arr)
 model.save("my_model")
 
+# Option 1: Load with the custom_object argument.
+loaded_1 = keras.models.load_model(
+    "my_model", custom_objects={"CustomModel": CustomModel}
+)
+
+# Option 2: Load without the CustomModel class.
+
 # Delete the custom-defined model class to ensure that the loader does not have
 # access to it.
 del CustomModel
 
-loaded = keras.models.load_model("my_model")
-np.testing.assert_allclose(loaded(input_arr), outputs)
+loaded_2 = keras.models.load_model("my_model")
+np.testing.assert_allclose(loaded_1(input_arr), outputs)
+np.testing.assert_allclose(loaded_2(input_arr), outputs)
 
 print("Original model:", model)
-print("Loaded model:", loaded)
+print("Model Loaded with custom objects:", loaded_1)
+print("Model loaded without the custom object class:", loaded_2)
+
 
 """
-As seen in the example above, the loader dynamically creates a new model class
-that acts like the original model.
+The first loaded model is loaded using the config and `CustomModel` class. The second
+model is loaded by dynamically creating the model class that acts like the original model.
+"""
+
+
+"""
+#### Configuring the SavedModel
+
+*New in TensoFlow 2.4*
+The argument `save_traces` has been added to `model.save`, which allows you to toggle
+SavedModel function tracing. Functions are saved to allow the Keras to re-load custom
+objects without the original class definitons, so when `save_traces=False`, all custom
+objects must have defined `get_config`/`from_config` methods. When loading, the custom
+objects must be passed to the `custom_objects` argument. `save_traces=False` reduces the
+disk space used by the SavedModel and saving time.
 """
 
 """
@@ -218,7 +250,7 @@ these losses & metrics are kept, since they are part of the `call` method of the
 - The **computation graph of custom objects** such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
-See [Custom objects](save_and_serialize.ipynb#custom-objects).
+See [Custom objects](#custom-objects).
 
 
 """
@@ -511,7 +543,7 @@ def create_layer():
 layer_1 = create_layer()
 layer_2 = create_layer()
 
-# Copy weights from layer 2 to layer 1
+# Copy weights from layer 1 to layer 2
 layer_2.set_weights(layer_1.get_weights())
 
 """
