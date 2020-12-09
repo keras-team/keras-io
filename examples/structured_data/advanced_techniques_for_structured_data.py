@@ -44,7 +44,7 @@ from sklearn.model_selection import train_test_split
 """
 ## Prepare the data
 
-First, download the data from the UCI Machine Learning Repository to a pandas Dataframe:
+First, let's download the data from the UCI Machine Learning Repository to a pandas Dataframe:
 """
 
 data_url = (
@@ -55,9 +55,9 @@ print(f"Dataset shape: {raw_data.shape}")
 raw_data.head()
 
 """
-The two catrogircal features in the dataset, as well as the target feature are binary encoded.
-We will this dataset repesentation to the typical repesentation, where each categorical feature is
-repesented as on column.
+The two catrogircal features in the dataset are binary encoded.
+We will convert this dataset repesentation to the typical repesentation, where each categorical
+feature is repesented as on column.
 """
 
 soil_type_values = [f"soil_type_{idx+1}" for idx in range(40)]
@@ -92,13 +92,15 @@ data = pd.concat(
     ignore_index=True,
 )
 data.columns = CSV_HEADER
+
+# Change the target label indicies to range from 0 to 6.
 data["Cover_Type"] = data["Cover_Type"] - 1
 
 print(f"Dataset shape: {data.shape}")
 data.head().T
 
 """
-You can see now the dataframe has 13 columns per sample (12 features, plus the target label).
+You can see now the Dataframe has 13 columns per sample (12 features, plus the target label).
 
 Let's split the data into training and testing splits, with 85% and 15% of the instance, respectively.
 """
@@ -337,7 +339,7 @@ def create_dense_feature_columns():
 
 
 """
-## Experiment 1: Baseline model
+## Experiment 1: baseline model
 
 In first experiment, we create a multi-layer feed-forward network, where the categorical features are
 one-hot encoded.
@@ -447,7 +449,6 @@ def create_deep_and_cross_model():
     merged = layers.concatenate([cross, deep])
     outputs = layers.Dense(units=NUM_CLASSES, activation="softmax")(merged)
     model = keras.Model(inputs=inputs, outputs=outputs, name="dnc-classifier")
-
     return model
 
 
