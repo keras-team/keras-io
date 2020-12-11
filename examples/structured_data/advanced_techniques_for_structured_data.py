@@ -1,5 +1,5 @@
 """
-Title: Advanced techniques for structured data
+Title: Structured data classification with wide, deep and cross networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/31
 Last modified: 2020/12/31
