@@ -252,90 +252,53 @@ def create_model_inputs():
 
 
 """
-## Create feature columns
+## Encode features
 
 We create two representations of our input features: sparse and dense:
-1. In the **sparse** representation, the categorical features are encoded with one-hot encoding,
-using [tf.feature_columns.indicator_column](https://www.tensorflow.org/api_docs/python/tf/feature_column/indicator_column).
-This representation can be useful for the model to *memorize* particular feature values to make certain
-predictions.
-2. In the **dense** representation, the categorical features are encoded with low-dimensional embeddings,
-using the [tf.feature_column.embedding_column](https://www.tensorflow.org/api_docs/python/tf/feature_column/embedding_column).
+1. In the **sparse** representation, the categorical features are encoded with one-hot encoding, using `CategoryEncoding` layer. 
+This representation can be useful for the model to *memorize* particular feature values to make certain predictions.
+2. In the **dense** representation, the categorical features are encoded with low-dimensional embeddings, using the `Embedding` layer. 
 This representation helps the model to *generalize* well to unseen feature combinations.
-
-These feature columns are converted to a Keras dense layer using the
-[tf.keras.layers.DenseFeatures](https://www.tensorflow.org/api_docs/python/tf/keras/layers/DenseFeatures).
 """
 
 
-def create_sparse_feature_columns():
-    feature_columns = []
-    for feature_name in FEATURE_NAMES:
-        if feature_name in NUMERIC_FEATURE_NAMES:
-            # Create a numeric feature column.
-            feature_column = tf.feature_column.numeric_column(feature_name)
-        else:
+from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
+from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+
+
+def encode_inputs(inputs, use_embedding=False):
+    encoded_features = []
+    for feature_name in inputs:
+        if feature_name in CATEGORICAL_FEATURE_NAMES:
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-            # Create a categorical feature column.
-            feature_column = tf.feature_column.categorical_column_with_vocabulary_list(
-                feature_name, vocabulary_list=vocabulary
+            # Create a lookup to convert a string values to an integer indices.
+            index = StringLookup(
+                vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
-            # Encode the categorical feature with one-hot representation.
-            feature_column = tf.feature_column.indicator_column(feature_column)
-        feature_columns.append(feature_column)
-
-    # Create a crossed feature to capture the interaction between Soil_Type and Wilderness_Area.
-    num_values = int(
-        len(CATEGORICAL_FEATURES_WITH_VOCABULARY["Soil_Type"])
-        * len(CATEGORICAL_FEATURES_WITH_VOCABULARY["Wilderness_Area"])
-    )
-    soil_type_X_wilderness_area = tf.feature_column.crossed_column(
-        ["Soil_Type", "Wilderness_Area"], hash_bucket_size=num_values
-    )
-    # Encode the crossed feature with one-hot representation.
-    soil_type_X_wilderness_area_onehot = tf.feature_column.indicator_column(
-        soil_type_X_wilderness_area
-    )
-    feature_columns.append(soil_type_X_wilderness_area_onehot)
-
-    return feature_columns
-
-
-def create_dense_feature_columns():
-    feature_columns = []
-    for feature_name in FEATURE_NAMES:
-        if feature_name in NUMERIC_FEATURE_NAMES:
-            # Create a numeric feature column.
-            feature_column = tf.feature_column.numeric_column(feature_name)
+            # Convert the string input values into integer indices.
+            value_index = index(inputs[feature_name])
+            if use_embedding:
+                embedding_dims = int(math.sqrt(len(vocabulary)))
+                # Create an embedding layer with the specified dimensions.
+                embedding_ecoder = layers.Embedding(
+                    input_dim=len(vocabulary), output_dim=embedding_dims
+                )
+                # Convert the index values to embedding repesentations.
+                encoded_feature = embedding_ecoder(value_index)
+            else:
+                # Create a one-hot encoder.
+                onehot_encoder = CategoryEncoding(output_mode="binary")
+                onehot_encoder.adapt(index(vocabulary))
+                # Convert the index values to a one-hot repesentations.
+                encoded_feature = onehot_encoder(value_index)
         else:
-            vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-            # Create a categorical feature column.
-            feature_column = tf.feature_column.categorical_column_with_vocabulary_list(
-                feature_name, vocabulary_list=vocabulary
-            )
-            # Set the embedding dimensions to the square root of the vocabulary size.
-            embedding_dims = int(math.sqrt(len(vocabulary)))
-            # Encode the categorical feature with embedding representation.
-            feature_column = tf.feature_column.embedding_column(
-                feature_column, dimension=embedding_dims
-            )
-        feature_columns.append(feature_column)
+            # Use the numerical features as-is.
+            encoded_feature = tf.expand_dims(inputs[feature_name], -1)
 
-    # Create a crossed feature to capture the interaction between Soil_Type and Wilderness_Area.
-    num_values = int(
-        len(CATEGORICAL_FEATURES_WITH_VOCABULARY["Soil_Type"])
-        * len(CATEGORICAL_FEATURES_WITH_VOCABULARY["Wilderness_Area"])
-    )
-    soil_type_X_wilderness_area = tf.feature_column.crossed_column(
-        ["Soil_Type", "Wilderness_Area"], hash_bucket_size=num_values
-    )
-    # Encode the crossed feature with embedding representation.
-    soil_type_X_wilderness_area_embedding = tf.feature_column.embedding_column(
-        soil_type_X_wilderness_area, dimension=int(math.sqrt(num_values))
-    )
-    feature_columns.append(soil_type_X_wilderness_area_embedding)
+        encoded_features.append(encoded_feature)
 
-    return feature_columns
+    all_features = layers.concatenate(encoded_features)
+    return all_features
 
 
 """
@@ -348,8 +311,7 @@ one-hot encoded.
 
 def create_baseline_model():
     inputs = create_model_inputs()
-    sparse_feature_columns = create_sparse_feature_columns()
-    features = layers.DenseFeatures(sparse_feature_columns)(inputs)
+    features = encode_inputs(inputs)
 
     for units in hidden_units:
         features = layers.Dense(units)(features)
@@ -387,9 +349,7 @@ Note that every input features contributes to both parts of the model with diffe
 def create_wide_and_deep_model():
 
     inputs = create_model_inputs()
-
-    sparse_feature_columns = create_sparse_feature_columns()
-    wide = layers.DenseFeatures(sparse_feature_columns)(inputs)
+    wide = encode_inputs(inputs)
     wide = layers.BatchNormalization()(wide)
 
     dense_feature_columns = create_dense_feature_columns()
@@ -428,9 +388,7 @@ crossing in an efficient way, where the degree of cross features grows with laye
 def create_deep_and_cross_model():
 
     inputs = create_model_inputs()
-    dense_feature_columns = create_dense_feature_columns()
-
-    x0 = layers.DenseFeatures(dense_feature_columns)(inputs)
+    x0 = encode_inputs(inputs, use_embedding=True)
 
     cross = x0
     for _ in hidden_units:
@@ -448,7 +406,7 @@ def create_deep_and_cross_model():
 
     merged = layers.concatenate([cross, deep])
     outputs = layers.Dense(units=NUM_CLASSES, activation="softmax")(merged)
-    model = keras.Model(inputs=inputs, outputs=outputs, name="dnc-classifier")
+    model = keras.Model(inputs=inputs, outputs=outputs)
     return model
 
 
@@ -464,7 +422,7 @@ The deep and cross model achieves ~82.7% test accuracy.
 """
 ## Conclusion
 
-You can use the `tf.feature_column` API with your Keras models to easily handle input categorical
+You can use the Keras Processing Layers to easily handle input categorical
 features with different encoding mechanisms, including one-hot encoding and low-dimensional embedding.
 In addition, different model architectures — like wide, deep, and cross networks — have different advantages,
 with respect to the various dataset properties. You can explore using them independently or combining
