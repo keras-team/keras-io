@@ -10,8 +10,8 @@ Description: Exploring advanced modeling techniques for structured data.
 ## Introduction
 
 This example demonstrates how to do structured data classification using advanced techniques like:
-1. [Wide & Deep](https://ai.googleblog.com/2016/06/wide-deep-learning-better-together-with.html) models
-2. [Deep & Cross](https://arxiv.org/abs/1708.05123) models
+1. [Wide and deep](https://ai.googleblog.com/2016/06/wide-deep-learning-better-together-with.html) models
+2. [Deep and cross](https://arxiv.org/abs/1708.05123) models
 
 The example covers using [tf.feature_column](https://www.tensorflow.org/api_docs/python/tf/feature_column)
 to handle input features, and encoding categorical features using one-hot encoding and
@@ -25,7 +25,7 @@ Note that this example should be run with TensorFlow 2.3 or higher.
 ## The dataset
 
 This example uses the [covertype](https://archive.ics.uci.edu/ml/datasets/covertype) from UCI
-Machine Learning Repository. The task is to Predict forest cover type from cartographic variables.
+Machine Learning Repository. The task is to predict forest cover type from cartographic variables.
 The dataset includes 506,011 intances with 12 input features, 10 of which numerical, and the other 2 are
 categorical. The target class has 7 labels.
 """
@@ -44,7 +44,7 @@ from sklearn.model_selection import train_test_split
 """
 ## Prepare the data
 
-First, let's download the data from the UCI Machine Learning Repository to a pandas Dataframe:
+First, let's load the dataset from the UCI Machine Learning Repository into a Pandas DataFrame:
 """
 
 data_url = (
@@ -55,7 +55,7 @@ print(f"Dataset shape: {raw_data.shape}")
 raw_data.head()
 
 """
-The two catrogircal features in the dataset are binary encoded.
+The two categorical features in the dataset are binary encoded.
 We will convert this dataset repesentation to the typical repesentation, where each categorical
 feature is repesented as on column.
 """
@@ -368,11 +368,11 @@ keras.utils.plot_model(baseline_model, show_shapes=True)
 run_experiment(baseline_model)
 
 """
-The baseline linear model acheives ~76.4% test accuracy.
+The baseline linear model achieves ~76.4% test accuracy.
 """
 
 """
-## Experiment 2: wide & deep model
+## Experiment 2: wide and deep model
 
 In the second experiment, we create a wide and deep model. The wide part of the model a linear model,
 while the deep part of the model is a multi-layer feed-forward network.
@@ -413,11 +413,11 @@ keras.utils.plot_model(wide_and_deep_model, show_shapes=True)
 run_experiment(wide_and_deep_model)
 
 """
-The wide and deep model acheives ~79.8% test accuracy.
+The wide and deep model achieves ~79.8% test accuracy.
 """
 
 """
-## Experiment 3: deep & cross model
+## Experiment 3: deep and cross model
 
 In the third experiment, we create a deep and cross model. The deep part of this model is the same as
 the deep part created in the previous experiment. The key idea of the cross part is to apply explicit feature
@@ -458,15 +458,15 @@ keras.utils.plot_model(deep_and_cross_model, show_shapes=True)
 run_experiment(deep_and_cross_model)
 
 """
-The deep and cross model acheives ~82.7% test accuracy.
+The deep and cross model achieves ~82.7% test accuracy.
 """
 
 """
 ## Conclusion
 
-You can use the `tf.feature_column` API with your `Keras` models to easily handle input categorical
+You can use the `tf.feature_column` API with your Keras models to easily handle input categorical
 features with different encoding mechanisms, including one-hot encoding and low-dimensional embedding.
-In addition, model architectures, like wide, deep, and cross networks, have different advantages,
+In addition, different model architectures — like wide, deep, and cross networks — have different advantages,
 with respect to the various dataset properties. You can explore using them independently or combining
 them to achieve the best result for your dataset.
 """
