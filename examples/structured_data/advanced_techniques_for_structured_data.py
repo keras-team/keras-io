@@ -14,7 +14,7 @@ This example demonstrates how to do structured data classification using advance
 2. [Deep and cross](https://arxiv.org/abs/1708.05123) models
 
 The example covers using [tf.feature_column](https://www.tensorflow.org/api_docs/python/tf/feature_column)
-to handle input features, and encoding categorical features using one-hot encoding and
+to handle input features, and encodes categorical features using one-hot encoding and
 embedding respesentation.
 
 
@@ -57,7 +57,7 @@ raw_data.head()
 """
 The two categorical features in the dataset are binary encoded.
 We will convert this dataset repesentation to the typical repesentation, where each categorical
-feature is repesented as on column.
+feature is repesented as one column.
 """
 
 soil_type_values = [f"soil_type_{idx+1}" for idx in range(40)]
@@ -93,16 +93,16 @@ data = pd.concat(
 )
 data.columns = CSV_HEADER
 
-# Change the target label indicies to range from 0 to 6.
+# Convert the target label indices into a range from 0 to 6 (there are 7 labels in total).
 data["Cover_Type"] = data["Cover_Type"] - 1
 
 print(f"Dataset shape: {data.shape}")
 data.head().T
 
 """
-You can see now the Dataframe has 13 columns per sample (12 features, plus the target label).
+The shape of the DataFrame shows there are 13 columns per each sample (12 for the features and 1 for the target label).
 
-Let's split the data into training and testing splits, with 85% and 15% of the instance, respectively.
+Let's split the data into training (85%) and test (15%) sets.
 """
 
 train_data, test_data = train_test_split(
@@ -113,7 +113,7 @@ print(f"Train split size: {len(train_data.index)}")
 print(f"Test split size: {len(test_data.index)}")
 
 """
-Now we store the train and test data splits to CSV files.
+Next, store the training and test data in separate CSV files.
 """
 
 train_data_file = "train_data.csv"
@@ -160,17 +160,17 @@ COLUMN_DEFAULTS = [
 NUM_CLASSES = len(TARGET_FEATURE_LABELS)
 
 """
-Second, let's download the train and test data files
+In this section, you'll download the training and test data:
 
-We can now load the data in Pandas Dataframes. The training data split includes 431,010 samples,
-while the test data split includes 75,001 samples, with 13 columns per sample (12 features, plus the
-target label):
+We can now load the data into separate DataFrames. The training data split includes 431,010 samples,
+while the test data split—75,001 samples. There with 13 columns per sample in each data split,
+as before.
 """
 
 """
 ## Experiment setup
 
-We create an input function to read and parse the file, and convert features and labels into a
+Next, create an input function that reads and parses the file, and then converts features and labels into a
 [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets) for training or evaluation.
 """
 
@@ -232,7 +232,7 @@ def run_experiment(model):
 """
 ## Create model inputs
 
-We define the inputs for our models as a dictionary, where the key is the feature name, and the value
+Now, define the inputs for the models as a dictionary, where the key is the feature name, and the value
 is a `keras.layers.Input` tensor with the corresponsing feature shape and data type.
 """
 
@@ -255,9 +255,9 @@ def create_model_inputs():
 ## Encode features
 
 We create two representations of our input features: sparse and dense:
-1. In the **sparse** representation, the categorical features are encoded with one-hot encoding, using `CategoryEncoding` layer. 
+1. In the **sparse** representation, the categorical features are encoded with one-hot encoding using the `CategoryEncoding` layer. 
 This representation can be useful for the model to *memorize* particular feature values to make certain predictions.
-2. In the **dense** representation, the categorical features are encoded with low-dimensional embeddings, using the `Embedding` layer. 
+2. In the **dense** representation, the categorical features are encoded with low-dimensional embeddings using the `Embedding` layer. 
 This representation helps the model to *generalize* well to unseen feature combinations.
 """
 
@@ -302,9 +302,9 @@ def encode_inputs(inputs, use_embedding=False):
 
 
 """
-## Experiment 1: baseline model
+## Experiment 1: a baseline model
 
-In first experiment, we create a multi-layer feed-forward network, where the categorical features are
+In the first experiment, let's create a multi-layer feed-forward network, where the categorical features are
 one-hot encoded.
 """
 
@@ -339,8 +339,8 @@ The baseline linear model achieves ~76.4% test accuracy.
 In the second experiment, we create a wide and deep model. The wide part of the model a linear model,
 while the deep part of the model is a multi-layer feed-forward network.
 
-In the wide part of the model, we use the sparse representation of the input features, while we use the
-dense repesentation of the input features for the deep part of the model.
+Use the sparse representation of the input features in the wide part of the model and the
+dense representation of the input features for the deep part of the model.
 
 Note that every input features contributes to both parts of the model with different representations.
 """
@@ -422,7 +422,7 @@ The deep and cross model achieves ~82.7% test accuracy.
 """
 ## Conclusion
 
-You can use the Keras Processing Layers to easily handle input categorical
+You can use the Keras prerocessing layers to easily handle input categorical
 features with different encoding mechanisms, including one-hot encoding and low-dimensional embedding.
 In addition, different model architectures — like wide, deep, and cross networks — have different advantages,
 with respect to the various dataset properties. You can explore using them independently or combining
