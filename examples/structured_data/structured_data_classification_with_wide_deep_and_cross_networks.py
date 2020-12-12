@@ -13,11 +13,6 @@ This example demonstrates how to do structured data classification using advance
 1. [Wide and deep](https://ai.googleblog.com/2016/06/wide-deep-learning-better-together-with.html) models
 2. [Deep and cross](https://arxiv.org/abs/1708.05123) models
 
-The example covers using [tf.feature_column](https://www.tensorflow.org/api_docs/python/tf/feature_column)
-to handle input features, and encodes categorical features using one-hot encoding and
-embedding respesentation.
-
-
 Note that this example should be run with TensorFlow 2.3 or higher.
 """
 
@@ -352,8 +347,7 @@ def create_wide_and_deep_model():
     wide = encode_inputs(inputs)
     wide = layers.BatchNormalization()(wide)
 
-    dense_feature_columns = create_dense_feature_columns()
-    deep = layers.DenseFeatures(dense_feature_columns)(inputs)
+    deep = encode_inputs(inputs, use_embedding=True)
     for units in hidden_units:
         deep = layers.Dense(units)(deep)
         deep = layers.BatchNormalization()(deep)
