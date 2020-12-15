@@ -2,7 +2,7 @@
 Title: Writing a training loop from scratch
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/15
+Last modified: 2020/12/15
 Description: Complete guide to writing low-level training & evaluation loops.
 """
 """
@@ -292,6 +292,12 @@ for epoch in range(epochs):
 
 """
 Much faster, isn't it?
+
+Caution: Note how `x` and `y` are the only arguments passed into `train_step`. 
+Passing in Keras optimizers or Keras models to functions that are decorated with
+`tf.function` may lead to an error. If you would like to call `train_step` with
+a new optimizer or new model, it is recommended to retrace the `train_step` or
+create a new `tf.function`-decorated training loop for that model or optimizer.
 """
 
 """
