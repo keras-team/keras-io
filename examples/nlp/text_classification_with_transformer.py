@@ -32,14 +32,11 @@ class MultiHeadSelfAttention(layers.Layer):
         self.key_dense = layers.Dense(embed_dim)
         self.value_dense = layers.Dense(embed_dim)
         self.combine_heads = layers.Dense(embed_dim)
-        
+
     def get_config(self):
         """ Required for saving/loading the model """
         config = super().get_config().copy()
-        config.update({
-            "embed_dim" : self.embed_dim,
-            "num_heads" : self.num_heads
-        })
+        config.update({"embed_dim": self.embed_dim, "num_heads": self.num_heads})
         return config
 
     def attention(self, query, key, value):
@@ -92,22 +89,27 @@ class TransformerBlock(layers.Layer):
         super(TransformerBlock, self).__init__()
         self.att = MultiHeadSelfAttention(embed_dim, num_heads)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(ff_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
-        
+
     def get_config(self):
         """ Required for saving/loading the model """
         config = super().get_config().copy()
-        config.update({
-            "embed_dim" : self.embed_dim,
-            "num_heads" : self.num_heads,
-            "ff_dim" : self.ff_dim,
-            "rate" : self.rate
-        })
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "num_heads": self.num_heads,
+                "ff_dim": self.ff_dim,
+                "rate": self.rate,
+            }
+        )
         return config
 
     def call(self, inputs, training):
@@ -131,15 +133,17 @@ class TokenAndPositionEmbedding(layers.Layer):
         super(TokenAndPositionEmbedding, self).__init__()
         self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
-        
+
     def get_config(self):
         """ Required for saving/loading the model """
         config = super().get_config().copy()
-        config.update({
-            "maxlen" : self.maxlen,
-            "vocab_size" : self.vocab_size,
-            "embed_dim" : self.embed_dim
-        })
+        config.update(
+            {
+                "maxlen": self.maxlen,
+                "vocab_size": self.vocab_size,
+                "embed_dim": self.embed_dim,
+            }
+        )
         return config
 
     def call(self, x):
