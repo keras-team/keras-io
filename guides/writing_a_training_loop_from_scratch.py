@@ -297,9 +297,9 @@ Caution: Note how `x` and `y` are the only arguments passed into `train_step`.
 Passing in Keras optimizers or Keras models to functions that are decorated with
 `tf.function` may lead to `ValueError: tf.function-decorated function tried to
 create variables on non-first call`. If you see this error, you are most likely
-using the same traced graph with a new optimizer or new model. In this case, you
-should retrace the `train_step` or create a new `tf.function`-decorated training
-loop for that model or optimizer.
+trying to pass in a new optimizer or new model to the same graph. In this case,
+you should force retracing of the `train_step` or create a new 
+`tf.function`-decorated training loop for that model or optimizer.
 """
 
 """
