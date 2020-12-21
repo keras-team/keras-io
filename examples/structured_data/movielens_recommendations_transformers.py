@@ -591,7 +591,7 @@ _, rmse = model.evaluate(test_dataset, verbose=0)
 print(f"Test MAE: {round(rmse, 3)}")
 
 """
-We achieve ~0.718 Mean Absolute Error (MAE) on the test data.
+You should achieve a Mean Absolute Error (MAE) at or around  ~0.718 on the test data.
 """
 
 """
