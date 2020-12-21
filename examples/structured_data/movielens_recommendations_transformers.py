@@ -568,6 +568,7 @@ def run_experiment(model):
         metrics=[keras.metrics.MeanAbsoluteError()],
     )
 
+    # Load the training set from the DataFrame.
     train_dataset = get_dataset_from_csv(
         train_data_file, shuffle=True, batch_size=batch_size
     )
