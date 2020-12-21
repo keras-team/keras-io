@@ -173,7 +173,7 @@ ratings_data.head()
 Now, let's split the `movie_ids` list into a set of sequences of a fixed length.
 We do the same for the `ratings`. Set the `sequence_length` variable to change the length
 of the input sequence to the model. You can also change the `step_size` to control the
-number of sequence to generate for each user.
+number of sequences to generate for each user.
 """
 
 sequence_length = 4
