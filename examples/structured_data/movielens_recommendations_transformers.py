@@ -481,7 +481,7 @@ def encode_input_features(
     )
     #################################################################
 
-    # Construt the transformer inputs.
+    # Construct the transformer inputs.
     for encoded_movie in tf.unstack(
         encoded_sequence_movies_with_poistion_and_rating, axis=1
     ):
