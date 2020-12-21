@@ -425,7 +425,7 @@ def encode_input_features(
         output_dim=movie_embedding_dims,
         name=f"movie_embedding",
     )
-    # Create movie genres vector lookup
+    # Create a vector lookup for movie genres.
     genre_vectors = movies[genres].to_numpy()
     movie_genres_lookup = layers.Embedding(
         input_dim=genre_vectors.shape[0],
