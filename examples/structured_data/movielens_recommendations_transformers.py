@@ -560,6 +560,7 @@ batch_size = 265
 num_epochs = 5
 
 
+# Define the training loop function.
 def run_experiment(model):
 
     model.compile(
