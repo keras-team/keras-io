@@ -1,5 +1,5 @@
 """
-Title: Structured data classification with wide, deep and cross networks
+Title: Structured data classification with Wide & Deep and Deep & Cross networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/31
 Last modified: 2020/12/31
@@ -10,8 +10,9 @@ Description: Exploring advanced modeling techniques for structured data.
 ## Introduction
 
 This example demonstrates how to do structured data classification using advanced techniques like:
-1. [Wide and deep](https://ai.googleblog.com/2016/06/wide-deep-learning-better-together-with.html) models
-2. [Deep and cross](https://arxiv.org/abs/1708.05123) models
+
+1. [Wide & Deep](https://ai.googleblog.com/2016/06/wide-deep-learning-better-together-with.html) models
+2. [Deep & Cross](https://arxiv.org/abs/1708.05123) models
 
 Note that this example should be run with TensorFlow 2.3 or higher.
 """
@@ -19,10 +20,10 @@ Note that this example should be run with TensorFlow 2.3 or higher.
 """
 ## The dataset
 
-This example uses the [covertype](https://archive.ics.uci.edu/ml/datasets/covertype) from UCI
+This example uses the [Covertype](https://archive.ics.uci.edu/ml/datasets/covertype) dataset from the UCI
 Machine Learning Repository. The task is to predict forest cover type from cartographic variables.
-The dataset includes 506,011 intances with 12 input features, 10 of which numerical, and the other 2 are
-categorical. The target class has 7 labels.
+The dataset includes 506,011 instances with 12 input features: 10 numerical features and 2
+categorical features. Each instance is categorize into one of 7 classes.
 """
 
 """
@@ -50,9 +51,9 @@ print(f"Dataset shape: {raw_data.shape}")
 raw_data.head()
 
 """
-The two categorical features in the dataset are binary encoded.
+The two categorical features in the dataset are binary-encoded.
 We will convert this dataset repesentation to the typical repesentation, where each categorical
-feature is repesented as one column.
+feature is represented as a single integer value.
 """
 
 soil_type_values = [f"soil_type_{idx+1}" for idx in range(40)]
@@ -95,7 +96,7 @@ print(f"Dataset shape: {data.shape}")
 data.head().T
 
 """
-The shape of the DataFrame shows there are 13 columns per each sample (12 for the features and 1 for the target label).
+The shape of the DataFrame shows there are 13 columns per sample (12 for the features and 1 for the target label).
 
 Let's split the data into training (85%) and test (15%) sets.
 """
@@ -155,17 +156,17 @@ COLUMN_DEFAULTS = [
 NUM_CLASSES = len(TARGET_FEATURE_LABELS)
 
 """
-In this section, you'll download the training and test data:
+In this section, we'll download the training and test data:
 
 We can now load the data into separate DataFrames. The training data split includes 431,010 samples,
-while the test data split—75,001 samples. There with 13 columns per sample in each data split,
+while the test data split includes 75,001 samples. There with 13 columns per sample in each data split,
 as before.
 """
 
 """
 ## Experiment setup
 
-Next, create an input function that reads and parses the file, and then converts features and labels into a
+Next, let's define an input function that reads and parses the file, then converts features and labels into a
 [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets) for training or evaluation.
 """
 
@@ -182,7 +183,6 @@ def get_dataset_from_csv(csv_file_path, batch_size, num_epochs=None, shuffle=Fal
         header=True,
         shuffle=shuffle,
     )
-
     return dataset.cache()
 
 
@@ -329,9 +329,9 @@ The baseline linear model achieves ~76.4% test accuracy.
 """
 
 """
-## Experiment 2: wide and deep model
+## Experiment 2: Wide & Deep model
 
-In the second experiment, we create a wide and deep model. The wide part of the model a linear model,
+In the second experiment, we create a Wide & Deep model. The wide part of the model a linear model,
 while the deep part of the model is a multi-layer feed-forward network.
 
 Use the sparse representation of the input features in the wide part of the model and the
@@ -371,9 +371,9 @@ The wide and deep model achieves ~79.8% test accuracy.
 """
 
 """
-## Experiment 3: deep and cross model
+## Experiment 3: Deep & Cross model
 
-In the third experiment, we create a deep and cross model. The deep part of this model is the same as
+In the third experiment, we create a Deep & Cross model. The deep part of this model is the same as
 the deep part created in the previous experiment. The key idea of the cross part is to apply explicit feature
 crossing in an efficient way, where the degree of cross features grows with layer depth.
 """
@@ -416,9 +416,9 @@ The deep and cross model achieves ~82.7% test accuracy.
 """
 ## Conclusion
 
-You can use the Keras prerocessing layers to easily handle input categorical
-features with different encoding mechanisms, including one-hot encoding and low-dimensional embedding.
+You can use Keras Preprocessing Layers to easily handle categorical
+features with different encoding mechanisms, including one-hot encoding and feature embedding.
 In addition, different model architectures — like wide, deep, and cross networks — have different advantages,
-with respect to the various dataset properties. You can explore using them independently or combining
+with respect to different dataset properties. You can explore using them independently or combining
 them to achieve the best result for your dataset.
 """
