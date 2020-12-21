@@ -1,5 +1,5 @@
 """
-Title: Recommendations with Transformer
+Title: A recommendation system with a transformer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
 Last modified: 2020/12/30
