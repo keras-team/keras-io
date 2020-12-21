@@ -597,7 +597,7 @@ You should achieve a Mean Absolute Error (MAE) at or around  ~0.718 on the test 
 """
 ## Conclusion
 
-The BST model uses the Transformer architecture to capture the sequential signals underlying
+The BST model uses the Transformer layer in its architecture to capture the sequential signals underlying
 users’ behavior sequences for recommendation.
 
 You can try training this model with different configurations, for example, by increasing
