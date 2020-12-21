@@ -409,7 +409,7 @@ def encode_input_features(
         encoded_other_features = None
     #################################################################
 
-    ## Create movie embedding encodor
+    ## Create a movie embedding encoder
     movie_vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
     movie_embedding_dims = int(math.sqrt(len(movie_vocabulary)))
     # Create a lookup to convert a string values to an integer indices.
