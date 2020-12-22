@@ -211,8 +211,7 @@ def run_experiment(model):
     test_dataset = get_dataset_from_csv(test_data_file, batch_size)
 
     print("Start training the model...")
-    history = model.fit(
-        train_dataset, epochs=num_epochs)
+    history = model.fit(train_dataset, epochs=num_epochs)
     print("Model training finished")
 
     _, accuracy = model.evaluate(test_dataset, verbose=0)
