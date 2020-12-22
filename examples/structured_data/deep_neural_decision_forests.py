@@ -11,7 +11,7 @@ Description: Structured data classification with Deep Neural Decision Forests.
 
 This example provides an implementation of the [Deep Neural Decision Forest](https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Kontschieder_Deep_Neural_Decision_ICCV_2015_paper.pdf)
 model, introduced by P. Kontschieder et al., for structured data classification.
-This model introduced a stochastic and differentiable decision tree model to unity
+This model introduced a stochastic and differentiable decision tree model to unify
 classification trees with the deep representation learning, in a joint training routine.
 
 ## The dataset
