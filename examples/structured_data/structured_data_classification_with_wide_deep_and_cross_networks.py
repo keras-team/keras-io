@@ -30,12 +30,12 @@ categorical features. Each instance is categorized into 1 of 7 classes.
 ## Setup
 """
 
-import tensorflow as tf
+import math
+import numpy as np
 import pandas as pd
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-import math
-from sklearn.model_selection import train_test_split
 
 """
 ## Prepare the data
@@ -103,9 +103,16 @@ The shape of the DataFrame shows there are 13 columns per sample
 Let's split the data into training (85%) and test (15%) sets.
 """
 
-train_data, test_data = train_test_split(
-    data, train_size=0.85, stratify=data["Cover_Type"]
-)
+train_splits = []
+test_splits = []
+
+for _, group_data in data.groupby("Cover_Type"):
+    random_selection = np.random.rand(len(group_data.index)) < 0.85
+    train_splits.append(group_data[random_selection])
+    test_splits.append(group_data[~random_selection])
+
+train_data = pd.concat(train_splits).sample(frac=1).reset_index(drop=True)
+test_data = pd.concat(test_splits).sample(frac=1).reset_index(drop=True)
 
 print(f"Train split size: {len(train_data.index)}")
 print(f"Test split size: {len(test_data.index)}")
@@ -189,7 +196,6 @@ Here we configure the parameters and implement the procedure for running a train
 evaluation experiment given a model.
 """
 
-train_size = 493860
 learning_rate = 0.001
 dropout_rate = 0.1
 batch_size = 265
