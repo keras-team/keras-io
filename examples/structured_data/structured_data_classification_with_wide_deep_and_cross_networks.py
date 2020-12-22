@@ -23,7 +23,7 @@ Note that this example should be run with TensorFlow 2.3 or higher.
 This example uses the [Covertype](https://archive.ics.uci.edu/ml/datasets/covertype) dataset from the UCI
 Machine Learning Repository. The task is to predict forest cover type from cartographic variables.
 The dataset includes 506,011 instances with 12 input features: 10 numerical features and 2
-categorical features. Each instance is categorize into one of 7 classes.
+categorical features. Each instance is categorized into 1 of 7 classes.
 """
 
 """
