@@ -40,7 +40,8 @@ from sklearn.model_selection import train_test_split
 """
 ## Prepare the data
 
-First, let's load the dataset from the UCI Machine Learning Repository into a Pandas DataFrame:
+First, let's load the dataset from the UCI Machine Learning Repository into a Pandas
+DataFrame:
 """
 
 data_url = (
@@ -52,8 +53,8 @@ raw_data.head()
 
 """
 The two categorical features in the dataset are binary-encoded.
-We will convert this dataset repesentation to the typical repesentation, where each categorical
-feature is represented as a single integer value.
+We will convert this dataset representation to the typical representation, where each
+categorical feature is represented as a single integer value.
 """
 
 soil_type_values = [f"soil_type_{idx+1}" for idx in range(40)]
@@ -96,7 +97,8 @@ print(f"Dataset shape: {data.shape}")
 data.head().T
 
 """
-The shape of the DataFrame shows there are 13 columns per sample (12 for the features and 1 for the target label).
+The shape of the DataFrame shows there are 13 columns per sample
+(12 for the features and 1 for the target label).
 
 Let's split the data into training (85%) and test (15%) sets.
 """
@@ -120,6 +122,9 @@ test_data.to_csv(test_data_file, index=False)
 
 """
 ## Define dataset metadata
+
+Here, we define the metadata of the dataset that will be useful for reading and parsing
+the data into input features, and encoding the input features with respect to their types.
 """
 
 TARGET_FEATURE_NAME = "Cover_Type"
@@ -156,22 +161,15 @@ COLUMN_DEFAULTS = [
 NUM_CLASSES = len(TARGET_FEATURE_LABELS)
 
 """
-In this section, we'll download the training and test data:
-
-We can now load the data into separate DataFrames. The training data split includes 431,010 samples,
-while the test data split includes 75,001 samples. There with 13 columns per sample in each data split,
-as before.
-"""
-
-"""
 ## Experiment setup
 
-Next, let's define an input function that reads and parses the file, then converts features and labels into a
-[`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets) for training or evaluation.
+Next, let's define an input function that reads and parses the file, then converts features
+and labels into a[`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
+for training or evaluation.
 """
 
 
-def get_dataset_from_csv(csv_file_path, batch_size, num_epochs=None, shuffle=False):
+def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
 
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
@@ -179,7 +177,7 @@ def get_dataset_from_csv(csv_file_path, batch_size, num_epochs=None, shuffle=Fal
         column_names=CSV_HEADER,
         column_defaults=COLUMN_DEFAULTS,
         label_name=TARGET_FEATURE_NAME,
-        num_epochs=num_epochs,
+        num_epochs=1,
         header=True,
         shuffle=shuffle,
     )
@@ -187,8 +185,8 @@ def get_dataset_from_csv(csv_file_path, batch_size, num_epochs=None, shuffle=Fal
 
 
 """
-Here we configure the parameters and implement the procedure for running a training and evaluation
-experiment given a model.
+Here we configure the parameters and implement the procedure for running a training and
+evaluation experiment given a model.
 """
 
 train_size = 493860
@@ -197,7 +195,6 @@ dropout_rate = 0.1
 batch_size = 265
 num_epochs = 50
 
-train_steps_per_epoch = train_size // batch_size
 hidden_units = [32, 32]
 
 
@@ -211,12 +208,11 @@ def run_experiment(model):
 
     train_dataset = get_dataset_from_csv(train_data_file, batch_size, shuffle=True)
 
-    test_dataset = get_dataset_from_csv(test_data_file, batch_size, num_epochs=1)
+    test_dataset = get_dataset_from_csv(test_data_file, batch_size)
 
     print("Start training the model...")
     history = model.fit(
-        train_dataset, epochs=num_epochs, steps_per_epoch=train_steps_per_epoch
-    )
+        train_dataset, epochs=num_epochs)
     print("Model training finished")
 
     _, accuracy = model.evaluate(test_dataset, verbose=0)
@@ -227,8 +223,9 @@ def run_experiment(model):
 """
 ## Create model inputs
 
-Now, define the inputs for the models as a dictionary, where the key is the feature name, and the value
-is a `keras.layers.Input` tensor with the corresponsing feature shape and data type.
+Now, define the inputs for the models as a dictionary, where the key is the feature name,
+and the value is a `keras.layers.Input` tensor with the corresponding feature shape
+and data type.
 """
 
 
@@ -250,10 +247,12 @@ def create_model_inputs():
 ## Encode features
 
 We create two representations of our input features: sparse and dense:
-1. In the **sparse** representation, the categorical features are encoded with one-hot encoding using the `CategoryEncoding` layer. 
-This representation can be useful for the model to *memorize* particular feature values to make certain predictions.
-2. In the **dense** representation, the categorical features are encoded with low-dimensional embeddings using the `Embedding` layer. 
-This representation helps the model to *generalize* well to unseen feature combinations.
+1. In the **sparse** representation, the categorical features are encoded with one-hot
+encoding using the `CategoryEncoding` layer. This representation can be useful for the
+model to *memorize* particular feature values to make certain predictions.
+2. In the **dense** representation, the categorical features are encoded with
+low-dimensional embeddings using the `Embedding` layer. This representation helps
+the model to *generalize* well to unseen feature combinations.
 """
 
 
@@ -266,7 +265,9 @@ def encode_inputs(inputs, use_embedding=False):
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURE_NAMES:
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-            # Create a lookup to convert a string values to an integer indices.
+            # Create a lookup to convert string values to an integer indices.
+            # Since we are not using a mask token nor expecting any out of vocabulary
+            # (oov) token, we set mask_token to None and  num_oov_indices to 0.
             index = StringLookup(
                 vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
@@ -278,13 +279,13 @@ def encode_inputs(inputs, use_embedding=False):
                 embedding_ecoder = layers.Embedding(
                     input_dim=len(vocabulary), output_dim=embedding_dims
                 )
-                # Convert the index values to embedding repesentations.
+                # Convert the index values to embedding representations.
                 encoded_feature = embedding_ecoder(value_index)
             else:
                 # Create a one-hot encoder.
                 onehot_encoder = CategoryEncoding(output_mode="binary")
                 onehot_encoder.adapt(index(vocabulary))
-                # Convert the index values to a one-hot repesentations.
+                # Convert the index values to a one-hot representation.
                 encoded_feature = onehot_encoder(value_index)
         else:
             # Use the numerical features as-is.
@@ -299,8 +300,8 @@ def encode_inputs(inputs, use_embedding=False):
 """
 ## Experiment 1: a baseline model
 
-In the first experiment, let's create a multi-layer feed-forward network, where the categorical features are
-one-hot encoded.
+In the first experiment, let's create a multi-layer feed-forward network,
+where the categorical features are one-hot encoded.
 """
 
 
@@ -331,13 +332,14 @@ The baseline linear model achieves ~76.4% test accuracy.
 """
 ## Experiment 2: Wide & Deep model
 
-In the second experiment, we create a Wide & Deep model. The wide part of the model a linear model,
-while the deep part of the model is a multi-layer feed-forward network.
+In the second experiment, we create a Wide & Deep model. The wide part of the model
+a linear model, while the deep part of the model is a multi-layer feed-forward network.
 
 Use the sparse representation of the input features in the wide part of the model and the
 dense representation of the input features for the deep part of the model.
 
-Note that every input features contributes to both parts of the model with different representations.
+Note that every input features contributes to both parts of the model with different
+representations.
 """
 
 
@@ -373,9 +375,10 @@ The wide and deep model achieves ~79.8% test accuracy.
 """
 ## Experiment 3: Deep & Cross model
 
-In the third experiment, we create a Deep & Cross model. The deep part of this model is the same as
-the deep part created in the previous experiment. The key idea of the cross part is to apply explicit feature
-crossing in an efficient way, where the degree of cross features grows with layer depth.
+In the third experiment, we create a Deep & Cross model. The deep part of this model
+is the same as the deep part created in the previous experiment. The key idea of
+the cross part is to apply explicit feature crossing in an efficient way,
+where the degree of cross features grows with layer depth.
 """
 
 
@@ -416,9 +419,10 @@ The deep and cross model achieves ~82.7% test accuracy.
 """
 ## Conclusion
 
-You can use Keras Preprocessing Layers to easily handle categorical
-features with different encoding mechanisms, including one-hot encoding and feature embedding.
-In addition, different model architectures — like wide, deep, and cross networks — have different advantages,
-with respect to different dataset properties. You can explore using them independently or combining
-them to achieve the best result for your dataset.
+You can use Keras Preprocessing Layers to easily handle categorical features
+with different encoding mechanisms, including one-hot encoding and feature embedding. 
+In addition, different model architectures — like wide, deep, and cross networks
+— have different advantages, with respect to different dataset properties.  
+You can explore using them independently or combining them to achieve the best result
+for your dataset.
 """
