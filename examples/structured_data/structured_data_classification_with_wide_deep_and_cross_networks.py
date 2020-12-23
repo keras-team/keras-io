@@ -1,15 +1,16 @@
 """
-Title: Structured data classification with Wide & Deep and Deep & Cross networks
+Title: Structured data learning with Wide, Deep, and Cross networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/31
 Last modified: 2020/12/31
-Description: Exploring advanced modeling techniques for structured data.
+Description: Using Wide & Deep and Deep & Cross networks for structured data classification.
 """
 
 """
 ## Introduction
 
-This example demonstrates how to do structured data classification using advanced techniques like:
+This example demonstrates how to do structured data classification using the two modeling
+techniques:
 
 1. [Wide & Deep](https://ai.googleblog.com/2016/06/wide-deep-learning-better-together-with.html) models
 2. [Deep & Cross](https://arxiv.org/abs/1708.05123) models
@@ -107,7 +108,7 @@ train_splits = []
 test_splits = []
 
 for _, group_data in data.groupby("Cover_Type"):
-    random_selection = np.random.rand(len(group_data.index)) < 0.85
+    random_selection = np.random.rand(len(group_data.index)) <= 0.85
     train_splits.append(group_data[random_selection])
     test_splits.append(group_data[~random_selection])
 
@@ -217,7 +218,7 @@ def run_experiment(model):
     test_dataset = get_dataset_from_csv(test_data_file, batch_size)
 
     print("Start training the model...")
-    history = model.fit(train_dataset, epochs=num_epochs)
+    history = model.fit(train_dataset, epochs=num_epochs, verbose=2)
     print("Model training finished")
 
     _, accuracy = model.evaluate(test_dataset, verbose=0)
@@ -418,16 +419,16 @@ keras.utils.plot_model(deep_and_cross_model, show_shapes=True)
 run_experiment(deep_and_cross_model)
 
 """
-The deep and cross model achieves ~82.7% test accuracy.
+The deep and cross model achieves ~81.7% test accuracy.
 """
 
 """
 ## Conclusion
 
 You can use Keras Preprocessing Layers to easily handle categorical features
-with different encoding mechanisms, including one-hot encoding and feature embedding. 
+with different encoding mechanisms, including one-hot encoding and feature embedding.
 In addition, different model architectures — like wide, deep, and cross networks
-— have different advantages, with respect to different dataset properties.  
+— have different advantages, with respect to different dataset properties.
 You can explore using them independently or combining them to achieve the best result
 for your dataset.
 """
