@@ -96,6 +96,9 @@ test_data.to_csv(test_data_file, index=False, header=False)
 
 """
 ## Define dataset metadata
+
+Here, we define the metadata of the dataset that will be useful for reading and parsing
+the data into input features, and encoding the input features with respect to their types.
 """
 
 NUMERIC_FEATURE_NAMES = [
@@ -201,6 +204,8 @@ def encode_inputs(inputs, use_embedding=False):
         if feature_name in CATEGORICAL_FEATURE_NAMES:
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
             # Create a lookup to convert a string values to an integer indices.
+            # Since we are not using a mask token nor expecting any out of vocabulary
+            # (oov) token, we set mask_token to None and  num_oov_indices to 0.
             index = StringLookup(
                 vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
@@ -388,20 +393,25 @@ trained simultaneously. The output of the forest model is the average outputs of
 class NeuralDecisionForest(keras.Model):
     def __init__(self, num_trees, depth, num_features, used_features_rate, num_classes):
         super(NeuralDecisionForest, self).__init__()
-        self.trees = []
+        self.ensemble = []
+        # Initialise the ensemble by adding NeuralDecisionTree instances.
+        # Each tree will have its own randomly selected input features to use.
         for _ in range(num_trees):
-            self.trees.append(
+            self.ensemble.append(
                 NeuralDecisionTree(depth, num_features, used_features_rate, num_classes)
             )
 
     def call(self, inputs):
+        # Initialise the outputs as a [batch_size, num_classes] matrix of zeros.
         batch_size = tf.shape(inputs)[0]
         outputs = tf.zeros([batch_size, num_classes])
 
-        for tree in self.trees:
+        # Aggregate the outputs of trees in the ensemble.
+        for tree in self.ensemble:
             outputs += tree(inputs)
-
-        outputs /= len(self.trees)
+        # Divide the outputs by the ensemble size to get the average.
+        outputs /= len(self.ensemble)
+        
         return outputs
 
 
@@ -414,7 +424,7 @@ of features to be used in each tree by setting the `used_features_rate` variable
 In addition, we set the depth to 5 instead of 10 that was used in the previous experiment.
 """
 
-num_trees = 50
+num_trees = 25
 depth = 5
 used_features_rate = 0.5
 
