@@ -411,7 +411,7 @@ class NeuralDecisionForest(keras.Model):
             outputs += tree(inputs)
         # Divide the outputs by the ensemble size to get the average.
         outputs /= len(self.ensemble)
-        
+
         return outputs
 
 
