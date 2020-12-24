@@ -218,7 +218,7 @@ def run_experiment(model):
     test_dataset = get_dataset_from_csv(test_data_file, batch_size)
 
     print("Start training the model...")
-    history = model.fit(train_dataset, epochs=num_epochs, verbose=2)
+    history = model.fit(train_dataset, epochs=num_epochs)
     print("Model training finished")
 
     _, accuracy = model.evaluate(test_dataset, verbose=0)
@@ -327,12 +327,12 @@ def create_baseline_model():
 
 
 baseline_model = create_baseline_model()
-keras.utils.plot_model(baseline_model, show_shapes=True)
+# keras.utils.plot_model(baseline_model, show_shapes=True)
 
 run_experiment(baseline_model)
 
 """
-The baseline linear model achieves ~76.4% test accuracy.
+The baseline linear model achieves ~76% test accuracy.
 """
 
 """
@@ -369,13 +369,12 @@ def create_wide_and_deep_model():
 
 
 wide_and_deep_model = create_wide_and_deep_model()
-
-keras.utils.plot_model(wide_and_deep_model, show_shapes=True)
+# keras.utils.plot_model(wide_and_deep_model, show_shapes=True)
 
 run_experiment(wide_and_deep_model)
 
 """
-The wide and deep model achieves ~79.8% test accuracy.
+The wide and deep model achieves ~79% test accuracy.
 """
 
 """
@@ -414,12 +413,12 @@ def create_deep_and_cross_model():
 
 
 deep_and_cross_model = create_deep_and_cross_model()
-keras.utils.plot_model(deep_and_cross_model, show_shapes=True)
+# keras.utils.plot_model(deep_and_cross_model, show_shapes=True)
 
 run_experiment(deep_and_cross_model)
 
 """
-The deep and cross model achieves ~81.7% test accuracy.
+The deep and cross model achieves ~81% test accuracy.
 """
 
 """
