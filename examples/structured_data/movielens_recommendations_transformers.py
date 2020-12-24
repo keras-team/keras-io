@@ -1,9 +1,9 @@
 """
-Title: A recommendation system with a transformer
+Title: A Transformer-based recommendation system
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
 Last modified: 2020/12/30
-Description: Using the Behavior Sequence Transformer model for on Movielens dataset.
+Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
 """
 
 """
