@@ -16,15 +16,18 @@ as well as user profile and movie features, to predict the rating of the user to
 
 More precisely, the BST model aims to predict the rating of a target movie by accepting
 the following inputs:
+
 1. A fixed-length *sequence* of `movie_ids` watched by a user.
 2. A fixed-length *sequence* of the `ratings` for the movies watched by a user.
-3. A set of user features, including `user_id`, `sex`, `occupation`, and `age_group`.
-4. A set of `genres` for each movie in the input sequence and the target movie.
+3. A *set* of user features, including `user_id`, `sex`, `occupation`, and `age_group`.
+4. A *set* of `genres` for each movie in the input sequence and the target movie.
 5. A `target_movie_id` for which to predict the rating.
 
 This example modifies the original BST model in the following ways:
+
 1. We incorporate the movie features (genres) into the processing of the embedding of each
-movie of the input sequence and the target movie, rather than treating them as "other features" outside the transformer layer.
+movie of the input sequence and the target movie, rather than treating them as "other features"
+outside the transformer layer.
 2. We utilize the ratings of movies in the input sequence, along with the their positions
 in the sequence, to update them before feeding them into the self-attention layer.
 
@@ -36,7 +39,10 @@ Note that this example should be run with TensorFlow 2.4 or higher.
 ## The dataset
 
 We use the [1M version of the Movielens dataset](https://grouplens.org/datasets/movielens/1m/).
-The dataset includes around 1 million ratings from 6000 users on 4000 movies, along with some user features, movie genres. In addition, the timestamp of each user-movie rating is provided, which allows creating sequences of movie ratings for each user, as expected by the BST model.
+The dataset includes around 1 million ratings from 6000 users on 4000 movies,
+along with some user features, movie genres. In addition, the timestamp of each user-movie
+rating is provided, which allows creating sequences of movie ratings for each user,
+as expected by the BST model.
 """
 
 """
@@ -52,7 +58,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-from sklearn.model_selection import train_test_split
 
 """
 ## Prepare the data
@@ -204,6 +209,7 @@ ratings_data.ratings = ratings_data.ratings.apply(
     lambda ids: create_sequences(ids, sequence_length, step_size)
 )
 
+# Drop the timestamps columns as we don't need it.
 del ratings_data["timestamps"]
 
 ratings_data.head()
@@ -244,7 +250,16 @@ Finally, we split the data into training and testing splits, with 85% and 15% of
 instance, respectively, and store them to CSV files.
 """
 
-train_data, test_data = train_test_split(ratings_data_transformed, train_size=0.85)
+train_splits = []
+test_splits = []
+
+for _, group_data in data.groupby("Cover_Type"):
+    random_selection = np.random.rand(len(group_data.index)) <= 0.85
+    train_splits.append(group_data[random_selection])
+    test_splits.append(group_data[~random_selection])
+
+train_data = pd.concat(train_splits).sample(frac=1).reset_index(drop=True)
+test_data = pd.concat(test_splits).sample(frac=1).reset_index(drop=True)
 
 print(f"Train split size: {len(train_data.index)}")
 print(f"Test split size: {len(test_data.index)}")
@@ -278,8 +293,8 @@ MOVIE_FEATURES = ["genres"]
 """
 
 
-def get_dataset_from_csv(csv_file_path, num_epochs=None, shuffle=False, batch_size=128):
-    def _process(features):
+def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
+    def process(features):
         movie_ids_string = features["sequence_movie_ids"]
         sequence_movie_ids = tf.strings.split(movie_ids_string, ",").to_tensor()
 
@@ -302,11 +317,11 @@ def get_dataset_from_csv(csv_file_path, num_epochs=None, shuffle=False, batch_si
         csv_file_path,
         batch_size=batch_size,
         column_names=CSV_HEADER,
-        num_epochs=num_epochs,
+        num_epochs=1,
         header=False,
         field_delim="|",
         shuffle=shuffle,
-    ).map(_process)
+    ).map(process)
 
     return dataset
 
@@ -398,7 +413,6 @@ def encode_input_features(
         encoded_feature = embedding_encoder(idx)
 
         encoded_other_features.append(encoded_feature)
-    #################################################################
 
     ## Create a single embedding vector for the user features
     if len(encoded_other_features) > 1:
@@ -407,7 +421,6 @@ def encode_input_features(
         encoded_other_features = encoded_other_features[0]
     else:
         encoded_other_features = None
-    #################################################################
 
     ## Create a movie embedding encoder
     movie_vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
@@ -440,10 +453,9 @@ def encode_input_features(
         activation="relu",
         name="process_movie_embedding_with_genres",
     )
-    #################################################################
 
     ## Define a function to encode a given movie id.
-    def _encode_movie(movie_id):
+    def encode_movie(movie_id):
         # Convert the string input values into integer indices.
         movie_idx = movie_index_lookup(movie_id)
         movie_embedding = movie_embedding_encoder(movie_idx)
@@ -455,16 +467,13 @@ def encode_input_features(
             )
         return encoded_movie
 
-    #################################################################
-
     ## Encoding target_movie_id
     target_movie_id = inputs["target_movie_id"]
-    encoded_target_movie = _encode_movie(target_movie_id)
-    #################################################################
+    encoded_target_movie = encode_movie(target_movie_id)
 
     ## Encoding sequence movie_ids.
     sequence_movies_ids = inputs["sequence_movie_ids"]
-    encoded_sequence_movies = _encode_movie(sequence_movies_ids)
+    encoded_sequence_movies = encode_movie(sequence_movies_ids)
     # Create positional embedding.
     position_embedding_encoder = layers.Embedding(
         input_dim=sequence_length,
@@ -479,7 +488,6 @@ def encode_input_features(
     encoded_sequence_movies_with_poistion_and_rating = layers.Multiply()(
         [(encoded_sequence_movies + encodded_positions), sequence_ratings]
     )
-    #################################################################
 
     # Construct the transformer inputs.
     for encoded_movie in tf.unstack(
@@ -549,7 +557,7 @@ def create_model():
 
 
 model = create_model()
-keras.utils.plot_model(model, show_shapes=True)
+# keras.utils.plot_model(model, show_shapes=True)
 
 """
 ## Run training and evaluation experiment
@@ -575,24 +583,20 @@ def run_experiment(model):
     )
 
     print("Start training the model...")
-    history = model.fit(
-        train_dataset,
-        epochs=num_epochs,
-        steps_per_epoch=len(train_data.index) // batch_size,
-    )
+    history = model.fit(train_dataset, epochs=num_epochs)
     print("Model training finished")
     return history
 
 
 history = run_experiment(model)
 
-test_dataset = get_dataset_from_csv(test_data_file, num_epochs=1, batch_size=batch_size)
+test_dataset = get_dataset_from_csv(test_data_file, batch_size=batch_size)
 
 _, rmse = model.evaluate(test_dataset, verbose=0)
 print(f"Test MAE: {round(rmse, 3)}")
 
 """
-You should achieve a Mean Absolute Error (MAE) at or around  ~0.718 on the test data.
+You should achieve a Mean Absolute Error (MAE) at or around  ~0.7 on the test data.
 """
 
 """
@@ -602,7 +606,7 @@ The BST model uses the Transformer layer in its architecture to capture the sequ
 users’ behavior sequences for recommendation.
 
 You can try training this model with different configurations, for example, by increasing
-the input sequence length, including other features like movie release year and customer
-zipcode, including cross features like sex X genre, execluding user id, and running for
-larger number of epochs.
+the input sequence length and training the model for a larger number of epochs. In addition,
+you can try including other features like movie release year and customer
+zipcode, and including cross features like sex X genre.
 """
