@@ -3,7 +3,8 @@ Title: Classification with Neural Decision Forests
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/15
 Last modified: 2021/01/15
-Description: Structured data classification with Deep Neural Decision Forests.
+Description: How to model and train stochastic, differentiable decision trees as classifiers for
+end-to-end learning in deep neural networks.
 """
 
 """
@@ -73,7 +74,7 @@ print(f"Train dataset shape: {train_data.shape}")
 print(f"Test dataset shape: {test_data.shape}")
 
 """
-We remove the first record as it is not a valid data example, and we remove a tailing
+We remove the first record as it is not a valid data example, and we remove a trailing
 'dot' in the class labels.
 """
 
@@ -451,6 +452,3 @@ forest_model = create_forest_model()
 keras.utils.plot_model(forest_model, show_shapes=True)
 
 run_experiment(forest_model)
-
-
-
