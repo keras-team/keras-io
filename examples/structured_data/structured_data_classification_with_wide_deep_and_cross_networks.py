@@ -327,7 +327,7 @@ def create_baseline_model():
 
 
 baseline_model = create_baseline_model()
-# keras.utils.plot_model(baseline_model, show_shapes=True)
+keras.utils.plot_model(baseline_model, show_shapes=True)
 
 run_experiment(baseline_model)
 
@@ -369,7 +369,7 @@ def create_wide_and_deep_model():
 
 
 wide_and_deep_model = create_wide_and_deep_model()
-# keras.utils.plot_model(wide_and_deep_model, show_shapes=True)
+keras.utils.plot_model(wide_and_deep_model, show_shapes=True)
 
 run_experiment(wide_and_deep_model)
 
@@ -413,7 +413,7 @@ def create_deep_and_cross_model():
 
 
 deep_and_cross_model = create_deep_and_cross_model()
-# keras.utils.plot_model(deep_and_cross_model, show_shapes=True)
+keras.utils.plot_model(deep_and_cross_model, show_shapes=True)
 
 run_experiment(deep_and_cross_model)
 
