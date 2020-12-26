@@ -381,7 +381,6 @@ def create_tree_model():
 
 
 tree_model = create_tree_model()
-keras.utils.plot_model(tree_model, show_shapes=True)
 
 run_experiment(tree_model)
 
@@ -449,6 +448,5 @@ def create_forest_model():
 
 
 forest_model = create_forest_model()
-keras.utils.plot_model(forest_model, show_shapes=True)
 
 run_experiment(forest_model)
