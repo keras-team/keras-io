@@ -9,7 +9,7 @@ Description: Structured data classification with Deep Neural Decision Forests.
 """
 ## Introduction
 
-This example provides an implementation of the [Deep Neural Decision Forest](https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Kontschieder_Deep_Neural_Decision_ICCV_2015_paper.pdf)
+This example provides an implementation of the [Deep Neural Decision Forest](https://ieeexplore.ieee.org/document/7410529)
 model, introduced by P. Kontschieder et al., for structured data classification.
 This model introduced a stochastic and differentiable decision tree model to unify
 classification trees with the deep representation learning, in a joint training routine.
@@ -72,8 +72,6 @@ test_data = pd.read_csv(test_data_url, header=None, names=CSV_HEADER)
 print(f"Train dataset shape: {train_data.shape}")
 print(f"Test dataset shape: {test_data.shape}")
 
-train_data.head().T
-
 """
 We remove the first record as it is not a valid data example, and we remove a tailing
 'dot' in the class labels.
@@ -101,6 +99,7 @@ Here, we define the metadata of the dataset that will be useful for reading and 
 the data into input features, and encoding the input features with respect to their types.
 """
 
+# A list of the numerical feature names.
 NUMERIC_FEATURE_NAMES = [
     "age",
     "education_num",
@@ -108,31 +107,31 @@ NUMERIC_FEATURE_NAMES = [
     "capital_loss",
     "hours_per_week",
 ]
-
+# A dictionary of the categorical features and their vocabulary.
 CATEGORICAL_FEATURES_WITH_VOCABULARY = {
-    "workclass": list(train_data["workclass"].unique()),
-    "education": list(train_data["education"].unique()),
-    "marital_status": list(train_data["marital_status"].unique()),
-    "occupation": list(train_data["occupation"].unique()),
-    "relationship": list(train_data["relationship"].unique()),
-    "race": list(train_data["race"].unique()),
-    "gender": list(train_data["gender"].unique()),
-    "native_country": list(train_data["native_country"].unique()),
+    "workclass": sorted(list(train_data["workclass"].unique())),
+    "education": sorted(list(train_data["education"].unique())),
+    "marital_status": sorted(list(train_data["marital_status"].unique())),
+    "occupation": sorted(list(train_data["occupation"].unique())),
+    "relationship": sorted(list(train_data["relationship"].unique())),
+    "race": sorted(list(train_data["race"].unique())),
+    "gender": sorted(list(train_data["gender"].unique())),
+    "native_country": sorted(list(train_data["native_country"].unique())),
 }
-
+# A list of the columns to ignore from the dataset.
 IGNORE_COLUMN_NAMES = ["fnlwgt"]
-
+# A list of the categorical feature names.
 CATEGORICAL_FEATURE_NAMES = list(CATEGORICAL_FEATURES_WITH_VOCABULARY.keys())
-
+# A list of all the input features.
 FEATURE_NAMES = NUMERIC_FEATURE_NAMES + CATEGORICAL_FEATURE_NAMES
-
+# A list of column default values for each feature.
 COLUMN_DEFAULTS = [
     [0.0] if feature_name in NUMERIC_FEATURE_NAMES + IGNORE_COLUMN_NAMES else ["NA"]
     for feature_name in CSV_HEADER
 ]
-
+# The name of the target feature.
 TARGET_FEATURE_NAME = "income_bracket"
-
+# A list of the labels of the target features.
 TARGET_LABELS = [" <=50K", " >50K"]
 
 """
@@ -151,10 +150,7 @@ taget_label_lookup = StringLookup(
 )
 
 
-def get_dataset_from_csv(csv_file_path, num_epochs=None, shuffle=False, batch_size=128):
-    def process(features, target):
-        target_index = taget_label_lookup(target)
-        return features, target_index
+def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
 
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
@@ -162,13 +158,13 @@ def get_dataset_from_csv(csv_file_path, num_epochs=None, shuffle=False, batch_si
         column_names=CSV_HEADER,
         column_defaults=COLUMN_DEFAULTS,
         label_name=TARGET_FEATURE_NAME,
-        num_epochs=num_epochs,
+        num_epochs=1,
         header=False,
         na_value="?",
         shuffle=shuffle,
-    ).map(process)
+    ).map(lambda features, target: features, target_label_lookup(target))
 
-    return dataset
+    return dataset.cache()
 
 
 """
@@ -241,12 +237,9 @@ def encode_inputs(inputs, use_embedding=False):
 ## Compile, train, and evaluate the model
 """
 
-train_size = 32561
 learning_rate = 0.01
 batch_size = 265
 num_epochs = 10
-
-train_steps_per_epoch = train_size // batch_size
 hidden_units = [64, 64]
 
 
@@ -263,13 +256,11 @@ def run_experiment(model):
         train_data_file, shuffle=True, batch_size=batch_size
     )
 
-    model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps_per_epoch)
+    model.fit(train_dataset, steps_per_epoch=train_steps_per_epoch)
     print("Model training finished")
 
     print("Evaluating the model on the test data...")
-    test_dataset = get_dataset_from_csv(
-        test_data_file, num_epochs=1, batch_size=batch_size
-    )
+    test_dataset = get_dataset_from_csv(test_data_file, batch_size=batch_size)
 
     _, accuracy = model.evaluate(test_dataset)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
@@ -277,6 +268,20 @@ def run_experiment(model):
 
 """
 ## Deep Neural Decision Tree
+
+A neural decision tree model has two sets of weights to learn. The first set is `pi`,
+which represents the probability distribution of the classes in the tree leaves.
+The second set is the weights of the routing layer `decision_fn`, which represents the probability
+of going to each leave. The forward pass of the model works as follows:
+
+1. The model expects input `features` as a single vector encoding all the features of an instance
+in the batch. This vector could be generated from a Convolution Neural Network (CNN) applied on images,
+or (non)linear transformations to structured data features. 
+2. The model first applies a `used_features_mask` to randomly select a subset of input features to use.
+3. Second, the model computes the probabilities `mu` for the input instances to reach the tree leaves,
+by iteratively performing a *stochastic* routing throughout the tree levels.
+4. Finally, the probabilities of reaching the leaves are combined by the class probabilities at the
+leaves to produce the final `outputs`.
 """
 
 
@@ -318,11 +323,11 @@ class NeuralDecisionTree(keras.Model):
         features = tf.matmul(
             features, self.used_features_mask, transpose_b=True
         )  # [batch_size, num_used_features]
-        # Compute the logits of the classes in the leaves.
+        # Compute the routing probabilities.
         decisions = tf.expand_dims(
             self.decision_fn(features), axis=2
         )  # [batch_size, num_leaves, 1]
-        # Concatenate the logits with their complements.
+        # Concatenate the routing probabilities with their complements.
         decisions = layers.concatenate(
             [decisions, 1 - decisions], axis=2
         )  # [batch_size, num_leaves, 2]
@@ -350,6 +355,7 @@ class NeuralDecisionTree(keras.Model):
 
 """
 ## Experiment 1: train a tree model
+
 In this experiment, we train a single neural decision tree model, where we use all
 the input features.
 """
@@ -378,9 +384,6 @@ keras.utils.plot_model(tree_model, show_shapes=True)
 
 run_experiment(tree_model)
 
-"""
-You should achieve around 85.19% accuracy on the test data.
-"""
 
 """
 ## Deep Neural Decision Forest
@@ -449,6 +452,5 @@ keras.utils.plot_model(forest_model, show_shapes=True)
 
 run_experiment(forest_model)
 
-"""
-You should achieve around 85.69% accuracy on the test data.
-"""
+
+
