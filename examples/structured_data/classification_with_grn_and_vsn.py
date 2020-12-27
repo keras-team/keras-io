@@ -9,7 +9,7 @@ Description: Using Gated Residual and Variable Selection Networks for income lev
 """
 ## Introduction
 
-This example we demonestrate the use of Gated
+This example demonstrates the use of Gated
 Residual Network (GRN) and Variable Selection Networks (VSN), proposed by
 [Bryan Lim et al.](https://arxiv.org/abs/1912.09363), for structured data
 classification. GRNs give the flexibility to the model to apply non-linear
@@ -30,7 +30,7 @@ Dataset](https://archive.ics.uci.edu/ml/datasets/Census-Income+%28KDD%29) provid
 by the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
 The task is binary classification to determine whether a person makes over 50K a year.
 
-The dataset includes ~300K intances with 41 input features, 7 of which numerical,
+The dataset includes ~300K instances with 41 input features, 7 of which numerical,
 and the other 34 are categorical.
 """
 
@@ -107,7 +107,7 @@ print(f"Train dataset shape: {train_data.shape}")
 print(f"Test dataset shape: {test_data.shape}")
 
 """
-Then we store the train and test data splits localy to CSV files.
+Then we store the train and test data splits locally to CSV files.
 """
 
 train_data_file = "train_data.csv"
@@ -124,9 +124,9 @@ parsing the data into input features, and encoding the input features with respe
 to their types.
 """
 
-# Target feaure name.
+# Target feature name.
 TARGET_FEATURE_NAME = "income_level"
-# Target feaure labels.
+# Target feature labels.
 TARGET_FEATURE_LABELS = sorted(list(train_data[TARGET_FEATURE_NAME].unique()))
 # Weight column name.
 WEIGHT_COLUMN_NAME = "instance_weight"
@@ -227,7 +227,7 @@ def create_model_inputs():
 
 For categorical features, we encode them using `layers.Embedding` using the
 `encoding_size` as the embedding dimensions. For the numerical features,
-we apply linear transformation using `layers.Dense` to project each featuer into
+we apply linear transformation using `layers.Dense` to project each feature into
 `encoding_size`-dimensional vector. Thus, all the encoded features will have the
 same dimensionality.
 
@@ -254,7 +254,7 @@ def encode_inputs(inputs, encoding_size):
             embedding_ecoder = layers.Embedding(
                 input_dim=len(vocabulary), output_dim=encoding_size
             )
-            # Convert the index values to embedding repesentations.
+            # Convert the index values to embedding representations.
             encoded_feature = embedding_ecoder(value_index)
         else:
             # Project the numeric feature to encoding_size using linear transformation.
@@ -290,7 +290,7 @@ The Gated Residual Network (GRN) works as follows:
 2. Applies linear transformation followed by dropout.
 4. Applies GLU and adds the original inputs to the output of the GLU to perform skip
 (residual) connection.
-6. Applies layer normalization and produce the output.
+6. Applies layer normalization and produces the output.
 """
 
 
@@ -322,7 +322,7 @@ class GatedResidualNetwork(layers.Layer):
 The Variable Selection Network (VSN) works as follows:
 1. Applies a GRN to each feature individually.
 2. Applies a GRN on the concatenation of all the features, followed by a softmax to
-produce a feature weights.
+produce feature weights.
 3. Produces a weighted sum of the output of the individual GRN.
 
 Note that the output of the VSN is [batch_size, encoding_size], regardless of the
