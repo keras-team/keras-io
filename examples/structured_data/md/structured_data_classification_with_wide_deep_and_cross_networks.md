@@ -787,6 +787,7 @@ Epoch 49/50
 Epoch 50/50
 1865/1865 [==============================] - 3s 1ms/step - loss: 0.5308 - sparse_categorical_accuracy: 0.7718
 Model training finished
+Test accuracy: 76.31%
 
 ```
 </div>
