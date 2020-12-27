@@ -9,17 +9,22 @@ Description: Using Gated Residual and Variable Selection Networks for income lev
 """
 ## Introduction
 
-This example demonstrates the use of Gated
-Residual Network (GRN) and Variable Selection Networks (VSN), proposed by
-[Bryan Lim et al.](https://arxiv.org/abs/1912.09363), for structured data
-classification. GRNs give the flexibility to the model to apply non-linear
-processing only where needed. VSNs allow the model to softly remove any
+This example demonstrates the use of [Gated
+Residual Networks (GRN) and Variable Selection Networks (VSN), proposed by
+Bryan Lim et al. in [Temporal Fusion Transformers (TFT) for Interpretable
+Multi-horizon Time Series Forecasting]((https://arxiv.org/abs/1912.09363), 
+for structured data classification. GRNs give the flexibility to the model to apply
+non-linear processing only where needed. VSNs allow the model to softly remove any
 unnecessary noisy inputs which could negatively impact performance.
 Together, those techniques help improving the learning capacity of deep neural
 network models.
 
+Note that this example implements only on the GRN and VSN components described in
+in the paper, rather than the whole TFT model, as GRN and VSN can be useful on
+their own for structured data learning tasks.
 
-Note that to run the code you need to use TensorFlow 2.3 or higher.
+
+To run the code you need to use TensorFlow 2.3 or higher.
 """
 
 """
