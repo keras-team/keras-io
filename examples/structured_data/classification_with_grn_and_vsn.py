@@ -19,7 +19,7 @@ Together, those techniques help improving the learning capacity of deep neural
 network models.
 
 
-Note that this example should be run with TensorFlow 2.3 or higher.
+Note that to run the code you need to use TensorFlow 2.3 or higher.
 """
 
 """
