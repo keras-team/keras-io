@@ -30,7 +30,7 @@ Dataset](https://archive.ics.uci.edu/ml/datasets/Census-Income+%28KDD%29) provid
 by the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
 The task is binary classification to determine whether a person makes over 50K a year.
 
-The dataset includes ~300K instances with 41 input features, 7 of which numerical,
+The dataset includes ~300K instances with 41 input features, 7 of which are numerical,
 and the other 34 are categorical.
 """
 
