@@ -48,7 +48,7 @@ from tensorflow.keras import layers
 """
 ## Prepare the data
 
-First we load the data from the UCI Machine Learning Repository to a pandas Dataframe.
+First we load the data from the UCI Machine Learning Repository to a Pandas DataFrame.
 """
 
 # Column names.
