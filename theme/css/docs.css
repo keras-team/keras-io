@@ -393,6 +393,7 @@ table {
   margin-bottom: 1.5rem;
   width: 100%;
   border: solid 2px gray;
+  font-size: 10pt;
 }
 tr {
   border: solid 1px gray;
