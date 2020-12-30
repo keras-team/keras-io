@@ -71,7 +71,7 @@ and `ratings.dat`.
 """
 
 urlretrieve("http://files.grouplens.org/datasets/movielens/ml-1m.zip", "movielens.zip")
-zip_ref = ZipFile("movielens.zip", "r").extractall()
+ZipFile("movielens.zip", "r").extractall()
 
 """
 Then, we load the data into pandas DataFrames with their proper column names.
@@ -138,26 +138,6 @@ for genre in genres:
         lambda values: int(genre in values.split("|"))
     )
 
-print(f"User count: {len(users.index)}")
-print(f"Movie count: {len(movies.index)}")
-print(f"Rating count: {len(ratings.index)}")
-
-"""
-Some sample records from the `users` DataFrame:
-"""
-
-users.sample()
-
-"""
-Some sample records from the `movies` DataFrame:
-"""
-
-movies.sample().T
-
-"""
-Some sample records from the `ratings` DataFrame:
-"""
-ratings.sample()
 
 """
 ### Transform the movie ratings data into sequences
@@ -180,7 +160,6 @@ ratings_data = pd.DataFrame(
     }
 )
 
-ratings_data.head()
 
 """
 Now, let's split the `movie_ids` list into a set of sequences of a fixed length.
@@ -217,10 +196,6 @@ ratings_data.ratings = ratings_data.ratings.apply(
     lambda ids: create_sequences(ids, sequence_length, step_size)
 )
 
-# Drop the timestamps columns as we don't need it.
-del ratings_data["timestamps"]
-
-ratings_data.head()
 
 """
 After that, we process the output to have each sequence in a separate records in the
@@ -241,15 +216,11 @@ ratings_data_transformed.movie_ids = ratings_data_transformed.movie_ids.apply(
 ratings_data_transformed.ratings = ratings_data_transformed.ratings.apply(
     lambda x: ",".join([str(v) for v in x])
 )
-del ratings_data_transformed["zip_code"]
 
 ratings_data_transformed.rename(
     columns={"movie_ids": "sequence_movie_ids", "ratings": "sequence_ratings"},
     inplace=True,
 )
-
-print("Dataset shape:", ratings_data_transformed.shape)
-ratings_data_transformed.head()
 
 """
 With `sequence_length` of 4 and `step_size` of 2, we end up with 498,623 sequences.
@@ -258,8 +229,7 @@ Finally, we split the data into training and testing splits, with 85% and 15% of
 instance, respectively, and store them to CSV files.
 """
 
-train_splits = []
-test_splits = []
+train_splits, test_splits = [], []
 
 for _, group_data in data.groupby("Cover_Type"):
     random_selection = np.random.rand(len(group_data.index)) <= 0.85
@@ -269,14 +239,8 @@ for _, group_data in data.groupby("Cover_Type"):
 train_data = pd.concat(train_splits).sample(frac=1).reset_index(drop=True)
 test_data = pd.concat(test_splits).sample(frac=1).reset_index(drop=True)
 
-print(f"Train split size: {len(train_data.index)}")
-print(f"Test split size: {len(test_data.index)}")
-
-train_data_file = "train_data.csv"
-test_data_file = "test_data.csv"
-
-train_data.to_csv(train_data_file, index=False, sep="|", header=False)
-test_data.to_csv(test_data_file, index=False, sep="|", header=False)
+train_data.to_csv("train_data.csv", index=False, sep="|", header=False)
+test_data.to_csv("test_data.csv", index=False, sep="|", header=False)
 
 """
 ## Define metadata
@@ -403,11 +367,10 @@ def encode_input_features(
 
     ## Encode user features
     for feature_name in other_feature_names:
-        feature = inputs[feature_name]
         # Convert the string input values into integer indices.
         vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
         idx = StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)(
-            feature
+            inputs[feature_name]
         )
         # Compute embedding dimensions
         embedding_dims = int(math.sqrt(len(vocabulary)))
@@ -418,9 +381,7 @@ def encode_input_features(
             name=f"{feature_name}_embedding",
         )
         # Convert the index values to embedding representations.
-        encoded_feature = embedding_encoder(idx)
-
-        encoded_other_features.append(encoded_feature)
+        encoded_other_features.append(embedding_encoder(idx))
 
     ## Create a single embedding vector for the user features
     if len(encoded_other_features) > 1:
@@ -571,35 +532,23 @@ keras.utils.plot_model(model, show_shapes=True)
 ## Run training and evaluation experiment
 """
 
-learning_rate = 0.01
-batch_size = 265
-num_epochs = 5
+# Compile the model.
+model.compile(
+    optimizer=keras.optimizers.Adagrad(learning_rate=0.01),
+    loss=keras.losses.MeanSquaredError(),
+    metrics=[keras.metrics.MeanAbsoluteError()],
+)
 
+# Read the training data.
+train_dataset = get_dataset_from_csv("train_data.csv", shuffle=True, batch_size=265)
 
-# Define the training loop function.
-def run_experiment(model):
+# Fit the model with the training data.
+model.fit(train_dataset, epochs=5)
 
-    model.compile(
-        optimizer=keras.optimizers.Adagrad(learning_rate=learning_rate),
-        loss=keras.losses.MeanSquaredError(),
-        metrics=[keras.metrics.MeanAbsoluteError()],
-    )
+# Read the test data.
+test_dataset = get_dataset_from_csv("test_data.csv", batch_size=265)
 
-    # Load the training set from the DataFrame.
-    train_dataset = get_dataset_from_csv(
-        train_data_file, shuffle=True, batch_size=batch_size
-    )
-
-    print("Start training the model...")
-    history = model.fit(train_dataset, epochs=num_epochs)
-    print("Model training finished")
-    return history
-
-
-history = run_experiment(model)
-
-test_dataset = get_dataset_from_csv(test_data_file, batch_size=batch_size)
-
+# Evaluate the model on the test data.
 _, rmse = model.evaluate(test_dataset, verbose=0)
 print(f"Test MAE: {round(rmse, 3)}")
 
