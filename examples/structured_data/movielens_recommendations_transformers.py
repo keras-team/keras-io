@@ -138,18 +138,26 @@ for genre in genres:
         lambda values: int(genre in values.split("|"))
     )
 
-"""
-Now, let's display some records from each DataFrame.
-"""
-
 print(f"User count: {len(users.index)}")
-users.head()
-
 print(f"Movie count: {len(movies.index)}")
-movies.sample(5).T
-
 print(f"Rating count: {len(ratings.index)}")
-ratings.head()
+
+"""
+Some sample records from the `users` DataFrame:
+"""
+
+users.sample()
+
+"""
+Some sample records from the `movies` DataFrame:
+"""
+
+movies.sample().T
+
+"""
+Some sample records from the `ratings` DataFrame:
+"""
+ratings.sample()
 
 """
 ### Transform the movie ratings data into sequences
