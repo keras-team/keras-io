@@ -42,13 +42,14 @@ with ZipFile("celeba_gan/data.zip", "r") as zipobj:
     zipobj.extractall("celeba_gan")
 ```
 
-Create a dataset from our folder:
+Create a dataset from our folder, and rescale the images to the [0-1] range:
 
 
 ```python
 dataset = keras.preprocessing.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
 )
+dataset = dataset.map(lambda x: x / 255.0)
 
 ```
 
@@ -70,13 +71,8 @@ for x in dataset:
 
 ```
 
-<div class="k-default-codeblock">
-```
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 
-```
-</div>
-![png](/img/examples/generative/dcgan_overriding_train_step/dcgan_overriding_train_step_8_1.png)
+![png](/img/examples/generative/dcgan_overriding_train_step/dcgan_overriding_train_step_8_0.png)
 
 
 ---
@@ -96,12 +92,11 @@ discriminator = keras.Sequential(
         layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
         layers.LeakyReLU(alpha=0.2),
         layers.Flatten(),
-        layers.Dropout(0.5),
+        layers.Dropout(0.2),
         layers.Dense(1, activation="sigmoid"),
     ],
     name="discriminator",
 )
-
 discriminator.summary()
 ```
 
@@ -160,7 +155,6 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-
 generator.summary()
 ```
 
@@ -221,8 +215,6 @@ class GAN(keras.Model):
         return [self.d_loss_metric, self.g_loss_metric]
 
     def train_step(self, real_images):
-        if isinstance(real_images, tuple):
-            real_images = real_images[0]
         # Sample random points in the latent space
         batch_size = tf.shape(real_images)[0]
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
@@ -263,6 +255,7 @@ class GAN(keras.Model):
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
 
+        # Update metrics
         self.d_loss_metric.update_state(d_loss)
         self.g_loss_metric.update_state(g_loss)
         return {
@@ -303,24 +296,21 @@ epochs = 1  # In practice, use ~100 epochs
 
 gan = GAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 gan.compile(
-    d_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
-    g_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
+    d_optimizer=keras.optimizers.Adam(learning_rate=0.0001),
+    g_optimizer=keras.optimizers.Adam(learning_rate=0.0001),
     loss_fn=keras.losses.BinaryCrossentropy(),
 )
 
 gan.fit(
-    dataset,
-    epochs=epochs,
-    verbose=2,
-    callbacks=[GANMonitor(num_img=3, latent_dim=latent_dim)],
+    dataset, epochs=epochs, callbacks=[GANMonitor(num_img=10, latent_dim=latent_dim)]
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-6332/6332 - 593s - d_loss: -1.8418e+08 - g_loss: 17124297728.0000
+6332/6332 [==============================] - 605s 96ms/step - d_loss: 0.6113 - g_loss: 1.1976
 
-<tensorflow.python.keras.callbacks.History at 0x7f8442785250>
+<tensorflow.python.keras.callbacks.History at 0x7f4eb5d055d0>
 
 ```
 </div>
