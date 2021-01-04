@@ -34,12 +34,13 @@ with ZipFile("celeba_gan/data.zip", "r") as zipobj:
     zipobj.extractall("celeba_gan")
 
 """
-Create a dataset from our folder:
+Create a dataset from our folder, and rescale the images to the [0-1] range:
 """
 
 dataset = keras.preprocessing.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
 )
+dataset = dataset.map(lambda x: x / 255.0)
 
 
 """
@@ -69,12 +70,11 @@ discriminator = keras.Sequential(
         layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
         layers.LeakyReLU(alpha=0.2),
         layers.Flatten(),
-        layers.Dropout(0.5),
+        layers.Dropout(0.2),
         layers.Dense(1, activation="sigmoid"),
     ],
     name="discriminator",
 )
-
 discriminator.summary()
 
 """
@@ -100,7 +100,6 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-
 generator.summary()
 
 """
@@ -128,8 +127,6 @@ class GAN(keras.Model):
         return [self.d_loss_metric, self.g_loss_metric]
 
     def train_step(self, real_images):
-        if isinstance(real_images, tuple):
-            real_images = real_images[0]
         # Sample random points in the latent space
         batch_size = tf.shape(real_images)[0]
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
@@ -170,6 +167,7 @@ class GAN(keras.Model):
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
 
+        # Update metrics
         self.d_loss_metric.update_state(d_loss)
         self.g_loss_metric.update_state(g_loss)
         return {
@@ -206,16 +204,13 @@ epochs = 1  # In practice, use ~100 epochs
 
 gan = GAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 gan.compile(
-    d_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
-    g_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
+    d_optimizer=keras.optimizers.Adam(learning_rate=0.0001),
+    g_optimizer=keras.optimizers.Adam(learning_rate=0.0001),
     loss_fn=keras.losses.BinaryCrossentropy(),
 )
 
 gan.fit(
-    dataset,
-    epochs=epochs,
-    verbose=2,
-    callbacks=[GANMonitor(num_img=3, latent_dim=latent_dim)],
+    dataset, epochs=epochs, callbacks=[GANMonitor(num_img=10, latent_dim=latent_dim)]
 )
 
 """
