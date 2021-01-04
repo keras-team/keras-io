@@ -136,15 +136,7 @@ def create_resnet_classifier():
 
 
 resnet_classifier = create_resnet_classifier()
-resnet_classifier.summary()
-
 history = run_experiment(resnet_classifier)
-
-import matplotlib.pyplot as plt
-
-plt.plot(history.history["sparse_top_k_categorical_accuracy"])
-plt.plot(history.history["val_sparse_top_k_categorical_accuracy"])
-plt.legend(["Train", "Eval"], loc="upper left")
 
 """
 After 100 epochs, the RestNet50 classification model achieves around 66% top 5
@@ -292,8 +284,6 @@ def create_vit_classifier():
 
 
 vit_classifier = create_vit_classifier()
-keras.utils.plot_model(vit_classifier, show_shapes=True)
-
 history = run_experiment(vit_classifier)
 
 """
