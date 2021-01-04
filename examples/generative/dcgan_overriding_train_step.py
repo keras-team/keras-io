@@ -1,9 +1,9 @@
 """
-Title: GAN overriding `Model.train_step`
+Title: DCGAN to generate face images
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/04/29
 Last modified: 2021/01/01
-Description: A simple DCGAN trained using `fit()` by overriding `train_step`.
+Description: A simple DCGAN trained using `fit()` by overriding `train_step` on CelebA images.
 """
 """
 ## Setup
@@ -202,7 +202,7 @@ class GANMonitor(keras.callbacks.Callback):
 ## Train the end-to-end model
 """
 
-epochs = 20  # In practice, use ~100 epochs
+epochs = 1  # In practice, use ~100 epochs
 
 gan = GAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 gan.compile(
@@ -212,17 +212,15 @@ gan.compile(
 )
 
 gan.fit(
-    dataset, epochs=epochs, callbacks=[GANMonitor(num_img=3, latent_dim=latent_dim)]
+    dataset,
+    epochs=epochs,
+    verbose=2,
+    callbacks=[GANMonitor(num_img=3, latent_dim=latent_dim)],
 )
 
 """
-Display some of the last generated images:
+Some of the last generated images around epoch 30
+(results keep improving after that):
+
+![results](https://i.imgur.com/h5MtQZ7l.png)
 """
-
-from IPython.display import Image, display
-
-display(Image("generated_img_19_0.png"))
-display(Image("generated_img_19_1.png"))
-display(Image("generated_img_19_2.png"))
-display(Image("generated_img_19_3.png"))
-display(Image("generated_img_19_4.png"))
