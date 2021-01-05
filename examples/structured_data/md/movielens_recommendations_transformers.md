@@ -103,11 +103,11 @@ movies = pd.read_csv(
 
 <div class="k-default-codeblock">
 ```
-/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:4: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:4: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
   after removing the cwd from sys.path.
-/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:10: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:10: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
   # Remove the CWD from sys.path while we load stuff.
-/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:14: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:14: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
   
 
 ```
@@ -560,12 +560,13 @@ model = create_model()
 keras.utils.plot_model(model, show_shapes=True)
 ```
 
-<div class="k-default-codeblock">
-```
-('Failed to import pydot. You must `pip install pydot` and install graphviz (https://graphviz.gitlab.io/download/), ', 'for `pydotprint` to work.')
 
-```
-</div>
+
+
+![png](/img/examples/structured_data/movielens_recommendations_transformers/movielens_recommendations_transformers_30_0.png)
+
+
+
 ---
 ## Run training and evaluation experiment
 
@@ -595,20 +596,20 @@ print(f"Test MAE: {round(rmse, 3)}")
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-1599/1599 [==============================] - 18s 10ms/step - loss: 1.4755 - mean_absolute_error: 0.9584
+1598/1598 [==============================] - 46s 27ms/step - loss: 1.6617 - mean_absolute_error: 0.9981
 Epoch 2/5
-1599/1599 [==============================] - 17s 11ms/step - loss: 1.0181 - mean_absolute_error: 0.8060
+1598/1598 [==============================] - 43s 27ms/step - loss: 1.0282 - mean_absolute_error: 0.8101
 Epoch 3/5
-1599/1599 [==============================] - 18s 11ms/step - loss: 0.9552 - mean_absolute_error: 0.7795
+1598/1598 [==============================] - 43s 27ms/step - loss: 0.9609 - mean_absolute_error: 0.7812
 Epoch 4/5
-1599/1599 [==============================] - 19s 12ms/step - loss: 0.9238 - mean_absolute_error: 0.7660
+1598/1598 [==============================] - 43s 27ms/step - loss: 0.9272 - mean_absolute_error: 0.7675
 Epoch 5/5
-1599/1599 [==============================] - 18s 11ms/step - loss: 0.9021 - mean_absolute_error: 0.7570
+1598/1598 [==============================] - 43s 27ms/step - loss: 0.9062 - mean_absolute_error: 0.7588
 Test MAE: 0.761
 
 ```
 </div>
-You should achieve a Mean Absolute Error (MAE) at or around 0.75 on the test data.
+You should achieve a Mean Absolute Error (MAE) at or around 0.7 on the test data.
 
 ---
 ## Conclusion
