@@ -60,6 +60,7 @@ dropout_rate = 0.5
 ## Compile, train, and evaluate the mode
 """
 
+
 def run_experiment(model):
     k = 5
     model.compile(
@@ -76,6 +77,7 @@ def run_experiment(model):
     print(f"Test tok {k} accuracy: {round(accuracy * 100, 2)}%")
 
     return history
+
 
 """
 ## Using data augmentation
@@ -94,6 +96,7 @@ data_augmentation = keras.Sequential(
 ## Implement Multilayer perceptron (MLP) as a layer
 """
 
+
 class MLP(layers.Layer):
     def __init__(self, hidden_units, dropout_rate):
         super(MLP, self).__init__()
@@ -106,11 +109,13 @@ class MLP(layers.Layer):
     def call(self, inputs):
         return self.mlp(inputs)
 
+
 """
 ## Experiment 1: Train the baseline classification model
 
 We use an untrained ResNet-50 architecture as our baseline model.
 """
+
 
 def create_resnet_classifier():
     inputs = layers.Input(shape=input_shape)
@@ -155,6 +160,7 @@ dropout_rate = 0.1
 ### Implement patch creation as a layer
 """
 
+
 class Patches(layers.Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
@@ -172,6 +178,7 @@ class Patches(layers.Layer):
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
+
 
 """
 Let's display patches for a sample image
@@ -206,6 +213,7 @@ vector of size `projection_dims`. In addition, it adds a learnable position
 embedding to the projected vector.
 """
 
+
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dims):
         super(PatchEncoder, self).__init__()
@@ -218,6 +226,7 @@ class PatchEncoder(layers.Layer):
         positions = tf.range(start=0, limit=num_patches, delta=1)
         encoded = self.projection(patch) + self.position_embedding(positions)
         return encoded
+
 
 """
 ### Build the ViT model
@@ -234,6 +243,7 @@ as the image representation, the outputs of the final Transformer block are
 aggregated with `layers.GlobalAveragePooling1D()` and then used as the image
 representation input to the MLP head.
 """
+
 
 def create_vit_classifier():
     inputs = layers.Input(shape=input_shape)
