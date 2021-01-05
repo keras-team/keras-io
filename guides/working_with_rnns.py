@@ -91,7 +91,7 @@ For more information, see the
 """
 ## Outputs and states
 
-By default, the output of a RNN layer contain a single vector per sample. This vector
+By default, the output of a RNN layer contains a single vector per sample. This vector
 is the RNN cell output corresponding to the last timestep, containing information
 about the entire input sequence. The shape of this output is `(batch_size, units)`
 where `units` corresponds to the `units` argument passed to the layer's constructor.
@@ -174,7 +174,7 @@ sequences, e.g. `RNN(LSTMCell(10))`.
 Mathematically, `RNN(LSTMCell(10))` produces the same result as `LSTM(10)`. In fact,
 the implementation of this layer in TF v1.x was just creating the corresponding RNN
 cell and wrapping it in a RNN layer.  However using the built-in `GRU` and `LSTM`
-layers enables the use of CuDNN and you may see better performance.
+layers enable the use of CuDNN and you may see better performance.
 
 There are three built-in RNN cells, each of them corresponding to the matching RNN
 layer.
@@ -197,7 +197,7 @@ When processing very long sequences (possibly infinite), you may want to use the
 pattern of **cross-batch statefulness**.
 
 Normally, the internal state of a RNN layer is reset every time it sees a new batch
-(i.e. every sample seen by the layer is assume to be independent from the past). The
+(i.e. every sample seen by the layer is assumed to be independent of the past). The
 layer will only maintain a state while processing a given sample.
 
 If you have very long sequences though, it is useful to break them into shorter
@@ -402,7 +402,7 @@ sample, sample_label = x_train[0], y_train[0]
 Let's create a model instance and train it.
 
 We choose `sparse_categorical_crossentropy` as the loss function for the model. The
-output of the model has shape of `[batch_size, 10]`. The target for the model is a
+output of the model has shape of `[batch_size, 10]`. The target for the model is an
 integer vector, each of the integer is in the range of 0 to 9.
 """
 
@@ -437,9 +437,9 @@ noncudnn_model.fit(
 """
 When running on a machine with a NVIDIA GPU and CuDNN installed,
 the model built with CuDNN is much faster to train compared to the
-model that use the regular TensorFlow kernel.
+model that uses the regular TensorFlow kernel.
 
-The same CuDNN-enabled model can also be use to run inference in a CPU-only
+The same CuDNN-enabled model can also be used to run inference in a CPU-only
 environment. The `tf.device` annotation below is just forcing the device placement.
 The model will run on CPU by default if no GPU is available.
 
@@ -479,7 +479,7 @@ such structured inputs.
 """
 
 """
-### Define a custom cell that support nested input/output
+### Define a custom cell that supports nested input/output
 """
 
 """
@@ -584,5 +584,5 @@ logic for individual step within the sequence, and the `keras.layers.RNN` layer
 will handle the sequence iteration for you. It's an incredibly powerful way to quickly
 prototype new kinds of RNNs (e.g. a LSTM variant).
 
-For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/RNN/).
+For more details, please visit the [API docs](https://keras.io/api/layers/recurrent_layers/rnn/).
 """

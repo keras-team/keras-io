@@ -2,11 +2,11 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/01<br>
-**Last modified:** 2020/04/28<br>
-**Description:** Everything you need to know to use Keras & TF 2.0 for deep learning research.
+**Last modified:** 2020/10/02<br>
+**Description:** Everything you need to know to use Keras & TensorFlow for deep learning research.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_researchers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_researchers.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/intro_to_keras_for_researchers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/intro_to_keras_for_researchers.py)
 
 
 
@@ -17,7 +17,6 @@
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -25,12 +24,13 @@ from tensorflow import keras
 
 Are you a machine learning researcher? Do you publish at NeurIPS and push the
 state-of-the-art in CV and NLP? This guide will serve as your first introduction to core
-Keras API concepts.
+Keras & TensorFlow API concepts.
 
 In this guide, you will learn about:
 
+- Tensors, variables, and gradients in TensorFlow
 - Creating layers by subclassing the `Layer` class
-- Computing gradients with a `GradientTape` and writing low-level training loops
+- Writing low-level training loops
 - Tracking losses created by layers via the `add_loss()` method
 - Tracking metrics in a low-level training loop
 - Speeding up execution with a compiled `tf.function`
@@ -38,12 +38,239 @@ In this guide, you will learn about:
 - The Keras Functional API
 
 You will also see the Keras API in action in two end-to-end research examples:
-a Variational Autoencoder, an a Hypernetwork.
+a Variational Autoencoder, and a Hypernetwork.
 
 ---
-## The `Layer` class
+## Tensors
 
-The `Layer` is the fundamental abstraction in Keras.
+TensorFlow is an infrastructure layer for differentiable programming.
+At its heart, it's a framework for manipulating N-dimensional arrays (tensors),
+much like NumPy.
+
+However, there are three key differences between NumPy and TensorFlow:
+
+- TensorFlow can leverage hardware accelerators such as GPUs and TPUs.
+- TensorFlow can automatically compute the gradient of arbitrary differentiable tensor expressions.
+- TensorFlow computation can be distributed to large numbers of devices on a single machine, and large number of
+machines (potentially with multiple devices each).
+
+Let's take a look at the object that is at the core of TensorFlow: the Tensor.
+
+Here's a constant tensor:
+
+
+```python
+x = tf.constant([[5, 2], [1, 3]])
+print(x)
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[5 2]
+ [1 3]], shape=(2, 2), dtype=int32)
+
+```
+</div>
+You can get its value as a NumPy array by calling `.numpy()`:
+
+
+```python
+x.numpy()
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+array([[5, 2],
+       [1, 3]], dtype=int32)
+
+```
+</div>
+Much like a NumPy array, it features the attributes `dtype` and `shape`:
+
+
+```python
+print("dtype:", x.dtype)
+print("shape:", x.shape)
+```
+
+<div class="k-default-codeblock">
+```
+dtype: <dtype: 'int32'>
+shape: (2, 2)
+
+```
+</div>
+A common way to create constant tensors is via `tf.ones` and `tf.zeros` (just like `np.ones` and `np.zeros`):
+
+
+```python
+print(tf.ones(shape=(2, 1)))
+print(tf.zeros(shape=(2, 1)))
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[1.]
+ [1.]], shape=(2, 1), dtype=float32)
+tf.Tensor(
+[[0.]
+ [0.]], shape=(2, 1), dtype=float32)
+
+```
+</div>
+You can also create random constant tensors:
+
+
+```python
+x = tf.random.normal(shape=(2, 2), mean=0.0, stddev=1.0)
+
+x = tf.random.uniform(shape=(2, 2), minval=0, maxval=10, dtype="int32")
+
+```
+
+---
+## Variables
+
+Variables are special tensors used to store mutable state (such as the weights of a neural network).
+You create a `Variable` using some initial value:
+
+
+```python
+initial_value = tf.random.normal(shape=(2, 2))
+a = tf.Variable(initial_value)
+print(a)
+
+```
+
+<div class="k-default-codeblock">
+```
+<tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
+array([[ 0.6405563 ,  0.03973103],
+       [-0.6126285 , -0.71384406]], dtype=float32)>
+
+```
+</div>
+You update the value of a `Variable` by using the methods `.assign(value)`, `.assign_add(increment)`, or `.assign_sub(decrement)`:
+
+
+```python
+new_value = tf.random.normal(shape=(2, 2))
+a.assign(new_value)
+for i in range(2):
+    for j in range(2):
+        assert a[i, j] == new_value[i, j]
+
+added_value = tf.random.normal(shape=(2, 2))
+a.assign_add(added_value)
+for i in range(2):
+    for j in range(2):
+        assert a[i, j] == new_value[i, j] + added_value[i, j]
+```
+
+---
+## Doing math in TensorFlow
+
+If you've used NumPy, doing math in TensorFlow will look very familiar.
+The main difference is that your TensorFlow code can run on GPU and TPU.
+
+
+```python
+a = tf.random.normal(shape=(2, 2))
+b = tf.random.normal(shape=(2, 2))
+
+c = a + b
+d = tf.square(c)
+e = tf.exp(d)
+```
+
+---
+## Gradients
+
+Here's another big difference with NumPy: you can automatically retrieve the gradient of any differentiable expression.
+
+Just open a `GradientTape`, start "watching" a tensor via `tape.watch()`,
+and compose a differentiable expression using this tensor as input:
+
+
+```python
+a = tf.random.normal(shape=(2, 2))
+b = tf.random.normal(shape=(2, 2))
+
+with tf.GradientTape() as tape:
+    tape.watch(a)  # Start recording the history of operations applied to `a`
+    c = tf.sqrt(tf.square(a) + tf.square(b))  # Do some math using `a`
+    # What's the gradient of `c` with respect to `a`?
+    dc_da = tape.gradient(c, a)
+    print(dc_da)
+
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[-0.3224076   0.69120544]
+ [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+
+```
+</div>
+By default, variables are watched automatically, so you don't need to manually `watch` them:
+
+
+```python
+a = tf.Variable(a)
+
+with tf.GradientTape() as tape:
+    c = tf.sqrt(tf.square(a) + tf.square(b))
+    dc_da = tape.gradient(c, a)
+    print(dc_da)
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[-0.3224076   0.69120544]
+ [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+
+```
+</div>
+Note that you can compute higher-order derivatives by nesting tapes:
+
+
+```python
+with tf.GradientTape() as outer_tape:
+    with tf.GradientTape() as tape:
+        c = tf.sqrt(tf.square(a) + tf.square(b))
+        dc_da = tape.gradient(c, a)
+    d2c_da2 = outer_tape.gradient(dc_da, a)
+    print(d2c_da2)
+
+```
+
+<div class="k-default-codeblock">
+```
+tf.Tensor(
+[[1.6652625  0.6523223 ]
+ [0.20117798 0.41852283]], shape=(2, 2), dtype=float32)
+
+```
+</div>
+---
+## Keras layers
+
+While TensorFlow is an **infrastructure layer for differentiable programming**,
+dealing with tensors, variables, and gradients,
+Keras is a **user interface for deep learning**, dealing with
+layers, models, optimizers, loss functions, metrics, and more.
+
+Keras serves as the high-level API for TensorFlow:
+Keras is what makes TensorFlow simple and productive.
+
+The `Layer` class is the fundamental abstraction in Keras.
 A `Layer` encapsulates a state (weights) and some computation
 (defined in the call method).
 
@@ -70,7 +297,6 @@ class Linear(keras.layers.Layer):
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
 
-
 ```
 
 You would use a `Layer` instance much like a Python function:
@@ -84,7 +310,6 @@ linear_layer = Linear(units=4, input_dim=2)
 # Here we call it on some data.
 y = linear_layer(tf.ones((2, 2)))
 assert y.shape == (2, 4)
-
 ```
 
 The weight variables (created in `__init__`) are automatically
@@ -93,7 +318,6 @@ tracked under the `weights` property:
 
 ```python
 assert linear_layer.weights == [linear_layer.w, linear_layer.b]
-
 ```
 
 You have many built-in layers available, from `Dense` to `Conv2D` to `LSTM` to
@@ -101,9 +325,9 @@ fancier ones like `Conv3DTranspose` or `ConvLSTM2D`. Be smart about reusing
 built-in functionality.
 
 ---
-## Weight creation
+## Layer weight creation
 
-The add_weight method gives you a shortcut for creating weights:
+The `self.add_weight()` method gives you a shortcut for creating weights:
 
 
 ```python
@@ -134,11 +358,10 @@ linear_layer = Linear(4)
 
 # This will also call `build(input_shape)` and create the weights.
 y = linear_layer(tf.ones((2, 2)))
-
 ```
 
 ---
-## Gradients
+## Layer gradients
 
 You can automatically retrieve the gradients of the weights of a layer by
 calling it inside a `GradientTape`. Using these gradients, you can update the
@@ -184,21 +407,20 @@ for step, (x, y) in enumerate(dataset):
     # Logging.
     if step % 100 == 0:
         print("Step:", step, "Loss:", float(loss))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.3826446533203125
-Step: 100 Loss: 2.267599582672119
-Step: 200 Loss: 2.1371021270751953
-Step: 300 Loss: 2.0780434608459473
-Step: 400 Loss: 1.9888293743133545
-Step: 500 Loss: 1.887470006942749
-Step: 600 Loss: 1.8170452117919922
-Step: 700 Loss: 1.694450855255127
-Step: 800 Loss: 1.653834581375122
-Step: 900 Loss: 1.6181517839431763
+Step: 0 Loss: 2.386174201965332
+Step: 100 Loss: 2.22518253326416
+Step: 200 Loss: 2.1162631511688232
+Step: 300 Loss: 2.047822952270508
+Step: 400 Loss: 2.025263547897339
+Step: 500 Loss: 1.9544496536254883
+Step: 600 Loss: 1.8216196298599243
+Step: 700 Loss: 1.7630621194839478
+Step: 800 Loss: 1.756800651550293
+Step: 900 Loss: 1.6689152717590332
 
 ```
 </div>
@@ -237,7 +459,6 @@ print(y.numpy())  # [4. 4.]
 assert my_sum.weights == [my_sum.total]
 assert my_sum.non_trainable_weights == [my_sum.total]
 assert my_sum.trainable_weights == []
-
 ```
 
 <div class="k-default-codeblock">
@@ -284,7 +505,6 @@ y = mlp(tf.ones(shape=(3, 64)))
 
 # Weights are recursively tracked.
 assert len(mlp.weights) == 6
-
 ```
 
 Note that our manually-created MLP above is equivalent to the following
@@ -299,7 +519,6 @@ mlp = keras.Sequential(
         keras.layers.Dense(10),
     ]
 )
-
 ```
 
 ---
@@ -326,7 +545,6 @@ class ActivityRegularization(keras.layers.Layer):
         # that depends on the inputs.
         self.add_loss(self.rate * tf.reduce_sum(inputs))
         return inputs
-
 
 ```
 
@@ -357,12 +575,11 @@ mlp = SparseMLP()
 y = mlp(tf.ones((10, 10)))
 
 print(mlp.losses)  # List containing one float32 scalar
-
 ```
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.21055736>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.16569461>]
 
 ```
 </div>
@@ -370,7 +587,6 @@ These losses are cleared by the top-level layer at the start of each forward
 pass -- they don't accumulate. `layer.losses` always contains only the losses
 created during the last forward pass. You would typically use these losses by
 summing them before computing your gradients when writing a training loop.
-
 
 
 ```python
@@ -418,21 +634,20 @@ for step, (x, y) in enumerate(dataset):
     # Logging.
     if step % 100 == 0:
         print("Step:", step, "Loss:", float(loss))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 6.011272430419922
-Step: 100 Loss: 2.6576173305511475
-Step: 200 Loss: 2.4374217987060547
-Step: 300 Loss: 2.3680849075317383
-Step: 400 Loss: 2.360743999481201
-Step: 500 Loss: 2.3423142433166504
-Step: 600 Loss: 2.313633680343628
-Step: 700 Loss: 2.3257956504821777
-Step: 800 Loss: 2.306140661239624
-Step: 900 Loss: 2.321286201477051
+Step: 0 Loss: 6.238003730773926
+Step: 100 Loss: 2.5299227237701416
+Step: 200 Loss: 2.435337543487549
+Step: 300 Loss: 2.3858678340911865
+Step: 400 Loss: 2.3544323444366455
+Step: 500 Loss: 2.3284459114074707
+Step: 600 Loss: 2.3211910724639893
+Step: 700 Loss: 2.3177292346954346
+Step: 800 Loss: 2.322242259979248
+Step: 900 Loss: 2.310494899749756
 
 ```
 </div>
@@ -489,33 +704,32 @@ for epoch in range(2):
             print("Epoch:", epoch, "Step:", step)
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
-    # Result the metric's state at the end of an epoch
+    # Reset the metric's state at the end of an epoch
     accuracy.reset_states()
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.109
+Total running accuracy so far: 0.047
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.745
+Total running accuracy so far: 0.755
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.819
+Total running accuracy so far: 0.826
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.850
+Total running accuracy so far: 0.855
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.867
+Total running accuracy so far: 0.872
 Epoch: 1 Step: 0
 Total running accuracy so far: 0.938
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.936
-Epoch: 1 Step: 400
-Total running accuracy so far: 0.939
-Epoch: 1 Step: 600
-Total running accuracy so far: 0.940
-Epoch: 1 Step: 800
 Total running accuracy so far: 0.941
+Epoch: 1 Step: 400
+Total running accuracy so far: 0.943
+Epoch: 1 Step: 600
+Total running accuracy so far: 0.944
+Epoch: 1 Step: 800
+Total running accuracy so far: 0.943
 
 ```
 </div>
@@ -569,21 +783,20 @@ for step, (x, y) in enumerate(dataset):
     loss = train_on_batch(x, y)
     if step % 100 == 0:
         print("Step:", step, "Loss:", float(loss))
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.372758388519287
-Step: 100 Loss: 0.6940608620643616
-Step: 200 Loss: 0.2873537838459015
-Step: 300 Loss: 0.4446139931678772
-Step: 400 Loss: 0.583051860332489
-Step: 500 Loss: 0.32000404596328735
-Step: 600 Loss: 0.265232115983963
-Step: 700 Loss: 0.12978266179561615
-Step: 800 Loss: 0.3476303219795227
-Step: 900 Loss: 0.24191027879714966
+Step: 0 Loss: 2.307070016860962
+Step: 100 Loss: 0.7121144533157349
+Step: 200 Loss: 0.45566993951797485
+Step: 300 Loss: 0.47507303953170776
+Step: 400 Loss: 0.23864206671714783
+Step: 500 Loss: 0.2954753041267395
+Step: 600 Loss: 0.31291744112968445
+Step: 700 Loss: 0.15316027402877808
+Step: 800 Loss: 0.32832837104797363
+Step: 900 Loss: 0.10866784304380417
 
 ```
 </div>
@@ -630,7 +843,6 @@ class MLPWithDropout(keras.layers.Layer):
 mlp = MLPWithDropout()
 y_train = mlp(tf.ones((2, 2)), training=True)
 y_test = mlp(tf.ones((2, 2)), training=False)
-
 ```
 
 ---
@@ -671,7 +883,6 @@ assert y.shape == (2, 10)
 # You can pass a `training` argument in `__call__`
 # (it will get passed down to the Dropout layer).
 y = model(tf.ones((2, 16)), training=True)
-
 ```
 
 The Functional API tends to be more concise than subclassing, and provides a few other
@@ -692,9 +903,9 @@ for your OO models.
 ---
 ## End-to-end experiment example 1: variational autoencoders.
 
-Here are some of things you've learned so far:
+Here are some of the things you've learned so far:
 
-- A `Layer` encapsulate a state (created in `__init__` or `build`) and some computation
+- A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
 - Layers can be recursively nested to create new, bigger computation blocks.
 - You can easily write highly hackable training loops by opening a
@@ -748,7 +959,6 @@ class Encoder(layers.Layer):
         z = self.sampling((z_mean, z_log_var))
         return z_mean, z_log_var, z
 
-
 ```
 
 Next, we have a `Decoder` class, which maps the probabilistic latent space coordinates
@@ -768,7 +978,6 @@ class Decoder(layers.Layer):
     def call(self, inputs):
         x = self.dense_proj(inputs)
         return self.dense_output(x)
-
 
 ```
 
@@ -796,7 +1005,6 @@ class VariationalAutoEncoder(layers.Layer):
         )
         self.add_loss(kl_loss)
         return reconstructed
-
 
 ```
 
@@ -846,22 +1054,21 @@ for step, x in enumerate(dataset):
     # as an exercise to the reader.
     if step >= 1000:
         break
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.38399988412857056
-Step: 100 Loss: 0.12813832219874505
-Step: 200 Loss: 0.10099794645214555
-Step: 300 Loss: 0.09052002512883903
-Step: 400 Loss: 0.08532035229100551
-Step: 500 Loss: 0.08204194844631615
-Step: 600 Loss: 0.07955289975478129
-Step: 700 Loss: 0.07817310818634428
-Step: 800 Loss: 0.07688544124606694
-Step: 900 Loss: 0.07589594667134486
-Step: 1000 Loss: 0.07492802400778342
+Step: 0 Loss: 0.3283705711364746
+Step: 100 Loss: 0.12607811022512982
+Step: 200 Loss: 0.09977191104669476
+Step: 300 Loss: 0.0897256354383654
+Step: 400 Loss: 0.08479013259608549
+Step: 500 Loss: 0.08158575140400799
+Step: 600 Loss: 0.07913740716886997
+Step: 700 Loss: 0.07780108796950753
+Step: 800 Loss: 0.07658983394503593
+Step: 900 Loss: 0.07564939806583057
+Step: 1000 Loss: 0.0746984266928145
 
 ```
 </div>
@@ -901,7 +1108,6 @@ vae = tf.keras.Model(inputs=original_inputs, outputs=outputs, name="vae")
 # Add KL divergence regularization loss.
 kl_loss = -0.5 * tf.reduce_mean(z_log_var - tf.square(z_mean) - tf.exp(z_log_var) + 1)
 vae.add_loss(kl_loss)
-
 ```
 
 Much more concise, right?
@@ -928,14 +1134,13 @@ vae.compile(optimizer, loss=loss_fn)
 
 # Actually training the model.
 vae.fit(dataset, epochs=1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 2s 962us/step - loss: 0.0713
+1875/1875 [==============================] - 2s 999us/step - loss: 0.0838
 
-<tensorflow.python.keras.callbacks.History at 0x15fcd8c10>
+<tensorflow.python.keras.callbacks.History at 0x1456bf250>
 
 ```
 </div>
@@ -956,7 +1161,6 @@ A hypernetwork is a deep neural network whose weights are generated by another n
 
 Let's implement a really trivial hypernetwork: we'll use a small 2-layer network  to
 generate the weights of a larger 3-layer network.
-
 
 
 
@@ -987,7 +1191,6 @@ inner_model = keras.Sequential(
         keras.layers.Dense(num_weights_to_generate, activation=tf.nn.sigmoid),
     ]
 )
-
 ```
 
 This is our training loop. For each batch of data:
@@ -1073,22 +1276,21 @@ for step, (x, y) in enumerate(dataset):
     # as an exercise to the reader.
     if step >= 1000:
         break
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 1.8061305284500122
-Step: 100 Loss: 2.430531589701624
-Step: 200 Loss: 2.1146517871364727
-Step: 300 Loss: 1.9503340735858263
-Step: 400 Loss: 1.8750596672872504
-Step: 500 Loss: 1.81695979083944
-Step: 600 Loss: 1.7097562247230214
-Step: 700 Loss: 1.642795581991716
-Step: 800 Loss: 1.6287533775725223
-Step: 900 Loss: 1.6253980021383934
-Step: 1000 Loss: 1.5546919323841977
+Step: 0 Loss: 3.346794843673706
+Step: 100 Loss: 2.5347713479901306
+Step: 200 Loss: 2.3532673210943518
+Step: 300 Loss: 2.105134464552208
+Step: 400 Loss: 1.9224171297462687
+Step: 500 Loss: 1.8143611295096513
+Step: 600 Loss: 1.7148052298323655
+Step: 700 Loss: 1.6695872197209294
+Step: 800 Loss: 1.616796940164684
+Step: 900 Loss: 1.5303113453757042
+Step: 1000 Loss: 1.4919751342148413
 
 ```
 </div>

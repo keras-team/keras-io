@@ -20,6 +20,6 @@ We welcome new code examples! Here are our rules:
 - They should be substantially different in topic from all examples listed above.
 - They should be extensively documented & commented.
 
-New examples are added via Pull Requests to the [keras.io](https://github.com/keras-team/keras-io) repository.
+New examples are added via Pull Requests to the [keras.io repository](https://github.com/keras-team/keras-io).
 They must be submitted as a `.py` file that follows a specific format. They are usually generated from Jupyter notebooks.
 See the [`tutobooks` documentation](https://github.com/keras-team/keras-io/blob/master/README.md) for more details.

@@ -44,8 +44,6 @@ data_path = keras.utils.get_file(
 import os
 import pathlib
 
-os.listdir(pathlib.Path(data_path).parent)
-
 data_dir = pathlib.Path(data_path).parent / "20_newsgroup"
 dirnames = os.listdir(data_dir)
 print("Number of directories:", len(dirnames))
@@ -141,7 +139,7 @@ vectorizer.get_vocabulary()[:5]
 Let's vectorize a test sentence:
 """
 
-output = vectorizer(np.array([["the cat sat on the mat"]]))
+output = vectorizer([["the cat sat on the mat"]])
 output.numpy()[0, :6]
 
 """
@@ -153,13 +151,13 @@ Here's a dict mapping words to their indices:
 """
 
 voc = vectorizer.get_vocabulary()
-word_index = dict(zip(voc, range(2, len(voc))))
+word_index = dict(zip(voc, range(len(voc))))
 
 """
 As you can see, we obtain the same encoding as above for our test sentence:
 """
 
-test = [b"the", b"cat", b"sat", b"on", b"the", b"mat"]
+test = ["the", "cat", "sat", "on", "the", "mat"]
 [word_index[w] for w in test]
 
 """
@@ -201,10 +199,6 @@ print("Found %s word vectors." % len(embeddings_index))
 Now, let's prepare a corresponding embedding matrix that we can use in a Keras
 `Embedding` layer. It's a simple NumPy matrix where entry at index `i` is the pre-trained
 vector for the word of index `i` in our `vectorizer`'s vocabulary.
-
-**Note:** the `TextVectorization` layer stores tokens as bytes, not `str` types.
-This means that you need to decode them to `utf-8` before doing string comparisons, like
-the below: `embeddings_index.get(word.decode('utf-8'))`
 """
 
 num_tokens = len(voc) + 2
@@ -215,7 +209,7 @@ misses = 0
 # Prepare embedding matrix
 embedding_matrix = np.zeros((num_tokens, embedding_dim))
 for word, i in word_index.items():
-    embedding_vector = embeddings_index.get(word.decode("utf-8"))
+    embedding_vector = embeddings_index.get(word)
     if embedding_vector is not None:
         # Words not found in embedding index will be all-zeros.
         # This includes the representation for "padding" and "OOV"

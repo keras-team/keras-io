@@ -46,7 +46,7 @@ both for training and inference. It natively supports loading Keras models, incl
 ## TensorFlow Lite
 
 [TensorFlow Lite](https://www.tensorflow.org/lite) is a runtime for efficient on-device inference that has native support for Keras models.
-Deploy your models on Android, iOS, or on embdeded devices.
+Deploy your models on Android, iOS, or on embedded devices.
 
 
 ---

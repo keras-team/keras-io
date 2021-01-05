@@ -192,7 +192,7 @@ augmented_train_ds = train_ds.map(
   lambda x, y: (data_augmentation(x, training=True), y))
 ```
 
-With this option, your data augmentation will happen **on CPU**, asynchrously, and will
+With this option, your data augmentation will happen **on CPU**, asynchronously, and will
  be buffered before going into the model.
 
 If you're training on CPU, this is the better option, since it makes data augmentation

@@ -15,7 +15,7 @@ This script shows an implementation of Actor Critic method on CartPole-V0 enviro
 As an agent takes actions and moves through an environment, it learns to map
 the observed state of the environment to two possible outputs:
 
-1. Recommended action: A probabiltiy value for each action in the action space.
+1. Recommended action: A probability value for each action in the action space.
    The part of the agent responsible for this output is called the **actor**.
 2. Estimated rewards in the future: Sum of all rewards it expects to receive in the
    future. The part of the agent responsible for this output is the **critic**.
@@ -26,7 +26,7 @@ from the actor maximize the rewards.
 ### CartPole-V0
 
 A pole is attached to a cart placed on a frictionless track. The agent has to apply
-force to move the cart. It is rewarded for for every time step the pole
+force to move the cart. It is rewarded for every time step the pole
 remains upright. The agent, therefore, must learn to keep the pole from falling over.
 
 ### References
@@ -44,7 +44,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-# Configuration paramaters for the whole setup
+# Configuration parameters for the whole setup
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000

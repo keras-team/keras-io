@@ -25,7 +25,7 @@ Transfer learning is usually done for tasks where your dataset has too little da
  train a full-scale model from scratch.
 
 The most common incarnation of transfer learning in the context of deep learning is the
- following worfklow:
+ following workflow:
 
 1. Take layers from a previously trained model.
 2. Freeze them, so as to avoid destroying any of the information they contain during
@@ -80,7 +80,7 @@ In general, all weights are trainable weights. The only built-in layer that has
 non-trainable weights is the `BatchNormalization` layer. It uses non-trainable weights
  to keep track of the mean and variance of its inputs during training.
 To learn how to use non-trainable weights in your own custom layers, see the
-[guide to writing new layers from scratch](making_new_layers_and_models_via_subclassing).
+[guide to writing new layers from scratch](https://keras.io/guides/making_new_layers_and_models_via_subclassing/).
 
 **Example: the `BatchNormalization` layer has 2 trainable weights and 2 non-trainable
  weights**
@@ -192,7 +192,7 @@ Note that an alternative, more lightweight workflow could also be:
  from the base model. This is called **feature extraction**.
 3. Use that output as input data for a new, smaller model.
 
-A key advantage of that second workflow is that you only run the base model once one
+A key advantage of that second workflow is that you only run the base model once on
  your data, rather than once per epoch of training. So it's a lot faster & cheaper.
 
 An issue with that second workflow, though, is that it doesn't allow you to dynamically
@@ -204,7 +204,7 @@ such scenarios data augmentation is very important. So in what follows, we will 
 
 Here's what the first workflow looks like in Keras:
 
-First, instantiate a base model with pre-trained weigts.
+First, instantiate a base model with pre-trained weights.
 
 ```python
 base_model = keras.applications.Xception(
@@ -310,7 +310,7 @@ But the two are tied in the case of the `BatchNormalization` layer.
 fine-tuning, you should keep the `BatchNormalization` layers in inference mode by
  passing `training=False` when calling the base model.
 Otherwise the updates applied to the non-trainable weights will suddenly destroy
-what the model the model has learned.
+what the model has learned.
 
 You'll see this pattern in action in the end-to-end example at the end of this guide.
 
@@ -364,8 +364,7 @@ Likewise for fine-tuning.
 """
 
 """
-## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs
- dataset
+## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs dataset
 
 To solidify these concepts, let's walk you through a concrete end-to-end transfer
 learning & fine-tuning example. We will load the Xception model, pre-trained on
@@ -380,7 +379,7 @@ you'll probably want to use the utility
 `tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
-Tansfer learning is most useful when working with very small datases. To keep our
+Transfer learning is most useful when working with very small datasets. To keep our
 dataset small, we will use 40% of the original training data (25,000 images) for
  training, 10% for validation, and 10% for testing.
 """
@@ -435,7 +434,7 @@ In general, it's a good practice to develop models that take raw data as input, 
 opposed to models that take already-preprocessed data. The reason being that, if your
 model expects preprocessed data, any time you export your model to use it elsewhere
 (in a web browser, in a mobile app), you'll need to reimplement the exact same
-preprocessing pipeline. This get very tricky very quickly. So we should do the least
+preprocessing pipeline. This gets very tricky very quickly. So we should do the least
  possible amount of preprocessing before hitting the model.
 
 Here, we'll do image resizing in the data pipeline (because a deep neural network can
@@ -497,7 +496,7 @@ for images, labels in train_ds.take(1):
             tf.expand_dims(first_image, 0), training=True
         )
         plt.imshow(augmented_image[0].numpy().astype("int32"))
-        plt.title(int(labels[i]))
+        plt.title(int(labels[0]))
         plt.axis("off")
 
 """

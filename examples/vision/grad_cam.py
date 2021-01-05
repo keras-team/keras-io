@@ -16,7 +16,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 # Display
-from IPython.display import Image
+from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
@@ -43,7 +43,7 @@ classifier_layer_names = [
 
 # The local path to our target image
 img_path = keras.utils.get_file(
-    "african_elephant.jpg", " https://i.imgur.com/Bvro0YD.png"
+    "african_elephant.jpg", "https://i.imgur.com/Bvro0YD.png"
 )
 
 display(Image(img_path))

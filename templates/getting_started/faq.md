@@ -16,12 +16,12 @@ A list of frequently Asked Keras Questions.
 
 ## Training-related questions
 
-- [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-epoch-mean)
+- [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-and-epoch-mean)
 - [Why is my training loss much higher than my testing loss?](#why-is-my-training-loss-much-higher-than-my-testing-loss)
 - [How can I use Keras with datasets that don't fit in memory?](#how-can-i-use-keras-with-datasets-that-dont-fit-in-memory)
 - [How can I regularly save Keras models during training?](#how-can-i-regularly-save-keras-models-during-training)
 - [How can I interrupt training when the validation loss isn't decreasing anymore?](#how-can-i-interrupt-training-when-the-validation-loss-isnt-decreasing-anymore)
-- [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-fine-tuning)
+- [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-finetuning)
 - [What's the difference between the `training` argument in `call()` and the `trainable` attribute?](#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute)
 - [In `fit()`, how is the validation split computed?](#in-fit-how-is-the-validation-split-computed)
 - [In `fit()`, is the data shuffled during training?](#in-fit-is-the-data-shuffled-during-training)
@@ -139,6 +139,8 @@ Importantly, you should:
 TPUs are a fast & efficient hardware accelerator for deep learning that is publicly available on Google Cloud.
 You can use TPUs via Colab, AI Platform (ML Engine), and Deep Learning VMs (provided the `TPU_NAME` environment variable is set on the VM).
 
+Make sure to read the [TPU usage guide](https://www.tensorflow.org/guide/tpu) first. Here's a quick summary:
+
 After connecting to a TPU runtime (e.g. by selecting the TPU runtime in Colab), you will need to detect your TPU using a `TPUClusterResolver`, which automatically detects a linked TPU on all supported platforms:
 
 ```python
@@ -162,7 +164,7 @@ Importantly, you should:
 
 - Make sure your dataset yields batches with a fixed static shape. A TPU graph can only process inputs with a constant shape.
 - Make sure you are able to read your data fast enough to keep the TPU utilized. Using the [TFRecord format](https://www.tensorflow.org/tutorials/load_data/tfrecord) to store your data may be a good idea.
-
+- Consider running multiple steps of gradient descent per graph execution in order to keep the TPU utilized. You can do this via the `experimental_steps_per_execution` argument `compile()`. It will yield a significant speed up for small models.
 
 ---
 
@@ -465,7 +467,10 @@ Within Keras, there is the ability to add [callbacks](/api/callbacks/) specifica
 A Keras model has two modes: training and testing. Regularization mechanisms, such as Dropout and L1/L2 weight regularization, are turned off at testing time.
 They are reflected in the training time loss but not in the test time loss.
 
-Besides, the training loss is the average of the losses over each batch of training data. Because your model is changing over time, the loss over the first batches of an epoch is generally higher than over the last batches. On the other hand, the testing loss for an epoch is computed using the model as it is at the end of the epoch, resulting in a lower loss.
+Besides, the training loss that Keras displays is the average of the losses for each batch of training data, **over the current epoch**.
+Because your model is changing over time, the loss over the first batches of an epoch is generally higher than over the last batches.
+This can bring the epoch-wise average down.
+On the other hand, the testing loss for an epoch is computed using the model as it is at the end of the epoch, resulting in a lower loss.
 
 
 ---
@@ -475,12 +480,15 @@ Besides, the training loss is the average of the losses over each batch of train
 You should use the [`tf.data` API](https://www.tensorflow.org/guide/data) to create `tf.data.Dataset` objects -- an abstraction over a data pipeline
 that can pull data from local disk, from a distribtued filesystem, from GCS, etc., as well as efficiently apply various data transformations.
 
-For instance, the utility `tf.keras.preprocessing.image_dataset_from_directory` will create a dataset that reads image data from a local directory.
+For instance, the utility [`tf.keras.preprocessing.image_dataset_from_directory`](https://keras.io/api/preprocessing/image/#imagedatasetfromdirectory-function)
+will create a dataset that reads image data from a local directory.
+Likewise, the utility [`tf.keras.preprocessing.text_dataset_from_directory`](https://keras.io/api/preprocessing/text/#textdatasetfromdirectory-function)
+will create a dataset that reads text files from a local directory.
 
 Dataset objects can be directly passed to `fit()`, or can be iterated over in a custom low-level training loop.
 
 ```python
-model.fit(dataset, epochs=10)
+model.fit(dataset, epochs=10, validation_data=val_dataset)
 ```
 
 ---
@@ -663,7 +671,6 @@ discriminator.compile(...)  # the weights of `discriminator` should be updated w
 discriminator.trainable = False
 gan.compile(...)  # `discriminator` is a submodel of `gan`, which should not be updated when `gan` is trained
 ```
-
 
 
 ---

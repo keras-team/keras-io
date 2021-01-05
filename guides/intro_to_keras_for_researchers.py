@@ -2,8 +2,8 @@
 Title: Introduction to Keras for Researchers
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/01
-Last modified: 2020/04/28
-Description: Everything you need to know to use Keras & TF 2.0 for deep learning research.
+Last modified: 2020/10/02
+Description: Everything you need to know to use Keras & TensorFlow for deep learning research.
 """
 """
 ## Setup
@@ -17,12 +17,13 @@ from tensorflow import keras
 
 Are you a machine learning researcher? Do you publish at NeurIPS and push the
 state-of-the-art in CV and NLP? This guide will serve as your first introduction to core
-Keras API concepts.
+Keras & TensorFlow API concepts.
 
 In this guide, you will learn about:
 
+- Tensors, variables, and gradients in TensorFlow
 - Creating layers by subclassing the `Layer` class
-- Computing gradients with a `GradientTape` and writing low-level training loops
+- Writing low-level training loops
 - Tracking losses created by layers via the `add_loss()` method
 - Tracking metrics in a low-level training loop
 - Speeding up execution with a compiled `tf.function`
@@ -34,9 +35,153 @@ a Variational Autoencoder, and a Hypernetwork.
 """
 
 """
-## The `Layer` class
+## Tensors
 
-The `Layer` is the fundamental abstraction in Keras.
+TensorFlow is an infrastructure layer for differentiable programming.
+At its heart, it's a framework for manipulating N-dimensional arrays (tensors),
+much like NumPy.
+
+However, there are three key differences between NumPy and TensorFlow:
+
+- TensorFlow can leverage hardware accelerators such as GPUs and TPUs.
+- TensorFlow can automatically compute the gradient of arbitrary differentiable tensor expressions.
+- TensorFlow computation can be distributed to large numbers of devices on a single machine, and large number of
+machines (potentially with multiple devices each).
+
+Let's take a look at the object that is at the core of TensorFlow: the Tensor.
+
+Here's a constant tensor:
+"""
+
+x = tf.constant([[5, 2], [1, 3]])
+print(x)
+
+"""
+You can get its value as a NumPy array by calling `.numpy()`:
+"""
+
+x.numpy()
+
+"""
+Much like a NumPy array, it features the attributes `dtype` and `shape`:
+"""
+
+print("dtype:", x.dtype)
+print("shape:", x.shape)
+
+"""
+A common way to create constant tensors is via `tf.ones` and `tf.zeros` (just like `np.ones` and `np.zeros`):
+"""
+
+print(tf.ones(shape=(2, 1)))
+print(tf.zeros(shape=(2, 1)))
+
+"""
+You can also create random constant tensors:
+"""
+
+x = tf.random.normal(shape=(2, 2), mean=0.0, stddev=1.0)
+
+x = tf.random.uniform(shape=(2, 2), minval=0, maxval=10, dtype="int32")
+
+
+"""
+## Variables
+
+Variables are special tensors used to store mutable state (such as the weights of a neural network).
+You create a `Variable` using some initial value:
+"""
+
+initial_value = tf.random.normal(shape=(2, 2))
+a = tf.Variable(initial_value)
+print(a)
+
+
+"""
+You update the value of a `Variable` by using the methods `.assign(value)`, `.assign_add(increment)`, or `.assign_sub(decrement)`:
+"""
+
+new_value = tf.random.normal(shape=(2, 2))
+a.assign(new_value)
+for i in range(2):
+    for j in range(2):
+        assert a[i, j] == new_value[i, j]
+
+added_value = tf.random.normal(shape=(2, 2))
+a.assign_add(added_value)
+for i in range(2):
+    for j in range(2):
+        assert a[i, j] == new_value[i, j] + added_value[i, j]
+
+"""
+## Doing math in TensorFlow
+
+If you've used NumPy, doing math in TensorFlow will look very familiar.
+The main difference is that your TensorFlow code can run on GPU and TPU.
+"""
+
+a = tf.random.normal(shape=(2, 2))
+b = tf.random.normal(shape=(2, 2))
+
+c = a + b
+d = tf.square(c)
+e = tf.exp(d)
+
+"""
+## Gradients
+
+Here's another big difference with NumPy: you can automatically retrieve the gradient of any differentiable expression.
+
+Just open a `GradientTape`, start "watching" a tensor via `tape.watch()`,
+and compose a differentiable expression using this tensor as input:
+"""
+
+a = tf.random.normal(shape=(2, 2))
+b = tf.random.normal(shape=(2, 2))
+
+with tf.GradientTape() as tape:
+    tape.watch(a)  # Start recording the history of operations applied to `a`
+    c = tf.sqrt(tf.square(a) + tf.square(b))  # Do some math using `a`
+    # What's the gradient of `c` with respect to `a`?
+    dc_da = tape.gradient(c, a)
+    print(dc_da)
+
+
+"""
+By default, variables are watched automatically, so you don't need to manually `watch` them:
+"""
+
+a = tf.Variable(a)
+
+with tf.GradientTape() as tape:
+    c = tf.sqrt(tf.square(a) + tf.square(b))
+    dc_da = tape.gradient(c, a)
+    print(dc_da)
+
+"""
+Note that you can compute higher-order derivatives by nesting tapes:
+"""
+
+with tf.GradientTape() as outer_tape:
+    with tf.GradientTape() as tape:
+        c = tf.sqrt(tf.square(a) + tf.square(b))
+        dc_da = tape.gradient(c, a)
+    d2c_da2 = outer_tape.gradient(dc_da, a)
+    print(d2c_da2)
+
+
+"""
+## Keras layers
+
+While TensorFlow is an **infrastructure layer for differentiable programming**,
+dealing with tensors, variables, and gradients,
+Keras is a **user interface for deep learning**, dealing with
+layers, models, optimizers, loss functions, metrics, and more.
+
+Keras serves as the high-level API for TensorFlow:
+Keras is what makes TensorFlow simple and productive.
+
+The `Layer` class is the fundamental abstraction in Keras.
 A `Layer` encapsulates a state (weights) and some computation
 (defined in the call method).
 
@@ -89,9 +234,9 @@ built-in functionality.
 """
 
 """
-## Weight creation
+## Layer weight creation
 
-The add_weight method gives you a shortcut for creating weights:
+The `self.add_weight()` method gives you a shortcut for creating weights:
 """
 
 
@@ -123,7 +268,7 @@ linear_layer = Linear(4)
 y = linear_layer(tf.ones((2, 2)))
 
 """
-## Gradients
+## Layer gradients
 
 You can automatically retrieve the gradients of the weights of a layer by
 calling it inside a `GradientTape`. Using these gradients, you can update the
@@ -412,7 +557,7 @@ for epoch in range(2):
             print("Epoch:", epoch, "Step:", step)
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
-    # Result the metric's state at the end of an epoch
+    # Reset the metric's state at the end of an epoch
     accuracy.reset_states()
 
 """
@@ -568,9 +713,9 @@ for your OO models.
 """
 ## End-to-end experiment example 1: variational autoencoders.
 
-Here are some of things you've learned so far:
+Here are some of the things you've learned so far:
 
-- A `Layer` encapsulate a state (created in `__init__` or `build`) and some computation
+- A `Layer` encapsulates a state (created in `__init__` or `build`) and some computation
 (defined in `call`).
 - Layers can be recursively nested to create new, bigger computation blocks.
 - You can easily write highly hackable training loops by opening a

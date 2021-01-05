@@ -10,7 +10,8 @@
 
 
 
-# Introduction
+---
+## Introduction
 
 A callback is a powerful tool to customize the behavior of a Keras model during
 training, evaluation, or inference. Examples include `tf.keras.callbacks.TensorBoard`
@@ -28,7 +29,6 @@ started.
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -99,7 +99,6 @@ def get_model():
     )
     return model
 
-
 ```
 
 Then, load the MNIST data for training and testing from Keras datasets API:
@@ -116,7 +115,6 @@ x_train = x_train[:1000]
 y_train = y_train[:1000]
 x_test = x_test[:1000]
 y_test = y_test[:1000]
-
 ```
 
 Now, define a simple custom callback that logs:
@@ -187,7 +185,6 @@ class CustomCallback(keras.callbacks.Callback):
         keys = list(logs.keys())
         print("...Predicting: end of batch {}; got log keys: {}".format(batch, keys))
 
-
 ```
 
 Let's try it out:
@@ -210,7 +207,6 @@ res = model.evaluate(
 )
 
 res = model.predict(x_test, batch_size=128, callbacks=[CustomCallback()])
-
 ```
 
 <div class="k-default-codeblock">
@@ -316,37 +312,36 @@ res = model.evaluate(
     verbose=0,
     callbacks=[LossAndErrorPrintingCallback()],
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
-For batch 0, loss is   32.34.
-For batch 1, loss is  465.33.
-For batch 2, loss is  319.39.
-For batch 3, loss is  241.91.
-For batch 4, loss is  195.22.
-For batch 5, loss is  163.79.
-For batch 6, loss is  141.30.
-For batch 7, loss is  127.17.
-The average loss for epoch 0 is  127.17 and mean absolute error is    6.13.
-For batch 0, loss is    4.59.
-For batch 1, loss is    4.53.
-For batch 2, loss is    4.59.
-For batch 3, loss is    4.80.
-For batch 4, loss is    4.83.
-For batch 5, loss is    4.78.
-For batch 6, loss is    4.73.
-For batch 7, loss is    4.65.
-The average loss for epoch 1 is    4.65 and mean absolute error is    1.73.
-For batch 0, loss is    6.36.
-For batch 1, loss is    5.55.
-For batch 2, loss is    5.64.
-For batch 3, loss is    5.69.
-For batch 4, loss is    5.93.
-For batch 5, loss is    5.83.
-For batch 6, loss is    5.78.
-For batch 7, loss is    5.71.
+For batch 0, loss is   32.45.
+For batch 1, loss is  393.79.
+For batch 2, loss is  272.00.
+For batch 3, loss is  206.95.
+For batch 4, loss is  167.29.
+For batch 5, loss is  140.41.
+For batch 6, loss is  121.19.
+For batch 7, loss is  109.21.
+The average loss for epoch 0 is  109.21 and mean absolute error is    5.83.
+For batch 0, loss is    5.94.
+For batch 1, loss is    5.73.
+For batch 2, loss is    5.50.
+For batch 3, loss is    5.38.
+For batch 4, loss is    5.16.
+For batch 5, loss is    5.19.
+For batch 6, loss is    5.64.
+For batch 7, loss is    7.05.
+The average loss for epoch 1 is    7.05 and mean absolute error is    2.14.
+For batch 0, loss is   40.89.
+For batch 1, loss is   42.12.
+For batch 2, loss is   41.42.
+For batch 3, loss is   42.10.
+For batch 4, loss is   42.05.
+For batch 5, loss is   42.91.
+For batch 6, loss is   43.05.
+For batch 7, loss is   42.94.
 
 ```
 </div>
@@ -440,39 +435,38 @@ model.fit(
     verbose=0,
     callbacks=[LossAndErrorPrintingCallback(), EarlyStoppingAtMinLoss()],
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
-For batch 0, loss is   27.16.
-For batch 1, loss is  479.73.
-For batch 2, loss is  328.31.
-For batch 3, loss is  248.68.
-For batch 4, loss is  200.24.
-The average loss for epoch 0 is  200.24 and mean absolute error is    8.40.
-For batch 0, loss is    6.74.
-For batch 1, loss is    6.80.
-For batch 2, loss is    6.37.
-For batch 3, loss is    6.15.
-For batch 4, loss is    5.94.
-The average loss for epoch 1 is    5.94 and mean absolute error is    1.98.
-For batch 0, loss is    5.79.
-For batch 1, loss is    5.56.
-For batch 2, loss is    5.40.
-For batch 3, loss is    5.04.
-For batch 4, loss is    4.81.
-The average loss for epoch 2 is    4.81 and mean absolute error is    1.73.
-For batch 0, loss is    5.60.
-For batch 1, loss is    9.10.
-For batch 2, loss is   11.11.
-For batch 3, loss is   16.32.
-For batch 4, loss is   23.31.
-The average loss for epoch 3 is   23.31 and mean absolute error is    3.98.
+For batch 0, loss is   34.49.
+For batch 1, loss is  438.63.
+For batch 2, loss is  301.08.
+For batch 3, loss is  228.22.
+For batch 4, loss is  183.83.
+The average loss for epoch 0 is  183.83 and mean absolute error is    8.24.
+For batch 0, loss is    9.19.
+For batch 1, loss is    7.99.
+For batch 2, loss is    7.32.
+For batch 3, loss is    6.83.
+For batch 4, loss is    6.31.
+The average loss for epoch 1 is    6.31 and mean absolute error is    2.07.
+For batch 0, loss is    5.26.
+For batch 1, loss is    4.62.
+For batch 2, loss is    4.51.
+For batch 3, loss is    4.56.
+For batch 4, loss is    4.52.
+The average loss for epoch 2 is    4.52 and mean absolute error is    1.72.
+For batch 0, loss is    4.36.
+For batch 1, loss is    6.15.
+For batch 2, loss is   10.84.
+For batch 3, loss is   17.60.
+For batch 4, loss is   26.95.
+The average loss for epoch 3 is   26.95 and mean absolute error is    4.29.
 Restoring model weights from the end of the best epoch.
 Epoch 00004: early stopping
 
-<tensorflow.python.keras.callbacks.History at 0x158bea450>
+<tensorflow.python.keras.callbacks.History at 0x15e0f08d0>
 
 ```
 </div>
@@ -543,189 +537,188 @@ model.fit(
         CustomLearningRateScheduler(lr_schedule),
     ],
 )
-
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Epoch 00000: Learning rate is 0.1000.
-For batch 0, loss is   20.39.
-For batch 1, loss is  467.92.
-For batch 2, loss is  320.53.
-For batch 3, loss is  242.66.
-For batch 4, loss is  195.60.
-The average loss for epoch 0 is  195.60 and mean absolute error is    8.23.
+For batch 0, loss is   32.53.
+For batch 1, loss is  430.35.
+For batch 2, loss is  294.47.
+For batch 3, loss is  223.69.
+For batch 4, loss is  180.61.
+The average loss for epoch 0 is  180.61 and mean absolute error is    8.20.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00001: Learning rate is 0.1000.
-For batch 0, loss is    6.62.
-For batch 1, loss is    6.02.
-For batch 2, loss is    6.85.
-For batch 3, loss is    6.46.
-For batch 4, loss is    6.33.
-The average loss for epoch 1 is    6.33 and mean absolute error is    2.03.
+For batch 0, loss is    6.72.
+For batch 1, loss is    5.57.
+For batch 2, loss is    5.33.
+For batch 3, loss is    5.35.
+For batch 4, loss is    5.53.
+The average loss for epoch 1 is    5.53 and mean absolute error is    1.92.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00002: Learning rate is 0.1000.
-For batch 0, loss is    5.28.
-For batch 1, loss is    5.29.
-For batch 2, loss is    5.30.
-For batch 3, loss is    4.84.
-For batch 4, loss is    4.59.
-The average loss for epoch 2 is    4.59 and mean absolute error is    1.73.
+For batch 0, loss is    5.22.
+For batch 1, loss is    5.19.
+For batch 2, loss is    5.51.
+For batch 3, loss is    5.80.
+For batch 4, loss is    5.69.
+The average loss for epoch 2 is    5.69 and mean absolute error is    1.99.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00003: Learning rate is 0.0500.
-For batch 0, loss is    5.20.
-For batch 1, loss is    5.33.
-For batch 2, loss is    4.70.
-For batch 3, loss is    4.43.
-For batch 4, loss is    4.29.
-The average loss for epoch 3 is    4.29 and mean absolute error is    1.67.
+For batch 0, loss is    6.21.
+For batch 1, loss is    4.85.
+For batch 2, loss is    4.90.
+For batch 3, loss is    4.66.
+For batch 4, loss is    4.54.
+The average loss for epoch 3 is    4.54 and mean absolute error is    1.69.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00004: Learning rate is 0.0500.
-For batch 0, loss is    4.97.
-For batch 1, loss is    4.64.
-For batch 2, loss is    4.30.
-For batch 3, loss is    3.95.
-For batch 4, loss is    3.96.
-The average loss for epoch 4 is    3.96 and mean absolute error is    1.57.
+For batch 0, loss is    3.62.
+For batch 1, loss is    3.58.
+For batch 2, loss is    3.92.
+For batch 3, loss is    3.73.
+For batch 4, loss is    3.65.
+The average loss for epoch 4 is    3.65 and mean absolute error is    1.57.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00005: Learning rate is 0.0500.
-For batch 0, loss is    3.18.
-For batch 1, loss is    3.04.
-For batch 2, loss is    3.31.
-For batch 3, loss is    3.88.
-For batch 4, loss is    3.83.
-The average loss for epoch 5 is    3.83 and mean absolute error is    1.56.
+For batch 0, loss is    4.42.
+For batch 1, loss is    4.95.
+For batch 2, loss is    5.83.
+For batch 3, loss is    6.36.
+For batch 4, loss is    6.62.
+The average loss for epoch 5 is    6.62 and mean absolute error is    2.09.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00006: Learning rate is 0.0100.
-For batch 0, loss is    4.45.
-For batch 1, loss is    4.82.
-For batch 2, loss is    4.13.
-For batch 3, loss is    3.70.
-For batch 4, loss is    3.44.
-The average loss for epoch 6 is    3.44 and mean absolute error is    1.47.
+For batch 0, loss is    8.74.
+For batch 1, loss is    7.34.
+For batch 2, loss is    5.55.
+For batch 3, loss is    4.98.
+For batch 4, loss is    4.48.
+The average loss for epoch 6 is    4.48 and mean absolute error is    1.65.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00007: Learning rate is 0.0100.
-For batch 0, loss is    2.93.
-For batch 1, loss is    3.21.
-For batch 2, loss is    3.49.
-For batch 3, loss is    3.49.
-For batch 4, loss is    3.60.
-The average loss for epoch 7 is    3.60 and mean absolute error is    1.50.
+For batch 0, loss is    4.30.
+For batch 1, loss is    4.01.
+For batch 2, loss is    3.97.
+For batch 3, loss is    3.68.
+For batch 4, loss is    3.76.
+The average loss for epoch 7 is    3.76 and mean absolute error is    1.51.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00008: Learning rate is 0.0100.
-For batch 0, loss is    3.94.
-For batch 1, loss is    3.30.
-For batch 2, loss is    3.45.
-For batch 3, loss is    3.68.
-For batch 4, loss is    3.45.
-The average loss for epoch 8 is    3.45 and mean absolute error is    1.44.
+For batch 0, loss is    3.41.
+For batch 1, loss is    3.74.
+For batch 2, loss is    3.51.
+For batch 3, loss is    3.52.
+For batch 4, loss is    3.47.
+The average loss for epoch 8 is    3.47 and mean absolute error is    1.47.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00009: Learning rate is 0.0050.
-For batch 0, loss is    4.47.
-For batch 1, loss is    3.74.
-For batch 2, loss is    3.70.
-For batch 3, loss is    3.89.
-For batch 4, loss is    3.64.
-The average loss for epoch 9 is    3.64 and mean absolute error is    1.47.
+For batch 0, loss is    3.39.
+For batch 1, loss is    3.04.
+For batch 2, loss is    3.10.
+For batch 3, loss is    3.22.
+For batch 4, loss is    3.14.
+The average loss for epoch 9 is    3.14 and mean absolute error is    1.38.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00010: Learning rate is 0.0050.
-For batch 0, loss is    4.53.
-For batch 1, loss is    4.10.
-For batch 2, loss is    3.81.
-For batch 3, loss is    3.74.
-For batch 4, loss is    3.83.
-The average loss for epoch 10 is    3.83 and mean absolute error is    1.50.
+For batch 0, loss is    2.77.
+For batch 1, loss is    2.89.
+For batch 2, loss is    2.94.
+For batch 3, loss is    2.85.
+For batch 4, loss is    2.78.
+The average loss for epoch 10 is    2.78 and mean absolute error is    1.30.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00011: Learning rate is 0.0050.
-For batch 0, loss is    2.82.
-For batch 1, loss is    3.02.
-For batch 2, loss is    3.16.
-For batch 3, loss is    3.04.
-For batch 4, loss is    2.90.
-The average loss for epoch 11 is    2.90 and mean absolute error is    1.34.
+For batch 0, loss is    3.69.
+For batch 1, loss is    3.33.
+For batch 2, loss is    3.22.
+For batch 3, loss is    3.57.
+For batch 4, loss is    3.79.
+The average loss for epoch 11 is    3.79 and mean absolute error is    1.51.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00012: Learning rate is 0.0010.
-For batch 0, loss is    3.30.
-For batch 1, loss is    3.17.
-For batch 2, loss is    2.87.
-For batch 3, loss is    2.87.
-For batch 4, loss is    2.96.
-The average loss for epoch 12 is    2.96 and mean absolute error is    1.33.
+For batch 0, loss is    3.61.
+For batch 1, loss is    3.21.
+For batch 2, loss is    3.07.
+For batch 3, loss is    3.34.
+For batch 4, loss is    3.23.
+The average loss for epoch 12 is    3.23 and mean absolute error is    1.42.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00013: Learning rate is 0.0010.
-For batch 0, loss is    2.84.
+For batch 0, loss is    2.03.
 For batch 1, loss is    3.25.
-For batch 2, loss is    3.20.
-For batch 3, loss is    3.11.
-For batch 4, loss is    3.07.
-The average loss for epoch 13 is    3.07 and mean absolute error is    1.37.
+For batch 2, loss is    3.23.
+For batch 3, loss is    3.36.
+For batch 4, loss is    3.44.
+The average loss for epoch 13 is    3.44 and mean absolute error is    1.46.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Epoch 00014: Learning rate is 0.0010.
-For batch 0, loss is    2.69.
-For batch 1, loss is    2.70.
+For batch 0, loss is    3.28.
+For batch 1, loss is    3.14.
 For batch 2, loss is    2.89.
-For batch 3, loss is    2.69.
-For batch 4, loss is    2.97.
-The average loss for epoch 14 is    2.97 and mean absolute error is    1.33.
+For batch 3, loss is    2.94.
+For batch 4, loss is    3.02.
+The average loss for epoch 14 is    3.02 and mean absolute error is    1.38.
 
-<tensorflow.python.keras.callbacks.History at 0x158bb8410>
+<tensorflow.python.keras.callbacks.History at 0x15d844410>
 
 ```
 </div>

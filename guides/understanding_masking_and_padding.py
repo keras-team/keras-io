@@ -19,8 +19,8 @@ from tensorflow.keras import layers
 **Masking** is a way to tell sequence-processing layers that certain timesteps
 in an input are missing, and thus should be skipped when processing the data.
 
-**Padding** is a special form of masking were the masked steps are at the start or at
-the beginning of a sequence. Padding comes from the need to encode sequence data into
+**Padding** is a special form of masking where the masked steps are at the start or
+the end of a sequence. Padding comes from the need to encode sequence data into
 contiguous batches: in order to make all sequences in a batch fit a given standard
 length, it is necessary to pad or truncate some sequences.
 
@@ -276,7 +276,7 @@ the mask is safe to do).
 If you have a custom layer that does not modify the time dimension, and if you want it
 to be able to propagate the current input mask, you should set `self.supports_masking
 = True` in the layer constructor. In this case, the default behavior of
-`compute_mask()` is just pass the current mask through.
+`compute_mask()` is to just pass the current mask through.
 
 Here's an example of a layer that is whitelisted for mask propagation:
 
@@ -296,7 +296,7 @@ class MyActivation(keras.layers.Layer):
 """
 You can now use this custom layer in-between a mask-generating layer (like `Embedding`)
 and a mask-consuming layer (like `LSTM`), and it will pass the mask along so that it
-reachs the mask-consuming layer.
+reaches the mask-consuming layer.
 """
 
 inputs = keras.Input(shape=(None,), dtype="int32")
@@ -326,7 +326,7 @@ class TemporalSoftmax(keras.layers.Layer):
     def call(self, inputs, mask=None):
         broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
         inputs_exp = tf.exp(inputs) * broadcast_float_mask
-        inputs_sum = tf.reduce_sum(inputs * broadcast_float_mask, axis=1, keepdims=True)
+        inputs_sum = tf.reduce_sum(inputs_exp * broadcast_float_mask, axis=-1, keepdims=True)
         return inputs_exp / inputs_sum
 
 

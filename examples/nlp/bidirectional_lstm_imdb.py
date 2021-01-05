@@ -41,6 +41,8 @@ model.summary()
 )
 print(len(x_train), "Training sequences")
 print(len(x_val), "Validation sequences")
+# Use pad_sequence to standardize sequence length:
+# this will truncate sequences longer than 200 words and zero-pad sequences shorter than 200 words.
 x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
 x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
 
@@ -48,5 +50,5 @@ x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
 ## Train and evaluate the model
 """
 
-model.compile("adam", "binary_crossentropy", metrics=["accuracy"])
+model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))

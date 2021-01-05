@@ -14,18 +14,15 @@
 ## Setup
 
 
-
 ```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
 ## Create a sampling layer
-
 
 
 ```python
@@ -40,12 +37,10 @@ class Sampling(layers.Layer):
         epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
-
 ```
 
 ---
 ## Build the encoder
-
 
 
 ```python
@@ -61,7 +56,6 @@ z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
 z = Sampling()([z_mean, z_log_var])
 encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
 encoder.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -98,7 +92,6 @@ ________________________________________________________________________________
 ## Build the decoder
 
 
-
 ```python
 latent_inputs = keras.Input(shape=(latent_dim,))
 x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
@@ -108,7 +101,6 @@ x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(
 decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(x)
 decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
 decoder.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -140,7 +132,6 @@ _________________________________________________________________
 ## Define the VAE as a `Model` with a custom `train_step`
 
 
-
 ```python
 
 class VAE(keras.Model):
@@ -148,35 +139,47 @@ class VAE(keras.Model):
         super(VAE, self).__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
+        self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
+        self.reconstruction_loss_tracker = keras.metrics.Mean(
+            name="reconstruction_loss"
+        )
+        self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.total_loss_tracker,
+            self.reconstruction_loss_tracker,
+            self.kl_loss_tracker,
+        ]
 
     def train_step(self, data):
-        if isinstance(data, tuple):
-            data = data[0]
         with tf.GradientTape() as tape:
-            z_mean, z_log_var, z = encoder(data)
-            reconstruction = decoder(z)
+            z_mean, z_log_var, z = self.encoder(data)
+            reconstruction = self.decoder(z)
             reconstruction_loss = tf.reduce_mean(
-                keras.losses.binary_crossentropy(data, reconstruction)
+                tf.reduce_sum(
+                    keras.losses.binary_crossentropy(data, reconstruction), axis=(1, 2)
+                )
             )
-            reconstruction_loss *= 28 * 28
-            kl_loss = 1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var)
-            kl_loss = tf.reduce_mean(kl_loss)
-            kl_loss *= -0.5
+            kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
+            kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
             total_loss = reconstruction_loss + kl_loss
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        self.total_loss_tracker.update_state(total_loss)
+        self.reconstruction_loss_tracker.update_state(reconstruction_loss)
+        self.kl_loss_tracker.update_state(kl_loss)
         return {
-            "loss": total_loss,
-            "reconstruction_loss": reconstruction_loss,
-            "kl_loss": kl_loss,
+            "loss": self.total_loss_tracker.result(),
+            "reconstruction_loss": self.reconstruction_loss_tracker.result(),
+            "kl_loss": self.kl_loss_tracker.result(),
         }
-
 
 ```
 
 ---
 ## Train the VAE
-
 
 
 ```python
@@ -187,73 +190,24 @@ mnist_digits = np.expand_dims(mnist_digits, -1).astype("float32") / 255
 vae = VAE(encoder, decoder)
 vae.compile(optimizer=keras.optimizers.Adam())
 vae.fit(mnist_digits, epochs=30, batch_size=128)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-547/547 [==============================] - 3s 5ms/step - loss: 202.1639 - reconstruction_loss: 199.6418 - kl_loss: 2.5221
+547/547 [==============================] - 35s 62ms/step - loss: 255.8020 - reconstruction_loss: 208.5391 - kl_loss: 2.9673
 Epoch 2/30
-547/547 [==============================] - 2s 4ms/step - loss: 161.9867 - reconstruction_loss: 158.9957 - kl_loss: 2.9910
+547/547 [==============================] - 38s 69ms/step - loss: 178.8786 - reconstruction_loss: 168.4294 - kl_loss: 5.4217
 Epoch 3/30
-547/547 [==============================] - 2s 4ms/step - loss: 157.0864 - reconstruction_loss: 153.9148 - kl_loss: 3.1716
+547/547 [==============================] - 39s 72ms/step - loss: 166.0320 - reconstruction_loss: 158.7979 - kl_loss: 5.8015
 Epoch 4/30
-547/547 [==============================] - 2s 5ms/step - loss: 154.6892 - reconstruction_loss: 151.4092 - kl_loss: 3.2800
+547/547 [==============================] - 38s 69ms/step - loss: 161.1647 - reconstruction_loss: 154.5963 - kl_loss: 5.9926
 Epoch 5/30
-547/547 [==============================] - 2s 4ms/step - loss: 153.1740 - reconstruction_loss: 149.8300 - kl_loss: 3.3441
-Epoch 6/30
-547/547 [==============================] - 2s 5ms/step - loss: 152.0346 - reconstruction_loss: 148.6590 - kl_loss: 3.3756
-Epoch 7/30
-547/547 [==============================] - 2s 5ms/step - loss: 151.2110 - reconstruction_loss: 147.7929 - kl_loss: 3.4181
-Epoch 8/30
-547/547 [==============================] - 2s 5ms/step - loss: 150.5230 - reconstruction_loss: 147.0933 - kl_loss: 3.4297
-Epoch 9/30
-547/547 [==============================] - 2s 5ms/step - loss: 149.9584 - reconstruction_loss: 146.5069 - kl_loss: 3.4515
-Epoch 10/30
-547/547 [==============================] - 2s 5ms/step - loss: 149.4152 - reconstruction_loss: 145.9451 - kl_loss: 3.4701
-Epoch 11/30
-547/547 [==============================] - 2s 5ms/step - loss: 149.0085 - reconstruction_loss: 145.5200 - kl_loss: 3.4885
-Epoch 12/30
-547/547 [==============================] - 2s 5ms/step - loss: 148.6831 - reconstruction_loss: 145.1854 - kl_loss: 3.4977
-Epoch 13/30
-547/547 [==============================] - 2s 4ms/step - loss: 148.3130 - reconstruction_loss: 144.7828 - kl_loss: 3.5302
+547/547 [==============================] - 40s 72ms/step - loss: 152.0941 - reconstruction_loss: 145.7407 - kl_loss: 6.4654
 Epoch 14/30
-547/547 [==============================] - 2s 5ms/step - loss: 148.0216 - reconstruction_loss: 144.4819 - kl_loss: 3.5397
-Epoch 15/30
-547/547 [==============================] - 2s 5ms/step - loss: 147.7056 - reconstruction_loss: 144.1588 - kl_loss: 3.5468
-Epoch 16/30
-547/547 [==============================] - 2s 5ms/step - loss: 147.4493 - reconstruction_loss: 143.8943 - kl_loss: 3.5549
-Epoch 17/30
-547/547 [==============================] - 2s 5ms/step - loss: 147.1656 - reconstruction_loss: 143.5847 - kl_loss: 3.5809
-Epoch 18/30
-547/547 [==============================] - 2s 5ms/step - loss: 147.0080 - reconstruction_loss: 143.4251 - kl_loss: 3.5829
-Epoch 19/30
-547/547 [==============================] - 2s 5ms/step - loss: 146.8182 - reconstruction_loss: 143.2218 - kl_loss: 3.5964
-Epoch 20/30
-547/547 [==============================] - 2s 5ms/step - loss: 146.5972 - reconstruction_loss: 142.9844 - kl_loss: 3.6128
-Epoch 21/30
-547/547 [==============================] - 2s 5ms/step - loss: 146.3822 - reconstruction_loss: 142.7513 - kl_loss: 3.6309
-Epoch 22/30
-547/547 [==============================] - 2s 5ms/step - loss: 146.1550 - reconstruction_loss: 142.5334 - kl_loss: 3.6215
-Epoch 23/30
-547/547 [==============================] - 2s 4ms/step - loss: 145.9934 - reconstruction_loss: 142.3690 - kl_loss: 3.6245
-Epoch 24/30
-547/547 [==============================] - 2s 5ms/step - loss: 145.8778 - reconstruction_loss: 142.2351 - kl_loss: 3.6426
-Epoch 25/30
-547/547 [==============================] - 2s 4ms/step - loss: 145.6936 - reconstruction_loss: 142.0350 - kl_loss: 3.6586
-Epoch 26/30
-547/547 [==============================] - 2s 4ms/step - loss: 145.5037 - reconstruction_loss: 141.8405 - kl_loss: 3.6633
+547/547 [==============================] - 38s 70ms/step - loss: 148.8709 - reconstruction_loss: 142.5713 - kl_loss: 6.6179
 Epoch 27/30
-547/547 [==============================] - 2s 4ms/step - loss: 145.3262 - reconstruction_loss: 141.6582 - kl_loss: 3.6680
-Epoch 28/30
-547/547 [==============================] - 2s 4ms/step - loss: 145.2551 - reconstruction_loss: 141.5739 - kl_loss: 3.6812
-Epoch 29/30
-547/547 [==============================] - 2s 5ms/step - loss: 145.1028 - reconstruction_loss: 141.4197 - kl_loss: 3.6831
-Epoch 30/30
-547/547 [==============================] - 2s 4ms/step - loss: 145.0274 - reconstruction_loss: 141.3409 - kl_loss: 3.6864
-
-<tensorflow.python.keras.callbacks.History at 0x7f74c83e79e8>
+191/547 [=========>....................] - ETA: 25s - loss: 149.0829 - reconstruction_loss: 142.2507 - kl_loss: 6.6429
 
 ```
 </div>
@@ -261,17 +215,14 @@ Epoch 30/30
 ## Display a grid of sampled digits
 
 
-
 ```python
 import matplotlib.pyplot as plt
 
 
-def plot_latent(encoder, decoder):
+def plot_latent_space(vae, n=30, figsize=15):
     # display a n*n 2D manifold of digits
-    n = 30
     digit_size = 28
-    scale = 2.0
-    figsize = 15
+    scale = 1.0
     figure = np.zeros((digit_size * n, digit_size * n))
     # linearly spaced coordinates corresponding to the 2D plot
     # of digit classes in the latent space
@@ -281,7 +232,7 @@ def plot_latent(encoder, decoder):
     for i, yi in enumerate(grid_y):
         for j, xi in enumerate(grid_x):
             z_sample = np.array([[xi, yi]])
-            x_decoded = decoder.predict(z_sample)
+            x_decoded = vae.decoder.predict(z_sample)
             digit = x_decoded[0].reshape(digit_size, digit_size)
             figure[
                 i * digit_size : (i + 1) * digit_size,
@@ -290,7 +241,7 @@ def plot_latent(encoder, decoder):
 
     plt.figure(figsize=(figsize, figsize))
     start_range = digit_size // 2
-    end_range = n * digit_size + start_range + 1
+    end_range = n * digit_size + start_range
     pixel_range = np.arange(start_range, end_range, digit_size)
     sample_range_x = np.round(grid_x, 1)
     sample_range_y = np.round(grid_y, 1)
@@ -302,8 +253,7 @@ def plot_latent(encoder, decoder):
     plt.show()
 
 
-plot_latent(encoder, decoder)
-
+plot_latent_space(vae)
 ```
 
 
@@ -314,12 +264,11 @@ plot_latent(encoder, decoder)
 ## Display how the latent space clusters different digit classes
 
 
-
 ```python
 
-def plot_label_clusters(encoder, decoder, data, labels):
+def plot_label_clusters(vae, data, labels):
     # display a 2D plot of the digit classes in the latent space
-    z_mean, _, _ = encoder.predict(data)
+    z_mean, _, _ = vae.encoder.predict(data)
     plt.figure(figsize=(12, 10))
     plt.scatter(z_mean[:, 0], z_mean[:, 1], c=labels)
     plt.colorbar()
@@ -331,8 +280,7 @@ def plot_label_clusters(encoder, decoder, data, labels):
 (x_train, y_train), _ = keras.datasets.mnist.load_data()
 x_train = np.expand_dims(x_train, -1).astype("float32") / 255
 
-plot_label_clusters(encoder, decoder, x_train, y_train)
-
+plot_label_clusters(vae, x_train, y_train)
 ```
 
 

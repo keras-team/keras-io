@@ -25,7 +25,7 @@ import os
 input_dir = "images/"
 target_dir = "annotations/trimaps/"
 img_size = (160, 160)
-num_classes = 4
+num_classes = 3
 batch_size = 32
 
 input_img_paths = sorted(
@@ -60,7 +60,7 @@ from PIL import ImageOps
 # Display input image #7
 display(Image(filename=input_img_paths[9]))
 
-# Display auto-constrast version of corresponding target (per-pixel categories)
+# Display auto-contrast version of corresponding target (per-pixel categories)
 img = PIL.ImageOps.autocontrast(load_img(target_img_paths[9]))
 display(img)
 
@@ -90,14 +90,16 @@ class OxfordPets(keras.utils.Sequence):
         i = idx * self.batch_size
         batch_input_img_paths = self.input_img_paths[i : i + self.batch_size]
         batch_target_img_paths = self.target_img_paths[i : i + self.batch_size]
-        x = np.zeros((batch_size,) + self.img_size + (3,), dtype="float32")
+        x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="float32")
         for j, path in enumerate(batch_input_img_paths):
             img = load_img(path, target_size=self.img_size)
             x[j] = img
-        y = np.zeros((batch_size,) + self.img_size + (1,), dtype="uint8")
+        y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
         for j, path in enumerate(batch_target_img_paths):
             img = load_img(path, target_size=self.img_size, color_mode="grayscale")
             y[j] = np.expand_dims(img, 2)
+            # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
+            y[j] -= 1
         return x, y
 
 
@@ -140,8 +142,6 @@ def get_model(img_size, num_classes):
         previous_block_activation = x  # Set aside next residual
 
     ### [Second half of the network: upsampling inputs] ###
-
-    previous_block_activation = x  # Set aside residual
 
     for filters in [256, 128, 64, 32]:
         x = layers.Activation("relu")(x)

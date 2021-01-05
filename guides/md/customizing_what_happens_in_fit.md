@@ -26,7 +26,7 @@ or step fusing?
 A core principle of Keras is **progressive disclosure of complexity**. You should
 always be able to get into lower-level workflows in a gradual way. You shouldn't fall
 off a cliff if the high-level functionality doesn't exactly match your use case. You
-should be able to gain more control over the small details while retaing a
+should be able to gain more control over the small details while retaining a
 commensurate amount of high-level convenience.
 
 When you need to customize what `fit()` does, you should **override the training step
@@ -40,16 +40,14 @@ models, or subclassed models.
 
 Let's see how that works.
 
-
 ---
 ## Setup
-
+Requires TensorFlow 2.2 or later.
 
 
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -79,7 +77,6 @@ of the metrics that were passed in `compile()`, and we query results from
 `self.metrics` at the end to retrieve their current value.
 
 
-
 ```python
 
 class CustomModel(keras.Model):
@@ -104,11 +101,9 @@ class CustomModel(keras.Model):
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
-
 ```
 
 Let's try this out:
-
 
 
 ```python
@@ -124,19 +119,18 @@ model.compile(optimizer="adam", loss="mse", metrics=["mae"])
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.fit(x, y, epochs=3)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.3701 - mae: 0.4972
+32/32 [==============================] - 0s 585us/step - loss: 0.5414 - mae: 0.6029
 Epoch 2/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2283 - mae: 0.3842
+32/32 [==============================] - 0s 492us/step - loss: 0.2820 - mae: 0.4143
 Epoch 3/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2193 - mae: 0.3759
+32/32 [==============================] - 0s 428us/step - loss: 0.2447 - mae: 0.3839
 
-<tensorflow.python.keras.callbacks.History at 0x7f3bfc41c0f0>
+<tensorflow.python.keras.callbacks.History at 0x151d28110>
 
 ```
 </div>
@@ -144,14 +138,26 @@ Epoch 3/3
 ## Going lower-level
 
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
-everything *manually* in `train_step`. Likewise for metrics. Here's a lower-level
+everything *manually* in `train_step`. Likewise for metrics.
+
+Here's a lower-level
 example, that only uses `compile()` to configure the optimizer:
 
+- We start by creating `Metric` instances to track our loss and a MAE score.
+- We implement a custom `train_step()` that updates the state of these metrics
+(by calling `update_state()` on them), then query them (via `result()`) to return their current average value,
+to be displayed by the progress bar and to be pass to any callback.
+- Note that we would need to call `reset_states()` on our metrics between each epoch! Otherwise
+calling `result()` would return an average since the start of training, whereas we usually work
+with per-epoch averages. Thankfully, the framework can do that for us: just list any metric
+you want to reset in the `metrics` property of the model. The model will call `reset_states()`
+on any object listed here at the begining of each `fit()` epoch or at the begining of a call to
+`evaluate()`.
 
 
 ```python
-mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
 loss_tracker = keras.metrics.Mean(name="loss")
+mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
 
 
 class CustomModel(keras.Model):
@@ -175,6 +181,15 @@ class CustomModel(keras.Model):
         mae_metric.update_state(y, y_pred)
         return {"loss": loss_tracker.result(), "mae": mae_metric.result()}
 
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch
+        # or at the start of `evaluate()`.
+        # If you don't implement this property, you have to call
+        # `reset_states()` yourself at the time of your choosing.
+        return [loss_tracker, mae_metric]
+
 
 # Construct an instance of CustomModel
 inputs = keras.Input(shape=(32,))
@@ -187,20 +202,24 @@ model.compile(optimizer="adam")
 # Just use `fit` as usual -- you can use callbacks, etc.
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.fit(x, y, epochs=3)
+model.fit(x, y, epochs=5)
 
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.3244 - mae: 0.4531
-Epoch 2/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2864 - mae: 0.4263
-Epoch 3/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2715 - mae: 0.4145
+Epoch 1/5
+32/32 [==============================] - 0s 603us/step - loss: 0.3112 - mae: 0.4482
+Epoch 2/5
+32/32 [==============================] - 0s 616us/step - loss: 0.2566 - mae: 0.4055
+Epoch 3/5
+32/32 [==============================] - 0s 506us/step - loss: 0.2459 - mae: 0.3975
+Epoch 4/5
+32/32 [==============================] - 0s 436us/step - loss: 0.2357 - mae: 0.3895
+Epoch 5/5
+32/32 [==============================] - 0s 466us/step - loss: 0.2245 - mae: 0.3799
 
-<tensorflow.python.keras.callbacks.History at 0x7f3b9c048390>
+<tensorflow.python.keras.callbacks.History at 0x152426810>
 
 ```
 </div>
@@ -215,7 +234,6 @@ weighting. If you want to support the `fit()` arguments `sample_weight` and
 - Pass it to `compiled_loss` & `compiled_metrics` (of course, you could also just apply
 it manually if you don't rely on `compile()` for losses & metrics)
 - That's it. That's the list.
-
 
 
 ```python
@@ -267,19 +285,18 @@ x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 sw = np.random.random((1000, 1))
 model.fit(x, y, sample_weight=sw, epochs=3)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 2ms/step - loss: 1.0058 - mae: 1.3402
+32/32 [==============================] - 0s 686us/step - loss: 0.2306 - mae: 0.5587
 Epoch 2/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.4708 - mae: 0.8719
+32/32 [==============================] - 0s 493us/step - loss: 0.1379 - mae: 0.4047
 Epoch 3/3
-32/32 [==============================] - 0s 2ms/step - loss: 0.2220 - mae: 0.5591
+32/32 [==============================] - 0s 445us/step - loss: 0.1382 - mae: 0.4210
 
-<tensorflow.python.keras.callbacks.History at 0x7f3b7c7efc50>
+<tensorflow.python.keras.callbacks.History at 0x1524e5f50>
 
 ```
 </div>
@@ -288,7 +305,6 @@ Epoch 3/3
 
 What if you want to do the same for calls to `model.evaluate()`? Then you would
 override `test_step` in exactly the same way. Here's what it looks like:
-
 
 
 ```python
@@ -318,14 +334,13 @@ model.compile(loss="mse", metrics=["mae"])
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.evaluate(x, y)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 1ms/step - loss: 0.8495 - mae: 0.8096
+32/32 [==============================] - 0s 558us/step - loss: 0.2916 - mae: 0.4347
 
-[0.849469780921936, 0.8096422553062439]
+[0.28433525562286377, 0.42363572120666504]
 
 ```
 </div>
@@ -341,7 +356,6 @@ Let's consider:
 "real").
 - One optimizer for each.
 - A loss function to train the discriminator.
-
 
 
 
@@ -379,12 +393,10 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-
 ```
 
 Here's a feature-complete GAN class, overriding `compile()` to use its own signature,
 and implementing the entire GAN algorithm in 17 lines in `train_step`:
-
 
 
 ```python
@@ -446,11 +458,9 @@ class GAN(keras.Model):
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
         return {"d_loss": d_loss, "g_loss": g_loss}
 
-
 ```
 
 Let's test-drive it:
-
 
 
 ```python
@@ -470,21 +480,17 @@ gan.compile(
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-# To limit execution time, we only train on 100 batches. You can train on
+# To limit the execution time, we only train on 100 batches. You can train on
 # the entire dataset. You will need about 20 epochs to get nice results.
 gan.fit(dataset.take(100), epochs=1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11493376/11490434 [==============================] - 0s 0us/step
-100/100 [==============================] - 1s 11ms/step - d_loss: 0.4090 - g_loss: 0.8741
+100/100 [==============================] - 56s 556ms/step - d_loss: 0.3829 - g_loss: 1.0662
 
-<tensorflow.python.keras.callbacks.History at 0x7f3b7c735c88>
+<tensorflow.python.keras.callbacks.History at 0x152683050>
 
 ```
 </div>
-The idea behind deep learning are simple, so why should their implementation be painful?
-
+The ideas behind deep learning are simple, so why should their implementation be painful?
