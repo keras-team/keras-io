@@ -10,11 +10,11 @@ Description: Implementing Vision Transformer (ViT) model for image classificatio
 ## Introduction
 
 This example implements the [Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929)
-model, by Alexey Dosovitskiy et al., for CIFAR-100 image classification.
-The ViT applies the transformer architecture with self-attentions to sequences of
-image patches, without using convolutional networks.
+model by Alexey Dosovitskiy et al. for image classification on the CIFAR-100 dataset.
+The ViT applies the Transformer architecture with self-attentions on sequences of
+image patches without using convolutional networks.
 
-The example requires TensorFlow 2.4 or higher, and
+The example requires TensorFlow 2.4 or higher and
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
 which can be installed using the following command:
 
@@ -113,7 +113,7 @@ class MLP(layers.Layer):
 """
 ## Experiment 1: Train the baseline classification model
 
-We use an untrained ResNet50 architecture as our baseline model.
+We use an untrained ResNet-50 architecture as our baseline model.
 """
 
 
@@ -139,12 +139,12 @@ resnet_classifier = create_resnet_classifier()
 history = run_experiment(resnet_classifier)
 
 """
-After 100 epochs, the RestNet50 classification model achieves around 66% top 5
+After 100 epochs the RestNet-50 classification model achieves around 66% top 5
 accuracy on the test data.
 """
 
 """
-## Experiment 2: Train Vision Transformer model
+## Experiment 2: Train the Vision Transformer model
 """
 
 patch_size = 4
@@ -240,7 +240,7 @@ MLP head with softmax to produce the final class probabilities output.
 Unlike the technique described in the [paper](https://arxiv.org/abs/2010.11929),
 which prepends a learnable embedding to the sequence of encoded patches to serve
 as the image representation, the outputs of the final Transformer block are
-aggregated, using `layers.GlobalAveragePooling1D()`, and used as the image
+aggregated with `layers.GlobalAveragePooling1D()` and then used as the image
 representation input to the MLP head.
 """
 
@@ -289,6 +289,6 @@ history = run_experiment(vit_classifier)
 """
 After 100 epochs, the ViT classification model achieves more than 72% top 5
 accuracy on the test data. You can try to train the model for more epochs,
-use larger number of Transformer layer, or increase the projection dimensions
+use larger number of Transformer layer or increase the projection dimensions
 to achieve better results.
 """
