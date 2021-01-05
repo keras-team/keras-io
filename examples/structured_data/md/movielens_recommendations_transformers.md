@@ -1,12 +1,16 @@
-"""
-Title: A Transformer-based recommendation system
-Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2020/12/30
-Last modified: 2020/12/30
-Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
-"""
+# A Transformer-based recommendation system
 
-"""
+**Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
+**Date created:** 2020/12/30<br>
+**Last modified:** 2020/12/30<br>
+**Description:** Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/structured_data/ipynb/movielens_recommendations_transformers.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/movielens_recommendations_transformers.py)
+
+
+
+---
 ## Introduction
 
 This example demonstrates the [Behavior Sequence Transformer (BST)](https://arxiv.org/abs/1905.06874)
@@ -33,9 +37,8 @@ in the sequence, to update them before feeding them into the self-attention laye
 
 
 Note that this example should be run with TensorFlow 2.4 or higher.
-"""
 
-"""
+---
 ## The dataset
 
 We use the [1M version of the Movielens dataset](https://grouplens.org/datasets/movielens/1m/).
@@ -43,12 +46,12 @@ The dataset includes around 1 million ratings from 6000 users on 4000 movies,
 along with some user features, movie genres. In addition, the timestamp of each user-movie
 rating is provided, which allows creating sequences of movie ratings for each user,
 as expected by the BST model.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import os
 import math
 from zipfile import ZipFile
@@ -59,8 +62,9 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+```
 
-"""
+---
 ## Prepare the data
 
 ### Download and prepare the DataFrames
@@ -69,15 +73,17 @@ First, let's download the movielens data.
 
 The downloaded folder will contain three data files: `users.dat`, `movies.dat`,
 and `ratings.dat`.
-"""
 
+
+```python
 urlretrieve("http://files.grouplens.org/datasets/movielens/ml-1m.zip", "movielens.zip")
 ZipFile("movielens.zip", "r").extractall()
+```
 
-"""
 Then, we load the data into pandas DataFrames with their proper column names.
-"""
 
+
+```python
 users = pd.read_csv(
     "ml-1m/users.dat",
     sep="::",
@@ -93,11 +99,23 @@ ratings = pd.read_csv(
 movies = pd.read_csv(
     "ml-1m/movies.dat", sep="::", names=["movie_id", "title", "genres"]
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:4: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+  after removing the cwd from sys.path.
+/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:10: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+  # Remove the CWD from sys.path while we load stuff.
+/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:14: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+  
+
+```
+</div>
 Here, we do some simple data processing to fix the data types of the columns.
-"""
 
+
+```python
 users["user_id"] = users["user_id"].apply(lambda x: f"user_{x}")
 users["age_group"] = users["age_group"].apply(lambda x: f"group_{x}")
 users["occupation"] = users["occupation"].apply(lambda x: f"occupation_{x}")
@@ -107,12 +125,13 @@ movies["movie_id"] = movies["movie_id"].apply(lambda x: f"movie_{x}")
 ratings["movie_id"] = ratings["movie_id"].apply(lambda x: f"movie_{x}")
 ratings["user_id"] = ratings["user_id"].apply(lambda x: f"user_{x}")
 ratings["rating"] = ratings["rating"].apply(lambda x: float(x))
+```
 
-"""
 Each movie has multiple genres. We split them into separate columns in the `movies`
 DataFrame.
-"""
 
+
+```python
 genres = [
     "Action",
     "Adventure",
@@ -139,8 +158,8 @@ for genre in genres:
         lambda values: int(genre in values.split("|"))
     )
 
+```
 
-"""
 ### Transform the movie ratings data into sequences
 
 First, let's sort the the ratings data using the `unix_timestamp`, and then group the
@@ -148,8 +167,9 @@ First, let's sort the the ratings data using the `unix_timestamp`, and then grou
 
 The output DataFrame will have a record for each `user_id`, with two ordered lists
 (sorted by rating datetime): the movies they have rated, and their ratings of these movies.
-"""
 
+
+```python
 ratings_group = ratings.sort_values(by=["unix_timestamp"]).groupby("user_id")
 
 ratings_data = pd.DataFrame(
@@ -161,14 +181,15 @@ ratings_data = pd.DataFrame(
     }
 )
 
+```
 
-"""
 Now, let's split the `movie_ids` list into a set of sequences of a fixed length.
 We do the same for the `ratings`. Set the `sequence_length` variable to change the length
 of the input sequence to the model. You can also change the `step_size` to control the
 number of sequences to generate for each user.
-"""
 
+
+```python
 sequence_length = 4
 step_size = 2
 
@@ -198,12 +219,13 @@ ratings_data.ratings = ratings_data.ratings.apply(
 )
 
 del ratings_data["timestamps"]
+```
 
-"""
 After that, we process the output to have each sequence in a separate records in
 the DataFrame. In addition, we join the user features with the ratings data.
-"""
 
+
+```python
 ratings_data_movies = ratings_data[["user_id", "movie_ids"]].explode(
     "movie_ids", ignore_index=True
 )
@@ -225,25 +247,28 @@ ratings_data_transformed.rename(
     columns={"movie_ids": "sequence_movie_ids", "ratings": "sequence_ratings"},
     inplace=True,
 )
+```
 
-"""
 With `sequence_length` of 4 and `step_size` of 2, we end up with 498,623 sequences.
 
 Finally, we split the data into training and testing splits, with 85% and 15% of
 the instances, respectively, and store them to CSV files.
-"""
 
+
+```python
 random_selection = np.random.rand(len(ratings_data_transformed.index)) <= 0.85
 train_data = ratings_data_transformed[random_selection]
 test_data = ratings_data_transformed[~random_selection]
 
 train_data.to_csv("train_data.csv", index=False, sep="|", header=False)
 test_data.to_csv("test_data.csv", index=False, sep="|", header=False)
+```
 
-"""
+---
 ## Define metadata
-"""
 
+
+```python
 CSV_HEADER = list(ratings_data_transformed.columns)
 
 CATEGORICAL_FEATURES_WITH_VOCABULARY = {
@@ -257,11 +282,13 @@ CATEGORICAL_FEATURES_WITH_VOCABULARY = {
 USER_FEATURES = ["sex", "age_group", "occupation"]
 
 MOVIE_FEATURES = ["genres"]
+```
 
-"""
+---
 ## Create `tf.data.Dataset` for training and evaluation
-"""
 
+
+```python
 
 def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
     def process(features):
@@ -295,11 +322,13 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
 
     return dataset
 
+```
 
-"""
+---
 ## Create model inputs
-"""
 
+
+```python
 
 def create_model_inputs():
     return {
@@ -318,8 +347,9 @@ def create_model_inputs():
         "occupation": layers.Input(name="occupation", shape=(1,), dtype=tf.string),
     }
 
+```
 
-"""
+---
 ## Encode input features
 
 The `encode_input_features` method works as follows:
@@ -344,8 +374,9 @@ by the attention layer for the transformer architecture.
 
 6. The method returns a tuple of two elements:  `encoded_transformer_features` and
 `encoded_other_features`.
-"""
 
+
+```python
 
 def encode_input_features(
     inputs,
@@ -469,11 +500,13 @@ def encode_input_features(
 
     return encoded_transformer_features, encoded_other_features
 
+```
 
-"""
+---
 ## Create a BST model
-"""
 
+
+```python
 include_user_id = False
 include_user_features = False
 include_movie_features = False
@@ -525,11 +558,19 @@ def create_model():
 
 model = create_model()
 keras.utils.plot_model(model, show_shapes=True)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+('Failed to import pydot. You must `pip install pydot` and install graphviz (https://graphviz.gitlab.io/download/), ', 'for `pydotprint` to work.')
+
+```
+</div>
+---
 ## Run training and evaluation experiment
-"""
 
+
+```python
 # Compile the model.
 model.compile(
     optimizer=keras.optimizers.Adagrad(learning_rate=0.01),
@@ -549,12 +590,27 @@ test_dataset = get_dataset_from_csv("test_data.csv", batch_size=265)
 # Evaluate the model on the test data.
 _, rmse = model.evaluate(test_dataset, verbose=0)
 print(f"Test MAE: {round(rmse, 3)}")
+```
 
-"""
-You should achieve a Mean Absolute Error (MAE) at or around 0.7 on the test data.
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+1599/1599 [==============================] - 18s 10ms/step - loss: 1.4755 - mean_absolute_error: 0.9584
+Epoch 2/5
+1599/1599 [==============================] - 17s 11ms/step - loss: 1.0181 - mean_absolute_error: 0.8060
+Epoch 3/5
+1599/1599 [==============================] - 18s 11ms/step - loss: 0.9552 - mean_absolute_error: 0.7795
+Epoch 4/5
+1599/1599 [==============================] - 19s 12ms/step - loss: 0.9238 - mean_absolute_error: 0.7660
+Epoch 5/5
+1599/1599 [==============================] - 18s 11ms/step - loss: 0.9021 - mean_absolute_error: 0.7570
+Test MAE: 0.761
 
-"""
+```
+</div>
+You should achieve a Mean Absolute Error (MAE) at or around 0.75 on the test data.
+
+---
 ## Conclusion
 
 The BST model uses the Transformer layer in its architecture to capture the sequential signals underlying
@@ -564,4 +620,3 @@ You can try training this model with different configurations, for example, by i
 the input sequence length and training the model for a larger number of epochs. In addition,
 you can try including other features like movie release year and customer
 zipcode, and including cross features like sex X genre.
-"""
