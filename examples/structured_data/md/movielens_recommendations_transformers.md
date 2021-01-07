@@ -557,15 +557,7 @@ def create_model():
 
 
 model = create_model()
-keras.utils.plot_model(model, show_shapes=True)
 ```
-
-
-
-
-![png](/img/examples/structured_data/movielens_recommendations_transformers/movielens_recommendations_transformers_30_0.png)
-
-
 
 ---
 ## Run training and evaluation experiment

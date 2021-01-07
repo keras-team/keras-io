@@ -524,7 +524,6 @@ def create_model():
 
 
 model = create_model()
-keras.utils.plot_model(model, show_shapes=True)
 
 """
 ## Run training and evaluation experiment
