@@ -3,28 +3,29 @@ Title: Classification with Neural Decision Forests
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/15
 Last modified: 2021/01/15
-Description: How to model and train stochastic, differentiable decision trees as classifiers for
-end-to-end learning in deep neural networks.
+Description: How to train differentiable decision trees for end-to-end learning in deep neural networks.
 """
 
 """
 ## Introduction
 
-This example provides an implementation of the [Deep Neural Decision Forest](https://ieeexplore.ieee.org/document/7410529)
-model, introduced by P. Kontschieder et al., for structured data classification.
-This model introduced a stochastic and differentiable decision tree model to unify
-classification trees with the deep representation learning, in a joint training routine.
+This example provides an implementation of the
+[Deep Neural Decision Forest](https://ieeexplore.ieee.org/document/7410529)
+model, introduced by P. Kontschieder et al. for structured data classification.
+This model introduces a stochastic and differentiable decision tree model,
+trained end-to-end, unifying decision trees with deep representation learning.
 
 ## The dataset
 
-This example uses the [United States Census Income
-Dataset](https://archive.ics.uci.edu/ml/datasets/census+income) provided by the
-[UC Irvine Machine Learning
-Repository](https://archive.ics.uci.edu/ml/index.php). The task is binary classification
-to determine whether a person makes over 50K a year.
+This example uses the
+[United States Census Income Dataset](https://archive.ics.uci.edu/ml/datasets/census+income)
+provided by the
+[UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
+The task is binary classification
+to predict whether a person is likely to be making over USD 50k a year.
 
-The dataset includes 48,842 instances with 14 input features, 5 of which numerical,
-and the other 9 are categorical.
+The dataset includes 48,842 instances with 14 input features: 5 numerical features
+and 9 categorical features.
 """
 
 """
@@ -84,7 +85,7 @@ test_data.income_bracket = test_data.income_bracket.apply(
 )
 
 """
-Now we store the train and test data splits locally to CSV files.
+We store the training and test data splits locally as CSV files.
 """
 
 train_data_file = "train_data.csv"
@@ -97,7 +98,7 @@ test_data.to_csv(test_data_file, index=False, header=False)
 ## Define dataset metadata
 
 Here, we define the metadata of the dataset that will be useful for reading and parsing
-the data into input features, and encoding the input features with respect to their types.
+and encoding input features.
 """
 
 # A list of the numerical feature names.
@@ -136,11 +137,11 @@ TARGET_FEATURE_NAME = "income_bracket"
 TARGET_LABELS = [" <=50K", " >50K"]
 
 """
-## Create tf.data.Dataset for training and evaluation
+## Create `tf.data.Dataset` objects for training and validation
 
 We create an input function to read and parse the file, and convert features and labels
 into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
-for training or evaluation. We also preprocess the input by mapping the target label
+for training or validation. We also preprocess the input by mapping the target label
 to an index.
 """
 
@@ -152,7 +153,6 @@ taget_label_lookup = StringLookup(
 
 
 def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
-
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,
@@ -164,7 +164,6 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
         na_value="?",
         shuffle=shuffle,
     ).map(lambda features, target: features, target_label_lookup(target))
-
     return dataset.cache()
 
 
@@ -233,40 +232,6 @@ def encode_inputs(inputs, use_embedding=False):
     encoded_features = layers.concatenate(encoded_features)
     return encoded_features
 
-
-"""
-## Compile, train, and evaluate the model
-"""
-
-learning_rate = 0.01
-batch_size = 265
-num_epochs = 10
-hidden_units = [64, 64]
-
-
-def run_experiment(model):
-
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
-        loss=keras.losses.SparseCategoricalCrossentropy(),
-        metrics=[keras.metrics.SparseCategoricalAccuracy()],
-    )
-
-    print("Start training the model...")
-    train_dataset = get_dataset_from_csv(
-        train_data_file, shuffle=True, batch_size=batch_size
-    )
-
-    model.fit(train_dataset, steps_per_epoch=train_steps_per_epoch)
-    print("Model training finished")
-
-    print("Evaluating the model on the test data...")
-    test_dataset = get_dataset_from_csv(test_data_file, batch_size=batch_size)
-
-    _, accuracy = model.evaluate(test_dataset)
-    print(f"Test accuracy: {round(accuracy * 100, 2)}%")
-
-
 """
 ## Deep Neural Decision Tree
 
@@ -276,8 +241,8 @@ The second set is the weights of the routing layer `decision_fn`, which represen
 of going to each leave. The forward pass of the model works as follows:
 
 1. The model expects input `features` as a single vector encoding all the features of an instance
-in the batch. This vector could be generated from a Convolution Neural Network (CNN) applied on images,
-or (non)linear transformations to structured data features. 
+in the batch. This vector could be generated from a Convolution Neural Network (CNN) applied to images,
+or dense transformations applied to structured data features. 
 2. The model first applies a `used_features_mask` to randomly select a subset of input features to use.
 3. Second, the model computes the probabilities `mu` for the input instances to reach the tree leaves,
 by iteratively performing a *stochastic* routing throughout the tree levels.
@@ -289,7 +254,6 @@ leaves to produce the final `outputs`.
 class NeuralDecisionTree(keras.Model):
     def __init__(self, depth, num_features, used_features_rate, num_classes):
         super(NeuralDecisionTree, self).__init__()
-
         self.depth = depth
         self.num_leaves = 2 ** depth
         self.num_classes = num_classes
@@ -311,13 +275,12 @@ class NeuralDecisionTree(keras.Model):
             trainable=True,
         )
 
-        # Initialise the stochastic routing layer.
+        # Initialize the stochastic routing layer.
         self.decision_fn = layers.Dense(
             units=self.num_leaves, activation="sigmoid", name="decision"
         )
 
     def call(self, features):
-
         batch_size = tf.shape(features)[0]
 
         # Apply the feature mask to the input features.
@@ -352,13 +315,77 @@ class NeuralDecisionTree(keras.Model):
         probabilities = keras.activations.softmax(self.pi)  # [num_leaves, num_classes]
         outputs = tf.matmul(mu, probabilities)  # [batch_size, num_classes]
         return outputs
+    
+    
+"""
+## Deep Neural Decision Forest
+
+The neural decision forest model consists of a set of neural decision trees that are
+trained simultaneously. The output of the forest model is the average outputs of its trees.
+"""
+
+
+class NeuralDecisionForest(keras.Model):
+    def __init__(self, num_trees, depth, num_features, used_features_rate, num_classes):
+        super(NeuralDecisionForest, self).__init__()
+        self.ensemble = []
+        # Initialize the ensemble by adding NeuralDecisionTree instances.
+        # Each tree will have its own randomly selected input features to use.
+        for _ in range(num_trees):
+            self.ensemble.append(
+                NeuralDecisionTree(depth, num_features, used_features_rate, num_classes)
+            )
+
+    def call(self, inputs):
+        # Initialize the outputs: a [batch_size, num_classes] matrix of zeros.
+        batch_size = tf.shape(inputs)[0]
+        outputs = tf.zeros([batch_size, num_classes])
+
+        # Aggregate the outputs of trees in the ensemble.
+        for tree in self.ensemble:
+            outputs += tree(inputs)
+        # Divide the outputs by the ensemble size to get the average.
+        outputs /= len(self.ensemble)
+        return outputs
 
 
 """
-## Experiment 1: train a tree model
+Finally, let's set up the code that will train and evaluate the model.
+"""
 
-In this experiment, we train a single neural decision tree model, where we use all
-the input features.
+learning_rate = 0.01
+batch_size = 265
+num_epochs = 10
+hidden_units = [64, 64]
+
+
+def run_experiment(model):
+
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=keras.losses.SparseCategoricalCrossentropy(),
+        metrics=[keras.metrics.SparseCategoricalAccuracy()],
+    )
+
+    print("Start training the model...")
+    train_dataset = get_dataset_from_csv(
+        train_data_file, shuffle=True, batch_size=batch_size
+    )
+
+    model.fit(train_dataset, steps_per_epoch=train_steps_per_epoch)
+    print("Model training finished")
+
+    print("Evaluating the model on the test data...")
+    test_dataset = get_dataset_from_csv(test_data_file, batch_size=batch_size)
+
+    _, accuracy = model.evaluate(test_dataset)
+    print(f"Test accuracy: {round(accuracy * 100, 2)}%")
+
+"""
+## Experiment 1: train a decision tree model
+
+In this experiment, we train a single neural decision tree model,
+where we use all input features.
 """
 
 num_trees = 10
@@ -381,50 +408,16 @@ def create_tree_model():
 
 
 tree_model = create_tree_model()
-
 run_experiment(tree_model)
-
-
-"""
-## Deep Neural Decision Forest
-
-The neural decision forest model consists of a set of neural decision trees that are
-trained simultaneously. The output of the forest model is the average outputs of its trees.
-"""
-
-
-class NeuralDecisionForest(keras.Model):
-    def __init__(self, num_trees, depth, num_features, used_features_rate, num_classes):
-        super(NeuralDecisionForest, self).__init__()
-        self.ensemble = []
-        # Initialise the ensemble by adding NeuralDecisionTree instances.
-        # Each tree will have its own randomly selected input features to use.
-        for _ in range(num_trees):
-            self.ensemble.append(
-                NeuralDecisionTree(depth, num_features, used_features_rate, num_classes)
-            )
-
-    def call(self, inputs):
-        # Initialise the outputs as a [batch_size, num_classes] matrix of zeros.
-        batch_size = tf.shape(inputs)[0]
-        outputs = tf.zeros([batch_size, num_classes])
-
-        # Aggregate the outputs of trees in the ensemble.
-        for tree in self.ensemble:
-            outputs += tree(inputs)
-        # Divide the outputs by the ensemble size to get the average.
-        outputs /= len(self.ensemble)
-
-        return outputs
 
 
 """
 ## Experiment 2: train a forest model
 
-In this experiment, we train neural decision forest, which consists of `num_trees` trees,
-and each tree uses randomly selected 50% of the input features. You can control the number
+In this experiment, we train a neural decision forest with `num_trees` trees,
+where each tree uses randomly selected 50% of the input features. You can control the number
 of features to be used in each tree by setting the `used_features_rate` variable.
-In addition, we set the depth to 5 instead of 10 that was used in the previous experiment.
+In addition, we set the depth to 5 instead of 10 compared to the previous experiment.
 """
 
 num_trees = 25
