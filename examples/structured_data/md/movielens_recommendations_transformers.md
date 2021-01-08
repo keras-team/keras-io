@@ -101,17 +101,6 @@ movies = pd.read_csv(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:4: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
-  after removing the cwd from sys.path.
-/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:10: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
-  # Remove the CWD from sys.path while we load stuff.
-/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:14: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
-  
-
-```
-</div>
 Here, we do some simple data processing to fix the data types of the columns.
 
 
