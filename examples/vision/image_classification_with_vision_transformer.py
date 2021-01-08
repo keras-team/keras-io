@@ -66,7 +66,7 @@ def run_experiment(model):
         y_train,
         batch_size=batch_size,
         epochs=num_epochs,
-        validation_split=0.15
+        validation_split=0.15,
     )
 
     accuracy = model.evaluate(x_test, y_test)[1]
