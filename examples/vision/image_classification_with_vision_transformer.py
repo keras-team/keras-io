@@ -14,13 +14,7 @@ model by Alexey Dosovitskiy et al. for image classification on the CIFAR-100 dat
 The ViT applies the Transformer architecture with self-attentions on sequences of
 image patches without using convolutional networks.
 
-The example requires TensorFlow 2.4 or higher and
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-which can be installed using the following command:
-
-```python
-pip install -U tensorflow-addons
-```
+The example requires TensorFlow 2.4 or higher.
 """
 
 """
@@ -50,9 +44,8 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 """
 
 learning_rate = 0.003
-weight_decay = 0.001
 batch_size = 512
-hidden_units = [128]
+hidden_units = [128, 128]
 num_epochs = 100
 dropout_rate = 0.5
 
@@ -62,19 +55,22 @@ dropout_rate = 0.5
 
 
 def run_experiment(model):
-    k = 5
     model.compile(
-        optimizer=tfa.optimizers.AdamW(
-            learning_rate=learning_rate, weight_decay=weight_decay
-        ),
+        optimizer=keras.optimizers.Adam(learning_rate),
         loss=keras.losses.SparseCategoricalCrossentropy(),
         metrics=[keras.metrics.SparseTopKCategoricalAccuracy(k)],
     )
 
-    history = model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs)
+    history = model.fit(
+        x_train,
+        y_train,
+        batch_size=batch_size,
+        epochs=num_epochs,
+        validation_split=0.15
+    )
 
     accuracy = model.evaluate(x_test, y_test)[1]
-    print(f"Test tok {k} accuracy: {round(accuracy * 100, 2)}%")
+    print(f"Test top 5 accuracy: {round(accuracy * 100, 2)}%")
 
     return history
 
@@ -93,21 +89,15 @@ data_augmentation = keras.Sequential(
 )
 
 """
-## Implement Multilayer perceptron (MLP) as a layer
+## Implement Multilayer Perceptron (MLP)
 """
 
 
-class MLP(layers.Layer):
-    def __init__(self, hidden_units, dropout_rate):
-        super(MLP, self).__init__()
-        mlp_layers = []
-        for units in hidden_units:
-            mlp_layers.append(layers.Dense(units, activation=tf.nn.gelu))
-            mlp_layers.append(layers.Dropout(dropout_rate))
-        self.mlp = keras.Sequential(mlp_layers)
-
-    def call(self, inputs):
-        return self.mlp(inputs)
+def mlp(x, hidden_units, dropout_rate):
+    for units in hidden_units:
+        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dropout(dropout_rate)(x)
+    return x
 
 
 """
@@ -125,9 +115,9 @@ def create_resnet_classifier():
     representation = keras.applications.ResNet50V2(
         include_top=False, weights=None, input_shape=input_shape, pooling="avg"
     )(augmented)
-    representation = layers.Dropout(dropout_rate)(features)
+    representation = layers.Dropout(dropout_rate)(representation)
     # Create MLP.
-    features = MLP(hidden_units, dropout_rate)(representation)
+    features = mlp(representation, hidden_units, dropout_rate)
     # Create softmax output.
     outputs = layers.Dense(num_classes, activation="softmax")(features)
     # Create the Keras model.
@@ -267,7 +257,7 @@ def create_vit_classifier():
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = MLP(transformer_hidden_units, dropout_rate)(x3)
+        x3 = mlp(x3, transformer_hidden_units, dropout_rate)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
@@ -275,7 +265,7 @@ def create_vit_classifier():
     representation = layers.GlobalAveragePooling1D()(encoded_patches)
     representation = layers.LayerNormalization(epsilon=1e-6)(representation)
     # Create MLP.
-    features = MLP(hidden_units, dropout_rate)(representation)
+    features = mlp(representation, hidden_units, dropout_rate)
     # Create softmax output.
     outputs = layers.Dense(num_classes, activation="softmax")(features)
     # Create the Keras model.
