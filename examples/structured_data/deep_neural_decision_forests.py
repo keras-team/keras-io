@@ -147,7 +147,7 @@ to an index.
 
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
-taget_label_lookup = StringLookup(
+target_label_lookup = StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0
 )
 
