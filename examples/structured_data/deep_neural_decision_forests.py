@@ -232,6 +232,7 @@ def encode_inputs(inputs, use_embedding=False):
     encoded_features = layers.concatenate(encoded_features)
     return encoded_features
 
+
 """
 ## Deep Neural Decision Tree
 
@@ -315,8 +316,8 @@ class NeuralDecisionTree(keras.Model):
         probabilities = keras.activations.softmax(self.pi)  # [num_leaves, num_classes]
         outputs = tf.matmul(mu, probabilities)  # [batch_size, num_classes]
         return outputs
-    
-    
+
+
 """
 ## Deep Neural Decision Forest
 
@@ -380,6 +381,7 @@ def run_experiment(model):
 
     _, accuracy = model.evaluate(test_dataset)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
+
 
 """
 ## Experiment 1: train a decision tree model
