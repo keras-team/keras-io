@@ -1,12 +1,16 @@
-"""
-Title: Classification with Neural Decision Forests
-Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2021/01/15
-Last modified: 2021/01/15
-Description: How to train differentiable decision trees for end-to-end learning in deep neural networks.
-"""
+# Classification with Neural Decision Forests
 
-"""
+**Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
+**Date created:** 2021/01/15<br>
+**Last modified:** 2021/01/15<br>
+**Description:** How to train differentiable decision trees for end-to-end learning in deep neural networks.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/structured_data/ipynb/deep_neural_decision_forests.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/deep_neural_decision_forests.py)
+
+
+
+---
 ## Introduction
 
 This example provides an implementation of the
@@ -15,6 +19,7 @@ model introduced by P. Kontschieder et al. for structured data classification.
 It demonstrates how to build a stochastic and differentiable decision tree model,
 train it end-to-end, and unify decision trees with deep representation learning.
 
+---
 ## The dataset
 
 This example uses the
@@ -26,23 +31,25 @@ to predict whether a person is likely to be making over USD 50,000 a year.
 
 The dataset includes 48,842 instances with 14 input features (such as age, work class, education, occupation, and so on): 5 numerical features
 and 9 categorical features.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import tensorflow as tf
 import numpy as np
 import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
 import math
+```
 
-"""
+---
 ## Prepare the data
-"""
 
+
+```python
 CSV_HEADER = [
     "age",
     "workclass",
@@ -73,34 +80,45 @@ test_data = pd.read_csv(test_data_url, header=None, names=CSV_HEADER)
 
 print(f"Train dataset shape: {train_data.shape}")
 print(f"Test dataset shape: {test_data.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Train dataset shape: (32561, 15)
+Test dataset shape: (16282, 15)
+
+```
+</div>
 Remove the first record (because it is not a valid data example) and a trailing
 'dot' in the class labels.
-"""
 
+
+```python
 test_data = test_data[1:]
 test_data.income_bracket = test_data.income_bracket.apply(
     lambda value: value.replace(".", "")
 )
+```
 
-"""
 We store the training and test data splits locally as CSV files.
-"""
 
+
+```python
 train_data_file = "train_data.csv"
 test_data_file = "test_data.csv"
 
 train_data.to_csv(train_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
+```
 
-"""
+---
 ## Define dataset metadata
 
 Here, we define the metadata of the dataset that will be useful for reading and parsing
 and encoding input features.
-"""
 
+
+```python
 # A list of the numerical feature names.
 NUMERIC_FEATURE_NAMES = [
     "age",
@@ -135,16 +153,18 @@ COLUMN_DEFAULTS = [
 TARGET_FEATURE_NAME = "income_bracket"
 # A list of the labels of the target features.
 TARGET_LABELS = [" <=50K", " >50K"]
+```
 
-"""
+---
 ## Create `tf.data.Dataset` objects for training and validation
 
 We create an input function to read and parse the file, and convert features and labels
 into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
 for training and validation. We also preprocess the input by mapping the target label
 to an index.
-"""
 
+
+```python
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 target_label_lookup = StringLookup(
@@ -166,11 +186,13 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
     ).map(lambda features, target: (features, target_label_lookup(target)))
     return dataset.cache()
 
+```
 
-"""
+---
 ## Create model inputs
-"""
 
+
+```python
 
 def create_model_inputs():
     inputs = {}
@@ -185,11 +207,13 @@ def create_model_inputs():
             )
     return inputs
 
+```
 
-"""
+---
 ## Encode input features
-"""
 
+
+```python
 from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
@@ -232,8 +256,9 @@ def encode_inputs(inputs, use_embedding=False):
     encoded_features = layers.concatenate(encoded_features)
     return encoded_features
 
+```
 
-"""
+---
 ## Deep Neural Decision Tree
 
 A neural decision tree model has two sets of weights to learn. The first set is `pi`,
@@ -249,8 +274,9 @@ or dense transformations applied to structured data features.
 by iteratively performing a *stochastic* routing throughout the tree levels.
 4. Finally, the probabilities of reaching the leaves are combined by the class probabilities at the
 leaves to produce the final `outputs`.
-"""
 
+
+```python
 
 class NeuralDecisionTree(keras.Model):
     def __init__(self, depth, num_features, used_features_rate, num_classes):
@@ -317,14 +343,16 @@ class NeuralDecisionTree(keras.Model):
         outputs = tf.matmul(mu, probabilities)  # [batch_size, num_classes]
         return outputs
 
+```
 
-"""
+---
 ## Deep Neural Decision Forest
 
 The neural decision forest model consists of a set of neural decision trees that are
 trained simultaneously. The output of the forest model is the average outputs of its trees.
-"""
 
+
+```python
 
 class NeuralDecisionForest(keras.Model):
     def __init__(self, num_trees, depth, num_features, used_features_rate, num_classes):
@@ -349,11 +377,12 @@ class NeuralDecisionForest(keras.Model):
         outputs /= len(self.ensemble)
         return outputs
 
+```
 
-"""
 Finally, let's set up the code that will train and evaluate the model.
-"""
 
+
+```python
 learning_rate = 0.01
 batch_size = 265
 num_epochs = 10
@@ -382,14 +411,16 @@ def run_experiment(model):
     _, accuracy = model.evaluate(test_dataset)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
+```
 
-"""
+---
 ## Experiment 1: train a decision tree model
 
 In this experiment, we train a single neural decision tree model
 where we use all input features.
-"""
 
+
+```python
 num_trees = 10
 depth = 10
 used_features_rate = 1.0
@@ -412,16 +443,52 @@ def create_tree_model():
 tree_model = create_tree_model()
 run_experiment(tree_model)
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Start training the model...
+Epoch 1/10
+
+/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/tensorflow/python/keras/engine/functional.py:595: UserWarning: Input dict contained keys ['fnlwgt'] which did not match any model input. They will be ignored by the model.
+  [n for n in tensors.keys() if n not in ref_input_names])
+
+123/123 [==============================] - 3s 15ms/step - loss: 0.5351 - sparse_categorical_accuracy: 0.7858
+Epoch 2/10
+123/123 [==============================] - 2s 17ms/step - loss: 0.3359 - sparse_categorical_accuracy: 0.8499
+Epoch 3/10
+123/123 [==============================] - 2s 19ms/step - loss: 0.3200 - sparse_categorical_accuracy: 0.8547
+Epoch 4/10
+123/123 [==============================] - 2s 19ms/step - loss: 0.3138 - sparse_categorical_accuracy: 0.8570
+Epoch 5/10
+123/123 [==============================] - 2s 20ms/step - loss: 0.3096 - sparse_categorical_accuracy: 0.8594
+Epoch 6/10
+123/123 [==============================] - 2s 18ms/step - loss: 0.3059 - sparse_categorical_accuracy: 0.8601
+Epoch 7/10
+123/123 [==============================] - 2s 20ms/step - loss: 0.3023 - sparse_categorical_accuracy: 0.8625
+Epoch 8/10
+123/123 [==============================] - 3s 21ms/step - loss: 0.2982 - sparse_categorical_accuracy: 0.8659
+Epoch 9/10
+123/123 [==============================] - 3s 22ms/step - loss: 0.2934 - sparse_categorical_accuracy: 0.8698
+Epoch 10/10
+123/123 [==============================] - 3s 27ms/step - loss: 0.2887 - sparse_categorical_accuracy: 0.8720
+Model training finished
+Evaluating the model on the test data...
+62/62 [==============================] - 1s 6ms/step - loss: 0.3213 - sparse_categorical_accuracy: 0.8490
+Test accuracy: 84.9%
+
+```
+</div>
+---
 ## Experiment 2: train a forest model
 
 In this experiment, we train a neural decision forest with `num_trees` trees
 where each tree uses randomly selected 50% of the input features. You can control the number
 of features to be used in each tree by setting the `used_features_rate` variable.
 In addition, we set the depth to 5 instead of 10 compared to the previous experiment.
-"""
 
+
+```python
 num_trees = 25
 depth = 5
 used_features_rate = 0.5
@@ -445,3 +512,35 @@ def create_forest_model():
 forest_model = create_forest_model()
 
 run_experiment(forest_model)
+```
+
+<div class="k-default-codeblock">
+```
+Start training the model...
+Epoch 1/10
+123/123 [==============================] - 10s 6ms/step - loss: 0.5519 - sparse_categorical_accuracy: 0.7654
+Epoch 2/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3468 - sparse_categorical_accuracy: 0.8432
+Epoch 3/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3301 - sparse_categorical_accuracy: 0.8469
+Epoch 4/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3240 - sparse_categorical_accuracy: 0.8497
+Epoch 5/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3204 - sparse_categorical_accuracy: 0.8505
+Epoch 6/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3177 - sparse_categorical_accuracy: 0.8521
+Epoch 7/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3154 - sparse_categorical_accuracy: 0.8529
+Epoch 8/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3133 - sparse_categorical_accuracy: 0.8531
+Epoch 9/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3114 - sparse_categorical_accuracy: 0.8542
+Epoch 10/10
+123/123 [==============================] - 1s 5ms/step - loss: 0.3097 - sparse_categorical_accuracy: 0.8546
+Model training finished
+Evaluating the model on the test data...
+62/62 [==============================] - 2s 4ms/step - loss: 0.3092 - sparse_categorical_accuracy: 0.8582
+Test accuracy: 85.82%
+
+```
+</div>
