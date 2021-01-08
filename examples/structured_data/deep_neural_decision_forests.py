@@ -11,9 +11,9 @@ Description: How to train differentiable decision trees for end-to-end learning 
 
 This example provides an implementation of the
 [Deep Neural Decision Forest](https://ieeexplore.ieee.org/document/7410529)
-model, introduced by P. Kontschieder et al. for structured data classification.
-This model introduces a stochastic and differentiable decision tree model,
-trained end-to-end, unifying decision trees with deep representation learning.
+model introduced by P. Kontschieder et al. for structured data classification.
+It demonstrates how to build a stochastic and differentiable decision tree model,
+train it end-to-end, and unify decision trees with deep representation learning.
 
 ## The dataset
 
@@ -22,9 +22,9 @@ This example uses the
 provided by the
 [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
 The task is binary classification
-to predict whether a person is likely to be making over USD 50k a year.
+to predict whether a person is likely to be making over USD 50,000 a year.
 
-The dataset includes 48,842 instances with 14 input features: 5 numerical features
+The dataset includes 48,842 instances with 14 input features (such as age, work class, education, occupation, and so on): 5 numerical features
 and 9 categorical features.
 """
 
@@ -75,7 +75,7 @@ print(f"Train dataset shape: {train_data.shape}")
 print(f"Test dataset shape: {test_data.shape}")
 
 """
-We remove the first record as it is not a valid data example, and we remove a trailing
+Remove the first record (because it is not a valid data example) and a trailing
 'dot' in the class labels.
 """
 
@@ -141,7 +141,7 @@ TARGET_LABELS = [" <=50K", " >50K"]
 
 We create an input function to read and parse the file, and convert features and labels
 into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
-for training or validation. We also preprocess the input by mapping the target label
+for training and validation. We also preprocess the input by mapping the target label
 to an index.
 """
 
@@ -200,8 +200,8 @@ def encode_inputs(inputs, use_embedding=False):
         if feature_name in CATEGORICAL_FEATURE_NAMES:
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
             # Create a lookup to convert a string values to an integer indices.
-            # Since we are not using a mask token nor expecting any out of vocabulary
-            # (oov) token, we set mask_token to None and  num_oov_indices to 0.
+            # Since we are not using a mask token, nor expecting any out of vocabulary
+            # (oov) token, we set mask_token to None and num_oov_indices to 0.
             index = StringLookup(
                 vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
@@ -242,10 +242,10 @@ The second set is the weights of the routing layer `decision_fn`, which represen
 of going to each leave. The forward pass of the model works as follows:
 
 1. The model expects input `features` as a single vector encoding all the features of an instance
-in the batch. This vector could be generated from a Convolution Neural Network (CNN) applied to images,
+in the batch. This vector can be generated from a Convolution Neural Network (CNN) applied to images
 or dense transformations applied to structured data features. 
 2. The model first applies a `used_features_mask` to randomly select a subset of input features to use.
-3. Second, the model computes the probabilities `mu` for the input instances to reach the tree leaves,
+3. Then, the model computes the probabilities (`mu`) for the input instances to reach the tree leaves
 by iteratively performing a *stochastic* routing throughout the tree levels.
 4. Finally, the probabilities of reaching the leaves are combined by the class probabilities at the
 leaves to produce the final `outputs`.
@@ -267,7 +267,7 @@ class NeuralDecisionTree(keras.Model):
         )
         self.used_features_mask = one_hot[sampled_feature_indicies]
 
-        # Initialise the weights of the classes in leaves.
+        # Initialize the weights of the classes in leaves.
         self.pi = tf.Variable(
             initial_value=tf.random_normal_initializer()(
                 shape=[self.num_leaves, self.num_classes]
@@ -386,7 +386,7 @@ def run_experiment(model):
 """
 ## Experiment 1: train a decision tree model
 
-In this experiment, we train a single neural decision tree model,
+In this experiment, we train a single neural decision tree model
 where we use all input features.
 """
 
@@ -416,7 +416,7 @@ run_experiment(tree_model)
 """
 ## Experiment 2: train a forest model
 
-In this experiment, we train a neural decision forest with `num_trees` trees,
+In this experiment, we train a neural decision forest with `num_trees` trees
 where each tree uses randomly selected 50% of the input features. You can control the number
 of features to be used in each tree by setting the `used_features_rate` variable.
 In addition, we set the depth to 5 instead of 10 compared to the previous experiment.
