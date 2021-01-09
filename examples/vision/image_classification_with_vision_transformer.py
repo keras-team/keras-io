@@ -14,7 +14,13 @@ model by Alexey Dosovitskiy et al. for image classification on the CIFAR-100 dat
 The ViT applies the Transformer architecture with self-attentions on sequences of
 image patches without using convolutional networks.
 
-The example requires TensorFlow 2.4 or higher.
+The example requires TensorFlow 2.4 or higher and
+[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
+which can be installed using the following command:
+
+```python
+pip install -U tensorflow-addons
+```
 """
 
 """
@@ -43,9 +49,10 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 ## Define hyperparameters
 """
 
-learning_rate = 0.003
+learning_rate = 0.001
+weight_decay = 0.0001
 batch_size = 512
-hidden_units = [128, 128]
+hidden_units = [128]
 num_epochs = 100
 dropout_rate = 0.5
 
@@ -55,22 +62,25 @@ dropout_rate = 0.5
 
 
 def run_experiment(model):
+    k = 5
     model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate),
+        optimizer=tfa.optimizers.AdamW(
+            learning_rate=learning_rate, weight_decay=weight_decay
+        ),
         loss=keras.losses.SparseCategoricalCrossentropy(),
         metrics=[keras.metrics.SparseTopKCategoricalAccuracy(k)],
     )
 
     history = model.fit(
-        x_train,
-        y_train,
+        x=x_train,
+        y=y_train,
         batch_size=batch_size,
         epochs=num_epochs,
         validation_split=0.15,
     )
 
     accuracy = model.evaluate(x_test, y_test)[1]
-    print(f"Test top 5 accuracy: {round(accuracy * 100, 2)}%")
+    print(f"Test tok {k} accuracy: {round(accuracy * 100, 2)}%")
 
     return history
 
@@ -89,7 +99,7 @@ data_augmentation = keras.Sequential(
 )
 
 """
-## Implement Multilayer Perceptron (MLP)
+## Implement multilayer perceptron (MLP)
 """
 
 
@@ -129,7 +139,7 @@ resnet_classifier = create_resnet_classifier()
 history = run_experiment(resnet_classifier)
 
 """
-After 100 epochs the RestNet-50 classification model achieves around 66% top 5
+After 100 epochs the RestNet-50 classification model achieves around 68% top 5
 accuracy on the test data.
 """
 
@@ -141,9 +151,9 @@ patch_size = 4
 image_size = input_shape[0]
 num_patches = (image_size // patch_size) ** 2
 projection_dims = 64
-num_heads = 4
+num_heads = 3
 transformer_hidden_units = [projection_dims * 2, projection_dims]
-transfomer_layers = 4
+transfomer_layers = 5
 dropout_rate = 0.1
 
 """
@@ -277,7 +287,7 @@ vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
 
 """
-After 100 epochs, the ViT classification model achieves more than 72% top 5
+After 100 epochs, the ViT classification model achieves more than 75% top 5
 accuracy on the test data. You can try to train the model for more epochs,
 use larger number of Transformer layers, or increase the projection dimensions
 to achieve better results.
