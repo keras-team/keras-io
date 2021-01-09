@@ -47,6 +47,8 @@ import random
 
 def causal_attention_mask(batch_size, n_dest, n_src, dtype):
     """
+    Mask the upper half of the dot product matrix in self attention.
+    This prevents flow of information from future tokens to current token.
     1's in the lower triangle, counting from the lower right corner.
     """
     i = tf.range(n_dest)[:, None]
