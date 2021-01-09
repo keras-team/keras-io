@@ -113,7 +113,7 @@ class TokenAndPositionEmbedding(layers.Layer):
 ## Implement the miniature GPT model
 """
 vocab_size = 20000  # Only consider the top 20k words
-maxlen = 100  # Max sequence size
+maxlen = 80  # Max sequence size
 embed_dim = 256  # Embedding size for each token
 num_heads = 2  # Number of attention heads
 feed_forward_dim = 256  # Hidden layer size in feed forward network inside transformer
@@ -147,7 +147,7 @@ tar -xf aclImdb_v1.tar.gz
 """
 
 
-batch_size = 32
+batch_size = 128
 
 # The dataset contains each review in a separate text file
 # The text files are present in four different folders
@@ -292,4 +292,4 @@ Note: This code should preferably be run on GPU.
 
 model = create_model()
 
-model.fit(text_ds, verbose=2, epochs=30, callbacks=[text_gen_callback])
+model.fit(text_ds, verbose=2, epochs=25, callbacks=[text_gen_callback])
