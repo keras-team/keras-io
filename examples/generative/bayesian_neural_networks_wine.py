@@ -70,7 +70,6 @@ split, and the rest as the test split.
 def get_train_and_test_splits(train_size, batch_size=1):
     dataset = (
         tfds.load(name="wine_quality", as_supervised=True, split="train")
-        .shuffle(buffer_size=dataset_size)
         .map(lambda x, y: (x, tf.cast(y, tf.float32)))
     )
 
@@ -78,9 +77,8 @@ def get_train_and_test_splits(train_size, batch_size=1):
         dataset.take(train_size)
         .shuffle(buffer_size=train_size)
         .batch(batch_size)
-        .repeat(1)
     )
-    test_dataset = dataset.skip(train_size).batch(batch_size).repeat(1)
+    test_dataset = dataset.skip(train_size).batch(batch_size)
 
     return train_dataset, test_dataset
 
@@ -102,7 +100,7 @@ def run_experiment(model, loss, train_dataset, test_dataset):
     )
 
     print("Start training the model...")
-    model.fit(train_dataset, epochs=num_epochs)
+    model.fit(train_dataset, epochs=num_epochs, validation_split=0.15)
     print("Model training finished.")
     _, rmse = model.evaluate(train_dataset, verbose=0)
     print(f"Train RMSE: {round(rmse, 3)}")
@@ -149,7 +147,8 @@ We create a standard deterministic neural network model as a baseline.
 
 def create_baseline_model():
     inputs = create_model_inputs()
-    features = keras.layers.concatenate(list(inputs.values()))
+    input_values = [value for _, value in sorted(inputs.items())]
+    features = keras.layers.concatenate(input_values)
     features = layers.BatchNormalization()(features)
 
     # Create hidden layers with deterministic weights using the Dense layer.
