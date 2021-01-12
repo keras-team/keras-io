@@ -68,15 +68,12 @@ split, and the rest as the test split.
 
 
 def get_train_and_test_splits(train_size, batch_size=1):
-    dataset = (
-        tfds.load(name="wine_quality", as_supervised=True, split="train")
-        .map(lambda x, y: (x, tf.cast(y, tf.float32)))
+    dataset = tfds.load(name="wine_quality", as_supervised=True, split="train").map(
+        lambda x, y: (x, tf.cast(y, tf.float32))
     )
 
     train_dataset = (
-        dataset.take(train_size)
-        .shuffle(buffer_size=train_size)
-        .batch(batch_size)
+        dataset.take(train_size).shuffle(buffer_size=train_size).batch(batch_size)
     )
     test_dataset = dataset.skip(train_size).batch(batch_size)
 
