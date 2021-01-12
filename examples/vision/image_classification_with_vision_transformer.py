@@ -90,12 +90,13 @@ def run_experiment(model):
 """
 
 data_augmentation = keras.Sequential(
-    [   
+    [
         layers.experimental.preprocessing.RandomCrop(32, 32),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
         layers.experimental.preprocessing.RandomRotation(0.02),
         layers.experimental.preprocessing.RandomZoom(
-            height_factor=0.2, width_factor=0.2)
+            height_factor=0.2, width_factor=0.2
+        ),
     ],
     name="data_augmentation",
 )
@@ -122,7 +123,7 @@ We use an untrained ResNet-50 architecture as our baseline model.
 def create_resnet_classifier():
     inputs = layers.Input(shape=input_shape)
     # Preprocess input images.
-    preprocessed =  keras.applications.resnet.preprocess_input(inputs)
+    preprocessed = keras.applications.resnet.preprocess_input(inputs)
     # Augment data.
     augmented = data_augmentation(preprocessed)
     # Generate features using ResNet.
