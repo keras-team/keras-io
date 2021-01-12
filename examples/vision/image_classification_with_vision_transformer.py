@@ -51,7 +51,7 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 learning_rate = 0.001
 weight_decay = 0.0001
-batch_size = 256
+batch_size = 512
 hidden_units = [128]
 num_epochs = 100
 dropout_rate = 0.5
@@ -91,12 +91,9 @@ def run_experiment(model):
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomCrop(32, 32),
+        layers.experimental.preprocessing.Rescaling(1.0 / 255),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
         layers.experimental.preprocessing.RandomRotation(0.02),
-        layers.experimental.preprocessing.RandomZoom(
-            height_factor=0.2, width_factor=0.2
-        ),
     ],
     name="data_augmentation",
 )
@@ -122,10 +119,8 @@ We use an untrained ResNet-50 architecture as our baseline model.
 
 def create_resnet_classifier():
     inputs = layers.Input(shape=input_shape)
-    # Preprocess input images.
-    preprocessed = keras.applications.resnet.preprocess_input(inputs)
     # Augment data.
-    augmented = data_augmentation(preprocessed)
+    augmented = data_augmentation(inputs)
     # Generate features using ResNet.
     representation = keras.applications.ResNet50V2(
         include_top=False, weights=None, input_shape=input_shape, pooling="avg"
@@ -144,7 +139,7 @@ resnet_classifier = create_resnet_classifier()
 history = run_experiment(resnet_classifier)
 
 """
-After 100 epochs the RestNet-50 classification model achieves around 73% top 5
+After 100 epochs the RestNet-50 classification model achieves around 68% top 5
 accuracy on the test data.
 """
 
