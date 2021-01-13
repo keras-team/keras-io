@@ -7,18 +7,22 @@ Description: Implement a complete transformer and train it on sequence to sequen
 """
 """
 ## Introduction
-Automatic speech recognition is the task of predicting text from an audio segment.
-One of the popular ways to solve this task, is by treating it as a sequence to
-sequence problem. The audio can be represented as a sequence of feature vectors
-and the text can be considered as a sequence of characters, words, or subword tokens.
+
+Automatic speech recognition (ASR) consists of transcribing audio segments into text.
+A popular way to handle this task is to treat it as a sequence-to-sequence
+problem. The audio can be represented as a sequence of feature vectors,
+and the text can be represented as a sequence of characters, words, or subword tokens.
+
 ASR models typically require huge datasets and take a lot of time to train.
-For this demonstration, we will use a simple dataset to reduce the training time and
-display some results. Our model will be a complete transformer (both encoder and decoder)
+For this demonstration, we will use a simple dataset so as to reduce training time yet
+display interesting results. Our model will be a Transformer (both encoder and decoder)
 as proposed in the paper, "Attention is All You Need".
+
 Our data consists of audio segments with a person speaking out one of the ten digits
 (0-9). We convert the digits as a sequence of characters (e.g. 9 -> n,i,n,e) to form
 a small dataset. The method shown below, however, can be applied to a real world
 speech dataset, to learn the mapping from audio to a sequence of characters.
+
 **References:**
 - [Attention is All You Need](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf)
 - [Free Spoken Digit Dataset](https://github.com/Jakobovski/free-spoken-digit-dataset)
@@ -29,9 +33,10 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-tf.__version__
+
 """
 ## Transformer Input Layer
+
 This layer computes the sum of position embeddings and feature embeddings to feed to
 the transformer layers.
 """
@@ -107,8 +112,8 @@ class TransformerDecoderLayer(layers.Layer):
         )
 
     def causal_attention_mask(self, batch_size, n_dest, n_src, dtype):
-        """
-        Mask the upper half of the dot product matrix in self attention.
+        """Mask the upper half of the dot product matrix in self attention.
+
         This prevents flow of information from future tokens to current token.
         1's in the lower triangle, counting from the lower right corner.
         """
@@ -139,6 +144,7 @@ class TransformerDecoderLayer(layers.Layer):
 """
 ## Complete Transformer Model
 """
+
 loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction="none"
 )
@@ -236,16 +242,19 @@ class Transformer(keras.Model):
 
 
 """
-# Preprocess the ASR data
-Due to the nature of our data, we already know the vocabulary for our target characters
-is 'a'-'z'. We add 3 extra tokens to this vocabulary.
+## Preprocess the ASR data
+
+Due to the nature of our data, we already know that the vocabulary for our target characters
+is 'a'-'z'. We add 3 extra tokens to this vocabulary:
+
 - `'<'`: start token
 - `'>'`: end token
 - `'-'`: pad token
+
 We tokenize the text labels with the above vocabulary.
-For the audio, we compute Log Mel spectrograms from the wav file using signal
-processing functions present in Tensorflow. Log Mel spectrogram is a popular
-feature for in ASR experiments.
+For the audio, we compute Log Mel-spectrograms from the wav file using signal
+processing functions present in TensorFlow. Log Mel-spectrogram is a popular
+feature preprocessing setup in ASR experiments.
 """
 
 
@@ -317,8 +326,9 @@ def create_dataset(flist, bs=4):
 
 
 """
-# Create ASR dataset object
+## Create a Dataset object
 """
+
 data_path = keras.utils.get_file(
     "spoken_digit.tar.gz",
     "https://github.com/Jakobovski/free-spoken-digit-dataset/archive/v1.0.9.tar.gz",
@@ -333,8 +343,9 @@ train_list = flist[:1800]
 val_list = flist[1800:]
 ds = create_dataset(train_list)
 val_ds = create_dataset(val_list)
+
 """
-# Callback to display predictions
+## Callback to display predictions
 """
 
 
@@ -369,8 +380,9 @@ class DisplayOutputs(keras.callbacks.Callback):
 
 
 """
-# Create model and train
+## Create & train the end-to-end model
 """
+
 model = Transformer(
     input_type="feats",
     nvocab=1000,
