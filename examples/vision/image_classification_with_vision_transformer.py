@@ -45,30 +45,24 @@ input_shape = (32, 32, 3)
 print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
 print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
-"""
-## Define hyperparameters
-"""
-
-learning_rate = 0.001
-weight_decay = 0.0001
-batch_size = 512
-hidden_units = [128]
-num_epochs = 100
-dropout_rate = 0.5
 
 """
 ## Compile, train, and evaluate the mode
 """
 
+learning_rate = 0.001
+weight_decay = 0.0001
+batch_size = 256
+num_epochs = 100
+
 
 def run_experiment(model):
-    k = 5
     model.compile(
         optimizer=tfa.optimizers.AdamW(
             learning_rate=learning_rate, weight_decay=weight_decay
         ),
         loss=keras.losses.SparseCategoricalCrossentropy(),
-        metrics=[keras.metrics.SparseTopKCategoricalAccuracy(k)],
+        metrics=[keras.metrics.SparseTopKCategoricalAccuracy(5)],
     )
 
     history = model.fit(
@@ -79,8 +73,9 @@ def run_experiment(model):
         validation_split=0.15,
     )
 
-    accuracy = model.evaluate(x_test, y_test)[1]
-    print(f"Test tok {k} accuracy: {round(accuracy * 100, 2)}%")
+    _, accuracy, top_k_accuracy = model.evaluate(x_test, y_test)
+    print(f"Test accuracy: {round(accuracy * 100, 2)}%")
+    print(f"Test top 5 accuracy: {round(top_k_accuracy * 100, 2)}%")
 
     return history
 
@@ -91,24 +86,15 @@ def run_experiment(model):
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.Rescaling(1.0 / 255),
+        layers.experimental.preprocessing.Normalization(),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
         layers.experimental.preprocessing.RandomRotation(0.02),
+        layers.experimental.preprocessing.RandomZoom(0.2, 0.2),
     ],
     name="data_augmentation",
 )
 
-"""
-## Implement multilayer perceptron (MLP)
-"""
-
-
-def mlp(x, hidden_units, dropout_rate):
-    for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
-        x = layers.Dropout(dropout_rate)(x)
-    return x
-
+data_augmentation.layers[0].adapt(x_train)
 
 """
 ## Experiment 1: Train the baseline classification model
@@ -125,11 +111,9 @@ def create_resnet_classifier():
     representation = keras.applications.ResNet50V2(
         include_top=False, weights=None, input_shape=input_shape, pooling="avg"
     )(augmented)
-    representation = layers.Dropout(dropout_rate)(representation)
-    # Create MLP.
-    features = mlp(representation, hidden_units, dropout_rate)
+    representation = layers.Dropout(0.5)(representation)
     # Create softmax output.
-    outputs = layers.Dense(num_classes, activation="softmax")(features)
+    outputs = layers.Dense(num_classes, activation="softmax")(representation)
     # Create the Keras model.
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
@@ -139,8 +123,8 @@ resnet_classifier = create_resnet_classifier()
 history = run_experiment(resnet_classifier)
 
 """
-After 100 epochs the RestNet-50 classification model achieves around 68% top 5
-accuracy on the test data.
+After 100 epochs the RestNet-50 classification model achieves around 48% accuracy
+and 74% top 5 accuracy, and  on the test data.
 """
 
 """
@@ -151,10 +135,23 @@ patch_size = 4
 image_size = input_shape[0]
 num_patches = (image_size // patch_size) ** 2
 projection_dims = 64
-num_heads = 3
-transformer_hidden_units = [projection_dims * 2, projection_dims]
-transfomer_layers = 5
+num_heads = 4
+transformer_units = [projection_dims * 2, projection_dims]
+transfomer_layers = 8
+mlp_head_units = [512, 128]
 dropout_rate = 0.1
+
+"""
+### Implement multilayer perceptron (MLP)
+"""
+
+
+def mlp(x, hidden_units, dropout_rate):
+    for units in hidden_units:
+        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dropout(dropout_rate)(x)
+    return x
+
 
 """
 ### Implement patch creation as a layer
@@ -217,13 +214,14 @@ embedding to the projected vector.
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dims):
         super(PatchEncoder, self).__init__()
+        self.num_patches = num_patches
         self.projection = layers.Dense(units=projection_dims)
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dims
         )
 
     def call(self, patch):
-        positions = tf.range(start=0, limit=num_patches, delta=1)
+        positions = tf.range(start=0, limit=self.num_patches, delta=1)
         encoded = self.projection(patch) + self.position_embedding(positions)
         return encoded
 
@@ -240,8 +238,9 @@ MLP head with softmax to produce the final class probabilities output.
 Unlike the technique described in the [paper](https://arxiv.org/abs/2010.11929),
 which prepends a learnable embedding to the sequence of encoded patches to serve
 as the image representation, the outputs of the final Transformer block are
-aggregated with `layers.GlobalAveragePooling1D()` and then used as the image
-representation input to the MLP head.
+aggregated with `layers.Flatten()` and then used as the image
+representation input to the MLP head. The `layers.GlobalAveragePooling1D`
+could be used instead.
 """
 
 
@@ -258,7 +257,7 @@ def create_vit_classifier():
     for _ in range(transfomer_layers):
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
-        # Create a multi-headed attention layer.
+        # Create a mult-headead attention layer.
         attention_output = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=projection_dims, dropout=dropout_rate
         )(x1, x1)
@@ -267,15 +266,16 @@ def create_vit_classifier():
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(x3, transformer_hidden_units, dropout_rate)
+        x3 = mlp(x3, transformer_units, dropout_rate)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
     # Create a [batch_size, projection_dims] tensor.
-    representation = layers.GlobalAveragePooling1D()(encoded_patches)
-    representation = layers.LayerNormalization(epsilon=1e-6)(representation)
+    representation = layers.Flatten()(encoded_patches)
+    representation = layers.Dropout(0.5)(representation)
+
     # Create MLP.
-    features = mlp(representation, hidden_units, dropout_rate)
+    features = mlp(representation, mlp_head_units, dropout_rate)
     # Create softmax output.
     outputs = layers.Dense(num_classes, activation="softmax")(features)
     # Create the Keras model.
@@ -287,8 +287,11 @@ vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
 
 """
-After 100 epochs, the ViT classification model achieves more than 75% top 5
-accuracy on the test data. You can try to train the model for more epochs,
-use larger number of Transformer layers, or increase the projection dimensions
-to achieve better results.
+After 100 epochs, the ViT classification model achieves around 52% accuracy and 
+80% top 5 accuracy on the test data. You can try to train the model 
+for more epochs, use larger number of Transformer layers, or increase 
+the projection dimensions to achieve better results. Also note that, as mentioned in 
+the [paper](https://arxiv.org/abs/2010.11929), the quality of the model is affected
+not only by the architecture choice, but also other parameters, such as training 
+schedule, optimizer, weight decay, etc.
 """
