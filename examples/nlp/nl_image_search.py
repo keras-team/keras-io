@@ -1,0 +1,556 @@
+"""
+Title: Natural Language Search with Dual Encoder
+Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
+Date created: 2021/01/30
+Last modified: 2021/01/30
+Description: Implementing a dual encoder model for image search with natural language.
+"""
+
+"""
+## Introduction
+
+The example demonstrates how to build a dual encoder (also known as
+[two-tower](https://dl.acm.org/doi/fullHtml/10.1145/3366424.3386195))
+neural network model to search for images using natural language. The idea is to train a vision
+encoder and a text encoder to project the representation of the images and their
+captions into the same embedding space, such that the caption embeddings are near
+to the embeddings of images describing them.
+
+This example requires TensorFlow 2.4 or higher.
+In addition, [TensorFlow Hub](https://www.tensorflow.org/hub)
+and [TensorFlow Text](https://www.tensorflow.org/tutorials/tensorflow_text/intro)
+are required for the BERT model, and [TensorFlow Addons](https://www.tensorflow.org/addons)
+is required for the AdamW optimizer. These libraries can be installed using the
+following command:
+
+```python
+pip install -q -U tensorflow-hub tensorflow-text tensorflow_addons
+```
+"""
+
+"""
+## Setup
+"""
+
+import os
+import collections
+import random
+import json
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import tensorflow_hub as hub
+import tensorflow_text as text
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+tf.get_logger().setLevel("ERROR")
+
+"""
+## Prepare the data
+
+We will use the [MS-COCO](https://cocodataset.org/#home) dataset to train our
+dual encoder model. It contains over 82,000 images, each of which has at least
+5 different caption annotations. The dataset is usually used for
+[image captioning](https://www.tensorflow.org/tutorials/text/image_captioning)
+tasks, but we can repurpose the image-caption pairs to train our dual encoder
+model for image search.
+
+###
+Download and extract the data
+
+First, let's download the dataset, which consists of two zipped folders,
+one contains the images, and the other contains their captions.
+Note that the images zipped folder is 13GB.
+"""
+
+root_dir = "datasets"
+annotations_dir = os.path.join(root_dir, "annotations")
+images_dir = os.path.join(root_dir, "train2014")
+tfrecords_dir = os.path.join(root_dir, "tfrecords")
+annotation_file = os.path.join(annotations_dir, "captions_train2014.json")
+
+# Download caption annotation files
+if not os.path.exists(annotations_dir):
+    annotation_zip = tf.keras.utils.get_file(
+        "captions.zip",
+        cache_dir=os.path.abspath("."),
+        origin="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
+        extract=True,
+    )
+    os.remove(annotation_zip)
+
+# Download image files
+if not os.path.exists(images_dir):
+    image_zip = tf.keras.utils.get_file(
+        "train2014.zip",
+        cache_dir=os.path.abspath("."),
+        origin="http://images.cocodataset.org/zips/train2014.zip",
+        extract=True,
+    )
+    os.remove(image_zip)
+
+print("Dataset is downloaded and extracted successfully.")
+
+with open(annotation_file, "r") as f:
+    annotations = json.load(f)["annotations"]
+
+image_path_to_caption = collections.defaultdict(list)
+for element in annotations:
+    caption = f"{element['caption'].lower().rstrip('.')}"
+    image_path = images_dir + "/COCO_train2014_" + "%012d.jpg" % (element["image_id"])
+    image_path_to_caption[image_path].append(caption)
+
+image_paths = list(image_path_to_caption.keys())
+data_size = len(image_paths)
+print(f"Number of images: {data_size}")
+
+"""
+Display a random image and its associated captions:
+"""
+
+sample_image_path = image_paths[np.random.choice(data_size)]
+for caption in image_path_to_caption[sample_image_path]:
+    print(caption)
+
+img = mpimg.imread(sample_image_path)
+plt.figure(figsize=(10, 10))
+plt.imshow(img)
+plt.axis("off")
+plt.show()
+
+"""
+### Process and save the data to TFRecord files
+
+You can change the `sample_size` to control many image-caption pairs will be used
+for training the dual encoder model. In this example we set `sample_size` to
+30,000 images, which is about 35% of the dataset. We use 2 captions for each
+image, thus producing 60,000 image-caption pairs. The size of the training set
+affects the quality of the produced encoders, but more examples would lead to
+longer training time.
+"""
+
+train_size = 30000
+captions_per_image = 2
+images_per_file = 2000
+train_image_paths = image_paths[:train_size]
+num_train_files = int(np.ceil(train_size / images_per_file))
+train_files_prefix = os.path.join(tfrecords_dir, "train")
+
+if tf.io.gfile.exists(tfrecords_dir):
+    print("Removing previous tfrecord files...")
+    tf.io.gfile.rmtree(tfrecords_dir)
+tf.io.gfile.makedirs(tfrecords_dir)
+print("A new tfrecord directory created.")
+
+
+def bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+
+def create_example(image_path, caption):
+
+    raw_image = tf.io.read_file(image_path).numpy()
+    feature = {
+        "caption": bytes_feature(caption.encode()),
+        "raw_image": bytes_feature(raw_image),
+    }
+
+    example = tf.train.Example(features=tf.train.Features(feature=feature))
+    return example
+
+
+def write_tfrecords(file_name, image_paths):
+    print(f"Writing {file_name}...")
+    caption_list = []
+    image_path_list = []
+    for image_path in image_paths:
+        captions = image_path_to_caption[image_path][:captions_per_image]
+        caption_list.extend(captions)
+        image_path_list.extend([image_path] * len(captions))
+
+    with tf.io.TFRecordWriter(file_name) as writer:
+        for example_idx in range(len(image_path_list)):
+            example = create_example(
+                image_path_list[example_idx], caption_list[example_idx]
+            )
+            writer.write(example.SerializeToString())
+    return example_idx + 1
+
+
+def write_data(image_paths, num_files, files_prefix):
+    example_counter = 0
+    for file_idx in range(num_files):
+        file_name = files_prefix + "-%02d.tfrecord" % (file_idx)
+        start_idx = images_per_file * file_idx
+        end_idx = start_idx + images_per_file
+        current_image_paths = image_paths[start_idx:end_idx]
+        example_counter += write_tfrecords(file_name, current_image_paths)
+        print(f"{example_counter} examples were written.")
+    return example_counter
+
+
+print("Writing train tfrecords...")
+train_example_count = write_data(train_image_paths, num_train_files, train_files_prefix)
+print("Train tfrecord files created successfully.")
+
+"""
+### Create `tf.data.Dataset` for training and evaluation
+"""
+
+AUTOTUNE = tf.data.experimental.AUTOTUNE
+
+feature_description = {
+    "caption": tf.io.FixedLenFeature([], tf.string),
+    "raw_image": tf.io.FixedLenFeature([], tf.string),
+}
+
+
+def read_example(example):
+    features = tf.io.parse_single_example(example, feature_description)
+    raw_image = features.pop("raw_image")
+    image = tf.image.decode_jpeg(raw_image, channels=3)
+    image = tf.image.resize(image, (299, 299))
+    features["image"] = image
+    return features, tf.constant(1)
+
+
+def get_dataset(file_pattern, batch_size):
+
+    file_names = tf.data.Dataset.list_files(file_pattern)
+    dataset = tf.data.TFRecordDataset(file_names)
+    dataset = dataset.map(
+        read_example, num_parallel_calls=AUTOTUNE, deterministic=False
+    )
+    dataset = dataset.shuffle(batch_size * 10)
+    dataset = dataset.prefetch(buffer_size=AUTOTUNE)
+    dataset = dataset.batch(batch_size)
+
+    return dataset
+
+
+"""
+## Implement projection head
+
+The projection head is used to transform the image and the text embeddings to
+the same embedding space with the same dimensionality.
+"""
+
+
+def project_embeddings(
+    embeddings, num_projection_layers, projection_dims, dropout_rate
+):
+
+    porjected_embeddings = layers.Dense(units=projection_dims)(embeddings)
+    for _ in range(num_projection_layers):
+        x = tf.nn.gelu(porjected_embeddings)
+        x = layers.Dense(projection_dims)(x)
+        x = layers.Dropout(dropout_rate)(x)
+        x = layers.Add()([porjected_embeddings, x])
+        porjected_embeddings = layers.LayerNormalization()(x)
+
+    return porjected_embeddings
+
+
+"""
+## Implement the vision encoder
+
+In this example, we use [Xception](https://keras.io/api/applications/xception/)
+from [Keras Applications](https://keras.io/api/applications/) as the base for the
+vision encoder.
+"""
+
+
+def create_vision_encoder(
+    num_projection_layers, projection_dims, dropout_rate, trainable=False
+):
+    # Load the pre-trained Xception model to be used as the base encoder.
+    xception = keras.applications.Xception(
+        include_top=False, weights="imagenet", pooling="avg"
+    )
+    # Set the trainability of the base encoder.
+    for layer in xception.layers:
+        layer.trainable = trainable
+    # Receive the images as inputs.
+    inputs = layers.Input(shape=(299, 299, 3), name="image_input")
+    # Preprocess the input image.
+    xception_input = tf.keras.applications.xception.preprocess_input(inputs)
+    # Generate the embeddings for the images using the xception model.
+    embeddings = xception(xception_input)
+    # Project the embeddings produced by the model.
+    outputs = project_embeddings(
+        embeddings, num_projection_layers, projection_dims, dropout_rate
+    )
+    # Create the vision encoder model.
+    encoder = keras.Model(inputs, outputs, name="vision_encoder")
+    return encoder
+
+
+"""
+## Implement the text encoder
+
+In this example, we use [BERT](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-12_H-256_A-4/1)
+from [TensorFlow Hub](https://tfhub.dev) as the text encoder
+"""
+
+bert_module_url = (
+    "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-512_A-8/1"
+)
+preprocess_model_url = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/2"
+
+
+def create_text_encoder(
+    num_projection_layers, projection_dims, dropout_rate, trainable=False
+):
+    # Load the BERT preprocessing module.
+    preprocess = hub.KerasLayer(preprocess_model_url, name="text_preprocessing")
+    # Load the pre-trained BERT model to be used as the base encoder.
+    bert = hub.KerasLayer(bert_module_url, "bert")
+    # Set the trainability of the base encoder.
+    bert.trainable = trainable
+    # Receive the text as inputs.
+    inputs = layers.Input(shape=(), dtype=tf.string, name="text_input")
+    # Preprocess the text.
+    bert_inputs = preprocess(inputs)
+    # Generate embeddings for the preprocessed text using the BERT model.
+    embeddings = bert(bert_inputs)["pooled_output"]
+    # Project the embeddings produced by the model.
+    outputs = project_embeddings(
+        embeddings, num_projection_layers, projection_dims, dropout_rate
+    )
+    # Create the text encoder model.
+    encoder = keras.Model(inputs, outputs, name="text_encoder")
+    return encoder
+
+
+"""
+## Implement contrastive similarity loss
+
+To calculate the loss, we compute the pairwise dot-product similarity between
+each `caption_i` and `images_j` in the batch as the predictions.
+The target similarity between `caption_i`  and `image_j` is computed as
+the average of the (dot-product similarity between `caption_i` and `caption_j`)
+and (the dot-product similarity between `image_i` and `image_j`).
+Then we use crossentropy to compute the loss between the targets and the predictions.
+"""
+
+
+class ContrastiveSimilarity(keras.losses.Loss):
+    def __init__(self, temperature, **kwargs):
+        super(ContrastiveSimilarity, self).__init__(**kwargs)
+        self.temperature = temperature
+
+    def __call__(self, y_true, y_pred, sample_weight=None):
+        # Delete y_true as it is not used.
+        del y_true
+        # Extract the caption_embeddings and image_embeddings from the model output.
+        caption_embeddings, image_embeddings = tf.unstack(y_pred)
+        # logits[i][j] is the dot_similarity(caption_i, image_j).
+        logits = (
+            tf.matmul(caption_embeddings, image_embeddings, transpose_b=True)
+            / self.temperature
+        )
+        # images_similarity[i][j] is the dot_similarity(image_i, image_j).
+        images_similarity = tf.matmul(
+            image_embeddings, image_embeddings, transpose_b=True
+        )
+        # captions_similarity[i][j] is the dot_similarity(caption_i, caption_j).
+        captions_similarity = tf.matmul(
+            caption_embeddings, caption_embeddings, transpose_b=True
+        )
+        # targets[i][j] = average dot_similarity(caption_i, caption_j) and dot_similarity(image_i, image_j).
+        # Softmax is applied to normalize the targets for each entry to sum to 1.
+        targets = keras.activations.softmax(
+            (captions_similarity + images_similarity) / (2 * self.temperature)
+        )
+        # Use crossentropy loss
+        loss = keras.losses.categorical_crossentropy(
+            y_true=targets, y_pred=logits, from_logits=True
+        )
+        # Compute and return the mean of the loss over the batch.
+        return tf.math.reduce_mean(loss)
+
+
+"""
+## Implement the dual encoder
+"""
+
+
+def create_dual_encoder(text_encoder, vision_encoder):
+    # Receive the captions and the images as inputs.
+    captions = layers.Input(name="caption", shape=(), dtype=tf.string)
+    images = layers.Input(name="image", shape=(299, 299, 3), dtype=tf.float32)
+    # Get the embeddings for the captions.
+    caption_embeddings = text_encoder(captions)
+    # Get the embeddings for the images.
+    image_embeddings = vision_encoder(images)
+    # Stack the caption_embeddings and image_embeddings to produce
+    # a single output tensor for computing the loss.
+    outputs = tf.stack([caption_embeddings, image_embeddings])
+    # Create the dual encoder model.
+    dual_encoder = keras.Model(
+        inputs=[captions, images], outputs=outputs, name="dual_encoder"
+    )
+    return dual_encoder
+
+
+"""
+## Train the dual encoder model
+
+In this experiment, we freeze the base encoders for text and image, and make only
+the projection head trainable.
+"""
+
+projection_dims = 256
+num_projection_layers = 1
+dropout_rate = 0.1
+learning_rate = 0.003
+weight_decay = 0.0001
+num_epochs = 30
+batch_size = 256
+temperature = 0.05
+
+vision_encoder = create_vision_encoder(
+    num_projection_layers, projection_dims, dropout_rate
+)
+vision_encoder.summary()
+
+text_encoder = create_text_encoder(num_projection_layers, projection_dims, dropout_rate)
+text_encoder.summary()
+
+optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay)
+loss = ContrastiveSimilarity(temperature)
+dual_encoder = create_dual_encoder(text_encoder, vision_encoder)
+dual_encoder.compile(optimizer=optimizer, loss=loss)
+dual_encoder.summary()
+
+"""
+Note that training the model with 60,000 image-caption pairs takes around 15 minutes
+per epoch using a P100 GPU accelerator"""
+
+print(f"Number of examples (caption-image pairs): {train_example_count}")
+print(f"Batch size: {batch_size}")
+print(f"Steps per epoch: {train_example_count // batch_size}")
+train_data = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
+history = dual_encoder.fit(train_data, epochs=num_epochs)
+
+"""
+Plotting the training loss:
+"""
+
+plt.plot(history["loss"])
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.show()
+
+"""
+## Search for images using natural language
+
+The process of searching for images using using natural language consists of the
+following steps:
+1. Generating embeddings for the images by feeding them into the `vision_encoder`.
+2. Feed the natural language query to the `text_encoder` to generate a query embedding.
+3. Compute the similarity between the query embedding and the image embeddings
+in the index to retrieve the indices of the top matches.
+4. Lookup the paths of the top matching images to display them.
+
+Note that, after training the `dual encoder`, the only the fine-tuned `vision_encoder`
+and `text_encoder` models will be used, while the `dual_encoder` model will be discarded.
+"""
+
+"""
+### Generate embeddings for the images
+
+We load the images and feed them into the `vision_encoder` to generate their embeddings.
+In large scale systems, this step is performed using a parallel data processing frameworks,
+such as [Apache Spark](https://spark.apache.org) or [Apache Beam](https://beam.apache.org).
+Generating the image embeddings will take a few minutes.
+"""
+
+image_embeddings = []
+idx = 0
+batch_size = 512
+
+print(f"Image embeddings generation started...")
+print(f"Generating embeddings for {len(image_paths)} images...")
+while idx < len(image_paths):
+    image_batch = []
+    current_image_paths = image_paths[idx : idx + batch_size]
+    for image_path in current_image_paths:
+        raw_image = tf.io.read_file(image_path)
+        image_array = tf.image.decode_jpeg(raw_image, channels=3)
+        image_array = tf.image.resize(image_array, (299, 299))
+        image_batch.append(image_array)
+    idx += batch_size
+    current_image_embeddings = vision_encoder(image_batch)
+    image_embeddings.extend(current_image_embeddings)
+    if idx % 10 == 0:
+        print(f"Generated embeddings for {idx} images...")
+
+image_embeddings = np.array(image_embeddings)
+print(f"Image embeddings generation completed.")
+print(f"Image embeddings shape: {image_embeddings.shape}.")
+
+"""
+### Retrieve relevant images
+
+In this example, we use exact matching by computing the dot product similarity
+between the input query embedding and the image embeddings, and retrieve the top k
+matches. However, *approximate* similarity matching, using frameworks like
+[ScaNN](https://github.com/google-research/google-research/tree/master/scann),
+[Annoy](https://github.com/spotify/annoy), or [Faiss](https://github.com/facebookresearch/faiss)
+is preferred in real-time use cases to scale with a large number of images.
+"""
+
+
+def find_matches(image_embeddings, queries, k=9, normalize=True):
+    matches = []
+    # Get the embedding for the query.
+    query_embedding = text_encoder(queries)
+    # Normalize the query and the image embeddings.
+    if normalize:
+        image_embeddings = tf.math.l2_normalize(image_embeddings, axis=1)
+        query_embedding = tf.math.l2_normalize(query_embedding, axis=1)
+    # Compute the dot product between the query and the image embeddings.
+    dot_similarity = tf.matmul(query_embedding, image_embeddings, transpose_b=True)
+    # Retrieve top k indices.
+    results = tf.math.top_k(dot_similarity, k).indices.numpy()
+    # Get matching image paths.
+    for indices in results:
+        matching_image_paths = [image_paths[idx] for idx in indices]
+        matches.append(matching_image_paths)
+    return matches
+
+
+"""
+Set the `query` variable to the type of images you want to search for.
+Try things like: 'a plate of healthy food',
+'a woman wearing a hat is walking down a sidewalk',
+'a bird sits near to the water', or 'wild animals are standing in a field'.
+"""
+
+query = "a family standing next to the ocean on a sandy beach with a surf board"
+matches = []
+
+matching_image_paths = find_matches(image_embeddings, [query], normalize=True)[0]
+for image_path in matching_image_paths:
+    matches.append(image_path)
+
+print(f"Your query: {query}")
+plt.figure(figsize=(20, 20))
+for i in range(9):
+    ax = plt.subplot(3, 3, i + 1)
+    img = mpimg.imread(matches[i])
+    plt.imshow(img)
+    plt.axis("off")
+
+
+"""
+## Final remarks
+
+You can obtain better results by increasing the size of the training sample,
+train for more  epochs, explore other base encoders for images and text,
+set the base encoders to be trainable, and tune the hyperparameters,
+especially the `temperature` for the softmax in the loss computation.
+"""
