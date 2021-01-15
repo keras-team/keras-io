@@ -360,11 +360,11 @@ class ContrastiveSimilarity(keras.losses.Loss):
             caption_embeddings, caption_embeddings, transpose_b=True
         )
         # targets[i][j] = average dot_similarity(caption_i, caption_j) and dot_similarity(image_i, image_j).
-        # Softmax is applied to normalize the targets for each entry to sum to 1.
+        # Apply softmaxt to normalize the targets for each entry to sum to 1.
         targets = keras.activations.softmax(
             (captions_similarity + images_similarity) / (2 * self.temperature)
         )
-        # Use crossentropy loss
+        # Use crossentropy to compute the error between the targets and the predictions.
         loss = keras.losses.categorical_crossentropy(
             y_true=targets, y_pred=logits, from_logits=True
         )
@@ -439,7 +439,7 @@ history = dual_encoder.fit(train_data, epochs=num_epochs)
 Plotting the training loss:
 """
 
-plt.plot(history["loss"])
+plt.plot(history.history["loss"])
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
 plt.show()
