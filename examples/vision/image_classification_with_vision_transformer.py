@@ -1,8 +1,8 @@
 """
 Title: Image Classification with Vision Transformer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2021/01/30
-Last modified: 2021/01/30
+Date created: 2021/01/18
+Last modified: 2021/01/18
 Description: Implementing Vision Transformer (ViT) model for image classification.
 """
 
@@ -57,12 +57,24 @@ num_epochs = 100
 
 
 def run_experiment(model):
+    optimizer = keras.optimizers.Adam(
+      keras.optimizers.schedules.InverseTimeDecay(
+          initial_learning_rate=0.001,
+          decay_steps=1000,
+          decay_rate=0.98)
+    )
+    
     model.compile(
-        optimizer=tfa.optimizers.AdamW(
-            learning_rate=learning_rate, weight_decay=weight_decay
-        ),
-        loss=keras.losses.SparseCategoricalCrossentropy(),
-        metrics=[keras.metrics.SparseTopKCategoricalAccuracy(5)],
+        optimizer=optimizer,
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[
+            keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+            keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+        ],
+    )
+
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(
+        '/tmp/checkpoint', monitor='val_accuracy', save_best_only=True,
     )
 
     history = model.fit(
@@ -71,11 +83,12 @@ def run_experiment(model):
         batch_size=batch_size,
         epochs=num_epochs,
         validation_split=0.15,
+        callbacks=[checkpoint_callback],
     )
 
-    _, accuracy, top_k_accuracy = model.evaluate(x_test, y_test)
+    _, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
-    print(f"Test top 5 accuracy: {round(top_k_accuracy * 100, 2)}%")
+    print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 
     return history
 
@@ -88,8 +101,10 @@ data_augmentation = keras.Sequential(
     [
         layers.experimental.preprocessing.Normalization(),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(0.02),
-        layers.experimental.preprocessing.RandomZoom(0.2, 0.2),
+        layers.experimental.preprocessing.RandomRotation(factor=0.02),
+        layers.experimental.preprocessing.RandomZoom(
+            height_factor=0.2, width_factor=0.2
+        ),
     ],
     name="data_augmentation",
 )
@@ -112,10 +127,10 @@ def create_resnet_classifier():
         include_top=False, weights=None, input_shape=input_shape, pooling="avg"
     )(augmented)
     representation = layers.Dropout(0.5)(representation)
-    # Create softmax output.
-    outputs = layers.Dense(num_classes, activation="softmax")(representation)
+    # Create outputs.
+    logits = layers.Dense(num_classes)(representation)
     # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=outputs)
+    model = keras.Model(inputs=inputs, outputs=logits)
     return model
 
 
@@ -276,10 +291,10 @@ def create_vit_classifier():
 
     # Create MLP.
     features = mlp(representation, mlp_head_units, dropout_rate)
-    # Create softmax output.
-    outputs = layers.Dense(num_classes, activation="softmax")(features)
+    # Create outputs.
+    logits = layers.Dense(num_classes)(features)
     # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=outputs)
+    model = keras.Model(inputs=inputs, outputs=logits)
     return model
 
 
