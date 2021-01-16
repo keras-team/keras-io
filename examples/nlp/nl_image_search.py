@@ -547,6 +547,50 @@ for i in range(9):
 
 
 """
+## Evaluate the retrieval quality
+
+To evaluate the dual encoder model, we use the captions as queries.
+We use the out-of-training-sample images and captions to evaluate the retrieval quality,
+using top k accuracy. A true prediction is counted if, for a given caption, its associated image
+is retrieved within the top k matches.
+"""
+
+
+def compute_topk_accuracy(image_paths, k=50):
+    batch_size = 1000
+    idx = 0
+    hits = 0
+    size = len(image_paths)
+
+    while idx < size:
+        current_image_paths = image_paths[idx : idx + batch_size]
+        queries = [
+            image_path_to_caption[image_path][0] for image_path in current_image_paths
+        ]
+        result = find_matches(image_embeddings, queries, k)
+        current_hits = sum(
+            [
+                image_path in matches
+                for (image_path, matches) in list(zip(current_image_paths, result))
+            ]
+        )
+        hits += current_hits
+        idx += batch_size
+        print(f"{idx} out of {size} example scored.")
+
+    accuracy = hits / size
+    return accuracy
+
+
+train_accuracy = compute_topk_accuracy(train_image_paths, k=50)
+print(f"Train accuracy: {round(train_accuracy, 3)}%")
+
+eval_image_paths = image_paths[train_size:]
+eval_accuracy = compute_topk_accuracy(eval_image_paths, k=50)
+print(f"Eval accuracy: {round(eval_accuracy, 3)}%")
+
+
+"""
 ## Final remarks
 
 You can obtain better results by increasing the size of the training sample,
