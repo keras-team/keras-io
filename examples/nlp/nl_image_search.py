@@ -556,7 +556,7 @@ is retrieved within the top k matches.
 """
 
 
-def compute_topk_accuracy(image_paths, k=50):
+def compute_topk_accuracy(image_paths, k=100):
     batch_size = 1000
     idx = 0
     hits = 0
@@ -582,11 +582,11 @@ def compute_topk_accuracy(image_paths, k=50):
     return accuracy
 
 
-train_accuracy = compute_topk_accuracy(train_image_paths, k=50)
+train_accuracy = compute_topk_accuracy(train_image_paths)
 print(f"Train accuracy: {round(train_accuracy, 3)}%")
 
 eval_image_paths = image_paths[train_size:]
-eval_accuracy = compute_topk_accuracy(eval_image_paths, k=50)
+eval_accuracy = compute_topk_accuracy(eval_image_paths)
 print(f"Eval accuracy: {round(eval_accuracy, 3)}%")
 
 
