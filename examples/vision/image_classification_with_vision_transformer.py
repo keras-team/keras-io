@@ -279,17 +279,18 @@ def create_vit_classifier():
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(x3, transformer_units, dropout_rate=0.1)
+        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
     # Create a [batch_size, projection_dims] tensor.
-    representation = layers.Flatten()(encoded_patches)
+    representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    representation = layers.Flatten()(representation)
     representation = layers.Dropout(0.5)(representation)
     # Create MLP.
-    features = mlp(representation, mlp_head_units, dropout_rate=0.5)
+    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)
     # Create outputs.
-    logits = layers.Dense(num_classes)(features)
+    logits = layers.Dense(num_classes, kernel_initializer="zeros")(features)
     # Create the Keras model.
     model = keras.Model(inputs=inputs, outputs=logits)
     return model
