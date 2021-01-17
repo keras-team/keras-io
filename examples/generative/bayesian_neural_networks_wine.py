@@ -102,7 +102,7 @@ def run_experiment(model, loss, train_dataset, test_dataset):
     )
 
     print("Start training the model...")
-    model.fit(train_dataset, epochs=num_epochs, validation_split=0.15)
+    model.fit(train_dataset, epochs=num_epochs, validation_data=test_dataset)
     print("Model training finished.")
     _, rmse = model.evaluate(train_dataset, verbose=0)
     print(f"Train RMSE: {round(rmse, 3)}")
@@ -303,7 +303,7 @@ see in the outputs of the same inputs.
 """
 
 
-def display_predictions(model, iterations=100):
+def compute_predictions(model, iterations=100):
     predicted = []
     for _ in range(iterations):
         predicted.append(model(examples).numpy())
