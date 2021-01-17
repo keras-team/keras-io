@@ -250,10 +250,10 @@ MLP head with softmax to produce the final class probabilities output.
 
 Unlike the technique described in the [paper](https://arxiv.org/abs/2010.11929),
 which prepends a learnable embedding to the sequence of encoded patches to serve
-as the image representation, the outputs of the final Transformer block are
-aggregated with `layers.Flatten()` and then used as the image
+as the image representation, all the outputs of the final Transformer block are
+reformed with `layers.Flatten()` and used as the image
 representation input to the MLP head. The `layers.GlobalAveragePooling1D`
-could be used instead.
+could also be used instead to aggregate the outputs of the Transformer block.
 """
 
 
@@ -299,11 +299,12 @@ vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
 
 """
-After 100 epochs, the ViT classification model achieves around 55% accuracy and 
-82% top 5 accuracy on the test data. You can try to train the model 
-for more epochs, use larger number of Transformer layers, or increase 
-the projection dimensions to achieve better results. Also note that, as mentioned in 
-the [paper](https://arxiv.org/abs/2010.11929), the quality of the model is affected
-not only by the architecture choice, but also other parameters, such as training 
-schedule, optimizer, weight decay, etc.
+After 100 epochs, the ViT classification model achieves around 55% accuracy and
+82% top 5 accuracy on the test data. Note that the state of the art results reported in the
+[paper](https://arxiv.org/abs/2010.11929) are achieved by pre-training the ViT model using
+the JFT-300M dataset, then fine-tuning it on the target dataset. To improve the model quality
+without pre-training, you can try to train the model for more epochs, use larger number of
+Transformer layers, or increase the projection dimensions. Besides, as mentioned in the paper,
+the quality of the model is affected not only by the architecture choice, but also other parameters,
+such as training schedule, optimizer, weight decay, etc. 
 """
