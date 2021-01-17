@@ -57,13 +57,10 @@ num_epochs = 100
 
 
 def run_experiment(model):
-    optimizer = keras.optimizers.Adam(
-      keras.optimizers.schedules.InverseTimeDecay(
-          initial_learning_rate=0.001,
-          decay_steps=1000,
-          decay_rate=0.98)
+    optimizer = tfa.optimizers.AdamW(
+        learning_rate=learning_rate, weight_decay=weight_decay
     )
-    
+
     model.compile(
         optimizer=optimizer,
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -73,8 +70,9 @@ def run_experiment(model):
         ],
     )
 
+    checkpoint_filepath = "/tmp/checkpoint"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
-        '/tmp/checkpoint', monitor='val_accuracy', save_best_only=True,
+        checkpoint_filepath, monitor="val_accuracy", save_best_only=True,
     )
 
     history = model.fit(
@@ -86,6 +84,7 @@ def run_experiment(model):
         callbacks=[checkpoint_callback],
     )
 
+    model.load_weights(checkpoint_filepath)
     _, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
     print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
@@ -153,8 +152,7 @@ projection_dims = 64
 num_heads = 4
 transformer_units = [projection_dims * 2, projection_dims]
 transfomer_layers = 8
-mlp_head_units = [512, 128]
-dropout_rate = 0.1
+mlp_head_units = [2048, 1024]
 
 """
 ### Implement multilayer perceptron (MLP)
@@ -274,23 +272,22 @@ def create_vit_classifier():
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
         # Create a mult-headead attention layer.
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dims, dropout=dropout_rate
+            num_heads=num_heads, key_dim=projection_dims, dropout=0.1
         )(x1, x1)
         # Skip connection 1.
         x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(x3, transformer_units, dropout_rate)
+        x3 = mlp(x3, transformer_units, dropout_rate=0.1)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
     # Create a [batch_size, projection_dims] tensor.
     representation = layers.Flatten()(encoded_patches)
     representation = layers.Dropout(0.5)(representation)
-
     # Create MLP.
-    features = mlp(representation, mlp_head_units, dropout_rate)
+    features = mlp(representation, mlp_head_units, dropout_rate=0.5)
     # Create outputs.
     logits = layers.Dense(num_classes)(features)
     # Create the Keras model.
@@ -302,8 +299,8 @@ vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
 
 """
-After 100 epochs, the ViT classification model achieves around 52% accuracy and 
-80% top 5 accuracy on the test data. You can try to train the model 
+After 100 epochs, the ViT classification model achieves around 55% accuracy and 
+82% top 5 accuracy on the test data. You can try to train the model 
 for more epochs, use larger number of Transformer layers, or increase 
 the projection dimensions to achieve better results. Also note that, as mentioned in 
 the [paper](https://arxiv.org/abs/2010.11929), the quality of the model is affected
