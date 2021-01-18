@@ -47,53 +47,25 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 
 """
-## Compile, train, and evaluate the mode
+## Configure the hyperparameters
 """
 
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
 num_epochs = 100
-
-
-def run_experiment(model):
-    optimizer = tfa.optimizers.AdamW(
-        learning_rate=learning_rate, weight_decay=weight_decay
-    )
-
-    model.compile(
-        optimizer=optimizer,
-        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=[
-            keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
-            keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
-        ],
-    )
-
-    checkpoint_filepath = "/tmp/checkpoint"
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(
-        checkpoint_filepath, monitor="val_accuracy", save_best_only=True,
-    )
-
-    history = model.fit(
-        x=x_train,
-        y=y_train,
-        batch_size=batch_size,
-        epochs=num_epochs,
-        validation_split=0.15,
-        callbacks=[checkpoint_callback],
-    )
-
-    model.load_weights(checkpoint_filepath)
-    _, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
-    print(f"Test accuracy: {round(accuracy * 100, 2)}%")
-    print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
-
-    return history
+patch_size = 4
+image_size = input_shape[0]
+num_patches = (image_size // patch_size) ** 2
+projection_dims = 64
+num_heads = 4
+transformer_units = [projection_dims * 2, projection_dims]
+transfomer_layers = 8
+mlp_head_units = [2048, 1024]
 
 
 """
-## Using data augmentation
+## Use data augmentation
 """
 
 data_augmentation = keras.Sequential(
@@ -110,52 +82,9 @@ data_augmentation = keras.Sequential(
 
 data_augmentation.layers[0].adapt(x_train)
 
-"""
-## Experiment 1: Train the baseline classification model
-
-We use an untrained ResNet-50 architecture as our baseline model.
-"""
-
-
-def create_resnet_classifier():
-    inputs = layers.Input(shape=input_shape)
-    # Augment data.
-    augmented = data_augmentation(inputs)
-    # Generate features using ResNet.
-    representation = keras.applications.ResNet50V2(
-        include_top=False, weights=None, input_shape=input_shape, pooling="avg"
-    )(augmented)
-    representation = layers.Dropout(0.5)(representation)
-    # Create outputs.
-    logits = layers.Dense(num_classes)(representation)
-    # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
-
-
-resnet_classifier = create_resnet_classifier()
-history = run_experiment(resnet_classifier)
 
 """
-After 100 epochs the RestNet-50 classification model achieves around 48% accuracy
-and 74% top 5 accuracy, and  on the test data.
-"""
-
-"""
-## Experiment 2: Train the Vision Transformer model
-"""
-
-patch_size = 4
-image_size = input_shape[0]
-num_patches = (image_size // patch_size) ** 2
-projection_dims = 64
-num_heads = 4
-transformer_units = [projection_dims * 2, projection_dims]
-transfomer_layers = 8
-mlp_head_units = [2048, 1024]
-
-"""
-### Implement multilayer perceptron (MLP)
+## Implement multilayer perceptron (MLP)
 """
 
 
@@ -167,7 +96,7 @@ def mlp(x, hidden_units, dropout_rate):
 
 
 """
-### Implement patch creation as a layer
+## Implement patch creation as a layer
 """
 
 
@@ -216,7 +145,7 @@ for i, patch in enumerate(patches[0]):
     plt.axis("off")
 
 """
-### Implement the patch encoding layer
+## Implement the patch encoding layer
 
 The `PatchEncoder` will linearly transform the patch by projecting it into a
 vector of size `projection_dims`. In addition, it adds a learnable position
@@ -240,7 +169,7 @@ class PatchEncoder(layers.Layer):
 
 
 """
-### Build the ViT model
+## Build the ViT model
 
 The ViT model consists of multiple layers of the Transformer block,
 which uses the `layers.MultiHeadAttention` layer as a self-attention mechanism
@@ -253,7 +182,8 @@ which prepends a learnable embedding to the sequence of encoded patches to serve
 as the image representation, all the outputs of the final Transformer block are
 reformed with `layers.Flatten()` and used as the image
 representation input to the MLP head. The `layers.GlobalAveragePooling1D`
-could also be used instead to aggregate the outputs of the Transformer block.
+could also be used instead to aggregate the outputs of the Transformer block,
+especially when the number of patches and the projection dimensions are large.
 """
 
 
@@ -290,14 +220,56 @@ def create_vit_classifier():
     # Create MLP.
     features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)
     # Create outputs.
-    logits = layers.Dense(num_classes, kernel_initializer="zeros")(features)
+    logits = layers.Dense(num_classes)(features)
     # Create the Keras model.
     model = keras.Model(inputs=inputs, outputs=logits)
     return model
 
 
+"""
+## Compile, train, and evaluate the mode
+"""
+
+
+def run_experiment(model):
+    optimizer = tfa.optimizers.AdamW(
+        learning_rate=learning_rate, weight_decay=weight_decay
+    )
+
+    model.compile(
+        optimizer=optimizer,
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[
+            keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+            keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+        ],
+    )
+
+    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(
+        checkpoint_filepath, monitor="val_accuracy", save_best_only=True,
+    )
+
+    history = model.fit(
+        x=x_train,
+        y=y_train,
+        batch_size=batch_size,
+        epochs=num_epochs,
+        validation_split=0.15,
+        callbacks=[checkpoint_callback],
+    )
+
+    model.load_weights(checkpoint_filepath)
+    _, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
+    print(f"Test accuracy: {round(accuracy * 100, 2)}%")
+    print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
+
+    return history
+
+
 vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
+
 
 """
 After 100 epochs, the ViT classification model achieves around 55% accuracy and
@@ -307,5 +279,6 @@ the JFT-300M dataset, then fine-tuning it on the target dataset. To improve the 
 without pre-training, you can try to train the model for more epochs, use larger number of
 Transformer layers, or increase the projection dimensions. Besides, as mentioned in the paper,
 the quality of the model is affected not only by the architecture choice, but also other parameters,
-such as training schedule, optimizer, weight decay, etc. 
+such as training schedule, optimizer, weight decay, etc. In practice, it's recommended to fine-tune a ViT model
+pre-trained using a large, high-resolution dataset.
 """
