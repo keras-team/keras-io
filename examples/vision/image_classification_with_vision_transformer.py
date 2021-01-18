@@ -3,18 +3,19 @@ Title: Image Classification with Vision Transformer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/18
 Last modified: 2021/01/18
-Description: Implementing Vision Transformer (ViT) model for image classification.
+Description: Implementing the Vision Transformer (ViT) model for image classification.
 """
 
 """
 ## Introduction
 
 This example implements the [Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929)
-model by Alexey Dosovitskiy et al. for image classification on the CIFAR-100 dataset.
-The ViT applies the Transformer architecture with self-attentions on sequences of
-image patches without using convolutional networks.
+model by Alexey Dosovitskiy et al. for image classification,
+and demonstrates it on the CIFAR-100 dataset.
+The ViT model applies the Transformer architecture with self-attention to sequences of
+image patches, without using convolution layers.
 
-The example requires TensorFlow 2.4 or higher and
+This example requires TensorFlow 2.4 or higher, as well as
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
 which can be installed using the following command:
 
@@ -54,14 +55,17 @@ learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
 num_epochs = 100
-patch_size = 6
-image_size = 72
+image_size = 72  # We'll resize input images to this size
+patch_size = 6  # Size of the patches to be extract from the input images
 num_patches = (image_size // patch_size) ** 2
-projection_dims = 64
+projection_dim = 64
 num_heads = 4
-transformer_units = [projection_dims * 2, projection_dims]
-transfomer_layers = 8
-mlp_head_units = [2048, 1024]
+transformer_units = [
+    projection_dim * 2,
+    projection_dim,
+]  # Size of the transformer layers
+transformer_layers = 8
+mlp_head_units = [2048, 1024]  # Size of the dense layers of the final classifier
 
 
 """
@@ -148,19 +152,19 @@ for i, patch in enumerate(patches[0]):
 """
 ## Implement the patch encoding layer
 
-The `PatchEncoder` will linearly transform the patch by projecting it into a
-vector of size `projection_dims`. In addition, it adds a learnable position
+The `PatchEncoder` layer will linearly transform a patch by projecting it into a
+vector of size `projection_dim`. In addition, it adds a learnable position
 embedding to the projected vector.
 """
 
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches, projection_dims):
+    def __init__(self, num_patches, projection_dim):
         super(PatchEncoder, self).__init__()
         self.num_patches = num_patches
-        self.projection = layers.Dense(units=projection_dims)
+        self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(
-            input_dim=num_patches, output_dim=projection_dims
+            input_dim=num_patches, output_dim=projection_dim
         )
 
     def call(self, patch):
@@ -172,17 +176,18 @@ class PatchEncoder(layers.Layer):
 """
 ## Build the ViT model
 
-The ViT model consists of multiple layers of the Transformer block,
-which uses the `layers.MultiHeadAttention` layer as a self-attention mechanism
-for the sequence of patches. The Transformer blocks produces a
+The ViT model consists of multiple Transformer blocks,
+which use the `layers.MultiHeadAttention` layer as a self-attention mechanism
+applied to the sequence of patches. The Transformer blocks produce a
 `[batch_size, num_patches, projection_dim]` tensor, which is processed via an
-MLP head with softmax to produce the final class probabilities output.
+classifier head with softmax to produce the final class probabilities output.
 
 Unlike the technique described in the [paper](https://arxiv.org/abs/2010.11929),
 which prepends a learnable embedding to the sequence of encoded patches to serve
 as the image representation, all the outputs of the final Transformer block are
-reformed with `layers.Flatten()` and used as the image
-representation input to the MLP head. The `layers.GlobalAveragePooling1D`
+reshaped with `layers.Flatten()` and used as the image
+representation input to the classifier head.
+Note that the `layers.GlobalAveragePooling1D` layer
 could also be used instead to aggregate the outputs of the Transformer block,
 especially when the number of patches and the projection dimensions are large.
 """
@@ -195,15 +200,15 @@ def create_vit_classifier():
     # Create patches.
     patches = Patches(patch_size)(augmented)
     # Encode patches.
-    encoded_patches = PatchEncoder(num_patches, projection_dims)(patches)
+    encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
 
     # Create multiple layers of the Transformer block.
-    for _ in range(transfomer_layers):
+    for _ in range(transformer_layers):
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
-        # Create a mult-headead attention layer.
+        # Create a multi-head attention layer.
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dims, dropout=0.1
+            num_heads=num_heads, key_dim=projection_dim, dropout=0.1
         )(x1, x1)
         # Skip connection 1.
         x2 = layers.Add()([attention_output, encoded_patches])
@@ -214,13 +219,13 @@ def create_vit_classifier():
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
-    # Create a [batch_size, projection_dims] tensor.
+    # Create a [batch_size, projection_dim] tensor.
     representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
     representation = layers.Flatten()(representation)
     representation = layers.Dropout(0.5)(representation)
-    # Create MLP.
+    # Add MLP.
     features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)
-    # Create outputs.
+    # Classify outputs.
     logits = layers.Dense(num_classes)(features)
     # Create the Keras model.
     model = keras.Model(inputs=inputs, outputs=logits)
@@ -277,13 +282,18 @@ history = run_experiment(vit_classifier)
 
 
 """
-After 100 epochs, the ViT classification model achieves around 55% accuracy and
-82% top 5 accuracy on the test data. Note that the state of the art results reported in the
+After 100 epochs, the ViT model achieves around 55% accuracy and
+82% top-5 accuracy on the test data. Meanwhile, a ResNet50V2 trained from scratch
+on the same data can achieve 67% accuracy.
+So the ViT model isn't quite competitive with regular convnets on this task.
+
+Note that the state of the art results reported in the
 [paper](https://arxiv.org/abs/2010.11929) are achieved by pre-training the ViT model using
 the JFT-300M dataset, then fine-tuning it on the target dataset. To improve the model quality
-without pre-training, you can try to train the model for more epochs, use larger number of
+without pre-training, you can try to train the model for more epochs, use a larger number of
 Transformer layers, or increase the projection dimensions. Besides, as mentioned in the paper,
-the quality of the model is affected not only by the architecture choice, but also other parameters,
-such as training schedule, optimizer, weight decay, etc. In practice, it's recommended to fine-tune a ViT model
-pre-trained using a large, high-resolution dataset.
+the quality of the model is affected not only by architecture choices, but also by parameters
+such as the learning rate schedule, optimizer, weight decay, etc.
+In practice, it's recommended to fine-tune a ViT model
+that was pre-trained using a large, high-resolution dataset.
 """
