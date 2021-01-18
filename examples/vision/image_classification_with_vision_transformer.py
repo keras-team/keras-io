@@ -54,8 +54,8 @@ learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
 num_epochs = 100
-patch_size = 4
-image_size = input_shape[0]
+patch_size = 6
+image_size = 72
 num_patches = (image_size // patch_size) ** 2
 projection_dims = 64
 num_heads = 4
@@ -71,6 +71,7 @@ mlp_head_units = [2048, 1024]
 data_augmentation = keras.Sequential(
     [
         layers.experimental.preprocessing.Normalization(),
+        layers.experimental.preprocessing.Resizing(image_size, image_size),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
         layers.experimental.preprocessing.RandomRotation(factor=0.02),
         layers.experimental.preprocessing.RandomZoom(
@@ -79,7 +80,7 @@ data_augmentation = keras.Sequential(
     ],
     name="data_augmentation",
 )
-
+# Compute the mean and the variance of the training data for normalization.
 data_augmentation.layers[0].adapt(x_train)
 
 
@@ -247,7 +248,10 @@ def run_experiment(model):
 
     checkpoint_filepath = "/tmp/checkpoint"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
-        checkpoint_filepath, monitor="val_accuracy", save_best_only=True,
+        checkpoint_filepath,
+        monitor="val_accuracy",
+        save_best_only=True,
+        save_weights_only=True,
     )
 
     history = model.fit(
@@ -255,7 +259,7 @@ def run_experiment(model):
         y=y_train,
         batch_size=batch_size,
         epochs=num_epochs,
-        validation_split=0.15,
+        validation_split=0.1,
         callbacks=[checkpoint_callback],
     )
 
@@ -268,6 +272,7 @@ def run_experiment(model):
 
 
 vit_classifier = create_vit_classifier()
+print(vit_classifier.summary())
 history = run_experiment(vit_classifier)
 
 
