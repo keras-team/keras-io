@@ -135,7 +135,10 @@ image = x_train[np.random.choice(range(x_train.shape[0]))]
 plt.imshow(image.astype("uint8"))
 plt.axis("off")
 
-patches = Patches(patch_size)([image])
+resized_image = tf.image.resize(
+    tf.convert_to_tensor([image]), size=(image_size, image_size)
+)
+patches = Patches(patch_size)(resized_image)
 print(f"Image size: {image_size} X {image_size}")
 print(f"Patch size: {patch_size} X {patch_size}")
 print(f"Patches per image: {patches.shape[1]}")
@@ -277,23 +280,21 @@ def run_experiment(model):
 
 
 vit_classifier = create_vit_classifier()
-print(vit_classifier.summary())
 history = run_experiment(vit_classifier)
 
 
 """
 After 100 epochs, the ViT model achieves around 55% accuracy and
-82% top-5 accuracy on the test data. Meanwhile, a ResNet50V2 trained from scratch
-on the same data can achieve 67% accuracy.
-So the ViT model isn't quite competitive with regular convnets on this task.
+82% top-5 accuracy on the test data. These are not competitive results on the CIFAR-100 dataset,
+as a ResNet50V2 trained from scratch on the same data can achieve 67% accuracy.
 
 Note that the state of the art results reported in the
 [paper](https://arxiv.org/abs/2010.11929) are achieved by pre-training the ViT model using
 the JFT-300M dataset, then fine-tuning it on the target dataset. To improve the model quality
 without pre-training, you can try to train the model for more epochs, use a larger number of
-Transformer layers, or increase the projection dimensions. Besides, as mentioned in the paper,
-the quality of the model is affected not only by architecture choices, but also by parameters
-such as the learning rate schedule, optimizer, weight decay, etc.
+Transformer layers, resize the input images, change the patch size, or increase the projection dimensions. 
+Besides, as mentioned in the paper, the quality of the model is affected not only by architecture choices, 
+but also by parameters such as the learning rate schedule, optimizer, weight decay, etc.
 In practice, it's recommended to fine-tune a ViT model
 that was pre-trained using a large, high-resolution dataset.
 """
