@@ -441,7 +441,6 @@ class DisplayOutputs(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if epoch % 5 != 0:
             return
-        print('lr', self.model.optimizer.lr.numpy())
         src = self.batch["src"]
         trg = self.batch["trg"].numpy()
         bs = tf.shape(src)[0]
