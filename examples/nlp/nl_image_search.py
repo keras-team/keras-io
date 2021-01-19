@@ -9,12 +9,12 @@ Description: Implementing a dual encoder model for image search with natural lan
 """
 ## Introduction
 
-The example demonstrates how to build a dual encoder (also known as
-[two-tower](https://dl.acm.org/doi/fullHtml/10.1145/3366424.3386195))
-neural network model to search for images using natural language. The idea is to train a vision
-encoder and a text encoder to project the representation of the images and their
-captions into the same embedding space, such that the caption embeddings are near
-to the embeddings of images describing them.
+The example demonstrates how to build a dual encoder (also known as two-tower) neural network
+model to search for images using natural language. The model is inspired by
+[CLIP](https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language.pdf)
+approach, introduced by Alec Radford et. al. The idea is to train a vision encoder and a text
+encoder to project the representation of the images and their captions into the same embedding
+space, such that the caption embeddings are near to the embeddings of images describing them.
 
 This example requires TensorFlow 2.4 or higher.
 In addition, [TensorFlow Hub](https://www.tensorflow.org/hub)
@@ -336,7 +336,7 @@ Then we use crossentropy to compute the loss between the targets and the predict
 """
 
 
-class ContrastiveSimilarity(keras.losses.Loss):
+class ContrastiveSimilarityLoss(keras.losses.Loss):
     def __init__(self, temperature, **kwargs):
         super(ContrastiveSimilarity, self).__init__(**kwargs)
         self.temperature = temperature
@@ -359,16 +359,21 @@ class ContrastiveSimilarity(keras.losses.Loss):
         captions_similarity = tf.matmul(
             caption_embeddings, caption_embeddings, transpose_b=True
         )
-        # targets[i][j] = average dot_similarity(caption_i, caption_j) and dot_similarity(image_i, image_j).
-        # Apply softmaxt to normalize the targets for each entry to sum to 1.
+        # targets[i][j] = avarage dot_similarity(caption_i, caption_j) and dot_similarity(image_i, image_j).
         targets = keras.activations.softmax(
             (captions_similarity + images_similarity) / (2 * self.temperature)
         )
-        # Use crossentropy to compute the error between the targets and the predictions.
-        loss = keras.losses.categorical_crossentropy(
+        # Compute the loss for the captions using crossentropy
+        captions_loss = keras.losses.categorical_crossentropy(
             y_true=targets, y_pred=logits, from_logits=True
         )
-        # Compute and return the mean of the loss over the batch.
+        # Compute the loss for the images using crossentropy
+        images_loss = keras.losses.categorical_crossentropy(
+            y_true=tf.transpose(targets), y_pred=tf.transpose(logits), from_logits=True
+        )
+        # Compute the average between the captions loss and the images loss
+        loss = (captions_loss + images_loss) / 2
+        # Return the mean of the loss over the batch.
         return tf.math.reduce_mean(loss)
 
 
@@ -409,7 +414,7 @@ learning_rate = 0.003
 weight_decay = 0.0001
 num_epochs = 30
 batch_size = 256
-temperature = 0.05
+temperature = 0.07
 
 vision_encoder = create_vision_encoder(
     num_projection_layers, projection_dims, dropout_rate
@@ -420,7 +425,7 @@ text_encoder = create_text_encoder(num_projection_layers, projection_dims, dropo
 text_encoder.summary()
 
 optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay)
-loss = ContrastiveSimilarity(temperature)
+loss = ContrastiveSimilarityLoss(temperature)
 dual_encoder = create_dual_encoder(text_encoder, vision_encoder)
 dual_encoder.compile(optimizer=optimizer, loss=loss)
 dual_encoder.summary()
