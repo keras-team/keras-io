@@ -39,15 +39,6 @@ from tensorflow.keras import layers
 import tensorflow_addons as tfa
 ```
 
-<div class="k-default-codeblock">
-```
-/opt/conda/lib/python3.7/site-packages/tensorflow_addons/utils/ensure_tf_install.py:43: UserWarning: You are currently using a nightly version of TensorFlow (2.4.0-dev20201023). 
-TensorFlow Addons offers no support for the nightly versions of TensorFlow. Some things might work, some other might not. 
-If you encounter a bug, do not file an issue on GitHub.
-  UserWarning,
-
-```
-</div>
 ---
 ## Prepare the data
 

@@ -131,6 +131,12 @@ and the functional API is a way to create models that closely mirrors this.
 Training, evaluation, and inference work exactly in the same way for models
 built using the functional API as for `Sequential` models.
 
+The `Model` class offers a built-in training loop (the `fit()` method)
+and a built-in evaluation loop (the `evaluate()` method). Note
+that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
+to implement training routines beyond supervised learning
+(e.g. [GANs](/examples/generative/dcgan_overriding_train_step/)).
+
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
 then evaluate the model on the test data:
