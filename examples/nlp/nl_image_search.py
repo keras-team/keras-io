@@ -11,10 +11,10 @@ Description: Implementing a dual encoder model for image search with natural lan
 
 The example demonstrates how to build a dual encoder (also known as two-tower) neural network
 model to search for images using natural language. The model is inspired by
-[CLIP](https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language.pdf)
-approach, introduced by Alec Radford et. al. The idea is to train a vision encoder and a text
-encoder to project the representation of the images and their captions into the same embedding
-space, such that the caption embeddings are near to the embeddings of images describing them.
+the [CLIP](https://openai.com/blog/clip/)
+approach, introduced by Alec Radford et al. The idea is to train a vision encoder and a text
+encoder jointly to project the representation of images and their captions into the same embedding
+space, such that the caption embeddings are located near the embeddings of the images they describe.
 
 This example requires TensorFlow 2.4 or higher.
 In addition, [TensorFlow Hub](https://www.tensorflow.org/hub)
@@ -60,9 +60,9 @@ model for image search.
 ###
 Download and extract the data
 
-First, let's download the dataset, which consists of two zipped folders,
-one contains the images, and the other contains their captions.
-Note that the images zipped folder is 13GB.
+First, let's download the dataset, which consists of two compressed folders.
+One contains the images, and the other contains their captions.
+Note that the compressed images folder is 13GB.
 """
 
 root_dir = "datasets"
@@ -107,7 +107,7 @@ data_size = len(image_paths)
 print(f"Number of images: {data_size}")
 
 """
-Display a random image and its associated captions:
+Let's display a random image and its associated captions:
 """
 
 sample_image_path = image_paths[np.random.choice(data_size)]
@@ -123,9 +123,10 @@ plt.show()
 """
 ### Process and save the data to TFRecord files
 
-You can change the `sample_size` to control many image-caption pairs will be used
-for training the dual encoder model. In this example we set `sample_size` to
-30,000 images, which is about 35% of the dataset. We use 2 captions for each
+You can change the `sample_size` parameter to control many image-caption pairs
+will be used for training the dual encoder model.
+In this example we set `sample_size` to 30,000 images,
+which is about 35% of the dataset. We use 2 captions for each
 image, thus producing 60,000 image-caption pairs. The size of the training set
 affects the quality of the produced encoders, but more examples would lead to
 longer training time.
@@ -142,7 +143,7 @@ if tf.io.gfile.exists(tfrecords_dir):
     print("Removing previous tfrecord files...")
     tf.io.gfile.rmtree(tfrecords_dir)
 tf.io.gfile.makedirs(tfrecords_dir)
-print("A new tfrecord directory created.")
+print("New tfrecord directory created.")
 
 
 def bytes_feature(value):
@@ -150,13 +151,11 @@ def bytes_feature(value):
 
 
 def create_example(image_path, caption):
-
     raw_image = tf.io.read_file(image_path).numpy()
     feature = {
         "caption": bytes_feature(caption.encode()),
         "raw_image": bytes_feature(raw_image),
     }
-
     example = tf.train.Example(features=tf.train.Features(feature=feature))
     return example
 
@@ -191,9 +190,9 @@ def write_data(image_paths, num_files, files_prefix):
     return example_counter
 
 
-print("Writing train tfrecords...")
+print("Writing training tfrecords...")
 train_example_count = write_data(train_image_paths, num_train_files, train_files_prefix)
-print("Train tfrecord files created successfully.")
+print("Training tfrecord files created successfully.")
 
 """
 ### Create `tf.data.Dataset` for training and evaluation
@@ -241,16 +240,14 @@ the same embedding space with the same dimensionality.
 def project_embeddings(
     embeddings, num_projection_layers, projection_dims, dropout_rate
 ):
-
-    porjected_embeddings = layers.Dense(units=projection_dims)(embeddings)
+    projected_embeddings = layers.Dense(units=projection_dims)(embeddings)
     for _ in range(num_projection_layers):
-        x = tf.nn.gelu(porjected_embeddings)
+        x = tf.nn.gelu(projected_embeddings)
         x = layers.Dense(projection_dims)(x)
         x = layers.Dropout(dropout_rate)(x)
-        x = layers.Add()([porjected_embeddings, x])
-        porjected_embeddings = layers.LayerNormalization()(x)
-
-    return porjected_embeddings
+        x = layers.Add()([projected_embeddings, x])
+        projected_embeddings = layers.LayerNormalization()(x)
+    return projected_embeddings
 
 
 """
@@ -341,9 +338,8 @@ class ContrastiveSimilarityLoss(keras.losses.Loss):
         super(ContrastiveSimilarity, self).__init__(**kwargs)
         self.temperature = temperature
 
-    def __call__(self, y_true, y_pred, sample_weight=None):
-        # Delete y_true as it is not used.
-        del y_true
+    def __call__(self, _, y_pred, sample_weight=None):
+        # Note that y_true is not used.
         # Extract the caption_embeddings and image_embeddings from the model output.
         caption_embeddings, image_embeddings = tf.unstack(y_pred)
         # logits[i][j] is the dot_similarity(caption_i, image_j).
@@ -450,15 +446,16 @@ plt.ylabel("Loss")
 plt.show()
 
 """
-## Search for images using natural language
+## Search for images using natural language queries
 
-The process of searching for images using using natural language consists of the
-following steps:
-1. Generating embeddings for the images by feeding them into the `vision_encoder`.
+We can then retrieve images corresponding to natural language queries via
+the following steps:
+
+1. Generate embeddings for the images by feeding them into the `vision_encoder`.
 2. Feed the natural language query to the `text_encoder` to generate a query embedding.
 3. Compute the similarity between the query embedding and the image embeddings
 in the index to retrieve the indices of the top matches.
-4. Lookup the paths of the top matching images to display them.
+4. Look up the paths of the top matching images to display them.
 
 Note that, after training the `dual encoder`, the only the fine-tuned `vision_encoder`
 and `text_encoder` models will be used, while the `dual_encoder` model will be discarded.
@@ -561,7 +558,7 @@ is retrieved within the top k matches.
 """
 
 
-def compute_topk_accuracy(image_paths, k=100):
+def compute_top_k_accuracy(image_paths, k=100):
     batch_size = 1000
     idx = 0
     hits = 0
@@ -587,11 +584,11 @@ def compute_topk_accuracy(image_paths, k=100):
     return accuracy
 
 
-train_accuracy = compute_topk_accuracy(train_image_paths)
+train_accuracy = compute_top_k_accuracy(train_image_paths)
 print(f"Train accuracy: {round(train_accuracy, 3)}%")
 
 eval_image_paths = image_paths[train_size:]
-eval_accuracy = compute_topk_accuracy(eval_image_paths)
+eval_accuracy = compute_top_k_accuracy(eval_image_paths)
 print(f"Eval accuracy: {round(eval_accuracy, 3)}%")
 
 
