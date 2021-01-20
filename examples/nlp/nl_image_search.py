@@ -34,7 +34,6 @@ pip install -q -U tensorflow-hub tensorflow-text tensorflow_addons
 
 import os
 import collections
-import random
 import json
 import numpy as np
 import tensorflow as tf
@@ -46,6 +45,7 @@ import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
+# Suppressing tf.hub warnings
 tf.get_logger().setLevel("ERROR")
 
 """
@@ -126,7 +126,7 @@ plt.show()
 
 You can change the `sample_size` parameter to control many image-caption pairs
 will be used for training the dual encoder model.
-In this example we set `sample_size` to 30,000 images,
+In this example we set `train_size` to 30,000 images,
 which is about 35% of the dataset. We use 2 captions for each
 image, thus producing 60,000 image-caption pairs. The size of the training set
 affects the quality of the produced encoders, but more examples would lead to
@@ -134,11 +134,17 @@ longer training time.
 """
 
 train_size = 30000
+valid_size = 5000
 captions_per_image = 2
 images_per_file = 2000
+
 train_image_paths = image_paths[:train_size]
 num_train_files = int(np.ceil(train_size / images_per_file))
 train_files_prefix = os.path.join(tfrecords_dir, "train")
+
+valid_image_paths = image_paths[train_size : train_size + valid_size]
+num_valid_files = int(np.ceil(valid_size / images_per_file))
+valid_files_prefix = os.path.join(tfrecords_dir, "valid")
 
 if tf.io.gfile.exists(tfrecords_dir):
     print("Removing previous tfrecord files...")
@@ -195,6 +201,10 @@ print("Writing training tfrecords...")
 train_example_count = write_data(train_image_paths, num_train_files, train_files_prefix)
 print("Training tfrecord files created successfully.")
 
+print(f"Writing {valid_size} validation tfrecords...")
+valid_example_count = write_data(valid_image_paths, num_valid_files, valid_files_prefix)
+print(f"Validation tfrecord files created successfully.")
+
 """
 ### Create `tf.data.Dataset` for training and evaluation
 """
@@ -213,6 +223,9 @@ def read_example(example):
     image = tf.image.decode_jpeg(raw_image, channels=3)
     image = tf.image.resize(image, (299, 299))
     features["image"] = image
+    # The `model.fit` method expects a tuple of (inputs, targets).
+    # Since the targets are dynamically computed during loss calculation,
+    # a tf constant is added as a placeholder for the targets.
     return features, tf.constant(1)
 
 
@@ -435,7 +448,8 @@ print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
 print(f"Steps per epoch: {train_example_count // batch_size}")
 train_data = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
-history = dual_encoder.fit(train_data, epochs=num_epochs)
+valid_data = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
+history = dual_encoder.fit(train_data, epochs=num_epochs, validation_data=valid_data)
 vision_encoder.save("vision_encoder")
 text_encoder.save("text_encoder")
 
@@ -473,8 +487,8 @@ such as [Apache Spark](https://spark.apache.org) or [Apache Beam](https://beam.a
 Generating the image embeddings will take a few minutes.
 """
 
-vision_encoder = tf.saved_model.load("vision_encoder")
-text_encoder = tf.saved_model.load("text_encoder")
+vision_encoder = keras.models.load_model("vision_encoder")
+text_encoder = keras.models.load_model("text_encoder")
 
 image_embeddings = []
 counter = 0
@@ -488,17 +502,10 @@ def read_image(image_path):
 
 print(f"Image embeddings generation started...")
 print(f"Generating embeddings for {len(image_paths)} images...")
-for image_batch in (
-    tf.data.Dataset.from_tensor_slices(image_paths).map(read_image).batch(512).repeat(1)
-):
-    current_image_embeddings = vision_encoder(image_batch)
-    image_embeddings.extend(current_image_embeddings)
-    counter += image_batch.shape[0]
-    if counter % 10 == 0:
-        print(f"Generated embeddings for {counter} images...")
-
-
-image_embeddings = np.array(image_embeddings)
+image_embeddings = vision_encoder.predict(
+    tf.data.Dataset.from_tensor_slices(image_paths).map(read_image).batch(512),
+    verbose=1,
+)
 print(f"Image embeddings generation completed.")
 print(f"Image embeddings shape: {image_embeddings.shape}.")
 
@@ -517,7 +524,7 @@ is preferred in real-time use cases to scale with a large number of images.
 def find_matches(image_embeddings, queries, k=9, normalize=True):
     matches = []
     # Get the embedding for the query.
-    query_embedding = text_encoder(queries)
+    query_embedding = text_encoder(tf.convert_to_tensor(queries))
     # Normalize the query and the image embeddings.
     if normalize:
         image_embeddings = tf.math.l2_normalize(image_embeddings, axis=1)
