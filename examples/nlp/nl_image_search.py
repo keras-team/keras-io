@@ -42,6 +42,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_hub as hub
 import tensorflow_text as text
+import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
@@ -335,7 +336,7 @@ Then we use crossentropy to compute the loss between the targets and the predict
 
 class ContrastiveSimilarityLoss(keras.losses.Loss):
     def __init__(self, temperature, **kwargs):
-        super(ContrastiveSimilarity, self).__init__(**kwargs)
+        super(ContrastiveSimilarityLoss, self).__init__(**kwargs)
         self.temperature = temperature
 
     def __call__(self, _, y_pred, sample_weight=None):
@@ -428,7 +429,7 @@ dual_encoder.summary()
 
 """
 Note that training the model with 60,000 image-caption pairs, with a batch size of 256,
-takes around 15 minutes per epoch using a P100 GPU accelerator"""
+takes around 11 minutes per epoch using a V100 GPU accelerator"""
 
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
@@ -591,9 +592,11 @@ def compute_top_k_accuracy(image_paths, k=100):
     return accuracy
 
 
+print(f"Scoring training data...")
 train_accuracy = compute_top_k_accuracy(train_image_paths)
 print(f"Train accuracy: {round(train_accuracy, 3)}%")
 
+print(f"Scoring evaluation data...")
 eval_image_paths = image_paths[train_size:]
 eval_accuracy = compute_top_k_accuracy(eval_image_paths)
 print(f"Eval accuracy: {round(eval_accuracy, 3)}%")
