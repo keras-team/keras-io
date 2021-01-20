@@ -458,8 +458,10 @@ Plotting the training loss:
 """
 
 plt.plot(history.history["loss"])
-plt.xlabel("Epochs")
+plt.plot(history.history["val_loss"])
 plt.ylabel("Loss")
+plt.xlabel("Epoch")
+plt.legend(["train", "valid"], loc="upper right")
 plt.show()
 
 """
