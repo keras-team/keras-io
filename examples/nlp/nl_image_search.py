@@ -472,28 +472,30 @@ such as [Apache Spark](https://spark.apache.org) or [Apache Beam](https://beam.a
 Generating the image embeddings will take a few minutes.
 """
 
-image_embeddings = []
-idx = 0
-batch_size = 512
-
 vision_encoder = tf.saved_model.load("vision_encoder")
 text_encoder = tf.saved_model.load("text_encoder")
 
+image_embeddings = []
+counter = 0
+
+
+def read_image(image_path):
+    raw_image = tf.io.read_file(image_path)
+    image_array = tf.image.decode_jpeg(raw_image, channels=3)
+    return tf.image.resize(image_array, (299, 299))
+
+
 print(f"Image embeddings generation started...")
 print(f"Generating embeddings for {len(image_paths)} images...")
-while idx < len(image_paths):
-    image_batch = []
-    current_image_paths = image_paths[idx : idx + batch_size]
-    for image_path in current_image_paths:
-        raw_image = tf.io.read_file(image_path)
-        image_array = tf.image.decode_jpeg(raw_image, channels=3)
-        image_array = tf.image.resize(image_array, (299, 299))
-        image_batch.append(image_array)
-    idx += batch_size
+for image_batch in (
+    tf.data.Dataset.from_tensor_slices(image_paths).map(read_image).batch(512).repeat(1)
+):
     current_image_embeddings = vision_encoder(image_batch)
     image_embeddings.extend(current_image_embeddings)
-    if idx % 10 == 0:
-        print(f"Generated embeddings for {idx} images...")
+    counter += image_batch.shape[0]
+    if counter % 10 == 0:
+        print(f"Generated embeddings for {counter} images...")
+
 
 image_embeddings = np.array(image_embeddings)
 print(f"Image embeddings generation completed.")
