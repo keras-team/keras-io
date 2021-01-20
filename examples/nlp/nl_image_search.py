@@ -427,14 +427,16 @@ dual_encoder.compile(optimizer=optimizer, loss=loss)
 dual_encoder.summary()
 
 """
-Note that training the model with 60,000 image-caption pairs takes around 15 minutes
-per epoch using a P100 GPU accelerator"""
+Note that training the model with 60,000 image-caption pairs, with a batch size of 256,
+takes around 15 minutes per epoch using a P100 GPU accelerator"""
 
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
 print(f"Steps per epoch: {train_example_count // batch_size}")
 train_data = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
 history = dual_encoder.fit(train_data, epochs=num_epochs)
+vision_encoder.save("vision_encoder")
+text_encoder.save("text_encoder")
 
 """
 Plotting the training loss:
@@ -473,6 +475,9 @@ Generating the image embeddings will take a few minutes.
 image_embeddings = []
 idx = 0
 batch_size = 512
+
+vision_encoder = tf.saved_model.load("vision_encoder")
+text_encoder = tf.saved_model.load("text_encoder")
 
 print(f"Image embeddings generation started...")
 print(f"Generating embeddings for {len(image_paths)} images...")
