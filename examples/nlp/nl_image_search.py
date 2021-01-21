@@ -44,6 +44,7 @@ import tensorflow_text as text
 import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from tqdm import tqdm
 
 # Suppressing tf.hub warnings
 tf.get_logger().setLevel("ERROR")
@@ -142,7 +143,7 @@ train_image_paths = image_paths[:train_size]
 num_train_files = int(np.ceil(train_size / images_per_file))
 train_files_prefix = os.path.join(tfrecords_dir, "train")
 
-valid_image_paths = image_paths[train_size : train_size + valid_size]
+valid_image_paths = image_paths[-valid_size:]
 num_valid_files = int(np.ceil(valid_size / images_per_file))
 valid_files_prefix = os.path.join(tfrecords_dir, "valid")
 
@@ -420,7 +421,7 @@ the projection head trainable.
 projection_dims = 256
 num_projection_layers = 1
 dropout_rate = 0.1
-learning_rate = 0.003
+learning_rate = 0.005
 weight_decay = 0.0001
 num_epochs = 30
 batch_size = 256
@@ -446,14 +447,27 @@ takes around 11 minutes per epoch using a V100 GPU accelerator"""
 
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
-print(f"Steps per epoch: {train_example_count // batch_size}")
+print(f"Steps per epoch: {int(np.ceil(train_example_count / batch_size))}")
 train_dataset = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
 valid_dataset = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
-history = dual_encoder.fit(
-    train_dataset, epochs=num_epochs, validation_data=valid_dataset
+# Create a learning rate schedular callback.
+reduce_lr = keras.callbacks.ReduceLROnPlateau(
+    monitor="val_loss", factor=0.2, patience=3
 )
+# Create an early stopping callback.
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss", patience=5, restore_best_weights=True
+)
+history = dual_encoder.fit(
+    train_dataset,
+    epochs=num_epochs,
+    validation_data=valid_dataset,
+    callbacks=[reduce_lr, early_stopping],
+)
+print("Training completed. Saving vision and text encoders...")
 vision_encoder.save("vision_encoder")
 text_encoder.save("text_encoder")
+print("Models are saved.")
 
 """
 Plotting the training loss:
@@ -490,12 +504,10 @@ In large scale systems, this step is performed using a parallel data processing 
 such as [Apache Spark](https://spark.apache.org) or [Apache Beam](https://beam.apache.org).
 Generating the image embeddings will take a few minutes.
 """
-
+print("Loading vision and text encoders...")
 vision_encoder = keras.models.load_model("vision_encoder")
 text_encoder = keras.models.load_model("text_encoder")
-
-image_embeddings = []
-counter = 0
+print("Models are loaded.")
 
 
 def read_image(image_path):
@@ -578,29 +590,25 @@ is retrieved within the top k matches.
 
 
 def compute_top_k_accuracy(image_paths, k=100):
-    batch_size = 1000
-    idx = 0
     hits = 0
     size = len(image_paths)
-
-    while idx < size:
-        current_image_paths = image_paths[idx : idx + batch_size]
+    num_batches = int(np.ceil(size / batch_size))
+    for idx in tqdm(range(num_batches)):
+        start_idx = idx * batch_size
+        end_idx = start_idx + batch_size
+        current_image_paths = image_paths[start_idx:end_idx]
         queries = [
             image_path_to_caption[image_path][0] for image_path in current_image_paths
         ]
         result = find_matches(image_embeddings, queries, k)
-        current_hits = sum(
+        hits += sum(
             [
                 image_path in matches
                 for (image_path, matches) in list(zip(current_image_paths, result))
             ]
         )
-        hits += current_hits
-        idx += batch_size
-        print(f"{idx} out of {size} example scored.")
 
-    accuracy = hits / size
-    return accuracy
+    return hits / size
 
 
 print(f"Scoring training data...")
