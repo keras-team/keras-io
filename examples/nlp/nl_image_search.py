@@ -449,7 +449,9 @@ print(f"Batch size: {batch_size}")
 print(f"Steps per epoch: {train_example_count // batch_size}")
 train_dataset = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
 valid_dataset = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
-history = dual_encoder.fit(train_dataset, epochs=num_epochs, validation_data=valid_dataset)
+history = dual_encoder.fit(
+    train_dataset, epochs=num_epochs, validation_data=valid_dataset
+)
 vision_encoder.save("vision_encoder")
 text_encoder.save("text_encoder")
 
