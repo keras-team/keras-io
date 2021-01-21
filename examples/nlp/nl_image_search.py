@@ -603,12 +603,12 @@ def compute_top_k_accuracy(image_paths, k=100):
 
 print(f"Scoring training data...")
 train_accuracy = compute_top_k_accuracy(train_image_paths)
-print(f"Train accuracy: {round(train_accuracy, 3)}%")
+print(f"Train accuracy: {round(train_accuracy * 100, 3)}%")
 
 print(f"Scoring evaluation data...")
 eval_image_paths = image_paths[train_size:]
 eval_accuracy = compute_top_k_accuracy(eval_image_paths)
-print(f"Eval accuracy: {round(eval_accuracy, 3)}%")
+print(f"Eval accuracy: {round(eval_accuracy * 100, 3)}%")
 
 
 """
