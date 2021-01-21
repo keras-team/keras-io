@@ -437,7 +437,7 @@ text_encoder.summary()
 optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay)
 loss = ContrastiveSimilarityLoss(temperature)
 dual_encoder = create_dual_encoder(text_encoder, vision_encoder)
-dual_encoder.compile(optimizer=optimizer, loss=loss)
+dual_encoder.compile(optimizer, loss)
 dual_encoder.summary()
 
 """
@@ -447,9 +447,9 @@ takes around 11 minutes per epoch using a V100 GPU accelerator"""
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
 print(f"Steps per epoch: {train_example_count // batch_size}")
-train_data = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
-valid_data = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
-history = dual_encoder.fit(train_data, epochs=num_epochs, validation_data=valid_data)
+train_dataset = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
+valid_dataset = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
+history = dual_encoder.fit(train_dataset, epochs=num_epochs, validation_data=valid_dataset)
 vision_encoder.save("vision_encoder")
 text_encoder.save("text_encoder")
 
