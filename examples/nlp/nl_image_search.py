@@ -423,7 +423,7 @@ num_projection_layers = 1
 dropout_rate = 0.1
 learning_rate = 0.005
 weight_decay = 0.0001
-num_epochs = 30
+num_epochs = 50
 batch_size = 256
 temperature = 0.07
 
