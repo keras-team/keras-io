@@ -169,7 +169,6 @@ def create_example(image_path, caption):
 
 
 def write_tfrecords(file_name, image_paths):
-    print(f"Writing {file_name}...")
     caption_list = []
     image_path_list = []
     for image_path in image_paths:
@@ -188,23 +187,22 @@ def write_tfrecords(file_name, image_paths):
 
 def write_data(image_paths, num_files, files_prefix):
     example_counter = 0
-    for file_idx in range(num_files):
+    for file_idx in tqdm(range(num_files)):
         file_name = files_prefix + "-%02d.tfrecord" % (file_idx)
         start_idx = images_per_file * file_idx
         end_idx = start_idx + images_per_file
         current_image_paths = image_paths[start_idx:end_idx]
         example_counter += write_tfrecords(file_name, current_image_paths)
-        print(f"{example_counter} examples were written.")
     return example_counter
 
 
 print("Writing training tfrecords...")
 train_example_count = write_data(train_image_paths, num_train_files, train_files_prefix)
-print("Training tfrecord files created successfully.")
+print(f"{train_example_count} examples were written to tfrecord files.")
 
-print(f"Writing {valid_size} validation tfrecords...")
+print(f"Writing validation tfrecords...")
 valid_example_count = write_data(valid_image_paths, num_valid_files, valid_files_prefix)
-print(f"Validation tfrecord files created successfully.")
+print(f"{valid_example_count} examples were written to tfrecord files.")
 
 """
 ### Create `tf.data.Dataset` for training and evaluation
