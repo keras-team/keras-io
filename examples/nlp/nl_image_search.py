@@ -24,7 +24,7 @@ is required for the AdamW optimizer. These libraries can be installed using the
 following command:
 
 ```python
-pip install -q -U tensorflow-hub tensorflow-text tensorflow_addons
+pip install -q -U tensorflow-hub tensorflow-text tensorflow-addons
 ```
 """
 
@@ -356,13 +356,15 @@ class DualEncoder(keras.Model):
         return [self.loss_tracker]
 
     def call(self, features, training=False):
-        # Extract the captions and the images from the input features.
-        captions = features["caption"]
-        images = features["image"]
-        # Get the embeddings for the captions.
-        caption_embeddings = text_encoder(captions, training=training)
-        # Get the embeddings for the images.
-        image_embeddings = vision_encoder(images, training=training)
+        # Place each encoder on a separate GPU (if available).
+        with tf.device("/gpu:0"):
+            # Get the embeddings for the captions.
+            caption_embeddings = text_encoder(features["caption"], training=training)
+        with tf.device("/gpu:1"):
+            # Get the embeddings for the images.
+            image_embeddings = vision_encoder(
+                images=features["image"], training=training
+            )
         return caption_embeddings, image_embeddings
 
     def compute_loss(self, caption_embeddings, image_embeddings):
@@ -444,8 +446,11 @@ dual_encoder.compile(optimizer)
 
 """
 Note that training the model with 60,000 image-caption pairs, with a batch size of 256,
-takes around 11 minutes per epoch using a V100 GPU accelerator"""
+takes around 12 minutes per epoch using a V100 GPU accelerator. If 2 GPUs are available,
+the epoch takes around 8 minutes.
+"""
 
+print(f"Number of GPUs: {len(tf.config.list_physical_devices('GPU'))}")
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
 print(f"Steps per epoch: {int(np.ceil(train_example_count / batch_size))}")
