@@ -222,10 +222,7 @@ def read_example(example):
     image = tf.image.decode_jpeg(raw_image, channels=3)
     image = tf.image.resize(image, (299, 299))
     features["image"] = image
-    # The `model.fit` method expects a tuple of (inputs, targets).
-    # Since the targets are dynamically computed during loss calculation,
-    # a tf constant is added as a placeholder for the targets.
-    return features, tf.constant(1)
+    return features
 
 
 def get_dataset(file_pattern, batch_size):
@@ -335,7 +332,7 @@ def create_text_encoder(
 
 
 """
-## Implement contrastive similarity loss
+## Implement the dual encoder
 
 To calculate the loss, we compute the pairwise dot-product similarity between
 each `caption_i` and `images_j` in the batch as the predictions.
@@ -346,15 +343,29 @@ Then we use crossentropy to compute the loss between the targets and the predict
 """
 
 
-class ContrastiveSimilarityLoss(keras.losses.Loss):
-    def __init__(self, temperature, **kwargs):
-        super(ContrastiveSimilarityLoss, self).__init__(**kwargs)
+class DualEncoder(keras.Model):
+    def __init__(self, text_encoder, image_encoder, temperature=1.0, **kwargs):
+        super(DualEncoder, self).__init__(**kwargs)
+        self.text_encoder = text_encoder
+        self.image_encoder = image_encoder
         self.temperature = temperature
+        self.loss_tracker = keras.metrics.Mean(name="loss")
 
-    def __call__(self, _, y_pred, sample_weight=None):
-        # Note that y_true is not used.
-        # Extract the caption_embeddings and image_embeddings from the model output.
-        caption_embeddings, image_embeddings = tf.unstack(y_pred)
+    @property
+    def metrics(self):
+        return [self.loss_tracker]
+
+    def call(self, features, training=False):
+        # Extract the captions and the images from the input features.
+        captions = features["caption"]
+        images = features["image"]
+        # Get the embeddings for the captions.
+        caption_embeddings = text_encoder(captions, training=training)
+        # Get the embeddings for the images.
+        image_embeddings = vision_encoder(images, training=training)
+        return caption_embeddings, image_embeddings
+
+    def compute_loss(self, caption_embeddings, image_embeddings):
         # logits[i][j] is the dot_similarity(caption_i, image_j).
         logits = (
             tf.matmul(caption_embeddings, image_embeddings, transpose_b=True)
@@ -380,33 +391,27 @@ class ContrastiveSimilarityLoss(keras.losses.Loss):
         images_loss = keras.losses.categorical_crossentropy(
             y_true=tf.transpose(targets), y_pred=tf.transpose(logits), from_logits=True
         )
-        # Compute the average between the captions loss and the images loss
         loss = (captions_loss + images_loss) / 2
         # Return the mean of the loss over the batch.
         return tf.math.reduce_mean(loss)
 
+    def train_step(self, features):
+        with tf.GradientTape() as tape:
+            # Forward pass
+            caption_embeddings, image_embeddings = self(features, training=True)
+            loss = self.compute_loss(caption_embeddings, image_embeddings)
+        # Backward pass
+        gradients = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        # Monitor loss
+        self.loss_tracker.update_state(loss)
+        return {"loss": self.loss_tracker.result()}
 
-"""
-## Implement the dual encoder
-"""
-
-
-def create_dual_encoder(text_encoder, vision_encoder):
-    # Receive the captions and the images as inputs.
-    captions = layers.Input(name="caption", shape=(), dtype=tf.string)
-    images = layers.Input(name="image", shape=(299, 299, 3), dtype=tf.float32)
-    # Get the embeddings for the captions.
-    caption_embeddings = text_encoder(captions)
-    # Get the embeddings for the images.
-    image_embeddings = vision_encoder(images)
-    # Stack the caption_embeddings and image_embeddings to produce
-    # a single output tensor for computing the loss.
-    outputs = tf.stack([caption_embeddings, image_embeddings])
-    # Create the dual encoder model.
-    dual_encoder = keras.Model(
-        inputs=[captions, images], outputs=outputs, name="dual_encoder"
-    )
-    return dual_encoder
+    def test_step(self, features):
+        caption_embeddings, image_embeddings = self(features, training=False)
+        loss = self.compute_loss(caption_embeddings, image_embeddings)
+        self.loss_tracker.update_state(loss)
+        return {"loss": self.loss_tracker.result()}
 
 
 """
@@ -419,11 +424,11 @@ the projection head trainable.
 projection_dims = 256
 num_projection_layers = 1
 dropout_rate = 0.1
-learning_rate = 0.005
-weight_decay = 0.0001
-num_epochs = 50
+learning_rate = 0.001
+weight_decay = 0.001
+num_epochs = 30
 batch_size = 256
-temperature = 0.07
+temperature = 0.05
 
 vision_encoder = create_vision_encoder(
     num_projection_layers, projection_dims, dropout_rate
@@ -434,10 +439,8 @@ text_encoder = create_text_encoder(num_projection_layers, projection_dims, dropo
 text_encoder.summary()
 
 optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay)
-loss = ContrastiveSimilarityLoss(temperature)
-dual_encoder = create_dual_encoder(text_encoder, vision_encoder)
-dual_encoder.compile(optimizer, loss)
-dual_encoder.summary()
+dual_encoder = DualEncoder(text_encoder, vision_encoder, temperature)
+dual_encoder.compile(optimizer)
 
 """
 Note that training the model with 60,000 image-caption pairs, with a batch size of 256,
@@ -448,7 +451,7 @@ print(f"Batch size: {batch_size}")
 print(f"Steps per epoch: {int(np.ceil(train_example_count / batch_size))}")
 train_dataset = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
 valid_dataset = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
-# Create a learning rate schedular callback.
+# Create a learning rate scheduler callback.
 reduce_lr = keras.callbacks.ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=3
 )
