@@ -362,9 +362,7 @@ class DualEncoder(keras.Model):
             caption_embeddings = text_encoder(features["caption"], training=training)
         with tf.device("/gpu:1"):
             # Get the embeddings for the images.
-            image_embeddings = vision_encoder(
-                images=features["image"], training=training
-            )
+            image_embeddings = vision_encoder(features["image"], training=training)
         return caption_embeddings, image_embeddings
 
     def compute_loss(self, caption_embeddings, image_embeddings):
