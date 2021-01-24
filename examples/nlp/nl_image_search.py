@@ -1,9 +1,9 @@
 """
-Title: Natural Language Search with Dual Encoder
+Title: Natural Language Search with a Dual Encoder
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/30
 Last modified: 2021/01/30
-Description: Implementing a dual encoder model for image search with natural language.
+Description: Implementation of a dual encoder model for image search with natural language.
 """
 
 """
@@ -53,7 +53,7 @@ tf.get_logger().setLevel("ERROR")
 ## Prepare the data
 
 We will use the [MS-COCO](https://cocodataset.org/#home) dataset to train our
-dual encoder model. It contains over 82,000 images, each of which has at least
+dual encoder model. MS-COCO contains over 82,000 images, each of which has at least
 5 different caption annotations. The dataset is usually used for
 [image captioning](https://www.tensorflow.org/tutorials/text/image_captioning)
 tasks, but we can repurpose the image-caption pairs to train our dual encoder
@@ -62,9 +62,9 @@ model for image search.
 ###
 Download and extract the data
 
-First, let's download the dataset, which consists of two compressed folders.
-One contains the images, and the other contains their captions.
-Note that the compressed images folder is 13GB.
+First, let's download the dataset, which consists of two compressed folders:
+one with images, and the other—with associated image captions.
+Note that the compressed images folder is 13GB in size.
 """
 
 root_dir = "datasets"
@@ -240,7 +240,7 @@ def get_dataset(file_pattern, batch_size):
 
 
 """
-## Implement projection head
+## Implement the projection head
 
 The projection head is used to transform the image and the text embeddings to
 the same embedding space with the same dimensionality.
@@ -297,7 +297,7 @@ def create_vision_encoder(
 """
 ## Implement the text encoder
 
-In this example, we use [BERT](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-12_H-256_A-4/1)
+We use [BERT](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-12_H-256_A-4/1)
 from [TensorFlow Hub](https://tfhub.dev) as the text encoder
 """
 
@@ -339,7 +339,7 @@ each `caption_i` and `images_j` in the batch as the predictions.
 The target similarity between `caption_i`  and `image_j` is computed as
 the average of the (dot-product similarity between `caption_i` and `caption_j`)
 and (the dot-product similarity between `image_i` and `image_j`).
-Then we use crossentropy to compute the loss between the targets and the predictions.
+Then, we use crossentropy to compute the loss between the targets and the predictions.
 """
 
 
@@ -417,7 +417,7 @@ class DualEncoder(keras.Model):
 """
 ## Train the dual encoder model
 
-In this experiment, we freeze the base encoders for text and image, and make only
+In this experiment, we freeze the base encoders for text and images, and make only
 the projection head trainable.
 """
 
@@ -496,7 +496,7 @@ the following steps:
 in the index to retrieve the indices of the top matches.
 4. Look up the paths of the top matching images to display them.
 
-Note that, after training the `dual encoder`, the only the fine-tuned `vision_encoder`
+Note that, after training the `dual encoder`, only the fine-tuned `vision_encoder`
 and `text_encoder` models will be used, while the `dual_encoder` model will be discarded.
 """
 
@@ -504,9 +504,9 @@ and `text_encoder` models will be used, while the `dual_encoder` model will be d
 ### Generate embeddings for the images
 
 We load the images and feed them into the `vision_encoder` to generate their embeddings.
-In large scale systems, this step is performed using a parallel data processing frameworks,
+In large scale systems, this step is performed using a parallel data processing framework,
 such as [Apache Spark](https://spark.apache.org) or [Apache Beam](https://beam.apache.org).
-Generating the image embeddings will take a few minutes.
+Generating the image embeddings may take several minutes.
 """
 print("Loading vision and text encoders...")
 vision_encoder = keras.models.load_model("vision_encoder")
