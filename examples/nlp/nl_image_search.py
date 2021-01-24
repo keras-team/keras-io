@@ -200,7 +200,7 @@ print("Writing training tfrecords...")
 train_example_count = write_data(train_image_paths, num_train_files, train_files_prefix)
 print(f"{train_example_count} examples were written to tfrecord files.")
 
-print(f"Writing validation tfrecords...")
+print("Writing validation tfrecords...")
 valid_example_count = write_data(valid_image_paths, num_valid_files, valid_files_prefix)
 print(f"{valid_example_count} examples were written to tfrecord files.")
 
@@ -520,13 +520,13 @@ def read_image(image_path):
     return tf.image.resize(image_array, (299, 299))
 
 
-print(f"Image embeddings generation started...")
+print("Image embeddings generation started...")
 print(f"Generating embeddings for {len(image_paths)} images...")
 image_embeddings = vision_encoder.predict(
     tf.data.Dataset.from_tensor_slices(image_paths).map(read_image).batch(512),
     verbose=1,
 )
-print(f"Image embeddings generation completed.")
+print("Image embeddings generation completed.")
 print(f"Image embeddings shape: {image_embeddings.shape}.")
 
 """
@@ -615,11 +615,11 @@ def compute_top_k_accuracy(image_paths, k=100):
     return hits / size
 
 
-print(f"Scoring training data...")
+print("Scoring training data...")
 train_accuracy = compute_top_k_accuracy(train_image_paths)
 print(f"Train accuracy: {round(train_accuracy * 100, 3)}%")
 
-print(f"Scoring evaluation data...")
+print("Scoring evaluation data...")
 eval_image_paths = image_paths[train_size:]
 eval_accuracy = compute_top_k_accuracy(eval_image_paths)
 print(f"Eval accuracy: {round(eval_accuracy * 100, 3)}%")
