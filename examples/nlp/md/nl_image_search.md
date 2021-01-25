@@ -1,12 +1,16 @@
-"""
-Title: Natural Language Search with a Dual Encoder
-Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2021/01/30
-Last modified: 2021/01/30
-Description: Implementation of a dual encoder model for image search with natural language.
-"""
+# Natural Language Search with a Dual Encoder
 
-"""
+**Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
+**Date created:** 2021/01/30<br>
+**Last modified:** 2021/01/30<br>
+**Description:** Implementation of a dual encoder model for image search with natural language.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/nl_image_search.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/nl_image_search.py)
+
+
+
+---
 ## Introduction
 
 The example demonstrates how to build a dual encoder (also known as two-tower) neural network
@@ -26,12 +30,12 @@ following command:
 ```python
 pip install -q -U tensorflow-hub tensorflow-text tensorflow-addons
 ```
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import os
 import collections
 import json
@@ -48,8 +52,18 @@ from tqdm import tqdm
 
 # Suppressing tf.hub warnings
 tf.get_logger().setLevel("ERROR")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/home/jupyter/.local/lib/python3.7/site-packages/tensorflow_addons/utils/ensure_tf_install.py:43: UserWarning: You are currently using a nightly version of TensorFlow (2.4.0-dev20201023). 
+TensorFlow Addons offers no support for the nightly versions of TensorFlow. Some things might work, some other might not. 
+If you encounter a bug, do not file an issue on GitHub.
+  UserWarning,
+
+```
+</div>
+---
 ## Prepare the data
 
 We will use the [MS-COCO](https://cocodataset.org/#home) dataset to train our
@@ -65,8 +79,9 @@ Download and extract the data
 First, let's download the dataset, which consists of two compressed folders:
 one with images, and the other—with associated image captions.
 Note that the compressed images folder is 13GB in size.
-"""
 
+
+```python
 root_dir = "datasets"
 annotations_dir = os.path.join(root_dir, "annotations")
 images_dir = os.path.join(root_dir, "train2014")
@@ -106,8 +121,19 @@ for element in annotations:
 
 image_paths = list(image_path_to_caption.keys())
 print(f"Number of images: {len(image_paths)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from http://images.cocodataset.org/annotations/annotations_trainval2014.zip
+252878848/252872794 [==============================] - 5s 0us/step
+Downloading data from http://images.cocodataset.org/zips/train2014.zip
+13510574080/13510573713 [==============================] - 394s 0us/step
+Dataset is downloaded and extracted successfully.
+Number of images: 82783
+
+```
+</div>
 ### Process and save the data to TFRecord files
 
 You can change the `sample_size` parameter to control many image-caption pairs
@@ -117,8 +143,9 @@ which is about 35% of the dataset. We use 2 captions for each
 image, thus producing 60,000 image-caption pairs. The size of the training set
 affects the quality of the produced encoders, but more examples would lead to
 longer training time.
-"""
 
+
+```python
 train_size = 30000
 valid_size = 5000
 captions_per_image = 2
@@ -179,11 +206,28 @@ print(f"{train_example_count} training examples were written to tfrecord files."
 
 valid_example_count = write_data(valid_image_paths, num_valid_files, valid_files_prefix)
 print(f"{valid_example_count} evaluation examples were written to tfrecord files.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 15/15 [03:19<00:00, 13.27s/it]
+  0%|                                                                                                                                     | 0/3 [00:00<?, ?it/s]
+
+60000 training examples were written to tfrecord files.
+
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:33<00:00, 11.07s/it]
+
+10000 evaluation examples were written to tfrecord files.
+
+```
+</div>
+    
+
+
 ### Create `tf.data.Dataset` for training and evaluation
-"""
 
+
+```python
 
 feature_description = {
     "caption": tf.io.FixedLenFeature([], tf.string),
@@ -214,14 +258,16 @@ def get_dataset(file_pattern, batch_size):
         .batch(batch_size)
     )
 
+```
 
-"""
+---
 ## Implement the projection head
 
 The projection head is used to transform the image and the text embeddings to
 the same embedding space with the same dimensionality.
-"""
 
+
+```python
 
 def project_embeddings(
     embeddings, num_projection_layers, projection_dims, dropout_rate
@@ -235,15 +281,17 @@ def project_embeddings(
         projected_embeddings = layers.LayerNormalization()(x)
     return projected_embeddings
 
+```
 
-"""
+---
 ## Implement the vision encoder
 
 In this example, we use [Xception](https://keras.io/api/applications/xception/)
 from [Keras Applications](https://keras.io/api/applications/) as the base for the
 vision encoder.
-"""
 
+
+```python
 
 def create_vision_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
@@ -268,14 +316,16 @@ def create_vision_encoder(
     # Create the vision encoder model.
     return keras.Model(inputs, outputs, name="vision_encoder")
 
+```
 
-"""
+---
 ## Implement the text encoder
 
 We use [BERT](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-12_H-256_A-4/1)
 from [TensorFlow Hub](https://tfhub.dev) as the text encoder
-"""
 
+
+```python
 
 def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
@@ -305,8 +355,9 @@ def create_text_encoder(
     # Create the text encoder model.
     return keras.Model(inputs, outputs, name="text_encoder")
 
+```
 
-"""
+---
 ## Implement the dual encoder
 
 To calculate the loss, we compute the pairwise dot-product similarity between
@@ -315,8 +366,9 @@ The target similarity between `caption_i`  and `image_j` is computed as
 the average of the (dot-product similarity between `caption_i` and `caption_j`)
 and (the dot-product similarity between `image_i` and `image_j`).
 Then, we use crossentropy to compute the loss between the targets and the predictions.
-"""
 
+
+```python
 
 class DualEncoder(keras.Model):
     def __init__(self, text_encoder, image_encoder, temperature=1.0, **kwargs):
@@ -388,14 +440,16 @@ class DualEncoder(keras.Model):
         self.loss_tracker.update_state(loss)
         return {"loss": self.loss_tracker.result()}
 
+```
 
-"""
+---
 ## Train the dual encoder model
 
 In this experiment, we freeze the base encoders for text and images, and make only
 the projection head trainable.
-"""
 
+
+```python
 num_epochs = 5
 batch_size = 256
 
@@ -409,13 +463,14 @@ dual_encoder = DualEncoder(text_encoder, vision_encoder, temperature=0.05)
 dual_encoder.compile(
     optimizer=tfa.optimizers.AdamW(learning_rate=0.001, weight_decay=0.001)
 )
+```
 
-"""
 Note that training the model with 60,000 image-caption pairs, with a batch size of 256,
 takes around 12 minutes per epoch using a V100 GPU accelerator. If 2 GPUs are available,
 the epoch takes around 8 minutes.
-"""
 
+
+```python
 print(f"Number of GPUs: {len(tf.config.list_physical_devices('GPU'))}")
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
@@ -440,19 +495,49 @@ print("Training completed. Saving vision and text encoders...")
 vision_encoder.save("vision_encoder")
 text_encoder.save("text_encoder")
 print("Models are saved.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Number of GPUs: 2
+Number of examples (caption-image pairs): 60000
+Batch size: 256
+Steps per epoch: 235
+Epoch 1/5
+235/235 [==============================] - 573s 2s/step - loss: 60.8318 - val_loss: 9.0531
+Epoch 2/5
+235/235 [==============================] - 553s 2s/step - loss: 7.8959 - val_loss: 5.2654
+Epoch 3/5
+235/235 [==============================] - 541s 2s/step - loss: 4.6644 - val_loss: 4.9260
+Epoch 4/5
+235/235 [==============================] - 538s 2s/step - loss: 4.0188 - val_loss: 4.6312
+Epoch 5/5
+235/235 [==============================] - 539s 2s/step - loss: 3.5555 - val_loss: 4.3503
+Training completed. Saving vision and text encoders...
+
+Models are saved.
+
+```
+</div>
 Plotting the training loss:
-"""
 
+
+```python
 plt.plot(history.history["loss"])
 plt.plot(history.history["val_loss"])
 plt.ylabel("Loss")
 plt.xlabel("Epoch")
 plt.legend(["train", "valid"], loc="upper right")
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/nlp/nl_image_search/nl_image_search_23_0.png)
+    
+
+
+---
 ## Search for images using natural language queries
 
 We can then retrieve images corresponding to natural language queries via
@@ -466,16 +551,16 @@ in the index to retrieve the indices of the top matches.
 
 Note that, after training the `dual encoder`, only the fine-tuned `vision_encoder`
 and `text_encoder` models will be used, while the `dual_encoder` model will be discarded.
-"""
 
-"""
 ### Generate embeddings for the images
 
 We load the images and feed them into the `vision_encoder` to generate their embeddings.
 In large scale systems, this step is performed using a parallel data processing framework,
 such as [Apache Spark](https://spark.apache.org) or [Apache Beam](https://beam.apache.org).
 Generating the image embeddings may take several minutes.
-"""
+
+
+```python
 print("Loading vision and text encoders...")
 vision_encoder = keras.models.load_model("vision_encoder")
 text_encoder = keras.models.load_model("text_encoder")
@@ -493,8 +578,18 @@ image_embeddings = vision_encoder.predict(
     verbose=1,
 )
 print(f"Image embeddings shape: {image_embeddings.shape}.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Loading vision and text encoders...
+Models are loaded.
+Generating embeddings for 82783 images...
+324/324 [==============================] - 437s 1s/step
+Image embeddings shape: (82783, 256).
+
+```
+</div>
 ### Retrieve relevant images
 
 In this example, we use exact matching by computing the dot product similarity
@@ -503,8 +598,9 @@ matches. However, *approximate* similarity matching, using frameworks like
 [ScaNN](https://github.com/google-research/google-research/tree/master/scann),
 [Annoy](https://github.com/spotify/annoy), or [Faiss](https://github.com/facebookresearch/faiss)
 is preferred in real-time use cases to scale with a large number of images.
-"""
 
+
+```python
 
 def find_matches(image_embeddings, queries, k=9, normalize=True):
     # Get the embedding for the query.
@@ -520,14 +616,15 @@ def find_matches(image_embeddings, queries, k=9, normalize=True):
     # Return matching image paths.
     return [[image_paths[idx] for idx in indices] for indices in results]
 
+```
 
-"""
 Set the `query` variable to the type of images you want to search for.
 Try things like: 'a plate of healthy food',
 'a woman wearing a hat is walking down a sidewalk',
 'a bird sits near to the water', or 'wild animals are standing in a field'.
-"""
 
+
+```python
 query = "a family standing next to the ocean on a sandy beach with a surf board"
 matches = find_matches(image_embeddings, [query], normalize=True)[0]
 
@@ -537,16 +634,24 @@ for i in range(9):
     plt.imshow(mpimg.imread(matches[i]))
     plt.axis("off")
 
+```
 
-"""
+
+    
+![png](/img/examples/nlp/nl_image_search/nl_image_search_30_0.png)
+    
+
+
+---
 ## Evaluate the retrieval quality
 
 To evaluate the dual encoder model, we use the captions as queries.
 We use the out-of-training-sample images and captions to evaluate the retrieval quality,
 using top k accuracy. A true prediction is counted if, for a given caption, its associated image
 is retrieved within the top k matches.
-"""
 
+
+```python
 
 def compute_top_k_accuracy(image_paths, k=100):
     hits = 0
@@ -577,12 +682,33 @@ print("Scoring evaluation data...")
 eval_accuracy = compute_top_k_accuracy(image_paths[train_size:])
 print(f"Eval accuracy: {round(eval_accuracy * 100, 3)}%")
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+  0%|                                                                                                                                   | 0/118 [00:00<?, ?it/s]
+
+Scoring training data...
+
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 118/118 [04:12<00:00,  2.14s/it]
+  0%|                                                                                                                                   | 0/207 [00:00<?, ?it/s]
+
+Train accuracy: 13.373%
+Scoring evaluation data...
+
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 207/207 [07:23<00:00,  2.14s/it]
+
+Eval accuracy: 6.235%
+
+```
+</div>
+    
+
+
+---
 ## Final remarks
 
 You can obtain better results by increasing the size of the training sample,
 train for more  epochs, explore other base encoders for images and text,
 set the base encoders to be trainable, and tune the hyperparameters,
 especially the `temperature` for the softmax in the loss computation.
-"""
