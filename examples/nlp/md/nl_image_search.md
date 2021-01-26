@@ -1,9 +1,9 @@
-# Natural Language Search with a Dual Encoder
+# Natural language image search with a Dual Encoder
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/01/30<br>
 **Last modified:** 2021/01/30<br>
-**Description:** Implementation of a dual encoder model for image search with natural language.
+**Description:** Implementation of a dual encoder model for retrieving images that match natural language queries.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/nl_image_search.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/nl_image_search.py)
@@ -54,15 +54,6 @@ from tqdm import tqdm
 tf.get_logger().setLevel("ERROR")
 ```
 
-<div class="k-default-codeblock">
-```
-/home/jupyter/.local/lib/python3.7/site-packages/tensorflow_addons/utils/ensure_tf_install.py:43: UserWarning: You are currently using a nightly version of TensorFlow (2.4.0-dev20201023). 
-TensorFlow Addons offers no support for the nightly versions of TensorFlow. Some things might work, some other might not. 
-If you encounter a bug, do not file an issue on GitHub.
-  UserWarning,
-
-```
-</div>
 ---
 ## Prepare the data
 
@@ -450,7 +441,7 @@ the projection head trainable.
 
 
 ```python
-num_epochs = 5
+num_epochs = 5  # In practice, train for at least 30 epochs
 batch_size = 256
 
 vision_encoder = create_vision_encoder(

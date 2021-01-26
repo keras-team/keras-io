@@ -1,9 +1,9 @@
 """
-Title: Natural Language Search with a Dual Encoder
+Title: Natural language image search with a Dual Encoder
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/30
 Last modified: 2021/01/30
-Description: Implementation of a dual encoder model for image search with natural language.
+Description: Implementation of a dual encoder model for retrieving images that match natural language queries.
 """
 
 """
@@ -396,7 +396,7 @@ In this experiment, we freeze the base encoders for text and images, and make on
 the projection head trainable.
 """
 
-num_epochs = 5
+num_epochs = 5  # In practice, train for at least 30 epochs
 batch_size = 256
 
 vision_encoder = create_vision_encoder(
