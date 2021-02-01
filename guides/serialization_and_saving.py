@@ -372,7 +372,7 @@ which cannot be serialized into a JSON-compatible config
 but it's completely unsafe and means your model cannot be loaded on a different system.
 
 In order to save/load a model with custom-defined layers, or a subclassed model,
-you should overwrite the `get_config` and optionally `from_config` methods.
+you should overwrite the `get_config` and, optionally for custom-defined layers, `from_config` methods.
 Additionally, you should use register the custom object so that Keras is aware of it.
 
 **Custom functions**
@@ -419,7 +419,7 @@ Specifications:
 compatible with the Keras architecture- and model-saving APIs.
 * `from_config(config)` (`classmethod`) should return a new layer or model
 object that is created from the config.
-The default implementation returns `cls(**config)`.
+The default implementation for custom layers returns `cls(**config)`.
 
 **Example:**
 """
