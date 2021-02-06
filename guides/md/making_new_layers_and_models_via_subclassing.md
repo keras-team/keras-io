@@ -387,7 +387,7 @@ inputs = keras.Input(shape=(3,))
 outputs = ActivityRegularizationLayer()(inputs)
 model = keras.Model(inputs, outputs)
 
-# If there is a loss passed in `compile`, thee regularization
+# If there is a loss passed in `compile`, the regularization
 # losses get added to it
 model.compile(optimizer="adam", loss="mse")
 model.fit(np.random.random((2, 3)), np.random.random((2, 3)))

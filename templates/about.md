@@ -5,9 +5,9 @@ It was developed with a focus on enabling fast experimentation. *Being able to g
 
 ---
 
-## Keras & TensorFlow 2.0
+## Keras & TensorFlow 2
 
-[TensorFlow 2.0](https://www.tensorflow.org/) is an end-to-end, open-source machine learning platform. You can think of it as an infrastructure layer for
+[TensorFlow 2](https://www.tensorflow.org/) is an end-to-end, open-source machine learning platform. You can think of it as an infrastructure layer for
 [differentiable programming](https://en.wikipedia.org/wiki/Differentiable_programming). It combines four key abilities:
 
 - Efficiently executing low-level tensor operations on CPU, GPU, or TPU.
@@ -15,12 +15,12 @@ It was developed with a focus on enabling fast experimentation. *Being able to g
 - Scaling computation to many devices (e.g. the [Summit supercomputer](https://www.olcf.ornl.gov/summit/) at Oak Ridge National Lab, which spans 27,000 GPUs).
 - Exporting programs ("graphs") to external runtimes such as servers, browsers, mobile and embedded devices.
 
-Keras is the high-level API of TensorFlow 2.0: an approchable, highly-productive interface for solving machine learning problems,
+Keras is the high-level API of TensorFlow 2: an approchable, highly-productive interface for solving machine learning problems,
 with a focus on modern deep learning. It provides essential abstractions and building blocks for developing
 and shipping machine learning solutions with high iteration velocity.
 
 Keras empowers engineers and researchers to take full advantage of the scalability
-and cross-platform capabilities of TensorFlow 2.0: you can run Keras on TPU or on large clusters of GPUs,
+and cross-platform capabilities of TensorFlow 2: you can run Keras on TPU or on large clusters of GPUs,
 and you can export your Keras models to run in the browser or on a mobile device. 
 
 ---
@@ -130,8 +130,8 @@ For more in-depth tutorials about Keras, you can check out:
 
 ## Installation & compatibility
 
-Keras comes packaged with TensorFlow 2.0 as `tensorflow.keras`.
-To start using Keras, simply [install TensorFlow 2.0](https://www.tensorflow.org/install).
+Keras comes packaged with TensorFlow 2 as `tensorflow.keras`.
+To start using Keras, simply [install TensorFlow 2](https://www.tensorflow.org/install).
 
 Keras/TensorFlow are compatible with:
 

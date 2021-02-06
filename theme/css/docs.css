@@ -76,7 +76,7 @@ blockquote {
   float: left;
 }
 .k-content {
-  width: 47rem;
+  width: 48rem;
   float: left;
   padding: 1.5rem;
   padding-top: 1rem;
@@ -393,6 +393,7 @@ table {
   margin-bottom: 1.5rem;
   width: 100%;
   border: solid 2px gray;
+  font-size: 10pt;
 }
 tr {
   border: solid 1px gray;

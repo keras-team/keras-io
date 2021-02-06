@@ -200,6 +200,12 @@ and the functional API is a way to create models that closely mirrors this.
 Training, evaluation, and inference work exactly in the same way for models
 built using the functional API as for `Sequential` models.
 
+The `Model` class offers a built-in training loop (the `fit()` method)
+and a built-in evaluation loop (the `evaluate()` method). Note
+that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
+to implement training routines beyond supervised learning
+(e.g. [GANs](/examples/generative/dcgan_overriding_train_step/)).
+
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
 then evaluate the model on the test data:
@@ -227,12 +233,12 @@ print("Test accuracy:", test_scores[1])
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.5778 - accuracy: 0.8391 - val_loss: 0.1893 - val_accuracy: 0.9440
+750/750 [==============================] - 2s 2ms/step - loss: 0.5648 - accuracy: 0.8473 - val_loss: 0.1793 - val_accuracy: 0.9474
 Epoch 2/2
-750/750 [==============================] - 1s 832us/step - loss: 0.1739 - accuracy: 0.9476 - val_loss: 0.1564 - val_accuracy: 0.9528
-313/313 - 0s - loss: 0.1497 - accuracy: 0.9528
-Test loss: 0.14971688389778137
-Test accuracy: 0.9527999758720398
+750/750 [==============================] - 1s 1ms/step - loss: 0.1686 - accuracy: 0.9506 - val_loss: 0.1398 - val_accuracy: 0.9576
+313/313 - 0s - loss: 0.1401 - accuracy: 0.9580
+Test loss: 0.14005452394485474
+Test accuracy: 0.9580000042915344
 
 ```
 </div>
@@ -261,6 +267,12 @@ del model
 model = keras.models.load_model("path_to_my_model")
 ```
 
+<div class="k-default-codeblock">
+```
+INFO:tensorflow:Assets written to: path_to_my_model/assets
+
+```
+</div>
 For details, read the model [serialization & saving](
     /guides/serialization_and_saving/) guide.
 
@@ -631,11 +643,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 3s 23ms/step - loss: 1.2998 - priority_loss: 0.7066 - department_loss: 2.9655
+40/40 [==============================] - 3s 21ms/step - loss: 1.2713 - priority_loss: 0.7000 - department_loss: 2.8567
 Epoch 2/2
-40/40 [==============================] - 1s 24ms/step - loss: 1.2969 - priority_loss: 0.6979 - department_loss: 2.9950
+40/40 [==============================] - 1s 22ms/step - loss: 1.2947 - priority_loss: 0.6990 - department_loss: 2.9786
 
-<tensorflow.python.keras.callbacks.History at 0x147518210>
+<tensorflow.python.keras.callbacks.History at 0x156dbce10>
 
 ```
 </div>
@@ -763,9 +775,9 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 2s 87ms/step - loss: 2.3145 - acc: 0.1124 - val_loss: 2.3046 - val_acc: 0.1150
+13/13 [==============================] - 2s 103ms/step - loss: 2.3218 - acc: 0.1291 - val_loss: 2.3014 - val_acc: 0.1150
 
-<tensorflow.python.keras.callbacks.History at 0x147c01650>
+<tensorflow.python.keras.callbacks.History at 0x157848990>
 
 ```
 </div>

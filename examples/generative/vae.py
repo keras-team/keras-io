@@ -71,27 +71,41 @@ class VAE(keras.Model):
         super(VAE, self).__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
+        self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
+        self.reconstruction_loss_tracker = keras.metrics.Mean(
+            name="reconstruction_loss"
+        )
+        self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.total_loss_tracker,
+            self.reconstruction_loss_tracker,
+            self.kl_loss_tracker,
+        ]
 
     def train_step(self, data):
-        if isinstance(data, tuple):
-            data = data[0]
         with tf.GradientTape() as tape:
             z_mean, z_log_var, z = self.encoder(data)
             reconstruction = self.decoder(z)
             reconstruction_loss = tf.reduce_mean(
-                keras.losses.binary_crossentropy(data, reconstruction)
+                tf.reduce_sum(
+                    keras.losses.binary_crossentropy(data, reconstruction), axis=(1, 2)
+                )
             )
-            reconstruction_loss *= 28 * 28
-            kl_loss = 1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var)
-            kl_loss = tf.reduce_mean(kl_loss)
-            kl_loss *= -0.5
+            kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
+            kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
             total_loss = reconstruction_loss + kl_loss
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        self.total_loss_tracker.update_state(total_loss)
+        self.reconstruction_loss_tracker.update_state(reconstruction_loss)
+        self.kl_loss_tracker.update_state(kl_loss)
         return {
-            "loss": total_loss,
-            "reconstruction_loss": reconstruction_loss,
-            "kl_loss": kl_loss,
+            "loss": self.total_loss_tracker.result(),
+            "reconstruction_loss": self.reconstruction_loss_tracker.result(),
+            "kl_loss": self.kl_loss_tracker.result(),
         }
 
 
@@ -114,12 +128,10 @@ vae.fit(mnist_digits, epochs=30, batch_size=128)
 import matplotlib.pyplot as plt
 
 
-def plot_latent(encoder, decoder):
+def plot_latent_space(vae, n=30, figsize=15):
     # display a n*n 2D manifold of digits
-    n = 30
     digit_size = 28
-    scale = 2.0
-    figsize = 15
+    scale = 1.0
     figure = np.zeros((digit_size * n, digit_size * n))
     # linearly spaced coordinates corresponding to the 2D plot
     # of digit classes in the latent space
@@ -129,7 +141,7 @@ def plot_latent(encoder, decoder):
     for i, yi in enumerate(grid_y):
         for j, xi in enumerate(grid_x):
             z_sample = np.array([[xi, yi]])
-            x_decoded = decoder.predict(z_sample)
+            x_decoded = vae.decoder.predict(z_sample)
             digit = x_decoded[0].reshape(digit_size, digit_size)
             figure[
                 i * digit_size : (i + 1) * digit_size,
@@ -150,16 +162,16 @@ def plot_latent(encoder, decoder):
     plt.show()
 
 
-plot_latent(encoder, decoder)
+plot_latent_space(vae)
 
 """
 ## Display how the latent space clusters different digit classes
 """
 
 
-def plot_label_clusters(encoder, decoder, data, labels):
+def plot_label_clusters(vae, data, labels):
     # display a 2D plot of the digit classes in the latent space
-    z_mean, _, _ = encoder.predict(data)
+    z_mean, _, _ = vae.encoder.predict(data)
     plt.figure(figsize=(12, 10))
     plt.scatter(z_mean[:, 0], z_mean[:, 1], c=labels)
     plt.colorbar()
@@ -171,4 +183,4 @@ def plot_label_clusters(encoder, decoder, data, labels):
 (x_train, y_train), _ = keras.datasets.mnist.load_data()
 x_train = np.expand_dims(x_train, -1).astype("float32") / 255
 
-plot_label_clusters(encoder, decoder, x_train, y_train)
+plot_label_clusters(vae, x_train, y_train)
