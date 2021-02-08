@@ -3,23 +3,24 @@ Title: Memory-efficient embeddings for recommendation systems
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/15
 Last modified: 2021/02/15
-Description: Using compositional and mixed dimension embeddings for memory-efficient models.
+Description: Using compositional & mixed dimension embeddings for memory-efficient recommendation models.
 """
 
 """
 ## Introduction
 
 This example demonstrates two techniques for building memory-efficient recommendation models
-by reducing the size of the embedding tables, without sacrificing the model effectiveness:
-1. [Qutient-remainder trick](https://arxiv.org/abs/1909.02107), by Hao-Jun Michael Shi et al.,
-which aims to reduce the number of embedding vectors to store, yet produces unique embedding
+by reducing the size of the embedding tables, without sacrificing model effectiveness:
+
+1. [Quotient-remainder trick](https://arxiv.org/abs/1909.02107), by Hao-Jun Michael Shi et al.,
+which reduces the number of embedding vectors to store, yet produces unique embedding
 vector for each item without explicit definition.
 2. [Mixed Dimension embeddings](https://arxiv.org/abs/1909.11810), by Antonio Ginart et al.,
-which aims to store embedding vectors with mixed dimensions, where less popular items have
+which stores embedding vectors with mixed dimensions, where less popular items have
 reduced dimension embeddings.
 
 We use the [1M version of the Movielens dataset](https://grouplens.org/datasets/movielens/1m/).
-The dataset includes around 1 million ratings from 6000 users on 4000 movies.
+The dataset includes around 1 million ratings from 6,000 users on 4,000 movies.
 """
 
 """
@@ -129,9 +130,7 @@ def run_experiment(model):
 
 """
 ## Experiment 1: standard collaborative filtering model
-"""
 
-"""
 ### Implement embedding encoder
 """
 
@@ -208,10 +207,12 @@ plt.show()
 """
 ### Implement Quotient-Remainder embedding as a layer
 
-Quotient-Remainder trick works as follows. For a set of vocabulary and  embedding size
+Quotient-Remainder technique works as follows. For a set of vocabulary and  embedding size
 `embedding_dim`, instead of creating a `vocabulary_size X embedding_dim` embedding table,
-we create *two* `num_buckets X embedding_dim` embedding tables, where `num_buckets << vocabulary_size`.
-An embedding for a given item `index` is generated as follows:
+we create *two* `num_buckets X embedding_dim` embedding tables, where `num_buckets`
+is much smaller than `vocabulary_size`.
+An embedding for a given item `index` is generated via the following steps:
+
 1. Compute the quotient `q_index` as `index // num_buckets`.
 2. Compute the remainder `r_index` as `index % num_buckets`.
 3. Lookup `q_embedding` from the first embedding table using `q_index`.
@@ -259,11 +260,12 @@ for the frequently queried items, while train embedding vectors with *reduced di
 for less frequent items, plus a *projection weights matrix* to bring low dimension embeddings
 to the full dimensions.
 
-More precisely, you define *blocks* of items of similar frequencies. For each block,
+More precisely, we define *blocks* of items of similar frequencies. For each block,
 a `block_vocab_size X block_embedding_dim` embedding table and `block_embedding_dim X full_embedding_dim`
 projection weights matrix are created. Note that, if `block_embedding_dim` equals `full_embedding_dim`,
 the projection weights matrix becomes an *identity* matrix. Embeddings for a given batch of item
-`indices` are generated as follows:
+`indices` are generated via the following steps:
+
 1. For each block, lookup the `block_embedding_dim` embedding vectors using `indices`, and
 project them to the `full_embedding_dim`.
 2. If an item index does not belong to a given block, an out-of-vocabulary embedding is returned.
@@ -340,7 +342,7 @@ In this experiment, we are going to use the **Quotient-Remainder** technique to 
 size of the user embeddings, and the **Mixed Dimension** technique to reduce the size of the
 movie embeddings.
 
-While in the [paper](https://arxiv.org/abs/1909.11810) an alpha-power rule is used to determined
+While in the [paper](https://arxiv.org/abs/1909.11810), an alpha-power rule is used to determined
 the dimensions of the embedding of each block, we simply set the number of blocks and the
 dimensions of embeddings of each block based on the histogram visualization of movies popularity.
 """
@@ -351,7 +353,8 @@ movie_frequencies.hist(bins=10)
 """
 You can see that we can group the movies into three blocks, and assign them 64, 32, and 16
 embedding dimensions, respectively. Feel free to experiment with different number of blocks
-and dimensions."""
+and dimensions.
+"""
 
 sorted_movie_vocabulary = list(movie_frequencies.keys())
 
@@ -367,7 +370,7 @@ user_embedding_num_buckets = len(user_vocabulary) // 50
 
 
 def create_memory_efficient_model():
-    # Recieve the user as an input.
+    # Take the user as an input.
     user_input = layers.Input(name="user_id", shape=(), dtype=tf.string)
     # Get user embedding.
     user_embedding = QREmbedding(
@@ -377,7 +380,7 @@ def create_memory_efficient_model():
         name="user_embedding",
     )(user_input)
 
-    # Receive the movie as an input.
+    # Take the movie as an input.
     movie_input = layers.Input(name="movie_id", shape=(), dtype=tf.string)
     # Get embedding.
     movie_embedding = MDEmbedding(
