@@ -2,7 +2,7 @@
 
 **Author:** [pavithrasv](https://github.com/pavithrasv)<br>
 **Date created:** 2020/05/31<br>
-**Last modified:** 2020/05/31<br>
+**Last modified:** 2020/02/08<br>
 **Description:** Detect anomalies in a timeseries using an Autoencoder.
 
 
@@ -156,7 +156,7 @@ TIME_STEPS = 288
 # Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []
-    for i in range(len(values) - time_steps):
+    for i in range(len(values) - time_steps + 1):
         output.append(values[i : (i + time_steps)])
     return np.stack(output)
 
