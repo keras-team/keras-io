@@ -109,11 +109,18 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=True):
 
 
 def run_experiment(model):
+
+    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(
+        checkpoint_filepath, monitor="val_loss", save_best_only=True
+    )
+
     # Compile the model.
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate),
         loss=tf.keras.losses.MeanSquaredError(),
         metrics=[keras.metrics.MeanAbsoluteError(name="mae")],
+        callbacks=[checkpoint_callback],
     )
     # Read the training data.
     train_dataset = get_dataset_from_csv("train_data.csv", batch_size)
@@ -121,15 +128,11 @@ def run_experiment(model):
     eval_dataset = get_dataset_from_csv("eval_data.csv", batch_size, shuffle=False)
     # Fit the model with the training data.
     history = model.fit(train_dataset, epochs=num_epochs, validation_data=eval_dataset)
-
-    # Evaluate the model on the test data.
-    _, rmse = model.evaluate(eval_dataset, verbose=0)
-    print(f"Eval MAE: {round(rmse, 3)}")
     return history
 
 
 """
-## Experiment 1: standard collaborative filtering model
+## Experiment 1: baseline collaborative filtering model
 
 ### Implement embedding encoder
 """
@@ -150,11 +153,11 @@ def embedding_encoder(vocabulary, embedding_dim, num_oov_indices=0, name=None):
 
 
 """
-### Implement the standard model
+### Implement the baseline model
 """
 
 
-def create_standard_model():
+def create_baseline_model():
 
     # Receive the user as an input.
     user_input = layers.Input(name="user_id", shape=(), dtype=tf.string)
@@ -178,19 +181,19 @@ def create_standard_model():
     prediction = keras.activations.sigmoid(logits) * 5
     # Create the model.
     model = keras.Model(
-        inputs=[user_input, movie_input], outputs=prediction, name="standard_model"
+        inputs=[user_input, movie_input], outputs=prediction, name="baseline_model"
     )
     return model
 
 
-standard_model = create_standard_model()
-standard_model.summary()
+baseline_model = create_baseline_model()
+baseline_model.summary()
 
 """
 Notice that the number of trainable parameters is 623,744
 """
 
-history = run_experiment(standard_model)
+history = run_experiment(baseline_model)
 
 plt.plot(history.history["loss"])
 plt.plot(history.history["val_loss"])
@@ -398,7 +401,7 @@ def create_memory_efficient_model():
     prediction = keras.activations.sigmoid(logits) * 5
     # Create the model.
     model = keras.Model(
-        inputs=[user_input, movie_input], outputs=prediction, name="standard_model"
+        inputs=[user_input, movie_input], outputs=prediction, name="baseline_model"
     )
     return model
 
@@ -408,7 +411,7 @@ memory_efficient_model.summary()
 
 """
 Notice that the number of trainable parameters is 117,968, which is more than 5x less than
-the number of parameters in the standard model.
+the number of parameters in the baseline model.
 """
 
 history = run_experiment(memory_efficient_model)
