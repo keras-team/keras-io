@@ -139,7 +139,7 @@ class Router(layers.Layer):
         self.expert_capacity = expert_capacity
         super(Router, self).__init__()
 
-    def call(self, inputs, training):
+    def call(self, inputs, training=False):
         # inputs shape: [tokens_per_batch, embed_dim]
         # router_logits shape: [tokens_per_batch, num_experts]
         router_logits = self.route(inputs)
@@ -320,3 +320,13 @@ def run_experiment(classifier):
 
 classifier = create_classifier()
 run_experiment(classifier)
+
+
+"""
+## Conclusion
+
+Compared to the standard Transformer architecture, the Switch Transformer can have much
+larger number of parameters, due to the Mixture of Experts, leading to larger learning
+capacity to produce more effective models, while maintaining the computational cost
+of running such models.
+"""
