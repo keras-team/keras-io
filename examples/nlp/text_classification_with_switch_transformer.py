@@ -19,8 +19,8 @@ independently on the tokens in the sequence. This allows increasing the model si
 increasing the computation needed to process each example.
 
 Note that, for training the Switch Transformer efficiently, data and model parallelism
-needs to be applied, so that experts can run simultaneously, each on its own accelerator.
-While the implementation described in the paper uses
+need to be applied, so that expert modules can run simultaneously, each on its own accelerator.
+While the implementation described in the paper uses the
 [TensorFlow Mesh](https://github.com/tensorflow/mesh) framework for distributed training,
 this example presents a simple, non-distributed implementation of the Switch Transformer
 model for demonstration purposes.
@@ -66,9 +66,9 @@ num_tokens_per_batch = (
 print(f"Number of tokens per batch: {num_tokens_per_batch}")
 
 """
-## Implement embedding layer
+## Implement token & position embedding layer
 
-Two seperate embedding layers, one for tokens, one for token index (positions).
+It consists of two seperate embedding layers, one for tokens, one for token index (positions).
 """
 
 
@@ -106,7 +106,7 @@ This is an auxiliary loss to encourage a balanced load across experts.
 """
 
 
-def load_balance_loss(router_probs, expert_mask):
+def load_balanced_loss(router_probs, expert_mask):
     # router_probs [tokens_per_batch, num_experts] is the probability assigned for
     # each expert per token. expert_mask [tokens_per_batch, num_experts] contains
     # the expert with the highest router probability in one−hot format.
@@ -158,7 +158,7 @@ class Router(layers.Layer):
         # expert_mask shape: [tokens_per_batch, num_experts]
         expert_mask = tf.one_hot(expert_index, depth=self.num_experts)
         # Compute load balancing loss.
-        aux_loss = load_balance_loss(router_probs, expert_mask)
+        aux_loss = load_balanced_loss(router_probs, expert_mask)
         self.add_loss(aux_loss)
         # Experts have a fixed capacity, ensure we do not exceed it. Construct
         # the batch indices, to each expert, with position in expert make sure that
@@ -178,7 +178,7 @@ class Router(layers.Layer):
         expert_gate *= expert_mask_flat
         # Combine expert outputs and scaling with router probability.
         # combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
-        combine_tensor = tf.expand_dims(
+        combined_tensor = tf.expand_dims(
             expert_gate
             * expert_mask_flat
             * tf.squeeze(tf.one_hot(expert_index, depth=self.num_experts), 1),
@@ -186,13 +186,13 @@ class Router(layers.Layer):
         ) * tf.squeeze(tf.one_hot(position_in_expert, depth=self.expert_capacity), 1)
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
-        dispatch_tensor = tf.cast(combine_tensor, tf.dtypes.float32)
+        dispatch_tensor = tf.cast(combined_tensor, tf.dtypes.float32)
 
-        return dispatch_tensor, combine_tensor
+        return dispatch_tensor, combined_tensor
 
 
 """
-### Implement a Switch as a layer
+### Implement a Switch layer
 """
 
 
@@ -243,7 +243,7 @@ class Switch(layers.Layer):
 
 
 """
-## Implement a Transformer block as a layer
+## Implement a Transformer block layer
 """
 
 
@@ -278,7 +278,6 @@ of it to classify text.
 
 
 def create_classifier():
-
     switch = Switch(num_experts, embed_dim, num_tokens_per_batch)
     transformer_block = TransformerBlock(ff_dim, num_heads, switch)
 
@@ -309,7 +308,6 @@ def run_experiment(classifier):
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"],
     )
-
     history = classifier.fit(
         x_train,
         y_train,
