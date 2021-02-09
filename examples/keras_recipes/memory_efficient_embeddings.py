@@ -110,10 +110,6 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=True):
 
 def run_experiment(model):
 
-    checkpoint_filepath = "checkpoint"
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(
-        checkpoint_filepath, monitor="val_loss", save_best_only=True
-    )
 
     # Compile the model.
     model.compile(
@@ -130,7 +126,6 @@ def run_experiment(model):
         train_dataset,
         epochs=num_epochs,
         validation_data=eval_dataset,
-        callbacks=[checkpoint_callback],
     )
     return history
 
