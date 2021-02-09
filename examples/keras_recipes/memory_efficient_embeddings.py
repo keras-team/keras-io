@@ -110,7 +110,6 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=True):
 
 def run_experiment(model):
 
-
     # Compile the model.
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate),
@@ -122,11 +121,7 @@ def run_experiment(model):
     # Read the test data.
     eval_dataset = get_dataset_from_csv("eval_data.csv", batch_size, shuffle=False)
     # Fit the model with the training data.
-    history = model.fit(
-        train_dataset,
-        epochs=num_epochs,
-        validation_data=eval_dataset,
-    )
+    history = model.fit(train_dataset, epochs=num_epochs, validation_data=eval_dataset,)
     return history
 
 
