@@ -1,8 +1,8 @@
 """
 Title: Classification with Gated Residual and Variable Selection Networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2021/01/15
-Last modified: 2021/01/15
+Date created: 2021/02/10
+Last modified: 2021/02/10
 Description: Using Gated Residual and Variable Selection Networks for income level prediction.
 """
 
@@ -11,7 +11,7 @@ Description: Using Gated Residual and Variable Selection Networks for income lev
 
 This example demonstrates the use of Gated
 Residual Networks (GRN) and Variable Selection Networks (VSN), proposed by
-Bryan Lim et al. in [Temporal Fusion Transformers (TFT) for Interpretable Multi-horizon Time Series Forecasting](https://arxiv.org/abs/1912.09363), 
+Bryan Lim et al. in [Temporal Fusion Transformers (TFT) for Interpretable Multi-horizon Time Series Forecasting](https://arxiv.org/abs/1912.09363),
 for structured data classification. GRNs give the flexibility to the model to apply
 non-linear processing only where needed. VSNs allow the model to softly remove any
 unnecessary noisy inputs which could negatively impact performance.
@@ -101,23 +101,35 @@ CSV_HEADER = [
     "income_level",
 ]
 
-train_data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.data.gz"
-train_data = pd.read_csv(train_data_url, header=None, names=CSV_HEADER)
+data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.data.gz"
+data = pd.read_csv(data_url, header=None, names=CSV_HEADER)
 
 test_data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.test.gz"
 test_data = pd.read_csv(test_data_url, header=None, names=CSV_HEADER)
 
-print(f"Train dataset shape: {train_data.shape}")
-print(f"Test dataset shape: {test_data.shape}")
+print(f"Data shape: {data.shape}")
+print(f"Test data shape: {test_data.shape}")
+
+
+"""
+We split the dataset into train and validation sets.
+"""
+
+random_selection = np.random.rand(len(data.index)) <= 0.85
+train_data = data[random_selection]
+valid_data = data[~random_selection]
+
 
 """
 Then we store the train and test data splits locally to CSV files.
 """
 
 train_data_file = "train_data.csv"
+valid_data_file = "valid_data.csv"
 test_data_file = "test_data.csv"
 
 train_data.to_csv(train_data_file, index=False, header=False)
+valid_data.to_csv(valid_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
 
 """
@@ -149,7 +161,7 @@ NUMERIC_FEATURE_NAMES = [
 # sure that they are treated as strings.
 CATEGORICAL_FEATURES_WITH_VOCABULARY = {
     feature_name: sorted(
-        [f"v={value}" for value in list(train_data[feature_name].unique())]
+        [str(value) for value in list(train_data[feature_name].unique())]
     )
     for feature_name in CSV_HEADER
     if feature_name
@@ -175,7 +187,7 @@ training and evaluation.
 
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
-taget_label_lookup = StringLookup(
+target_lookup = StringLookup(
     vocabulary=TARGET_FEATURE_LABELS, mask_token=None, num_oov_indices=0
 )
 
@@ -183,10 +195,11 @@ taget_label_lookup = StringLookup(
 def process(features, target):
     for feature_name in features:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-            features[feature_name] = tf.strings.join(
-                ["v=", tf.cast(features[feature_name], tf.dtypes.string)]
-            )
-    target_index = taget_label_lookup(target)
+            # Cast categorical feature values to string.
+            features[feature_name] = tf.cast(features[feature_name], tf.dtypes.string)
+    # Lookup the index for the target value.
+    target_index = target_lookup(target)
+    # Get the instance weight.
     weight = features.pop(WEIGHT_COLUMN_NAME)
     return features, target_index, weight
 
@@ -386,14 +399,14 @@ def create_model(encoding_size):
 learning_rate = 0.001
 dropout_rate = 0.15
 batch_size = 265
-num_epochs = 10
+num_epochs = 20
 encoding_size = 16
 
 model = create_model(encoding_size)
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
     loss=keras.losses.BinaryCrossentropy(),
-    metrics=[keras.metrics.BinaryAccuracy()],
+    metrics=[keras.metrics.BinaryAccuracy(name="accuracy")],
 )
 
 
@@ -404,10 +417,15 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
 
 print("Start training the model...")
 train_dataset = get_dataset_from_csv(
-    train_data_file, shuffle=True, batch_size=batch_size,
-    callbacks=[early_stopping]
+    train_data_file, shuffle=True, batch_size=batch_size
 )
-model.fit(train_dataset, epochs=num_epochs)
+valid_dataset = get_dataset_from_csv(valid_data_file, batch_size=batch_size)
+model.fit(
+    train_dataset,
+    epochs=num_epochs,
+    validation_data=valid_dataset,
+    callbacks=[early_stopping],
+)
 print("Model training finished.")
 
 print("Evaluating model performance...")
