@@ -204,6 +204,7 @@ class CustomModel(keras.Model):
         if len(data) == 3:
             x, y, sample_weight = data
         else:
+            sample_weight = None
             x, y = data
 
         with tf.GradientTape() as tape:
