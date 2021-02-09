@@ -9,10 +9,9 @@ Description: Using Gated Residual and Variable Selection Networks for income lev
 """
 ## Introduction
 
-This example demonstrates the use of [Gated
+This example demonstrates the use of Gated
 Residual Networks (GRN) and Variable Selection Networks (VSN), proposed by
-Bryan Lim et al. in [Temporal Fusion Transformers (TFT) for Interpretable
-Multi-horizon Time Series Forecasting]((https://arxiv.org/abs/1912.09363), 
+Bryan Lim et al. in [Temporal Fusion Transformers (TFT) for Interpretable Multi-horizon Time Series Forecasting](https://arxiv.org/abs/1912.09363), 
 for structured data classification. GRNs give the flexibility to the model to apply
 non-linear processing only where needed. VSNs allow the model to softly remove any
 unnecessary noisy inputs which could negatively impact performance.
@@ -35,8 +34,8 @@ Dataset](https://archive.ics.uci.edu/ml/datasets/Census-Income+%28KDD%29) provid
 by the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
 The task is binary classification to determine whether a person makes over 50K a year.
 
-The dataset includes ~300K instances with 41 input features, 7 of which are numerical,
-and the other 34 are categorical.
+The dataset includes ~300K instances with 41 input features: 7 numerical features
+and 34 categorical features.
 """
 
 """
@@ -397,9 +396,16 @@ model.compile(
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
+
+# Create an early stopping callback.
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss", patience=5, restore_best_weights=True
+)
+
 print("Start training the model...")
 train_dataset = get_dataset_from_csv(
-    train_data_file, shuffle=True, batch_size=batch_size
+    train_data_file, shuffle=True, batch_size=batch_size,
+    callbacks=[early_stopping]
 )
 model.fit(train_dataset, epochs=num_epochs)
 print("Model training finished.")
