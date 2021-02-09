@@ -110,7 +110,7 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=True):
 
 def run_experiment(model):
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "checkpoint"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath, monitor="val_loss", save_best_only=True
     )
@@ -120,14 +120,18 @@ def run_experiment(model):
         optimizer=keras.optimizers.Adam(learning_rate),
         loss=tf.keras.losses.MeanSquaredError(),
         metrics=[keras.metrics.MeanAbsoluteError(name="mae")],
-        callbacks=[checkpoint_callback],
     )
     # Read the training data.
     train_dataset = get_dataset_from_csv("train_data.csv", batch_size)
     # Read the test data.
     eval_dataset = get_dataset_from_csv("eval_data.csv", batch_size, shuffle=False)
     # Fit the model with the training data.
-    history = model.fit(train_dataset, epochs=num_epochs, validation_data=eval_dataset)
+    history = model.fit(
+        train_dataset,
+        epochs=num_epochs,
+        validation_data=eval_dataset,
+        callbacks=[checkpoint_callback],
+    )
     return history
 
 
@@ -216,11 +220,11 @@ we create *two* `num_buckets X embedding_dim` embedding tables, where `num_bucke
 is much smaller than `vocabulary_size`.
 An embedding for a given item `index` is generated via the following steps:
 
-1. Compute the quotient `q_index` as `index // num_buckets`.
-2. Compute the remainder `r_index` as `index % num_buckets`.
-3. Lookup `q_embedding` from the first embedding table using `q_index`.
-4. Lookup `r_embedding` from the second embedding table using `r_index`.
-5. Return `q_embedding` * `r_embedding`.
+1. Compute the `quotient_index` as `index // num_buckets`.
+2. Compute the `remainder_index` as `index % num_buckets`.
+3. Lookup `quotient_embedding` from the first embedding table using `quotient_index`.
+4. Lookup `remainder_embedding` from the second embedding table using `remainder_index`.
+5. Return `quotient_embedding` * `remainder_embedding`.
 
 This technique not only reduces the number of embedding vectors needs to be stored and trained,
 but also generates a *unique* embedding vector for each item of size `embedding_dim`.
@@ -244,15 +248,15 @@ class QREmbedding(keras.layers.Layer):
         # Get the item index.
         embedding_index = self.index_lookup(inputs)
         # Get the quotient index.
-        q_index = tf.math.floordiv(embedding_index, self.num_buckets)
+        quotient_index = tf.math.floordiv(embedding_index, self.num_buckets)
         # Get the reminder index.
-        r_index = tf.math.floormod(embedding_index, self.num_buckets)
-        # Lookup the q_embedding using the q_index.
-        q_embedding = self.q_embeddings(q_index)
-        # Lookup the r_embedding using the r_index.
-        r_embedding = self.r_embeddings(r_index)
+        remainder_index = tf.math.floormod(embedding_index, self.num_buckets)
+        # Lookup the quotient_embedding using the quotient_index.
+        quotient_embedding = self.q_embeddings(quotient_index)
+        # Lookup the remainder_embedding using the remainder_index.
+        remainder_embedding = self.r_embeddings(remainder_index)
         # Use multiplication as a combiner operation
-        return q_embedding * r_embedding
+        return quotient_embedding * remainder_embedding
 
 
 """
