@@ -11,14 +11,15 @@ Description: Using Gated Residual and Variable Selection Networks for income lev
 
 This example demonstrates the use of Gated
 Residual Networks (GRN) and Variable Selection Networks (VSN), proposed by
-Bryan Lim et al. in [Temporal Fusion Transformers (TFT) for Interpretable Multi-horizon Time Series Forecasting](https://arxiv.org/abs/1912.09363),
+Bryan Lim et al. in
+[Temporal Fusion Transformers (TFT) for Interpretable Multi-horizon Time Series Forecasting](https://arxiv.org/abs/1912.09363),
 for structured data classification. GRNs give the flexibility to the model to apply
 non-linear processing only where needed. VSNs allow the model to softly remove any
 unnecessary noisy inputs which could negatively impact performance.
 Together, those techniques help improving the learning capacity of deep neural
 network models.
 
-Note that this example implements only on the GRN and VSN components described in
+Note that this example implements only the GRN and VSN components described in
 in the paper, rather than the whole TFT model, as GRN and VSN can be useful on
 their own for structured data learning tasks.
 
@@ -29,9 +30,10 @@ To run the code you need to use TensorFlow 2.3 or higher.
 """
 ## The dataset
 
-This example uses the [United States Census Income
-Dataset](https://archive.ics.uci.edu/ml/datasets/Census-Income+%28KDD%29) provided
-by the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
+This example uses the
+[United States Census Income Dataset](https://archive.ics.uci.edu/ml/datasets/Census-Income+%28KDD%29)
+provided by the
+[UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
 The task is binary classification to determine whether a person makes over 50K a year.
 
 The dataset includes ~300K instances with 41 input features: 7 numerical features
@@ -52,7 +54,7 @@ from tensorflow.keras import layers
 """
 ## Prepare the data
 
-First we load the data from the UCI Machine Learning Repository to a Pandas DataFrame.
+First we load the data from the UCI Machine Learning Repository into a Pandas DataFrame.
 """
 
 # Column names.
@@ -178,7 +180,7 @@ COLUMN_DEFAULTS = [
 ]
 
 """
-## Create tf.data.Dataset for training and evaluation
+## Create a `tf.data.Dataset` for training and evaluation
 
 We create an input function to read and parse the file, and convert features and
 labels into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets) for
@@ -303,6 +305,7 @@ class GatedLinearUnit(layers.Layer):
 ## Implement the Gated Residual Network
 
 The Gated Residual Network (GRN) works as follows:
+
 1. Applies the nonlinear ELU transformation to the inputs.
 2. Applies linear transformation followed by dropout.
 4. Applies GLU and adds the original inputs to the output of the GLU to perform skip
@@ -337,6 +340,7 @@ class GatedResidualNetwork(layers.Layer):
 ## Implement the Variable Selection Network
 
 The Variable Selection Network (VSN) works as follows:
+
 1. Applies a GRN to each feature individually.
 2. Applies a GRN on the concatenation of all the features, followed by a softmax to
 produce feature weights.
@@ -436,7 +440,7 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 """
 You should achieve more than 95% accuracy on the test set.
 
-To increase the learning capacity of the model, you can try increase the
-`encoding_size`, or stack multiple GRN layers on top of the VSN layer.
-This may require to also increase the `dropout_rate` to avoid overfitting.
+To increase the learning capacity of the model, you can try increasing the
+`encoding_size` value, or stacking multiple GRN layers on top of the VSN layer.
+This may require to also increase the `dropout_rate` value to avoid overfitting.
 """
