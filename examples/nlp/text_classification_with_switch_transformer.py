@@ -87,7 +87,7 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 """
-## Implement feedforward network
+## Implement the feedforward network
 
 This is used as the Mixture of Experts in the Switch Transformer.
 """
@@ -100,7 +100,7 @@ def create_feedforward_network(ff_dim, name=None):
 
 
 """
-## Implement load balance loss
+## Implement the load-balanced loss
 
 This is an auxiliary loss to encourage a balanced load across experts.
 """
@@ -271,7 +271,7 @@ class TransformerBlock(layers.Layer):
 """
 ## Implement the classifier
 
-Transformer layer outputs one vector for each time step of our input sequence.
+The `TransformerBlock` layer outputs one vector for each time step of our input sequence.
 Here, we take the mean across all time steps and use a feedforward network on top
 of it to classify text.
 """
@@ -325,8 +325,7 @@ run_experiment(classifier)
 """
 ## Conclusion
 
-Compared to the standard Transformer architecture, the Switch Transformer can have much
-larger number of parameters, due to the Mixture of Experts, leading to larger learning
-capacity to produce more effective models, while maintaining the computational cost
-of running such models.
+Compared to the standard Transformer architecture, the Switch Transformer can have a much
+larger number of parameters, leading to increased model
+capacity, while maintaining a reasonable computational cost.
 """
