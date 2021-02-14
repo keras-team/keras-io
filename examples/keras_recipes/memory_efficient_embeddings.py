@@ -3,7 +3,7 @@ Title: Memory-efficient embeddings for recommendation systems
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/15
 Last modified: 2021/02/15
-Description: Using compositional & mixed dimension embeddings for memory-efficient recommendation models.
+Description: Using compositional & mixed-dimension embeddings for memory-efficient recommendation models.
 """
 
 """
@@ -109,7 +109,6 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=True):
 
 
 def run_experiment(model):
-
     # Compile the model.
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate),
@@ -152,7 +151,6 @@ def embedding_encoder(vocabulary, embedding_dim, num_oov_indices=0, name=None):
 
 
 def create_baseline_model():
-
     # Receive the user as an input.
     user_input = layers.Input(name="user_id", shape=(), dtype=tf.string)
     # Get user embedding.
@@ -204,7 +202,7 @@ plt.show()
 """
 ### Implement Quotient-Remainder embedding as a layer
 
-Quotient-Remainder technique works as follows. For a set of vocabulary and  embedding size
+The Quotient-Remainder technique works as follows. For a set of vocabulary and  embedding size
 `embedding_dim`, instead of creating a `vocabulary_size X embedding_dim` embedding table,
 we create *two* `num_buckets X embedding_dim` embedding tables, where `num_buckets`
 is much smaller than `vocabulary_size`.
