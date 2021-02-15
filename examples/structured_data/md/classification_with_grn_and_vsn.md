@@ -1,12 +1,16 @@
-"""
-Title: Classification with Gated Residual and Variable Selection Networks
-Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2021/02/10
-Last modified: 2021/02/10
-Description: Using Gated Residual and Variable Selection Networks for income level prediction.
-"""
+# Classification with Gated Residual and Variable Selection Networks
 
-"""
+**Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
+**Date created:** 2021/02/10<br>
+**Last modified:** 2021/02/10<br>
+**Description:** Using Gated Residual and Variable Selection Networks for income level prediction.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/structured_data/ipynb/classification_with_grn_and_vsn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/classification_with_grn_and_vsn.py)
+
+
+
+---
 ## Introduction
 
 This example demonstrates the use of Gated
@@ -25,9 +29,8 @@ their own for structured data learning tasks.
 
 
 To run the code you need to use TensorFlow 2.3 or higher.
-"""
 
-"""
+---
 ## The dataset
 
 This example uses the
@@ -38,25 +41,27 @@ The task is binary classification to determine whether a person makes over 50K a
 
 The dataset includes ~300K instances with 41 input features: 7 numerical features
 and 34 categorical features.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import math
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+```
 
-"""
+---
 ## Prepare the data
 
 First we load the data from the UCI Machine Learning Repository into a Pandas DataFrame.
-"""
 
+
+```python
 # Column names.
 CSV_HEADER = [
     "age",
@@ -112,11 +117,19 @@ test_data = pd.read_csv(test_data_url, header=None, names=CSV_HEADER)
 print(f"Data shape: {data.shape}")
 print(f"Test data shape: {test_data.shape}")
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Data shape: (199523, 42)
+Test data shape: (99762, 42)
+
+```
+</div>
 We convert the target column from string to integer.
-"""
 
+
+```python
 data["income_level"] = data["income_level"].apply(
     lambda x: 0 if x == " - 50000." else 1
 )
@@ -124,20 +137,22 @@ test_data["income_level"] = test_data["income_level"].apply(
     lambda x: 0 if x == " - 50000." else 1
 )
 
+```
 
-"""
 Then, We split the dataset into train and validation sets.
-"""
 
+
+```python
 random_selection = np.random.rand(len(data.index)) <= 0.85
 train_data = data[random_selection]
 valid_data = data[~random_selection]
 
+```
 
-"""
 Finally we store the train and test data splits locally to CSV files.
-"""
 
+
+```python
 train_data_file = "train_data.csv"
 valid_data_file = "valid_data.csv"
 test_data_file = "test_data.csv"
@@ -145,15 +160,17 @@ test_data_file = "test_data.csv"
 train_data.to_csv(train_data_file, index=False, header=False)
 valid_data.to_csv(valid_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
+```
 
-"""
+---
 ## Define dataset metadata
 
 Here, we define the metadata of the dataset that will be useful for reading and
 parsing the data into input features, and encoding the input features with respect
 to their types.
-"""
 
+
+```python
 # Target feature name.
 TARGET_FEATURE_NAME = "income_level"
 # Weight column name.
@@ -188,15 +205,17 @@ COLUMN_DEFAULTS = [
     else ["NA"]
     for feature_name in CSV_HEADER
 ]
+```
 
-"""
+---
 ## Create a `tf.data.Dataset` for training and evaluation
 
 We create an input function to read and parse the file, and convert features and
 labels into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets) for
 training and evaluation.
-"""
 
+
+```python
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 
@@ -225,11 +244,13 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
 
     return dataset
 
+```
 
-"""
+---
 ## Create model inputs
-"""
 
+
+```python
 
 def create_model_inputs():
     inputs = {}
@@ -244,8 +265,9 @@ def create_model_inputs():
             )
     return inputs
 
+```
 
-"""
+---
 ## Encode input features
 
 For categorical features, we encode them using `layers.Embedding` using the
@@ -254,8 +276,8 @@ we apply linear transformation using `layers.Dense` to project each feature into
 `encoding_size`-dimensional vector. Thus, all the encoded features will have the
 same dimensionality.
 
-"""
 
+```python
 from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
@@ -286,14 +308,16 @@ def encode_inputs(inputs, encoding_size):
         encoded_features.append(encoded_feature)
     return encoded_features
 
+```
 
-"""
+---
 ## Implement the Gated Linear Unit
 
 [Gated Linear Units (GLUs)](https://arxiv.org/abs/1612.08083) provide the
 flexibility to suppress input that are not relevant for a given task.
-"""
 
+
+```python
 
 class GatedLinearUnit(layers.Layer):
     def __init__(self, units):
@@ -304,8 +328,9 @@ class GatedLinearUnit(layers.Layer):
     def call(self, inputs):
         return self.linear(inputs) * self.sigmoid(inputs)
 
+```
 
-"""
+---
 ## Implement the Gated Residual Network
 
 The Gated Residual Network (GRN) works as follows:
@@ -315,8 +340,9 @@ The Gated Residual Network (GRN) works as follows:
 4. Applies GLU and adds the original inputs to the output of the GLU to perform skip
 (residual) connection.
 6. Applies layer normalization and produces the output.
-"""
 
+
+```python
 
 class GatedResidualNetwork(layers.Layer):
     def __init__(self, units, dropout_rate):
@@ -339,8 +365,9 @@ class GatedResidualNetwork(layers.Layer):
         x = self.layer_norm(x)
         return x
 
+```
 
-"""
+---
 ## Implement the Variable Selection Network
 
 The Variable Selection Network (VSN) works as follows:
@@ -352,8 +379,9 @@ produce feature weights.
 
 Note that the output of the VSN is [batch_size, encoding_size], regardless of the
 number of the input features.
-"""
 
+
+```python
 
 class VariableSelection(layers.Layer):
     def __init__(self, num_features, units, dropout_rate):
@@ -380,11 +408,13 @@ class VariableSelection(layers.Layer):
         outputs = tf.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
         return outputs
 
+```
 
-"""
+---
 ## Create Gated Residual and Variable Selection Networks model
-"""
 
+
+```python
 
 def create_model(encoding_size):
     inputs = create_model_inputs()
@@ -399,11 +429,13 @@ def create_model(encoding_size):
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
 
+```
 
-"""
+---
 ## Compile, train, and evaluate the model
-"""
 
+
+```python
 learning_rate = 0.001
 dropout_rate = 0.15
 batch_size = 265
@@ -440,11 +472,60 @@ print("Evaluating model performance...")
 test_dataset = get_dataset_from_csv(test_data_file, batch_size=batch_size)
 _, accuracy = model.evaluate(test_dataset)
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Start training the model...
+Epoch 1/20
+640/640 [==============================] - 28s 23ms/step - loss: 297.7439 - accuracy: 0.9427 - val_loss: 224.0750 - val_accuracy: 0.9517
+Epoch 2/20
+640/640 [==============================] - 11s 17ms/step - loss: 231.1974 - accuracy: 0.9498 - val_loss: 219.9516 - val_accuracy: 0.9528
+Epoch 3/20
+640/640 [==============================] - 11s 17ms/step - loss: 224.3364 - accuracy: 0.9506 - val_loss: 220.5569 - val_accuracy: 0.9511
+Epoch 4/20
+640/640 [==============================] - 11s 16ms/step - loss: 222.2389 - accuracy: 0.9505 - val_loss: 216.2226 - val_accuracy: 0.9536
+Epoch 5/20
+640/640 [==============================] - 11s 16ms/step - loss: 221.2436 - accuracy: 0.9511 - val_loss: 214.6238 - val_accuracy: 0.9528
+Epoch 6/20
+640/640 [==============================] - 11s 17ms/step - loss: 219.4547 - accuracy: 0.9519 - val_loss: 216.6328 - val_accuracy: 0.9521
+Epoch 7/20
+640/640 [==============================] - 11s 16ms/step - loss: 218.1072 - accuracy: 0.9515 - val_loss: 212.7955 - val_accuracy: 0.9536
+Epoch 8/20
+640/640 [==============================] - 11s 17ms/step - loss: 218.0054 - accuracy: 0.9516 - val_loss: 211.5051 - val_accuracy: 0.9534
+Epoch 9/20
+640/640 [==============================] - 11s 18ms/step - loss: 214.6256 - accuracy: 0.9520 - val_loss: 206.9488 - val_accuracy: 0.9547
+Epoch 10/20
+640/640 [==============================] - 12s 19ms/step - loss: 213.1709 - accuracy: 0.9530 - val_loss: 208.3064 - val_accuracy: 0.9553
+Epoch 11/20
+640/640 [==============================] - 12s 18ms/step - loss: 210.5090 - accuracy: 0.9531 - val_loss: 208.1572 - val_accuracy: 0.9540
+Epoch 12/20
+640/640 [==============================] - 12s 18ms/step - loss: 207.6745 - accuracy: 0.9541 - val_loss: 203.6136 - val_accuracy: 0.9562
+Epoch 13/20
+640/640 [==============================] - 12s 18ms/step - loss: 208.3804 - accuracy: 0.9542 - val_loss: 203.1174 - val_accuracy: 0.9561
+Epoch 14/20
+640/640 [==============================] - 11s 17ms/step - loss: 208.0113 - accuracy: 0.9541 - val_loss: 202.6524 - val_accuracy: 0.9557
+Epoch 15/20
+640/640 [==============================] - 11s 16ms/step - loss: 206.8468 - accuracy: 0.9546 - val_loss: 205.3135 - val_accuracy: 0.9552
+Epoch 16/20
+640/640 [==============================] - 11s 17ms/step - loss: 206.5992 - accuracy: 0.9547 - val_loss: 206.2844 - val_accuracy: 0.9545
+Epoch 17/20
+640/640 [==============================] - 11s 17ms/step - loss: 205.8689 - accuracy: 0.9541 - val_loss: 203.4467 - val_accuracy: 0.9558
+Epoch 18/20
+640/640 [==============================] - 11s 17ms/step - loss: 206.0711 - accuracy: 0.9549 - val_loss: 201.3426 - val_accuracy: 0.9565
+Epoch 19/20
+640/640 [==============================] - 10s 16ms/step - loss: 205.7568 - accuracy: 0.9550 - val_loss: 203.5569 - val_accuracy: 0.9558
+Epoch 20/20
+640/640 [==============================] - 10s 16ms/step - loss: 206.1800 - accuracy: 0.9547 - val_loss: 200.9309 - val_accuracy: 0.9566
+Model training finished.
+Evaluating model performance...
+377/377 [==============================] - 4s 9ms/step - loss: 203.9960 - accuracy: 0.9545
+Test accuracy: 95.45%
+
+```
+</div>
 You should achieve more than 95% accuracy on the test set.
 
 To increase the learning capacity of the model, you can try increasing the
 `encoding_size` value, or stacking multiple GRN layers on top of the VSN layer.
 This may require to also increase the `dropout_rate` value to avoid overfitting.
-"""
