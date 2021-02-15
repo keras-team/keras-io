@@ -42,7 +42,7 @@ input_shape = (32, 32, 3)
 x_data = np.concatenate([x_train, x_test])
 y_data = np.concatenate([y_train, y_test])
 
-print("x_data shape:", x_data.shape, " - y_data shape:", {y_data.shape})
+print("x_data shape:", x_data.shape, " - y_data shape:", y_data.shape)
 
 class_labels = [
     "airplane",
@@ -498,7 +498,7 @@ for idx, c in enumerate(cluster_assignments):
     clusters[c].append((idx, cluster_confidence[idx]))
 
 for c in range(num_clusters):
-    print("cluster", c, ":", {len(clusters[c])})
+    print("cluster", c, ":", len(clusters[c]))
 
 """
 Notice that the clusters have roughly balanced sizes.
@@ -548,7 +548,7 @@ for c in range(num_clusters):
         np.round((correct_count / cluster_size) * 100, 2) if cluster_size > 0 else 0
     )
     cluster_label = class_labels[cluster_label_idx]
-    print("cluster", c, "label is:", cluster_label, " -  accuracy:", {accuracy}, "%")
+    print("cluster", c, "label is:", cluster_label, " -  accuracy:", accuracy, "%")
 
 """
 ## Concluding remarks
