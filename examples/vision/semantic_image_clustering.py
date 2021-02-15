@@ -12,7 +12,7 @@ Description: Semantic Clustering by Adopting Nearest neighbors (SCAN) algorithm.
 This example demonstrates applying the [Semantic Clustering by Adopting Nearest neighbors
 (SCAN)](https://arxiv.org/abs/2005.12320) algorithm, by Wouter Van Gansbeke et. al, on the
 [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) images dataset. The algorithm,
-consists of three phases:
+consists of two phases:
 1. Self-supervised visual representation learning of images, in which we use the
 [simCLR](https://arxiv.org/abs/2002.05709?ref=hackernoon.com) technique.
 2. Clustering of the learnt visual representation vectors that maximizes the agreement
