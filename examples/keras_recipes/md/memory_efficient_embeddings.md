@@ -73,8 +73,6 @@ print(f"Number of ratings: {len(ratings_data.index)}")
 
 <div class="k-default-codeblock">
 ```
-/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/ipykernel_launcher.py:7: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
-  import sys
 
 Number of users: 6040
 Number of movies: 3706
