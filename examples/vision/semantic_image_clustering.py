@@ -87,7 +87,7 @@ data_preprocessing = keras.Sequential(
     ]
 )
 # Compute the mean and the variance from the data for normalization.
-data_preprocessing.layers[-1].adapt(x_train)
+data_preprocessing.layers[-1].adapt(x_data)
 
 """
 ## Data augmentation
@@ -538,7 +538,7 @@ cluster_label_counts = dict()
 for c in range(num_clusters):
     cluster_label_counts[c] = [0] * num_classes
     instances = clusters[c]
-    for i in instances:
+    for i,_ in instances:
         cluster_label_counts[c][y_data[i][0]] += 1
 
     cluster_label_idx = np.argmax(cluster_label_counts[c])
