@@ -538,7 +538,7 @@ cluster_label_counts = dict()
 for c in range(num_clusters):
     cluster_label_counts[c] = [0] * num_classes
     instances = clusters[c]
-    for i,_ in instances:
+    for i, _ in instances:
         cluster_label_counts[c][y_data[i][0]] += 1
 
     cluster_label_idx = np.argmax(cluster_label_counts[c])
