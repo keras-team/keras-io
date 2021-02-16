@@ -73,7 +73,7 @@ target_size = 32  # Resize the input images.
 representation_dim = 512  # The dimensions of the features vector.
 projection_units = 128  # The projection head of the representation learner.
 num_augumentations = 2  # Number of augmented images to generate for each input.
-num_clusters = 10  # Number of clusters.
+num_clusters = 20  # Number of clusters.
 k_neighbours = 5  # Number of neighbours to consider during cluster learning.
 tune_encoder_during_clustering = False  # Freeze the encoder in the cluster learning.
 
@@ -257,7 +257,7 @@ history = representation_learner.fit(
     x=x_data,
     y=labels,
     batch_size=512,
-    epochs=50,  # for better results, increase the number of epochs to 500.
+    epochs=100,  # for better results, increase the number of epochs to 500.
 )
 
 """
@@ -568,7 +568,8 @@ for c in range(num_clusters):
 
 To improve the accuracy results, you can perform the a fine-tuning step through self-labeling,
 as described in the [paper](https://arxiv.org/abs/2005.12320), besides increasing the number
-of epochs in the representation learning phase and the clustering phase.
+of epochs in the representation learning phase and the clustering phase. Allowing
+the encoder weights to be tuned during the clustering phase yields better results as well.
 Note that such a technique is not expected to outperform the accuracy of supervised image
 classification techniques, rather showing that it can learn the semantics of the images and
 group them into clusters that are similar to their original classes.
