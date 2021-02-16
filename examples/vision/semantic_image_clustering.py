@@ -17,6 +17,13 @@ consists of two phases:
 [simCLR](https://arxiv.org/abs/2002.05709?ref=hackernoon.com) technique.
 2. Clustering of the learnt visual representation vectors that maximizes the agreement
 between the cluster assignments of the neighbours.
+
+The example requires [TensorFlow Addons](https://www.tensorflow.org/addons), 
+which you can install using the following command:
+
+```python
+pip install tensorflow-addons
+```
 """
 """
 ## Setup
@@ -26,6 +33,7 @@ from collections import defaultdict
 import random
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
@@ -61,8 +69,7 @@ class_labels = [
 ## Define hyperparameters
 """
 
-target_size = 64  # Resize the input images.
-learning_rate = 0.0004  # Learning rate for the Adam optimizer.
+target_size = 32  # Resize the input images.
 representation_dim = 512  # The dimensions of the features vector.
 projection_units = 128  # The projection head of the representation learner.
 num_augumentations = 2  # Number of augmented images to generate for each input.
@@ -76,8 +83,7 @@ tune_encoder_during_clustering = False  # Freeze the encoder in the cluster lear
 The data preprocessing resizes the input images to the desired `target_size`, and applies
 feature-wise normalization. Note that, when using `keras.applications.ResNet50V2` as the
 visual encoder, resizing the input images towards 255 x 255 would lead to better results,
-but would require longer time to train. In this example, we only resize the input images
-to 64 x 64.
+but would require longer time to train.
 """
 
 data_preprocessing = keras.Sequential(
@@ -237,12 +243,16 @@ representation_learner.summary()
 # Since this self-supervised learning, we don't
 # use the y_data as our labels.
 labels = tf.ones(shape=(x_data.shape[0]))
-
+# Create a a Cosine decay learning rate scheduler.
+lr_scheduler = keras.experimental.CosineDecay(
+    initial_learning_rate=0.001, decay_steps=500, alpha=0.1
+)
+# Compile the model.
 representation_learner.compile(
-    optimizer=keras.optimizers.Adam(learning_rate),
+    optimizer=tfa.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
     loss=ContrastiveLoss(temperature=0.1),
 )
-
+# Fit the model.
 history = representation_learner.fit(
     x=x_data,
     y=labels,
@@ -449,18 +459,21 @@ def create_clustering_learner(clustering_model):
 # then freeze the encoder weights.
 for layer in encoder.layers:
     layer.trainable = tune_encoder_during_clustering
-
+# Create the clustering model and learner.
 clustering_model = create_clustering_model(encoder, num_clusters, name="clustering")
 clustering_learner = create_clustering_learner(clustering_model)
-clustering_learner.summary()
-
+print(clustering_learner.summary())
+# Instantiate the model losses.
 losses = [ClustersConsistencyLoss(), ClustersEntropyLoss(entropy_loss_weight=5)]
-
+# Create the model inputs and labels.
 inputs = {"anchors": x_data, "neighbours": tf.gather(x_data, neighbours)}
 labels = tf.ones(shape=(x_data.shape[0]))
-
-clustering_learner.compile(optimizer=keras.optimizers.Adam(learning_rate), loss=losses)
-
+# Compile the model.
+clustering_learner.compile(
+    optimizer=tfa.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
+    loss=losses,
+)
+# Fit the model.
 clustering_learner.fit(x=inputs, y=labels, batch_size=512, epochs=50)
 
 """
