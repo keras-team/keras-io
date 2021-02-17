@@ -16,7 +16,7 @@ consists of two phases:
 1. Self-supervised visual representation learning of images, in which we use the
 [simCLR](https://arxiv.org/abs/2002.05709?ref=hackernoon.com) technique.
 2. Clustering of the learnt visual representation vectors that maximizes the agreement
-between the cluster assignments of the neighbours.
+between the cluster assignments of the neighbors.
 
 The example requires [TensorFlow Addons](https://www.tensorflow.org/addons), 
 which you can install using the following command:
@@ -74,16 +74,16 @@ representation_dim = 512  # The dimensions of the features vector.
 projection_units = 128  # The projection head of the representation learner.
 num_augumentations = 2  # Number of augmented images to generate for each input.
 num_clusters = 20  # Number of clusters.
-k_neighbours = 5  # Number of neighbours to consider during cluster learning.
+k_neighbours = 5  # Number of neighbors to consider during cluster learning.
 tune_encoder_during_clustering = False  # Freeze the encoder in the cluster learning.
 
 """
 ## Implement data preprocessing
 
-The data preprocessing resizes the input images to the desired `target_size`, and applies
+The data preprocessing step resizes the input images to the desired `target_size` and applies
 feature-wise normalization. Note that, when using `keras.applications.ResNet50V2` as the
-visual encoder, resizing the input images towards 255 x 255 would lead to better results,
-but would require longer time to train.
+visual encoder, resizing the images into 255 x 255 inputs would lead to more accurate results 
+but require a longer time to train.
 """
 
 data_preprocessing = keras.Sequential(
@@ -97,9 +97,10 @@ data_preprocessing.layers[-1].adapt(x_data)
 
 """
 ## Data augmentation
+
 Unlink simCLR, which randomly picks a single data augmentation function to apply to an input
 image, we apply a set of data augmentation functions randomly to the input image.
-You can experiment with other [image augmentation functinoality](https://www.tensorflow.org/tutorials/images/data_augmentation).
+(You can experiment with other image augmentation techniques by following the [data augmentation tutorial](https://www.tensorflow.org/tutorials/images/data_augmentation).)
 """
 
 data_augmentation = keras.Sequential(
@@ -179,12 +180,12 @@ class ContrastiveLoss(keras.losses.Loss):
         self.l2_normalize = l2_normalize
 
     def __call__(self, labels, feature_vectors, sample_weight=None):
-        # feature_vectors shape is [num_augmentations * batch_size, projection_units].
+        # The shape of feature_vectors is [num_augmentations * batch_size, projection_units].
         # Convert labels to an identiy matrix of shape [batch_size, batch_size].
         labels = tf.eye(tf.shape(labels)[0])
         if self.l2_normalize:
             feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
-        # logits shape: [num_augmentations * batch_size, num_augmentations * batch_size].
+        # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
         logits = (
             tf.linalg.matmul(feature_vectors, feature_vectors, transpose_b=True)
             / self.temperature
@@ -194,7 +195,7 @@ class ContrastiveLoss(keras.losses.Loss):
         logits = logits - logits_max
         # Compute num_augmentations.
         num_augmentations = tf.shape(feature_vectors)[0] // tf.shape(labels)[0]
-        # targets shape: [num_augmentations * batch_size, num_augmentations * batch_size].
+        # The shape of targets is [num_augmentations * batch_size, num_augmentations * batch_size].
         targets = tf.tile(labels, [num_augmentations, num_augmentations])
         # Compute cross entropy loss
         loss = keras.losses.categorical_crossentropy(
@@ -211,7 +212,7 @@ class ContrastiveLoss(keras.losses.Loss):
 def create_representation_learner(encoder, num_augumentations, projection_units):
 
     inputs = keras.Input(shape=input_shape)
-    # Preprocess input images.
+    # Preprocess the input images.
     preprocessed = data_preprocessing(inputs)
     # Create augmented versions of the images.
     augmented = []
@@ -231,7 +232,7 @@ def create_representation_learner(encoder, num_augumentations, projection_units)
 
 
 """
-### Train model
+### Train the model
 """
 
 encoder = create_encoder(representation_dim)
@@ -240,7 +241,7 @@ representation_learner = create_representation_learner(
 )
 representation_learner.summary()
 
-# Since this self-supervised learning, we don't
+# Since this is self-supervised learning, we don't
 # use the y_data as our labels.
 labels = tf.ones(shape=(x_data.shape[0]))
 # Create a a Cosine decay learning rate scheduler.
@@ -270,7 +271,7 @@ plt.xlabel("epoch")
 plt.show()
 
 """
-## Compute nearest neighbours
+## Compute the nearest neighbors
 """
 
 """
@@ -303,7 +304,7 @@ for batch_idx in tqdm(range(num_batches)):
 neighbours = np.reshape(np.array(neighbours), (-1, k_neighbours))
 
 """
-Let's display some neighbours on each row
+Let's display some neighbors on each row
 """
 
 nrows = 4
@@ -473,7 +474,8 @@ clustering_learner.compile(
     optimizer=tfa.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
     loss=losses,
 )
-# Fit the model.
+
+# Begin training the model.
 clustering_learner.fit(x=inputs, y=labels, batch_size=512, epochs=50)
 
 """
@@ -520,8 +522,7 @@ Notice that the clusters have roughly balanced sizes.
 """
 ### Visualize cluster images
 
-We display the *prototypes* of each cluster, which are the instances with the highest
-clustering confidence.
+Display the *prototypes*—instances with the highest clustering confidence—of each cluster:
 """
 
 num_images = 8
@@ -564,12 +565,12 @@ for c in range(num_clusters):
     print("cluster", c, "label is:", cluster_label, " -  accuracy:", accuracy, "%")
 
 """
-## Concluding remarks
+## Conclusion
 
 To improve the accuracy results, you can perform the a fine-tuning step through self-labeling,
 as described in the [paper](https://arxiv.org/abs/2005.12320), besides increasing the number
 of epochs in the representation learning phase and the clustering phase. Allowing
-the encoder weights to be tuned during the clustering phase yields better results as well.
+Allowing the encoder weights to be tuned during the clustering phase can yield better results as well.
 Note that such a technique is not expected to outperform the accuracy of supervised image
 classification techniques, rather showing that it can learn the semantics of the images and
 group them into clusters that are similar to their original classes.
