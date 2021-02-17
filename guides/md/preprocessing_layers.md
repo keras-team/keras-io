@@ -54,7 +54,7 @@ These layers are for standardizing the inputs of an image model.
 - `Resizing` layer: resizes a batch of images to a target size.
 - `Rescaling` layer: rescales and offsets the values of a batch of image (e.g. go from
 inputs in the `[0, 255]` range to inputs in the `[0, 1]` range.
-- `CenterCrop` layer: returns a center crop if a batch of images.
+- `CenterCrop` layer: returns a center crop of a batch of images.
 
 ### Image data augmentation layers
 
