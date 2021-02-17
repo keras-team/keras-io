@@ -9,10 +9,10 @@ Description: Semantic Clustering by Adopting Nearest neighbors (SCAN) algorithm.
 """
 ## Introduction
 
-This example demonstrates applying the [Semantic Clustering by Adopting Nearest neighbors
-(SCAN)](https://arxiv.org/abs/2005.12320) algorithm, by Wouter Van Gansbeke et. al, on the
-[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) images dataset. The algorithm,
-consists of two phases:
+This example demonstrates how to apply the [Semantic Clustering by Adopting Nearest neighbors
+(SCAN)](https://arxiv.org/abs/2005.12320) algorithm, Van Gansbeke et. al, 2020, on the
+[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset. The algorithm consists of
+two phases:
 1. Self-supervised visual representation learning of images, in which we use the
 [simCLR](https://arxiv.org/abs/2002.05709?ref=hackernoon.com) technique.
 2. Clustering of the learnt visual representation vectors that maximizes the agreement
@@ -567,11 +567,11 @@ for c in range(num_clusters):
 """
 ## Conclusion
 
-To improve the accuracy results, you can perform the a fine-tuning step through self-labeling,
-as described in the [paper](https://arxiv.org/abs/2005.12320), besides increasing the number
-of epochs in the representation learning phase and the clustering phase. Allowing
-Allowing the encoder weights to be tuned during the clustering phase can yield better results as well.
-Note that such a technique is not expected to outperform the accuracy of supervised image
-classification techniques, rather showing that it can learn the semantics of the images and
-group them into clusters that are similar to their original classes.
+To improve the accuracy results, you can: 1) increase the number
+of epochs in the representation learning and the clustering phases, 2)
+allow the encoder weights to be tuned during the clustering phase, and 3) perform a final
+fine-tuning step through self-labeling, as described in the [paper](https://arxiv.org/abs/2005.12320).
+Note that unsupervised image clustering techniques are not expected to outperform the accuracy
+of supervised image classification techniques, rather showing that they can learn the semantics
+of the images and group them into clusters that are similar to their original classes.
 """
