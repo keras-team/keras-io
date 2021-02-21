@@ -3,15 +3,15 @@ Title: Automatic Speech Recognition with Transformer
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2021/01/13
 Last modified: 2021/01/13
-Description: Implement a complete transformer and train it on sequence to sequence ASR.
+Description: Training a sequence-to-sequence Transformer for automatic speech recognition.
 """
 """
 ## Introduction
 
 Automatic speech recognition (ASR) consists of transcribing audio segments into text.
-A popular way to handle this task is to treat it as a sequence-to-sequence
-problem. The audio can be represented as a sequence of feature vectors,
-and the text can be represented as a sequence of characters, words, or subword tokens.
+ASK tasks can be treat sequence-to-sequence problems, where the
+audio can be represented as a sequence of feature vectors
+and the text—as a sequence of characters, words, or subword tokens.
 
 For this demonstration, we will use LJSpeech dataset from the
 [LibriVox](https://librivox.org/) project. It consists of short
@@ -37,7 +37,7 @@ from tensorflow.keras import layers
 
 
 """
-## Transformer Input Layer
+## Define the Transformer's Input Layer
 
 When processing past target tokens for the decoder, we compute the sum of 
 position embeddings and token embeddings.
@@ -47,39 +47,38 @@ them and process local relationships. It makes the training stable.
 """
 
 
-class TransformerInput(layers.Layer):
-    def __init__(
-        self, input_type="tokens", num_vocab=1000, num_hid=64, num_ff=128, maxlen=100,
-    ):
+class TokenEmbedding(layers.Layer):
+    def __init__(self, num_vocab=1000, maxlen=100, num_hid=64):
         super().__init__()
-        self.input_type = input_type
-        if input_type == "tokens":
-            self.emb = tf.keras.layers.Embedding(num_vocab, num_hid)
-        elif input_type == "features":
-            self.conv1 = tf.keras.layers.Conv1D(
-                num_hid, 11, strides=2, padding="same", activation="relu"
-            )
-            self.conv2 = tf.keras.layers.Conv1D(
-                num_hid, 11, strides=2, padding="same", activation="relu"
-            )
-            self.conv3 = tf.keras.layers.Conv1D(
-                num_hid, 11, strides=2, padding="same", activation="relu"
-            )
-        else:
-            raise ValueError("input_type must be one of ('tokens', 'features')")
+        self.emb = tf.keras.layers.Embedding(num_vocab, num_hid)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
-        if self.input_type == "tokens":
-            maxlen = tf.shape(x)[-1]
-            x = self.emb(x)
-            positions = tf.range(start=0, limit=maxlen, delta=1)
-            positions = self.pos_emb(positions)
-            return x + positions
-        else:
-            x = self.conv1(x)
-            x = self.conv2(x)
-            return self.conv3(x)
+        maxlen = tf.shape(x)[-1]
+        x = self.emb(x)
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = self.pos_emb(positions)
+        return x + positions
+
+
+class SpeechFeatureEmbedding(layers.Layer):
+    def __init__(self, num_hid=64, maxlen=100):
+        super().__init__()
+        self.conv1 = tf.keras.layers.Conv1D(
+            num_hid, 11, strides=2, padding="same", activation="relu"
+        )
+        self.conv2 = tf.keras.layers.Conv1D(
+            num_hid, 11, strides=2, padding="same", activation="relu"
+        )
+        self.conv3 = tf.keras.layers.Conv1D(
+            num_hid, 11, strides=2, padding="same", activation="relu"
+        )
+        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
+
+    def call(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        return self.conv3(x)
 
 
 """
@@ -87,12 +86,15 @@ class TransformerInput(layers.Layer):
 """
 
 
-class TransformerEncoderLayer(layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+class TransformerEncoder(layers.Layer):
+    def __init__(self, embed_dim, num_heads, feed_forward_dim, rate=0.1):
         super().__init__()
         self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(feed_forward_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -113,25 +115,28 @@ class TransformerEncoderLayer(layers.Layer):
 """
 
 
-class TransformerDecoderLayer(layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+class TransformerDecoder(layers.Layer):
+    def __init__(self, embed_dim, num_heads, feed_forward_dim, dropout_rate=0.1):
         super().__init__()
-        self.ln1 = layers.LayerNormalization(epsilon=1e-6)
-        self.ln2 = layers.LayerNormalization(epsilon=1e-6)
-        self.ln3 = layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm3 = layers.LayerNormalization(epsilon=1e-6)
         self.self_att = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embed_dim
         )
         self.enc_att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
-        self.self_drop = layers.Dropout(0.5)
-        self.enc_drop = layers.Dropout(0.0)
-        self.ffn_drop = layers.Dropout(0.0)
+        self.self_dropout = layers.Dropout(0.5)
+        self.enc_dropout = layers.Dropout(0.1)
+        self.ffn_dropout = layers.Dropout(0.1)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(feed_forward_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
 
     def causal_attention_mask(self, batch_size, n_dest, n_src, dtype):
-        """Mask the upper half of the dot product matrix in self attention.
+        """Masks the upper half of the dot product matrix in self attention.
 
         This prevents flow of information from future tokens to current token.
         1's in the lower triangle, counting from the lower right corner.
@@ -146,17 +151,17 @@ class TransformerDecoderLayer(layers.Layer):
         )
         return tf.tile(mask, mult)
 
-    def call(self, enc_out, trg):
-        input_shape = tf.shape(trg)
+    def call(self, enc_out, target):
+        input_shape = tf.shape(target)
         batch_size = input_shape[0]
         seq_len = input_shape[1]
         causal_mask = self.causal_attention_mask(batch_size, seq_len, seq_len, tf.bool)
-        trg_att = self.self_att(trg, trg, attention_mask=causal_mask)
-        trg_norm = self.ln1(trg + self.self_drop(trg_att))
-        enc_out = self.enc_att(trg_norm, enc_out)
-        enc_out_norm = self.ln2(self.enc_drop(enc_out) + trg_norm)
+        target_att = self.self_att(target, target, attention_mask=causal_mask)
+        target_norm = self.layernorm1(target + self.self_dropout(target_att))
+        enc_out = self.enc_att(target_norm, enc_out)
+        enc_out_norm = self.layernorm2(self.enc_dropout(enc_out) + target_norm)
         ffn_out = self.ffn(enc_out_norm)
-        ffn_out_norm = self.ln3(enc_out_norm + self.ffn_drop(ffn_out))
+        ffn_out_norm = self.layernorm3(enc_out_norm + self.ffn_dropout(ffn_out))
         return ffn_out_norm
 
 
@@ -169,29 +174,15 @@ as input. During inference, the decoder uses its own past predictions to predict
 next token.
 """
 
-loss_object = tf.keras.losses.CategoricalCrossentropy(
-    from_logits=True, label_smoothing=0.1, reduction="none"
-)
-
-
-def masked_loss(real, pred):
-    """ assuming pad token index = 0 """
-    one_hot = tf.one_hot(real, depth=34)
-    mask = tf.math.logical_not(tf.math.equal(real, 0))
-    loss_ = loss_object(one_hot, pred)
-    mask = tf.cast(mask, dtype=loss_.dtype)
-    loss_ *= mask
-    return tf.reduce_mean(loss_)
-
 
 class Transformer(keras.Model):
     def __init__(
         self,
         num_hid=64,
         num_head=2,
-        num_ff=128,
-        src_maxlen=100,
-        trg_maxlen=100,
+        num_feed_forward=128,
+        source_maxlen=100,
+        target_maxlen=100,
         num_layers_enc=4,
         num_layers_dec=1,
         num_classes=10,
@@ -200,50 +191,43 @@ class Transformer(keras.Model):
         self.loss_metric = keras.metrics.Mean(name="loss")
         self.num_layers_enc = num_layers_enc
         self.num_layers_dec = num_layers_dec
-        self.trg_maxlen = trg_maxlen
+        self.target_maxlen = target_maxlen
+        self.num_classes = num_classes
 
-        self.enc_input = TransformerInput(
-            input_type="features", num_hid=num_hid, maxlen=src_maxlen
+        self.enc_input = SpeechFeatureEmbedding(num_hid=num_hid, maxlen=source_maxlen)
+        self.dec_input = TokenEmbedding(
+            num_vocab=num_classes, maxlen=target_maxlen, num_hid=num_hid
         )
-        self.dec_input = TransformerInput(
-            input_type="tokens",
-            num_vocab=num_classes,
-            num_hid=num_hid,
-            maxlen=trg_maxlen,
+
+        self.encoder = keras.Sequential(
+            [self.enc_input]
+            + [
+                TransformerEncoder(num_hid, num_head, num_feed_forward)
+                for _ in range(num_layers_enc)
+            ]
         )
-        for i in range(num_layers_enc):
-            setattr(
-                self,
-                f"enc_layer_{i}",
-                TransformerEncoderLayer(num_hid, num_head, num_ff),
-            )
+
         for i in range(num_layers_dec):
             setattr(
                 self,
                 f"dec_layer_{i}",
-                TransformerDecoderLayer(num_hid, num_head, num_ff),
+                TransformerDecoder(num_hid, num_head, num_feed_forward),
             )
 
-        self.final = layers.Dense(num_classes)
+        self.classifier = layers.Dense(num_classes)
 
-    def encode_src(self, src):
-        x = self.enc_input(src)
-        for i in range(self.num_layers_enc):
-            x = getattr(self, f"enc_layer_{i}")(x)
-        return x
-
-    def decode(self, enc_out, trg):
-        y = self.dec_input(trg)
+    def decode(self, enc_out, target):
+        y = self.dec_input(target)
         for i in range(self.num_layers_dec):
             y = getattr(self, f"dec_layer_{i}")(enc_out, y)
         return y
 
     def call(self, inputs):
-        src = inputs[0]
-        trg = inputs[1]
-        x = self.encode_src(src)
-        y = self.decode(x, trg)
-        return self.final(y)
+        source = inputs[0]
+        target = inputs[1]
+        x = self.encoder(source)
+        y = self.decode(x, target)
+        return self.classifier(y)
 
     @property
     def metrics(self):
@@ -251,45 +235,55 @@ class Transformer(keras.Model):
 
     def train_step(self, batch):
         """ Process one batch inside model.fit() """
-        src = batch["src"]
-        trg = batch["trg"]
-        dec_inp = trg[:, :-1]
-        dec_trg = trg[:, 1:]
+        source = batch["source"]
+        target = batch["target"]
+        dec_input = target[:, :-1]
+        dec_target = target[:, 1:]
         with tf.GradientTape() as tape:
-            preds = self([src, dec_inp])
-            loss = masked_loss(dec_trg, preds)
+            preds = self([source, dec_input])
+            one_hot = tf.one_hot(dec_target, depth=self.num_classes)
+            mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
+            loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
 
-    def generate(self, src, trg_start_token_idx):
+    def test_step(self, batch):
+        source = batch["source"]
+        target = batch["target"]
+        dec_input = target[:, :-1]
+        dec_target = target[:, 1:]
+        preds = self([source, dec_input])
+        one_hot = tf.one_hot(dec_target, depth=self.num_classes)
+        mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
+        loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
+        self.loss_metric.update_state(loss)
+        return {"loss": self.loss_metric.result()}
+
+    def generate(self, source, target_start_token_idx):
         """ inference for one batch of inputs using greedy decoding """
-        bs = tf.shape(src)[0]
-        enc = self.encode_src(src)
-        dec_inp = tf.ones((bs, 1), dtype=tf.int32) * trg_start_token_idx
+        bs = tf.shape(source)[0]
+        enc = self.encoder(source)
+        dec_input = tf.ones((bs, 1), dtype=tf.int32) * target_start_token_idx
         dec_logits = []
-        for i in range(self.trg_maxlen - 1):
-            dec_out = self.decode(enc, dec_inp)
-            logits = self.final(dec_out)
+        for i in range(self.target_maxlen - 1):
+            dec_out = self.decode(enc, dec_input)
+            logits = self.classifier(dec_out)
             logits = tf.argmax(logits, axis=-1, output_type=tf.int32)
             last_logit = tf.expand_dims(logits[:, -1], axis=-1)
             dec_logits.append(last_logit)
-            dec_inp = tf.concat([dec_inp, last_logit], axis=-1)
-        return dec_inp
+            dec_input = tf.concat([dec_input, last_logit], axis=-1)
+        return dec_input
 
 
 """
-## Download dataset
+## Download the dataset
 
 Note: This requires ~3.6 GB of disk space and
 takes ~5 minutes for the extraction of files.
 """
-
-
-import keras
-import os
 
 keras.utils.get_file(
     os.path.join(os.getcwd(), "data.tar.gz"),
@@ -322,7 +316,7 @@ def get_data(wavs, id_to_text, maxlen=50):
 
 
 """
-## Preprocess dataset
+## Preprocess the dataset
 """
 
 
@@ -351,13 +345,13 @@ class VectorizeChar:
 
 max_target_len = 200  # all transcripts in out data are < 200 characters
 data = get_data(wavs, id_to_text, max_target_len)
-vectorize_layer = VectorizeChar(max_target_len)
-len(vectorize_layer.get_vocabulary())
+vectorizer = VectorizeChar(max_target_len)
+print("vocab size", len(vectorizer.get_vocabulary()))
 
 
 def create_text_ds(data):
     texts = [_["text"] for _ in data]
-    text_ds = [vectorize_layer(t) for t in texts]
+    text_ds = [vectorizer(t) for t in texts]
     text_ds = tf.data.Dataset.from_tensor_slices(text_ds)
     return text_ds
 
@@ -372,7 +366,7 @@ def path_to_audio(path):
     # normalisation
     means = tf.math.reduce_mean(x, 1, keepdims=True)
     stddevs = tf.math.reduce_std(x, 1, keepdims=True)
-    x = tf.divide(tf.subtract(x, means), stddevs)
+    x = (x - means) / stddevs
     audio_len = tf.shape(x)[0]
     # padding to 10 seconds
     pad_len = 2754
@@ -394,14 +388,14 @@ def create_tf_dataset(data, bs=4):
     audio_ds = create_audio_ds(data)
     text_ds = create_text_ds(data)
     ds = tf.data.Dataset.zip((audio_ds, text_ds))
-    ds = ds.map(lambda x, y: {"src": x, "trg": y})
+    ds = ds.map(lambda x, y: {"source": x, "target": y})
     ds = ds.batch(bs)
     ds = ds.prefetch(tf.data.experimental.AUTOTUNE)
     return ds
 
 
 """
-Check contents of one batch
+Check the contents of one batch
 """
 
 
@@ -413,53 +407,54 @@ ds = create_tf_dataset(train_data, bs=64)
 val_ds = create_tf_dataset(test_data, bs=4)
 
 for i in ds.take(1):
-    print(i["src"].shape)
-    print(i["trg"])
+    print(i["source"].shape)
+    print(i["target"])
 
 
 """
-## Callbacks to display predictions and to change learning rate
+## Callbacks to display predictions and to change the learning rate
 """
 
 
 class DisplayOutputs(keras.callbacks.Callback):
     def __init__(
-        self, batch, idx_to_token, trg_start_token_idx=27, trg_end_token_idx=28
+        self, batch, idx_to_token, target_start_token_idx=27, target_end_token_idx=28
     ):
         """ Displays a batch of outputs after every epoch 
-        Arguments:
-        - batch: test batch containing the keys "src" and "trg"
-        - idx_to_token: a List containing the vocabulary tokens corresponding to their indices
-        - trg_start_token_idx: start token index in the target vocabulary
-        - trg_end_token_idx: end token index in the target vocabulary
+        
+        Args:
+            batch: A test batch containing the keys "source" and "target"
+            idx_to_token: A List containing the vocabulary tokens corresponding to their indices
+            target_start_token_idx: A start token index in the target vocabulary
+            target_end_token_idx: An end token index in the target vocabulary
         """
         self.batch = batch
-        self.trg_start_token_idx = trg_start_token_idx
-        self.trg_end_token_idx = trg_end_token_idx
+        self.target_start_token_idx = target_start_token_idx
+        self.target_end_token_idx = target_end_token_idx
         self.idx_to_char = idx_to_token
 
     def on_epoch_end(self, epoch, logs=None):
         if epoch % 5 != 0:
             return
-        src = self.batch["src"]
-        trg = self.batch["trg"].numpy()
-        bs = tf.shape(src)[0]
-        preds = self.model.generate(src, self.trg_start_token_idx)
+        source = self.batch["source"]
+        target = self.batch["target"].numpy()
+        bs = tf.shape(source)[0]
+        preds = self.model.generate(source, self.target_start_token_idx)
         preds = preds.numpy()
         for i in range(bs):
-            target = ""
-            for idx in trg[i, :]:
-                target += "" + self.idx_to_char[idx]
+            target_text = ""
+            for idx in target[i, :]:
+                target_text += "" + self.idx_to_char[idx]
             prediction = ""
             over = False
             for idx in preds[i, :]:
-                if over:  # Add padding token once end token has beeen predicted
+                if over:  # Add a padding token once the end token has been predicted
                     prediction += "-"
                     continue
-                if idx == self.trg_end_token_idx:
+                if idx == self.target_end_token_idx:
                     over = True
                 prediction += "" + self.idx_to_char[idx]
-            print(f"target:     {target}")
+            print(f"target:     {target_text}")
             print(f"prediction: {prediction}")
             print()
 
@@ -468,15 +463,15 @@ def scheduler(epoch, lr):
     """ linear warm up - linear decay """
     init_lr = 0.00001
     lr_after_warmup = 0.001
-    final_lr = 0.00001
+    classifier_lr = 0.00001
     warmup_epochs = 15
     decay_epochs = 85
     if epoch < warmup_epochs:
         return init_lr + ((lr_after_warmup - init_lr) / (warmup_epochs - 1)) * epoch
     return max(
-        final_lr,
+        classifier_lr,
         lr_after_warmup
-        - (epoch - warmup_epochs) * (lr_after_warmup - final_lr) / (decay_epochs),
+        - (epoch - warmup_epochs) * (lr_after_warmup - classifier_lr) / (decay_epochs),
     )
 
 
@@ -484,14 +479,12 @@ def scheduler(epoch, lr):
 ## Create & train the end-to-end model
 """
 
+batch = next(iter(val_ds))
 
-for i in val_ds.take(1):
-    batch = i  # Use the first batch of validation set to display outputs
-
-# vocabulary to convert predicted indices to characters
-idx_to_char = vectorize_layer.get_vocabulary()
+# The vocabulary to convert predicted indices into characters
+idx_to_char = vectorizer.get_vocabulary()
 display_cb = DisplayOutputs(
-    batch, idx_to_char, trg_start_token_idx=2, trg_end_token_idx=3
+    batch, idx_to_char, target_start_token_idx=2, target_end_token_idx=3
 )  # set the arguments as per vocabulary index for '<' and '>'
 
 schedule_cb = tf.keras.callbacks.LearningRateScheduler(scheduler)
@@ -499,20 +492,25 @@ schedule_cb = tf.keras.callbacks.LearningRateScheduler(scheduler)
 model = Transformer(
     num_hid=200,
     num_head=2,
-    num_ff=400,
-    trg_maxlen=max_target_len,
+    num_feed_forward=400,
+    target_maxlen=max_target_len,
     num_layers_enc=4,
     num_layers_dec=1,
     num_classes=34,
 )
-model.compile(optimizer="adam")
+loss_fn = tf.keras.losses.CategoricalCrossentropy(
+    from_logits=True, label_smoothing=0.1,
+)
+model.compile(optimizer="adam", loss=loss_fn)
 
-history = model.fit(ds, callbacks=[display_cb, schedule_cb], epochs=1)
+history = model.fit(
+    ds, validation_data=val_ds, callbacks=[display_cb, schedule_cb], epochs=1
+)
 
 """
-In practice, train for ~100 epochs. 
+In practice, you should train for around 100 epochs or more. 
 
-Some of the predicted text around epoch 35.
+Some of the predicted text at or around epoch 35 may look as follows:
 ```
 target:     <as they sat in the car, frazier asked oswald where his lunch was>
 prediction: <as they sat in the car frazier his lunch ware mis lunch was>
