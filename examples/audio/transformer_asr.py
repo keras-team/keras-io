@@ -524,8 +524,7 @@ model = Transformer(
     num_classes=34,
 )
 loss_fn = tf.keras.losses.CategoricalCrossentropy(
-    from_logits=True,
-    label_smoothing=0.1,
+    from_logits=True, label_smoothing=0.1,
 )
 
 learning_rate = CustomSchedule(
