@@ -8,12 +8,12 @@ Description: Training a sequence-to-sequence Transformer for automatic speech re
 """
 ## Introduction
 
-Automatic speech recognition (ASR) consists of transcribing audio segments into text.
-ASK tasks can be treat sequence-to-sequence problems, where the
+Automatic speech recognition (ASR) consists of transcribing audio speech segments into text.
+ASR can be treated as a sequence-to-sequence problem, where the
 audio can be represented as a sequence of feature vectors
-and the text—as a sequence of characters, words, or subword tokens.
+and the text as a sequence of characters, words, or subword tokens.
 
-For this demonstration, we will use LJSpeech dataset from the
+For this demonstration, we will use the LJSpeech dataset from the
 [LibriVox](https://librivox.org/) project. It consists of short
 audio clips of a single speaker reading passages from 7 non-fiction books.
 Our model will be similar to the original Transformer (both encoder and decoder)
@@ -21,6 +21,7 @@ as proposed in the paper, "Attention is All You Need".
 
 
 **References:**
+
 - [Attention is All You Need](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf)
 - [Very Deep Self-Attention Networks for End-to-End Speech Recognition](https://arxiv.org/pdf/1904.13377.pdf)
 - [Speech Transformers](https://ieeexplore.ieee.org/document/8462506)
@@ -37,13 +38,13 @@ from tensorflow.keras import layers
 
 
 """
-## Define the Transformer's Input Layer
+## Define the Transformer Input Layer
 
 When processing past target tokens for the decoder, we compute the sum of 
 position embeddings and token embeddings.
 
 When processing audio features, we apply convolutional layers to downsample
-them and process local relationships. It makes the training stable.
+them (via convolution stides) and process local relationships.
 """
 
 
