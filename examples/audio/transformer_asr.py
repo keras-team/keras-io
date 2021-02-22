@@ -235,7 +235,7 @@ class Transformer(keras.Model):
         return [self.loss_metric]
 
     def train_step(self, batch):
-        """ Process one batch inside model.fit() """
+        """Processes one batch inside model.fit()."""
         source = batch["source"]
         target = batch["target"]
         dec_input = target[:, :-1]
