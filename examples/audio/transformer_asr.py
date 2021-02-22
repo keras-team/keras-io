@@ -169,7 +169,7 @@ class TransformerDecoder(layers.Layer):
 """
 ## Complete Transformer Model
 
-Our model takes audio spectrograms as input, and predicts a sequence of characters.
+Our model takes audio spectrograms as inputs and predicts a sequence of characters.
 During training, we give the decoder the target character sequence shifted to the left
 as input. During inference, the decoder uses its own past predictions to predict the 
 next token.
