@@ -53,7 +53,7 @@ y_data = np.concatenate([y_train, y_test])
 
 print("x_data shape:", x_data.shape, " - y_data shape:", y_data.shape)
 
-class_labels = [
+classes = [
     "airplane",
     "automobile",
     "bird",
@@ -107,7 +107,7 @@ image, we apply a set of data augmentation functions randomly to the input image
 data_augmentation = keras.Sequential(
     [
         layers.experimental.preprocessing.RandomTranslation(
-            (-0.2, 0.2), (-0.2, 0.2), fill_mode="nearest"
+            height_factor=(-0.2, 0.2), width_factor=(-0.2, 0.2), fill_mode="nearest"
         ),
         layers.experimental.preprocessing.RandomFlip(mode="horizontal"),
         layers.experimental.preprocessing.RandomRotation(
@@ -117,11 +117,6 @@ data_augmentation = keras.Sequential(
             height_factor=(-0.3, 0.1), width_factor=(-0.3, 0.1), fill_mode="nearest"
         ),
         layers.experimental.preprocessing.RandomContrast(factor=0.4),
-        layers.Lambda(lambda images: tf.image.random_brightness(images, max_delta=0.4)),
-        layers.Lambda(
-            lambda images: tf.image.random_saturation(images, lower=0, upper=0.4)
-        ),
-        layers.Lambda(lambda images: tf.image.random_hue(images, max_delta=0.1)),
     ]
 )
 
@@ -131,7 +126,7 @@ Display a random image
 
 image_idx = np.random.choice(range(x_data.shape[0]))
 image = x_data[image_idx]
-image_class = class_labels[y_data[image_idx][0]]
+image_class = classes[y_data[image_idx][0]]
 plt.figure(figsize=(3, 3))
 plt.imshow(x_data[image_idx].astype("uint8"))
 plt.title(image_class)
@@ -320,7 +315,7 @@ for _ in range(nrows):
     for j in range(ncols):
         plt.subplot(nrows, ncols, position)
         plt.imshow(x_data[indices[j]].astype("uint8"))
-        plt.title(class_labels[y_data[indices[j]][0]])
+        plt.title(classes[y_data[indices[j]][0]])
         plt.axis("off")
         position += 1
 
@@ -536,7 +531,7 @@ for c in range(num_clusters):
         image_idx = cluster_instances[j][0]
         plt.subplot(num_clusters, num_images, position)
         plt.imshow(x_data[image_idx].astype("uint8"))
-        plt.title(class_labels[y_data[image_idx][0]])
+        plt.title(classes[y_data[image_idx][0]])
         plt.axis("off")
         position += 1
 
@@ -562,7 +557,7 @@ for c in range(num_clusters):
     accuracy = (
         np.round((correct_count / cluster_size) * 100, 2) if cluster_size > 0 else 0
     )
-    cluster_label = class_labels[cluster_label_idx]
+    cluster_label = classes[cluster_label_idx]
     print("cluster", c, "label is:", cluster_label, " -  accuracy:", accuracy, "%")
 
 """
