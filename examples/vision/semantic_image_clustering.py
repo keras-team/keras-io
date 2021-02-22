@@ -13,10 +13,11 @@ This example demonstrates how to apply the [Semantic Clustering by Adopting Near
 (SCAN)](https://arxiv.org/abs/2005.12320) algorithm (Van Gansbeke et al., 2020) on the
 [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset. The algorithm consists of
 two phases:
+
 1. Self-supervised visual representation learning of images, in which we use the
-[simCLR](https://arxiv.org/abs/2002.05709?ref=hackernoon.com) technique.
-2. Clustering of the learnt visual representation vectors that maximizes the agreement
-between the cluster assignments of the neighbors.
+[simCLR](https://arxiv.org/abs/2002.05709) technique.
+2. Clustering of the learned visual representation vectors to maximize the agreement
+between the cluster assignments of neighboring vectors.
 
 The example requires [TensorFlow Addons](https://www.tensorflow.org/addons), 
 which you can install using the following command:
@@ -98,7 +99,7 @@ data_preprocessing.layers[-1].adapt(x_data)
 """
 ## Data augmentation
 
-Unlink simCLR, which randomly picks a single data augmentation function to apply to an input
+Unlike simCLR, which randomly picks a single data augmentation function to apply to an input
 image, we apply a set of data augmentation functions randomly to the input image.
 (You can experiment with other image augmentation techniques by following the [data augmentation tutorial](https://www.tensorflow.org/tutorials/images/data_augmentation).)
 """
