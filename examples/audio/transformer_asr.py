@@ -264,7 +264,7 @@ class Transformer(keras.Model):
         return {"loss": self.loss_metric.result()}
 
     def generate(self, source, target_start_token_idx):
-        """ inference for one batch of inputs using greedy decoding """
+        """Performs inference over one batch of inputs using greedy decoding."""
         bs = tf.shape(source)[0]
         enc = self.encoder(source)
         dec_input = tf.ones((bs, 1), dtype=tf.int32) * target_start_token_idx
