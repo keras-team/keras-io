@@ -11,22 +11,24 @@ Description: Converting data to TFRecords files.
 
 The TFRecord format is a simple format for storing a sequence of binary records,
 converting your data into TFRecords has many advantages:
-- **Storage**: the data may end up taking less space and it can also be partitioned into
+
+- **Efficient storage**: the data may end up taking less space and it can also be partitioned into
 multiple files.
-- **Efficiency**: data can be read with parallel I/O operations, useful for TPUs or
+- **Fast I/O**: the data can be read with parallel I/O operations, useful for TPUs or
 multiple hosts.
-- **Convenience**: data can be read from a single source (e.g.
-[COCO](https://cocodataset.org/) stores data into two folders, images, and annotation).
+- **Self-contained files**: the data can be read from a single source (e.g.
+by contrast, [COCO](https://cocodataset.org/) stores data into two folders,
+"images" and "annotations").
 
-An interesting use case of TFRecords are TPUs because the hardware is multi-core, and its
-speed usually benefits from optimized I/O operations, besides that TPUs usually require
-data to be stored remotely (e.g. Google storage), and storing your data as TFRecords
-makes it easier to the load data without batch-downloading it.
+An important use case of TFRecords is training on TPUs: TPUs are fast enough that
+they usually benefit from optimized I/O operations. In addition, TPUs require
+data to be stored remotely (e.g. on Google Cloud Storage), and storing your data as TFRecords
+makes it easier to the load data without batch-downloading it first.
 
-Performance with TFRecords can be further improved if later, you use it with the
+Performance with TFRecords can be further improved if you use it with the
 [tf.data](https://www.tensorflow.org/guide/data) API.
 
-Here we will learn how to convert data of different types (image, text, and numeric) into
+Here, we will learn how to convert data of different types (image, text, and numeric) into
 TFRecords.
 
 **Reference**
@@ -84,15 +86,16 @@ print(f"Number of images: {len(annotations)}")
 """
 ## The COCO2017 dataset
 
-We will be using the [COCO2017](https://cocodataset.org/) dataset because it has many
-different types of features and will serve as a good example of how to encode different
-features as TFRecords.
+We will be using the [COCO2017](https://cocodataset.org/) dataset, because it has many
+different types of features (images, floating point data, lists...):
+it will serve as a good example of how to encode different features as TFRecords.
 
-This dataset has two sets of features, images, and the instances meta-data.
+This dataset has two sets of fields: images, and annotation meta-data.
 
-Images are a collection of ".jpg" files, and the meta-data is a ".json" file that
-according to the [official site](https://cocodataset.org/#format-data) contains these
+Images are a collection of ".jpg" files, and the meta-data is a ".json" file which,
+according to the [official site](https://cocodataset.org/#format-data), contains the following
 properties:
+
 ```
 id: int,
 image_id: int,
@@ -166,7 +169,6 @@ def create_example(image, path, example):
         "id": int64_feature(example["id"]),
         "image_id": int64_feature(example["image_id"]),
     }
-
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
 
@@ -183,14 +185,13 @@ def parse_tfrecord_fn(example):
     example = tf.io.parse_single_example(example, feature_description)
     example["image"] = tf.io.decode_jpeg(example["image"], channels=3)
     example["bbox"] = tf.sparse.to_dense(example["bbox"])
-
     return example
 
 
 """
 ## Generating TFRecords
 
-The generated TFRecrods will have the file name format `file_{number}.tfrec`, this is
+The generated TFRecrods will have the file name format `file_{number}.tfrec`. This is
 optional, but writing the number of files at the file name can make counting easier.
 """
 
@@ -240,9 +241,7 @@ def prepare_sample(features):
 
 
 def get_dataset(filenames, batch_size):
-    """
-        Return a Tensorflow dataset ready for training or inference.
-    """
+    """Return a Tensorflow dataset ready for training or inference."""
     dataset = (
         tf.data.TFRecordDataset(
             filenames, num_parallel_reads=tf.data.experimental.AUTOTUNE
@@ -285,7 +284,7 @@ model.fit(
 """
 ## Conclusion
 
-Now instead of reading images and annotations from different folders, we can have all the
-information of the samples reading from the same source, the TFRecords that we just
-created. This process makes storing and reading the data much more easy and efficient.
+Now, instead of reading images and annotations from different folders, we can have all the
+information we need from a single source, the TFRecords that we just
+created. This process makes storing and reading the data simpler and more efficient.
 """
