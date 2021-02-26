@@ -87,7 +87,7 @@ print(f"Number of images: {len(annotations)}")
 ## The COCO2017 dataset
 
 We will be using the [COCO2017](https://cocodataset.org/) dataset, because it has many
-different types of features (images, floating point data, lists...):
+different types of features, including images, floating point data, and lists.
 it will serve as a good example of how to encode different features as TFRecords.
 
 This dataset has two sets of fields: images, and annotation meta-data.
