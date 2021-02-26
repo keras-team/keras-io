@@ -29,7 +29,7 @@ Performance with TFRecords can be further improved if you use it with the
 [tf.data](https://www.tensorflow.org/guide/data) API.
 
 Here, we will learn how to convert data of different types (image, text, and numeric) into
-TFRecords.
+TFRecord.
 
 **Reference**
 
