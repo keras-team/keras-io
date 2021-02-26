@@ -129,7 +129,7 @@ if not os.path.exists(tfrecords_dir):
     os.makedirs(tfrecords_dir)  # creating TFRecords output folder
 
 """
-## TFRecords functions
+## Define TFRecords helper functions
 """
 
 
