@@ -76,7 +76,7 @@ if not os.path.exists(annotations_dir):
     )
     os.remove(annotation_zip)
 
-print("Dataset is downloaded and extracted successfully.")
+print("The COCO dataset has been downloaded and extracted successfully.")
 
 with open(annotation_file, "r") as f:
     annotations = json.load(f)["annotations"]
