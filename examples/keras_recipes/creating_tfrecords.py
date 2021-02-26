@@ -231,7 +231,7 @@ Explain that you are able to do not use all features from the dataset
 """
 
 """
-## Dataset functions
+## Define dataset helper functions
 """
 
 
