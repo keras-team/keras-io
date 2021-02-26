@@ -107,7 +107,7 @@ area: float, area of the bounding box
 iscrowd: 0 or 1, is single object or a collection
 ```
 
-### Looking at the annotations of a single data sample
+### Explore the annotations of a single data sample
 """
 
 pprint.pprint(annotations[60])
