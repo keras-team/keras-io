@@ -192,8 +192,9 @@ def parse_tfrecord_fn(example):
 """
 ## Generate data in the TFRecord format
 
-The generated TFRecrods will have the file name format `file_{number}.tfrec`. This is
-optional, but writing the number of files at the file name can make counting easier.
+Let's generate the COCO2017 data in the TFRecord format. The format will be
+`file_{number}.tfrec` (this is optional, but including the number sequences in the file
+names can make counting easier).
 """
 
 for tfrec_num in range(n_tfrecods):
