@@ -12,13 +12,13 @@ Description: Converting data to the TFRecord format.
 The TFRecord format is a simple format for storing a sequence of binary records. 
 Converting your data into TFRecord has many advantages, such as:
 
-- **Efficient storage**: the data may end up taking less space and it can also be partitioned into
-multiple files.
-- **Fast I/O**: the data can be read with parallel I/O operations, useful for TPUs or
-multiple hosts.
-- **Self-contained files**: the data can be read from a single source (e.g.
-by contrast, [COCO](https://cocodataset.org/) stores data into two folders,
-"images" and "annotations").
+- **More efficient storage**: the TFRecord data can take up less space than the original data;
+it can also be partitioned into multiple files.
+- **Fast I/O**: the TFRecord format can be read with parallel I/O operations, which is useful 
+for [TPUs](https://www.tensorflow.org/guide/tpu) or multiple hosts.
+- **Self-contained files**: the TFRecord data can be read from a single source—for example,
+the [COCO2017](https://cocodataset.org/) dataset originally stores data in two folders
+("images" and "annotations").
 
 An important use case of the TFRecord data format  is training on TPUs. First, TPUs are fast
 enough to benefit from optimized I/O operations. In addition, TPUs require
