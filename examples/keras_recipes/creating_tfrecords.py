@@ -209,7 +209,7 @@ for tfrec_num in range(n_tfrecods):
             writer.write(example.SerializeToString())
 
 """
-## Looking at a generated TFRecord of a single data sample
+## Explore one sample from the generated TFRecord
 """
 
 raw_dataset = tf.data.TFRecordDataset(f"{tfrecords_dir}/file_00-{n_samples}.tfrec")
