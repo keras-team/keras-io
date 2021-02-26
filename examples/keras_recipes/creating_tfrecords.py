@@ -3,7 +3,7 @@ Title: Creating TFRecords
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
 Date created: 2021/02/25
 Last modified: 2021/02/25
-Description: Converting data to TFRecords files.
+Description: Converting data to the TFRecord format.
 """
 
 """
