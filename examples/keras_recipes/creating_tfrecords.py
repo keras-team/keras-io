@@ -9,8 +9,8 @@ Description: Converting data to the TFRecord format.
 """
 ## Introduction
 
-The TFRecord format is a simple format for storing a sequence of binary records,
-converting your data into TFRecords has many advantages:
+The TFRecord format is a simple format for storing a sequence of binary records. 
+Converting your data into TFRecord has many advantages, such as:
 
 - **Efficient storage**: the data may end up taking less space and it can also be partitioned into
 multiple files.
