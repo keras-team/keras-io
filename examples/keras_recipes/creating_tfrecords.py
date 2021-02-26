@@ -46,7 +46,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 """
-## Downloading the data
+## Download the COCO2017 dataset
 """
 
 root_dir = "datasets"
