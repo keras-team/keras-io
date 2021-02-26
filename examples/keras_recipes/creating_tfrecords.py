@@ -225,7 +225,7 @@ for features in parsed_dataset.take(1):
     plt.show()
 
 """
-## Training a simple model with the generated TFRecords
+## Train a simple model using the generated TFRecords
 
 Explain that you are able to do not use all features from the dataset
 """
