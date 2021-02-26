@@ -93,7 +93,7 @@ format.
 
 This dataset has two sets of fields: images and annotation meta-data.
 
-Images are a collection of ".jpg" files, and the meta-data is a ".json" file which,
+The images are a collection of JPG files and the meta-data are stored in a JSON file which,
 according to the [official site](https://cocodataset.org/#format-data), contains the following
 properties:
 
