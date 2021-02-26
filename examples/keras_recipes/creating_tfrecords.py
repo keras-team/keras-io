@@ -190,7 +190,7 @@ def parse_tfrecord_fn(example):
 
 
 """
-## Generating TFRecords
+## Generate data in the TFRecord format
 
 The generated TFRecrods will have the file name format `file_{number}.tfrec`. This is
 optional, but writing the number of files at the file name can make counting easier.
