@@ -25,8 +25,8 @@ they usually benefit from optimized I/O operations. In addition, TPUs require
 data to be stored remotely (e.g. on Google Cloud Storage), and storing your data as TFRecords
 makes it easier to the load data without batch-downloading it first.
 
-Performance with TFRecords can be further improved if you use it with the
-[tf.data](https://www.tensorflow.org/guide/data) API.
+Performance using the TFRecord format can be further improved if you also use combine 
+it with the [tf.data](https://www.tensorflow.org/guide/data) API.
 
 In this example you will learn how to convert data of different types (image, text, and numeric) into
 TFRecord.
