@@ -1,26 +1,38 @@
 """
 Title: Creating TFRecords
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
-Date created: 2021/02/22
-Last modified: 2021/02/22
+Date created: 2021/02/25
+Last modified: 2021/02/25
 Description: Converting data to TFRecords files.
 """
 
 """
-## Reference
-
-- [TFRecord and tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord)
-
 ## Introduction
 
-The TFRecord format is a simple format for storing a sequence of binary records.
+The TFRecord format is a simple format for storing a sequence of binary records,
+converting your data into TFRecords has many advantages:
+- **Storage**: the data may end up taking less space and it can also be partitioned into
+multiple files.
+- **Efficiency**: data can be read with parallel I/O operations, useful for TPUs or
+multiple hosts.
+- **Convenience**: data can be read from a single source (e.g.
+[COCO](https://cocodataset.org/) stores data into two folders, images, and annotation).
 
-Converting your data into TFRecords has many advantages, especially if later, you load it
-using the [tf.data](https://www.tensorflow.org/guide/data) API. The data will take less
-space from disk, it can also be read and processed faster.
+An interesting use case of TFRecords are TPUs because the hardware is multi-core, and its
+speed usually benefits from optimized I/O operations, besides that TPUs usually require
+data to be stored remotely (e.g. Google storage), and storing your data as TFRecords
+makes it easier to the load data without batch-downloading it.
+
+Performance with TFRecords can be further improved if later, you use it with the
+[tf.data](https://www.tensorflow.org/guide/data) API.
 
 Here we will learn how to convert data of different types (image, text, and numeric) into
 TFRecords.
+
+**Reference**
+
+- [TFRecord and tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord)
+
 
 ## Dependencies
 """
@@ -32,11 +44,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 """
-## Downloading the COCO2017 dataset
-
-We will be using the [COCO2017](https://cocodataset.org/) dataset because it has many
-different types of features and will serve as a good example of how to encode different
-features as TFRecords.
+## Downloading the data
 """
 
 root_dir = "datasets"
@@ -74,58 +82,89 @@ with open(annotation_file, "r") as f:
 print(f"Number of images: {len(annotations)}")
 
 """
-## Looking at the annotations of a single data sample
+## The COCO2017 dataset
+
+We will be using the [COCO2017](https://cocodataset.org/) dataset because it has many
+different types of features and will serve as a good example of how to encode different
+features as TFRecords.
+
+This dataset has two sets of features, images, and the instances meta-data.
+
+Images are a collection of ".jpg" files, and the meta-data is a ".json" file that
+according to the [official site](https://cocodataset.org/#format-data) contains these
+properties:
+```
+id: int,
+image_id: int,
+category_id: int,
+segmentation: RLE or [polygon], object segmentation mask
+bbox: [x,y,width,height], object bounding box coordinates
+area: float, area of the bounding box
+iscrowd: 0 or 1, is single object or a collection
+```
+
+### Looking at the annotations of a single data sample
 """
 
 pprint.pprint(annotations[60])
 
 """
 ## Parameters
+
+`n_samples` is the number of data samples on each TFRecord file.
+
+`n_tfrecods` is total number of TFRecords that we will create.
 """
 
-n_samples = 4096  # number of samples on each TFRecord
-n_tfrecods = len(annotations) // n_samples  # total number of TFRecords
+n_samples = 4096
+n_tfrecods = len(annotations) // n_samples
 if len(annotations) % n_samples:
-    n_tfrecods += 1
+    n_tfrecods += 1  # add one record if there are any remaining samples
 
 if not os.path.exists(tfrecords_dir):
-    os.makedirs(tfrecords_dir)  # Creating output folder
+    os.makedirs(tfrecords_dir)  # creating TFRecords output folder
 
 """
-## Auxiliary functions
+## TFRecords functions
 """
 
 
-def _bytes_feature(value):
+def image_feature(value):
     """Returns a bytes_list from a string / byte."""
-    if isinstance(value, type(tf.constant(0))):
-        value = value.numpy()  # BytesList won't unpack a string from an EagerTensor.
-    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+    return tf.train.Feature(
+        bytes_list=tf.train.BytesList(value=[tf.io.encode_jpeg(value).numpy()])
+    )
 
 
-def _float_feature(value):
+def bytes_feature(value):
+    """Returns a bytes_list from a string / byte."""
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.encode()]))
+
+
+def float_feature(value):
     """Returns a float_list from a float / double."""
     return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
 
 
-def _int64_feature(value):
+def int64_feature(value):
     """Returns an int64_list from a bool / enum / int / uint."""
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-def _float_feature_list(value):
+def float_feature_list(value):
     """Returns a list of float_list from a float / double."""
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
-def create_example(image, example):
+def create_example(image, path, example):
     feature = {
-        "image": _bytes_feature(image),
-        "area": _float_feature(example["area"]),
-        "bbox": _float_feature_list(example["bbox"]),
-        "category_id": _int64_feature(example["category_id"]),
-        "id": _int64_feature(example["id"]),
-        "image_id": _int64_feature(example["image_id"]),
+        "image": image_feature(image),
+        "path": bytes_feature(path),
+        "area": float_feature(example["area"]),
+        "bbox": float_feature_list(example["bbox"]),
+        "category_id": int64_feature(example["category_id"]),
+        "id": int64_feature(example["id"]),
+        "image_id": int64_feature(example["image_id"]),
     }
 
     return tf.train.Example(features=tf.train.Features(feature=feature))
@@ -134,6 +173,7 @@ def create_example(image, example):
 def parse_tfrecord_fn(example):
     feature_description = {
         "image": tf.io.FixedLenFeature([], tf.string),
+        "path": tf.io.FixedLenFeature([], tf.string),
         "area": tf.io.FixedLenFeature([], tf.float32),
         "bbox": tf.io.VarLenFeature(tf.float32),
         "category_id": tf.io.FixedLenFeature([], tf.int64),
@@ -141,7 +181,7 @@ def parse_tfrecord_fn(example):
         "image_id": tf.io.FixedLenFeature([], tf.int64),
     }
     example = tf.io.parse_single_example(example, feature_description)
-    example["image"] = tf.image.decode_jpeg(example["image"], channels=3)
+    example["image"] = tf.io.decode_jpeg(example["image"], channels=3)
     example["bbox"] = tf.sparse.to_dense(example["bbox"])
 
     return example
@@ -162,9 +202,8 @@ for tfrec_num in range(n_tfrecods):
     ) as writer:
         for sample in samples:
             image_path = f"{images_dir}/{sample['image_id']:012d}.jpg"
-            image = tf.io.read_file(image_path).numpy()
-
-            example = create_example(image, sample)
+            image = tf.io.decode_jpeg(tf.io.read_file(image_path))
+            example = create_example(image, image_path, sample)
             writer.write(example.SerializeToString())
 
 """
@@ -183,6 +222,65 @@ for features in parsed_dataset.take(1):
     plt.figure(figsize=(7, 7))
     plt.imshow(features["image"].numpy())
     plt.show()
+
+"""
+## Training a simple model with the generated TFRecords
+
+Explain that you are able to do not use all features from the dataset
+"""
+
+"""
+## Dataset functions
+"""
+
+
+def prepare_sample(features):
+    image = tf.image.resize(features["image"], size=(224, 224))
+    return image, features["category_id"]
+
+
+def get_dataset(filenames, batch_size):
+    """
+        Return a Tensorflow dataset ready for training or inference.
+    """
+    dataset = (
+        tf.data.TFRecordDataset(
+            filenames, num_parallel_reads=tf.data.experimental.AUTOTUNE
+        )
+        .map(parse_tfrecord_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        .map(prepare_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        .shuffle(batch_size * 10)
+        .batch(batch_size)
+        .prefetch(tf.data.experimental.AUTOTUNE)
+    )
+    return dataset
+
+
+train_filenames = tf.io.gfile.glob(tfrecords_dir + "/*.tfrec")
+batch_size = 64
+epochs = 5
+steps_per_epoch = 50
+
+
+input_tensor = tf.keras.layers.Input(shape=(224, 224, 3), name="image")
+model = tf.keras.applications.EfficientNetB0(
+    input_tensor=input_tensor, weights=None, classes=91
+)
+
+
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    metrics=["sparse_categorical_accuracy"],
+)
+
+
+model.fit(
+    x=get_dataset(train_filenames, batch_size),
+    epochs=epochs,
+    steps_per_epoch=steps_per_epoch,
+    verbose=1,
+)
 
 """
 ## Conclusion
