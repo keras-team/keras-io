@@ -286,7 +286,8 @@ model.fit(
 """
 ## Conclusion
 
-Now, instead of reading images and annotations from different folders, we can have all the
-information we need from a single source, the TFRecords that we just
-created. This process makes storing and reading the data simpler and more efficient.
+This example demonstrates that instead of reading images and annotations from different sources
+you can have your data coming from a single source thanks to TFRecord. This process can
+make storing and reading data simpler and more efficient. For more information, you can go 
+to the [TFRecord and tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord) tutorial.
 """
