@@ -20,10 +20,10 @@ multiple hosts.
 by contrast, [COCO](https://cocodataset.org/) stores data into two folders,
 "images" and "annotations").
 
-An important use case of TFRecords is training on TPUs: TPUs are fast enough that
-they usually benefit from optimized I/O operations. In addition, TPUs require
-data to be stored remotely (e.g. on Google Cloud Storage), and storing your data as TFRecords
-makes it easier to the load data without batch-downloading it first.
+An important use case of the TFRecord data format  is training on TPUs. First, TPUs are fast
+enough to benefit from optimized I/O operations. In addition, TPUs require
+data to be stored remotely (e.g. on Google Cloud Storage) and using the TFRecord format
+makes it easier to load the data without batch-downloading.
 
 Performance using the TFRecord format can be further improved if you also use combine 
 it with the [tf.data](https://www.tensorflow.org/guide/data) API.
