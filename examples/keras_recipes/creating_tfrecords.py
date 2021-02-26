@@ -28,7 +28,7 @@ makes it easier to the load data without batch-downloading it first.
 Performance with TFRecords can be further improved if you use it with the
 [tf.data](https://www.tensorflow.org/guide/data) API.
 
-Here, we will learn how to convert data of different types (image, text, and numeric) into
+In this example you will learn how to convert data of different types (image, text, and numeric) into
 TFRecord.
 
 **Reference**
