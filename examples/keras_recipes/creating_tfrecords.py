@@ -91,7 +91,7 @@ different types of features, including images, floating point data, and lists.
 It will serve as a good example of how to encode different features into the TFRecord 
 format.
 
-This dataset has two sets of fields: images, and annotation meta-data.
+This dataset has two sets of fields: images and annotation meta-data.
 
 Images are a collection of ".jpg" files, and the meta-data is a ".json" file which,
 according to the [official site](https://cocodataset.org/#format-data), contains the following
