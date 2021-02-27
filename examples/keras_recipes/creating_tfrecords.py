@@ -1,8 +1,8 @@
 """
 Title: Creating TFRecords
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
-Date created: 2021/02/25
-Last modified: 2021/02/25
+Date created: 2021/02/27
+Last modified: 2021/02/27
 Description: Converting data to the TFRecord format.
 """
 
@@ -12,24 +12,24 @@ Description: Converting data to the TFRecord format.
 The TFRecord format is a simple format for storing a sequence of binary records. 
 Converting your data into TFRecord has many advantages, such as:
 
-- **More efficient storage**: the TFRecord data can take up less space than the original data;
-it can also be partitioned into multiple files.
-- **Fast I/O**: the TFRecord format can be read with parallel I/O operations, which is useful 
-for [TPUs](https://www.tensorflow.org/guide/tpu) or multiple hosts.
-- **Self-contained files**: the TFRecord data can be read from a single source—for example,
-the [COCO2017](https://cocodataset.org/) dataset originally stores data in two folders
-("images" and "annotations").
+- **More efficient storage**: the TFRecord data can take up less space than the original
+data; it can also be partitioned into multiple files.
+- **Fast I/O**: the TFRecord format can be read with parallel I/O operations, which is
+useful for [TPUs](https://www.tensorflow.org/guide/tpu) or multiple hosts.
+- **Self-contained files**: the TFRecord data can be read from a single source—for
+example, the [COCO2017](https://cocodataset.org/) dataset originally stores data in 
+two folders ("images" and "annotations").
 
-An important use case of the TFRecord data format  is training on TPUs. First, TPUs are fast
-enough to benefit from optimized I/O operations. In addition, TPUs require
+An important use case of the TFRecord data format  is training on TPUs. First, TPUs are
+fast enough to benefit from optimized I/O operations. In addition, TPUs require
 data to be stored remotely (e.g. on Google Cloud Storage) and using the TFRecord format
 makes it easier to load the data without batch-downloading.
 
 Performance using the TFRecord format can be further improved if you also use 
 it with the [tf.data](https://www.tensorflow.org/guide/data) API.
 
-In this example you will learn how to convert data of different types (image, text, and numeric) into
-TFRecord.
+In this example you will learn how to convert data of different types (image, text, and
+numeric) into TFRecord.
 
 **Reference**
 
@@ -62,10 +62,7 @@ annotations_url = (
 # Download image files
 if not os.path.exists(images_dir):
     image_zip = tf.keras.utils.get_file(
-        "images.zip", 
-        cache_dir=os.path.abspath("."), 
-        origin=images_url, 
-        extract=True,
+        "images.zip", cache_dir=os.path.abspath("."), origin=images_url, extract=True,
     )
     os.remove(image_zip)
 
@@ -96,9 +93,9 @@ format.
 
 This dataset has two sets of fields: images and annotation meta-data.
 
-The images are a collection of JPG files and the meta-data are stored in a JSON file which,
-according to the [official site](https://cocodataset.org/#format-data), contains the following
-properties:
+The images are a collection of JPG files and the meta-data are stored in a JSON file
+which, according to the [official site](https://cocodataset.org/#format-data), 
+contains the following properties:
 
 ```
 id: int,
@@ -234,22 +231,23 @@ for features in parsed_dataset.take(1):
 
 Another advantage of TFRecord is that you are able to add many features to it and later 
 use only a few of them, in this case, we are going to use only `image` and `category_id`.
+
 """
 
 """
+
 ## Define dataset helper functions
 """
 
+
 def prepare_sample(features):
-    image = tf.image.resize(features['image'], size=(224, 224))
-    return image, features['category_id']
+    image = tf.image.resize(features["image"], size=(224, 224))
+    return image, features["category_id"]
 
 
 def get_dataset(filenames, batch_size):
     dataset = (
-        tf.data.TFRecordDataset(
-            filenames, num_parallel_reads=AUTOTUNE
-        )
+        tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
         .map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
         .map(prepare_sample, num_parallel_calls=AUTOTUNE)
         .shuffle(batch_size * 10)
@@ -259,7 +257,7 @@ def get_dataset(filenames, batch_size):
     return dataset
 
 
-train_filenames = tf.io.gfile.glob(tfrecords_dir + "/*.tfrec")
+train_filenames = tf.io.gfile.glob(f"{tfrecords_dir}/*.tfrec")
 batch_size = 32
 epochs = 1
 steps_per_epoch = 50
@@ -274,7 +272,7 @@ model = tf.keras.applications.EfficientNetB0(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
+    metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
 )
 
 
@@ -282,14 +280,15 @@ model.fit(
     x=get_dataset(train_filenames, batch_size),
     epochs=epochs,
     steps_per_epoch=steps_per_epoch,
-    verbose=1
+    verbose=1,
 )
 
 """
 ## Conclusion
 
-This example demonstrates that instead of reading images and annotations from different sources
-you can have your data coming from a single source thanks to TFRecord. This process can
-make storing and reading data simpler and more efficient. For more information, you can go 
-to the [TFRecord and tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord) tutorial.
+This example demonstrates that instead of reading images and annotations from different
+sources you can have your data coming from a single source thanks to TFRecord. 
+This process can make storing and reading data simpler and more efficient. 
+For more information, you can go to the [TFRecord and
+tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord) tutorial.
 """
