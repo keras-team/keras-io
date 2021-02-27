@@ -25,7 +25,7 @@ enough to benefit from optimized I/O operations. In addition, TPUs require
 data to be stored remotely (e.g. on Google Cloud Storage) and using the TFRecord format
 makes it easier to load the data without batch-downloading.
 
-Performance using the TFRecord format can be further improved if you also use combine 
+Performance using the TFRecord format can be further improved if you also use 
 it with the [tf.data](https://www.tensorflow.org/guide/data) API.
 
 In this example you will learn how to convert data of different types (image, text, and numeric) into
@@ -62,7 +62,10 @@ annotations_url = (
 # Download image files
 if not os.path.exists(images_dir):
     image_zip = tf.keras.utils.get_file(
-        "images.zip", cache_dir=os.path.abspath("."), origin=images_url, extract=True,
+        "images.zip", 
+        cache_dir=os.path.abspath("."), 
+        origin=images_url, 
+        extract=True,
     )
     os.remove(image_zip)
 
@@ -115,15 +118,15 @@ pprint.pprint(annotations[60])
 """
 ## Parameters
 
-`n_samples` is the number of data samples on each TFRecord file.
+`num_samples` is the number of data samples on each TFRecord file.
 
-`n_tfrecods` is total number of TFRecords that we will create.
+`num_tfrecods` is total number of TFRecords that we will create.
 """
 
-n_samples = 4096
-n_tfrecods = len(annotations) // n_samples
-if len(annotations) % n_samples:
-    n_tfrecods += 1  # add one record if there are any remaining samples
+num_samples = 4096
+num_tfrecods = len(annotations) // num_samples
+if len(annotations) % num_samples:
+    num_tfrecods += 1  # add one record if there are any remaining samples
 
 if not os.path.exists(tfrecords_dir):
     os.makedirs(tfrecords_dir)  # creating TFRecords output folder
@@ -197,8 +200,8 @@ Let's generate the COCO2017 data in the TFRecord format. The format will be
 names can make counting easier).
 """
 
-for tfrec_num in range(n_tfrecods):
-    samples = annotations[(tfrec_num * n_samples) : ((tfrec_num + 1) * n_samples)]
+for tfrec_num in range(num_tfrecods):
+    samples = annotations[(tfrec_num * num_samples) : ((tfrec_num + 1) * num_samples)]
 
     with tf.io.TFRecordWriter(
         tfrecords_dir + "/file_%.2i-%i.tfrec" % (tfrec_num, len(samples))
@@ -213,7 +216,7 @@ for tfrec_num in range(n_tfrecods):
 ## Explore one sample from the generated TFRecord
 """
 
-raw_dataset = tf.data.TFRecordDataset(f"{tfrecords_dir}/file_00-{n_samples}.tfrec")
+raw_dataset = tf.data.TFRecordDataset(f"{tfrecords_dir}/file_00-{num_samples}.tfrec")
 parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
 
 for features in parsed_dataset.take(1):
@@ -229,39 +232,38 @@ for features in parsed_dataset.take(1):
 """
 ## Train a simple model using the generated TFRecords
 
-Explain that you are able to do not use all features from the dataset
+Another advantage of TFRecord is that you are able to add many features to it and later 
+use only a few of them, in this case, we are going to use only `image` and `category_id`.
 """
 
 """
 ## Define dataset helper functions
 """
 
-
 def prepare_sample(features):
-    image = tf.image.resize(features["image"], size=(224, 224))
-    return image, features["category_id"]
+    image = tf.image.resize(features['image'], size=(224, 224))
+    return image, features['category_id']
 
 
 def get_dataset(filenames, batch_size):
-    """Return a Tensorflow dataset ready for training or inference."""
     dataset = (
         tf.data.TFRecordDataset(
-            filenames, num_parallel_reads=tf.data.experimental.AUTOTUNE
+            filenames, num_parallel_reads=AUTOTUNE
         )
-        .map(parse_tfrecord_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        .map(prepare_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        .map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
+        .map(prepare_sample, num_parallel_calls=AUTOTUNE)
         .shuffle(batch_size * 10)
         .batch(batch_size)
-        .prefetch(tf.data.experimental.AUTOTUNE)
+        .prefetch(AUTOTUNE)
     )
     return dataset
 
 
 train_filenames = tf.io.gfile.glob(tfrecords_dir + "/*.tfrec")
-batch_size = 64
-epochs = 5
+batch_size = 32
+epochs = 1
 steps_per_epoch = 50
-
+AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 input_tensor = tf.keras.layers.Input(shape=(224, 224, 3), name="image")
 model = tf.keras.applications.EfficientNetB0(
@@ -272,7 +274,7 @@ model = tf.keras.applications.EfficientNetB0(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=["sparse_categorical_accuracy"],
+    metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
 )
 
 
@@ -280,7 +282,7 @@ model.fit(
     x=get_dataset(train_filenames, batch_size),
     epochs=epochs,
     steps_per_epoch=steps_per_epoch,
-    verbose=1,
+    verbose=1
 )
 
 """
