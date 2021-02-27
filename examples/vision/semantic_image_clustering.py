@@ -168,8 +168,10 @@ def create_encoder(representation_dim):
 ### Implement the unsupervised contrastive loss
 """
 
-    
-def constrative_loss(feature_vectors, batch_size, num_augmentations, temperature, l2_normalize):
+
+def constrative_loss(
+    feature_vectors, batch_size, num_augmentations, temperature, l2_normalize
+):
     if l2_normalize:
         feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
     # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
@@ -194,16 +196,24 @@ def constrative_loss(feature_vectors, batch_size, num_augmentations, temperature
 ### Implement representation learner
 """
 
-class RepresentationLearner(keras.Model):
 
-    def __init__(self, encoder, projector, num_augmentations, temperature=1.0, l2_normalize=False, **kwargs):
+class RepresentationLearner(keras.Model):
+    def __init__(
+        self,
+        encoder,
+        projector,
+        num_augmentations,
+        temperature=1.0,
+        l2_normalize=False,
+        **kwargs
+    ):
         super(RepresentationLearner, self).__init__(**kwargs)
         self.encoder = encoder
         self.projector = projector
         self.num_augmentations = num_augmentations
         self.temperature = temperature
         self.l2_normalize = l2_normalize
-        self.loss_tracker = keras.metrics.Mean(name='loss')
+        self.loss_tracker = keras.metrics.Mean(name="loss")
 
     @property
     def metrics(self):
@@ -212,7 +222,7 @@ class RepresentationLearner(keras.Model):
     def call(self, inputs):
         # Preprocess the input images.
         preprocessed = data_preprocessing(inputs)
-         # Create augmented versions of the images.
+        # Create augmented versions of the images.
         features = self.encoder(preprocessed)
         # Add a projection head.
         return self.projector(features)
@@ -228,7 +238,11 @@ class RepresentationLearner(keras.Model):
             feature_vectors = self.call(augmented)
             batch_size = tf.shape(inputs)[0]
             loss = constrative_loss(
-                feature_vectors, batch_size, self.num_augmentations, self.temperature, self.l2_normalize
+                feature_vectors,
+                batch_size,
+                self.num_augmentations,
+                self.temperature,
+                self.l2_normalize,
             )
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -247,12 +261,14 @@ class RepresentationLearner(keras.Model):
 # Create vision encoder.
 encoder = create_encoder(representation_dim)
 # Create projection head.
-projector = keras.Sequential([
-    layers.Dropout(rate=0.1),
-    layers.Dense(units=projection_units, use_bias=False),
-    layers.BatchNormalization(),
-    layers.ReLU(),
-])
+projector = keras.Sequential(
+    [
+        layers.Dropout(rate=0.1),
+        layers.Dense(units=projection_units, use_bias=False),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+    ]
+)
 
 representation_learner = RepresentationLearner(
     encoder, projector, num_augmentations, temperature=0.1
