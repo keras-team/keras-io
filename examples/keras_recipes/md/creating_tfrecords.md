@@ -1,12 +1,16 @@
-"""
-Title: Creating TFRecords
-Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
-Date created: 2021/02/27
-Last modified: 2021/02/27
-Description: Converting data to the TFRecord format.
-"""
+# Creating TFRecords
 
-"""
+**Author:** [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)<br>
+**Date created:** 2021/02/27<br>
+**Last modified:** 2021/02/27<br>
+**Description:** Converting data to the TFRecord format.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_recipes/ipynb/creating_tfrecords.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_recipes/creating_tfrecords.py)
+
+
+
+---
 ## Introduction
 
 The TFRecord format is a simple format for storing a sequence of binary records.
@@ -36,16 +40,19 @@ numeric) into TFRecord.
 - [TFRecord and tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord)
 
 
+---
 ## Dependencies
-"""
 
+
+```python
 import os
 import json
 import pprint
 import tensorflow as tf
 import matplotlib.pyplot as plt
+```
 
-"""
+---
 ## Download the COCO2017 dataset
 
 We will be using the [COCO2017](https://cocodataset.org/) dataset, because it has many
@@ -68,8 +75,9 @@ bbox: [x,y,width,height], object bounding box coordinates
 area: float, area of the bounding box
 iscrowd: 0 or 1, is single object or a collection
 ```
-"""
 
+
+```python
 root_dir = "datasets"
 tfrecords_dir = "tfrecords"
 images_dir = os.path.join(root_dir, "val2017")
@@ -103,21 +111,52 @@ with open(annotation_file, "r") as f:
     annotations = json.load(f)["annotations"]
 
 print(f"Number of images: {len(annotations)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from http://images.cocodataset.org/zips/val2017.zip
+815587328/815585330 [==============================] - 990s 1us/step
+Downloading data from http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+172441600/252907541 [===================>..........] - ETA: 1:35
+
+```
+</div>
 ### Contents of the COCO2017 dataset
-"""
 
+
+```python
 pprint.pprint(annotations[60])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+{'area': 367.89710000000014,
+ 'bbox': [265.67, 222.31, 26.48, 14.71],
+ 'category_id': 72,
+ 'id': 34096,
+ 'image_id': 525083,
+ 'iscrowd': 0,
+ 'segmentation': [[267.51,
+                   222.31,
+                   292.15,
+                   222.31,
+                   291.05,
+                   237.02,
+                   265.67,
+                   237.02]]}
+
+```
+</div>
+---
 ## Parameters
 
 `num_samples` is the number of data samples on each TFRecord file.
 
 `num_tfrecods` is total number of TFRecords that we will create.
-"""
 
+
+```python
 num_samples = 4096
 num_tfrecods = len(annotations) // num_samples
 if len(annotations) % num_samples:
@@ -125,11 +164,13 @@ if len(annotations) % num_samples:
 
 if not os.path.exists(tfrecords_dir):
     os.makedirs(tfrecords_dir)  # creating TFRecords output folder
+```
 
-"""
+---
 ## Define TFRecords helper functions
-"""
 
+
+```python
 
 def image_feature(value):
     """Returns a bytes_list from a string / byte."""
@@ -186,15 +227,17 @@ def parse_tfrecord_fn(example):
     example["bbox"] = tf.sparse.to_dense(example["bbox"])
     return example
 
+```
 
-"""
+---
 ## Generate data in the TFRecord format
 
 Let's generate the COCO2017 data in the TFRecord format. The format will be
 `file_{number}.tfrec` (this is optional, but including the number sequences in the file
 names can make counting easier).
-"""
 
+
+```python
 for tfrec_num in range(num_tfrecods):
     samples = annotations[(tfrec_num * num_samples) : ((tfrec_num + 1) * num_samples)]
 
@@ -206,11 +249,13 @@ for tfrec_num in range(num_tfrecods):
             image = tf.io.decode_jpeg(tf.io.read_file(image_path))
             example = create_example(image, image_path, sample)
             writer.write(example.SerializeToString())
+```
 
-"""
+---
 ## Explore one sample from the generated TFRecord
-"""
 
+
+```python
 raw_dataset = tf.data.TFRecordDataset(f"{tfrecords_dir}/file_00-{num_samples}.tfrec")
 parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
 
@@ -223,20 +268,34 @@ for features in parsed_dataset.take(1):
     plt.figure(figsize=(7, 7))
     plt.imshow(features["image"].numpy())
     plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+bbox: [473.07 395.93  38.65  28.67]
+area: 702.1057739257812
+category_id: 18
+id: 1768
+image_id: 289343
+path: b'datasets/val2017/000000289343.jpg'
+Image shape: (640, 529, 3)
+
+```
+</div>
+![png](/img/examples/keras_recipes/creating_tfrecords/creating_tfrecords_14_1.png)
+
+
+---
 ## Train a simple model using the generated TFRecords
 
 Another advantage of TFRecord is that you are able to add many features to it and later
 use only a few of them, in this case, we are going to use only `image` and `category_id`.
 
-"""
-
-"""
-
+---
 ## Define dataset helper functions
-"""
 
+
+```python
 
 def prepare_sample(features):
     image = tf.image.resize(features["image"], size=(224, 224))
@@ -280,8 +339,17 @@ model.fit(
     steps_per_epoch=steps_per_epoch,
     verbose=1,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+50/50 [==============================] - 258s 5s/step - loss: 3.9857 - sparse_categorical_accuracy: 0.2375
+
+<tensorflow.python.keras.callbacks.History at 0x7f6ca4160d90>
+
+```
+</div>
+---
 ## Conclusion
 
 This example demonstrates that instead of reading images and annotations from different
@@ -289,4 +357,3 @@ sources you can have your data coming from a single source thanks to TFRecord.
 This process can make storing and reading data simpler and more efficient.
 For more information, you can go to the [TFRecord and
 tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord) tutorial.
-"""
