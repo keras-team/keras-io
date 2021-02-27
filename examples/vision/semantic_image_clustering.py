@@ -73,7 +73,7 @@ classes = [
 target_size = 32  # Resize the input images.
 representation_dim = 512  # The dimensions of the features vector.
 projection_units = 128  # The projection head of the representation learner.
-num_augumentations = 2  # Number of augmented images to generate for each input.
+num_augmentations = 2  # Number of augmented images to generate for each input.
 num_clusters = 20  # Number of clusters.
 k_neighbours = 5  # Number of neighbors to consider during cluster learning.
 tune_encoder_during_clustering = False  # Freeze the encoder in the cluster learning.
@@ -168,78 +168,95 @@ def create_encoder(representation_dim):
 ### Implement the unsupervised contrastive loss
 """
 
-
-class ContrastiveLoss(keras.losses.Loss):
-    def __init__(self, temperature=1.0, l2_normalize=False):
-        super(ContrastiveLoss, self).__init__()
-        self.temperature = temperature
-        self.l2_normalize = l2_normalize
-
-    def __call__(self, labels, feature_vectors, sample_weight=None):
-        # The shape of feature_vectors is [num_augmentations * batch_size, projection_units].
-        # Convert labels to an identiy matrix of shape [batch_size, batch_size].
-        labels = tf.eye(tf.shape(labels)[0])
-        if self.l2_normalize:
-            feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
-        # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
-        logits = (
-            tf.linalg.matmul(feature_vectors, feature_vectors, transpose_b=True)
-            / self.temperature
-        )
-        # Apply log-max trick for numerical stability.
-        logits_max = tf.math.reduce_max(logits, axis=1)
-        logits = logits - logits_max
-        # Compute num_augmentations.
-        num_augmentations = tf.shape(feature_vectors)[0] // tf.shape(labels)[0]
-        # The shape of targets is [num_augmentations * batch_size, num_augmentations * batch_size].
-        targets = tf.tile(labels, [num_augmentations, num_augmentations])
-        # Compute cross entropy loss
-        loss = keras.losses.categorical_crossentropy(
-            y_true=targets, y_pred=logits, from_logits=True
-        )
-        return loss
+    
+def constrative_loss(feature_vectors, batch_size, num_augmentations, temperature, l2_normalize):
+    if l2_normalize:
+        feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
+    # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
+    logits = (
+        tf.linalg.matmul(feature_vectors, feature_vectors, transpose_b=True)
+        / temperature
+    )
+    # Apply log-max trick for numerical stability.
+    logits_max = tf.math.reduce_max(logits, axis=1)
+    logits = logits - logits_max
+    # The shape of targets is [num_augmentations * batch_size, num_augmentations * batch_size].
+    # targets is a matrix consits of num_augmentations submatrices of shape [batch_size * batch_size].
+    # Each [batch_size * batch_size] submatrix is an identity matrix (diagonal entries are ones).
+    targets = tf.tile(tf.eye(batch_size), [num_augmentations, num_augmentations])
+    # Compute cross entropy loss
+    return keras.losses.categorical_crossentropy(
+        y_true=targets, y_pred=logits, from_logits=True
+    )
 
 
 """
 ### Implement representation learner
 """
 
+class RepresentationLearner(keras.Model):
 
-def create_representation_learner(encoder, num_augumentations, projection_units):
+    def __init__(self, encoder, projector, num_augmentations, temperature=1.0, l2_normalize=False, **kwargs):
+        super(RepresentationLearner, self).__init__(**kwargs)
+        self.encoder = encoder
+        self.projector = projector
+        self.num_augmentations = num_augmentations
+        self.temperature = temperature
+        self.l2_normalize = l2_normalize
+        self.loss_tracker = keras.metrics.Mean(name='loss')
 
-    inputs = keras.Input(shape=input_shape)
-    # Preprocess the input images.
-    preprocessed = data_preprocessing(inputs)
-    # Create augmented versions of the images.
-    augmented = []
-    for _ in range(num_augumentations):
-        augmented.append(data_augmentation(preprocessed))
-    augmented = layers.Concatenate(axis=0)(augmented)
-    # Generate embedding representations of the images.
-    features = encoder(augmented)
-    # Add a projection head.
-    features = layers.Dropout(rate=0.1)(features)
-    x = layers.Dense(units=projection_units, use_bias=False)(features)
-    x = layers.BatchNormalization()(x)
-    outputs = layers.ReLU()(x)
-    # Create the model.
-    model = keras.Model(inputs=inputs, outputs=outputs, name="representation_learner")
-    return model
+    @property
+    def metrics(self):
+        return [self.loss_tracker]
+
+    def call(self, inputs):
+        # Preprocess the input images.
+        preprocessed = data_preprocessing(inputs)
+         # Create augmented versions of the images.
+        features = self.encoder(preprocessed)
+        # Add a projection head.
+        return self.projector(features)
+
+    def train_step(self, inputs):
+        # Create augmented versions of the images.
+        augmented = []
+        for _ in range(self.num_augmentations):
+            augmented.append(data_augmentation(inputs))
+        augmented = layers.Concatenate(axis=0)(augmented)
+        # Run the forward pass and compute the contrastive loss
+        with tf.GradientTape() as tape:
+            feature_vectors = self.call(augmented)
+            batch_size = tf.shape(inputs)[0]
+            loss = constrative_loss(
+                feature_vectors, batch_size, self.num_augmentations, self.temperature, self.l2_normalize
+            )
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        # Update loss tracker metric
+        self.loss_tracker.update_state(loss)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
 
 
 """
 ### Train the model
 """
-
+# Create vision encoder.
 encoder = create_encoder(representation_dim)
-representation_learner = create_representation_learner(
-    encoder, num_augumentations, projection_units
-)
-representation_learner.summary()
+# Create projection head.
+projector = keras.Sequential([
+    layers.Dropout(rate=0.1),
+    layers.Dense(units=projection_units, use_bias=False),
+    layers.BatchNormalization(),
+    layers.ReLU(),
+])
 
-# Since this is self-supervised learning, we don't
-# use the y_data as our labels.
-labels = tf.ones(shape=(x_data.shape[0]))
+representation_learner = RepresentationLearner(
+    encoder, projector, num_augmentations, temperature=0.1
+)
 # Create a a Cosine decay learning rate scheduler.
 lr_scheduler = keras.experimental.CosineDecay(
     initial_learning_rate=0.001, decay_steps=500, alpha=0.1
@@ -247,14 +264,12 @@ lr_scheduler = keras.experimental.CosineDecay(
 # Compile the model.
 representation_learner.compile(
     optimizer=tfa.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
-    loss=ContrastiveLoss(temperature=0.1),
 )
 # Fit the model.
 history = representation_learner.fit(
     x=x_data,
-    y=labels,
     batch_size=512,
-    epochs=100,  # for better results, increase the number of epochs to 500.
+    epochs=50,  # for better results, increase the number of epochs to 500.
 )
 
 """
