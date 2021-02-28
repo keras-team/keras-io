@@ -165,34 +165,6 @@ def create_encoder(representation_dim):
 
 
 """
-### Implement the unsupervised contrastive loss
-"""
-
-
-def constrative_loss(
-    feature_vectors, batch_size, num_augmentations, temperature, l2_normalize
-):
-    if l2_normalize:
-        feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
-    # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
-    logits = (
-        tf.linalg.matmul(feature_vectors, feature_vectors, transpose_b=True)
-        / temperature
-    )
-    # Apply log-max trick for numerical stability.
-    logits_max = tf.math.reduce_max(logits, axis=1)
-    logits = logits - logits_max
-    # The shape of targets is [num_augmentations * batch_size, num_augmentations * batch_size].
-    # targets is a matrix consits of num_augmentations submatrices of shape [batch_size * batch_size].
-    # Each [batch_size * batch_size] submatrix is an identity matrix (diagonal entries are ones).
-    targets = tf.tile(tf.eye(batch_size), [num_augmentations, num_augmentations])
-    # Compute cross entropy loss
-    return keras.losses.categorical_crossentropy(
-        y_true=targets, y_pred=logits, from_logits=True
-    )
-
-
-"""
 ### Implement representation learner
 """
 
