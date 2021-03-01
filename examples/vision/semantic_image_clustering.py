@@ -115,7 +115,7 @@ data_augmentation = keras.Sequential(
         ),
         layers.experimental.preprocessing.RandomZoom(
             height_factor=(-0.3, 0.1), width_factor=(-0.3, 0.1), fill_mode="nearest"
-        )
+        ),
     ]
 )
 
