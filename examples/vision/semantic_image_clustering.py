@@ -51,7 +51,7 @@ input_shape = (32, 32, 3)
 x_data = np.concatenate([x_train, x_test])
 y_data = np.concatenate([y_train, y_test])
 
-print("x_data shape:", x_data.shape, " - y_data shape:", y_data.shape)
+print("x_data shape:", x_data.shape, "- y_data shape:", y_data.shape)
 
 classes = [
     "airplane",
@@ -100,7 +100,8 @@ data_preprocessing.layers[-1].adapt(x_data)
 
 Unlike simCLR, which randomly picks a single data augmentation function to apply to an input
 image, we apply a set of data augmentation functions randomly to the input image.
-(You can experiment with other image augmentation techniques by following the [data augmentation tutorial](https://www.tensorflow.org/tutorials/images/data_augmentation).)
+(You can experiment with other image augmentation techniques by following
+the [data augmentation tutorial](https://www.tensorflow.org/tutorials/images/data_augmentation).)
 """
 
 data_augmentation = keras.Sequential(
@@ -114,13 +115,7 @@ data_augmentation = keras.Sequential(
         ),
         layers.experimental.preprocessing.RandomZoom(
             height_factor=(-0.3, 0.1), width_factor=(-0.3, 0.1), fill_mode="nearest"
-        ),
-        #         layers.experimental.preprocessing.RandomContrast(factor=0.4),
-        #         layers.Lambda(lambda images: tf.image.random_brightness(images, max_delta=0.4)),
-        #         layers.Lambda(
-        #             lambda images: tf.image.random_saturation(images, lower=0, upper=0.4)
-        #         ),
-        #         layers.Lambda(lambda images: tf.image.random_hue(images, max_delta=0.1)),
+        )
     ]
 )
 
