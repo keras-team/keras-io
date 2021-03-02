@@ -40,7 +40,7 @@ from tensorflow.keras import layers
 """
 ## Define the Transformer Input Layer
 
-When processing past target tokens for the decoder, we compute the sum of 
+When processing past target tokens for the decoder, we compute the sum of
 position embeddings and token embeddings.
 
 When processing audio features, we apply convolutional layers to downsample
@@ -171,7 +171,7 @@ class TransformerDecoder(layers.Layer):
 
 Our model takes audio spectrograms as inputs and predicts a sequence of characters.
 During training, we give the decoder the target character sequence shifted to the left
-as input. During inference, the decoder uses its own past predictions to predict the 
+as input. During inference, the decoder uses its own past predictions to predict the
 next token.
 """
 
@@ -299,7 +299,7 @@ saveto = "./datasets/LJSpeech-1.1"
 wavs = glob("{}/**/*.wav".format(saveto), recursive=True)
 
 id_to_text = {}
-with open(os.path.join(saveto, "metadata.csv")) as f:
+with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
     for line in f:
         id = line.strip().split("|")[0]
         text = line.strip().split("|")[2]
@@ -395,22 +395,11 @@ def create_tf_dataset(data, bs=4):
     return ds
 
 
-"""
-Check the contents of one batch
-"""
-
-
 split = int(len(data) * 0.99)
 train_data = data[:split]
 test_data = data[split:]
-
 ds = create_tf_dataset(train_data, bs=64)
 val_ds = create_tf_dataset(test_data, bs=4)
-
-for i in ds.take(1):
-    print(i["source"].shape)
-    print(i["target"])
-
 
 """
 ## Callbacks to display predictions
@@ -443,21 +432,14 @@ class DisplayOutputs(keras.callbacks.Callback):
         preds = self.model.generate(source, self.target_start_token_idx)
         preds = preds.numpy()
         for i in range(bs):
-            target_text = ""
-            for idx in target[i, :]:
-                target_text += "" + self.idx_to_char[idx]
+            target_text = "".join([self.idx_to_char[_] for _ in target[i, :]])
             prediction = ""
-            over = False
             for idx in preds[i, :]:
-                if over:  # Add a padding token once the end token has been predicted
-                    prediction += "-"
-                    continue
+                prediction += self.idx_to_char[idx]
                 if idx == self.target_end_token_idx:
-                    over = True
-                prediction += "" + self.idx_to_char[idx]
-            print(f"target:     {target_text}")
-            print(f"prediction: {prediction}")
-            print()
+                    break
+            print(f"target:     {target_text.replace('-','')}")
+            print(f"prediction: {prediction}\n")
 
 
 """
@@ -542,7 +524,7 @@ model.compile(optimizer=optimizer, loss=loss_fn)
 history = model.fit(ds, validation_data=val_ds, callbacks=[display_cb], epochs=1)
 
 """
-In practice, you should train for around 100 epochs or more. 
+In practice, you should train for around 100 epochs or more.
 
 Some of the predicted text at or around epoch 35 may look as follows:
 ```
