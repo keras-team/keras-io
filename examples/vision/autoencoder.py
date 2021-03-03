@@ -31,7 +31,7 @@ from tensorflow.keras.datasets import mnist
 
 def preprocess(dataset):
     """
-    Normalizes the supplied dataset and reshapes it into the appropriate format.
+    Normalizes the MNIST dataset and reshapes it into the appropriate format.
     """
 
     dataset = dataset.astype("float32") / 255.0
