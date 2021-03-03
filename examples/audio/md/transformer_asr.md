@@ -1,4 +1,3 @@
-
 # Automatic Speech Recognition with Transformer
 
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
