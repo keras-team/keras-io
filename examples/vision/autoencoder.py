@@ -81,7 +81,7 @@ def display(dataset1, dataset2):
 
 
 """
-## Prepare de data
+## Prepare the data
 """
 
 # We only need images from the dataset. We will never use the target values so
