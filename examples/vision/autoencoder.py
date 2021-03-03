@@ -1,6 +1,6 @@
 """
 Title: Convolutional Autoencoder For Image Denoising
-Author: Santiago L. Valdarrama
+Author: [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/01
 Last modified: 2021/03/01
 Description: How to train a deep convolutional autoencoder for image denoising.
@@ -9,11 +9,11 @@ Description: How to train a deep convolutional autoencoder for image denoising.
 """
 ## Introduction
 
-This example demonstrates how to implementat of a deep convolutional autoencoder
-for image denoising—mapping noisy digits images from the MNIST dataset to clean digits
+This example demonstrates how to implement a deep convolutional autoencoder
+for image denoising, mapping noisy digits images from the MNIST dataset to clean digits
 images. This implementation is based on an original blog post titled
 [Building Autoencoders in Keras](https://blog.keras.io/building-autoencoders-in-keras.html)
-by François Chollet.
+by [François Chollet](https://twitter.com/fchollet).
 """
 
 """
