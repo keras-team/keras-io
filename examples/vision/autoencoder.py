@@ -3,7 +3,7 @@ Title: Convolutional Autoencoder For Image Denoising
 Author: Santiago L. Valdarrama
 Date created: 2021/03/01
 Last modified: 2021/03/01
-Description: How to train an autoencoder that can be used for denoising images.
+Description: How to train a deep convolutional autoencoder for image denoising.
 """
 
 """
