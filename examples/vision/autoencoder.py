@@ -54,7 +54,7 @@ def noise(dataset):
 
 def display(dataset1, dataset2):
     """
-    Displays ten random images from each one of the supplied datasets.
+    Displays 10 random images from each of the supplied datasets.
     """
 
     n = 10
