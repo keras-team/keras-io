@@ -30,19 +30,14 @@ from tensorflow.keras.datasets import mnist
 
 
 def preprocess(dataset):
-    """
-    Normalizes the MNIST dataset and reshapes it into the appropriate format.
-    """
-
+    """Normalizes the MNIST dataset and reshapes images to (28, 28 1)."""
     dataset = dataset.astype("float32") / 255.0
     dataset = np.reshape(dataset, (len(dataset), 28, 28, 1))
     return dataset
 
 
 def noise(dataset):
-    """
-    Adds random noise to each image in the supplied dataset.
-    """
+    """Adds random noise to each image in the supplied dataset."""
 
     noise_factor = 0.4
     noisy_dataset = dataset + noise_factor * np.random.normal(
@@ -53,12 +48,8 @@ def noise(dataset):
 
 
 def display(dataset1, dataset2):
-    """
-    Displays 10 random images from each of the supplied datasets.
-    """
-
+    """Displays 10 random images from each of the supplied datasets."""
     n = 10
-
     indices = np.random.randint(len(dataset1), size=n)
     images1 = dataset1[indices, :]
     images2 = dataset2[indices, :]
@@ -101,7 +92,7 @@ display(train_dataset, noisy_train_dataset)
 """
 ## Build the autoencoder
 
-We are going to use the functional API to build our convolutional autoencoder.
+We are going to use the Functional API to build our convolutional autoencoder.
 """
 
 input = Input(shape=(28, 28, 1))
@@ -125,8 +116,8 @@ autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
 autoencoder.summary()
 
 """
-Now we can train the autoencoder using `train_dataset` as our input `X` and the same
-dataset as our `y`. Notice that we are setting up the validation data using the same format.
+Now we can train the autoencoder using `train_dataset` as our input input data and the same
+dataset as our target data. Notice that we are setting up the validation data using the same format.
 """
 
 autoencoder.fit(
@@ -151,7 +142,7 @@ display(test_dataset, predictions)
 
 """
 Now that we know that our autoencoder works, let's retrain it using the noisy dataset as
-our `X` and the clean dataset as our `y`. We want our autoencoder to learn how to denoise
+our input data and the clean dataset as our target data. We want our autoencoder to learn how to denoise
 the images.
 """
 
