@@ -9,9 +9,11 @@ Description: How to train an autoencoder that can be used for denoising images.
 """
 ## Introduction
 
-This example illustrates the implementation of a Deep Convolutional Autoecoder that can
-be used to denoise images. This implementation is based on an original blog post from 
-François Chollet.
+This example demonstrates how to implementat of a deep convolutional autoencoder
+for image denoising—mapping noisy digits images from the MNIST dataset to clean digits
+images. This implementation is based on an original blog post titled
+[Building Autoencoders in Keras](https://blog.keras.io/building-autoencoders-in-keras.html)
+by François Chollet.
 """
 
 """
