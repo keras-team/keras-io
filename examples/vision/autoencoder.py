@@ -125,8 +125,8 @@ autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
 autoencoder.summary()
 
 """
-Now we can train our autoencoder using the `train_dataset` as our `X` and the same
-dataset as our `y`. Noticed we are setting up the validation data using the same format.
+Now we can train the autoencoder using `train_dataset` as our input `X` and the same
+dataset as our `y`. Notice that we are setting up the validation data using the same format.
 """
 
 autoencoder.fit(
