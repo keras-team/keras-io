@@ -84,8 +84,7 @@ def display(dataset1, dataset2):
 ## Prepare the data
 """
 
-# We only need images from the dataset. We will never use the target values so
-# we aren't going to load them.
+# Since we only need images from the dataset to encode and decode, we won't use the labels.
 (train_dataset, _), (test_dataset, _) = mnist.load_data()
 
 # Normalize and reshape the data
