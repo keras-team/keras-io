@@ -29,30 +29,39 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Input, UpSampling2D
 from tensorflow.keras.datasets import mnist
 
 
-def preprocess(dataset):
-    """Normalizes the MNIST dataset and reshapes images to (28, 28 1)."""
-    dataset = dataset.astype("float32") / 255.0
-    dataset = np.reshape(dataset, (len(dataset), 28, 28, 1))
-    return dataset
+def preprocess(array):
+    """
+    Normalizes the supplied array and reshapes it into the appropriate format.
+    """
 
+    array = array.astype('float32') / 255.
+    array = np.reshape(array, (len(array), 28, 28, 1))
+    return array
 
-def noise(dataset):
-    """Adds random noise to each image in the supplied dataset."""
+def noise(array):
+    """
+    Adds random noise to each image in the supplied array.
+    """
 
     noise_factor = 0.4
-    noisy_dataset = dataset + noise_factor * np.random.normal(
-        loc=0.0, scale=1.0, size=dataset.shape
-    )
+    noisy_array = array + noise_factor * np.random.normal(
+        loc=0.0, 
+        scale=1.0, 
+        size=array.shape
+    ) 
 
-    return np.clip(noisy_dataset, 0.0, 1.0)
+    return np.clip(noisy_array, 0., 1.)
 
+def display(array1, array2):
+    """
+    Displays ten random images from each one of the supplied arrays.
+    """
 
-def display(dataset1, dataset2):
-    """Displays 10 random images from each of the supplied datasets."""
     n = 10
-    indices = np.random.randint(len(dataset1), size=n)
-    images1 = dataset1[indices, :]
-    images2 = dataset2[indices, :]
+
+    indices = np.random.randint(len(array1), size=n)
+    images1 = array1[indices, :]
+    images2 = array2[indices, :]
 
     plt.figure(figsize=(20, 4))
     for i, (image1, image2) in enumerate(zip(images1, images2)):
@@ -69,25 +78,26 @@ def display(dataset1, dataset2):
         ax.get_yaxis().set_visible(False)
 
     plt.show()
-
+   
 
 """
 ## Prepare the data
 """
 
-# Since we only need images from the dataset to encode and decode, we won't use the labels.
-(train_dataset, _), (test_dataset, _) = mnist.load_data()
+# Since we only need images from the dataset to encode and decode, we 
+# won't use the labels.
+(train_data, _), (test_data, _) = mnist.load_data()
 
 # Normalize and reshape the data
-train_dataset = preprocess(train_dataset)
-test_dataset = preprocess(test_dataset)
+train_data = preprocess(train_data)
+test_data = preprocess(test_data)
 
-# Create a copy of the datasets with added noise
-noisy_train_dataset = noise(train_dataset)
-noisy_test_dataset = noise(test_dataset)
+# Create a copy of the data with added noise
+noisy_train_data = noise(train_data) 
+noisy_test_data = noise(test_data) 
 
-# Display the train dataset and the version with added noise
-display(train_dataset, noisy_train_dataset)
+# Display the train data and a version of it with added noise
+display(train_data, noisy_train_data)
 
 """
 ## Build the autoencoder
@@ -95,72 +105,66 @@ display(train_dataset, noisy_train_dataset)
 We are going to use the Functional API to build our convolutional autoencoder.
 """
 
-input = Input(shape=(28, 28, 1))
+input = layers.Input(shape=(28, 28, 1))
 
 # Encoder
-x = Conv2D(32, (3, 3), activation="relu", padding="same")(input)
-x = MaxPooling2D((2, 2), padding="same")(x)
-x = Conv2D(32, (3, 3), activation="relu", padding="same")(x)
-x = MaxPooling2D((2, 2), padding="same")(x)
+x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(input)
+x = layers.MaxPooling2D((2, 2), padding='same')(x)
+x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+x = layers.MaxPooling2D((2, 2), padding='same')(x)
 
 # Decoder
-x = Conv2D(32, (3, 3), activation="relu", padding="same")(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(32, (3, 3), activation="relu", padding="same")(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(1, (3, 3), activation="sigmoid", padding="same")(x)
+x = layers.Conv2DTranspose(32, (3, 3), strides=2, activation='relu', padding='same')(x)
+x = layers.Conv2DTranspose(32, (3, 3), strides=2, activation='relu', padding='same')(x)
+x = layers.Conv2D(1, (3, 3), activation='sigmoid', padding='same')(x)
 
 # Autoencoder
 autoencoder = Model(input, x)
-autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
+autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
 autoencoder.summary()
 
 """
-Now we can train the autoencoder using `train_dataset` as our input data and the same
-dataset as our target data. Notice that we are setting up the validation data using the same format.
+Now we can train our autoencoder using `train_data` as both our input data and target. 
+Notice we are setting up the validation data using the same format.
 """
 
 autoencoder.fit(
-    x=train_dataset,
-    y=train_dataset,
+    x=train_data, 
+    y=train_data,
     epochs=50,
     batch_size=128,
     shuffle=True,
-    validation_data=(test_dataset, test_dataset),
+    validation_data=(test_data, test_data)
 )
 
 """
-Let's predict on our test dataset and display the original image together with the
-prediction from our autoencoder.
+Let's predict on our test dataset and display the original image together with the prediction from our autoencoder.
 
-Notice how the predictions are pretty close to the original images, although not quite
-the same.
+Notice how the predictions are pretty close to the original images, although not quite the same.
 """
 
-predictions = autoencoder.predict(test_dataset)
-display(test_dataset, predictions)
+predictions = autoencoder.predict(test_data)
+display(test_data, predictions)
 
 """
-Now that we know that our autoencoder works, let's retrain it using the noisy dataset as
-our input data and the clean dataset as our target data. We want our autoencoder to learn how to denoise
-the images.
+Now that we know that our autoencoder works, let's retrain it using the noisy data as our input and the clean data
+as our target. We want our autoencoder to learn how to denoise the images.
 """
 
 autoencoder.fit(
-    x=noisy_train_dataset,
-    y=train_dataset,
+    x=noisy_train_data, 
+    y=train_data,
     epochs=100,
     batch_size=128,
     shuffle=True,
-    validation_data=(noisy_test_dataset, test_dataset),
+    validation_data=(noisy_test_data, test_data)
 )
 
 """
-Let's now predict on the noisy dataset and display the results of our autoencoder.
+Let's now predict on the noisy data and display the results of our autoencoder.
 
-Notice how the autoencoder does an amazing job at removing the noise from the input
-images.
+Notice how the autoencoder does an amazing job at removing the noise from the input images.
 """
 
-predictions = autoencoder.predict(noisy_test_dataset)
-display(noisy_test_dataset, predictions)
+predictions = autoencoder.predict(noisy_test_data)
+display(noisy_test_data, predictions)
