@@ -24,9 +24,9 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Input, UpSampling2D
+from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Model
 
 
 def preprocess(array):
