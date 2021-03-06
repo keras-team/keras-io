@@ -628,7 +628,7 @@ unzip -qq saved_checkpoints.zip
 
 
 # Load the checkpoints
-weight_file = "./saved_checkpoints/cyclegan_checkpoints.090"
+weight_file = "./model_checkpoints/cyclegan_checkpoints.090"
 cycle_gan_model.load_weights(weight_file).expect_partial()
 print("Weights loaded successfully")
 
