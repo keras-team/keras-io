@@ -3,7 +3,7 @@ Title: mixup augmentation for image classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2020/03/06
 Last modified: 2020/03/06
-Description: Applying the mixup technique for data augmentation to aid with image classification.
+Description: Data augmentation using the mixup technique for image classification.
 """
 """
 ## Introduction
@@ -12,7 +12,7 @@ Description: Applying the mixup technique for data augmentation to aid with imag
 """
 mixup is a *domain-agnostic* data augmentation technique proposed in [mixup: Beyond
 Empirical Risk Minimization](https://arxiv.org/abs/1710.09412) by Zhang et al. It's
-implemented with the following formulas -
+implemented with the following formulas:
 
 * $\tilde{x}=\lambda x_{i}+(1-\lambda) x_{j}$, where $x_{i}$ and $x_{j}$ are input
 features
@@ -52,7 +52,7 @@ tfd = tfp.distributions
 """
 ## Prepare the dataset
 
-In this example, we will be using the FashionMNIST dataset. But this same recipe can
+In this example, we will be using the [FashionMNIST](https://research.zalando.com/welcome/mission/research-projects/fashion-mnist/) dataset. But this same recipe can
 be used for other classification datasets as well.
 """
 
@@ -206,11 +206,11 @@ more than two images to create a single one.
 """
 ## Notes
 
-* mixup can be useful for low data regimes as it can help to create synthentic examples
-in a simple manner without incurring excruciating computational costs.
-* [Label smoothing](https://www.pyimagesearch.com/2019/12/30/label-smoothing-with-keras-tensorflow-and-deep-learning/) and mixup usually do not go well together because label smoothing
+* With mixup, you can create synthetic examples — especially when you lack a large
+dataset - without incurring high computational costs.
+* [Label smoothing](https://www.pyimagesearch.com/2019/12/30/label-smoothing-with-keras-tensorflow-and-deep-learning/) and mixup usually do not work well together because label smoothing
 already modifies the hard labels by some factor.
-* mixup does not play well when you are using [Supervised Contrastive
+* mixup does not work well when you are using [Supervised Contrastive
 Learning](https://arxiv.org/abs/2004.11362) (SCL) since SCL expects the true labels
 during its pre-training phase.
 * There are a number of data augmentation techniques that extend mixup such as
