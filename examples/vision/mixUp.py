@@ -1,8 +1,8 @@
 """
 Title: mixup augmentation for image classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2020/03/06
-Last modified: 2020/03/06
+Date created: 2021/03/06
+Last modified: 2021/03/06
 Description: Data augmentation using the mixup technique for image classification.
 """
 """
