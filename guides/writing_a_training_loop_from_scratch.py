@@ -128,7 +128,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %s samples" % ((step + 1) * 64))
+            print("Seen so far: %s samples" % ((step + 1) * batch_size))
 
 """
 ## Low-level handling of metrics
@@ -192,7 +192,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -272,7 +272,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
