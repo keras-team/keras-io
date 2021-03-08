@@ -62,9 +62,7 @@ def get_img_array(img_path, size):
     return array
 
 
-def make_gradcam_heatmap(
-    img_array, model, last_conv_layer_name, pred_index=None
-):
+def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
     # First, we create a model that maps the input image to the activations
     # of the last conv layer as well as the output predictions
     grad_model = tf.keras.models.Model(
@@ -131,9 +129,7 @@ plt.show()
 """
 
 
-def save_and_display_gradcam(
-    img_path, heatmap, cam_path="cam.jpg", alpha=0.4
-):
+def save_and_display_gradcam(img_path, heatmap, cam_path="cam.jpg", alpha=0.4):
     # Load the original image
     img = keras.preprocessing.image.load_img(img_path)
     img = keras.preprocessing.image.img_to_array(img)
