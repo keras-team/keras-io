@@ -31,14 +31,14 @@ In this guide, you will learn how to:
 
 - Prepare your data before training a model (by turning it into either NumPy
  arrays or `tf.data.Dataset` objects).
-- Do data preprocessing, for instance feature normalization or vocabulary
+- Do data preprocessing, for instance, feature normalization or vocabulary
  indexing.
 - Build a model that turns your data into useful predictions,
 using the Keras Functional API.
 - Train your model with the built-in Keras `fit()` method, while being
 mindful of checkpointing, metrics monitoring, and fault tolerance.
-- Evaluate your model on a test data and how to use it for inference on new data.
-- Customize what `fit()` does, for instance to build a GAN.
+- Evaluate your model on test data and how to use it for inference on new data.
+- Customize what `fit()` does, for instance, to build a GAN.
 - Speed up training by leveraging multiple GPUs.
 - Refine your model through hyperparameter tuning.
 
@@ -58,11 +58,11 @@ Neural networks don't process raw data, like text files, encoded JPEG image file
 
 - Text files need to be read into string tensors, then split into words. Finally, the
  words need to be indexed & turned into integer tensors.
-- Images need to be read and decoded into integer tensors, then converted to floating
+- Images need to be read and decoded into integer tensors, then converted to floating-
  point and normalized to small values (usually between 0 and 1).
-- CSV data needs to be parsed, with numerical features converted to floating point
+- CSV data needs to be parsed, with numerical features converted to floating-point
  tensors and categorical features indexed and converted to integer tensors.
-Then each feature typically needs to be normalized to zero-mean and unit-variance.
+Then each feature typically needs to be normalized to zero-mean and unit variance.
 - Etc.
 
 Let's start with data loading.
@@ -80,7 +80,7 @@ high-performance option that is more suitable for datasets that do not fit in me
 - **Python generators** that yield batches of data (such as custom subclasses of
 the `keras.utils.Sequence` class).
 
-Before you start training a model, you will need to make your data available as one of
+Before you start training a model, you will need to make your data available in one of
 these formats. If you have a large dataset and you are training on GPU(s), consider
 using `Dataset` objects, since they will take care of performance-critical details,
  such as:

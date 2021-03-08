@@ -15,8 +15,8 @@ It was developed with a focus on enabling fast experimentation. *Being able to g
 - Scaling computation to many devices (e.g. the [Summit supercomputer](https://www.olcf.ornl.gov/summit/) at Oak Ridge National Lab, which spans 27,000 GPUs).
 - Exporting programs ("graphs") to external runtimes such as servers, browsers, mobile and embedded devices.
 
-Keras is the high-level API of TensorFlow 2: an approchable, highly-productive interface for solving machine learning problems,
-with a focus on modern deep learning. It provides essential abstractions and building blocks for developing
+Keras is the high-level API of TensorFlow 2: an approachable, highly-productive interface for solving machine learning problems,
+focusing on modern deep learning. It provides essential abstractions and building blocks for developing
 and shipping machine learning solutions with high iteration velocity.
 
 Keras empowers engineers and researchers to take full advantage of the scalability
@@ -30,7 +30,7 @@ and you can export your Keras models to run in the browser or on a mobile device
 The core data structures of Keras are __layers__ and __models__.
 The simplest type of model is the [`Sequential` model](/guides/sequential_model/), a linear stack of layers.
 For more complex architectures, you should use the [Keras functional API](/guides/functional_api/),
-which allows to build arbitrary graphs of layers, or [write models entirely from scratch via subclasssing](/guides/making_new_layers_and_models_via_subclassing/).
+which allows to build arbitrary graphs of layers or [write models entirely from scratch via subclasssing](/guides/making_new_layers_and_models_via_subclassing/).
 
 Here is the `Sequential` model:
 
@@ -57,8 +57,8 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 ```
 
-If you need to, you can further configure your optimizer. The Keras philosophy is to keep simple things simple,
-while allowing the user to be fully in control when they need to (the ultimate control being the easy extensibility of the source code via subclassing).
+If you need to, you can further configure your optimizer. The Keras philosophy is to keep simple things as they are,
+while allowing the user to be fully in control when they need to (the ultimate being control  the easy extensibility of the source code via subclassing).
 
 ```python
 model.compile(loss=keras.losses.categorical_crossentropy,
@@ -87,7 +87,7 @@ classes = model.predict(x_test, batch_size=128)
 What you just saw is the most elementary way to use Keras: it mirrors the Scikit-Learn API.
 
 However, Keras is also a highly-flexible framework suitable to iterate on state-of-the-art research ideas.
-Keras follows the principle of **progressive discloure of complexity**: it makes it easy to get started,
+Keras follows the principle of **progressive disclosure of complexity**: it makes it easy to get started,
 yet it makes it possible to handle arbitrarily advanced use cases,
 only requiring incremental learning at each step.
 
@@ -157,7 +157,7 @@ You can also post **bug reports and feature requests** (only) in [GitHub issues]
 ## Why this name, Keras?
 
 
-Keras (κέρας) means _horn_ in Greek. It is a reference to a literary image from ancient Greek and Latin literature, first found in the _Odyssey_, where dream spirits (_Oneiroi_, singular _Oneiros_) are divided between those who deceive dreamers with false visions, who arrive to Earth through a gate of ivory, and those who announce a future that will come to pass, who arrive through a gate of horn. It's a play on the words κέρας (horn) / κραίνω (fulfill), and ἐλέφας (ivory) / ἐλεφαίρομαι (deceive).
+Keras (κέρας) means _horn_ in Greek. It is a reference to a literary image from ancient Greek and Latin literature, first found in the _Odyssey_, where dream spirits (_Oneiroi_, singular _Oneiros_) are divided between those who deceive dreamers with false visions, who arrive at Earth through a gate of ivory and those who announce a future that will come to pass, who arrive through a gate of horn. It's a play on the words κέρας (horn) / κραίνω (fulfill), and ἐλέφας (ivory) / ἐλεφαίρομαι (deceive).
 
 Keras was initially developed as part of the research effort of project ONEIROS (Open-ended Neuro-Electronic Intelligent Robot Operating System).
 
