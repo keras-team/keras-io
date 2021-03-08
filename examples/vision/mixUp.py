@@ -49,6 +49,7 @@ import tensorflow.keras.layers as L
 from tensorflow.keras.utils import to_categorical
 
 import tensorflow_probability as tfp
+
 tf_distribution = tfp.distributions
 
 """
@@ -152,18 +153,22 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 ## Model building
 """
 
+
 def get_training_model():
-    model = tf.keras.Sequential([
-        model.add(L.Conv2D(16, (5, 5), activation="relu", input_shape=(28, 28, 1)))
-        model.add(L.MaxPooling2D(pool_size=(2, 2)))
-        model.add(L.Conv2D(32, (5, 5), activation="relu"))
-        model.add(L.MaxPooling2D(pool_size=(2, 2)))
-        model.add(L.Dropout(0.2))
-        model.add(L.GlobalAvgPool2D())
-        model.add(L.Dense(128, activation="relu"))
-        model.add(L.Dense(10, activation="softmax"))
-    ])
+    model = tf.keras.Sequential(
+        [
+            model.add(L.Conv2D(16, (5, 5), activation="relu", input_shape=(28, 28, 1))),
+            model.add(L.MaxPooling2D(pool_size=(2, 2))),
+            model.add(L.Conv2D(32, (5, 5), activation="relu")),
+            model.add(L.MaxPooling2D(pool_size=(2, 2))),
+            model.add(L.Dropout(0.2)),
+            model.add(L.GlobalAvgPool2D()),
+            model.add(L.Dense(128, activation="relu")),
+            model.add(L.Dense(10, activation="softmax")),
+        ]
+    )
     return model
+
 
 """
 For the sake of reproducibility, we serialize the initial random weights of our shallow
