@@ -10,22 +10,25 @@ Description: Data augmentation using the mixup technique for image classificatio
 """
 
 """
-mixup is a *domain-agnostic* data augmentation technique proposed in [mixup: Beyond
-Empirical Risk Minimization](https://arxiv.org/abs/1710.09412) by Zhang et al. It's
-implemented with the following formulas:
+mixup is a *domain-agnostic* data augmentation technique proposed in [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412) 
+by Zhang et al. It's implemented with the following formulas:
 
-* $\tilde{x}=\lambda x_{i}+(1-\lambda) x_{j}$, where $x_{i}$ and $x_{j}$ are input
-features
-* $\bar{y}=\lambda y_{i}+(1-\lambda) y_{j}$, where $y_{i}$ and $y_{j}$ are one-hot
-encoded labels
+![](https://i.ibb.co/DRyHYww/image.png)
 
-(Note that $lambda x_{i}$ and $lambda y_{i}$ are values with the [0, 1] range and are
-sampled from the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution).)
+(Note that the lambda values are values with the [0, 1] range and are sampled from the
+[Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution).)
 
-The technique is quite holistically named - we are literally mixing up the features and
-their corresponding labels. Implementation-wise it's simple. mixup can be extended to a
-variety of data modalities such as computer vision, natural language processing, speech,
-and so on.
+The technique is quite systematically named - we are literally mixing up the features and
+their corresponding labels. Implementation-wise it's simple. Neural networks are prone
+to [memorizing corrupt labels](https://arxiv.org/abs/1611.03530). mixup relaxes this by
+combining different features with one another (same happens for the labels too) so that
+a network does not get overconfident about the relationship between the features and
+their labels. 
+
+mixup is specifically useful when we are not sure about selecting a set of augmentation
+transforms for a given dataset, medical imaging datasets, for example. mixup can be
+extended to a variety of data modalities such as computer vision, naturallanguage
+processing, speech, and so on.
 
 This example requires TensorFlow 2.4 or higher, as well as TensorFlow Probability, which
 can be installed using the following command:
@@ -46,8 +49,7 @@ import tensorflow.keras.layers as L
 from tensorflow.keras.utils import to_categorical
 
 import tensorflow_probability as tfp
-
-tfd = tfp.distributions
+tf_distribution = tfp.distributions
 
 """
 ## Prepare the dataset
@@ -98,8 +100,8 @@ test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(BATCH_SIZE)
 ## Define the mixup technique function
 
 To perform the mixup routine, we create new virtual datasets using the training data from
-the same dataset, and apply a $\lambda$ value within the [0, 1] range sampled from a [Beta
-distribution](https://en.wikipedia.org/wiki/Beta_distribution) — such that, for example, `new_x = lambda * x1 + (1 - lambda) * x2` (where
+the same dataset, and apply a lambda value within the [0, 1] range sampled from a [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution)
+— such that, for example, `new_x = lambda * x1 + (1 - lambda) * x2` (where
 `x1` and `x2` are images) and the same equation is applied to the labels as well.
 """
 
@@ -111,7 +113,7 @@ def mix_up(ds_one, ds_two, alpha=0.2):
     batch_size = tf.shape(images_one)[0]
 
     # Sample lambda and reshape it to do the mixup
-    l = tfd.Beta(0.2, 0.2).sample(batch_size)
+    l = tf_distribution.Beta(0.2, 0.2).sample(batch_size)
     x_l = tf.reshape(l, (batch_size, 1, 1, 1))
     y_l = tf.reshape(l, (batch_size, 1))
 
@@ -150,19 +152,18 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 ## Model building
 """
 
-
 def get_training_model():
-    model = tf.keras.Sequential()
-    model.add(L.Conv2D(16, (5, 5), activation="relu", input_shape=(28, 28, 1)))
-    model.add(L.MaxPooling2D(pool_size=(2, 2)))
-    model.add(L.Conv2D(32, (5, 5), activation="relu"))
-    model.add(L.MaxPooling2D(pool_size=(2, 2)))
-    model.add(L.Dropout(0.2))
-    model.add(L.GlobalAvgPool2D())
-    model.add(L.Dense(128, activation="relu"))
-    model.add(L.Dense(10, activation="softmax"))
+    model = tf.keras.Sequential([
+        model.add(L.Conv2D(16, (5, 5), activation="relu", input_shape=(28, 28, 1)))
+        model.add(L.MaxPooling2D(pool_size=(2, 2)))
+        model.add(L.Conv2D(32, (5, 5), activation="relu"))
+        model.add(L.MaxPooling2D(pool_size=(2, 2)))
+        model.add(L.Dropout(0.2))
+        model.add(L.GlobalAvgPool2D())
+        model.add(L.Dense(128, activation="relu"))
+        model.add(L.Dense(10, activation="softmax"))
+    ])
     return model
-
 
 """
 For the sake of reproducibility, we serialize the initial random weights of our shallow
@@ -197,7 +198,7 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 """
 Readers are encouraged to try out mixup on different datasets from different domains and
-experiment with the $\lambda$ parameter. You are strongly advised to check out the
+experiment with the lambda parameter. You are strongly advised to check out the
 [original paper](https://arxiv.org/abs/1710.09412) as well - the authors present several ablation studies on mixup
 showing how it can improve generalization, as well as show their results of combining
 more than two images to create a single one.
@@ -213,6 +214,8 @@ already modifies the hard labels by some factor.
 * mixup does not work well when you are using [Supervised Contrastive
 Learning](https://arxiv.org/abs/2004.11362) (SCL) since SCL expects the true labels
 during its pre-training phase.
+* A few other benefits of mixup include (as described in the [paper](https://arxiv.org/abs/1710.09412)) robustness to
+adversarial examples and stabilized GAN (Generative Adversarial Networks) training. 
 * There are a number of data augmentation techniques that extend mixup such as
 [CutMix](https://arxiv.org/abs/1905.04899) and [AugMix](https://arxiv.org/abs/1912.02781).
 """
