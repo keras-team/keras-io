@@ -30,12 +30,7 @@ transforms for a given dataset, medical imaging datasets, for example. mixup can
 extended to a variety of data modalities such as computer vision, naturallanguage
 processing, speech, and so on.
 
-This example requires TensorFlow 2.4 or higher, as well as TensorFlow Probability, which
-can be installed using the following command:
-"""
-
-"""shell
-pip install tensorflow-probability
+This example requires TensorFlow 2.4 or higher.
 """
 
 """
