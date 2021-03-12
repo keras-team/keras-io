@@ -25,7 +25,7 @@ import matplotlib.cm as cm
 
 You can change these to another model.
 
-To get the values for `last_conv_layer_name` use `model.summary()` 
+To get the values for `last_conv_layer_name` use `model.summary()`
 to see the names of all layers in the model.
 
 """
@@ -39,7 +39,7 @@ last_conv_layer_name = "block14_sepconv2_act"
 
 # The local path to our target image
 img_path = keras.utils.get_file(
-    "african_elephant.jpg", " https://i.imgur.com/Bvro0YD.png"
+    "african_elephant.jpg", "https://i.imgur.com/Bvro0YD.png"
 )
 
 display(Image(img_path))
@@ -183,12 +183,20 @@ img_array = preprocess_input(get_img_array(img_path, size=img_size))
 preds = model.predict(img_array)
 print("Predicted:", decode_predictions(preds, top=2)[0])
 
-# Generate class activation heatmap for "chow," the class index is 260
+"""
+We generate class activation heatmap for "chow," the class index is 260
+
+"""
+
 heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=260)
 
 save_and_display_gradcam(img_path, heatmap)
 
-# Generate class activation heatmap for "egyptian cat," the class index is 285
+"""
+We generate class activation heatmap for "egyptian cat," the class index is 285
+
+"""
+
 heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=285)
 
 save_and_display_gradcam(img_path, heatmap)
