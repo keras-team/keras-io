@@ -65,7 +65,7 @@ y_test = tf.one_hot(y_test, 10)
 
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 64
-EPOCHS = 5
+EPOCHS = 10
 
 """
 ## Convert the data into TensorFlow `Dataset` objects

@@ -1,15 +1,14 @@
-
 # MixUp augmentation for image classification
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/03/06<br>
 **Last modified:** 2021/03/06<br>
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/mixUp.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/mixUp.py)
-
-
 **Description:** Data augmentation using the mixup technique for image classification.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/mixup.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/mixup.py)
+
+
 
 ---
 ## Introduction
@@ -66,19 +65,6 @@ x_test = np.reshape(x_test, (-1, 28, 28, 1))
 y_test = tf.one_hot(y_test, 10)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-labels-idx1-ubyte.gz
-32768/29515 [=================================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-images-idx3-ubyte.gz
-26427392/26421880 [==============================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-labels-idx1-ubyte.gz
-8192/5148 [===============================================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-images-idx3-ubyte.gz
-4423680/4422102 [==============================] - 0s 0us/step
-
-```
-</div>
 ---
 ## Define hyperparameters
 
@@ -86,7 +72,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 ```python
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 64
-EPOCHS = 5
+EPOCHS = 10
 ```
 
 ---
@@ -180,19 +166,19 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 
 <div class="k-default-codeblock">
 ```
-[0.0, 0.9999974966049194, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.5033950805664062e-06]
-[0.0, 0.0, 0.0, 0.0, 0.0, 0.11348208785057068, 0.8865178823471069, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.0016847170190885663, 0.0, 0.0, 0.0, 0.0, 0.0, 0.9983152747154236, 0.0]
-[0.0, 0.04897904023528099, 0.0, 0.0, 0.9510209560394287, 0.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.9999988675117493, 1.1195215847692452e-06, 0.0]
-[0.0, 0.0, 0.0, 0.9978762269020081, 0.0, 0.0, 0.0, 0.0, 0.0021237730979919434, 0.0]
-[0.0, 0.0, 0.0004618267703335732, 0.9995381832122803, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.01706075668334961, 0.0, 0.0, 0.9829392433166504, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.5761554837226868, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.42384451627731323, 0.0]
+[0.0, 0.0, 0.9999957084655762, 0.0, 4.291534423828125e-06, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.03438800573348999, 0.0, 0.0, 0.0, 0.0, 0.0, 0.96561199426651, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.9808260202407837, 0.0, 0.0, 0.0, 0.01917397230863571, 0.0, 0.0, 0.0]
+[0.0, 0.9999748468399048, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.5153160095214844e-05]
+[0.0, 0.0, 0.0, 0.0002035107754636556, 0.0, 0.9997965097427368, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2410212755203247, 0.0, 0.0, 0.7589787244796753]
 
 ```
 </div>
-![png](/img/examples/vision/mixUp/mixUp_15_1.png)
+![png](/img/examples/vision/mixup/mixup_15_1.png)
 
 
 ---
@@ -242,18 +228,28 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
-907/907 [==============================] - 36s 4ms/step - loss: 1.4261 - accuracy: 0.5208 - val_loss: 0.6958 - val_accuracy: 0.7430
-Epoch 2/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.9633 - accuracy: 0.7194 - val_loss: 0.5709 - val_accuracy: 0.8030
-Epoch 3/5
-907/907 [==============================] - 3s 4ms/step - loss: 0.8721 - accuracy: 0.7609 - val_loss: 0.4988 - val_accuracy: 0.8270
-Epoch 4/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.8323 - accuracy: 0.7770 - val_loss: 0.4683 - val_accuracy: 0.8485
-Epoch 5/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.7964 - accuracy: 0.7912 - val_loss: 0.4587 - val_accuracy: 0.8435
-157/157 [==============================] - 0s 2ms/step - loss: 0.4814 - accuracy: 0.8299
-Test accuracy: 82.99%
+Epoch 1/10
+907/907 [==============================] - 38s 41ms/step - loss: 1.4440 - accuracy: 0.5173 - val_loss: 0.7120 - val_accuracy: 0.7405
+Epoch 2/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.9869 - accuracy: 0.7074 - val_loss: 0.5996 - val_accuracy: 0.7780
+Epoch 3/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.9096 - accuracy: 0.7451 - val_loss: 0.5197 - val_accuracy: 0.8285
+Epoch 4/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.8485 - accuracy: 0.7741 - val_loss: 0.4830 - val_accuracy: 0.8380
+Epoch 5/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.8032 - accuracy: 0.7916 - val_loss: 0.4543 - val_accuracy: 0.8445
+Epoch 6/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.7675 - accuracy: 0.8032 - val_loss: 0.4398 - val_accuracy: 0.8470
+Epoch 7/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.7474 - accuracy: 0.8098 - val_loss: 0.4262 - val_accuracy: 0.8495
+Epoch 8/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.7337 - accuracy: 0.8145 - val_loss: 0.3950 - val_accuracy: 0.8650
+Epoch 9/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.7154 - accuracy: 0.8218 - val_loss: 0.3822 - val_accuracy: 0.8725
+Epoch 10/10
+907/907 [==============================] - 38s 42ms/step - loss: 0.7095 - accuracy: 0.8224 - val_loss: 0.3563 - val_accuracy: 0.8720
+157/157 [==============================] - 2s 14ms/step - loss: 0.3821 - accuracy: 0.8726
+Test accuracy: 87.26%
 
 ```
 </div>
@@ -273,18 +269,28 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
-907/907 [==============================] - 3s 3ms/step - loss: 1.1834 - accuracy: 0.5570 - val_loss: 0.6639 - val_accuracy: 0.7670
-Epoch 2/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.6553 - accuracy: 0.7547 - val_loss: 0.5536 - val_accuracy: 0.7900
-Epoch 3/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.5712 - accuracy: 0.7868 - val_loss: 0.4954 - val_accuracy: 0.8240
-Epoch 4/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.5169 - accuracy: 0.8101 - val_loss: 0.4742 - val_accuracy: 0.8310
-Epoch 5/5
-907/907 [==============================] - 3s 3ms/step - loss: 0.4799 - accuracy: 0.8239 - val_loss: 0.4324 - val_accuracy: 0.8460
-157/157 [==============================] - 0s 2ms/step - loss: 0.4654 - accuracy: 0.8357
-Test accuracy: 83.57%
+Epoch 1/10
+907/907 [==============================] - 37s 40ms/step - loss: 1.2037 - accuracy: 0.5553 - val_loss: 0.6732 - val_accuracy: 0.7565
+Epoch 2/10
+907/907 [==============================] - 37s 40ms/step - loss: 0.6724 - accuracy: 0.7462 - val_loss: 0.5715 - val_accuracy: 0.7940
+Epoch 3/10
+907/907 [==============================] - 37s 40ms/step - loss: 0.5828 - accuracy: 0.7897 - val_loss: 0.5042 - val_accuracy: 0.8210
+Epoch 4/10
+907/907 [==============================] - 37s 40ms/step - loss: 0.5203 - accuracy: 0.8115 - val_loss: 0.4587 - val_accuracy: 0.8405
+Epoch 5/10
+907/907 [==============================] - 36s 40ms/step - loss: 0.4802 - accuracy: 0.8255 - val_loss: 0.4602 - val_accuracy: 0.8340
+Epoch 6/10
+907/907 [==============================] - 36s 40ms/step - loss: 0.4566 - accuracy: 0.8351 - val_loss: 0.3985 - val_accuracy: 0.8700
+Epoch 7/10
+907/907 [==============================] - 37s 40ms/step - loss: 0.4273 - accuracy: 0.8457 - val_loss: 0.3764 - val_accuracy: 0.8685
+Epoch 8/10
+907/907 [==============================] - 36s 40ms/step - loss: 0.4133 - accuracy: 0.8481 - val_loss: 0.3704 - val_accuracy: 0.8735
+Epoch 9/10
+907/907 [==============================] - 36s 40ms/step - loss: 0.3951 - accuracy: 0.8543 - val_loss: 0.3715 - val_accuracy: 0.8680
+Epoch 10/10
+907/907 [==============================] - 36s 40ms/step - loss: 0.3850 - accuracy: 0.8586 - val_loss: 0.3458 - val_accuracy: 0.8735
+157/157 [==============================] - 2s 13ms/step - loss: 0.3817 - accuracy: 0.8636
+Test accuracy: 86.36%
 
 ```
 </div>
