@@ -40,8 +40,11 @@ pip install -U -q imgaug
 """
 ## Setup
 """
-import numpy as np
 import tensorflow as tf
+
+tf.random.set_seed(42)
+
+import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras import layers
 
@@ -51,6 +54,8 @@ tfds.disable_progress_bar()
 
 from imgaug import augmenters as iaa
 import imgaug as ia
+
+ia.seed(42)
 
 """
 ## Load the CIFAR10 dataset
@@ -69,7 +74,7 @@ print(f"Total test examples: {len(x_test)}")
 
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 128
-EPOCHS = 10
+EPOCHS = 1
 
 """
 ## Initialize `RandAugment` object
@@ -85,22 +90,31 @@ def augment(images):
     # Input to `augment()` is a TensorFlow tensor which
     # is not supported by `imgaug`. This is why we first
     # convert it to its `numpy` variant.
+    images = tf.cast(images, tf.uint8)
     return rand_aug(images=images.numpy())
 
 
 """
 ## Create TensorFlow `Dataset` objects
 
-There's one problem, though. We cannot map our `augment()` function to a TensorFlow
-`Dataset` object. To tackle this problem, we will make use of the
-[`tf.py_function`](https://www.tensorflow.org/api_docs/python/tf/py_function) that can
-convert a Python function into a TensorFlow op.
+There's one problem, though. Because `RandAugment` can only process NumPy arrays, it
+cannot be applied directly as part of the `Dataset` object (which expects TensorFlow
+tensors). To make `RandAugment` part of the dataset, we need to wrap it in a [`tf.py_function`](https://www.tensorflow.org/api_docs/python/tf/py_function).
+
+A `tf.py_function` is a TensorFlow operation (which, like any other TensorFlow operation,
+takes TF tensors as arguments and returns TensorFlow tensors) that is capable of running
+arbitrary Python code. Naturally, this Python code can only be executed on CPU (whereas
+the rest of the TensorFlow graph can be accelerated on GPU), which in some  cases can
+cause significant slowdowns -- however, in this case, the `Dataset` pipeline will run
+asynchronously together with the model, and doing preprocessing on CPU will remain
+performant.
 """
 
 train_ds_rand = (
     tf.data.Dataset.from_tensor_slices((x_train, y_train))
     .shuffle(BATCH_SIZE * 100)
     .batch(BATCH_SIZE)
+    .map(lambda x, y: (tf.image.resize(x, (72, 72)), y), num_parallel_calls=AUTO)
     .map(
         lambda x, y: (tf.py_function(augment, [x], [tf.float32]), y),
         num_parallel_calls=AUTO,
@@ -114,15 +128,19 @@ train_ds_rand = (
 test_ds = (
     tf.data.Dataset.from_tensor_slices((x_test, y_test))
     .batch(BATCH_SIZE)
+    .map(lambda x, y: (tf.image.resize(x, (72, 72)), y), num_parallel_calls=AUTO)
     .prefetch(AUTO)
 )
 
 """
 **Note about using `tf.py_function`**:
 
-As our `augment()` function is not a native TensorFlow operation chances are likely that
-it can turn into an expensive operation. This is why it is much better to apply it
+* As our `augment()` function is not a native TensorFlow operation chances are likely
+that it can turn into an expensive operation. This is why it is much better to apply it
 _after_ batching our dataset.
+* `tf.py_function` is [not yet compatible](https://github.com/tensorflow/tensorflow/issues/38762) with TPUs. So, if you have distributed
+TensorFlow training pipelines that use TPUs you cannot use `tf.py_function`. In that
+case, consider switching to a multi-GPU environment. 
 """
 
 """
@@ -132,13 +150,13 @@ random flips, random rotations, and random zoomings.
 
 simple_aug = tf.keras.Sequential(
     [
+        layers.experimental.preprocessing.Resizing(72, 72),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
         layers.experimental.preprocessing.RandomRotation(factor=0.02),
         layers.experimental.preprocessing.RandomZoom(
             height_factor=0.2, width_factor=0.2
         ),
-    ],
-    name="data_augmentation",
+    ]
 )
 
 # Now, map the augmentation pipeline to our training dataset
@@ -155,7 +173,7 @@ train_ds_simple = (
 """
 
 sample_images, _ = next(iter(train_ds_rand))
-plt.figure(figsize=(8, 8))
+plt.figure(figsize=(10, 10))
 for i, image in enumerate(sample_images[:9]):
     ax = plt.subplot(3, 3, i + 1)
     plt.imshow(image.numpy().astype("int"))
@@ -171,7 +189,7 @@ variations.
 """
 
 sample_images, _ = next(iter(train_ds_simple))
-plt.figure(figsize=(8, 8))
+plt.figure(figsize=(10, 10))
 for i, image in enumerate(sample_images[:9]):
     ax = plt.subplot(3, 3, i + 1)
     plt.imshow(image.numpy().astype("int"))
@@ -180,28 +198,28 @@ for i, image in enumerate(sample_images[:9]):
 """
 ## Define a model building utility function
 
-Now, we define a shallow CNN. Also, notice that the network already has a rescaling layer
-inside it. This eliminates the need to do any separate preprocessing on our dataset and
-is specifically very useful for deployment purposes.
+Now, we define a CNN model that is based on the [ResNet50V2 architecture](https://arxiv.org/abs/1603.05027). Also,
+notice that the network already has a rescaling layer inside it. This eliminates the need
+to do any separate preprocessing on our dataset and is specifically very useful for
+deployment purposes.
 """
 
 
 def get_training_model():
+    resnet50_v2 = tf.keras.applications.ResNet50V2(
+        weights=None, include_top=True, input_shape=(72, 72, 3), classes=10
+    )
     model = tf.keras.Sequential(
         [
-            layers.Input((32, 32, 3)),
-            layers.experimental.preprocessing.Rescaling(1.0 / 255),
-            layers.Conv2D(16, (5, 5), activation="relu"),
-            layers.MaxPooling2D(pool_size=(2, 2)),
-            layers.Conv2D(32, (5, 5), activation="relu"),
-            layers.MaxPooling2D(pool_size=(2, 2)),
-            layers.Dropout(0.2),
-            layers.GlobalAvgPool2D(),
-            layers.Dense(128, activation="relu"),
-            layers.Dense(10, activation="softmax"),
+            layers.Input((72, 72, 3)),
+            layers.experimental.preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1),
+            resnet50_v2,
         ]
     )
     return model
+
+
+print(get_training_model().summary())
 
 
 """
@@ -221,7 +239,7 @@ be using the following configuration:
 ![](https://storage.googleapis.com/tfds-data/visualization/fig/cifar10_corrupted-saturate_5-1.0.0.png)
 
 For the sake of reproducibility, we serialize the initial random weights of our shallow
-network.
+network. 
 """
 
 initial_model = get_training_model()
@@ -258,6 +276,7 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 """
 
 # Load and prepare the CIFAR-10-C dataset
+# (If it's not already downloaded, it takes ~10 minutes of time to download)
 cifar_10_c = tfds.load("cifar10_corrupted/saturate_5", split="test", as_supervised=True)
 cifar_10_c = cifar_10_c.batch(BATCH_SIZE)
 
@@ -278,11 +297,16 @@ print(
 )
 
 """
-As we can see at the expense of increased training time with RandAugment, we are able to
-carve out slightly better performance on the CIFAR-10-C dataset. With a deeper model and
-longer training schedule, this performance will likely improve. You can run the same
+For the purpose of this example, we trained the models for only a single epoch. In my 
+experiments, I found that with RandAugment the model performs way better (76.64%) than
+the model trained with `simple_aug` (64.80%) on the CIFAR-10-C dataset. Additionally, I 
+found that RandAugment helped stabilize the training. You can my experimentation notebook
+[here](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb). 
+
+As we can see from the notebook, at the expense of increased training time with RandAugment,
+we are able to carve out far better performance on the CIFAR-10-C dataset. You can
 experiment on the other corruption and perturbation settings that come with the
-CIFAR-10-C dataset and see if RandAugment helps.
+run the same CIFAR-10-C dataset and see if RandAugment helps.
 
 Readers are encouraged to experiment with the different values of `n` and `m` in the
 `RandAugment` object. In the [original paper](https://arxiv.org/abs/1909.13719), the
