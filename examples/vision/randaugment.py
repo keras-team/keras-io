@@ -8,13 +8,14 @@ Description: Applying RandAugment augmentation for training an image classificat
 """
 Data augmentation is a very useful technique that helps to improve the translational
 invariance of convolutional neural networks (CNN). RandAugment is a stochastic data
-augmentation routine for vision data and was proposed in [RandAugment: Practical
-automated data augmentation with a reduced search
-space](https://arxiv.org/abs/1909.13719). It is composed of strong augmentation
+augmentation routine for vision data and was proposed in
+[RandAugment: Practical automated data augmentation with a reduced search space](https://arxiv.org/abs/1909.13719).
+It is composed of strong augmentation
 transforms like color jitters, Gaussian blurs, saturations, etc. along with more
 traditional augmentation transforms such as random crops.
 
 RandAugment has two parameters:
+
 * `n` that denotes the number of randomly selected augmentation transforms to apply
 sequentially
 * `m` strength of all the augmentation transforms
@@ -24,13 +25,15 @@ RandAugment also provide pseudocode of RandAugment in the original paper (Figure
 
 ![](https://i.ibb.co/Df6Ynxd/image.png)
 
-Recently, it has been a key component of works like [Noisy Student Training](https://arxiv.org/abs/1911.04252) and
-[Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848). It has been also central to the
+Recently, it has been a key component of works like
+[Noisy Student Training](https://arxiv.org/abs/1911.04252) and
+[Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848).
+It has been also central to the
 success of [EfficientNets](https://arxiv.org/abs/1905.11946).
 
 This example requires TensorFlow 2.4 or higher, as well as
-[`imgaug`](https://imgaug.readthedocs.io/), which can be installed using the following
-command:
+[`imgaug`](https://imgaug.readthedocs.io/),
+which can be installed using the following command:
 """
 
 """shell
@@ -60,8 +63,8 @@ ia.seed(42)
 """
 ## Load the CIFAR10 dataset
 
-For this example, we will be using the [CIFAR10
-dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
+For this example, we will be using the
+[CIFAR10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 """
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
@@ -97,9 +100,10 @@ def augment(images):
 """
 ## Create TensorFlow `Dataset` objects
 
-There's one problem, though. Because `RandAugment` can only process NumPy arrays, it
+Because `RandAugment` can only process NumPy arrays, it
 cannot be applied directly as part of the `Dataset` object (which expects TensorFlow
-tensors). To make `RandAugment` part of the dataset, we need to wrap it in a [`tf.py_function`](https://www.tensorflow.org/api_docs/python/tf/py_function).
+tensors). To make `RandAugment` part of the dataset, we need to wrap it in a
+[`tf.py_function`](https://www.tensorflow.org/api_docs/python/tf/py_function).
 
 A `tf.py_function` is a TensorFlow operation (which, like any other TensorFlow operation,
 takes TF tensors as arguments and returns TensorFlow tensors) that is capable of running
@@ -136,9 +140,10 @@ test_ds = (
 * As our `augment()` function is not a native TensorFlow operation chances are likely
 that it can turn into an expensive operation. This is why it is much better to apply it
 _after_ batching our dataset.
-* `tf.py_function` is [not yet compatible](https://github.com/tensorflow/tensorflow/issues/38762) with TPUs. So, if you have distributed
-TensorFlow training pipelines that use TPUs you cannot use `tf.py_function`. In that
-case, consider switching to a multi-GPU environment. 
+* `tf.py_function` is [not compatible](https://github.com/tensorflow/tensorflow/issues/38762)
+with TPUs. So, if you have distributed TensorFlow training pipelines that use TPUs
+you cannot use `tf.py_function`. In that case, consider switching to a multi-GPU environment,
+or rewriting the contents of the function in pure TensorFlow.
 """
 
 """
@@ -196,7 +201,8 @@ for i, image in enumerate(sample_images[:9]):
 """
 ## Define a model building utility function
 
-Now, we define a CNN model that is based on the [ResNet50V2 architecture](https://arxiv.org/abs/1603.05027). Also,
+Now, we define a CNN model that is based on the
+[ResNet50V2 architecture](https://arxiv.org/abs/1603.05027). Also,
 notice that the network already has a rescaling layer inside it. This eliminates the need
 to do any separate preprocessing on our dataset and is specifically very useful for
 deployment purposes.
@@ -222,17 +228,19 @@ print(get_training_model().summary())
 
 """
 We will train this network on two different versions of our dataset:
+
 * One augmented with RandAugment.
 * Another one augmented with `simple_aug`.
 
 Since RandAugment is known to enhance the robustness of models to common perturbations
 and corruptions, we will also evaluate our models on the CIFAR-10-C dataset, proposed in
-[Benchmarking Neural Network Robustness to Common Corruptions and
-Perturbations](https://arxiv.org/abs/1903.12261) by Hendrycks et al. CIFAR-10-C dataset
+[Benchmarking Neural Network Robustness to Common Corruptions and Perturbations](https://arxiv.org/abs/1903.12261)
+by Hendrycks et al. The CIFAR-10-C dataset
 consists of 19 different image corruptions and perturbations (for example speckle noise,
 fog, Gaussian blur, etc.) that too at varying severity levels. For this example we will
 be using the following configuration:
-[`cifar10_corrupted/saturate_5`](https://www.tensorflow.org/datasets/catalog/cifar10_corrupted#cifar10_corruptedsaturate_5). The images from this configuration look like so:
+[`cifar10_corrupted/saturate_5`](https://www.tensorflow.org/datasets/catalog/cifar10_corrupted#cifar10_corruptedsaturate_5).
+The images from this configuration look like so:
 
 ![](https://storage.googleapis.com/tfds-data/visualization/fig/cifar10_corrupted-saturate_5-1.0.0.png)
 
