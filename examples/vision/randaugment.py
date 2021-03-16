@@ -112,12 +112,14 @@ performant.
 
 train_ds_rand = (
     tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    .shuffle(BATCH_SIZE*100)
+    .shuffle(BATCH_SIZE * 100)
     .batch(BATCH_SIZE)
     # The returned output contains an unncessary axis of
     # 1-D and we need to remove it.
-    .map(lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
-                            num_parallel_calls=AUTO)
+    .map(
+        lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
+        num_parallel_calls=AUTO,
+    )
     .prefetch(AUTO)
 )
 
