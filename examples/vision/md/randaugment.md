@@ -1,11 +1,15 @@
-"""
-Title: RandAugment for Image Classification for Improved Robustness
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/03/13
-Last modified: 2021/03/13
-Description: RandAugment augmentation for training an image classification model with improved robustness.
-"""
-"""
+# RandAugment for Image Classification for Improved Robustness
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/03/13<br>
+**Last modified:** 2021/03/13<br>
+**Description:** RandAugment augmentation for training an image classification model with improved robustness.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/randaugment.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/randaugment.py)
+
+
+
 Data augmentation is a very useful technique that helps to improve the translational
 invariance of convolutional neural networks (CNN). RandAugment is a stochastic data
 augmentation routine for vision data and was proposed in
@@ -34,15 +38,17 @@ success of [EfficientNets](https://arxiv.org/abs/1905.11946).
 This example requires TensorFlow 2.4 or higher, as well as
 [`imgaug`](https://imgaug.readthedocs.io/),
 which can be installed using the following command:
-"""
 
-"""shell
-pip install -U -q imgaug
-"""
 
-"""
+```python
+!pip install -U -q imgaug
+```
+
+---
 ## Setup
-"""
+
+
+```python
 import tensorflow as tf
 
 tf.random.set_seed(42)
@@ -59,34 +65,47 @@ from imgaug import augmenters as iaa
 import imgaug as ia
 
 ia.seed(42)
+```
 
-"""
+---
 ## Load the CIFAR10 dataset
 
 For this example, we will be using the
 [CIFAR10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 print(f"Total training examples: {len(x_train)}")
 print(f"Total test examples: {len(x_test)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total training examples: 50000
+Total test examples: 10000
+
+```
+</div>
+---
 ## Define hyperparameters
-"""
 
+
+```python
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 128
 EPOCHS = 1
 IMAGE_SIZE = 72
+```
 
-"""
+---
 ## Initialize `RandAugment` object
 
 Now, we will initialize a `RandAugment` object from the `imgaug.augmenters` module with
 the parameters suggested by the RandAugment authors.
-"""
 
+
+```python
 rand_aug = iaa.RandAugment(n=3, m=7)
 
 
@@ -97,8 +116,9 @@ def augment(images):
     images = tf.cast(images, tf.uint8)
     return rand_aug(images=images.numpy())
 
+```
 
-"""
+---
 ## Create TensorFlow `Dataset` objects
 
 Because `RandAugment` can only process NumPy arrays, it
@@ -113,8 +133,9 @@ the rest of the TensorFlow graph can be accelerated on GPU), which in some  case
 cause significant slowdowns -- however, in this case, the `Dataset` pipeline will run
 asynchronously together with the model, and doing preprocessing on CPU will remain
 performant.
-"""
 
+
+```python
 train_ds_rand = (
     tf.data.Dataset.from_tensor_slices((x_train, y_train))
     .shuffle(BATCH_SIZE * 100)
@@ -141,8 +162,8 @@ test_ds = (
     )
     .prefetch(AUTO)
 )
+```
 
-"""
 **Note about using `tf.py_function`**:
 
 * As our `augment()` function is not a native TensorFlow operation chances are likely
@@ -152,13 +173,12 @@ _after_ batching our dataset.
 with TPUs. So, if you have distributed TensorFlow training pipelines that use TPUs
 you cannot use `tf.py_function`. In that case, consider switching to a multi-GPU environment,
 or rewriting the contents of the function in pure TensorFlow.
-"""
 
-"""
 For comparison purposes, let's also define a simple augmentation pipeline consisting of
 random flips, random rotations, and random zoomings.
-"""
 
+
+```python
 simple_aug = tf.keras.Sequential(
     [
         layers.experimental.preprocessing.Resizing(IMAGE_SIZE, IMAGE_SIZE),
@@ -178,35 +198,50 @@ train_ds_simple = (
     .map(lambda x, y: (simple_aug(x), y), num_parallel_calls=AUTO)
     .prefetch(AUTO)
 )
+```
 
-"""
+---
 ## Visualize the dataset augmented with RandAugment
-"""
 
+
+```python
 sample_images, _ = next(iter(train_ds_rand))
 plt.figure(figsize=(10, 10))
 for i, image in enumerate(sample_images[:9]):
     ax = plt.subplot(3, 3, i + 1)
     plt.imshow(image.numpy().astype("int"))
     plt.axis("off")
+```
 
-"""
+
+    
+![png](/img/examples/vision/randaugment/randaugment_17_0.png)
+    
+
+
 You are encouraged to run the above code block a couple of times to see different
 variations.
-"""
 
-"""
+---
 ## Visualize the dataset augmented with `simple_aug`
-"""
 
+
+```python
 sample_images, _ = next(iter(train_ds_simple))
 plt.figure(figsize=(10, 10))
 for i, image in enumerate(sample_images[:9]):
     ax = plt.subplot(3, 3, i + 1)
     plt.imshow(image.numpy().astype("int"))
     plt.axis("off")
+```
 
-"""
+
+    
+![png](/img/examples/vision/randaugment/randaugment_20_0.png)
+    
+
+
+---
 ## Define a model building utility function
 
 Now, we define a CNN model that is based on the
@@ -214,8 +249,9 @@ Now, we define a CNN model that is based on the
 notice that the network already has a rescaling layer inside it. This eliminates the need
 to do any separate preprocessing on our dataset and is specifically very useful for
 deployment purposes.
-"""
 
+
+```python
 
 def get_training_model():
     resnet50_v2 = tf.keras.applications.ResNet50V2(
@@ -236,8 +272,26 @@ def get_training_model():
 
 print(get_training_model().summary())
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+rescaling (Rescaling)        (None, 72, 72, 3)         0         
+_________________________________________________________________
+resnet50v2 (Functional)      (None, 10)                23585290  
+=================================================================
+Total params: 23,585,290
+Trainable params: 23,539,850
+Non-trainable params: 45,440
+_________________________________________________________________
+None
+
+```
+</div>
 We will train this network on two different versions of our dataset:
 
 * One augmented with RandAugment.
@@ -257,15 +311,17 @@ The images from this configuration look like so:
 
 For the sake of reproducibility, we serialize the initial random weights of our shallow
 network.
-"""
 
+
+```python
 initial_model = get_training_model()
 initial_model.save_weights("initial_weights.h5")
+```
 
-"""
 #1. Train model with RandAugment
-"""
 
+
+```python
 rand_aug_model = get_training_model()
 rand_aug_model.load_weights("initial_weights.h5")
 rand_aug_model.compile(
@@ -274,11 +330,20 @@ rand_aug_model.compile(
 rand_aug_model.fit(train_ds_rand, validation_data=test_ds, epochs=EPOCHS)
 _, test_acc = rand_aug_model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_acc * 100))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+391/391 [==============================] - 88s 203ms/step - loss: 2.0948 - accuracy: 0.2691 - val_loss: 4.6603 - val_accuracy: 0.2846
+79/79 [==============================] - 2s 21ms/step - loss: 4.6603 - accuracy: 0.2846
+Test accuracy: 28.46%
+
+```
+</div>
 # 2. Train model with `simple_aug`
-"""
 
+
+```python
 simple_aug_model = get_training_model()
 simple_aug_model.load_weights("initial_weights.h5")
 simple_aug_model.compile(
@@ -287,11 +352,21 @@ simple_aug_model.compile(
 simple_aug_model.fit(train_ds_simple, validation_data=test_ds, epochs=EPOCHS)
 _, test_acc = simple_aug_model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_acc * 100))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+391/391 [==============================] - 31s 68ms/step - loss: 1.7856 - accuracy: 0.3862 - val_loss: 1.4807 - val_accuracy: 0.5201
+79/79 [==============================] - 2s 21ms/step - loss: 1.4807 - accuracy: 0.5201
+Test accuracy: 52.01%
+
+```
+</div>
+---
 ## Load the CIFAR-10-C dataset and evaluate performance
-"""
 
+
+```python
 # Load and prepare the CIFAR-10-C dataset
 # (If it's not already downloaded, it takes ~10 minutes of time to download)
 cifar_10_c = tfds.load("cifar10_corrupted/saturate_5", split="test", as_supervised=True)
@@ -315,8 +390,15 @@ print(
         test_acc * 100
     )
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Accuracy with RandAugment on CIFAR-10-C (saturate_5): 19.95%
+Accuracy with simple_aug on CIFAR-10-C (saturate_5): 42.13%
+
+```
+</div>
 For the purpose of this example, we trained the models for only a single epoch. In my
 experiments, I found that with RandAugment the model performs way better (76.64%) than
 the model trained with `simple_aug` (64.80%) on the CIFAR-10-C dataset. Additionally, I
@@ -337,4 +419,3 @@ RandAugment has shown great progress in improving the robustness of deep models 
 computer vision as shown in works like [Noisy Student Training](https://arxiv.org/abs/1911.04252) and
 [FixMatch](https://arxiv.org/abs/2001.07685). This makes RandAugment quite a useful
 recipe for training different vision models.
-"""
