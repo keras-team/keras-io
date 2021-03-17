@@ -119,8 +119,10 @@ train_ds_rand = (
     tf.data.Dataset.from_tensor_slices((x_train, y_train))
     .shuffle(BATCH_SIZE * 100)
     .batch(BATCH_SIZE)
-    .map(lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
-        num_parallel_calls=AUTO)
+    .map(
+        lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
+        num_parallel_calls=AUTO,
+    )
     # The returned output of `tf.py_function` contains an unncessary axis of
     # 1-D and we need to remove it.
     .map(
@@ -133,8 +135,10 @@ train_ds_rand = (
 test_ds = (
     tf.data.Dataset.from_tensor_slices((x_test, y_test))
     .batch(BATCH_SIZE)
-    .map(lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y), 
-        num_parallel_calls=AUTO)
+    .map(
+        lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
+        num_parallel_calls=AUTO,
+    )
     .prefetch(AUTO)
 )
 
@@ -215,8 +219,10 @@ deployment purposes.
 
 def get_training_model():
     resnet50_v2 = tf.keras.applications.ResNet50V2(
-        weights=None, include_top=True, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), 
-        classes=10
+        weights=None,
+        include_top=True,
+        input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+        classes=10,
     )
     model = tf.keras.Sequential(
         [
