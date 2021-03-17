@@ -2,11 +2,11 @@
 Title: RandAugment for Image Classification for Improved Robustness
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/03/13
-Last modified: 2021/03/13
+Last modified: 2021/03/17
 Description: RandAugment for training an image classification model with improved robustness.
 """
 """
-Data augmentation is a very useful technique that helps to improve the translational
+Data augmentation is a very useful technique that can help to improve the translational
 invariance of convolutional neural networks (CNN). RandAugment is a stochastic data
 augmentation routine for vision data and was proposed in
 [RandAugment: Practical automated data augmentation with a reduced search space](https://arxiv.org/abs/1909.13719).
