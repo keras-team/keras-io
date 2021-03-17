@@ -255,7 +255,7 @@ The images from this configuration look like so:
 
 ![](https://storage.googleapis.com/tfds-data/visualization/fig/cifar10_corrupted-saturate_5-1.0.0.png)
 
-For the sake of reproducibility, we serialize the initial random weights of our shallow
+In the interest of reproducibility, we serialize the initial random weights of our shallow
 network.
 """
 
@@ -317,13 +317,13 @@ print(
 )
 
 """
-For the purpose of this example, we trained the models for only a single epoch. In my
-experiments, I found that with RandAugment the model performs way better (76.64%) than
-the model trained with `simple_aug` (64.80%) on the CIFAR-10-C dataset. Additionally, I
-found that RandAugment helped stabilize the training. You can my experimentation notebook
-[here](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb).
+For the purpose of this example, we trained the models for only a single epoch. On the
+CIFAR-10-C dataset, the model with RandAugment can perform better with a higher accuracy
+(for example, 76.64% in one experiment) compared with the model trained with `simple_aug` 
+(e.g., 64.80%). RandAugment can also help stabilize the training. You can explore this
+[notebook](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb) to check some of the results.
 
-As we can see from the notebook, at the expense of increased training time with RandAugment,
+In the notebook, you may notice that, at the expense of increased training time with RandAugment,
 we are able to carve out far better performance on the CIFAR-10-C dataset. You can
 experiment on the other corruption and perturbation settings that come with the
 run the same CIFAR-10-C dataset and see if RandAugment helps.
