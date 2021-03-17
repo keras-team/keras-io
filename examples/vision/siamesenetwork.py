@@ -494,7 +494,7 @@ e.g. tf.keras.applications.ResNet50().
 
 3) Every layer has a name, this is really helpful for fine tuning, If you want to fine
 tune specific layers, in our example we loop over the layers until we find specific layer
-bu it's name and we made it trainable, this allows the weights of this layer to change
+by it's name and we made it trainable, this allows the weights of this layer to change
 during training
 
 4) In our example we have only one embedding network that we need to train it but we need
@@ -509,7 +509,7 @@ output layers as values.
 6) We used cosine similarity to measure how to 2 output embeddings are similar to each
 other.
 
-6) You can create you custom Layers by just creating a class that inherits from
+6) You can create your custom Layers by just creating a class that inherits from
 tf.keras.layers.Layer, you just need to implement the call function. check out the
 documentation https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer
 
