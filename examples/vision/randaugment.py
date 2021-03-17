@@ -123,7 +123,7 @@ train_ds_rand = (
         lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
         num_parallel_calls=AUTO,
     )
-    # The returned output of `tf.py_function` contains an unncessary axis of
+    # The returned output of `tf.py_function` contains an unnecessary axis of
     # 1-D and we need to remove it.
     .map(
         lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
