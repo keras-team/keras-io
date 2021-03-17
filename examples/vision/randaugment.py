@@ -319,7 +319,7 @@ print(
 """
 For the purpose of this example, we trained the models for only a single epoch. On the
 CIFAR-10-C dataset, the model with RandAugment can perform better with a higher accuracy
-(for example, 76.64% in one experiment) compared with the model trained with `simple_aug` 
+(for example, 76.64% in one experiment) compared with the model trained with `simple_aug`
 (e.g., 64.80%). RandAugment can also help stabilize the training. You can explore this
 [notebook](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb) to check some of the results.
 
