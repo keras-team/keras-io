@@ -325,10 +325,10 @@ we are able to carve out far better performance on the CIFAR-10-C dataset. You c
 experiment on the other corruption and perturbation settings that come with the
 run the same CIFAR-10-C dataset and see if RandAugment helps.
 
-Readers are encouraged to experiment with the different values of `n` and `m` in the
-`RandAugment` object. In the [original paper](https://arxiv.org/abs/1909.13719), the
-authors show the impact of the individual augmentation transforms for a particular task
-and a range of ablation studies. You are welcome to check them out.
+You can also experiment with the different values of `n` and `m` in the `RandAugment`
+object. In the [original paper](https://arxiv.org/abs/1909.13719), the authors show
+the impact of the individual augmentation transforms for a particular task and a range of
+ablation studies. You are welcome to check them out.
 
 RandAugment has shown great progress in improving the robustness of deep models for
 computer vision as shown in works like [Noisy Student Training](https://arxiv.org/abs/1911.04252) and
