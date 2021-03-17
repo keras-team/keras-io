@@ -233,7 +233,7 @@ your preprocessing layers and your training model:
 inputs = keras.Input(shape=input_shape)
 x = preprocessing_layer(inputs)
 outputs = training_model(x)
-infernece_model = keras.Model(inputs, outputs)
+inference_model = keras.Model(inputs, outputs)
 ```
 
 ---
@@ -303,9 +303,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 4s 2ms/step - loss: 2.1193
+1563/1563 [==============================] - 3s 1ms/step - loss: 2.1995
 
-<tensorflow.python.keras.callbacks.History at 0x7f5b1409a250>
+<tensorflow.python.keras.callbacks.History at 0x152275510>
 
 ```
 </div>
@@ -520,7 +520,7 @@ Encoded text:
     
 <div class="k-default-codeblock">
 ```
-Model output: tf.Tensor([[0.8250091]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.40469304]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -577,7 +577,7 @@ Encoded text:
     
 <div class="k-default-codeblock">
 ```
-Model output: tf.Tensor([[-2.3685102]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.4092756]], shape=(1, 1), dtype=float32)
 
 ```
 </div>

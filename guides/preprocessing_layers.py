@@ -200,7 +200,7 @@ your preprocessing layers and your training model:
 inputs = keras.Input(shape=input_shape)
 x = preprocessing_layer(inputs)
 outputs = training_model(x)
-infernece_model = keras.Model(inputs, outputs)
+inference_model = keras.Model(inputs, outputs)
 ```
 """
 
