@@ -3,7 +3,7 @@ Title: RandAugment for Image Classification for Improved Robustness
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/03/13
 Last modified: 2021/03/13
-Description: RandAugment augmentation for training an image classification model with improved robustness.
+Description: RandAugment for training an image classification model with improved robustness.
 """
 """
 Data augmentation is a very useful technique that helps to improve the translational

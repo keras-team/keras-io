@@ -3,7 +3,7 @@
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/03/13<br>
 **Last modified:** 2021/03/13<br>
-**Description:** RandAugment augmentation for training an image classification model with improved robustness.
+**Description:** RandAugment for training an image classification model with improved robustness.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/randaugment.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/randaugment.py)
@@ -334,9 +334,9 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 88s 203ms/step - loss: 2.0948 - accuracy: 0.2691 - val_loss: 4.6603 - val_accuracy: 0.2846
-79/79 [==============================] - 2s 21ms/step - loss: 4.6603 - accuracy: 0.2846
-Test accuracy: 28.46%
+391/391 [==============================] - 99s 203ms/step - loss: 2.0931 - accuracy: 0.2734 - val_loss: 1.7154 - val_accuracy: 0.4402
+79/79 [==============================] - 2s 21ms/step - loss: 1.7154 - accuracy: 0.4402
+Test accuracy: 44.02%
 
 ```
 </div>
@@ -356,9 +356,9 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 31s 68ms/step - loss: 1.7856 - accuracy: 0.3862 - val_loss: 1.4807 - val_accuracy: 0.5201
-79/79 [==============================] - 2s 21ms/step - loss: 1.4807 - accuracy: 0.5201
-Test accuracy: 52.01%
+391/391 [==============================] - 31s 69ms/step - loss: 1.7836 - accuracy: 0.3788 - val_loss: 1.3316 - val_accuracy: 0.5205
+79/79 [==============================] - 2s 22ms/step - loss: 1.3316 - accuracy: 0.5205
+Test accuracy: 52.05%
 
 ```
 </div>
@@ -394,8 +394,8 @@ print(
 
 <div class="k-default-codeblock">
 ```
-Accuracy with RandAugment on CIFAR-10-C (saturate_5): 19.95%
-Accuracy with simple_aug on CIFAR-10-C (saturate_5): 42.13%
+Accuracy with RandAugment on CIFAR-10-C (saturate_5): 34.14%
+Accuracy with simple_aug on CIFAR-10-C (saturate_5): 46.90%
 
 ```
 </div>
