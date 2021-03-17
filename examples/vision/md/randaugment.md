@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/03/13<br>
-**Last modified:** 2021/03/13<br>
+**Last modified:** 2021/03/17<br>
 **Description:** RandAugment for training an image classification model with improved robustness.
 
 
@@ -10,13 +10,13 @@
 
 
 
-Data augmentation is a very useful technique that helps to improve the translational
+Data augmentation is a very useful technique that can help to improve the translational
 invariance of convolutional neural networks (CNN). RandAugment is a stochastic data
 augmentation routine for vision data and was proposed in
 [RandAugment: Practical automated data augmentation with a reduced search space](https://arxiv.org/abs/1909.13719).
-It is composed of strong augmentation
-transforms like color jitters, Gaussian blurs, saturations, etc. along with more
-traditional augmentation transforms such as random crops.
+It is composed of strong augmentation transforms like color jitters, Gaussian blurs,
+saturations, etc. along with more traditional augmentation transforms such as
+random crops.
 
 RandAugment has two parameters:
 
@@ -144,7 +144,7 @@ train_ds_rand = (
         lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
         num_parallel_calls=AUTO,
     )
-    # The returned output of `tf.py_function` contains an unncessary axis of
+    # The returned output of `tf.py_function` contains an unnecessary axis of
     # 1-D and we need to remove it.
     .map(
         lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
@@ -309,7 +309,7 @@ The images from this configuration look like so:
 
 ![](https://storage.googleapis.com/tfds-data/visualization/fig/cifar10_corrupted-saturate_5-1.0.0.png)
 
-For the sake of reproducibility, we serialize the initial random weights of our shallow
+In the interest of reproducibility, we serialize the initial random weights of our shallow
 network.
 
 
@@ -334,9 +334,9 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 99s 203ms/step - loss: 2.0931 - accuracy: 0.2734 - val_loss: 1.7154 - val_accuracy: 0.4402
-79/79 [==============================] - 2s 21ms/step - loss: 1.7154 - accuracy: 0.4402
-Test accuracy: 44.02%
+391/391 [==============================] - 96s 198ms/step - loss: 2.0999 - accuracy: 0.2682 - val_loss: 1.6780 - val_accuracy: 0.4646
+79/79 [==============================] - 2s 22ms/step - loss: 1.6780 - accuracy: 0.4646
+Test accuracy: 46.46%
 
 ```
 </div>
@@ -356,9 +356,9 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 31s 69ms/step - loss: 1.7836 - accuracy: 0.3788 - val_loss: 1.3316 - val_accuracy: 0.5205
-79/79 [==============================] - 2s 22ms/step - loss: 1.3316 - accuracy: 0.5205
-Test accuracy: 52.05%
+391/391 [==============================] - 31s 70ms/step - loss: 1.8253 - accuracy: 0.3734 - val_loss: 1.3216 - val_accuracy: 0.5405
+79/79 [==============================] - 2s 22ms/step - loss: 1.3216 - accuracy: 0.5405
+Test accuracy: 54.05%
 
 ```
 </div>
@@ -394,18 +394,18 @@ print(
 
 <div class="k-default-codeblock">
 ```
-Accuracy with RandAugment on CIFAR-10-C (saturate_5): 34.14%
-Accuracy with simple_aug on CIFAR-10-C (saturate_5): 46.90%
+Accuracy with RandAugment on CIFAR-10-C (saturate_5): 37.28%
+Accuracy with simple_aug on CIFAR-10-C (saturate_5): 46.50%
 
 ```
 </div>
-For the purpose of this example, we trained the models for only a single epoch. In my
-experiments, I found that with RandAugment the model performs way better (76.64%) than
-the model trained with `simple_aug` (64.80%) on the CIFAR-10-C dataset. Additionally, I
-found that RandAugment helped stabilize the training. You can my experimentation notebook
-[here](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb).
+For the purpose of this example, we trained the models for only a single epoch. On the
+CIFAR-10-C dataset, the model with RandAugment can perform better with a higher accuracy
+(for example, 76.64% in one experiment) compared with the model trained with `simple_aug`
+(e.g., 64.80%). RandAugment can also help stabilize the training. You can explore this
+[notebook](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb) to check some of the results.
 
-As we can see from the notebook, at the expense of increased training time with RandAugment,
+In the notebook, you may notice that, at the expense of increased training time with RandAugment,
 we are able to carve out far better performance on the CIFAR-10-C dataset. You can
 experiment on the other corruption and perturbation settings that come with the
 run the same CIFAR-10-C dataset and see if RandAugment helps.

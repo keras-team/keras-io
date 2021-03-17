@@ -10,9 +10,9 @@ Data augmentation is a very useful technique that can help to improve the transl
 invariance of convolutional neural networks (CNN). RandAugment is a stochastic data
 augmentation routine for vision data and was proposed in
 [RandAugment: Practical automated data augmentation with a reduced search space](https://arxiv.org/abs/1909.13719).
-It is composed of strong augmentation
-transforms like color jitters, Gaussian blurs, saturations, etc. along with more
-traditional augmentation transforms such as random crops.
+It is composed of strong augmentation transforms like color jitters, Gaussian blurs,
+saturations, etc. along with more traditional augmentation transforms such as
+random crops.
 
 RandAugment has two parameters:
 
