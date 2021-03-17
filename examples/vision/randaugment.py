@@ -3,7 +3,7 @@ Title: RandAugment for Image Classification for Improved Robustness
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/03/13
 Last modified: 2021/03/13
-Description: Applying RandAugment augmentation for training an image classification model with improved robustness.
+Description: RandAugment augmentation for training an image classification model with improved robustness.
 """
 """
 Data augmentation is a very useful technique that helps to improve the translational
@@ -318,7 +318,7 @@ For the purpose of this example, we trained the models for only a single epoch. 
 experiments, I found that with RandAugment the model performs way better (76.64%) than
 the model trained with `simple_aug` (64.80%) on the CIFAR-10-C dataset. Additionally, I 
 found that RandAugment helped stabilize the training. You can my experimentation notebook
-[here](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb). 
+[here](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb).
 
 As we can see from the notebook, at the expense of increased training time with RandAugment,
 we are able to carve out far better performance on the CIFAR-10-C dataset. You can
