@@ -21,9 +21,7 @@ sequentially
 * `m` strength of all the augmentation transforms
 
 These parameters are tuned for a given dataset and a network architecture. The authors of
-RandAugment also provide pseudocode of RandAugment in the original paper (Figure 2):
-
-![](https://i.ibb.co/Df6Ynxd/image.png)
+RandAugment also provide pseudocode of RandAugment in the original paper (Figure 2).
 
 Recently, it has been a key component of works like
 [Noisy Student Training](https://arxiv.org/abs/1911.04252) and
@@ -34,30 +32,25 @@ success of [EfficientNets](https://arxiv.org/abs/1905.11946).
 This example requires TensorFlow 2.4 or higher, as well as
 [`imgaug`](https://imgaug.readthedocs.io/),
 which can be installed using the following command:
+
+```python
+pip install imgaug
+```
 """
 
-"""shell
-pip install -U -q imgaug
 """
-
-"""
-## Setup
+## Imports & setup
 """
 import tensorflow as tf
-
-tf.random.set_seed(42)
-
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras import layers
-
 import tensorflow_datasets as tfds
-
-tfds.disable_progress_bar()
-
 from imgaug import augmenters as iaa
 import imgaug as ia
 
+tfds.disable_progress_bar()
+tf.random.set_seed(42)
 ia.seed(42)
 
 """
@@ -123,8 +116,6 @@ train_ds_rand = (
         lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
         num_parallel_calls=AUTO,
     )
-    # The returned output of `tf.py_function` contains an unnecessary axis of
-    # 1-D and we need to remove it.
     .map(
         lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
         num_parallel_calls=AUTO,
@@ -234,7 +225,7 @@ def get_training_model():
     return model
 
 
-print(get_training_model().summary())
+get_training_model().summary()
 
 
 """
@@ -263,7 +254,7 @@ initial_model = get_training_model()
 initial_model.save_weights("initial_weights.h5")
 
 """
-#1. Train model with RandAugment
+## Train model with RandAugment
 """
 
 rand_aug_model = get_training_model()
@@ -276,7 +267,7 @@ _, test_acc = rand_aug_model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 """
-# 2. Train model with `simple_aug`
+## Train model with `simple_aug`
 """
 
 simple_aug_model = get_training_model()

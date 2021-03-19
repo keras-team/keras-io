@@ -25,9 +25,7 @@ sequentially
 * `m` strength of all the augmentation transforms
 
 These parameters are tuned for a given dataset and a network architecture. The authors of
-RandAugment also provide pseudocode of RandAugment in the original paper (Figure 2):
-
-![](https://i.ibb.co/Df6Ynxd/image.png)
+RandAugment also provide pseudocode of RandAugment in the original paper (Figure 2).
 
 Recently, it has been a key component of works like
 [Noisy Student Training](https://arxiv.org/abs/1911.04252) and
@@ -39,31 +37,25 @@ This example requires TensorFlow 2.4 or higher, as well as
 [`imgaug`](https://imgaug.readthedocs.io/),
 which can be installed using the following command:
 
-
 ```python
-!pip install -U -q imgaug
+pip install imgaug
 ```
 
 ---
-## Setup
+## Imports & setup
 
 
 ```python
 import tensorflow as tf
-
-tf.random.set_seed(42)
-
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras import layers
-
 import tensorflow_datasets as tfds
-
-tfds.disable_progress_bar()
-
 from imgaug import augmenters as iaa
 import imgaug as ia
 
+tfds.disable_progress_bar()
+tf.random.set_seed(42)
 ia.seed(42)
 ```
 
@@ -144,8 +136,6 @@ train_ds_rand = (
         lambda x, y: (tf.image.resize(x, (IMAGE_SIZE, IMAGE_SIZE)), y),
         num_parallel_calls=AUTO,
     )
-    # The returned output of `tf.py_function` contains an unnecessary axis of
-    # 1-D and we need to remove it.
     .map(
         lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
         num_parallel_calls=AUTO,
@@ -214,9 +204,7 @@ for i, image in enumerate(sample_images[:9]):
 ```
 
 
-    
-![png](/img/examples/vision/randaugment/randaugment_17_0.png)
-    
+![png](/img/examples/vision/randaugment/randaugment_16_0.png)
 
 
 You are encouraged to run the above code block a couple of times to see different
@@ -236,9 +224,7 @@ for i, image in enumerate(sample_images[:9]):
 ```
 
 
-    
-![png](/img/examples/vision/randaugment/randaugment_20_0.png)
-    
+![png](/img/examples/vision/randaugment/randaugment_19_0.png)
 
 
 ---
@@ -269,8 +255,7 @@ def get_training_model():
     )
     return model
 
-
-print(get_training_model().summary())
+print(get_training_model().summary()
 
 ```
 
@@ -288,7 +273,6 @@ Total params: 23,585,290
 Trainable params: 23,539,850
 Non-trainable params: 45,440
 _________________________________________________________________
-None
 
 ```
 </div>
@@ -318,7 +302,8 @@ initial_model = get_training_model()
 initial_model.save_weights("initial_weights.h5")
 ```
 
-#1. Train model with RandAugment
+---
+## Train model with RandAugment
 
 
 ```python
@@ -334,13 +319,14 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 96s 198ms/step - loss: 2.0999 - accuracy: 0.2682 - val_loss: 1.6780 - val_accuracy: 0.4646
-79/79 [==============================] - 2s 22ms/step - loss: 1.6780 - accuracy: 0.4646
-Test accuracy: 46.46%
+391/391 [==============================] - 1199s 3s/step - loss: 2.0652 - accuracy: 0.2744 - val_loss: 1.6281 - val_accuracy: 0.4319
+79/79 [==============================] - 46s 580ms/step - loss: 1.6281 - accuracy: 0.4319
+Test accuracy: 43.19%
 
 ```
 </div>
-# 2. Train model with `simple_aug`
+---
+## Train model with `simple_aug`
 
 
 ```python
@@ -356,9 +342,9 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 31s 70ms/step - loss: 1.8253 - accuracy: 0.3734 - val_loss: 1.3216 - val_accuracy: 0.5405
-79/79 [==============================] - 2s 22ms/step - loss: 1.3216 - accuracy: 0.5405
-Test accuracy: 54.05%
+391/391 [==============================] - 1169s 3s/step - loss: 1.7628 - accuracy: 0.3862 - val_loss: 1.3458 - val_accuracy: 0.5305
+79/79 [==============================] - 42s 527ms/step - loss: 1.3458 - accuracy: 0.5305
+Test accuracy: 53.05%
 
 ```
 </div>
@@ -394,8 +380,8 @@ print(
 
 <div class="k-default-codeblock">
 ```
-Accuracy with RandAugment on CIFAR-10-C (saturate_5): 37.28%
-Accuracy with simple_aug on CIFAR-10-C (saturate_5): 46.50%
+Accuracy with RandAugment on CIFAR-10-C (saturate_5): 35.90%
+Accuracy with simple_aug on CIFAR-10-C (saturate_5): 47.34%
 
 ```
 </div>
