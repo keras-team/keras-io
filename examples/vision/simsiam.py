@@ -1,8 +1,8 @@
 """
 Title: Self-supervised contrastive learning with SimSiam
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/03/13
-Last modified: 2021/03/17
+Date created: 2021/03/19
+Last modified: 2021/03/20
 Description: Implementation of a self-supervised learning method for computer vision.
 """
 """
@@ -31,13 +31,13 @@ is implemented as the following:
 1. We create two different versions of the same dataset with a stochastic data
 augmentation pipeline. Note that the random initialization seed needs to be the same
 during create these versions. 
-2. We take a ResNet50 without any classification head (**backbone**) and we add a shallow
+2. We take a ResNet without any classification head (**backbone**) and we add a shallow
 fully-connected network (**projection head**) on top of it. Collectively, this is known
 as the **encoder**. 
 3. We pass the output of the encoder through a **predictor** which is again a shallow
 fully-connected network having an
 [AutoEncoder](https://en.wikipedia.org/wiki/Autoencoder) like structure. 
-4. We then train our encoder to maximize the cosine similarity between the two different
+3. We then train our encoder to maximize the cosine similarity between the two different
 versions of our dataset. 
 
 This example requires TensorFlow 2.4 or higher.
@@ -48,33 +48,33 @@ This example requires TensorFlow 2.4 or higher.
 """
 
 from tensorflow.keras import layers
-import tensorflow_datasets as tfds
+from tensorflow.keras import regularizers
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-tfds.disable_progress_bar()
 
 """
 ## Define hyperparameters
 """
 
 AUTO = tf.data.AUTOTUNE
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 EPOCHS = 5
-RESIZE_TO = 260
-CROP_TO = 224
+CROP_TO = 32
 SEED = 26
 
 PROJECT_DIM = 2048
 LATENT_DIM = 512
+WD = 0.0005
 
 """
-## Load the [Flowers](https://www.robots.ox.ac.uk/~vgg/data/flowers/) dataset
+## Load the CIFAR10 dataset
 """
 
-train_ds = tfds.load("tf_flowers", as_supervised=False, split=["train[:85%]"])[0]
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+print(f"Total training examples: {len(x_train)}")
+print(f"Total test examples: {len(x_test)}")
 
 """
 ## Defining our data augmentation pipeline
@@ -84,25 +84,23 @@ augmentation pipeline is critical for SSL systems to work effectively in compute
 Two particular augmentation transforms that seem to matter the most are: 1.) Random
 resized crops and 2.) Color distortions. Most of the other SSL systems for computer
 vision (such as [BYOL](https://arxiv.org/abs/2006.07733),
-[MoCov2](https://arxiv.org/abs/2003.04297), [SwAV](https://arxiv.org/abs/2006.09882), etc.)
-include these in their training pipelines.  
+[MoCoV2](https://arxiv.org/abs/2003.04297), [SwAV](https://arxiv.org/abs/2006.09882),
+etc.) include these in their training pipelines.  
 """
 
 
-def random_resize_crop(image):
-    # We first resize our image to a bigger dimension and then
-    # we take random crops from it fitting to our desired
-    # dimension.
-    image = tf.image.resize(image, (RESIZE_TO, RESIZE_TO))
+def flip_random_crop(image):
+    # With random crops we also apply horizontal flipping.
+    image = tf.image.random_flip_left_right(image)
     image = tf.image.random_crop(image, (CROP_TO, CROP_TO, 3))
     return image
 
 
-def color_jitter(x, s=0.5):
-    x = tf.image.random_brightness(x, max_delta=0.8 * s)
-    x = tf.image.random_contrast(x, lower=1 - 0.8 * s, upper=1 + 0.8 * s)
-    x = tf.image.random_saturation(x, lower=1 - 0.8 * s, upper=1 + 0.8 * s)
-    x = tf.image.random_hue(x, max_delta=0.2 * s)
+def color_jitter(x, s=[0.4, 0.4, 0.4, 0.1]):
+    x = tf.image.random_brightness(x, max_delta=0.8 * s[0])
+    x = tf.image.random_contrast(x, lower=1 - 0.8 * s[1], upper=1 + 0.8 * s[1])
+    x = tf.image.random_saturation(x, lower=1 - 0.8 * s[2], upper=1 + 0.8 * s[2])
+    x = tf.image.random_hue(x, max_delta=0.2 * s[3])
     # Affine transformations can disturb the natural range of
     # RGB images, hence this is needed.
     x = tf.clip_by_value(x, 0, 255)
@@ -132,8 +130,7 @@ def custom_augment(image):
     # As discussed in the SimCLR paper, the series of augmentation
     # transformations (except for random crops) need to be applied
     # randomly to impose translational invariance.
-    image = image["image"]
-    image = random_resize_crop(image)
+    image = flip_random_crop(image)
     image = random_apply(color_jitter, image, p=0.8)
     image = random_apply(color_drop, image, p=0.2)
     return image
@@ -154,15 +151,17 @@ Let's now apply our augmentation pipeline to our dataset and visualize a few out
 Here we create two different versions of our dataset *without* any ground-truth labels. 
 """
 
+ssl_ds_one = tf.data.Dataset.from_tensor_slices(x_train)
 ssl_ds_one = (
-    train_ds.shuffle(1024, seed=SEED)
+    ssl_ds_one.shuffle(1024, seed=SEED)
     .map(custom_augment, num_parallel_calls=AUTO)
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
 )
 
+ssl_ds_two = tf.data.Dataset.from_tensor_slices(x_train)
 ssl_ds_two = (
-    train_ds.shuffle(1024, seed=SEED)
+    ssl_ds_two.shuffle(1024, seed=SEED)
     .map(custom_augment, num_parallel_calls=AUTO)
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
@@ -198,25 +197,47 @@ the same but are augmented differently.
 """
 ## Defining the encoder and the predictor
 
-The configurations of these architectures have been referred from Section 3 of [the
+We use an implementation of ResNet20 that is specifically configured for the CIFAR10
+dataset. The code is taken from the
+[keras-idiomatic-programmer](https://github.com/GoogleCloudPlatform/keras-idiomatic-progra
+mmer/blob/master/zoo/resnet/resnet_cifar10_v2.py) repository. The hyperparameters of
+these architectures have been referred from Section 3 and Appendix A of [the original
 paper](https://arxiv.org/abs/2011.10566). 
 """
 
+"""shell
+!wget -q
+https://gist.githubusercontent.com/sayakpaul/0d2d367a9f9e2dd0941e2779c553c314/raw/609f10c2
+c5fade182191c8b2042c4da9348523d7/resnet_cifar10_v2.py \
+    -O resnet_cifar10_v2.py
+"""
+
+import resnet_cifar10_v2
+
+n = 18
+depth = n * 9 + 2
+N_BLOCKS = ((depth - 2) // 9) - 1
+
 
 def get_encoder():
-    resnet50_v2 = tf.keras.applications.ResNet50V2(
-        weights=None, include_top=False, input_shape=(CROP_TO, CROP_TO, 3)
-    )
+    # Input and backbone.
     inputs = layers.Input((CROP_TO, CROP_TO, 3))
     x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1)(
         inputs
     )
-    x = resnet50_v2(x, training=True)
+    x = resnet_cifar10_v2.stem(x)
+    x = resnet_cifar10_v2.learner(x, N_BLOCKS)
     x = layers.GlobalAveragePooling2D()(x)
-    x = layers.Dense(PROJECT_DIM, use_bias=False)(x)
+
+    # Projection head.
+    x = layers.Dense(
+        PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WD)
+    )(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
-    x = layers.Dense(PROJECT_DIM, use_bias=False)(x)
+    x = layers.Dense(
+        PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WD)
+    )(x)
     outputs = layers.BatchNormalization()(x)
     return tf.keras.Model(inputs, outputs, name="encoder")
 
@@ -226,7 +247,9 @@ def get_predictor():
         [
             # Note the AutoEncoder-like structure.
             layers.Input((PROJECT_DIM,)),
-            layers.Dense(LATENT_DIM, use_bias=False),
+            layers.Dense(
+                LATENT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WD)
+            ),
             layers.ReLU(),
             layers.BatchNormalization(),
             layers.Dense(PROJECT_DIM),
@@ -235,9 +258,6 @@ def get_predictor():
     )
     return model
 
-
-print(get_encoder().summary())
-print(get_predictor().summary())
 
 """
 ## Defining the (pre-)training loop
@@ -280,26 +300,26 @@ class SimSiam(tf.keras.Model):
         return [self.loss_tracker]
 
     def train_step(self, data):
-        # Unpack the data
+        # Unpack the data.
         ds_one, ds_two = data
 
-        # Forward pass through the encoder and predictor
+        # Forward pass through the encoder and predictor.
         with tf.GradientTape() as tape:
             z1, z2 = self.encoder(ds_one), self.encoder(ds_two)
             p1, p2 = self.predictor(z1), self.predictor(z2)
             # Note that here we are enforcing the network to match
             # the representations of two differently augmented batches
-            # of data
+            # of data.
             loss = compute_loss(p1, z2) / 2 + compute_loss(p2, z1) / 2
 
-        # Compute gradients and update the parameters
+        # Compute gradients and update the parameters.
         learnable_params = (
             self.encoder.trainable_variables + self.predictor.trainable_variables
         )
         gradients = tape.gradient(loss, learnable_params)
         self.optimizer.apply_gradients(zip(gradients, learnable_params))
 
-        # Monitor loss
+        # Monitor loss.
         self.loss_tracker.update_state(loss)
         return {"loss": self.loss_tracker.result()}
 
@@ -311,7 +331,7 @@ In the interest of this example, we will train the model for only 5 epochs.
 """
 
 # Create a cosine decay learning scheduler.
-num_training_samples = tf.data.experimental.cardinality(train_ds).numpy()
+num_training_samples = len(x_train)
 steps = EPOCHS * (num_training_samples // BATCH_SIZE)
 lr_decayed_fn = tf.keras.experimental.CosineDecay(
     initial_learning_rate=0.03, decay_steps=steps
@@ -324,18 +344,21 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
 
 # Start training.
 simsiam = SimSiam(get_encoder(), get_predictor())
-simsiam.compile(optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.9))
+simsiam.compile(optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.6))
 history = simsiam.fit(ssl_ds, epochs=EPOCHS, callbacks=[early_stopping])
 
+# Visualize the training progress of the model.
 plt.plot(history.history["loss"])
 plt.grid()
+plt.title("Negative Cosine Similairty")
 plt.show()
 
 """
-Although our solution quickly gets very close to the minimum loss value (-1 in this case)
-this is likely happening because of *representation collapse* where the encoder projects
-all the images to identical representations. This suggests that additional hyperparameter
-tuning is required especially in the following areas:
+If your solution gets very close to -1 (minimum value of our loss) very quickly with a
+different dataset and a different backbone architecture that is likely because of
+*representation collapse*. It is a phenomenon where the encoder yields similar output for
+all the images. In that case additional hyperparameter tuning is required especially in
+the following areas:
 * Strength of the color distortions and their probabilities. 
 * Learning rate and its schedule. 
 * Architecture of both the backbone and their projection head. 
@@ -346,55 +369,50 @@ tuning is required especially in the following areas:
 
 The most popularly used method to evaluate a SSL method in computer vision (or any other
 pre-training method as such) is to learn a linear classifier on the frozen features of
-the trained backbone model (in this case it is `ResNet50V2`) and evaluate the classifier
-on unseen images. Other methods include
+the trained backbone model (in this case it is ResNet20) and evaluate the classifier on
+unseen images. Other methods include
 [fine-tuning](https://keras.io/guides/transfer_learning/) on the source dataset or even a
 target dataset with 5% or 10% labels present. Practically, we can use the backbone model
 for any downstream task such as semantic segmentation, object detection, and so on where
 the backbone models are usually pre-trained with *pure supervised learning*. 
 """
 
-# We first load our supervised dataset.
-train_ds, validation_ds = tfds.load(
-    "tf_flowers", split=["train[:85%]", "train[85%:]"], as_supervised=True
-)
+# We first create labeled `Dataset` objects.
+train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
 # Then we shuffle, batch, and prefetch this dataset for performance. We
 # also apply random resized crops as an augmentation but only to the
 # training set.
 train_ds = (
     train_ds.shuffle(1024)
-    .map(lambda x, y: (random_resize_crop(x), y), num_parallel_calls=AUTO)
+    .map(lambda x, y: (flip_random_crop(x), y), num_parallel_calls=AUTO)
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
 )
-validation_ds = (
-    validation_ds.shuffle(1024)
-    .map(
-        lambda x, y: (tf.image.resize(x, (CROP_TO, CROP_TO)), y),
-        num_parallel_calls=AUTO,
-    )
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
+test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
-# Extract the backbone ResNet50V2.
-rn50 = tf.keras.Model(simsiam.encoder.input, simsiam.encoder.layers[3].output)
+# Extract the backbone ResNet20.
+backbone = tf.keras.Model(simsiam.encoder.input, simsiam.encoder.layers[-6].output)
 
 # We then create our linear classifier and train it.
-rn50.trainable = False
+backbone.trainable = False
 inputs = layers.Input((CROP_TO, CROP_TO, 3))
-x = rn50(inputs, training=False)
-outputs = layers.Dense(5, activation="softmax")(x)
-linear_model = tf.keras.Model(inputs, outputs)
+x = backbone(inputs, training=False)
+outputs = layers.Dense(10, activation="softmax")(x)
+linear_model = tf.keras.Model(inputs, outputs, name="linear_model")
 
 # Start training.
 linear_model.compile(
-    loss="sparse_categorical_crossentropy", metrics=["accuracy"], optimizer="adam"
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
+    optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.9),
 )
 history = linear_model.fit(
-    train_ds, validation_data=validation_ds, epochs=EPOCHS, callbacks=[early_stopping]
+    train_ds, validation_data=test_ds, epochs=EPOCHS, callbacks=[early_stopping]
 )
+_, test_acc = linear_model.evaluate(test_ds)
+print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 """
 ## Notes
