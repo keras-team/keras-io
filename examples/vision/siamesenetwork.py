@@ -9,19 +9,17 @@ Description: Siamese network with custom data generator and training loop.
 ### Setup
 """
 
-import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import os
+import random
+import tensorflow as tf
 
 from pathlib import Path
 from tensorflow.keras import losses, optimizers
 from tensorflow.keras import layers
 from tensorflow.keras import Model
 from tensorflow.keras import applications
-from tensorflow.keras import preprocessing
-from tensorflow.keras.utils import Sequence
 
 """
 # Load the dataset
