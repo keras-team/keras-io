@@ -1,8 +1,8 @@
 """
-Title: Siamese Network
-Author: [hazemessamm](https://twitter.com/hazemessamm)
+Title: Siamese Network with Triplet Loss
+Author: [hazemessamm](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/13
-Last modified: 2021/03/16
+Last modified: 2021/03/22
 Description: Siamese network with custom data generator and training loop.
 """
 """
@@ -22,6 +22,27 @@ from tensorflow.keras import Model
 from tensorflow.keras import applications
 from tensorflow.keras import preprocessing
 from tensorflow.keras.utils import Sequence
+
+"""
+# Load the dataset
+
+Let's download the [Totally Looks Like dataset](https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl) and unzip it in our local directory.
+
+We will end up with two different directories:
+* `left` contains the images that we will use as the anchor.
+* `right` contains the images that we will use as the positive sample (an image that looks like the anchor.)
+"""
+
+cache_dir = Path(os.path.expanduser("~")) / ".keras"
+anchor_images_path = cache_dir / "left"
+positive_images_path = cache_dir / "right"
+
+"""shell
+gdown --id 1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34
+gdown --id 1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW
+unzip -oq left.zip -d $cache_dir
+unzip -oq right.zip -d $cache_dir
+"""
 
 """
 ## Siamese Network
@@ -44,9 +65,6 @@ distance(f(Anchor), f(Negative)))**2, 0.0)
 Note that the weights are shared which mean that we are only using one model for
 prediction and training
 
-You can find the dataset here:
-https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl
-
 Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
 
 Image from:
@@ -66,53 +84,49 @@ folder.
 ## Preparing data
 """
 
-anchor_images_path = Path("left")
 target_shape = (200, 200)
+anchor_images = [str(anchor_images_path / f) for f in os.listdir(anchor_images_path)]
 
-anchor_images = [
-    str(anchor_images_path / f) for f in os.listdir(anchor_images_path)
-]
 
 def preprocess_image(filename):
     image_string = tf.io.read_file(filename)
     image = tf.image.decode_jpeg(image_string, channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
-    image = tf.image.resize(image, [200, 200])
-
-    # image = preprocessing.image.load_img(filename, target_size=(200, 200))
-    # image = preprocessing.image.img_to_array(image)
+    image = tf.image.resize(image, target_shape)
     return image
+
 
 def generate_negative_sample(t: tf.Tensor):
     filename = t.numpy().decode("utf-8")
     candidate = filename
     while candidate == filename:
-        candidate = random.choice(anchor_images).split(os.sep)[1]
+        candidate = random.choice(anchor_images).split(os.sep)[-1]
 
-    folder = random.choice(["left", "right"])
+    folder = random.choice([anchor_images_path, positive_images_path])
 
-    return str(Path(folder) / candidate)
+    return str(folder / candidate)
+
 
 def generate_triplets(anchor_sample):
     parts = tf.strings.split(anchor_sample, os.sep)
     filename = parts[-1]
 
-    positive_sample = f"right{os.sep}" + filename
+    positive_sample = f"{str(positive_images_path)}{os.sep}" + filename
 
     negative_sample = tf.py_function(
-        func=generate_negative_sample, 
-        inp=[filename], 
-        Tout=tf.string
+        func=generate_negative_sample, inp=[filename], Tout=tf.string
     )
 
     return anchor_sample, positive_sample, negative_sample
 
+
 def preprocess_triplets(anchor, positive, negative):
     return (
-        preprocess_image(anchor), 
-        preprocess_image(positive), 
-        preprocess_image(negative)
+        preprocess_image(anchor),
+        preprocess_image(positive),
+        preprocess_image(negative),
     )
+
 
 dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
 dataset = dataset.shuffle(buffer_size=100)
@@ -128,6 +142,7 @@ def visualize(x):
     ax1.imshow(anchor[0])
     ax2.imshow(positive[0])
     ax3.imshow(negative[0])
+
 
 visualize(next(iter(dataset)))
 
@@ -318,7 +333,7 @@ anchor_tensor, positive_tensor, negative_embedding = example_prediction
 anchor_embedding, positive_embedding, negative_embedding = (
     embedding(anchor_tensor),
     embedding(positive_tensor),
-    embedding(negative_embedding)
+    embedding(negative_embedding),
 )
 
 positive_similarity = CosineDistance()(anchor_embedding, positive_embedding)
