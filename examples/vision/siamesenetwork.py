@@ -15,6 +15,7 @@ import numpy as np
 import random
 import os
 
+from pathlib import Path
 from tensorflow.keras import losses, optimizers
 from tensorflow.keras import layers
 from tensorflow.keras import Model
@@ -65,204 +66,70 @@ folder.
 ## Preparing data
 """
 
-dataset = os.path.join("/mnt/media", "TotallyLooksLikeDataset")
-anchor_images_path = os.path.join(dataset, "left")
-positive_images_path = os.path.join(dataset, "right")
+anchor_images_path = Path("left")
 target_shape = (200, 200)
 
-"""
-## SiameseDatasetGenerator
-"""
+anchor_images = [
+    str(anchor_images_path / f) for f in os.listdir(anchor_images_path)
+]
 
-"""
-This class inherits from Sequence which is used to generate images for training, the
-reason of using a generator is that there are datasets which contain a lot of high
-resolution images and we cannot load all of them in our memory so we just generate
-batches of them while training we inherit it so we can use it in training
+def preprocess_image(filename):
+    image_string = tf.io.read_file(filename)
+    image = tf.image.decode_jpeg(image_string, channels=3)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.resize(image, [200, 200])
 
-1) We override the __len__ method by returning our number of batches so keras can know
-how many batches available.
-2) We override __getitem__ method so we can access any index of an array
-"""
+    # image = preprocessing.image.load_img(filename, target_size=(200, 200))
+    # image = preprocessing.image.img_to_array(image)
+    return image
 
-"""
-### Negative images:
-"""
+def generate_negative_sample(t: tf.Tensor):
+    filename = t.numpy().decode("utf-8")
+    candidate = filename
+    while candidate == filename:
+        candidate = random.choice(anchor_images).split(os.sep)[1]
 
-"""
-Negative images are just random images we sample from our dataset. every example should
-contain 3 images (Anchor, Positive and Negative). The negative image should NOT be the
-same as the Anchor or the Positive images, We use a set() that stores the names of the
-anchor and positive images so when we sample the negative images we avoid getting any
-image that exist in the set()
-"""
+    folder = random.choice(["left", "right"])
 
-"""
-### Batch shuffle:
-"""
+    return str(Path(folder) / candidate)
 
-"""
-We need to shuffle the batch so we can have random examples
-"""
+def generate_triplets(anchor_sample):
+    parts = tf.strings.split(anchor_sample, os.sep)
+    filename = parts[-1]
 
-"""
-### Image preprocessing:
-"""
+    positive_sample = f"right{os.sep}" + filename
 
-"""
-After creating a list of paths for Anchor images, positive images, negative images we
-pass these lists to the preprocess_img()
-because we need to load the image given the path we have and we need to convert it into
-tensor by using img_to_array()
-"""
+    negative_sample = tf.py_function(
+        func=generate_negative_sample, 
+        inp=[filename], 
+        Tout=tf.string
+    )
 
+    return anchor_sample, positive_sample, negative_sample
 
-class SiameseDatasetGenerator(Sequence):
-    def __init__(
-        self,
-        anchor_images_path,
-        positive_images_path,
-        target_shape,
-        batch_size=128,
-        shuffle=True,
-    ):
-        self.anchor_images_path = (
-            anchor_images_path  # store the path of the anchor images
-        )
-        self.positive_images_path = (
-            positive_images_path  # store the path of the positive images
-        )
-        self.target_shape = target_shape  ##store image shape
-        # list the contents (images) of the specified directory
-        self.anchor_images = np.array(os.listdir(positive_images_path))
-        self.positive_images = np.array(os.listdir(positive_images_path))
-        self.batch_size = batch_size
-        self.num_examples = len(self.anchor_images)
-        self.num_batches = self.num_examples // batch_size
-        self.shuffle = shuffle
+def preprocess_triplets(anchor, positive, negative):
+    return (
+        preprocess_image(anchor), 
+        preprocess_image(positive), 
+        preprocess_image(negative)
+    )
 
-    """
-    we use __len__ method that is called
-    to get the length of the batches
-    it is called when we call len()
-    """
-
-    def __len__(self):
-        return self.num_batches
-
-    """
-    this method allows us to get batches when we
-    access the instance the same way we access a list
-    e.g. dataset[0] will call __getitem__(index=0)
-    """
-
-    def __getitem__(self, index):
-        current_batch = index * self.batch_size
-        # here we get batches of data by using slicing
-        anchor_imgs = self.anchor_images[
-            current_batch : current_batch + self.batch_size
-        ]
-        positive_imgs = self.positive_images[
-            index * self.batch_size : (index + 1) * self.batch_size
-        ]
-        # store the loaded images to avoid reloading them in negative images
-        # we store them in a set for faster access
-        loaded_examples = set([i for i in anchor_imgs])
-
-        negative_imgs = np.array(
-            self.get_negative_imgs(
-                from_anchor_dir=random.choice([True, False]),
-                loaded_examples=loaded_examples,
-            )
-        )
-        anchor_imgs = np.array(
-            [os.path.join(self.anchor_images_path + "/", img) for img in anchor_imgs]
-        )
-        positive_imgs = np.array(
-            [
-                os.path.join(self.positive_images_path + "/", img)
-                for img in positive_imgs
-            ]
-        )
-
-        if self.shuffle:
-            # create a list of random numbers to use it when we shuffle the batches
-            random_shuffle = random.choices(
-                [*range(0, len(anchor_imgs))], k=len(anchor_imgs)
-            )
-            anchor_imgs = anchor_imgs[random_shuffle]
-            positive_imgs = positive_imgs[random_shuffle]
-            negative_imgs = negative_imgs[random_shuffle]
-
-        anchor_imgs = self.preprocess_img(anchor_imgs)
-        positive_imgs = self.preprocess_img(positive_imgs)
-        negative_imgs = self.preprocess_img(negative_imgs)
-
-        # here if the batch size equal one we just convert the images into numpy
-        # and expand the dimension of this batch by adding 1 in the first axis
-        if self.batch_size == 1:
-            return np.expand_dims(
-                np.array([anchor_imgs, positive_imgs, negative_imgs]), axis=0
-            )
-        # Add the batch_size dimension in the first axis by using permute()
-        return tf.keras.backend.permute_dimensions(
-            np.array([anchor_imgs, positive_imgs, negative_imgs]), (1, 0, 2, 3, 4)
-        )
-
-    def get_negative_imgs(self, from_anchor_dir=True, loaded_examples={}):
-        # load the negative_imgs by randomly loading it from anchor or positive images
-        negative_imgs = []
-        if from_anchor_dir:
-            negative_imgs = random.choices(
-                [img for img in self.anchor_images if img not in loaded_examples],
-                k=self.batch_size,
-            )
-            negative_imgs = [
-                os.path.join(self.anchor_images_path + "/", img)
-                for img in negative_imgs
-            ]
-        else:
-            negative_imgs = random.choices(
-                [img for img in self.positive_images if img not in loaded_examples],
-                k=self.batch_size,
-            )
-            negative_imgs = [
-                os.path.join(self.positive_images_path + "/", img)
-                for img in negative_imgs
-            ]
-        return negative_imgs
-
-    def preprocess_img(self, imgs):
-        output = []
-        for img_path in imgs:
-            img = preprocessing.image.load_img(img_path, target_size=self.target_shape)
-            img = preprocessing.image.img_to_array(img)
-            output.append(img)
-        if len(output) == 1:
-            return output[0]
-        return tuple(output)
-
-
-dataset = SiameseDatasetGenerator(
-    anchor_images_path, positive_images_path, target_shape, 32, False
-)
+dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
+dataset = dataset.shuffle(buffer_size=100)
+dataset = dataset.map(generate_triplets)
+dataset = dataset.map(preprocess_triplets)
+dataset = dataset.batch(32, drop_remainder=False)
+dataset = dataset.prefetch(1)
 
 # this function just visalize each random 3 images (anchor, positive, negative)
-def visualize():
-    example = dataset[random.randint(0, dataset.batch_size)]
-    img1, img2, img3 = (
-        preprocessing.image.array_to_img(example[:, 0][0]),
-        preprocessing.image.array_to_img(example[:, 1][0]),
-        preprocessing.image.array_to_img(example[:, 2][0]),
-    )
+def visualize(x):
+    anchor, positive, negative = x
     f, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    ax1.imshow(img1)
-    ax2.imshow(img2)
-    ax3.imshow(img3)
-    plt.savefig("test.png")
+    ax1.imshow(anchor[0])
+    ax2.imshow(positive[0])
+    ax3.imshow(negative[0])
 
-
-visualize()  # as you see we have two similar images and one different image
+visualize(next(iter(dataset)))
 
 """
 ## Loading a pre-trained model
@@ -399,7 +266,8 @@ class SiameseModel(Model):
     def train_step(self, data):
         # here we create a tape to record our operations so we can get the gradients
         with tf.GradientTape() as tape:
-            embeddings = training_model((data[:, 0], data[:, 1], data[:, 2]))
+            anchor, positive, negative = data
+            embeddings = training_model((anchor, positive, negative))
 
             # Euclidean Distance between anchor and positive
             # axis=-1 so we can get distances over examples
@@ -443,38 +311,21 @@ siamese_model.fit(dataset, epochs=3)
 ### Inference
 """
 
-# here we just load from the dataset an example
-# we should NOT test the performace of the model
-# using training data but here we are just see how did it learn
-example_prediction = dataset[3]
-anchor_example = preprocessing.image.array_to_img(example_prediction[:, 0][0])
-positive_example = preprocessing.image.array_to_img(example_prediction[:, 1][0])
-negative_example = preprocessing.image.array_to_img(example_prediction[:, 2][0])
+example_prediction = next(iter(dataset))
+visualize(example_prediction)
 
-# here we just plotting the example that we loaded
-f, (ax1, ax2, ax3) = plt.subplots(1, 3)
-ax1.imshow(anchor_example)
-ax2.imshow(positive_example)
-ax3.imshow(negative_example)
-
-# we add an extra dimension (batch_size dimension) in the first axis by using expand dims.
-anchor_tensor = np.expand_dims(example_prediction[:, 0][0], axis=0)
-positive_tensor = np.expand_dims(example_prediction[:, 1][0], axis=0)
-negative_tensor = np.expand_dims(example_prediction[:, 2][0], axis=0)
-
-anchor_embedding, positive_embedding = (
+anchor_tensor, positive_tensor, negative_embedding = example_prediction
+anchor_embedding, positive_embedding, negative_embedding = (
     embedding(anchor_tensor),
     embedding(positive_tensor),
+    embedding(negative_embedding)
 )
-positive_similarity = CosineDistance()(anchor_embedding, positive_embedding)
-print("Similarity between similar images:", positive_similarity)
 
-anchor_embedding, negative_embedding = (
-    embedding(anchor_tensor),
-    embedding(negative_tensor),
-)
+positive_similarity = CosineDistance()(anchor_embedding, positive_embedding)
+print("Similarity between similar images:", positive_similarity[0])
+
 negative_similarity = CosineDistance()(anchor_embedding, negative_embedding)
-print("Similarity between dissimilar images:", negative_similarity)
+print("Similarity between dissimilar images:", negative_similarity[0])
 
 """
 ### Key Takeaways
