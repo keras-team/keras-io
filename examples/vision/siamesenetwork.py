@@ -22,9 +22,6 @@ from tensorflow.keras import applications
 from tensorflow.keras import preprocessing
 from tensorflow.keras.utils import Sequence
 
-physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
 """
 ## Siamese Network
 
