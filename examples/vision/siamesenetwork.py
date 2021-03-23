@@ -186,6 +186,15 @@ class DistanceLayer(layers.Layer):
 
 
 class SiameseModel(Model):
+    """
+    Model implementing a custom training loop to compute the Triplet Loss
+    using the three embeddings produced by the Siamese network.
+
+    Here is the definition of Triplet Loss:
+        L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + alpha, 0)
+
+    """
+
     def __init__(self, siamese_network, alpha=0.5):
         super(SiameseModel, self).__init__()
         self.siamese_network = siamese_network
@@ -197,11 +206,17 @@ class SiameseModel(Model):
     def train_step(self, data):
         with tf.GradientTape() as tape:
             anchor, positive, negative = data
-            distances = self.siamese_network((anchor, positive, negative))
 
-            # Computing the loss by subtracting both distances and making
-            # sure we don't get a negative value.
-            loss = distances[0] - distances[1]
+            # The output of the network is a tuple containing the distances
+            # between the anchor and the positive example, and the anchor and
+            # the negative example.
+            ap_distance, an_distance = self.siamese_network(
+                (anchor, positive, negative)
+            )
+
+            # Computing the Triplet Loss by subtracting both distances and
+            # making sure we don't get a negative value.
+            loss = ap_distance - an_distance
             loss = tf.maximum(loss + self.alpha, 0.0)
 
         # Let's get the gradients (loss with respect to trainable weights)
