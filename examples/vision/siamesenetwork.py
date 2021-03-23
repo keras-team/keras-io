@@ -5,6 +5,7 @@ Date created: 2021/03/13
 Last modified: 2021/03/22
 Description: Siamese network with custom data generator and training loop.
 """
+
 """
 ### Setup
 """
@@ -20,15 +21,27 @@ from tensorflow.keras import losses, optimizers
 from tensorflow.keras import layers
 from tensorflow.keras import Model
 from tensorflow.keras import applications
+from tensorflow.keras import preprocessing
+
+target_shape = (200, 200)
+
+
+def visualize(x):
+    anchor, positive, negative = x
+    f, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    ax1.imshow(anchor[0])
+    ax2.imshow(positive[0])
+    ax3.imshow(negative[0])
+
 
 """
 # Load the dataset
 
-Let's download the [Totally Looks Like dataset](https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl) and unzip it in our local directory.
+We are going to use the [Totally Looks Like dataset](https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl). We are going to download it and unzip it inside the `~/.keras` directory.
 
-We will end up with two different directories:
-* `left` contains the images that we will use as the anchor.
-* `right` contains the images that we will use as the positive sample (an image that looks like the anchor.)
+The dataset consists on two separate files:
+* `left.zip` contains the images that we will use as the anchor.
+* `right.zip` contains the images that we will use as the positive sample (an image that looks like the anchor.)
 """
 
 cache_dir = Path(Path.home()) / ".keras"
@@ -43,47 +56,16 @@ unzip -oq right.zip -d $cache_dir
 """
 
 """
-## Siamese Network
-
-[Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is used to solve
-many problems like detecting question duplicates, face recognition by comparing the
-similarity of the inputs by comparing their feature vectors.
-
-First we need to have a dataset that contains 3 Images, 2 are similar and 1 is different,
-they are called Anchor image, Positive Image and Negative image respectively, we need to
-tell the network that the anchor image and the positive image are similar, we also need
-to tell it that the anchor image and the negative image are NOT similar, we can do that
-by the Triplet Loss Function.
-
-Triplet Loss function:
-
-L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
-distance(f(Anchor), f(Negative)))**2, 0.0)
-
-Note that the weights are shared which mean that we are only using one model for
-prediction and training
-
-Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
-
-Image from:
-https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
-
-
-![1_0E9104t29iMBmtvq7G1G6Q.png](attachment:1_0E9104t29iMBmtvq7G1G6Q.png)
+Now we can load the name of every available anchor file in the unzipped directory.
 """
-
-"""
-First we get the paths of the datasets in siamese networks we usually have two folders
-each folder has images and every image has a corresponding similar picture in the other
-folder.
-"""
-
-"""
-## Preparing data
-"""
-
-target_shape = (200, 200)
 anchor_images = [str(anchor_images_path / f) for f in os.listdir(anchor_images_path)]
+
+"""
+## Preparing the data
+
+We are going to use a `tf.data` pipeline to load the data and generate the triplets
+that we need to train the Siamese network.
+"""
 
 
 def preprocess_image(filename):
@@ -126,6 +108,11 @@ def preprocess_triplets(anchor, positive, negative):
     )
 
 
+"""
+Let's setup our pipeline using the list of anchor filenames as the source. The output
+of our pipeline contains a triplet with the anchor, the positive, and the negative image.
+"""
+
 dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
 dataset = dataset.shuffle(buffer_size=100)
 dataset = dataset.map(generate_triplets)
@@ -133,16 +120,43 @@ dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
 dataset = dataset.prefetch(1)
 
-# this function just visalize each random 3 images (anchor, positive, negative)
-def visualize(x):
-    anchor, positive, negative = x
-    f, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    ax1.imshow(anchor[0])
-    ax2.imshow(positive[0])
-    ax3.imshow(negative[0])
+visualize(list(dataset.take(1).as_numpy_iterator())[0])
+
+"""
+## Siamese Network
+
+[Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is used to solve
+many problems like detecting question duplicates, face recognition by comparing the
+similarity of the inputs by comparing their feature vectors.
+
+First we need to have a dataset that contains 3 Images, 2 are similar and 1 is different,
+they are called Anchor image, Positive Image and Negative image respectively, we need to
+tell the network that the anchor image and the positive image are similar, we also need
+to tell it that the anchor image and the negative image are NOT similar, we can do that
+by the Triplet Loss Function.
+
+Triplet Loss function:
+
+L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
+distance(f(Anchor), f(Negative)))**2, 0.0)
+
+Note that the weights are shared which mean that we are only using one model for
+prediction and training
+
+Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
+
+Image from:
+https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
 
 
-visualize(next(iter(dataset)))
+![1_0E9104t29iMBmtvq7G1G6Q.png](attachment:1_0E9104t29iMBmtvq7G1G6Q.png)
+"""
+
+"""
+First we get the paths of the datasets in siamese networks we usually have two folders
+each folder has images and every image has a corresponding similar picture in the other
+folder.
+"""
 
 
 def norm(embeddings):
