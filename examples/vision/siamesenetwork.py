@@ -169,22 +169,6 @@ Let's create a `Mean` metric instance to track the loss of the training process.
 loss_tracker = metrics.Mean(name="loss")
 
 
-class DistanceLayer(layers.Layer):
-    """
-    This layer is responsible for computing the distance between the anchor
-    embedding and the positive embedding, and the anchor embedding and the
-    negative embedding.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def call(self, anchor, positive, negative):
-        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
-        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
-        return (ap_distance, an_distance)
-
-
 class SiameseModel(Model):
     def __init__(self, siamese_network, alpha=0.5):
         super(SiameseModel, self).__init__()
@@ -274,6 +258,23 @@ output = layers.Dense(256)(dense2)
 embedding = Model(base_cnn.input, output, name="SiameseNetwork")
 
 embedding.summary()
+
+
+class DistanceLayer(layers.Layer):
+    """
+    This layer is responsible for computing the distance between the anchor
+    embedding and the positive embedding, and the anchor embedding and the
+    negative embedding.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def call(self, anchor, positive, negative):
+        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
+        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
+        return (ap_distance, an_distance)
+
 
 """
 ## Model for training
