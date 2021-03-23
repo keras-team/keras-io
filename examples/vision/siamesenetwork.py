@@ -1,9 +1,36 @@
 """
 Title: Siamese Network with Triplet Loss
-Author: [hazemessamm](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
+Author: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/13
 Last modified: 2021/03/22
 Description: Siamese network with custom data generator and training loop.
+"""
+
+
+"""
+TODO: Still need to work on this.
+
+# Introduction
+
+[Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is used to solve
+many problems like detecting question duplicates, face recognition by comparing the
+similarity of the inputs by comparing their feature vectors.
+First we need to have a dataset that contains 3 Images, 2 are similar and 1 is different,
+they are called Anchor image, Positive Image and Negative image respectively, we need to
+tell the network that the anchor image and the positive image are similar, we also need
+to tell it that the anchor image and the negative image are NOT similar, we can do that
+by the Triplet Loss Function.
+Triplet Loss function:
+L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
+distance(f(Anchor), f(Negative)))**2, 0.0)
+Note that the weights are shared which mean that we are only using one model for
+prediction and training
+You can find the dataset here:
+https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl
+Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
+Image from:
+https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
+![1_0E9104t29iMBmtvq7G1G6Q.png](attachment:1_0E9104t29iMBmtvq7G1G6Q.png)
 """
 
 """
@@ -68,13 +95,6 @@ unzip -oq right.zip -d $cache_dir
 """
 
 """
-Now we can load the name of every available anchor file in the unzipped directory. This will 
-help with the generation of negative samples.
-"""
-
-anchor_images = os.listdir(anchor_images_path)
-
-"""
 ## Preparing the data
 
 We are going to use a `tf.data` pipeline to load the data and generate the triplets that we
@@ -97,6 +117,7 @@ def preprocess_image(filename):
     image = tf.image.resize(image, target_shape)
     return image
 
+
 def preprocess_triplets(anchor, positive, negative):
     """
     Given the filenames corresponding to the three images, it loads and
@@ -104,9 +125,9 @@ def preprocess_triplets(anchor, positive, negative):
     """
 
     return (
-        preprocess_image(anchor), 
-        preprocess_image(positive), 
-        preprocess_image(negative)
+        preprocess_image(anchor),
+        preprocess_image(positive),
+        preprocess_image(negative),
     )
 
 
@@ -117,12 +138,10 @@ the anchor, the positive, and the negative image.
 """
 
 anchor_dataset = tf.data.Dataset.list_files(
-    file_pattern=str(anchor_images_path / "*.jpg"),
-    shuffle=False
+    file_pattern=str(anchor_images_path / "*.jpg"), shuffle=False
 )
 positive_dataset = tf.data.Dataset.list_files(
-    file_pattern=str(positive_images_path / "*.jpg"),
-    shuffle=False
+    file_pattern=str(positive_images_path / "*.jpg"), shuffle=False
 )
 
 # The negative sample is a randomly selected image from either the anchor or
@@ -137,41 +156,101 @@ dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
 dataset = dataset.prefetch(1)
 
+"""
+Let's take a look at a few examples of triplets. Notice how the first two images
+look alike while the third is always different.
+"""
+
 visualize(*list(dataset.take(1).as_numpy_iterator())[0])
 
 """
-## Siamese Network
+# Setting up the Embedding generator model
 
-[Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is used to solve
-many problems like detecting question duplicates, face recognition by comparing the
-similarity of the inputs by comparing their feature vectors.
+Our Siamese Network will generate embeddings for each one of the images of the
+triplet. To do this, we will use a pre-trained ResNet50 model on ImageNet and
+connect a few `Dense` layers to it so we have space to learn to separate these
+embeddings.
 
-First we need to have a dataset that contains 3 Images, 2 are similar and 1 is different,
-they are called Anchor image, Positive Image and Negative image respectively, we need to
-tell the network that the anchor image and the positive image are similar, we also need
-to tell it that the anchor image and the negative image are NOT similar, we can do that
-by the Triplet Loss Function.
+We will freeze the weights of all the layers of the model up until
+`conv5_block1_out`. This is important so we don't mess with the weights that
+the model already learned. We are going to leave the bottom few layers open so
+we can fine tune those weights during training.
+"""
 
-Triplet Loss function:
+base_cnn = applications.ResNet50(
+    weights="imagenet", input_shape=target_shape + (3,), include_top=False
+)
 
-L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
-distance(f(Anchor), f(Negative)))**2, 0.0)
+flatten = layers.Flatten()(base_cnn.output)
+dense1 = layers.Dense(512, activation="relu")(flatten)
+dense1 = layers.BatchNormalization()(dense1)
+dense2 = layers.Dense(256, activation="relu")(dense1)
+dense2 = layers.BatchNormalization()(dense2)
+output = layers.Dense(256)(dense2)
 
-Note that the weights are shared which mean that we are only using one model for
-prediction and training
+embedding = Model(base_cnn.input, output, name="Embedding")
 
-Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
+trainable = False
+for layer in base_cnn.layers:
+    if layer.name == "conv5_block1_out":
+        trainable = True
+    layer.trainable = trainable
 
-Image from:
-https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
+"""
+# Setting up the Siamese Network model
+
+The Siamese network will receive each one of the triplet images as an input,
+generate the embeddings, and output the distance between the anchor and the
+positive embedding, and the distance between the anchor and the negative
+embedding.
+
+To compute the distance, we can use a custom layer `DistanceLayer` that
+returns both values as a tuple.
+"""
 
 
-![1_0E9104t29iMBmtvq7G1G6Q.png](attachment:1_0E9104t29iMBmtvq7G1G6Q.png)
+class DistanceLayer(layers.Layer):
+    """
+    This layer is responsible for computing the distance between the anchor
+    embedding and the positive embedding, and the anchor embedding and the
+    negative embedding.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def call(self, anchor, positive, negative):
+        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
+        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
+        return (ap_distance, an_distance)
+
+
+anchor_input = layers.Input(shape=target_shape + (3,))
+positive_input = layers.Input(shape=target_shape + (3,))
+negative_input = layers.Input(shape=target_shape + (3,))
+
+distances = DistanceLayer()(
+    embedding(anchor_input), embedding(positive_input), embedding(negative_input)
+)
+
+siamese_network = Model(
+    inputs=[anchor_input, positive_input, negative_input], outputs=distances,
+)
+
+"""
+# Putting everything together
+
+We now need to implement a model with custom training loop so we can compute
+the Triplet Loss using the three embeddings produced by the Siamese network.
+
+Here is the definition of Triplet Loss implemented on this example:
+`L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + alpha, 0)`
 """
 
 """
 Let's create a `Mean` metric instance to track the loss of the training process.
 """
+
 loss_tracker = metrics.Mean(name="loss")
 
 
@@ -194,7 +273,7 @@ class SiameseModel(Model):
         self.siamese_network(inputs)
 
     def train_step(self, data):
-        # GradientTape is a context manager that records every operation that you do inside. 
+        # GradientTape is a context manager that records every operation that you do inside.
         # We are using it here to compute the loss so we can get the gradients and apply
         # them using the optimizer specified in `compile()`.
         with tf.GradientTape() as tape:
@@ -232,128 +311,63 @@ class SiameseModel(Model):
 
 
 """
-## Loading a pre-trained model
+# Training
 
-Here we use ResNet50 architecture, we use "imagenet" weights, also we pass the image shape
-Note that include_top means that we do NOT want the top layers
-"""
-
-base_cnn = applications.ResNet50(
-    weights="imagenet", input_shape=target_shape + (3,), include_top=False
-)
-
-"""
-## Fine Tuning
-
-Here we fine tune the ResNet50 we freeze all layers that exist before "conv5_block1_out"
-layer, starting from "conv5_block2_2_relu" layer we unfreeze all the layers so we can
-just train these layers
-"""
-
-trainable = False
-for layer in base_cnn.layers:
-    if layer.name == "conv5_block1_out":
-        trainable = True
-    layer.trainable = trainable
-
-"""
-## Adding top layers
-
-Here we customize the model by adding Dense layers and Batch Normalization layers. we
-start with the image input then we pass the input to the base_cnn then we flatten it.
-Finally we pass each layer as an input to the next layer the output layer is just a dense
-layer which will act as an embedding for our images.
-"""
-
-flatten = layers.Flatten()(base_cnn.output)
-dense1 = layers.Dense(512, activation="relu")(flatten)
-dense1 = layers.BatchNormalization()(dense1)
-dense2 = layers.Dense(256, activation="relu")(dense1)
-dense2 = layers.BatchNormalization()(dense2)
-output = layers.Dense(256)(dense2)
-
-embedding = Model(base_cnn.input, output, name="SiameseNetwork")
-
-embedding.summary()
-
-
-class DistanceLayer(layers.Layer):
-    """
-    This layer is responsible for computing the distance between the anchor
-    embedding and the positive embedding, and the anchor embedding and the
-    negative embedding.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def call(self, anchor, positive, negative):
-        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
-        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
-        return (ap_distance, an_distance)
-
-
-"""
-## Model for training
-
-This model is just used for training we pass to it three input batches (anchor images,
-positive images, negative images) and the output will be the output of the model we
-defined above, it will be 1 output for each input.
-"""
-
-anchor_input = layers.Input(shape=target_shape + (3,))
-positive_input = layers.Input(shape=target_shape + (3,))
-negative_input = layers.Input(shape=target_shape + (3,))
-
-distances = DistanceLayer()(
-    embedding(anchor_input), embedding(positive_input), embedding(negative_input)
-)
-
-siamese_network = Model(
-    inputs=[anchor_input, positive_input, negative_input], outputs=distances,
-)
-
-"""
-### Training
+We are now ready to train our model.
 """
 
 siamese_model = SiameseModel(siamese_network)
 siamese_model.compile(optimizer=optimizers.Adam(0.0001))
-siamese_model.fit(dataset, epochs=3)
+siamese_model.fit(dataset, epochs=20)
 
 """
-### Inference
+# Looking at what the network learned
+
+At this point, we can check how the network learned to separate the embeddings
+depending on whether they belong to similar images.
+
+We can use Cosine Similarity to measure the similarity between embeddings.
 """
 
-example_prediction = next(iter(dataset))
-visualize(*example_prediction)
+"""
+Let's pick a sample from the dataset to check the similarity between the
+embeddings generated for each image.
+"""
+sample = next(iter(dataset))
+visualize(*sample)
 
-anchor_tensor, positive_tensor, negative_embedding = example_prediction
+"""
+.
+"""
+
+anchor, positive, negative = sample
 anchor_embedding, positive_embedding, negative_embedding = (
-    embedding(anchor_tensor),
-    embedding(positive_tensor),
-    embedding(negative_embedding),
+    embedding(anchor),
+    embedding(positive),
+    embedding(negative),
 )
 
-
 """
-## Cosine Similarity Metric
+Finally, we can compute the cosine similarity between the anchor and positive
+images and compare it with the similarity between the anchor and the negative
+images.
 
-Cosine Similarity is a metric to measure the similarity
-between two vectors.
-
-We use it to measure how similar two embedding are.
+We should expect the similarity between the anchor and positive images to be
+larger than the similarity between the anchor and the negative images.
 """
 
 cosine_similarity = metrics.CosineSimilarity()
 
 positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
-print("Similarity between similar images:", positive_similarity.numpy())
+print("Positive similarity:", positive_similarity.numpy())
 
 negative_similarity = cosine_similarity(anchor_embedding, negative_embedding)
-print("Similarity between dissimilar images:", negative_similarity.numpy())
+print("Negative similarity", negative_similarity.numpy())
+
 
 """
+TODO: Still need to work on this.
+
 ### Key Takeaways
 
 1) You can create your custom data generator by creating a class that inherits from
