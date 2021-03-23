@@ -3,7 +3,7 @@ Title: Siamese Network with Triplet Loss
 Author: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/13
 Last modified: 2021/03/22
-Description: Siamese network with custom data generator and training loop.
+Description: Siamese network with tf.data and custom training loop.
 """
 
 
@@ -370,50 +370,27 @@ TODO: Still need to work on this.
 
 ### Key Takeaways
 
-1) You can create your custom data generator by creating a class that inherits from
-tf.keras.utils.Sequence, as we saw, this is really helpful if we want to generate data in
-different forms like Anchor, Positive and negative in our case, you just need to
-implement the __len__() and __getitem__(). Check out the documentation
-https://www.tensorflow.org/api_docs/python/tf/keras/utils/Sequence
+1) tf.data API enables you to build input pipelines for your model, it is useful
+if you have large dataset, also it fetches your data efficiently.
 
-2) If you don't have the computation power to train large models like ResNet-50 or if you
-don't have the time to re-write really big models you can just download it with one line,
-e.g. tf.keras.applications.ResNet50().
+2) tf.data.Dataset can be used to create your dataset and enables you to make sequence
+of operations like shuffling your data or applying transformations to preprocess the data.
 
-3) Every layer has a name, this is really helpful for fine tuning, If you want to fine
-tune specific layers, in our example we loop over the layers until we find specific layer
-by it's name and we made it trainable, this allows the weights of this layer to change
-during training
+3) Transfer Learning is used to avoid re-training or re-writing large architectures. 
 
-4) In our example we have only one embedding network that we need to train it but we need
-3 outputs to compare them with each other, we can do that by creating a model that have 3
-input layers and each input will pass through the embedding network and then we will have
-3 outputs embeddings, we did that in the "Model for Training section".
+4) In Keras every layer has a name, we can use this to retrieve layers, this is helpful
+for finetuning, in our example we loop over the ResNet50 layers until specific layer
+and we made it trainable.
 
-5) You can name your output layers like we did in the "Model for Training section", you
-just need to create a dictionary with keys as the name of your output layer and the
-output layers as values.
+5) We can create custom layers by creating a class that inherits from keras.layers.Layer
+as we did in the DistanceLayer class, we just need to implement the call() method.
 
-6) We used cosine similarity to measure how to 2 output embeddings are similar to each
-other.
+6) We used cosine similarity metric to measure how to 2 output embeddings are similar to each other.
 
-6) You can create your custom Layers by just creating a class that inherits from
-tf.keras.layers.Layer, you just need to implement the call function. check out the
-documentation https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer
-
-7) If you want to have custom training loop you can create your own model class that
-inherits from tf.keras.Model, you just need to override the train_step function and add
-you implementation.
-
-8) You can get your model gradients by using tf.GradientTape(), GradientTape records the
-operations that you do inside it, so you can get the predictions and write your custom
-loss function inside the GradientTape as we did.
-
-9) You can get the gradients using tape.gradient(loss, model.trainable_weights), this
-means that we need the gradients of the loss with respect to the model trainable weights,
-where "tape" is the name of our tf.GradientTape() in our example.
-
-10) you can just pass the gradients and the model weights to the optimizer to update them.
+7) overriding the train_step() allows you to have custom training loop, 
+train_step uses GradientTape which records every operation that you do inside it,
+we use it because we need the gradients that will be passed to the optimizer
+to update the model weights every step.
 
 For more info about GradientTape check out
 https://keras.io/getting_started/intro_to_keras_for_researchers/ and
