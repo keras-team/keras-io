@@ -195,6 +195,13 @@ class SiameseModel(Model):
         self.siamese_network(inputs)
 
     def train_step(self, data):
+        '''
+        GradientTape is a recorder that records the operations that you do inside it. 
+        GradientTape is used as context manager so you can use it only for the operations
+        that you want them for getting the gradients,
+        after recording the operations you can pass the gradients to the optimizer
+        with the neural network parameters to update them.
+        '''
         with tf.GradientTape() as tape:
             anchor, positive, negative = data
             distances = self.siamese_network((anchor, positive, negative))
@@ -224,25 +231,16 @@ class SiameseModel(Model):
 
 
 """
-## Cosine Similarity Layer
+## Cosine Similarity Metric
 
-This layer just computes how similar to feature vectors are by computing it using the
-Cosine Similarity
-We override the call method and implement our own call method.
+Cosine Similarity is a metric to measure the similarity
+between two vectors.
 
-Check out https://www.tensorflow.org/api_docs/python/tf/keras/losses/CosineSimilarity
-
-We return the negative of the loss because we just need to know how similar they are we
-do NOT need to know the loss
+We use it to measure how similar two embedding are.
 """
 
 
-class CosineDistance(layers.Layer):
-    def __init__(self):
-        super(CosineDistance, self).__init__()
-
-    def call(self, img1, img2):
-        return -losses.CosineSimilarity(reduction=losses.Reduction.NONE)(img1, img2)
+cosine_similarity = metrics.CosineSimilarity()
 
 
 """
@@ -323,7 +321,7 @@ siamese_model.fit(dataset, epochs=3)
 """
 
 example_prediction = next(iter(dataset))
-visualize(example_prediction)
+visualize(*example_prediction)
 
 anchor_tensor, positive_tensor, negative_embedding = example_prediction
 anchor_embedding, positive_embedding, negative_embedding = (
@@ -332,11 +330,11 @@ anchor_embedding, positive_embedding, negative_embedding = (
     embedding(negative_embedding),
 )
 
-positive_similarity = CosineDistance()(anchor_embedding, positive_embedding)
-print("Similarity between similar images:", positive_similarity[0])
+positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
+print("Similarity between similar images:", positive_similarity.numpy())
 
-negative_similarity = CosineDistance()(anchor_embedding, negative_embedding)
-print("Similarity between dissimilar images:", negative_similarity[0])
+negative_similarity = cosine_similarity(anchor_embedding, negative_embedding)
+print("Similarity between dissimilar images:", negative_similarity.numpy())
 
 """
 ### Key Takeaways
