@@ -195,13 +195,13 @@ class SiameseModel(Model):
         self.siamese_network(inputs)
 
     def train_step(self, data):
-        '''
+        """
         GradientTape is a recorder that records the operations that you do inside it. 
         GradientTape is used as context manager so you can use it only for the operations
         that you want them for getting the gradients,
         after recording the operations you can pass the gradients to the optimizer
         with the neural network parameters to update them.
-        '''
+        """
         with tf.GradientTape() as tape:
             anchor, positive, negative = data
             distances = self.siamese_network((anchor, positive, negative))
