@@ -231,19 +231,6 @@ class SiameseModel(Model):
 
 
 """
-## Cosine Similarity Metric
-
-Cosine Similarity is a metric to measure the similarity
-between two vectors.
-
-We use it to measure how similar two embedding are.
-"""
-
-
-cosine_similarity = metrics.CosineSimilarity()
-
-
-"""
 ## Loading a pre-trained model
 
 Here we use ResNet50 architecture, we use "imagenet" weights, also we pass the image shape
@@ -329,6 +316,18 @@ anchor_embedding, positive_embedding, negative_embedding = (
     embedding(positive_tensor),
     embedding(negative_embedding),
 )
+
+
+"""
+## Cosine Similarity Metric
+
+Cosine Similarity is a metric to measure the similarity
+between two vectors.
+
+We use it to measure how similar two embedding are.
+"""
+
+cosine_similarity = metrics.CosineSimilarity()
 
 positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
 print("Similarity between similar images:", positive_similarity.numpy())
