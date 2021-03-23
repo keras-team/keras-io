@@ -169,22 +169,6 @@ Let's create a `Mean` metric instance to track the loss of the training process.
 loss_tracker = metrics.Mean(name="loss")
 
 
-class DistanceLayer(layers.Layer):
-    """
-    This layer is responsible for computing the distance between the anchor
-    embedding and the positive embedding, and the anchor embedding and the
-    negative embedding.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def call(self, anchor, positive, negative):
-        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
-        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
-        return (ap_distance, an_distance)
-
-
 class SiameseModel(Model):
     """
     Model implementing a custom training loop to compute the Triplet Loss
@@ -246,19 +230,6 @@ class SiameseModel(Model):
 
 
 """
-## Cosine Similarity Metric
-
-Cosine Similarity is a metric to measure the similarity
-between two vectors.
-
-We use it to measure how similar two embedding are.
-"""
-
-
-cosine_similarity = metrics.CosineSimilarity()
-
-
-"""
 ## Loading a pre-trained model
 
 Here we use ResNet50 architecture, we use "imagenet" weights, also we pass the image shape
@@ -303,6 +274,23 @@ embedding = Model(base_cnn.input, output, name="SiameseNetwork")
 
 embedding.summary()
 
+
+class DistanceLayer(layers.Layer):
+    """
+    This layer is responsible for computing the distance between the anchor
+    embedding and the positive embedding, and the anchor embedding and the
+    negative embedding.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def call(self, anchor, positive, negative):
+        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
+        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
+        return (ap_distance, an_distance)
+
+
 """
 ## Model for training
 
@@ -344,6 +332,18 @@ anchor_embedding, positive_embedding, negative_embedding = (
     embedding(positive_tensor),
     embedding(negative_embedding),
 )
+
+
+"""
+## Cosine Similarity Metric
+
+Cosine Similarity is a metric to measure the similarity
+between two vectors.
+
+We use it to measure how similar two embedding are.
+"""
+
+cosine_similarity = metrics.CosineSimilarity()
 
 positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
 print("Similarity between similar images:", positive_similarity.numpy())
