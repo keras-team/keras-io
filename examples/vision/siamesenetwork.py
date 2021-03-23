@@ -26,8 +26,7 @@ from tensorflow.keras import preprocessing
 target_shape = (200, 200)
 
 
-def visualize(x):
-    anchor, positive, negative = x
+def visualize(anchor, positive, negative):
     f, (ax1, ax2, ax3) = plt.subplots(1, 3)
     ax1.imshow(anchor[0])
     ax2.imshow(positive[0])
@@ -56,9 +55,11 @@ unzip -oq right.zip -d $cache_dir
 """
 
 """
-Now we can load the name of every available anchor file in the unzipped directory.
+Now we can load the name of every available anchor file in the unzipped directory. This will 
+help with the generation of negative samples.
 """
-anchor_images = [str(anchor_images_path / f) for f in os.listdir(anchor_images_path)]
+
+anchor_images = os.listdir(anchor_images_path)
 
 """
 ## Preparing the data
@@ -69,6 +70,11 @@ that we need to train the Siamese network.
 
 
 def preprocess_image(filename):
+    """
+    Loads the specified file as a JPEG image, preprocess it and 
+    resizes it to the target shape.
+    """
+
     image_string = tf.io.read_file(filename)
     image = tf.image.decode_jpeg(image_string, channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
@@ -76,31 +82,27 @@ def preprocess_image(filename):
     return image
 
 
-def generate_negative_sample(t: tf.Tensor):
-    filename = t.numpy().decode("utf-8")
-    candidate = filename
-    while candidate == filename:
-        candidate = random.choice(anchor_images).split(os.sep)[-1]
+def generate_negative_sample(anchor, positive):
+    """
+    Generates the negative sample that will be used with the supplied anchor
+    and positive samples. This negative sample is randomly selected from the
+    list of existing files.
+    """
+
+    candidate = random.choice(anchor_images)
 
     folder = random.choice([anchor_images_path, positive_images_path])
+    negative = str(folder / candidate)
 
-    return str(folder / candidate)
-
-
-def generate_triplets(anchor_sample):
-    parts = tf.strings.split(anchor_sample, os.sep)
-    filename = parts[-1]
-
-    positive_sample = f"{str(positive_images_path)}{os.sep}" + filename
-
-    negative_sample = tf.py_function(
-        func=generate_negative_sample, inp=[filename], Tout=tf.string
-    )
-
-    return anchor_sample, positive_sample, negative_sample
+    return anchor, positive, negative
 
 
 def preprocess_triplets(anchor, positive, negative):
+    """
+    Given the filenames corresponding to the three images, it loads and
+    preprocess them.
+    """
+
     return (
         preprocess_image(anchor),
         preprocess_image(positive),
@@ -109,18 +111,26 @@ def preprocess_triplets(anchor, positive, negative):
 
 
 """
-Let's setup our pipeline using the list of anchor filenames as the source. The output
-of our pipeline contains a triplet with the anchor, the positive, and the negative image.
+Let's setup our pipeline using a zipped list with anchor and positive
+filenames as the source. The output of our pipeline contains a triplet with
+the anchor, the positive, and the negative image.
 """
 
-dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
+anchor_dataset = tf.data.Dataset.list_files(
+    file_pattern=str(anchor_images_path / "*.jpg"), shuffle=False
+)
+positive_dataset = tf.data.Dataset.list_files(
+    file_pattern=str(positive_images_path / "*.jpg"), shuffle=False
+)
+
+dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset))
+dataset = dataset.map(generate_negative_sample)
 dataset = dataset.shuffle(buffer_size=100)
-dataset = dataset.map(generate_triplets)
 dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
 dataset = dataset.prefetch(1)
 
-visualize(list(dataset.take(1).as_numpy_iterator())[0])
+visualize(*list(dataset.take(1).as_numpy_iterator())[0])
 
 """
 ## Siamese Network
