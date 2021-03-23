@@ -28,10 +28,22 @@ target_shape = (200, 200)
 
 
 def visualize(anchor, positive, negative):
-    f, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    ax1.imshow(anchor[0])
-    ax2.imshow(positive[0])
-    ax3.imshow(negative[0])
+    """
+    Visualizes a few triplets from the supplied batches.
+    """
+
+    def show(ax, image):
+        ax.imshow(image)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+    fig = plt.figure(figsize=(9, 9))
+
+    axs = fig.subplots(3, 3)
+    for i in range(3):
+        show(axs[i, 0], anchor[i])
+        show(axs[i, 1], positive[i])
+        show(axs[i, 2], negative[i])
 
 
 """
@@ -65,8 +77,11 @@ anchor_images = os.listdir(anchor_images_path)
 """
 ## Preparing the data
 
-We are going to use a `tf.data` pipeline to load the data and generate the triplets
-that we need to train the Siamese network.
+We are going to use a `tf.data` pipeline to load the data and generate the triplets that we
+need to train the Siamese network.
+
+We'll set up the pipeline using a zipped list with anchor, positive, and negative filenames as
+the source. The pipeline will load and preprocess the corresponding images.
 """
 
 
@@ -82,22 +97,6 @@ def preprocess_image(filename):
     image = tf.image.resize(image, target_shape)
     return image
 
-
-def generate_negative_sample(anchor, positive):
-    """
-    Generates the negative sample that will be used with the supplied anchor
-    and positive samples. This negative sample is randomly selected from the
-    list of existing files.
-    """
-
-    candidate = random.choice(anchor_images)
-
-    folder = random.choice([anchor_images_path, positive_images_path])
-    negative = str(folder / candidate)
-
-    return anchor, positive, negative
-
-
 def preprocess_triplets(anchor, positive, negative):
     """
     Given the filenames corresponding to the three images, it loads and
@@ -105,9 +104,9 @@ def preprocess_triplets(anchor, positive, negative):
     """
 
     return (
-        preprocess_image(anchor),
-        preprocess_image(positive),
-        preprocess_image(negative),
+        preprocess_image(anchor), 
+        preprocess_image(positive), 
+        preprocess_image(negative)
     )
 
 
@@ -118,15 +117,22 @@ the anchor, the positive, and the negative image.
 """
 
 anchor_dataset = tf.data.Dataset.list_files(
-    file_pattern=str(anchor_images_path / "*.jpg"), shuffle=False
+    file_pattern=str(anchor_images_path / "*.jpg"),
+    shuffle=False
 )
 positive_dataset = tf.data.Dataset.list_files(
-    file_pattern=str(positive_images_path / "*.jpg"), shuffle=False
+    file_pattern=str(positive_images_path / "*.jpg"),
+    shuffle=False
 )
 
-dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset))
-dataset = dataset.map(generate_negative_sample)
-dataset = dataset.shuffle(buffer_size=100)
+# The negative sample is a randomly selected image from either the anchor or
+# the positive list of images. To ensure that we select a random image, we need
+# to shuffle the dataset.
+negative_dataset = anchor_dataset.concatenate(positive_dataset)
+negative_dataset = negative_dataset.shuffle(buffer_size=20000)
+
+dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
+dataset = dataset.shuffle(buffer_size=10000)
 dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
 dataset = dataset.prefetch(1)
@@ -188,13 +194,9 @@ class SiameseModel(Model):
         self.siamese_network(inputs)
 
     def train_step(self, data):
-        """
-        GradientTape is a recorder that records the operations that you do inside it. 
-        GradientTape is used as context manager so you can use it only for the operations
-        that you want them for getting the gradients,
-        after recording the operations you can pass the gradients to the optimizer
-        with the neural network parameters to update them.
-        """
+        # GradientTape is a context manager that records every operation that you do inside. 
+        # We are using it here to compute the loss so we can get the gradients and apply
+        # them using the optimizer specified in `compile()`.
         with tf.GradientTape() as tape:
             anchor, positive, negative = data
 
