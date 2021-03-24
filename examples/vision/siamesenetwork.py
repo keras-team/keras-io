@@ -1,5 +1,5 @@
 """
-Title: Siamese Network with Triplet Loss
+Title: Siamese Network to compare similarity with a triplet loss
 Author: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/13
 Last modified: 2021/03/22
