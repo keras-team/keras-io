@@ -10,26 +10,23 @@ Description: A Siamese Network to compare how similar different images using a `
 """
 # Introduction
 
-You can use a [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) 
-to solve various problems in machine learning, such as detecting question duplicates, 
-face recognition through a comparison of the similarity of the inputs by comparing their feature vectors.
-First, we need to have a dataset that contains 3 images, of which 2 are similar and 1 is
-different. These images are referred to as _anchor_, _positive_, and _negative_ images,
-respectively. The neural network will need to know that the anchor and the positive images
-are similar, while the anchor and the negative images are dissimilar — this can be done with the help of the [triplet loss](https://www.tensorflow.org/addons/tutorials/losses_triplet)
-(you can find out more in the FaceNet paper by [Schroff et al., 2015](https://arxiv.org/pdf/1503.03832.pdf)).
-The triplet loss function is measured as follows:
+A [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is a type of network architecture that
+contains two or more identical subnetworks used to generate a feature vector of each input and compare their similarity.
 
-L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
-distance(f(Anchor), f(Negative)))**2, 0.0)
+Siamese Networks help different use cases, like detecting duplicates, finding anomalies, and face recognition.
 
-Note that the weights of the network are shared. Therefore, we are going to use only one 
-model for training and inference.
-In this example, we will use the [Totally Looks Like](https://sites.google.com/view/totally-looks-like-dataset)
+This example uses a Siamese Network with three identical subnetworks. We will provide three images to the model, where
+two of them will be similar (anchor and positive samples), and the third will be different (a negative example.)
+Our goal is for the model to learn to determine the similarity between images. 
+
+For the network to learn, we use the triplet loss. You can find an introduction to triplet loss in the
+[FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
+loss function as follows:
+
+`L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + margin, 0)`
+
+This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset) 
 by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
-Image from:
-https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
-![1_0E9104t29iMBmtvq7G1G6Q.png](attachment:1_0E9104t29iMBmtvq7G1G6Q.png)
 """
 
 """
