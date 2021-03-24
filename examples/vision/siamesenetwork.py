@@ -59,7 +59,8 @@ target_shape = (200, 200)
 """
 # Load the dataset
 
-We are going to use the [Totally Looks Like dataset](https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl). We are going to download it and unzip it inside the `~/.keras` directory.
+We are going to load the Totally Looks Like dataset and unzip it inside the `~/.keras` directory
+in the local environment.
 
 The dataset consists on two separate files:
 * `left.zip` contains the images that we will use as the anchor.
