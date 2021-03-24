@@ -409,8 +409,9 @@ TODO: Still need to work on this.
 
 ### Summary
 
-1) tf.data API enables you to build input pipelines for your model, it is useful
-if you have large dataset, also it fetches your data efficiently.
+1) The `tf.data` API enables you to build efficient input pipelines for your model. It is 
+particularly useful if you have large dataset. You can learn more in the
+[`tf.data` guide](https://www.tensorflow.org/guide/data).
 
 2) tf.data.Dataset can be used to create your dataset and enables you to make sequence
 of operations like shuffling your data or applying transformations to preprocess the data.
