@@ -113,29 +113,42 @@ def preprocess_triplets(anchor, positive, negative):
 
 
 """
-Let's setup our pipeline using a zipped list with anchor and positive
-filenames as the source. The output of our pipeline contains a triplet with
-the anchor, the positive, and the negative image.
+Let's setup our data pipeline using a zipped list with an anchor, positive,
+and negative image filename as the source. The output of the pipeline
+contains the same triplet with every image loaded and preprocessed.
 """
 
-anchor_dataset = tf.data.Dataset.list_files(
-    file_pattern=str(anchor_images_path / "*.jpg"), shuffle=False
-)
-positive_dataset = tf.data.Dataset.list_files(
-    file_pattern=str(positive_images_path / "*.jpg"), shuffle=False
+# We need to make sure both the anchor and positive images are loaded in
+# sorted order so we can match them together.
+anchor_images = sorted(
+    [str(anchor_images_path / f) for f in os.listdir(anchor_images_path)]
 )
 
-# The negative sample is a randomly selected image from either the anchor or
-# the positive list of images. To ensure that we select a random image, we need
-# to shuffle the dataset.
-negative_dataset = anchor_dataset.concatenate(positive_dataset)
-negative_dataset = negative_dataset.shuffle(buffer_size=20000)
+positive_images = sorted(
+    [str(positive_images_path / f) for f in os.listdir(positive_images_path)]
+)
+
+anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
+positive_dataset = tf.data.Dataset.from_tensor_slices(positive_images)
+
+# To generate the list of negative images, let's randomize the list of
+# available images and concatenate them together.
+rng = np.random.RandomState(seed=42)
+rng.shuffle(anchor_images)
+rng.shuffle(positive_images)
+
+negative_images = anchor_images + positive_images
+np.random.RandomState(seed=32).shuffle(negative_images)
+
+negative_dataset = tf.data.Dataset.from_tensor_slices(negative_images)
+negative_dataset = negative_dataset.shuffle(buffer_size=4096)
 
 dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
-dataset = dataset.shuffle(buffer_size=10000)
+dataset = dataset.shuffle(buffer_size=1024)
 dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
 dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
 
 """
 Let's take a look at a few examples of triplets. Notice how the first two images
