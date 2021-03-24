@@ -29,7 +29,6 @@ Note that the weights of the network are shared. Therefore, we are going to use 
 model for training and inference.
 In this example, we will use the [Totally Looks Like](https://sites.google.com/view/totally-looks-like-dataset)
 by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
-Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
 Image from:
 https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
 ![1_0E9104t29iMBmtvq7G1G6Q.png](attachment:1_0E9104t29iMBmtvq7G1G6Q.png)
