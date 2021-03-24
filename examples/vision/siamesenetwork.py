@@ -426,10 +426,13 @@ as we did in the DistanceLayer class, we just need to implement the call() metho
 
 6) We used cosine similarity metric to measure how to 2 output embeddings are similar to each other.
 
-7) overriding the train_step() allows you to have custom training loop, 
-train_step uses GradientTape which records every operation that you do inside it,
-we use it because we need the gradients that will be passed to the optimizer
-to update the model weights every step.
+7) Overriding the `train_step()` method allows you to have a custom training loop. 
+`train_step()` uses [`tf.GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape),
+which records every operation that you perform inside it. We use it to access the gradients
+that are passed to the optimizer to update the model weights at every step.
+For more details, check out the [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
+and
+[Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
 
 For more info about GradientTape check out
 https://keras.io/getting_started/intro_to_keras_for_researchers/ and
