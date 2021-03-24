@@ -363,7 +363,7 @@ siamese_model.compile(optimizer=optimizers.Adam(0.0001))
 siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 
 """
-# Looking at what the network learned
+# Inspecting what the network has learned
 
 At this point, we can check how the network learned to separate the embeddings
 depending on whether they belong to similar images.
