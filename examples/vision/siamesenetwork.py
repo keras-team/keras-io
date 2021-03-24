@@ -240,9 +240,9 @@ class DistanceLayer(layers.Layer):
         return (ap_distance, an_distance)
 
 
-anchor_input = layers.Input(shape=target_shape + (3,))
-positive_input = layers.Input(shape=target_shape + (3,))
-negative_input = layers.Input(shape=target_shape + (3,))
+anchor_input = layers.Input(name="anchor", shape=target_shape + (3,))
+positive_input = layers.Input(name="positive", shape=target_shape + (3,))
+negative_input = layers.Input(name="negative", shape=target_shape + (3,))
 
 distances = DistanceLayer()(
     embedding(preprocess_input(anchor_input)),
