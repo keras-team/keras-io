@@ -16,7 +16,7 @@ contains two or more identical subnetworks used to generate a feature vector of 
 Siamese Networks help different use cases, like detecting duplicates, finding anomalies, and face recognition.
 
 This example uses a Siamese Network with three identical subnetworks. We will provide three images to the model, where
-two of them will be similar (anchor and positive samples), and the third will be different (a negative example.)
+two of them will be similar (_anchor_ and _positive_ samples), and the third will be different (a _negative_ example.)
 Our goal is for the model to learn to determine the similarity between images. 
 
 For the network to learn, we use the triplet loss. You can find an introduction to triplet loss in the
@@ -397,33 +397,30 @@ print("Negative similarity", negative_similarity.numpy())
 
 
 """
-### Summary
+# Summary
 
-1) The `tf.data` API enables you to build efficient input pipelines for your model. It is 
-particularly useful if you have large dataset. You can learn more in the
-[`tf.data` guide](https://www.tensorflow.org/guide/data).
+1. The `tf.data` API enables you to build efficient input pipelines for your model. It is 
+particularly useful if you have a large dataset. You can learn more about `tf.data`
+pipelines in [tf.data: Build TensorFlow input pipelines](https://www.tensorflow.org/guide/data).
 
-2) You can use `tf.data.Dataset` to create your dataset — it enables you to make a sequence
-of operations like shuffling your data or applying transformations to preprocess the data.
+2. In this example, we use a pre-trained ResNet50 as part of the subnetwork that generates
+the feature embeddings. By using [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en),
+we can significantly reduce the training time and size of the dataset.
 
-3) In this example, [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en) is used to avoid re-training or re-writing large architectures. [Learn more](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en).
+3. Notice how we are [fine-tuning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en#fine-tuning)
+the weights of the final layers of the ResNet50 network but keeping the rest of the layers untouched.
+Using the name assigned to each layer, we can freeze the weights to a certain point and keep the last few layers open. 
 
-4) In Keras, layers can have names, which can be used to retrieve layers. This can be helpful
-during [fine-tuning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en#fine-tuning). 
-In our example, we loop over the ResNet50 layers before a specific layer, and then we train 
-the model on the last few layers.
+4. We can create custom layers by creating a class that inherits from `tf.keras.layers.Layer`,
+as we did in the `DistanceLayer` class.
 
-5) We can create custom layers by creating a class that inherits from `tf.keras.layers.Layer`,
-as we did in the `DistanceLayer` class — we just need to implement the `call()` method.
+5. We used a cosine similarity metric to measure how to 2 output embeddings are similar to each other.
 
-6) We used cosine similarity metric to measure how to 2 output embeddings are similar to each other.
-
-7) Overriding the `train_step()` method allows you to have a custom training loop. 
-`train_step()` uses [`tf.GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape),
-which records every operation that you perform inside it. We use it to access the gradients
-that are passed to the optimizer to update the model weights at every step.
-For more details, check out the [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
-and
-[Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
+6. You can implement a custom training loop by overriding the `train_step()` method. `train_step()` uses
+[`tf.GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape),
+which records every operation that you perform inside it. In this example, we use it to access the
+gradients passed to the optimizer to update the model weights at every step. For more details, check out the
+[Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
+and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
 
 """
