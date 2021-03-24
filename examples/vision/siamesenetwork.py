@@ -413,7 +413,7 @@ TODO: Still need to work on this.
 particularly useful if you have large dataset. You can learn more in the
 [`tf.data` guide](https://www.tensorflow.org/guide/data).
 
-2) tf.data.Dataset can be used to create your dataset and enables you to make sequence
+2) You can use `tf.data.Dataset` to create your dataset — it enables you to make a sequence
 of operations like shuffling your data or applying transformations to preprocess the data.
 
 3) Transfer Learning is used to avoid re-training or re-writing large architectures. 
