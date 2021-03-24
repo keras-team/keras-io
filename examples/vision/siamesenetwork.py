@@ -27,8 +27,8 @@ distance(f(Anchor), f(Negative)))**2, 0.0)
 
 Note that the weights of the network are shared. Therefore, we are going to use only one 
 model for training and inference.
-You can find the dataset here:
-https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl
+In this example, we will use the [Totally Looks Like](https://sites.google.com/view/totally-looks-like-dataset)
+by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
 Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
 Image from:
 https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab17522942
