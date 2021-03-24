@@ -421,7 +421,7 @@ of operations like shuffling your data or applying transformations to preprocess
 for finetuning, in our example we loop over the ResNet50 layers until specific layer
 and we made it trainable.
 
-5) We can create custom layers by creating a class that inherits from keras.layers.Layer
+5) We can create custom layers by creating a class that inherits from `tf.keras.layers.Layer`,
 as we did in the DistanceLayer class, we just need to implement the call() method.
 
 6) We used cosine similarity metric to measure how to 2 output embeddings are similar to each other.
