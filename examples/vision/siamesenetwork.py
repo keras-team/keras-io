@@ -34,7 +34,7 @@ https://towardsdatascience.com/a-friendly-introduction-to-siamese-networks-85ab1
 """
 
 """
-### Setup
+# Setup
 """
 
 import matplotlib.pyplot as plt
@@ -52,25 +52,6 @@ from tensorflow.keras import Model
 
 
 target_shape = (200, 200)
-
-
-def visualize(anchor, positive, negative):
-    """
-    Visualizes a few triplets from the supplied batches.
-    """
-
-    def show(ax, image):
-        ax.imshow(image)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-    fig = plt.figure(figsize=(9, 9))
-
-    axs = fig.subplots(3, 3)
-    for i in range(3):
-        show(axs[i, 0], anchor[i])
-        show(axs[i, 1], positive[i])
-        show(axs[i, 2], negative[i])
 
 
 """
@@ -95,7 +76,7 @@ unzip -oq right.zip -d $cache_dir
 """
 
 """
-## Preparing the data
+# Preparing the data
 
 We are going to use a `tf.data` pipeline to load the data and generate the triplets that we
 need to train the Siamese network.
@@ -160,6 +141,26 @@ dataset = dataset.prefetch(1)
 Let's take a look at a few examples of triplets. Notice how the first two images
 look alike while the third is always different.
 """
+
+
+def visualize(anchor, positive, negative):
+    """
+    Visualizes a few triplets from the supplied batches.
+    """
+
+    def show(ax, image):
+        ax.imshow(image)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+    fig = plt.figure(figsize=(9, 9))
+
+    axs = fig.subplots(3, 3)
+    for i in range(3):
+        show(axs[i, 0], anchor[i])
+        show(axs[i, 1], positive[i])
+        show(axs[i, 2], negative[i])
+
 
 visualize(*list(dataset.take(1).as_numpy_iterator())[0])
 
@@ -335,10 +336,6 @@ embeddings generated for each image.
 """
 sample = next(iter(dataset))
 visualize(*sample)
-
-"""
-.
-"""
 
 anchor, positive, negative = sample
 anchor_embedding, positive_embedding, negative_embedding = (
