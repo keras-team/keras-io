@@ -297,7 +297,7 @@ class SiameseModel(Model):
         self.siamese_network(inputs)
 
     def train_step(self, data):
-        # GradientTape is a context manager that records every operation that you do inside.
+        # `tf.GradientTape` is a context manager that records every operation that you do inside.
         # We are using it here to compute the loss so we can get the gradients and apply
         # them using the optimizer specified in `compile()`.
         with tf.GradientTape() as tape:
@@ -330,9 +330,7 @@ class SiameseModel(Model):
     def test_step(self, data):
         anchor, positive, negative = data
 
-        ap_distance, an_distance = self.siamese_network(
-            (anchor, positive, negative)
-        )
+        ap_distance, an_distance = self.siamese_network((anchor, positive, negative))
 
         loss = ap_distance - an_distance
         loss = tf.maximum(loss + self.alpha, 0.0)
