@@ -265,10 +265,7 @@ siamese_network = Model(
 # Putting everything together
 
 We now need to implement a model with custom training loop so we can compute
-the Triplet Loss using the three embeddings produced by the Siamese network.
-
-Here is the definition of Triplet Loss implemented on this example:
-`L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + alpha, 0)`
+the triplet loss using the three embeddings produced by the Siamese network.
 """
 
 """
