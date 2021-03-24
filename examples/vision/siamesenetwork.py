@@ -129,6 +129,8 @@ positive_images = sorted(
     [str(positive_images_path / f) for f in os.listdir(positive_images_path)]
 )
 
+image_count = len(anchor_images)
+
 anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
 positive_dataset = tf.data.Dataset.from_tensor_slices(positive_images)
 
@@ -149,6 +151,10 @@ dataset = dataset.shuffle(buffer_size=1024)
 dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
 dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+# Let's now split our dataset in train and validation.
+train_dataset = dataset.take(round(image_count * 0.8))
+val_dataset = dataset.skip(round(image_count * 0.8))
 
 
 """
