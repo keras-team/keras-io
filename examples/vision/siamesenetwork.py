@@ -378,9 +378,9 @@ visualize(*sample)
 
 anchor, positive, negative = sample
 anchor_embedding, positive_embedding, negative_embedding = (
-    embedding(anchor),
-    embedding(positive),
-    embedding(negative),
+    embedding(preprocess_input(anchor)),
+    embedding(preprocess_input(positive)),
+    embedding(preprocess_input(negative)),
 )
 
 """
