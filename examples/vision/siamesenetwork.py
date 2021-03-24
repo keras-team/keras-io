@@ -1,9 +1,9 @@
 """
-Title: Siamese Network to compare similarity with a triplet loss
+Title: Comparing similarity between images using a Siamese Network with a triplet loss
 Author: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/13
 Last modified: 2021/03/22
-Description: A Siamese Network for a similarity comparison with `tf.data`, a triplet loss, and a custom training loop.
+Description: A Siamese Network to compare how similar different images using a `tf.data` pipeline, a triplet loss, and a custom training and validation loop.
 """
 
 
