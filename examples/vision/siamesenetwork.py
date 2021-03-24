@@ -407,7 +407,7 @@ print("Negative similarity", negative_similarity.numpy())
 """
 TODO: Still need to work on this.
 
-### Key Takeaways
+### Summary
 
 1) tf.data API enables you to build input pipelines for your model, it is useful
 if you have large dataset, also it fetches your data efficiently.
