@@ -8,13 +8,11 @@ Description: A Siamese Network for a similarity comparison with `tf.data`, a tri
 
 
 """
-TODO: Still need to work on this.
-
 # Introduction
 
 You can use a [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) 
-to solve various problems in machine learning, such as detecting question duplicates, face recognition through a comparison of the similarity of the inputs by comparing their feature
-vectors.
+to solve various problems in machine learning, such as detecting question duplicates, 
+face recognition through a comparison of the similarity of the inputs by comparing their feature vectors.
 First, we need to have a dataset that contains 3 images, of which 2 are similar and 1 is
 different. These images are referred to as _anchor_, _positive_, and _negative_ images,
 respectively. The neural network will need to know that the anchor and the positive images
@@ -405,8 +403,6 @@ print("Negative similarity", negative_similarity.numpy())
 
 
 """
-TODO: Still need to work on this.
-
 ### Summary
 
 1) The `tf.data` API enables you to build efficient input pipelines for your model. It is 
