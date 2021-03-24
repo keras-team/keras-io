@@ -374,7 +374,7 @@ similarity between embeddings.
 Let's pick a sample from the dataset to check the similarity between the
 embeddings generated for each image.
 """
-sample = next(iter(dataset))
+sample = next(iter(train_dataset))
 visualize(*sample)
 
 anchor, positive, negative = sample
