@@ -149,12 +149,16 @@ negative_dataset = negative_dataset.shuffle(buffer_size=4096)
 dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
 dataset = dataset.shuffle(buffer_size=1024)
 dataset = dataset.map(preprocess_triplets)
-dataset = dataset.batch(32, drop_remainder=False)
-dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
 # Let's now split our dataset in train and validation.
 train_dataset = dataset.take(round(image_count * 0.8))
 val_dataset = dataset.skip(round(image_count * 0.8))
+
+train_dataset = train_dataset.batch(32, drop_remainder=False)
+train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+
+val_dataset = val_dataset.batch(32, drop_remainder=False)
+val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
 
 """
@@ -182,7 +186,7 @@ def visualize(anchor, positive, negative):
         show(axs[i, 2], negative[i])
 
 
-visualize(*list(dataset.take(1).as_numpy_iterator())[0])
+visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 
 """
 # Setting up the Embedding generator model
@@ -280,42 +284,34 @@ val_loss_tracker = metrics.Mean(name="val_loss")
 
 class SiameseModel(Model):
     """
-    Model implementing a custom training loop to compute the Triplet Loss
-    using the three embeddings produced by the Siamese network.
+    The Siamese Network model with a custom training and testing loops.
 
-    Here is the definition of Triplet Loss:
-        L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + alpha, 0)
+    Computes the triplet loss using the three embeddings produced by the
+    Siamese Network.
+
+    The triplet loss is defined as:
+        L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + margin, 0)
 
     """
 
-    def __init__(self, siamese_network, alpha=0.5):
+    def __init__(self, siamese_network, margin=0.5):
         super(SiameseModel, self).__init__()
         self.siamese_network = siamese_network
-        self.alpha = alpha
+        self.margin = margin
 
     def call(self, inputs):
         self.siamese_network(inputs)
 
     def train_step(self, data):
-        # `tf.GradientTape` is a context manager that records every operation that you do inside.
-        # We are using it here to compute the loss so we can get the gradients and apply
-        # them using the optimizer specified in `compile()`.
+        # GradientTape is a context manager that records every operation that
+        # you do inside. We are using it here to compute the loss so we can get
+        # the gradients and apply them using the optimizer specified in
+        # `compile()`.
         with tf.GradientTape() as tape:
-            anchor, positive, negative = data
+            loss = self._compute_loss(data)
 
-            # The output of the network is a tuple containing the distances
-            # between the anchor and the positive example, and the anchor and
-            # the negative example.
-            ap_distance, an_distance = self.siamese_network(
-                (anchor, positive, negative)
-            )
-
-            # Computing the Triplet Loss by subtracting both distances and
-            # making sure we don't get a negative value.
-            loss = ap_distance - an_distance
-            loss = tf.maximum(loss + self.alpha, 0.0)
-
-        # Let's get the gradients (loss with respect to trainable weights)
+        # Storing the gradients of the loss function with respect to the
+        # weights/parameters.
         gradients = tape.gradient(loss, self.siamese_network.trainable_weights)
 
         # Applying the gradients on the model using the specified optimizer
@@ -323,24 +319,33 @@ class SiameseModel(Model):
             zip(gradients, self.siamese_network.trainable_weights)
         )
 
-        # Let's update and return the loss metric.
+        # Let's update and return the training loss metric.
         loss_tracker.update_state(loss)
         return {"loss": loss_tracker.result()}
 
     def test_step(self, data):
-        anchor, positive, negative = data
+        loss = self._compute_loss(data)
 
-        ap_distance, an_distance = self.siamese_network((anchor, positive, negative))
-
-        loss = ap_distance - an_distance
-        loss = tf.maximum(loss + self.alpha, 0.0)
-
+        # Let's update and return the validation loss metric.
         val_loss_tracker.update_state(loss)
-        return {"val_loss": val_loss_tracker.result()}
+        return {"loss": val_loss_tracker.result()}
+
+    def _compute_loss(self, data):
+        # The output of the network is a tuple containing the distances
+        # between the anchor and the positive example, and the anchor and
+        # the negative example.
+        ap_distance, an_distance = self.siamese_network(data)
+
+        # Computing the Triplet Loss by subtracting both distances and
+        # making sure we don't get a negative value.
+        loss = ap_distance - an_distance
+        loss = tf.maximum(loss + self.margin, 0.0)
+
+        return loss
 
     @property
     def metrics(self):
-        # We need to list our metric here so the `reset_states()` can be
+        # We need to list our metrics here so the `reset_states()` can be
         # called automatically.
         return [loss_tracker, val_loss_tracker]
 
@@ -353,7 +358,7 @@ We are now ready to train our model.
 
 siamese_model = SiameseModel(siamese_network)
 siamese_model.compile(optimizer=optimizers.Adam(0.0001))
-siamese_model.fit(dataset, epochs=20, validation_data=val_dataset)
+siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 
 """
 # Looking at what the network learned
