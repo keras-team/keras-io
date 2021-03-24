@@ -275,6 +275,7 @@ Let's create a `Mean` metric instance to track the loss of the training process.
 """
 
 loss_tracker = metrics.Mean(name="loss")
+val_loss_tracker = metrics.Mean(name="val_loss")
 
 
 class SiameseModel(Model):
@@ -296,7 +297,7 @@ class SiameseModel(Model):
         self.siamese_network(inputs)
 
     def train_step(self, data):
-        # `tf.GradientTape` is a context manager that records every operation that you do inside.
+        # GradientTape is a context manager that records every operation that you do inside.
         # We are using it here to compute the loss so we can get the gradients and apply
         # them using the optimizer specified in `compile()`.
         with tf.GradientTape() as tape:
@@ -326,11 +327,24 @@ class SiameseModel(Model):
         loss_tracker.update_state(loss)
         return {"loss": loss_tracker.result()}
 
+    def test_step(self, data):
+        anchor, positive, negative = data
+
+        ap_distance, an_distance = self.siamese_network(
+            (anchor, positive, negative)
+        )
+
+        loss = ap_distance - an_distance
+        loss = tf.maximum(loss + self.alpha, 0.0)
+
+        val_loss_tracker.update_state(loss)
+        return {"val_loss": val_loss_tracker.result()}
+
     @property
     def metrics(self):
         # We need to list our metric here so the `reset_states()` can be
         # called automatically.
-        return [loss_tracker]
+        return [loss_tracker, val_loss_tracker]
 
 
 """
@@ -341,7 +355,7 @@ We are now ready to train our model.
 
 siamese_model = SiameseModel(siamese_network)
 siamese_model.compile(optimizer=optimizers.Adam(0.0001))
-siamese_model.fit(dataset, epochs=20)
+siamese_model.fit(dataset, epochs=20, validation_data=val_dataset)
 
 """
 # Looking at what the network learned
