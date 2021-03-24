@@ -25,8 +25,8 @@ The triplet loss function is measured as follows:
 L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
 distance(f(Anchor), f(Negative)))**2, 0.0)
 
-Note that the weights are shared which mean that we are only using one model for
-prediction and training
+Note that the weights of the network are shared. Therefore, we are going to use only one 
+model for training and inference.
 You can find the dataset here:
 https://drive.google.com/drive/folders/1qQJHA5m-vLMAkBfWEWgGW9n61gC_orHl
 Also more info found here: https://sites.google.com/view/totally-looks-like-dataset
