@@ -416,7 +416,7 @@ particularly useful if you have large dataset. You can learn more in the
 2) You can use `tf.data.Dataset` to create your dataset — it enables you to make a sequence
 of operations like shuffling your data or applying transformations to preprocess the data.
 
-3) Transfer Learning is used to avoid re-training or re-writing large architectures. 
+3) In this example, [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en) is used to avoid re-training or re-writing large architectures. [Learn more](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en).
 
 4) In Keras, layers can have names, which can be used to retrieve layers. This can be helpful
 during [fine-tuning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en#fine-tuning). 
