@@ -15,11 +15,11 @@ TODO: Still need to work on this.
 You can use a [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) 
 to solve various problems in machine learning, such as detecting question duplicates, face recognition through a comparison of the similarity of the inputs by comparing their feature
 vectors.
-First we need to have a dataset that contains 3 Images, 2 are similar and 1 is different,
-they are called Anchor image, Positive Image and Negative image respectively, we need to
-tell the network that the anchor image and the positive image are similar, we also need
-to tell it that the anchor image and the negative image are NOT similar, we can do that
-by the Triplet Loss Function.
+First, we need to have a dataset that contains 3 images, of which 2 are similar and 1 is
+different. These images are referred to as _anchor_, _positive_, and _negative_ images,
+respectively. The neural network will need to know that the anchor and the positive images
+are similar, while the anchor and the negative images are dissimilar — this can be done with the help of the [triplet loss](https://www.tensorflow.org/addons/tutorials/losses_triplet)
+(you can find out more in the FaceNet paper by [Schroff et al., 2015](https://arxiv.org/pdf/1503.03832.pdf)).
 Triplet Loss function:
 L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
 distance(f(Anchor), f(Negative)))**2, 0.0)
