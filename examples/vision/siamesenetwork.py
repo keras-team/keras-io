@@ -418,9 +418,10 @@ of operations like shuffling your data or applying transformations to preprocess
 
 3) Transfer Learning is used to avoid re-training or re-writing large architectures. 
 
-4) In Keras every layer has a name, we can use this to retrieve layers, this is helpful
-for finetuning, in our example we loop over the ResNet50 layers until specific layer
-and we made it trainable.
+4) In Keras, layers can have names, which can be used to retrieve layers. This can be helpful
+during [fine-tuning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en#fine-tuning). 
+In our example, we loop over the ResNet50 layers before a specific layer, and then we train 
+the model on the last few layers.
 
 5) We can create custom layers by creating a class that inherits from `tf.keras.layers.Layer`,
 as we did in the `DistanceLayer` class — we just need to implement the `call()` method.
