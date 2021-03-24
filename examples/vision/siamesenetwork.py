@@ -12,9 +12,9 @@ TODO: Still need to work on this.
 
 # Introduction
 
-[Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is used to solve
-many problems like detecting question duplicates, face recognition by comparing the
-similarity of the inputs by comparing their feature vectors.
+You can use a [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) 
+to solve various problems in machine learning, such as detecting question duplicates, face recognition through a comparison of the similarity of the inputs by comparing their feature
+vectors.
 First we need to have a dataset that contains 3 Images, 2 are similar and 1 is different,
 they are called Anchor image, Positive Image and Negative image respectively, we need to
 tell the network that the anchor image and the positive image are similar, we also need
