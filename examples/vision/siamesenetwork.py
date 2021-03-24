@@ -366,7 +366,8 @@ siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 At this point, we can check how the network learned to separate the embeddings
 depending on whether they belong to similar images.
 
-We can use Cosine Similarity to measure the similarity between embeddings.
+We can use [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) to measure the
+similarity between embeddings.
 """
 
 """
