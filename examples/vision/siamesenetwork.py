@@ -49,6 +49,7 @@ from tensorflow.keras import layers
 from tensorflow.keras import losses, optimizers
 from tensorflow.keras import metrics
 from tensorflow.keras import Model
+from tensorflow.keras.applications.resnet import preprocess_input
 
 
 target_shape = (200, 200)
@@ -244,7 +245,9 @@ positive_input = layers.Input(shape=target_shape + (3,))
 negative_input = layers.Input(shape=target_shape + (3,))
 
 distances = DistanceLayer()(
-    embedding(anchor_input), embedding(positive_input), embedding(negative_input)
+    embedding(preprocess_input(anchor_input)),
+    embedding(preprocess_input(positive_input)),
+    embedding(preprocess_input(negative_input)),
 )
 
 siamese_network = Model(
