@@ -198,10 +198,10 @@ triplet. To do this, we will use a pre-trained ResNet50 model on ImageNet and
 connect a few `Dense` layers to it so we have space to learn to separate these
 embeddings.
 
-We will freeze the weights of all the layers of the model up until
-`conv5_block1_out`. This is important so we don't mess with the weights that
-the model already learned. We are going to leave the bottom few layers open so
-we can fine tune those weights during training.
+We will freeze the weights of all the layers of the model up until `conv5_block1_out`. 
+This is important to avoid affecting the weights that the model has already learned. 
+We are going to leave the bottom few layers open, so that we can fine-tune their weights
+during training.
 """
 
 base_cnn = applications.ResNet50(
