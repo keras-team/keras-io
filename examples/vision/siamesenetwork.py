@@ -135,7 +135,7 @@ dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_datase
 dataset = dataset.shuffle(buffer_size=10000)
 dataset = dataset.map(preprocess_triplets)
 dataset = dataset.batch(32, drop_remainder=False)
-dataset = dataset.prefetch(1)
+dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
 """
 Let's take a look at a few examples of triplets. Notice how the first two images
