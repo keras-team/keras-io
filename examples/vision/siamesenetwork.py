@@ -436,7 +436,4 @@ For more details, check out the [Intro to Keras for researchers](https://keras.i
 and
 [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
 
-For more info about GradientTape check out
-https://keras.io/getting_started/intro_to_keras_for_researchers/ and
-https://www.tensorflow.org/api_docs/python/tf/GradientTape
 """
