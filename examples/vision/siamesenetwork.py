@@ -20,9 +20,11 @@ different. These images are referred to as _anchor_, _positive_, and _negative_ 
 respectively. The neural network will need to know that the anchor and the positive images
 are similar, while the anchor and the negative images are dissimilar — this can be done with the help of the [triplet loss](https://www.tensorflow.org/addons/tutorials/losses_triplet)
 (you can find out more in the FaceNet paper by [Schroff et al., 2015](https://arxiv.org/pdf/1503.03832.pdf)).
-Triplet Loss function:
+The triplet loss function is measured as follows:
+
 L(Anchor, Positive, Negative) = max((distance(f(Anchor), f(Positive)) -
 distance(f(Anchor), f(Negative)))**2, 0.0)
+
 Note that the weights are shared which mean that we are only using one model for
 prediction and training
 You can find the dataset here:
