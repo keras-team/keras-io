@@ -3,9 +3,8 @@ Title: Image similarity estimation using a Siamese Network with a triplet loss
 Authors: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/25
 Last modified: 2021/03/25
-Description: Training a Siamese Network to compare the similarity of images, using a triplet loss and a custom training and validation loop.
+Description: Training a Siamese Network to compare the similarity of images using a triplet loss function.
 """
-
 
 """
 ## Introduction
