@@ -16,7 +16,7 @@ Siamese Networks can be applied to different use cases, like detecting duplicate
 
 This example uses a Siamese Network with three identical subnetworks. We will provide three images to the model, where
 two of them will be similar (_anchor_ and _positive_ samples), and the third will be unrelated (a _negative_ example.)
-Our goal is for the model to learn to estimate the similarity between images. 
+Our goal is for the model to learn to estimate the similarity between images.
 
 For the network to learn, we use a triplet loss function. You can find an introduction to triplet loss in the
 [FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
@@ -24,7 +24,7 @@ loss function as follows:
 
 `L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A)-f(N)‖² + margin, 0)`
 
-This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset) 
+This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset)
 by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
 """
 
@@ -191,8 +191,8 @@ triplet. To do this, we will use a ResNet50 model pretrained on ImageNet and
 connect a few `Dense` layers to it so we can learn to separate these
 embeddings.
 
-We will freeze the weights of all the layers of the model up until the layer `conv5_block1_out`. 
-This is important to avoid affecting the weights that the model has already learned. 
+We will freeze the weights of all the layers of the model up until the layer `conv5_block1_out`.
+This is important to avoid affecting the weights that the model has already learned.
 We are going to leave the bottom few layers trainable, so that we can fine-tune their weights
 during training.
 """
@@ -388,7 +388,7 @@ print("Negative similarity", negative_similarity.numpy())
 """
 ## Summary
 
-1. The `tf.data` API enables you to build efficient input pipelines for your model. It is 
+1. The `tf.data` API enables you to build efficient input pipelines for your model. It is
 particularly useful if you have a large dataset. You can learn more about `tf.data`
 pipelines in [tf.data: Build TensorFlow input pipelines](https://www.tensorflow.org/guide/data).
 
@@ -398,7 +398,7 @@ we can significantly reduce the training time and size of the dataset.
 
 3. Notice how we are [fine-tuning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en#fine-tuning)
 the weights of the final layers of the ResNet50 network but keeping the rest of the layers untouched.
-Using the name assigned to each layer, we can freeze the weights to a certain point and keep the last few layers open. 
+Using the name assigned to each layer, we can freeze the weights to a certain point and keep the last few layers open.
 
 4. We can create custom layers by creating a class that inherits from `tf.keras.layers.Layer`,
 as we did in the `DistanceLayer` class.
