@@ -1,36 +1,36 @@
 """
-Title: Comparing similarity between images using a Siamese Network with a triplet loss
-Author: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
-Date created: 2021/03/13
-Last modified: 2021/03/22
-Description: A Siamese Network to compare how similar different images using a `tf.data` pipeline, a triplet loss, and a custom training and validation loop.
+Title: Image similarity estimation using a Siamese Network with a triplet loss
+Authors: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
+Date created: 2021/03/25
+Last modified: 2021/03/25
+Description: Training a Siamese Network to compare the similarity of images, using a triplet loss and a custom training and validation loop.
 """
 
 
 """
-# Introduction
+## Introduction
 
 A [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network) is a type of network architecture that
-contains two or more identical subnetworks used to generate a feature vector of each input and compare their similarity.
+contains two or more identical subnetworks used to generate feature vectors for each input and compare them.
 
-Siamese Networks help different use cases, like detecting duplicates, finding anomalies, and face recognition.
+Siamese Networks can be applied to different use cases, like detecting duplicates, finding anomalies, and face recognition.
 
 This example uses a Siamese Network with three identical subnetworks. We will provide three images to the model, where
-two of them will be similar (_anchor_ and _positive_ samples), and the third will be different (a _negative_ example.)
-Our goal is for the model to learn to determine the similarity between images. 
+two of them will be similar (_anchor_ and _positive_ samples), and the third will be unrelated (a _negative_ example.)
+Our goal is for the model to learn to estimate the similarity between images. 
 
-For the network to learn, we use the triplet loss. You can find an introduction to triplet loss in the
+For the network to learn, we use a triplet loss function. You can find an introduction to triplet loss in the
 [FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
 loss function as follows:
 
-`L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + margin, 0)`
+`L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A)-f(N)‖² + margin, 0)`
 
 This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset) 
 by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
 """
 
 """
-# Setup
+## Setup
 """
 
 import matplotlib.pyplot as plt
@@ -38,28 +38,29 @@ import numpy as np
 import os
 import random
 import tensorflow as tf
-
 from pathlib import Path
 from tensorflow.keras import applications
 from tensorflow.keras import layers
-from tensorflow.keras import losses, optimizers
+from tensorflow.keras import losses
+from tensorflow.keras import optimizers
 from tensorflow.keras import metrics
 from tensorflow.keras import Model
-from tensorflow.keras.applications.resnet import preprocess_input
+from tensorflow.keras.applications import resnet
 
 
 target_shape = (200, 200)
 
 
 """
-# Load the dataset
+## Load the dataset
 
-We are going to load the Totally Looks Like dataset and unzip it inside the `~/.keras` directory
+We are going to load the *Totally Looks Like* dataset and unzip it inside the `~/.keras` directory
 in the local environment.
 
-The dataset consists on two separate files:
+The dataset consists of two separate files:
+
 * `left.zip` contains the images that we will use as the anchor.
-* `right.zip` contains the images that we will use as the positive sample (an image that looks like the anchor.)
+* `right.zip` contains the images that we will use as the positive sample (an image that looks like the anchor).
 """
 
 cache_dir = Path(Path.home()) / ".keras"
@@ -74,7 +75,7 @@ unzip -oq right.zip -d $cache_dir
 """
 
 """
-# Preparing the data
+## Preparing the data
 
 We are going to use a `tf.data` pipeline to load the data and generate the triplets that we
 need to train the Siamese network.
@@ -86,8 +87,8 @@ the source. The pipeline will load and preprocess the corresponding images.
 
 def preprocess_image(filename):
     """
-    Loads the specified file as a JPEG image, preprocess it and 
-    resizes it to the target shape.
+    Load the specified file as a JPEG image, preprocess it and 
+    resize it to the target shape.
     """
 
     image_string = tf.io.read_file(filename)
@@ -99,7 +100,7 @@ def preprocess_image(filename):
 
 def preprocess_triplets(anchor, positive, negative):
     """
-    Given the filenames corresponding to the three images, it loads and
+    Given the filenames corresponding to the three images, load and
     preprocess them.
     """
 
@@ -160,14 +161,12 @@ val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
 """
 Let's take a look at a few examples of triplets. Notice how the first two images
-look alike while the third is always different.
+look alike while the third one is always different.
 """
 
 
 def visualize(anchor, positive, negative):
-    """
-    Visualizes a few triplets from the supplied batches.
-    """
+    """Visualize a few triplets from the supplied batches."""
 
     def show(ax, image):
         ax.imshow(image)
@@ -186,16 +185,16 @@ def visualize(anchor, positive, negative):
 visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 
 """
-# Setting up the Embedding generator model
+## Setting up the embedding generator model
 
-Our Siamese Network will generate embeddings for each one of the images of the
-triplet. To do this, we will use a pre-trained ResNet50 model on ImageNet and
-connect a few `Dense` layers to it so we have space to learn to separate these
+Our Siamese Network will generate embeddings for each of the images of the
+triplet. To do this, we will use a ResNet50 model pretrained on ImageNet and
+connect a few `Dense` layers to it so we can learn to separate these
 embeddings.
 
-We will freeze the weights of all the layers of the model up until `conv5_block1_out`. 
+We will freeze the weights of all the layers of the model up until the layer `conv5_block1_out`. 
 This is important to avoid affecting the weights that the model has already learned. 
-We are going to leave the bottom few layers open, so that we can fine-tune their weights
+We are going to leave the bottom few layers trainable, so that we can fine-tune their weights
 during training.
 """
 
@@ -219,11 +218,11 @@ for layer in base_cnn.layers:
     layer.trainable = trainable
 
 """
-# Setting up the Siamese Network model
+## Setting up the Siamese Network model
 
-The Siamese network will receive each one of the triplet images as an input,
+The Siamese network will receive each of the triplet images as an input,
 generate the embeddings, and output the distance between the anchor and the
-positive embedding, and the distance between the anchor and the negative
+positive embedding, as well as the distance between the anchor and the negative
 embedding.
 
 To compute the distance, we can use a custom layer `DistanceLayer` that
@@ -238,8 +237,8 @@ class DistanceLayer(layers.Layer):
     negative embedding.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def call(self, anchor, positive, negative):
         ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
@@ -262,36 +261,31 @@ siamese_network = Model(
 )
 
 """
-# Putting everything together
+## Putting everything together
 
 We now need to implement a model with custom training loop so we can compute
 the triplet loss using the three embeddings produced by the Siamese network.
-"""
 
-"""
 Let's create a `Mean` metric instance to track the loss of the training process.
 """
 
-loss_tracker = metrics.Mean(name="loss")
-val_loss_tracker = metrics.Mean(name="val_loss")
-
 
 class SiameseModel(Model):
-    """
-    The Siamese Network model with a custom training and testing loops.
+    """The Siamese Network model with a custom training and testing loops.
 
     Computes the triplet loss using the three embeddings produced by the
     Siamese Network.
 
     The triplet loss is defined as:
-        L(A,P,N) = max(||f(A)-f(P)||**2 - ||f(A)-f(N)||**2 + margin, 0)
-
+       L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A)-f(N)‖² + margin, 0)
     """
 
     def __init__(self, siamese_network, margin=0.5):
         super(SiameseModel, self).__init__()
         self.siamese_network = siamese_network
         self.margin = margin
+        self.loss_tracker = metrics.Mean(name="loss")
+        self.val_loss_tracker = metrics.Mean(name="val_loss")
 
     def call(self, inputs):
         self.siamese_network(inputs)
@@ -314,15 +308,15 @@ class SiameseModel(Model):
         )
 
         # Let's update and return the training loss metric.
-        loss_tracker.update_state(loss)
-        return {"loss": loss_tracker.result()}
+        self.loss_tracker.update_state(loss)
+        return {"loss": self.loss_tracker.result()}
 
     def test_step(self, data):
         loss = self._compute_loss(data)
 
         # Let's update and return the validation loss metric.
-        val_loss_tracker.update_state(loss)
-        return {"loss": val_loss_tracker.result()}
+        self.val_loss_tracker.update_state(loss)
+        return {"loss": self.val_loss_tracker.result()}
 
     def _compute_loss(self, data):
         # The output of the network is a tuple containing the distances
@@ -334,7 +328,6 @@ class SiameseModel(Model):
         # making sure we don't get a negative value.
         loss = ap_distance - an_distance
         loss = tf.maximum(loss + self.margin, 0.0)
-
         return loss
 
     @property
@@ -345,7 +338,7 @@ class SiameseModel(Model):
 
 
 """
-# Training
+## Training
 
 We are now ready to train our model.
 """
@@ -355,16 +348,14 @@ siamese_model.compile(optimizer=optimizers.Adam(0.0001))
 siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 
 """
-# Inspecting what the network has learned
+## Inspecting what the network has learned
 
 At this point, we can check how the network learned to separate the embeddings
 depending on whether they belong to similar images.
 
 We can use [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) to measure the
 similarity between embeddings.
-"""
 
-"""
 Let's pick a sample from the dataset to check the similarity between the
 embeddings generated for each image.
 """
@@ -397,7 +388,7 @@ print("Negative similarity", negative_similarity.numpy())
 
 
 """
-# Summary
+## Summary
 
 1. The `tf.data` API enables you to build efficient input pipelines for your model. It is 
 particularly useful if you have a large dataset. You can learn more about `tf.data`
