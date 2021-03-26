@@ -285,7 +285,6 @@ class SiameseModel(Model):
         self.siamese_network = siamese_network
         self.margin = margin
         self.loss_tracker = metrics.Mean(name="loss")
-        self.val_loss_tracker = metrics.Mean(name="val_loss")
 
     def call(self, inputs):
         self.siamese_network(inputs)
@@ -315,8 +314,8 @@ class SiameseModel(Model):
         loss = self._compute_loss(data)
 
         # Let's update and return the validation loss metric.
-        self.val_loss_tracker.update_state(loss)
-        return {"loss": self.val_loss_tracker.result()}
+        self.loss_tracker.update_state(loss)
+        return {"loss": self.loss_tracker.result()}
 
     def _compute_loss(self, data):
         # The output of the network is a tuple containing the distances
@@ -334,7 +333,7 @@ class SiameseModel(Model):
     def metrics(self):
         # We need to list our metrics here so the `reset_states()` can be
         # called automatically.
-        return [loss_tracker, val_loss_tracker]
+        return [self.loss_tracker]
 
 
 """
