@@ -6,7 +6,7 @@
 **Description:** Training a Siamese Network to compare the similarity of images using a triplet loss function.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/siamesenetwork.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/siamesenetwork.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/siamese_network.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/siamese_network.py)
 
 
 
@@ -205,7 +205,7 @@ visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 ```
 
 
-![png](/img/examples/vision/siamesenetwork/siamesenetwork_12_0.png)
+![png](/img/examples/vision/siamese_network/siamesenetwork_12_0.png)
 
 
 ---
@@ -431,7 +431,7 @@ anchor_embedding, positive_embedding, negative_embedding = (
 ```
 
 
-![png](/img/examples/vision/siamesenetwork/siamesenetwork_22_0.png)
+![png](/img/examples/vision/siamese_network/siamesenetwork_22_0.png)
 
 
 Finally, we can compute the cosine similarity between the anchor and positive
