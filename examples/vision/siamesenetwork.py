@@ -314,7 +314,7 @@ class SiameseModel(Model):
     def test_step(self, data):
         loss = self._compute_loss(data)
 
-        # Let's update and return the validation loss metric.
+        # Let's update and return the loss metric.
         self.loss_tracker.update_state(loss)
         return {"loss": self.loss_tracker.result()}
 
