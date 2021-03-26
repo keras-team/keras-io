@@ -257,8 +257,7 @@ distances = DistanceLayer()(
 )
 
 siamese_network = Model(
-    inputs=[anchor_input, positive_input, negative_input],
-    outputs=distances,
+    inputs=[anchor_input, positive_input, negative_input], outputs=distances
 )
 
 """
