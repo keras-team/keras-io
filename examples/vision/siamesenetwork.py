@@ -198,7 +198,7 @@ We are going to leave the bottom few layers trainable, so that we can fine-tune 
 during training.
 """
 
-base_cnn = applications.ResNet50(
+base_cnn = resnet.ResNet50(
     weights="imagenet", input_shape=target_shape + (3,), include_top=False
 )
 
@@ -251,9 +251,9 @@ positive_input = layers.Input(name="positive", shape=target_shape + (3,))
 negative_input = layers.Input(name="negative", shape=target_shape + (3,))
 
 distances = DistanceLayer()(
-    embedding(preprocess_input(anchor_input)),
-    embedding(preprocess_input(positive_input)),
-    embedding(preprocess_input(negative_input)),
+    embedding(resnet.preprocess_input(anchor_input)),
+    embedding(resnet.preprocess_input(positive_input)),
+    embedding(resnet.preprocess_input(negative_input)),
 )
 
 siamese_network = Model(
