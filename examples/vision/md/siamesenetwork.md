@@ -26,7 +26,7 @@ For the network to learn, we use a triplet loss function. You can find an introd
 [FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
 loss function as follows:
 
-`L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A)-f(N)‖² + margin, 0)`
+`L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A) - f(N)‖² + margin, 0)`
 
 This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset)
 by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
@@ -306,7 +306,7 @@ class SiameseModel(Model):
     Siamese Network.
 
     The triplet loss is defined as:
-       L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A)-f(N)‖² + margin, 0)
+       L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A) - f(N)‖² + margin, 0)
     """
 
     def __init__(self, siamese_network, margin=0.5):
