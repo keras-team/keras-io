@@ -87,7 +87,7 @@ the source. The pipeline will load and preprocess the corresponding images.
 
 def preprocess_image(filename):
     """
-    Load the specified file as a JPEG image, preprocess it and 
+    Load the specified file as a JPEG image, preprocess it and
     resize it to the target shape.
     """
 
@@ -257,7 +257,8 @@ distances = DistanceLayer()(
 )
 
 siamese_network = Model(
-    inputs=[anchor_input, positive_input, negative_input], outputs=distances,
+    inputs=[anchor_input, positive_input, negative_input],
+    outputs=distances,
 )
 
 """
