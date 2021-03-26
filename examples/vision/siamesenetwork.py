@@ -287,7 +287,7 @@ class SiameseModel(Model):
         self.loss_tracker = metrics.Mean(name="loss")
 
     def call(self, inputs):
-        self.siamese_network(inputs)
+        return self.siamese_network(inputs)
 
     def train_step(self, data):
         # GradientTape is a context manager that records every operation that
