@@ -130,7 +130,7 @@ kernel.shape: (10, 5)
 ```
 
 Turns out we had the wrong axis for the `concat` op! We should be concatenating `neg` and
-`pop` alongside the feature axis 1, not the batch axis 0. Here's the correct version:
+`pos` alongside the feature axis 1, not the batch axis 0. Here's the correct version:
 """
 
 
