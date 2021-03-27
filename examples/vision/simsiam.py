@@ -66,7 +66,7 @@ SEED = 26
 
 PROJECT_DIM = 2048
 LATENT_DIM = 512
-WD = 0.0005
+WEIGHT_DECAY = 0.0005
 
 """
 ## Load the CIFAR10 dataset
@@ -96,11 +96,15 @@ def flip_random_crop(image):
     return image
 
 
-def color_jitter(x, s=[0.4, 0.4, 0.4, 0.1]):
-    x = tf.image.random_brightness(x, max_delta=0.8 * s[0])
-    x = tf.image.random_contrast(x, lower=1 - 0.8 * s[1], upper=1 + 0.8 * s[1])
-    x = tf.image.random_saturation(x, lower=1 - 0.8 * s[2], upper=1 + 0.8 * s[2])
-    x = tf.image.random_hue(x, max_delta=0.2 * s[3])
+def color_jitter(x, strength=[0.4, 0.4, 0.4, 0.1]):
+    x = tf.image.random_brightness(x, max_delta=0.8 * strength[0])
+    x = tf.image.random_contrast(
+        x, lower=1 - 0.8 * strength[1], upper=1 + 0.8 * strength[1]
+    )
+    x = tf.image.random_saturation(
+        x, lower=1 - 0.8 * strength[2], upper=1 + 0.8 * strength[2]
+    )
+    x = tf.image.random_hue(x, max_delta=0.2 * strength[3])
     # Affine transformations can disturb the natural range of
     # RGB images, hence this is needed.
     x = tf.clip_by_value(x, 0, 255)
@@ -113,17 +117,11 @@ def color_drop(x):
     return x
 
 
-# This function is referred from here:
-# https://github.com/google-research/simclr/blob/master/data_util.py.
 def random_apply(func, x, p):
-    return tf.cond(
-        tf.less(
-            tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32),
-            tf.cast(p, tf.float32),
-        ),
-        lambda: func(x),
-        lambda: x,
-    )
+    if tf.random.uniform([], minval=0, maxval=1) < p:
+        return func(x)
+    else:
+        return x
 
 
 def custom_augment(image):
@@ -199,8 +197,7 @@ the same but are augmented differently.
 
 We use an implementation of ResNet20 that is specifically configured for the CIFAR10
 dataset. The code is taken from the
-[keras-idiomatic-programmer](https://github.com/GoogleCloudPlatform/keras-idiomatic-progra
-mmer/blob/master/zoo/resnet/resnet_cifar10_v2.py) repository. The hyperparameters of
+[keras-idiomatic-programmer](https://github.com/GoogleCloudPlatform/keras-idiomatic-programmer/blob/master/zoo/resnet/resnet_cifar10_v2.py) repository. The hyperparameters of
 these architectures have been referred from Section 3 and Appendix A of [the original
 paper](https://arxiv.org/abs/2011.10566). 
 """
@@ -227,16 +224,16 @@ def get_encoder():
     )
     x = resnet_cifar10_v2.stem(x)
     x = resnet_cifar10_v2.learner(x, N_BLOCKS)
-    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.GlobalAveragePooling2D(name="backbone_pool")(x)
 
     # Projection head.
     x = layers.Dense(
-        PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WD)
+        PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WEIGHT_DECAY)
     )(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
     x = layers.Dense(
-        PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WD)
+        PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WEIGHT_DECAY)
     )(x)
     outputs = layers.BatchNormalization()(x)
     return tf.keras.Model(inputs, outputs, name="encoder")
@@ -248,7 +245,9 @@ def get_predictor():
             # Note the AutoEncoder-like structure.
             layers.Input((PROJECT_DIM,)),
             layers.Dense(
-                LATENT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WD)
+                LATENT_DIM,
+                use_bias=False,
+                kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
             ),
             layers.ReLU(),
             layers.BatchNormalization(),
@@ -393,7 +392,9 @@ train_ds = (
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 # Extract the backbone ResNet20.
-backbone = tf.keras.Model(simsiam.encoder.input, simsiam.encoder.layers[-6].output)
+backbone = tf.keras.Model(
+    simsiam.encoder.input, simsiam.encoder.get_layer("backbone_pool").output
+)
 
 # We then create our linear classifier and train it.
 backbone.trainable = False
