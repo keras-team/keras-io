@@ -36,7 +36,7 @@ Sequential models, models built with the Functional API, and models written from
 scratch via model subclassing.
 
 This guide doesn't cover distributed training. For distributed training, see
-our [guide to multi-gpu & distributed training](/guides/distributed_training/).
+our [guide to multi-gpu & distributed training](https://keras.io/guides/distributed_training/).
 """
 
 """
