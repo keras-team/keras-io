@@ -1,3 +1,8 @@
+![GitHub forks](https://img.shields.io/github/forks/keras-team/keras-io?style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/github/stars/keras-team/keras-io?style=for-the-badge)
+![GitHub watchers](https://img.shields.io/github/watchers/keras-team/keras-io?style=for-the-badge)
+[![GitHub issues](https://img.shields.io/github/issues/keras-team/keras-io?style=for-the-badge)](https://github.com/keras-team/keras-io/issues)
+[![GitHub license](https://img.shields.io/github/license/keras-team/keras-io?style=for-the-badge)](https://github.com/keras-team/keras-io/blob/master/LICENSE)
 # Keras.io documentation generator
 
 This repository hosts the code used to generate the [keras.io](https://keras.io) website.
