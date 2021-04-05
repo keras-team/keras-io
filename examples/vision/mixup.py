@@ -117,7 +117,7 @@ def mix_up(ds_one, ds_two, alpha=0.2):
     batch_size = tf.shape(images_one)[0]
 
     # Sample lambda and reshape it to do the mixup
-    l = sample_beta_distribution(batch_size, 0.2, 0.2)
+    l = sample_beta_distribution(batch_size, alpha, alpha)
     x_l = tf.reshape(l, (batch_size, 1, 1, 1))
     y_l = tf.reshape(l, (batch_size, 1))
 
