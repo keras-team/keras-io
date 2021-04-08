@@ -230,7 +230,7 @@ Metrics:
 
 If you need to create a custom loss, Keras provides two ways to do so.
 
-The first method involves creating a function that accepts inputs `y_true` and 
+The first method involves creating a function that accepts inputs `y_true` and
 `y_pred`. The following example shows a loss function that computes the mean squared
 error between the real data and the predictions:
 """
@@ -908,7 +908,7 @@ model.compile(
 )
 
 """
-You could also choose not to compute a loss for certain outputs, if these outputs are 
+You could also choose not to compute a loss for certain outputs, if these outputs are
 meant for prediction but not for training:
 """
 
