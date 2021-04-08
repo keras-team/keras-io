@@ -10,9 +10,8 @@ Self-supervised learning (SSL) is an interesting branch of study in the field of
 representation learning. SSL systems try to formulate a supervised signal from a corpus
 of unlabeled data points.  An example is we train a deep neural network to predict the
 next word from a given set of words. In literature, these tasks are known as *pretext
-tasks* or *auxiliary tasks*. If we [train such a
-network](https://arxiv.org/abs/1801.06146) on a huge dataset (such as the [Wikipedia text
-corpus](https://www.corpusdata.org/wikipedia.asp)) it learns very effective
+tasks* or *auxiliary tasks*. If we [train such a network](https://arxiv.org/abs/1801.06146) on a huge dataset (such as
+the [Wikipedia text corpus](https://www.corpusdata.org/wikipedia.asp)) it learns very effective
 representations that transfer well to downstream tasks. Language models like
 [BERT](https://arxiv.org/abs/1810.04805), [GPT-3](https://arxiv.org/abs/2005.14165),
 [ELMo](https://allennlp.org/elmo) all benefit from this. 
@@ -211,9 +210,9 @@ c5fade182191c8b2042c4da9348523d7/resnet_cifar10_v2.py \
 
 import resnet_cifar10_v2
 
-n = 18
-depth = n * 9 + 2
-N_BLOCKS = ((depth - 2) // 9) - 1
+N = 18
+DEPTH = N * 9 + 2
+NUM_BLOCKS = ((DEPTH - 2) // 9) - 1
 
 
 def get_encoder():
@@ -223,7 +222,7 @@ def get_encoder():
         inputs
     )
     x = resnet_cifar10_v2.stem(x)
-    x = resnet_cifar10_v2.learner(x, N_BLOCKS)
+    x = resnet_cifar10_v2.learner(x, NUM_BLOCKS)
     x = layers.GlobalAveragePooling2D(name="backbone_pool")(x)
 
     # Projection head.
