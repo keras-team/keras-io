@@ -1,11 +1,15 @@
-"""
-Title: Self-supervised contrastive learning with SimSiam
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/03/19
-Last modified: 2021/03/20
-Description: Implementation of a self-supervised learning method for computer vision.
-"""
-"""
+# Self-supervised contrastive learning with SimSiam
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/03/19<br>
+**Last modified:** 2021/03/20<br>
+**Description:** Implementation of a self-supervised learning method for computer vision.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/simsiam.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/simsiam.py)
+
+
+
 Self-supervised learning (SSL) is an interesting branch of study in the field of
 representation learning. SSL systems try to formulate a supervised signal from a corpus
 of unlabeled data points.  An example is we train a deep neural network to predict the
@@ -40,23 +44,25 @@ fully-connected network having an
 versions of our dataset.
 
 This example requires TensorFlow 2.4 or higher.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
 import numpy as np
+```
 
-"""
+---
 ## Define hyperparameters
-"""
 
+
+```python
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 128
 EPOCHS = 5
@@ -66,16 +72,26 @@ SEED = 26
 PROJECT_DIM = 2048
 LATENT_DIM = 512
 WEIGHT_DECAY = 0.0005
+```
 
-"""
+---
 ## Load the CIFAR10 dataset
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 print(f"Total training examples: {len(x_train)}")
 print(f"Total test examples: {len(x_test)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total training examples: 50000
+Total test examples: 10000
+
+```
+</div>
+---
 ## Defining our data augmentation pipeline
 
 As studied in [SimCLR](https://arxiv.org/abs/2002.05709) having the right data
@@ -85,8 +101,9 @@ resized crops and 2.) Color distortions. Most of the other SSL systems for compu
 vision (such as [BYOL](https://arxiv.org/abs/2006.07733),
 [MoCoV2](https://arxiv.org/abs/2003.04297), [SwAV](https://arxiv.org/abs/2006.09882),
 etc.) include these in their training pipelines.
-"""
 
+
+```python
 
 def flip_random_crop(image):
     # With random crops we also apply horizontal flipping.
@@ -132,22 +149,22 @@ def custom_augment(image):
     image = random_apply(color_drop, image, p=0.2)
     return image
 
+```
 
-"""
 It should be noted that an augmentation pipeline is generally dependent on various
 properties of the dataset we are dealing with. For example, if images in the dataset are
 heavily object-centric then taking random crops with a very high probability may hurt the
 training performance.
 
 Let's now apply our augmentation pipeline to our dataset and visualize a few outputs.
-"""
 
-"""
+---
 ## Convert the data into TensorFlow `Dataset` objects
 
 Here we create two different versions of our dataset *without* any ground-truth labels.
-"""
 
+
+```python
 ssl_ds_one = tf.data.Dataset.from_tensor_slices(x_train)
 ssl_ds_one = (
     ssl_ds_one.shuffle(1024, seed=SEED)
@@ -185,13 +202,24 @@ for n in range(25):
     plt.imshow(sample_images_two[n].numpy().astype("int"))
     plt.axis("off")
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/simsiam/simsiam_12_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/simsiam/simsiam_12_1.png)
+    
+
+
 Notice that the images in `samples_images_one` and `sample_images_two` are essentially
 the same but are augmented differently.
-"""
 
-"""
+---
 ## Defining the encoder and the predictor
 
 We use an implementation of ResNet20 that is specifically configured for the CIFAR10
@@ -199,12 +227,14 @@ dataset. The code is taken from the
 [keras-idiomatic-programmer](https://github.com/GoogleCloudPlatform/keras-idiomatic-programmer/blob/master/zoo/resnet/resnet_cifar10_v2.py) repository. The hyperparameters of
 these architectures have been referred from Section 3 and Appendix A of [the original
 paper](https://arxiv.org/abs/2011.10566).
-"""
 
-"""shell
-wget -q https://git.io/JYx2x -O resnet_cifar10_v2.py
-"""
 
+```python
+!wget -q https://git.io/JYx2x -O resnet_cifar10_v2.py
+```
+
+
+```python
 import resnet_cifar10_v2
 
 N = 2
@@ -253,8 +283,9 @@ def get_predictor():
     )
     return model
 
+```
 
-"""
+---
 ## Defining the (pre-)training loop
 
 One of the main reasons behind training networks with these kinds of approaches is to
@@ -262,8 +293,9 @@ utilize the learned representations for downstream tasks like classification. Th
 this particular training phase is also referred to as _pre-training_.
 
 We start by defining the loss function.
-"""
 
+
+```python
 
 def compute_loss(p, z):
     # The authors of SimSiam emphasize the impact of
@@ -276,12 +308,13 @@ def compute_loss(p, z):
     # equivalent to maximizing the similarity).
     return -tf.reduce_mean(tf.reduce_sum((p * z), axis=1))
 
+```
 
-"""
 We then define our training loop by overriding the `train_step()` function of the
 `tf.keras.Model` class.
-"""
 
+
+```python
 
 class SimSiam(tf.keras.Model):
     def __init__(self, encoder, predictor):
@@ -318,13 +351,15 @@ class SimSiam(tf.keras.Model):
         self.loss_tracker.update_state(loss)
         return {"loss": self.loss_tracker.result()}
 
+```
 
-"""
+---
 ## Pre-training our networks
 
 In the interest of this example, we will train the model for only 5 epochs.
-"""
 
+
+```python
 # Create a cosine decay learning scheduler.
 num_training_samples = len(x_train)
 steps = EPOCHS * (num_training_samples // BATCH_SIZE)
@@ -347,8 +382,28 @@ plt.plot(history.history["loss"])
 plt.grid()
 plt.title("Negative Cosine Similairty")
 plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+391/391 [==============================] - 33s 42ms/step - loss: -0.8359
+Epoch 2/5
+391/391 [==============================] - 16s 41ms/step - loss: -0.8579
+Epoch 3/5
+391/391 [==============================] - 16s 42ms/step - loss: -0.8682
+Epoch 4/5
+391/391 [==============================] - 16s 42ms/step - loss: -0.8736
+Epoch 5/5
+391/391 [==============================] - 16s 42ms/step - loss: -0.8755
+
+```
+</div>
+    
+![png](/img/examples/vision/simsiam/simsiam_22_1.png)
+    
+
+
 If your solution gets very close to -1 (minimum value of our loss) very quickly with a
 different dataset and a different backbone architecture that is likely because of
 *representation collapse*. It is a phenomenon where the encoder yields similar output for
@@ -357,9 +412,8 @@ the following areas:
 * Strength of the color distortions and their probabilities.
 * Learning rate and its schedule.
 * Architecture of both the backbone and their projection head.
-"""
 
-"""
+---
 ## Evaluating our SSL method
 
 The most popularly used method to evaluate a SSL method in computer vision (or any other
@@ -370,8 +424,9 @@ unseen images. Other methods include
 target dataset with 5% or 10% labels present. Practically, we can use the backbone model
 for any downstream task such as semantic segmentation, object detection, and so on where
 the backbone models are usually pre-trained with *pure supervised learning*.
-"""
 
+
+```python
 # We first create labeled `Dataset` objects.
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
@@ -410,8 +465,26 @@ history = linear_model.fit(
 )
 _, test_acc = linear_model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_acc * 100))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+391/391 [==============================] - 7s 11ms/step - loss: 3.7945 - accuracy: 0.1623 - val_loss: 3.7292 - val_accuracy: 0.2128
+Epoch 2/5
+391/391 [==============================] - 3s 9ms/step - loss: 3.7215 - accuracy: 0.2103 - val_loss: 3.6965 - val_accuracy: 0.2249
+Epoch 3/5
+391/391 [==============================] - 3s 9ms/step - loss: 3.6962 - accuracy: 0.2199 - val_loss: 3.6822 - val_accuracy: 0.2290
+Epoch 4/5
+391/391 [==============================] - 3s 9ms/step - loss: 3.6843 - accuracy: 0.2247 - val_loss: 3.6769 - val_accuracy: 0.2334
+Epoch 5/5
+391/391 [==============================] - 3s 9ms/step - loss: 3.6808 - accuracy: 0.2265 - val_loss: 3.6761 - val_accuracy: 0.2303
+79/79 [==============================] - 1s 7ms/step - loss: 3.6761 - accuracy: 0.2303
+Test accuracy: 23.03%
+
+```
+</div>
+---
 ## Notes
 * More data and longer pre-training schedule benefit SSL in general.
 * SSL is particularly very helpful when you do not have access to very limited *labeled*
@@ -428,4 +501,3 @@ representations, you can check out the following resources:
 intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/)
    * [Understanding self-supervised learning using controlled datasets with known
 structure](https://sslneuips20.github.io/files/CameraReadys%203-77/64/CameraReady/Understanding_self_supervised_learning.pdf)
-"""
