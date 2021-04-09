@@ -36,7 +36,7 @@ as the **encoder**.
 3. We pass the output of the encoder through a **predictor** which is again a shallow
 fully-connected network having an
 [AutoEncoder](https://en.wikipedia.org/wiki/Autoencoder) like structure.
-3. We then train our encoder to maximize the cosine similarity between the two different
+4. We then train our encoder to maximize the cosine similarity between the two different
 versions of our dataset.
 
 This example requires TensorFlow 2.4 or higher.
@@ -68,7 +68,7 @@ LATENT_DIM = 512
 WEIGHT_DECAY = 0.0005
 
 """
-## Load the CIFAR10 dataset
+## Load the CIFAR-10 dataset
 """
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
@@ -322,7 +322,8 @@ class SimSiam(tf.keras.Model):
 """
 ## Pre-training our networks
 
-In the interest of this example, we will train the model for only 5 epochs.
+In the interest of this example, we will train the model for only 5 epochs. In reality,
+this should at least be 100 epochs. 
 """
 
 # Create a cosine decay learning scheduler.
@@ -337,7 +338,7 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor="loss", patience=5, restore_best_weights=True
 )
 
-# Start training.
+# Compile model and start training.
 simsiam = SimSiam(get_encoder(), get_predictor())
 simsiam.compile(optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.6))
 history = simsiam.fit(ssl_ds, epochs=EPOCHS, callbacks=[early_stopping])
@@ -399,7 +400,7 @@ x = backbone(inputs, training=False)
 outputs = layers.Dense(10, activation="softmax")(x)
 linear_model = tf.keras.Model(inputs, outputs, name="linear_model")
 
-# Start training.
+# Compile model and start training.
 linear_model.compile(
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"],
