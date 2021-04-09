@@ -323,7 +323,7 @@ class SimSiam(tf.keras.Model):
 ## Pre-training our networks
 
 In the interest of this example, we will train the model for only 5 epochs. In reality,
-this should at least be 100 epochs. 
+this should at least be 100 epochs.
 """
 
 # Create a cosine decay learning scheduler.

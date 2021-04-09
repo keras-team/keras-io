@@ -40,7 +40,7 @@ as the **encoder**.
 3. We pass the output of the encoder through a **predictor** which is again a shallow
 fully-connected network having an
 [AutoEncoder](https://en.wikipedia.org/wiki/Autoencoder) like structure.
-3. We then train our encoder to maximize the cosine similarity between the two different
+4. We then train our encoder to maximize the cosine similarity between the two different
 versions of our dataset.
 
 This example requires TensorFlow 2.4 or higher.
@@ -75,7 +75,7 @@ WEIGHT_DECAY = 0.0005
 ```
 
 ---
-## Load the CIFAR10 dataset
+## Load the CIFAR-10 dataset
 
 
 ```python
@@ -356,7 +356,8 @@ class SimSiam(tf.keras.Model):
 ---
 ## Pre-training our networks
 
-In the interest of this example, we will train the model for only 5 epochs.
+In the interest of this example, we will train the model for only 5 epochs. In reality,
+this should at least be 100 epochs.
 
 
 ```python
@@ -372,7 +373,7 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor="loss", patience=5, restore_best_weights=True
 )
 
-# Start training.
+# Compile model and start training.
 simsiam = SimSiam(get_encoder(), get_predictor())
 simsiam.compile(optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.6))
 history = simsiam.fit(ssl_ds, epochs=EPOCHS, callbacks=[early_stopping])
@@ -387,15 +388,15 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-391/391 [==============================] - 33s 42ms/step - loss: -0.8359
+391/391 [==============================] - 33s 43ms/step - loss: -0.8845
 Epoch 2/5
-391/391 [==============================] - 16s 41ms/step - loss: -0.8579
+391/391 [==============================] - 16s 42ms/step - loss: -0.9107
 Epoch 3/5
-391/391 [==============================] - 16s 42ms/step - loss: -0.8682
+391/391 [==============================] - 16s 42ms/step - loss: -0.9212
 Epoch 4/5
-391/391 [==============================] - 16s 42ms/step - loss: -0.8736
+391/391 [==============================] - 16s 41ms/step - loss: -0.9267
 Epoch 5/5
-391/391 [==============================] - 16s 42ms/step - loss: -0.8755
+391/391 [==============================] - 16s 41ms/step - loss: -0.9282
 
 ```
 </div>
@@ -454,7 +455,7 @@ x = backbone(inputs, training=False)
 outputs = layers.Dense(10, activation="softmax")(x)
 linear_model = tf.keras.Model(inputs, outputs, name="linear_model")
 
-# Start training.
+# Compile model and start training.
 linear_model.compile(
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"],
@@ -470,17 +471,17 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-391/391 [==============================] - 7s 11ms/step - loss: 3.7945 - accuracy: 0.1623 - val_loss: 3.7292 - val_accuracy: 0.2128
+391/391 [==============================] - 7s 11ms/step - loss: 3.8130 - accuracy: 0.1552 - val_loss: 3.7642 - val_accuracy: 0.2168
 Epoch 2/5
-391/391 [==============================] - 3s 9ms/step - loss: 3.7215 - accuracy: 0.2103 - val_loss: 3.6965 - val_accuracy: 0.2249
+391/391 [==============================] - 3s 9ms/step - loss: 3.7541 - accuracy: 0.2233 - val_loss: 3.7256 - val_accuracy: 0.2367
 Epoch 3/5
-391/391 [==============================] - 3s 9ms/step - loss: 3.6962 - accuracy: 0.2199 - val_loss: 3.6822 - val_accuracy: 0.2290
+391/391 [==============================] - 3s 8ms/step - loss: 3.7213 - accuracy: 0.2357 - val_loss: 3.7061 - val_accuracy: 0.2463
 Epoch 4/5
-391/391 [==============================] - 3s 9ms/step - loss: 3.6843 - accuracy: 0.2247 - val_loss: 3.6769 - val_accuracy: 0.2334
+391/391 [==============================] - 3s 8ms/step - loss: 3.7054 - accuracy: 0.2465 - val_loss: 3.6987 - val_accuracy: 0.2530
 Epoch 5/5
-391/391 [==============================] - 3s 9ms/step - loss: 3.6808 - accuracy: 0.2265 - val_loss: 3.6761 - val_accuracy: 0.2303
-79/79 [==============================] - 1s 7ms/step - loss: 3.6761 - accuracy: 0.2303
-Test accuracy: 23.03%
+391/391 [==============================] - 3s 9ms/step - loss: 3.6999 - accuracy: 0.2486 - val_loss: 3.6976 - val_accuracy: 0.2524
+79/79 [==============================] - 1s 6ms/step - loss: 3.6976 - accuracy: 0.2524
+Test accuracy: 25.24%
 
 ```
 </div>
