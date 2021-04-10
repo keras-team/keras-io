@@ -7,14 +7,14 @@ Description: Train a lightweight Deep CNN for image denhazing.
 """
 """
 # Introduction
-Image Dehazing is an important problem is Computer Vision. It can not only be used to
+Image Dehazing is an important problem in Computer Vision. It can not only be used to
 enhance photographs clicked in hazy conditions, but also can be used to augment other
 computer vision systems such as Object Detection and Seantic Segmentation as a
 pre-processing step. In this example, we implement
-[AODNet](https://arxiv.org/abs/1707.06543v1), a simple and light-weight Deep CNN model
+[AODNet](https://arxiv.org/abs/1707.06543v1), a simple and lightweight Deep CNN model
 that directly generates a clean image from a hazy image. The end-to-end design of AODNet
 makes it easy to embed AOD-Net into other deep models such as Faster-RCNN and YOLO as a
-pre-processing step, making it easier for such model to detect and recognize objects from
+pre-processing step, making it easier for such a model to detect and recognize objects from
 a clean image.
 """
 
