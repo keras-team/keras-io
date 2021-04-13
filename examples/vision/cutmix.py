@@ -330,7 +330,7 @@ def resnet_v20(input_shape, depth, num_classes=10):
         num_classes, activation="softmax", kernel_initializer="he_normal"
     )(y)
 
-    # Instantiate model.
+    # Instantiate the model
     model = keras.models.Model(inputs=inputs, outputs=outputs)
     return model
 
