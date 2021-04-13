@@ -249,7 +249,7 @@ for i in range(9):
     plt.axis("off")
 
 """
-## Define the Model
+## Define the model using ResNet-20
 """
 
 
