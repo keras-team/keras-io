@@ -16,11 +16,12 @@ information loss and inefficiency present in regional dropout strategies.
 Instead of removing pixels and filling them with black or grey pixels or
 Gaussian noise, you replace the removed regions with a patch from another image,
 while the ground truth labels are mixed proportionally to the number of pixels
-of combined images. CutMix was proposed in
+of combined images. The CutMix technique can make efficient use of training
+pixels, while retaining the regularization effect of regional dropout.
+
+This data augmentation technique was proposed in
 [CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
 (Yun et al., 2019).
-
-CutMix Augmentation is used when there is presence of uninformative pixel during training.
 
 It's implemented with the following formulas:
 
