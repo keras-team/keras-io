@@ -293,7 +293,7 @@ def resnet_v20(input_shape, depth, num_classes=10):
 
     if (depth - 2) % 6 != 0:
         raise ValueError("depth should be 6n+2 (eg 20, 32, 44 in [a])")
-    # Start model definition.
+    # Start the model definition
     num_filters = 16
     num_res_blocks = int((depth - 2) / 6)
 
