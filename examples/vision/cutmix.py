@@ -218,7 +218,7 @@ def cutmix(a, b):
     l = 1 - (target_w * target_h) / (IMG_SHAPE * IMG_SHAPE)
     l = tf.cast(l, tf.float32)
 
-    ## Combine labels
+    # Combine the labels of both images
     label = l * label1 + (1 - l) * label2
 
     return image, label
