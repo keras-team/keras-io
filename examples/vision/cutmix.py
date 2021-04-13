@@ -1,5 +1,5 @@
 """
-Title: CutMix Augmentation for Image Classification
+Title: CutMix data augmentation for image classification
 Author: [Sayan Nath](https://twitter.com/SayanNa20204009)
 Date created: 2021/03/25
 Last modified: 2021/03/25
