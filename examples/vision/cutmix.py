@@ -138,7 +138,7 @@ train_ds_simple = (
     .prefetch(AUTO)
 )
 
-# We will be combining two shuffled datasets from the same training data.
+# Combine two shuffled datasets from the same training data.
 train_ds = tf.data.Dataset.zip((train_ds_one, train_ds_two))
 
 test_ds = (
