@@ -225,7 +225,7 @@ def cutmix(a, b):
 
 
 """
-**Note** that here , we are combining two images to create a single one.
+**Note**: we are combining two images to create a single one.
 """
 
 """
