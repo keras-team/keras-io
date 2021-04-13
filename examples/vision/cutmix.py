@@ -196,7 +196,7 @@ def cutmix(a, b):
     ## Lambda
     l = dist.sample(1)[0][0]
 
-    ## Get bbox ofsets and heights and widths
+    # Get the bounding box offsets, heights and widths
     bbx1, bby1, target_h, target_w = get_box(l)
 
     ## Get patch from image2
