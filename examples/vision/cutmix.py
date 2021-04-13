@@ -205,7 +205,7 @@ def cutmix(a, b):
     image2 = tf.image.pad_to_bounding_box(crop2, bby1, bbx1, IMG_SHAPE, IMG_SHAPE)
     ## Get patch from image1
     crop1 = tf.image.crop_to_bounding_box(image1, bby1, bbx1, target_h, target_w)
-    ## Pad the patch with same offset
+    # Pad the `image1` patch (`crop1`) with the same offset
     img1 = tf.image.pad_to_bounding_box(crop1, bby1, bbx1, IMG_SHAPE, IMG_SHAPE)
 
     ## Subtract the patch from image1 so that patch from image2 can be put on instead
