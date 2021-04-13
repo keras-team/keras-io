@@ -228,7 +228,7 @@ def cutmix(a, b):
 """
 
 """
-## Visualize the new dataset after applying CutMix Augmentation.
+## Visualize the new dataset after applying the CutMix augmentation
 """
 
 # Create the new dataset using our `mix_up` utility
