@@ -148,7 +148,7 @@ test_ds = (
 )
 
 """
-##Define the CutMix Technique Function
+## Define the CutMix data augmentation function
 
 cutmix function takes two `image` and `label` pair and performs cutmix augmentation. It
 samples `λ(l)` from a [Beta
