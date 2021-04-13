@@ -343,7 +343,7 @@ initial_model = training_model()
 initial_model.save_weights("initial_weights.h5")
 
 """
-## 1. Train the model with the CutMix Dataset
+## Train the model with the dataset augmented by CutMix
 """
 
 model = training_model()
