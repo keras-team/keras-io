@@ -11,18 +11,14 @@ Description: Data augmentation with CutMix for image classification on CIFAR-10.
 """
 
 """
-_CutMix_ is a data augmentation technique proposed in [CutMix: Regularization Strategy to
-Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
-by Sangdoo Yun, Dongyoon Han, Seong Joon Oh, Sanghyuk Chun,
-Junsuk Choe, Youngjoon Yoo.
-
-In CutMix Augmentation technique,instead of removing pixels and filling them with black
-or grey pixels or Gaussian noise a patch of similar dimension is placed from another
-image.
-
-The ground truth labels are mixed proportionally to the number of pixels of combined
-images. The labels which are linearly iinterpolated label which gets produced is
-proportional to the pixels which are contributing from the two images.
+_CutMix_ is a data augmentation technique that addresses the issue of
+information loss and inefficiency present in regional dropout strategies. 
+Instead of removing pixels and filling them with black or grey pixels or
+Gaussian noise, you replace the removed regions with a patch from another image,
+while the ground truth labels are mixed proportionally to the number of pixels
+of combined images. CutMix was proposed in
+[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
+(Yun et al., 2019).
 
 CutMix Augmentation is used when there is presence of uninformative pixel during training.
 
