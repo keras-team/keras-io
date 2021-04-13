@@ -214,7 +214,7 @@ def cutmix(a, b):
     # Add the modified `image1` and `image2`  together to get the CutMix image
     image = image1 + image2
 
-    ## Adjust lambda according to pixel ration
+    # Adjust Lambda in accordance to the pixel ration
     l = 1 - (target_w * target_h) / (IMG_SHAPE * IMG_SHAPE)
     l = tf.cast(l, tf.float32)
 
