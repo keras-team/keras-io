@@ -354,7 +354,7 @@ test_loss, test_accuracy = model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 
 """
-## 2. Train the model with the Original Dataset
+## Train the model using the original non-augmented dataset
 """
 
 model = training_model()
