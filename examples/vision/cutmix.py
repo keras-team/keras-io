@@ -323,7 +323,7 @@ def resnet_v20(input_shape, depth, num_classes=10):
         num_filters *= 2
 
     # Add the classifier on top of ResNet-20.
-    # v1 does not use BN after last shortcut connection-ReLU
+    # (v1 does not use batch normalization after the last shortcut connection with ReLU)
     x = keras.layers.AveragePooling2D(pool_size=8)(x)
     y = keras.layers.Flatten()(x)
     outputs = keras.layers.Dense(
