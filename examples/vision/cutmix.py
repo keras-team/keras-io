@@ -368,9 +368,10 @@ print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 """
 ## Notes
 
-In this example, we trained our model for 15 epochs. On the CIFAR10 dataset, the model
-performs better with `CutMix Augmentation` with a better accuracy (for example 80.02% in
-one experiment) compared to model with a accuracy (for example 74.20%).
+  In this example, we trained our model for 15 epochs. In our experiment, the
+model with CutMix achieves a better accuracy on the CIFAR-10 dataset (80.02% in
+our experiment) compared to the model that doesn't use the augmentation
+(74.20%).
 
 You may notice it takes less time to train the model with the CutMix augmentation.
 
