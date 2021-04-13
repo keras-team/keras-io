@@ -3,7 +3,7 @@ Title: CutMix Augmentation for Image Classification
 Author: [Sayan Nath](https://twitter.com/SayanNa20204009)
 Date created: 2021/03/25
 Last modified: 2021/03/25
-Description: Data augmentation using the CutMix technique for image classification.
+Description: Data augmentation with CutMix for image classification on CIFAR-10.
 """
 
 """
