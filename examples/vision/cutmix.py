@@ -304,7 +304,7 @@ def resnet_v20(input_shape, depth, num_classes=10):
         for res_block in range(num_res_blocks):
             strides = 1
             if stack > 0 and res_block == 0:  # first layer but not first stack
-                strides = 2  # downsample
+                strides = 2  # Downsample
             y = resnet_layer(inputs=x, num_filters=num_filters, strides=strides)
             y = resnet_layer(inputs=y, num_filters=num_filters, activation=None)
             if stack > 0 and res_block == 0:  # first layer but not first stack
