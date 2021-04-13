@@ -378,6 +378,6 @@ one experiment) compared to model with a accuracy (for example 74.20%).
 
 In the notebook, you may notice that, the time taken during the CutMix Augmentation.
 
-You can also experiment this `CutMix` technique by reading this [Original
-Paper](https://arxiv.org/pdf/1905.04899.pdf)
+You can experiment further with the CutMix technique by following the
+[original paper](https://arxiv.org/pdf/1905.04899.pdf).
 """
