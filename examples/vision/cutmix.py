@@ -103,7 +103,7 @@ BATCH_SIZE = 32
 IMG_SHAPE = 32
 
 """
-## Dataloader
+## Define the image preprocessing function
 """
 
 
