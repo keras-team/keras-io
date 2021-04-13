@@ -308,8 +308,8 @@ def resnet_v20(input_shape, depth, num_classes=10):
             y = resnet_layer(inputs=x, num_filters=num_filters, strides=strides)
             y = resnet_layer(inputs=y, num_filters=num_filters, activation=None)
             if stack > 0 and res_block == 0:  # first layer but not first stack
-                # linear projection residual shortcut connection to match
-                # changed dims
+                # The linear projection residual shortcut connection to match
+                # the changed dimensions
                 x = resnet_layer(
                     inputs=x,
                     num_filters=num_filters,
