@@ -146,11 +146,11 @@ test_ds = (
 """
 ## Define the CutMix data augmentation function
 
-cutmix function takes two `image` and `label` pair and performs cutmix augmentation. It
-samples `λ(l)` from a [Beta
-Distribution](https://en.wikipedia.org/wiki/Beta_distribution) and we get the bounding
-box from get_box function. We crop the image2 and pad this image in the final padded
-image at the same location.
+The CutMix function takes two `image` and `label` pairs to perform the
+augmentation. It samples `λ(l)` from the
+[Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) and returns
+a bounding box from `get_box` function. We then crop the second image (`image2`)
+and pad this image in the final padded image at the same location.
 """
 
 
