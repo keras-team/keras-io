@@ -193,7 +193,7 @@ def cutmix(a, b):
 
     # Get a sample from the Beta distribution
     dist = tfd.Beta(alpha, beta)
-    ## Lambda
+    # Define Lambda
     l = dist.sample(1)[0][0]
 
     # Get the bounding box offsets, heights and widths
