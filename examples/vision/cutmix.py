@@ -191,7 +191,7 @@ def cutmix(a, b):
     alpha = [1.0]
     beta = [1.0]
 
-    ## Get sample from beta distribution
+    # Get a sample from the Beta distribution
     dist = tfd.Beta(alpha, beta)
     ## Lambda
     l = dist.sample(1)[0][0]
