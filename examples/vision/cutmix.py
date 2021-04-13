@@ -211,7 +211,7 @@ def cutmix(a, b):
     # Modify the first image by subtracting the patch from `image1`
     # (before applying the `image2` patch)
     image1 = image1 - img1
-    ## Add modified image1 and image2 to get cutmix image
+    # Add the modified `image1` and `image2`  together to get the CutMix image
     image = image1 + image2
 
     ## Adjust lambda according to pixel ration
