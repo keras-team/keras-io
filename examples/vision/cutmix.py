@@ -70,10 +70,10 @@ tf.random.set_seed(42)
 tfd = tfp.distributions
 
 """
-## Load the CIFAR10 dataset
+## Load the CIFAR-10 dataset
 
-For this example, we will be using the
-[CIFAR10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
+In this example, we will use the
+[CIFAR- 10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 """
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
