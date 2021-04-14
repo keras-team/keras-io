@@ -1,9 +1,9 @@
 """
-Title: CutMix Augmentation for Image Classification
-Author: [Sayan Nath](https://twitter.com/SayanNa20204009)
-Date created: 2021/03/25
-Last modified: 2021/03/25
-Description: Data augmentation using the CutMix technique for image classification.
+Title: CutMix data augmentation for image classification<br>
+Author: [Sayan Nath](https://twitter.com/SayanNa20204009)<br>
+Date created: 2021/04/14<br>
+Last modified: 2021/04/14<br>
+Description: Data augmentation with CutMix for image classification on CIFAR-10.
 """
 
 """
@@ -11,42 +11,33 @@ Description: Data augmentation using the CutMix technique for image classificati
 """
 
 """
-_CutMix_ is a data augmentation technique proposed in [CutMix: Regularization Strategy to
-Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
-by Sangdoo Yun, Dongyoon Han, Seong Joon Oh, Sanghyuk Chun,
-Junsuk Choe, Youngjoon Yoo.
-
-In CutMix Augmentation technique,instead of removing pixels and filling them with black
-or grey pixels or Gaussian noise a patch of similar dimension is placed from another
-image.
-
-The ground truth labels are mixed proportionally to the number of pixels of combined
-images. The labels which are linearly iinterpolated label which gets produced is
-proportional to the pixels which are contributing from the two images.
-
-CutMix Augmentation is used when there is presence of uninformative pixel during training.
+_CutMix_ is a data augmentation technique that addresses the issue of
+information loss and inefficiency present in regional dropout strategies. 
+Instead of removing pixels and filling them with black or grey pixels or
+Gaussian noise, you replace the removed regions with a patch from another image,
+while the ground truth labels are mixed proportionally to the number of pixels
+of combined images. The CutMix technique can make efficient use of training
+pixels, while retaining the regularization effect of regional dropout.
+This data augmentation technique was proposed in
+[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable
+Features](https://arxiv.org/pdf/1905.04899.pdf)
+(Yun et al., 2019).
 
 It's implemented with the following formulas:
 
-<img height=100 width=250
-src="https://raw.githubusercontent.com/sayannath/CutMix-Augmentation---Keras/main/assets/cutmix-1.png?token=AKAF55CUC3LRB4YI7RXCO3TAMXKHU">
-
-
+![](https://i.imgur.com/cGvd13V.png)
 
 where M is the binary mask which indicates the cutout and the fill-in regions from the
 two randomly drawn images and λ is drawn from [Beta(α,α)
 distribution](https://en.wikipedia.org/wiki/Beta_distribution) and `λ ∈ [0, 1]`
 
 
-The coordinates of bounding boxes are <img height=40 width=150
-src="https://raw.githubusercontent.com/sayannath/CutMix-Augmentation---Keras/main/assets/c
-utmix-3.png?token=AKAF55G3SW73WB34GD74ARDAMXKCA"> which indicates the cutout and fill-in
-regions in case of the images.
+The coordinates of bounding boxes are ![](https://i.imgur.com/eNisep4.png) which
+indicates the cutout and fill-in regions in case of the images.
 
 The bounding box sampling is represented by:
 
-<img height=100 width=250
-src="https://raw.githubusercontent.com/sayannath/CutMix-Augmentation---Keras/main/assets/cutmix-2.png?token=AKAF55CDRYZPUHPXDVCGUODAMXKRS">
+![](https://i.imgur.com/Snph9aj.png)
 
 where `rx,ry` are randomly drawn from a uniform distribution with upper bound
 
@@ -63,23 +54,23 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.applications import resnet50
-import tensorflow_probability as tfp
 
 np.random.seed(42)
 tf.random.set_seed(42)
-tfd = tfp.distributions
+
 
 """
-## Load the CIFAR10 dataset
+## Load the CIFAR-10 dataset
 
-For this example, we will be using the
-[CIFAR10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
+In this example, we will use the
+[CIFAR- 10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 """
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
-y_train = pd.get_dummies(y_train.flatten()).values.astype(np.float32)
-y_test = pd.get_dummies(y_test.flatten()).values.astype(np.float32)
+
+y_train = tf.keras.utils.to_categorical(y_train, num_classes=10)
+y_test = tf.keras.utils.to_categorical(y_test, num_classes=10)
 
 class_names = [
     "Airplane",
@@ -103,7 +94,7 @@ BATCH_SIZE = 32
 IMG_SHAPE = 32
 
 """
-## Dataloader
+## Define the image preprocessing function
 """
 
 
@@ -138,7 +129,7 @@ train_ds_simple = (
     .prefetch(AUTO)
 )
 
-# We will be combining two shuffled datasets from the same training data.
+# Combine two shuffled datasets from the same training data.
 train_ds = tf.data.Dataset.zip((train_ds_one, train_ds_two))
 
 test_ds = (
@@ -148,14 +139,20 @@ test_ds = (
 )
 
 """
-##Define the CutMix Technique Function
+## Define the CutMix data augmentation function
 
-cutmix function takes two `image` and `label` pair and performs cutmix augmentation. It
-samples `λ(l)` from a [Beta
-Distribution](https://en.wikipedia.org/wiki/Beta_distribution) and we get the bounding
-box from get_box function. We crop the image2 and pad this image in the final padded
-image at the same location.
+The CutMix function takes two `image` and `label` pairs to perform the
+augmentation. It samples `λ(l)` from the
+[Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) and returns
+a bounding box from `get_box` function. We then crop the second image (`image2`)
+and pad this image in the final padded image at the same location.
 """
+
+
+def sample_beta_distribution(size, concentration_0=0.2, concentration_1=0.2):
+    gamma_1_sample = tf.random.gamma(shape=[size], alpha=concentration_1)
+    gamma_2_sample = tf.random.gamma(shape=[size], alpha=concentration_0)
+    return gamma_1_sample / (gamma_1_sample + gamma_2_sample)
 
 
 @tf.function
@@ -171,20 +168,20 @@ def get_box(l):
     cx = tf.random.uniform((1,), minval=0, maxval=IMG_SHAPE, dtype=tf.int32)  # rx
     cy = tf.random.uniform((1,), minval=0, maxval=IMG_SHAPE, dtype=tf.int32)  # ry
 
-    bbx1 = tf.clip_by_value(cx[0] - cut_w // 2, 0, IMG_SHAPE)
-    bby1 = tf.clip_by_value(cy[0] - cut_h // 2, 0, IMG_SHAPE)
+    boundaryx1 = tf.clip_by_value(cx[0] - cut_w // 2, 0, IMG_SHAPE)
+    boundaryy1 = tf.clip_by_value(cy[0] - cut_h // 2, 0, IMG_SHAPE)
     bbx2 = tf.clip_by_value(cx[0] + cut_w // 2, 0, IMG_SHAPE)
     bby2 = tf.clip_by_value(cy[0] + cut_h // 2, 0, IMG_SHAPE)
 
-    target_h = bby2 - bby1
+    target_h = bby2 - boundaryy1
     if target_h == 0:
         target_h += 1
 
-    target_w = bbx2 - bbx1
+    target_w = bbx2 - boundaryx1
     if target_w == 0:
         target_w += 1
 
-    return bbx1, bby1, target_h, target_w
+    return boundaryx1, boundaryy1, target_h, target_w
 
 
 @tf.function
@@ -195,47 +192,49 @@ def cutmix(a, b):
     alpha = [1.0]
     beta = [1.0]
 
-    ## Get sample from beta distribution
-    dist = tfd.Beta(alpha, beta)
-    ## Lambda
-    l = dist.sample(1)[0][0]
+    # Get a sample from the Beta distribution
+    l = sample_beta_distribution(1, alpha, beta)
 
-    ## Get bbox ofsets and heights and widths
+    # Define Lambda
+    l = l[0][0]
+
+    # Get the bounding box offsets, heights and widths
     bbx1, bby1, target_h, target_w = get_box(l)
 
-    ## Get patch from image2
-    crop2 = tf.image.crop_to_bounding_box(image2, bby1, bbx1, target_h, target_w)
-    ## Pad the patch with same offset
-    image2 = tf.image.pad_to_bounding_box(crop2, bby1, bbx1, IMG_SHAPE, IMG_SHAPE)
-    ## Get patch from image1
-    crop1 = tf.image.crop_to_bounding_box(image1, bby1, bbx1, target_h, target_w)
-    ## Pad the patch with same offset
-    img1 = tf.image.pad_to_bounding_box(crop1, bby1, bbx1, IMG_SHAPE, IMG_SHAPE)
+    # Get a patch from the second image (`image2`)
+    crop2 = tf.image.crop_to_bounding_box(image2, boundaryy1, boundaryx1, target_h, target_w)
+    # Pad the `image2` patch (`crop2`) with the same offset
+    image2 = tf.image.pad_to_bounding_box(crop2, boundaryy1, boundaryx1, IMG_SHAPE, IMG_SHAPE)
+    # Get a patch from the first image (`image1`)
+    crop1 = tf.image.crop_to_bounding_box(image1, boundaryy1, boundaryx1, target_h, target_w)
+    # Pad the `image1` patch (`crop1`) with the same offset
+    img1 = tf.image.pad_to_bounding_box(crop1, boundaryy1, boundaryx1, IMG_SHAPE, IMG_SHAPE)
 
-    ## Subtract the patch from image1 so that patch from image2 can be put on instead
+    # Modify the first image by subtracting the patch from `image1`
+    # (before applying the `image2` patch)
     image1 = image1 - img1
-    ## Add modified image1 and image2 to get cutmix image
+    # Add the modified `image1` and `image2`  together to get the CutMix image
     image = image1 + image2
 
-    ## Adjust lambda according to pixel ration
+    # Adjust Lambda in accordance to the pixel ration
     l = 1 - (target_w * target_h) / (IMG_SHAPE * IMG_SHAPE)
     l = tf.cast(l, tf.float32)
 
-    ## Combine labels
+    # Combine the labels of both images
     label = l * label1 + (1 - l) * label2
 
     return image, label
 
 
 """
-**Note** that here , we are combining two images to create a single one.
+**Note**: we are combining two images to create a single one.
 """
 
 """
-## Visualize the new dataset after applying CutMix Augmentation.
+## Visualize the new dataset after applying the CutMix augmentation
 """
 
-# Create the new dataset using our `mix_up` utility
+# Create the new dataset using our `cutmix` utility
 train_ds_cmu = (
     train_ds.shuffle(1024)
     .map(cutmix, num_parallel_calls=AUTO)
@@ -253,7 +252,7 @@ for i in range(9):
     plt.axis("off")
 
 """
-## Define the Model
+## Define the model using ResNet-20
 """
 
 
@@ -346,11 +345,12 @@ initial_model = training_model()
 initial_model.save_weights("initial_weights.h5")
 
 """
-## 1. Train the model with the CutMix Dataset
+## 1. Train the model with the dataset augmented by CutMix
 """
 
 model = training_model()
 model.load_weights("initial_weights.h5")
+
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 model.fit(train_ds_cmu, validation_data=test_ds, epochs=10)
 
@@ -358,7 +358,7 @@ test_loss, test_accuracy = model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 
 """
-## 2. Train the model with the Original Dataset
+## 2. Train the model using the original non-augmented dataset
 """
 
 model = training_model()
@@ -371,13 +371,13 @@ print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 
 """
 ## Notes
+In this example, we trained our model for 15 epochs. In our experiment, the
+model with CutMix achieves a better accuracy on the CIFAR-10 dataset (80.02% in
+our experiment) compared to the model that doesn't use the augmentation
+(74.20%).
 
-In this example, we trained our model for 15 epochs. On the CIFAR10 dataset, the model
-performs better with `CutMix Augmentation` with a better accuracy (for example 80.02% in
-one experiment) compared to model with a accuracy (for example 74.20%).
+You may notice it takes less time to train the model with the CutMix augmentation.
 
-In the notebook, you may notice that, the time taken during the CutMix Augmentation.
-
-You can also experiment this `CutMix` technique by reading this [Original
-Paper](https://arxiv.org/pdf/1905.04899.pdf)
+You can experiment further with the CutMix technique by following the
+[original paper](https://arxiv.org/pdf/1905.04899.pdf).
 """
