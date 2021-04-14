@@ -295,7 +295,7 @@ def resnet_v20(input_shape, depth, num_classes=10):
 
     if (depth - 2) % 6 != 0:
         raise ValueError("depth should be 6n+2 (eg 20, 32, 44 in [a])")
-    # Start model definition.
+    # Start the model definition
     num_filters = 16
     num_res_blocks = int((depth - 2) / 6)
 
@@ -305,13 +305,13 @@ def resnet_v20(input_shape, depth, num_classes=10):
     for stack in range(3):
         for res_block in range(num_res_blocks):
             strides = 1
-            if stack > 0 and res_block == 0:  # first layer but not first stack
-                strides = 2  # downsample
+            if stack > 0 and res_block == 0:  # The first layer but not the first stack
+                strides = 2  # Downsample
             y = resnet_layer(inputs=x, num_filters=num_filters, strides=strides)
             y = resnet_layer(inputs=y, num_filters=num_filters, activation=None)
             if stack > 0 and res_block == 0:  # first layer but not first stack
-                # linear projection residual shortcut connection to match
-                # changed dims
+                # The linear projection residual shortcut connection to match
+                # the changed dimensions
                 x = resnet_layer(
                     inputs=x,
                     num_filters=num_filters,
@@ -324,15 +324,15 @@ def resnet_v20(input_shape, depth, num_classes=10):
             x = keras.layers.Activation("relu")(x)
         num_filters *= 2
 
-    # Add classifier on top.
-    # v1 does not use BN after last shortcut connection-ReLU
+    # Add the classifier on top of ResNet-20.
+    # (v1 does not use batch normalization after the last shortcut connection with ReLU)
     x = keras.layers.AveragePooling2D(pool_size=8)(x)
     y = keras.layers.Flatten()(x)
     outputs = keras.layers.Dense(
         num_classes, activation="softmax", kernel_initializer="he_normal"
     )(y)
 
-    # Instantiate model.
+    # Instantiate the model
     model = keras.models.Model(inputs=inputs, outputs=outputs)
     return model
 
@@ -352,7 +352,7 @@ model = training_model()
 model.load_weights("initial_weights.h5")
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(train_ds_cmu, validation_data=test_ds, epochs=10)
+model.fit(train_ds_cmu, validation_data=test_ds, epochs=5)
 
 test_loss, test_accuracy = model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
@@ -364,7 +364,7 @@ print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 model = training_model()
 model.load_weights("initial_weights.h5")
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(train_ds_simple, validation_data=test_ds, epochs=10)
+model.fit(train_ds_simple, validation_data=test_ds, epochs=5)
 
 test_loss, test_accuracy = model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
