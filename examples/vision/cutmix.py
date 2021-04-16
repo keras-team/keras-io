@@ -18,9 +18,8 @@ Gaussian noise, you replace the removed regions with a patch from another image,
 while the ground truth labels are mixed proportionally to the number of pixels
 of combined images. The CutMix technique can make efficient use of training
 pixels, while retaining the regularization effect of regional dropout.
-This data augmentation technique was proposed in
-[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable
-Features](https://arxiv.org/pdf/1905.04899.pdf)
+This data augmentation method was proposed in
+[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
 (Yun et al., 2019).
 
 It's implemented with the following formulas:
