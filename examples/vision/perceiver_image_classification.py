@@ -55,7 +55,7 @@ learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 64
 num_epochs = 100
-dropout_rate = 0.1
+dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 2  # Size of the patches to be extract from the input images.
 num_patches = (image_size // patch_size) ** 2  # Size of the data array.
@@ -94,7 +94,6 @@ data_augmentation = keras.Sequential(
         layers.experimental.preprocessing.Normalization(),
         layers.experimental.preprocessing.Resizing(image_size, image_size),
         layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(factor=0.02),
         layers.experimental.preprocessing.RandomZoom(
             height_factor=0.2, width_factor=0.2
         ),
