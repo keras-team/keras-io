@@ -2,14 +2,16 @@
 Title: Consistency Training with Supervision
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/13
-Last modified: 2021/04/13
-Description: Supervised learning with consistency training to improve robustness of vision models.
+Last modified: 2021/04/19
+Description: Training with consistency regularization for robustness against data distribution shifts in supervised learning in computer vision.
 """
 """
-Deep learning models excel highly in many image recognition tasks yet they are brittle to
-subtle distribution shifts in the input data. So, naturally, there arises a question of
-why. The literature (such as [this one](https://arxiv.org/pdf/1906.08988.pdf)) suggests
-there's no reason for deep learning models to be robust against such shifts. Conventional
+Deep learning models excel in many image recognition tasks when the data is independent
+and identically distributed (i.i.d.). However, they can suffer from performance 
+degradation caused by subtle distribution shifts in the input data  (such as random
+noise, contrast change, and blurring). So, naturally, there arises a question of
+why. As discussed in [A Fourier Perspective on Model Robustness in Computer Vision](https://arxiv.org/pdf/1906.08988.pdf)),
+there's no reason for deep learning models to be robust against such shifts. Standard
 model training procedures (such as standard image classification training workflows)
 *don't* enable a model to learn beyond what's fed to it in the form of training data.
 
@@ -17,7 +19,7 @@ In this example, we will be training an image classification model enforcing a s
 *consistency* inside it by doing the following:
 
 * Train a standard image classification model.
-* Train an equal or larger model on a noisy version of the dataset (augmented using
+* Train an _equal or larger_ model on a noisy version of the dataset (augmented using
 [RandAugment](https://arxiv.org/abs/1909.13719)). 
 * To do this, we will first obtain predictions of the previous model on the clean images
 of the dataset. 
@@ -32,7 +34,10 @@ This overall training workflow finds its roots in works like
 Consistency Training](https://arxiv.org/abs/1904.12848), and [Noisy Student
 Training](https://arxiv.org/abs/1911.04252). Since this training process encourages a
 model yield consistent predictions for clean as well as noisy images, it's often referred
-to as *consistency training* or *training with consistency regularization*.
+to as *consistency training* or *training with consistency regularization*. Although the
+example focuses on using consistency training to enhance the robustness of models to
+common corruptions this example can also serve a template for performing weakly
+supervised learning.
 
 This example requires TensorFlow 2.4 or higher, as well as TensorFlow Hub and TensorFlow
 Models, which can be installed using the following command:
@@ -169,8 +174,7 @@ for i, image in enumerate(sample_images[:9]):
 """
 ## Define a model building utility function
 
-We now define our model building utility. Our model is based on the [ResNet50V2
-architecture](https://arxiv.org/abs/1603.05027).
+We now define our model building utility. Our model is based on the [ResNet50V2 architecture](https://arxiv.org/abs/1603.05027).
 """
 
 
@@ -240,8 +244,7 @@ print(f"Test accuracy: {acc*100}%")
 """
 ## Define a self-training utility
 
-For this part, we will borrow the `Distiller` class from [this Keras
-Example](https://keras.io/examples/vision/knowledge_distillation/).
+For this part, we will borrow the `Distiller` class from [this Keras Example](https://keras.io/examples/vision/knowledge_distillation/).
 """
 
 # Majority of the code is taken from:
@@ -369,6 +372,7 @@ proposed in [Benchmarking Neural Network Robustness to Common Corruptions and
 Perturbations](https://arxiv.org/abs/1903.12261). For this example, we will be using the
 CIFAR-10-C dataset which has 19 different corruptions on 5 different severity levels. To
 assess the robustness of the models on this dataset, we will do the following:
+
 * Run the pre-trained models on the highest level of severities and obtain the top-1
 accuracies.
 * Compute the mean top-1 accuracy.
