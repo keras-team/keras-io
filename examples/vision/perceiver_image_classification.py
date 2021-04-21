@@ -171,7 +171,7 @@ class PatchEncoder(layers.Layer):
 
 
 """
-## Build the Preceiver model
+## Build the Perceiver model
 
 The Perceiver consists of two modules: a cross-attention
 module and a standard Transformer with self-attention.
@@ -279,15 +279,15 @@ def create_transformer_module(
 
 
 """
-### Preceiver model
+### Perceiver model
 
-The Preceiver model repeats the cross-attention and Transformer modules
+The Perceiver model repeats the cross-attention and Transformer modules
 `num_iterations` times—with shared weights and skip connections—to allow
 the latent array to iteratively extract information from the input image as it is needed.
 """
 
 
-class Preceiver(keras.Model):
+class Perceiver(keras.Model):
     def __init__(
         self,
         patch_size,
@@ -301,7 +301,7 @@ class Preceiver(keras.Model):
         num_iterations,
         classifier_units,
     ):
-        super(Preceiver, self).__init__()
+        super(Perceiver, self).__init__()
 
         self.latent_dim = latent_dim
         self.data_dim = data_dim
@@ -329,7 +329,7 @@ class Preceiver(keras.Model):
         self.patch_encoder = PatchEncoder(self.data_dim, self.projection_dim)
 
         # Create cross-attenion module.
-        self.corss_attention = create_cross_attention_module(
+        self.cross_attention = create_cross_attention_module(
             self.latent_dim,
             self.data_dim,
             self.projection_dim,
@@ -347,15 +347,15 @@ class Preceiver(keras.Model):
             self.dropout_rate,
         )
 
-        # Create gloabl average pooling layer.
-        self.gloabl_average_pooling = layers.GlobalAveragePooling1D()
+        # Create global average pooling layer.
+        self.global_average_pooling = layers.GlobalAveragePooling1D()
 
         # Create a classification head.
         self.classification_head = create_ffn(
             hidden_units=self.classifier_units, dropout_rate=self.dropout_rate
         )
 
-        super(Preceiver, self).build(input_shape)
+        super(Perceiver, self).build(input_shape)
 
     def call(self, inputs):
         # Augment data.
@@ -379,7 +379,7 @@ class Preceiver(keras.Model):
             cross_attention_inputs["latent_array"] = latent_array
 
         # Apply global average pooling to generate a [batch_size, projection_dim] repesentation tensor.
-        representation = self.gloabl_average_pooling(latent_array)
+        representation = self.global_average_pooling(latent_array)
         # Generate logits.
         logits = self.classification_head(representation)
         return logits
@@ -440,7 +440,7 @@ Note that training the perceiver model with the current settings on a V100 GPUs 
 around 200 seconds.
 """
 
-preceiver_classifier = Preceiver(
+perceiver_classifier = Perceiver(
     patch_size,
     num_patches,
     latent_dim,
@@ -454,7 +454,7 @@ preceiver_classifier = Preceiver(
 )
 
 
-history = run_experiment(preceiver_classifier)
+history = run_experiment(perceiver_classifier)
 
 """
 After 50 epochs, the Perceiver model achieves around 52% accuracy and 81% top-5 accuracy on the test data.
