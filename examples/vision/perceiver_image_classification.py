@@ -67,7 +67,7 @@ patch_size = 2  # Size of the patches to be extract from the input images.
 num_patches = (image_size // patch_size) ** 2  # Size of the data array.
 latent_dim = 256  # Size of the latent array.
 projection_dim = 256  # Embedding size of each element in the data and latent arrays.
-num_heads = 4  # Number of Transformer heads.
+num_heads = 8  # Number of Transformer heads.
 ffn_units = [
     projection_dim,
     projection_dim,
@@ -463,7 +463,7 @@ perceiver_classifier = Perceiver(
 history = run_experiment(perceiver_classifier)
 
 """
-After 50 epochs, the Perceiver model achieves around 52% accuracy and 81% top-5 accuracy on the test data.
+After 50 epochs, the Perceiver model achieves around 53% accuracy and 81% top-5 accuracy on the test data.
 
 As mentioned in the ablations of the [Perceiver](https://arxiv.org/abs/2103.03206) paper,
 you can obtain better results by increasing the latent array size,
