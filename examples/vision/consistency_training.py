@@ -30,14 +30,13 @@ since the student model is equal or larger in size this process is also referred
 ***Self-Training***. 
 
 This overall training workflow finds its roots in works like
-[FixMatch](https://arxiv.org/abs/2001.07685), [Unsupervised Data Augmentation for
-Consistency Training](https://arxiv.org/abs/1904.12848), and [Noisy Student
-Training](https://arxiv.org/abs/1911.04252). Since this training process encourages a
-model yield consistent predictions for clean as well as noisy images, it's often referred
-to as *consistency training* or *training with consistency regularization*. Although the
-example focuses on using consistency training to enhance the robustness of models to
-common corruptions this example can also serve a template for performing weakly
-supervised learning.
+[FixMatch](https://arxiv.org/abs/2001.07685), [Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848),
+and [Noisy Student Training](https://arxiv.org/abs/1911.04252). Since this training
+process encourages a model yield consistent predictions for clean as well as noisy
+images, it's often referred to as *consistency training* or *training with consistency
+regularization*. Although the example focuses on using consistency training to enhance
+the robustness of models to common corruptions this example can also serve a template
+for performing _weakly supervised learning_.
 
 This example requires TensorFlow 2.4 or higher, as well as TensorFlow Hub and TensorFlow
 Models, which can be installed using the following command:
@@ -217,7 +216,9 @@ part but for this example, we will use [Stochastic Weight Averaging](https://arx
 
 # Define the callbacks.
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(patience=3)
-es = tf.keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    patience=10, restore_best_weights=True
+)
 
 # Initialize SWA from tf-hub.
 SWA = tfa.optimizers.SWA
@@ -226,7 +227,8 @@ SWA = tfa.optimizers.SWA
 teacher_model = get_training_model()
 teacher_model.load_weights("initial_teacher_model.h5")
 teacher_model.compile(
-    optimizer="adam",
+    # Notice that we are wrapping our optimizer within SWA
+    optimizer=SWA(tf.keras.optimizers.Adam()),
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=["accuracy"],
 )
@@ -234,7 +236,7 @@ history = teacher_model.fit(
     train_clean_ds,
     epochs=EPOCHS,
     validation_data=validation_ds,
-    callbacks=[reduce_lr, es],
+    callbacks=[reduce_lr, early_stopping],
 )
 
 # Evaluate the teacher model on the test set.
@@ -324,9 +326,9 @@ class SelfTrainer(tf.keras.Model):
 
 
 """
-The only difference in this implementation is the way loss is being calculated. Instead
+The only difference in this implementation is the way loss is being calculated. **Instead
 of weighted the distillation loss and student loss differently we are taking their
-average following Noisy Student Training.
+average following Noisy Student Training**.
 """
 
 """
@@ -338,7 +340,7 @@ average following Noisy Student Training.
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
     patience=3, factor=0.5, monitor="val_accuracy"
 )
-es = tf.keras.callbacks.EarlyStopping(
+early_stopping = tf.keras.callbacks.EarlyStopping(
     patience=10, restore_best_weights=True, monitor="val_accuracy"
 )
 
@@ -356,7 +358,7 @@ history = self_trainer.fit(
     consistency_training_ds,
     epochs=EPOCHS,
     validation_data=validation_ds,
-    callbacks=[reduce_lr, es],
+    callbacks=[reduce_lr, early_stopping],
 )
 
 # Evaluate the student model.
