@@ -16,6 +16,12 @@ The Perceiver model leverages an asymmetric attention mechanism to iteratively
 distill inputs into a tight latent bottleneck,
 allowing it to scale to handle very large inputs.
 
+In other words, let’s assume that your input data array (e.g. image) has `M` elements (i.e. patches), where `M` is large.
+In a standard Transformer model, a self-attention operation is performed for the `M` elements. The complexity of this operation is $O(M^2)$.
+However, the Perceiver model creates a latent array of size `N` elements, where `N << M`, and performs two operations iteratively:
+1. cross-attention Transformer between the latent array and the data array - The complexity of this operation is $O(M.N)$.
+2. self-attention Transformer on the latent array -  The complexity of this operation is $O(N^2)$.
+
 This example requires TensorFlow 2.4 or higher, as well as
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
 which can be installed using the following command:
