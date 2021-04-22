@@ -378,7 +378,7 @@ class Perceiver(keras.Model):
         # Apply the cross-attention and the Transformer modules iteratively.
         for _ in range(num_iterations):
             # Apply cross-attention from the latent array to the data array.
-            latent_array = self.corss_attention(cross_attention_inputs)
+            latent_array = self.cross_attention(cross_attention_inputs)
             # Apply self-attention Transformer to the latent array.
             latent_array = self.transformer(latent_array)
             # Set the latent array of the next iteration.
