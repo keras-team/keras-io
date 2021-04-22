@@ -473,5 +473,5 @@ the cross-attention and the latent Transformer modules. You may also try to incr
 and use different patch sizes.
 
 The Perceiver benefits from inceasing the model size. However, larger models needs bigger accelerators
-to fit in and train efficiently. This is why in the Perceiver paper they used 32 TPUs to run the experiments.
+to fit in and train efficiently. This is why in the Perceiver paper they used 32 TPU cores to run the experiments.
 """
