@@ -60,7 +60,7 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 64
-num_epochs = 100
+num_epochs = 50
 dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 2  # Size of the patches to be extract from the input images.
@@ -463,7 +463,7 @@ perceiver_classifier = Perceiver(
 history = run_experiment(perceiver_classifier)
 
 """
-After 50 epochs, the Perceiver model achieves around 53% accuracy and 81% top-5 accuracy on the test data.
+After 40 epochs, the Perceiver model achieves around 53% accuracy and 81% top-5 accuracy on the test data.
 
 As mentioned in the ablations of the [Perceiver](https://arxiv.org/abs/2103.03206) paper,
 you can obtain better results by increasing the latent array size,
