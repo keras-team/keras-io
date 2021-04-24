@@ -24,7 +24,7 @@ The complexity of this operation is `O(M^2)`.
 However, the Perceiver model creates a latent array of size `N` elements, where `N << M`,
 and performs two operations iteratively:
 
-1. Cross-attention Transformer between the latent array and the data array - The complexity of this operation is $O(M.N)$.
+1. Cross-attention Transformer between the latent array and the data array - The complexity of this operation is `O(M.N)`.
 2. Self-attention Transformer on the latent array -  The complexity of this operation is `O(N^2)`.
 
 This example requires TensorFlow 2.4 or higher, as well as
