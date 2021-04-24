@@ -35,8 +35,8 @@ import matplotlib.pyplot as plt
 # Downloading Dataset
 
 The authors of the AODNet paper have created synthesized hazy images using the
-groundtruth images with depth meta-data from the indoor [NYU2
-Depth Database](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html). We will
+groundtruth images with depth meta-data from the indoor 
+[NYU2 Depth Database](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html). We will
 download this dataset from Google Drive using `gdown`.
 """
 
