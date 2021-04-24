@@ -1,11 +1,15 @@
-"""
-Title: Consistency Training with Supervision
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/04/13
-Last modified: 2021/04/19
-Description: Training with consistency regularization for robustness against data distribution shifts.
-"""
-"""
+# Consistency Training with Supervision
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/04/13<br>
+**Last modified:** 2021/04/19<br>
+**Description:** Training with consistency regularization for robustness against data distribution shifts.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/consistency_training.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/consistency_training.py)
+
+
+
 Deep learning models excel in many image recognition tasks when the data is independent
 and identically distributed (i.i.d.). However, they can suffer from performance
 degradation caused by subtle distribution shifts in the input data  (such as random
@@ -41,16 +45,16 @@ for performing _weakly supervised learning_.
 This example requires TensorFlow 2.4 or higher, as well as TensorFlow Hub and TensorFlow
 Models, which can be installed using the following command:
 
-"""
 
-"""shell
-pip install -q tf-models-official tensorflow-addons
-"""
+```python
+!pip install -q tf-models-official tensorflow-addons
+```
 
-"""
+---
 ## Imports and setup
-"""
 
+
+```python
 from official.vision.image_classification.augment import RandAugment
 from tensorflow.keras import layers
 
@@ -59,41 +63,48 @@ import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 
 tf.random.set_seed(42)
+```
 
-"""
+---
 ## Define hyperparameters
-"""
 
+
+```python
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 128
 EPOCHS = 5
 
 CROP_TO = 72
 RESIZE_TO = 96
+```
 
-"""
+---
 ## Load the CIFAR-10 dataset
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
 val_samples = 49500
 new_train_x, new_y_train = x_train[: val_samples + 1], y_train[: val_samples + 1]
 val_x, val_y = x_train[val_samples:], y_train[val_samples:]
+```
 
-"""
+---
 ## Create TensorFlow `Dataset` objects
-"""
 
+
+```python
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 9.
 augmenter = RandAugment(num_layers=2, magnitude=9)
+```
 
-"""
 For training the teacher model, we will only be using two geometric augmentation
 transforms: random horizontal flip and random crop.
-"""
 
+
+```python
 
 def preprocess_train(image, label, noisy=True):
     image = tf.image.random_flip_left_right(image)
@@ -114,13 +125,14 @@ def preprocess_test(image, label):
 train_ds = tf.data.Dataset.from_tensor_slices((new_train_x, new_y_train))
 validation_ds = tf.data.Dataset.from_tensor_slices((val_x, val_y))
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+```
 
-"""
 We make sure `train_clean_ds` and `train_noisy_ds` are shuffled using the *same* seed to
 ensure their orders are exactly the same. This will be helpful during training the
 student model.
-"""
 
+
+```python
 # This dataset will be used to train the first model.
 train_clean_ds = (
     train_ds.shuffle(BATCH_SIZE * 10, seed=42)
@@ -151,11 +163,13 @@ test_ds = (
 
 # This dataset will be used to train the second model.
 consistency_training_ds = tf.data.Dataset.zip((train_clean_ds, train_noisy_ds))
+```
 
-"""
+---
 ## Visualize the datasets
-"""
 
+
+```python
 sample_images, sample_labels = next(iter(train_clean_ds))
 plt.figure(figsize=(10, 10))
 for i, image in enumerate(sample_images[:9]):
@@ -169,13 +183,27 @@ for i, image in enumerate(sample_images[:9]):
     ax = plt.subplot(3, 3, i + 1)
     plt.imshow(image.numpy().astype("int"))
     plt.axis("off")
+```
 
-"""
+
+    
+![png](/img/examples/vision/consistency_training/consistency_training_16_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/consistency_training/consistency_training_16_1.png)
+    
+
+
+---
 ## Define a model building utility function
 
 We now define our model building utility. Our model is based on the [ResNet50V2 architecture](https://arxiv.org/abs/1603.05027).
-"""
 
+
+```python
 
 def get_training_model(num_classes=10):
     resnet50_v2 = tf.keras.applications.ResNet50V2(
@@ -192,16 +220,18 @@ def get_training_model(num_classes=10):
     )
     return model
 
+```
 
-"""
 In the interest of reproducibility, we serialize the initial random weights of the
 teacher  network.
-"""
 
+
+```python
 initial_teacher_model = get_training_model()
 initial_teacher_model.save_weights("initial_teacher_model.h5")
+```
 
-"""
+---
 ## Train the teacher model
 
 As noted in Noisy Student Training, if the teacher model is trained with *geometric
@@ -210,8 +240,9 @@ performance. The original work uses [Stochastic Depth](https://arxiv.org/abs/160
 and [Dropout](https://jmlr.org/papers/v15/srivastava14a.html) to bring in the ensembling
 part but for this example, we will use [Stochastic Weight Averaging](https://arxiv.org/abs/1803.05407)
 (SWA) which also resembles geometric ensembling.
-"""
 
+
+```python
 # Define the callbacks.
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(patience=3)
 early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -240,13 +271,31 @@ history = teacher_model.fit(
 # Evaluate the teacher model on the test set.
 _, acc = teacher_model.evaluate(test_ds, verbose=0)
 print(f"Test accuracy: {acc*100}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+387/387 [==============================] - 73s 78ms/step - loss: 1.7785 - accuracy: 0.3582 - val_loss: 2.0589 - val_accuracy: 0.3920
+Epoch 2/5
+387/387 [==============================] - 28s 71ms/step - loss: 1.2493 - accuracy: 0.5542 - val_loss: 1.4228 - val_accuracy: 0.5380
+Epoch 3/5
+387/387 [==============================] - 28s 73ms/step - loss: 1.0294 - accuracy: 0.6350 - val_loss: 1.4422 - val_accuracy: 0.5900
+Epoch 4/5
+387/387 [==============================] - 28s 73ms/step - loss: 0.8954 - accuracy: 0.6864 - val_loss: 1.2189 - val_accuracy: 0.6520
+Epoch 5/5
+387/387 [==============================] - 28s 73ms/step - loss: 0.7879 - accuracy: 0.7231 - val_loss: 0.9790 - val_accuracy: 0.6500
+Test accuracy: 65.83999991416931%
+
+```
+</div>
+---
 ## Define a self-training utility
 
 For this part, we will borrow the `Distiller` class from [this Keras Example](https://keras.io/examples/vision/knowledge_distillation/).
-"""
 
+
+```python
 # Majority of the code is taken from:
 # https://keras.io/examples/vision/knowledge_distillation/
 class SelfTrainer(tf.keras.Model):
@@ -317,17 +366,17 @@ class SelfTrainer(tf.keras.Model):
         results = {m.name: m.result() for m in self.metrics}
         return results
 
+```
 
-"""
 The only difference in this implementation is the way loss is being calculated. **Instead
 of weighted the distillation loss and student loss differently we are taking their
 average following Noisy Student Training**.
-"""
 
-"""
+---
 ## Train the student model
-"""
 
+
+```python
 # Define the callbacks.
 # We are using a larger decay factor to stabilize the training.
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
@@ -357,8 +406,25 @@ history = self_trainer.fit(
 # Evaluate the student model.
 acc = self_trainer.evaluate(test_ds, verbose=0)
 print(f"Test accuracy from student model: {acc*100}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+387/387 [==============================] - 39s 84ms/step - accuracy: 0.2112 - total_loss: 1.0629 - val_accuracy: 0.4180
+Epoch 2/5
+387/387 [==============================] - 32s 82ms/step - accuracy: 0.3341 - total_loss: 0.9554 - val_accuracy: 0.3900
+Epoch 3/5
+387/387 [==============================] - 31s 81ms/step - accuracy: 0.3873 - total_loss: 0.8852 - val_accuracy: 0.4580
+Epoch 4/5
+387/387 [==============================] - 31s 81ms/step - accuracy: 0.4294 - total_loss: 0.8423 - val_accuracy: 0.5660
+Epoch 5/5
+387/387 [==============================] - 31s 81ms/step - accuracy: 0.4547 - total_loss: 0.8093 - val_accuracy: 0.5880
+Test accuracy from student model: 58.490002155303955%
+
+```
+</div>
+---
 ## Assess the robustness of the models
 
 A standard benchmark of assessing the robustness of vision models is to record their
@@ -383,4 +449,3 @@ The figure below presents an executive summary of that assessment:
 **Mean Top-1** results stand for the CIFAR-10-C dataset and **Test Top-1** results stand
 for the CIFAR-10 test set. It's clear that consistency training has an advantage on not
 only enhancing the model robustness but also on improving the standard test performance.
-"""
