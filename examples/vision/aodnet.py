@@ -7,14 +7,15 @@ Description: Train a lightweight Deep CNN for image denhazing.
 """
 """
 # Introduction
-Image Dehazing is an important problem in Computer Vision. It can not only be used to
+
+Image Dehazing is an important problem is Computer Vision. It can not only be used to
 enhance photographs clicked in hazy conditions, but also can be used to augment other
 computer vision systems such as Object Detection and Seantic Segmentation as a
 pre-processing step. In this example, we implement
-[AODNet](https://arxiv.org/abs/1707.06543v1), a simple and lightweight Deep CNN model
+[AODNet](https://arxiv.org/abs/1707.06543v1), a simple and light-weight Deep CNN model
 that directly generates a clean image from a hazy image. The end-to-end design of AODNet
 makes it easy to embed AOD-Net into other deep models such as Faster-RCNN and YOLO as a
-pre-processing step, making it easier for such a model to detect and recognize objects from
+pre-processing step, making it easier for such model to detect and recognize objects from
 a clean image.
 """
 
@@ -27,12 +28,12 @@ import gdown
 import numpy as np
 from PIL import Image
 from glob import glob
-from glob import glob
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 """
 # Downloading Dataset
+
 The authors of the AODNet paper have created synthesized hazy images using the
 groundtruth images with depth meta-data from the indoor [NYU2
 Depth Database](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html). We will
@@ -45,16 +46,19 @@ gdown.download(
     quiet=False,
 )
 
-os.system("unzip -qq Dehaze-NYU.zip")
-os.system("rm ./Dehaze-NYU.zip")
+"""shell
+!unzip -qq Dehaze-NYU.zip
+!rm ./Dehaze-NYU.zip
+"""
 
 """
 ## Data Loader
+
 In order to ensure that the model is fed the data efficiently during training, we will be
 use the `tf.data` API to create our data loading pipeline. Due to memory constraints for
 training on Google Colab, we generate random crops of size `256` from corresponding
-hazing and clean image pair. For the training dataset, we use also apply random rotation
-and random horizontal flips in order to augment the data.
+hazing and clean image pair. For the training dataset, we use also apply random
+horizontal flips in order to augment the data.
 """
 
 
@@ -84,6 +88,25 @@ def read_images(image_files):
     return dataset
 
 
+def apply_scaling(hazy_image, original_image):
+    hazy_image = tf.cast(hazy_image, tf.float32)
+    original_image = tf.cast(original_image, tf.float32)
+    hazy_image = hazy_image / 255.0
+    original_image = original_image / 255.0
+    return hazy_image, original_image
+
+
+def random_flip(hazy_image, original_image):
+    return tf.cond(
+        tf.random.uniform(shape=(), maxval=1) < 0.5,
+        lambda: (hazy_image, original_image),
+        lambda: (
+            tf.image.flip_left_right(hazy_image),
+            tf.image.flip_left_right(original_image),
+        ),
+    )
+
+
 def random_crop(hazy_image, original_image, low_crop_size, enhanced_crop_size):
     hazy_image_shape = tf.shape(hazy_image)[:2]
     low_w = tf.random.uniform(
@@ -104,32 +127,6 @@ def random_crop(hazy_image, original_image, low_crop_size, enhanced_crop_size):
     return hazy_image_cropped, original_image_cropped
 
 
-def random_flip(hazy_image, original_image):
-    return tf.cond(
-        tf.random.uniform(shape=(), maxval=1) < 0.5,
-        lambda: (hazy_image, original_image),
-        lambda: (
-            tf.image.flip_left_right(hazy_image),
-            tf.image.flip_left_right(original_image),
-        ),
-    )
-
-
-def random_rotate(hazy_image, original_image):
-    condition = tf.random.uniform(shape=(), maxval=4, dtype=tf.int32)
-    hazy_image = tf.image.rot90(hazy_image, condition)
-    original_image = tf.image.rot90(original_image, condition)
-    return hazy_image, original_image
-
-
-def apply_scaling(hazy_image, original_image):
-    hazy_image = tf.cast(hazy_image, tf.float32)
-    original_image = tf.cast(original_image, tf.float32)
-    hazy_image = hazy_image / 255.0
-    original_image = original_image / 255.0
-    return hazy_image, original_image
-
-
 def configure_dataset(
     dataset, image_crop_size, buffer_size, batch_size, is_dataset_train
 ):
@@ -142,7 +139,6 @@ def configure_dataset(
             num_parallel_calls=tf.data.AUTOTUNE,
         )
     if is_dataset_train:
-        dataset = dataset.map(random_rotate, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.map(random_flip, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.shuffle(buffer_size)
     dataset = dataset.batch(batch_size)
@@ -151,52 +147,50 @@ def configure_dataset(
     return dataset
 
 
-class DeHazeDataLoader:
-    def __init__(self, dataset_path):
-        (self.original_images, self.hazy_images) = get_image_file_list(
-            dataset_path=dataset_path
-        )
-
-    def __len__(self):
-        assert len(self.hazy_images) == len(self.original_images)
-        return len(self.hazy_images)
-
-    def build_dataset(self, image_crop_size, buffer_size, batch_size, val_split):
-        hazy_dataset = read_images(self.hazy_images)
-        original_dataset = read_images(self.original_images)
-        dataset = tf.data.Dataset.zip((hazy_dataset, original_dataset))
-        cardinality = tf.data.experimental.cardinality(dataset).numpy()
-        train_dataset = configure_dataset(
-            dataset=dataset.skip(int(cardinality * val_split)),
-            image_crop_size=image_crop_size,
-            buffer_size=buffer_size,
-            batch_size=batch_size,
-            is_dataset_train=True,
-        )
-        val_dataset = configure_dataset(
-            dataset=dataset.take(int(cardinality * val_split)),
-            image_crop_size=image_crop_size,
-            buffer_size=buffer_size,
-            batch_size=batch_size,
-            is_dataset_train=True,
-        )
-        return train_dataset, val_dataset
+def build_dataset(dataset_path, image_crop_size, buffer_size, batch_size, val_split):
+    original_images, hazy_images = get_image_file_list(dataset_path=dataset_path)
+    assert len(original_images) == len(hazy_images)
+    print("Total Number of Image Pairs:", len(original_images))
+    hazy_dataset = read_images(hazy_images)
+    original_dataset = read_images(original_images)
+    dataset = tf.data.Dataset.zip((hazy_dataset, original_dataset))
+    cardinality = tf.data.experimental.cardinality(dataset).numpy()
+    train_dataset = configure_dataset(
+        dataset=dataset.skip(int(cardinality * val_split)),
+        image_crop_size=image_crop_size,
+        buffer_size=buffer_size,
+        batch_size=batch_size,
+        is_dataset_train=True,
+    )
+    val_dataset = configure_dataset(
+        dataset=dataset.take(int(cardinality * val_split)),
+        image_crop_size=image_crop_size,
+        buffer_size=buffer_size,
+        batch_size=batch_size,
+        is_dataset_train=True,
+    )
+    return train_dataset, val_dataset
 
 
-dataloader = DeHazeDataLoader("./Dehazing")
-print("Total Number of Image Pairs:", len(dataloader))
-train_dataset, val_dataset = dataloader.build_dataset(
-    image_crop_size=256, buffer_size=1024, batch_size=16, val_split=0.1
+train_dataset, val_dataset = build_dataset(
+    dataset_path="./Dehazing",
+    image_crop_size=256,
+    buffer_size=1024,
+    batch_size=16,
+    val_split=0.1,
 )
 print(train_dataset)
 print(val_dataset)
 
 """
 ## Building AODNet Model
+
 Now we will build AODNet a subclass of  `tf.keras.Model`. The following diagrams taken
 from the paper summarizes the architecture of the AODNet model.
+
 ### The AODNet Model
 ![](https://i.imgur.com/nmnF0cY.png)
+
 ### K-estimation Model
 ![](https://i.imgur.com/dq5i4uz.png)
 """
@@ -208,51 +202,41 @@ class AODNet(tf.keras.Model):
         self.conv_layer_1 = tf.keras.layers.Conv2D(
             filters=3,
             kernel_size=1,
-            strides=1,
             padding="same",
             activation=tf.nn.relu,
-            use_bias=True,
-            kernel_initializer=tf.initializers.random_normal(stddev=stddev),
+            kernel_initializer=tf.keras.initializers.RandomNormal(stddev=stddev),
             kernel_regularizer=tf.keras.regularizers.L2(weight_decay),
         )
         self.conv_layer_2 = tf.keras.layers.Conv2D(
             filters=3,
             kernel_size=1,
-            strides=1,
             padding="same",
             activation=tf.nn.relu,
-            use_bias=True,
-            kernel_initializer=tf.initializers.random_normal(stddev=stddev),
+            kernel_initializer=tf.keras.initializers.RandomNormal(stddev=stddev),
             kernel_regularizer=tf.keras.regularizers.L2(weight_decay),
         )
         self.conv_layer_3 = tf.keras.layers.Conv2D(
             filters=3,
             kernel_size=5,
-            strides=1,
             padding="same",
             activation=tf.nn.relu,
-            use_bias=True,
-            kernel_initializer=tf.initializers.random_normal(stddev=stddev),
+            kernel_initializer=tf.keras.initializers.RandomNormal(stddev=stddev),
             kernel_regularizer=tf.keras.regularizers.L2(weight_decay),
         )
         self.conv_layer_4 = tf.keras.layers.Conv2D(
             filters=3,
             kernel_size=7,
-            strides=1,
             padding="same",
             activation=tf.nn.relu,
-            use_bias=True,
-            kernel_initializer=tf.initializers.random_normal(stddev=stddev),
+            kernel_initializer=tf.keras.initializers.RandomNormal(stddev=stddev),
             kernel_regularizer=tf.keras.regularizers.L2(weight_decay),
         )
         self.conv_layer_5 = tf.keras.layers.Conv2D(
             filters=3,
             kernel_size=3,
-            strides=1,
             padding="same",
             activation=tf.nn.relu,
-            use_bias=True,
-            kernel_initializer=tf.initializers.random_normal(stddev=stddev),
+            kernel_initializer=tf.keras.initializers.RandomNormal(stddev=stddev),
             kernel_regularizer=tf.keras.regularizers.L2(weight_decay),
         )
         self.relu = tf.keras.layers.ReLU(max_value=1.0)
@@ -266,7 +250,7 @@ class AODNet(tf.keras.Model):
         conv_4 = self.conv_layer_4(concat_2)
         concat_3 = tf.concat([conv_1, conv_2, conv_3, conv_4], axis=-1)
         k = self.conv_layer_5(concat_3)
-        j = tf.math.multiply(k, inputs) - k + 1.0
+        j = k * inputs - k + 1.0
         output = self.relu(j)
         return output
 
@@ -277,6 +261,7 @@ Since we are training the model using a single GPU, i.e, Nvidia Tesla P100, we w
 in its scope on the specified device. We would define and compile our model in the scope
 of our distribution strategy. We would be using Adam as out optimizer, Mean Squared Error
 as the loss function and PSNR (Peak Signal Noise Ratio) as our metric.
+
 **Note:** For training AODNet in a multi-GPU environment,
 `tf.distribute.MirroredStrategy` can be used as a distribution stratgey.
 """
@@ -286,20 +271,19 @@ def peak_signal_noise_ratio(y_true, y_pred):
     return tf.image.psnr(y_pred, y_true, max_val=255.0)
 
 
-strategy = tf.distribute.OneDeviceStrategy("/gpu:0")
-with strategy.scope():
-    model = AODNet(name="AODNet", stddev=0.02, weight_decay=1e-4)
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-        loss=tf.keras.losses.MeanSquaredError(),
-        metrics=[peak_signal_noise_ratio],
-    )
-    model.build((1, 256, 256, 3))
+model = AODNet(name="AODNet", stddev=0.02, weight_decay=1e-4)
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+    loss=tf.keras.losses.MeanSquaredError(),
+    metrics=[peak_signal_noise_ratio],
+)
+model.build((1, 256, 256, 3))
 
 model.summary()
 
 """
 # Training
+
 We train AODNet for 10 epochs, on Nvidia Tesla P100, an epoch takes around 190 seconds,
 so the model takes around 30 minutes to train
 """
@@ -332,6 +316,7 @@ plt.show()
 
 """
 # Inference
+
 We define 2 simple utility functions for inferring from an image and plotting the results
 """
 
