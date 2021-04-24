@@ -345,7 +345,9 @@ We use the sample real-world test images collected from
 testing our model.
 """
 
-os.system("git clone https://github.com/soumik12345/AODNet")
+"""shell
+!git clone https://github.com/soumik12345/AODNet
+"""
 
 for hazy_image_file in glob("./AODNet/assets/sample_test_images/*"):
     hazy_image, predicted_image = infer(model, hazy_image_file)
