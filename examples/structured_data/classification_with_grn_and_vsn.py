@@ -256,9 +256,6 @@ same dimensionality.
 
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-
 
 def encode_inputs(inputs, encoding_size):
     encoded_features = []
