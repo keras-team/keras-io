@@ -31,6 +31,7 @@ while the dissimilar images are further away.
 In this example, we will be implementing one such system called **SimSiam** proposed in
 [Exploring Simple Siamese Representation Learning](https://arxiv.org/abs/2011.10566). It
 is implemented as the following:
+
 1. We create two different versions of the same dataset with a stochastic data
 augmentation pipeline. Note that the random initialization seed needs to be the same
 during create these versions.
@@ -388,15 +389,15 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-391/391 [==============================] - 33s 43ms/step - loss: -0.8845
+391/391 [==============================] - 33s 42ms/step - loss: -0.8973
 Epoch 2/5
-391/391 [==============================] - 16s 42ms/step - loss: -0.9107
+391/391 [==============================] - 16s 40ms/step - loss: -0.9129
 Epoch 3/5
-391/391 [==============================] - 16s 42ms/step - loss: -0.9212
+391/391 [==============================] - 16s 40ms/step - loss: -0.9165
 Epoch 4/5
-391/391 [==============================] - 16s 41ms/step - loss: -0.9267
+391/391 [==============================] - 16s 40ms/step - loss: -0.9176
 Epoch 5/5
-391/391 [==============================] - 16s 41ms/step - loss: -0.9282
+391/391 [==============================] - 16s 40ms/step - loss: -0.9182
 
 ```
 </div>
@@ -410,6 +411,7 @@ different dataset and a different backbone architecture that is likely because o
 *representation collapse*. It is a phenomenon where the encoder yields similar output for
 all the images. In that case additional hyperparameter tuning is required especially in
 the following areas:
+
 * Strength of the color distortions and their probabilities.
 * Learning rate and its schedule.
 * Architecture of both the backbone and their projection head.
@@ -471,17 +473,17 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-391/391 [==============================] - 7s 11ms/step - loss: 3.8130 - accuracy: 0.1552 - val_loss: 3.7642 - val_accuracy: 0.2168
+391/391 [==============================] - 7s 11ms/step - loss: 3.8072 - accuracy: 0.1527 - val_loss: 3.7449 - val_accuracy: 0.2046
 Epoch 2/5
-391/391 [==============================] - 3s 9ms/step - loss: 3.7541 - accuracy: 0.2233 - val_loss: 3.7256 - val_accuracy: 0.2367
+391/391 [==============================] - 3s 8ms/step - loss: 3.7356 - accuracy: 0.2107 - val_loss: 3.7055 - val_accuracy: 0.2308
 Epoch 3/5
-391/391 [==============================] - 3s 8ms/step - loss: 3.7213 - accuracy: 0.2357 - val_loss: 3.7061 - val_accuracy: 0.2463
+391/391 [==============================] - 3s 8ms/step - loss: 3.7036 - accuracy: 0.2228 - val_loss: 3.6874 - val_accuracy: 0.2329
 Epoch 4/5
-391/391 [==============================] - 3s 8ms/step - loss: 3.7054 - accuracy: 0.2465 - val_loss: 3.6987 - val_accuracy: 0.2530
+391/391 [==============================] - 3s 8ms/step - loss: 3.6893 - accuracy: 0.2276 - val_loss: 3.6808 - val_accuracy: 0.2334
 Epoch 5/5
-391/391 [==============================] - 3s 9ms/step - loss: 3.6999 - accuracy: 0.2486 - val_loss: 3.6976 - val_accuracy: 0.2524
-79/79 [==============================] - 1s 6ms/step - loss: 3.6976 - accuracy: 0.2524
-Test accuracy: 25.24%
+391/391 [==============================] - 3s 9ms/step - loss: 3.6845 - accuracy: 0.2305 - val_loss: 3.6798 - val_accuracy: 0.2339
+79/79 [==============================] - 1s 7ms/step - loss: 3.6798 - accuracy: 0.2339
+Test accuracy: 23.39%
 
 ```
 </div>
