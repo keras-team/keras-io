@@ -27,6 +27,7 @@ while the dissimilar images are further away.
 In this example, we will be implementing one such system called **SimSiam** proposed in
 [Exploring Simple Siamese Representation Learning](https://arxiv.org/abs/2011.10566). It
 is implemented as the following:
+
 1. We create two different versions of the same dataset with a stochastic data
 augmentation pipeline. Note that the random initialization seed needs to be the same
 during create these versions.
@@ -355,9 +356,11 @@ different dataset and a different backbone architecture that is likely because o
 *representation collapse*. It is a phenomenon where the encoder yields similar output for
 all the images. In that case additional hyperparameter tuning is required especially in
 the following areas:
+
 * Strength of the color distortions and their probabilities.
 * Learning rate and its schedule.
 * Architecture of both the backbone and their projection head.
+
 """
 
 """
@@ -413,6 +416,7 @@ _, test_acc = linear_model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_acc * 100))
 
 """
+
 ## Notes
 * More data and longer pre-training schedule benefit SSL in general.
 * SSL is particularly very helpful when you do not have access to very limited *labeled*
@@ -429,4 +433,5 @@ representations, you can check out the following resources:
 intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/)
    * [Understanding self-supervised learning using controlled datasets with known
 structure](https://sslneuips20.github.io/files/CameraReadys%203-77/64/CameraReady/Understanding_self_supervised_learning.pdf)
+
 """
