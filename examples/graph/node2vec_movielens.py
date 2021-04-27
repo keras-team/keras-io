@@ -16,7 +16,7 @@ a variety of ML applications, and leads to greater predictive power.
 learn embeddings for the graph nodes, which can be used for a variety of ML tasks
 such as node label prediction and link prediction.
 
-[node2vec](https://arxiv.org/abs/1607.00653) is a simple, yet scalable and effictive
+[node2vec](https://arxiv.org/abs/1607.00653) is a simple, yet scalable and effective
 technique for learning low-dimensional embeddings for nodes in a graph by optimizing
 a neighborhood preserving objective. The aim is to learn similar embeddings for
 neighboring nodes, with respect to the graph structure.
