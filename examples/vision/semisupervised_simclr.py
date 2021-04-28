@@ -3,7 +3,8 @@ Title: Semi-supervised image classification using contrastive pretraining with S
 Author: [András Béres](www.linkedin.com/in/andras-beres-789190210)
 Date created: 2021/04/24
 Last modified: 2021/04/24
-Description: Using SimCLR for contrastive pretraining for semi-supervised image classification.
+Description: Using SimCLR for contrastive pretraining for semi-supervised image
+classification on the STL-10 dataset.
 """
 """
 ## Introduction
@@ -24,7 +25,7 @@ labeled dataset, and by being label-efficient by utilizing the unlabeled example
 learning as well.
 
 In this example, we will pretrain an encoder with contrastive learning on the
-[STL10](https://ai.stanford.edu/~acoates/stl10/) semi-supervised dataset using no labels
+[STL-10](https://ai.stanford.edu/~acoates/stl10/) semi-supervised dataset using no labels
 at all, and then finetune it using only its labeled subset.
 
 ### Contrastive learning
@@ -41,11 +42,18 @@ from each other (contrasting negatives) in representation space.
 
 One such contrastive approach is [SimCLR](https://arxiv.org/abs/2002.05709), which
 essentially identifies the core components needed to optimize this objective, and
-achieves a high performance by scaling this simple approach. For further reading about
-SimCLR check out [its
-blogpost](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html), for
-an overview of self-supervised learning across both vision and language check out [this
-blogpost](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/).
+achieves a high performance by scaling this simple approach.
+
+Another approach is [SimSiam](https://arxiv.org/abs/2011.10566)
+([Keras example](https://keras.io/examples/vision/simsiam/)), whose main difference from
+SimCLR is that it does not use any negatives in its loss. Therefore it does not explicitly
+prevent the trivial solution, rather avoids it implicitly by architecture design
+(assymetric encoding paths using a predictor network, and BatchNorm applied in the final layers).
+
+For further reading about SimCLR check out
+[its blogpost](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html), for
+an overview of self-supervised learning across both vision and language check out
+[this blogpost](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/).
 """
 
 """
@@ -124,6 +132,7 @@ batch_size, train_dataset, labeled_train_dataset, test_dataset = prepare_dataset
 ## Custom image augmentation layers
 
 The two most important image augmentations for contrastive learning are the following:
+
 - cropping: forces the model to encode different parts of the same image similarly
 - color jitter: prevents a trivial color histogram-based solution to the task by
 distorting color histograms
@@ -132,6 +141,7 @@ In this example we use random horizontal flips as well.
 
 We implement our image augmentations as custom preprocessing layers. This has the
 following two advantages:
+
 - the data augmentation will run on the GPU, so the training will not be bottlenecked by
 the data pipeline in environments with constrained CPU resources (such as a Colab
 Notebook, or a personal machine)
@@ -400,6 +410,7 @@ nonlinear projection head is attached to the top of the encoder, as it improves 
 quality of representations of the encoder.
 
 The InfoNCE/NT-Xent/N-pairs loss is used, which can be interpreted in the following way:
+
 - we treat each image in the batch as if it had its own class
 - then we have two examples (a pair of augmented views) for each "class"
 - each view's representation is compared to every possible pair's one (for both augmented
@@ -408,17 +419,19 @@ versions)
 - and use categorical cross-entropy as the "classification" loss
 
 The following two metrics are used for monitoring the pretraining performance:
-- **contrastive accuracy**: self-supervised metric, the ratio of cases in which the
-closest representation to a view was its differently augmented version from the same
-image. Self-supervised metrics can be used for hyperparameter tuning even in the case
-when there are no labeled examples.
-- **linear probing accuracy**: supervised metric, "linear probing" is a widely used
-metric in the self-supervised literature. It simply means the accuracy of a logistic
-regression classifier trained on the encoder's features, i.e. training a single linear
-fully connected layer for classification on top of the frozen encoder. This classifier is
-usually trained after the pretraining phase, however in this example, we train it during
-pretraining, which might decrease its accuracy, but that way its value can be monitored
-during training, which helps with experimentation and debugging.
+
+- [contrastive accuracy (SimCLR Table 5)](https://arxiv.org/abs/2002.05709):
+Self-supervised metric, the ratio of cases in which the representation of an image is
+more similar to its differently augmented version's one, than to the representation of
+any other image in the current batch. Self-supervised metrics can be used for
+hyperparameter tuning even in the case when there are no labeled examples.
+- [linear probing accuracy](https://arxiv.org/abs/1603.08511): Linear probing is a popular
+metric to evaluate self-supervised classifiers. It is computed as the accuracy of a logistic
+regression classifier trained on top of the encoder's features. In our case, this is done by
+training a single dense layer on top of the frozen encoder. Note that contrary to traditional
+approach where the classifier is trained after the pretraining phase, in this example we
+train it during pretraining. This might slightly decrease its accuracy, but that way we
+can monitor its value during training, which helps with experimentation and debugging.
 
 Another widely used supervised metric is the [KNN
 accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN classifier
@@ -446,14 +459,8 @@ class ContrastiveModel(keras.Model):
         )
         # a single dense layer for linear probing
         self.linear_probe = keras.Sequential(
-            [layers.Input(shape=(width,)), layers.Dense(10),], name="linear_probe",
+            [layers.Input(shape=(width,)), layers.Dense(10)], name="linear_probe"
         )
-
-        self.contrastive_augmenter.summary()
-        self.classification_augmenter.summary()
-        self.encoder.summary()
-        self.projection_head.summary()
-        self.linear_probe.summary()
 
     def compile(self, contrastive_optimizer, probe_optimizer, **kwargs):
         super().compile(**kwargs)
@@ -492,16 +499,13 @@ class ContrastiveModel(keras.Model):
 
         # the temperature-scaled similarities are used as logits for cross-entropy
         # a symmetrized version of the loss is used here
-        loss = (
-            keras.losses.sparse_categorical_crossentropy(
-                contrastive_labels, similarities, from_logits=True
-            )
-            + keras.losses.sparse_categorical_crossentropy(
-                contrastive_labels, tf.transpose(similarities), from_logits=True
-            )
-        ) / 2
-
-        return loss
+        loss_1_2 = keras.losses.sparse_categorical_crossentropy(
+            contrastive_labels, similarities, from_logits=True
+        )
+        loss_2_1 = keras.losses.sparse_categorical_crossentropy(
+            contrastive_labels, tf.transpose(similarities), from_logits=True
+        )
+        return (loss_1_2 + loss_2_1) / 2
 
     def train_step(self, data):
         (unlabeled_images, _), (labeled_images, labels) = data
@@ -570,6 +574,7 @@ pretraining_model.compile(
     probe_optimizer=keras.optimizers.Adam(),
 )
 
+pretraining_model.summary()
 pretraining_history = pretraining_model.fit(
     train_dataset, epochs=num_epochs // 2, validation_data=test_dataset
 )
@@ -672,10 +677,11 @@ only a small amount of labeled examples.
 ### Architecture:
 
 It is shown in the original paper, that increasing the width and depth of the models
-improves performance with a higher rate then for supervised learning. Also, using a
+improves performance at a higher rate than for supervised learning. Also, using a
 [ResNet50](https://keras.io/api/applications/resnet/#resnet50-function) encoder is quite
-standard in the literature. However keep in mind, that more powerful models will require
-more memory and will limit the maximal batch size you can use.
+standard in the literature. However keep in mind, that more powerful models will not
+only increase training time but will also require more memory and will limit the maximal
+batch size you can use.
 
 It has [been](https://arxiv.org/abs/1905.09272)
 [reported](https://arxiv.org/abs/1911.05722) that the usage of BatchNorm layers could
@@ -691,6 +697,7 @@ hyperparameter tuning.
 
 However for a different task or model architecture these would need tuning, so here are
 my notes on the most important ones:
+
 - **batch size**: since the objective can be interpreted as a classification over a batch
 of images (loosely speaking), batch size is actually a more important hyperparameter than
 usual. The higher, the better.
@@ -717,6 +724,7 @@ increase performance.
 ## Related works
 
 Other instance-level (image-level) contrastive learning methods:
+
 - [MoCo](https://arxiv.org/abs/1911.05722) ([v2](https://arxiv.org/abs/2003.04297),
 [v3](https://arxiv.org/abs/2104.02057)): uses a momentum-encoder as well, whose weights
 are an exponential moving average of the target encoder
@@ -724,19 +732,20 @@ are an exponential moving average of the target encoder
 - [BarlowTwins](https://arxiv.org/abs/2103.03230): uses a cross correlation-based
 objective instead of pairwise comparison
 
-I have implemented **MoCo** and **BarlowTwins** as well in a similar fashion, you can
-find these three implementations together in [this
-repository](https://github.com/beresandras/contrastive-classification-keras). A Colab
-Notebook is included as well.
+Keras implementations of **MoCo** and **BarlowTwins** can be found in
+[this repository](https://github.com/beresandras/contrastive-classification-keras), with a
+Colab Notebook included as well.
 
 There is also a new line of works, which optimize a similar objective, however without
 the use of any negatives:
+
 - [BYOL](https://arxiv.org/abs/2006.07733): momentum-encoder + no negatives
-- [SimSiam](https://arxiv.org/abs/2011.10566): no momentum-encoder + no negatives
+- [SimSiam](https://arxiv.org/abs/2011.10566)
+([Keras example](https://keras.io/examples/vision/simsiam/)): no momentum-encoder + no negatives
 
 In my experience these methods are more brittle (they can collapse to a constant
-representation, I could not get them to work using this simple encoder architecture).
-They are more dependent on the
+representation, I could not get them to work using this encoder architecture).
+They are generally more dependent on the
 [model](https://generallyintelligent.ai/understanding-self-supervised-contrastive-learning.html)
 [architecture](https://arxiv.org/abs/2010.10241), however they improve performance
 at smaller batch sizes.
