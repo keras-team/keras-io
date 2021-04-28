@@ -473,7 +473,7 @@ plt.xlabel("epoch")
 plt.show()
 
 """
-## Analyze the trained embeddings
+## Analyze the learnt embeddings
 """
 
 movie_embeddings = model.get_layer("item_embeddings").get_weights()[0]
