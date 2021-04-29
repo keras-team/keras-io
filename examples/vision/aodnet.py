@@ -3,20 +3,25 @@ Title: An All-in-One Network for Dehazing and Beyond
 Author: [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2021/04/10
 Last modified: 2021/04/10
-Description: Train a lightweight Deep CNN for image denhazing.
+Description: Dehaze images with a lightweight deep convolutional neural network.
 """
 """
 # Introduction
 
-Image Dehazing is an important problem is Computer Vision. It can not only be used to
-enhance photographs clicked in hazy conditions, but also can be used to augment other
-computer vision systems such as Object Detection and Seantic Segmentation as a
+_Image dehazing_ — improving the image quality by removing the haze from images
+captured in real-world weather conditions — is an important problem is computer
+vision. It can be used not only to enhance photographs clicked in hazy
+conditions, but also can be used to augment other computer vision systems, such
+as _object detection_ and _semantic segmentation_ as a
 pre-processing step. In this example, we implement
-[AODNet](https://arxiv.org/abs/1707.06543v1), a simple and light-weight Deep CNN model
-that directly generates a clean image from a hazy image. The end-to-end design of AODNet
-makes it easy to embed AOD-Net into other deep models such as Faster-RCNN and YOLO as a
-pre-processing step, making it easier for such model to detect and recognize objects from
-a clean image.
+the [All-in-One Network (AOD-Net)](https://arxiv.org/abs/1707.06543v1) — a simple and
+lightweight deep convolutional neural network model that can generate clean
+images directly from hazy images. The end-to-end design of the AOD-Net
+enables embedding the network into other neural network models for, such as
+[Faster-RCNN](https://arxiv.org/abs/1506.01497v3) and
+[YOLO](https://pjreddie.com/media/files/papers/yolo.pdf), as a pre-processing
+step, making it easier for such model to detect and recognize objects from
+clean images.
 """
 
 """shell
@@ -32,12 +37,12 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 """
-# Downloading Dataset
+# Load the NYU2 Depth Database
 
-The authors of the AODNet paper have created synthesized hazy images using the
-groundtruth images with depth meta-data from the indoor 
-[NYU2 Depth Database](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html). We will
-download this dataset from Google Drive using `gdown`.
+The experiment in the AOD-Net paper used synthesized hazy images from the
+ground-truth images with depth meta-data from the indoor 
+[NYU2 Depth Database](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html).
+We will download this dataset from Google Drive using `gdown`.
 """
 
 gdown.download(
@@ -52,7 +57,7 @@ gdown.download(
 """
 
 """
-## Data Loader
+## Define the data transformation and augmentation functions
 
 In order to ensure that the model is fed the data efficiently during training, we will be
 use the `tf.data` API to create our data loading pipeline. Due to memory constraints for
@@ -183,15 +188,15 @@ print(train_dataset)
 print(val_dataset)
 
 """
-## Building AODNet Model
+## Define the AOD-Net model
 
-Now we will build AODNet a subclass of  `tf.keras.Model`. The following diagrams taken
-from the paper summarizes the architecture of the AODNet model.
+Now we will define the AOD-Net model as a subclass of  `tf.keras.Model`. The
+following diagrams from the original paper summarize its architecture:
 
-### The AODNet Model
+### The AOD-Net model
 ![](https://i.imgur.com/nmnF0cY.png)
 
-### K-estimation Model
+### The K-estimation model
 ![](https://i.imgur.com/dq5i4uz.png)
 """
 
@@ -256,36 +261,38 @@ class AODNet(tf.keras.Model):
 
 
 """
-Since we are training the model using a single GPU, i.e, Nvidia Tesla P100, we would use
-`tf.distribute.OneDeviceStrategy`, using this strategy will place any variables created
-in its scope on the specified device. We would define and compile our model in the scope
-of our distribution strategy. We would be using Adam as out optimizer, Mean Squared Error
-as the loss function and PSNR (Peak Signal Noise Ratio) as our metric.
-
-**Note:** For training AODNet in a multi-GPU environment,
-`tf.distribute.MirroredStrategy` can be used as a distribution stratgey.
+In this example, we are training the model using a single GPU (an NVIDIA Tesla
+P100) and the`tf.distribute.OneDeviceStrategy`. This
+[TensorFlow distribution strategy](https://www.tensorflow.org/tutorials/distribute/keras)
+will place any variables created in its scope on the specified device. We will
+define and compile our model in the scope of our distribution strategy, using
+Adam as the optimizer, the Mean Squared Error
+as the loss function, and the PSNR (Peak Signal Noise Ratio) as our metric.
+**Note:** For training the AOD-Net in a multi-GPU environment, we can also use
+`tf.distribute.MirroredStrategy` (go to the
+[Distributed training](https://www.tensorflow.org/guide/distributed_training)
+guide more information).
 """
 
 
 def peak_signal_noise_ratio(y_true, y_pred):
     return tf.image.psnr(y_pred, y_true, max_val=255.0)
 
+strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 
-model = AODNet(name="AODNet", stddev=0.02, weight_decay=1e-4)
-model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-    loss=tf.keras.losses.MeanSquaredError(),
-    metrics=[peak_signal_noise_ratio],
-)
-model.build((1, 256, 256, 3))
-
-model.summary()
+with strategy.scope():
+    model = AODNet(name='AODNet', stddev=0.02, weight_decay=1e-4)
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+        loss=tf.keras.losses.MeanSquaredError(),
+        metrics=[peak_signal_noise_ratio]
+    )
 
 """
 # Training
 
-We train AODNet for 10 epochs, on Nvidia Tesla P100, an epoch takes around 190 seconds,
-so the model takes around 30 minutes to train
+We train the AOD-Net for 10 epochs. On an NVIDIA Tesla P100, each epoch
+can take around 190 seconds, so the model may take around 30 minutes to train.
 """
 
 training_history = model.fit(train_dataset, validation_data=val_dataset, epochs=10)
@@ -317,7 +324,8 @@ plt.show()
 """
 # Inference
 
-We define 2 simple utility functions for inferring from an image and plotting the results
+Next, let's define 2 simple utility functions for inferring from
+an image and plotting the results:
 """
 
 
