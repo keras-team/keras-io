@@ -3,8 +3,7 @@ Title: Semi-supervised image classification using contrastive pretraining with S
 Author: [András Béres](www.linkedin.com/in/andras-beres-789190210)
 Date created: 2021/04/24
 Last modified: 2021/04/24
-Description: Using SimCLR for contrastive pretraining for semi-supervised image
-classification on the STL-10 dataset.
+Description: Contrastive pretraining with SimCLR for semi-supervised image classification on the STL-10 dataset.
 """
 """
 ## Introduction
@@ -60,8 +59,6 @@ an overview of self-supervised learning across both vision and language check ou
 ## Setup
 """
 
-import random
-import math
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -78,6 +75,9 @@ num_epochs = 60
 steps_per_epoch = 200  # defines the batch size implicitly
 width = 128
 temperature = 0.1
+# stronger augmentations for contrastive, weaker ones for supervised training
+contrastive_augmentation = {"min_area": 0.25, "brightness": 0.3, "color_jitter": 0.15}
+classification_augmentation = {"min_area": 0.5, "brightness": 0.2, "color_jitter": 0.1}
 
 """
 ## Dataset
@@ -112,13 +112,13 @@ def prepare_dataset(steps_per_epoch):
     test_dataset = (
         tfds.load("stl10", split="test", as_supervised=True)
         .batch(batch_size)
-        .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        .prefetch(buffer_size=tf.data.AUTOTUNE)
     )
 
     # labeled and unlabeled datasets are zipped together
     train_dataset = tf.data.Dataset.zip(
         (unlabeled_train_dataset, labeled_train_dataset)
-    ).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    ).prefetch(buffer_size=tf.data.AUTOTUNE)
 
     return batch_size, train_dataset, labeled_train_dataset, test_dataset
 
@@ -129,195 +129,74 @@ batch_size, train_dataset, labeled_train_dataset, test_dataset = prepare_dataset
 )
 
 """
-## Custom image augmentation layers
+## Image augmentations
 
 The two most important image augmentations for contrastive learning are the following:
 
-- cropping: forces the model to encode different parts of the same image similarly
+- cropping: forces the model to encode different parts of the same image similarly, we
+implement it with the
+[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
+ + [RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/) layers
 - color jitter: prevents a trivial color histogram-based solution to the task by
-distorting color histograms
+distorting color histograms. A principled way to implement that is by affine
+transformations in color space.
 
-In this example we use random horizontal flips as well.
+In this example we use random horizontal flips as well. Stronger augmentations are
+applied for contrastive learning, along with weaker ones for supervised classification
+to avoid overfitting on the few labeled examples.
 
-We implement our image augmentations as custom preprocessing layers. This has the
-following two advantages:
+We implement random color jitter as a custom preprocessing layer. Using preprocessing
+layers for data augmentation has the following two advantages:
 
-- the data augmentation will run on the GPU, so the training will not be bottlenecked by
-the data pipeline in environments with constrained CPU resources (such as a Colab
-Notebook, or a personal machine)
+- the data augmentation will run on GPU in batches, so the training will not be
+bottlenecked by the data pipeline in environments with constrained CPU resources (such
+as a Colab Notebook, or a personal machine)
 - deployment is easier as the data preprocessing pipeline is encapsulated in the model,
 and does not have to be reimplemented when deploying it
 """
 
-# the implementation of these image augmentations follow the torchvision library:
-# https://github.com/pytorch/vision/blob/master/torchvision/transforms/transforms.py
-# https://github.com/pytorch/vision/blob/master/torchvision/transforms/functional_tensor.py
 
-# however these augmentations:
-# -run on batches of images
-# -run on gpu
-# -can be part of a model
-
-
-# crops and resizes part of the image to the original resolutions
-class RandomResizedCrop(layers.Layer):
-    def __init__(self, scale, ratio, **kwargs):
+# distorts the color distibutions of images
+class RandomColorAffine(layers.Layer):
+    def __init__(self, brightness=0, jitter=0, **kwargs):
         super().__init__(**kwargs)
-        # area-range of the cropped part: (min area, max area), uniform sampling
-        self.scale = scale
-        # aspect-ratio-range of the cropped part: (log min ratio, log max ratio), log-uniform sampling
-        self.log_ratio = (tf.math.log(ratio[0]), tf.math.log(ratio[1]))
+
+        self.brightness = brightness
+        self.jitter = jitter
 
     def call(self, images, training=True):
         if training:
             batch_size = tf.shape(images)[0]
-            height = tf.shape(images)[1]
-            width = tf.shape(images)[2]
 
-            # independently sampled scales and ratios for every image in the batch
-            random_scales = tf.random.uniform(
-                (batch_size,), self.scale[0], self.scale[1]
+            # same for all colors
+            brightness_scales = tf.random.normal(
+                shape=(batch_size, 1, 1, 1), mean=1.0, stddev=self.brightness
             )
-            random_ratios = tf.exp(
-                tf.random.uniform((batch_size,), self.log_ratio[0], self.log_ratio[1])
-            )
-
-            # corresponding height and widths, clipped to fit in the image
-            new_heights = tf.clip_by_value(tf.sqrt(random_scales / random_ratios), 0, 1)
-            new_widths = tf.clip_by_value(tf.sqrt(random_scales * random_ratios), 0, 1)
-
-            # random anchors for the crop bounding boxes
-            height_offsets = tf.random.uniform((batch_size,), 0, 1 - new_heights)
-            width_offsets = tf.random.uniform((batch_size,), 0, 1 - new_widths)
-
-            # assemble bounding boxes and crop
-            bounding_boxes = tf.stack(
-                [
-                    height_offsets,
-                    width_offsets,
-                    height_offsets + new_heights,
-                    width_offsets + new_widths,
-                ],
-                axis=1,
-            )
-            images = tf.image.crop_and_resize(
-                images, bounding_boxes, tf.range(batch_size), (height, width)
+            # different for all colors
+            jitter_matrices = tf.random.normal(
+                shape=(batch_size, 1, 3, 3), stddev=self.jitter
             )
 
+            color_transforms = (
+                tf.eye(3, batch_shape=[batch_size, 1]) * brightness_scales
+                + jitter_matrices
+            )
+            images = tf.clip_by_value(tf.matmul(images, color_transforms), 0, 1)
         return images
 
 
-# distorts the color distibutions of images
-class RandomColorJitter(layers.Layer):
-    def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, **kwargs):
-        super().__init__(**kwargs)
-
-        # color jitter ranges: (min jitter strength, max jitter strength)
-        self.brightness = brightness
-        self.contrast = contrast
-        self.saturation = saturation
-        self.hue = hue
-
-        # list of applicable color augmentations
-        self.color_augmentations = [
-            self.random_brightness,
-            self.random_contrast,
-            self.random_saturation,
-            self.random_hue,
+# image augmentation module
+def get_augmenter(min_area, brightness, color_jitter):
+    zoom_factor = 1.0 - tf.sqrt(min_area)
+    return keras.Sequential(
+        [
+            layers.Input(shape=(96, 96, 3)),
+            preprocessing.Rescaling(1 / 255),
+            preprocessing.RandomFlip("horizontal"),
+            preprocessing.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
+            preprocessing.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
+            RandomColorAffine(brightness, color_jitter),
         ]
-
-        # the tf.image.random_[brightness, contrast, saturation, hue] operations
-        # cannot be used here, as they transform a batch of images in the same way
-
-    def blend(self, images_1, images_2, ratios):
-        # linear interpolation between two images, with values clipped to the valid range
-        return tf.clip_by_value(ratios * images_1 + (1.0 - ratios) * images_2, 0, 1)
-
-    def random_brightness(self, images):
-        # random interpolation/extrapolation between the image and darkness
-        return self.blend(
-            images,
-            0,
-            tf.random.uniform(
-                (tf.shape(images)[0], 1, 1, 1), 1 - self.brightness, 1 + self.brightness
-            ),
-        )
-
-    def random_contrast(self, images):
-        # random interpolation/extrapolation between the image and its mean intensity value
-        mean = tf.reduce_mean(
-            tf.image.rgb_to_grayscale(images), axis=(1, 2), keepdims=True
-        )
-        return self.blend(
-            images,
-            mean,
-            tf.random.uniform(
-                (tf.shape(images)[0], 1, 1, 1), 1 - self.contrast, 1 + self.contrast
-            ),
-        )
-
-    def random_saturation(self, images):
-        # random interpolation/extrapolation between the image and its grayscale counterpart
-        return self.blend(
-            images,
-            tf.image.rgb_to_grayscale(images),
-            tf.random.uniform(
-                (tf.shape(images)[0], 1, 1, 1), 1 - self.saturation, 1 + self.saturation
-            ),
-        )
-
-    def random_hue(self, images):
-        # random shift in hue in hsv colorspace
-        images = tf.image.rgb_to_hsv(images)
-        images += tf.random.uniform(
-            (tf.shape(images)[0], 1, 1, 3), (-self.hue, 0, 0), (self.hue, 0, 0)
-        )
-        # tf.math.floormod(images, 1.0) should be used here, however in introduces artifacts
-        images = tf.where(images < 0.0, images + 1.0, images)
-        images = tf.where(images > 1.0, images - 1.0, images)
-        images = tf.image.hsv_to_rgb(images)
-        return images
-
-    def call(self, images, training=True):
-        if training:
-            # applies color augmentations in random order
-            for color_augmentation in random.sample(self.color_augmentations, 4):
-                images = color_augmentation(images)
-        return images
-
-
-"""
-## Image augmentation modules
-
-We use stronger augmentations for contrastive learning, along with weaker ones for
-supervised classification to avoid overfitting on the few labeled examples.
-"""
-
-# stronger augmentations are used for the contrastive task
-def get_contrastive_augmenter():
-    return keras.Sequential(
-        [
-            layers.Input(shape=(96, 96, 3)),
-            preprocessing.Rescaling(1 / 255),
-            preprocessing.RandomFlip("horizontal"),
-            RandomResizedCrop(scale=(0.2, 1.0), ratio=(3 / 4, 4 / 3)),
-            RandomColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.2),
-        ],
-        name="contrastive_augmenter",
-    )
-
-
-# weaker augmentations are used for the classification task
-def get_classification_augmenter():
-    return keras.Sequential(
-        [
-            layers.Input(shape=(96, 96, 3)),
-            preprocessing.Rescaling(1 / 255),
-            preprocessing.RandomFlip("horizontal"),
-            RandomResizedCrop(scale=(0.5, 1.0), ratio=(3 / 4, 4 / 3)),
-            RandomColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-        ],
-        name="classification_augmenter",
     )
 
 
@@ -327,9 +206,9 @@ def visualize_augmentations(num_images):
     # apply augmentations
     augmented_images = zip(
         images,
-        get_classification_augmenter()(images),
-        get_contrastive_augmenter()(images),
-        get_contrastive_augmenter()(images),
+        get_augmenter(**classification_augmentation)(images),
+        get_augmenter(**contrastive_augmentation)(images),
+        get_augmenter(**contrastive_augmentation)(images),
     )
 
     row_titles = [
@@ -354,6 +233,7 @@ visualize_augmentations(num_images=8)
 """
 ## Encoder architecture
 """
+
 
 # define the encoder architecture
 def get_encoder(width):
@@ -381,11 +261,11 @@ A baseline supervised model is trained using random initialization for 60 epochs
 baseline_model = keras.Sequential(
     [
         layers.Input(shape=(96, 96, 3)),
-        get_classification_augmenter(),
+        get_augmenter(**classification_augmentation),
         get_encoder(width),
         layers.Dense(10),
     ],
-    name="not_pretrained_model",
+    name="baseline_model",
 )
 baseline_model.compile(
     optimizer=keras.optimizers.Adam(),
@@ -433,10 +313,11 @@ approach where the classifier is trained after the pretraining phase, in this ex
 train it during pretraining. This might slightly decrease its accuracy, but that way we
 can monitor its value during training, which helps with experimentation and debugging.
 
-Another widely used supervised metric is the [KNN
-accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN classifier
+Another widely used supervised metric is the
+[KNN accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN classifier
 trained on top of the encoder's features, which is not implemented in this example.
 """
+
 
 # define the contrastive model with model-subclassing
 class ContrastiveModel(keras.Model):
@@ -445,8 +326,8 @@ class ContrastiveModel(keras.Model):
 
         self.temperature = temperature
 
-        self.contrastive_augmenter = get_contrastive_augmenter()
-        self.classification_augmenter = get_classification_augmenter()
+        self.contrastive_augmenter = get_augmenter(**contrastive_augmentation)
+        self.classification_augmenter = get_augmenter(**classification_augmentation)
         self.encoder = get_encoder(width)
         # a non-linear mlp as projection head
         self.projection_head = keras.Sequential(
@@ -461,6 +342,10 @@ class ContrastiveModel(keras.Model):
         self.linear_probe = keras.Sequential(
             [layers.Input(shape=(width,)), layers.Dense(10)], name="linear_probe"
         )
+
+        self.encoder.summary()
+        self.projection_head.summary()
+        self.linear_probe.summary()
 
     def compile(self, contrastive_optimizer, probe_optimizer, **kwargs):
         super().compile(**kwargs)
@@ -574,7 +459,6 @@ pretraining_model.compile(
     probe_optimizer=keras.optimizers.Adam(),
 )
 
-pretraining_model.summary()
 pretraining_history = pretraining_model.fit(
     train_dataset, epochs=num_epochs // 2, validation_data=test_dataset
 )
@@ -595,11 +479,11 @@ randomly initalized fully connected classification layer on its top.
 finetuning_model = keras.Sequential(
     [
         layers.Input(shape=(96, 96, 3)),
-        get_classification_augmenter(),
+        get_augmenter(**classification_augmentation),
         pretraining_model.encoder,
         layers.Dense(10),
     ],
-    name="pretrained_model",
+    name="finetuning_model",
 )
 finetuning_model.compile(
     optimizer=keras.optimizers.Adam(),
@@ -620,16 +504,14 @@ print(
 ## Comparison against the baseline
 """
 
+
 # the classification accuracies of the baseline and the pretraining + finetuning process:
 def plot_training_curves(pretraining_history, finetuning_history, baseline_history):
     pretraining_epochs = len(pretraining_history.history["val_p_acc"])
     finetuning_epochs = len(finetuning_history.history["val_acc"])
 
     plt.figure(figsize=(8, 5), dpi=100)
-    plt.plot(
-        baseline_history.history["val_acc"],
-        label="supervised baseline with random init",
-    )
+    plt.plot(baseline_history.history["val_acc"], label="supervised baseline")
     plt.plot(
         pretraining_history.history["val_p_acc"], label="self-supervised pretraining"
     )
@@ -644,10 +526,7 @@ def plot_training_curves(pretraining_history, finetuning_history, baseline_histo
     plt.ylabel("validation accuracy")
 
     plt.figure(figsize=(8, 5), dpi=100)
-    plt.plot(
-        baseline_history.history["val_loss"],
-        label="supervised baseline with random init",
-    )
+    plt.plot(baseline_history.history["val_loss"], label="supervised baseline")
     plt.plot(
         pretraining_history.history["val_p_loss"], label="self-supervised pretraining"
     )
