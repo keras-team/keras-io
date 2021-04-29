@@ -76,8 +76,8 @@ steps_per_epoch = 200  # defines the batch size implicitly
 width = 128
 temperature = 0.1
 # stronger augmentations for contrastive, weaker ones for supervised training
-contrastive_augmentation = {"min_area": 0.2, "brightness": 0.4, "color_jitter": 0.1}
-classification_augmentation = {"min_area": 0.6, "brightness": 0.2, "color_jitter": 0.05}
+contrastive_augmentation = {"min_area": 0.2, "brightness": 0.6, "color_jitter": 0.2}
+classification_augmentation = {"min_area": 0.6, "brightness": 0.3, "color_jitter": 0.1}
 
 """
 ## Dataset
@@ -174,7 +174,7 @@ class RandomColorAffine(layers.Layer):
             )
             # different for all colors
             jitter_matrices = tf.random.uniform(
-                (batch_size, 1, 3, 3), minval=-self.brightness, maxval=self.brightness
+                (batch_size, 1, 3, 3), minval=-self.jitter, maxval=self.jitter
             )
 
             color_transforms = (
