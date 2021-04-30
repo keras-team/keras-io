@@ -111,8 +111,8 @@ validation_ds = (
 """
 ## Define the learnable resizer utilities
 
-The figure below (courtesy of the original paper) presents the structure of the learnable
-resizing module:
+The figure below (courtesy: [Learning to Resize Images for Computer Vision Tasks](https://arxiv.org/abs/2103.09950v1))
+presents the structure of the learnable resizing module:
 
 ![](https://i.ibb.co/gJYtSs0/image.png)
 """
@@ -263,11 +263,13 @@ trained using the same initial random weights.
 combination of natural and stylized images. It might be interesting to investigate if
 this learnable resizing module could achieve something similar as the outputs seem to
 discard the texture information. 
+* The resizer module can handle arbitrary resolutions and aspect ratios which is very
+important for tasks like object detection and segmentation. 
 * Through a set of experiments, the authors also verify if the performance improvement is
 ***not*** solely due to the increase in the number of model parameters. You are
 encouraged to check those out in the
 [original paper](https://arxiv.org/abs/2103.09950v1). 
-* There is another closely related topic on adaptive image resizing that attempts to
-resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/pdf/2104.00298)
+* There is another closely related topic on ***adaptive image resizing*** that attempts
+to resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/pdf/2104.00298)
 uses this idea. 
 """
