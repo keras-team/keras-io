@@ -44,6 +44,7 @@ from tensorflow import keras
 import tensorflow as tf
 
 import tensorflow_datasets as tfds
+
 tfds.disable_progress_bar()
 
 import matplotlib.pyplot as plt
@@ -266,4 +267,7 @@ discard the texture information.
 ***not*** solely due to the increase in the number of model parameters. You are
 encouraged to check those out in the
 [original paper](https://arxiv.org/abs/2103.09950v1). 
+* There is another closely related topic on adaptive image resizing that attempts to
+resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/pdf/2104.00298)
+uses this idea. 
 """
