@@ -7,18 +7,18 @@ Description: How to optimally learn representations of images for a given resolu
 """
 """
 It is a common belief that if we constrain vision models to perceive things as humans do,
-their performance can be improved. For example, in [this
-work](https://arxiv.org/abs/1811.12231), Geirhos et. al showed that the vision models
-pre-trained on the ImageNet-1k dataset are biased toward texture whereas human beings
-mostly use the shape descriptor to develop a common perception. But does this belief
-always apply especially when it comes to improving the performance of vision models? 
+their performance can be improved. For example, in [this work](https://arxiv.org/abs/1811.12231),
+Geirhos et al. showed that the vision models pre-trained on the ImageNet-1k dataset are
+biased toward texture whereas human beings mostly use the shape descriptor to develop a
+common perception. But does this belief always apply especially when it comes to improving
+the performance of vision models? 
 
 It turns out it may not always be the case. When training vision models, it is common to
-resize images to a lower dimension ((224x224), (299x299), etc.) to allow mini-batch
+resize images to a lower dimension ((224 x 224), (299 x 299), etc.) to allow mini-batch
 learning and also to keep up the compute limitations.  We generally make use of image
 resizing methods like **bilinear interpolation** for this step and the resized images do
 not lose much of their perceptual character to the human eyes. In [Learning to Resize
-Images for Computer Vision Tasks](https://arxiv.org/abs/2103.09950v1), Talebi et. al show
+Images for Computer Vision Tasks](https://arxiv.org/abs/2103.09950v1), Talebi et al. show
 that if we try to optimize the perceptual quality of the images for the vision models
 rather than the human eyes, their performance can further be improved. They investigate
 the following question: 
@@ -26,11 +26,11 @@ the following question:
 **For a given image resolution and a model, how to best resize the given images?**
 
 As shown in the paper, this idea helps to consistently improve the performance of the
-common vision models (pre-trained on ImageNet-1k) like DenseNet121, ResNet50,
+common vision models (pre-trained on ImageNet-1k) like DenseNet-121, ResNet-50,
 MobileNetV2, and EfficientNets. In this example, we will implement the learnable image
 resizing module as proposed in the paper and demonstrate that on the
-[Cast-Vs-Dogs dataset](https://www.microsoft.com/en-us/download/details.aspx?id=54765)
-using the [DenseNet121](https://arxiv.org/abs/1608.06993) model. 
+[Cats and Dogs dataset](https://www.microsoft.com/en-us/download/details.aspx?id=54765)
+using the [DenseNet-121](https://arxiv.org/abs/1608.06993) architecture. 
 
 This example requires TensorFlow 2.4 or higher.
 """
@@ -71,9 +71,9 @@ EPOCHS = 5
 ALPHA = 0.2
 
 """
-For this example, we will use the bilinear interpolation but the learnable image resizer
-module is not dependent on any specific interpolation method. We can use other ones (such
-as bicubic) as well. 
+In this example, we will use the bilinear interpolation but the learnable image resizer
+module is not dependent on any specific interpolation method. We can also use others,
+such as bicubic.
 """
 
 """
@@ -199,7 +199,7 @@ for i, image in enumerate(sample_images[:9]):
 
 
 def get_model():
-    backbone = tf.keras.applications.DenseNet121(
+    backbone = tf.keras.applications.DenseNet - 121(
         weights=None, include_top=True, classes=2
     )
     backbone.trainable = True
@@ -239,9 +239,9 @@ for i, image in enumerate(sample_images[:9]):
     plt.axis("off")
 
 """
-As we can see the visuals of the images have improved with training. Additionally, you
-can find this repository that shows the benefits of using the resizing module. Below is a
-comparison:
+The plot shows that the visuals of the images have improved with training. Additionally, 
+you can find [this repository](https://github.com/sayakpaul/Learnable-Image-Resizing) that shows the benefits of using the resizing module. Below
+is a comparison:
 
 |           Model           	| Number of  parameters (Million) 	| Top-1 accuracy 	|
 |:-------------------------:	|:-------------------------------:	|:--------------:	|
@@ -249,7 +249,7 @@ comparison:
 | Without learnable resizer 	|             7.039554            	|      50.3      	|
 
 Note the above-reported models were trained for 10 epochs on 90% of the training set of
-Cats-vs-Dogs unlike this example. Also, note that the increase in the number of
+Cats and Dogs unlike this example. Also, note that the increase in the number of
 parameters due to the resizing module is very negligible. You can reproduce these results
 from [this repository](https://github.com/sayakpaul/Learnable-Image-Resizing). To ensure
 that the improvement in the performance is not due to stochasticity, the models were
@@ -259,7 +259,7 @@ trained using the same initial random weights.
 """
 ## Notes
 
-* To impose shape bias inside the vision models, Geirhos et. al trained them with a
+* To impose shape bias inside the vision models, Geirhos et al. trained them with a
 combination of natural and stylized images. It might be interesting to investigate if
 this learnable resizing module could achieve something similar as the outputs seem to
 discard the texture information. 
