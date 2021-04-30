@@ -137,21 +137,21 @@ def learnable_resizer(
     inputs, filters=16, num_res_blocks=1, interpolation=INTERPOLATION
 ):
 
-    # We first do a naive resizing.
+    # First, perform naive resizing.
     naive_resize = layers.experimental.preprocessing.Resizing(
         *TARGET_DIM, interpolation=interpolation
     )(inputs)
 
-    # First conv block without Batch Norm.
+    # First convolution block without batch normalization.
     x = layers.Conv2D(filters=filters, kernel_size=7, strides=1, padding="same")(inputs)
     x = layers.LeakyReLU(ALPHA)(x)
 
-    # Second conv block with Batch Norm.
+    # Second convolution block with batch normalization.
     x = layers.Conv2D(filters=filters, kernel_size=1, strides=1, padding="same")(x)
     x = layers.LeakyReLU(ALPHA)(x)
     x = layers.BatchNormalization()(x)
 
-    # Intermediate resizing as bottleneck.
+    # Intermediate resizing as a bottleneck.
     bottleneck = layers.experimental.preprocessing.Resizing(
         *TARGET_DIM, interpolation=interpolation
     )(x)
