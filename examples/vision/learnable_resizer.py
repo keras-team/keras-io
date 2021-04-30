@@ -57,8 +57,8 @@ import numpy as np
 """
 In order to facilitate mini-batch learning, we need to have a fixed shape for the images
 inside a given batch. This is why an initial resizing is required. We first resize all
-the images to (300x300) shape and then learn their optimal representation for the
-(224x224) resolution. 
+the images to (300 x 300) shape and then learn their optimal representation for the
+(224 x 224) resolution. 
 """
 
 INP_DIM = (300, 300)
