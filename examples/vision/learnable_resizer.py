@@ -199,9 +199,7 @@ for i, image in enumerate(sample_images[:9]):
 
 
 def get_model():
-    backbone = tf.keras.applications.DenseNet - 121(
-        weights=None, include_top=True, classes=2
-    )
+    backbone = tf.keras.applications.DenseNet(weights=None, include_top=True, classes=2)
     backbone.trainable = True
 
     inputs = layers.Input((INP_DIM[0], INP_DIM[1], 3))
@@ -211,6 +209,11 @@ def get_model():
 
     return tf.keras.Model(inputs, outputs)
 
+
+"""
+The structure of the learnable image resizer module allows for flexible integrations with
+different vision models.
+"""
 
 """
 ## Compile and train our model with learnable resizer
@@ -239,21 +242,21 @@ for i, image in enumerate(sample_images[:9]):
     plt.axis("off")
 
 """
-The plot shows that the visuals of the images have improved with training. Additionally, 
-you can find [this repository](https://github.com/sayakpaul/Learnable-Image-Resizing) that shows the benefits of using the resizing module. Below
-is a comparison:
+The plot shows that the visuals of the images have improved with training. The following
+table shows the benefits of using the resizing module in comparison to using the bilinear 
+interpolation:
 
 |           Model           	| Number of  parameters (Million) 	| Top-1 accuracy 	|
 |:-------------------------:	|:-------------------------------:	|:--------------:	|
 |   With learnable resizer  	|             7.051717            	|      52.02     	|
 | Without learnable resizer 	|             7.039554            	|      50.3      	|
 
+For more details, you can check out [this repository](https://github.com/sayakpaul/Learnable-Image-Resizing).
 Note the above-reported models were trained for 10 epochs on 90% of the training set of
 Cats and Dogs unlike this example. Also, note that the increase in the number of
-parameters due to the resizing module is very negligible. You can reproduce these results
-from [this repository](https://github.com/sayakpaul/Learnable-Image-Resizing). To ensure
-that the improvement in the performance is not due to stochasticity, the models were
-trained using the same initial random weights. 
+parameters due to the resizing module is very negligible. To ensure that the improvement
+in the performance is not due to stochasticity, the models were trained using the same
+initial random weights. 
 """
 
 """
