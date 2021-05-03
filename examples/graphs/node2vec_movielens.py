@@ -491,12 +491,10 @@ print("Embeddings shape:", movie_embeddings.shape)
 
 query_movies = [
     "Matrix, The (1999)",
-    "Aliens (1986)",
     "Star Wars: Episode IV - A New Hope (1977)",
     "Lion King, The (1994)",
     "Terminator 2: Judgment Day (1991)",
     "Godfather, The (1972)",
-    "Titanic (1997)",
 ]
 
 """
