@@ -24,6 +24,7 @@ neighboring nodes, with respect to the graph structure.
 Given your data items structured as a graph (where the items are represented as
 nodes and the relationship between items are represented as edges),
 node2vec works as follows:
+
 1. Generate item sequences using (biased) random walk.
 2. Create positive and negative training examples from these sequences.
 3. Train a [word2vec](https://www.tensorflow.org/tutorials/text/word2vec) model
@@ -37,7 +38,7 @@ or movie genres prediction.
 
 This example requires `networkx` package, which can be installed using the following command:
 
-```python
+```
 pip install networkx
 ````
 """
@@ -264,7 +265,7 @@ def next_step(graph, previous, current, p, q):
     return next
 
 
-def randm_walk(graph, num_walks, num_steps, p, q):
+def random_walk(graph, num_walks, num_steps, p, q):
     walks = []
     nodes = list(graph.nodes())
     # Perform multiple iterations of the random walk.
@@ -304,7 +305,7 @@ p = 1
 q = 1
 num_walks = 5
 num_steps = 10
-walks = randm_walk(movies_graph, num_walks, num_steps, p, q)
+walks = random_walk(movies_graph, num_walks, num_steps, p, q)
 
 print("Number of walks generated:", len(walks))
 
@@ -313,6 +314,7 @@ print("Number of walks generated:", len(walks))
 
 To train a skip-gram model, we use the generated walks to create positive and
 negative training examples. Each example includes the following features:
+
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
 3. `weight`: How many times these two movies occured in walk sequences.
@@ -414,6 +416,7 @@ dataset = create_dataset(
 ## Train a Skip-gram Model
 
 Our skip-gram is a simple binary classification model that works as follows:
+
 1. An embedding is looked up for the `target` movie.
 2. An embedding is looked up for the `context` movie.
 3. The dot product is computed between these two embeddings.
@@ -433,8 +436,8 @@ num_epochs = 10
 def create_model(vocabulary_size, embedding_dim):
 
     inputs = {
-        "target": layers.Input(name="target", shape=(), dtype=tf.int32),
-        "context": layers.Input(name="context", shape=(), dtype=tf.int32),
+        "target": layers.Input(name="target", shape=(), dtype="int32"),
+        "context": layers.Input(name="context", shape=(), dtype="int32"),
     }
     # Initialize item embeddings.
     embed_item = layers.Embedding(
@@ -461,17 +464,33 @@ def create_model(vocabulary_size, embedding_dim):
 ### Train the model
 """
 
+"""
+We instantiate the model and compile it.
+"""
+
 model = create_model(len(vocabulary), embedding_dim)
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate),
     loss=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-tf.keras.utils.plot_model(
+"""
+Let's plot the model.
+"""
+
+keras.utils.plot_model(
     model, show_shapes=True, show_dtype=True, show_layer_names=True,
 )
 
+"""
+Now we fit the model with the `dataset`.
+"""
+
 history = model.fit(dataset, epochs=num_epochs)
+
+"""
+Finally we plot the learning history.
+"""
 
 plt.plot(history.history["loss"])
 plt.ylabel("loss")
