@@ -1,11 +1,11 @@
 
 """
-# Similarity Network with Duplet Loss
+# Siamese Network with Contrastive Loss
 
 Author: [Mehdi](https://github.com/s-mrb)<br>
 Date created: 2021/05/02<br>
 Last modified: 2020/05/03<br>
-Description: Similarity Learning Using `Siamese Network` with `Duplet Loss`
+Description: Similarity Learning Using Siamese Network with Contrastive Loss
 """
 
 """
@@ -14,15 +14,15 @@ Description: Similarity Learning Using `Siamese Network` with `Duplet Loss`
 The [Siamese Network](https://papers.nips.cc/paper/1993/file/288cc0ff022877bd3df94bc9360b9c5d-Paper.pdf) introduced by Bromley and LeCun to solve signature
 verification as an image matching problem is now widely used for finding the
 level of similarity between two images. This algorithm evolved to have many
-different variants, althought the one we are going to use is Duplet Network.
-A duplet network involves two sister netwroks for finding embeddings/encodings
+different variants, although the one we are going to use is Duplet Network.
+A duplet network involves two sister networks for finding embeddings/encodings
 and then a distance heuristic to find out how much these embeddings differ from
 each other.
 
 """
 
 """
-## Necessary Imports
+## Necessary imports
 """
 
 import random
@@ -49,15 +49,15 @@ x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
 
 """
-## Make Pairs of images
+## Create pairs of images
 
 We want our model to be able to differentiate 0 from 1,2,3, .., 9 to do so we
 should teach it how each digit differs from each of the other digit, for this
 purpose we would select N random images from class A (lets say class of
-digit 0) and would pair with N random images from class B (lets say class of
+digit 0) and would pair it with N random images from class B (lets say class of
 digit 1), and would repeat this process untill class of digit 9. In this way we
 successfuly pair 0 with each other digit, now we would do the same for class of
-1,2,3 and so on.
+1,2,3 .upto that of 9.
 """
 
 def make_pairs(x, y):
@@ -129,7 +129,7 @@ def visualize(dataset, to_show=10, num_col=5, predictions=None, test=False):
   for images, labels in dataset.take(1):
     for i in range(to_show):
         ax = axes[i//num_col, i%num_col]
-        # images[0][i][:,:,0] -> because it is (28,28,1) and imshow takes (28,82)
+        # images[0][i][:,:,0] -> because it is (28,28,1) and imshow takes (28,28)
         # ax.imshow(tf.concat([images[0][i][:,:,0],images[1][i][:,:,0]],axis=1))
 
         ax.imshow(tf.concat([images[0][i],images[1][i]],axis=1))
@@ -148,7 +148,7 @@ visualize(train_ds)
 """
 ## Model
 
-There are two input layers, each lead to dense network which produces
+There are two input layers, each lead to its own dense network which produces
 embeddings. Lambda layer will merge them using euclidean distance and merged
 layer will be fed to final network.
 """
@@ -201,9 +201,10 @@ results = model.evaluate(test_ds)
 print("test loss, test acc:", results)
 
 """
-## Visualize Predictions
+## Visualize predictions
 """
 
 predictions = model.predict(test_ds)
 
 visualize(dataset=test_ds, predictions=predictions, test=True)
+
