@@ -11,10 +11,12 @@ Description: Implementing the node2vec to generate embeddings for movies.
 
 
 Learning useful representations from objects structured as graphs is useful for
-a variety of ML applications, and leads to greater predictive power.
+a variety of ML applications —such as social and communication networks analysis,
+biomedicine studies, and recommendation systems, and leads to greater predictive power.
 [Graph Representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/) aims to
 learn embeddings for the graph nodes, which can be used for a variety of ML tasks
-such as node label prediction and link prediction.
+such as node label prediction (e.g. categorizing an article based on its citations)
+and link prediction (e.g. recommending an interest group to a user in a social network).
 
 [node2vec](https://arxiv.org/abs/1607.00653) is a simple, yet scalable and effective
 technique for learning low-dimensional embeddings for nodes in a graph by optimizing
@@ -452,7 +454,7 @@ def create_model(vocabulary_size, embedding_dim):
     # Lookup embeddings for context.
     context_embeddings = embed_item(inputs["context"])
     # Compute dot similarity between target and context embeddings.
-    logits = layers.Dot(axes=1, name="dot_similarity")(
+    logits = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
         [target_embeddings, context_embeddings]
     )
     # Create the model.
