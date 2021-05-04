@@ -11,13 +11,13 @@ Description: Similarity Learning Using Siamese Network with Contrastive Loss
 """
 ## Introduction
 
-The [Siamese Network](https://papers.nips.cc/paper/1993/file/288cc0ff022877bd3df94bc9360b9c5d-Paper.pdf) introduced by Bromley and LeCun to solve signature
-verification as an image matching problem is now widely used for finding the
-level of similarity between two images. This algorithm evolved to have many
-different variants, although the one we are going to use is Duplet Network.
-A duplet network involves two sister networks for finding embeddings/encodings
-and then a distance heuristic to find out how much these embeddings differ from
-each other.
+The [Siamese Network](https://papers.nips.cc/paper/1993/file/288cc0ff022877bd3df94bc9360b9c5d-Paper.pdf)
+introduced by Bromley and LeCun to solve signature verification as an image
+matching problem is now widely used for finding the level of similarity between
+two images. This algorithm evolved to have many different forms, although
+the one we are going to use is Duplet Network. A duplet network involves
+two sister networks for finding embeddings/encodings and then a distance
+heuristic to find out how much these embeddings differ from each other.
 
 """
 
