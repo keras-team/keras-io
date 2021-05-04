@@ -57,7 +57,7 @@ purpose we would select N random images from class A (lets say class of
 digit 0) and would pair it with N random images from class B (lets say class of
 digit 1), and would repeat this process untill class of digit 9. In this way we
 successfuly pair 0 with each other digit, now we would do the same for class of
-1,2,3 .upto that of 9.
+1,2,3 upto that of 9.
 """
 
 def make_pairs(x, y):
