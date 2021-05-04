@@ -103,17 +103,17 @@ pairs_test, labels_test = make_pairs(x_test, y_test)
 # later we can generate tf.data.Dataset using these halves
 # we will do the same for labels
 
-x1 = pairs_train[:,0]
-x2 = pairs_train[:,1]
+x_train_1 = pairs_train[:,0]
+x_train_2 = pairs_train[:,1]
 # x1.shape = (120000, 28, 28)
 
-y1, y2 = pairs_test[:,0],pairs_test[:,1]
+x_test_1, x_test_2 = pairs_test[:,0],pairs_test[:,1]
 
-train_pair = tf.data.Dataset.from_tensor_slices((x1, x2))
+train_pair = tf.data.Dataset.from_tensor_slices((x_train_1, x_train_2))
 train_label = tf.data.Dataset.from_tensor_slices(labels_train)
 train_ds = tf.data.Dataset.zip((train_pair, train_label)).batch(16)
 
-test_pair = tf.data.Dataset.from_tensor_slices((y1, y2))
+test_pair = tf.data.Dataset.from_tensor_slices((x_test_1, x_test_2))
 test_label = tf.data.Dataset.from_tensor_slices(labels_test)
 test_ds = tf.data.Dataset.zip((test_pair, test_label)).batch(16)
 
@@ -122,23 +122,30 @@ test_ds = tf.data.Dataset.zip((test_pair, test_label)).batch(16)
 """
 
 def visualize(dataset, to_show=10, num_col=5, predictions=None, test=False):
-  num_row = to_show//num_col
+
+  # handle the case when user input more columns then images to show
+  num_row = to_show//num_col if to_show//num_col != 0 else 1 
 
   # plot images
   fig, axes = plt.subplots(num_row, num_col, figsize=(1.5*num_col,2*num_row))
   for images, labels in dataset.take(1):
     for i in range(to_show):
-        ax = axes[i//num_col, i%num_col]
-        # images[0][i][:,:,0] -> because it is (28,28,1) and imshow takes (28,28)
-        # ax.imshow(tf.concat([images[0][i][:,:,0],images[1][i][:,:,0]],axis=1))
 
+        # if row is one, axes array is one dimentional
+        if num_row == 1:
+          ax = axes[i%num_col]
+        else:
+          ax = axes[i//num_col, i%num_col]
+          
+        # images[0][i][:,:,0] -> because it is (28,28,1) 
+        # and imshow takes (28,82)
         ax.imshow(tf.concat([images[0][i],images[1][i]],axis=1))
         if test:
           ax.set_title('y:{}  |  y^:{}'.format(labels[i],predictions[i]))
         else:
           ax.set_title('Label: {}'.format(labels[i]))
   if test:
-    plt.tight_layout(rect = (0,0,2,2 ), w_pad=0.0)
+    plt.tight_layout(rect = (0,0,2,2 ), w_pad=0.0, )
   else:
     plt.tight_layout()
   plt.show()
@@ -190,7 +197,10 @@ def contrastive_loss(y_true, y_pred):
     margin_square = K.square(K.maximum(margin - (1-y_pred), 0))
     return K.mean(y_true * square_pred + (1 - y_true) * margin_square)
 
-model.compile(loss = contrastive_loss, optimizer=RMSprop(), metrics=["accuracy"])
+model.compile(
+	loss = contrastive_loss, 
+	optimizer=RMSprop(), 
+	metrics=["accuracy"])
 
 model.summary()
 
@@ -206,5 +216,10 @@ print("test loss, test acc:", results)
 
 predictions = model.predict(test_ds)
 
-visualize(dataset=test_ds, predictions=predictions, test=True)
+visualize(
+	dataset=test_ds, 
+	to_show=3, 
+	num_col=3, 
+	predictions=predictions, 
+	test=True)
 
