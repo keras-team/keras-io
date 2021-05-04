@@ -121,13 +121,18 @@ test_ds = tf.data.Dataset.zip((test_pair, test_label)).batch(16)
 ## Visualize
 """
 
-def visualize(dataset, to_show=10, num_col=5, predictions=None, test=False):
+# images to show must be integral multiple of num_col
+# if not then then they would be made so
+def visualize(dataset, to_show=6, num_col=3, predictions=None, test=False):
 
-  # handle the case when user input more columns then images to show
+  # handle case when user input more columns then images to show
   num_row = to_show//num_col if to_show//num_col != 0 else 1 
 
+  # num_col must be integral multiple of to_show 
+  to_show = to_show if to_show/num_col == 0 else num_row*num_col
+
   # plot images
-  fig, axes = plt.subplots(num_row, num_col, figsize=(1.5*num_col,2*num_row))
+  fig, axes = plt.subplots(num_row, num_col, figsize=(5,5))
   for images, labels in dataset.take(1):
     for i in range(to_show):
 
@@ -137,19 +142,21 @@ def visualize(dataset, to_show=10, num_col=5, predictions=None, test=False):
         else:
           ax = axes[i//num_col, i%num_col]
           
-        # images[0][i][:,:,0] -> because it is (28,28,1) 
-        # and imshow takes (28,82)
-        ax.imshow(tf.concat([images[0][i],images[1][i]],axis=1))
+        # images[0][i][:,:,0] -> because it is
+        # (28,28,1) and imshow takes (28,82)
+        ax.imshow(tf.concat([images[0][i],images[1][i]],axis=1), cmap='gray')
         if test:
-          ax.set_title('y:{}  |  y^:{}'.format(labels[i],predictions[i]))
+          ax.set_title('True: {} | Pred: {:.5f}'.format(
+          labels[i],
+          predictions[i][0]))
         else:
           ax.set_title('Label: {}'.format(labels[i]))
   if test:
-    plt.tight_layout(rect = (0,0,2,2 ), w_pad=0.0, )
+    plt.tight_layout(rect = (0,0,1.9,1.9 ), w_pad=0.0)
   else:
-    plt.tight_layout()
+    plt.tight_layout(rect = (0,0,1.5,1.5))
   plt.show()
-
+  
 visualize(train_ds)
 
 """
