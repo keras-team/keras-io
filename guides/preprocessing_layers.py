@@ -39,7 +39,7 @@ trick".
 features.
 - `StringLookup` layer: turns string categorical values an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
-- `IntegerLookup` layer: turns integer categorical values an encoded representation that can be
+- `IntegerLookup` layer: turns integer categorical values into an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
 - `CategoryCrossing` layer: combines categorical features into co-occurrence features.
 E.g. if you have feature values "a" and "b", it can provide with the combination feature
@@ -78,7 +78,7 @@ a sample of the training data. The list of stateful preprocessing layers is:
 - `TextVectorization`: holds a mapping between string tokens and integer indices
 - `StringLookup` and `IntegerLookup`: hold a mapping between input values and integer
 indices.
-- `Normalization`: holds the mean and standard deviation of the features
+- `Normalization`: holds the mean and standard deviation of the features.
 - `Discretization`: holds information about value bucket boundaries.
 
 Crucially, these layers are **non-trainable**. Their state is not set during training; it
@@ -291,8 +291,9 @@ string `""`), and index 1 is reserved for out-of-vocabulary values (values that 
 seen during `adapt()`). You can configure this by using the `mask_token` and `oov_token`
 constructor arguments  of `StringLookup`.
 
-You can see the `StringLookup` in action in the example
-[structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/).
+You can see the `StringLookup` in action in the
+[Structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/)
+example.
 """
 
 """
