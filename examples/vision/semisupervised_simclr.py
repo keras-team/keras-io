@@ -70,14 +70,20 @@ from tensorflow.keras.layers.experimental import preprocessing
 """
 ## Hyperparameterers
 """
+# dataset hyperparameters
+unlabeled_dataset_size = 100000
+labeled_dataset_size = 5000
+image_size = 96
+image_channels = 3
 
+# algorithm hyperparameters
 num_epochs = 60
-steps_per_epoch = 200  # defines the batch size implicitly
+batch_size = 525  # corresponds to 200 steps per epoch
 width = 128
 temperature = 0.1
 # stronger augmentations for contrastive, weaker ones for supervised training
-contrastive_augmentation = {"min_area": 0.2, "brightness": 0.6, "color_jitter": 0.2}
-classification_augmentation = {"min_area": 0.6, "brightness": 0.3, "color_jitter": 0.1}
+contrastive_augmentation = {"min_area": 1 / 4, "brightness": 0.6, "jitter": 0.2}
+classification_augmentation = {"min_area": 2 / 3, "brightness": 0.3, "jitter": 0.1}
 
 """
 ## Dataset
@@ -87,31 +93,29 @@ of labeled images simultaneously.
 """
 
 
-def prepare_dataset(steps_per_epoch):
+def prepare_dataset():
     # labeled and unlabeled samples are loaded synchronously
     # with batch sizes selected accordingly
-    unlabeled_batch_size = 100000 // steps_per_epoch
-    labeled_batch_size = 5000 // steps_per_epoch
-    batch_size = unlabeled_batch_size + labeled_batch_size
+    steps_per_epoch = (unlabeled_dataset_size + labeled_dataset_size) // batch_size
+    unlabeled_batch_size = unlabeled_dataset_size // steps_per_epoch
+    labeled_batch_size = labeled_dataset_size // steps_per_epoch
     print(
-        "batch size is {} (unlabeled) + {} (labeled)".format(
-            unlabeled_batch_size, labeled_batch_size
-        )
+        f"batch size is {unlabeled_batch_size} (unlabeled) + {labeled_batch_size} (labeled)"
     )
 
     unlabeled_train_dataset = (
         tfds.load("stl10", split="unlabelled", as_supervised=True, shuffle_files=True)
-        .shuffle(buffer_size=5000)
-        .batch(unlabeled_batch_size, drop_remainder=True)
+        .shuffle(buffer_size=10 * unlabeled_batch_size)
+        .batch(unlabeled_batch_size)
     )
     labeled_train_dataset = (
         tfds.load("stl10", split="train", as_supervised=True, shuffle_files=True)
-        .shuffle(buffer_size=5000)
-        .batch(labeled_batch_size, drop_remainder=True)
+        .shuffle(buffer_size=10 * labeled_batch_size)
+        .batch(labeled_batch_size)
     )
     test_dataset = (
         tfds.load("stl10", split="test", as_supervised=True)
-        .batch(batch_size)
+        .batch(labeled_batch_size)
         .prefetch(buffer_size=tf.data.AUTOTUNE)
     )
 
@@ -120,13 +124,11 @@ def prepare_dataset(steps_per_epoch):
         (unlabeled_train_dataset, labeled_train_dataset)
     ).prefetch(buffer_size=tf.data.AUTOTUNE)
 
-    return batch_size, train_dataset, labeled_train_dataset, test_dataset
+    return train_dataset, labeled_train_dataset, test_dataset
 
 
 # load STL10 dataset
-batch_size, train_dataset, labeled_train_dataset, test_dataset = prepare_dataset(
-    steps_per_epoch
-)
+train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 
 """
 ## Image augmentations
@@ -186,16 +188,16 @@ class RandomColorAffine(layers.Layer):
 
 
 # image augmentation module
-def get_augmenter(min_area, brightness, color_jitter):
+def get_augmenter(min_area, brightness, jitter):
     zoom_factor = 1.0 - tf.sqrt(min_area)
     return keras.Sequential(
         [
-            layers.Input(shape=(96, 96, 3)),
+            layers.Input(shape=(image_size, image_size, image_channels)),
             preprocessing.Rescaling(1 / 255),
             preprocessing.RandomFlip("horizontal"),
             preprocessing.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
             preprocessing.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
-            RandomColorAffine(brightness, color_jitter),
+            RandomColorAffine(brightness, jitter),
         ]
     )
 
@@ -236,10 +238,10 @@ visualize_augmentations(num_images=8)
 
 
 # define the encoder architecture
-def get_encoder(width):
+def get_encoder():
     return keras.Sequential(
         [
-            layers.Input(shape=(96, 96, 3)),
+            layers.Input(shape=(image_size, image_size, image_channels)),
             layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
             layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
             layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
@@ -260,9 +262,9 @@ A baseline supervised model is trained using random initialization for 60 epochs
 # baseline supervised training with random initialization
 baseline_model = keras.Sequential(
     [
-        layers.Input(shape=(96, 96, 3)),
+        layers.Input(shape=(image_size, image_size, image_channels)),
         get_augmenter(**classification_augmentation),
-        get_encoder(width),
+        get_encoder(),
         layers.Dense(10),
     ],
     name="baseline_model",
@@ -321,14 +323,14 @@ trained on top of the encoder's features, which is not implemented in this examp
 
 # define the contrastive model with model-subclassing
 class ContrastiveModel(keras.Model):
-    def __init__(self, width, temperature):
+    def __init__(self):
         super().__init__()
 
         self.temperature = temperature
 
         self.contrastive_augmenter = get_augmenter(**contrastive_augmentation)
         self.classification_augmenter = get_augmenter(**classification_augmentation)
-        self.encoder = get_encoder(width)
+        self.encoder = get_encoder()
         # a non-linear mlp as projection head
         self.projection_head = keras.Sequential(
             [
@@ -356,12 +358,21 @@ class ContrastiveModel(keras.Model):
         # self.contrastive_loss will be defined as a method
         self.probe_loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
-        self.contrastive_accuracy = keras.metrics.SparseCategoricalAccuracy()
-        self.probe_accuracy = keras.metrics.SparseCategoricalAccuracy()
+        self.contrastive_loss_tracker = keras.metrics.Mean(name="c_loss")
+        self.contrastive_accuracy = keras.metrics.SparseCategoricalAccuracy(
+            name="c_acc"
+        )
+        self.probe_loss_tracker = keras.metrics.Mean(name="p_loss")
+        self.probe_accuracy = keras.metrics.SparseCategoricalAccuracy(name="p_acc")
 
-    def reset_metrics(self):
-        self.contrastive_accuracy.reset_states()
-        self.probe_accuracy.reset_states()
+    @property
+    def metrics(self):
+        return [
+            self.contrastive_loss_tracker,
+            self.contrastive_accuracy,
+            self.probe_loss_tracker,
+            self.probe_accuracy,
+        ]
 
     def contrastive_loss(self, projections_1, projections_2):
         # InfoNCE loss (information noise-contrastive estimation)
@@ -376,6 +387,7 @@ class ContrastiveModel(keras.Model):
 
         # the similarity between the representations of two augmented views of the
         # same image should be higher than their similarity with other views
+        batch_size = tf.shape(projections_1)[0]
         contrastive_labels = tf.range(batch_size)
         self.contrastive_accuracy.update_state(contrastive_labels, similarities)
         self.contrastive_accuracy.update_state(
@@ -417,6 +429,7 @@ class ContrastiveModel(keras.Model):
                 self.encoder.trainable_weights + self.projection_head.trainable_weights,
             )
         )
+        self.contrastive_loss_tracker.update_state(contrastive_loss)
 
         # labels are only used in evalutation for an on-the-fly logistic regression
         preprocessed_images = self.classification_augmenter(labeled_images)
@@ -428,14 +441,10 @@ class ContrastiveModel(keras.Model):
         self.probe_optimizer.apply_gradients(
             zip(gradients, self.linear_probe.trainable_weights)
         )
+        self.probe_loss_tracker.update_state(probe_loss)
         self.probe_accuracy.update_state(labels, class_logits)
 
-        return {
-            "c_loss": contrastive_loss,
-            "c_acc": self.contrastive_accuracy.result(),
-            "p_loss": probe_loss,
-            "p_acc": self.probe_accuracy.result(),
-        }
+        return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
         labeled_images, labels = data
@@ -447,13 +456,15 @@ class ContrastiveModel(keras.Model):
         features = self.encoder(preprocessed_images, training=False)
         class_logits = self.linear_probe(features, training=False)
         probe_loss = self.probe_loss(labels, class_logits)
-
+        self.probe_loss_tracker.update_state(probe_loss)
         self.probe_accuracy.update_state(labels, class_logits)
-        return {"p_loss": probe_loss, "p_acc": self.probe_accuracy.result()}
+
+        # only the probe metrics are logged at test time
+        return {m.name: m.result() for m in self.metrics[2:]}
 
 
 # the contrastive model is pretrained for half of the epochs
-pretraining_model = ContrastiveModel(width, temperature)
+pretraining_model = ContrastiveModel()
 pretraining_model.compile(
     contrastive_optimizer=keras.optimizers.Adam(),
     probe_optimizer=keras.optimizers.Adam(),
@@ -478,7 +489,7 @@ randomly initalized fully connected classification layer on its top.
 # the contrastive model is then finetuned for the other half of the epochs
 finetuning_model = keras.Sequential(
     [
-        layers.Input(shape=(96, 96, 3)),
+        layers.Input(shape=(image_size, image_size, image_channels)),
         get_augmenter(**classification_augmentation),
         pretraining_model.encoder,
         layers.Dense(10),
@@ -510,35 +521,24 @@ def plot_training_curves(pretraining_history, finetuning_history, baseline_histo
     pretraining_epochs = len(pretraining_history.history["val_p_acc"])
     finetuning_epochs = len(finetuning_history.history["val_acc"])
 
-    plt.figure(figsize=(8, 5), dpi=100)
-    plt.plot(baseline_history.history["val_acc"], label="supervised baseline")
-    plt.plot(
-        pretraining_history.history["val_p_acc"], label="self-supervised pretraining"
-    )
-    plt.plot(
-        list(range(pretraining_epochs, pretraining_epochs + finetuning_epochs)),
-        finetuning_history.history["val_acc"],
-        label="supervised finetuning",
-    )
-    plt.legend()
-    plt.title("Classification accuracy during training")
-    plt.xlabel("epochs")
-    plt.ylabel("validation accuracy")
-
-    plt.figure(figsize=(8, 5), dpi=100)
-    plt.plot(baseline_history.history["val_loss"], label="supervised baseline")
-    plt.plot(
-        pretraining_history.history["val_p_loss"], label="self-supervised pretraining"
-    )
-    plt.plot(
-        list(range(pretraining_epochs, pretraining_epochs + finetuning_epochs)),
-        finetuning_history.history["val_loss"],
-        label="supervised finetuning",
-    )
-    plt.legend()
-    plt.title("Classification loss during training")
-    plt.xlabel("epochs")
-    plt.ylabel("validation loss")
+    for metric_key, metric_name in zip(["acc", "loss"], ["accuracy", "loss"]):
+        plt.figure(figsize=(8, 5), dpi=100)
+        plt.plot(
+            baseline_history.history[f"val_{metric_key}"], label="supervised baseline"
+        )
+        plt.plot(
+            pretraining_history.history[f"val_p_{metric_key}"],
+            label="self-supervised pretraining",
+        )
+        plt.plot(
+            list(range(pretraining_epochs, pretraining_epochs + finetuning_epochs)),
+            finetuning_history.history[f"val_{metric_key}"],
+            label="supervised finetuning",
+        )
+        plt.legend()
+        plt.title(f"Classification {metric_name} during training")
+        plt.xlabel("epochs")
+        plt.ylabel(f"validation {metric_name}")
 
 
 plot_training_curves(pretraining_history, finetuning_history, baseline_history)
@@ -580,7 +580,7 @@ my notes on the most important ones:
 - **batch size**: since the objective can be interpreted as a classification over a batch
 of images (loosely speaking), batch size is actually a more important hyperparameter than
 usual. The higher, the better.
-- **temperature**: the temperature defines "softness" of the of the softmax distibution
+- **temperature**: the temperature defines "softness" of the of the softmax distribution
 that is used in the cross-entropy loss, and is an important hyperparameter. Lower values
 generally lead to a higher contrastive accuracy. A recent trick (in
 [ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn the temperature's value as
@@ -588,8 +588,13 @@ well (which can be done by defining it as a tf.Variable, and applying gradients 
 This provides a good baseline value, however in my experiments the learned temperature
 was somewhat lower than optimal, as it is optimized w.r.t. the contrastive loss, which is
 not a perfect proxy for representation quality.
-- **image augmentation strength**: stronger augmentations increase the difficulty of the
-task, however after a point too strong augmentations will degrade performance.
+- **image augmentation strength**: during pretraining stronger augmentations increase the
+difficulty of the task, however after a point too strong augmentations will degrade
+performance. During finetuning stronger augmentations reduce overfitting while in my
+experience too strong augmentations decrease the performance gains from pretraining.
+The whole data augmentation pipeline can be seen as an important hyperparameter of the
+algorithm, implementations of other custom image augmentation layers in Keras can be found in
+[this repository](https://github.com/beresandras/contrastive-classification-keras).
 - **learning rate schedule**: a constant schedule is used here, however it is quite
 common in the literature to use a [cosine decay
 schedule](https://www.tensorflow.org/api_docs/python/tf/keras/experimental/CosineDecay),
