@@ -10,48 +10,54 @@ Description: Contrastive pretraining with SimCLR for semi-supervised image class
 
 ### Semi-supervised learning
 
-Semi-supervised learning is a machine learning paradigm, that deals with **partially
-labeled datasets**. When applying deep learning in the real world, one usually has to
-gather a large dataset to make it work well. However, while the cost of labeling scales
-linearly with the dataset size (labeling each example takes a constant time), model
-performance only scales [sublinearly](https://arxiv.org/abs/2001.08361) with it. This
-means that labeling more and more samples becomes less and less cost-efficient, while
-gathering unlabeled data is generally cheap as it is usually readily available in large
-quantities.
+Semi-supervised learning is a machine learning paradigm, that deals with
+**partially labeled datasets**. When applying deep learning in the real world,
+one usually has to gather a large dataset to make it work well. However, while
+the cost of labeling scales linearly with the dataset size (labeling each
+example takes a constant time), model performance only scales
+[sublinearly](https://arxiv.org/abs/2001.08361) with it. This means that
+labeling more and more samples becomes less and less cost-efficient, while
+gathering unlabeled data is generally cheap as it is usually readily available
+in large quantities.
 
-Semi-supervised learning offers to solve this problem by only requiring a partially
-labeled dataset, and by being label-efficient by utilizing the unlabeled examples for
-learning as well.
+Semi-supervised learning offers to solve this problem by only requiring a
+partially labeled dataset, and by being label-efficient by utilizing the
+unlabeled examples for learning as well.
 
 In this example, we will pretrain an encoder with contrastive learning on the
-[STL-10](https://ai.stanford.edu/~acoates/stl10/) semi-supervised dataset using no labels
-at all, and then finetune it using only its labeled subset.
+[STL-10](https://ai.stanford.edu/~acoates/stl10/) semi-supervised dataset using
+no labels at all, and then finetune it using only its labeled subset.
 
 ### Contrastive learning
 
-On the highest level, the main idea of contrastive learning is to **learn representations
-that are invariant to image augmentations** in a self-supervised manner. One problem with
-this objective is that it has a trivial degenerate solution, when the sepresentations are
-constant, and do not depend at all on the input images.
+On the highest level, the main idea of contrastive learning is to **learn
+representations that are invariant to image augmentations** in a self-supervised
+manner. One problem with this objective is that it has a trivial degenerate
+solution, when the sepresentations are constant, and do not depend at all on the
+input images.
 
-Contrastive learning avoids this condition by modifying the objective in the following
-way: it pulls representations of augmented versions/views of the same image closer to
-each other (contracting positives), while simultaneously pushing different images away
-from each other (contrasting negatives) in representation space.
+Contrastive learning avoids this condition by modifying the objective in the
+following way: it pulls representations of augmented versions/views of the same
+image closer to each other (contracting positives), while simultaneously pushing
+different images away from each other (contrasting negatives) in representation
+space.
 
-One such contrastive approach is [SimCLR](https://arxiv.org/abs/2002.05709), which
-essentially identifies the core components needed to optimize this objective, and
-achieves a high performance by scaling this simple approach.
+One such contrastive approach is [SimCLR](https://arxiv.org/abs/2002.05709),
+which essentially identifies the core components needed to optimize this
+objective, and achieves a high performance by scaling this simple approach.
 
 Another approach is [SimSiam](https://arxiv.org/abs/2011.10566)
-([Keras example](https://keras.io/examples/vision/simsiam/)), whose main difference from
-SimCLR is that it does not use any negatives in its loss. Therefore it does not explicitly
-prevent the trivial solution, rather avoids it implicitly by architecture design
-(assymetric encoding paths using a predictor network, and BatchNorm applied in the final layers).
+([Keras example](https://keras.io/examples/vision/simsiam/)),
+whose main difference from
+SimCLR is that it does not use any negatives in its loss. Therefore it does not
+explicitly prevent the trivial solution, rather avoids it implicitly by
+architecture design (assymetric encoding paths using a predictor network, and
+BatchNorm applied in the final layers).
 
 For further reading about SimCLR check out
-[its blogpost](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html), for
-an overview of self-supervised learning across both vision and language check out
+[its blogpost](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html),
+for an overview of self-supervised learning across both vision and language
+check out
 [this blogpost](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/).
 """
 
@@ -88,8 +94,8 @@ classification_augmentation = {"min_area": 2 / 3, "brightness": 0.3, "jitter": 0
 """
 ## Dataset
 
-During training we will load a large batch of unlabeled images along with a smaller batch
-of labeled images simultaneously.
+During training we will load a large batch of unlabeled images along with a
+smaller batch of labeled images simultaneously.
 """
 
 
@@ -133,28 +139,30 @@ train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 """
 ## Image augmentations
 
-The two most important image augmentations for contrastive learning are the following:
+The two most important image augmentations for contrastive learning are the
+following:
 
-- cropping: forces the model to encode different parts of the same image similarly, we
-implement it with the
-[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
- + [RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/) layers
+- cropping: forces the model to encode different parts of the same image
+  similarly, we implement it with the
+  [RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
+  + [RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/)
+  layers
 - color jitter: prevents a trivial color histogram-based solution to the task by
-distorting color histograms. A principled way to implement that is by affine
-transformations in color space.
+  distorting color histograms. A principled way to implement that is by affine
+  transformations in color space.
 
-In this example we use random horizontal flips as well. Stronger augmentations are
-applied for contrastive learning, along with weaker ones for supervised classification
-to avoid overfitting on the few labeled examples.
+In this example we use random horizontal flips as well. Stronger augmentations
+are applied for contrastive learning, along with weaker ones for supervised
+classification to avoid overfitting on the few labeled examples.
 
-We implement random color jitter as a custom preprocessing layer. Using preprocessing
-layers for data augmentation has the following two advantages:
+We implement random color jitter as a custom preprocessing layer. Using
+preprocessing layers for data augmentation has the following two advantages:
 
 - the data augmentation will run on GPU in batches, so the training will not be
-bottlenecked by the data pipeline in environments with constrained CPU resources (such
-as a Colab Notebook, or a personal machine)
-- deployment is easier as the data preprocessing pipeline is encapsulated in the model,
-and does not have to be reimplemented when deploying it
+  bottlenecked by the data pipeline in environments with constrained CPU
+  resources (such as a Colab Notebook, or a personal machine)
+- deployment is easier as the data preprocessing pipeline is encapsulated in the
+  model, and does not have to be reimplemented when deploying it
 """
 
 
@@ -256,7 +264,8 @@ def get_encoder():
 """
 ## Supervised baseline model
 
-A baseline supervised model is trained using random initialization for 60 epochs.
+A baseline supervised model is trained using random initialization for 60
+epochs.
 """
 
 # baseline supervised training with random initialization
@@ -287,37 +296,43 @@ print(
 """
 ## Self-supervised model for contrastive pretraining
 
-We pretrain an encoder on unlabeled images with a contrastive loss for 30 epochs. A
-nonlinear projection head is attached to the top of the encoder, as it improves the
-quality of representations of the encoder.
+We pretrain an encoder on unlabeled images with a contrastive loss for 30
+epochs. A nonlinear projection head is attached to the top of the encoder, as it
+improves the quality of representations of the encoder.
 
-The InfoNCE/NT-Xent/N-pairs loss is used, which can be interpreted in the following way:
+The InfoNCE/NT-Xent/N-pairs loss is used, which can be interpreted in the
+following way:
 
 - we treat each image in the batch as if it had its own class
 - then we have two examples (a pair of augmented views) for each "class"
-- each view's representation is compared to every possible pair's one (for both augmented
-versions)
-- we use the temperature-scaled cosine similarity of compared representations as logits
+- each view's representation is compared to every possible pair's one (for both
+  augmented versions)
+- we use the temperature-scaled cosine similarity of compared representations as
+  logits
 - and use categorical cross-entropy as the "classification" loss
 
 The following two metrics are used for monitoring the pretraining performance:
 
 - [contrastive accuracy (SimCLR Table 5)](https://arxiv.org/abs/2002.05709):
-Self-supervised metric, the ratio of cases in which the representation of an image is
-more similar to its differently augmented version's one, than to the representation of
-any other image in the current batch. Self-supervised metrics can be used for
-hyperparameter tuning even in the case when there are no labeled examples.
-- [linear probing accuracy](https://arxiv.org/abs/1603.08511): Linear probing is a popular
-metric to evaluate self-supervised classifiers. It is computed as the accuracy of a logistic
-regression classifier trained on top of the encoder's features. In our case, this is done by
-training a single dense layer on top of the frozen encoder. Note that contrary to traditional
-approach where the classifier is trained after the pretraining phase, in this example we
-train it during pretraining. This might slightly decrease its accuracy, but that way we
-can monitor its value during training, which helps with experimentation and debugging.
+  Self-supervised metric, the ratio of cases in which the representation of an
+  image is more similar to its differently augmented version's one, than to the
+  representation of any other image in the current batch. Self-supervised
+  metrics can be used for hyperparameter tuning even in the case when there are
+  no labeled examples.
+- [linear probing accuracy](https://arxiv.org/abs/1603.08511): Linear probing is
+  a popular metric to evaluate self-supervised classifiers. It is computed as
+  the accuracy of a logistic regression classifier trained on top of the
+  encoder's features. In our case, this is done by training a single dense layer
+  on top of the frozen encoder. Note that contrary to traditional approach where
+  the classifier is trained after the pretraining phase, in this example we
+  train it during pretraining. This might slightly decrease its accuracy, but
+  that way we can monitor its value during training, which helps with
+  experimentation and debugging.
 
 Another widely used supervised metric is the
-[KNN accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN classifier
-trained on top of the encoder's features, which is not implemented in this example.
+[KNN accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN
+classifier trained on top of the encoder's features, which is not implemented in
+this example.
 """
 
 
@@ -482,8 +497,8 @@ print(
 """
 ## Supervised finetuning of the pretrained encoder
 
-We then finetune the encoder on the labeled examples for 30 epochs, by attaching a single
-randomly initalized fully connected classification layer on its top.
+We then finetune the encoder on the labeled examples for 30 epochs, by attaching
+a single randomly initalized fully connected classification layer on its top.
 """
 
 # the contrastive model is then finetuned for the other half of the epochs
@@ -544,10 +559,10 @@ def plot_training_curves(pretraining_history, finetuning_history, baseline_histo
 plot_training_curves(pretraining_history, finetuning_history, baseline_history)
 
 """
-By comparing the training curves, we can see that by using contrastive pretraining, a
-higher validation accuracy can be reached, paired with a significantly lower validation
-loss, which means that the pretrained network was able to generalize better when seeing
-only a small amount of labeled examples.
+By comparing the training curves, we can see that by using contrastive
+pretraining, a higher validation accuracy can be reached, paired with a lower
+validation loss, which means that the pretrained network was able to generalize
+better when seeing only a small amount of labeled examples.
 """
 
 """
@@ -555,53 +570,57 @@ only a small amount of labeled examples.
 
 ### Architecture:
 
-It is shown in the original paper, that increasing the width and depth of the models
-improves performance at a higher rate than for supervised learning. Also, using a
-[ResNet50](https://keras.io/api/applications/resnet/#resnet50-function) encoder is quite
-standard in the literature. However keep in mind, that more powerful models will not
-only increase training time but will also require more memory and will limit the maximal
-batch size you can use.
+It is shown in the original paper, that increasing the width and depth of the
+models improves performance at a higher rate than for supervised learning. Also,
+using a [ResNet50](https://keras.io/api/applications/resnet/#resnet50-function)
+encoder is quite standard in the literature. However keep in mind, that more
+powerful models will not only increase training time but will also require more
+memory and will limit the maximal batch size you can use.
 
 It has [been](https://arxiv.org/abs/1905.09272)
-[reported](https://arxiv.org/abs/1911.05722) that the usage of BatchNorm layers could
-sometimes degrade performance, as it introduces an intra-batch dependency between
-samples, which is why I did not have used them in this example. In my experiments
-however, using BatchNorm, especially in the projection head, improves performance.
+[reported](https://arxiv.org/abs/1911.05722) that the usage of BatchNorm layers
+could sometimes degrade performance, as it introduces an intra-batch dependency
+between samples, which is why I did not have used them in this example. In my
+experiments however, using BatchNorm, especially in the projection head,
+improves performance.
 
 ### Hyperparameters:
 
 The hyperparameters of this example have been tuned manually for this task and
-architecture, so without changing those, only marginal gains can be expected from further
-hyperparameter tuning.
+architecture, so without changing those, only marginal gains can be expected
+from further hyperparameter tuning.
 
-However for a different task or model architecture these would need tuning, so here are
-my notes on the most important ones:
+However for a different task or model architecture these would need tuning, so
+here are my notes on the most important ones:
 
-- **batch size**: since the objective can be interpreted as a classification over a batch
-of images (loosely speaking), batch size is actually a more important hyperparameter than
-usual. The higher, the better.
-- **temperature**: the temperature defines "softness" of the of the softmax distribution
-that is used in the cross-entropy loss, and is an important hyperparameter. Lower values
-generally lead to a higher contrastive accuracy. A recent trick (in
-[ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn the temperature's value as
-well (which can be done by defining it as a tf.Variable, and applying gradients on it).
-This provides a good baseline value, however in my experiments the learned temperature
-was somewhat lower than optimal, as it is optimized w.r.t. the contrastive loss, which is
-not a perfect proxy for representation quality.
-- **image augmentation strength**: during pretraining stronger augmentations increase the
-difficulty of the task, however after a point too strong augmentations will degrade
-performance. During finetuning stronger augmentations reduce overfitting while in my
-experience too strong augmentations decrease the performance gains from pretraining.
-The whole data augmentation pipeline can be seen as an important hyperparameter of the
-algorithm, implementations of other custom image augmentation layers in Keras can be found in
-[this repository](https://github.com/beresandras/contrastive-classification-keras).
-- **learning rate schedule**: a constant schedule is used here, however it is quite
-common in the literature to use a [cosine decay
-schedule](https://www.tensorflow.org/api_docs/python/tf/keras/experimental/CosineDecay),
-which can further improve performance.
-- **optimizer**: Adam is used in this example, as it provides good performance with
-default parameters. SGD with momentum requires more tuning, however it could slightly
-increase performance.
+- **batch size**: since the objective can be interpreted as a classification
+  over a batch of images (loosely speaking), batch size is actually a more
+  important hyperparameter than usual. The higher, the better.
+- **temperature**: the temperature defines "softness" of the of the softmax
+  distribution that is used in the cross-entropy loss, and is an important
+  hyperparameter. Lower values generally lead to a higher contrastive accuracy.
+  A recent trick (in [ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn
+  the temperature's value as well (which can be done by defining it as a
+  tf.Variable, and applying gradients on it). This provides a good baseline
+  value, however in my experiments the learned temperature was somewhat lower
+  than optimal, as it is optimized w.r.t. the contrastive loss, which is not a
+  perfect proxy for representation quality.
+- **image augmentation strength**: during pretraining stronger augmentations
+  increase the difficulty of the task, however after a point too strong
+  augmentations will degrade performance. During finetuning stronger
+  augmentations reduce overfitting while in my experience too strong
+  augmentations decrease the performance gains from pretraining. The whole data
+  augmentation pipeline can be seen as an important hyperparameter of the
+  algorithm, implementations of other custom image augmentation layers in Keras
+  can be found in
+  [this repository](https://github.com/beresandras/contrastive-classification-keras).
+- **learning rate schedule**: a constant schedule is used here, however it is
+  quite common in the literature to use a
+  [cosine decay schedule](https://www.tensorflow.org/api_docs/python/tf/keras/experimental/CosineDecay),
+  which can further improve performance.
+- **optimizer**: Adam is used in this example, as it provides good performance
+  with default parameters. SGD with momentum requires more tuning, however it
+  could slightly increase performance.
 """
 
 """
@@ -609,28 +628,31 @@ increase performance.
 
 Other instance-level (image-level) contrastive learning methods:
 
-- [MoCo](https://arxiv.org/abs/1911.05722) ([v2](https://arxiv.org/abs/2003.04297),
-[v3](https://arxiv.org/abs/2104.02057)): uses a momentum-encoder as well, whose weights
-are an exponential moving average of the target encoder
-- [SwAV](https://arxiv.org/abs/2006.09882): uses clustering instead of pairwise comparison
-- [BarlowTwins](https://arxiv.org/abs/2103.03230): uses a cross correlation-based
-objective instead of pairwise comparison
+- [MoCo](https://arxiv.org/abs/1911.05722)
+  ([v2](https://arxiv.org/abs/2003.04297),
+  [v3](https://arxiv.org/abs/2104.02057)): uses a momentum-encoder as well,
+  whose weights are an exponential moving average of the target encoder
+- [SwAV](https://arxiv.org/abs/2006.09882): uses clustering instead of pairwise
+  comparison
+- [BarlowTwins](https://arxiv.org/abs/2103.03230): uses a cross
+  correlation-based objective instead of pairwise comparison
 
-Keras implementations of **MoCo** and **BarlowTwins** can be found in
-[this repository](https://github.com/beresandras/contrastive-classification-keras), with a
-Colab Notebook included as well.
+Keras implementations of **MoCo** and **BarlowTwins** can be found in [this
+repository](https://github.com/beresandras/contrastive-classification-keras),
+with a Colab Notebook included as well.
 
-There is also a new line of works, which optimize a similar objective, however without
-the use of any negatives:
+There is also a new line of works, which optimize a similar objective, however
+without the use of any negatives:
 
 - [BYOL](https://arxiv.org/abs/2006.07733): momentum-encoder + no negatives
 - [SimSiam](https://arxiv.org/abs/2011.10566)
-([Keras example](https://keras.io/examples/vision/simsiam/)): no momentum-encoder + no negatives
+  ([Keras example](https://keras.io/examples/vision/simsiam/)):
+  no momentum-encoder + no negatives
 
 In my experience these methods are more brittle (they can collapse to a constant
 representation, I could not get them to work using this encoder architecture).
 They are generally more dependent on the
 [model](https://generallyintelligent.ai/understanding-self-supervised-contrastive-learning.html)
-[architecture](https://arxiv.org/abs/2010.10241), however they improve performance
-at smaller batch sizes.
+[architecture](https://arxiv.org/abs/2010.10241), however they improve
+performance at smaller batch sizes.
 """
