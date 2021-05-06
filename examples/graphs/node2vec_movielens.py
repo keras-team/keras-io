@@ -130,12 +130,12 @@ def get_movie_id_by_title(title):
 We create an edge between two movie nodes in the graph if both movies are rated
 by the same user >= `min_rating`. The weight of the edge will be based on the
 [pointwise mutual information](https://en.wikipedia.org/wiki/Pointwise_mutual_information)
-between the two movies, which is computed as: $log(xy) - log(x) - log(y) + log(D)$, where:
+between the two movies, which is computed as: `log(xy) - log(x) - log(y) + log(D)`, where:
 
-* $xy$ is how many users rated both movie `x` and movie `y` with >= `min_rating`.
-* $x$ is how many users rated movie `x` >= `min_rating`.
-* $y$ is how many users rated movie `y` >= `min_rating`.
-* $D$ total number of movie ratings >= `min_rating`.
+* `xy` is how many users rated both movie `x` and movie `y` with >= `min_rating`.
+* `x` is how many users rated movie `x` >= `min_rating`.
+* `y` is how many users rated movie `y` >= `min_rating`.
+* `D` total number of movie ratings >= `min_rating`.
 """
 
 """
@@ -302,10 +302,13 @@ def random_walk(graph, num_walks, num_steps, p, q):
 You can explore different configurations of `p` and `q` to different results of
 related movies.
 """
-
+# Random walk return parameter.
 p = 1
+# Random walk in-out parameter.
 q = 1
+# Number of iterations of random walks.
 num_walks = 5
+# Number of steps of each random walk.
 num_steps = 10
 walks = random_walk(movies_graph, num_walks, num_steps, p, q)
 
@@ -403,6 +406,7 @@ def create_dataset(targets, contexts, labels, weights, batch_size):
     dataset = tf.data.Dataset.from_tensor_slices((inputs, labels, weights))
     dataset = dataset.shuffle(buffer_size=batch_size * 2)
     dataset = dataset.batch(batch_size, drop_remainder=True)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
