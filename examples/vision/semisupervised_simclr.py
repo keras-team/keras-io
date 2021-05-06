@@ -596,7 +596,7 @@ here are my notes on the most important ones:
 - **batch size**: since the objective can be interpreted as a classification
   over a batch of images (loosely speaking), the batch size is actually a more
   important hyperparameter than usual. The higher, the better.
-- **temperature**: the temperature defines "softness" of the of the softmax
+- **temperature**: the temperature defines the "softness" of the softmax
   distribution that is used in the cross-entropy loss, and is an important
   hyperparameter. Lower values generally lead to a higher contrastive accuracy.
   A recent trick (in [ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn
