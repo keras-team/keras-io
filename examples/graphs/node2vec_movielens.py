@@ -332,7 +332,7 @@ otherwise (i.e., if randomly sampled) the label is 0.
 """
 
 
-def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_size):
+def generate_examples(sequences, window_size, num_negative_samples, vocabulary_size):
 
     example_weights = defaultdict(int)
 
@@ -349,7 +349,7 @@ def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_s
             sequence,
             vocabulary_size=vocabulary_size,
             window_size=window_size,
-            negative_samples=num_negative_smaples,
+            negative_samples=num_negative_samples,
         )
 
         for idx in range(len(pairs)):
@@ -374,11 +374,11 @@ def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_s
     return np.array(targets), np.array(contexts), np.array(labels), np.array(weights)
 
 
-num_negative_smaples = 4
+num_negative_samples = 4
 targets, contexts, labels, weights = generate_examples(
     sequences=walks,
     window_size=num_steps,
-    num_negative_smaples=num_negative_smaples,
+    num_negative_samples=num_negative_samples,
     vocabulary_size=len(vocabulary),
 )
 
