@@ -3,7 +3,7 @@ Title: Graph representation learning with node2vec.
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2021/05/15
-Description: Implementing the node2vec to generate embeddings for movies.
+Description: Implementing the node2vec model to generate embeddings for movies from the Movielens dataset.
 """
 
 """
@@ -11,8 +11,8 @@ Description: Implementing the node2vec to generate embeddings for movies.
 
 
 Learning useful representations from objects structured as graphs is useful for
-a variety of ML applications —such as social and communication networks analysis,
-biomedicine studies, and recommendation systems, and leads to greater predictive power.
+a variety of machine learning (ML) applications—such as social and communication networks analysis,
+biomedicine studies, and recommendation systems—and leads to greater predictive power.
 [Graph Representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/) aims to
 learn embeddings for the graph nodes, which can be used for a variety of ML tasks
 such as node label prediction (e.g. categorizing an article based on its citations)
@@ -40,7 +40,7 @@ or movie genres prediction.
 
 This example requires `networkx` package, which can be installed using the following command:
 
-```
+```shell
 pip install networkx
 ````
 """
@@ -65,12 +65,12 @@ from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
 """
-## Download and Prepare the Data
+## Download the Movielens dataset and prepare the data
 
 The small version of the Movielens dataset includes around 100 thousand ratings
 from 610 users on 9742 movies.
 
-First, let's download the movielens data. The downloaded folder will contain
+First, let's download the dataset. The downloaded folder will contain
 three data files: `users.csv`, `movies.csv`, and `ratings.csv`. In this example,
 we will only need the `movies.dat`, and `ratings.dat` data files.
 """
@@ -81,38 +81,38 @@ urlretrieve(
 ZipFile("movielens.zip", "r").extractall()
 
 """
-Then, we load the data into pandas DataFrames and perform some basic processing.
+Then, we load the data into a Pandas DataFrame and perform some basic processing.
 """
 
 # Load movies to a DataFrame.
 movies = pd.read_csv("ml-latest-small/movies.csv")
-# Make the movieId string.
+# Create a `movieId` string.
 movies["movieId"] = movies["movieId"].apply(lambda x: f"movie_{x}")
 
 # Load ratings to a DataFrame.
 ratings = pd.read_csv("ml-latest-small/ratings.csv")
-# # Convert rating to float
+# Convert the `ratings` to floating point
 ratings["rating"] = ratings["rating"].apply(lambda x: float(x))
-# # Make the movie_id string.
+# Create the `movie_id` string.
 ratings["movieId"] = ratings["movieId"].apply(lambda x: f"movie_{x}")
 
 print("Movies data shape:", movies.shape)
 print("Ratings data shape:", ratings.shape)
 
 """
-Let's show a sample instance of the `ratings` DataFrame.
+Let's inspect a sample instance of the `ratings` DataFrame.
 """
 
 ratings.head()
 
 """
-Let's show how sample instance of the `movies` DataFrame.
+Next, let's check a sample instance of the `movies` DataFrame.
 """
 
 movies.head()
 
 """
-Implement utility functions movies DataFrame
+Implement two utility functions for the `movies` DataFrame.
 """
 
 
@@ -125,7 +125,7 @@ def get_movie_id_by_title(title):
 
 
 """
-## Construct the Movies Graph
+## Construct the Movies graph
 
 We create an edge between two movie nodes in the graph if both movies are rated
 by the same user >= `min_rating`. The weight of the edge will be based on the
@@ -215,21 +215,21 @@ print("Average node degree:", round(sum(degrees) / len(degrees), 2))
 """
 ### Step 3: Create vocabulary and a mapping from tokens to integer indices
 
-The vocabulary is the nodes (movie ids) in the graph.
+The vocabulary is the nodes (movie IDs) in the graph.
 """
 
 vocabulary = ["NA"] + list(movies_graph.nodes)
 vocabulary_lookup = {token: idx for idx, token in enumerate(vocabulary)}
 
 """
-## Implement Biased Random Walk
+## Implement the biased random walk
 
 A random walk starts from a given node, and randomly picks a neighbour node to move to.
 If the edges are weighted, the neighbour is selected *probabilistically* with
 respect to weights of the edges between the current node and its neighbours.
 This procedure is repeated for `num_steps` to generate a sequence of *related* nodes.
 
-The *biased* random walk balances between **breadth-first sampling**
+The [*biased* random walk](https://en.wikipedia.org/wiki/Biased_random_walk_on_a_graph) balances between **breadth-first sampling**
 (where only local neighbours are visited) and **depth-first sampling**
 (where  distant neighbours are visited) by introducing the following two parameters:
 1. **Return parameter** (`p`): Controls the likelihood of immediately revisiting
@@ -298,7 +298,7 @@ def random_walk(graph, num_walks, num_steps, p, q):
 
 
 """
-## Generate Training Data using Random Walk
+## Generate training data using the biased random walk
 You can explore different configurations of `p` and `q` to different results of
 related movies.
 """
@@ -312,7 +312,7 @@ walks = random_walk(movies_graph, num_walks, num_steps, p, q)
 print("Number of walks generated:", len(walks))
 
 """
-## Generate Positive and Negative Examples
+## Generate positive and negative examples
 
 To train a skip-gram model, we use the generated walks to create positive and
 negative training examples. Each example includes the following features:
@@ -389,7 +389,7 @@ print(f"Labels shape: {labels.shape}")
 print(f"Weights shape: {weights.shape}")
 
 """
-### Create tf.data.Dataset
+### Convert the data into `tf.data.Dataset` objects
 """
 
 batch_size = 1024
@@ -415,7 +415,7 @@ dataset = create_dataset(
 )
 
 """
-## Train a Skip-gram Model
+## Train the skip-gram model
 
 Our skip-gram is a simple binary classification model that works as follows:
 
@@ -485,7 +485,7 @@ keras.utils.plot_model(
 )
 
 """
-Now we fit the model with the `dataset`.
+Now we train the model on the `dataset`.
 """
 
 history = model.fit(dataset, epochs=num_epochs)
@@ -500,7 +500,7 @@ plt.xlabel("epoch")
 plt.show()
 
 """
-## Analyze the learnt embeddings
+## Analyze the learnt embeddings.
 """
 
 movie_embeddings = model.get_layer("item_embeddings").get_weights()[0]
@@ -519,7 +519,7 @@ query_movies = [
 ]
 
 """
-Get the embeddings of the query movies
+Get the embeddings of the query movies.
 """
 
 query_embeddings = []
@@ -533,7 +533,7 @@ for movie_title in query_movies:
 query_embeddings = np.array(query_embeddings)
 
 """
-Compute the consine similarity between the embeddings of the query movies and all
+Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of the query movies and all
 other movies, then pick the top k for each.
 """
 
@@ -547,7 +547,7 @@ _, indices = tf.math.top_k(similarities, k=5)
 indices = indices.numpy().tolist()
 
 """
-Display the top related movies the query movies
+Display the top related movies the query movies.
 """
 
 for idx, title in enumerate(query_movies):
