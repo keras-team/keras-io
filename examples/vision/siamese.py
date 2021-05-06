@@ -1,28 +1,31 @@
 
 """
-# Siamese Network with Contrastive Loss
+# Siamese network with a contrastive loss
 
 Author: [Mehdi](https://github.com/s-mrb)<br>
-Date created: 2021/05/02<br>
-Last modified: 2020/05/03<br>
-Description: Similarity Learning Using Siamese Network with Contrastive Loss
+Date created: 2021/05/06<br>
+Last modified: 2020/05/06<br>
+Description: Similarity learning using siamese network with contrastive loss
 """
 
 """
 ## Introduction
 
-The [Siamese Network](https://papers.nips.cc/paper/1993/file/288cc0ff022877bd3df94bc9360b9c5d-Paper.pdf)
-introduced by Bromley and LeCun to solve signature verification as an image
-matching problem is now widely used for finding the level of similarity between
-two images. This algorithm evolved to have many different forms, although
-the one we are going to use is Duplet Network. A duplet network involves
-two sister networks for finding embeddings/encodings and then a distance
-heuristic to find out how much these embeddings differ from each other.
+[Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network)
+is any Neural Network which share weights between two or more sister networks,
+each producing embedding vector of its respective input and these embeddings
+are then passed through some 
+[distance heuristic](https://developers.google.com/machine-learning/clustering/similarity/measuring-similarity)
+to find the distance between them. This distance is later used to increase the
+contrast between embeddings of inputs of different classes and decrease it with
+that of similar class by employing some loss function, with the main objective
+of contrasting [vector spaces](https://en.wikipedia.org/wiki/Vector_space)
+from which these sample inputs were taken.
 
 """
 
 """
-## Necessary imports
+## Setup
 """
 
 import random
@@ -33,34 +36,50 @@ from tensorflow.keras.layers.experimental.preprocessing import Rescaling
 from tensorflow.keras.layers import Flatten, Dense, Concatenate, Lambda, Input
 from tensorflow.keras.layers import Conv2D, Activation,AveragePooling2D
 from tensorflow.keras.datasets import mnist
-from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras import utils
 import matplotlib.pyplot as plt
 from keras import backend as K
 
 """
-## Load data
+## Load the MNIST dataset
 """
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# We change data type to float
+# Change the data type to a floating point format
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
 
 """
 ## Create pairs of images
 
-We want our model to be able to differentiate 0 from 1,2,3, .., 9 to do so we
-should teach it how each digit differs from each of the other digit, for this
-purpose we would select N random images from class A (lets say class of
-digit 0) and would pair it with N random images from class B (lets say class of
-digit 1), and would repeat this process untill class of digit 9. In this way we
-successfuly pair 0 with each other digit, now we would do the same for class of
-1,2,3 upto that of 9.
+We will train the model to differentiate each digit from one another. For
+example, digit `0` needs to be differentiated from the rest of the
+digits (`1` through `9`), digit `1` - from `0` and `2` through `9`, and so on.
+To carry this out, we will select N random images from class A (for example, for
+digit `0`) and pair it with N random images from another class B (for example,
+for digit `1`). Then, we can repeat this process for all classes of digits
+(until digit `9`). Once we have paired digit `0` with other digits, we can
+repeat this process for the remaining classes for the rest of the digits (from
+`1` until `9`).
+
 """
 
 def make_pairs(x, y):
+    """
+    Parameters
+    ----------
+    x : list/array
+        List containing images, each index in this list corresponds to one image
+
+    y : list
+        List containing labels, each label with datatype of `int`
+
+    Returns
+    -------
+    List of the shape (number_of_pairs, shape_of_one_pair)
+    """
+
     num_classes = max(y) + 1
     digit_indices = [np.where(y == i)[0] for i in range(num_classes)]
 
@@ -77,7 +96,7 @@ def make_pairs(x, y):
         pairs += [[x1, x2]]
         labels += [1]
     
-        # add a not matching example
+        # add a non-matching example
         label2 = random.randint(0, num_classes-1)
         while label2 == label1:
             label2 = random.randint(0, num_classes-1)
@@ -94,18 +113,30 @@ pairs_train, labels_train = make_pairs(x_train, y_train)
 pairs_test, labels_test = make_pairs(x_test, y_test)
 
 """
-## Create dataset
+## Convert the data into TensorFlow Dataset objects
+<br>
+**pairs_train.shape = (120000, 2, 28, 28)** <br>
+Imagine it as: <br>
+**pairs_train.shape = (120000, pair.shape)** <br>
+<br>
+`pairs_train` contains 120K `pairs` in `axis 0`, shape of each pair
+is (2,28,28) hence `each pair` of `pairs_train` contains one image in its
+`axis 0` (do not confuse it with the `axis 0` of `pairs_train`) and the
+other one in the `axis 1`. We will slice `pairs_train` on its `axix 0`
+followed by desired axis of pair to obtain all images (120K) which belong
+either to the `axis 0` or the `axis 1` of all the pairs of `pairs_train`.
+<br>
+**Note:** Do not confuse axes of `pairs_train` with those of
+`pair within pairs_train`, `pairs_train` have only one axis `axis 0` which
+contain 120K pairs, whereas each `pair within pairs_train` have two axis,
+each for one image of a pair.
+
 """
 
-# 0 index of pairs_train contain one image of pair
-# and at index 1 the other image of pair is present
-# we can split entire vector of pairs into two havles,
-# later we can generate tf.data.Dataset using these halves
-# we will do the same for labels
 
 x_train_1 = pairs_train[:,0]
 x_train_2 = pairs_train[:,1]
-# x1.shape = (120000, 28, 28)
+# x_train_1.shape = (120000, 28, 28)
 
 x_test_1, x_test_2 = pairs_test[:,0],pairs_test[:,1]
 
@@ -121,22 +152,44 @@ test_ds = tf.data.Dataset.zip((test_pair, test_label)).batch(16)
 ## Visualize
 """
 
-# images to show must be integral multiple of num_col
-# if not then then they would be made so
 def visualize(dataset, to_show=6, num_col=3, predictions=None, test=False):
+  """
+  Parameters
+  ----------
+  dataset : TensorFlow Dataset object
+            The dataset to visualize, with batch of the form
+            ((image_1, image_2), label)
 
-  # handle case when user input more columns then images to show
+  to_show : int
+             Number of examples to visualize (default is 6)
+           `to_show` must be an integral multiple of `num_col`.
+            If not, then it will be converted to that.
+
+  num_col : int
+            Number of images in one row - (default is 3)
+
+  predictions : list/array
+                Array of predictions with shape (to_show, 1) - (default None)
+                Must be passed when test=True
+
+  test  : boolean
+          Whether the dataset being visualized is train dataset or
+          test dataset - (default False)
+
+  """
+
+  # When a user inputs more columns than there are images to visualize:
   num_row = to_show//num_col if to_show//num_col != 0 else 1 
 
-  # num_col must be integral multiple of to_show 
+  # `to_show` must be an integral multiple of `num_col`  
   to_show = to_show if to_show/num_col == 0 else num_row*num_col
 
-  # plot images
+  # Plot the images
   fig, axes = plt.subplots(num_row, num_col, figsize=(5,5))
   for images, labels in dataset.take(1):
     for i in range(to_show):
 
-        # if row is one, axes array is one dimentional
+        # If the number of rows is 1, the axes array is one-dimensional
         if num_row == 1:
           ax = axes[i%num_col]
         else:
@@ -160,11 +213,12 @@ def visualize(dataset, to_show=6, num_col=3, predictions=None, test=False):
 visualize(train_ds)
 
 """
-## Model
+## Define the model
 
-There are two input layers, each lead to its own dense network which produces
-embeddings. Lambda layer will merge them using euclidean distance and merged
-layer will be fed to final network.
+There will be two input layers, each leading to its own network, which
+produces embeddings. Lambda layer will merge them using
+[Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
+merged layer will be fed to final network.
 """
 
 def euclidean_distance(vects):
@@ -184,19 +238,23 @@ x = Flatten()(x)
 
 x = tf.keras.layers.BatchNormalization()(x)
 x = Dense(10, activation = 'tanh')(x)
-dense = Model(input, x)
+embedding_network = Model(input, x)
 
 
-input1 = Input((28,28,1))
-input2 = Input((28,28,1))
+input_1 = Input((28,28,1))
+input_2 = Input((28,28,1))
 
-dense1 = dense(input1)
-dense2 = dense(input2)
+# As mentioned above Siamese Network share weights between
+# tower networks (sister networks). To allow this sharing we will use
+# same embedding network for both tower networks
 
-merge_layer = Lambda(euclidean_distance)([dense1,dense2])
+tower_1 = embedding_network(input_1)
+tower_2 = embedding_network(input_2)
+
+merge_layer = Lambda(euclidean_distance)([tower_1, tower_2])
 normal_layer = tf.keras.layers.BatchNormalization()(merge_layer)
-dense_layer = Dense(1, activation="sigmoid")(normal_layer)
-model = Model(inputs=[input1, input2], outputs=dense_layer)
+output_layer = Dense(1, activation="sigmoid")(normal_layer)
+siamese = Model(inputs=[input_1, input_2], outputs=output_layer)
 
 def contrastive_loss(y_true, y_pred):
     margin = 1
@@ -204,24 +262,24 @@ def contrastive_loss(y_true, y_pred):
     margin_square = K.square(K.maximum(margin - (1-y_pred), 0))
     return K.mean(y_true * square_pred + (1 - y_true) * margin_square)
 
-model.compile(
+siamese.compile(
 	loss = contrastive_loss, 
-	optimizer=RMSprop(), 
+	optimizer='RMSprop', 
 	metrics=["accuracy"])
 
-model.summary()
+siamese.summary()
 
 # Rarely it stucks at local optima, in that case just try again
-model.fit(train_ds, epochs= 10)
+siamese.fit(train_ds, epochs= 10)
 
-results = model.evaluate(test_ds)
+results = siamese.evaluate(test_ds)
 print("test loss, test acc:", results)
 
 """
-## Visualize predictions
+## Visualize the predictions
 """
 
-predictions = model.predict(test_ds)
+predictions = siamese.predict(test_ds)
 
 visualize(
 	dataset=test_ds, 
