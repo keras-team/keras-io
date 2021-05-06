@@ -2,7 +2,7 @@
 """
 # Siamese network with a contrastive loss
 
-Author: [Mehdi](https://twitter.com/SyedMehdirazab)<br>
+Author: Mehdi<br>
 Date created: 2021/05/06<br>
 Last modified: 2020/05/06<br>
 Description: Similarity learning using siamese network with contrastive loss
@@ -281,7 +281,7 @@ input_2 = Input((28,28,1))
 
 # As mentioned above, Siamese Network share weights between
 # tower networks (sister networks). To allow this, we will use
-# same embedding network for both tower networks
+# same embedding network for both tower networks.
 tower_1 = embedding_network(input_1)
 tower_2 = embedding_network(input_2)
 
