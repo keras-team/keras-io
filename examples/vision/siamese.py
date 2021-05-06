@@ -2,7 +2,7 @@
 """
 # Siamese network with a contrastive loss
 
-Author: [Mehdi](https://github.com/s-mrb)<br>
+Author: [Mehdi](https://twitter.com/SyedMehdirazab)<br>
 Date created: 2021/05/06<br>
 Last modified: 2020/05/06<br>
 Description: Similarity learning using siamese network with contrastive loss
@@ -69,15 +69,16 @@ def make_pairs(x, y):
     """
     Parameters
     ----------
-    x : list/array
+    x : list
         List containing images, each index in this list corresponds to one image
-
     y : list
         List containing labels, each label with datatype of `int`
 
     Returns
     -------
-    List of the shape (number_of_pairs, shape_of_one_pair)
+    Tuple containing two numpy arrays as (pair_of_samples, labels), 
+    where pair of samples' shape is (2len(x), 2,n_features_dims) and
+    labels are a binary array of shape (2len(x))
     """
 
     num_classes = max(y) + 1
@@ -152,23 +153,25 @@ test_ds = tf.data.Dataset.zip((test_pair, test_label)).batch(16)
 ## Visualize
 """
 
+
 def visualize(dataset, to_show=6, num_col=3, predictions=None, test=False):
   """
   Parameters
   ----------
   dataset : TensorFlow Dataset object
-            The dataset to visualize, with batch of the form
+            The dataset to visualize, with batch of form
             ((image_1, image_2), label)
 
   to_show : int
-             Number of examples to visualize (default is 6)
-           `to_show` must be an integral multiple of `num_col`.
-            If not, then it will be converted to that.
+            Number of examples to visualize (default is 6)
+            `to_show` must be an integral multiple of `num_col`.
+            Otherwise it will be trimmed if it is greater than num_col, 
+            and incremented if if it is less then num_col.
 
   num_col : int
             Number of images in one row - (default is 3)
 
-  predictions : list/array
+  predictions : list
                 Array of predictions with shape (to_show, 1) - (default None)
                 Must be passed when test=True
 
@@ -178,11 +181,24 @@ def visualize(dataset, to_show=6, num_col=3, predictions=None, test=False):
 
   """
 
-  # When a user inputs more columns than there are images to visualize:
+  # Define num_row
+  # If to_show % num_col != 0 
+  #    trim to_show,
+  #       to trim to_show limit num_row to the point where
+  #       to_show % num_col == 0
+  # 
+  # If to_show//num_col == 0
+  #    then it means num_col is greater then to_show
+  #    increment to_show
+  #       to increment to_show set num_row to 1
   num_row = to_show//num_col if to_show//num_col != 0 else 1 
 
   # `to_show` must be an integral multiple of `num_col`  
-  to_show = to_show if to_show/num_col == 0 else num_row*num_col
+  #  we found num_row and we have num_col
+  #  to increment or decrement to_show
+  #  to make it integral multiple of `num_col`
+  #  simply set it equal to num_row * num_col 
+  to_show = num_row*num_col
 
   # Plot the images
   fig, axes = plt.subplots(num_row, num_col, figsize=(5,5))
@@ -209,8 +225,12 @@ def visualize(dataset, to_show=6, num_col=3, predictions=None, test=False):
   else:
     plt.tight_layout(rect = (0,0,1.5,1.5))
   plt.show()
-  
-visualize(train_ds)
+
+
+
+
+
+visualize(train_ds, to_show=3)
 
 """
 ## Define the model
@@ -221,7 +241,22 @@ produces embeddings. Lambda layer will merge them using
 merged layer will be fed to final network.
 """
 
+
+# Provided two tensors t1 and t2
+# Euclidean distance = sqrt(sum(square(t1-t2)))
 def euclidean_distance(vects):
+    """
+    Parameter
+    ---------
+    vect  : list
+            list containing two tensors of same length
+
+    Return
+    ------
+    Tensor containing euclidean distance
+    (as floating point value) between vectors
+    """
+
     x, y = vects
     sum_square = K.sum(K.square(x - y), axis=1, keepdims=True)
     return K.sqrt(K.maximum(sum_square, K.epsilon()))
@@ -244,10 +279,9 @@ embedding_network = Model(input, x)
 input_1 = Input((28,28,1))
 input_2 = Input((28,28,1))
 
-# As mentioned above Siamese Network share weights between
-# tower networks (sister networks). To allow this sharing we will use
+# As mentioned above, Siamese Network share weights between
+# tower networks (sister networks). To allow this, we will use
 # same embedding network for both tower networks
-
 tower_1 = embedding_network(input_1)
 tower_2 = embedding_network(input_2)
 
@@ -256,11 +290,31 @@ normal_layer = tf.keras.layers.BatchNormalization()(merge_layer)
 output_layer = Dense(1, activation="sigmoid")(normal_layer)
 siamese = Model(inputs=[input_1, input_2], outputs=output_layer)
 
-def contrastive_loss(y_true, y_pred):
-    margin = 1
-    square_pred = K.square(1-y_pred)
-    margin_square = K.square(K.maximum(margin - (1-y_pred), 0))
-    return K.mean(y_true * square_pred + (1 - y_true) * margin_square)
+# Contrastive loss = mean( (1-true_value) * square(prediction) +
+#                         true_value * square( max(margin-prediction, 0) ))
+def contrastive_loss(margin=1, y_true, y_pred):
+    """
+    Parameters
+    ----------
+    margin  : int
+              margin defines the baseline for distance for which pairs
+              should be classified as dissimilar. - (default is 1)
+
+    y_true  : list
+              list of labels, each label is of type float32
+
+    y_pred  : list
+              list of predictions of same length as of y_true,
+              each label is of type float32
+    
+    Return
+    ------
+    A tensor containing constrastive loss as floating point value
+    """
+
+    square_pred = K.square(y_pred)
+    margin_square = K.square(K.maximum(margin - (y_pred), 0))
+    return K.mean((1-y_true) * square_pred + (y_true) * margin_square)
 
 siamese.compile(
 	loss = contrastive_loss, 
@@ -287,4 +341,5 @@ visualize(
 	num_col=3, 
 	predictions=predictions, 
 	test=True)
+
 
