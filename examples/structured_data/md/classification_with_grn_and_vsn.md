@@ -278,9 +278,6 @@ same dimensionality.
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-
 
 def encode_inputs(inputs, encoding_size):
     encoded_features = []
@@ -478,49 +475,49 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 ```
 Start training the model...
 Epoch 1/20
-640/640 [==============================] - 28s 23ms/step - loss: 297.7439 - accuracy: 0.9427 - val_loss: 224.0750 - val_accuracy: 0.9517
+641/641 [==============================] - 26s 22ms/step - loss: 317.7028 - accuracy: 0.9353 - val_loss: 230.1805 - val_accuracy: 0.9497
 Epoch 2/20
-640/640 [==============================] - 11s 17ms/step - loss: 231.1974 - accuracy: 0.9498 - val_loss: 219.9516 - val_accuracy: 0.9528
+641/641 [==============================] - 13s 19ms/step - loss: 231.4161 - accuracy: 0.9506 - val_loss: 224.7825 - val_accuracy: 0.9498
 Epoch 3/20
-640/640 [==============================] - 11s 17ms/step - loss: 224.3364 - accuracy: 0.9506 - val_loss: 220.5569 - val_accuracy: 0.9511
+641/641 [==============================] - 12s 19ms/step - loss: 226.8173 - accuracy: 0.9503 - val_loss: 223.0818 - val_accuracy: 0.9508
 Epoch 4/20
-640/640 [==============================] - 11s 16ms/step - loss: 222.2389 - accuracy: 0.9505 - val_loss: 216.2226 - val_accuracy: 0.9536
+641/641 [==============================] - 13s 19ms/step - loss: 224.1516 - accuracy: 0.9507 - val_loss: 221.8637 - val_accuracy: 0.9509
 Epoch 5/20
-640/640 [==============================] - 11s 16ms/step - loss: 221.2436 - accuracy: 0.9511 - val_loss: 214.6238 - val_accuracy: 0.9528
+641/641 [==============================] - 13s 19ms/step - loss: 223.9696 - accuracy: 0.9507 - val_loss: 217.8728 - val_accuracy: 0.9513
 Epoch 6/20
-640/640 [==============================] - 11s 17ms/step - loss: 219.4547 - accuracy: 0.9519 - val_loss: 216.6328 - val_accuracy: 0.9521
+641/641 [==============================] - 13s 19ms/step - loss: 220.7267 - accuracy: 0.9508 - val_loss: 220.2448 - val_accuracy: 0.9516
 Epoch 7/20
-640/640 [==============================] - 11s 16ms/step - loss: 218.1072 - accuracy: 0.9515 - val_loss: 212.7955 - val_accuracy: 0.9536
+641/641 [==============================] - 13s 19ms/step - loss: 219.7464 - accuracy: 0.9514 - val_loss: 216.4628 - val_accuracy: 0.9516
 Epoch 8/20
-640/640 [==============================] - 11s 17ms/step - loss: 218.0054 - accuracy: 0.9516 - val_loss: 211.5051 - val_accuracy: 0.9534
+641/641 [==============================] - 13s 19ms/step - loss: 218.7294 - accuracy: 0.9517 - val_loss: 215.2192 - val_accuracy: 0.9519
 Epoch 9/20
-640/640 [==============================] - 11s 18ms/step - loss: 214.6256 - accuracy: 0.9520 - val_loss: 206.9488 - val_accuracy: 0.9547
+641/641 [==============================] - 12s 19ms/step - loss: 218.3938 - accuracy: 0.9516 - val_loss: 217.1790 - val_accuracy: 0.9514
 Epoch 10/20
-640/640 [==============================] - 12s 19ms/step - loss: 213.1709 - accuracy: 0.9530 - val_loss: 208.3064 - val_accuracy: 0.9553
+641/641 [==============================] - 13s 19ms/step - loss: 217.2871 - accuracy: 0.9522 - val_loss: 213.4623 - val_accuracy: 0.9523
 Epoch 11/20
-640/640 [==============================] - 12s 18ms/step - loss: 210.5090 - accuracy: 0.9531 - val_loss: 208.1572 - val_accuracy: 0.9540
+641/641 [==============================] - 13s 19ms/step - loss: 215.0476 - accuracy: 0.9522 - val_loss: 211.6762 - val_accuracy: 0.9523
 Epoch 12/20
-640/640 [==============================] - 12s 18ms/step - loss: 207.6745 - accuracy: 0.9541 - val_loss: 203.6136 - val_accuracy: 0.9562
+641/641 [==============================] - 13s 19ms/step - loss: 213.2402 - accuracy: 0.9527 - val_loss: 212.2001 - val_accuracy: 0.9525
 Epoch 13/20
-640/640 [==============================] - 12s 18ms/step - loss: 208.3804 - accuracy: 0.9542 - val_loss: 203.1174 - val_accuracy: 0.9561
+641/641 [==============================] - 13s 20ms/step - loss: 212.8123 - accuracy: 0.9530 - val_loss: 207.9878 - val_accuracy: 0.9538
 Epoch 14/20
-640/640 [==============================] - 11s 17ms/step - loss: 208.0113 - accuracy: 0.9541 - val_loss: 202.6524 - val_accuracy: 0.9557
+641/641 [==============================] - 13s 19ms/step - loss: 208.4605 - accuracy: 0.9541 - val_loss: 208.0063 - val_accuracy: 0.9543
 Epoch 15/20
-640/640 [==============================] - 11s 16ms/step - loss: 206.8468 - accuracy: 0.9546 - val_loss: 205.3135 - val_accuracy: 0.9552
+641/641 [==============================] - 13s 19ms/step - loss: 211.9185 - accuracy: 0.9533 - val_loss: 208.2112 - val_accuracy: 0.9540
 Epoch 16/20
-640/640 [==============================] - 11s 17ms/step - loss: 206.5992 - accuracy: 0.9547 - val_loss: 206.2844 - val_accuracy: 0.9545
+641/641 [==============================] - 13s 19ms/step - loss: 207.7694 - accuracy: 0.9544 - val_loss: 207.3279 - val_accuracy: 0.9547
 Epoch 17/20
-640/640 [==============================] - 11s 17ms/step - loss: 205.8689 - accuracy: 0.9541 - val_loss: 203.4467 - val_accuracy: 0.9558
+641/641 [==============================] - 13s 19ms/step - loss: 208.6964 - accuracy: 0.9540 - val_loss: 204.3082 - val_accuracy: 0.9553
 Epoch 18/20
-640/640 [==============================] - 11s 17ms/step - loss: 206.0711 - accuracy: 0.9549 - val_loss: 201.3426 - val_accuracy: 0.9565
+641/641 [==============================] - 13s 19ms/step - loss: 207.2199 - accuracy: 0.9547 - val_loss: 206.4799 - val_accuracy: 0.9549
 Epoch 19/20
-640/640 [==============================] - 10s 16ms/step - loss: 205.7568 - accuracy: 0.9550 - val_loss: 203.5569 - val_accuracy: 0.9558
+641/641 [==============================] - 13s 19ms/step - loss: 206.7960 - accuracy: 0.9548 - val_loss: 206.0898 - val_accuracy: 0.9555
 Epoch 20/20
-640/640 [==============================] - 10s 16ms/step - loss: 206.1800 - accuracy: 0.9547 - val_loss: 200.9309 - val_accuracy: 0.9566
+641/641 [==============================] - 13s 20ms/step - loss: 206.2721 - accuracy: 0.9547 - val_loss: 206.6541 - val_accuracy: 0.9549
 Model training finished.
 Evaluating model performance...
-377/377 [==============================] - 4s 9ms/step - loss: 203.9960 - accuracy: 0.9545
-Test accuracy: 95.45%
+377/377 [==============================] - 5s 11ms/step - loss: 206.3511 - accuracy: 0.9541
+Test accuracy: 95.41%
 
 ```
 </div>

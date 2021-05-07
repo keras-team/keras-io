@@ -172,7 +172,7 @@ drastic change is expected within 60 minutes. We do this via the `sampling_rate`
 argument in `timeseries_dataset_from_array` utility.
 
 We are tracking data from past 720 timestamps (720/6=120 hours). This data will be
-used to predict the temperature after 72 timestamps (76/6=12 hours).
+used to predict the temperature after 72 timestamps (72/6=12 hours).
 
 Since every feature has values with
 varying ranges, we do normalization to confine feature values to a range of `[0, 1]` before

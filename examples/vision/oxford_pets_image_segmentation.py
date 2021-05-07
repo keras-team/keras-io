@@ -104,7 +104,7 @@ class OxfordPets(keras.utils.Sequence):
 
 
 """
-## Perpare U-Net Xception-style model
+## Prepare U-Net Xception-style model
 """
 
 from tensorflow.keras import layers
