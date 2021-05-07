@@ -30,13 +30,13 @@ no labels at all, and then fine-tune it using only its labeled subset.
 
 ### Contrastive learning
 
-On the highest level, the main idea of contrastive learning is to **learn
+On the highest level, the main idea behind contrastive learning is to **learn
 representations that are invariant to image augmentations** in a self-supervised
 manner. One problem with this objective is that it has a trivial degenerate
-solution, when the sepresentations are constant, and do not depend at all on the
+solution: the case where the representations are constant, and do not depend at all on the
 input images.
 
-Contrastive learning avoids this condition by modifying the objective in the
+Contrastive learning avoids this trap by modifying the objective in the
 following way: it pulls representations of augmented versions/views of the same
 image closer to each other (contracting positives), while simultaneously pushing
 different images away from each other (contrasting negatives) in representation
@@ -76,31 +76,31 @@ from tensorflow.keras.layers.experimental import preprocessing
 """
 ## Hyperparameterers
 """
-# dataset hyperparameters
+# Dataset hyperparameters
 unlabeled_dataset_size = 100000
 labeled_dataset_size = 5000
 image_size = 96
 image_channels = 3
 
-# algorithm hyperparameters
+# Algorithm hyperparameters
 num_epochs = 60
-batch_size = 525  # corresponds to 200 steps per epoch
+batch_size = 525  # Corresponds to 200 steps per epoch
 width = 128
 temperature = 0.1
-# stronger augmentations for contrastive, weaker ones for supervised training
+# Stronger augmentations for contrastive, weaker ones for supervised training
 contrastive_augmentation = {"min_area": 1 / 4, "brightness": 0.6, "jitter": 0.2}
 classification_augmentation = {"min_area": 2 / 3, "brightness": 0.3, "jitter": 0.1}
 
 """
 ## Dataset
 
-During training we will load a large batch of unlabeled images along with a
-smaller batch of labeled images simultaneously.
+During training we will simultaneously load a large batch of unlabeled images along with a
+smaller batch of labeled images.
 """
 
 
 def prepare_dataset():
-    # labeled and unlabeled samples are loaded synchronously
+    # Labeled and unlabeled samples are loaded synchronously
     # with batch sizes selected accordingly
     steps_per_epoch = (unlabeled_dataset_size + labeled_dataset_size) // batch_size
     unlabeled_batch_size = unlabeled_dataset_size // steps_per_epoch
@@ -125,7 +125,7 @@ def prepare_dataset():
         .prefetch(buffer_size=tf.data.AUTOTUNE)
     )
 
-    # labeled and unlabeled datasets are zipped together
+    # Labeled and unlabeled datasets are zipped together
     train_dataset = tf.data.Dataset.zip(
         (unlabeled_train_dataset, labeled_train_dataset)
     ).prefetch(buffer_size=tf.data.AUTOTUNE)
@@ -133,7 +133,7 @@ def prepare_dataset():
     return train_dataset, labeled_train_dataset, test_dataset
 
 
-# load STL10 dataset
+# Load STL10 dataset
 train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 
 """
@@ -142,14 +142,14 @@ train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 The two most important image augmentations for contrastive learning are the
 following:
 
-- cropping: forces the model to encode different parts of the same image
-  similarly, we implement it with the
-  [RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
-  + [RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/)
-  layers
-- color jitter: prevents a trivial color histogram-based solution to the task by
-  distorting color histograms. A principled way to implement that is by affine
-  transformations in color space.
+- Cropping: forces the model to encode different parts of the same image
+similarly, we implement it with the
+[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
++ [RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/)
+layers
+- Color jitter: prevents a trivial color histogram-based solution to the task by
+distorting color histograms. A principled way to implement that is by affine
+transformations in color space.
 
 In this example we use random horizontal flips as well. Stronger augmentations
 are applied for contrastive learning, along with weaker ones for supervised
@@ -158,15 +158,15 @@ classification to avoid overfitting on the few labeled examples.
 We implement random color jitter as a custom preprocessing layer. Using
 preprocessing layers for data augmentation has the following two advantages:
 
-- the data augmentation will run on GPU in batches, so the training will not be
-  bottlenecked by the data pipeline in environments with constrained CPU
-  resources (such as a Colab Notebook, or a personal machine)
-- deployment is easier as the data preprocessing pipeline is encapsulated in the
-  model, and does not have to be reimplemented when deploying it
+- The data augmentation will run on GPU in batches, so the training will not be
+bottlenecked by the data pipeline in environments with constrained CPU
+resources (such as a Colab Notebook, or a personal machine)
+- Deployment is easier as the data preprocessing pipeline is encapsulated in the
+model, and does not have to be reimplemented when deploying it
 """
 
 
-# distorts the color distibutions of images
+# Distorts the color distibutions of images
 class RandomColorAffine(layers.Layer):
     def __init__(self, brightness=0, jitter=0, **kwargs):
         super().__init__(**kwargs)
@@ -178,11 +178,11 @@ class RandomColorAffine(layers.Layer):
         if training:
             batch_size = tf.shape(images)[0]
 
-            # same for all colors
+            # Same for all colors
             brightness_scales = 1 + tf.random.uniform(
                 (batch_size, 1, 1, 1), minval=-self.brightness, maxval=self.brightness
             )
-            # different for all colors
+            # Different for all colors
             jitter_matrices = tf.random.uniform(
                 (batch_size, 1, 3, 3), minval=-self.jitter, maxval=self.jitter
             )
@@ -195,12 +195,12 @@ class RandomColorAffine(layers.Layer):
         return images
 
 
-# image augmentation module
+# Image augmentation module
 def get_augmenter(min_area, brightness, jitter):
     zoom_factor = 1.0 - tf.sqrt(min_area)
     return keras.Sequential(
         [
-            layers.Input(shape=(image_size, image_size, image_channels)),
+            keras.Input(shape=(image_size, image_size, image_channels)),
             preprocessing.Rescaling(1 / 255),
             preprocessing.RandomFlip("horizontal"),
             preprocessing.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
@@ -211,16 +211,15 @@ def get_augmenter(min_area, brightness, jitter):
 
 
 def visualize_augmentations(num_images):
-    # sample a batch from a dataset
+    # Sample a batch from a dataset
     images = next(iter(train_dataset))[0][0][:num_images]
-    # apply augmentations
+    # Apply augmentations
     augmented_images = zip(
         images,
         get_augmenter(**classification_augmentation)(images),
         get_augmenter(**contrastive_augmentation)(images),
         get_augmenter(**contrastive_augmentation)(images),
     )
-
     row_titles = [
         "Original:",
         "Weakly augmented:",
@@ -245,11 +244,11 @@ visualize_augmentations(num_images=8)
 """
 
 
-# define the encoder architecture
+# Define the encoder architecture
 def get_encoder():
     return keras.Sequential(
         [
-            layers.Input(shape=(image_size, image_size, image_channels)),
+            keras.Input(shape=(image_size, image_size, image_channels)),
             layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
             layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
             layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
@@ -271,7 +270,7 @@ epochs.
 # baseline supervised training with random initialization
 baseline_model = keras.Sequential(
     [
-        layers.Input(shape=(image_size, image_size, image_channels)),
+        keras.Input(shape=(image_size, image_size, image_channels)),
         get_augmenter(**classification_augmentation),
         get_encoder(),
         layers.Dense(10),
@@ -314,20 +313,20 @@ following way:
 The following two metrics are used for monitoring the pretraining performance:
 
 - [Contrastive accuracy (SimCLR Table 5)](https://arxiv.org/abs/2002.05709):
-  Self-supervised metric, the ratio of cases in which the representation of an
-  image is more similar to its differently augmented version's one, than to the
-  representation of any other image in the current batch. Self-supervised
-  metrics can be used for hyperparameter tuning even in the case when there are
-  no labeled examples.
+Self-supervised metric, the ratio of cases in which the representation of an
+image is more similar to its differently augmented version's one, than to the
+representation of any other image in the current batch. Self-supervised
+metrics can be used for hyperparameter tuning even in the case when there are
+no labeled examples.
 - [Linear probing accuracy](https://arxiv.org/abs/1603.08511): Linear probing is
-  a popular metric to evaluate self-supervised classifiers. It is computed as
-  the accuracy of a logistic regression classifier trained on top of the
-  encoder's features. In our case, this is done by training a single dense layer
-  on top of the frozen encoder. Note that contrary to traditional approach where
-  the classifier is trained after the pretraining phase, in this example we
-  train it during pretraining. This might slightly decrease its accuracy, but
-  that way we can monitor its value during training, which helps with
-  experimentation and debugging.
+a popular metric to evaluate self-supervised classifiers. It is computed as
+the accuracy of a logistic regression classifier trained on top of the
+encoder's features. In our case, this is done by training a single dense layer
+on top of the frozen encoder. Note that contrary to traditional approach where
+the classifier is trained after the pretraining phase, in this example we
+train it during pretraining. This might slightly decrease its accuracy, but
+that way we can monitor its value during training, which helps with
+experimentation and debugging.
 
 Another widely used supervised metric is the
 [KNN accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN
@@ -336,26 +335,25 @@ this example.
 """
 
 
-# define the contrastive model with model-subclassing
+# Define the contrastive model with model-subclassing
 class ContrastiveModel(keras.Model):
     def __init__(self):
         super().__init__()
 
         self.temperature = temperature
-
         self.contrastive_augmenter = get_augmenter(**contrastive_augmentation)
         self.classification_augmenter = get_augmenter(**classification_augmentation)
         self.encoder = get_encoder()
-        # a non-linear mlp as projection head
+        # Non-linear MLP as projection head
         self.projection_head = keras.Sequential(
             [
-                layers.Input(shape=(width,)),
+                keras.Input(shape=(width,)),
                 layers.Dense(width, activation="relu"),
                 layers.Dense(width),
             ],
             name="projection_head",
         )
-        # a single dense layer for linear probing
+        # Single dense layer for linear probing
         self.linear_probe = keras.Sequential(
             [layers.Input(shape=(width,)), layers.Dense(10)], name="linear_probe"
         )
@@ -393,14 +391,14 @@ class ContrastiveModel(keras.Model):
         # InfoNCE loss (information noise-contrastive estimation)
         # NT-Xent loss (normalized temperature-scaled cross entropy)
 
-        # cosine similarity: the dot product of the l2-normalized feature vectors
+        # Cosine similarity: the dot product of the l2-normalized feature vectors
         projections_1 = tf.math.l2_normalize(projections_1, axis=1)
         projections_2 = tf.math.l2_normalize(projections_2, axis=1)
         similarities = (
             tf.matmul(projections_1, projections_2, transpose_b=True) / self.temperature
         )
 
-        # the similarity between the representations of two augmented views of the
+        # The similarity between the representations of two augmented views of the
         # same image should be higher than their similarity with other views
         batch_size = tf.shape(projections_1)[0]
         contrastive_labels = tf.range(batch_size)
@@ -409,7 +407,7 @@ class ContrastiveModel(keras.Model):
             contrastive_labels, tf.transpose(similarities)
         )
 
-        # the temperature-scaled similarities are used as logits for cross-entropy
+        # The temperature-scaled similarities are used as logits for cross-entropy
         # a symmetrized version of the loss is used here
         loss_1_2 = keras.losses.sparse_categorical_crossentropy(
             contrastive_labels, similarities, from_logits=True
@@ -422,15 +420,15 @@ class ContrastiveModel(keras.Model):
     def train_step(self, data):
         (unlabeled_images, _), (labeled_images, labels) = data
 
-        # both labeled and unlabeled images are used, without labels
+        # Both labeled and unlabeled images are used, without labels
         images = tf.concat((unlabeled_images, labeled_images), axis=0)
-        # each image is augmented twice, differently
+        # Each image is augmented twice, differently
         augmented_images_1 = self.contrastive_augmenter(images)
         augmented_images_2 = self.contrastive_augmenter(images)
         with tf.GradientTape() as tape:
             features_1 = self.encoder(augmented_images_1)
             features_2 = self.encoder(augmented_images_2)
-            # the representations are passed through a projection mlp
+            # The representations are passed through a projection mlp
             projections_1 = self.projection_head(features_1)
             projections_2 = self.projection_head(features_2)
             contrastive_loss = self.contrastive_loss(projections_1, projections_2)
@@ -446,7 +444,7 @@ class ContrastiveModel(keras.Model):
         )
         self.contrastive_loss_tracker.update_state(contrastive_loss)
 
-        # labels are only used in evalutation for an on-the-fly logistic regression
+        # Labels are only used in evalutation for an on-the-fly logistic regression
         preprocessed_images = self.classification_augmenter(labeled_images)
         with tf.GradientTape() as tape:
             features = self.encoder(preprocessed_images)
@@ -464,7 +462,7 @@ class ContrastiveModel(keras.Model):
     def test_step(self, data):
         labeled_images, labels = data
 
-        # for testing the components are used with a training=False flag
+        # For testing the components are used with a training=False flag
         preprocessed_images = self.classification_augmenter(
             labeled_images, training=False
         )
@@ -474,11 +472,11 @@ class ContrastiveModel(keras.Model):
         self.probe_loss_tracker.update_state(probe_loss)
         self.probe_accuracy.update_state(labels, class_logits)
 
-        # only the probe metrics are logged at test time
+        # Only the probe metrics are logged at test time
         return {m.name: m.result() for m in self.metrics[2:]}
 
 
-# the contrastive model is pretrained for half of the epochs
+# The contrastive model is pretrained for half of the epochs
 pretraining_model = ContrastiveModel()
 pretraining_model.compile(
     contrastive_optimizer=keras.optimizers.Adam(),
@@ -531,7 +529,7 @@ print(
 """
 
 
-# the classification accuracies of the baseline and the pretraining + finetuning process:
+# The classification accuracies of the baseline and the pretraining + finetuning process:
 def plot_training_curves(pretraining_history, finetuning_history, baseline_history):
     pretraining_epochs = len(pretraining_history.history["val_p_acc"])
     finetuning_epochs = len(finetuning_history.history["val_acc"])
@@ -568,7 +566,7 @@ better when seeing only a small amount of labeled examples.
 """
 ## Improving further
 
-### Architecture:
+### Architecture
 
 The experiment in the original paper demonstrated that increasing the width and depth of the
 models improves performance at a higher rate than for supervised learning. Also,
@@ -584,7 +582,7 @@ between samples, which is why I did not have used them in this example. In my
 experiments however, using BatchNorm, especially in the projection head,
 improves performance.
 
-### Hyperparameters:
+### Hyperparameters
 
 The hyperparameters used in this example have been tuned manually for this task and
 architecture. Therefore, without changing them, only marginal gains can be expected
@@ -593,34 +591,34 @@ from further hyperparameter tuning.
 However for a different task or model architecture these would need tuning, so
 here are my notes on the most important ones:
 
-- **batch size**: since the objective can be interpreted as a classification
-  over a batch of images (loosely speaking), the batch size is actually a more
-  important hyperparameter than usual. The higher, the better.
-- **temperature**: the temperature defines the "softness" of the softmax
-  distribution that is used in the cross-entropy loss, and is an important
-  hyperparameter. Lower values generally lead to a higher contrastive accuracy.
-  A recent trick (in [ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn
-  the temperature's value as well (which can be done by defining it as a
-  tf.Variable, and applying gradients on it). Even though this provides a good baseline
-  value, in my experiments the learned temperature was somewhat lower
-  than optimal, as it is optimized with respect to the contrastive loss, which is not a
-  perfect proxy for representation quality.
-- **image augmentation strength**: during pretraining stronger augmentations
-  increase the difficulty of the task, however after a point too strong
-  augmentations will degrade performance. During finetuning stronger
-  augmentations reduce overfitting while in my experience too strong
-  augmentations decrease the performance gains from pretraining. The whole data
-  augmentation pipeline can be seen as an important hyperparameter of the
-  algorithm, implementations of other custom image augmentation layers in Keras
-  can be found in
-  [this repository](https://github.com/beresandras/contrastive-classification-keras).
-- **learning rate schedule**: a constant schedule is used here, but it is
-  quite common in the literature to use a
-  [cosine decay schedule](https://www.tensorflow.org/api_docs/python/tf/keras/experimental/CosineDecay),
-  which can further improve performance.
-- **optimizer**: Adam is used in this example, as it provides good performance
-  with default parameters. SGD with momentum requires more tuning, however it
-  could slightly increase performance.
+- **Batch size**: since the objective can be interpreted as a classification
+over a batch of images (loosely speaking), the batch size is actually a more
+important hyperparameter than usual. The higher, the better.
+- **Temperature**: the temperature defines the "softness" of the softmax
+distribution that is used in the cross-entropy loss, and is an important
+hyperparameter. Lower values generally lead to a higher contrastive accuracy.
+A recent trick (in [ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn
+the temperature's value as well (which can be done by defining it as a
+tf.Variable, and applying gradients on it). Even though this provides a good baseline
+value, in my experiments the learned temperature was somewhat lower
+than optimal, as it is optimized with respect to the contrastive loss, which is not a
+perfect proxy for representation quality.
+- **Image augmentation strength**: during pretraining stronger augmentations
+increase the difficulty of the task, however after a point too strong
+augmentations will degrade performance. During finetuning stronger
+augmentations reduce overfitting while in my experience too strong
+augmentations decrease the performance gains from pretraining. The whole data
+augmentation pipeline can be seen as an important hyperparameter of the
+algorithm, implementations of other custom image augmentation layers in Keras
+can be found in
+[this repository](https://github.com/beresandras/contrastive-classification-keras).
+- **Learning rate schedule**: a constant schedule is used here, but it is
+quite common in the literature to use a
+[cosine decay schedule](https://www.tensorflow.org/api_docs/python/tf/keras/experimental/CosineDecay),
+which can further improve performance.
+- **Optimizer**: Adam is used in this example, as it provides good performance
+with default parameters. SGD with momentum requires more tuning, however it
+could slightly increase performance.
 """
 
 """
@@ -629,16 +627,16 @@ here are my notes on the most important ones:
 Other instance-level (image-level) contrastive learning methods:
 
 - [MoCo](https://arxiv.org/abs/1911.05722)
-  ([v2](https://arxiv.org/abs/2003.04297),
-  [v3](https://arxiv.org/abs/2104.02057)): uses a momentum-encoder as well,
-  whose weights are an exponential moving average of the target encoder
+([v2](https://arxiv.org/abs/2003.04297),
+[v3](https://arxiv.org/abs/2104.02057)): uses a momentum-encoder as well,
+whose weights are an exponential moving average of the target encoder
 - [SwAV](https://arxiv.org/abs/2006.09882): uses clustering instead of pairwise
-  comparison
+comparison
 - [BarlowTwins](https://arxiv.org/abs/2103.03230): uses a cross
-  correlation-based objective instead of pairwise comparison
+correlation-based objective instead of pairwise comparison
 
-Keras implementations of **MoCo** and **BarlowTwins** can be found in [this
-repository](https://github.com/beresandras/contrastive-classification-keras),
+Keras implementations of **MoCo** and **BarlowTwins** can be found in
+[this repository](https://github.com/beresandras/contrastive-classification-keras),
 which includes a Colab notebook.
 
 There is also a new line of works, which optimize a similar objective, but
@@ -646,8 +644,8 @@ without the use of any negatives:
 
 - [BYOL](https://arxiv.org/abs/2006.07733): momentum-encoder + no negatives
 - [SimSiam](https://arxiv.org/abs/2011.10566)
-  ([Keras example](https://keras.io/examples/vision/simsiam/)):
-  no momentum-encoder + no negatives
+([Keras example](https://keras.io/examples/vision/simsiam/)):
+no momentum-encoder + no negatives
 
 In my experience, these methods are more brittle (they can collapse to a constant
 representation, I could not get them to work using this encoder architecture).
