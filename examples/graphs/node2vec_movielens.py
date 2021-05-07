@@ -299,6 +299,7 @@ def random_walk(graph, num_walks, num_steps, p, q):
 
 """
 ## Generate training data using the biased random walk
+
 You can explore different configurations of `p` and `q` to different results of
 related movies.
 """
