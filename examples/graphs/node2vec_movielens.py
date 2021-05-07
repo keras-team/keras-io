@@ -3,24 +3,23 @@ Title: Graph representation learning with node2vec.
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2021/05/15
-Description: Implementing the node2vec model to generate embeddings for movies from the Movielens dataset.
+Description: Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
 """
 
 """
 ## Introduction
 
-
 Learning useful representations from objects structured as graphs is useful for
 a variety of machine learning (ML) applications—such as social and communication networks analysis,
-biomedicine studies, and recommendation systems—and leads to greater predictive power.
-[Graph Representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/) aims to
+biomedicine studies, and recommendation systems.
+[Graph representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/) aims to
 learn embeddings for the graph nodes, which can be used for a variety of ML tasks
 such as node label prediction (e.g. categorizing an article based on its citations)
 and link prediction (e.g. recommending an interest group to a user in a social network).
 
 [node2vec](https://arxiv.org/abs/1607.00653) is a simple, yet scalable and effective
 technique for learning low-dimensional embeddings for nodes in a graph by optimizing
-a neighborhood preserving objective. The aim is to learn similar embeddings for
+a neighborhood-preserving objective. The aim is to learn similar embeddings for
 neighboring nodes, with respect to the graph structure.
 
 Given your data items structured as a graph (where the items are represented as
@@ -32,7 +31,8 @@ node2vec works as follows:
 3. Train a [word2vec](https://www.tensorflow.org/tutorials/text/word2vec) model
 (skip-gram) to learn embeddings for the items.
 
-In this example, we demonstrate the node2vec technique on the [small version of the Movielens dataset](https://files.grouplens.org/datasets/movielens/ml-latest-small-README.html)
+In this example, we demonstrate the node2vec technique on the
+[small version of the Movielens dataset](https://files.grouplens.org/datasets/movielens/ml-latest-small-README.html)
 to learn movie embeddings. Such a dataset can be represented as a graph by treating
 the movies as nodes, and creating edges between movies that have similar ratings
 by the users. The learnt movie embeddings can be used for tasks such as movie recommendation,
@@ -65,10 +65,10 @@ from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
 """
-## Download the Movielens dataset and prepare the data
+## Download the MovieLens dataset and prepare the data
 
-The small version of the Movielens dataset includes around 100 thousand ratings
-from 610 users on 9742 movies.
+The small version of the MovieLens dataset includes around 100k ratings
+from 610 users on 9,742 movies.
 
 First, let's download the dataset. The downloaded folder will contain
 three data files: `users.csv`, `movies.csv`, and `ratings.csv`. In this example,
@@ -81,7 +81,7 @@ urlretrieve(
 ZipFile("movielens.zip", "r").extractall()
 
 """
-Then, we load the data into a Pandas DataFrame and perform some basic processing.
+Then, we load the data into a Pandas DataFrame and perform some basic preprocessing.
 """
 
 # Load movies to a DataFrame.
@@ -232,6 +232,7 @@ This procedure is repeated for `num_steps` to generate a sequence of *related* n
 The [*biased* random walk](https://en.wikipedia.org/wiki/Biased_random_walk_on_a_graph) balances between **breadth-first sampling**
 (where only local neighbours are visited) and **depth-first sampling**
 (where  distant neighbours are visited) by introducing the following two parameters:
+
 1. **Return parameter** (`p`): Controls the likelihood of immediately revisiting
 a node in the walk. Setting it to a high value encourages moderate exploration,
 while setting it to a low value would keep the walk local.
@@ -334,9 +335,7 @@ otherwise (i.e., if randomly sampled) the label is 0.
 
 
 def generate_examples(sequences, window_size, num_negative_samples, vocabulary_size):
-
     example_weights = defaultdict(int)
-
     # Iterate over all sequences (walks).
     for sequence in tqdm(
         sequences,
@@ -344,7 +343,6 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
         leave=True,
         desc=f"Generating postive and negative examples",
     ):
-
         # Generate positive and negative skip-gram pairs for a sequence (walk).
         pairs, labels = keras.preprocessing.sequence.skipgrams(
             sequence,
@@ -352,7 +350,6 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
             window_size=window_size,
             negative_samples=num_negative_samples,
         )
-
         for idx in range(len(pairs)):
             pair = pairs[idx]
             label = labels[idx]
@@ -366,7 +363,6 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
     for entry in example_weights:
         weight = example_weights[entry]
         target, context, label = entry
-
         targets.append(target)
         contexts.append(context)
         labels.append(label)
