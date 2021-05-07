@@ -537,8 +537,8 @@ for movie_title in query_movies:
 query_embeddings = np.array(query_embeddings)
 
 """
-Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of the query movies and all
-other movies, then pick the top k for each.
+Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies` and all
+the other movies, then pick the top k for each.
 """
 
 similarities = tf.linalg.matmul(
@@ -551,7 +551,7 @@ _, indices = tf.math.top_k(similarities, k=5)
 indices = indices.numpy().tolist()
 
 """
-Display the top related movies the query movies.
+Display the top related movies in `query_movies`.
 """
 
 for idx, title in enumerate(query_movies):
