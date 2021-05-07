@@ -513,6 +513,8 @@ print("Embeddings shape:", movie_embeddings.shape)
 
 """
 ### Find related movies
+
+Define a list with some movies called `query_movies`.
 """
 
 query_movies = [
@@ -524,7 +526,7 @@ query_movies = [
 ]
 
 """
-Get the embeddings of the query movies.
+Get the embeddings of the movies in `query_movies`.
 """
 
 query_embeddings = []
@@ -538,8 +540,8 @@ for movie_title in query_movies:
 query_embeddings = np.array(query_embeddings)
 
 """
-Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies` and all
-the other movies, then pick the top k for each.
+Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies`
+and all the other movies, then pick the top k for each.
 """
 
 similarities = tf.linalg.matmul(
