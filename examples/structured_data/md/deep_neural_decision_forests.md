@@ -437,19 +437,6 @@ run_experiment(tree_model)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:AutoGraph could not transform <bound method NeuralDecisionTree.call of <__main__.NeuralDecisionTree object at 0x7f9615316520>> and will run it as-is.
-Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
-Cause: invalid syntax (tmp6v144klm.py, line 30)
-To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
-WARNING: AutoGraph could not transform <bound method NeuralDecisionTree.call of <__main__.NeuralDecisionTree object at 0x7f9615316520>> and will run it as-is.
-Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
-Cause: invalid syntax (tmp6v144klm.py, line 30)
-To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
-Start training the model...
-Epoch 1/10
-
-/usr/local/google/home/mattdangerw/.local/lib/python3.9/site-packages/tensorflow/python/keras/engine/functional.py:588: UserWarning: Input dict contained keys ['fnlwgt'] which did not match any model input. They will be ignored by the model.
-  warnings.warn(
 
 123/123 [==============================] - 3s 9ms/step - loss: 0.5326 - sparse_categorical_accuracy: 0.7838
 Epoch 2/10
