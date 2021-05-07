@@ -54,7 +54,7 @@ explicitly prevent the trivial solution, and, instead, avoids it implicitly by
 architecture design (asymmetric encoding paths using a predictor network and
 batch normalization (BatchNorm) are applied in the final layers).
 
-For further reading about SimCLR check out
+For further reading about SimCLR, check out
 [the official Google AI blog post](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html),
 and for an overview of self-supervised learning across both vision and language
 check out
