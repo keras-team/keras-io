@@ -3,7 +3,7 @@
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/05/15<br>
 **Last modified:** 2021/05/15<br>
-**Description:** Implementing the node2vec to generate embeddings for movies.
+**Description:** Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graphs/ipynb/node2vec_movielens.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graphs/node2vec_movielens.py)
@@ -13,27 +13,30 @@
 ---
 ## Introduction
 
-
 Learning useful representations from objects structured as graphs is useful for
-a variety of ML applications, and leads to greater predictive power.
-[Graph Representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/) aims to
+a variety of machine learning (ML) applications—such as social and communication networks analysis,
+biomedicine studies, and recommendation systems.
+[Graph representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/) aims to
 learn embeddings for the graph nodes, which can be used for a variety of ML tasks
-such as node label prediction and link prediction.
+such as node label prediction (e.g. categorizing an article based on its citations)
+and link prediction (e.g. recommending an interest group to a user in a social network).
 
 [node2vec](https://arxiv.org/abs/1607.00653) is a simple, yet scalable and effective
 technique for learning low-dimensional embeddings for nodes in a graph by optimizing
-a neighborhood preserving objective. The aim is to learn similar embeddings for
+a neighborhood-preserving objective. The aim is to learn similar embeddings for
 neighboring nodes, with respect to the graph structure.
 
 Given your data items structured as a graph (where the items are represented as
 nodes and the relationship between items are represented as edges),
 node2vec works as follows:
+
 1. Generate item sequences using (biased) random walk.
 2. Create positive and negative training examples from these sequences.
 3. Train a [word2vec](https://www.tensorflow.org/tutorials/text/word2vec) model
 (skip-gram) to learn embeddings for the items.
 
-In this example, we demonstrate the node2vec technique on the [small version of the Movielens dataset](https://files.grouplens.org/datasets/movielens/ml-latest-small-README.html)
+In this example, we demonstrate the node2vec technique on the
+[small version of the Movielens dataset](https://files.grouplens.org/datasets/movielens/ml-latest-small-README.html)
 to learn movie embeddings. Such a dataset can be represented as a graph by treating
 the movies as nodes, and creating edges between movies that have similar ratings
 by the users. The learnt movie embeddings can be used for tasks such as movie recommendation,
@@ -41,7 +44,7 @@ or movie genres prediction.
 
 This example requires `networkx` package, which can be installed using the following command:
 
-```python
+```shell
 pip install networkx
 ````
 
@@ -67,12 +70,12 @@ import matplotlib.pyplot as plt
 ```
 
 ---
-## Download and Prepare the Data
+## Download the MovieLens dataset and prepare the data
 
-The small version of the Movielens dataset includes around 100 thousand ratings
-from 610 users on 9742 movies.
+The small version of the MovieLens dataset includes around 100k ratings
+from 610 users on 9,742 movies.
 
-First, let's download the movielens data. The downloaded folder will contain
+First, let's download the dataset. The downloaded folder will contain
 three data files: `users.csv`, `movies.csv`, and `ratings.csv`. In this example,
 we will only need the `movies.dat`, and `ratings.dat` data files.
 
@@ -84,20 +87,20 @@ urlretrieve(
 ZipFile("movielens.zip", "r").extractall()
 ```
 
-Then, we load the data into pandas DataFrames and perform some basic processing.
+Then, we load the data into a Pandas DataFrame and perform some basic preprocessing.
 
 
 ```python
 # Load movies to a DataFrame.
 movies = pd.read_csv("ml-latest-small/movies.csv")
-# Make the movieId string.
+# Create a `movieId` string.
 movies["movieId"] = movies["movieId"].apply(lambda x: f"movie_{x}")
 
 # Load ratings to a DataFrame.
 ratings = pd.read_csv("ml-latest-small/ratings.csv")
-# # Convert rating to float
+# Convert the `ratings` to floating point
 ratings["rating"] = ratings["rating"].apply(lambda x: float(x))
-# # Make the movie_id string.
+# Create the `movie_id` string.
 ratings["movieId"] = ratings["movieId"].apply(lambda x: f"movie_{x}")
 
 print("Movies data shape:", movies.shape)
@@ -111,7 +114,7 @@ Ratings data shape: (100836, 4)
 
 ```
 </div>
-Let's show a sample instance of the `ratings` DataFrame.
+Let's inspect a sample instance of the `ratings` DataFrame.
 
 
 ```python
@@ -191,7 +194,7 @@ ratings.head()
 
 
 
-Let's show how sample instance of the `movies` DataFrame.
+Next, let's check a sample instance of the `movies` DataFrame.
 
 
 ```python
@@ -265,7 +268,7 @@ movies.head()
 
 
 
-Implement utility functions movies DataFrame
+Implement two utility functions for the `movies` DataFrame.
 
 
 ```python
@@ -280,17 +283,17 @@ def get_movie_id_by_title(title):
 ```
 
 ---
-## Construct the Movies Graph
+## Construct the Movies graph
 
 We create an edge between two movie nodes in the graph if both movies are rated
 by the same user >= `min_rating`. The weight of the edge will be based on the
 [pointwise mutual information](https://en.wikipedia.org/wiki/Pointwise_mutual_information)
-between the two movies, which is computed as: $log(xy) - log(x) - log(y) + log(D)$, where:
+between the two movies, which is computed as: `log(xy) - log(x) - log(y) + log(D)`, where:
 
-* $xy$ is how many users rated both movie `x` and movie `y` with >= `min_rating`.
-* $x$ is how many users rated movie `x` >= `min_rating`.
-* $y$ is how many users rated movie `y` >= `min_rating`.
-* $D$ total number of movie ratings >= `min_rating`.
+* `xy` is how many users rated both movie `x` and movie `y` with >= `min_rating`.
+* `x` is how many users rated movie `x` >= `min_rating`.
+* `y` is how many users rated movie `y` >= `min_rating`.
+* `D` total number of movie ratings >= `min_rating`.
 
 ### Step 1: create the weighted edges between movies.
 
@@ -323,7 +326,7 @@ for group in tqdm(
 
 <div class="k-default-codeblock">
 ```
-Compute movie rating frequencies: 100%|██████████| 573/573 [00:00<00:00, 983.26it/s]
+Compute movie rating frequencies: 100%|██████████| 573/573 [00:00<00:00, 1041.36it/s]
 
 ```
 </div>
@@ -357,7 +360,7 @@ for pair in tqdm(
 
 <div class="k-default-codeblock">
 ```
-Creating the movie graph: 100%|██████████| 298586/298586 [00:00<00:00, 719943.92it/s]
+Creating the movie graph: 100%|██████████| 298586/298586 [00:00<00:00, 762305.97it/s]
 
 ```
 </div>
@@ -397,7 +400,7 @@ Average node degree: 57.0
 </div>
 ### Step 3: Create vocabulary and a mapping from tokens to integer indices
 
-The vocabulary is the nodes (movie ids) in the graph.
+The vocabulary is the nodes (movie IDs) in the graph.
 
 
 ```python
@@ -406,16 +409,17 @@ vocabulary_lookup = {token: idx for idx, token in enumerate(vocabulary)}
 ```
 
 ---
-## Implement Biased Random Walk
+## Implement the biased random walk
 
 A random walk starts from a given node, and randomly picks a neighbour node to move to.
 If the edges are weighted, the neighbour is selected *probabilistically* with
 respect to weights of the edges between the current node and its neighbours.
 This procedure is repeated for `num_steps` to generate a sequence of *related* nodes.
 
-The *biased* random walk balances between **breadth-first sampling**
+The [*biased* random walk](https://en.wikipedia.org/wiki/Biased_random_walk_on_a_graph) balances between **breadth-first sampling**
 (where only local neighbours are visited) and **depth-first sampling**
 (where  distant neighbours are visited) by introducing the following two parameters:
+
 1. **Return parameter** (`p`): Controls the likelihood of immediately revisiting
 a node in the walk. Setting it to a high value encourages moderate exploration,
 while setting it to a low value would keep the walk local.
@@ -451,7 +455,7 @@ def next_step(graph, previous, current, p, q):
     return next
 
 
-def randm_walk(graph, num_walks, num_steps, p, q):
+def random_walk(graph, num_walks, num_steps, p, q):
     walks = []
     nodes = list(graph.nodes())
     # Perform multiple iterations of the random walk.
@@ -483,28 +487,33 @@ def randm_walk(graph, num_walks, num_steps, p, q):
 ```
 
 ---
-## Generate Training Data using Random Walk
+## Generate training data using the biased random walk
+
 You can explore different configurations of `p` and `q` to different results of
 related movies.
 
 
 ```python
+# Random walk return parameter.
 p = 1
+# Random walk in-out parameter.
 q = 1
+# Number of iterations of random walks.
 num_walks = 5
+# Number of steps of each random walk.
 num_steps = 10
-walks = randm_walk(movies_graph, num_walks, num_steps, p, q)
+walks = random_walk(movies_graph, num_walks, num_steps, p, q)
 
 print("Number of walks generated:", len(walks))
 ```
 
 <div class="k-default-codeblock">
 ```
-Random walks iteration 1 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 290.73it/s]
-Random walks iteration 2 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 299.66it/s]
-Random walks iteration 3 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 306.30it/s]
-Random walks iteration 4 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 308.98it/s]
-Random walks iteration 5 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 309.18it/s]
+Random walks iteration 1 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 296.67it/s]
+Random walks iteration 2 of 5: 100%|██████████| 1405/1405 [00:05<00:00, 274.60it/s]
+Random walks iteration 3 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 281.69it/s]
+Random walks iteration 4 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 285.56it/s]
+Random walks iteration 5 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 301.79it/s]
 
 Number of walks generated: 7025
 
@@ -514,10 +523,11 @@ Number of walks generated: 7025
 
 
 ---
-## Generate Positive and Negative Examples
+## Generate positive and negative examples
 
 To train a skip-gram model, we use the generated walks to create positive and
 negative training examples. Each example includes the following features:
+
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
 3. `weight`: How many times these two movies occured in walk sequences.
@@ -529,10 +539,8 @@ otherwise (i.e., if randomly sampled) the label is 0.
 
 ```python
 
-def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_size):
-
+def generate_examples(sequences, window_size, num_negative_samples, vocabulary_size):
     example_weights = defaultdict(int)
-
     # Iterate over all sequences (walks).
     for sequence in tqdm(
         sequences,
@@ -540,15 +548,13 @@ def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_s
         leave=True,
         desc=f"Generating postive and negative examples",
     ):
-
         # Generate positive and negative skip-gram pairs for a sequence (walk).
         pairs, labels = keras.preprocessing.sequence.skipgrams(
             sequence,
             vocabulary_size=vocabulary_size,
             window_size=window_size,
-            negative_samples=num_negative_smaples,
+            negative_samples=num_negative_samples,
         )
-
         for idx in range(len(pairs)):
             pair = pairs[idx]
             label = labels[idx]
@@ -562,7 +568,6 @@ def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_s
     for entry in example_weights:
         weight = example_weights[entry]
         target, context, label = entry
-
         targets.append(target)
         contexts.append(context)
         labels.append(label)
@@ -571,18 +576,18 @@ def generate_examples(sequences, window_size, num_negative_smaples, vocabulary_s
     return np.array(targets), np.array(contexts), np.array(labels), np.array(weights)
 
 
-num_negative_smaples = 4
+num_negative_samples = 4
 targets, contexts, labels, weights = generate_examples(
     sequences=walks,
     window_size=num_steps,
-    num_negative_smaples=num_negative_smaples,
+    num_negative_samples=num_negative_samples,
     vocabulary_size=len(vocabulary),
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-Generating postive and negative examples: 100%|██████████| 7025/7025 [00:11<00:00, 637.83it/s]
+Generating postive and negative examples: 100%|██████████| 7025/7025 [00:11<00:00, 638.29it/s]
 
 ```
 </div>
@@ -598,14 +603,14 @@ print(f"Weights shape: {weights.shape}")
 
 <div class="k-default-codeblock">
 ```
-Targets shape: (881266,)
-Contexts shape: (881266,)
-Labels shape: (881266,)
-Weights shape: (881266,)
+Targets shape: (880170,)
+Contexts shape: (880170,)
+Labels shape: (880170,)
+Weights shape: (880170,)
 
 ```
 </div>
-### Create tf.data.Dataset
+### Convert the data into `tf.data.Dataset` objects
 
 
 ```python
@@ -620,6 +625,7 @@ def create_dataset(targets, contexts, labels, weights, batch_size):
     dataset = tf.data.Dataset.from_tensor_slices((inputs, labels, weights))
     dataset = dataset.shuffle(buffer_size=batch_size * 2)
     dataset = dataset.batch(batch_size, drop_remainder=True)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
@@ -633,9 +639,10 @@ dataset = create_dataset(
 ```
 
 ---
-## Train a Skip-gram Model
+## Train the skip-gram model
 
 Our skip-gram is a simple binary classification model that works as follows:
+
 1. An embedding is looked up for the `target` movie.
 2. An embedding is looked up for the `context` movie.
 3. The dot product is computed between these two embeddings.
@@ -657,8 +664,8 @@ num_epochs = 10
 def create_model(vocabulary_size, embedding_dim):
 
     inputs = {
-        "target": layers.Input(name="target", shape=(), dtype=tf.int32),
-        "context": layers.Input(name="context", shape=(), dtype=tf.int32),
+        "target": layers.Input(name="target", shape=(), dtype="int32"),
+        "context": layers.Input(name="context", shape=(), dtype="int32"),
     }
     # Initialize item embeddings.
     embed_item = layers.Embedding(
@@ -673,7 +680,7 @@ def create_model(vocabulary_size, embedding_dim):
     # Lookup embeddings for context.
     context_embeddings = embed_item(inputs["context"])
     # Compute dot similarity between target and context embeddings.
-    logits = layers.Dot(axes=1, name="dot_similarity")(
+    logits = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
         [target_embeddings, context_embeddings]
     )
     # Create the model.
@@ -684,6 +691,8 @@ def create_model(vocabulary_size, embedding_dim):
 
 ### Train the model
 
+We instantiate the model and compile it.
+
 
 ```python
 model = create_model(len(vocabulary), embedding_dim)
@@ -691,52 +700,73 @@ model.compile(
     optimizer=keras.optimizers.Adam(learning_rate),
     loss=keras.losses.BinaryCrossentropy(from_logits=True),
 )
+```
 
-tf.keras.utils.plot_model(
+Let's plot the model.
+
+
+```python
+keras.utils.plot_model(
     model, show_shapes=True, show_dtype=True, show_layer_names=True,
 )
+```
 
+<div class="k-default-codeblock">
+```
+('Failed to import pydot. You must `pip install pydot` and install graphviz (https://graphviz.gitlab.io/download/), ', 'for `pydotprint` to work.')
+
+```
+</div>
+Now we train the model on the `dataset`.
+
+
+```python
 history = model.fit(dataset, epochs=num_epochs)
+```
 
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+859/859 [==============================] - 3s 3ms/step - loss: 3.4761
+Epoch 2/10
+859/859 [==============================] - 2s 3ms/step - loss: 3.3149
+Epoch 3/10
+859/859 [==============================] - 2s 3ms/step - loss: 3.2930
+Epoch 4/10
+859/859 [==============================] - 3s 3ms/step - loss: 3.2771
+Epoch 5/10
+859/859 [==============================] - 2s 3ms/step - loss: 3.2673
+Epoch 6/10
+859/859 [==============================] - 2s 3ms/step - loss: 3.2592
+Epoch 7/10
+859/859 [==============================] - 2s 3ms/step - loss: 3.2508
+Epoch 8/10
+859/859 [==============================] - 3s 3ms/step - loss: 3.2418
+Epoch 9/10
+859/859 [==============================] - 2s 3ms/step - loss: 3.2354
+Epoch 10/10
+859/859 [==============================] - 3s 3ms/step - loss: 3.2273
+
+```
+</div>
+Finally we plot the learning history.
+
+
+```python
 plt.plot(history.history["loss"])
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
-('Failed to import pydot. You must `pip install pydot` and install graphviz (https://graphviz.gitlab.io/download/), ', 'for `pydotprint` to work.')
-Epoch 1/10
-860/860 [==============================] - 4s 4ms/step - loss: 3.4829
-Epoch 2/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.3240
-Epoch 3/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.3079
-Epoch 4/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.2937
-Epoch 5/10
-860/860 [==============================] - 4s 4ms/step - loss: 3.2840
-Epoch 6/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.2743
-Epoch 7/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.2661
-Epoch 8/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.2574
-Epoch 9/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.2506
-Epoch 10/10
-860/860 [==============================] - 3s 4ms/step - loss: 3.2439
 
-```
-</div>
     
-![png](/img/examples/graphs/node2vec_movielens/node2vec_movielens_41_1.png)
+![png](/img/examples/graphs/node2vec_movielens/node2vec_movielens_48_0.png)
     
 
 
 ---
-## Analyze the learnt embeddings
+## Analyze the learnt embeddings.
 
 
 ```python
@@ -752,6 +782,8 @@ Embeddings shape: (1406, 50)
 </div>
 ### Find related movies
 
+Define a list with some movies called `query_movies`.
+
 
 ```python
 query_movies = [
@@ -763,7 +795,7 @@ query_movies = [
 ]
 ```
 
-Get the embeddings of the query movies
+Get the embeddings of the movies in `query_movies`.
 
 
 ```python
@@ -778,8 +810,8 @@ for movie_title in query_movies:
 query_embeddings = np.array(query_embeddings)
 ```
 
-Compute the consine similarity between the embeddings of the query movies and all
-other movies, then pick the top k for each.
+Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies`
+and all the other movies, then pick the top k for each.
 
 
 ```python
@@ -793,7 +825,7 @@ _, indices = tf.math.top_k(similarities, k=5)
 indices = indices.numpy().tolist()
 ```
 
-Display the top related movies the query movies
+Display the top related movies in `query_movies`.
 
 
 ```python
@@ -815,21 +847,18 @@ Matrix, The (1999)
 - Matrix, The (1999)
 - Inception (2010)
 - Dark Knight, The (2008)
-- Lord of the Rings: The Fellowship of the Ring, The (2001)
 - Back to the Future (1985)
+- Lord of the Rings: The Fellowship of the Ring, The (2001)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-    
-<div class="k-default-codeblock">
-```
 Star Wars: Episode IV - A New Hope (1977)
 -----------------------------------------
-- Back to the Future (1985)
 - Star Wars: Episode V - The Empire Strikes Back (1980)
 - Star Wars: Episode IV - A New Hope (1977)
+- Back to the Future (1985)
 - Matrix, The (1999)
 - Star Wars: Episode VI - Return of the Jedi (1983)
 ```
@@ -843,7 +872,7 @@ Lion King, The (1994)
 - Beauty and the Beast (1991)
 - Jurassic Park (1993)
 - Mrs. Doubtfire (1993)
-- Apollo 13 (1995)
+- Independence Day (a.k.a. ID4) (1996)
 ```
 </div>
     
@@ -864,10 +893,10 @@ Terminator 2: Judgment Day (1991)
 Godfather, The (1972)
 ---------------------
 - Godfather, The (1972)
+- Reservoir Dogs (1992)
 - Apocalypse Now (1979)
 - Fargo (1996)
 - American Beauty (1999)
-- Reservoir Dogs (1992)
 ```
 </div>
     
