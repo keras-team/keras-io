@@ -1,5 +1,5 @@
 """
-Title: Graph representation learning with node2vec.
+Title: Graph representation learning with node2vec
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2021/05/15
@@ -42,7 +42,7 @@ This example requires `networkx` package, which can be installed using the follo
 
 ```shell
 pip install networkx
-````
+```
 """
 
 """

@@ -1,4 +1,4 @@
-# Graph representation learning with node2vec.
+# Graph representation learning with node2vec
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/05/15<br>
@@ -44,9 +44,9 @@ or movie genres prediction.
 
 This example requires `networkx` package, which can be installed using the following command:
 
-```shell
+```
 pip install networkx
-````
+```
 
 ---
 ## Setup
