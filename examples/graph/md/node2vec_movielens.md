@@ -6,7 +6,7 @@
 **Description:** Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graphs/ipynb/node2vec_movielens.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graphs/node2vec_movielens.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graph/ipynb/node2vec_movielens.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graph/node2vec_movielens.py)
 
 
 
@@ -761,7 +761,7 @@ plt.show()
 
 
     
-![png](/img/examples/graphs/node2vec_movielens/node2vec_movielens_48_0.png)
+![png](/img/examples/graph/node2vec_movielens/node2vec_movielens_48_0.png)
     
 
 
