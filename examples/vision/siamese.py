@@ -292,7 +292,7 @@ siamese = Model(inputs=[input_1, input_2], outputs=output_layer)
 
 # Contrastive loss = mean( (1-true_value) * square(prediction) +
 #                         true_value * square( max(margin-prediction, 0) ))
-def contrastive_loss(margin=1, y_true, y_pred):
+def contrastive_loss(y_true, y_pred, margin=1):
     """
     Parameters
     ----------
