@@ -202,7 +202,7 @@ def get_model():
         weights=None,
         include_top=True,
         classes=2,
-        input_shape=((INP_SIZE[0], INP_SIZE[1], 3)),
+        input_shape=((TARGET_SIZE[0], TARGET_SIZE[1], 3)),
     )
     backbone.trainable = True
 
