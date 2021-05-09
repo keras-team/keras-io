@@ -1,6 +1,6 @@
 # Semi-supervised image classification using contrastive pretraining with SimCLR
 
-**Author:** [András Béres](www.linkedin.com/in/andras-beres-789190210)<br>
+**Author:** [András Béres](https://www.linkedin.com/in/andras-beres-789190210)<br>
 **Date created:** 2021/04/24<br>
 **Last modified:** 2021/04/24<br>
 **Description:** Contrastive pretraining with SimCLR for semi-supervised image classification on the STL-10 dataset.
