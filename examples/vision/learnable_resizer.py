@@ -17,8 +17,8 @@ It turns out it may not always be the case. When training vision models, it is c
 resize images to a lower dimension ((224 x 224), (299 x 299), etc.) to allow mini-batch
 learning and also to keep up the compute limitations.  We generally make use of image
 resizing methods like **bilinear interpolation** for this step and the resized images do
-not lose much of their perceptual character to the human eyes. In [Learning to Resize
-Images for Computer Vision Tasks](https://arxiv.org/abs/2103.09950v1), Talebi et al. show
+not lose much of their perceptual character to the human eyes. In
+[Learning to Resize Images for Computer Vision Tasks](https://arxiv.org/abs/2103.09950v1), Talebi et al. show
 that if we try to optimize the perceptual quality of the images for the vision models
 rather than the human eyes, their performance can further be improved. They investigate
 the following question: 
@@ -58,17 +58,16 @@ import numpy as np
 In order to facilitate mini-batch learning, we need to have a fixed shape for the images
 inside a given batch. This is why an initial resizing is required. We first resize all
 the images to (300 x 300) shape and then learn their optimal representation for the
-(224 x 224) resolution. 
+(150 x 150) resolution. 
 """
 
-INP_DIM = (300, 300)
-TARGET_DIM = (224, 224)
+INP_SIZE = (300, 300)
+TARGET_SIZE = (150, 150)
 INTERPOLATION = "bilinear"
 
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 64
 EPOCHS = 5
-ALPHA = 0.2
 
 """
 In this example, we will use the bilinear interpolation but the learnable image resizer
@@ -91,7 +90,7 @@ train_ds, validation_ds = tfds.load(
 
 
 def preprocess_dataset(image, label):
-    image = tf.image.resize(image, (INP_DIM[0], INP_DIM[1]))
+    image = tf.image.resize(image, (INP_SIZE[0], INP_SIZE[1]))
     label = tf.one_hot(label, depth=2)
     return (image, label)
 
@@ -118,7 +117,7 @@ presents the structure of the learnable resizing module:
 """
 
 
-def conv_block(x, filters, kernel_size, strides, activation=layers.LeakyReLU(ALPHA)):
+def conv_block(x, filters, kernel_size, strides, activation=layers.LeakyReLU(0.2)):
     x = layers.Conv2D(filters, kernel_size, strides, padding="same", use_bias=False)(x)
     x = layers.BatchNormalization()(x)
     if activation:
@@ -139,21 +138,21 @@ def learnable_resizer(
 
     # First, perform naive resizing.
     naive_resize = layers.experimental.preprocessing.Resizing(
-        *TARGET_DIM, interpolation=interpolation
+        *TARGET_SIZE, interpolation=interpolation
     )(inputs)
 
     # First convolution block without batch normalization.
     x = layers.Conv2D(filters=filters, kernel_size=7, strides=1, padding="same")(inputs)
-    x = layers.LeakyReLU(ALPHA)(x)
+    x = layers.LeakyReLU(0.2)(x)
 
     # Second convolution block with batch normalization.
     x = layers.Conv2D(filters=filters, kernel_size=1, strides=1, padding="same")(x)
-    x = layers.LeakyReLU(ALPHA)(x)
+    x = layers.LeakyReLU(0.2)(x)
     x = layers.BatchNormalization()(x)
 
     # Intermediate resizing as a bottleneck.
     bottleneck = layers.experimental.preprocessing.Resizing(
-        *TARGET_DIM, interpolation=interpolation
+        *TARGET_SIZE, interpolation=interpolation
     )(x)
 
     # Residual passes.
@@ -166,10 +165,10 @@ def learnable_resizer(
     )(x)
     x = layers.BatchNormalization()(x)
 
-    # Skip connection
+    # Skip connection.
     x = layers.Add()([bottleneck, x])
 
-    # Final resized image
+    # Final resized image.
     x = layers.Conv2D(filters=3, kernel_size=7, strides=1, padding="same")(x)
     final_resize = layers.Add()([naive_resize, x])
 
@@ -202,7 +201,7 @@ def get_model():
     backbone = tf.keras.applications.DenseNet(weights=None, include_top=True, classes=2)
     backbone.trainable = True
 
-    inputs = layers.Input((INP_DIM[0], INP_DIM[1], 3))
+    inputs = layers.Input((INP_SIZE[0], INP_SIZE[1], 3))
     x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 255)(inputs)
     x = learnable_resizer(x)
     outputs = backbone(x)
@@ -248,8 +247,8 @@ interpolation:
 
 |           Model           	| Number of  parameters (Million) 	| Top-1 accuracy 	|
 |:-------------------------:	|:-------------------------------:	|:--------------:	|
-|   With learnable resizer  	|             7.051717            	|      52.02     	|
-| Without learnable resizer 	|             7.039554            	|      50.3      	|
+|   With the learnable resizer  	|             7.051717            	|      67.67%     	|
+| Without the learnable resizer 	|             7.039554            	|      60.19%      	|
 
 For more details, you can check out [this repository](https://github.com/sayakpaul/Learnable-Image-Resizing).
 Note the above-reported models were trained for 10 epochs on 90% of the training set of
@@ -266,12 +265,15 @@ initial random weights.
 combination of natural and stylized images. It might be interesting to investigate if
 this learnable resizing module could achieve something similar as the outputs seem to
 discard the texture information. 
+
 * The resizer module can handle arbitrary resolutions and aspect ratios which is very
 important for tasks like object detection and segmentation. 
+
 * Through a set of experiments, the authors also verify if the performance improvement is
 ***not*** solely due to the increase in the number of model parameters. You are
 encouraged to check those out in the
 [original paper](https://arxiv.org/abs/2103.09950v1). 
+
 * There is another closely related topic on ***adaptive image resizing*** that attempts
 to resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/pdf/2104.00298)
 uses this idea. 
