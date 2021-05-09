@@ -80,7 +80,7 @@ from tensorflow.keras.layers.experimental import preprocessing
 ```
 
 ---
-## Hyperparameterers
+## Hyperparameters
 
 
 ```python
@@ -291,12 +291,11 @@ def get_encoder():
 ---
 ## Supervised baseline model
 
-A baseline supervised model is trained using random initialization for 60
-epochs.
+A baseline supervised model is trained using random initialization.
 
 
 ```python
-# baseline supervised training with random initialization
+# Baseline supervised training with random initialization
 baseline_model = keras.Sequential(
     [
         keras.Input(shape=(image_size, image_size, image_channels)),
@@ -371,8 +370,8 @@ Maximal validation accuracy: 61.49%
 ---
 ## Self-supervised model for contrastive pretraining
 
-We pretrain an encoder on unlabeled images with a contrastive loss for 30
-epochs. A nonlinear projection head is attached to the top of the encoder, as it
+We pretrain an encoder on unlabeled images with a contrastive loss.
+A nonlinear projection head is attached to the top of the encoder, as it
 improves the quality of representations of the encoder.
 
 We use the InfoNCE/NT-Xent/N-pairs loss, which can be interpreted in the
@@ -553,7 +552,7 @@ class ContrastiveModel(keras.Model):
         return {m.name: m.result() for m in self.metrics[2:]}
 
 
-# The contrastive model is pretrained for half of the epochs
+# Contrastive pretraining
 pretraining_model = ContrastiveModel()
 pretraining_model.compile(
     contrastive_optimizer=keras.optimizers.Adam(),
@@ -661,12 +660,12 @@ Maximal validation accuracy: 56.30%
 ---
 ## Supervised finetuning of the pretrained encoder
 
-We then finetune the encoder on the labeled examples for 30 epochs, by attaching
+We then finetune the encoder on the labeled examples, by attaching
 a single randomly initalized fully connected classification layer on its top.
 
 
 ```python
-# the contrastive model is then finetuned for the other half of the epochs
+# Supervised finetuning of the pretrained encoder
 finetuning_model = keras.Sequential(
     [
         layers.Input(shape=(image_size, image_size, image_channels)),
