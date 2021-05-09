@@ -198,7 +198,12 @@ for i, image in enumerate(sample_images[:9]):
 
 
 def get_model():
-    backbone = tf.keras.applications.DenseNet(weights=None, include_top=True, classes=2)
+    backbone = tf.keras.applications.DenseNet121(
+        weights=None,
+        include_top=True,
+        classes=2,
+        input_shape=((INP_SIZE[0], INP_SIZE[1], 3)),
+    )
     backbone.trainable = True
 
     inputs = layers.Input((INP_SIZE[0], INP_SIZE[1], 3))
