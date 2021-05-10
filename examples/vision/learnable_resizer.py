@@ -278,7 +278,7 @@ model and warm-start the training. Record the performance.
 
 Now, the authors argue that using the second option is better because it helps the model
 learn how to adjust the representations better with respect to the given resolution.
-Since the results purely empirical, a few more experiments such as analyzing the
+Since the results purely are empirical, a few more experiments such as analyzing the
 cross-channel interaction would have been even better. It is worth noting that elements
 like [Squeeze and Excitation (SE) blocks](https://arxiv.org/abs/1709.01507), [Global Context (GC) blocks](https://arxiv.org/pdf/1904.11492) also add a few
 parameters to an existing network but they are known to help a network process
