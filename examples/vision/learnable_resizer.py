@@ -261,6 +261,28 @@ Cats and Dogs unlike this example. Also, note that the increase in the number of
 parameters due to the resizing module is very negligible. To ensure that the improvement
 in the performance is not due to stochasticity, the models were trained using the same
 initial random weights. 
+
+Now, a question worth asking here is -  _isn't the improved accuracy simply a consequence
+of adding more layers (the resizer is a mini network after all) to the model, compared to
+the baseline?_
+
+To show that it is not the case, the authors conduct the following experiment:
+
+* Take a pre-trained model trained some size, say (224 x 224).
+
+* Now, first, use it to infer predictions on images resized to a lower resolution. Record
+the performance.
+
+* For the second experiment, plug in the resizer module at the top of the pre-trained
+model and warm-start the training. Record the performance.
+
+Now, the authors argue that using the second option is better because it helps the model
+learn how to adjust the representations better with respect to the given resolution.
+Since the results purely empirical, a few more experiments such as analyzing the
+cross-channel interaction would have been even better. It is worth noting that elements
+like [Squeeze and Excitation (SE) blocks](https://arxiv.org/abs/1709.01507), [Global Context (GC) blocks](https://arxiv.org/pdf/1904.11492) also add a few
+parameters to an existing network but they are known to help a network process
+information in systematic ways to improve the overall performance. 
 """
 
 """
@@ -273,11 +295,6 @@ discard the texture information.
 
 * The resizer module can handle arbitrary resolutions and aspect ratios which is very
 important for tasks like object detection and segmentation. 
-
-* Through a set of experiments, the authors also verify if the performance improvement is
-***not*** solely due to the increase in the number of model parameters. You are
-encouraged to check those out in the
-[original paper](https://arxiv.org/abs/2103.09950v1). 
 
 * There is another closely related topic on ***adaptive image resizing*** that attempts
 to resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/pdf/2104.00298)
