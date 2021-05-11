@@ -113,17 +113,7 @@ validation_ds = (
 )
 ```
 
-<div class="k-default-codeblock">
-```
-[1mDownloading and preparing dataset cats_vs_dogs/4.0.0 (download: 786.68 MiB, generated: Unknown size, total: 786.68 MiB) to /root/tensorflow_datasets/cats_vs_dogs/4.0.0...[0m
 
-WARNING:absl:1738 images were corrupted and were skipped
-
-Shuffling and writing examples to /root/tensorflow_datasets/cats_vs_dogs/4.0.0.incomplete66KOGO/cats_vs_dogs-train.tfrecord
-[1mDataset cats_vs_dogs downloaded and prepared to /root/tensorflow_datasets/cats_vs_dogs/4.0.0. Subsequent calls will reuse this data.[0m
-
-```
-</div>
 ---
 ## Define the learnable resizer utilities
 
@@ -213,20 +203,7 @@ for i, image in enumerate(sample_images[:9]):
     plt.axis("off")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 
-```
-</div>
 ![png](/img/examples/vision/learnable_resizer/learnable_resizer_13_1.png)
 
 
