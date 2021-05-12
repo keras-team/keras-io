@@ -403,7 +403,8 @@ and processed using FFN to produce the new state of the node representations (em
 
 The technique implemented use ideas from [Graph Convolutional Networks](https://arxiv.org/abs/1609.02907),
 [GraphSage](https://arxiv.org/abs/1706.02216), [Graph Isomorphism Network](https://arxiv.org/abs/1810.00826),
-and [Simple Graph Networks](https://arxiv.org/abs/1902.07153).
+[Simple Graph Networks](https://arxiv.org/abs/1902.07153), and
+[Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493).
 Two other key techniques that are not covered are [Graph Attention Networks](https://arxiv.org/abs/1710.10903)
 and [Message Passing Neural Networks](https://arxiv.org/abs/1704.01212).
 """
@@ -430,7 +431,17 @@ class GraphConvLayer(keras.layers.Layer):
 
     def build(self, input_shape):
         self.ffn_prepare = create_ffn(self.hidden_units, self.dropout_rate)
-        self.ffn_update = create_ffn(self.hidden_units, self.dropout_rate)
+        if self.combination_type == "gated":
+            self.update_fn = layers.GRU(
+                units=self.hidden_units,
+                activation="tanh",
+                recurrent_activation="sigmoid",
+                dropout=self.dropout_rate,
+                return_state=True,
+                recurrent_dropout=self.dropout_rate,
+            )
+        else:
+            self.update_fn = create_ffn(self.hidden_units, self.dropout_rate)
 
     def prepare(self, node_repesentations, weights=None):
         # node_repesentations shape is [num_edges, embedding_dim].
@@ -463,14 +474,23 @@ class GraphConvLayer(keras.layers.Layer):
     def update(self, node_repesentations, aggregated_messages):
         # node_repesentations shape is [num_nodes, representation_dim].
         # aggregated_messages shape is [num_nodes, representation_dim].
-        if self.combination_type == "concat":
+        if self.combination_type == "gru":
+            # Create a sequence of two elements for the GRU layer.
+            h = tf.stack([node_repesentations, aggregated_messages], axis=1)
+        elif self.combination_type == "concat":
+            # Concatenate the node_repesentations and aggregated_messages.
             h = tf.concat([node_repesentations, aggregated_messages], axis=1)
         elif self.combination_type == "add":
+            # Add node_repesentations and aggregated_messages.
             h = node_repesentations + aggregated_messages
         else:
             raise ValueError(f"Invalid combination type: {self.combination_type}.")
 
-        node_embeddings = self.ffn_update(h)
+        # Apply the processing function.
+        node_embeddings = self.update_fn(h)
+        if self.combination_type == "gru":
+            node_embeddings = tf.unstack(node_embeddings, axis=1)[-1]
+
         if self.normalize:
             node_embeddings = tf.nn.l2_normalize(node_embeddings, axis=-1)
         return node_embeddings
