@@ -9,7 +9,7 @@ Description: Training a keypoint detector with data augmentation and transfer le
 Keypoint detection helps to locate the key parts from objects. For example, the key parts
 in our face include nose tips, eyebrows, eye corners, and so on. These parts help to
 represent the underlying object in a feature-rich manner. Keypoint detection has
-applications ranging from pose estimation, face detection, etc.
+applications such as pose estimation, face detection, etc.
 
 In this example, we will build a keypoint detector using the [StanfordExtra dataset](https://github.com/benjiebob/StanfordExtra)
 with transfer learning. This example requires TensorFlow 2.4 or higher, as well as [`imgaug`](https://imgaug.readthedocs.io/),
