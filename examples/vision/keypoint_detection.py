@@ -155,8 +155,8 @@ There are a total of 24 entries present inside `joints`. Each entry has 3 values
 * visibility flag of the keypoints (1 indicates visibility and 0 indicates non-visibility)
 
 As we can see `joints` contain multiple `[0, 0, 0]` entries which denote that those
-keypoints were not labeled. In this example, we will consider both the non-visible
-keypoints as and the unlabeled keypoints in order to allow mini-batch learning. 
+keypoints were not labeled. In this example, we will consider both non-visible as well as
+unlabeled keypoints in order to allow mini-batch learning. 
 """
 
 # Load the metdata definition file and preview it.
@@ -231,7 +231,7 @@ visualize_keypoints(images, keypoints)
 """
 The plots show that we have images of non-uniform sizes which is expected in most of the
 real-world scenarios. However, if we resize these images to have a uniform shape (for
-e.g. (224 x 224)) their grouth-truth annotations will also be affected for that. The same
+e.g. (224 x 224)) their ground-truth annotations will also be affected for that. The same
 applies, if we apply any geometric transformation (horizontal flip, for e.g.) to an image
 here. Fortunately, `imgaug` provides utilities that can handle these situations
 efficiently. In the next section, we will write a data generator inheriting the
@@ -323,6 +323,8 @@ train_aug = iaa.Sequential(
     [
         iaa.Resize(IMG_SIZE, interpolation="linear"),
         iaa.Fliplr(0.3),
+        # `Sometimes()` applies a function randomly to the inputs with
+        # a given probability (0.3, in this case).
         iaa.Sometimes(0.3, iaa.Affine(rotate=10, scale=(0.5, 0.7))),
     ]
 )
