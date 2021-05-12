@@ -294,9 +294,7 @@ class KeyPointsDataset(keras.utils.Sequence):
             if new_image.shape[-1] == 4:
                 new_image = Image.fromarray(new_image)
                 new_image = np.array(new_image.convert("RGB"))
-            batch_images[
-                i,
-            ] = new_image
+            batch_images[i,] = new_image
 
             # Parse the coordinates from the new keypoint object.
             kpTemp = []
@@ -305,9 +303,7 @@ class KeyPointsDataset(keras.utils.Sequence):
                 kpTemp.append(np.nan_to_num(keypoint.y))
 
             # More on why this reshaping later.
-            batch_keypoints[i,] = np.array(
-                kpTemp
-            ).reshape(1, 1, 24 * 2)
+            batch_keypoints[i,] = np.array(kpTemp).reshape(1, 1, 24 * 2)
 
         # Scale the coordinates to [0, 1] range.
         batch_keypoints = batch_keypoints / IMG_SIZE
