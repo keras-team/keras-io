@@ -15,7 +15,7 @@ It was developed with a focus on enabling fast experimentation. *Being able to g
 - Scaling computation to many devices (e.g. the [Summit supercomputer](https://www.olcf.ornl.gov/summit/) at Oak Ridge National Lab, which spans 27,000 GPUs).
 - Exporting programs ("graphs") to external runtimes such as servers, browsers, mobile and embedded devices.
 
-Keras is the high-level API of TensorFlow 2: an approchable, highly-productive interface for solving machine learning problems,
+Keras is the high-level API of TensorFlow 2: an approachable, highly-productive interface for solving machine learning problems,
 with a focus on modern deep learning. It provides essential abstractions and building blocks for developing
 and shipping machine learning solutions with high iteration velocity.
 
@@ -87,7 +87,7 @@ classes = model.predict(x_test, batch_size=128)
 What you just saw is the most elementary way to use Keras: it mirrors the Scikit-Learn API.
 
 However, Keras is also a highly-flexible framework suitable to iterate on state-of-the-art research ideas.
-Keras follows the principle of **progressive discloure of complexity**: it makes it easy to get started,
+Keras follows the principle of **progressive disclosure of complexity**: it makes it easy to get started,
 yet it makes it possible to handle arbitrarily advanced use cases,
 only requiring incremental learning at each step.
 

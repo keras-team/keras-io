@@ -130,7 +130,7 @@ to be displayed by the progress bar and to be pass to any callback.
 calling `result()` would return an average since the start of training, whereas we usually work
 with per-epoch averages. Thankfully, the framework can do that for us: just list any metric
 you want to reset in the `metrics` property of the model. The model will call `reset_states()`
-on any object listed here at the begining of each `fit()` epoch or at the begining of a call to
+on any object listed here at the beginning of each `fit()` epoch or at the beginning of a call to
 `evaluate()`.
 """
 
@@ -204,6 +204,7 @@ class CustomModel(keras.Model):
         if len(data) == 3:
             x, y, sample_weight = data
         else:
+            sample_weight = None
             x, y = data
 
         with tf.GradientTape() as tape:

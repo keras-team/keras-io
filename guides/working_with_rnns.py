@@ -313,7 +313,7 @@ Under the hood, `Bidirectional` will copy the RNN layer passed in, and flip the
 `go_backwards` field of the newly copied layer, so that it will process the inputs in
 reverse order.
 
-The output of the `Bidirectional` RNN will be, by default, the sum of the forward layer
+The output of the `Bidirectional` RNN will be, by default, the concatenation of the forward layer
 output and the backward layer output. If you need a different merging behavior, e.g.
 concatenation, change the `merge_mode` parameter in the `Bidirectional` wrapper
 constructor. For more details about `Bidirectional`, please check

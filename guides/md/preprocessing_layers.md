@@ -2,7 +2,7 @@
 
 **Authors:** Francois Chollet, Mark Omernick<br>
 **Date created:** 2020/07/25<br>
-**Last modified:** 2020/07/25<br>
+**Last modified:** 2021/04/23<br>
 **Description:** Overview of how to leverage preprocessing layers to create end-to-end models.
 
 
@@ -36,13 +36,15 @@ read by an `Embedding` layer or `Dense` layer.
 These layers are for structured data encoding and feature engineering.
 
 - `CategoryEncoding` layer: turns integer categorical features into one-hot, multi-hot,
-or TF-IDF dense representations.
+or count dense representations.
 - `Hashing` layer: performs categorical feature hashing, also known as the "hashing
 trick".
 - `Discretization` layer: turns continuous numerical features into integer categorical
 features.
-- `StringLookup` layer: turns string categorical values into integers indices.
-- `IntegerLookup` layer: turns integer categorical values into integers indices.
+- `StringLookup` layer: turns string categorical values an encoded representation that can be
+read by an `Embedding` layer or `Dense` layer.
+- `IntegerLookup` layer: turns integer categorical values into an encoded representation that can be
+read by an `Embedding` layer or `Dense` layer.
 - `CategoryCrossing` layer: combines categorical features into co-occurrence features.
 E.g. if you have feature values "a" and "b", it can provide with the combination feature
 "a and b are present at the same time".
@@ -54,7 +56,7 @@ These layers are for standardizing the inputs of an image model.
 - `Resizing` layer: resizes a batch of images to a target size.
 - `Rescaling` layer: rescales and offsets the values of a batch of image (e.g. go from
 inputs in the `[0, 255]` range to inputs in the `[0, 1]` range.
-- `CenterCrop` layer: returns a center crop if a batch of images.
+- `CenterCrop` layer: returns a center crop of a batch of images.
 
 ### Image data augmentation layers
 
@@ -76,10 +78,9 @@ Some preprocessing layers have an internal state that must be computed based on
 a sample of the training data. The list of stateful preprocessing layers is:
 
 - `TextVectorization`: holds a mapping between string tokens and integer indices
-- `Normalization`: holds the mean and standard deviation of the features
-- `StringLookup` and `IntegerLookup`: hold a mapping between input values and output
+- `StringLookup` and `IntegerLookup`: hold a mapping between input values and integer
 indices.
-- `CategoryEncoding`: holds an index of input values.
+- `Normalization`: holds the mean and standard deviation of the features.
 - `Discretization`: holds information about value bucket boundaries.
 
 Crucially, these layers are **non-trainable**. Their state is not set during training; it
@@ -103,13 +104,6 @@ print("Features mean: %.2f" % (normalized_data.numpy().mean()))
 print("Features std: %.2f" % (normalized_data.numpy().std()))
 ```
 
-<div class="k-default-codeblock">
-```
-Features mean: 0.00
-Features std: 1.00
-
-```
-</div>
 The `adapt()` method takes either a Numpy array or a `tf.data.Dataset` object. In the
 case of `StringLookup` and `TextVectorization`, you can also pass a list of strings:
 
@@ -233,7 +227,7 @@ your preprocessing layers and your training model:
 inputs = keras.Input(shape=input_shape)
 x = preprocessing_layer(inputs)
 outputs = training_model(x)
-infernece_model = keras.Model(inputs, outputs)
+inference_model = keras.Model(inputs, outputs)
 ```
 
 ---
@@ -303,9 +297,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 4s 2ms/step - loss: 2.1193
+1563/1563 [==============================] - 3s 2ms/step - loss: 2.1828
 
-<tensorflow.python.keras.callbacks.History at 0x7f5b1409a250>
+<tensorflow.python.keras.callbacks.History at 0x7f049093f130>
 
 ```
 </div>
@@ -314,31 +308,27 @@ model.fit(x_train, y_train)
 
 ```python
 # Define some toy data
-data = tf.constant(["a", "b", "c", "b", "c", "a"])
+data = tf.constant([["a"], ["b"], ["c"], ["b"], ["c"], ["a"]])
 
-# Use StringLookup to build an index of the feature values
-indexer = preprocessing.StringLookup()
-indexer.adapt(data)
-
-# Use CategoryEncoding to encode the integer indices to a one-hot vector
-encoder = preprocessing.CategoryEncoding(output_mode="binary")
-encoder.adapt(indexer(data))
+# Use StringLookup to build an index of the feature values and encode output.
+lookup = preprocessing.StringLookup(output_mode="binary")
+lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
-test_data = tf.constant(["a", "b", "c", "d", "e", ""])
-encoded_data = encoder(indexer(test_data))
+test_data = tf.constant([["a"], ["b"], ["c"], ["d"], ["e"], [""]])
+encoded_data = lookup(test_data)
 print(encoded_data)
 ```
 
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[0. 0. 0. 0. 1.]
- [0. 0. 0. 1. 0.]
- [0. 0. 1. 0. 0.]
- [0. 1. 0. 0. 0.]
- [0. 1. 0. 0. 0.]
- [1. 0. 0. 0. 0.]], shape=(6, 5), dtype=float32)
+[[0. 0. 0. 1.]
+ [0. 0. 1. 0.]
+ [0. 1. 0. 0.]
+ [1. 0. 0. 0.]
+ [1. 0. 0. 0.]
+ [0. 0. 0. 0.]], shape=(6, 4), dtype=float32)
 
 ```
 </div>
@@ -347,48 +337,45 @@ string `""`), and index 1 is reserved for out-of-vocabulary values (values that 
 seen during `adapt()`). You can configure this by using the `mask_token` and `oov_token`
 constructor arguments  of `StringLookup`.
 
-You can see the `StringLookup` and `CategoryEncoding` layers in action in the example
-[structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/).
+You can see the `StringLookup` in action in the
+[Structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/)
+example.
 
 ### Encoding integer categorical features via one-hot encoding
 
 
 ```python
 # Define some toy data
-data = tf.constant([10, 20, 20, 10, 30, 0])
+data = tf.constant([[10], [20], [20], [10], [30], [0]])
 
-# Use IntegerLookup to build an index of the feature values
-indexer = preprocessing.IntegerLookup()
-indexer.adapt(data)
-
-# Use CategoryEncoding to encode the integer indices to a one-hot vector
-encoder = preprocessing.CategoryEncoding(output_mode="binary")
-encoder.adapt(indexer(data))
+# Use IntegerLookup to build an index of the feature values and encode output.
+lookup = preprocessing.IntegerLookup(output_mode="binary")
+lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
-test_data = tf.constant([10, 10, 20, 50, 60, 0])
-encoded_data = encoder(indexer(test_data))
+test_data = tf.constant([[10], [10], [20], [50], [60], [0]])
+encoded_data = lookup(test_data)
 print(encoded_data)
 ```
 
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[0. 0. 0. 1. 0.]
- [0. 0. 0. 1. 0.]
- [0. 0. 1. 0. 0.]
- [0. 1. 0. 0. 0.]
- [0. 1. 0. 0. 0.]
- [1. 0. 0. 0. 0.]], shape=(6, 5), dtype=float32)
+[[0. 0. 1. 0.]
+ [0. 0. 1. 0.]
+ [0. 1. 0. 0.]
+ [1. 0. 0. 0.]
+ [1. 0. 0. 0.]
+ [0. 0. 0. 0.]], shape=(6, 4), dtype=float32)
 
 ```
 </div>
 Note that index 0 is reserved for missing values (which you should specify as the value
 0), and index 1 is reserved for out-of-vocabulary values (values that were not seen
-during `adapt()`). You can configure this by using the `mask_value` and `oov_value`
+during `adapt()`). You can configure this by using the `mask_token` and `oov_token`
 constructor arguments  of `IntegerLookup`.
 
-You can see the `IntegerLookup` and `CategoryEncoding` layers in action in the example
+You can see the `IntegerLookup` in action in the example
 [structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/).
 
 ### Applying the hashing trick to an integer categorical feature
@@ -409,7 +396,7 @@ data = np.random.randint(0, 100000, size=(10000, 1))
 hasher = preprocessing.Hashing(num_bins=64, salt=1337)
 
 # Use the CategoryEncoding layer to one-hot encode the hashed values
-encoder = preprocessing.CategoryEncoding(max_tokens=64, output_mode="binary")
+encoder = preprocessing.CategoryEncoding(num_tokens=64, output_mode="binary")
 encoded_data = encoder(hasher(data))
 print(encoded_data.shape)
 ```
@@ -520,7 +507,7 @@ Encoded text:
     
 <div class="k-default-codeblock">
 ```
-Model output: tf.Tensor([[0.8250091]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.53373265]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -566,7 +553,7 @@ print("Model output:", test_output)
 <div class="k-default-codeblock">
 ```
 Encoded text:
- [[8.04719   1.6945957 0.        0.        0.        0.        0.
+ [[5.461647  1.6945957 0.        0.        0.        0.        0.
   0.        0.        0.        0.        0.        0.        0.
   0.        0.        1.0986123 1.0986123 1.0986123 0.        0.
   0.        0.        0.        0.        0.        0.        0.
@@ -577,7 +564,7 @@ Encoded text:
     
 <div class="k-default-codeblock">
 ```
-Model output: tf.Tensor([[-2.3685102]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.49451536]], shape=(1, 1), dtype=float32)
 
 ```
 </div>

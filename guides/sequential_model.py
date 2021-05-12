@@ -254,7 +254,7 @@ Once your model architecture is ready, you will want to:
 - Save your model to disk and restore it. See our
 [guide to serialization & saving](/guides/serialization_and_saving/).
 - Speed up model training by leveraging multiple GPUs. See our
-[guide to multi-GPU and distributed training](/guides/distributed_training).
+[guide to multi-GPU and distributed training](https://keras.io/guides/distributed_training/).
 """
 
 """

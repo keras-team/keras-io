@@ -6,5 +6,5 @@ mdx_truly_sane_lists
 sphinx~=3.0.3
 black==19.10b0
 pathlib
-tf-nightly~=2.4.0.dev20201023
+tensorflow
 PyYAML

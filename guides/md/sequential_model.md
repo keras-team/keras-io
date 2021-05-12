@@ -94,9 +94,9 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x148873e90>,
- <tensorflow.python.keras.layers.core.Dense at 0x14887ee10>,
- <tensorflow.python.keras.layers.core.Dense at 0x148886490>]
+[<tensorflow.python.keras.layers.core.Dense at 0x1024e6710>,
+ <tensorflow.python.keras.layers.core.Dense at 0x13d632ed0>,
+ <tensorflow.python.keras.layers.core.Dense at 0x14c6ddb50>]
 
 ```
 </div>
@@ -176,10 +176,10 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 <div class="k-default-codeblock">
 ```
 [<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[ 0.47175038,  0.0916599 , -0.7113838 ],
-        [ 0.4508165 ,  0.80212307,  0.54930305],
-        [ 0.47127366,  0.77359426,  0.6605067 ],
-        [ 0.28070033,  0.01403308, -0.62135905]], dtype=float32)>,
+ array([[ 0.9168253 , -0.315467  ,  0.84068155],
+        [ 0.8220899 , -0.7972665 ,  0.18171883],
+        [-0.65188885, -0.890025  , -0.7620717 ],
+        [ 0.14732742, -0.2934308 ,  0.36235213]], dtype=float32)>,
  <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
 
 ```
@@ -287,7 +287,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x14886eb10>]
+[<tensorflow.python.keras.layers.core.Dense at 0x14cd016d0>]
 
 ```
 </div>
@@ -421,7 +421,7 @@ Once your model architecture is ready, you will want to:
 - Save your model to disk and restore it. See our
 [guide to serialization & saving](/guides/serialization_and_saving/).
 - Speed up model training by leveraging multiple GPUs. See our
-[guide to multi-GPU and distributed training](/guides/distributed_training).
+[guide to multi-GPU and distributed training](https://keras.io/guides/distributed_training/).
 
 ---
 ## Feature extraction with a Sequential model

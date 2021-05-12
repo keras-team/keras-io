@@ -434,13 +434,6 @@ plt.show()
 
 
 ```python
-
-def normalize_test(values, mean, std):
-    values -= mean
-    values /= std
-    return values
-
-
 df_test_value = (df_daily_jumpsup - training_mean) / training_std
 fig, ax = plt.subplots()
 df_test_value.plot(legend=False, ax=ax)
