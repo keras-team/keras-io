@@ -1,5 +1,5 @@
 """
-Title: Keypoint detection with and transfer learning
+Title: Keypoint Detection with Transfer Learning
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/02
 Last modified: 2021/05/02
