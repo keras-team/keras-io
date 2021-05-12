@@ -9,7 +9,7 @@ Description: Implementing a graph neural network model for predicting the topic 
 """
 ## Introduction
 
-Many datasets in various machine learning (ML) application have structural relationships
+Many datasets in various machine learning (ML) applications have structural relationships
 between their entities, which can be represented as graphs. Such application includes
 social and communication networks analysis, traffic prediction, and fraud detection.
 [Graph representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/)
@@ -129,7 +129,7 @@ citations["target"] = citations["target"].apply(lambda name: paper_idx[name])
 papers["subject"] = papers["subject"].apply(lambda value: class_idx[value])
 
 """
-Now let's visualize the citation graph. Each node in the graph represent a paper,
+Now let's visualize the citation graph. Each node in the graph represents a paper,
 and the color of the node corresponds to its subject. Note that we only show a sample of
 the papers in the dataset.
 """
@@ -341,7 +341,7 @@ def display_class_probabilities(probabilities):
 
 
 """
-Now we show the baseline model predictions given these randomly generated instance.
+Now we show the baseline model predictions given these randomly generated instances.
 """
 
 new_instances = generate_random_instances(num_classes)
@@ -359,7 +359,7 @@ part in GNN models, which is addressed in different ways by the specialised libr
 In this example, we show a simple approach for preparing and using graph data that is suitable
 if your dataset consists of a single graph that fits entirely in memory.
 
-We graph data is represented by the `graph_info` tuple, which consists of the following
+The graph data is represented by the `graph_info` tuple, which consists of the following
 three elements:
 
 1. `node_features`: This is a `[num_nodes, num_features]` NumPy array that includes the
@@ -368,8 +368,8 @@ word-presence binary vectors of each paper.
 2. `edges`:  This is `[num_edges, num_edges]` NumPy array representing a sparse
 [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix#:~:text=In%20graph%20theory%20and%20computer,with%20zeros%20on%20its%20diagonal.)
 of the links between the nodes. In this example, the links are the citations between the papers.
-3. `edge_weights` (optional): This is a `[num_edges]` NumPy array that includes the edge weights.
-In this example, there are no weights for the paper citations.
+3. `edge_weights` (optional): This is a `[num_edges]` NumPy array that includes the edge weights, which *quantify*
+the relationships between nodes in the graph. In this example, there are no weights for the paper citations.
 """
 
 # Create an edges array (sparse adjacency matrix) of shape [2, num_edges].
@@ -401,7 +401,7 @@ to prepare a single message for each node.
 `[num_nodes, representation_dim]` neighbour messages are combined (concatenated or added)
 and processed using FFN to produce the new state of the node representations (embeddings).
 
-The technique implemented used ideas from [Graph Convolutional Networks](https://arxiv.org/abs/1609.02907),
+The technique implemented use ideas from [Graph Convolutional Networks](https://arxiv.org/abs/1609.02907),
 [GraphSage](https://arxiv.org/abs/1706.02216), [Graph Isomorphism Network](https://arxiv.org/abs/1810.00826),
 and [Simple Graph Networks](https://arxiv.org/abs/1902.07153).
 Two other key techniques that are not covered are [Graph Attention Networks](https://arxiv.org/abs/1710.10903)
@@ -503,7 +503,7 @@ as follows:
 2. Apply one or more graph convolutional layer, with skip connections,  to the node representation
 to produce node embeddings.
 3. Apply post-processing using FFN to the node embeddings to generat the final node embeddings.
-4. Feed the the node embeddings in a Softmax layer to predict the node class.
+4. Feed the node embeddings in a Softmax layer to predict the node class.
 
 Each graph convolutional layer added captures information from a further level of neighbours.
 However, adding many graph convolutional layer can cause oversmoothing, where the model
@@ -644,7 +644,7 @@ display_learning_curves(history)
 """
 Now we evaluate the GNN model on the test data split.
 The results may vary depending on the training sample, however the GNN model always outperforms
-the the baseline model in terms of the test accuracy."""
+the baseline model in terms of the test accuracy."""
 
 x_test = test_data.paper_id.to_numpy()
 _, test_accuracy = gnn_model.evaluate(x=x_test, y=y_test, verbose=0)
