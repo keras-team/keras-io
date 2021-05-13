@@ -7,6 +7,8 @@ Description: Similarity learning using siamese network with contrastive loss
 """
 
 """
+## Introduction
+
 [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network)
 is any Neural Network which share weights between two or more sister networks,
 each producing embedding vector of its respective input and these embeddings
@@ -43,6 +45,7 @@ x_test = x_test.astype("float32")
 
 """
 ## Create pairs of images
+
 We will train the model to differentiate each digit from one another. For
 example, digit `0` needs to be differentiated from the rest of the
 digits (`1` through `9`), digit `1` - from `0` and `2` through `9`, and so on.
@@ -221,6 +224,7 @@ visualize(pairs_train, labels_train, to_show=3)
 
 """
 ## Define the model
+
 There will be two input layers, each leading to its own network, which
 produces embeddings. Lambda layer will merge them using
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
