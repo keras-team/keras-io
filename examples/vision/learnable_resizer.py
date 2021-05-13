@@ -2,7 +2,7 @@
 Title: Learning to Resize in Computer Vision
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/30
-Last modified: 2021/04/30
+Last modified: 2021/05/13
 Description: How to optimally learn representations of images for a given resolution.
 """
 """
@@ -132,9 +132,8 @@ def res_block(x):
     return layers.Add()([inputs, x])
 
 
-def learnable_resizer(
-    inputs, filters=16, num_res_blocks=1, interpolation=INTERPOLATION
-):
+def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLATION):
+    inputs = layers.Input(shape=[None, None, 3])
 
     # First, perform naive resizing.
     naive_resize = layers.experimental.preprocessing.Resizing(
@@ -172,8 +171,10 @@ def learnable_resizer(
     x = layers.Conv2D(filters=3, kernel_size=7, strides=1, padding="same")(x)
     final_resize = layers.Add()([naive_resize, x])
 
-    return final_resize
+    return tf.keras.Model(inputs, final_resize, name="learnable_resizer")
 
+
+learnable_resizer = get_learnable_resizer()
 
 """
 ## Visualize the outputs of the learnable resizing module
@@ -184,11 +185,19 @@ random weights of the resizer.
 
 sample_images, _ = next(iter(train_ds))
 
-plt.figure(figsize=(10, 10))
-for i, image in enumerate(sample_images[:9]):
-    ax = plt.subplot(3, 3, i + 1)
-    image = tf.image.convert_image_dtype(image, tf.float32)
+
+plt.figure(figsize=(16, 10))
+for i, image in enumerate(sample_images[:6]):
+    image = image / 255
+
+    ax = plt.subplot(3, 4, 2 * i + 1)
+    plt.title("Input Image")
+    plt.imshow(image.numpy().squeeze())
+    plt.axis("off")
+
+    ax = plt.subplot(3, 4, 2 * i + 2)
     resized_image = learnable_resizer(image[None, ...])
+    plt.title("Resized Image")
     plt.imshow(resized_image.numpy().squeeze())
     plt.axis("off")
 
@@ -235,14 +244,19 @@ model.fit(train_ds, validation_data=validation_ds, epochs=EPOCHS)
 ## Visualize the outputs of the trained visualizer
 """
 
-learned_resizer = tf.keras.Model(model.input, model.layers[-2].output)
+plt.figure(figsize=(16, 10))
+for i, image in enumerate(sample_images[:6]):
+    image = image / 255
 
-plt.figure(figsize=(10, 10))
-for i, image in enumerate(sample_images[:9]):
-    ax = plt.subplot(3, 3, i + 1)
-    image = tf.image.convert_image_dtype(image, tf.float32)
-    resized_image = learned_resizer(image[None, ...])
-    plt.imshow(resized_image.numpy().squeeze())
+    ax = plt.subplot(3, 4, 2 * i + 1)
+    plt.title("Input Image")
+    plt.imshow(image.numpy().squeeze())
+    plt.axis("off")
+
+    ax = plt.subplot(3, 4, 2 * i + 2)
+    resized_image = learnable_resizer(image[None, ...])
+    plt.title("Resized Image")
+    plt.imshow(resized_image.numpy().squeeze() / 10)
     plt.axis("off")
 
 """
