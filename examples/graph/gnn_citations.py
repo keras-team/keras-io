@@ -392,14 +392,17 @@ print("Number of features per node:", node_features.shape[1])
 We implement a graph convolution module as a [Keras Layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer?version=nightly).
 Our `GraphConvLayer` performs the following steps:
 
-1. **Prepare**: The input node representations are processed using FFN. You can simplify
+1. **Prepare**: The input node representations are processed using a FFN. You can simplify
 the processing by only applying linear transformation to the representations.
 2. **Aggregate**: The node representations of each neighbours of each node are aggregated with
 respect to the `edge_weigts` using a *permutation invariant* pooling operation, such as *sum*, *mean*, and *max*,
 to prepare a single message for each node.
-3. **Update**: The `[num_nodes, representation_dim]` node representations and the
-`[num_nodes, representation_dim]` neighbour messages are combined (concatenated or added)
-and processed using FFN to produce the new state of the node representations (embeddings).
+3. **Update**: The `node_repesentations` and `aggregated_messages`—both of shape `[num_nodes, representation_dim]`—
+are combined and processed to produce the new state of the node representations (node embeddings).
+If `combination_type` is `gru`, the `node_repesentations` and `aggregated_messages` are stacked to create a sequence,
+then processed by a GRU layer. Otherwise, the `node_repesentations` and `aggregated_messages` are added
+or concatenated, then processed using a FFN.
+
 
 The technique implemented use ideas from [Graph Convolutional Networks](https://arxiv.org/abs/1609.02907),
 [GraphSage](https://arxiv.org/abs/1706.02216), [Graph Isomorphism Network](https://arxiv.org/abs/1810.00826),
