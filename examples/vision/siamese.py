@@ -2,7 +2,7 @@
 Title: Siamese network with a contrastive loss
 Author: Mehdi
 Date created: 2021/05/06
-Last modified: 2020/05/06
+Last modified: 2021/05/06
 Description: Similarity learning using siamese network with contrastive loss
 """
 
