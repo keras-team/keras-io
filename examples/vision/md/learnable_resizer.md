@@ -2,13 +2,13 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/04/30<br>
-**Last modified:** 2021/04/30<br>
+**Last modified:** 2021/05/13<br>
+**Description:** How to optimally learn representations of images for a given resolution.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/learnable_resizer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/learnable_resizer.py)
 
 
-**Description:** How to optimally learn representations of images for a given resolution.
 
 It is a common belief that if we constrain vision models to perceive things as humans do,
 their performance can be improved. For example, in [this work](https://arxiv.org/abs/1811.12231),
@@ -112,7 +112,16 @@ validation_ds = (
 )
 ```
 
+<div class="k-default-codeblock">
+```
+[1mDownloading and preparing dataset 786.68 MiB (download: 786.68 MiB, generated: Unknown size, total: 786.68 MiB) to /home/jupyter/tensorflow_datasets/cats_vs_dogs/4.0.0...[0m
 
+WARNING:absl:1738 images were corrupted and were skipped
+
+[1mDataset cats_vs_dogs downloaded and prepared to /home/jupyter/tensorflow_datasets/cats_vs_dogs/4.0.0. Subsequent calls will reuse this data.[0m
+
+```
+</div>
 ---
 ## Define the learnable resizer utilities
 
@@ -139,9 +148,8 @@ def res_block(x):
     return layers.Add()([inputs, x])
 
 
-def learnable_resizer(
-    inputs, filters=16, num_res_blocks=1, interpolation=INTERPOLATION
-):
+def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLATION):
+    inputs = layers.Input(shape=[None, None, 3])
 
     # First, perform naive resizing.
     naive_resize = layers.experimental.preprocessing.Resizing(
@@ -179,8 +187,10 @@ def learnable_resizer(
     x = layers.Conv2D(filters=3, kernel_size=7, strides=1, padding="same")(x)
     final_resize = layers.Add()([naive_resize, x])
 
-    return final_resize
+    return tf.keras.Model(inputs, final_resize, name="learnable_resizer")
 
+
+learnable_resizer = get_learnable_resizer()
 ```
 
 ---
@@ -193,17 +203,37 @@ random weights of the resizer.
 ```python
 sample_images, _ = next(iter(train_ds))
 
-plt.figure(figsize=(10, 10))
-for i, image in enumerate(sample_images[:9]):
-    ax = plt.subplot(3, 3, i + 1)
-    image = tf.image.convert_image_dtype(image, tf.float32)
+
+plt.figure(figsize=(16, 10))
+for i, image in enumerate(sample_images[:6]):
+    image = image / 255
+
+    ax = plt.subplot(3, 4, 2 * i + 1)
+    plt.title("Input Image")
+    plt.imshow(image.numpy().squeeze())
+    plt.axis("off")
+
+    ax = plt.subplot(3, 4, 2 * i + 2)
     resized_image = learnable_resizer(image[None, ...])
+    plt.title("Resized Image")
     plt.imshow(resized_image.numpy().squeeze())
     plt.axis("off")
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 
+```
+</div>
+    
 ![png](/img/examples/vision/learnable_resizer/learnable_resizer_13_1.png)
+    
 
 
 ---
@@ -250,17 +280,17 @@ model.fit(train_ds, validation_data=validation_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-146/146 [==============================] - 71s 385ms/step - loss: 0.6857 - accuracy: 0.5615 - val_loss: 0.7303 - val_accuracy: 0.4948
+146/146 [==============================] - 49s 247ms/step - loss: 0.6956 - accuracy: 0.5697 - val_loss: 0.6958 - val_accuracy: 0.5103
 Epoch 2/5
-146/146 [==============================] - 57s 359ms/step - loss: 0.6557 - accuracy: 0.6333 - val_loss: 1.1659 - val_accuracy: 0.5052
+146/146 [==============================] - 33s 216ms/step - loss: 0.6685 - accuracy: 0.6117 - val_loss: 0.6955 - val_accuracy: 0.5387
 Epoch 3/5
-146/146 [==============================] - 57s 359ms/step - loss: 0.6373 - accuracy: 0.6661 - val_loss: 0.7083 - val_accuracy: 0.5499
+146/146 [==============================] - 33s 216ms/step - loss: 0.6542 - accuracy: 0.6190 - val_loss: 0.7410 - val_accuracy: 0.5684
 Epoch 4/5
-146/146 [==============================] - 57s 361ms/step - loss: 0.6239 - accuracy: 0.6769 - val_loss: 0.8817 - val_accuracy: 0.5073
+146/146 [==============================] - 33s 216ms/step - loss: 0.6357 - accuracy: 0.6576 - val_loss: 0.9322 - val_accuracy: 0.5314
 Epoch 5/5
-146/146 [==============================] - 57s 359ms/step - loss: 0.6027 - accuracy: 0.7002 - val_loss: 0.6936 - val_accuracy: 0.6161
+146/146 [==============================] - 33s 215ms/step - loss: 0.6224 - accuracy: 0.6745 - val_loss: 0.6526 - val_accuracy: 0.6672
 
-<tensorflow.python.keras.callbacks.History at 0x7fe18695a090>
+<tensorflow.python.keras.callbacks.History at 0x7f4433a79a50>
 
 ```
 </div>
@@ -269,18 +299,36 @@ Epoch 5/5
 
 
 ```python
-learned_resizer = tf.keras.Model(model.input, model.layers[-2].output)
+plt.figure(figsize=(16, 10))
+for i, image in enumerate(sample_images[:6]):
+    image = image / 255
 
-plt.figure(figsize=(10, 10))
-for i, image in enumerate(sample_images[:9]):
-    ax = plt.subplot(3, 3, i + 1)
-    image = tf.image.convert_image_dtype(image, tf.float32)
-    resized_image = learned_resizer(image[None, ...])
-    plt.imshow(resized_image.numpy().squeeze())
+    ax = plt.subplot(3, 4, 2 * i + 1)
+    plt.title("Input Image")
+    plt.imshow(image.numpy().squeeze())
+    plt.axis("off")
+
+    ax = plt.subplot(3, 4, 2 * i + 2)
+    resized_image = learnable_resizer(image[None, ...])
+    plt.title("Resized Image")
+    plt.imshow(resized_image.numpy().squeeze() / 10)
     plt.axis("off")
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+
+```
+</div>
+    
 ![png](/img/examples/vision/learnable_resizer/learnable_resizer_20_1.png)
+    
 
 
 The plot shows that the visuals of the images have improved with training. The following
