@@ -240,6 +240,7 @@ We will also apply data augmentation using `imgaug` on batches of data.
 ## Prepare data generator
 """
 
+
 class KeyPointsDataset(keras.utils.Sequence):
     def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True):
         self.image_keys = image_keys
@@ -290,7 +291,9 @@ class KeyPointsDataset(keras.utils.Sequence):
             if new_image.shape[-1] == 4:
                 new_image = Image.fromarray(new_image)
                 new_image = np.array(new_image.convert("RGB"))
-            batch_images[i,] = new_image
+            batch_images[
+                i,
+            ] = new_image
 
             # Parse the coordinates from the new keypoint object.
             kp_temp = []
@@ -299,7 +302,9 @@ class KeyPointsDataset(keras.utils.Sequence):
                 kp_temp.append(np.nan_to_num(keypoint.y))
 
             # More on why this reshaping later.
-            batch_keypoints[i,] = np.array(kp_temp).reshape(1, 1, 24 * 2)
+            batch_keypoints[i,] = np.array(
+                kp_temp
+            ).reshape(1, 1, 24 * 2)
 
         # Scale the coordinates to [0, 1] range.
         batch_keypoints = batch_keypoints / IMG_SIZE
@@ -332,8 +337,10 @@ test_aug = iaa.Sequential([iaa.Resize(IMG_SIZE, interpolation="linear")])
 """
 
 np.random.shuffle(samples)
-train_keys, validation_keys = samples[int(len(samples) * 0.15):],\
-	samples[:int(len(samples) * 0.15)]
+train_keys, validation_keys = (
+    samples[int(len(samples) * 0.15) :],
+    samples[: int(len(samples) * 0.15)],
+)
 
 
 """
