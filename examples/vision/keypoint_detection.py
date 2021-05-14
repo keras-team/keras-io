@@ -75,7 +75,7 @@ import json, os
 IMG_SIZE = 224
 BATCH_SIZE = 64
 EPOCHS = 5
-NB_KEYPOINTS = 24 * 2  # 24 pairs each having x and y coordinates
+NUM_KEYPOINTS = 24 * 2  # 24 pairs each having x and y coordinates
 
 """
 ## Load data
@@ -105,40 +105,37 @@ json_dict = {i["img_path"]: i for i in json_data}
 A single entry of `json_dict` looks like the following:
 
 ```
-'n02085782-Japanese_spaniel/n02085782_2886.jpg': {'img_bbox': [205,
-   20,
-   116,
-   201],
-  'img_data': ...,
-  'img_height': 272,
-  'img_path': 'n02085782-Japanese_spaniel/n02085782_2886.jpg',
-  'img_width': 350,
-  'is_multiple_dogs': False,
-  'joints': [[108.66666666666667, 252.0, 1],
-   [147.66666666666666, 229.0, 1],
-   [163.5, 208.5, 1],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [54.0, 244.0, 1],
-   [77.33333333333333, 225.33333333333334, 1],
-   [79.0, 196.5, 1],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [150.66666666666666, 86.66666666666667, 1],
-   [88.66666666666667, 73.0, 1],
-   [116.0, 106.33333333333333, 1],
-   [109.0, 123.33333333333333, 1],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0],
-   [0, 0, 0]],
-  'seg': ...
+'n02085782-Japanese_spaniel/n02085782_2886.jpg': 
+{'img_bbox': [205, 20, 116, 201],
+ 'img_height': 272,
+ 'img_path': 'n02085782-Japanese_spaniel/n02085782_2886.jpg',
+ 'img_width': 350,
+ 'is_multiple_dogs': False,
+ 'joints': [[108.66666666666667, 252.0, 1],
+            [147.66666666666666, 229.0, 1],
+            [163.5, 208.5, 1],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [54.0, 244.0, 1],
+            [77.33333333333333, 225.33333333333334, 1],
+            [79.0, 196.5, 1],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [150.66666666666666, 86.66666666666667, 1],
+            [88.66666666666667, 73.0, 1],
+            [116.0, 106.33333333333333, 1],
+            [109.0, 123.33333333333333, 1],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]],
+ 'seg': ...}
 ```
 """
 
@@ -213,8 +210,8 @@ def visualize_keypoints(images, keypoints):
 
 # Select four samples randomly for visualization.
 samples = list(json_dict.keys())
-n_samples = 4
-selected_samples = np.random.choice(samples, n_samples, replace=False)
+num_samples = 4
+selected_samples = np.random.choice(samples, num_samples, replace=False)
 
 images, keypoints = [], []
 
@@ -243,7 +240,6 @@ We will also apply data augmentation using `imgaug` on batches of data.
 ## Prepare data generator
 """
 
-
 class KeyPointsDataset(keras.utils.Sequence):
     def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True):
         self.image_keys = image_keys
@@ -270,7 +266,7 @@ class KeyPointsDataset(keras.utils.Sequence):
     def __data_generation(self, image_keys_temp):
         batch_images = np.empty((self.batch_size, IMG_SIZE, IMG_SIZE, 3), dtype="int")
         batch_keypoints = np.empty(
-            (self.batch_size, 1, 1, NB_KEYPOINTS), dtype="float32"
+            (self.batch_size, 1, 1, NUM_KEYPOINTS), dtype="float32"
         )
 
         for i, key in enumerate(image_keys_temp):
@@ -297,13 +293,13 @@ class KeyPointsDataset(keras.utils.Sequence):
             batch_images[i,] = new_image
 
             # Parse the coordinates from the new keypoint object.
-            kpTemp = []
+            kp_temp = []
             for keypoint in new_kps_obj:
-                kpTemp.append(np.nan_to_num(keypoint.x))
-                kpTemp.append(np.nan_to_num(keypoint.y))
+                kp_temp.append(np.nan_to_num(keypoint.x))
+                kp_temp.append(np.nan_to_num(keypoint.y))
 
             # More on why this reshaping later.
-            batch_keypoints[i,] = np.array(kpTemp).reshape(1, 1, 24 * 2)
+            batch_keypoints[i,] = np.array(kp_temp).reshape(1, 1, 24 * 2)
 
         # Scale the coordinates to [0, 1] range.
         batch_keypoints = batch_keypoints / IMG_SIZE
@@ -335,7 +331,10 @@ test_aug = iaa.Sequential([iaa.Resize(IMG_SIZE, interpolation="linear")])
 ## Create training and validation splits
 """
 
-train_keys, validation_keys = train_test_split(samples, test_size=0.15, random_state=42)
+np.random.shuffle(samples)
+train_keys, validation_keys = samples[int(len(samples) * 0.15):],\
+	samples[:int(len(samples) * 0.15)]
+
 
 """
 ## Data generator investigation
@@ -375,10 +374,10 @@ def get_model():
     x = backbone(x, training=False)
     x = layers.Dropout(0.3)(x)
     x = layers.SeparableConv2D(
-        NB_KEYPOINTS, kernel_size=5, strides=1, activation="relu"
+        NUM_KEYPOINTS, kernel_size=5, strides=1, activation="relu"
     )(x)
     outputs = layers.SeparableConv2D(
-        NB_KEYPOINTS, kernel_size=3, strides=1, activation="sigmoid"
+        NUM_KEYPOINTS, kernel_size=3, strides=1, activation="sigmoid"
     )(x)
 
     return tf.keras.Model(inputs, outputs, name="keypoint_detector")
@@ -393,7 +392,7 @@ get_model().summary()
 
 """
 Notice the output shape of the network - `(None, 1, 1, 48)`. This is why we had reshaped
-the coordinates like so: `batch_keypoints[i, ] = np.array(kpTemp).reshape(1, 1, 24*2)`.  
+the coordinates like so: `batch_keypoints[i, ] = np.array(kp_temp).reshape(1, 1, 24*2)`.  
 """
 
 """
@@ -432,7 +431,6 @@ Predictions will likely improve with more training.
 
 * Try using other augmentation transforms from `imgaug` to investigate how that changes
 the results. 
-
 * Here, we transferred the features from the pre-trained network linearly that is we did
 not [fine-tune](https://keras.io/guides/transfer_learning/) it. You are encouraged to fine-tune it on this task and see if that
 improves the performance. You can also try different architectures and see how they
