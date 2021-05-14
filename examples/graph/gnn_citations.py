@@ -495,7 +495,12 @@ class GraphConvLayer(layers.Layer):
         return node_embeddings
 
     def call(self, inputs):
-        # inputs is a tuple of three elements: node_repesentations, edges, edge_weights.
+        """Process the inputs to produce the node_embeddings.
+        
+        inputs: a tuple of three elements: node_repesentations, edges, edge_weights.
+        Returns: node_embeddings of shape [num_nodes, representation_dim].
+        """
+
         node_repesentations, edges, edge_weights = inputs
         # Get node_indices (source) and neighbour_indices (target) from edges.
         node_indices, neighbour_indices = edges[0], edges[1]
