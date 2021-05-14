@@ -31,8 +31,6 @@ libraries that provide rich GNN APIs, such as [Spectral](https://graphneural.net
 """
 
 import os
-import tarfile
-from urllib.request import urlretrieve
 import pandas as pd
 import numpy as np
 import networkx as nx
@@ -60,11 +58,12 @@ The dataset has two tap-separated files: `cora.cites` and `cora.content`.
 Let's download the dataset.
 """
 
-urlretrieve("https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz", "cora.tgz")
-with tarfile.open("cora.tgz", "r:gz") as tar:
-    tar.extractall()
-
-data_dir = "cora"
+zip_file = keras.utils.get_file(
+    fname="cora.tgz",
+    origin="https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz",
+    extract=True,
+)
+data_dir = os.path.join(os.path.dirname(zip_file), "cora")
 
 """
 ### Process and visualize the dataset
@@ -413,7 +412,7 @@ and [Message Passing Neural Networks](https://arxiv.org/abs/1704.01212).
 """
 
 
-class GraphConvLayer(keras.layers.Layer):
+class GraphConvLayer(layers.Layer):
     def __init__(
         self,
         hidden_units,
@@ -426,25 +425,22 @@ class GraphConvLayer(keras.layers.Layer):
     ):
         super(GraphConvLayer, self).__init__(*args, **kwargs)
 
-        self.hidden_units = hidden_units
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
-        self.dropout_rate = dropout_rate
         self.normalize = normalize
 
-    def build(self, input_shape):
-        self.ffn_prepare = create_ffn(self.hidden_units, self.dropout_rate)
+        self.ffn_prepare = create_ffn(hidden_units, dropout_rate)
         if self.combination_type == "gated":
             self.update_fn = layers.GRU(
-                units=self.hidden_units,
+                units=hidden_units,
                 activation="tanh",
                 recurrent_activation="sigmoid",
-                dropout=self.dropout_rate,
+                dropout=dropout_rate,
                 return_state=True,
-                recurrent_dropout=self.dropout_rate,
+                recurrent_dropout=dropout_rate,
             )
         else:
-            self.update_fn = create_ffn(self.hidden_units, self.dropout_rate)
+            self.update_fn = create_ffn(hidden_units, dropout_rate)
 
     def prepare(self, node_repesentations, weights=None):
         # node_repesentations shape is [num_edges, embedding_dim].
@@ -453,21 +449,21 @@ class GraphConvLayer(keras.layers.Layer):
             node_repesentations = node_repesentations * tf.expand_dims(weights, -1)
         return node_repesentations
 
-    def aggregate(self, node_indicies, neighbour_messages):
-        # node_indicies shape is [num_edges].
+    def aggregate(self, node_indices, neighbour_messages):
+        # node_indices shape is [num_edges].
         # neighbour_messages shape: [num_edges, representation_dim].
-        num_nodes = tf.math.reduce_max(node_indicies) + 1
+        num_nodes = tf.math.reduce_max(node_indices) + 1
         if self.aggregation_type == "sum":
             aggregated_message = tf.math.unsorted_segment_sum(
-                neighbour_messages, node_indicies, num_segments=num_nodes
+                neighbour_messages, node_indices, num_segments=num_nodes
             )
         elif self.aggregation_type == "mean":
             aggregated_message = tf.math.unsorted_segment_mean(
-                neighbour_messages, node_indicies, num_segments=num_nodes
+                neighbour_messages, node_indices, num_segments=num_nodes
             )
         elif self.aggregation_type == "max":
             aggregated_message = tf.math.unsorted_segment_max(
-                neighbour_messages, node_indicies, num_segments=num_nodes
+                neighbour_messages, node_indices, num_segments=num_nodes
             )
         else:
             raise ValueError(f"Invalid aggregation type: {self.aggregation_type}.")
@@ -501,15 +497,15 @@ class GraphConvLayer(keras.layers.Layer):
     def call(self, inputs):
         # inputs is a tuple of three elements: node_repesentations, edges, edge_weights.
         node_repesentations, edges, edge_weights = inputs
-        # Get node_indicies (source) and neighbour_indices (target) from edges.
-        node_indicies, neighbour_indices = edges[0], edges[1]
+        # Get node_indices (source) and neighbour_indices (target) from edges.
+        node_indices, neighbour_indices = edges[0], edges[1]
         # neighbour_repesentations shape is [num_edges, representation_dim].
         neighbour_repesentations = tf.gather(node_repesentations, neighbour_indices)
 
         # Prepare the messages of the neighbours.
         neighbour_messages = self.prepare(neighbour_repesentations, edge_weights)
         # Aggregate the neighbour messages.
-        aggregated_messages = self.aggregate(node_indicies, neighbour_messages)
+        aggregated_messages = self.aggregate(node_indices, neighbour_messages)
         # Update the node embedding with the neighbour messages.
         node_embeddings = self.update(node_repesentations, aggregated_messages)
 
@@ -556,7 +552,6 @@ class GNNNodeClassifier(tf.keras.Model):
 
         # Unpack graph_info to three elements: node_features, edges, and edge_weight.
         node_features, edges, edge_weights = graph_info
-
         self.node_features = node_features
         self.edges = edges
         self.edge_weights = edge_weights
@@ -566,46 +561,38 @@ class GNNNodeClassifier(tf.keras.Model):
         # Scale edge_weights to sum to 1.
         self.edge_weights = self.edge_weights / tf.math.reduce_sum(self.edge_weights)
 
-        self.num_classes = num_classes
-        self.hidden_units = hidden_units
-        self.aggregation_type = aggregation_type
-        self.combination_type = combination_type
-        self.dropout_rate = dropout_rate
-        self.normalize = normalize
-
-    def build(self, input_shape):
-
+        # Create a process layer.
         self.preprocess = create_ffn(
             self.hidden_units, self.dropout_rate, name="preprocess"
         )
-
+        # Create the first GraphConv layer.
         self.conv1 = GraphConvLayer(
-            self.hidden_units,
+            hidden_units,
             self.dropout_rate,
-            self.aggregation_type,
-            self.combination_type,
-            self.normalize,
+            aggregation_type,
+            combination_type,
+            normalize,
             name="graph_conv1",
         )
-
+        # Create the second GraphConv layer.
         self.conv2 = GraphConvLayer(
-            self.hidden_units,
-            self.dropout_rate,
-            self.aggregation_type,
-            self.combination_type,
-            self.normalize,
+            hidden_units,
+            dropout_rate,
+            aggregation_type,
+            combination_type,
+            normalize,
             name="graph_conv2",
         )
-
+        # Create a skip connection layer.
         self.skip_connection = layers.Add(name="skip_connection")
-
+        # Create a postprocess layer.
         self.postprocess = create_ffn(
-            self.hidden_units, self.dropout_rate, name="postprocess"
+            self.hidden_units, dropout_rate, name="postprocess"
         )
+        # Create a compute logits layer.
+        self.compute_logits = layers.Dense(units=num_classes, name="logits")
 
-        self.compute_logits = layers.Dense(units=self.num_classes, name="logits")
-
-    def call(self, input_node_indicies):
+    def call(self, input_node_indices):
         # Preprocess the node_features to produce node representations.
         x = self.preprocess(self.node_features)
         # Apply the first graph conv layer.
@@ -618,8 +605,8 @@ class GNNNodeClassifier(tf.keras.Model):
         x = self.skip_connection([x2, x])
         # Postprocess node embedding.
         x = self.postprocess(x)
-        # Fetch node embeddings for the input node_indicies.
-        node_embeddings = tf.squeeze(tf.gather(x, input_node_indicies))
+        # Fetch node embeddings for the input node_indices.
+        node_embeddings = tf.squeeze(tf.gather(x, input_node_indices))
         # Compute logits
         logits = self.compute_logits(node_embeddings)
         # Return logits
@@ -639,9 +626,9 @@ gnn_model = GNNNodeClassifier(
     name="gnn_model",
 )
 
-input_node_indicies = [1, 100, 1000]
+input_node_indices = [1, 100, 1000]
 
-outputs = gnn_model(input_node_indicies)
+outputs = gnn_model(input_node_indices)
 print("GNN output shape:", outputs.shape)
 
 gnn_model.summary()
@@ -686,21 +673,21 @@ num_nodes = node_features.shape[0]
 new_node_features = np.concatenate([node_features, new_instances])
 # Second we add the M edges (citations) from each new node to a set
 # of existing nodes in a particular subject
-new_node_indicies = [i + num_nodes for i in range(num_classes)]
+new_node_indices = [i + num_nodes for i in range(num_classes)]
 new_citations = []
 for subject_idx, group in papers.groupby("subject"):
     subject_papers = list(group.paper_id)
     # Select random x papers specific subject.
-    selected_paper_indicies1 = np.random.choice(subject_papers, 5)
+    selected_paper_indices1 = np.random.choice(subject_papers, 5)
     # Select random y papers from any subject (where y < x).
-    selected_paper_indicies2 = np.random.choice(list(papers.paper_id), 2)
+    selected_paper_indices2 = np.random.choice(list(papers.paper_id), 2)
     # Merge the selected paper indices.
-    selected_paper_indicies = np.concatenate(
-        [selected_paper_indicies1, selected_paper_indicies2], axis=0
+    selected_paper_indices = np.concatenate(
+        [selected_paper_indices1, selected_paper_indices2], axis=0
     )
     # Create edges between a citing paper idx and the selected cited papers.
-    citing_paper_indx = new_node_indicies[subject_idx]
-    for cited_paper_idx in selected_paper_indicies:
+    citing_paper_indx = new_node_indices[subject_idx]
+    for cited_paper_idx in selected_paper_indices:
         new_citations.append([citing_paper_indx, cited_paper_idx])
 
 new_citations = np.array(new_citations).T
@@ -718,7 +705,7 @@ gnn_model.edge_weights = tf.ones(shape=new_edges.shape[1])
 print("New node_features shape:", gnn_model.node_features.shape)
 print("New edges shape:", gnn_model.edges.shape)
 
-logits = gnn_model.predict(tf.convert_to_tensor(new_node_indicies))
+logits = gnn_model.predict(tf.convert_to_tensor(new_node_indices))
 probabilities = keras.activations.softmax(tf.convert_to_tensor(logits)).numpy()
 display_class_probabilities(probabilities)
 
