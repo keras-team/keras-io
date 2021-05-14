@@ -445,10 +445,10 @@ class GraphConvLayer(layers.Layer):
 
     def prepare(self, node_repesentations, weights=None):
         # node_repesentations shape is [num_edges, embedding_dim].
-        node_repesentations = self.ffn_prepare(node_repesentations)
+        messages = self.ffn_prepare(node_repesentations)
         if weights is not None:
-            node_repesentations = node_repesentations * tf.expand_dims(weights, -1)
-        return node_repesentations
+            messages = messages * tf.expand_dims(weights, -1)
+        return messages
 
     def aggregate(self, node_indices, neighbour_messages):
         # node_indices shape is [num_edges].
@@ -497,7 +497,7 @@ class GraphConvLayer(layers.Layer):
 
     def call(self, inputs):
         """Process the inputs to produce the node_embeddings.
-        
+
         inputs: a tuple of three elements: node_repesentations, edges, edge_weights.
         Returns: node_embeddings of shape [num_nodes, representation_dim].
         """
