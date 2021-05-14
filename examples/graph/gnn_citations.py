@@ -391,11 +391,12 @@ print("Number of features per node:", node_features.shape[1])
 We implement a graph convolution module as a [Keras Layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer?version=nightly).
 Our `GraphConvLayer` performs the following steps:
 
-1. **Prepare**: The input node representations are processed using a FFN. You can simplify
+1. **Prepare**: The input node representations are processed using a FFN to produce a *message*. You can simplify
 the processing by only applying linear transformation to the representations.
-2. **Aggregate**: The node representations of each neighbours of each node are aggregated with
+2. **Aggregate**: The messages of the neighbours of each node are aggregated with
 respect to the `edge_weigts` using a *permutation invariant* pooling operation, such as *sum*, *mean*, and *max*,
-to prepare a single message for each node.
+to prepare a single aggregated message for each node. See, for example, [tf.math.unsorted_segment_sum](https://www.tensorflow.org/api_docs/python/tf/math/unsorted_segment_sum)
+APIs used to aggregate neighbour messages.
 3. **Update**: The `node_repesentations` and `aggregated_messages`—both of shape `[num_nodes, representation_dim]`—
 are combined and processed to produce the new state of the node representations (node embeddings).
 If `combination_type` is `gru`, the `node_repesentations` and `aggregated_messages` are stacked to create a sequence,
