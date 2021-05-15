@@ -589,8 +589,6 @@ class GNNNodeClassifier(tf.keras.Model):
             normalize,
             name="graph_conv2",
         )
-        # Create a skip connection layer.
-        self.skip_connection = layers.Add(name="skip_connection")
         # Create a postprocess layer.
         self.postprocess = create_ffn(
             self.hidden_units, dropout_rate, name="postprocess"
@@ -604,11 +602,11 @@ class GNNNodeClassifier(tf.keras.Model):
         # Apply the first graph conv layer.
         x1 = self.conv1((x, self.edges, self.edge_weights))
         # Skip connection.
-        x = self.skip_connection([x1, x])
+        x = x1 + x
         # Apply the second graph conv layer.
         x2 = self.conv2((x, self.edges, self.edge_weights))
         # Skip connection.
-        x = self.skip_connection([x2, x])
+        x = x2 + x
         # Postprocess node embedding.
         x = self.postprocess(x)
         # Fetch node embeddings for the input node_indices.
