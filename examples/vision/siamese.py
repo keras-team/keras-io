@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 (x_utrain, y_utrain), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Change the data type to a floating point format
-x_train = x_train.astype("float32")
+x_utrain = x_utrain.astype("float32")
 x_test = x_test.astype("float32")
 
 
@@ -51,6 +51,7 @@ Use list slicing to split train data into `train` and `val`
 x_train, x_val = x_utrain[0:54000], x_utrain[54000:]
 y_train, y_val = y_utrain[0:54000], y_utrain[54000:] 
 del x_utrain
+del y_utrain
 
 
 """
