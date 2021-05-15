@@ -31,14 +31,13 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 
 
 """
 ## Load the MNIST dataset
 """
-
-(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+# x_utrain = unsplitted train data, not splitted into val
+(x_utrain, y_utrain), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Change the data type to a floating point format
 x_train = x_train.astype("float32")
@@ -46,10 +45,12 @@ x_test = x_test.astype("float32")
 
 
 """
-Use train_test_split to split train data into `train` and `val`
+Use list slicing to split train data into `train` and `val`
 """
 
-x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.10)
+x_train, x_val = x_utrain[0:54000], x_utrain[54000:]
+y_train, y_val = y_utrain[0:54000], y_utrain[54000:] 
+del x_utrain
 
 
 """
@@ -127,24 +128,24 @@ pairs_test, labels_test = make_pairs(x_test, y_test)
 
 """
 
-**pairs_train.shape = (120000, 2, 28, 28)**
+**pairs_train.shape = (108000, 2, 28, 28)**
 
 Imagine it as:
 
-**pairs_train.shape = (120000, pair.shape)**
+**pairs_train.shape = (108000, pair.shape)**
 
 
-`pairs_train` contains 120K `pairs` in `axis 0`, shape of each pair
+`pairs_train` contains 108K `pairs` in `axis 0`, shape of each pair
 is (2,28,28) hence `each pair` of `pairs_train` contains one image in its
 `axis 0` (do not confuse it with the `axis 0` of `pairs_train`) and the
 other one in the `axis 1`. We will slice `pairs_train` on its `axix 0`
-followed by desired axis of pair to obtain all images (120K) which belong
+followed by desired axis of pair to obtain all images (108K) which belong
 either to the `axis 0` or the `axis 1` of all the pairs of `pairs_train`.
 
 
 **Note:** Do not confuse axes of `pairs_train` with those of
 `pair within pairs_train`, `pairs_train` have only one axis `axis 0` which
-contain 120K pairs, whereas each `pair within pairs_train` have two axis,
+contain 108K pairs, whereas each `pair within pairs_train` have two axis,
 each for one image of a pair.
 """
 
@@ -154,7 +155,7 @@ Separate train pairs
 
 x_train_1 = pairs_train[:, 0]
 x_train_2 = pairs_train[:, 1]
-# x_train_1.shape = (120000, 28, 28)
+# x_train_1.shape = (108000, 28, 28)
 
 """
 Separate validation pairs
