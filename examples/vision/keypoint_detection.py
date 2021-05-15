@@ -374,7 +374,7 @@ def get_model():
         weights="imagenet", include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3)
     )
     backbone.trainable = False
-    
+
     inputs = layers.Input((IMG_SIZE, IMG_SIZE, 3))
     x = keras.applications.mobilenet_v2.preprocess_input(inputs)
     x = backbone(x)
