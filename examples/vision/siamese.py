@@ -81,9 +81,9 @@ def make_pairs(x, y):
     """Creates a tuple containing image pairs with corresponding label.
 
     Arguments:
-        x : List containing images, each index in this list corresponds to
+        x: List containing images, each index in this list corresponds to
             one image.
-        y : List containing labels, each label with datatype of `int`.
+        y: List containing labels, each label with datatype of `int`.
 
     Returns:
         Tuple containing two numpy arrays as (pairs_of_samples, labels),
@@ -280,7 +280,7 @@ def euclidean_distance(vects):
     """Find the Euclidean distance between two vectors.
 
     Arguments:
-        vect: List containing two tensors of same length.
+        vects: List containing two tensors of same length.
 
     Returns:
         Tensor containing euclidean distance
