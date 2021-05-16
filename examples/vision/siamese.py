@@ -198,7 +198,7 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
         predictions: Numpy Array of predictions with shape (to_show, 1) -
                 (default is None)
                 Must be passed when test=True.
-        test  : Boolean telling whether the dataset being visualized is 
+        test: Boolean telling whether the dataset being visualized is 
                 train dataset or test dataset - (default False).
 
     Returns:
@@ -280,7 +280,7 @@ def euclidean_distance(vects):
     """Find the Euclidean distance between two vectors.
 
     Arguments:
-        vect  : List containing two tensors of same length.
+        vect: List containing two tensors of same length.
 
     Returns:
         Tensor containing euclidean distance
