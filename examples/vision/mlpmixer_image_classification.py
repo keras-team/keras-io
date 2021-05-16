@@ -52,16 +52,16 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 ## Configure the hyperparameters
 """
 
-learning_rate = 0.001
+learning_rate = 0.005
 weight_decay = 0.0001
-batch_size = 64
+batch_size = 128
 num_epochs = 50
-dropout_rate = 0.1
+dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 8  # Size of the patches to be extracted from the input images.
 num_patches = (image_size // patch_size) ** 2  # Size of the data array.
 hidden_units = 256  # Number of hidden units.
-num_mixers = 2  # Number of mixer blocks.
+num_mixers = 4  # Number of mixer blocks.
 
 print(f"Image size: {image_size} X {image_size} = {image_size ** 2}")
 print(f"Patch size: {patch_size} X {patch_size} = {patch_size ** 2} ")
@@ -197,6 +197,8 @@ def create_mlpmixer_classifier():
         x = MLPMixerLayer(num_patches, hidden_units, dropout_rate)(x)
     # Apply global average pooling to generate a [batch_size, hidden_units] representation tensor.
     representation = layers.GlobalAveragePooling1D()(x)
+    # Apply dropout.
+    representation = layers.Dropout(rate=dropout_rate)(representation)
     # Compute logits outputs.
     logits = layers.Dense(num_classes)(representation)
     # Create the Keras model.
@@ -226,7 +228,7 @@ def run_experiment(model):
     )
     # Create a learning rate scheduler callback.
     reduce_lr = keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.5, patience=3
+        monitor="val_loss", factor=0.5, patience=5
     )
     # Create an early stopping callback.
     early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -251,14 +253,16 @@ def run_experiment(model):
 
 
 """
-Note that training the perceiver model with the current settings on a V100 GPUs
-takes around 120 seconds.
+Note that training the model with the current settings on a V100 GPUs
+takes around 10 seconds per epoch.
 """
 
 classifier = create_mlpmixer_classifier()
 history = run_experiment(classifier)
 
 """
+The model achieves around 50% accuracy and 78% top-5 accuracy on the test data.
+
 As mentioned in the [MLP-Mixer](https://arxiv.org/abs/2105.01601) paper,
 when pre-trained on large datasets, or with modern regularization schemes,
 the MLP-Mixer attains competitive scores to state-of-the-art models.
