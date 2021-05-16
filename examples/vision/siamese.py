@@ -1,8 +1,8 @@
 """
-Title: Siamese network with a contrastive loss
-Author: Mehdi
-Date created: 2021/05/06
-Last modified: 2021/05/06
+Title: Siamese network with a contrastive loss   
+Author: Mehdi   
+Date created: 2021/05/06   
+Last modified: 2021/05/06   
 Description: Similarity learning using siamese network with contrastive loss
 """
 
@@ -32,26 +32,34 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
+"""
+Define some hyperparameters
+"""
+
+epochs = 10
+batch_size = 16
+# margin for constrastive loss
+margin = 1
 
 """
 ## Load the MNIST dataset
 """
-# x_utrain = unsplitted train data, not splitted into val
-(x_utrain, y_utrain), (x_test, y_test) = keras.datasets.mnist.load_data()
+(x_train_val, y_train_val), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Change the data type to a floating point format
-x_utrain = x_utrain.astype("float32")
+x_train_val = x_train_val.astype("float32")
 x_test = x_test.astype("float32")
 
 
 """
-Use list slicing to split train data into `train` and `val`
+Use list slicing to split train_val data into `train` and `val`
 """
 
-x_train, x_val = x_utrain[0:54000], x_utrain[54000:]
-y_train, y_val = y_utrain[0:54000], y_utrain[54000:] 
-del x_utrain
-del y_utrain
+# Keep 50% of train_val  in validation set 
+x_train, x_val = x_train_val[0:30000], x_train_val[30000:]
+y_train, y_val = y_train_val[0:30000], y_train_val[30000:] 
+del x_train_val
+del y_train_val
 
 
 """
@@ -60,32 +68,27 @@ del y_utrain
 We will train the model to differentiate each digit from one another. For
 example, digit `0` needs to be differentiated from the rest of the
 digits (`1` through `9`), digit `1` - from `0` and `2` through `9`, and so on.
-To carry this out, we will select N random images from class A (for example, for
-digit `0`) and pair it with N random images from another class B (for example,
-for digit `1`). Then, we can repeat this process for all classes of digits
-(until digit `9`). Once we have paired digit `0` with other digits, we can
-repeat this process for the remaining classes for the rest of the digits (from
-`1` until `9`).
+To carry this out, we will select N random images from class A (for example,
+for digit `0`) and pair it with N random images from another class B
+(for example, for digit `1`). Then, we can repeat this process for all classes
+of digits (until digit `9`). Once we have paired digit `0` with other digits,
+we can repeat this process for the remaining classes for the rest of the digits
+(from `1` until `9`).
 """
 
 
 def make_pairs(x, y):
-    """
-    Creates a tuple containing image pairs with corresponding label
+    """Creates a tuple containing image pairs with corresponding label.
 
-    Parameters
-    ----------
-    x : list
-        List containing images, each index in this list corresponds to
-        one image
-    y : list
-        List containing labels, each label with datatype of `int`
+    Arguments:
+        x : List containing images, each index in this list corresponds to
+            one image.
+        y : List containing labels, each label with datatype of `int`.
 
-    Returns
-    -------
-    Tuple containing two numpy arrays as (pairs_of_samples, labels),
-    where pairs_of_samples' shape is (2len(x), 2,n_features_dims) and
-    labels are a binary array of shape (2len(x))
+    Returns:
+        Tuple containing two numpy arrays as (pairs_of_samples, labels),
+        where pairs_of_samples' shape is (2len(x), 2,n_features_dims) and
+        labels are a binary array of shape (2len(x)).
     """
 
     num_classes = max(y) + 1
@@ -129,24 +132,24 @@ pairs_test, labels_test = make_pairs(x_test, y_test)
 
 """
 
-**pairs_train.shape = (108000, 2, 28, 28)**
+**pairs_train.shape = (60000, 2, 28, 28)**
 
 Imagine it as:
 
-**pairs_train.shape = (108000, pair.shape)**
+**pairs_train.shape = (60000, pair.shape)**
 
 
-`pairs_train` contains 108K `pairs` in `axis 0`, shape of each pair
+`pairs_train` contains 60K `pairs` in `axis 0`, shape of each pair
 is (2,28,28) hence `each pair` of `pairs_train` contains one image in its
 `axis 0` (do not confuse it with the `axis 0` of `pairs_train`) and the
 other one in the `axis 1`. We will slice `pairs_train` on its `axix 0`
-followed by desired axis of pair to obtain all images (108K) which belong
+followed by desired axis of pair to obtain all images (60K) which belong
 either to the `axis 0` or the `axis 1` of all the pairs of `pairs_train`.
 
 
 **Note:** Do not confuse axes of `pairs_train` with those of
 `pair within pairs_train`, `pairs_train` have only one axis `axis 0` which
-contain 108K pairs, whereas each `pair within pairs_train` have two axis,
+contain 60K pairs, whereas each `pair within pairs_train` have two axis,
 each for one image of a pair.
 """
 
@@ -156,14 +159,16 @@ Separate train pairs
 
 x_train_1 = pairs_train[:, 0]
 x_train_2 = pairs_train[:, 1]
-# x_train_1.shape = (108000, 28, 28)
+# x_train_1.shape = (60000, 28, 28)
 
 """
 Separate validation pairs
 """
+
 x_val_1 = pairs_val[:, 0]
 x_val_2 = pairs_val[:, 1]
-# x_val_1.shape = (12000, 28, 28)
+# x_val_1.shape = (60000, 28, 28)
+
 """
 Separate test pairs
 """
@@ -179,33 +184,25 @@ x_test_2 = pairs_test[:, 1]
 
 
 def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False):
-    """
-    Creates a plot of pairs and labels, and prediction if it's test dataset
+    """Creates a plot of pairs and labels, and prediction if it's test dataset.
 
-    Parameters
-    ----------
-    pairs   : Numpy Array
-              Array, of pairs to visualize, having shape
-              (Number of pairs, 2, 28, 28)
-    to_show : int
-              Number of examples to visualize (default is 6)
-              `to_show` must be an integral multiple of `num_col`.
-              Otherwise it will be trimmed if it is greater than num_col,
-              and incremented if if it is less then num_col.
-    num_col : int
-              Number of images in one row - (default is 3)
-              For test and train respectively, it should not exceed 3 and 7
-    predictions : list
-                  Array of predictions with shape (to_show, 1) -
-                  (default is None)
-                  Must be passed when test=True
-    test  : boolean
-            Whether the dataset being visualized is train dataset or
-            test dataset - (default False)
+    Arguments:
+        pairs: Numpy Array, of pairs to visualize, having shape
+              (Number of pairs, 2, 28, 28).
+        to_show: Int, number of examples to visualize (default is 6)
+                `to_show` must be an integral multiple of `num_col`.
+                Otherwise it will be trimmed if it is greater than num_col,
+                and incremented if if it is less then num_col.
+        num_col: Int, number of images in one row - (default is 3)
+                For test and train respectively, it should not exceed 3 and 7.
+        predictions: Numpy Array of predictions with shape (to_show, 1) -
+                (default is None)
+                Must be passed when test=True.
+        test  : Boolean telling whether the dataset being visualized is 
+                train dataset or test dataset - (default False).
 
-    Returns
-    -------
-    None
+    Returns:
+        None.
     """
 
     # Define num_row
@@ -280,18 +277,14 @@ merged layer will be fed to final network.
 # Provided two tensors t1 and t2
 # Euclidean distance = sqrt(sum(square(t1-t2)))
 def euclidean_distance(vects):
-    """
-    Find the Euclidean distance between two vectors
+    """Find the Euclidean distance between two vectors.
 
-    Parameter
-    ---------
-    vect  : list
-            list containing two tensors of same length
+    Arguments:
+        vect  : List containing two tensors of same length.
 
-    Return
-    ------
-    Tensor containing euclidean distance
-    (as floating point value) between vectors
+    Return:
+        Tensor containing euclidean distance
+        (as floating point value) between vectors.
     """
 
     x, y = vects
@@ -333,37 +326,32 @@ Define Constrastive Loss
 
 # Contrastive loss = mean( (1-true_value) * square(prediction) +
 #                         true_value * square( max(margin-prediction, 0) ))
-def contrastive_loss(y_true, y_pred, margin=1):
-    """
-    Calculate the constrastive loss
+def loss(margin=1):
+  def contrastive_loss(y_true, y_pred, margin=1):
+      """Calculate the constrastive loss.
 
-    Parameters
-    ----------
-    margin  : int
-              margin defines the baseline for distance for which pairs
-              should be classified as dissimilar. - (default is 1)
-    y_true  : list
-              list of labels, each label is of type float32
-    y_pred  : list
-              list of predictions of same length as of y_true,
-              each label is of type float32
+      Arguments:
+          margin: Integer, defines the baseline for distance for which pairs
+                  should be classified as dissimilar. - (default is 1).
+          y_true: List of labels, each label is of type float32.
+          y_pred: List of predictions of same length as of y_true,
+                  each label is of type float32.
 
-    Return
-    ------
-    A tensor containing constrastive loss as floating point value
-    """
+      Return:
+          A tensor containing constrastive loss as floating point value.
+      """
 
-    square_pred = tf.math.square(y_pred)
-    margin_square = tf.math.square(tf.math.maximum(margin - (y_pred), 0))
-    return tf.math.reduce_mean((1 - y_true) * square_pred + (y_true) * margin_square)
+      square_pred = tf.math.square(y_pred)
+      margin_square = tf.math.square(tf.math.maximum(margin - (y_pred), 0))
+      return tf.math.reduce_mean((1 - y_true) * square_pred + (y_true) * margin_square)
+  return contrastive_loss
 
 
 """
 Compile the model with constrastive loss
 """
 
-siamese.compile(loss=contrastive_loss, optimizer="RMSprop", metrics=["accuracy"])
-
+siamese.compile(loss=loss(margin=margin), optimizer="RMSprop", metrics=["accuracy"])
 siamese.summary()
 
 
@@ -372,28 +360,48 @@ Train the model
 """
 
 # Rarely it stucks at local optima, in that case just try again
-siamese.fit(
+history = siamese.fit(
     [x_train_1, x_train_2],
     labels_train,
     validation_data=([x_val_1, x_val_2], labels_val),
-    batch_size=16,
-    epochs=10,
+    batch_size=batch_size,
+    epochs=epochs,
 )
 
+"""
+## Visualize results
+"""
+
+# Plot accuracy curve
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('Model Accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.show()
+
+# Plot loss curve
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('Model Loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.show()
 
 """
-Test the model
+Evaluate the model
 """
 
 results = siamese.evaluate([x_test_1, x_test_2], labels_test)
 print("test loss, test acc:", results)
 
 """
-## Visualize the predictions
+Visualize the predictions
 """
 
 predictions = siamese.predict([x_test_1, x_test_2])
-
 visualize(
     pairs_test, labels_test, to_show=3, predictions=predictions, test=True
 )
