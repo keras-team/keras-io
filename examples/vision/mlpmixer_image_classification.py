@@ -9,7 +9,7 @@ Description: Implementing the MLP-Mixer model for image classification.
 """
 ## Introduction
 
-This example demonestrate using the [MLP-Mixer](https://arxiv.org/abs/2105.01601)
+This example demonstrates using the [MLP-Mixer](https://arxiv.org/abs/2105.01601)
 model, by Ilya Tolstikhin et al., for image classification, and demonstrates it
 on the CIFAR-100 dataset. The MLP-Mixer is an architecture based exclusively on
 multi-layer perceptrons (MLPs), and contains two types of MLP layers:
@@ -58,7 +58,7 @@ batch_size = 64
 num_epochs = 50
 dropout_rate = 0.1
 image_size = 64  # We'll resize input images to this size.
-patch_size = 8  # Size of the patches to be extract from the input images.
+patch_size = 8  # Size of the patches to be extracted from the input images.
 num_patches = (image_size // patch_size) ** 2  # Size of the data array.
 hidden_units = 256  # Number of hidden units.
 num_mixers = 2  # Number of mixer blocks.
@@ -203,7 +203,7 @@ def create_mlpmixer_classifier():
     # Create multiple blocks of the MLP-Mixer module.
     for _ in range(num_mixers):
         x = MLPMixerLayer(num_patches, hidden_units, dropout_rate)(x)
-    # Apply global average pooling to generate a [batch_size, hidden_units] repesentation tensor.
+    # Apply global average pooling to generate a [batch_size, hidden_units] representation tensor.
     representation = layers.GlobalAveragePooling1D()(x)
     # Compute logits outputs.
     logits = layers.Dense(num_classes)(representation)
@@ -269,5 +269,5 @@ when pre-trained on large datasets, or with modern regularization schemes,
 the MLP-Mixer attains competitive scores to state-of-the-art models.
 You can obtain better results by increasing the hidden units,
 increasing, increasing the number of mixer blocks, and training the model for longer.
-You may also try to increase the size the input images and use different patch sizes.
+You may also try to increase the size of the input images and use different patch sizes.
 """
