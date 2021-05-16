@@ -123,7 +123,7 @@ class Patches(layers.Layer):
             padding="VALID",
         )
         patch_dims = patches.shape[-1]
-        patches = tf.reshape(patches, [batch_size, num_patches, patch_dims])
+        patches = tf.reshape(patches, [batch_size, self.num_patches, patch_dims])
         return patches
 
 
