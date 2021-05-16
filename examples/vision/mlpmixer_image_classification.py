@@ -9,7 +9,7 @@ Description: Implementing the MLP-Mixer model for image classification.
 """
 ## Introduction
 
-This example demonstrates using the [MLP-Mixer](https://arxiv.org/abs/2105.01601)
+This example implements the [MLP-Mixer](https://arxiv.org/abs/2105.01601)
 model, by Ilya Tolstikhin et al., for image classification, and demonstrates it
 on the CIFAR-100 dataset. The MLP-Mixer is an architecture based exclusively on
 multi-layer perceptrons (MLPs), and contains two types of MLP layers:
