@@ -282,7 +282,7 @@ def euclidean_distance(vects):
     Arguments:
         vect  : List containing two tensors of same length.
 
-    Return:
+    Returns:
         Tensor containing euclidean distance
         (as floating point value) between vectors.
     """
@@ -324,20 +324,28 @@ siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 Define Constrastive Loss
 """
 
-# Contrastive loss = mean( (1-true_value) * square(prediction) +
-#                         true_value * square( max(margin-prediction, 0) ))
 def loss(margin=1):
-  def contrastive_loss(y_true, y_pred, margin=1):
+  """Provides 'constrastive_loss' an enclosing scope with variable 'margin'.
+  
+  Arguments:
+    margin: Integer, defines the baseline for distance for which pairs
+            should be classified as dissimilar. - (default is 1).
+  
+  Returns:
+    'constrastive_loss' function with data ('margin') attached.
+  """
+
+  # Contrastive loss = mean( (1-true_value) * square(prediction) +
+  #                         true_value * square( max(margin-prediction, 0) ))
+  def contrastive_loss(y_true, y_pred):
       """Calculate the constrastive loss.
 
       Arguments:
-          margin: Integer, defines the baseline for distance for which pairs
-                  should be classified as dissimilar. - (default is 1).
           y_true: List of labels, each label is of type float32.
           y_pred: List of predictions of same length as of y_true,
                   each label is of type float32.
 
-      Return:
+      Returns:
           A tensor containing constrastive loss as floating point value.
       """
 
@@ -345,7 +353,6 @@ def loss(margin=1):
       margin_square = tf.math.square(tf.math.maximum(margin - (y_pred), 0))
       return tf.math.reduce_mean((1 - y_true) * square_pred + (y_true) * margin_square)
   return contrastive_loss
-
 
 """
 Compile the model with constrastive loss
@@ -359,7 +366,6 @@ siamese.summary()
 Train the model
 """
 
-# Rarely it stucks at local optima, in that case just try again
 history = siamese.fit(
     [x_train_1, x_train_2],
     labels_train,
