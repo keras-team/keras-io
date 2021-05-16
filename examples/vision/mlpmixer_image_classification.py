@@ -261,7 +261,10 @@ classifier = create_mlpmixer_classifier()
 history = run_experiment(classifier)
 
 """
-The model achieves around 50% accuracy and 78% top-5 accuracy on the test data.
+The model achieves around 52% accuracy and 81% top-5 accuracy on the test data.
+However, the MLP-Mixer model tends to have much less number of parameters compared
+to convolutional and transformer-based models, which leads to less training and
+serving computational cost.
 
 As mentioned in the [MLP-Mixer](https://arxiv.org/abs/2105.01601) paper,
 when pre-trained on large datasets, or with modern regularization schemes,
