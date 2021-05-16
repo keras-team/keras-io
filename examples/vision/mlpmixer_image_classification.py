@@ -260,7 +260,6 @@ takes around 120 seconds.
 """
 
 classifier = create_mlpmixer_classifier()
-
 history = run_experiment(classifier)
 
 """
