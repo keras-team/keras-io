@@ -163,25 +163,17 @@ class MLPMixerLayer(layers.Layer):
         # Apply layer normalization.
         x = self.normalize(inputs)
         # Transpose inputs from [num_batches, num_patches, hidden_units] to [num_batches, hidden_units, num_patches].
-        x_transposed = tf.linalg.matrix_transpose(x)
+        x_channels = tf.linalg.matrix_transpose(x)
         # Apply mlp1 on each channel independently.
-        x_channels = tf.unstack(x_transposed, axis=1)
-        mlp1_outputs = []
-        for channel in x_channels:
-            mlp1_outputs.append(self.mlp1(channel))
-        mlp1_outputs = tf.stack(mlp1_outputs, axis=1)
+        mlp1_outputs = self.mlp1(x_channels)
         # Transpose mlp1_outputs from [num_batches, hidden_dim, num_patches] to [num_batches, num_patches, hidden_units].
         mlp1_outputs = tf.linalg.matrix_transpose(mlp1_outputs)
         # Add skip connection.
         x = mlp1_outputs + inputs
         # Apply layer normalization.
-        x = self.normalize(x)
+        x_patches = self.normalize(x)
         # Apply mlp2 on each patch independtenly.
-        patches = tf.unstack(x, axis=1)
-        mlp2_outputs = []
-        for patch in patches:
-            mlp2_outputs.append(self.mlp2(patch))
-        mlp2_outputs = tf.stack(mlp2_outputs, axis=1)
+        mlp2_outputs = self.mlp2(x_patches)
         # Add skip connection.
         x = x + mlp2_outputs
         return x
@@ -232,6 +224,10 @@ def run_experiment(model):
             keras.metrics.SparseTopKCategoricalAccuracy(5, name="top5-acc"),
         ],
     )
+    # Create a learning rate scheduler callback.
+    reduce_lr = keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss", factor=0.5, patience=3
+    )
     # Create an early stopping callback.
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=10, restore_best_weights=True
@@ -243,7 +239,7 @@ def run_experiment(model):
         batch_size=batch_size,
         epochs=num_epochs,
         validation_split=0.1,
-        callbacks=[early_stopping],
+        callbacks=[early_stopping, reduce_lr],
     )
 
     _, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
