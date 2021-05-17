@@ -1,11 +1,15 @@
-"""
-Title: Keypoint Detection with Transfer Learning
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/05/02
-Last modified: 2021/05/02
-Description: Training a keypoint detector with data augmentation and transfer learning.
-"""
-"""
+# Keypoint Detection with Transfer Learning
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/05/02<br>
+**Last modified:** 2021/05/02<br>
+**Description:** Training a keypoint detector with data augmentation and transfer learning.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/keypoint_detection.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/keypoint_detection.py)
+
+
+
 Keypoint detection consists of locating key object parts. For example, the key parts
 of our faces include nose tips, eyebrows, eye corners, and so on. These parts help to
 represent the underlying object in a feature-rich manner. Keypoint detection has
@@ -16,27 +20,24 @@ In this example, we will build a keypoint detector using the
 using transfer learning. This example requires TensorFlow 2.4 or higher,
 as well as [`imgaug`](https://imgaug.readthedocs.io/) library,
 which can be installed using the following command:
-"""
 
-"""shell
-pip install -q -U imgaug
-"""
 
-"""
+```python
+!pip install -q -U imgaug
+```
+
+---
 ## Data collection
-"""
 
-"""
 The StanfordExtra dataset contains 12,000 images of dogs together with keypoints and
 segmentation maps. It is developed from the [Stanford dogs dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/).
 It can be downloaded with the command below:
-"""
 
-"""shell
-wget -q http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar
-"""
 
-"""
+```python
+!wget -q http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar
+```
+
 Annotations are provided as a single JSON file in the StanfordExtra dataset and one needs
 to fill [this form](https://forms.gle/sRtbicgxsWvRtRmUA) to get access to it. The
 authors explicitly instruct users not to share the JSON file, and this example respects this wish:
@@ -45,17 +46,18 @@ you should obtain the JSON file yourself.
 The JSON file is expected to be locally available as `stanfordextra_v12.zip`.
 
 After the files are downloaded, we can extract the archives.
-"""
 
-"""shell
-tar xf images.tar
-unzip -qq ~/stanfordextra_v12.zip
-"""
 
-"""
+```python
+!tar xf images.tar
+!unzip -qq ~/stanfordextra_v12.zip
+```
+
+---
 ## Imports
-"""
 
+
+```python
 from tensorflow.keras import layers
 from tensorflow import keras
 import tensorflow as tf
@@ -71,24 +73,28 @@ import pandas as pd
 import numpy as np
 import json
 import os
+```
 
-"""
+---
 ## Define hyperparameters
-"""
 
+
+```python
 IMG_SIZE = 224
 BATCH_SIZE = 64
 EPOCHS = 5
 NUM_KEYPOINTS = 24 * 2  # 24 pairs each having x and y coordinates
+```
 
-"""
+---
 ## Load data
 
 The authors also provide a metadata file that specifies additional information about the
 keypoints, like color information, animal pose name, etc. We will load this file in a `pandas`
 dataframe to extract information for visualization purposes.
-"""
 
+
+```python
 IMG_DIR = "Images"
 JSON = "StanfordExtra_V12/StanfordExtra_v12.json"
 KEYPOINT_DEF = (
@@ -102,8 +108,8 @@ with open(JSON) as infile:
 # Set up a dictionary, mapping all the ground-truth information
 # with respect to the path of the image.
 json_dict = {i["img_path"]: i for i in json_data}
+```
 
-"""
 A single entry of `json_dict` looks like the following:
 
 ```
@@ -139,9 +145,7 @@ A single entry of `json_dict` looks like the following:
             [0, 0, 0]],
  'seg': ...}
 ```
-"""
 
-"""
 In this example, the keys we are interested in are:
 
 * `img_path`
@@ -156,8 +160,9 @@ There are a total of 24 entries present inside `joints`. Each entry has 3 values
 As we can see `joints` contain multiple `[0, 0, 0]` entries which denote that those
 keypoints were not labeled. In this example, we will consider both non-visible as well as
 unlabeled keypoints in order to allow mini-batch learning.
-"""
 
+
+```python
 # Load the metdata definition file and preview it.
 keypoint_def = pd.read_csv(KEYPOINT_DEF)
 keypoint_def.head()
@@ -180,13 +185,15 @@ def get_dog(name):
 
     return data
 
+```
 
-"""
+---
 ## Visualize data
 
 Now, we write a utility function to visualize the images and their keypoints.
-"""
 
+
+```python
 # Parts of this code come from here:
 # https://github.com/benjiebob/StanfordExtra/blob/master/demo.ipynb
 def visualize_keypoints(images, keypoints):
@@ -231,8 +238,14 @@ for sample in selected_samples:
     keypoints.append(keypoint)
 
 visualize_keypoints(images, keypoints)
+```
 
-"""
+
+    
+![png](/img/examples/vision/keypoint_detection/keypoint_detection_18_0.png)
+    
+
+
 The plots show that we have images of non-uniform sizes, which is expected in most
 real-world scenarios. However, if we resize these images to have a uniform shape (for
 instance (224 x 224)) their ground-truth annotations will also be affected. The same
@@ -241,12 +254,12 @@ Fortunately, `imgaug` provides utilities that can handle this issue.
 In the next section, we will write a data generator inheriting the
 [`keras.utils.Sequence`](https://keras.io/api/utils/python_utils/#sequence-class) class
 that applies data augmentation on batches of data using `imgaug`.
-"""
 
-"""
+---
 ## Prepare data generator
-"""
 
+
+```python
 
 class KeyPointsDataset(keras.utils.Sequence):
     def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True):
@@ -309,16 +322,16 @@ class KeyPointsDataset(keras.utils.Sequence):
 
         return (batch_images, batch_keypoints)
 
+```
 
-"""
 To know more about how to operate with keypoints in `imgaug` check out
 [this document](https://imgaug.readthedocs.io/en/latest/source/examples_keypoints.html).
-"""
 
-"""
+---
 ## Define augmentation transforms
-"""
 
+
+```python
 train_aug = iaa.Sequential(
     [
         iaa.Resize(IMG_SIZE, interpolation="linear"),
@@ -330,22 +343,26 @@ train_aug = iaa.Sequential(
 )
 
 test_aug = iaa.Sequential([iaa.Resize(IMG_SIZE, interpolation="linear")])
+```
 
-"""
+---
 ## Create training and validation splits
-"""
 
+
+```python
 np.random.shuffle(samples)
 train_keys, validation_keys = (
     samples[int(len(samples) * 0.15) :],
     samples[: int(len(samples) * 0.15)],
 )
 
+```
 
-"""
+---
 ## Data generator investigation
-"""
 
+
+```python
 train_dataset = KeyPointsDataset(train_keys, train_aug)
 validation_dataset = KeyPointsDataset(validation_keys, test_aug, train=False)
 
@@ -358,8 +375,21 @@ assert sample_keypoints.min() == 0.0
 
 sample_keypoints = sample_keypoints[:4].reshape(-1, 24, 2) * IMG_SIZE
 visualize_keypoints(sample_images[:4], sample_keypoints)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total batches in training set: 166
+Total batches in validation set: 29
+
+```
+</div>
+    
+![png](/img/examples/vision/keypoint_detection/keypoint_detection_28_1.png)
+    
+
+
+---
 ## Model building
 
 The [Stanford dogs dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/) (on which
@@ -368,8 +398,9 @@ So, it is likely that the models pretrained on the ImageNet-1k dataset would be 
 for this task. We will use a MobileNetV2 pre-trained on this dataset as a backbone to
 extract meaningful features from the images and then pass those to a custom regression
 head for predicting coordinates.
-"""
 
+
+```python
 
 def get_model():
     # Load the pre-trained weights of MobileNetV2 and freeze the weights
@@ -391,33 +422,80 @@ def get_model():
 
     return keras.Model(inputs, outputs, name="keypoint_detector")
 
+```
 
-"""
 Our custom network is fully-convolutional which makes it more parameter-friendly than the
 same version of the network having fully-connected dense layers.
-"""
 
+
+```python
 get_model().summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "keypoint_detector"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_2 (InputLayer)         [(None, 224, 224, 3)]     0         
+_________________________________________________________________
+tf.math.truediv (TFOpLambda) (None, 224, 224, 3)       0         
+_________________________________________________________________
+tf.math.subtract (TFOpLambda (None, 224, 224, 3)       0         
+_________________________________________________________________
+mobilenetv2_1.00_224 (Functi (None, 7, 7, 1280)        2257984   
+_________________________________________________________________
+dropout (Dropout)            (None, 7, 7, 1280)        0         
+_________________________________________________________________
+separable_conv2d (SeparableC (None, 3, 3, 48)          93488     
+_________________________________________________________________
+separable_conv2d_1 (Separabl (None, 1, 1, 48)          2784      
+=================================================================
+Total params: 2,354,256
+Trainable params: 96,272
+Non-trainable params: 2,257,984
+_________________________________________________________________
+
+```
+</div>
 Notice the output shape of the network: `(None, 1, 1, 48)`. This is why we have reshaped
 the coordinates as: `batch_keypoints[i, :] = np.array(kp_temp).reshape(1, 1, 24 * 2)`.
-"""
 
-"""
+---
 ## Model compilation and training
 
 For this example, we will train the network only for five epochs.
-"""
 
+
+```python
 model = get_model()
 model.compile(loss="mse", optimizer=keras.optimizers.Adam(1e-4))
 model.fit(train_dataset, validation_data=validation_dataset, epochs=EPOCHS)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+166/166 [==============================] - 85s 486ms/step - loss: 0.1087 - val_loss: 0.0950
+Epoch 2/5
+166/166 [==============================] - 78s 471ms/step - loss: 0.0830 - val_loss: 0.0778
+Epoch 3/5
+166/166 [==============================] - 78s 468ms/step - loss: 0.0778 - val_loss: 0.0739
+Epoch 4/5
+166/166 [==============================] - 78s 470ms/step - loss: 0.0753 - val_loss: 0.0711
+Epoch 5/5
+166/166 [==============================] - 78s 468ms/step - loss: 0.0735 - val_loss: 0.0692
+
+<tensorflow.python.keras.callbacks.History at 0x7f3ac55b6050>
+
+```
+</div>
+---
 ## Make predictions and visualize them
-"""
 
+
+```python
 sample_val_images, sample_val_keypoints = next(iter(validation_dataset))
 sample_val_images = sample_val_images[:4]
 sample_val_keypoints = sample_val_keypoints[:4].reshape(-1, 24, 2) * IMG_SIZE
@@ -428,12 +506,23 @@ visualize_keypoints(sample_val_images, sample_val_keypoints)
 
 # Predictions
 visualize_keypoints(sample_val_images, predictions)
+```
 
-"""
+
+    
+![png](/img/examples/vision/keypoint_detection/keypoint_detection_37_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/keypoint_detection/keypoint_detection_37_1.png)
+    
+
+
 Predictions will likely improve with more training.
-"""
 
-"""
+---
 ## Going further
 
 * Try using other augmentation transforms from `imgaug` to investigate how that changes
@@ -442,4 +531,3 @@ the results.
 not [fine-tune](https://keras.io/guides/transfer_learning/) it. You are encouraged to fine-tune it on this task and see if that
 improves the performance. You can also try different architectures and see how they
 affect the final performance.
-"""
