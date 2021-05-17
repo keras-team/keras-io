@@ -1,12 +1,16 @@
-"""
-Title: Siamese network with a contrastive loss
-Author: Mehdi
-Date created: 2021/05/06
-Last modified: 2021/05/06
-Description: Similarity learning using siamese network with contrastive loss.
-"""
+# Siamese network with a contrastive loss
 
-"""
+**Author:** Mehdi<br>
+**Date created:** 2021/05/06<br>
+**Last modified:** 2021/05/06<br>
+**Description:** Similarity learning using siamese network with contrastive loss.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/siamese.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/siamese.py)
+
+
+
+---
 ## Introduction
 
 [Siamese Network](https://en.wikipedia.org/wiki/Siamese_neural_network)
@@ -19,50 +23,56 @@ contrast between embeddings of inputs of different classes and decrease it with
 that of similar class by employing some loss function, with the main objective
 of contrasting [vector spaces](https://en.wikipedia.org/wiki/Vector_space)
 from which these sample inputs were taken.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import random
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
+```
 
-"""
 Define some hyperparameters
-"""
 
+
+```python
 epochs = 10
 batch_size = 16
 # margin for constrastive loss
 margin = 1
+```
 
-"""
+---
 ## Load the MNIST dataset
-"""
+
+
+```python
 (x_train_val, y_train_val), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Change the data type to a floating point format
 x_train_val = x_train_val.astype("float32")
 x_test = x_test.astype("float32")
 
+```
 
-"""
 Use list slicing to split train_val data into `train` and `val`
-"""
 
+
+```python
 # Keep 50% of train_val  in validation set
 x_train, x_val = x_train_val[0:30000], x_train_val[30000:]
 y_train, y_val = y_train_val[0:30000], y_train_val[30000:]
 del x_train_val
 del y_train_val
 
+```
 
-"""
+---
 ## Create pairs of images
 
 We will train the model to differentiate each digit from one another. For
@@ -74,8 +84,9 @@ for digit `0`) and pair it with N random images from another class B
 of digits (until digit `9`). Once we have paired digit `0` with other digits,
 we can repeat this process for the remaining classes for the rest of the digits
 (from `1` until `9`).
-"""
 
+
+```python
 
 def make_pairs(x, y):
     """Creates a tuple containing image pairs with corresponding label.
@@ -128,8 +139,7 @@ pairs_val, labels_val = make_pairs(x_val, y_val)
 
 # make test pairs
 pairs_test, labels_test = make_pairs(x_test, y_test)
-
-"""
+```
 
 **pairs_train.shape = (60000, 2, 28, 28)**
 
@@ -150,37 +160,40 @@ either to the `axis 0` or the `axis 1` of all the pairs of `pairs_train`.
 `pair within pairs_train`, `pairs_train` have only one axis `axis 0` which
 contain 60K pairs, whereas each `pair within pairs_train` have two axis,
 each for one image of a pair.
-"""
 
-"""
 Separate train pairs
-"""
 
+
+```python
 x_train_1 = pairs_train[:, 0]
 x_train_2 = pairs_train[:, 1]
 # x_train_1.shape = (60000, 28, 28)
+```
 
-"""
 Separate validation pairs
-"""
 
+
+```python
 x_val_1 = pairs_val[:, 0]
 x_val_2 = pairs_val[:, 1]
 # x_val_1.shape = (60000, 28, 28)
+```
 
-"""
 Separate test pairs
-"""
 
+
+```python
 x_test_1 = pairs_test[:, 0]
 x_test_2 = pairs_test[:, 1]
 # x_test_1.shape = (20000, 28, 28)
 
+```
 
-"""
+---
 ## Visualize
-"""
 
+
+```python
 
 def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False):
     """Creates a plot of pairs and labels, and prediction if it's test dataset.
@@ -245,34 +258,57 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
         plt.tight_layout(rect=(0, 0, 1.5, 1.5))
     plt.show()
 
+```
 
-"""
 Inspect train pairs
-"""
 
+
+```python
 visualize(pairs_train[0:-1], labels_train[0:-1], to_show=4, num_col=4)
+```
 
-"""
+
+    
+![png](/img/examples/vision/siamese/siamese_22_0.png)
+    
+
+
 Inspect validation pairs
-"""
 
+
+```python
 visualize(pairs_val[0:-1], labels_val[0:-1], to_show=4, num_col=4)
+```
 
-"""
+
+    
+![png](/img/examples/vision/siamese/siamese_24_0.png)
+    
+
+
 Inspect test pairs
-"""
 
+
+```python
 visualize(pairs_test[0:-1], labels_test[0:-1], to_show=4, num_col=4)
+```
 
-"""
+
+    
+![png](/img/examples/vision/siamese/siamese_26_0.png)
+    
+
+
+---
 ## Define the model
 
 There will be two input layers, each leading to its own network, which
 produces embeddings. Lambda layer will merge them using
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged layer will be fed to final network.
-"""
 
+
+```python
 # Provided two tensors t1 and t2
 # Euclidean distance = sqrt(sum(square(t1-t2)))
 def euclidean_distance(vects):
@@ -318,11 +354,12 @@ normal_layer = tf.keras.layers.BatchNormalization()(merge_layer)
 output_layer = layers.Dense(1, activation="sigmoid")(normal_layer)
 siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 
+```
 
-"""
 Define Constrastive Loss
-"""
 
+
+```python
 
 def loss(margin=1):
     """Provides 'constrastive_loss' an enclosing scope with variable 'margin'.
@@ -357,19 +394,48 @@ def loss(margin=1):
 
     return contrastive_loss
 
+```
 
-"""
 Compile the model with constrastive loss
-"""
 
+
+```python
 siamese.compile(loss=loss(margin=margin), optimizer="RMSprop", metrics=["accuracy"])
 siamese.summary()
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "model_1"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            [(None, 28, 28, 1)]  0                                            
+__________________________________________________________________________________________________
+input_3 (InputLayer)            [(None, 28, 28, 1)]  0                                            
+__________________________________________________________________________________________________
+model (Functional)              (None, 10)           5318        input_2[0][0]                    
+                                                                 input_3[0][0]                    
+__________________________________________________________________________________________________
+lambda (Lambda)                 (None, 1)            0           model[0][0]                      
+                                                                 model[1][0]                      
+__________________________________________________________________________________________________
+batch_normalization_2 (BatchNor (None, 1)            4           lambda[0][0]                     
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 1)            2           batch_normalization_2[0][0]      
+==================================================================================================
+Total params: 5,324
+Trainable params: 4,808
+Non-trainable params: 516
+__________________________________________________________________________________________________
+
+```
+</div>
 Train the model
-"""
 
+
+```python
 history = siamese.fit(
     [x_train_1, x_train_2],
     labels_train,
@@ -377,11 +443,38 @@ history = siamese.fit(
     batch_size=batch_size,
     epochs=epochs,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0993 - accuracy: 0.8791 - val_loss: 0.0341 - val_accuracy: 0.9553
+Epoch 2/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0494 - accuracy: 0.9343 - val_loss: 0.0251 - val_accuracy: 0.9675
+Epoch 3/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0412 - accuracy: 0.9461 - val_loss: 0.0213 - val_accuracy: 0.9723
+Epoch 4/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0366 - accuracy: 0.9528 - val_loss: 0.0180 - val_accuracy: 0.9767
+Epoch 5/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0343 - accuracy: 0.9556 - val_loss: 0.0157 - val_accuracy: 0.9795
+Epoch 6/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0322 - accuracy: 0.9586 - val_loss: 0.0170 - val_accuracy: 0.9783
+Epoch 7/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0310 - accuracy: 0.9605 - val_loss: 0.0161 - val_accuracy: 0.9798
+Epoch 8/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0302 - accuracy: 0.9617 - val_loss: 0.0144 - val_accuracy: 0.9819
+Epoch 9/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0286 - accuracy: 0.9634 - val_loss: 0.0162 - val_accuracy: 0.9794
+Epoch 10/10
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0285 - accuracy: 0.9632 - val_loss: 0.0135 - val_accuracy: 0.9830
+
+```
+</div>
+---
 ## Visualize results
-"""
 
+
+```python
 
 def plt_metric(history, metric, title, has_valid=True):
     """Plots the given 'metric' from 'history'.
@@ -411,17 +504,45 @@ plt_metric(history=history.history, metric="accuracy", title="Model accuracy")
 
 # Plot the constrastive loss
 plt_metric(history=history.history, metric="loss", title="Constrastive Loss")
+```
 
-"""
+
+    
+![png](/img/examples/vision/siamese/siamese_36_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/siamese/siamese_36_1.png)
+    
+
+
 Evaluate the model
-"""
 
+
+```python
 results = siamese.evaluate([x_test_1, x_test_2], labels_test)
 print("test loss, test acc:", results)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+625/625 [==============================] - 4s 6ms/step - loss: 0.0136 - accuracy: 0.9827
+test loss, test acc: [0.013579603284597397, 0.9827499985694885]
+
+```
+</div>
 Visualize the predictions
-"""
 
+
+```python
 predictions = siamese.predict([x_test_1, x_test_2])
 visualize(pairs_test, labels_test, to_show=3, predictions=predictions, test=True)
+```
+
+
+    
+![png](/img/examples/vision/siamese/siamese_40_0.png)
+    
+
