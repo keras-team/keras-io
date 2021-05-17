@@ -6,13 +6,15 @@ Last modified: 2021/05/02
 Description: Training a keypoint detector with data augmentation and transfer learning.
 """
 """
-Keypoint detection helps to locate the key parts from objects. For example, the key parts
-in our face include nose tips, eyebrows, eye corners, and so on. These parts help to
+Keypoint detection consists of locating key object parts. For example, the key parts
+of our faces include nose tips, eyebrows, eye corners, and so on. These parts help to
 represent the underlying object in a feature-rich manner. Keypoint detection has
-applications such as pose estimation, face detection, etc.
+applications that include pose estimation, face detection, etc.
 
-In this example, we will build a keypoint detector using the [StanfordExtra dataset](https://github.com/benjiebob/StanfordExtra)
-with transfer learning. This example requires TensorFlow 2.4 or higher, as well as [`imgaug`](https://imgaug.readthedocs.io/),
+In this example, we will build a keypoint detector using the
+[StanfordExtra dataset](https://github.com/benjiebob/StanfordExtra),
+using transfer learning. This example requires TensorFlow 2.4 or higher,
+as well as [`imgaug`](https://imgaug.readthedocs.io/) library,
 which can be installed using the following command:
 """
 
@@ -25,8 +27,8 @@ pip install -q -U imgaug
 """
 
 """
-The StanfordExtra dataset contains 12000 images to dogs with their keypoints and
-segmentation maps labeled. It is developed from the [Stanford dogs dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/).
+The StanfordExtra dataset contains 12,000 images of dogs together with keypoints and
+segmentation maps. It is developed from the [Stanford dogs dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/).
 It can be downloaded with the command below:
 """
 
@@ -36,11 +38,13 @@ wget -q http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar
 
 """
 Annotations are provided as a single JSON file in the StanfordExtra dataset and one needs
-to fill [this form](https://forms.gle/sRtbicgxsWvRtRmUA) to get access to it. Since the
-authors explicitly instruct about not sharing the JSON file, this example respects that
-and does not provide it. The JSON file will download as `stanfordextra_v12.zip`. 
+to fill [this form](https://forms.gle/sRtbicgxsWvRtRmUA) to get access to it. The
+authors explicitly instruct users not to share the JSON file, and this example respects this wish:
+you should obtain the JSON file yourself.
 
-After the files are downloaded we can extract the archives. 
+The JSON file is expected to be locally available as `stanfordextra_v12.zip`. 
+
+After the files are downloaded, we can extract the archives. 
 """
 
 """shell
@@ -66,7 +70,8 @@ from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
-import json, os
+import json
+import os
 
 """
 ## Define hyperparameters
@@ -79,11 +84,9 @@ NUM_KEYPOINTS = 24 * 2  # 24 pairs each having x and y coordinates
 
 """
 ## Load data
-"""
 
-"""
 The authors also provide a metadata file that specifies additional information about the
-keypoints like color information, animal pose name, etc. We will load that in a `pandas`
+keypoints, like color information, animal pose name, etc. We will load this file in a `pandas`
 dataframe to extract information for visualization purposes. 
 """
 
@@ -140,7 +143,7 @@ A single entry of `json_dict` looks like the following:
 """
 
 """
-For ths example, the keys we are interested in are: 
+In this example, the keys we are interested in are: 
 
 * `img_path`
 * `joints`
@@ -226,14 +229,14 @@ for sample in selected_samples:
 visualize_keypoints(images, keypoints)
 
 """
-The plots show that we have images of non-uniform sizes which is expected in most of the
+The plots show that we have images of non-uniform sizes, which is expected in most
 real-world scenarios. However, if we resize these images to have a uniform shape (for
-e.g. (224 x 224)) their ground-truth annotations will also be affected for that. The same
-applies, if we apply any geometric transformation (horizontal flip, for e.g.) to an image
-here. Fortunately, `imgaug` provides utilities that can handle these situations
-efficiently. In the next section, we will write a data generator inheriting the
-[`keras.utils.Sequence`](https://keras.io/api/utils/python_utils/#sequence-class) class.
-We will also apply data augmentation using `imgaug` on batches of data. 
+instance (224 x 224)) their ground-truth annotations will also be affected. The same
+applies if we apply any geometric transformation (horizontal flip, for e.g.) to an image.
+Fortunately, `imgaug` provides utilities that can handle this issue.
+In the next section, we will write a data generator inheriting the
+[`keras.utils.Sequence`](https://keras.io/api/utils/python_utils/#sequence-class) class
+that applies data augmentation on batches of data using `imgaug`. 
 """
 
 """
@@ -309,7 +312,8 @@ class KeyPointsDataset(keras.utils.Sequence):
 
 
 """
-To know more about how to operate with keypoints in `imgaug` check out [this document](https://imgaug.readthedocs.io/en/latest/source/examples_keypoints.html). 
+To know more about how to operate with keypoints in `imgaug` check out
+[this document](https://imgaug.readthedocs.io/en/latest/source/examples_keypoints.html). 
 """
 
 """
@@ -361,7 +365,7 @@ visualize_keypoints(sample_images[:4], sample_keypoints)
 
 The [Stanford dogs dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/) (on which
 the StanfordExtra dataset is based) was built using the [ImageNet-1k dataset](http://image-net.org/).
-So, it is likely that the models pre-trained on the ImageNet-1k dataset would be useful
+So, it is likely that the models pretrained on the ImageNet-1k dataset would be useful
 for this task. We will use a MobileNetV2 pre-trained on this dataset as a backbone to
 extract meaningful features from the images and then pass those to a custom regression
 head for predicting coordinates. 
@@ -397,15 +401,13 @@ same version of the network having fully-connected dense layers.
 get_model().summary()
 
 """
-Notice the output shape of the network - `(None, 1, 1, 48)`. This is why we had reshaped
-the coordinates like so: `batch_keypoints[i, ] = np.array(kp_temp).reshape(1, 1, 24*2)`.  
+Notice the output shape of the network: `(None, 1, 1, 48)`. This is why we have reshaped
+the coordinates as: `batch_keypoints[i, :] = np.array(kp_temp).reshape(1, 1, 24 * 2)`.  
 """
 
 """
 ## Model compilation and training
-"""
 
-"""
 For this example, we will train the network only for five epochs. 
 """
 
@@ -433,7 +435,7 @@ Predictions will likely improve with more training.
 """
 
 """
-## Call for action
+## Going further
 
 * Try using other augmentation transforms from `imgaug` to investigate how that changes
 the results. 
