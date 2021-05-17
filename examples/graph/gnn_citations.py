@@ -64,7 +64,6 @@ zip_file = keras.utils.get_file(
     extract=True,
 )
 data_dir = os.path.join(os.path.dirname(zip_file), "cora")
-
 """
 ### Process and visualize the dataset
 
@@ -90,12 +89,10 @@ citations.sample(frac=1).head()
 Now let's load the papers data into a Pandas DataFrame.
 """
 
-feature_names = ["paper_id"] + [f"term_{idx}" for idx in range(1433)]
-column_names = feature_names + ["subject"]
+column_names = ["paper_id"] + [f"term_{idx}" for idx in range(1433)] + ["subject"]
 papers = pd.read_csv(
-    os.path.join(data_dir, "cora.content"), sep="\t", header=None, names=column_names
+    os.path.join(data_dir, "cora.content"), sep="\t", header=None, names=column_names,
 )
-num_features = papers.shape[-1] - 2
 print("Papers shape:", papers.shape)
 
 """
@@ -116,11 +113,9 @@ print(papers.subject.value_counts())
 We convert the paper ids and the subjects into zero-based indices.
 """
 
-paper_ids = sorted(papers["paper_id"].unique())
-paper_idx = {name: idx for idx, name in enumerate(paper_ids)}
-
 class_values = sorted(papers["subject"].unique())
 class_idx = {name: id for id, name in enumerate(class_values)}
+paper_idx = {name: idx for idx, name in enumerate(sorted(papers["paper_id"].unique()))}
 
 papers["paper_id"] = papers["paper_id"].apply(lambda name: paper_idx[name])
 citations["source"] = citations["source"].apply(lambda name: paper_idx[name])
@@ -139,25 +134,16 @@ cora_graph = nx.from_pandas_edgelist(citations.sample(n=1500))
 subjects = list(papers[papers["paper_id"].isin(list(cora_graph.nodes))]["subject"])
 nx.draw_spring(cora_graph, node_size=15, node_color=subjects)
 
-degrees = [cora_graph.degree(node) for node in cora_graph]
-max_degree = max(degrees)
-average_degree = sum(degrees) / cora_graph.number_of_nodes()
-print(f"Average number of citations per paper: {round(average_degree)}.")
-print(f"Maximum number of citations per paper: {max_degree}.")
 
 """
 ### Split the dataset into stratified train and test sets
 """
 
-data_size = papers.shape[0]
-train_ratio = 0.5
+train_data, test_data = [], []
 
-train_data = []
-test_data = []
-
-groups = papers.groupby("subject")
-for _, group_data in groups:
-    random_selection = np.random.rand(len(group_data.index)) <= train_ratio
+for _, group_data in papers.groupby("subject"):
+    # Select around 50% of the dataset for training.
+    random_selection = np.random.rand(len(group_data.index)) <= 0.5
     train_data.append(group_data[random_selection])
     test_data.append(group_data[~random_selection])
 
@@ -218,7 +204,7 @@ def display_learning_curves(history):
     ax1.plot(history.history["val_loss"])
     ax1.legend(["train", "test"], loc="upper right")
     ax1.set_xlabel("Epochs")
-    ax1.set_ylabel("loss")
+    ax1.set_ylabel("Loss")
 
     ax2.plot(history.history["acc"])
     ax2.plot(history.history["val_acc"])
@@ -254,7 +240,7 @@ def create_ffn(hidden_units, dropout_rate, name=None):
 
 feature_names = set(papers.columns) - {"paper_id", "subject"}
 num_features = len(feature_names)
-num_classes = len(class_values)
+num_classes = len(class_idx)
 
 # Create train and test features as a numpy array.
 x_train = train_data[feature_names].to_numpy()
@@ -271,22 +257,18 @@ roughly the same number of parameters as the GNN models to be built later.
 """
 
 
-num_blocks = 5
-
-
 def create_baseline_model(hidden_units, num_classes, dropout_rate=0.2):
     inputs = layers.Input(shape=(num_features,), name="input_features")
-    x = inputs
-    for block_idx in range(num_blocks):
+    x = create_ffn(hidden_units, dropout_rate, name=f"ffn_block1")(inputs)
+    for block_idx in range(4):
         # Create an FFN block.
-        x1 = create_ffn(hidden_units, dropout_rate, name=f"ffn_block{block_idx + 1}")(x)
+        x1 = create_ffn(hidden_units, dropout_rate, name=f"ffn_block{block_idx + 2}")(x)
         # Add skip connection.
-        x = layers.Add(name=f"skip_connection{block_idx + 1}")([x1, x1])
+        x = layers.Add(name=f"skip_connection{block_idx + 2}")([x, x1])
     # Compute logits.
     logits = layers.Dense(num_classes, name="logits")(x)
     # Create the mode.
-    model = keras.Model(inputs=inputs, outputs=logits, name="baseline")
-    return model
+    return keras.Model(inputs=inputs, outputs=logits, name="baseline")
 
 
 baseline_model = create_baseline_model(hidden_units, num_classes, dropout_rate)
@@ -327,8 +309,7 @@ def generate_random_instances(num_instances):
         instance = (probabilities <= token_probability).astype(int)
         instances.append(instance)
 
-    instances = np.array(instances)
-    return instances
+    return np.array(instances)
 
 
 def display_class_probabilities(probabilities):
@@ -336,7 +317,6 @@ def display_class_probabilities(probabilities):
         print(f"Instance {instance_idx + 1}:")
         for class_idx, prob in enumerate(probs):
             print(f"- {class_values[class_idx]}: {round(prob * 100, 2)}%")
-        print("")
 
 
 """
@@ -376,14 +356,14 @@ edges = citations[["source", "target"]].to_numpy().T
 # Create an edge weights array of ones.
 edge_weights = tf.ones(shape=edges.shape[1])
 # Create a node features array of shape [num_nodes, num_features].
-papers = papers.sort_values("paper_id")
-node_features = tf.cast(papers[feature_names].to_numpy(), dtype=tf.dtypes.float32)
+node_features = tf.cast(
+    papers.sort_values("paper_id")[feature_names].to_numpy(), dtype=tf.dtypes.float32
+)
 # Create graph info tuple with node_features, edges, and edge_weights.
 graph_info = (node_features, edges, edge_weights)
 
 print("Edges shape:", edges.shape)
-print("Number of nodes:", node_features.shape[0])
-print("Number of features per node:", node_features.shape[1])
+print("Nodes shape:", node_features.shape)
 
 """
 ### Implement a graph convolution layer
@@ -513,9 +493,7 @@ class GraphConvLayer(layers.Layer):
         # Aggregate the neighbour messages.
         aggregated_messages = self.aggregate(node_indices, neighbour_messages)
         # Update the node embedding with the neighbour messages.
-        node_embeddings = self.update(node_repesentations, aggregated_messages)
-
-        return node_embeddings
+        return self.update(node_repesentations, aggregated_messages)
 
 
 """
@@ -568,13 +546,11 @@ class GNNNodeClassifier(tf.keras.Model):
         self.edge_weights = self.edge_weights / tf.math.reduce_sum(self.edge_weights)
 
         # Create a process layer.
-        self.preprocess = create_ffn(
-            self.hidden_units, self.dropout_rate, name="preprocess"
-        )
+        self.preprocess = create_ffn(hidden_units, dropout_rate, name="preprocess")
         # Create the first GraphConv layer.
         self.conv1 = GraphConvLayer(
             hidden_units,
-            self.dropout_rate,
+            dropout_rate,
             aggregation_type,
             combination_type,
             normalize,
@@ -590,9 +566,7 @@ class GNNNodeClassifier(tf.keras.Model):
             name="graph_conv2",
         )
         # Create a postprocess layer.
-        self.postprocess = create_ffn(
-            self.hidden_units, dropout_rate, name="postprocess"
-        )
+        self.postprocess = create_ffn(hidden_units, dropout_rate, name="postprocess")
         # Create a compute logits layer.
         self.compute_logits = layers.Dense(units=num_classes, name="logits")
 
@@ -612,15 +586,14 @@ class GNNNodeClassifier(tf.keras.Model):
         # Fetch node embeddings for the input node_indices.
         node_embeddings = tf.squeeze(tf.gather(x, input_node_indices))
         # Compute logits
-        logits = self.compute_logits(node_embeddings)
-        # Return logits
-        return logits
+        return self.compute_logits(node_embeddings)
 
 
 """
 Let's test instantiating and calling the GNN model.
 Notice that if you provide `N` node indices, the output will be a tensor of shape `[N, num_classes]`,
-regardless of the size of the graph."""
+regardless of the size of the graph.
+"""
 
 gnn_model = GNNNodeClassifier(
     graph_info=graph_info,
@@ -630,10 +603,7 @@ gnn_model = GNNNodeClassifier(
     name="gnn_model",
 )
 
-input_node_indices = [1, 100, 1000]
-
-outputs = gnn_model(input_node_indices)
-print("GNN output shape:", outputs.shape)
+print("GNN output shape:", gnn_model([1, 10, 100]))
 
 gnn_model.summary()
 
@@ -658,7 +628,8 @@ display_learning_curves(history)
 """
 Now we evaluate the GNN model on the test data split.
 The results may vary depending on the training sample, however the GNN model always outperforms
-the baseline model in terms of the test accuracy."""
+the baseline model in terms of the test accuracy.
+"""
 
 x_test = test_data.paper_id.to_numpy()
 _, test_accuracy = gnn_model.evaluate(x=x_test, y=y_test, verbose=0)
@@ -667,8 +638,8 @@ print(f"Test accuracy: {round(test_accuracy * 100, 2)}%")
 """
 ### Examine the GNN model predictions
 
-Let's add the new instances as nodes to the `node_features`, and generate links (citations)
-to existing nodes.
+Let's add the new instances as nodes to the `node_features`, and generate links
+(citations) to existing nodes.
 """
 
 # First we add the N new_instances as nodes to the graph
