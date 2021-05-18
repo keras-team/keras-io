@@ -56,10 +56,9 @@ Use list slicing to split train_val data into `train` and `val`
 """
 
 # Keep 50% of train_val  in validation set
-x_train, x_val = x_train_val[0:30000], x_train_val[30000:]
-y_train, y_val = y_train_val[0:30000], y_train_val[30000:]
-del x_train_val
-del y_train_val
+x_train, x_val = x_train_val[:30000], x_train_val[30000:]
+y_train, y_val = y_train_val[:30000], y_train_val[30000:]
+del x_train_val, y_train_val
 
 
 """
@@ -250,19 +249,19 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
 Inspect train pairs
 """
 
-visualize(pairs_train[0:-1], labels_train[0:-1], to_show=4, num_col=4)
+visualize(pairs_train[:-1], labels_train[:-1], to_show=4, num_col=4)
 
 """
 Inspect validation pairs
 """
 
-visualize(pairs_val[0:-1], labels_val[0:-1], to_show=4, num_col=4)
+visualize(pairs_val[:-1], labels_val[:-1], to_show=4, num_col=4)
 
 """
 Inspect test pairs
 """
 
-visualize(pairs_test[0:-1], labels_test[0:-1], to_show=4, num_col=4)
+visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 
 """
 ## Define the model

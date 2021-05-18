@@ -65,10 +65,9 @@ Use list slicing to split train_val data into `train` and `val`
 
 ```python
 # Keep 50% of train_val  in validation set
-x_train, x_val = x_train_val[0:30000], x_train_val[30000:]
-y_train, y_val = y_train_val[0:30000], y_train_val[30000:]
-del x_train_val
-del y_train_val
+x_train, x_val = x_train_val[:30000], x_train_val[30000:]
+y_train, y_val = y_train_val[:30000], y_train_val[30000:]
+del x_train_val, y_train_val
 
 ```
 
@@ -264,7 +263,7 @@ Inspect train pairs
 
 
 ```python
-visualize(pairs_train[0:-1], labels_train[0:-1], to_show=4, num_col=4)
+visualize(pairs_train[:-1], labels_train[:-1], to_show=4, num_col=4)
 ```
 
 
@@ -277,7 +276,7 @@ Inspect validation pairs
 
 
 ```python
-visualize(pairs_val[0:-1], labels_val[0:-1], to_show=4, num_col=4)
+visualize(pairs_val[:-1], labels_val[:-1], to_show=4, num_col=4)
 ```
 
 
@@ -290,7 +289,7 @@ Inspect test pairs
 
 
 ```python
-visualize(pairs_test[0:-1], labels_test[0:-1], to_show=4, num_col=4)
+visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 ```
 
 
@@ -448,25 +447,25 @@ history = siamese.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0993 - accuracy: 0.8791 - val_loss: 0.0341 - val_accuracy: 0.9553
+3750/3750 [==============================] - 42s 11ms/step - loss: 0.2559 - accuracy: 0.5061 - val_loss: 0.2341 - val_accuracy: 0.7966
 Epoch 2/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0494 - accuracy: 0.9343 - val_loss: 0.0251 - val_accuracy: 0.9675
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.1015 - accuracy: 0.8817 - val_loss: 0.0368 - val_accuracy: 0.9526
 Epoch 3/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0412 - accuracy: 0.9461 - val_loss: 0.0213 - val_accuracy: 0.9723
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0538 - accuracy: 0.9293 - val_loss: 0.0250 - val_accuracy: 0.9686
 Epoch 4/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0366 - accuracy: 0.9528 - val_loss: 0.0180 - val_accuracy: 0.9767
+3750/3750 [==============================] - 43s 12ms/step - loss: 0.0436 - accuracy: 0.9436 - val_loss: 0.0214 - val_accuracy: 0.9726
 Epoch 5/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0343 - accuracy: 0.9556 - val_loss: 0.0157 - val_accuracy: 0.9795
+3750/3750 [==============================] - 43s 12ms/step - loss: 0.0381 - accuracy: 0.9507 - val_loss: 0.0183 - val_accuracy: 0.9761
 Epoch 6/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0322 - accuracy: 0.9586 - val_loss: 0.0170 - val_accuracy: 0.9783
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0371 - accuracy: 0.9518 - val_loss: 0.0182 - val_accuracy: 0.9766
 Epoch 7/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0310 - accuracy: 0.9605 - val_loss: 0.0161 - val_accuracy: 0.9798
+3750/3750 [==============================] - 46s 12ms/step - loss: 0.0342 - accuracy: 0.9557 - val_loss: 0.0167 - val_accuracy: 0.9787
 Epoch 8/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0302 - accuracy: 0.9617 - val_loss: 0.0144 - val_accuracy: 0.9819
+3750/3750 [==============================] - 54s 14ms/step - loss: 0.0328 - accuracy: 0.9577 - val_loss: 0.0166 - val_accuracy: 0.9786
 Epoch 9/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0286 - accuracy: 0.9634 - val_loss: 0.0162 - val_accuracy: 0.9794
+3750/3750 [==============================] - 44s 12ms/step - loss: 0.0316 - accuracy: 0.9593 - val_loss: 0.0157 - val_accuracy: 0.9800
 Epoch 10/10
-3750/3750 [==============================] - 44s 12ms/step - loss: 0.0285 - accuracy: 0.9632 - val_loss: 0.0135 - val_accuracy: 0.9830
+3750/3750 [==============================] - 43s 12ms/step - loss: 0.0302 - accuracy: 0.9614 - val_loss: 0.0149 - val_accuracy: 0.9813
 
 ```
 </div>
@@ -528,8 +527,8 @@ print("test loss, test acc:", results)
 
 <div class="k-default-codeblock">
 ```
-625/625 [==============================] - 4s 6ms/step - loss: 0.0136 - accuracy: 0.9827
-test loss, test acc: [0.013579603284597397, 0.9827499985694885]
+625/625 [==============================] - 4s 6ms/step - loss: 0.0141 - accuracy: 0.9818
+test loss, test acc: [0.014080599881708622, 0.9817500114440918]
 
 ```
 </div>
