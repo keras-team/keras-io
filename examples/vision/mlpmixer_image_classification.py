@@ -3,7 +3,7 @@ Title: Image Classification with MLP-Mixer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
-Description: Implementing the MLP-Mixer model for image classification.
+Description: Implementing the MLP-Mixer model for CIFAR-100 image classification.
 """
 
 """
@@ -16,6 +16,10 @@ multi-layer perceptrons (MLPs), and contains two types of MLP layers:
 
 1. One applied independently to image patches, which mixes the per-location features.
 2. The other applied across patches (across channels), which mixes spatial information.
+
+This is similar to a [depthwise separable convolution layer](https://arxiv.org/pdf/1610.02357.pdf)
+of the Xception model, but with two chained dense transforms, no max pooling, and layer normalization
+instead of batch normalization.
 
 This example requires TensorFlow 2.4 or higher, as well as
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
@@ -128,25 +132,6 @@ class Patches(layers.Layer):
 
 
 """
-## Implement the patch encoding layer
-
-The `PatchEncoder` layer will linearly transform a patch by projecting it into
-a vector of size `hidden_units`. Note that no positional encoding is used.
-"""
-
-
-class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches, hidden_units):
-        super(PatchEncoder, self).__init__()
-        self.num_patches = num_patches
-        self.projection = layers.Dense(units=hidden_units)
-
-    def call(self, patches):
-        encoded = self.projection(patches)
-        return encoded
-
-
-"""
 ## Implement the MLP-Mixer module
 """
 
@@ -191,7 +176,7 @@ def create_mlpmixer_classifier():
     # Create patches.
     patches = Patches(patch_size, num_patches)(augmented)
     # Encode patches to generate a [batch_size, num_patches, hidden_units] tensor.
-    x = PatchEncoder(num_patches, hidden_units)(patches)
+    x = layers.Dense(units=hidden_units)(patches)
     # Create multiple blocks of the MLP-Mixer module.
     for _ in range(num_mixers):
         x = MLPMixerLayer(num_patches, hidden_units, dropout_rate)(x)
