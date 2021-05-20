@@ -175,9 +175,11 @@ _, ax = plt.subplots(4, 4, figsize=(10, 5))
 for batch, _ in train_dataset.take(1):
     images = batch["image"]
     labels = batch["label"]
+    batch_len = tf.cast(tf.shape(labels)[0], dtype="int64")
+    label_length = tf.reshape(tf.argmin(labels, axis=-1), shape=(batch_len, 1))
     for i in range(16):
         img = (images[i] * 255).numpy().astype("uint8")
-        label = tf.strings.reduce_join(num_to_char(labels[i])).numpy().decode("utf-8")
+        label = tf.strings.reduce_join(num_to_char(labels[i][:label_length[i, 0]])).numpy().decode("utf-8")
         ax[i // 4, i % 4].imshow(img[:, :, 0].T, cmap="gray")
         ax[i // 4, i % 4].set_title(label)
         ax[i // 4, i % 4].axis("off")
