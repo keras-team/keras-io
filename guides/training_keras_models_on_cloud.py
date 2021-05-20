@@ -27,7 +27,7 @@ will need in this guide.
 """
 
 """shell
-pip install -q tensorflow_cloud
+pip install -q --use-deprecated=legacy-resolver tensorflow_cloud
 """
 
 import tensorflow as tf
