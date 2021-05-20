@@ -135,8 +135,12 @@ def encode_single_sample(img_path, label):
     img = tf.transpose(img, perm=[1, 0, 2])
     # 6. Map the characters in label to numbers
     label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
-    # 7. Return a dict as our model is expecting two inputs
-    return {"image": img, "label": label}
+    # 7. Pad label with -1 to match the output from the ctc_decode function
+    label = tf.pad(label, [[0, img_width // downsample_factor - tf.shape(label)[0]]], constant_values=-1)
+    # 8. Create a dict as our model is expecting two inputs
+    inputs = {"image": img, "label": label}
+    # 9. Return tuple containing inputs and targets
+    return inputs, label
 
 
 """
@@ -168,7 +172,7 @@ validation_dataset = (
 
 
 _, ax = plt.subplots(4, 4, figsize=(10, 5))
-for batch in train_dataset.take(1):
+for batch, _ in train_dataset.take(1):
     images = batch["image"]
     labels = batch["label"]
     for i in range(16):
@@ -184,6 +188,15 @@ plt.show()
 """
 
 
+def ctc_accuracy(y_true, y_pred):
+    input_shape = tf.shape(y_pred)
+    input_length = tf.ones(shape=input_shape[0]) * tf.cast(input_shape[1], 'float32')
+    y_pred_decoded, _ = keras.backend.ctc_decode(y_pred, tf.cast(input_length, 'int32'), greedy=True)
+    n_true = tf.reduce_sum(tf.cast(tf.reduce_all(tf.equal(y_true, y_pred_decoded), axis=-1), dtype='float32'))
+    n = tf.cast(input_shape[0], dtype="float32")
+    return tf.math.divide_no_nan(n_true, n)
+
+
 class CTCLayer(layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
@@ -194,10 +207,9 @@ class CTCLayer(layers.Layer):
         # to the layer using `self.add_loss()`.
         batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
         input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
-        label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
 
         input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-        label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        label_length = tf.reshape(tf.argmin(y_true, axis=-1), shape=(batch_len, 1))
 
         loss = self.loss_fn(y_true, y_pred, input_length, label_length)
         self.add_loss(loss)
@@ -261,7 +273,7 @@ def build_model():
     # Optimizer
     opt = keras.optimizers.Adam()
     # Compile the model and return
-    model.compile(optimizer=opt)
+    model.compile(optimizer=opt, metrics=[ctc_accuracy])
     return model
 
 
@@ -317,7 +329,7 @@ def decode_batch_predictions(pred):
 
 
 #  Let's check results on some validation samples
-for batch in validation_dataset.take(1):
+for batch, _ in validation_dataset.take(1):
     batch_images = batch["image"]
     batch_labels = batch["label"]
 
