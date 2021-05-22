@@ -187,7 +187,7 @@ class Patches(layers.Layer):
 
 
 """
-## Implement the MLP-Mixer model
+## The MLP-Mixer model
 
 The MLP-Mixer is an architecture based exclusively on
 multi-layer perceptrons (MLPs), and contains two types of MLP layers:
@@ -276,7 +276,7 @@ You may also try to increase the size of the input images and use different patc
 """
 
 """
-## Implement the MLP-Mixer model
+## The gMLP model
 
 The gMLP as an MLP architecture with Spatial Gating Unit (SGU).
 The SGU  enables cross-patch interactions across the spatial (channel) dimension by:
