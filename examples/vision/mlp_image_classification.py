@@ -67,7 +67,35 @@ print(f"Patches per image: {num_patches}")
 print(f"Elements per patch (3 channels): {(patch_size ** 2) * 3}")
 
 """
-## Define the experiment
+## Build a classification model
+
+We implement a method that builds a classifier given the processing blocks.
+"""
+
+
+def build_classifier(blocks):
+    inputs = layers.Input(shape=input_shape)
+    # Augment data.
+    augmented = data_augmentation(inputs)
+    # Create patches.
+    patches = Patches(patch_size, num_patches)(augmented)
+    # Encode patches to generate a [batch_size, num_patches, embedding_dim] tensor.
+    x = layers.Dense(units=embedding_dim)(patches)
+    # Process x using the module blocks.
+    x = blocks(x)
+    # Apply global average pooling to generate a [batch_size, embedding_dim] representation tensor.
+    representation = layers.GlobalAveragePooling1D()(x)
+    # Apply dropout.
+    representation = layers.Dropout(rate=dropout_rate)(representation)
+    # Compute logits outputs.
+    logits = layers.Dense(num_classes)(representation)
+    # Create the Keras model.
+    model = keras.Model(inputs=inputs, outputs=logits)
+    return model
+
+
+"""
+## Define an experiment
 
 We implement a method to compile, train, and evaluate a given model.
 """
@@ -220,41 +248,18 @@ class MLPMixerLayer(layers.Layer):
 
 
 """
-### Build the MLP-Mixer classification model
-"""
-
-
-def create_mlpmixer_classifier():
-    inputs = layers.Input(shape=input_shape)
-    # Augment data.
-    augmented = data_augmentation(inputs)
-    # Create patches.
-    patches = Patches(patch_size, num_patches)(augmented)
-    # Encode patches to generate a [batch_size, num_patches, hidden_units] tensor.
-    x = layers.Dense(units=hidden_units)(patches)
-    # Create multiple blocks of the MLP-Mixer module.
-    for _ in range(num_mixers):
-        x = MLPMixerLayer(num_patches, hidden_units, dropout_rate)(x)
-    # Apply global average pooling to generate a [batch_size, hidden_units] representation tensor.
-    representation = layers.GlobalAveragePooling1D()(x)
-    # Apply dropout.
-    representation = layers.Dropout(rate=dropout_rate)(representation)
-    # Compute logits outputs.
-    logits = layers.Dense(num_classes)(representation)
-    # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
-
-
-"""
-### Train and evaluate the MLP-Mixer model
+### Build, train, and evaluate an MLP-Mixer model
 
 Note that training the model with the current settings on a V100 GPUs
 takes around 10 seconds per epoch.
 """
 
-classifier = create_mlpmixer_classifier()
-history = run_experiment(classifier)
+mlpmixer_blocks = keras.Sequential(
+    [MLPMixerLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
+)
+
+mlpmixer_classifier = build_classifier(mlpmixer_blocks)
+history = run_experiment(mlpmixer_classifier)
 
 """
 The MLP-Mixer model achieves around 52% accuracy and 81% top-5 accuracy on the test data.
@@ -333,41 +338,18 @@ class gMLPLayer(layers.Layer):
 
 
 """
-### Build the gMLP classification model
-"""
-
-
-def create_gmlp_classifier():
-    inputs = layers.Input(shape=input_shape)
-    # Augment data.
-    augmented = data_augmentation(inputs)
-    # Create patches.
-    patches = Patches(patch_size, num_patches)(augmented)
-    # Encode patches to generate a [batch_size, num_patches, embedding_dim] tensor.
-    x = layers.Dense(units=embedding_dim)(patches)
-    # Create multiple blocks of the gMLP module.
-    for _ in range(num_blocks):
-        x = gMLPLayer(embedding_dim, dropout_rate)(x)
-    # Apply global average pooling to generate a [batch_size, embedding_dim] representation tensor.
-    representation = layers.GlobalAveragePooling1D()(x)
-    # Apply dropout.
-    representation = layers.Dropout(rate=dropout_rate)(representation)
-    # Compute logits outputs.
-    logits = layers.Dense(num_classes)(representation)
-    # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
-
-
-"""
-### Train and evaluate the gMLP model
+### Build, train, and evaluate a gMLP model
 
 Note that training the model with the current settings on a V100 GPUs
 takes around 20 seconds per epoch.
 """
 
-classifier = create_gmlp_classifier()
-history = run_experiment(classifier)
+gmlp_blocks = keras.Sequential(
+    [gMLPLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
+)
+
+gmlp_classifier = build_classifier(gmlp_blocks)
+history = run_experiment(gmlp_classifier)
 
 """
 The gMLP model achieves around 51% accuracy and 80% top-5 accuracy on the test data.
