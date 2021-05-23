@@ -9,11 +9,18 @@ Description: Implementing the MLP-Mixer gMLP models for CIFAR-100 image classifi
 """
 ## Introduction
 
-This example implements the two modern attention-free, all-multi-layer perceptrons (MLP) models for image
+This example implements three modern attention-free, all-multi-layer perceptrons (MLP) models for image
 classification, demonstrated on CIFAR-100 dataset:
 
 1. [MLP-Mixer](https://arxiv.org/abs/2105.01601) model, by Ilya Tolstikhin et al., based on two types of MLPs.
+3. [FNet](https://arxiv.org/abs/2105.03824) model, by James Lee-Thorp et al., based on unparameterized
+Fourier Transform.
 2. [gMLP](https://arxiv.org/abs/2105.08050) model, by Hanxiao Liu et al., based on MLP with gating.
+
+
+The purpose of the example is not to compare between these models—as they might perform differently on
+different datasets with well-tuned hyperparameter, rather showing simple implementation of their building
+blocks.
 
 This example requires TensorFlow 2.4 or higher, as well as
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
@@ -73,7 +80,7 @@ We implement a method that builds a classifier given the processing blocks.
 """
 
 
-def build_classifier(blocks):
+def build_classifier(blocks, positional_encoding=False):
     inputs = layers.Input(shape=input_shape)
     # Augment data.
     augmented = data_augmentation(inputs)
@@ -81,6 +88,12 @@ def build_classifier(blocks):
     patches = Patches(patch_size, num_patches)(augmented)
     # Encode patches to generate a [batch_size, num_patches, embedding_dim] tensor.
     x = layers.Dense(units=embedding_dim)(patches)
+    if positional_encoding:
+        positions = tf.range(start=0, limit=num_patches, delta=1)
+        position_embedding = layers.Embedding(
+            input_dim=num_patches, output_dim=embedding_dim
+        )(positions)
+        x = x + position_embedding
     # Process x using the module blocks.
     x = blocks(x)
     # Apply global average pooling to generate a [batch_size, embedding_dim] representation tensor.
@@ -206,7 +219,7 @@ instead of batch normalization.
 
 
 class MLPMixerLayer(layers.Layer):
-    def __init__(self, num_patches, hidden_units, dropout_rate=0.2, *args, **kwargs):
+    def __init__(self, num_patches, hidden_units, dropout_rate, *args, **kwargs):
         super(MLPMixerLayer, self).__init__(*args, **kwargs)
 
         self.mlp1 = keras.Sequential(
@@ -221,7 +234,7 @@ class MLPMixerLayer(layers.Layer):
             [
                 layers.Dense(units=num_patches),
                 tfa.layers.GELU(),
-                layers.Dense(units=embedding_dims),
+                layers.Dense(units=embedding_dim),
                 layers.Dropout(rate=dropout_rate),
             ]
         )
@@ -276,11 +289,89 @@ You may also try to increase the size of the input images and use different patc
 """
 
 """
+## The FNet model
+
+The FNet uses a similar block to the Transformer block. However, FNet replaces the self-attention layer
+in the Transformer block with a parameter-free 2D Fourier transformation layer:
+
+1. one 1D Fourier Transform is applied along the patches.
+2. one 1D Fourier Transform is applied along the channels.
+"""
+
+"""
+### Implement the FNet module
+"""
+
+
+class FNetLayer(layers.Layer):
+    def __init__(self, num_patches, embedding_dim, dropout_rate, *args, **kwargs):
+        super(FNetLayer, self).__init__(*args, **kwargs)
+
+        self.fourier = layers.Lambda(
+            lambda inputs: tf.cast(
+                tf.signal.rfft2d(
+                    inputs, fft_length=[num_patches, (embedding_dim * 2) - 1]
+                ),
+                dtype=tf.dtypes.float32,
+            )
+        )
+
+        self.ffn = keras.Sequential(
+            [
+                layers.Dense(units=embedding_dim),
+                tfa.layers.GELU(),
+                layers.Dropout(rate=dropout_rate),
+            ]
+        )
+
+        self.normalize1 = layers.LayerNormalization(epsilon=1e-6)
+        self.normalize2 = layers.LayerNormalization(epsilon=1e-6)
+
+    def call(self, inputs):
+        # Apply fourier transformations.
+        x = self.fourier(inputs)
+        # Add skip connection.
+        x = x + inputs
+        # Apply layer normalization.
+        x = self.normalize1(x)
+        # Apply Feedfowrad network.
+        x_ffn = self.ffn(x)
+        # Add skip connection.
+        x = x + x_ffn
+        # Apply layer normalization.
+        return self.normalize2(x)
+
+
+"""
+### Build, train, and evaluate a FNet model
+
+Note that training the model with the current settings on a V100 GPUs
+takes around 25 seconds per epoch.
+"""
+
+fnet_blocks = keras.Sequential(
+    [FNetLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
+)
+
+fnet_classifier = build_classifier(fnet_blocks, positional_encoding=True)
+history = run_experiment(fnet_classifier)
+
+"""
+The FNet model achieves around 45% accuracy and 77% top-5 accuracy on the test data.
+
+As shown in the [FNet](https://arxiv.org/abs/2105.03824) paper,
+better results can be achieved by increasing the embedding dimensions,
+increasing, increasing the number of FNet blocks, and training the model for longer.
+You may also try to increase the size of the input images and use different patch sizes.
+The FNet scales very efficiently to long inputs, runs much faster faster than attention-based
+Transformer models, and produces competitive accuracy results.
+"""
+
+"""
 ## The gMLP model
 
 The gMLP as an MLP architecture with Spatial Gating Unit (SGU).
 The SGU  enables cross-patch interactions across the spatial (channel) dimension by:
-
 1. Transform the input spatially by applying linear projection across patches (along channels).
 2. Applying element-wise multiplication of the input and its spatial transformation.
 """
@@ -291,7 +382,7 @@ The SGU  enables cross-patch interactions across the spatial (channel) dimension
 
 
 class gMLPLayer(layers.Layer):
-    def __init__(self, num_patches, embedding_dims, dropout_rate=0.2, *args, **kwargs):
+    def __init__(self, num_patches, embedding_dims, dropout_rate, *args, **kwargs):
         super(gMLPLayer, self).__init__(*args, **kwargs)
 
         self.channel_projection1 = keras.Sequential(
@@ -339,7 +430,6 @@ class gMLPLayer(layers.Layer):
 
 """
 ### Build, train, and evaluate a gMLP model
-
 Note that training the model with the current settings on a V100 GPUs
 takes around 20 seconds per epoch.
 """
@@ -353,7 +443,6 @@ history = run_experiment(gmlp_classifier)
 
 """
 The gMLP model achieves around 51% accuracy and 80% top-5 accuracy on the test data.
-
 As shown in the [gMLP](https://arxiv.org/abs/2105.08050) paper,
 better results can be achieved by increasing the embedding dimensions,
 increasing, increasing the number of gMLP blocks, and training the model for longer.
