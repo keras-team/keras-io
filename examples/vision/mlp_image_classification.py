@@ -115,7 +115,6 @@ We implement a method to compile, train, and evaluate a given model.
 
 
 def run_experiment(model):
-
     # Create Adam optimizer with weight decay.
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay,
@@ -307,15 +306,6 @@ class FNetLayer(layers.Layer):
     def __init__(self, num_patches, embedding_dim, dropout_rate, *args, **kwargs):
         super(FNetLayer, self).__init__(*args, **kwargs)
 
-        self.fourier = layers.Lambda(
-            lambda inputs: tf.cast(
-                tf.signal.rfft2d(
-                    inputs, fft_length=[num_patches, (embedding_dim * 2) - 1]
-                ),
-                dtype=tf.dtypes.float32,
-            )
-        )
-
         self.ffn = keras.Sequential(
             [
                 layers.Dense(units=embedding_dim),
@@ -329,7 +319,10 @@ class FNetLayer(layers.Layer):
 
     def call(self, inputs):
         # Apply fourier transformations.
-        x = self.fourier(inputs)
+        x = tf.cast(
+            tf.signal.fft2d(tf.cast(inputs, dtype=tf.dtypes.complex64)),
+            dtype=tf.dtypes.float32,
+        )
         # Add skip connection.
         x = x + inputs
         # Apply layer normalization.
@@ -346,7 +339,7 @@ class FNetLayer(layers.Layer):
 ### Build, train, and evaluate a FNet model
 
 Note that training the model with the current settings on a V100 GPUs
-takes around 25 seconds per epoch.
+takes around 15 seconds per epoch.
 """
 
 fnet_blocks = keras.Sequential(
@@ -372,6 +365,7 @@ Transformer models, and produces competitive accuracy results.
 
 The gMLP as an MLP architecture with Spatial Gating Unit (SGU).
 The SGU  enables cross-patch interactions across the spatial (channel) dimension by:
+
 1. Transform the input spatially by applying linear projection across patches (along channels).
 2. Applying element-wise multiplication of the input and its spatial transformation.
 """
