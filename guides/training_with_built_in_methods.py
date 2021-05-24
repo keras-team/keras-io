@@ -159,8 +159,8 @@ The `metrics` argument should be a list -- your model can have any number of met
 
 If your model has multiple outputs, you can specify different losses and metrics for
 each output, and you can modulate the contribution of each output to the total loss of
-the model. You will find more details about this in the **Passing data to multi-input,
-multi-output models** section.
+the model. You will find more details about this in the [Passing data to multi-input,
+multi-output models](https://www.tensorflow.org/guide/keras/train_and_evaluate#passing_data_to_multi-input_multi-output_models) section.
 
 Note that if you're satisfied with the default settings, in many cases the optimizer,
 loss, and metrics can be specified via string identifiers as a shortcut:
