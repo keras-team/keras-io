@@ -311,6 +311,7 @@ class FNetLayer(layers.Layer):
                 layers.Dense(units=embedding_dim),
                 tfa.layers.GELU(),
                 layers.Dropout(rate=dropout_rate),
+                layers.Dense(units=embedding_dim),
             ]
         )
 
