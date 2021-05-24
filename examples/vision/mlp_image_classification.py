@@ -3,24 +3,23 @@ Title: Image Classification with Modern MLP models
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
-Description: Implementing the MLP-Mixer gMLP models for CIFAR-100 image classification.
+Description: Implementing the MLP-Mixer, FNet, and gMLP models for CIFAR-100 image classification.
 """
 
 """
 ## Introduction
 
-This example implements three modern attention-free, all-multi-layer perceptrons (MLP) models for image
-classification, demonstrated on CIFAR-100 dataset:
+This example implements three modern attention-free, multi-layer perceptron (MLP) based models for image
+classification, demonstrated on the CIFAR-100 dataset:
 
-1. [MLP-Mixer](https://arxiv.org/abs/2105.01601) model, by Ilya Tolstikhin et al., based on two types of MLPs.
-3. [FNet](https://arxiv.org/abs/2105.03824) model, by James Lee-Thorp et al., based on unparameterized
+1. The [MLP-Mixer](https://arxiv.org/abs/2105.01601) model, by Ilya Tolstikhin et al., based on two types of MLPs.
+3. The [FNet](https://arxiv.org/abs/2105.03824) model, by James Lee-Thorp et al., based on unparameterized
 Fourier Transform.
-2. [gMLP](https://arxiv.org/abs/2105.08050) model, by Hanxiao Liu et al., based on MLP with gating.
+2. The [gMLP](https://arxiv.org/abs/2105.08050) model, by Hanxiao Liu et al., based on MLP with gating.
 
-
-The purpose of the example is not to compare between these models—as they might perform differently on
-different datasets with well-tuned hyperparameter, rather showing simple implementation of their building
-blocks.
+The purpose of the example is not to compare between these models, as they might perform differently on
+different datasets with well-tuned hyperparameters. Rather, it is to show simple implementations of their
+main building blocks.
 
 This example requires TensorFlow 2.4 or higher, as well as
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
@@ -110,7 +109,7 @@ def build_classifier(blocks, positional_encoding=False):
 """
 ## Define an experiment
 
-We implement a method to compile, train, and evaluate a given model.
+We implement a utility function to compile, train, and evaluate a given model.
 """
 
 
@@ -174,7 +173,7 @@ data_augmentation.layers[0].adapt(x_train)
 
 
 """
-## Implement patch creation as a layer
+## Implement patch extraction as a layer
 """
 
 
@@ -202,13 +201,13 @@ class Patches(layers.Layer):
 ## The MLP-Mixer model
 
 The MLP-Mixer is an architecture based exclusively on
-multi-layer perceptrons (MLPs), and contains two types of MLP layers:
+multi-layer perceptrons (MLPs), that contains two types of MLP layers:
 
 1. One applied independently to image patches, which mixes the per-location features.
 2. The other applied across patches (along channels), which mixes spatial information.
 
-This is similar to a [depthwise separable convolution layer](https://arxiv.org/pdf/1610.02357.pdf)
-of the Xception model, but with two chained dense transforms, no max pooling, and layer normalization
+This is similar to a [depthwise separable convolution based model](https://arxiv.org/pdf/1610.02357.pdf)
+such as the Xception model, but with two chained dense transforms, no max pooling, and layer normalization
 instead of batch normalization.
 """
 
@@ -260,7 +259,7 @@ class MLPMixerLayer(layers.Layer):
 
 
 """
-### Build, train, and evaluate an MLP-Mixer model
+### Build, train, and evaluate the MLP-Mixer model
 
 Note that training the model with the current settings on a V100 GPUs
 takes around 10 seconds per epoch.
@@ -293,8 +292,8 @@ You may also try to increase the size of the input images and use different patc
 The FNet uses a similar block to the Transformer block. However, FNet replaces the self-attention layer
 in the Transformer block with a parameter-free 2D Fourier transformation layer:
 
-1. one 1D Fourier Transform is applied along the patches.
-2. one 1D Fourier Transform is applied along the channels.
+1. One 1D Fourier Transform is applied along the patches.
+2. One 1D Fourier Transform is applied along the channels.
 """
 
 """
@@ -337,7 +336,7 @@ class FNetLayer(layers.Layer):
 
 
 """
-### Build, train, and evaluate a FNet model
+### Build, train, and evaluate the FNet model
 
 Note that training the model with the current settings on a V100 GPUs
 takes around 15 seconds per epoch.
@@ -364,10 +363,10 @@ Transformer models, and produces competitive accuracy results.
 """
 ## The gMLP model
 
-The gMLP as an MLP architecture with Spatial Gating Unit (SGU).
-The SGU  enables cross-patch interactions across the spatial (channel) dimension by:
+The gMLP is a MLP architecture that features a Spatial Gating Unit (SGU).
+The SGU enables cross-patch interactions across the spatial (channel) dimension, by:
 
-1. Transform the input spatially by applying linear projection across patches (along channels).
+1. Transforming the input spatially by applying linear projection across patches (along channels).
 2. Applying element-wise multiplication of the input and its spatial transformation.
 """
 
@@ -424,7 +423,8 @@ class gMLPLayer(layers.Layer):
 
 
 """
-### Build, train, and evaluate a gMLP model
+### Build, train, and evaluate the gMLP model
+
 Note that training the model with the current settings on a V100 GPUs
 takes around 20 seconds per epoch.
 """
@@ -442,6 +442,6 @@ As shown in the [gMLP](https://arxiv.org/abs/2105.08050) paper,
 better results can be achieved by increasing the embedding dimensions,
 increasing, increasing the number of gMLP blocks, and training the model for longer.
 You may also try to increase the size of the input images and use different patch sizes.
-Note that, the paper used advanced regularization strategies, such as Mixup and CutMix,
+Note that, the paper used advanced regularization strategies, such as MixUp and CutMix,
 as well as AutoAugment.
 """
