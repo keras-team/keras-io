@@ -1,5 +1,5 @@
 """
-Title: Image Classification with Modern MLP models
+Title: Image classification with modern MLP models
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
@@ -25,7 +25,7 @@ This example requires TensorFlow 2.4 or higher, as well as
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
 which can be installed using the following command:
 
-```shell
+```
 pip install -U tensorflow-addons
 ```
 """
