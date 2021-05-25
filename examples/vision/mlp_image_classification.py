@@ -56,7 +56,6 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 ## Configure the hyperparameters
 """
 
-learning_rate = 0.005
 weight_decay = 0.0001
 batch_size = 128
 num_epochs = 50
@@ -64,8 +63,8 @@ dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 8  # Size of the patches to be extracted from the input images.
 num_patches = (image_size // patch_size) ** 2  # Size of the data array.
-hidden_units = 256  # Number of hidden units.
-num_mixers = 4  # Number of mixer blocks.
+embedding_dim = 256  # Number of hidden units.
+num_blocks = 4  # Number of blocks.
 
 print(f"Image size: {image_size} X {image_size} = {image_size ** 2}")
 print(f"Patch size: {patch_size} X {patch_size} = {patch_size ** 2} ")
@@ -102,8 +101,7 @@ def build_classifier(blocks, positional_encoding=False):
     # Compute logits outputs.
     logits = layers.Dense(num_classes)(representation)
     # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
+    return keras.Model(inputs=inputs, outputs=logits)
 
 
 """
@@ -262,19 +260,18 @@ class MLPMixerLayer(layers.Layer):
 ### Build, train, and evaluate the MLP-Mixer model
 
 Note that training the model with the current settings on a V100 GPUs
-takes around 10 seconds per epoch.
+takes around 8 seconds per epoch.
 """
 
 mlpmixer_blocks = keras.Sequential(
     [MLPMixerLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
 )
-
+learning_rate = 0.005
 mlpmixer_classifier = build_classifier(mlpmixer_blocks)
 history = run_experiment(mlpmixer_classifier)
 
 """
-The MLP-Mixer model achieves around 52% accuracy and 81% top-5 accuracy on the test data.
-However, the MLP-Mixer model tends to have much less number of parameters compared
+The MLP-Mixer model tends to have much less number of parameters compared
 to convolutional and transformer-based models, which leads to less training and
 serving computational cost.
 
@@ -339,19 +336,17 @@ class FNetLayer(layers.Layer):
 ### Build, train, and evaluate the FNet model
 
 Note that training the model with the current settings on a V100 GPUs
-takes around 15 seconds per epoch.
+takes around 8 seconds per epoch.
 """
 
 fnet_blocks = keras.Sequential(
     [FNetLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
 )
-
+learning_rate = 0.001
 fnet_classifier = build_classifier(fnet_blocks, positional_encoding=True)
 history = run_experiment(fnet_classifier)
 
 """
-The FNet model achieves around 45% accuracy and 77% top-5 accuracy on the test data.
-
 As shown in the [FNet](https://arxiv.org/abs/2105.03824) paper,
 better results can be achieved by increasing the embedding dimensions,
 increasing, increasing the number of FNet blocks, and training the model for longer.
@@ -376,18 +371,18 @@ The SGU enables cross-patch interactions across the spatial (channel) dimension,
 
 
 class gMLPLayer(layers.Layer):
-    def __init__(self, num_patches, embedding_dims, dropout_rate, *args, **kwargs):
+    def __init__(self, num_patches, embedding_dim, dropout_rate, *args, **kwargs):
         super(gMLPLayer, self).__init__(*args, **kwargs)
 
         self.channel_projection1 = keras.Sequential(
             [
-                layers.Dense(units=embedding_dims * 2),
+                layers.Dense(units=embedding_dim * 2),
                 tfa.layers.GELU(),
                 layers.Dropout(rate=dropout_rate),
             ]
         )
 
-        self.channel_projection2 = layers.Dense(units=embedding_dims)
+        self.channel_projection2 = layers.Dense(units=embedding_dim)
 
         self.spatial_projection = layers.Dense(
             units=num_patches, bias_initializer="Ones"
@@ -426,18 +421,17 @@ class gMLPLayer(layers.Layer):
 ### Build, train, and evaluate the gMLP model
 
 Note that training the model with the current settings on a V100 GPUs
-takes around 20 seconds per epoch.
+takes around 9 seconds per epoch.
 """
 
 gmlp_blocks = keras.Sequential(
     [gMLPLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
 )
-
+learning_rate = 0.003
 gmlp_classifier = build_classifier(gmlp_blocks)
 history = run_experiment(gmlp_classifier)
 
 """
-The gMLP model achieves around 51% accuracy and 80% top-5 accuracy on the test data.
 As shown in the [gMLP](https://arxiv.org/abs/2105.08050) paper,
 better results can be achieved by increasing the embedding dimensions,
 increasing, increasing the number of gMLP blocks, and training the model for longer.
