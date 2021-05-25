@@ -430,7 +430,7 @@ def create_baseline_model(hidden_units, num_classes, dropout_rate=0.2):
         x = layers.Add(name=f"skip_connection{block_idx + 2}")([x, x1])
     # Compute logits.
     logits = layers.Dense(num_classes, name="logits")(x)
-    # Create the mode.
+    # Create the model.
     return keras.Model(inputs=inputs, outputs=logits, name="baseline")
 
 
