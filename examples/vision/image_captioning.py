@@ -20,7 +20,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.applications import efficientnet
-from keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 
 
 seed = 1234
@@ -152,7 +152,6 @@ train_data, valid_data = train_val_split(captions_mapping)
 print("Number of training samples: ", len(train_data))
 print("Number of validation samples: ", len(valid_data))
 
-
 """
 ## Vectorizing the text data
 
@@ -233,9 +232,7 @@ The image captioning task consists of three models in total. These are:
 
 def get_cnn_model():
     base_model = efficientnet.EfficientNetB0(
-        input_shape=(*IMAGE_SIZE, 3),
-        include_top=False,
-        weights="imagenet",
+        input_shape=(*IMAGE_SIZE, 3), include_top=False, weights="imagenet",
     )
     # We freeze our feature extractor
     base_model.trainable = False
@@ -352,11 +349,7 @@ class TransformerDecoderBlock(layers.Layer):
 
 class ImageCaptioningModel(keras.Model):
     def __init__(
-        self,
-        cnn_model,
-        encoder,
-        decoder,
-        num_captions_per_image=5,
+        self, cnn_model, encoder, decoder, num_captions_per_image=5,
     ):
         super().__init__()
         self.cnn_model = cnn_model
