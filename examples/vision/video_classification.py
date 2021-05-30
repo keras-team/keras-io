@@ -3,23 +3,24 @@ Title: Video Classification with a CNN-RNN Architecture
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
 Last modified: 2021/05/28
-Description: Training a video classifier with transfer learning and a recurrent model with the UCF101 dataset.
+Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 """
 """
-This example demonstrates video classification. It is an important use-case with
-applications in surveillance, security, and so on. We will be using the [UCF101 dataset](https://www.crcv.ucf.edu/data/UCF101.php)
+This example demonstrates video classification, an important use-case with
+applications in recommendations, security, and so on.
+We will be using the [UCF101 dataset](https://www.crcv.ucf.edu/data/UCF101.php)
 to build our video classifier. The dataset consists of videos categorized into different
-actions like cricket shot, punching, biking, etc. This is why the dataset is known to
-build action recognizers which is just an extension of video classification.
+actions, like cricket shot, punching, biking, etc. This dataset is commonly used to
+build action recognizers, which are an application of video classification.
 
-A video is made of an ordered sequence of frames. While the frames constitue
-**spatiality** the sequence of those frames constitute the **temporality** of a video. To
-systematically model both of these aspects we generally use a hybrid architecture that
-consists of convolutions (for spatiality) as well as recurrent layers (for temporality).
-In this example, we will be using such a hybrid architecture consisting of a
+A video consists of an ordered sequence of frames. Each frame contains *spatial* information,
+and the sequence of those frames contains *temporal* information. To model
+both of these aspects, we use a hybrid architecture that
+consists of convolutions (for spatial processing) as well as recurrent layers (for temporal processing).
+Specifically, we'll use a
 Convolutional Neural Network (CNN) and a Recurrent Neural Network (RNN) consisting of
-[GRU layers](https://keras.io/api/layers/recurrent_layers/gru/). These kinds of hybrid
-architectures are popularly known as **CNN-RNN**.
+[GRU layers](https://keras.io/api/layers/recurrent_layers/gru/). This kind of hybrid
+architecture is popularly known as a **CNN-RNN**.
 
 This example requires TensorFlow 2.4 or higher, as well as TensorFlow Docs, which can be
 installed using the following command:
@@ -33,7 +34,8 @@ installed using the following command:
 ## Data collection
 
 In order to keep the runtime of this example relatively short, we will be using a
-subsampled version of the original UCF101 dataset. You can refer to [this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
+subsampled version of the original UCF101 dataset. You can refer to
+[this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
 to know how the subsampling was done. 
 """
 
@@ -66,7 +68,6 @@ import os
 EPOCHS = 100
 BATCH_SIZE = 64
 IMG_SIZE = 224
-
 SEQ_LENGTH = 5
 
 """
@@ -82,22 +83,19 @@ print(f"Total videos for testing: {len(test_df)}")
 train_df.sample(10)
 
 """
-One of the many challenges of training video classifiers is figuring out a way to feed
-the videos to a network. [This blogpost](https://blog.coast.ai/five-video-classification-methods-implemented-in-keras-and-tensorflow-99cad29cc0b5)
-discusses five such methods. As a video is an ordered sequence of frames, we can extract
-the frames, organize them, and then feed them to our network. But the number of frames
-may differ which would not allow mini-batch learning. To account for all these factors,
-we can do the following:
-
-1. Capture the frames of a video. 
-2. Save the frames within a predefined serialization interval until a maximum frame count
-is reached.
+One of the many challenges of training video classifiers is figuring out how to feed
+the videos to the model.
+[This blog post](https://blog.coast.ai/five-video-classification-methods-implemented-in-keras-and-tensorflow-99cad29cc0b5)
+discusses five possible methods. Since a video is an ordered sequence of frames, we could just extract
+the frames and put them in a 3D tensor. But the number of frames
+may differ from video to video which would prevent us from stacking them into batches (unless we use padding).
+As an alternative, we can **save video frames at a fixed interval until a maximum frame count is reached**.
 
 Videos of the UCF101 dataset is [known](https://www.crcv.ucf.edu/papers/UCF101_CRCV-TR-12-01.pdf)
 to not contain extreme variations in objects and actions across frames. Because of this,
 it is okay to only consider a few frames for the learning task. We will be using
-[OpenCV's `VideoCapture()` method](https://docs.opencv.org/master/dd/d43/tutorial_py_video_display.html) to read
-frames from videos.
+[OpenCV's `VideoCapture()` method](https://docs.opencv.org/master/dd/d43/tutorial_py_video_display.html)
+to read frames from videos.
 """
 
 
@@ -143,8 +141,9 @@ broken_video_names_train = separate_frames(train_video_names, "train", "train_fr
 broken_video_names_test = separate_frames(test_video_names, "test", "test_frames")
 
 """
-Now that we have extracted the frames and serialized them we can organize them in a
-[Pandas DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) for easy information retrieval.
+Now that we have extracted the frames and serialized them, we can put them in a
+[Pandas DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html)
+for easy retrieval.
 """
 
 
@@ -175,9 +174,9 @@ new_train_df.head(10)
 """
 A video is now represented as an ordered sequence of five frames. This almost concludes
 our initial data preparation steps. To ensure our model is invariant to order of the
-videos, we need to shuffle the entries of the training DataFrame. But we cannot just
+videos, we need to shuffle the entries of the training DataFrame. But we can't just
 randomly shuffle them -- this would hurt the order in which consecutive frames of an
-individual video is present. We need to shuffle respecting that interval.
+individual video are presented. We need to shuffle respecting that interval.
 """
 
 
@@ -194,8 +193,8 @@ def shuffle_df(df, interval=SEQ_LENGTH):
 
 
 """
-Thanks to [Ranjan Debnath](https://in.linkedin.com/in/desmond00) for helping with this
-method.
+Thanks to [Ranjan Debnath](https://in.linkedin.com/in/desmond00)
+for helping with this method.
 """
 
 new_train_df = shuffle_df(new_train_df)
@@ -209,7 +208,7 @@ The training frames are now shuffled as expected.
 ## Feature extraction from frames
 
 We can use a pre-trained network to extract meaningful features from the extracted
-frames. The [`Applications`](https://keras.io/api/applications/) class of Keras provides
+frames. The [`Keras Applications`](https://keras.io/api/applications/) module provides
 a number of state-of-the-art models pre-trained on the [ImageNet-1k dataset](http://image-net.org/).
 We will be using the [InceptionV3 model](https://arxiv.org/abs/1512.00567) for this purpose.
 """
@@ -265,9 +264,9 @@ network considering the temporality present inside of them. Data fed to the recu
 layers must have a time-step dimension. So, how do we incorporate that in the extracted
 features?
 
-The features have a shape of `len(train_frames), 5, 5, 2048`). Recall that each video is
+The features have a shape of `(len(train_frames), 5, 5, 2048)`. Recall that each video is
 now represented as an ordered sequence of **five** frames. So, we can reshape our features
-like so: `len(train_frames)/5, 5, 5*5*2048`). The second dimension (5) is now the
+like so: `(len(train_frames) / 5, 5, 5 * 5 * 2048)`. The second dimension (5) is now the
 time-step dimension. It turns out that this heuristic works quite well in practice. It
 just needs as adjustment in the number of examples such that it is divisible by the
 number of frames representing a video. Fortunately, for this example, we did not have to
@@ -282,12 +281,13 @@ test_features = test_features.reshape(
 )
 
 """
-We now need to prepare the labels i.e. the action classes which are present as strings.
-Neural networks do not understand string values, they must be converted to some numerical
-form before they are fed to neural networks. Here we will use the [`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup)
-layer to binarize the string class labels. It will first give us an integer encoding of
-the string values and then it will [one-hot encode](https://developers.google.com/machine-learning/glossary#one-hot-encoding)
-those values. The point of making the values one-hot encoded will be made clear in a moment. 
+We now need to prepare the labels (the action classes), which are encoded as strings.
+Neural networks do not understand string values, so they must be converted to some numerical
+form before they are fed to the model. Here we will use the
+[`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup)
+layer to binarize the string labels. It will first map the strings to integer indices and then it will
+[one-hot encode](https://developers.google.com/machine-learning/glossary#one-hot-encoding)
+those integer values.
 """
 
 label_processor = keras.layers.experimental.preprocessing.StringLookup(
@@ -311,8 +311,8 @@ assert (
 )
 
 """
-We then need to skip some labels from both `train_labels` and `test_labels` since the
-number of samples has changed now. 
+We now need to skip some labels from both `train_labels` and `test_labels` since the
+number of samples has changed. 
 """
 
 
@@ -330,9 +330,8 @@ test_labels = prepare_labels(test_labels)
 """
 ## Train the sequence model
 
-Empirically, [label-smoothing](https://arxiv.org/abs/1906.02629) was found to provide an
-improved performance. This is why we represented the integer labels as one-hot encoded
-vectors in the first place.
+Empirically, [label-smoothing](https://arxiv.org/abs/1906.02629) was found to improve performance.
+This is why we represented the integer labels as one-hot encoded vectors in the first place.
 """
 
 
@@ -348,7 +347,6 @@ def get_sequence_model(optimizer, label_smoothing=0.1):
             keras.layers.Dense(len(class_vocab), activation="softmax"),
         ]
     )
-
     rnn_model.compile(
         loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
         optimizer=optimizer,
@@ -362,7 +360,6 @@ def run_experiment():
     checkpoint = keras.callbacks.ModelCheckpoint(
         filepath, save_weights_only=True, save_best_only=True, verbose=1
     )
-
     seq_model = get_sequence_model("adam")
     history = seq_model.fit(
         train_features,
@@ -372,7 +369,6 @@ def run_experiment():
         epochs=EPOCHS,
         callbacks=[checkpoint],
     )
-
     seq_model.load_weights(filepath)
     return history, seq_model
 
@@ -464,6 +460,7 @@ that affects the performance.
 * Following [this tutorial](https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub), try a
 [pre-trained action recognition model](https://arxiv.org/abs/1705.07750) from DeepMind.
 * Rolling-averaging can be useful technique for video classification and it can be
-combined with a standard image classification model to infer on videos. [This tutorial](https://www.pyimagesearch.com/2019/07/15/video-classification-with-keras-and-deep-learning/)
+combined with a standard image classification model to infer on videos.
+[This tutorial](https://www.pyimagesearch.com/2019/07/15/video-classification-with-keras-and-deep-learning/)
 will help understand how to use rolling-averaging with an image classifier.
 """
