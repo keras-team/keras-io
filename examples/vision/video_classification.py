@@ -1,5 +1,5 @@
 """
-Title: Video Classification with a Conv-LSTM Architecture
+Title: Video Classification with a CNN-RNN Architecture
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
 Last modified: 2021/05/28
@@ -19,7 +19,7 @@ consists of convolutions (for spatiality) as well as recurrent layers (for tempo
 In this example, we will be using such a hybrid architecture consisting of a
 Convolutional Neural Network (CNN) and a Recurrent Neural Network (RNN) consisting of
 [GRU layers](https://keras.io/api/layers/recurrent_layers/gru/). These kinds of hybrid
-architectures are popularly known as **Conv-LSTM**.
+architectures are popularly known as **CNN-RNN**.
 
 This example requires TensorFlow 2.4 or higher, as well as TensorFlow Docs, which can be
 installed using the following command:
@@ -33,7 +33,7 @@ installed using the following command:
 ## Data collection
 
 In order to keep the runtime of this example relatively short, we will be using a
-subsampled version of the original UCF101 dataset. You can refer to [this notebook](https://colab.research.google.com/drive/1hOphhnrdAdxlTCh95pWv0F4RQXjKTOUe?usp=sharing)
+subsampled version of the original UCF101 dataset. You can refer to [this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
 to know how the subsampling was done. 
 """
 
@@ -46,7 +46,6 @@ to know how the subsampling was done.
 ## Setup
 """
 
-from sklearn.preprocessing import LabelBinarizer
 from tensorflow_docs.vis import embed
 from tensorflow import keras
 from imutils import paths
@@ -67,6 +66,8 @@ import os
 EPOCHS = 100
 BATCH_SIZE = 64
 IMG_SIZE = 224
+
+SEQ_LENGTH = 5
 
 """
 ## Data preparation
@@ -100,7 +101,9 @@ frames from videos.
 """
 
 
-def separate_frames(video_names, root_dir, output_dir, frame_count=5, save_interval=10):
+def separate_frames(
+    video_names, root_dir, output_dir, frame_count=SEQ_LENGTH, save_interval=10
+):
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
@@ -178,7 +181,7 @@ individual video is present. We need to shuffle respecting that interval.
 """
 
 
-def shuffle_df(df, interval=5):
+def shuffle_df(df, interval=SEQ_LENGTH):
     df_copy = df.copy()
     random_indices = list(range(0, len(df), interval))
     np.random.shuffle(random_indices)
@@ -263,7 +266,7 @@ layers must have a time-step dimension. So, how do we incorporate that in the ex
 features?
 
 The features have a shape of `len(train_frames), 5, 5, 2048`). Recall that each video is
-now represented as an ordered sequence of five frames. So, we can reshape our features
+now represented as an ordered sequence of **five** frames. So, we can reshape our features
 like so: `len(train_frames)/5, 5, 5*5*2048`). The second dimension (5) is now the
 time-step dimension. It turns out that this heuristic works quite well in practice. It
 just needs as adjustment in the number of examples such that it is divisible by the
@@ -271,29 +274,55 @@ number of frames representing a video. Fortunately, for this example, we did not
 do that explicitly.
 """
 
-train_features = train_features.reshape(len(train_features) // 5, 5, 5 * 5 * 2048)
-test_features = test_features.reshape(len(test_features) // 5, 5, 5 * 5 * 2048)
+train_features = train_features.reshape(
+    len(train_features) // SEQ_LENGTH, SEQ_LENGTH, 5 * 5 * 2048
+)
+test_features = test_features.reshape(
+    len(test_features) // SEQ_LENGTH, SEQ_LENGTH, 5 * 5 * 2048
+)
 
 """
-We also need to prepare our labels accordingly since the number of total examples has
-changed.
+We now need to prepare the labels i.e. the action classes which are present as strings.
+Neural networks do not understand string values, they must be converted to some numerical
+form before they are fed to neural networks. Here we will use the [`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup)
+layer to binarize the string class labels. It will first give us an integer encoding of
+the string values and then it will [one-hot encode](https://developers.google.com/machine-learning/glossary#one-hot-encoding)
+those values. The point of making the values one-hot encoded will be made clear in a moment. 
+"""
+
+label_processor = keras.layers.experimental.preprocessing.StringLookup(
+    max_tokens=6, num_oov_indices=0, output_mode="binary", sparse=False
+)
+label_processor.adapt(new_train_df["class"].values)
+
+train_labels = label_processor(new_train_df["class"].values[..., None])
+test_labels = label_processor(new_test_df["class"].values[..., None])
+
+
+# We can verify the vocabulary like so.
+class_vocab = label_processor.get_vocabulary()
+print(class_vocab)
+
+# We can also verify if the string values were mapped as expected.
+idx = np.random.choice(len(train_labels))
+assert (
+    class_vocab[train_labels[idx].numpy().argmax(-1)]
+    == new_train_df["class"].values[idx]
+)
+
+"""
+We then need to skip some labels from both `train_labels` and `test_labels` since the
+number of samples has changed now. 
 """
 
 
 def prepare_labels(tags):
     labels = []
     for (i, label) in enumerate(tags):
-        if i % 5 == 0:
+        if i % SEQ_LENGTH == 0:
             labels.append(label)
     return np.stack(labels)
 
-
-lb = LabelBinarizer()
-
-# First we represent the class labels as integers and then we
-# one-hot encode them.
-train_labels = lb.fit_transform(new_train_df["class"].values.tolist())
-test_labels = lb.transform(new_test_df["class"].values.tolist())
 
 train_labels = prepare_labels(train_labels)
 test_labels = prepare_labels(test_labels)
@@ -308,22 +337,24 @@ vectors in the first place.
 
 
 def get_sequence_model(optimizer, label_smoothing=0.1):
-    lstm_model = keras.Sequential(
+    rnn_model = keras.Sequential(
         [
-            keras.layers.GRU(64, input_shape=(5, 5 * 5 * 2048), return_sequences=True),
+            keras.layers.GRU(
+                64, input_shape=(SEQ_LENGTH, 5 * 5 * 2048), return_sequences=True
+            ),
             keras.layers.GRU(32),
             keras.layers.Dense(32, activation="relu"),
             keras.layers.Dropout(0.4),
-            keras.layers.Dense(len(lb.classes_), activation="softmax"),
+            keras.layers.Dense(len(class_vocab), activation="softmax"),
         ]
     )
 
-    lstm_model.compile(
+    rnn_model.compile(
         loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
         optimizer=optimizer,
         metrics=["accuracy"],
     )
-    return lstm_model
+    return rnn_model
 
 
 def run_experiment():
@@ -362,16 +393,15 @@ The plot above suggests that our model has fit the data well.
 ## Inference
 """
 
-# For inference, we first extract frames from a single video
-# and then extract features from those using the pre-trained
-# InceptionV3 network.
+# For inference, we first extract frames from a single video and then extract features
+# from those using the pre-trained InceptionV3 network.
 def extract_features_test(video_name):
     output_dir = video_name.split(".")[0]
     separate_frames(
         [video_name],
         root_dir="test",
         output_dir=output_dir,
-        frame_count=5,
+        frame_count=SEQ_LENGTH,
         save_interval=10,
     )
 
@@ -392,11 +422,11 @@ def extract_features_test(video_name):
 # features to our recurrent model and obtain predictions.
 def sequence_prediction(video_name):
     frames, features = extract_features_test(video_name)
-    features = features.reshape(1, 5, 5 * 5 * 2048)
+    features = features.reshape(1, SEQ_LENGTH, 5 * 5 * 2048)
     probabilities = sequence_model.predict(features)[0]
 
     for i in np.argsort(probabilities)[::-1]:
-        print(f"  {lb.classes_[i]}: {probabilities[i] * 100:5.2f}%")
+        print(f"  {class_vocab[i]}: {probabilities[i] * 100:5.2f}%")
     return frames
 
 
@@ -426,9 +456,14 @@ to_gif(frames)
 
 * In this example, we made use of transfer learning for extracting meaningful features
 from video frames. You could also fine-tune the pre-trained network to notice how that
-affects the end results.
+affects the end results. You may even have better results with a smaller,
+higher-accuracy model like [EfficientNetB0](https://arxiv.org/abs/1905.11946).
 * Try different combinations of `max_frame_counts` and `save_interval` to observe how
 that affects the performance.
+* Train on a higher number of classes and see if you are able to get good performance.
 * Following [this tutorial](https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub), try a
 [pre-trained action recognition model](https://arxiv.org/abs/1705.07750) from DeepMind.
+* Rolling-averaging can be useful technique for video classification and it can be
+combined with a standard image classification model to infer on videos. [This tutorial](https://www.pyimagesearch.com/2019/07/15/video-classification-with-keras-and-deep-learning/)
+will help understand how to use rolling-averaging with an image classifier.
 """
