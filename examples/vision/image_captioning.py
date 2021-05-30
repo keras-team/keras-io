@@ -36,11 +36,11 @@ than 8,000 images that are each paired with five different captions.
 
 
 """shell
-! wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
-! wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip
-! unzip -qq Flickr8k_Dataset.zip
-! unzip -qq Flickr8k_text.zip
-! rm Flickr8k_Dataset.zip Flickr8k_text.zip
+wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
+wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip
+unzip -qq Flickr8k_Dataset.zip
+unzip -qq Flickr8k_text.zip
+rm Flickr8k_Dataset.zip Flickr8k_text.zip
 """
 
 
@@ -356,6 +356,7 @@ class ImageCaptioningModel(keras.Model):
         cnn_model,
         encoder,
         decoder,
+        num_captions_per_image=5,
     ):
         super().__init__()
         self.cnn_model = cnn_model
@@ -363,6 +364,7 @@ class ImageCaptioningModel(keras.Model):
         self.decoder = decoder
         self.loss_tracker = keras.metrics.Mean(name="loss")
         self.acc_tracker = keras.metrics.Mean(name="accuracy")
+        self.num_captions_per_image = num_captions_per_image
 
     def _compute_loss_and_acc(self, batch_data, training=True):
         batch_img, batch_seq = batch_data
@@ -378,7 +380,7 @@ class ImageCaptioningModel(keras.Model):
         # 3. Pass each of the five captions one by one the decoder
         # along with the encoder outputs and compute the loss for each caption.
         # We will also compute the accuracy
-        for i in range(5):
+        for i in range(self.num_captions_per_image):
             batch_seq_inp = batch_seq[:, i, :-1]
             batch_seq_true = batch_seq[:, i, 1:]
             batch_seq_pred = self.decoder(batch_seq_inp, encoder_out, training=training)
@@ -387,7 +389,7 @@ class ImageCaptioningModel(keras.Model):
                 batch_seq_true, batch_seq_pred
             )
 
-        return loss, acc / 5.0
+        return loss, acc / float(self.num_captions_per_image)
 
     def train_step(self, batch_data):
         # 1. Compute the loss
