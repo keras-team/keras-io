@@ -3,9 +3,8 @@ Title: Image Captioning
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2021/05/29
 Last modified: 2021/06/29
-Description: Implement image captioning model using CNN and Transformers.
+Description: Implement an image captioning model using a CNN and a Transformer.
 """
-
 
 """
 ## Setup
@@ -30,7 +29,7 @@ tf.random.set_seed(seed)
 """
 ## Download the dataset
 
-We will be using the Flickr8K dataset for this tutorial. This dataset comprises of more
+We will be using the Flickr8K dataset for this tutorial. This dataset comprises over
 than 8,000 images that are each paired with five different captions.
 """
 
@@ -74,14 +73,14 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 
 def load_captions_data(filename):
-    """Load captions (text) data and maps them to corresponding images.
+    """Loads captions (text) data and maps them to corresponding images.
 
     Args:
-        filename: path to the text file containing caption data.
+        filename: Path to the text file containing caption data.
 
     Returns:
-        caption_mapping: dictionary mapping image names and the corresponding captions
-        text_data: list containing all the available captions
+        caption_mapping: Dictionary mapping image names and the corresponding captions
+        text_data: List containing all the available captions
     """
 
     with open(filename) as caption_file:
@@ -115,8 +114,8 @@ def train_val_split(caption_data, train_size=0.8, shuffle=True):
     """Split the captioning dataset into train and validation sets.
 
     Args:
-        caption_data (dict): a dictionary containing the mapped caption data
-        train_size (float): fraction of all the full dataset to use as training data
+        caption_data (dict): Dictionary containing the mapped caption data
+        train_size (float): Fraction of all the full dataset to use as training data
         shuffle (bool): Whether to shuffle the dataset before splitting
 
     Returns:
@@ -155,10 +154,12 @@ print("Number of validation samples: ", len(valid_data))
 """
 ## Vectorizing the text data
 
-We'll use the TextVectorization layer to vectorize the text data i.e. to turn the
+We'll use the `TextVectorization` layer to vectorize the text data,
+that is to say, to turn the
 original strings into integer sequences where each integer represents the index of
-a word in a vocabulary. We will use the default string standardization
-(strip punctuation characters) and splitting scheme (split on whitespace).
+a word in a vocabulary. We will use a custom string standardization scheme
+(strip punctuation characters except `<` and `>`) and the default
+splitting scheme (split on whitespace).
 """
 
 
@@ -220,13 +221,13 @@ valid_dataset = make_dataset(list(valid_data.keys()), list(valid_data.values()))
 """
 ## Building the model
 
-The image captioning task consists of three models in total. These are:
+Our image captioning architecture consists of three models in total:
 
-1. CNN: Any CNN model as a backbone to extract the image features
-2. TransformerEncoder: The extracted image features are then passed to a Transformer
-                        based encodder that generates a new representation of the inputs
-3. TransformerDecoder: This model takes the encoder output and the text data (sequences)
-                        as inputs and tries to learn to generate the caption.
+1. A CNN: Any CNN model as a backbone to extract the image features
+2. A TransformerEncoder: The extracted image features are then passed to a Transformer
+                         based encodder that generates a new representation of the inputs
+3. A TransformerDecoder: This model takes the encoder output and the text data (sequences)
+                         as inputs and tries to learn to generate the caption.
 """
 
 
@@ -502,8 +503,8 @@ generate_caption()
 ## End Notes
 
 We saw that the model starts to generate reasonable captions after a few epochs. To keep
-this example easily runnable, we have trained it with a few constraints like minimal
-number of attention heads, no image-based augmentation, or lr scheduling. To improve
-the predictions, you can try changing these training settings and find a very reasonable
-model for your use case.
+this example easily runnable, we have trained it with a few constraints, like a minimal
+number of attention heads, no image data augmentation, and no learning rate scheduling.
+To improve the predictions, you can try changing these training settings
+and find a good model for your use case.
 """
