@@ -27,7 +27,7 @@ installed using the following command:
 """
 
 """shell
-!pip install -q git+https://github.com/tensorflow/docs
+pip install -q git+https://github.com/tensorflow/docs
 """
 
 """
@@ -40,8 +40,8 @@ to know how the subsampling was done.
 """
 
 """shell
-!wget -q https://storage.googleapis.com/demo-experiments/ucf101_top5.tar.gz
-!tar xf ucf101_top5.tar.gz
+wget -q https://storage.googleapis.com/demo-experiments/ucf101_top5.tar.gz
+tar xf ucf101_top5.tar.gz
 """
 
 """
@@ -290,8 +290,9 @@ layer to binarize the string labels. It will first map the strings to integer in
 those integer values.
 """
 
+nb_classes = len(np.unique(new_train_df["class"].values))
 label_processor = keras.layers.experimental.preprocessing.StringLookup(
-    max_tokens=6, num_oov_indices=0, output_mode="binary", sparse=False
+    max_tokens=nb_classes, num_oov_indices=0, output_mode="binary", sparse=False
 )
 label_processor.adapt(new_train_df["class"].values)
 
@@ -338,9 +339,8 @@ This is why we represented the integer labels as one-hot encoded vectors in the 
 def get_sequence_model(optimizer, label_smoothing=0.1):
     rnn_model = keras.Sequential(
         [
-            keras.layers.GRU(
-                64, input_shape=(SEQ_LENGTH, 5 * 5 * 2048), return_sequences=True
-            ),
+            keras.Input((SEQ_LENGTH, 5 * 5 * 2048)),
+            keras.layers.GRU(64, return_sequences=True),
             keras.layers.GRU(32),
             keras.layers.Dense(32, activation="relu"),
             keras.layers.Dropout(0.4),
@@ -376,7 +376,7 @@ def run_experiment():
 history, sequence_model = run_experiment()
 
 plt.plot(history.history["loss"], label="train_loss")
-plt.plot(history.history["val_loss"], label="train_loss")
+plt.plot(history.history["val_loss"], label="val_loss")
 plt.legend()
 plt.grid()
 plt.show()
