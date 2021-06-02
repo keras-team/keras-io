@@ -50,7 +50,7 @@ ls aclImdb/train
 
 """
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
- which represents on review (either positive or negative):
+ which represents one review (either positive or negative):
 """
 
 """shell

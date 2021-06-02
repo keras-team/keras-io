@@ -349,9 +349,9 @@ history = run_experiment(fnet_classifier)
 """
 As shown in the [FNet](https://arxiv.org/abs/2105.03824) paper,
 better results can be achieved by increasing the embedding dimensions,
-increasing, increasing the number of FNet blocks, and training the model for longer.
+increasing the number of FNet blocks, and training the model for longer.
 You may also try to increase the size of the input images and use different patch sizes.
-The FNet scales very efficiently to long inputs, runs much faster faster than attention-based
+The FNet scales very efficiently to long inputs, runs much faster than attention-based
 Transformer models, and produces competitive accuracy results.
 """
 
@@ -434,7 +434,7 @@ history = run_experiment(gmlp_classifier)
 """
 As shown in the [gMLP](https://arxiv.org/abs/2105.08050) paper,
 better results can be achieved by increasing the embedding dimensions,
-increasing, increasing the number of gMLP blocks, and training the model for longer.
+increasing the number of gMLP blocks, and training the model for longer.
 You may also try to increase the size of the input images and use different patch sizes.
 Note that, the paper used advanced regularization strategies, such as MixUp and CutMix,
 as well as AutoAugment.
