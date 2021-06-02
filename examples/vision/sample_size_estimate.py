@@ -1,9 +1,9 @@
 """
-Title: Model-based sample size determination
+Title: Estimating required sample size for model training
 Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
 Last modified: 2021/05/21
-Description: Estimate the number of images required to reach a desired model accuracy.
+Description: Estimate the number of samples required to reach a desired model accuracy.
 """
 
 """
@@ -20,40 +20,30 @@ sizes. A model-based sample size determination method can be used to estimate th
 number of images needed to arrive at a scientifically valid sample size that would give
 the required model performance.
 
-A systematic review of [Sample-Size Determination Methodologies for Machine Learning in
-Medical Imaging Research](https://bit.ly/3f53LSs) by Balki et al. provides examples of
-several sample-size determination methods. In this example, a
-balanced subsampling scheme is used to determine the optimum sample size for our model.
-This is done by selecting a random subsample consisting of Y number of images and
-training the model using the subsample. The model is then evaluated on an independent
+A systematic review of [Sample-Size Determination Methodologies](https://bit.ly/3f53LSs)
+by Balki et al. provides examples of several sample-size determination methods. In this
+example, a balanced subsampling scheme is used to determine the optimum sample size for
+our model. This is done by selecting a random subsample consisting of Y number of images
+and training the model using the subsample. The model is then evaluated on an independent
 test set. This process is repeated N times for each subsample with replacement to allow
 for the construction of a mean and confidence interval for the observed performance.
 
-This example requires TensorFlow 2.4 or higher and the latest version of
-[imgaug](https://imgaug.readthedocs.io/).
+This example requires TensorFlow 2.4 or higher.
 """
 
 """
 # Setup
 """
 
-"""shell
-!pip install imgaug==0.4.0
-"""
-
-
-from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-import imgaug.augmenters as iaa
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import tensorflow_datasets as tfds
 from tensorflow.keras import layers
-print("Tensorflow version", tf.__version__)
-print("Keras version", keras.__version__)
+from tensorflow.keras.layers.experimental import preprocessing
 
-# Define fixed variables and seed
+# Define seed and fixed variables
 seed = 42
 tf.random.set_seed(seed)
 np.random.seed(seed)
@@ -62,8 +52,7 @@ AUTO = tf.data.AUTOTUNE
 """
 # Load TensorFlow dataset
 
-We'll be using the [TensorFlow Flowers
-dataset](https://www.tensorflow.org/datasets/catalog/tf_flowers).
+We'll be using the [TF Flowers dataset](https://bit.ly/34FQxWc).
 """
 
 # Specify dataset parameters
@@ -81,12 +70,12 @@ image_size = (224, 224)
 )
 
 # Extract number of classes and list of class names
-nr_train_samples = train_data.cardinality().numpy()
+num_train_samples = train_data.cardinality().numpy()
 num_classes = ds_info.features["label"].num_classes
 class_names = ds_info.features["label"].names
 
-print(f"Nr. of training samples: {nr_train_samples}")
-print(f"Nr. of classes: {num_classes}")
+print(f"Number of training samples: {num_train_samples}")
+print(f"Number of classes: {num_classes}")
 print(f"Class names: {class_names}")
 
 """
@@ -134,54 +123,23 @@ train it and unfreeze layers for fine-tuning.
 """
 
 
-def build_model(model_name, num_classes, img_size=image_size[0], top_dropout=0.3):
-    """
-    Creates a Keras application model without the top layer using imagenet
-    weights, adding the following custom layers:
-      - GlobalAveragePooling2D(name="avg_pool")
-      - Dropout(top_dropout), defaults to 0.3
-      - Dense(num_classes, activation="softmax", name="serve_out")
+def build_model(num_classes, img_size=image_size[0], top_dropout=0.3):
+    """Creates a Keras MobileNetV2 model without the top layer using imagenet
+        weights, adding new custom top layers.
 
-    Arguments
-    ---------
-    model_name:     "VGG16", "ResNet50", "EfficientNetB0", etc. as per Keras
-                    applications: https://keras.io/api/applications/
-    num_classes:    Number of classese to use in the softmax layer.
-    img_size    =   Square size of input images, defaults to 224x224.
-    top_dropout =   Sets value for dropout layer, defaults to 0.3.
+    Arguments:
+        num_classes: Int, number of classese to use in the softmax layer.
+        img_size: Int, square size of input images (defaults is 224).
+        top_dropout: Int, value for dropout layer (defaults is 0.3).
 
+    Returns:
+        Uncompiled Keras model.
     """
 
-    # Define function to resize and pre-process images inside the model
-    def resize_and_preprocess(x):
-        x = tf.image.resize(x, [img_size, img_size])
-
-        # Select preprocessing mode based on the model specified
-        # (includes only a few of the Keras applications)
-        caffe_modes = ["VGG", "ResNet5", "ResNet1"]
-        tf_modes = ["MobileNet", "Xception", "NASNet", "Inception"]
-        if any(x in model_name for x in caffe_modes):
-            mode = "caffe"
-        elif any(x in model_name for x in tf_modes):
-            mode = "tf"
-        else:
-            mode = None
-
-        # Apply preprocessing (if applicable). EfficientNet has no preprocessing.
-        if mode == "tf":
-            # Divide by max/2 pixel value
-            x = tf.divide(x, [127.5, 127.5, 127.5])
-            x = tf.subtract(x, [1, 1, 1])  # Minus one to normalise to [-1, 1]
-        elif mode == "caffe":
-            x = tf.reverse(x, axis=[-1])  # Swop channels RGB -> BGR
-            # Subtract mean value
-            x = tf.subtract(x, [103.939, 116.779, 123.68])
-        return x
-
-    # Create input and pre-processing layers and import pre-trained model
-    inputs = layers.Input(shape=(img_size, img_size, 3), name="serve_in")
-    x = layers.Lambda(resize_and_preprocess)(inputs)
-    model = getattr(tf.keras.applications, model_name)(
+    # Create input and pre-processing layers for MobileNetV2
+    inputs = layers.Input(shape=(img_size, img_size, 3))
+    x = preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1)(inputs)
+    model = keras.applications.MobileNetV2(
         include_top=False, weights="imagenet", input_tensor=x
     )
 
@@ -191,9 +149,8 @@ def build_model(model_name, num_classes, img_size=image_size[0], top_dropout=0.3
     # Rebuild top
     x = layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
     x = layers.Dropout(top_dropout)(x)
-    outputs = layers.Dense(
-        num_classes, activation="softmax", name="serve_out")(x)
-    model = tf.keras.Model(inputs, outputs, name=model_name)
+    outputs = layers.Dense(num_classes, activation="softmax")(x)
+    model = tf.keras.Model(inputs, outputs)
 
     print("Trainable weights:", len(model.trainable_weights))
     print("Non_trainable weights:", len(model.non_trainable_weights))
@@ -209,23 +166,23 @@ def compile_and_train(
     patience=5,
     epochs=5,
 ):
-    """
-    Compiles and trains a Keras model using EarlyStopping callback that monitors
-    'val_auc' (so requires at minimum 'auc' as a metric. Compiles using
-    categorical_crossentropy loss with optimizer and metrics of choice.
+    """Compiles and trains a Keras model using EarlyStopping callback on
+        'val_auc' (requires at minimum 'auc' as a metric. Compiles using
+        categorical_crossentropy loss with optimizer and metrics of choice.
 
-    Arguments
-    ---------
-    model:          Uncompiled Keras model class.
-    train_ds:       Trainig dataset in tf.data format.
-    val_ds:         Validation dataset in tf.data format.
-    class_weights:  Dictionary of weights per class.
-    metrics:        Keras/TF metrics, requires at least 'auc' metric.
-                    Defaults to [keras.metrics.AUC(name='auc'), 'acc'].
-    optimizer:      Keras/TF optimizer, defaults to keras.optimizers.Adam().
-    patience:       EarlyStopping patience, defaults to 5 epochs.
-    epochs:         Number of epochs to train, defaults to 5.
+    Arguments:
+        model: Uncompiled Keras model.
+        train_ds: tf.data.Dataset, trainig dataset.
+        val_ds: tf.data.Dataset, validation dataset.
+        class_weights: Dict, weights per class.
+        metrics: Keras/TF metrics, requires at least 'auc' metric(defaults is
+                [keras.metrics.AUC(name='auc'), 'acc']).
+        optimizer: Keras/TF optimizer (defaults is keras.optimizers.Adam()).
+        patience: Int, epochsfor EarlyStopping patience (defaults is 5).
+        epochs: Int, number of epochs to train (default is 5).
 
+    Returns:
+        Training history for trained Keras model.
     """
 
     stopper = keras.callbacks.EarlyStopping(
@@ -237,8 +194,7 @@ def compile_and_train(
         restore_best_weights=True,
     )
 
-    model.compile(loss="categorical_crossentropy",
-                  optimizer=optimizer, metrics=metrics)
+    model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=metrics)
 
     history = model.fit(
         train_ds, epochs=epochs, validation_data=val_ds, callbacks=[stopper]
@@ -247,17 +203,17 @@ def compile_and_train(
 
 
 def unfreeze(model, block_name, verbose=0):
-    """
-    Unfreezes Keras model layers. Sets all layers, except BatchNormalization,
-    after (and including) the specified block_name to trainable.
+    """Unfreezes Keras model layers.
 
-    Arguments
-    ---------
-    model:        Keras model.
-    block_name:   String with layer name, for example block_name = 'block4'.
-                  Checks if supplied string is in the layer name.
-    verbose:      Int: 0 means silent, 1 prints out layers trainability status.
+    Arguments:
+        model: Keras model.
+        block_name: Str, layer name for example block_name = 'block4'.
+                    Checks if supplied string is in the layer name.
+        verbose: Int, 0 means silent, 1 prints out layers trainability status.
 
+    Returns:
+        Keras model with all layers after (and including) the specified
+        block_name to trainable, excluding BatchNormalization layers.
     """
 
     # Set the whole model trainable and
@@ -275,7 +231,6 @@ def unfreeze(model, block_name, verbose=0):
             layer.trainable = False
             if verbose == 1:
                 print(layer.name, "NOT trainable")
-
     print("Trainable weights:", len(model.trainable_weights))
     print("Non-trainable weights:", len(model.non_trainable_weights))
     return model
@@ -284,29 +239,17 @@ def unfreeze(model, block_name, verbose=0):
 """
 # Define augmentation function
 
-We'll use the RandAugment augmentation as shown in a recent Keras code example:
-[RandAugment for Image Classification for Improved
-Robustness](https://https://keras.io/examples/vision/randaugment/).
+Define image augmentation using keras preprocessing layers.
 """
 
-rand_aug = iaa.RandAugment(n=3, m=7)
-
-
-def rand_augment(images):
-    """
-    Randomly augments a batch of image tensors using imgaug library.
-
-    Arguments
-    ---------
-    images:       TensorFlow tensors to augment, must be batched
-
-    """
-    # Convert back to uint8 and convert tensor to numpy values
-    images = tf.cast(images, tf.uint8)
-    images = rand_aug(images=images.numpy())
-
-    return images
-
+image_augmentation = keras.Sequential(
+    [
+        preprocessing.RandomFlip("horizontal"),
+        preprocessing.RandomRotation(0.1),
+        preprocessing.RandomZoom(height_factor=(-0.1, -0), fill_mode="constant"),
+        preprocessing.RandomContrast(factor=0.1),
+    ],
+)
 
 """
 # Define iterative subsampling functions
@@ -317,32 +260,31 @@ for splitting the dataset and training the model.
 """
 
 
-def create_subsets(dataset, percentage):
+def create_subsets(dataset, fraction):
+    """Creates a subset from a dataset based on a specified fraction. It is
+        divided into training (90%) and validation (10%) sets.
+
+    Arguments:
+        dataset: tf.data.Dataset.
+        fraction: Int, number between 0 and 1.
+
+    Returns:
+        Training and validations datasets with number of subsamples.
     """
-    Creates a subset from a dataset based on a specified percentage. This subset
-    is then divided into training (90%) and validation (10%) sets. Output contains
-    the training set, validation set and number of subsamples.
 
-    Arguments
-    ---------
-    dataset:      Dataset in tf.data format.
-    percentage:   Number between 0 and 100, excluding limits (0 > x > 100).
-
-    """
-
-    ds_subset = dataset.take(int(nr_train_samples * percentage))
+    ds_subset = dataset.take(int(num_train_samples * fraction))
 
     # Calculate subset length
-    nr_of_subsamples = ds_subset.cardinality().numpy()
-    print("Subset length:", nr_of_subsamples)
+    num_subsamples = ds_subset.cardinality().numpy()
+    print("Subset length:", num_subsamples)
 
     # Split off 90% for training and 10% for validation
-    train_val_split = int(nr_of_subsamples * 0.9)
+    train_val_split = int(num_subsamples * 0.9)
     train_ds = ds_subset.take(train_val_split)
-    print("Nr of training samples:", train_ds.cardinality().numpy())
+    print("Number of training samples:", train_ds.cardinality().numpy())
 
     val_ds = ds_subset.skip(train_val_split)
-    print("Nr of validation samples:", val_ds.cardinality().numpy())
+    print("Number of validation samples:", val_ds.cardinality().numpy())
 
     # Prepare the training set for training, apply random augmentations
     train_ds = (
@@ -356,11 +298,7 @@ def create_subsets(dataset, percentage):
         )
         .batch(batch_size)  # First batch images before augmenting
         .map(
-            lambda img, lab: (
-                tf.py_function(rand_augment, [img], [tf.float32])[0],
-                lab,
-            ),
-            num_parallel_calls=AUTO,
+            lambda img, lab: (image_augmentation(img), lab), num_parallel_calls=AUTO,
         )  # Augment images
         .cache()
         .prefetch(AUTO)
@@ -380,18 +318,23 @@ def create_subsets(dataset, percentage):
         .batch(batch_size)
         .prefetch(AUTO)
     )
-    return train_ds, val_ds, nr_of_subsamples
+    return train_ds, val_ds, num_subsamples
 
 
 def train_model(train_ds, val_ds, test_ds):
-    """
-    1) Builds a VGG19 model.
-    2) Trains only the top layers for 10 epochs.
-    3) Unfreezes from block 4 onwards.
-    4) Trains the deeper layers for 20 more epochs.
+    """Builds a model, trains only the top layers for 10 epochs. Unfreezes
+        deeper layers train for 20 more epochs. Calculates model accuracy.
+
+    Arguments:
+        train_ds: tf.data.Dataset, trainig dataset.
+        val_ds: tf.data.Dataset, validation dataset.
+        test_ds: tf.data.Dataset, test dataset.
+
+    Returns:
+        Model accuracy.
     """
 
-    model = build_model("VGG19", num_classes)
+    model = build_model(num_classes)
 
     # Compile and train top layers
     history = compile_and_train(
@@ -404,8 +347,8 @@ def train_model(train_ds, val_ds, test_ds):
         epochs=10,
     )
 
-    # Unfreeze model from block 4 onwards
-    model = unfreeze(model, "block4")
+    # Unfreeze model from block 6 onwards
+    model = unfreeze(model, "block_10")
 
     # Compile and train for 20 epochs with a lower learning rate
     fine_tune_epochs = 20
@@ -416,7 +359,7 @@ def train_model(train_ds, val_ds, test_ds):
         train_ds,
         val_ds,
         metrics=[keras.metrics.AUC(name="auc"), "acc"],
-        optimizer=keras.optimizers.Adam(lr=1e-4),
+        optimizer=keras.optimizers.Adam(learning_rate=1e-4),
         patience=5,
         epochs=total_epochs,
     )
@@ -430,11 +373,11 @@ def train_model(train_ds, val_ds, test_ds):
 
 """
 Let's create a small subset and plot a few images from the training set. These should now
-be augmented using RandAug.
+be augmented.
 """
 
-# Test image augmentations on a subset (5% of training data)
-train_ds, val_ds, nr_of_samples = create_subsets(train_data, 0.1)
+# Test image augmentations on a subset (10% of training data)
+train_ds, val_ds, num_samples = create_subsets(train_data, 0.1)
 
 # Plot images from the training set
 image_batch, label_batch = next(iter(train_ds))
@@ -459,46 +402,40 @@ pretend that only 50% of the actual data is available at present.
 Note that this trains 20 models and will take some time. Make sure you have a GPU runtime
 active.
 
-To keep this example lightweight, sample data from a previous training run is provided
-after the commented out code below.
+To keep this example lightweight, sample data from a previous training run is provided.
 """
 
-# # Train all the sample models and calculate accuracy
-# sample_splits = [0.05, 0.1, 0.25, 0.5]
-# iter_per_split = 5
-# overall_accuracy = []
-# sample_sizes = []
 
-# for percentage in sample_splits:
-#     print(f"Percentage split: {percentage}")
-#     # Repeat training 3 times for each sample size
-#     sample_accuracy = []
-#     for i in range(iter_per_split):
-#         print(f"Run {i+1} out of {iter_per_split}:")
-#         # Create percentage subsets, train model and calculate accuracy
-#         # train_ds, val_ds, sub_len, class_len = create_subsets(train_df, percentage)
-#         train_ds, val_ds, nr_of_samples = create_subsets(
-#             train_data, percentage)
-#         accuracy = train_model(train_ds, val_ds, test_ds)
-#         print(f"Accuracy: {accuracy}")
-#         sample_accuracy.append(accuracy)
+def train_iteratively(
+    train_data, sample_splits=[0.05, 0.1, 0.25, 0.5], iter_per_split=5
+):
+    # Train all the sample models and calculate accuracy
+    overall_accuracy = []
+    sample_sizes = []
 
-#     overall_accuracy.append(sample_accuracy)
-#     sample_sizes.append(nr_of_samples)
-#     # smallest_class_sizes.append(class_len)
-
-#     # Clear session and reset random seeds
-#     tf.keras.backend.clear_session()
-#     tf.random.set_seed(seed)
-#     np.random.seed(seed)
+    for fraction in sample_splits:
+        print(f"Fraqction split: {fraction}")
+        # Repeat training 3 times for each sample size
+        sample_accuracy = []
+        for i in range(iter_per_split):
+            print(f"Run {i+1} out of {iter_per_split}:")
+            # Create fraction subsets, train model and calculate accuracy
+            # train_ds, val_ds, sub_len, class_len = create_subsets(train_df, fraction)
+            train_ds, val_ds, num_samples = create_subsets(train_data, fraction)
+            accuracy = train_model(train_ds, val_ds, test_ds)
+            print(f"Accuracy: {accuracy}")
+            sample_accuracy.append(accuracy)
+        overall_accuracy.append(sample_accuracy)
+        sample_sizes.append(num_samples)
+    return overall_accuracy, sample_sizes
 
 
-# Sample data
+# Running the above function produces the following outputs
 overall_accuracy = [
-    [0.71662125, 0.77111717, 0.73024523, 0.75476839, 0.47411444],
-    [0.80926431, 0.67302452, 0.66757493, 0.74386921, 0.79291553],
-    [0.82288828, 0.82561308, 0.85286104, 0.83378747, 0.8119891],
-    [0.89645777, 0.90463215, 0.84468665, 0.88283379, 0.88555858],
+    [0.82016348773, 0.74659400544, 0.80108991825, 0.84468664850, 0.82288828337],
+    [0.86103542234, 0.87738419618, 0.85013623978, 0.89373297002, 0.89100817438],
+    [0.89100817438, 0.92370572207, 0.88555858310, 0.91008174386, 0.89100817438],
+    [0.89373297002, 0.93732970027, 0.91280653950, 0.87193460490, 0.91280653950],
 ]
 
 sample_sizes = [165, 330, 825, 1651]
@@ -507,52 +444,61 @@ sample_sizes = [165, 330, 825, 1651]
 # Learning curve
 
 We now plot the learning curve by fitting an exponential curve through the mean accuracy
-points.
+points. We use TF to fit an exponential function through the data.
 
-We then extrapolate the learning curve to the desired model accuracy of 95% to estimate
-the number of images required for the training set that would produce this accuracy.
+We then extrapolate the learning curve to the predict the accuracy of a model trained on
+the whole training set.
 """
 
 # The x-values, mean accuracy and errors can be extracted
-x_pos = sample_sizes
+x = sample_sizes
 mean_acc = [np.mean(i) for i in overall_accuracy]
 error = [np.std(i) for i in overall_accuracy]
 
-# Define an exponential function
+# Define the exponential and cost functions
 
 
-def func(x, a, b):
-    """Return values from an exponential function."""
+def exp_func(x, a, b):
     return a * x ** b
 
 
-# Fit an exponential curve through the data points
-popt, pcov = curve_fit(func, x_pos, mean_acc)
+def squared_error(y_pred, y_true):
+    return tf.reduce_mean(tf.square(y_pred - y_true))
 
-# Extrapolate the fitted curve to predict the x value for the desired accuracy.
-# Take the largest sample size and add 100 until the desired accuracy is reached.
-desired_acc = 0.95
-x_pred = max(x_pos)
-accuracy = func(x_pred, *popt)
-while accuracy < desired_acc:
-    x_pred = x_pred + 100
-    accuracy = func(x_pred, *popt)
+
+# Define variables, learning rate and number of epochs for fitting with TF
+a = tf.Variable(0.6)  # Use smart guesses for the weights to speed up fitting
+b = tf.Variable(0.05)
+learning_rate = 0.01
+training_epochs = 2000
+
+# Fit the exponential function to the data
+for epoch in range(training_epochs):
+    with tf.GradientTape() as g:
+        y_pred = exp_func(x, a, b)
+        cost_function = squared_error(y_pred, mean_acc)
+    # Get gradients and compute adjusted weights
+    gradients = g.gradient(cost_function, [a, b])
+    a.assign_sub(gradients[0] * learning_rate)
+    b.assign_sub(gradients[1] * learning_rate)
+print(f"Curve fit weights: a = {a.numpy()} and b = {b.numpy()}.")
+
+# We can now estimate the accuracy for the whole training set using exp_func
+max_acc = exp_func(num_train_samples, a, b)
 
 # Print predicted x value and append to plot values
-print(f"We predict that {x_pred} samples will produce {desired_acc} accuracy.")
-x_plot = np.append(x_pos, x_pred)
-
-# Create smooth x values for plot range
-lin_x = np.linspace(x_plot[0], x_plot[-1], 100)
+print(f"A model accuracy of {max_acc} is predicted for {num_train_samples} samples.")
+x_cont = np.linspace(x[0], num_train_samples, 100)
 
 # Build the plot
 fig, ax = plt.subplots(figsize=(12, 6))
-ax.errorbar(x_pos, mean_acc, yerr=error, fmt="o", label="Mean acc & std dev.")
-ax.plot(lin_x, func(lin_x, *popt), "r-", label="Fitted exponential curve.")
+ax.errorbar(x, mean_acc, yerr=error, fmt="o", label="Mean acc & std dev.")
+ax.plot(x_cont, exp_func(x_cont, a, b), "r-", label="Fitted exponential curve.")
 ax.set_ylabel("Model clasification accuracy.", fontsize=12)
 ax.set_xlabel("Training sample size.", fontsize=12)
-ax.set_xticks(x_plot)
-ax.set_xticklabels([str(x) for x in x_plot], rotation=90, fontsize=10)
+ax.set_xticks(np.append(x, num_train_samples))
+ax.set_yticks(np.append(mean_acc, max_acc))
+ax.set_xticklabels(list(np.append(x, num_train_samples)), rotation=90, fontsize=10)
 ax.yaxis.set_tick_params(labelsize=10)
 ax.set_title("Learning curve: model accuracy vs sample size.", fontsize=14)
 ax.legend(loc=(0.75, 0.75), fontsize=10)
@@ -562,40 +508,38 @@ plt.tight_layout()
 plt.show()
 
 """
-We also calculate the standard deviation error for curve fit to see how well it fits the
-data. The lower the error the better the fit.
+The mean absolute error (MAE) can be calculated for curve fit to see how well it fits
+the data. The lower the error the better the fit.
 """
 
-std_dev = np.std([mean_acc[i] - func(x_pos[i], *popt)
-                  for i in range(len(x_pos))])
-print(
-    f"The standard deviation error for the curve fit is {np.round(std_dev, 4)}.")
+mae = np.mean([np.abs(mean_acc[i] - exp_func(x[i], a, b)) for i in range(len(x))])
+print(f"The mean absolute error for the curve fit is {np.round(mae, 4)}.")
 
 """
-From the extrapolated curve we can see that we require an estimated 3151 images to reach
-95% accuracy.
+From the extrapolated curve we can see that 3303 images will yield approximately an
+accuracy of about 95%.
 
-Now, let's use all the data (3269 images) and train the model to see if our prediction
+Now, let's use all the data (3303 images) and train the model to see if our prediction
 was accurate!
 """
 
 # Now train the model with full dataset to get the actual accuracy
-train_ds, val_ds, nr_of_samples = create_subsets(train_data, 0.99)
+train_ds, val_ds, num_samples = create_subsets(train_data, 1)
 accuracy = train_model(train_ds, val_ds, test_ds)
-print(f"A model accuracy of {accuracy} is reached on {nr_of_samples} images!")
+print(f"A model accuracy of {accuracy} is reached on {num_samples} images!")
 
 """
 # Conclusion
 
-We see that a model accuracy of about 91-94%* is reached using 3269 images. This is quite
-close to our estimation!
+We see that a model accuracy of about 94-96%* is reached using 3303 images. This is quite
+close to our estimate!
 
-Even though we used only 50% of the dataset (1651 images) we were able to model the
-training behaviour of our model and predict the number of images we would need to reach
-the desired accuracy. This is very useful when a smaller set of data is available and it
-has been shown that convergence on a deep learning model is possible but more images are
-needed. The image count prediction can be used to plan and budget for further image
-collection initiatives.
+Even though we used only 50% of the dataset (1651 images) we were able to model the training
+behaviour of our model and predict the model accuracy for a given amount of images. This same
+methodology can be used to predict the amount of images needed to reach a desired accuracy.
+This is very useful when a smaller set of data is available, and it has been shown that
+convergence on a deep learning model is possible, but more images are needed. The image count
+prediction can be used to plan and budget for further image collection initiatives.
 
 *Note: repeat results may vary due to randomness.
 """
