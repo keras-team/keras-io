@@ -8,3 +8,5 @@ black==19.10b0
 pathlib
 tensorflow
 PyYAML
+jupyter
+keras-tuner
