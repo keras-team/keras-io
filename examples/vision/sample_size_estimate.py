@@ -347,7 +347,7 @@ def train_model(train_ds, val_ds, test_ds):
         epochs=10,
     )
 
-    # Unfreeze model from block 6 onwards
+    # Unfreeze model from block 10 onwards
     model = unfreeze(model, "block_10")
 
     # Compile and train for 20 epochs with a lower learning rate
