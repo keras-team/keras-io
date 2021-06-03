@@ -5,11 +5,11 @@ KT_GUIDES_MASTER = {
     'children': [
         {
             'path': 'distributed_tuning',
-            'title': 'Distributed Tuning on Multiple GPUs and Machines',
+            'title': 'Distributed hyperparameter tuning',
         },
         {
-            'path': 'subclass_tuner',
-            'title': 'Subclassing Tuner for Custom Training Loops',
+            'path': 'custom_tuner',
+            'title': 'Writing your own Tuner to support a custom training loop',
         },
     ]
 }

@@ -1,29 +1,47 @@
 """
-Title: Subclassing Tuner for Custom Training Loops
-Author: Tom O'Malley, Haifeng Jin
+Title: Writing your own Tuner to support a custom training loop
+Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/28
 Last modified: 2021/06/02
 Description: Subclassing the Tuner class in Keras Tuner for more customization like custom training loops.
 """
 """
 
-The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to support advanced uses such as:
+The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to
+support advanced uses such as:
 
 - Custom training loops (GANs, reinforement learning, etc.)
-- Adding hyperparameters outside of the model builing function (preprocessing, data augmentation, test time augmentation, etc.)
 
-This tutorial will not cover subclassing to support non-Keras models. To accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner` class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
+- Adding hyperparameters outside of the model builing function (preprocessing,
+data augmentation, test time augmentation, etc.)
+
+This tutorial will not cover subclassing to support non-Keras models. To
+accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner`
+class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
 
 ### Understanding the search process.
 
-`Tuner.search` can be passed any arguments. These arguments will be passed directly to `Tuner.run_trial`, along with a `Trial` object that contains information about the current trial, including hyperparameters and the status of the trial. Typically, `Tuner.run_trial` is the only method that users need to override when subclassing `Tuner`.
+`Tuner.search` can be passed any arguments. These arguments will be passed
+directly to `Tuner.run_trial`, along with a `Trial` object that contains
+information about the current trial, including hyperparameters and the status
+of the trial. Typically, `Tuner.run_trial` is the only method that users need
+to override when subclassing `Tuner`.
 
 ### Overriding `run_trial`.
 
-There are two ways to write `run_trial`. One is to leverage `Tuner`'s built-in callback hooks, which send the value of the `objective` to the `Oracle` and save the latest state of the Model. These hooks are:
+There are two ways to write `run_trial`. One is to leverage `Tuner`'s built-in
+callback hooks, which send the value of the `objective` to the `Oracle` and
+save the latest state of the Model. These hooks are:
 
-* `self.on_epoch_end`: Must be called. Reports results to the `Oracle` and saves the Model. The `logs` dictionary passed to this method must contain the `objective` name.
-* `self.on_epoch_begin`, `self.on_batch_begin`, `self.on_batch_end`: Optional. These methods do nothing in `Tuner`, but are useful to provide as hooks if you expect users of your subclass to create their own subclasses that override these parts of the training process.
+* `self.on_epoch_end`: Must be called. Reports results to the `Oracle` and
+saves the Model. The `logs` dictionary passed to this method must contain the
+`objective` name.
+
+* `self.on_epoch_begin`, `self.on_batch_begin`, `self.on_batch_end`: Optional.
+These methods do nothing in `Tuner`, but are useful to provide as hooks if you
+expect users of your subclass to create their own subclasses that override
+these parts of the training process.
+
 
 ```python
 class MyTuner(kt.Tuner):
@@ -35,9 +53,14 @@ class MyTuner(kt.Tuner):
               self.on_epoch_end(trial, model, epoch, logs={'loss': epoch_loss})
 ```
 
-Alternatively, you can instead directly call the methods used to report results to the `Oracle` and save the Model. This can allow more flexibility for use cases where there is no natural concept of epoch or where you do not want to report results to the `Oracle` after each epoch. These methods are:
+Alternatively, you can instead directly call the methods used to report results
+to the `Oracle` and save the Model. This can allow more flexibility for use
+cases where there is no natural concept of epoch or where you do not want to
+report results to the `Oracle` after each epoch. These methods are:
 
-* `self.oracle.update_trial`: Reports current results to the `Oracle`. The `metrics` dictionary passed to this method must contain the `objective` name.
+* `self.oracle.update_trial`: Reports current results to the `Oracle`. The
+`metrics` dictionary passed to this method must contain the `objective` name.
+
 * `self.save_model`: Saves the trained model.
 
 ```python
@@ -52,7 +75,10 @@ class MyTuner(kt.Tuner):
 
 ### Adding HyperParameters during preprocessing, evaluation, etc.
 
-New `HyperParameter`s can be defined anywhere in `run_trial`, in the same way that `HyperParameter`s are defined in a `HyperModel`. These hyperparameters take on their default value the first time they are encountered, and thereafter are tuned by the `Oracle`.
+New `HyperParameter`s can be defined anywhere in `run_trial`, in the same way
+that `HyperParameter`s are defined in a `HyperModel`. These hyperparameters
+take on their default value the first time they are encountered, and thereafter
+are tuned by the `Oracle`.
 
 ```python
 class MyTuner(kt.Tuner):

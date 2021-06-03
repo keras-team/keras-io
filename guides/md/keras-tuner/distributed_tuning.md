@@ -1,6 +1,6 @@
-# Distributed Tuning on Multiple GPUs and Machines
+# Distributed hyperparameter tuning
 
-**Author:** Tom O'Malley, Haifeng Jin<br>
+**Authors:** Tom O'Malley, Haifeng Jin<br>
 **Date created:** 2019/10/24<br>
 **Last modified:** 2021/06/02<br>
 **Description:** Tuning the hyperparameters of the models with multiple GPUs and multiple machines.
@@ -10,40 +10,56 @@
 
 
 
-Keras Tuner makes it easy to perform distributed hyperparameter search. No changes to your code are needed to scale up from running single-threaded locally to running on dozens or hundreds of workers in parallel. Distributed Keras Tuner uses a chief-worker model. The chief runs a service to which the workers report results and query for the hyperparameters to try next. The chief should be run on a single-threaded CPU instance (or alternatively as a separate process on one of the workers).
+Keras Tuner makes it easy to perform distributed hyperparameter search. No
+changes to your code are needed to scale up from running single-threaded
+locally to running on dozens or hundreds of workers in parallel. Distributed
+Keras Tuner uses a chief-worker model. The chief runs a service to which the
+workers report results and query for the hyperparameters to try next. The chief
+should be run on a single-threaded CPU instance (or alternatively as a separate
+process on one of the workers).
 
 ### Configuring distributed mode
 
-Configuring distributed mode for Keras Tuner only requires setting three environment variables:
+Configuring distributed mode for Keras Tuner only requires setting three
+environment variables:
 
-**KERASTUNER_TUNER_ID**: This should be set to "chief" for the chief process. Other workers should be passed a unique ID (by convention, "tuner0", "tuner1", etc).
+**KERASTUNER_TUNER_ID**: This should be set to "chief" for the chief process.
+Other workers should be passed a unique ID (by convention, "tuner0", "tuner1",
+etc).
 
-**KERASTUNER_ORACLE_IP**: The IP address or hostname that the chief service should run on. All workers should be able to resolve and access this address.
+**KERASTUNER_ORACLE_IP**: The IP address or hostname that the chief service
+should run on. All workers should be able to resolve and access this address.
 
-**KERASTUNER_ORACLE_PORT**: The port that the chief service should run on. This can be freely chosen, but must be a port that is accessible to the other workers. Instances communicate via the [gRPC](https://www.grpc.io) protocol.
+**KERASTUNER_ORACLE_PORT**: The port that the chief service should run on. This
+can be freely chosen, but must be a port that is accessible to the other
+workers. Instances communicate via the [gRPC](https://www.grpc.io) protocol.
 
-The same code can be run on all workers. Additional considerations for distributed mode are:
+The same code can be run on all workers. Additional considerations for
+distributed mode are:
 
-- All workers should have access to a centralized file system to which they can write their results.
-- All workers should be able to access the necessary training and validation data needed for tuning.
-- To support fault-tolerance, `overwrite` should be kept as `False` in `Tuner.__init__` (`False` is the default).
+- All workers should have access to a centralized file system to which they can
+write their results.
 
-Example bash script for chief service (sample code for `run_tuning.py` at bottom of page):
+- All workers should be able to access the necessary training and validation
+data needed for tuning.
+
+- To support fault-tolerance, `overwrite` should be kept as `False` in
+`Tuner.__init__` (`False` is the default).
+
+Example bash script for chief service (sample code for `run_tuning.py` at
+bottom of page):
 
 
 ```python
-!!export KERASTUNER_TUNER_ID="chief"
-!!export KERASTUNER_ORACLE_IP="127.0.0.1"
-!!export KERASTUNER_ORACLE_PORT="8000"
-!!python run_tuning.py
+!export KERASTUNER_TUNER_ID="chief"
+!export KERASTUNER_ORACLE_IP="127.0.0.1"
+!export KERASTUNER_ORACLE_PORT="8000"
+!python run_tuning.py
 ```
-
-
-
 
 <div class="k-default-codeblock">
 ```
-["python: can't open file 'run_tuning.py': [Errno 2] No such file or directory"]
+python: can't open file 'run_tuning.py': [Errno 2] No such file or directory
 
 ```
 </div>
@@ -65,12 +81,29 @@ python: can't open file 'run_tuning.py': [Errno 2] No such file or directory
 </div>
 ### Data parallelism with tf.distribute
 
-Keras Tuner also supports data parallelism via [tf.distribute](https://www.tensorflow.org/tutorials/distribute/keras). Data parallelism and distributed tuning can be combined. For example, if you have 10 workers with 4 GPUs on each worker, you can run 10 parallel trials with each trial training on 4 GPUs by using [tf.distribute.MirroredStrategy](https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy). You can also run each trial on TPUs via [tf.distribute.experimental.TPUStrategy](https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/TPUStrategy). Currently [tf.distribute.MultiWorkerMirroredStrategy](https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy) is not supported, but support for this is on the roadmap.
+Keras Tuner also supports data parallelism via
+[tf.distribute](https://www.tensorflow.org/tutorials/distribute/keras). Data
+parallelism and distributed tuning can be combined. For example, if you have 10
+workers with 4 GPUs on each worker, you can run 10 parallel trials with each
+trial training on 4 GPUs by using
+[tf.distribute.MirroredStrategy](
+https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy).
+You can also run each trial on TPUs via
+[tf.distribute.experimental.TPUStrategy](
+https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/TPUStrategy).
+Currently
+[tf.distribute.MultiWorkerMirroredStrategy](
+https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy)
+is not supported, but support for this is on the roadmap.
 
 
 ### Example code
 
-When the enviroment variables described above are set, the example below will run distributed tuning and will also use data parallelism within each trial via `tf.distribute`. The example loads MNIST from `tensorflow_datasets` and uses hyperband for the hyperparameter search.
+When the enviroment variables described above are set, the example below will
+run distributed tuning and use data parallelism within each trial via
+`tf.distribute`. The example loads MNIST from `tensorflow_datasets` and uses
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) for the hyperparameter
+search.
 
 
 ```python
@@ -134,10 +167,8 @@ def main():
     # Reshape the images to have the channel dimension.
     x_train = (x_train.reshape(x_train.shape + (1,)) / 255.0)[:1000]
     y_train = y_train.astype(np.int64)[:1000]
-    # mnist_train = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,))).batch(32)
     x_test = (x_test.reshape(x_test.shape + (1,)) / 255.0)[:100]
     y_test = y_test.astype(np.int64)[:100]
-    # mnist_test = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,))).batch(32)
 
     tuner.search(
         x_train,
@@ -155,15 +186,15 @@ if __name__ == "__main__":
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 06s]
-val_accuracy: 0.33000001311302185
+Trial 2 Complete [00h 00m 07s]
+val_accuracy: 0.7400000095367432
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.3700000047683716
-Total elapsed time: 00h 00m 14s
+Best val_accuracy So Far: 0.7400000095367432
+Total elapsed time: 00h 00m 16s
 INFO:tensorflow:Oracle triggered exit
 
 ```

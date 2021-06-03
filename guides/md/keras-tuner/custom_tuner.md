@@ -1,32 +1,50 @@
-# Subclassing Tuner for Custom Training Loops
+# Writing your own Tuner to support a custom training loop
 
-**Author:** Tom O'Malley, Haifeng Jin<br>
+**Authors:** Tom O'Malley, Haifeng Jin<br>
 **Date created:** 2019/10/28<br>
 **Last modified:** 2021/06/02<br>
 **Description:** Subclassing the Tuner class in Keras Tuner for more customization like custom training loops.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras-tuner/subclass_tuner.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras-tuner/subclass_tuner.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras-tuner/custom_tuner.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras-tuner/custom_tuner.py)
 
 
 
-The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to support advanced uses such as:
+The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to
+support advanced uses such as:
 
 - Custom training loops (GANs, reinforement learning, etc.)
-- Adding hyperparameters outside of the model builing function (preprocessing, data augmentation, test time augmentation, etc.)
 
-This tutorial will not cover subclassing to support non-Keras models. To accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner` class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
+- Adding hyperparameters outside of the model builing function (preprocessing,
+data augmentation, test time augmentation, etc.)
+
+This tutorial will not cover subclassing to support non-Keras models. To
+accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner`
+class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
 
 ### Understanding the search process.
 
-`Tuner.search` can be passed any arguments. These arguments will be passed directly to `Tuner.run_trial`, along with a `Trial` object that contains information about the current trial, including hyperparameters and the status of the trial. Typically, `Tuner.run_trial` is the only method that users need to override when subclassing `Tuner`.
+`Tuner.search` can be passed any arguments. These arguments will be passed
+directly to `Tuner.run_trial`, along with a `Trial` object that contains
+information about the current trial, including hyperparameters and the status
+of the trial. Typically, `Tuner.run_trial` is the only method that users need
+to override when subclassing `Tuner`.
 
 ### Overriding `run_trial`.
 
-There are two ways to write `run_trial`. One is to leverage `Tuner`'s built-in callback hooks, which send the value of the `objective` to the `Oracle` and save the latest state of the Model. These hooks are:
+There are two ways to write `run_trial`. One is to leverage `Tuner`'s built-in
+callback hooks, which send the value of the `objective` to the `Oracle` and
+save the latest state of the Model. These hooks are:
 
-* `self.on_epoch_end`: Must be called. Reports results to the `Oracle` and saves the Model. The `logs` dictionary passed to this method must contain the `objective` name.
-* `self.on_epoch_begin`, `self.on_batch_begin`, `self.on_batch_end`: Optional. These methods do nothing in `Tuner`, but are useful to provide as hooks if you expect users of your subclass to create their own subclasses that override these parts of the training process.
+* `self.on_epoch_end`: Must be called. Reports results to the `Oracle` and
+saves the Model. The `logs` dictionary passed to this method must contain the
+`objective` name.
+
+* `self.on_epoch_begin`, `self.on_batch_begin`, `self.on_batch_end`: Optional.
+These methods do nothing in `Tuner`, but are useful to provide as hooks if you
+expect users of your subclass to create their own subclasses that override
+these parts of the training process.
+
 
 ```python
 class MyTuner(kt.Tuner):
@@ -38,9 +56,14 @@ class MyTuner(kt.Tuner):
               self.on_epoch_end(trial, model, epoch, logs={'loss': epoch_loss})
 ```
 
-Alternatively, you can instead directly call the methods used to report results to the `Oracle` and save the Model. This can allow more flexibility for use cases where there is no natural concept of epoch or where you do not want to report results to the `Oracle` after each epoch. These methods are:
+Alternatively, you can instead directly call the methods used to report results
+to the `Oracle` and save the Model. This can allow more flexibility for use
+cases where there is no natural concept of epoch or where you do not want to
+report results to the `Oracle` after each epoch. These methods are:
 
-* `self.oracle.update_trial`: Reports current results to the `Oracle`. The `metrics` dictionary passed to this method must contain the `objective` name.
+* `self.oracle.update_trial`: Reports current results to the `Oracle`. The
+`metrics` dictionary passed to this method must contain the `objective` name.
+
 * `self.save_model`: Saves the trained model.
 
 ```python
@@ -55,7 +78,10 @@ class MyTuner(kt.Tuner):
 
 ### Adding HyperParameters during preprocessing, evaluation, etc.
 
-New `HyperParameter`s can be defined anywhere in `run_trial`, in the same way that `HyperParameter`s are defined in a `HyperModel`. These hyperparameters take on their default value the first time they are encountered, and thereafter are tuned by the `Oracle`.
+New `HyperParameter`s can be defined anywhere in `run_trial`, in the same way
+that `HyperParameter`s are defined in a `HyperModel`. These hyperparameters
+take on their default value the first time they are encountered, and thereafter
+are tuned by the `Oracle`.
 
 ```python
 class MyTuner(kt.Tuner):
@@ -199,17 +225,17 @@ if __name__ == "__main__":
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 04s]
-loss: 2.259909152984619
+Trial 2 Complete [00h 00m 01s]
+loss: 2.279149055480957
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best loss So Far: 2.079871892929077
-Total elapsed time: 00h 00m 09s
+Best loss So Far: 2.1915926933288574
+Total elapsed time: 00h 00m 03s
 INFO:tensorflow:Oracle triggered exit
-{'conv_layers': 3, 'filters_0': 28, 'kernel_size_0': 5, 'pooling0': 'avg', 'filters_1': 16, 'kernel_size_1': 4, 'pooling1': 'max', 'filters_2': 28, 'kernel_size_2': 4, 'pooling2': 'avg', 'global_pooling': 'max', 'optimizer': 'adam', 'batch_size': 64, 'learning_rate': 0.001}
+{'conv_layers': 3, 'filters_0': 8, 'kernel_size_0': 4, 'pooling0': 'avg', 'filters_1': 16, 'kernel_size_1': 4, 'pooling1': 'avg', 'filters_2': 20, 'kernel_size_2': 4, 'pooling2': 'avg', 'global_pooling': 'max', 'optimizer': 'sgd', 'batch_size': 64, 'learning_rate': 0.001}
 
 ```
 </div>

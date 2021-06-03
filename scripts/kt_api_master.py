@@ -4,8 +4,6 @@ PAGES = {
         'kerastuner.oracles.Hyperband',
         'kerastuner.oracles.RandomSearch',
         'kerastuner.Oracle',
-        'kerastuner.Oracle._populate_space',
-        'kerastuner.Oracle._score_trial',
         'kerastuner.Oracle.create_trial',
         'kerastuner.Oracle.end_trial',
         'kerastuner.Oracle.get_best_trials',
@@ -82,8 +80,6 @@ KT_API_MASTER = {
                 'kerastuner.oracles.Hyperband',
                 'kerastuner.oracles.RandomSearch',
                 'kerastuner.Oracle',
-                'kerastuner.Oracle._populate_space',
-                'kerastuner.Oracle._score_trial',
                 'kerastuner.Oracle.create_trial',
                 'kerastuner.Oracle.end_trial',
                 'kerastuner.Oracle.get_best_trials',
@@ -92,5 +88,5 @@ KT_API_MASTER = {
                 'kerastuner.Oracle.update_trial',
             ]
         },
-        ]
-        }
+    ]
+}
