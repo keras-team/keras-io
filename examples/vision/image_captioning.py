@@ -198,16 +198,12 @@ def read_image(img_path, size=IMAGE_SIZE):
     return img
 
 
-def text_to_seq(cap):
-    return vectorization(cap)
-
-
 def make_dataset(images, captions):
     img_dataset = tf.data.Dataset.from_tensor_slices(images).map(
         read_image, num_parallel_calls=AUTOTUNE
     )
     cap_dataset = tf.data.Dataset.from_tensor_slices(captions).map(
-        text_to_seq, num_parallel_calls=AUTOTUNE
+        vectorization, num_parallel_calls=AUTOTUNE
     )
     dataset = tf.data.Dataset.zip((img_dataset, cap_dataset))
     dataset = dataset.batch(BATCH_SIZE).shuffle(256).prefetch(AUTOTUNE)
@@ -307,23 +303,31 @@ class TransformerDecoderBlock(layers.Layer):
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
 
-        self.pe = PositionalEmbedding(
+        self.embedding = PositionalEmbedding(
             embed_dim=EMBED_DIM, sequence_length=SEQ_LENGTH, vocab_size=VOCAB_SIZE
         )
         self.out = layers.Dense(VOCAB_SIZE, activation="softmax")
         self.dropout = layers.Dropout(0.5)
 
     def call(self, inputs, encoder_outputs, training, mask=None):
-        inputs = self.pe(inputs)
+        inputs = self.embedding(inputs)
         causal_mask = self.get_causal_attention_mask(inputs)
 
+        if mask is not None:
+            padding_mask = tf.cast(mask[:, :, tf.newaxis], dtype=tf.int32)
+            combined_mask = tf.cast(mask[:, tf.newaxis, :], dtype=tf.int32)
+            combined_mask = tf.minimum(combined_mask, causal_mask)
+
         attention_output_1 = self.attention_1(
-            query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
+            query=inputs, value=inputs, key=inputs, attention_mask=combined_mask
         )
         out_1 = self.layernorm_1(inputs + attention_output_1)
 
         attention_output_2 = self.attention_2(
-            query=out_1, value=encoder_outputs, key=encoder_outputs, attention_mask=None
+            query=out_1,
+            value=encoder_outputs,
+            key=encoder_outputs,
+            attention_mask=padding_mask,
         )
         out_2 = self.layernorm_2(out_1 + attention_output_2)
 
@@ -360,6 +364,19 @@ class ImageCaptioningModel(keras.Model):
         self.acc_tracker = keras.metrics.Mean(name="accuracy")
         self.num_captions_per_image = num_captions_per_image
 
+    def calculate_loss(self, y_true, y_pred, mask):
+        loss = self.loss(y_true, y_pred)
+        mask = tf.cast(mask, dtype=loss.dtype)
+        loss *= mask
+        return tf.reduce_sum(loss) / tf.reduce_sum(mask)
+
+    def calculate_accuracy(self, y_true, y_pred, mask):
+        accuracy = tf.equal(y_true, tf.argmax(y_pred, axis=2))
+        accuracy = tf.math.logical_and(mask, accuracy)
+        accuracy = tf.cast(accuracy, dtype=tf.float32)
+        mask = tf.cast(mask, dtype=tf.float32)
+        return tf.reduce_sum(accuracy) / tf.reduce_sum(mask)
+
     def _compute_loss_and_acc(self, batch_data, training=True):
         batch_img, batch_seq = batch_data
         loss = 0
@@ -377,11 +394,18 @@ class ImageCaptioningModel(keras.Model):
         for i in range(self.num_captions_per_image):
             batch_seq_inp = batch_seq[:, i, :-1]
             batch_seq_true = batch_seq[:, i, 1:]
-            batch_seq_pred = self.decoder(batch_seq_inp, encoder_out, training=training)
-            loss += self.loss(batch_seq_true, batch_seq_pred)
-            acc += keras.metrics.sparse_categorical_accuracy(
-                batch_seq_true, batch_seq_pred
+
+            # Compute the mask for the input sequence
+            mask = tf.math.not_equal(batch_seq_inp, 0)
+
+            # Pass the encoder outputs, sequence inputs along with mask to the decoder
+            batch_seq_pred = self.decoder(
+                batch_seq_inp, encoder_out, training=training, mask=mask
             )
+
+            # Calculate loss and accuracy
+            loss += self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+            acc += self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
 
         return loss, acc / float(self.num_captions_per_image)
 
