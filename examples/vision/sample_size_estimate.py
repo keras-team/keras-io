@@ -20,7 +20,7 @@ sizes. A model-based sample size determination method can be used to estimate th
 number of images needed to arrive at a scientifically valid sample size that would give
 the required model performance.
 
-A systematic review of [Sample-Size Determination Methodologies](https://bit.ly/3f53LSs)
+A systematic review of [Sample-Size Determination Methodologies](https://www.researchgate.net/publication/335779941_Sample-Size_Determination_Methodologies_for_Machine_Learning_in_Medical_Imaging_Research_A_Systematic_Review)
 by Balki et al. provides examples of several sample-size determination methods. In this
 example, a balanced subsampling scheme is used to determine the optimum sample size for
 our model. This is done by selecting a random subsample consisting of Y number of images
@@ -50,9 +50,9 @@ np.random.seed(seed)
 AUTO = tf.data.AUTOTUNE
 
 """
-# Load TensorFlow dataset
+# Load TensorFlow dataset and convert to NumPy arrays
 
-We'll be using the [TF Flowers dataset](https://bit.ly/34FQxWc).
+We'll be using the [TF Flowers dataset](https://www.tensorflow.org/datasets/catalog/tf_flowers).
 """
 
 # Specify dataset parameters
@@ -70,53 +70,66 @@ image_size = (224, 224)
 )
 
 # Extract number of classes and list of class names
-num_train_samples = train_data.cardinality().numpy()
 num_classes = ds_info.features["label"].num_classes
 class_names = ds_info.features["label"].names
 
-print(f"Number of training samples: {num_train_samples}")
 print(f"Number of classes: {num_classes}")
 print(f"Class names: {class_names}")
 
+# Convert datasets to NumPy arrays
+def dataset_to_array(dataset, image_size, num_classes):
+    images, labels = [], []
+    for img, lab in dataset.as_numpy_iterator():
+        images.append(tf.image.resize(img, image_size).numpy())
+        labels.append(tf.one_hot(lab, num_classes))
+    return np.array(images), np.array(labels)
+
+
+img_train, label_train = dataset_to_array(train_data, image_size, num_classes)
+img_test, label_test = dataset_to_array(test_data, image_size, num_classes)
+
+num_train_samples = len(img_train)
+print(f"Number of training samples: {num_train_samples}")
+
 """
-# Prepare test set for training
+# Plot a few examples from the test set
 """
-
-test_ds = (
-    test_data.map(
-        lambda img, lab: (tf.image.resize(img, image_size), lab),
-        num_parallel_calls=AUTO,
-    )  # Resize images
-    .map(
-        lambda img, lab: (img, tf.one_hot(lab, num_classes)), num_parallel_calls=AUTO
-    )  # Convert to one-hot labels
-    .cache()
-    .batch(batch_size)
-    .prefetch(AUTO)
-)
-
-# Extract true labels from the test set (to be used for model evaluation later)
-y_true = np.empty((0, num_classes))
-for _, label in test_ds.unbatch().as_numpy_iterator():
-    y_true = np.vstack((y_true, label))
-y_true_indices = np.argmax(y_true, axis=1)
-
-# Count number of test samples
-num_test_samples = len(y_true_indices)
-print("Test set length:", num_test_samples)
-
-# Plot images from the test set
-image_batch, label_batch = next(iter(test_ds))
 
 plt.figure(figsize=(16, 12))
 for n in range(30):
     ax = plt.subplot(5, 6, n + 1)
-    plt.imshow(image_batch[n].numpy().astype("int32"))
-    plt.title(np.array(class_names)[label_batch[n].numpy() == True][0])
+    plt.imshow(img_test[n].astype("int32"))
+    plt.title(np.array(class_names)[label_test[n] == True][0])
     plt.axis("off")
 
 """
-# Define model building & train functions
+# Augmentation
+
+Define image augmentation using keras preprocessing layers and apply them to the training set.
+"""
+
+# Define image augmentation model
+image_augmentation = keras.Sequential(
+    [
+        preprocessing.RandomFlip("horizontal"),
+        preprocessing.RandomRotation(0.1),
+        preprocessing.RandomZoom(height_factor=(-0.1, -0)),
+        preprocessing.RandomContrast(factor=0.1),
+    ],
+)
+
+# Apply the augmentations to the training images and plot a few examples
+img_train = image_augmentation(img_train).numpy()
+
+plt.figure(figsize=(16, 12))
+for n in range(30):
+    ax = plt.subplot(5, 6, n + 1)
+    plt.imshow(img_train[n].astype("int32"))
+    plt.title(np.array(class_names)[label_train[n] == True][0])
+    plt.axis("off")
+
+"""
+# Define model building & training functions
 
 We create a few convenience functions to build a transfer-learning model, compile and
 train it and unfreeze layers for fine-tuning.
@@ -124,7 +137,7 @@ train it and unfreeze layers for fine-tuning.
 
 
 def build_model(num_classes, img_size=image_size[0], top_dropout=0.3):
-    """Creates a Keras MobileNetV2 model without the top layer using imagenet
+    """Creates a Keras application model without the top layer using imagenet
         weights, adding new custom top layers.
 
     Arguments:
@@ -150,7 +163,7 @@ def build_model(num_classes, img_size=image_size[0], top_dropout=0.3):
     x = layers.GlobalAveragePooling2D(name="avg_pool")(model.output)
     x = layers.Dropout(top_dropout)(x)
     outputs = layers.Dense(num_classes, activation="softmax")(x)
-    model = tf.keras.Model(inputs, outputs)
+    model = keras.Model(inputs, outputs)
 
     print("Trainable weights:", len(model.trainable_weights))
     print("Non_trainable weights:", len(model.non_trainable_weights))
@@ -159,8 +172,8 @@ def build_model(num_classes, img_size=image_size[0], top_dropout=0.3):
 
 def compile_and_train(
     model,
-    train_ds,
-    val_ds,
+    training_data,
+    training_labels,
     metrics=[keras.metrics.AUC(name="auc"), "acc"],
     optimizer=keras.optimizers.Adam(),
     patience=5,
@@ -169,12 +182,12 @@ def compile_and_train(
     """Compiles and trains a Keras model using EarlyStopping callback on
         'val_auc' (requires at minimum 'auc' as a metric. Compiles using
         categorical_crossentropy loss with optimizer and metrics of choice.
+        Validation split set to 10%.
 
     Arguments:
         model: Uncompiled Keras model.
-        train_ds: tf.data.Dataset, trainig dataset.
-        val_ds: tf.data.Dataset, validation dataset.
-        class_weights: Dict, weights per class.
+        training_data: NumPy Array, trainig data.
+        training_labels: NumPy Array, trainig labels.
         metrics: Keras/TF metrics, requires at least 'auc' metric(defaults is
                 [keras.metrics.AUC(name='auc'), 'acc']).
         optimizer: Keras/TF optimizer (defaults is keras.optimizers.Adam()).
@@ -197,7 +210,12 @@ def compile_and_train(
     model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=metrics)
 
     history = model.fit(
-        train_ds, epochs=epochs, validation_data=val_ds, callbacks=[stopper]
+        x=training_data,
+        y=training_labels,
+        batch_size=batch_size,
+        epochs=epochs,
+        validation_split=0.1,
+        callbacks=[stopper],
     )
     return history
 
@@ -216,8 +234,7 @@ def unfreeze(model, block_name, verbose=0):
         block_name to trainable, excluding BatchNormalization layers.
     """
 
-    # Set the whole model trainable and
-    model.trainable = True
+    # Unfreeze from block_name onwards
     set_trainable = False
 
     for layer in model.layers:
@@ -228,7 +245,6 @@ def unfreeze(model, block_name, verbose=0):
             if verbose == 1:
                 print(layer.name, "trainable")
         else:
-            layer.trainable = False
             if verbose == 1:
                 print(layer.name, "NOT trainable")
     print("Trainable weights:", len(model.trainable_weights))
@@ -237,98 +253,19 @@ def unfreeze(model, block_name, verbose=0):
 
 
 """
-# Define augmentation function
+# Define iterative training function
 
-Define image augmentation using keras preprocessing layers.
-"""
-
-image_augmentation = keras.Sequential(
-    [
-        preprocessing.RandomFlip("horizontal"),
-        preprocessing.RandomRotation(0.1),
-        preprocessing.RandomZoom(height_factor=(-0.1, -0), fill_mode="constant"),
-        preprocessing.RandomContrast(factor=0.1),
-    ],
-)
-
-"""
-# Define iterative subsampling functions
-
-To iteratively train a model over several subsample sets we need to create some functions
-for splitting the dataset and training the model.
-
+To train a model over several subsample sets we need to create an iterative training function.
 """
 
 
-def create_subsets(dataset, fraction):
-    """Creates a subset from a dataset based on a specified fraction. It is
-        divided into training (90%) and validation (10%) sets.
-
-    Arguments:
-        dataset: tf.data.Dataset.
-        fraction: Int, number between 0 and 1.
-
-    Returns:
-        Training and validations datasets with number of subsamples.
-    """
-
-    ds_subset = dataset.take(int(num_train_samples * fraction))
-
-    # Calculate subset length
-    num_subsamples = ds_subset.cardinality().numpy()
-    print("Subset length:", num_subsamples)
-
-    # Split off 90% for training and 10% for validation
-    train_val_split = int(num_subsamples * 0.9)
-    train_ds = ds_subset.take(train_val_split)
-    print("Number of training samples:", train_ds.cardinality().numpy())
-
-    val_ds = ds_subset.skip(train_val_split)
-    print("Number of validation samples:", val_ds.cardinality().numpy())
-
-    # Prepare the training set for training, apply random augmentations
-    train_ds = (
-        train_ds.map(
-            lambda img, lab: (tf.image.resize(img, image_size), lab),
-            num_parallel_calls=AUTO,
-        )
-        .map(
-            lambda img, lab: (img, tf.one_hot(lab, num_classes)),
-            num_parallel_calls=AUTO,
-        )
-        .batch(batch_size)  # First batch images before augmenting
-        .map(
-            lambda img, lab: (image_augmentation(img), lab), num_parallel_calls=AUTO,
-        )  # Augment images
-        .cache()
-        .prefetch(AUTO)
-    )
-
-    # Prepare validation set for training, only resize and one-hot encode
-    val_ds = (
-        val_ds.map(
-            lambda img, lab: (tf.image.resize(img, image_size), lab),
-            num_parallel_calls=AUTO,
-        )
-        .map(
-            lambda img, lab: (img, tf.one_hot(lab, num_classes)),
-            num_parallel_calls=AUTO,
-        )
-        .cache()
-        .batch(batch_size)
-        .prefetch(AUTO)
-    )
-    return train_ds, val_ds, num_subsamples
-
-
-def train_model(train_ds, val_ds, test_ds):
+def train_model(training_data, training_labels):
     """Builds a model, trains only the top layers for 10 epochs. Unfreezes
         deeper layers train for 20 more epochs. Calculates model accuracy.
 
     Arguments:
-        train_ds: tf.data.Dataset, trainig dataset.
-        val_ds: tf.data.Dataset, validation dataset.
-        test_ds: tf.data.Dataset, test dataset.
+        training_data: NumPy Array, trainig data.
+        training_labels: NumPy Array, trainig labels.
 
     Returns:
         Model accuracy.
@@ -339,15 +276,15 @@ def train_model(train_ds, val_ds, test_ds):
     # Compile and train top layers
     history = compile_and_train(
         model,
-        train_ds,
-        val_ds,
+        training_data,
+        training_labels,
         metrics=[keras.metrics.AUC(name="auc"), "acc"],
         optimizer=keras.optimizers.Adam(),
         patience=3,
         epochs=10,
     )
 
-    # Unfreeze model from block 10 onwards
+    # Unfreeze model from block 6 onwards
     model = unfreeze(model, "block_10")
 
     # Compile and train for 20 epochs with a lower learning rate
@@ -356,8 +293,8 @@ def train_model(train_ds, val_ds, test_ds):
 
     history_fine = compile_and_train(
         model,
-        train_ds,
-        val_ds,
+        training_data,
+        training_labels,
         metrics=[keras.metrics.AUC(name="auc"), "acc"],
         optimizer=keras.optimizers.Adam(learning_rate=1e-4),
         patience=5,
@@ -365,29 +302,13 @@ def train_model(train_ds, val_ds, test_ds):
     )
 
     # Calculate model accuracy on the test set
-    y_pred = model.predict(test_ds)
+    y_pred = model.predict(img_test)
     y_pred_indices = np.argmax(y_pred, axis=1)
-    acc = np.sum(np.equal(y_pred_indices, y_true_indices)) / num_test_samples
-    return acc
+    acc = np.sum(np.equal(y_pred_indices, np.argmax(label_test, axis=1))) / len(
+        img_test
+    )
+    return np.round(acc, 4)
 
-
-"""
-Let's create a small subset and plot a few images from the training set. These should now
-be augmented.
-"""
-
-# Test image augmentations on a subset (10% of training data)
-train_ds, val_ds, num_samples = create_subsets(train_data, 0.1)
-
-# Plot images from the training set
-image_batch, label_batch = next(iter(train_ds))
-
-plt.figure(figsize=(16, 12))
-for n in range(30):
-    ax = plt.subplot(5, 6, n + 1)
-    plt.imshow(image_batch[n].numpy().astype("int32"))
-    plt.title(np.array(class_names)[label_batch[n].numpy() == True][0])
-    plt.axis("off")
 
 """
 # Train models iteratively
@@ -406,23 +327,24 @@ To keep this example lightweight, sample data from a previous training run is pr
 """
 
 
-def train_iteratively(
-    train_data, sample_splits=[0.05, 0.1, 0.25, 0.5], iter_per_split=5
-):
+def train_iteratively(sample_splits=[0.05, 0.1, 0.25, 0.5], iter_per_split=5):
     # Train all the sample models and calculate accuracy
     overall_accuracy = []
     sample_sizes = []
 
     for fraction in sample_splits:
-        print(f"Fraqction split: {fraction}")
+        print(f"Fraction split: {fraction}")
         # Repeat training 3 times for each sample size
         sample_accuracy = []
+        num_samples = int(num_train_samples * fraction)
         for i in range(iter_per_split):
             print(f"Run {i+1} out of {iter_per_split}:")
-            # Create fraction subsets, train model and calculate accuracy
-            # train_ds, val_ds, sub_len, class_len = create_subsets(train_df, fraction)
-            train_ds, val_ds, num_samples = create_subsets(train_data, fraction)
-            accuracy = train_model(train_ds, val_ds, test_ds)
+            # Create fractional subsets
+            rand_idx = np.random.randint(num_train_samples, size=num_samples)
+            train_img_subset = img_train[rand_idx, :]
+            train_label_subset = label_train[rand_idx, :]
+            # Train model and calculate accuracy
+            accuracy = train_model(train_img_subset, train_label_subset)
             print(f"Accuracy: {accuracy}")
             sample_accuracy.append(accuracy)
         overall_accuracy.append(sample_accuracy)
@@ -455,15 +377,12 @@ x = sample_sizes
 mean_acc = [np.mean(i) for i in overall_accuracy]
 error = [np.std(i) for i in overall_accuracy]
 
-# Define the exponential and cost functions
+# Define mean squared error cost and exponential curve fit functions
+mse = keras.losses.MeanSquaredError()
 
 
 def exp_func(x, a, b):
     return a * x ** b
-
-
-def squared_error(y_pred, y_true):
-    return tf.reduce_mean(tf.square(y_pred - y_true))
 
 
 # Define variables, learning rate and number of epochs for fitting with TF
@@ -474,17 +393,22 @@ training_epochs = 2000
 
 # Fit the exponential function to the data
 for epoch in range(training_epochs):
-    with tf.GradientTape() as g:
+    with tf.GradientTape() as tape:
         y_pred = exp_func(x, a, b)
-        cost_function = squared_error(y_pred, mean_acc)
+        cost_function = mse(y_pred, mean_acc)
     # Get gradients and compute adjusted weights
-    gradients = g.gradient(cost_function, [a, b])
+    gradients = tape.gradient(cost_function, [a, b])
     a.assign_sub(gradients[0] * learning_rate)
     b.assign_sub(gradients[1] * learning_rate)
 print(f"Curve fit weights: a = {a.numpy()} and b = {b.numpy()}.")
 
-# We can now estimate the accuracy for the whole training set using exp_func
-max_acc = exp_func(num_train_samples, a, b)
+# We can now estimate the accuracy for the whole training set
+def predict_accuracy(num_samples):
+    """Predicts the model accuracy based on a given number of samples"""
+    return exp_func(num_samples, a, b).numpy()
+
+
+max_acc = predict_accuracy(num_train_samples)
 
 # Print predicted x value and append to plot values
 print(f"A model accuracy of {max_acc} is predicted for {num_train_samples} samples.")
@@ -512,8 +436,8 @@ The mean absolute error (MAE) can be calculated for curve fit to see how well it
 the data. The lower the error the better the fit.
 """
 
-mae = np.mean([np.abs(mean_acc[i] - exp_func(x[i], a, b)) for i in range(len(x))])
-print(f"The mean absolute error for the curve fit is {np.round(mae, 4)}.")
+mae = keras.losses.MeanAbsoluteError()
+print(f"The mae for the curve fit is {mae(mean_acc, exp_func(x, a, b)).numpy()}.")
 
 """
 From the extrapolated curve we can see that 3303 images will yield approximately an
@@ -524,9 +448,8 @@ was accurate!
 """
 
 # Now train the model with full dataset to get the actual accuracy
-train_ds, val_ds, num_samples = create_subsets(train_data, 1)
-accuracy = train_model(train_ds, val_ds, test_ds)
-print(f"A model accuracy of {accuracy} is reached on {num_samples} images!")
+# accuracy = train_model(img_train, label_train)
+# print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
 
 """
 # Conclusion
