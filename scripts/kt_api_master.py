@@ -1,45 +1,84 @@
-PAGES = {
-    'documentation/oracles.md': [
-        'kerastuner.oracles.BayesianOptimization',
-        'kerastuner.oracles.Hyperband',
-        'kerastuner.oracles.RandomSearch',
-        'kerastuner.Oracle',
-        'kerastuner.Oracle.create_trial',
-        'kerastuner.Oracle.end_trial',
-        'kerastuner.Oracle.get_best_trials',
-        'kerastuner.Oracle.get_state',
-        'kerastuner.Oracle.set_state',
-        'kerastuner.Oracle.update_trial',
-    ],
-}
-
-KT_API_MASTER = {
-    'path': 'keras-tuner/',
-    'title': 'Keras Tuner',
+ORACLE_MASTER = {
+    'path': 'oracles/',
+    'title': 'Oracles',
     'toc': True,
     'children': [
         {
-            'path': 'hyperparameters',
-            'title': 'The HyperParameters class',
+            'path': 'base_oracle',
+            'title': 'The base Oracle class',
             'generate': [
-                'kerastuner.HyperParameters',
-                'kerastuner.HyperParameters.Boolean',
-                'kerastuner.HyperParameters.Choice',
-                'kerastuner.HyperParameters.Fixed',
-                'kerastuner.HyperParameters.Float',
-                'kerastuner.HyperParameters.Int',
-                'kerastuner.HyperParameters.conditional_scope',
-                'kerastuner.HyperParameters.get',
+                'kerastuner.Oracle',
+                'kerastuner.Oracle.create_trial',
+                'kerastuner.Oracle.end_trial',
+                'kerastuner.Oracle.get_best_trials',
+                'kerastuner.Oracle.get_state',
+                'kerastuner.Oracle.set_state',
+                'kerastuner.Oracle.update_trial',
             ]
         },
         {
-            'path': 'tuners',
-            'title': 'The Tuner class',
+            'path': 'random',
+            'title': 'RandomSearch',
             'generate': [
-                'kerastuner.BayesianOptimization',
-                'kerastuner.Hyperband',
-                'kerastuner.RandomSearch',
-                'kerastuner.tuners.Sklearn',
+                'kerastuner.oracles.RandomSearch',
+            ]
+        },
+        {
+            'path': 'bayesian',
+            'title': 'BayesianOptimization',
+            'generate': [
+                'kerastuner.oracles.BayesianOptimization',
+            ]
+        },
+        {
+            'path': 'hyperband',
+            'title': 'Hyperband',
+            'generate': [
+                'kerastuner.oracles.Hyperband',
+            ]
+        },
+    ]
+}
+
+HYPERMODEL_MASTER = {
+    'path': 'hypermodels/',
+    'title': 'HyperModels',
+    'toc': True,
+    'children': [
+        {
+            'path': 'base_hypermodel',
+            'title': 'The base HyperModel class',
+            'generate': [
+                'kerastuner.HyperModel',
+                'kerastuner.HyperModel.build',
+            ]
+        },
+        {
+            'path': 'hyper_resnet',
+            'title': 'HyperResNet',
+            'generate': [
+                'kerastuner.applications.HyperResNet',
+            ]
+        },
+        {
+            'path': 'hyper_xception',
+            'title': 'HyperXception',
+            'generate': [
+                'kerastuner.applications.HyperXception',
+            ]
+        },
+    ]
+}
+
+TUNER_MASTER = {
+    'path': 'tuners/',
+    'title': 'Tuners',
+    'toc': True,
+    'children': [
+        {
+            'path': 'base_tuner',
+            'title': 'The base Tuner class',
+            'generate': [
                 'kerastuner.Tuner',
                 'kerastuner.Tuner.get_best_models',
                 'kerastuner.Tuner.get_state',
@@ -63,30 +102,57 @@ KT_API_MASTER = {
             ]
         },
         {
-            'path': 'hypermodels',
-            'title': 'The HyperModel class',
+            'path': 'random',
+            'title': 'RandomSearch',
             'generate': [
-                'kerastuner.HyperModel',
-                'kerastuner.HyperModel.build',
-                'kerastuner.applications.HyperXception',
-                'kerastuner.applications.HyperResNet',
+                'kerastuner.RandomSearch',
             ]
         },
         {
-            'path': 'oracles',
-            'title': 'The Oracle class',
+            'path': 'bayesian',
+            'title': 'BayesianOptimization',
             'generate': [
-                'kerastuner.oracles.BayesianOptimization',
-                'kerastuner.oracles.Hyperband',
-                'kerastuner.oracles.RandomSearch',
-                'kerastuner.Oracle',
-                'kerastuner.Oracle.create_trial',
-                'kerastuner.Oracle.end_trial',
-                'kerastuner.Oracle.get_best_trials',
-                'kerastuner.Oracle.get_state',
-                'kerastuner.Oracle.set_state',
-                'kerastuner.Oracle.update_trial',
+                'kerastuner.BayesianOptimization',
             ]
         },
+        {
+            'path': 'hyperband',
+            'title': 'Hyperband',
+            'generate': [
+                'kerastuner.Hyperband',
+            ]
+        },
+        {
+            'path': 'sklearn',
+            'title': 'Sklearn',
+            'generate': [
+                'kerastuner.tuners.Sklearn',
+            ]
+        },
+    ]
+}
+
+KT_API_MASTER = {
+    'path': 'keras-tuner/',
+    'title': 'Keras Tuner',
+    'toc': True,
+    'children': [
+        {
+            'path': 'hyperparameters',
+            'title': 'HyperParameters',
+            'generate': [
+                'kerastuner.HyperParameters',
+                'kerastuner.HyperParameters.Boolean',
+                'kerastuner.HyperParameters.Choice',
+                'kerastuner.HyperParameters.Fixed',
+                'kerastuner.HyperParameters.Float',
+                'kerastuner.HyperParameters.Int',
+                'kerastuner.HyperParameters.conditional_scope',
+                'kerastuner.HyperParameters.get',
+            ]
+        },
+        TUNER_MASTER,
+        ORACLE_MASTER,
+        HYPERMODEL_MASTER,
     ]
 }
