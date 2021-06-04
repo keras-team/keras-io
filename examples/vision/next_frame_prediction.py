@@ -55,13 +55,14 @@ dataset = np.load(fpath)
 
 # Swap the axes representing the number of frames and number of data samples.
 dataset = np.swapaxes(dataset, 0, 1)
-# We'll pick out 1000 out of the 10000 total examples and use those.
+# We'll pick out 1000 of the 10000 total examples and use those.
 dataset = dataset[:1000, ...]
 # Add a channel dimension since the images are grayscale.
 dataset = np.expand_dims(dataset, axis=-1)
 
 # Split into train and validation sets using indexing to optimize memory.
-train_index, val_index = train_test_split(np.arange(dataset.shape[0]), train_size=0.9)
+train_index, val_index = train_test_split(
+    np.arange(dataset.shape[0]), train_size=0.9)
 train_dataset = dataset[train_index]
 val_dataset = dataset[val_index]
 
@@ -76,7 +77,6 @@ def create_shifted_frames(data):
     y = data[:, 1 : data.shape[1], :, :]
     return X, y
 
-
 # Apply the processing function to the datasets.
 X_train, y_train = create_shifted_frames(train_dataset)
 X_val, y_val = create_shifted_frames(val_dataset)
@@ -84,6 +84,7 @@ X_val, y_val = create_shifted_frames(val_dataset)
 # Inspect the dataset.
 print("Training Dataset Shapes: " + str(X_train.shape) + ", " + str(y_train.shape))
 print("Validation Dataset Shapes: " + str(X_val.shape) + ", " + str(y_val.shape))
+
 """
 ## Data Visualization
 
@@ -187,7 +188,7 @@ model.fit(
 With our model now constructed and trained, we can create
 some example frame predictions based on the input data.
 
-We'll pick a few random examples from the validation set and
+We'll pick a random example from the validation set and
 then choose the first ten frames from them. From there, we can
 allow the model to predict ten new frames, which we can compare
 to the ground truth frame predictions.
@@ -228,3 +229,5 @@ for idx, ax in enumerate(axes[1]):
 
 # Display the figure.
 plt.show()
+
+
