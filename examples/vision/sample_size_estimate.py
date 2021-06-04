@@ -8,27 +8,25 @@ Description: Estimate the model accuracy for a specific training set size.
 
 """
 # Introduction
-In most real-world use cases, the image data required to train a deep learning model is
-limited, this is especially true in the medical imaging domain where dataset creation is
-costly. The first question that usually comes up is "how many images will we need to
-train a good enough machine learning model".
 
-Statistical approaches can be used to try and calculate the size of an optimum training
-set, but this is difficult. In many cases a small set of data is available and then it is
-useful to consider the “behaviour” of the model when subjected to varying training sample
-sizes. A model-based sample size determination method can be used to estimate the optimum
-number of images needed to arrive at a scientifically valid sample size that would give
+In many real-world scenarios, the amount image data available to train a deep learning model is
+limited. This is especially true in the medical imaging domain, where dataset creation is
+costly. One of first question that usually comes up when approaching a new problem is:
+**"how many images will we need to train a good enough machine learning model?"**
+
+In most cases, a small set of samples is available, and we can use it to model the relationship
+between training data size and model performance. Such a model can be used to estimate the optimal
+number of images needed to arrive at a sample size that would achieve
 the required model performance.
 
-A systematic review of [Sample-Size Determination Methodologies](https://www.researchgate.net/publication/335779941_Sample-Size_Determination_Methodologies_for_Machine_Learning_in_Medical_Imaging_Research_A_Systematic_Review)
+A systematic review of
+[Sample-Size Determination Methodologies](https://www.researchgate.net/publication/335779941_Sample-Size_Determination_Methodologies_for_Machine_Learning_in_Medical_Imaging_Research_A_Systematic_Review)
 by Balki et al. provides examples of several sample-size determination methods. In this
-example, a balanced subsampling scheme is used to determine the optimum sample size for
+example, a balanced subsampling scheme is used to determine the optimal sample size for
 our model. This is done by selecting a random subsample consisting of Y number of images
 and training the model using the subsample. The model is then evaluated on an independent
 test set. This process is repeated N times for each subsample with replacement to allow
 for the construction of a mean and confidence interval for the observed performance.
-
-This example requires TensorFlow 2.4 or higher.
 """
 
 """
@@ -137,8 +135,7 @@ train it and unfreeze layers for fine-tuning.
 
 
 def build_model(num_classes, img_size=image_size[0], top_dropout=0.3):
-    """Creates a Keras application model without the top layer using imagenet
-        weights, adding new custom top layers.
+    """Creates a classifier based on pre-trained MobileNetV2.
 
     Arguments:
         num_classes: Int, number of classese to use in the softmax layer.
@@ -179,18 +176,15 @@ def compile_and_train(
     patience=5,
     epochs=5,
 ):
-    """Compiles and trains a Keras model using EarlyStopping callback on
-        'val_auc' (requires at minimum 'auc' as a metric. Compiles using
-        categorical_crossentropy loss with optimizer and metrics of choice.
-        Validation split set to 10%.
+    """Compiles and trains the model.
 
     Arguments:
         model: Uncompiled Keras model.
         training_data: NumPy Array, trainig data.
         training_labels: NumPy Array, trainig labels.
-        metrics: Keras/TF metrics, requires at least 'auc' metric(defaults is
-                [keras.metrics.AUC(name='auc'), 'acc']).
-        optimizer: Keras/TF optimizer (defaults is keras.optimizers.Adam()).
+        metrics: Keras/TF metrics, requires at least 'auc' metric (default is
+                `[keras.metrics.AUC(name='auc'), 'acc']`).
+        optimizer: Keras/TF optimizer (defaults is `keras.optimizers.Adam()).
         patience: Int, epochsfor EarlyStopping patience (defaults is 5).
         epochs: Int, number of epochs to train (default is 5).
 
@@ -260,8 +254,11 @@ To train a model over several subsample sets we need to create an iterative trai
 
 
 def train_model(training_data, training_labels):
-    """Builds a model, trains only the top layers for 10 epochs. Unfreezes
-        deeper layers train for 20 more epochs. Calculates model accuracy.
+    """Trains the model as follows:
+    
+    - Trains only the top layers for 10 epochs.
+    - Unfreezes deeper layers.
+    - Train for 20 more epochs.
 
     Arguments:
         training_data: NumPy Array, trainig data.
@@ -385,9 +382,7 @@ the whole training set.
 
 
 def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
-    """Fits a learning curve to model training accuracy results and predicts
-        accuracy for a newly given sample size. Alco calculates the mean absolute 
-        error (MAE) for the curve fit.
+    """Fits a learning curve to model training accuracy results.
 
     Arguments:
         train_acc: List/Numpy Array, training accuracy for all model
@@ -396,9 +391,6 @@ def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
                     each split.
         pred_sample_size: Int, sample size to predict model accuracy based on
                         fitted learning curve.
-
-    Returns:
-        None.
     """
     x = sample_sizes
     mean_acc = [np.mean(i) for i in train_acc]
@@ -484,6 +476,4 @@ methodology can be used to predict the amount of images needed to reach a desire
 This is very useful when a smaller set of data is available, and it has been shown that
 convergence on a deep learning model is possible, but more images are needed. The image count
 prediction can be used to plan and budget for further image collection initiatives.
-
-*Note: repeat results may vary due to randomness.
 """
