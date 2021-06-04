@@ -99,7 +99,7 @@ to not contain extreme variations in objects and actions across frames. Because 
 it may be okay to only consider a few frames for the learning task. But this approach may
 not generalize well to other video classification problems. We will be using
 [OpenCV's `VideoCapture()` method](https://docs.opencv.org/master/dd/d43/tutorial_py_video_display.html) to read
-frames from videos. 
+frames from videos.
 """
 
 # The following two methods are taken from this tutorial:
