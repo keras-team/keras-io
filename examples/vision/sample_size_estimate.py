@@ -2,8 +2,8 @@
 Title: Estimating required sample size for model training
 Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
-Last modified: 2021/05/21
-Description: Estimate the number of samples required to reach a desired model accuracy.
+Last modified: 2021/06/04
+Description: Estimate the model accuracy for a specific training set size.
 """
 
 """
@@ -328,8 +328,19 @@ To keep this example lightweight, sample data from a previous training run is pr
 
 
 def train_iteratively(sample_splits=[0.05, 0.1, 0.25, 0.5], iter_per_split=5):
+    """Trains a model iteratively over several sample splits.
+
+    Arguments:
+        sample_splits: List/NumPy array, contains fractions of the trainins set
+                        to train over.
+        iter_per_split: Int, number of times to train a model per sample split.
+
+    Returns:
+        Training accuracy for all splits and iterations and the number of samples
+        used for training at each split.
+    """
     # Train all the sample models and calculate accuracy
-    overall_accuracy = []
+    train_acc = []
     sample_sizes = []
 
     for fraction in sample_splits:
@@ -347,13 +358,13 @@ def train_iteratively(sample_splits=[0.05, 0.1, 0.25, 0.5], iter_per_split=5):
             accuracy = train_model(train_img_subset, train_label_subset)
             print(f"Accuracy: {accuracy}")
             sample_accuracy.append(accuracy)
-        overall_accuracy.append(sample_accuracy)
+        train_acc.append(sample_accuracy)
         sample_sizes.append(num_samples)
-    return overall_accuracy, sample_sizes
+    return train_acc, sample_sizes
 
 
 # Running the above function produces the following outputs
-overall_accuracy = [
+train_acc = [
     [0.82016348773, 0.74659400544, 0.80108991825, 0.84468664850, 0.82288828337],
     [0.86103542234, 0.87738419618, 0.85013623978, 0.89373297002, 0.89100817438],
     [0.89100817438, 0.92370572207, 0.88555858310, 0.91008174386, 0.89100817438],
@@ -373,74 +384,86 @@ the whole training set.
 """
 
 # The x-values, mean accuracy and errors can be extracted
-x = sample_sizes
-mean_acc = [np.mean(i) for i in overall_accuracy]
-error = [np.std(i) for i in overall_accuracy]
-
-# Define mean squared error cost and exponential curve fit functions
-mse = keras.losses.MeanSquaredError()
 
 
-def exp_func(x, a, b):
-    return a * x ** b
+def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
+    """Fits a learning curve to model training accuracy results and predicts
+        accuracy for a newly given sample size. Alco calculates the mean absolute 
+        error (MAE) for the curve fit.
+
+    Arguments:
+        train_acc: List/Numpy Array, training accuracy for all model
+                    training splits and iterations.
+        sample_sizes: List/Numpy array, number of samples used for training at
+                    each split.
+        pred_sample_size: Int, sample size to predict model accuracy based on
+                        fitted learning curve.
+
+    Returns:
+        None.
+    """
+    x = sample_sizes
+    mean_acc = [np.mean(i) for i in train_acc]
+    error = [np.std(i) for i in train_acc]
+
+    # Define mean squared error cost and exponential curve fit functions
+    mse = keras.losses.MeanSquaredError()
+
+    def exp_func(x, a, b):
+        return a * x ** b
+
+    # Define variables, learning rate and number of epochs for fitting with TF
+    a = tf.Variable(0.0)
+    b = tf.Variable(0.0)
+    learning_rate = 0.01
+    training_epochs = 5000
+
+    # Fit the exponential function to the data
+    for epoch in range(training_epochs):
+        with tf.GradientTape() as tape:
+            y_pred = exp_func(x, a, b)
+            cost_function = mse(y_pred, mean_acc)
+        # Get gradients and compute adjusted weights
+        gradients = tape.gradient(cost_function, [a, b])
+        a.assign_sub(gradients[0] * learning_rate)
+        b.assign_sub(gradients[1] * learning_rate)
+    print(f"Curve fit weights: a = {a.numpy()} and b = {b.numpy()}.")
+
+    # We can now estimate the accuracy for pred_sample_size
+    max_acc = exp_func(pred_sample_size, a, b).numpy()
+
+    # Print predicted x value and append to plot values
+    print(f"A model accuracy of {max_acc} is predicted for {pred_sample_size} samples.")
+    x_cont = np.linspace(x[0], pred_sample_size, 100)
+
+    # Build the plot
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.errorbar(x, mean_acc, yerr=error, fmt="o", label="Mean acc & std dev.")
+    ax.plot(x_cont, exp_func(x_cont, a, b), "r-", label="Fitted exponential curve.")
+    ax.set_ylabel("Model clasification accuracy.", fontsize=12)
+    ax.set_xlabel("Training sample size.", fontsize=12)
+    ax.set_xticks(np.append(x, pred_sample_size))
+    ax.set_yticks(np.append(mean_acc, max_acc))
+    ax.set_xticklabels(list(np.append(x, pred_sample_size)), rotation=90, fontsize=10)
+    ax.yaxis.set_tick_params(labelsize=10)
+    ax.set_title("Learning curve: model accuracy vs sample size.", fontsize=14)
+    ax.legend(loc=(0.75, 0.75), fontsize=10)
+    ax.xaxis.grid(True)
+    ax.yaxis.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # The mean absolute error (MAE) is calculated for curve fit to see how well
+    # it fits the data. The lower the error the better the fit.
+    mae = keras.losses.MeanAbsoluteError()
+    print(f"The mae for the curve fit is {mae(mean_acc, exp_func(x, a, b)).numpy()}.")
 
 
-# Define variables, learning rate and number of epochs for fitting with TF
-a = tf.Variable(0.6)  # Use smart guesses for the weights to speed up fitting
-b = tf.Variable(0.05)
-learning_rate = 0.01
-training_epochs = 2000
-
-# Fit the exponential function to the data
-for epoch in range(training_epochs):
-    with tf.GradientTape() as tape:
-        y_pred = exp_func(x, a, b)
-        cost_function = mse(y_pred, mean_acc)
-    # Get gradients and compute adjusted weights
-    gradients = tape.gradient(cost_function, [a, b])
-    a.assign_sub(gradients[0] * learning_rate)
-    b.assign_sub(gradients[1] * learning_rate)
-print(f"Curve fit weights: a = {a.numpy()} and b = {b.numpy()}.")
-
-# We can now estimate the accuracy for the whole training set
-def predict_accuracy(num_samples):
-    """Predicts the model accuracy based on a given number of samples"""
-    return exp_func(num_samples, a, b).numpy()
-
-
-max_acc = predict_accuracy(num_train_samples)
-
-# Print predicted x value and append to plot values
-print(f"A model accuracy of {max_acc} is predicted for {num_train_samples} samples.")
-x_cont = np.linspace(x[0], num_train_samples, 100)
-
-# Build the plot
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.errorbar(x, mean_acc, yerr=error, fmt="o", label="Mean acc & std dev.")
-ax.plot(x_cont, exp_func(x_cont, a, b), "r-", label="Fitted exponential curve.")
-ax.set_ylabel("Model clasification accuracy.", fontsize=12)
-ax.set_xlabel("Training sample size.", fontsize=12)
-ax.set_xticks(np.append(x, num_train_samples))
-ax.set_yticks(np.append(mean_acc, max_acc))
-ax.set_xticklabels(list(np.append(x, num_train_samples)), rotation=90, fontsize=10)
-ax.yaxis.set_tick_params(labelsize=10)
-ax.set_title("Learning curve: model accuracy vs sample size.", fontsize=14)
-ax.legend(loc=(0.75, 0.75), fontsize=10)
-ax.xaxis.grid(True)
-ax.yaxis.grid(True)
-plt.tight_layout()
-plt.show()
+# We use the whole training set to predict the model accuracy
+fit_and_predict(train_acc, sample_sizes, pred_sample_size=num_train_samples)
 
 """
-The mean absolute error (MAE) can be calculated for curve fit to see how well it fits
-the data. The lower the error the better the fit.
-"""
-
-mae = keras.losses.MeanAbsoluteError()
-print(f"The mae for the curve fit is {mae(mean_acc, exp_func(x, a, b)).numpy()}.")
-
-"""
-From the extrapolated curve we can see that 3303 images will yield approximately an
+From the extrapolated curve we can see that 3303 images will yield an estimated
 accuracy of about 95%.
 
 Now, let's use all the data (3303 images) and train the model to see if our prediction
@@ -448,8 +471,8 @@ was accurate!
 """
 
 # Now train the model with full dataset to get the actual accuracy
-# accuracy = train_model(img_train, label_train)
-# print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
+accuracy = train_model(img_train, label_train)
+print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
 
 """
 # Conclusion
