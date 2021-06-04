@@ -383,8 +383,6 @@ We then extrapolate the learning curve to the predict the accuracy of a model tr
 the whole training set.
 """
 
-# The x-values, mean accuracy and errors can be extracted
-
 
 def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
     """Fits a learning curve to model training accuracy results and predicts
