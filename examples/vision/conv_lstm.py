@@ -23,7 +23,6 @@ of predicting what images come next given a series of images.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 from tensorflow import keras
@@ -61,7 +60,10 @@ dataset = dataset[:1000, ...]
 dataset = np.expand_dims(dataset, axis=-1)
 
 # Split into train and validation sets using indexing to optimize memory.
-train_index, val_index = train_test_split(np.arange(dataset.shape[0]), train_size=0.9)
+indexes = np.arange(dataset.shape[0])
+np.random.shuffle(indexes)
+train_index = indexes[: int(0.9 * dataset.shape[0])]
+val_index = indexes[int(0.9 * dataset.shape[0]) :]
 train_dataset = dataset[train_index]
 val_dataset = dataset[val_index]
 
