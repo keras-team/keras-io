@@ -2,7 +2,7 @@
 Title: Estimating required sample size for model training
 Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
-Last modified: 2021/06/04
+Last modified: 2021/06/05
 Description: Estimate the model accuracy for a specific training set size.
 """
 
@@ -11,13 +11,12 @@ Description: Estimate the model accuracy for a specific training set size.
 
 In many real-world scenarios, the amount image data available to train a deep learning model is
 limited. This is especially true in the medical imaging domain, where dataset creation is
-costly. One of first question that usually comes up when approaching a new problem is:
+costly. One of the first questions that usually comes up when approaching a new problem is:
 **"how many images will we need to train a good enough machine learning model?"**
 
 In most cases, a small set of samples is available, and we can use it to model the relationship
 between training data size and model performance. Such a model can be used to estimate the optimal
-number of images needed to arrive at a sample size that would achieve
-the required model performance.
+number of images needed to arrive at a sample size that would achieve the required model performance.
 
 A systematic review of
 [Sample-Size Determination Methodologies](https://www.researchgate.net/publication/335779941_Sample-Size_Determination_Methodologies_for_Machine_Learning_in_Medical_Imaging_Research_A_Systematic_Review)
@@ -109,8 +108,8 @@ Define image augmentation using keras preprocessing layers and apply them to the
 # Define image augmentation model
 image_augmentation = keras.Sequential(
     [
-        preprocessing.RandomFlip("horizontal"),
-        preprocessing.RandomRotation(0.1),
+        preprocessing.RandomFlip(mode="horizontal"),
+        preprocessing.RandomRotation(factor=0.1),
         preprocessing.RandomZoom(height_factor=(-0.1, -0)),
         preprocessing.RandomContrast(factor=0.1),
     ],
@@ -299,11 +298,7 @@ def train_model(training_data, training_labels):
     )
 
     # Calculate model accuracy on the test set
-    y_pred = model.predict(img_test)
-    y_pred_indices = np.argmax(y_pred, axis=1)
-    acc = np.sum(np.equal(y_pred_indices, np.argmax(label_test, axis=1))) / len(
-        img_test
-    )
+    _, _, acc = model.evaluate(img_test, label_test)
     return np.round(acc, 4)
 
 
@@ -362,10 +357,10 @@ def train_iteratively(sample_splits=[0.05, 0.1, 0.25, 0.5], iter_per_split=5):
 
 # Running the above function produces the following outputs
 train_acc = [
-    [0.82016348773, 0.74659400544, 0.80108991825, 0.84468664850, 0.82288828337],
-    [0.86103542234, 0.87738419618, 0.85013623978, 0.89373297002, 0.89100817438],
-    [0.89100817438, 0.92370572207, 0.88555858310, 0.91008174386, 0.89100817438],
-    [0.89373297002, 0.93732970027, 0.91280653950, 0.87193460490, 0.91280653950],
+    [0.8202, 0.7466, 0.8011, 0.8447, 0.8229],
+    [0.861, 0.8774, 0.8501, 0.8937, 0.891],
+    [0.891, 0.9237, 0.8856, 0.9101, 0.891],
+    [0.8937, 0.9373, 0.9128, 0.8719, 0.9128],
 ]
 
 sample_sizes = [165, 330, 825, 1651]
