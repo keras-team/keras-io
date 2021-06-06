@@ -2,8 +2,8 @@
 Title: Estimating required sample size for model training
 Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
-Last modified: 2021/06/05
-Description: Estimate the model accuracy for a specific training set size.
+Last modified: 2021/06/06
+Description: Modeling the relationship between training set size and model accuracy.
 """
 
 """
@@ -254,7 +254,7 @@ To train a model over several subsample sets we need to create an iterative trai
 
 def train_model(training_data, training_labels):
     """Trains the model as follows:
-    
+
     - Trains only the top layers for 10 epochs.
     - Unfreezes deeper layers.
     - Train for 20 more epochs.
@@ -456,8 +456,8 @@ was accurate!
 """
 
 # Now train the model with full dataset to get the actual accuracy
-accuracy = train_model(img_train, label_train)
-print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
+# accuracy = train_model(img_train, label_train)
+# print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
 
 """
 # Conclusion
