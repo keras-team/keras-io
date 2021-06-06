@@ -2,7 +2,7 @@
 Title: Image Captioning
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2021/05/29
-Last modified: 2021/06/29
+Last modified: 2021/06/06
 Description: Implement an image captioning model using a CNN and a Transformer.
 """
 
@@ -30,7 +30,7 @@ tf.random.set_seed(seed)
 ## Download the dataset
 
 We will be using the Flickr8K dataset for this tutorial. This dataset comprises over
-than 8,000 images that are each paired with five different captions.
+8,000 images, that are each paired with five different captions.
 """
 
 
@@ -55,13 +55,13 @@ VOCAB_SIZE = 10000
 # Fixed length allowed for any sequence
 SEQ_LENGTH = 20
 
-# Dimensions for the image embeddings and token embeddings
+# Dimension for the image embeddings and token embeddings
 EMBED_DIM = 512
 
 # Number of self-attention heads
 NUM_HEADS = 2
 
-# Dimensions of the feed-forward network
+# Per-layer units in the feed-forward network
 FF_DIM = 512
 
 # Other training parameters
@@ -184,13 +184,13 @@ vectorization = TextVectorization(
 vectorization.adapt(text_data)
 
 """
-## Building a tf dataset pipeline for training
+## Building a `tf.data.Dataset` pipeline for training
 
-We will generate pairs of images and the corresponding captions using `tf.data.Dataset`
+We will generate pairs of images and corresponding captions using a `tf.data.Dataset` object.
 The pipeline consists of two steps:
 
 1. Read the image from the disk
-2. Tokenize all the five captions corresponding to this image
+2. Tokenize all the five captions corresponding to the image
 """
 
 
@@ -221,11 +221,11 @@ valid_dataset = make_dataset(list(valid_data.keys()), list(valid_data.values()))
 """
 ## Building the model
 
-Our image captioning architecture consists of three models in total:
+Our image captioning architecture consists of three models:
 
-1. A CNN: Any CNN model as a backbone to extract the image features
+1. A CNN: used to extract the image features
 2. A TransformerEncoder: The extracted image features are then passed to a Transformer
-                    based encodder that generates a new representation of the inputs
+                    based encoder that generates a new representation of the inputs
 3. A TransformerDecoder: This model takes the encoder output and the text data
                     (sequences) as inputs and tries to learn to generate the caption.
 """
@@ -398,7 +398,6 @@ class ImageCaptioningModel(keras.Model):
         # 3. Pass each of the five captions one by one to the decoder
         # along with the encoder outputs and compute the loss as well as accuracy
         # for each caption.
-
         for i in range(self.num_captions_per_image):
             with tf.GradientTape() as tape:
                 batch_seq_inp = batch_seq[:, i, :-1]
