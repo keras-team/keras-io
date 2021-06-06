@@ -22,7 +22,7 @@ from tensorflow.keras.applications import efficientnet
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 
 
-seed = 1234
+seed = 111
 np.random.seed(seed)
 tf.random.set_seed(seed)
 
@@ -51,18 +51,21 @@ IMAGE_SIZE = (299, 299)
 
 # Vocabulary size
 VOCAB_SIZE = 10000
-# Maximum length allowed for any sequence
-SEQ_LENGTH = 40
+
+# Fixed length allowed for any sequence
+SEQ_LENGTH = 20
 
 # Dimensions for the image embeddings and token embeddings
 EMBED_DIM = 512
+
 # Number of self-attention heads
 NUM_HEADS = 2
+
 # Dimensions of the feed-forward network
 FF_DIM = 512
 
 # Other training parameters
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 EPOCHS = 15
 AUTOTUNE = tf.data.AUTOTUNE
 
@@ -195,6 +198,7 @@ def read_image(img_path, size=IMAGE_SIZE):
     img = tf.io.read_file(img_path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.resize(img, IMAGE_SIZE)
+    img = tf.image.convert_image_dtype(img, tf.float32)
     return img
 
 
@@ -221,9 +225,9 @@ Our image captioning architecture consists of three models in total:
 
 1. A CNN: Any CNN model as a backbone to extract the image features
 2. A TransformerEncoder: The extracted image features are then passed to a Transformer
-                         based encodder that generates a new representation of the inputs
-3. A TransformerDecoder: This model takes the encoder output and the text data (sequences)
-                         as inputs and tries to learn to generate the caption.
+                    based encodder that generates a new representation of the inputs
+3. A TransformerDecoder: This model takes the encoder output and the text data
+                    (sequences) as inputs and tries to learn to generate the caption.
 """
 
 
@@ -306,12 +310,15 @@ class TransformerDecoderBlock(layers.Layer):
         self.embedding = PositionalEmbedding(
             embed_dim=EMBED_DIM, sequence_length=SEQ_LENGTH, vocab_size=VOCAB_SIZE
         )
-        self.out = layers.Dense(VOCAB_SIZE, activation="softmax")
-        self.dropout = layers.Dropout(0.5)
+        self.out = layers.Dense(VOCAB_SIZE)
+        self.dropout_1 = layers.Dropout(0.1)
+        self.dropout_2 = layers.Dropout(0.5)
+        self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, training, mask=None):
         inputs = self.embedding(inputs)
         causal_mask = self.get_causal_attention_mask(inputs)
+        inputs = self.dropout_1(inputs, training=training)
 
         if mask is not None:
             padding_mask = tf.cast(mask[:, :, tf.newaxis], dtype=tf.int32)
@@ -333,7 +340,7 @@ class TransformerDecoderBlock(layers.Layer):
 
         proj_output = self.dense_proj(out_2)
         proj_out = self.layernorm_3(out_2 + proj_output)
-        proj_out = self.dropout(proj_out, training=training)
+        proj_out = self.dropout_2(proj_out, training=training)
 
         preds = self.out(proj_out)
         return preds
@@ -379,8 +386,8 @@ class ImageCaptioningModel(keras.Model):
 
     def _compute_loss_and_acc(self, batch_data, training=True):
         batch_img, batch_seq = batch_data
-        loss = 0
-        acc = 0
+        batch_loss = 0
+        batch_acc = 0
 
         # 1. Get image embeddings
         img_embed = self.cnn_model(batch_img)
@@ -389,44 +396,48 @@ class ImageCaptioningModel(keras.Model):
         encoder_out = self.encoder(img_embed, training=training)
 
         # 3. Pass each of the five captions one by one the decoder
-        # along with the encoder outputs and compute the loss for each caption.
-        # We will also compute the accuracy
+        # along with the encoder outputs and compute the loss as well as accuracy
+        # for each caption.
+
         for i in range(self.num_captions_per_image):
-            batch_seq_inp = batch_seq[:, i, :-1]
-            batch_seq_true = batch_seq[:, i, 1:]
+            with tf.GradientTape() as tape:
+                batch_seq_inp = batch_seq[:, i, :-1]
+                batch_seq_true = batch_seq[:, i, 1:]
 
-            # Compute the mask for the input sequence
-            mask = tf.math.not_equal(batch_seq_inp, 0)
+                # 4. Compute the mask for the input sequence
+                mask = tf.math.not_equal(batch_seq_inp, 0)
 
-            # Pass the encoder outputs, sequence inputs along with mask to the decoder
-            batch_seq_pred = self.decoder(
-                batch_seq_inp, encoder_out, training=training, mask=mask
+                # 5. Pass the encoder outputs, sequence inputs along with
+                # mask to the decoder
+                batch_seq_pred = self.decoder(
+                    batch_seq_inp, encoder_out, training=training, mask=mask
+                )
+
+                # 6. Calculate loss and accuracy
+                loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+                acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+
+                # 7. Update the batch loss and batch accuracy
+                batch_loss += loss
+                batch_acc += acc
+
+            # 8. Get the list of all the trainable weights
+            train_vars = (
+                self.encoder.trainable_variables + self.decoder.trainable_variables
             )
 
-            # Calculate loss and accuracy
-            loss += self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-            acc += self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+            # 9. Get the gradients
+            grads = tape.gradient(loss, train_vars)
 
-        return loss, acc / float(self.num_captions_per_image)
+            # 10. Update the trainable weights
+            self.optimizer.apply_gradients(zip(grads, train_vars))
+
+        return batch_loss, batch_acc / float(self.num_captions_per_image)
 
     def train_step(self, batch_data):
-        # 1. Compute the loss
-        with tf.GradientTape() as tape:
-            loss, acc = self._compute_loss_and_acc(batch_data)
-
-        # 2. Get the list of all the trainable weights
-        train_vars = self.encoder.trainable_variables + self.decoder.trainable_variables
-
-        # 7. Get the gradients
-        grads = tape.gradient(loss, train_vars)
-
-        # 8. Update the trainable weights
-        self.optimizer.apply_gradients(zip(grads, train_vars))
-
-        # 9. Update the loss tracker and the accuracy
+        loss, acc = self._compute_loss_and_acc(batch_data)
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
-
         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
 
     def test_step(self, batch_data):
@@ -458,10 +469,12 @@ caption_model = ImageCaptioningModel(
 """
 
 # Define the loss function
-cross_entropy = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+cross_entropy = keras.losses.SparseCategoricalCrossentropy(
+    from_logits=True, reduction="none"
+)
 
 # EarlyStopping criteria
-early_stopping = keras.callbacks.EarlyStopping(patience=2, restore_best_weights=True)
+early_stopping = keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True)
 
 # Compile the model
 caption_model.compile(optimizer=keras.optimizers.Adam(), loss=cross_entropy)
@@ -505,8 +518,9 @@ def generate_caption():
     decoded_caption = "<start> "
     for i in range(max_decoded_sentence_length):
         tokenized_caption = vectorization([decoded_caption])[:, :-1]
+        mask = tf.math.not_equal(tokenized_caption, 0)
         predictions = caption_model.decoder(
-            tokenized_caption, encoded_img, training=False
+            tokenized_caption, encoded_img, training=False, mask=mask
         )
         sampled_token_index = np.argmax(predictions[0, i, :])
         sampled_token = index_lookup[sampled_token_index]
