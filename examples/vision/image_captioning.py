@@ -395,7 +395,7 @@ class ImageCaptioningModel(keras.Model):
         # 2. Pass image embeddings to encoder
         encoder_out = self.encoder(img_embed, training=training)
 
-        # 3. Pass each of the five captions one by one the decoder
+        # 3. Pass each of the five captions one by one to the decoder
         # along with the encoder outputs and compute the loss as well as accuracy
         # for each caption.
 
