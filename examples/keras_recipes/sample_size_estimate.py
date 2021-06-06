@@ -2,7 +2,7 @@
 Title: Estimating required sample size for model training
 Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
-Last modified: 2021/06/05
+Last modified: 2021/06/06
 Description: Modeling the relationship between training set size and model accuracy.
 """
 
@@ -401,7 +401,7 @@ def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
     a = tf.Variable(0.0)
     b = tf.Variable(0.0)
     learning_rate = 0.01
-    training_epochs = 1000
+    training_epochs = 5000
 
     # Fit the exponential function to the data
     for epoch in range(training_epochs):
@@ -456,8 +456,8 @@ was accurate!
 """
 
 # Now train the model with full dataset to get the actual accuracy
-# accuracy = train_model(img_train, label_train)
-# print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
+accuracy = train_model(img_train, label_train)
+print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
 
 """
 # Conclusion
