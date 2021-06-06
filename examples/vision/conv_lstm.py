@@ -2,8 +2,8 @@
 Title: Next-Frame Video Prediction with Convolutional LSTMs
 Author: [Amogh Joshi](https://github.com/amogh7joshi)
 Date created: 2021/06/02
-Last modified: 2021/06/02
-Description: How to build and train a convolutional LSTM deep neural network for next-frame video prediction.
+Last modified: 2021/06/05
+Description: How to build and train a convolutional LSTM model for next-frame video prediction.
 """
 
 """
@@ -11,10 +11,10 @@ Description: How to build and train a convolutional LSTM deep neural network for
 
 The 
 [Convolutional LSTM](https://papers.nips.cc/paper/2015/file/07563a3fe3bbe7e3ba84431ad9d055af-Paper.pdf) 
-model introduces time series predictions to computer vision by allowing computations
-on spatiotemporal video data. In this example, we will explore the 
+architectures bring together timeseries processing and computer vision by
+introducing a convolutional recurrent cell in a LSTM layer. In this example, we will explore the 
 Convolutional LSTM model in an application to next-frame prediction, the process
-of predicting what images come next given a series of images.
+of predicting what video frames come next given a series of past frames.
 """
 
 """
@@ -117,14 +117,10 @@ plt.show()
 """
 ## Model Construction
 
-To build a Convolutional LSTM model, we will utilize Keras's
+To build a Convolutional LSTM model, we will use the
 `ConvLSTM2D` layer, which will accept inputs of shape
-`(batch_size, n_frames, width, height, channels)`, and return
+`(batch_size, num_frames, width, height, channels)`, and return
 a prediction movie of the same shape.
-
-We will use Keras's
-[Functional API](https://keras.io/guides/functional_api/) to
-build the model:
 """
 
 # Construct the input layer with no definite frame size.
@@ -192,12 +188,12 @@ model.fit(
 """
 ## Frame Prediction Visualizations
 
-With our model now constructed and trained, we can create
-some example frame predictions based on the input data.
+With our model now constructed and trained, we can generate
+some example frame predictions based on a new video.
 
 We'll pick a random example from the validation set and
 then choose the first ten frames from them. From there, we can
-allow the model to predict ten new frames, which we can compare
+allow the model to predict 10 new frames, which we can compare
 to the ground truth frame predictions.
 """
 
