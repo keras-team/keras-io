@@ -11,7 +11,7 @@ Description: How to build and train a convolutional LSTM model for next-frame vi
 
 The 
 [Convolutional LSTM](https://papers.nips.cc/paper/2015/file/07563a3fe3bbe7e3ba84431ad9d055af-Paper.pdf) 
-architectures bring together timeseries processing and computer vision by
+architectures bring together time series processing and computer vision by
 introducing a convolutional recurrent cell in a LSTM layer. In this example, we will explore the 
 Convolutional LSTM model in an application to next-frame prediction, the process
 of predicting what video frames come next given a series of past frames.
