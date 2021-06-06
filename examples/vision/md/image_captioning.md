@@ -1,15 +1,20 @@
-"""
-Title: Image Captioning
-Author: [A_K_Nain](https://twitter.com/A_K_Nain)
-Date created: 2021/05/29
-Last modified: 2021/06/06
-Description: Implement an image captioning model using a CNN and a Transformer.
-"""
+# Image Captioning
 
-"""
+**Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
+**Date created:** 2021/05/29<br>
+**Last modified:** 2021/06/06<br>
+**Description:** Implement an image captioning model using a CNN and a Transformer.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/image_captioning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/image_captioning.py)
+
+
+
+---
 ## Setup
-"""
 
+
+```python
 import os
 import re
 import numpy as np
@@ -25,23 +30,25 @@ from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 seed = 111
 np.random.seed(seed)
 tf.random.set_seed(seed)
+```
 
-"""
+---
 ## Download the dataset
 
 We will be using the Flickr8K dataset for this tutorial. This dataset comprises over
 8,000 images, that are each paired with five different captions.
-"""
 
 
-"""shell
-wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
-wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip
-unzip -qq Flickr8k_Dataset.zip
-unzip -qq Flickr8k_text.zip
-rm Flickr8k_Dataset.zip Flickr8k_text.zip
-"""
+```python
+!wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
+!wget -q https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip
+!unzip -qq Flickr8k_Dataset.zip
+!unzip -qq Flickr8k_text.zip
+!rm Flickr8k_Dataset.zip Flickr8k_text.zip
+```
 
+
+```python
 
 # Path to the images
 IMAGES_PATH = "Flicker8k_Dataset"
@@ -69,11 +76,13 @@ BATCH_SIZE = 64
 EPOCHS = 30
 AUTOTUNE = tf.data.AUTOTUNE
 
+```
 
-"""
+---
 ## Preparing the dataset
-"""
 
+
+```python
 
 def load_captions_data(filename):
     """Loads captions (text) data and maps them to corresponding images.
@@ -153,8 +162,16 @@ captions_mapping, text_data = load_captions_data("Flickr8k.token.txt")
 train_data, valid_data = train_val_split(captions_mapping)
 print("Number of training samples: ", len(train_data))
 print("Number of validation samples: ", len(valid_data))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Number of training samples:  6472
+Number of validation samples:  1619
+
+```
+</div>
+---
 ## Vectorizing the text data
 
 We'll use the `TextVectorization` layer to vectorize the text data,
@@ -163,8 +180,9 @@ original strings into integer sequences where each integer represents the index 
 a word in a vocabulary. We will use a custom string standardization scheme
 (strip punctuation characters except `<` and `>`) and the default
 splitting scheme (split on whitespace).
-"""
 
+
+```python
 
 def custom_standardization(input_string):
     lowercase = tf.strings.lower(input_string)
@@ -182,8 +200,9 @@ vectorization = TextVectorization(
     standardize=custom_standardization,
 )
 vectorization.adapt(text_data)
+```
 
-"""
+---
 ## Building a `tf.data.Dataset` pipeline for training
 
 We will generate pairs of images and corresponding captions using a `tf.data.Dataset` object.
@@ -191,8 +210,9 @@ The pipeline consists of two steps:
 
 1. Read the image from the disk
 2. Tokenize all the five captions corresponding to the image
-"""
 
+
+```python
 
 def read_image(img_path, size=IMAGE_SIZE):
     img = tf.io.read_file(img_path)
@@ -217,8 +237,9 @@ def make_dataset(images, captions):
 # Pass the list of images and the list of corresponding captions
 train_dataset = make_dataset(list(train_data.keys()), list(train_data.values()))
 valid_dataset = make_dataset(list(valid_data.keys()), list(valid_data.values()))
+```
 
-"""
+---
 ## Building the model
 
 Our image captioning architecture consists of three models:
@@ -228,8 +249,9 @@ Our image captioning architecture consists of three models:
                     based encoder that generates a new representation of the inputs
 3. A TransformerDecoder: This model takes the encoder output and the text data
                     (sequences) as inputs and tries to learn to generate the caption.
-"""
 
+
+```python
 
 def get_cnn_model():
     base_model = efficientnet.EfficientNetB0(
@@ -462,11 +484,13 @@ decoder = TransformerDecoderBlock(
 caption_model = ImageCaptioningModel(
     cnn_model=cnn_model, encoder=encoder, decoder=decoder
 )
+```
 
-"""
+---
 ## Model training
-"""
 
+
+```python
 # Define the loss function
 cross_entropy = keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction="none"
@@ -485,11 +509,80 @@ caption_model.fit(
     validation_data=valid_dataset,
     callbacks=[early_stopping],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/30
+102/102 [==============================] - 108s 870ms/step - loss: 17.8187 - acc: 0.3348 - val_loss: 14.9386 - val_acc: 0.4246
+Epoch 2/30
+102/102 [==============================] - 87s 798ms/step - loss: 14.5171 - acc: 0.4263 - val_loss: 12.8639 - val_acc: 0.4591
+Epoch 3/30
+102/102 [==============================] - 87s 797ms/step - loss: 13.3328 - acc: 0.4546 - val_loss: 11.6439 - val_acc: 0.4827
+Epoch 4/30
+102/102 [==============================] - 87s 795ms/step - loss: 12.5629 - acc: 0.4680 - val_loss: 10.8319 - val_acc: 0.5024
+Epoch 5/30
+102/102 [==============================] - 87s 793ms/step - loss: 11.8896 - acc: 0.4844 - val_loss: 10.1778 - val_acc: 0.5200
+Epoch 6/30
+102/102 [==============================] - 87s 794ms/step - loss: 11.3603 - acc: 0.4961 - val_loss: 9.5783 - val_acc: 0.5377
+Epoch 7/30
+102/102 [==============================] - 86s 792ms/step - loss: 10.9604 - acc: 0.4997 - val_loss: 9.0548 - val_acc: 0.5532
+Epoch 8/30
+102/102 [==============================] - 87s 793ms/step - loss: 10.4629 - acc: 0.5191 - val_loss: 8.5665 - val_acc: 0.5708
+Epoch 9/30
+102/102 [==============================] - 87s 792ms/step - loss: 10.0396 - acc: 0.5294 - val_loss: 8.2714 - val_acc: 0.5793
+Epoch 10/30
+102/102 [==============================] - 87s 794ms/step - loss: 9.7202 - acc: 0.5363 - val_loss: 7.7541 - val_acc: 0.5999
+Epoch 11/30
+102/102 [==============================] - 87s 793ms/step - loss: 9.4190 - acc: 0.5497 - val_loss: 7.4767 - val_acc: 0.6108
+Epoch 12/30
+102/102 [==============================] - 86s 792ms/step - loss: 9.1445 - acc: 0.5578 - val_loss: 7.1285 - val_acc: 0.6236
+Epoch 13/30
+102/102 [==============================] - 86s 791ms/step - loss: 8.8761 - acc: 0.5697 - val_loss: 6.8233 - val_acc: 0.6355
+Epoch 14/30
+102/102 [==============================] - 86s 792ms/step - loss: 8.6291 - acc: 0.5795 - val_loss: 6.5597 - val_acc: 0.6460
+Epoch 15/30
+102/102 [==============================] - 86s 792ms/step - loss: 8.3854 - acc: 0.5871 - val_loss: 6.3434 - val_acc: 0.6560
+Epoch 16/30
+102/102 [==============================] - 87s 793ms/step - loss: 8.2089 - acc: 0.5938 - val_loss: 6.1205 - val_acc: 0.6641
+Epoch 17/30
+102/102 [==============================] - 86s 792ms/step - loss: 8.0622 - acc: 0.5986 - val_loss: 5.9047 - val_acc: 0.6761
+Epoch 18/30
+102/102 [==============================] - 86s 791ms/step - loss: 7.8163 - acc: 0.6077 - val_loss: 5.6701 - val_acc: 0.6850
+Epoch 19/30
+102/102 [==============================] - 86s 792ms/step - loss: 7.6717 - acc: 0.6130 - val_loss: 5.5881 - val_acc: 0.6870
+Epoch 20/30
+102/102 [==============================] - 86s 790ms/step - loss: 7.5109 - acc: 0.6168 - val_loss: 5.4276 - val_acc: 0.6941
+Epoch 21/30
+102/102 [==============================] - 86s 791ms/step - loss: 7.4174 - acc: 0.6180 - val_loss: 5.2176 - val_acc: 0.7046
+Epoch 22/30
+102/102 [==============================] - 86s 791ms/step - loss: 7.2118 - acc: 0.6278 - val_loss: 4.9934 - val_acc: 0.7147
+Epoch 23/30
+102/102 [==============================] - 86s 791ms/step - loss: 7.0644 - acc: 0.6357 - val_loss: 4.8968 - val_acc: 0.7175
+Epoch 24/30
+102/102 [==============================] - 86s 791ms/step - loss: 6.9504 - acc: 0.6428 - val_loss: 4.8188 - val_acc: 0.7227
+Epoch 25/30
+102/102 [==============================] - 86s 790ms/step - loss: 6.8367 - acc: 0.6450 - val_loss: 4.6168 - val_acc: 0.7325
+Epoch 26/30
+102/102 [==============================] - 86s 791ms/step - loss: 6.7263 - acc: 0.6510 - val_loss: 4.5875 - val_acc: 0.7332
+Epoch 27/30
+102/102 [==============================] - 86s 788ms/step - loss: 6.6951 - acc: 0.6481 - val_loss: 4.5294 - val_acc: 0.7334
+Epoch 28/30
+102/102 [==============================] - 86s 790ms/step - loss: 6.5242 - acc: 0.6582 - val_loss: 4.3365 - val_acc: 0.7444
+Epoch 29/30
+102/102 [==============================] - 86s 790ms/step - loss: 6.3877 - acc: 0.6614 - val_loss: 4.2305 - val_acc: 0.7493
+Epoch 30/30
+102/102 [==============================] - 86s 790ms/step - loss: 6.3973 - acc: 0.6652 - val_loss: 4.2088 - val_acc: 0.7502
+
+<tensorflow.python.keras.callbacks.History at 0x7fa9a47c6690>
+
+```
+</div>
+---
 ## Check sample predictions
-"""
 
+
+```python
 vocab = vectorization.get_vocabulary()
 index_lookup = dict(zip(range(len(vocab)), vocab))
 max_decoded_sentence_length = SEQ_LENGTH - 1
@@ -535,8 +628,43 @@ def generate_caption():
 generate_caption()
 generate_caption()
 generate_caption()
+```
 
-"""
+
+    
+![png](/img/examples/vision/image_captioning/image_captioning_17_0.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+PREDICTED CAPTION: a cowboy in a white outfit just got bucked off an angry bull
+
+```
+</div>
+    
+![png](/img/examples/vision/image_captioning/image_captioning_17_2.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+PREDICTED CAPTION: two girls laugh in the waves
+
+```
+</div>
+    
+![png](/img/examples/vision/image_captioning/image_captioning_17_4.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+PREDICTED CAPTION: two men one with a frisbee cap and a striped shirt
+
+```
+</div>
+---
 ## End Notes
 
 We saw that the model starts to generate reasonable captions after a few epochs. To keep
@@ -544,4 +672,3 @@ this example easily runnable, we have trained it with a few constraints, like a 
 number of attention heads, no image data augmentation, and no learning rate scheduling.
 To improve the predictions, you can try changing these training settings
 and find a good model for your use case.
-"""
