@@ -2,8 +2,8 @@
 """
 Title: CutMix data augmentation for image classification
 Author: [Sayan Nath](https://github.com/sayannath)
-Date created: 2021/03/25
-Last modified: 2021/03/25
+Date created: 2021/06/08
+Last modified: 2021/06/08
 Description: Data augmentation with CutMix for image classification on CIFAR-10.
 """
 
