@@ -1,4 +1,4 @@
-# 3D Image Classification from CT Scans
+# 3D image classification from CT scans
 
 **Author:** [Hasib Zunair](https://twitter.com/hasibzunair)<br>
 **Date created:** 2020/09/23<br>

@@ -16,18 +16,6 @@ This is a constantly-updated list of code examples that we're currently interest
 - [2](https://arxiv.org/abs/1912.04958)
 - [Reference TF implementation](https://github.com/NVlabs/stylegan2)
 
---
-
-## Improve next-frame prediction with ConvLSTM
-
-[Current example](https://keras.io/examples/vision/conv_lstm/)
-
-Recommendations:
-
-- Find a better, more interesting dataset
-- Make it work better
-- Add detailed explanations
-
 
 --
 
@@ -58,5 +46,38 @@ The dataset should have at least 50k samples and there should be at least a doze
 - [TF/Keras implementation](https://github.com/auvisusAI/detr-tensorflow)
 
 
+--
+
+## 3D image segmentation
+
+--
+
+## Question answering from structured knowledge base and freeform documents
+
+--
+
+## Instance segmentation
+
+--
+
+## EEG & MEG signal classification
+
+--
+
+## Text summarization
+
+--
+
+## Audio track separation
+
+--
+
+## Audio style transfer
+
+--
+
+## Timeseries imputation
+
+--
 
 

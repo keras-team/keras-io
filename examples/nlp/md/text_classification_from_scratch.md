@@ -71,7 +71,7 @@ labeledBow.feat [34mpos[m[m             unsupBow.feat   urls_pos.txt
 ```
 </div>
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
- which represents on review (either positive or negative):
+ which represents one review (either positive or negative):
 
 
 ```python

@@ -1,4 +1,4 @@
-# Image Classification with Vision Transformer
+# Image classification with Vision Transformer
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/01/18<br>

@@ -1,5 +1,5 @@
 """
-Title: Consistency Training with Supervision
+Title: Consistency training with supervision
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/13
 Last modified: 2021/04/19

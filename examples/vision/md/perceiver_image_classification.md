@@ -1,4 +1,4 @@
-# Image Classification with Perceiver
+# Image classification with Perceiver
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/04/30<br>
@@ -14,7 +14,7 @@
 ## Introduction
 
 This example implements the
-[Perceiver: General Perception with Iterative Attention](https://arxiv.org/abs/2103.032069)
+[Perceiver: General Perception with Iterative Attention](https://arxiv.org/abs/2103.03206)
 model by Andrew Jaegle et al. for image classification,
 and demonstrates it on the CIFAR-100 dataset.
 

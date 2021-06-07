@@ -1,5 +1,5 @@
 """
-Title: Convolutional Autoencoder For Image Denoising
+Title: Convolutional autoencoder for image denoising
 Author: [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/01
 Last modified: 2021/03/01

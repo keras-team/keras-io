@@ -18,7 +18,7 @@ CSV file. Our data includes both numerical and categorical features. We will use
 preprocessing layers to normalize the numerical features and vectorize the categorical
 ones.
 
-Note that this example should be run with TensorFlow 2.3 or higher, or `tf-nightly`.
+Note that this example should be run with TensorFlow 2.5 or higher.
 
 ### The dataset
 
