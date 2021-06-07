@@ -326,6 +326,8 @@ class KerasIO:
 
         guides/md/ -> sources/guides/
         guides/md/intro_* -> sources/getting_started/
+        guides/md/keras-tuner/getting_started.md
+            -> sources/ecosystem/keras-tuner/getting_started.md
         examples/*/md/ -> sources/examples/*/
         """
         # Guides
@@ -344,6 +346,13 @@ class KerasIO:
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_researchers.md",
+        )
+        shutil.copyfile(
+            Path(self.templates_dir) / "guides" / "keras-tuner" / "getting_started.md",
+            Path(self.templates_dir)
+            / "ecosystem"
+            / "keras-tuner"
+            / "getting_started.md",
         )
 
         # Examples

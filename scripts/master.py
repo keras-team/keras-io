@@ -29,10 +29,6 @@ MASTER = {
                     'title': 'Introduction to Keras for researchers',
                 },
                 {
-                    'path': 'ecosystem',
-                    'title': 'The Keras ecosystem',
-                },
-                {
                     'path': 'learning_resources',
                     'title': 'Learning resources',
                 },
@@ -440,6 +436,22 @@ MASTER = {
         {
             'path': 'why_keras',
             'title': 'Why choose Keras?',
+        },
+        {
+            'path': 'ecosystem/',
+            'title': 'The Keras ecosystem',
+            'children': [
+                {
+                    'path': 'keras-tuner/',
+                    'title': 'Keras Tuner',
+                    'children': [
+                        {
+                            'path': 'getting_started',
+                            'title': 'Getting stared on Keras Tuner',
+                        },
+                    ]
+                }
+            ]
         },
         {
             'path': 'governance',
