@@ -15,32 +15,6 @@
 !pip install keras-tuner
 ```
 
-<div class="k-default-codeblock">
-```
-Defaulting to user installation because normal site-packages is not writeable
-Requirement already satisfied: keras-tuner in /home/me/.local/lib/python3.6/site-packages (1.0.2)
-Requirement already satisfied: scipy in /home/me/.local/lib/python3.6/site-packages (from keras-tuner) (1.5.4)
-Requirement already satisfied: future in /home/me/.local/lib/python3.6/site-packages (from keras-tuner) (0.18.2)
-Requirement already satisfied: scikit-learn in /home/me/.local/lib/python3.6/site-packages (from keras-tuner) (0.24.2)
-Requirement already satisfied: numpy in /usr/local/lib/python3.6/dist-packages (from keras-tuner) (1.19.5)
-Requirement already satisfied: colorama in /usr/local/lib/python3.6/dist-packages (from keras-tuner) (0.4.4)
-Requirement already satisfied: terminaltables in /home/me/.local/lib/python3.6/site-packages (from keras-tuner) (3.1.0)
-Requirement already satisfied: requests in /usr/local/lib/python3.6/dist-packages (from keras-tuner) (2.25.1)
-Requirement already satisfied: packaging in /usr/local/lib/python3.6/dist-packages (from keras-tuner) (20.9)
-Requirement already satisfied: tqdm in /home/me/.local/lib/python3.6/site-packages (from keras-tuner) (4.61.0)
-Requirement already satisfied: tabulate in /home/me/.local/lib/python3.6/site-packages (from keras-tuner) (0.8.9)
-Requirement already satisfied: pyparsing>=2.0.2 in /usr/local/lib/python3.6/dist-packages (from packaging->keras-tuner) (2.4.7)
-Requirement already satisfied: chardet<5,>=3.0.2 in /usr/local/lib/python3.6/dist-packages (from requests->keras-tuner) (4.0.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.6/dist-packages (from requests->keras-tuner) (2020.12.5)
-Requirement already satisfied: idna<3,>=2.5 in /usr/lib/python3/dist-packages (from requests->keras-tuner) (2.6)
-Requirement already satisfied: urllib3<1.27,>=1.21.1 in /usr/local/lib/python3.6/dist-packages (from requests->keras-tuner) (1.26.4)
-Requirement already satisfied: threadpoolctl>=2.0.0 in /home/me/.local/lib/python3.6/site-packages (from scikit-learn->keras-tuner) (2.1.0)
-Requirement already satisfied: joblib>=0.11 in /home/me/.local/lib/python3.6/site-packages (from scikit-learn->keras-tuner) (1.0.1)
-[33mWARNING: You are using pip version 21.1.1; however, version 21.1.2 is available.
-You should consider upgrading via the '/usr/bin/python3 -m pip install --upgrade pip' command.[0m
-
-```
-</div>
 Here's how to perform hyperparameter tuning for a single-layer dense neural
 network using random search.
 First, we need to prepare the dataset.

@@ -13,3 +13,4 @@ templates/examples/keras_recipes/*
 templates/examples/timeseries/*
 templates/examples/graph/*
 templates/guides/**/*.md
+templates/keras-tuner/getting_started.md
