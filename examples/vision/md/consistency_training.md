@@ -1,4 +1,4 @@
-# Consistency Training with Supervision
+# Consistency training with supervision
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/04/13<br>

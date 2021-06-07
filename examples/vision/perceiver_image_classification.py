@@ -1,5 +1,5 @@
 """
-Title: Image Classification with Perceiver
+Title: Image classification with Perceiver
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/04/30
 Last modified: 2021/01/30

@@ -1,5 +1,5 @@
 """
-Title: Image Classification with Vision Transformer
+Title: Image classification with Vision Transformer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/18
 Last modified: 2021/01/18

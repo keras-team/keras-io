@@ -1,5 +1,5 @@
 """
-Title: 3D Image Classification from CT Scans
+Title: 3D image classification from CT scans
 Author: [Hasib Zunair](https://twitter.com/hasibzunair)
 Date created: 2020/09/23
 Last modified: 2020/09/23

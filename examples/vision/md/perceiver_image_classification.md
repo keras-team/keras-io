@@ -1,4 +1,4 @@
-# Image Classification with Perceiver
+# Image classification with Perceiver
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/04/30<br>
