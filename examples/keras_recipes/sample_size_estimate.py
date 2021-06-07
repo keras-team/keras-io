@@ -29,7 +29,7 @@ for the construction of a mean and confidence interval for the observed performa
 """
 
 """
-# Setup
+## Setup
 """
 
 import matplotlib.pyplot as plt
@@ -47,7 +47,7 @@ np.random.seed(seed)
 AUTO = tf.data.AUTOTUNE
 
 """
-# Load TensorFlow dataset and convert to NumPy arrays
+## Load TensorFlow dataset and convert to NumPy arrays
 
 We'll be using the [TF Flowers dataset](https://www.tensorflow.org/datasets/catalog/tf_flowers).
 """
@@ -89,7 +89,7 @@ num_train_samples = len(img_train)
 print(f"Number of training samples: {num_train_samples}")
 
 """
-# Plot a few examples from the test set
+## Plot a few examples from the test set
 """
 
 plt.figure(figsize=(16, 12))
@@ -100,7 +100,7 @@ for n in range(30):
     plt.axis("off")
 
 """
-# Augmentation
+## Augmentation
 
 Define image augmentation using keras preprocessing layers and apply them to the training set.
 """
@@ -126,7 +126,7 @@ for n in range(30):
     plt.axis("off")
 
 """
-# Define model building & training functions
+## Define model building & training functions
 
 We create a few convenience functions to build a transfer-learning model, compile and
 train it and unfreeze layers for fine-tuning.
@@ -246,7 +246,7 @@ def unfreeze(model, block_name, verbose=0):
 
 
 """
-# Define iterative training function
+## Define iterative training function
 
 To train a model over several subsample sets we need to create an iterative training function.
 """
@@ -303,7 +303,7 @@ def train_model(training_data, training_labels):
 
 
 """
-# Train models iteratively
+## Train models iteratively
 
 Now that we have model building functions and supporting iterative functions we can train
 the model over several subsample splits.
@@ -366,7 +366,7 @@ train_acc = [
 sample_sizes = [165, 330, 825, 1651]
 
 """
-# Learning curve
+## Learning curve
 
 We now plot the learning curve by fitting an exponential curve through the mean accuracy
 points. We use TF to fit an exponential function through the data.
@@ -460,7 +460,7 @@ accuracy = train_model(img_train, label_train)
 print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!")
 
 """
-# Conclusion
+## Conclusion
 
 We see that a model accuracy of about 94-96%* is reached using 3303 images. This is quite
 close to our estimate!

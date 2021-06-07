@@ -10,7 +10,7 @@
 
 
 
-# Introduction
+## Introduction
 
 In many real-world scenarios, the amount image data available to train a deep learning model is
 limited. This is especially true in the medical imaging domain, where dataset creation is
@@ -30,7 +30,7 @@ and training the model using the subsample. The model is then evaluated on an in
 test set. This process is repeated N times for each subsample with replacement to allow
 for the construction of a mean and confidence interval for the observed performance.
 
-# Setup
+## Setup
 
 
 ```python
@@ -49,7 +49,7 @@ np.random.seed(seed)
 AUTO = tf.data.AUTOTUNE
 ```
 
-# Load TensorFlow dataset and convert to NumPy arrays
+## Load TensorFlow dataset and convert to NumPy arrays
 
 We'll be using the [TF Flowers dataset](https://www.tensorflow.org/datasets/catalog/tf_flowers).
 
@@ -100,7 +100,7 @@ Number of training samples: 3303
 
 ```
 </div>
-# Plot a few examples from the test set
+## Plot a few examples from the test set
 
 
 ```python
@@ -118,7 +118,7 @@ for n in range(30):
     
 
 
-# Augmentation
+## Augmentation
 
 Define image augmentation using keras preprocessing layers and apply them to the training set.
 
@@ -151,7 +151,7 @@ for n in range(30):
     
 
 
-# Define model building & training functions
+## Define model building & training functions
 
 We create a few convenience functions to build a transfer-learning model, compile and
 train it and unfreeze layers for fine-tuning.
@@ -272,7 +272,7 @@ def unfreeze(model, block_name, verbose=0):
 
 ```
 
-# Define iterative training function
+## Define iterative training function
 
 To train a model over several subsample sets we need to create an iterative training function.
 
@@ -330,7 +330,7 @@ def train_model(training_data, training_labels):
 
 ```
 
-# Train models iteratively
+## Train models iteratively
 
 Now that we have model building functions and supporting iterative functions we can train
 the model over several subsample splits.
@@ -394,7 +394,7 @@ train_acc = [
 sample_sizes = [165, 330, 825, 1651]
 ```
 
-# Learning curve
+## Learning curve
 
 We now plot the learning curve by fitting an exponential curve through the mean accuracy
 points. We use TF to fit an exponential function through the data.
@@ -560,7 +560,7 @@ A model accuracy of 0.9537 is reached on 3303 images!
 
 ```
 </div>
-# Conclusion
+## Conclusion
 
 We see that a model accuracy of about 94-96%* is reached using 3303 images. This is quite
 close to our estimate!
