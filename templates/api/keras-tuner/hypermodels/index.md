@@ -9,11 +9,11 @@ A simple code example is shown as follows.
 ```python
 class MyHyperModel(kt.HyperModel):
   def build(self, hp):
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(
+    model = keras.Sequential()
+    model.add(keras.layers.Dense(
         hp.Choice('units', [8, 16, 32]),
         activation='relu'))
-    model.add(tf.keras.layers.Dense(1, activation='relu'))
+    model.add(keras.layers.Dense(1, activation='relu'))
     model.compile(loss='mse')
     return model
 ```
@@ -27,8 +27,8 @@ tuner = kt.RandomSearch(
     max_trials=5)
 ```
 
-There are also some built-in `HyperModel` subclasses (e.g. HyperResNet,
-HyperXception) for the users to directly use so that the users don't need to
+There are also some built-in `HyperModel` subclasses (e.g. `HyperResNet`,
+`HyperXception`) for the users to directly use so that the users don't need to
 write their own search spaces.
 
 ```python
