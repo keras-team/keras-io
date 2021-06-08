@@ -10,6 +10,11 @@
 
 
 
+
+```python
+!pip install keras-tuner -q
+```
+
 The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to
 support advanced uses such as:
 
@@ -226,16 +231,16 @@ if __name__ == "__main__":
 <div class="k-default-codeblock">
 ```
 Trial 2 Complete [00h 00m 01s]
-loss: 2.279149055480957
+loss: 2.083385467529297
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best loss So Far: 2.1915926933288574
-Total elapsed time: 00h 00m 03s
+Best loss So Far: 2.083385467529297
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
-{'conv_layers': 3, 'filters_0': 8, 'kernel_size_0': 4, 'pooling0': 'avg', 'filters_1': 16, 'kernel_size_1': 4, 'pooling1': 'avg', 'filters_2': 20, 'kernel_size_2': 4, 'pooling2': 'avg', 'global_pooling': 'max', 'optimizer': 'sgd', 'batch_size': 64, 'learning_rate': 0.001}
+{'conv_layers': 3, 'filters_0': 12, 'kernel_size_0': 4, 'pooling0': 'avg', 'filters_1': 20, 'kernel_size_1': 4, 'pooling1': 'avg', 'filters_2': 28, 'kernel_size_2': 4, 'pooling2': 'avg', 'global_pooling': 'avg', 'optimizer': 'sgd', 'batch_size': 64, 'learning_rate': 0.005594661103196281}
 
 ```
 </div>

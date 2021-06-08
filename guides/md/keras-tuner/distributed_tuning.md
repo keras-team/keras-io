@@ -10,6 +10,11 @@
 
 
 
+
+```python
+!pip install keras-tuner -q
+```
+
 Keras Tuner makes it easy to perform distributed hyperparameter search. No
 changes to your code are needed to scale up from running single-threaded
 locally to running on dozens or hundreds of workers in parallel. Distributed
@@ -186,15 +191,15 @@ if __name__ == "__main__":
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 07s]
-val_accuracy: 0.7400000095367432
+Trial 2 Complete [00h 00m 02s]
+val_accuracy: 0.2199999988079071
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.7400000095367432
-Total elapsed time: 00h 00m 16s
+Best val_accuracy So Far: 0.5
+Total elapsed time: 00h 00m 05s
 INFO:tensorflow:Oracle triggered exit
 
 ```

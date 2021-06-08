@@ -1,4 +1,4 @@
-# Getting stared with Keras Tuner
+# Getting started with Keras Tuner
 
 **Authors:** Luca Invernizzi, James Long, Francois Chollet, Tom O'Malley, Haifeng Jin<br>
 **Date created:** 2019/05/31<br>
@@ -12,7 +12,7 @@
 
 
 ```python
-!pip install keras-tuner
+!pip install keras-tuner -q
 ```
 
 Here's how to perform hyperparameter tuning for a single-layer dense neural
@@ -135,15 +135,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 26s]
-val_accuracy: 0.9576500058174133
+Trial 3 Complete [00h 00m 15s]
+val_accuracy: 0.9517499804496765
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9730499982833862
-Total elapsed time: 00h 01m 24s
+Best val_accuracy So Far: 0.9594999849796295
+Total elapsed time: 00h 00m 50s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -175,19 +175,19 @@ Showing 10 best trials
 Objective(name='val_accuracy', direction='max')
 Trial summary
 Hyperparameters:
-units: 384
-learning_rate: 0.001
-Score: 0.9730499982833862
-Trial summary
-Hyperparameters:
-units: 288
+units: 96
 learning_rate: 0.01
-Score: 0.9576500058174133
+Score: 0.9594999849796295
 Trial summary
 Hyperparameters:
-units: 64
-learning_rate: 0.001
-Score: 0.9576499760150909
+units: 192
+learning_rate: 0.01
+Score: 0.9517499804496765
+Trial summary
+Hyperparameters:
+units: 128
+learning_rate: 0.0001
+Score: 0.9302999973297119
 
 ```
 </div>
@@ -280,15 +280,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 12s]
-val_accuracy: 0.9555000066757202
+Trial 3 Complete [00h 00m 06s]
+val_accuracy: 0.9577999711036682
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9743000268936157
-Total elapsed time: 00h 00m 41s
+Best val_accuracy So Far: 0.9682999849319458
+Total elapsed time: 00h 00m 21s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -322,15 +322,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 01m 41s]
-val_accuracy: 0.10000000149011612
+Trial 3 Complete [00h 00m 20s]
+val_accuracy: 0.10999999940395355
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.10000000149011612
-Total elapsed time: 00h 02m 45s
+Best val_accuracy So Far: 0.10999999940395355
+Total elapsed time: 00h 01m 38s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -375,15 +375,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 05s]
-val_accuracy: 0.10000000149011612
+Trial 3 Complete [00h 00m 03s]
+val_accuracy: 0.14000000059604645
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.10999999940395355
-Total elapsed time: 00h 00m 19s
+Best val_accuracy So Far: 0.14000000059604645
+Total elapsed time: 00h 00m 10s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -434,15 +434,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 06s]
-val_accuracy: 0.10000000149011612
+Trial 3 Complete [00h 00m 03s]
+val_accuracy: 0.07000000029802322
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.10000000149011612
-Total elapsed time: 00h 00m 36s
+Best val_accuracy So Far: 0.23999999463558197
+Total elapsed time: 00h 00m 22s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -479,15 +479,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 09s]
-val_loss: 0.09007570892572403
+Trial 3 Complete [00h 00m 07s]
+val_loss: 0.08818201720714569
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 0.08995667099952698
-Total elapsed time: 00h 00m 35s
+Best val_loss So Far: 0.08818201720714569
+Total elapsed time: 00h 00m 22s
 INFO:tensorflow:Oracle triggered exit
 
 ```

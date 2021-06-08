@@ -5,6 +5,11 @@ Date created: 2019/10/28
 Last modified: 2021/06/02
 Description: Subclassing the Tuner class in Keras Tuner for more customization like custom training loops.
 """
+
+"""shell
+pip install keras-tuner -q
+"""
+
 """
 
 The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to

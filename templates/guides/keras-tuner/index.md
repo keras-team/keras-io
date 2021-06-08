@@ -1,6 +1,6 @@
 # Hyperparameter Tuning
 
-These guides are for using Keras Tuner to tune the hyperparameters of the Keras models.
+These guides are deep-dives into specific topics of using Keras Tuner.
 
 ## Available guides
 

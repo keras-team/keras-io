@@ -5,6 +5,11 @@ Date created: 2019/10/24
 Last modified: 2021/06/02
 Description: Tuning the hyperparameters of the models with multiple GPUs and multiple machines.
 """
+
+"""shell
+pip install keras-tuner -q
+"""
+
 """
 
 Keras Tuner makes it easy to perform distributed hyperparameter search. No

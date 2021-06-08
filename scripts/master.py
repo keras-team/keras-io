@@ -455,7 +455,15 @@ MASTER = {
             'children': [
                 {
                     'path': 'getting_started',
-                    'title': 'Getting stared on Keras Tuner',
+                    'title': 'Getting started',
+                },
+                {
+                    'path': '../guides/keras-tuner',
+                    'title': 'Developer guides',
+                },
+                {
+                    'path': '../api/keras-tuner',
+                    'title': 'API reference',
                 },
             ]
         },

@@ -18,21 +18,21 @@ ORACLE_MASTER = {
         },
         {
             'path': 'random',
-            'title': 'RandomSearch',
+            'title': 'RandomSearchOracle',
             'generate': [
                 'kerastuner.oracles.RandomSearch',
             ]
         },
         {
             'path': 'bayesian',
-            'title': 'BayesianOptimization',
+            'title': 'BayesianOptimizationOracle',
             'generate': [
                 'kerastuner.oracles.BayesianOptimization',
             ]
         },
         {
             'path': 'hyperband',
-            'title': 'Hyperband',
+            'title': 'HyperbandOracle',
             'generate': [
                 'kerastuner.oracles.Hyperband',
             ]
@@ -80,6 +80,7 @@ TUNER_MASTER = {
             'title': 'The base Tuner class',
             'generate': [
                 'kerastuner.Tuner',
+                'kerastuner.Tuner.get_best_hyperparameters',
                 'kerastuner.Tuner.get_best_models',
                 'kerastuner.Tuner.get_state',
                 'kerastuner.Tuner.load_model',
@@ -87,14 +88,6 @@ TUNER_MASTER = {
                 'kerastuner.Tuner.on_batch_begin',
                 'kerastuner.Tuner.on_batch_end',
                 'kerastuner.Tuner.on_epoch_end',
-                'kerastuner.Tuner.run_trial',
-                'kerastuner.Tuner.save_model',
-                'kerastuner.Tuner.search',
-                'kerastuner.Tuner.set_state',
-                'kerastuner.Tuner.get_best_hyperparameters',
-                'kerastuner.Tuner.get_best_models',
-                'kerastuner.Tuner.get_state',
-                'kerastuner.Tuner.load_model',
                 'kerastuner.Tuner.run_trial',
                 'kerastuner.Tuner.save_model',
                 'kerastuner.Tuner.search',
