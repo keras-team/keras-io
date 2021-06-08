@@ -1,6 +1,6 @@
 # Hyperparameter Tuning
 
-These guides are deep-dives into specific topics of using Keras Tuner.
+These guides cover KerasTuner best practices.
 
 ## Available guides
 
