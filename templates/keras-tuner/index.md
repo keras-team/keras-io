@@ -18,8 +18,8 @@ Install latest release:
 pip install -U keras-tuner
 ```
 
-You can also checkout other versions in our
-[GitHub repository](https://github.com/keras-team/keras-tuner)
+You can also check out other versions in our
+[GitHub repository](https://github.com/keras-team/keras-tuner).
 
 ## Usage
 
@@ -27,7 +27,7 @@ Here is a simple example of how to use Keras Tuner.
 Import Keras Tuner and TensorFlow.
 ```python
 import kerastuner as kt
-import tensorflow as tf
+from tensorflow import keras
 ```
 
 Write a function that creates and returns a Keras model.
@@ -35,11 +35,11 @@ Use the `hp` argument to define the hyperparameters during model creation.
 
 ```python
 def build_model(hp):
-  model = tf.keras.Sequential()
-  model.add(tf.keras.layers.Dense(
+  model = keras.Sequential()
+  model.add(keras.layers.Dense(
       hp.Choice('units', [8, 16, 32]),
       activation='relu'))
-  model.add(tf.keras.layers.Dense(1, activation='relu'))
+  model.add(keras.layers.Dense(1, activation='relu'))
   model.compile(loss='mse')
   return model
 ```
