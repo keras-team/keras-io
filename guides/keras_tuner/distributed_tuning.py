@@ -6,23 +6,20 @@ Last modified: 2021/06/02
 Description: Tuning the hyperparameters of the models with multiple GPUs and multiple machines.
 """
 
-"""shell
-pip install keras-tuner -q
 """
+## Introduction
 
-"""
-
-Keras Tuner makes it easy to perform distributed hyperparameter search. No
+KerasTuner makes it easy to perform distributed hyperparameter search. No
 changes to your code are needed to scale up from running single-threaded
 locally to running on dozens or hundreds of workers in parallel. Distributed
-Keras Tuner uses a chief-worker model. The chief runs a service to which the
+KerasTuner uses a chief-worker model. The chief runs a service to which the
 workers report results and query for the hyperparameters to try next. The chief
 should be run on a single-threaded CPU instance (or alternatively as a separate
 process on one of the workers).
 
 ### Configuring distributed mode
 
-Configuring distributed mode for Keras Tuner only requires setting three
+Configuring distributed mode for KerasTuner only requires setting three
 environment variables:
 
 **KERASTUNER_TUNER_ID**: This should be set to "chief" for the chief process.
@@ -41,40 +38,35 @@ distributed mode are:
 
 - All workers should have access to a centralized file system to which they can
 write their results.
-
 - All workers should be able to access the necessary training and validation
 data needed for tuning.
-
 - To support fault-tolerance, `overwrite` should be kept as `False` in
 `Tuner.__init__` (`False` is the default).
 
 Example bash script for chief service (sample code for `run_tuning.py` at
 bottom of page):
 
-"""
-
-"""shell
+```
 export KERASTUNER_TUNER_ID="chief"
 export KERASTUNER_ORACLE_IP="127.0.0.1"
 export KERASTUNER_ORACLE_PORT="8000"
 python run_tuning.py
-"""
+```
 
-"""
 Example bash script for worker:
-"""
 
-"""shell
+```
 export KERASTUNER_TUNER_ID="tuner0"
 export KERASTUNER_ORACLE_IP="127.0.0.1"
 export KERASTUNER_ORACLE_PORT="8000"
 python run_tuning.py
+```
 """
 
 """
-### Data parallelism with tf.distribute
+### Data parallelism with `tf.distribute`
 
-Keras Tuner also supports data parallelism via
+KerasTuner also supports data parallelism via
 [tf.distribute](https://www.tensorflow.org/tutorials/distribute/keras). Data
 parallelism and distributed tuning can be combined. For example, if you have 10
 workers with 4 GPUs on each worker, you can run 10 parallel trials with each
@@ -140,37 +132,31 @@ def build_model(hp):
     return model
 
 
-def main():
-    """Runs the hyperparameter search."""
-    tuner = kt.Hyperband(
-        hypermodel=build_model,
-        objective="val_accuracy",
-        max_epochs=2,
-        factor=3,
-        hyperband_iterations=1,
-        distribution_strategy=tf.distribute.MirroredStrategy(),
-        directory="results_dir",
-        project_name="mnist",
-        overwrite=True,
-    )
+tuner = kt.Hyperband(
+    hypermodel=build_model,
+    objective="val_accuracy",
+    max_epochs=2,
+    factor=3,
+    hyperband_iterations=1,
+    distribution_strategy=tf.distribute.MirroredStrategy(),
+    directory="results_dir",
+    project_name="mnist",
+    overwrite=True,
+)
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
-    # Reshape the images to have the channel dimension.
-    x_train = (x_train.reshape(x_train.shape + (1,)) / 255.0)[:1000]
-    y_train = y_train.astype(np.int64)[:1000]
-    x_test = (x_test.reshape(x_test.shape + (1,)) / 255.0)[:100]
-    y_test = y_test.astype(np.int64)[:100]
+# Reshape the images to have the channel dimension.
+x_train = (x_train.reshape(x_train.shape + (1,)) / 255.0)[:1000]
+y_train = y_train.astype(np.int64)[:1000]
+x_test = (x_test.reshape(x_test.shape + (1,)) / 255.0)[:100]
+y_test = y_test.astype(np.int64)[:100]
 
-    tuner.search(
-        x_train,
-        y_train,
-        steps_per_epoch=600,
-        validation_data=(x_test, y_test),
-        validation_steps=100,
-        callbacks=[tf.keras.callbacks.EarlyStopping("val_accuracy")],
-    )
-
-
-if __name__ == "__main__":
-    main()
+tuner.search(
+    x_train,
+    y_train,
+    steps_per_epoch=600,
+    validation_data=(x_test, y_test),
+    validation_steps=100,
+    callbacks=[tf.keras.callbacks.EarlyStopping("val_accuracy")],
+)

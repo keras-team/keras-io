@@ -1,11 +1,15 @@
 KT_GUIDES_MASTER = {
-    'path': 'keras-tuner/',
+    'path': 'keras_tuner/',
     'title': 'Hyperparameter Tuning',
     'toc': True,
     'children': [
         {
+            'path': 'getting_started',
+            'title': 'Getting started with KerasTuner',
+        },
+        {
             'path': 'distributed_tuning',
-            'title': 'Distributed hyperparameter tuning',
+            'title': 'Distributed hyperparameter tuning with KerasTuner',
         },
         {
             'path': 'custom_tuner',

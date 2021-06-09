@@ -1,27 +1,27 @@
-# Getting started with Keras Tuner
+"""
+Title: Getting started with KerasTuner
+Authors: Luca Invernizzi, James Long, Francois Chollet, Tom O'Malley, Haifeng Jin
+Date created: 2019/05/31
+Last modified: 2021/06/07
+Description: The basics of using KerasTuner to tune model hyperparameters.
+"""
 
-**Authors:** Luca Invernizzi, James Long, Francois Chollet, Tom O'Malley, Haifeng Jin<br>
-**Date created:** 2019/05/31<br>
-**Last modified:** 2021/06/07<br>
-**Description:** The basics of using Keras Tuner to tune Keras model's hyperparameters.
+"""
+## Setup
+"""
 
+"""shell
+pip install keras-tuner -q
+"""
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras-tuner/getting_started.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras-tuner/getting_started.py)
-
-
-
-
-```python
-!pip install keras-tuner -q
-```
+"""
+## Introduction
 
 Here's how to perform hyperparameter tuning for a single-layer dense neural
 network using random search.
-First, we need to prepare the dataset.
-We use MNIST dataset as an example.
+First, we need to prepare the dataset -- let's use MNIST dataset as an example.
+"""
 
-
-```python
 from tensorflow import keras
 import numpy as np
 
@@ -40,7 +40,9 @@ num_classes = 10
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_val = keras.utils.to_categorical(y_val, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
-```
+
+"""
+## Prepare a model-building function
 
 Then, we define a model-building function. It takes an argument `hp` from
 which you can sample hyperparameters, such as
@@ -48,9 +50,8 @@ which you can sample hyperparameters, such as
 (an integer from a certain range).
 
 This function returns a compiled model.
+"""
 
-
-```python
 from tensorflow.keras import layers
 from kerastuner import RandomSearch
 
@@ -74,9 +75,11 @@ def build_model(hp):
     )
     return model
 
-```
 
-Next, instantiate a tuner. You should specify the model-building function, the
+"""
+## Start the search
+
+Next, let's instantiate a tuner. You should specify the model-building function, the
 name of the objective to optimize (whether to minimize or maximize is
 automatically inferred for built-in metrics), the total number of trials
 (`max_trials`) to test, and the number of models that should be built and fit
@@ -93,9 +96,8 @@ results variance and therefore be able to more accurately assess the
 performance of a model. If you want to get results faster, you could set
 `executions_per_trial=1` (single round of training for each model
 configuration).
+"""
 
-
-```python
 tuner = RandomSearch(
     build_model,
     objective="val_accuracy",
@@ -105,96 +107,46 @@ tuner = RandomSearch(
     directory="my_dir",
     project_name="helloworld",
 )
-```
 
+"""
 You can print a summary of the search space:
+"""
 
-
-```python
 tuner.search_space_summary()
-```
 
-<div class="k-default-codeblock">
-```
-Search space summary
-Default search space size: 2
-units (Int)
-{'default': None, 'conditions': [], 'min_value': 32, 'max_value': 512, 'step': 32, 'sampling': None}
-learning_rate (Choice)
-{'default': 0.01, 'conditions': [], 'values': [0.01, 0.001, 0.0001], 'ordered': True}
-
-```
-</div>
+"""
 Then, start the search for the best hyperparameter configuration.
 The call to `search` has the same signature as `model.fit()`.
+"""
 
-
-```python
 tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
-```
 
-<div class="k-default-codeblock">
-```
-Trial 3 Complete [00h 00m 15s]
-val_accuracy: 0.9517499804496765
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_accuracy So Far: 0.9594999849796295
-Total elapsed time: 00h 00m 50s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>
+"""
 Here's what happens in `search`: models are built iteratively by calling the
 model-building function, which populates the hyperparameter space (search
 space) tracked by the `hp` object. The tuner progressively explores the space,
 recording metrics for each configuration.
+"""
+
+"""
+## Query the results
 
 When search is over, you can retrieve the best model(s):
+"""
 
-
-```python
 models = tuner.get_best_models(num_models=2)
-```
 
+"""
 Or print a summary of the results:
+"""
 
-
-```python
 tuner.results_summary()
-```
 
-<div class="k-default-codeblock">
-```
-Results summary
-Results in my_dir/helloworld
-Showing 10 best trials
-Objective(name='val_accuracy', direction='max')
-Trial summary
-Hyperparameters:
-units: 96
-learning_rate: 0.01
-Score: 0.9594999849796295
-Trial summary
-Hyperparameters:
-units: 192
-learning_rate: 0.01
-Score: 0.9517499804496765
-Trial summary
-Hyperparameters:
-units: 128
-learning_rate: 0.0001
-Score: 0.9302999973297119
-
-```
-</div>
+"""
 You will also find detailed logs, checkpoints, etc, in the folder `my_dir/helloworld`, i.e. `directory/project_name`.
+"""
 
-
----
+"""
 ## The search space may contain conditional hyperparameters
 
 Below, we have a `for` loop creating a tunable number of layers,
@@ -204,9 +156,8 @@ This can be pushed to any level of parameter interdependency, including recursio
 
 Note that all parameter names should be unique (here, in the loop over `i`,
 we name the inner parameters `'units_' + str(i)`).
+"""
 
-
-```python
 
 def build_model(hp):
     model = keras.Sequential()
@@ -226,17 +177,15 @@ def build_model(hp):
     )
     return model
 
-```
 
----
+"""
 ## You can use a HyperModel subclass instead of a model-building function
 
 This makes it easy to share and reuse hypermodels.
 
 A `HyperModel` subclass only needs to implement a `build(self, hp)` method.
+"""
 
-
-```python
 from kerastuner import HyperModel
 
 
@@ -276,32 +225,15 @@ tuner = RandomSearch(
 )
 
 tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
-```
 
-<div class="k-default-codeblock">
-```
-Trial 3 Complete [00h 00m 06s]
-val_accuracy: 0.9577999711036682
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_accuracy So Far: 0.9682999849319458
-Total elapsed time: 00h 00m 21s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>
----
-## Keras Tuner includes pre-made tunable applications: HyperResNet and HyperXception
+"""
+## KerasTuner includes pre-made tunable applications: HyperResNet and HyperXception
 
 These are ready-to-use hypermodels for computer vision.
 
 They come pre-compiled with `loss="categorical_crossentropy"` and `metrics=["accuracy"]`.
+"""
 
-
-```python
 from kerastuner.applications import HyperResNet
 
 hypermodel = HyperResNet(input_shape=(28, 28, 1), classes=10)
@@ -318,24 +250,8 @@ tuner = RandomSearch(
 tuner.search(
     x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
 )
-```
 
-<div class="k-default-codeblock">
-```
-Trial 3 Complete [00h 00m 20s]
-val_accuracy: 0.10999999940395355
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_accuracy So Far: 0.10999999940395355
-Total elapsed time: 00h 01m 38s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>
----
+"""
 ## You can easily restrict the search space to just a few parameters
 
 If you have an existing hypermodel, and you want to search over only a few parameters
@@ -343,15 +259,15 @@ If you have an existing hypermodel, and you want to search over only a few param
 to the tuner constructor, as well as `tune_new_entries=False` to specify that parameters
 that you didn't list in `hyperparameters` should not be tuned. For these parameters, the default
 value gets used.
+"""
 
-
-```python
 from kerastuner import HyperParameters
 from kerastuner.applications import HyperXception
 
 hypermodel = HyperXception(input_shape=(28, 28, 1), classes=10)
 
 hp = HyperParameters()
+
 # This will override the `learning_rate` parameter with your
 # own selection of choices
 hp.Choice("learning_rate", values=[1e-2, 1e-3, 1e-4])
@@ -371,26 +287,8 @@ tuner = RandomSearch(
 tuner.search(
     x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
 )
-```
 
-<div class="k-default-codeblock">
-```
-Trial 3 Complete [00h 00m 03s]
-val_accuracy: 0.14000000059604645
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_accuracy So Far: 0.14000000059604645
-Total elapsed time: 00h 00m 10s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>
-Want to know what parameter names are available? Read the code.
-
----
+"""
 ## About parameter default values
 
 Whenever you register a hyperparameter inside a model-building function or the `build` method of a hypermodel,
@@ -402,15 +300,13 @@ hp.Int("units", min_value=32, max_value=512, step=32, default=128)
 
 If you don't, hyperparameters always have a default default (for `Int`, it is equal to `min_value`).
 
----
 ## Fixing values in a hypermodel
 
 What if you want to do the reverse -- tune all available parameters in a hypermodel, **except** one (the learning rate)?
 
 Pass a `hyperparameters` argument with a `Fixed` entry (or any number of `Fixed` entries), and specify `tune_new_entries=True`.
+"""
 
-
-```python
 hypermodel = HyperXception(input_shape=(28, 28, 1), classes=10)
 
 hp = HyperParameters()
@@ -430,31 +326,15 @@ tuner = RandomSearch(
 tuner.search(
     x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
 )
-```
 
-<div class="k-default-codeblock">
-```
-Trial 3 Complete [00h 00m 03s]
-val_accuracy: 0.07000000029802322
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_accuracy So Far: 0.23999999463558197
-Total elapsed time: 00h 00m 22s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>
----
+"""
 ## Overriding compilation arguments
 
-If you have a hypermodel for which you want to change the existing optimizer, loss, or metrics, you can do so by passing these arguments
+If you have a hypermodel for which you want to change the existing optimizer,
+loss, or metrics, you can do so by passing these arguments
 to the tuner constructor:
+"""
 
-
-```python
 hypermodel = HyperXception(input_shape=(28, 28, 1), classes=10)
 
 tuner = RandomSearch(
@@ -475,20 +355,3 @@ tuner = RandomSearch(
 tuner.search(
     x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
 )
-```
-
-<div class="k-default-codeblock">
-```
-Trial 3 Complete [00h 00m 07s]
-val_loss: 0.08818201720714569
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_loss So Far: 0.08818201720714569
-Total elapsed time: 00h 00m 22s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>

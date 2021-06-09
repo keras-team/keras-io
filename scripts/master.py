@@ -450,22 +450,8 @@ MASTER = {
             'title': 'Contributing to Keras',
         },
         {
-            'path': 'keras-tuner/',
-            'title': 'Keras Tuner',
-            'children': [
-                {
-                    'path': 'getting_started',
-                    'title': 'Getting started',
-                },
-                {
-                    'path': '../guides/keras-tuner',
-                    'title': 'Developer guides',
-                },
-                {
-                    'path': '../api/keras-tuner',
-                    'title': 'API reference',
-                },
-            ]
+            'path': 'keras_tuner/',
+            'title': 'KerasTuner',
         },
     ]
 }

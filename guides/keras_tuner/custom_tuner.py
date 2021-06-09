@@ -3,28 +3,24 @@ Title: Writing your own Tuner to support a custom training loop
 Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/28
 Last modified: 2021/06/02
-Description: Subclassing the Tuner class in Keras Tuner for more customization like custom training loops.
-"""
-
-"""shell
-pip install keras-tuner -q
+Description: Subclassing the Tuner class in KerasTuner for more customization like custom training loops.
 """
 
 """
+## Introduction
 
 The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to
 support advanced uses such as:
 
-- Custom training loops (GANs, reinforement learning, etc.)
-
-- Adding hyperparameters outside of the model builing function (preprocessing,
+* Custom training loops (GANs, reinforement learning, etc.)
+* Adding hyperparameters outside of the model builing function (preprocessing,
 data augmentation, test time augmentation, etc.)
 
 This tutorial will not cover subclassing to support non-Keras models. To
 accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner`
 class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
 
-### Understanding the search process.
+## Understanding the search process
 
 `Tuner.search` can be passed any arguments. These arguments will be passed
 directly to `Tuner.run_trial`, along with a `Trial` object that contains
@@ -32,7 +28,7 @@ information about the current trial, including hyperparameters and the status
 of the trial. Typically, `Tuner.run_trial` is the only method that users need
 to override when subclassing `Tuner`.
 
-### Overriding `run_trial`.
+## Overriding `run_trial`
 
 There are two ways to write `run_trial`. One is to leverage `Tuner`'s built-in
 callback hooks, which send the value of the `objective` to the `Oracle` and
@@ -41,7 +37,6 @@ save the latest state of the Model. These hooks are:
 * `self.on_epoch_end`: Must be called. Reports results to the `Oracle` and
 saves the Model. The `logs` dictionary passed to this method must contain the
 `objective` name.
-
 * `self.on_epoch_begin`, `self.on_batch_begin`, `self.on_batch_end`: Optional.
 These methods do nothing in `Tuner`, but are useful to provide as hooks if you
 expect users of your subclass to create their own subclasses that override
@@ -65,7 +60,6 @@ report results to the `Oracle` after each epoch. These methods are:
 
 * `self.oracle.update_trial`: Reports current results to the `Oracle`. The
 `metrics` dictionary passed to this method must contain the `objective` name.
-
 * `self.save_model`: Saves the trained model.
 
 ```python
@@ -194,31 +188,26 @@ class MyTuner(kt.Tuner):
             epoch_loss_metric.reset_states()
 
 
-def main():
-    tuner = MyTuner(
-        oracle=kt.oracles.BayesianOptimization(
-            objective=kt.Objective("loss", "min"), max_trials=2
-        ),
-        hypermodel=build_model,
-        directory="results",
-        project_name="mnist_custom_training",
-    )
+tuner = MyTuner(
+    oracle=kt.oracles.BayesianOptimization(
+        objective=kt.Objective("loss", "min"), max_trials=2
+    ),
+    hypermodel=build_model,
+    directory="results",
+    project_name="mnist_custom_training",
+)
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
-    # Reshape the images to have the channel dimension.
-    x_train = x_train.reshape(x_train.shape + (1,))[:1000]
-    y_train = y_train.astype(np.int64)[:1000]
+# Reshape the images to have the channel dimension.
+x_train = x_train.reshape(x_train.shape + (1,))[:1000]
+y_train = y_train.astype(np.int64)[:1000]
 
-    mnist_train = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+mnist_train = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 
-    tuner.search(train_ds=mnist_train)
+tuner.search(train_ds=mnist_train)
 
-    best_hps = tuner.get_best_hyperparameters()[0]
-    print(best_hps.values)
+best_hps = tuner.get_best_hyperparameters()[0]
+print(best_hps.values)
 
-    best_model = tuner.get_best_models()[0]
-
-
-if __name__ == "__main__":
-    main()
+best_model = tuner.get_best_models()[0]

@@ -18,21 +18,21 @@ ORACLE_MASTER = {
         },
         {
             'path': 'random',
-            'title': 'RandomSearchOracle',
+            'title': 'RandomSearch Oracle',
             'generate': [
                 'kerastuner.oracles.RandomSearch',
             ]
         },
         {
             'path': 'bayesian',
-            'title': 'BayesianOptimizationOracle',
+            'title': 'BayesianOptimization Oracle',
             'generate': [
                 'kerastuner.oracles.BayesianOptimization',
             ]
         },
         {
             'path': 'hyperband',
-            'title': 'HyperbandOracle',
+            'title': 'Hyperband Oracle',
             'generate': [
                 'kerastuner.oracles.Hyperband',
             ]
@@ -96,28 +96,28 @@ TUNER_MASTER = {
         },
         {
             'path': 'random',
-            'title': 'RandomSearch',
+            'title': 'RandomSearch Tuner',
             'generate': [
                 'kerastuner.RandomSearch',
             ]
         },
         {
             'path': 'bayesian',
-            'title': 'BayesianOptimization',
+            'title': 'BayesianOptimization Tuner',
             'generate': [
                 'kerastuner.BayesianOptimization',
             ]
         },
         {
             'path': 'hyperband',
-            'title': 'Hyperband',
+            'title': 'Hyperband Tuner',
             'generate': [
                 'kerastuner.Hyperband',
             ]
         },
         {
             'path': 'sklearn',
-            'title': 'Sklearn',
+            'title': 'Sklearn Tuner',
             'generate': [
                 'kerastuner.tuners.Sklearn',
             ]
@@ -126,7 +126,7 @@ TUNER_MASTER = {
 }
 
 KT_API_MASTER = {
-    'path': 'keras-tuner/',
+    'path': 'keras_tuner/',
     'title': 'Keras Tuner',
     'toc': True,
     'children': [
