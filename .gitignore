@@ -3,6 +3,7 @@ sources/*
 site/*
 scripts/upload.py
 *.pyc
+*.swp
 templates/examples/generative/*
 templates/examples/nlp/*
 templates/examples/vision/*
@@ -11,4 +12,5 @@ templates/examples/rl/*
 templates/examples/keras_recipes/*
 templates/examples/timeseries/*
 templates/examples/graph/*
-templates/guides/*.md
+templates/guides/**/*.md
+templates/keras-tuner/getting_started.md

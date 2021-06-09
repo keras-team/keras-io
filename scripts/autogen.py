@@ -326,6 +326,8 @@ class KerasIO:
 
         guides/md/ -> sources/guides/
         guides/md/intro_* -> sources/getting_started/
+        guides/md/keras-tuner/getting_started.md
+            -> sources/keras-tuner/getting_started.md
         examples/*/md/ -> sources/examples/*/
         """
         # Guides
@@ -344,6 +346,12 @@ class KerasIO:
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_researchers.md",
+        )
+        shutil.copyfile(
+            Path(self.templates_dir) / "guides" / "keras-tuner" / "getting_started.md",
+            Path(self.templates_dir)
+            / "keras-tuner"
+            / "getting_started.md",
         )
 
         # Examples
@@ -749,6 +757,8 @@ def copy_inner_contents(src, dst, ext=".md"):
         fdst = Path(dst) / fname
         if fname.endswith(ext):
             shutil.copyfile(fpath, fdst)
+        if os.path.isdir(fpath):
+            copy_inner_contents(fpath, fdst, ext)
 
 
 def make_outline(md_source):
