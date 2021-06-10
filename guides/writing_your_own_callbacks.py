@@ -216,7 +216,7 @@ class LossAndErrorPrintingCallback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         print(
-            "The average loss for epoch {} is {:7.2f} "
+            "The loss of the last step of epoch {} is {:7.2f} "
             "and mean absolute error is {:7.2f}.".format(
                 epoch, logs["loss"], logs["mean_absolute_error"]
             )
