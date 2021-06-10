@@ -59,7 +59,7 @@ First, we're going to need an optimizer, a loss function, and a dataset:
 # Instantiate an optimizer.
 optimizer = keras.optimizers.SGD(learning_rate=1e-3)
 # Instantiate a loss function.
-loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = keras.losses.SparseCategoricalCrossentropy()
 
 # Prepare the training dataset.
 batch_size = 64
