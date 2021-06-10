@@ -89,19 +89,19 @@ test_df = pd.read_csv("test.csv")
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
 
-# The following two methods are taken from this tutorial:
+
+center_crop_layer = layers.experimental.preprocessing.CenterCrop(IMG_SIZE, IMG_SIZE)
+
+
+def crop_center(frame):
+    cropped = center_crop_layer(frame[None, ...])
+    cropped = cropped.numpy().squeeze()
+    return cropped
+
+
+# Following method is modified from this tutorial:
 # https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
-
-
-def crop_center_square(frame):
-    y, x = frame.shape[0:2]
-    min_dim = min(y, x)
-    start_x = (x // 2) - (min_dim // 2)
-    start_y = (y // 2) - (min_dim // 2)
-    return frame[start_y : start_y + min_dim, start_x : start_x + min_dim]
-
-
-def load_video(path, max_frames=0, resize=(IMG_SIZE, IMG_SIZE)):
+def load_video(path, max_frames=0):
     cap = cv2.VideoCapture(path)
     frames = []
     try:
@@ -109,8 +109,7 @@ def load_video(path, max_frames=0, resize=(IMG_SIZE, IMG_SIZE)):
             ret, frame = cap.read()
             if not ret:
                 break
-            frame = crop_center_square(frame)
-            frame = cv2.resize(frame, resize)
+            frame = crop_center(frame)
             frame = frame[:, :, [2, 1, 0]]
             frames.append(frame)
 
@@ -138,6 +137,7 @@ def build_feature_extractor():
 
 
 feature_extractor = build_feature_extractor()
+
 
 # Label preprocessing with StringLookup.
 label_processor = keras.layers.experimental.preprocessing.StringLookup(
@@ -244,13 +244,6 @@ class PositionalEmbedding(layers.Layer):
     def compute_mask(self, inputs, mask=None):
         return tf.math.not_equal(inputs, 0)
 
-    def get_config(self):
-        config = super(PositionalEmbedding, self).get_config()
-        config.update(
-            {"output_dim": self.output_dim, "sequence_length": self.sequence_length,}
-        )
-        return config
-
 
 """
 Now, we can create a subclassed layer for the Transformer. 
@@ -273,23 +266,10 @@ class TransformerEncoder(layers.Layer):
         self.layernorm_2 = layers.LayerNormalization()
 
     def call(self, inputs, mask=None):
-        if mask is not None:
-            mask = mask[:, tf.newaxis, :]
         attention_output = self.attention(inputs, inputs, attention_mask=mask)
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
-
-    def get_config(self):
-        config = super(TransformerEncoder, self).get_config()
-        config.update(
-            {
-                "embed_dim": self.embed_dim,
-                "num_heads": self.num_heads,
-                "dense_dim": self.dense_dim,
-            }
-        )
-        return config
 
 
 """
@@ -306,7 +286,7 @@ def get_compiled_model():
 
     inputs = keras.Input(shape=(None, None))
     x = PositionalEmbedding(
-        sequence_length, embed_dim, name="frame_position_emebedding"
+        sequence_length, embed_dim, name="frame_position_embedding"
     )(inputs)
     x = TransformerEncoder(embed_dim, dense_dim, num_heads, name="transformer_layer")(
         x, mask=None
@@ -381,7 +361,7 @@ def prepare_single_video(frames):
     return frame_featutes
 
 
-def sequence_prediction(path):
+def predict_action(path):
     class_vocab = label_processor.get_vocabulary()
 
     frames = load_video(os.path.join("test", path))
@@ -404,5 +384,12 @@ def to_gif(images):
 
 test_video = np.random.choice(test_df["video_name"].values.tolist())
 print(f"Test video path: {test_video}")
-test_frames = sequence_prediction(test_video)
+test_frames = predict_action(test_video)
 to_gif(test_frames[:MAX_SEQ_LENGTH])
+
+"""
+If you notice incorrect predictions, it's likely because our model was trained on a
+small dataset. This is particularly applicable to Transformer-based model because they
+lack the inductive priors of models like CNNs and RNNs which are _designed_ to handle
+specific data modalities and arrangements. 
+"""
