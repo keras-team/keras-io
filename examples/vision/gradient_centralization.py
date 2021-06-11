@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
+Title: Gradient Centralization for Better Training Performance
+Author: [Rishit Dagli](https://github.com/Rishit-dagli)
 Date created: FILLME
 Last modified: FILLME
-Description: FILLME
+Description: Implement Gradient Centralization to improve training performance of DNNs.
 """
 """
 # Introduction
