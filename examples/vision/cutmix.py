@@ -12,23 +12,32 @@ Description: Data augmentation with CutMix for image classification on CIFAR-10.
 """
 
 """
-_CutMix_ is a data augmentation technique that addresses the issue of information loss and inefficiency present in regional dropout strategies. Instead of removing pixels and filling them with black or grey pixels or Gaussian noise, you replace the removed regions with a patch from another image, while the ground truth labels are mixed proportionally to the number of pixels of combined images. CutMix was proposed in [CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf) (Yun et al., 2019)
+_CutMix_ is a data augmentation technique that addresses the issue of information loss
+and inefficiency present in regional dropout strategies.
+Instead of removing pixels and filling them with black or grey pixels or Gaussian noise,
+you replace the removed regions with a patch from another image,
+while the ground truth labels are mixed proportionally to the number of pixels of combined images.
+CutMix was proposed in
+[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
+(Yun et al., 2019)
 
-It's implemented with the following formulas:
+It's implemented via the following formulas:
 ![](https://i.imgur.com/cGvd13V.png)
-where M is the binary mask which indicates the cutout and the fill-in regions from the two randomly drawn images and λ is drawn from [Beta(α,α) distribution](https://en.wikipedia.org/wiki/Beta_distribution) and `λ ∈ [0, 1]`
+where `M` is the binary mask which indicates the cutout and the fill-in
+regions from the two randomly drawn images and `λ` ∈ `[0, 1]` is drawn from a
+[`Beta(α, α)` distribution](https://en.wikipedia.org/wiki/Beta_distribution)
 
-The coordinates of bounding boxes are ![](https://i.imgur.com/eNisep4.png) which indicates the cutout and fill-in regions in case of the images.
+The coordinates of bounding boxes are:
+![](https://i.imgur.com/eNisep4.png)
+which indicates the cutout and fill-in regions in case of the images.
 The bounding box sampling is represented by:
 
 ![](https://i.imgur.com/Snph9aj.png)
-where `rx,ry` are randomly drawn from a uniform distribution with upper bound
-
-This example requires TensorFlow 2.4 or higher.
+where `rx, ry` are randomly drawn from a uniform distribution with upper bound.
 """
 
 """
-## Import the necessary packages
+## Setup
 """
 
 import numpy as np
@@ -44,18 +53,15 @@ tf.random.set_seed(42)
 ## Load the CIFAR-10 dataset
 
 In this example, we will use the
-[CIFAR- 10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
+[CIFAR-10 image classification dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 """
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-
-
 y_train = tf.keras.utils.to_categorical(y_train, num_classes=10)
 y_test = tf.keras.utils.to_categorical(y_test, num_classes=10)
 
 print(x_train.shape)
 print(y_train.shape)
-
 print(x_test.shape)
 print(y_test.shape)
 
@@ -169,7 +175,6 @@ def get_box(lambda_value):
 
 @tf.function
 def cutmix(train_ds_one, train_ds_two):
-
     (image1, label1), (image2, label2) = train_ds_one, train_ds_two
 
     alpha = [0.25]
@@ -213,7 +218,6 @@ def cutmix(train_ds_one, train_ds_two):
 
     # Combine the labels of both images
     label = lambda_value * label1 + (1 - lambda_value) * label2
-
     return image, label
 
 
@@ -241,7 +245,7 @@ for i in range(9):
     plt.axis("off")
 
 """
-## Define the model using ResNet-20
+## Define a ResNet-20 model
 """
 
 
@@ -254,7 +258,6 @@ def resnet_layer(
     batch_normalization=True,
     conv_first=True,
 ):
-
     conv = keras.layers.Conv2D(
         num_filters,
         kernel_size=kernel_size,
@@ -263,7 +266,6 @@ def resnet_layer(
         kernel_initializer="he_normal",
         kernel_regularizer=keras.regularizers.l2(1e-4),
     )
-
     x = inputs
     if conv_first:
         x = conv(x)
@@ -281,7 +283,6 @@ def resnet_layer(
 
 
 def resnet_v20(input_shape, depth, num_classes=10):
-
     if (depth - 2) % 6 != 0:
         raise ValueError("depth should be 6n+2 (eg 20, 32, 44 in [a])")
     # Start model definition.
@@ -334,7 +335,7 @@ initial_model = training_model()
 initial_model.save_weights("initial_weights.h5")
 
 """
-## 1. Train the model with the dataset augmented by CutMix
+## Train the model with the dataset augmented by CutMix
 """
 
 model = training_model()
@@ -347,7 +348,7 @@ test_loss, test_accuracy = model.evaluate(test_ds)
 print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 
 """
-## 2. Train the model using the original non-augmented dataset
+## Train the model using the original non-augmented dataset
 """
 
 model = training_model()
@@ -360,8 +361,12 @@ print("Test accuracy: {:.2f}%".format(test_accuracy * 100))
 
 """
 ## Notes
-In this example, we trained our model for 15 epochs. In our experiment, the model with CutMix achieves a better accuracy on the CIFAR-10 dataset (80.36% in our experiment) compared to the model that doesn't use the augmentation (72.70%).
+
+In this example, we trained our model for 15 epochs.
+In our experiment, the model with CutMix achieves a better accuracy on the CIFAR-10 dataset
+(80.36% in our experiment) compared to the model that doesn't use the augmentation (72.70%).
 You may notice it takes less time to train the model with the CutMix augmentation.
 
-You can experiment further with the CutMix technique by following the [original paper](https://arxiv.org/pdf/1905.04899.pdf).
+You can experiment further with the CutMix technique by following the
+[original paper](https://arxiv.org/abs/1905.04899).
 """
