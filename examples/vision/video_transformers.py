@@ -6,13 +6,13 @@ Last modified: 2021/06/08
 Description: Training a video classifier with hybrid transformers.
 """
 """
-This example is a successor to the
+This example is a follow-up to the
 [Video Classification with a CNN-RNN Architecture](https://keras.io/examples/vision/video_classification/)
-exammple. In this example, we will be using a Transformer-based
-([Vaswani et al.](https://arxiv.org/abs/1706.03762)) model to classify videos. You can follow
+example. This time, we will be using a Transformer-based model
+([Vaswani et al.](https://arxiv.org/abs/1706.03762)) to classify videos. You can follow
 [this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11)
-in case you need an introduction to Transformers with code. After reading this
-example, you will know how to develop a hybrid Transformer-based models for video
+in case you need an introduction to Transformers (with code). After reading this
+example, you will know how to develop hybrid Transformer-based models for video
 classification that operate on CNN feature maps.
 
 This example requires TensorFlow 2.5 or higher, as well as TensorFlow Docs, which can be
@@ -27,8 +27,9 @@ pip install -q git+https://github.com/tensorflow/docs
 ## Data collection
 
 As done in the [predecessor](https://keras.io/examples/vision/video_classification/) to
-this example, we will be using a subsampled version of the [UCF101 dataset](https://www.crcv.ucf.edu/data/UCF101.php)
-which is a known benchmark dataset. In case you want to operate on a larger subsample or
+this example, we will be using a subsampled version of the
+[UCF101 dataset](https://www.crcv.ucf.edu/data/UCF101.php),
+a well-known benchmark dataset. In case you want to operate on a larger subsample or
 even the entire dataset, please refer to 
 [this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb).
 """
@@ -66,21 +67,18 @@ EPOCHS = 5
 """
 ## Data preparation
 
-We will mostly be following the same data preparation steps in this example except for
+We will mostly be following the same data preparation steps in this example, except for
 the following changes:
 
-* Reducing the image sizes to 128 instead of 224 to speed up computation. 
+* We reduce the image size to 128x128 instead of 224x224 to speed up computation. 
 * Instead of using a pre-trained [InceptionV3](https://arxiv.org/abs/1512.00567) network,
-we will be using a pre-trained
+we use a pre-trained
 [DenseNet121](http://openaccess.thecvf.com/content_cvpr_2017/papers/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.pdf)
 for feature extraction. 
-* We will directly be padding the shorter videos to the `MAX_SEQ_LENGTH`. 
+* We directly pad shorter videos to length `MAX_SEQ_LENGTH`. 
 
 First, let's load up the
 [DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html). 
-
-**Note**: In case you did not follow the data preparation steps in the previous example
-mentioned at the beginning, you are strongly advised to do that first before proceeding. 
 """
 
 train_df = pd.read_csv("train.csv")
@@ -88,7 +86,6 @@ test_df = pd.read_csv("test.csv")
 
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
-
 
 center_crop_layer = layers.experimental.preprocessing.CenterCrop(IMG_SIZE, IMG_SIZE)
 
@@ -194,8 +191,8 @@ def prepare_all_videos(df, root_dir):
 
 
 """
-Calling `prepare_all_videos()` on `train_df` and `test_df` takes ~20 minutes time to
-complete execution. This is why, to save time, we will use already prepared NumPy arrays.
+Calling `prepare_all_videos()` on `train_df` and `test_df` takes ~20 minutes to
+complete. For this reason, to save time, here we download already preprocessed NumPy arrays:
 """
 
 """shell
@@ -214,13 +211,14 @@ print(f"Frame features in train set: {train_data.shape}")
 We will be building on top of the code shared in 
 [this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11) of 
 [Deep Learning with Python (Second ed.)](https://www.manning.com/books/deep-learning-with-python)
-by François Chollet. 
+by François Chollet.
 
 First, self-attention layers that form the basic blocks of a Transformer are
-order-agnostic. Since, videos are ordered sequences of frames we would need our
-Transformer model to account for that. This is done via **positional encodings**. We will
-simply embed the positions of the frames present inside videos with
-[`layers.Embedding()`](https://keras.io/api/layers/core_layers/embedding). We will then
+order-agnostic. Since videos are ordered sequences of frames, we need our
+Transformer model to take into account order information.
+We do this via **positional encoding**.
+We simply embed the positions of the frames present inside videos with an
+[`Embedding` layer](https://keras.io/api/layers/core_layers/embedding). We then
 add these positional embeddings to the precomputed CNN feature maps. 
 """
 
@@ -246,7 +244,7 @@ class PositionalEmbedding(layers.Layer):
 
 
 """
-Now, we can create a subclassed layer for the Transformer. 
+Now, we can create a subclassed layer for the Transformer.
 """
 
 
@@ -331,9 +329,9 @@ def run_experiment():
 trained_model = run_experiment()
 
 """
-**Note**: This model has ~4.23 Million parameters which is way more than the sequence
+**Note**: This model has ~4.23 Million parameters, which is way more than the sequence
 model (99918 parameters) we used in the prequel of this example.  This kind of
-Transformer model is best off with more data and a larger pre-training schedule. 
+Transformer model works best with a larger datseta and a longer pre-training schedule. 
 """
 
 
@@ -388,8 +386,6 @@ test_frames = predict_action(test_video)
 to_gif(test_frames[:MAX_SEQ_LENGTH])
 
 """
-If you notice incorrect predictions, it's likely because our model was trained on a
-small dataset. This is particularly applicable to Transformer-based model because they
-lack the inductive priors of models like CNNs and RNNs which are _designed_ to handle
-specific data modalities and arrangements. 
+The performance of our model is far from optimal, because it was trained on a
+small dataset.
 """
