@@ -749,6 +749,8 @@ def copy_inner_contents(src, dst, ext=".md"):
         fdst = Path(dst) / fname
         if fname.endswith(ext):
             shutil.copyfile(fpath, fdst)
+        if os.path.isdir(fpath):
+            copy_inner_contents(fpath, fdst, ext)
 
 
 def make_outline(md_source):
