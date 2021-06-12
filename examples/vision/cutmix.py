@@ -84,7 +84,7 @@ class_names = [
 
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 32
-IMG_SHAPE = 32
+IMG_SIZE = 32
 
 """
 ## Define the image preprocessing function
@@ -92,7 +92,7 @@ IMG_SHAPE = 32
 
 
 def preprocess_image(image, label):
-    image = tf.image.resize(image, (IMG_SHAPE, IMG_SHAPE))
+    image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
     image = tf.image.convert_image_dtype(image, tf.float32) / 255.0
     return image, label
 
@@ -148,19 +148,19 @@ def sample_beta_distribution(size, concentration_0=0.2, concentration_1=0.2):
 def get_box(lambda_value):
     cut_rat = tf.math.sqrt(1.0 - lambda_value)
 
-    cut_w = IMG_SHAPE * cut_rat  # rw
+    cut_w = IMG_SIZE * cut_rat  # rw
     cut_w = tf.cast(cut_w, tf.int32)
 
-    cut_h = IMG_SHAPE * cut_rat  # rh
+    cut_h = IMG_SIZE * cut_rat  # rh
     cut_h = tf.cast(cut_h, tf.int32)
 
-    cut_x = tf.random.uniform((1,), minval=0, maxval=IMG_SHAPE, dtype=tf.int32)  # rx
-    cut_y = tf.random.uniform((1,), minval=0, maxval=IMG_SHAPE, dtype=tf.int32)  # ry
+    cut_x = tf.random.uniform((1,), minval=0, maxval=IMG_SIZE, dtype=tf.int32)  # rx
+    cut_y = tf.random.uniform((1,), minval=0, maxval=IMG_SIZE, dtype=tf.int32)  # ry
 
-    boundaryx1 = tf.clip_by_value(cut_x[0] - cut_w // 2, 0, IMG_SHAPE)
-    boundaryy1 = tf.clip_by_value(cut_y[0] - cut_h // 2, 0, IMG_SHAPE)
-    bbx2 = tf.clip_by_value(cut_x[0] + cut_w // 2, 0, IMG_SHAPE)
-    bby2 = tf.clip_by_value(cut_y[0] + cut_h // 2, 0, IMG_SHAPE)
+    boundaryx1 = tf.clip_by_value(cut_x[0] - cut_w // 2, 0, IMG_SIZE)
+    boundaryy1 = tf.clip_by_value(cut_y[0] - cut_h // 2, 0, IMG_SIZE)
+    bbx2 = tf.clip_by_value(cut_x[0] + cut_w // 2, 0, IMG_SIZE)
+    bby2 = tf.clip_by_value(cut_y[0] + cut_h // 2, 0, IMG_SIZE)
 
     target_h = bby2 - boundaryy1
     if target_h == 0:
@@ -195,7 +195,7 @@ def cutmix(train_ds_one, train_ds_two):
     )
     # Pad the `image2` patch (`crop2`) with the same offset
     image2 = tf.image.pad_to_bounding_box(
-        crop2, boundaryy1, boundaryx1, IMG_SHAPE, IMG_SHAPE
+        crop2, boundaryy1, boundaryx1, IMG_SIZE, IMG_SIZE
     )
     # Get a patch from the first image (`image1`)
     crop1 = tf.image.crop_to_bounding_box(
@@ -203,7 +203,7 @@ def cutmix(train_ds_one, train_ds_two):
     )
     # Pad the `image1` patch (`crop1`) with the same offset
     img1 = tf.image.pad_to_bounding_box(
-        crop1, boundaryy1, boundaryx1, IMG_SHAPE, IMG_SHAPE
+        crop1, boundaryy1, boundaryx1, IMG_SIZE, IMG_SIZE
     )
 
     # Modify the first image by subtracting the patch from `image1`
@@ -213,7 +213,7 @@ def cutmix(train_ds_one, train_ds_two):
     image = image1 + image2
 
     # Adjust Lambda in accordance to the pixel ration
-    lambda_value = 1 - (target_w * target_h) / (IMG_SHAPE * IMG_SHAPE)
+    lambda_value = 1 - (target_w * target_h) / (IMG_SIZE * IMG_SIZE)
     lambda_value = tf.cast(lambda_value, tf.float32)
 
     # Combine the labels of both images
