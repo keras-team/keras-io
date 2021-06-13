@@ -21,17 +21,22 @@ CutMix was proposed in
 (Yun et al., 2019)
 
 It's implemented via the following formulas:
-![](https://i.imgur.com/cGvd13V.png)
+
+<img src="https://i.imgur.com/cGvd13V.png" width="200"/>
+
 where `M` is the binary mask which indicates the cutout and the fill-in
-regions from the two randomly drawn images and `λ` ∈ `[0, 1]` is drawn from a
+regions from the two randomly drawn images and `λ` (in `[0, 1]`) is drawn from a
 [`Beta(α, α)` distribution](https://en.wikipedia.org/wiki/Beta_distribution)
 
 The coordinates of bounding boxes are:
-![](https://i.imgur.com/eNisep4.png)
+
+<img src="https://i.imgur.com/eNisep4.png" width="150"/>
+
 which indicates the cutout and fill-in regions in case of the images.
 The bounding box sampling is represented by:
 
-![](https://i.imgur.com/Snph9aj.png)
+<img src="https://i.imgur.com/Snph9aj.png" width="200"/>
+
 where `rx, ry` are randomly drawn from a uniform distribution with upper bound.
 """
 

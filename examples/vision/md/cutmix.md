@@ -6,7 +6,7 @@
 **Description:** Data augmentation with CutMix for image classification on CIFAR-10.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/cutmix.ipynb)  <span class="k-dot">�</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/cutmix.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/cutmix.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/cutmix.py)
 
 
 
@@ -23,17 +23,22 @@ CutMix was proposed in
 (Yun et al., 2019)
 
 It's implemented via the following formulas:
-![](https://i.imgur.com/cGvd13V.png)
+
+<img src="https://i.imgur.com/cGvd13V.png" width="200"/>
+
 where `M` is the binary mask which indicates the cutout and the fill-in
-regions from the two randomly drawn images and `Î»` âˆˆ `[0, 1]` is drawn from a
-[`Beta(Î±, Î±)` distribution](https://en.wikipedia.org/wiki/Beta_distribution)
+regions from the two randomly drawn images and `λ` (in `[0, 1]`) is drawn from a
+[`Beta(α, α)` distribution](https://en.wikipedia.org/wiki/Beta_distribution)
 
 The coordinates of bounding boxes are:
-![](https://i.imgur.com/eNisep4.png)
+
+<img src="https://i.imgur.com/eNisep4.png" width="150"/>
+
 which indicates the cutout and fill-in regions in case of the images.
 The bounding box sampling is represented by:
 
-![](https://i.imgur.com/Snph9aj.png)
+<img src="https://i.imgur.com/Snph9aj.png" width="200"/>
+
 where `rx, ry` are randomly drawn from a uniform distribution with upper bound.
 
 ---
@@ -154,7 +159,7 @@ test_ds = (
 ---
 ## Define the CutMix data augmentation function
 
-The CutMix function takes two `image` and `label` pairs to perform the augmentation. It samples `Î»(l)` from the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) and returns a bounding box from `get_box` function. We then crop the second image (`image2`) and pad this image in the final padded image at the same location.
+The CutMix function takes two `image` and `label` pairs to perform the augmentation. It samples `λ(l)` from the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) and returns a bounding box from `get_box` function. We then crop the second image (`image2`) and pad this image in the final padded image at the same location.
 
 
 ```python
@@ -270,7 +275,7 @@ for i in range(9):
 
 
     
-![png](../examples/vision/md/cutmix_files/../examples/vision/md/cutmix_16_0.png)
+![png](/img/examples/vision/cutmix/cutmix_16_0.png)
     
 
 
