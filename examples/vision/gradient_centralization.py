@@ -18,21 +18,21 @@ vectors to have zero mean. Gradient Centralization morever improves the Lipschit
 the loss function and its gradient so that the training process becomes more efficient
 and stable.
 
-This example requires TensorFlow 2.2 or higher, as well as a package I built,
-[gradient-centralization-tf](https://github.com/Rishit-dagli/Gradient-Centralization-Tenso
-rFlow), which can be installed using the following command:
+This example requires TensorFlow 2.2 or higher as well as `tensorflow_datasets` which can
+be installed with this command:
 
-```py
-pip install gradient-centralization-tf
 ```
+pip install tensorflow-datasets
+```
+
+We will be implementing Gradient Centralization in this example but you could also use
+this very easily with a package I built,
+[gradient-centralization-tf](https://github.com/Rishit-dagli/Gradient-Centralization-TensorFlow).
+[gradient-centralization-tf](https://github.com/Rishit-dagli/Gradient-Centralization-TensorFlow).
 """
 
 """
 # Setup
-"""
-
-"""shell
-!pip install gradient-centralization-tf
 """
 
 import tensorflow as tf
@@ -43,9 +43,7 @@ from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import RMSprop
-
-
-import gctf
+import keras.backend as K
 
 from time import time
 import os
@@ -78,7 +76,7 @@ print(f"Test images: {metadata.splits['test'].num_examples}")
 We will rescale the data to `[0, 1]`  andperform simple augmentations to our data.
 """
 
-rescale = tf.keras.Sequential([layers.experimental.preprocessing.Rescaling(1.0 / 255)])
+rescale = layers.experimental.preprocessing.Rescaling(1.0 / 255)
 
 data_augmentation = tf.keras.Sequential(
     [
@@ -171,7 +169,7 @@ class TimeHistory(tf.keras.callbacks.Callback):
 
 """
 We now train the model we built earlier without Gradient Centralization which we can
-compare to the training performance of the model trained with GGradient Centralization.
+compare to the training performance of the model trained with Gradient Centralization.
 """
 
 time_callback_no_gc = TimeHistory()
@@ -181,6 +179,13 @@ model.compile(
     metrics=["accuracy"],
 )
 
+model.summary()
+
+"""
+We also save the history since we later want to compare our model trained with and not
+trained with Gradient Centralization
+"""
+
 history_no_gc = model.fit(
     train_ds, epochs=10, verbose=1, callbacks=[time_callback_no_gc]
 )
@@ -188,13 +193,12 @@ history_no_gc = model.fit(
 """
 # Train the model with GC 
 
-We will now train the same model, this time using Gradient Centralization. We use the
-package
-[`gradient-centralization-tf`](https://github.com/Rishit-dagli/Gradient-Centralization-Ten
-sorFlow/) package to help us implement Gradient Centralization on top of our optimizer.
-We will make use of the `gctf.centralized_gradients_for_optimizer()` method to do so.
-This method accepts a `tf.keras.optimizers.Optimizer` object and modifies our optimizer
-to use Gradient Centralization.
+We will now train the same model, this time using Gradient Centralization. We will now
+subclass the `RMSProp` optimizer class modifying the
+`tf.keras.optimizers.Optimizer.get_gradients()` method where we now implement Gradient
+Centralization. On a high level the idea is that let us say we obtain our gradients
+through back propogation for a Dense or Convolution layer we then compute the mean of the
+column vectors of the weight matrix, and then remove the mean from each column vector.
 
 The experiments in [this paper](https://arxiv.org/abs/2004.01461) on various
 applications, including general image classification, fine-grained image classification,
@@ -202,21 +206,44 @@ detection and segmentation and Person ReID demonstrate that GC can consistently 
 the performance of DNN learning.
 """
 
-optimizer = RMSprop(learning_rate=1e-4)
-optimizer.get_gradients = gctf.centralized_gradients_for_optimizer(optimizer)
+
+class gc_rmsprop(RMSprop):
+    def get_gradients(self, loss, params):
+        # We here just provide a modified get_gradients() function since we are
+        # trying to just compute the centralized gradients.
+
+        grads = []
+        for grad in K.gradients(loss, params):
+            grad_len = len(grad.shape)
+            if grad_len > 1:
+                axis = list(range(grad_len - 1))
+                grad -= tf.reduce_mean(grad, axis=axis, keep_dims=True)
+            grads.append(grad)
+
+        if None in grads:
+            raise ValueError(
+                "An operation has `None` for gradient. "
+                "Please make sure that all of your ops have a "
+                "gradient defined (i.e. are differentiable). "
+                "Common ops without gradient: "
+                "K.argmax, K.round, K.eval."
+            )
+        if hasattr(optimizer, "clipnorm") and optimizer.clipnorm > 0:
+            norm = K.sqrt(sum([K.sum(K.square(g)) for g in grads]))
+            grads = [
+                tf.keras.optimizers.clip_norm(g, optimizer.clipnorm, norm)
+                for g in grads
+            ]
+        if hasattr(optimizer, "clipvalue") and optimizer.clipvalue > 0:
+            grads = [
+                K.clip(g, -optimizer.clipvalue, optimizer.clipvalue) for g in grads
+            ]
+        return grads
+
+
+optimizer = gc_rmsprop(learning_rate=1e-4)
 
 """
-Alternatively you could also directly use this line of code to use Gradient
-Centralization:
-
-```py
-optimizer = gctf.optimizers.rmsprop(learning_rate = 1e-4)
-```
-
-However, `gctf.optimizers` currently only supports eight commonly used optimizers and so
-this example shows implementing Gradient Centralization so you can use it with some other
-optimizers too.
-
 We will now train our model this time using Gradient Centralization, notice our optimizer
 is the one using Gradient Centralization this time.
 
@@ -224,6 +251,8 @@ is the one using Gradient Centralization this time.
 
 time_callback_gc = TimeHistory()
 model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["accuracy"])
+
+model.summary()
 
 history_gc = model.fit(train_ds, epochs=10, verbose=1, callbacks=[time_callback_gc])
 
