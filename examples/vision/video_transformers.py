@@ -30,7 +30,7 @@ As done in the [predecessor](https://keras.io/examples/vision/video_classificati
 this example, we will be using a subsampled version of the
 [UCF101 dataset](https://www.crcv.ucf.edu/data/UCF101.php),
 a well-known benchmark dataset. In case you want to operate on a larger subsample or
-even the entire dataset, please refer to 
+even the entire dataset, please refer to
 [this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb).
 """
 
@@ -71,15 +71,15 @@ EPOCHS = 5
 We will mostly be following the same data preparation steps in this example, except for
 the following changes:
 
-* We reduce the image size to 128x128 instead of 224x224 to speed up computation. 
+* We reduce the image size to 128x128 instead of 224x224 to speed up computation.
 * Instead of using a pre-trained [InceptionV3](https://arxiv.org/abs/1512.00567) network,
 we use a pre-trained
 [DenseNet121](http://openaccess.thecvf.com/content_cvpr_2017/papers/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.pdf)
-for feature extraction. 
-* We directly pad shorter videos to length `MAX_SEQ_LENGTH`. 
+for feature extraction.
+* We directly pad shorter videos to length `MAX_SEQ_LENGTH`.
 
 First, let's load up the
-[DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html). 
+[DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html).
 """
 
 train_df = pd.read_csv("train.csv")
@@ -209,8 +209,8 @@ print(f"Frame features in train set: {train_data.shape}")
 """
 ## Building the Transformer-based model
 
-We will be building on top of the code shared in 
-[this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11) of 
+We will be building on top of the code shared in
+[this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11) of
 [Deep Learning with Python (Second ed.)](https://www.manning.com/books/deep-learning-with-python)
 by François Chollet.
 
@@ -220,7 +220,7 @@ Transformer model to take into account order information.
 We do this via **positional encoding**.
 We simply embed the positions of the frames present inside videos with an
 [`Embedding` layer](https://keras.io/api/layers/core_layers/embedding). We then
-add these positional embeddings to the precomputed CNN feature maps. 
+add these positional embeddings to the precomputed CNN feature maps.
 """
 
 
@@ -332,7 +332,7 @@ trained_model = run_experiment()
 """
 **Note**: This model has ~4.23 Million parameters, which is way more than the sequence
 model (99918 parameters) we used in the prequel of this example.  This kind of
-Transformer model works best with a larger datseta and a longer pre-training schedule. 
+Transformer model works best with a larger datseta and a longer pre-training schedule.
 """
 
 
