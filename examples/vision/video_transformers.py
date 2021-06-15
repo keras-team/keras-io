@@ -234,14 +234,15 @@ class PositionalEmbedding(layers.Layer):
         self.output_dim = output_dim
 
     def call(self, inputs):
-        # Our inputs are of shape: `(batch_size, frames, num_features)
+        # The inputs are of shape: `(batch_size, frames, num_features)`
         length = tf.shape(inputs)[1]
         positions = tf.range(start=0, limit=length, delta=1)
         embedded_positions = self.position_embeddings(positions)
         return inputs + embedded_positions
 
     def compute_mask(self, inputs, mask=None):
-        return tf.math.not_equal(inputs, 0)
+        mask = tf.reduce_any(tf.cast(inputs, "bool"), axis=-1)
+        return mask
 
 
 """
@@ -265,6 +266,9 @@ class TransformerEncoder(layers.Layer):
         self.layernorm_2 = layers.LayerNormalization()
 
     def call(self, inputs, mask=None):
+        if mask is not None:
+            mask = mask[:, tf.newaxis, :]
+
         attention_output = self.attention(inputs, inputs, attention_mask=mask)
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
@@ -287,9 +291,7 @@ def get_compiled_model():
     x = PositionalEmbedding(
         sequence_length, embed_dim, name="frame_position_embedding"
     )(inputs)
-    x = TransformerEncoder(embed_dim, dense_dim, num_heads, name="transformer_layer")(
-        x, mask=None
-    )
+    x = TransformerEncoder(embed_dim, dense_dim, num_heads, name="transformer_layer")(x)
     x = layers.GlobalMaxPooling1D()(x)
     x = layers.Dropout(0.5)(x)
     outputs = layers.Dense(classes, activation="softmax")(x)
@@ -457,6 +459,5 @@ plt.show()
 
 """
 Since the frames in the videos do not have a lot of variation (in terms of object
-changes, scene changes, etc.) we get a uniform heatmap. But all the frames seem to have
-a strong correlation with the penultimate frame.
+changes, scene changes, etc.) we get a uniform heatmap.
 """
