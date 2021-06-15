@@ -381,7 +381,7 @@ model.compile(
 
 """
 Since the output layers have different names, you could also specify
-the loss like this:
+the losses and loss weights with the corresponding layer names:
 """
 
 model.compile(
