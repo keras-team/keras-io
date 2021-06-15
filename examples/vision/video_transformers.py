@@ -334,7 +334,7 @@ trained_model = run_experiment()
 """
 **Note**: This model has ~4.23 Million parameters, which is way more than the sequence
 model (99918 parameters) we used in the prequel of this example.  This kind of
-Transformer model works best with a larger datseta and a longer pre-training schedule.
+Transformer model works best with a larger dataset and a longer pre-training schedule.
 """
 
 
