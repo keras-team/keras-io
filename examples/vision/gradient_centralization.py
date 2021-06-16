@@ -51,6 +51,8 @@ dataset](https://www.tensorflow.org/datasets/catalog/horses_or_humans).
 num_classes = 2
 input_shape = (300, 300, 3)
 dataset_name = "horses_or_humans"
+batch_size = 128
+AUTOTUNE = tf.data.AUTOTUNE
 
 (train_ds, test_ds), metadata = tfds.load(
     name=dataset_name,
@@ -78,9 +80,6 @@ data_augmentation = tf.keras.Sequential(
         layers.experimental.preprocessing.RandomZoom(0.2),
     ]
 )
-
-batch_size = 128
-AUTOTUNE = tf.data.AUTOTUNE
 
 
 def prepare(ds, shuffle=False, augment=False):
@@ -184,7 +183,7 @@ history_no_gc = model.fit(
 )
 
 """
-# Train the model with GC 
+# Train the model with GC
 
 We will now train the same model, this time using Gradient Centralization. We will now
 subclass the `RMSProp` optimizer class modifying the
@@ -198,13 +197,13 @@ applications, including general image classification, fine-grained image classif
 detection and segmentation and Person ReID demonstrate that GC can consistently improve
 the performance of DNN learning.
 
-Also, for simplicity at the moment we are not implementing gradient cliiping functionality, 
+Also, for simplicity at the moment we are not implementing gradient cliiping functionality,
 however this quite easy to implement
 """
 
 class GCRMSprop(RMSprop):
     def get_gradients(self, loss, params):
-        # We here just provide a modified get_gradients() function since we are 
+        # We here just provide a modified get_gradients() function since we are
         # trying to just compute the centralized gradients.
 
         grads = []
