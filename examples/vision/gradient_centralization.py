@@ -34,17 +34,12 @@ this very easily with a package I built,
 # Setup
 """
 
+from time import time
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow.keras import layers
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers  import MaxPooling2D
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import RMSprop
-
-from time import time
-import os
 
 """
 # Prepare the data
