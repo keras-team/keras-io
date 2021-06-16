@@ -28,7 +28,6 @@ pip install tensorflow-datasets
 We will be implementing Gradient Centralization in this example but you could also use
 this very easily with a package I built,
 [gradient-centralization-tf](https://github.com/Rishit-dagli/Gradient-Centralization-TensorFlow).
-[gradient-centralization-tf](https://github.com/Rishit-dagli/Gradient-Centralization-TensorFlow).
 """
 
 """
