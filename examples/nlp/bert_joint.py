@@ -42,10 +42,6 @@ from tqdm import trange, tqdm
 from collections import Counter
 from conlleval import evaluate
 
-os.environ["HTTP_PROXY"] = "http://yqk798:Ajk791dp3@entproxy.kdc.capitalone.com:8099"
-os.environ["HTTPS_PROXY"] = "http://yqk798:Ajk791dp3@entproxy.kdc.capitalone.com:8099"
-os.environ["http_proxy"] = "http://yqk798:Ajk791dp3@entproxy.kdc.capitalone.com:8099"
-os.environ["https_proxy"] = "http://yqk798:Ajk791dp3@entproxy.kdc.capitalone.com:8099"
 
 """
 ## Setup BertTokenizer
