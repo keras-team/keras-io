@@ -113,7 +113,7 @@ test_ds = prepare(test_ds)
 """
 # Define a model
 
-In this section we will define a Convolutional neural network
+In this section we will define a Convolutional neural network.
 """
 
 model = tf.keras.Sequential(
@@ -138,11 +138,56 @@ model = tf.keras.Sequential(
 )
 
 """
-We will also create a callback which allows us to easily measure the total training time
-and the time taken for each epoch  since we are interested in comparing the effect of
-Gradient Centralization on the model we built above.
+# Implement Gradient Centralization
+
+We will now
+subclass the `RMSProp` optimizer class modifying the
+`tf.keras.optimizers.Optimizer.get_gradients()` method where we now implement Gradient
+Centralization. On a high level the idea is that let us say we obtain our gradients
+through back propogation for a Dense or Convolution layer we then compute the mean of the
+column vectors of the weight matrix, and then remove the mean from each column vector.
+
+The experiments in [this paper](https://arxiv.org/abs/2004.01461) on various
+applications, including general image classification, fine-grained image classification,
+detection and segmentation and Person ReID demonstrate that GC can consistently improve
+the performance of DNN learning.
+
+Also, for simplicity at the moment we are not implementing gradient cliiping functionality,
+however this quite easy to implement.
+
+At the moment we are just creating a subclass for the `RMSProp` optimizer 
+however you could easily reproduce this for any toher optimizer or on a custom 
+optimizer in the same way. We will be using this class in the later section when
+we train a model with Gradient Centralization.
 """
 
+class GCRMSprop(RMSprop):
+    def get_gradients(self, loss, params):
+        # We here just provide a modified get_gradients() function since we are
+        # trying to just compute the centralized gradients.
+
+        grads = []
+        gradients = super().get_gradients()
+        for grad in gradients:
+            grad_len = len(grad.shape)
+            if grad_len > 1:
+                axis = list(range(grad_len - 1))
+                grad -= tf.reduce_mean(grad,
+                                        axis=axis,
+                                        keep_dims=True)
+            grads.append(grad)
+
+        return grads
+
+optimizer = GCRMSprop(learning_rate=1e-4)
+
+"""
+# Training utilities
+
+We will also create a callback which allows us to easily measure the total training time
+and the time taken for each epoch since we are interested in comparing the effect of
+Gradient Centralization on the model we built above.
+"""
 
 class TimeHistory(tf.keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -154,12 +199,9 @@ class TimeHistory(tf.keras.callbacks.Callback):
     def on_epoch_end(self, batch, logs={}):
         self.times.append(time() - self.epoch_time_start)
 
-
 """
 # Train the model without GC
-"""
 
-"""
 We now train the model we built earlier without Gradient Centralization which we can
 compare to the training performance of the model trained with Gradient Centralization.
 """
@@ -185,46 +227,8 @@ history_no_gc = model.fit(
 """
 # Train the model with GC
 
-We will now train the same model, this time using Gradient Centralization. We will now
-subclass the `RMSProp` optimizer class modifying the
-`tf.keras.optimizers.Optimizer.get_gradients()` method where we now implement Gradient
-Centralization. On a high level the idea is that let us say we obtain our gradients
-through back propogation for a Dense or Convolution layer we then compute the mean of the
-column vectors of the weight matrix, and then remove the mean from each column vector.
-
-The experiments in [this paper](https://arxiv.org/abs/2004.01461) on various
-applications, including general image classification, fine-grained image classification,
-detection and segmentation and Person ReID demonstrate that GC can consistently improve
-the performance of DNN learning.
-
-Also, for simplicity at the moment we are not implementing gradient cliiping functionality,
-however this quite easy to implement
-"""
-
-class GCRMSprop(RMSprop):
-    def get_gradients(self, loss, params):
-        # We here just provide a modified get_gradients() function since we are
-        # trying to just compute the centralized gradients.
-
-        grads = []
-        gradients = super().get_gradients()
-        for grad in gradients:
-            grad_len = len(grad.shape)
-            if grad_len > 1:
-                axis = list(range(grad_len - 1))
-                grad -= tf.reduce_mean(grad,
-                                        axis=axis,
-                                        keep_dims=True)
-            grads.append(grad)
-
-        return grads
-
-optimizer = GCRMSprop(learning_rate=1e-4)
-
-"""
-We will now train our model this time using Gradient Centralization, notice our optimizer
-is the one using Gradient Centralization this time.
-
+We will now train the same model, this time using Gradient Centralization, 
+notice our optimizer is the one using Gradient Centralization this time.
 """
 
 time_callback_gc = TimeHistory()
