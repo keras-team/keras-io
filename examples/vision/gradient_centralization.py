@@ -203,6 +203,9 @@ The experiments in [this paper](https://arxiv.org/abs/2004.01461) on various
 applications, including general image classification, fine-grained image classification,
 detection and segmentation and Person ReID demonstrate that GC can consistently improve
 the performance of DNN learning.
+
+Also, for simplicity at the moment we are not implementing gradient cliiping functionality, 
+however this quite easy to implement
 """
 
 class GCRMSprop(RMSprop):
@@ -221,16 +224,6 @@ class GCRMSprop(RMSprop):
                                         keep_dims=True)
             grads.append(grad)
 
-        if hasattr(optimizer, 'clipnorm') and optimizer.clipnorm > 0:
-            norm = K.sqrt(sum([K.sum(K.square(g)) for g in grads]))
-            grads = [
-                tf.keras.optimizers.clip_norm(
-                    g,
-                    optimizer.clipnorm,
-                    norm) for g in grads]
-        if hasattr(optimizer, 'clipvalue') and optimizer.clipvalue > 0:
-            grads = [K.clip(g, -optimizer.clipvalue, optimizer.clipvalue)
-                      for g in grads]
         return grads
 
 optimizer = GCRMSprop(learning_rate=1e-4)
