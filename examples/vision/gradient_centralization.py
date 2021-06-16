@@ -39,11 +39,10 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow.keras import layers
 from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.layers  import MaxPooling2D
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import RMSprop
-import keras.backend as K
 
 from time import time
 import os
@@ -206,40 +205,39 @@ detection and segmentation and Person ReID demonstrate that GC can consistently 
 the performance of DNN learning.
 """
 
-
 class gc_rmsprop(RMSprop):
     def get_gradients(self, loss, params):
-        # We here just provide a modified get_gradients() function since we are
+        # We here just provide a modified get_gradients() function since we are 
         # trying to just compute the centralized gradients.
 
         grads = []
-        for grad in K.gradients(loss, params):
+        gradients = super().get_gradients()
+        for grad in gradients:
             grad_len = len(grad.shape)
             if grad_len > 1:
                 axis = list(range(grad_len - 1))
-                grad -= tf.reduce_mean(grad, axis=axis, keep_dims=True)
+                grad -= tf.reduce_mean(grad,
+                                        axis=axis,
+                                        keep_dims=True)
             grads.append(grad)
 
         if None in grads:
-            raise ValueError(
-                "An operation has `None` for gradient. "
-                "Please make sure that all of your ops have a "
-                "gradient defined (i.e. are differentiable). "
-                "Common ops without gradient: "
-                "K.argmax, K.round, K.eval."
-            )
-        if hasattr(optimizer, "clipnorm") and optimizer.clipnorm > 0:
+            raise ValueError('An operation has `None` for gradient. '
+                              'Please make sure that all of your ops have a '
+                              'gradient defined (i.e. are differentiable). '
+                              'Common ops without gradient: '
+                              'K.argmax, K.round, K.eval.')
+        if hasattr(optimizer, 'clipnorm') and optimizer.clipnorm > 0:
             norm = K.sqrt(sum([K.sum(K.square(g)) for g in grads]))
             grads = [
-                tf.keras.optimizers.clip_norm(g, optimizer.clipnorm, norm)
-                for g in grads
-            ]
-        if hasattr(optimizer, "clipvalue") and optimizer.clipvalue > 0:
-            grads = [
-                K.clip(g, -optimizer.clipvalue, optimizer.clipvalue) for g in grads
-            ]
+                tf.keras.optimizers.clip_norm(
+                    g,
+                    optimizer.clipnorm,
+                    norm) for g in grads]
+        if hasattr(optimizer, 'clipvalue') and optimizer.clipvalue > 0:
+            grads = [K.clip(g, -optimizer.clipvalue, optimizer.clipvalue)
+                      for g in grads]
         return grads
-
 
 optimizer = gc_rmsprop(learning_rate=1e-4)
 
