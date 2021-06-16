@@ -220,13 +220,7 @@ class gc_rmsprop(RMSprop):
                                         axis=axis,
                                         keep_dims=True)
             grads.append(grad)
-
-        if None in grads:
-            raise ValueError('An operation has `None` for gradient. '
-                              'Please make sure that all of your ops have a '
-                              'gradient defined (i.e. are differentiable). '
-                              'Common ops without gradient: '
-                              'K.argmax, K.round, K.eval.')
+            
         if hasattr(optimizer, 'clipnorm') and optimizer.clipnorm > 0:
             norm = K.sqrt(sum([K.sum(K.square(g)) for g in grads]))
             grads = [
