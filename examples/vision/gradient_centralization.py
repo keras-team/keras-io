@@ -205,7 +205,7 @@ detection and segmentation and Person ReID demonstrate that GC can consistently 
 the performance of DNN learning.
 """
 
-class gc_rmsprop(RMSprop):
+class GCRMSprop(RMSprop):
     def get_gradients(self, loss, params):
         # We here just provide a modified get_gradients() function since we are 
         # trying to just compute the centralized gradients.
@@ -220,7 +220,7 @@ class gc_rmsprop(RMSprop):
                                         axis=axis,
                                         keep_dims=True)
             grads.append(grad)
-            
+
         if hasattr(optimizer, 'clipnorm') and optimizer.clipnorm > 0:
             norm = K.sqrt(sum([K.sum(K.square(g)) for g in grads]))
             grads = [
@@ -233,7 +233,7 @@ class gc_rmsprop(RMSprop):
                       for g in grads]
         return grads
 
-optimizer = gc_rmsprop(learning_rate=1e-4)
+optimizer = GCRMSprop(learning_rate=1e-4)
 
 """
 We will now train our model this time using Gradient Centralization, notice our optimizer
