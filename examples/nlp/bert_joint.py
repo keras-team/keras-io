@@ -8,17 +8,16 @@ Description: Joint Named Entity Recognition (NER) and sentence classification fr
 """
 ## Introduction
 
-Named Entity Recognition (NER) is the process of identifying named entities in text. Example of named entities are: "Person", "Location", "organization", "Dates" etc. NER is essentially a token classification process where every token is classified into one or more categories depending upon the number of named entities we want to identify.
+Named Entity Recognition (NER) is the process of identifying named entities in text. Example of named entities are: "Person", "Location", "Organization", "Dates" etc. NER is essentially a token classification process where every token is classified into one or more predeterminedcategories.
 
 Sentence classification is the process of assigning a label to an entire sentence. Examples include sentiment analysis and restaurant reviews.
 
 For both of these tasks, we need labeled datasets. Ideally we want a dataset that has both sentence level labels as well as word level labels. However, in practice this is not very common. A lot of datasets are either one or the other. Further, if you have only one dataset and you want to use an open source public dataset for the other task, it's not very straight-forward to do so.
 
-
-In this exercise, we will train a BERT model to do both NER and sentence classification using 2 different datasets - one that contains only word level labels and the other only sentence level.
+In this exercise, we will train a BERT model to do both NER and sentence classification using 2 different datasets - one that contains only word level labels and the other only sentence level labels.
 """
 """
-## Install the open source transformers and dataset package from Huggingface
+## Install the open source transformers and dataset package from Huggingface. Also download apython module for NER evaluation.
 """
 
 """shell
