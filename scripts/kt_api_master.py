@@ -7,34 +7,36 @@ ORACLE_MASTER = {
             'path': 'base_oracle',
             'title': 'The base Oracle class',
             'generate': [
-                'kerastuner.Oracle',
-                'kerastuner.Oracle.create_trial',
-                'kerastuner.Oracle.end_trial',
-                'kerastuner.Oracle.get_best_trials',
-                'kerastuner.Oracle.get_state',
-                'kerastuner.Oracle.set_state',
-                'kerastuner.Oracle.update_trial',
+                'keras_tuner.Oracle',
+                'keras_tuner.Oracle.create_trial',
+                'keras_tuner.Oracle.end_trial',
+                'keras_tuner.Oracle.get_best_trials',
+                'keras_tuner.Oracle.get_state',
+                'keras_tuner.Oracle.set_state',
+                'keras_tuner.Oracle.score_trial',
+                'keras_tuner.Oracle.populate_space',
+                'keras_tuner.Oracle.update_trial',
             ]
         },
         {
             'path': 'random',
             'title': 'RandomSearch Oracle',
             'generate': [
-                'kerastuner.oracles.RandomSearch',
+                'keras_tuner.oracles.RandomSearchOracle',
             ]
         },
         {
             'path': 'bayesian',
             'title': 'BayesianOptimization Oracle',
             'generate': [
-                'kerastuner.oracles.BayesianOptimization',
+                'keras_tuner.oracles.BayesianOptimizationOracle',
             ]
         },
         {
             'path': 'hyperband',
             'title': 'Hyperband Oracle',
             'generate': [
-                'kerastuner.oracles.Hyperband',
+                'keras_tuner.oracles.HyperbandOracle',
             ]
         },
     ]
@@ -49,22 +51,22 @@ HYPERMODEL_MASTER = {
             'path': 'base_hypermodel',
             'title': 'The base HyperModel class',
             'generate': [
-                'kerastuner.HyperModel',
-                'kerastuner.HyperModel.build',
+                'keras_tuner.HyperModel',
+                'keras_tuner.HyperModel.build',
             ]
         },
         {
             'path': 'hyper_resnet',
             'title': 'HyperResNet',
             'generate': [
-                'kerastuner.applications.HyperResNet',
+                'keras_tuner.applications.HyperResNet',
             ]
         },
         {
             'path': 'hyper_xception',
             'title': 'HyperXception',
             'generate': [
-                'kerastuner.applications.HyperXception',
+                'keras_tuner.applications.HyperXception',
             ]
         },
     ]
@@ -79,47 +81,49 @@ TUNER_MASTER = {
             'path': 'base_tuner',
             'title': 'The base Tuner class',
             'generate': [
-                'kerastuner.Tuner',
-                'kerastuner.Tuner.get_best_hyperparameters',
-                'kerastuner.Tuner.get_best_models',
-                'kerastuner.Tuner.get_state',
-                'kerastuner.Tuner.load_model',
-                'kerastuner.Tuner.on_epoch_begin',
-                'kerastuner.Tuner.on_batch_begin',
-                'kerastuner.Tuner.on_batch_end',
-                'kerastuner.Tuner.on_epoch_end',
-                'kerastuner.Tuner.run_trial',
-                'kerastuner.Tuner.save_model',
-                'kerastuner.Tuner.search',
-                'kerastuner.Tuner.set_state',
+                'keras_tuner.Tuner',
+                'keras_tuner.Tuner.get_best_hyperparameters',
+                'keras_tuner.Tuner.get_best_models',
+                'keras_tuner.Tuner.get_state',
+                'keras_tuner.Tuner.load_model',
+                'keras_tuner.Tuner.on_epoch_begin',
+                'keras_tuner.Tuner.on_batch_begin',
+                'keras_tuner.Tuner.on_batch_end',
+                'keras_tuner.Tuner.on_epoch_end',
+                'keras_tuner.Tuner.run_trial',
+                'keras_tuner.Tuner.results_summary',
+                'keras_tuner.Tuner.save_model',
+                'keras_tuner.Tuner.search',
+                'keras_tuner.Tuner.search_space_summary',
+                'keras_tuner.Tuner.set_state',
             ]
         },
         {
             'path': 'random',
             'title': 'RandomSearch Tuner',
             'generate': [
-                'kerastuner.RandomSearch',
+                'keras_tuner.RandomSearch',
             ]
         },
         {
             'path': 'bayesian',
             'title': 'BayesianOptimization Tuner',
             'generate': [
-                'kerastuner.BayesianOptimization',
+                'keras_tuner.BayesianOptimization',
             ]
         },
         {
             'path': 'hyperband',
             'title': 'Hyperband Tuner',
             'generate': [
-                'kerastuner.Hyperband',
+                'keras_tuner.Hyperband',
             ]
         },
         {
             'path': 'sklearn',
             'title': 'Sklearn Tuner',
             'generate': [
-                'kerastuner.tuners.Sklearn',
+                'keras_tuner.SklearnTuner',
             ]
         },
     ]
@@ -134,14 +138,14 @@ KT_API_MASTER = {
             'path': 'hyperparameters',
             'title': 'HyperParameters',
             'generate': [
-                'kerastuner.HyperParameters',
-                'kerastuner.HyperParameters.Boolean',
-                'kerastuner.HyperParameters.Choice',
-                'kerastuner.HyperParameters.Fixed',
-                'kerastuner.HyperParameters.Float',
-                'kerastuner.HyperParameters.Int',
-                'kerastuner.HyperParameters.conditional_scope',
-                'kerastuner.HyperParameters.get',
+                'keras_tuner.HyperParameters',
+                'keras_tuner.HyperParameters.Boolean',
+                'keras_tuner.HyperParameters.Choice',
+                'keras_tuner.HyperParameters.Fixed',
+                'keras_tuner.HyperParameters.Float',
+                'keras_tuner.HyperParameters.Int',
+                'keras_tuner.HyperParameters.conditional_scope',
+                'keras_tuner.HyperParameters.get',
             ]
         },
         TUNER_MASTER,

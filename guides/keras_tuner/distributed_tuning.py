@@ -92,7 +92,7 @@ search.
 """
 
 
-import kerastuner as kt
+import keras_tuner as kt
 import tensorflow as tf
 import numpy as np
 

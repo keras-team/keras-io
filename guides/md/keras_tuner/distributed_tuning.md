@@ -95,7 +95,7 @@ search.
 
 ```python
 
-import kerastuner as kt
+import keras_tuner as kt
 import tensorflow as tf
 import numpy as np
 
@@ -167,15 +167,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 02s]
-val_accuracy: 0.15000000596046448
+Trial 2 Complete [00h 00m 03s]
+val_accuracy: 0.4699999988079071
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.7300000190734863
-Total elapsed time: 00h 00m 10s
+Best val_accuracy So Far: 0.5099999904632568
+Total elapsed time: 00h 00m 06s
 INFO:tensorflow:Oracle triggered exit
 
 ```

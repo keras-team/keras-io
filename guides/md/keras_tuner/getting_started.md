@@ -9,6 +9,7 @@
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_tuner/getting_started.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_tuner/getting_started.py)
 
 
+
 ---
 ## Setup
 
@@ -46,6 +47,13 @@ y_val = keras.utils.to_categorical(y_val, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+
+```
+</div>
 ---
 ## Prepare a model-building function
 
@@ -59,7 +67,7 @@ This function returns a compiled model.
 
 ```python
 from tensorflow.keras import layers
-from kerastuner import RandomSearch
+from keras_tuner import RandomSearch
 
 
 def build_model(hp):
@@ -145,15 +153,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 07s]
-val_accuracy: 0.9280500113964081
+Trial 3 Complete [00h 00m 18s]
+val_accuracy: 0.9421000182628632
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9700999855995178
-Total elapsed time: 00h 00m 28s
+Best val_accuracy So Far: 0.9730499982833862
+Total elapsed time: 00h 00m 48s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -188,19 +196,19 @@ Showing 10 best trials
 Objective(name='val_accuracy', direction='max')
 Trial summary
 Hyperparameters:
-units: 256
-learning_rate: 0.001
-Score: 0.9700999855995178
-Trial summary
-Hyperparameters:
 units: 480
-learning_rate: 0.01
-Score: 0.9517500102519989
+learning_rate: 0.001
+Score: 0.9730499982833862
 Trial summary
 Hyperparameters:
-units: 96
+units: 160
+learning_rate: 0.001
+Score: 0.9692499935626984
+Trial summary
+Hyperparameters:
+units: 320
 learning_rate: 0.0001
-Score: 0.9280500113964081
+Score: 0.9421000182628632
 
 ```
 </div>
@@ -249,7 +257,7 @@ A `HyperModel` subclass only needs to implement a `build(self, hp)` method.
 
 
 ```python
-from kerastuner import HyperModel
+from keras_tuner import HyperModel
 
 
 class MyHyperModel(HyperModel):
@@ -292,15 +300,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 05s]
-val_accuracy: 0.9577000141143799
+Trial 3 Complete [00h 00m 10s]
+val_accuracy: 0.9571999907493591
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9577000141143799
-Total elapsed time: 00h 00m 14s
+Best val_accuracy So Far: 0.9573000073432922
+Total elapsed time: 00h 00m 28s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -314,7 +322,7 @@ They come pre-compiled with `loss="categorical_crossentropy"` and `metrics=["acc
 
 
 ```python
-from kerastuner.applications import HyperResNet
+from keras_tuner.applications import HyperResNet
 
 hypermodel = HyperResNet(input_shape=(28, 28, 1), classes=10)
 
@@ -334,15 +342,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 16s]
-val_accuracy: 0.09000000357627869
+Trial 3 Complete [00h 00m 34s]
+val_accuracy: 0.10000000149011612
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Best val_accuracy So Far: 0.10000000149011612
-Total elapsed time: 00h 01m 15s
+Total elapsed time: 00h 01m 45s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -358,8 +366,8 @@ value gets used.
 
 
 ```python
-from kerastuner import HyperParameters
-from kerastuner.applications import HyperXception
+from keras_tuner import HyperParameters
+from keras_tuner.applications import HyperXception
 
 hypermodel = HyperXception(input_shape=(28, 28, 1), classes=10)
 
@@ -388,15 +396,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 03s]
-val_accuracy: 0.029999999329447746
+Trial 3 Complete [00h 00m 02s]
+val_accuracy: 0.10999999940395355
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Best val_accuracy So Far: 0.10999999940395355
-Total elapsed time: 00h 00m 11s
+Total elapsed time: 00h 00m 08s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -445,15 +453,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 02s]
-val_accuracy: 0.12999999523162842
+Trial 3 Complete [00h 00m 07s]
+val_accuracy: 0.10000000149011612
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.12999999523162842
-Total elapsed time: 00h 00m 11s
+Best val_accuracy So Far: 0.11999999731779099
+Total elapsed time: 00h 00m 17s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -491,15 +499,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 03s]
-val_loss: 0.09437878429889679
+Trial 3 Complete [00h 00m 07s]
+val_loss: 0.09853753447532654
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 0.09018845856189728
-Total elapsed time: 00h 00m 13s
+Best val_loss So Far: 0.08992436528205872
+Total elapsed time: 00h 00m 23s
 INFO:tensorflow:Oracle triggered exit
 
 ```
