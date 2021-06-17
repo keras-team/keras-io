@@ -126,7 +126,7 @@ output of the same shape. In this case, `sequence_length` is 288 and
 
 model = keras.Sequential(
     [
-        layers.Input(shape=(x_train.shape[1], x_train.shape[2])),
+        layers.InputLayer(input_shape=(x_train.shape[1], x_train.shape[2])),
         layers.Conv1D(
             filters=32, kernel_size=7, padding="same", strides=2, activation="relu"
         ),
