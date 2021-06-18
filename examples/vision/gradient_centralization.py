@@ -156,7 +156,7 @@ Also, for simplicity at the moment we are not implementing gradient cliiping fun
 however this quite easy to implement.
 
 At the moment we are just creating a subclass for the `RMSProp` optimizer
-however you could easily reproduce this for any toher optimizer or on a custom 
+however you could easily reproduce this for any toher optimizer or on a custom
 optimizer in the same way. We will be using this class in the later section when
 we train a model with Gradient Centralization.
 """
