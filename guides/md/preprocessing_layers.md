@@ -11,7 +11,7 @@
 
 
 ---
-## Keras preprocessing layers
+## Keras preprocessing
 
 The Keras preprocessing layers API allows developers to build Keras-native input
 processing pipelines. These input processing pipelines can be used as independent
@@ -23,7 +23,7 @@ end-to-end: models that accept raw images or raw structured data as input; model
 handle feature normalization or feature value indexing on their own.
 
 ---
-## Available preprocessing layers
+## Available preprocessing
 
 ### Text preprocessing
 
@@ -36,7 +36,7 @@ read by an `Embedding` layer or `Dense` layer.
 - `Discretization` layer: turns continuous numerical features into integer categorical
 features.
 
-### Categorical features
+### Categorical features preprocessing
 
 - `CategoryEncoding` layer: turns integer categorical features into one-hot, multi-hot,
 or count dense representations.
@@ -48,7 +48,7 @@ read by an `Embedding` layer or `Dense` layer.
 read by an `Embedding` layer or `Dense` layer.
 
 
-### Image preprocessing layers
+### Image preprocessing
 
 These layers are for standardizing the inputs of an image model.
 
@@ -57,7 +57,7 @@ These layers are for standardizing the inputs of an image model.
 inputs in the `[0, 255]` range to inputs in the `[0, 1]` range.
 - `CenterCrop` layer: returns a center crop of a batch of images.
 
-### Image data augmentation layers
+### Image data augmentation
 
 These layers apply random augmentation transforms to a batch of images. They
 are only active during training.
@@ -248,8 +248,6 @@ inference_model = keras.Model(inputs, outputs)
 Note that image data augmentation layers are only active during training (similarly to
 the `Dropout` layer).
 
-TODO: use tf.data
-
 
 ```python
 from tensorflow import keras
@@ -287,9 +285,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 10s 506ms/step - loss: 9.2884
+5/5 [==============================] - 10s 514ms/step - loss: 9.2905
 
-<tensorflow.python.keras.callbacks.History at 0x1553e7190>
+<tensorflow.python.keras.callbacks.History at 0x15e1664d0>
 
 ```
 </div>
@@ -323,9 +321,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 1s 836us/step - loss: 2.1258
+1563/1563 [==============================] - 1s 835us/step - loss: 2.1309
 
-<tensorflow.python.keras.callbacks.History at 0x156f60850>
+<tensorflow.python.keras.callbacks.History at 0x15fce2710>
 
 ```
 </div>
@@ -501,14 +499,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 1s/step - loss: 0.9913
+1/1 [==============================] - 1s 1s/step - loss: 0.9776
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.06249692]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.04514679]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -586,14 +584,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 195ms/step - loss: 0.0159
+1/1 [==============================] - 0s 183ms/step - loss: 2.6441
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.58806014]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-1.207074]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -651,6 +649,7 @@ print("\nCalling end-to-end model on test string...")
 test_data = tf.constant(["The one the other will absorb"])
 test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
+
 ```
 
 <div class="k-default-codeblock">
@@ -668,14 +667,35 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 205ms/step - loss: 5.4344
+1/1 [==============================] - 0s 184ms/step - loss: 0.7904
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[1.5943396]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.8694465]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
+---
+## Important gotchas
+
+### Working with lookup layers with very large vocabularies
+
+You may find yourself working with a very large vocabulary in a `TextVectorization`, a `StringLookup` layer,
+or an `IntegerLookup` layer. Typically, a vocabulary larger than 500MB would be considered "very large".
+
+In such case, for best performance, you should avoid using `adapt()`.
+Instead, pre-compute your vocabulary in advance
+(you could use Apache Beam or TF Transform for this)
+and store it in a file. Then load the vocabulary into the layer at construction
+time by passing the filepath as the `vocabulary` argument.
+
+
+### Using lookup layers on a TPU pod or with `ParameterServerStrategy`.
+
+There is an outstanding issue that causes performance to degrade when using
+a `TextVectorization`, `StringLookup`, or `IntegerLookup` layer while
+training on a TPU pod or on multiple machines via `ParameterServerStrategy`.
+This is slated to be fixed in TensorFlow 2.7.
