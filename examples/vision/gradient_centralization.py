@@ -173,9 +173,7 @@ class GCRMSprop(RMSprop):
             grad_len = len(grad.shape)
             if grad_len > 1:
                 axis = list(range(grad_len - 1))
-                grad -= tf.reduce_mean(grad,
-                                        axis=axis,
-                                        keep_dims=True)
+                grad -= tf.reduce_mean(grad, axis=axis, keep_dims=True)
             grads.append(grad)
 
         return grads
@@ -231,7 +229,7 @@ history_no_gc = model.fit(
 """
 # Train the model with GC
 
-We will now train the same model, this time using Gradient Centralization, 
+We will now train the same model, this time using Gradient Centralization,
 notice our optimizer is the one using Gradient Centralization this time.
 """
 
