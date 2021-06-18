@@ -25,29 +25,28 @@ handle feature normalization or feature value indexing on their own.
 ---
 ## Available preprocessing layers
 
-### Core preprocessing layers
+### Text preprocessing
 
 - `TextVectorization` layer: turns raw strings into an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
+
+### Numerical features preprocessing
+
 - `Normalization` layer: performs feature-wise normalize of input features.
+- `Discretization` layer: turns continuous numerical features into integer categorical
+features.
 
-### Structured data preprocessing layers
-
-These layers are for structured data encoding and feature engineering.
+### Categorical features
 
 - `CategoryEncoding` layer: turns integer categorical features into one-hot, multi-hot,
 or count dense representations.
 - `Hashing` layer: performs categorical feature hashing, also known as the "hashing
 trick".
-- `Discretization` layer: turns continuous numerical features into integer categorical
-features.
 - `StringLookup` layer: turns string categorical values an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
 - `IntegerLookup` layer: turns integer categorical values into an encoded representation that can be
 read by an `Embedding` layer or `Dense` layer.
-- `CategoryCrossing` layer: combines categorical features into co-occurrence features.
-E.g. if you have feature values "a" and "b", it can provide with the combination feature
-"a and b are present at the same time".
+
 
 ### Image preprocessing layers
 
@@ -104,6 +103,13 @@ print("Features mean: %.2f" % (normalized_data.numpy().mean()))
 print("Features std: %.2f" % (normalized_data.numpy().std()))
 ```
 
+<div class="k-default-codeblock">
+```
+Features mean: -0.00
+Features std: 1.00
+
+```
+</div>
 The `adapt()` method takes either a Numpy array or a `tf.data.Dataset` object. In the
 case of `StringLookup` and `TextVectorization`, you can also pass a list of strings:
 
@@ -161,8 +167,8 @@ print(vectorized_data)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[2 4 5]
- [5 1 3]], shape=(2, 3), dtype=int64)
+[[1 3 4]
+ [4 0 2]], shape=(2, 3), dtype=int64)
 
 ```
 </div>
@@ -200,6 +206,10 @@ This is the best option for `TextVectorization`, and all structured data preproc
 layers. It can also be a good option if you're training on CPU
 and you use image preprocessing layers.
 
+**When running on TPU, you should always place preprocessing layers in the `tf.data` pipeline**
+(with the exception of `Normalization` and `Rescaling`, which run fine on TPU and are commonly
+used as the first layer is an image model).
+
 ---
 ## Benefits of doing preprocessing inside the model at inference time
 
@@ -233,10 +243,12 @@ inference_model = keras.Model(inputs, outputs)
 ---
 ## Quick recipes
 
-### Image data augmentation (on-device)
+### Image data augmentation
 
 Note that image data augmentation layers are only active during training (similarly to
 the `Dropout` layer).
+
+TODO: use tf.data
 
 
 ```python
@@ -252,21 +264,35 @@ data_augmentation = keras.Sequential(
     ]
 )
 
-# Create a model that includes the augmentation stage
-input_shape = (32, 32, 3)
+# Load some data
+(x_train, y_train), _ = keras.datasets.cifar10.load_data()
+input_shape = x_train.shape[1:]
 classes = 10
+
+# Create a tf.data pipeline of augmented images (and their labels)
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(16).map(lambda x, y: (data_augmentation(x), y))
+
+
+# Create a model and train it on the augmented image data
 inputs = keras.Input(shape=input_shape)
-# Augment images
-x = data_augmentation(inputs)
-# Rescale image values to [0, 1]
-x = preprocessing.Rescaling(1.0 / 255)(x)
-# Add the rest of the model
-outputs = keras.applications.ResNet50(
+x = preprocessing.Rescaling(1.0 / 255)(inputs)  # Rescale inputs
+outputs = keras.applications.ResNet50(  # Add the rest of the model
     weights=None, input_shape=input_shape, classes=classes
 )(x)
 model = keras.Model(inputs, outputs)
+model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
+model.fit(train_dataset, steps_per_epoch=5)
 ```
 
+<div class="k-default-codeblock">
+```
+5/5 [==============================] - 10s 506ms/step - loss: 9.2884
+
+<tensorflow.python.keras.callbacks.History at 0x1553e7190>
+
+```
+</div>
 You can see a similar setup in action in the example
 [image classification from scratch](https://keras.io/examples/vision/image_classification_from_scratch/).
 
@@ -297,9 +323,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 3s 2ms/step - loss: 2.1828
+1563/1563 [==============================] - 1s 836us/step - loss: 2.1258
 
-<tensorflow.python.keras.callbacks.History at 0x7f049093f130>
+<tensorflow.python.keras.callbacks.History at 0x156f60850>
 
 ```
 </div>
@@ -328,7 +354,7 @@ tf.Tensor(
  [0. 1. 0. 0.]
  [1. 0. 0. 0.]
  [1. 0. 0. 0.]
- [0. 0. 0. 0.]], shape=(6, 4), dtype=float32)
+ [1. 0. 0. 0.]], shape=(6, 4), dtype=float32)
 
 ```
 </div>
@@ -349,7 +375,7 @@ example.
 data = tf.constant([[10], [20], [20], [10], [30], [0]])
 
 # Use IntegerLookup to build an index of the feature values and encode output.
-lookup = preprocessing.IntegerLookup(output_mode="binary")
+lookup = preprocessing.IntegerLookup(output_mode="multi_hot")
 lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
@@ -361,12 +387,12 @@ print(encoded_data)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[0. 0. 1. 0.]
- [0. 0. 1. 0.]
- [0. 1. 0. 0.]
- [1. 0. 0. 0.]
- [1. 0. 0. 0.]
- [0. 0. 0. 0.]], shape=(6, 4), dtype=float32)
+[[0. 0. 1. 0. 0.]
+ [0. 0. 1. 0. 0.]
+ [0. 1. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]
+ [0. 0. 0. 0. 1.]], shape=(6, 5), dtype=float32)
 
 ```
 </div>
@@ -396,7 +422,7 @@ data = np.random.randint(0, 100000, size=(10000, 1))
 hasher = preprocessing.Hashing(num_bins=64, salt=1337)
 
 # Use the CategoryEncoding layer to one-hot encode the hashed values
-encoder = preprocessing.CategoryEncoding(num_tokens=64, output_mode="binary")
+encoder = preprocessing.CategoryEncoding(num_tokens=64, output_mode="multi_hot")
 encoded_data = encoder(hasher(data))
 print(encoded_data.shape)
 ```
@@ -414,7 +440,7 @@ This is how you should preprocess text to be passed to an `Embedding` layer.
 
 ```python
 # Define some text data to adapt the layer
-data = tf.constant(
+adapt_data = tf.constant(
     [
         "The Brain is wider than the Sky",
         "For put them side by side",
@@ -422,30 +448,67 @@ data = tf.constant(
         "With ease and You beside",
     ]
 )
-# Instantiate TextVectorization with "int" output_mode
+
+# Create a TextVectorization layer
 text_vectorizer = preprocessing.TextVectorization(output_mode="int")
 # Index the vocabulary via `adapt()`
-text_vectorizer.adapt(data)
+text_vectorizer.adapt(adapt_data)
 
-# You can retrieve the vocabulary we indexed via get_vocabulary()
-vocab = text_vectorizer.get_vocabulary()
-print("Vocabulary:", vocab)
+# Try out the layer
+print(
+    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+)
 
-# Create an Embedding + LSTM model
-inputs = keras.Input(shape=(1,), dtype="string")
-x = text_vectorizer(inputs)
-x = layers.Embedding(input_dim=len(vocab), output_dim=64)(x)
-outputs = layers.LSTM(1)(x)
+# Create a simple model
+inputs = keras.Input(shape=(None,), dtype="int64")
+x = layers.Embedding(input_dim=text_vectorizer.vocabulary_size(), output_dim=16)(inputs)
+x = layers.GRU(8)(x)
+outputs = layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
-# Call the model on test data (which includes unknown tokens)
-test_data = tf.constant(["The Brain is deeper than the sea"])
-test_output = model(test_data)
+# Create a labeled dataset (which includes unknown tokens)
+train_dataset = tf.data.Dataset.from_tensor_slices(
+    (["\nThe Brain is deeper than the sea"], [1])
+)
+
+# Preprocess the string inputs, turning them into int sequences
+train_dataset = train_dataset.batch(1).map(lambda x, y: (text_vectorizer(x), y))
+# Train the model on the int sequences
+print("\nTraining model...")
+model.compile(optimizer="rmsprop", loss="mse")
+model.fit(train_dataset)
+
+# For inference, you can export a model that accepts strings as input
+inputs = keras.Input(shape=(1,), dtype="string")
+x = text_vectorizer(inputs)
+outputs = model(x)
+end_to_end_model = keras.Model(inputs, outputs)
+
+# Call the end-to-end model on test data (which includes unknown tokens)
+print("\nCalling end-to-end model on test string...")
+test_data = tf.constant(["The one the other will absorb"])
+test_output = end_to_end_model(test_data)
+print("Model output:", test_output)
 ```
 
 <div class="k-default-codeblock">
 ```
-Vocabulary: ['', '[UNK]', 'the', 'side', 'you', 'with', 'will', 'wider', 'them', 'than', 'sky', 'put', 'other', 'one', 'is', 'for', 'ease', 'contain', 'by', 'brain', 'beside', 'and']
+Encoded text:
+ [[ 2 19 14  1  9  2  1]]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Training model...
+1/1 [==============================] - 1s 1s/step - loss: 0.9913
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Calling end-to-end model on test string...
+Model output: tf.Tensor([[0.06249692]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -453,9 +516,8 @@ You can see the `TextVectorization` layer in action, combined with an `Embedding
 in the example
 [text classification from scratch](https://keras.io/examples/nlp/text_classification_from_scratch/).
 
-Note that when training such a model, for best performance, you should
-use the `TextVectorization` layer as part of the input pipeline (which is what we
-do in the text classification example above).
+Note that when training such a model, for best performance, you should always
+use the `TextVectorization` layer as part of the input pipeline.
 
 ### Encoding text as a dense matrix of ngrams with multi-hot encoding
 
@@ -464,7 +526,7 @@ This is how you should preprocess text to be passed to a `Dense` layer.
 
 ```python
 # Define some text data to adapt the layer
-data = tf.constant(
+adapt_data = tf.constant(
     [
         "The Brain is wider than the Sky",
         "For put them side by side",
@@ -474,26 +536,42 @@ data = tf.constant(
 )
 # Instantiate TextVectorization with "binary" output_mode (multi-hot)
 # and ngrams=2 (index all bigrams)
-text_vectorizer = preprocessing.TextVectorization(output_mode="binary", ngrams=2)
+text_vectorizer = preprocessing.TextVectorization(output_mode="multi_hot", ngrams=2)
 # Index the bigrams via `adapt()`
-text_vectorizer.adapt(data)
+text_vectorizer.adapt(adapt_data)
 
+# Try out the layer
 print(
-    "Encoded text:\n",
-    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
-    "\n",
+    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
-# Create a Dense model
-inputs = keras.Input(shape=(1,), dtype="string")
-x = text_vectorizer(inputs)
-outputs = layers.Dense(1)(x)
+# Create a simple model
+inputs = keras.Input(shape=(text_vectorizer.vocabulary_size(),))
+outputs = layers.Dense(1)(inputs)
 model = keras.Model(inputs, outputs)
 
-# Call the model on test data (which includes unknown tokens)
-test_data = tf.constant(["The Brain is deeper than the sea"])
-test_output = model(test_data)
+# Create a labeled dataset (which includes unknown tokens)
+train_dataset = tf.data.Dataset.from_tensor_slices(
+    (["\nThe Brain is deeper than the sea"], [1])
+)
 
+# Preprocess the string inputs, turning them into int sequences
+train_dataset = train_dataset.batch(1).map(lambda x, y: (text_vectorizer(x), y))
+# Train the model on the int sequences
+print("\nTraining model...")
+model.compile(optimizer="rmsprop", loss="mse")
+model.fit(train_dataset)
+
+# For inference, you can export a model that accepts strings as input
+inputs = keras.Input(shape=(1,), dtype="string")
+x = text_vectorizer(inputs)
+outputs = model(x)
+end_to_end_model = keras.Model(inputs, outputs)
+
+# Call the end-to-end model on test data (which includes unknown tokens)
+print("\nCalling end-to-end model on test string...")
+test_data = tf.constant(["The one the other will absorb"])
+test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
 ```
 
@@ -501,13 +579,21 @@ print("Model output:", test_output)
 ```
 Encoded text:
  [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]] 
+  0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Model output: tf.Tensor([[0.53373265]], shape=(1, 1), dtype=float32)
+Training model...
+1/1 [==============================] - 0s 195ms/step - loss: 0.0159
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Calling end-to-end model on test string...
+Model output: tf.Tensor([[0.58806014]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -518,7 +604,7 @@ This is an alternative way of preprocessing text before passing it to a `Dense` 
 
 ```python
 # Define some text data to adapt the layer
-data = tf.constant(
+adapt_data = tf.constant(
     [
         "The Brain is wider than the Sky",
         "For put them side by side",
@@ -530,23 +616,40 @@ data = tf.constant(
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
 text_vectorizer = preprocessing.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
-text_vectorizer.adapt(data)
+text_vectorizer.adapt(adapt_data)
 
+# Try out the layer
 print(
-    "Encoded text:\n",
-    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
-    "\n",
+    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
-# Create a Dense model
-inputs = keras.Input(shape=(1,), dtype="string")
-x = text_vectorizer(inputs)
-outputs = layers.Dense(1)(x)
+# Create a simple model
+inputs = keras.Input(shape=(text_vectorizer.vocabulary_size(),))
+outputs = layers.Dense(1)(inputs)
 model = keras.Model(inputs, outputs)
 
-# Call the model on test data (which includes unknown tokens)
-test_data = tf.constant(["The Brain is deeper than the sea"])
-test_output = model(test_data)
+# Create a labeled dataset (which includes unknown tokens)
+train_dataset = tf.data.Dataset.from_tensor_slices(
+    (["\nThe Brain is deeper than the sea"], [1])
+)
+
+# Preprocess the string inputs, turning them into int sequences
+train_dataset = train_dataset.batch(1).map(lambda x, y: (text_vectorizer(x), y))
+# Train the model on the int sequences
+print("\nTraining model...")
+model.compile(optimizer="rmsprop", loss="mse")
+model.fit(train_dataset)
+
+# For inference, you can export a model that accepts strings as input
+inputs = keras.Input(shape=(1,), dtype="string")
+x = text_vectorizer(inputs)
+outputs = model(x)
+end_to_end_model = keras.Model(inputs, outputs)
+
+# Call the end-to-end model on test data (which includes unknown tokens)
+print("\nCalling end-to-end model on test string...")
+test_data = tf.constant(["The one the other will absorb"])
+test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
 ```
 
@@ -558,13 +661,21 @@ Encoded text:
   0.        0.        1.0986123 1.0986123 1.0986123 0.        0.
   0.        0.        0.        0.        0.        0.        0.
   1.0986123 0.        0.        0.        0.        0.        0.
-  0.        1.0986123 1.0986123 0.        0.        0.       ]] 
+  0.        1.0986123 1.0986123 0.        0.        0.       ]]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Model output: tf.Tensor([[-0.49451536]], shape=(1, 1), dtype=float32)
+Training model...
+1/1 [==============================] - 0s 205ms/step - loss: 5.4344
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Calling end-to-end model on test string...
+Model output: tf.Tensor([[1.5943396]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
