@@ -37,7 +37,7 @@ You can also check out other versions in our
 Import KerasTuner and TensorFlow:
 
 ```python
-import kerastuner as kt
+import keras_tuner as kt
 from tensorflow import keras
 ```
 

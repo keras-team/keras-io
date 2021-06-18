@@ -3,6 +3,13 @@
 Keras is a deep learning API written in Python, running on top of the machine learning platform [TensorFlow](https://github.com/tensorflow/tensorflow).
 It was developed with a focus on enabling fast experimentation. *Being able to go from idea to result as fast as possible is key to doing good research.*
 
+Keras is:
+
+- **Simple** -- but not simplistic. Keras reduces developer *cognitive load* to free you to focus on the parts of the problem that really matter.
+- **Flexible** -- Keras adopts the principle of *progressive disclosure of complexity*: simple workflows should be quick and easy,
+while arbitrarily advanced workflows should be *possible* via a clear path that builds upon what you've already learned.
+- **Powerful** -- Keras provides industry-strength performance and scalability: it is used by organizations and companies including NASA, YouTube, or Waymo.
+
 ---
 
 ## Keras & TensorFlow 2
@@ -12,7 +19,7 @@ It was developed with a focus on enabling fast experimentation. *Being able to g
 
 - Efficiently executing low-level tensor operations on CPU, GPU, or TPU.
 - Computing the gradient of arbitrary differentiable expressions.
-- Scaling computation to many devices (e.g. the [Summit supercomputer](https://www.olcf.ornl.gov/summit/) at Oak Ridge National Lab, which spans 27,000 GPUs).
+- Scaling computation to many devices, such as clusters of hundreds of GPUs.
 - Exporting programs ("graphs") to external runtimes such as servers, browsers, mobile and embedded devices.
 
 Keras is the high-level API of TensorFlow 2: an approachable, highly-productive interface for solving machine learning problems,
@@ -68,7 +75,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 You can now iterate on your training data in batches:
 
 ```python
-# x_train and y_train are Numpy arrays --just like in the Scikit-Learn API.
+# x_train and y_train are Numpy arrays
 model.fit(x_train, y_train, epochs=5, batch_size=32)
 ```
 
@@ -84,7 +91,7 @@ Or generate predictions on new data:
 classes = model.predict(x_test, batch_size=128)
 ```
 
-What you just saw is the most elementary way to use Keras: it mirrors the Scikit-Learn API.
+What you just saw is the most elementary way to use Keras.
 
 However, Keras is also a highly-flexible framework suitable to iterate on state-of-the-art research ideas.
 Keras follows the principle of **progressive disclosure of complexity**: it makes it easy to get started,
@@ -118,8 +125,6 @@ for inputs, targets in dataset:
     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 ```
 
-The ideas behind deep learning are simple, so why should their implementation be painful?
-
 For more in-depth tutorials about Keras, you can check out:
 
 - [Introduction to Keras for engineers](/getting_started/intro_to_keras_for_engineers/)
@@ -147,10 +152,12 @@ Keras/TensorFlow are compatible with:
 
 You can ask questions and join the development discussion:
 
+- In the [TensorFlow forum](https://discuss.tensorflow.org/).
 - On the [Keras Google group](https://groups.google.com/forum/#!forum/keras-users).
 - On the [Keras Slack channel](https://kerasteam.slack.com). Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation to the channel.
 
-You can also post **bug reports and feature requests** (only) in [GitHub issues](https://github.com/keras-team/keras/issues). Make sure to read [our guidelines](https://github.com/keras-team/keras/blob/master/CONTRIBUTING.md) first.
+You can also post **bug reports and feature requests** (only) in [GitHub issues](https://github.com/keras-team/keras/issues).
+Make sure to read [our guidelines](https://github.com/keras-team/keras/blob/master/CONTRIBUTING.md) first.
 
 ---
 
