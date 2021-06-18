@@ -52,7 +52,7 @@ num_classes = 2
 input_shape = (300, 300, 3)
 dataset_name = "horses_or_humans"
 batch_size = 128
-AUTOTUNE = tf.data.AUTOTUNE
+AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 (train_ds, test_ds), metadata = tfds.load(
     name=dataset_name,
