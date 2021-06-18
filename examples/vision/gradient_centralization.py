@@ -6,7 +6,7 @@ Last modified: 06/18/21
 Description: Implement Gradient Centralization to improve training performance of DNNs.
 """
 """
-# Introduction
+## Introduction
 
 This example implements [Gradient Centralization](https://arxiv.org/abs/2004.01461), a
 new optimization technique for Deep Neural Networks by Yong et al., and demonstrates it
@@ -31,7 +31,7 @@ this very easily with a package I built,
 """
 
 """
-# Setup
+## Setup
 """
 
 from time import time
@@ -42,7 +42,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.optimizers import RMSprop
 
 """
-# Prepare the data
+## Prepare the data
 
 For this example, we will be using the [Horses or Humans
 dataset](https://www.tensorflow.org/datasets/catalog/horses_or_humans).
@@ -66,7 +66,7 @@ print(f"Training images: {metadata.splits['train'].num_examples}")
 print(f"Test images: {metadata.splits['test'].num_examples}")
 
 """
-# Use Data Augmentation
+## Use Data Augmentation
 
 We will rescale the data to `[0, 1]`  andperform simple augmentations to our data.
 """
@@ -111,7 +111,7 @@ train_ds = prepare(train_ds, shuffle=True, augment=True)
 test_ds = prepare(test_ds)
 
 """
-# Define a model
+## Define a model
 
 In this section we will define a Convolutional neural network.
 """
@@ -138,7 +138,7 @@ model = tf.keras.Sequential(
 )
 
 """
-# Implement Gradient Centralization
+## Implement Gradient Centralization
 
 We will now
 subclass the `RMSProp` optimizer class modifying the
@@ -182,7 +182,7 @@ class GCRMSprop(RMSprop):
 optimizer = GCRMSprop(learning_rate=1e-4)
 
 """
-# Training utilities
+## Training utilities
 
 We will also create a callback which allows us to easily measure the total training time
 and the time taken for each epoch since we are interested in comparing the effect of
@@ -202,7 +202,7 @@ class TimeHistory(tf.keras.callbacks.Callback):
 
 
 """
-# Train the model without GC
+## Train the model without GC
 
 We now train the model we built earlier without Gradient Centralization which we can
 compare to the training performance of the model trained with Gradient Centralization.
@@ -227,7 +227,7 @@ history_no_gc = model.fit(
 )
 
 """
-# Train the model with GC
+## Train the model with GC
 
 We will now train the same model, this time using Gradient Centralization,
 notice our optimizer is the one using Gradient Centralization this time.
@@ -241,7 +241,7 @@ model.summary()
 history_gc = model.fit(train_ds, epochs=10, verbose=1, callbacks=[time_callback_gc])
 
 """
-# Comparing performance
+## Comparing performance
 """
 
 print("Not using Gradient Centralization")
