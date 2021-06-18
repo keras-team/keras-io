@@ -9,7 +9,7 @@ Description: Subclassing the Tuner class in KerasTuner for more customization li
 """
 ## Introduction
 
-The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to
+The `Tuner` class at `keras_tuner.engine.tuner.Tuner` can be subclassed to
 support advanced uses such as:
 
 * Custom training loops (GANs, reinforement learning, etc.)
@@ -17,8 +17,8 @@ support advanced uses such as:
 data augmentation, test time augmentation, etc.)
 
 This tutorial will not cover subclassing to support non-Keras models. To
-accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner`
-class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
+accomplish this, you can subclass the `keras_tuner.engine.base_tuner.BaseTuner`
+class (See `keras_tuner.tuners.sklearn.Sklearn` for an example).
 
 ## Understanding the search process
 
@@ -94,7 +94,7 @@ class MyTuner(kt.Tuner):
 ### End-to-end Example:
 
 """
-import kerastuner as kt
+import keras_tuner as kt
 import tensorflow as tf
 import numpy as np
 
