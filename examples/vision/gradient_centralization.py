@@ -161,6 +161,7 @@ optimizer in the same way. We will be using this class in the later section when
 we train a model with Gradient Centralization.
 """
 
+
 class GCRMSprop(RMSprop):
     def get_gradients(self, loss, params):
         # We here just provide a modified get_gradients() function since we are
@@ -179,6 +180,7 @@ class GCRMSprop(RMSprop):
 
         return grads
 
+
 optimizer = GCRMSprop(learning_rate=1e-4)
 
 """
@@ -189,6 +191,7 @@ and the time taken for each epoch since we are interested in comparing the effec
 Gradient Centralization on the model we built above.
 """
 
+
 class TimeHistory(tf.keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.times = []
@@ -198,6 +201,7 @@ class TimeHistory(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, batch, logs={}):
         self.times.append(time() - self.epoch_time_start)
+
 
 """
 # Train the model without GC
