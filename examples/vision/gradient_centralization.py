@@ -1,8 +1,8 @@
 """
 Title: Gradient Centralization for Better Training Performance
 Author: [Rishit Dagli](https://github.com/Rishit-dagli)
-Date created: FILLME
-Last modified: FILLME
+Date created: 06/18/21
+Last modified: 06/18/21
 Description: Implement Gradient Centralization to improve training performance of DNNs.
 """
 """
