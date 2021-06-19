@@ -80,7 +80,7 @@ Test images: 256
 </div>
 ## Use Data Augmentation
 
-We will rescale the data to `[0, 1]`  andperform simple augmentations to our data.
+We will rescale the data to `[0, 1]` and perform simple augmentations to our data.
 
 
 ```python
