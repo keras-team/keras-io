@@ -68,7 +68,7 @@ print(f"Test images: {metadata.splits['test'].num_examples}")
 """
 ## Use Data Augmentation
 
-We will rescale the data to `[0, 1]`  andperform simple augmentations to our data.
+We will rescale the data to `[0, 1]` and perform simple augmentations to our data.
 """
 
 rescale = layers.experimental.preprocessing.Rescaling(1.0 / 255)
