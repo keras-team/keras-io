@@ -528,3 +528,28 @@ print("\nCalling end-to-end model on test string...")
 test_data = tf.constant(["The one the other will absorb"])
 test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
+
+
+"""
+## Important gotchas
+
+### Working with lookup layers with very large vocabularies
+
+You may find yourself working with a very large vocabulary in a `TextVectorization`, a `StringLookup` layer,
+or an `IntegerLookup` layer. Typically, a vocabulary larger than 500MB would be considered "very large".
+
+In such case, for best performance, you should avoid using `adapt()`.
+Instead, pre-compute your vocabulary in advance
+(you could use Apache Beam or TF Transform for this)
+and store it in a file. Then load the vocabulary into the layer at construction
+time by passing the filepath as the `vocabulary` argument.
+
+
+### Using lookup layers on a TPU pod or with `ParameterServerStrategy`.
+
+There is an outstanding issue that causes performance to degrade when using
+a `TextVectorization`, `StringLookup`, or `IntegerLookup` layer while
+training on a TPU pod or on multiple machines via `ParameterServerStrategy`.
+This is slated to be fixed in TensorFlow 2.7.
+
+"""
