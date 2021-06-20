@@ -250,7 +250,6 @@ x = layers.Dropout(0.5)(x)
 
 # Conv1D + global max pooling
 x = layers.Conv1D(128, 7, padding="valid", activation="relu", strides=3)(x)
-x = layers.Conv1D(128, 7, padding="valid", activation="relu", strides=3)(x)
 x = layers.GlobalMaxPooling1D()(x)
 
 # We add a vanilla hidden layer:
