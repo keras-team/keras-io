@@ -64,6 +64,7 @@ import numpy as np
 
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import regularizers
 from official.vision.image_classification.augment import RandAugment
 
 import tensorflow_datasets as tfds
@@ -102,10 +103,15 @@ TARGET_BATCH_SIZE = 3 * SOURCE_BATCH_SIZE  # Reference: Section 3.2
 EPOCHS = 10
 STEPS_PER_EPOCH = len(mnist_x_train) // SOURCE_BATCH_SIZE
 TOTAL_STEPS = EPOCHS * STEPS_PER_EPOCH
-T = 0
+CURRENT_STEP = 0
 
 AUTO = tf.data.AUTOTUNE
 LEARNING_RATE = 0.03
+
+WEIGHT_DECAY = 0.0005
+INIT = "he_normal"
+DEPTH = 28
+WIDTH_MULT = 2
 
 """
 ## Data augmentation utilities
@@ -224,8 +230,11 @@ denotes the weight of the loss contibuted by the target samples.
 
 
 def mu_schedule():
-    global T
-    return 0.5 - tf.cos(tf.math.minimum(TF_PI, (2 * TF_PI * T) / TOTAL_STEPS)) / 2
+    global CURRENT_STEP
+    return (
+        0.5
+        - tf.cos(tf.math.minimum(TF_PI, (2 * TF_PI * CURRENT_STEP) / TOTAL_STEPS)) / 2
+    )
 
 
 """
@@ -345,8 +354,8 @@ class AdaMatch(keras.Model):
 
             t = mu_schedule()
             total_loss = source_loss + (t * target_loss)
-            global T
-            T += 1
+            global CURRENT_STEP
+            CURRENT_STEP += 1
 
         gradients = tape.gradient(total_loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
@@ -385,13 +394,149 @@ For more details on these methods and to know how each of them contribute please
 ## Instantiate a Wide-ResNet-28-2
 
 The authors use a [WideResNet-28-2](https://arxiv.org/abs/1605.07146) for the dataset
-pairs we are using in this example. Note that the following model has a scaling layer
-inside it that scales the pixel values to [0, 1]. 
+pairs we are using in this example. Most of the following code has been referred from
+[this script](https://github.com/asmith26/wide_resnets_keras/blob/master/main.py). Note
+that the following model has a scaling layer inside it that scales the pixel values to
+[0, 1].
 """
 
-"""shell
-wget -O wide_resnet.py -q https://git.io/Jnzzj
-import wide_resnet
+
+def wide_basic(n_input_plane, n_output_plane, stride):
+    def f(net):
+        conv_params = [[3, 3, stride, "same"], [3, 3, (1, 1), "same"]]
+
+        n_bottleneck_plane = n_output_plane
+
+        # Residual block
+        for i, v in enumerate(conv_params):
+            if i == 0:
+                if n_input_plane != n_output_plane:
+                    net = layers.BatchNormalization()(net)
+                    net = layers.Activation("relu")(net)
+                    convs = net
+                else:
+                    convs = layers.BatchNormalization()(net)
+                    convs = layers.Activation("relu")(convs)
+                convs = layers.Conv2D(
+                    n_bottleneck_plane,
+                    (v[0], v[1]),
+                    strides=v[2],
+                    padding=v[3],
+                    kernel_initializer=INIT,
+                    kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
+                    use_bias=False,
+                )(convs)
+            else:
+                convs = layers.BatchNormalization()(convs)
+                convs = layers.Activation("relu")(convs)
+                convs = layers.Conv2D(
+                    n_bottleneck_plane,
+                    (v[0], v[1]),
+                    strides=v[2],
+                    padding=v[3],
+                    kernel_initializer=INIT,
+                    kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
+                    use_bias=False,
+                )(convs)
+
+        # Shortcut connection: identity function or 1x1
+        # convolutional
+        #  (depends on difference between input & output shape - this
+        #   corresponds to whether we are using the first block in
+        #   each
+        #   group; see `layer()`).
+        if n_input_plane != n_output_plane:
+            shortcut = layers.Conv2D(
+                n_output_plane,
+                (1, 1),
+                strides=stride,
+                padding="same",
+                kernel_initializer=INIT,
+                kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
+                use_bias=False,
+            )(net)
+        else:
+            shortcut = net
+
+        return layers.Add()([convs, shortcut])
+
+    return f
+
+
+# Stacking residual Units on the same stage
+def layer(block, n_input_plane, n_output_plane, count, stride):
+    def f(net):
+        net = block(n_input_plane, n_output_plane, stride)(net)
+        for i in range(2, int(count + 1)):
+            net = block(n_output_plane, n_output_plane, stride=(1, 1))(net)
+        return net
+
+    return f
+
+
+def get_network(image_size=32, num_classes=10):
+    n = (DEPTH - 4) / 6
+    n_stages = [16, 16 * WIDTH_MULT, 32 * WIDTH_MULT, 64 * WIDTH_MULT]
+
+    inputs = layers.Input(shape=(image_size, image_size, 3))
+    x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 255)(inputs)
+
+    conv1 = layers.Conv2D(
+        n_stages[0],
+        (3, 3),
+        strides=1,
+        padding="same",
+        kernel_initializer=INIT,
+        kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
+        use_bias=False,
+    )(x)
+
+    # Add wide residual blocks
+    block_fn = wide_basic
+    conv2 = layer(
+        block_fn,
+        n_input_plane=n_stages[0],
+        n_output_plane=n_stages[1],
+        count=n,
+        stride=(1, 1),
+    )(
+        conv1
+    )  # Stage 1
+    conv3 = layer(
+        block_fn,
+        n_input_plane=n_stages[1],
+        n_output_plane=n_stages[2],
+        count=n,
+        stride=(2, 2),
+    )(
+        conv2
+    )  # Stage 2
+    conv4 = layer(
+        block_fn,
+        n_input_plane=n_stages[2],
+        n_output_plane=n_stages[3],
+        count=n,
+        stride=(2, 2),
+    )(
+        conv3
+    )  # Stage 3
+
+    batch_norm = layers.BatchNormalization()(conv4)
+    relu = layers.Activation("relu")(batch_norm)
+
+    # Classifier
+    trunk_outputs = layers.GlobalAveragePooling2D()(relu)
+    outputs = layers.Dense(
+        num_classes, kernel_regularizer=regularizers.l2(WEIGHT_DECAY)
+    )(trunk_outputs)
+
+    return tf.keras.Model(inputs, outputs)
+
+
+"""
+We can now instantiate a Wide ResNet model like so. Note that the purpose of using a
+Wide ResNet here is to keep the implementation as close to the original one
+as possible.
 """
 
 wrn_model = wide_resnet.get_network()
