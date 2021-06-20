@@ -560,7 +560,7 @@ total_ds = tf.data.Dataset.zip((final_source_ds, final_target_ds))
 adamatch_trainer.fit(total_ds, epochs=EPOCHS)
 
 """
-## Evaluation on the source and target test sets
+## Evaluation on the target and source test sets
 """
 
 # Compile the AdaMatch model to yield accuracy
@@ -572,7 +572,10 @@ _, accuracy = adamatch_trained_model.evaluate(svhn_test)
 print(f"Accuracy on target test set: {accuracy * 100:.2f}%")
 
 """
-With more training this score improves.
+With more training this score improves. When this same network is trained with
+traditional classification objective, it yields an accuracy of **7.20%** which is
+significantly lower than what we got with AdaMatch. You can check out [this notebook](https://colab.research.google.com/github/sayakpaul/AdaMatch-TF/blob/main/Vanilla_WideResNet.ipynb)
+to know about the hyperparameters and other experimental details. 
 """
 
 
