@@ -73,7 +73,7 @@ are only active during training.
 ---
 ## The `adapt()` method
 
-Some preprocessing layers have an internal state that must be computed based on
+Some preprocessing layers have an internal state that can be computed based on
 a sample of the training data. The list of stateful preprocessing layers is:
 
 - `TextVectorization`: holds a mapping between string tokens and integer indices
@@ -83,7 +83,8 @@ indices.
 - `Discretization`: holds information about value bucket boundaries.
 
 Crucially, these layers are **non-trainable**. Their state is not set during training; it
-must be set **before training**, a step called "adaptation".
+must be set **before training**, either by initializing them from a precomputed constant,
+or by "adapting" them on data.
 
 You set the state of a preprocessing layer by exposing it to training data, via the
 `adapt()` method:
@@ -195,12 +196,19 @@ all image preprocessing and data augmentation layers.
 batches of preprocessed data, like this:
 
 ```python
-dataset = dataset.map(
-  lambda x, y: (preprocessing_layer(x), y))
+dataset = dataset.map(lambda x, y: (preprocessing_layer(x), y))
 ```
 
 With this option, your preprocessing will happen on CPU, asynchronously, and will be
 buffered before going into the model.
+In addition, if you call `dataset.prefetch(tf.data.AUTOTUNE)` on your dataset,
+the preprocessing will happen efficiently in parallel with training:
+
+```python
+dataset = dataset.map(lambda x, y: (preprocessing_layer(x), y))
+dataset = dataset.prefetch(tf.data.AUTOTUNE)
+model.fit(dataset, ...)
+```
 
 This is the best option for `TextVectorization`, and all structured data preprocessing
 layers. It can also be a good option if you're training on CPU
@@ -285,9 +293,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 10s 514ms/step - loss: 9.2905
+5/5 [==============================] - 12s 576ms/step - loss: 8.7839
 
-<tensorflow.python.keras.callbacks.History at 0x15e1664d0>
+<tensorflow.python.keras.callbacks.History at 0x1550b7110>
 
 ```
 </div>
@@ -321,9 +329,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 1s 835us/step - loss: 2.1309
+1563/1563 [==============================] - 2s 910us/step - loss: 2.1323
 
-<tensorflow.python.keras.callbacks.History at 0x15fce2710>
+<tensorflow.python.keras.callbacks.History at 0x15727b8d0>
 
 ```
 </div>
@@ -335,7 +343,7 @@ model.fit(x_train, y_train)
 data = tf.constant([["a"], ["b"], ["c"], ["b"], ["c"], ["a"]])
 
 # Use StringLookup to build an index of the feature values and encode output.
-lookup = preprocessing.StringLookup(output_mode="binary")
+lookup = preprocessing.StringLookup(output_mode="one_hot")
 lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
@@ -356,10 +364,8 @@ tf.Tensor(
 
 ```
 </div>
-Note that index 0 is reserved for missing values (which you should specify as the empty
-string `""`), and index 1 is reserved for out-of-vocabulary values (values that were not
-seen during `adapt()`). You can configure this by using the `mask_token` and `oov_token`
-constructor arguments  of `StringLookup`.
+Note that, here, index 0 is reserved for out-of-vocabulary values
+(values that were not seen during `adapt()`).
 
 You can see the `StringLookup` in action in the
 [Structured data classification from scratch](https://keras.io/examples/structured_data/structured_data_classification_from_scratch/)
@@ -373,7 +379,7 @@ example.
 data = tf.constant([[10], [20], [20], [10], [30], [0]])
 
 # Use IntegerLookup to build an index of the feature values and encode output.
-lookup = preprocessing.IntegerLookup(output_mode="multi_hot")
+lookup = preprocessing.IntegerLookup(output_mode="one_hot")
 lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
@@ -419,7 +425,7 @@ data = np.random.randint(0, 100000, size=(10000, 1))
 # Use the Hashing layer to hash the values to the range [0, 64]
 hasher = preprocessing.Hashing(num_bins=64, salt=1337)
 
-# Use the CategoryEncoding layer to one-hot encode the hashed values
+# Use the CategoryEncoding layer to multi-hot encode the hashed values
 encoder = preprocessing.CategoryEncoding(num_tokens=64, output_mode="multi_hot")
 encoded_data = encoder(hasher(data))
 print(encoded_data.shape)
@@ -466,11 +472,11 @@ model = keras.Model(inputs, outputs)
 
 # Create a labeled dataset (which includes unknown tokens)
 train_dataset = tf.data.Dataset.from_tensor_slices(
-    (["\nThe Brain is deeper than the sea"], [1])
+    (["The Brain is deeper than the sea", "for if they are held Blue to Blue"], [1, 0])
 )
 
 # Preprocess the string inputs, turning them into int sequences
-train_dataset = train_dataset.batch(1).map(lambda x, y: (text_vectorizer(x), y))
+train_dataset = train_dataset.batch(2).map(lambda x, y: (text_vectorizer(x), y))
 # Train the model on the int sequences
 print("\nTraining model...")
 model.compile(optimizer="rmsprop", loss="mse")
@@ -499,14 +505,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 1s/step - loss: 0.9776
+1/1 [==============================] - 2s 2s/step - loss: 0.5292
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.04514679]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.01447889]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -532,7 +538,7 @@ adapt_data = tf.constant(
         "With ease and You beside",
     ]
 )
-# Instantiate TextVectorization with "binary" output_mode (multi-hot)
+# Instantiate TextVectorization with "multi_hot" output_mode
 # and ngrams=2 (index all bigrams)
 text_vectorizer = preprocessing.TextVectorization(output_mode="multi_hot", ngrams=2)
 # Index the bigrams via `adapt()`
@@ -550,11 +556,11 @@ model = keras.Model(inputs, outputs)
 
 # Create a labeled dataset (which includes unknown tokens)
 train_dataset = tf.data.Dataset.from_tensor_slices(
-    (["\nThe Brain is deeper than the sea"], [1])
+    (["The Brain is deeper than the sea", "for if they are held Blue to Blue"], [1, 0])
 )
 
 # Preprocess the string inputs, turning them into int sequences
-train_dataset = train_dataset.batch(1).map(lambda x, y: (text_vectorizer(x), y))
+train_dataset = train_dataset.batch(2).map(lambda x, y: (text_vectorizer(x), y))
 # Train the model on the int sequences
 print("\nTraining model...")
 model.compile(optimizer="rmsprop", loss="mse")
@@ -584,14 +590,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 183ms/step - loss: 2.6441
+1/1 [==============================] - 0s 222ms/step - loss: 1.4333
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-1.207074]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.89536154]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -628,11 +634,11 @@ model = keras.Model(inputs, outputs)
 
 # Create a labeled dataset (which includes unknown tokens)
 train_dataset = tf.data.Dataset.from_tensor_slices(
-    (["\nThe Brain is deeper than the sea"], [1])
+    (["The Brain is deeper than the sea", "for if they are held Blue to Blue"], [1, 0])
 )
 
 # Preprocess the string inputs, turning them into int sequences
-train_dataset = train_dataset.batch(1).map(lambda x, y: (text_vectorizer(x), y))
+train_dataset = train_dataset.batch(2).map(lambda x, y: (text_vectorizer(x), y))
 # Train the model on the int sequences
 print("\nTraining model...")
 model.compile(optimizer="rmsprop", loss="mse")
@@ -667,14 +673,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 184ms/step - loss: 0.7904
+1/1 [==============================] - 0s 216ms/step - loss: 19.4452
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.8694465]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.36555034]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
