@@ -50,6 +50,9 @@ another.
 
 ![](https://i.ibb.co/S596JgT/Data-Preview.png)
 
+Popular domain adaptation algorithms in deep learning include [Deep CORAL](https://arxiv.org/abs/1612.01939),
+[Moment Matching](https://arxiv.org/abs/1812.01754), etc. 
+
 **Note** that in this example, we will be using these two datasets as our source and
 target datasets.
 """
@@ -58,7 +61,6 @@ target datasets.
 ## Setup
 """
 
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 
@@ -352,6 +354,7 @@ class AdaMatch(keras.Model):
                 y_tilde_target_w, logits_target[tf.shape(target_w)[0] :], mask
             )
 
+            ## Compute the weight to be contributed by the loss from target samples ##
             t = mu_schedule()
             total_loss = source_loss + (t * target_loss)
             global CURRENT_STEP
