@@ -6,11 +6,13 @@ Last modified: 2021/06/19
 Description: Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
 """
 """
-In this example, we will implement AdaMatch proposed in
+## Introduction
+
+In this example, we will implement the AdaMatch algorithm, proposed in
 [AdaMatch: A Unified Approach to Semi-Supervised Learning and Domain Adaptation](https://arxiv.org/abs/2106.04732)
-by Berthelot et al. It sets new state-of-the-art in unsupervised domain adaptation (as of
-June 2021). AdaMatch is particularly important for practical applications because it
-beautifully unifies semi-supervised learning (SSL) and unsupervised domain adaptation
+by Berthelot et al. It sets a new state-of-the-art in unsupervised domain adaptation (as of
+June 2021). AdaMatch is particularly interesting because it
+unifies semi-supervised learning (SSL) and unsupervised domain adaptation
 (UDA) under one framework. It thereby provides a way to perform semi-supervised domain
 adaptation (SSDA).
 
@@ -29,32 +31,29 @@ Before we proceed, let's review a few preliminary concepts underlying this examp
 """
 ## Preliminaries
 
-**Semi-supervised learning**, where we generally use a small amount of labeled dataset to
-train models on a bigger unlabeled dataset. Some popular semi-supervised learning methods
-for computer vision are [FixMatch](https://arxiv.org/abs/2001.07685),
+In **semi-supervised learning (SSL)**, we use a small amount of labeled data to
+train models on a bigger unlabeled dataset. Popular semi-supervised learning methods
+for computer vision include [FixMatch](https://arxiv.org/abs/2001.07685),
 [MixMatch](https://arxiv.org/abs/1905.02249),
 [Noisy Student Training](https://arxiv.org/abs/1911.04252), etc. You can refer to 
 [this example](https://keras.io/examples/vision/consistency_training/) to get an idea
-about a standard SSL workflow. 
+of what a standard SSL workflow looks like. 
 
-**Unsupervised domain adaptation**, where we have access to a source labeled dataset and
+In **unsupervised domain adaptation**, we have access to a source labeled dataset and
 a target *unlabeled* dataset. Then the task is to learn a model that can generalize well
 to the target dataset. The source and the target datasets vary in terms of distribution.
-The following figure provides an overview of this idea. Here we have the
-[MNIST dataset](http://yann.lecun.com/exdb/mnist/) which is a dataset of images of
-handwritten digits as the source dataset. On the other hand, the target dataset is
-[SVHN](http://ufldl.stanford.edu/housenumbers/) which consists of images of house
-numbers. Both the datasets have various varying factors in terms of texture, viewpoint,
-appearence, etc. This is why their domains or distributions are different from one
+The following figure provides an illustration of this idea. In the present example, we use the
+[MNIST dataset](http://yann.lecun.com/exdb/mnist/) as the source dataset, while the target dataset is
+[SVHN](http://ufldl.stanford.edu/housenumbers/), which consists of images of house
+numbers. Both datasets have various varying factors in terms of texture, viewpoint,
+appearence, etc.: their domains, or distributions, are different from one
 another.
 
 ![](https://i.imgur.com/dJFSJuT.png)
 
-Popular domain adaptation algorithms in deep learning include [Deep CORAL](https://arxiv.org/abs/1612.01939),
+Popular domain adaptation algorithms in deep learning include
+[Deep CORAL](https://arxiv.org/abs/1612.01939),
 [Moment Matching](https://arxiv.org/abs/1812.01754), etc. 
-
-**Note** that in this example, we will be using these two datasets as our source and
-target datasets.
 """
 
 """
@@ -77,7 +76,7 @@ import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 
 """
-## Datasets
+## Prepare the data
 """
 
 ## MNIST ##
@@ -99,7 +98,7 @@ svhn_train, svhn_test = tfds.load(
 )
 
 """
-## Constants and hyperparameters
+## Define constants and hyperparameters
 """
 
 RESIZE_TO = 32
@@ -123,7 +122,7 @@ WIDTH_MULT = 2
 ## Data augmentation utilities
 
 A standard element of SSL algorithms is to feed weakly and strongly augmented versions of
-the same images to the learning model and making its predictions consistent. For strong
+the same images to the learning model to make its predictions consistent. For strong
 augmentation, [RandAugment](https://arxiv.org/abs/1909.13719) is a standard choice. For
 weak augmentation, we will use horizontal flipping and random cropping.
 """
@@ -159,7 +158,7 @@ def strong_augment(image, source=True):
 
 
 """
-## Data loader utilities
+## Data loading utilities
 """
 
 
@@ -195,13 +194,13 @@ target_ds_s = create_individual_ds(svhn_train, strong_augment, source=False)
 final_target_ds = tf.data.Dataset.zip((target_ds_w, target_ds_s))
 
 """
-Here's how a single image batche looks like:
+Here's what a single image batch looks like:
 
 ![](https://i.imgur.com/aver8cG.png)
 """
 
 """
-## Utilities for loss calculation utilities and weight scheduler
+## Loss computation utilities
 """
 
 
@@ -230,7 +229,7 @@ def compute_loss_target(target_pseudo_labels_w, logits_target_s, mask):
 
 
 """
-## Subclassed model for AdaMatch trainer
+## Subclassed model for AdaMatch training
 
 The figure below presents the overall workflow of AdaMatch (taken from the
 [original paper](https://arxiv.org/abs/2106.04732)):
@@ -239,25 +238,21 @@ The figure below presents the overall workflow of AdaMatch (taken from the
 
 Here's a brief step-by-step breakdown of the workflow:
 
-1. We first retrieve the weakly and stronhly augmented pairs of images from source and
-target images.
-2. Then we prepare two concatenated copies:
-
-    i. One where all the two pairs are concatenated.
-
-    ii. One where only the source image pair is concatenated.
-3. We make two forwarded passes through the underlying learning model:
-
-    i. The first forward pass encompasses the concatenated copy obtained from **2.i**. In
+1. We first retrieve the weakly and strongly augmented pairs of images from the source and
+target datasets.
+2. We prepare two concatenated copies:
+    i. One where both pairs are concatenated.
+    ii. One where only the source data image pair is concatenated.
+3. We run two forward passes through the model:
+    i. The first forward pass uses the concatenated copy obtained from **2.i**. In
 this forward pass, the [Batch Normalization](https://arxiv.org/abs/1502.03167) statistics
 are updated.
-
-    ii. In this forward pass, we only use the concatenated copy obtained from **2.ii**.
-    Also, in this case, Batch Normalization layers are run in inference mode.
-4. Then the respective logits are computed for both the forward passes.
-5. The logits then go through a series of transformations introduced in the paper (which
-are discussed shortly).
-6. We then compute the losses and update the gradients of the underlying model.
+    ii. In the second forward pass, we only use the concatenated copy obtained from **2.ii**.
+    Batch Normalization layers are run in inference mode.
+4. The respective logits are computed for both the forward passes.
+5. The logits go through a series of transformations, introduced in the paper (which
+we will discuss shortly).
+6. We compute the loss and update the gradients of the underlying model.
 """
 
 
@@ -360,9 +355,9 @@ class AdaMatch(keras.Model):
 """
 The authors introduce three improvements in the paper:
 
-* In AdaMatch, we perform two forward passes and only one of them is respsonsible for
-updating the Batch Normalization statistics. This is done to account for the distribution
-shifts from the target dataset. In the other forward pass, we only use the source sample
+* In AdaMatch, we perform two forward passes, and only one of them is respsonsible for
+updating the Batch Normalization statistics. This is done to account for distribution
+shifts in the target dataset. In the other forward pass, we only use the source sample,
 and the Batch Normalization layers are run in inference mode. Logits for the source
 samples (weakly and strongly augmented versions) from these two passes are slightly
 different from one another because of how Batch Normalization layers are run. Final
@@ -375,10 +370,10 @@ of unsupervised domain adaptation, we don't have access to any labels of the tar
 dataset. This is why pseudo labels are generated from the underlying model.
 * The underlying model generates pseudo-labels for the target samples. It's likely that
 the model would make faulty predictions. Those can propagate back as we make progress in
-the training and hurt the overall performance. To compensate for that, we filter the
+the training, and hurt the overall performance. To compensate for that, we filter the
 high-confidence predictions based on a threshold (hence the use of `mask` inside
 `compute_loss_target()`). In AdaMatch, this threshold is relatively adjusted which is why
-it's called **relative confidence thresholding**.
+it is called **relative confidence thresholding**.
 
 For more details on these methods and to know how each of them contribute please refer to
 [the paper](https://arxiv.org/abs/2106.04732).
@@ -483,7 +478,7 @@ def get_network(image_size=32, num_classes=10):
     n = (DEPTH - 4) / 6
     n_stages = [16, 16 * WIDTH_MULT, 32 * WIDTH_MULT, 64 * WIDTH_MULT]
 
-    inputs = layers.Input(shape=(image_size, image_size, 3))
+    inputs = keras.Input(shape=(image_size, image_size, 3))
     x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 255)(inputs)
 
     conv1 = layers.Conv2D(
@@ -535,7 +530,7 @@ def get_network(image_size=32, num_classes=10):
         num_classes, kernel_regularizer=regularizers.l2(WEIGHT_DECAY)
     )(trunk_outputs)
 
-    return tf.keras.Model(inputs, outputs)
+    return keras.Model(inputs, outputs)
 
 
 """
@@ -548,7 +543,7 @@ wrn_model = wide_resnet.get_network()
 print(f"Model has {wrn_model.count_params()/1e6} Million parameters.")
 
 """
-## Instantiate optimizer and AdaMatch trainer
+## Instantiate AdaMatch model and compile it
 """
 
 reduce_lr = keras.optimizers.schedules.CosineDecay(LEARNING_RATE, TOTAL_STEPS, 0.25)
@@ -577,10 +572,11 @@ _, accuracy = adamatch_trained_model.evaluate(svhn_test)
 print(f"Accuracy on target test set: {accuracy * 100:.2f}%")
 
 """
-With more training this score improves. When this same network is trained with
+With more training, this score improves. When this same network is trained with
 standard classification objective, it yields an accuracy of **7.20%** which is
-significantly lower than what we got with AdaMatch. You can check out [this notebook](https://colab.research.google.com/github/sayakpaul/AdaMatch-TF/blob/main/Vanilla_WideResNet.ipynb)
-to know about the hyperparameters and other experimental details. 
+significantly lower than what we got with AdaMatch. You can check out
+[this notebook](https://colab.research.google.com/github/sayakpaul/AdaMatch-TF/blob/main/Vanilla_WideResNet.ipynb)
+to learn more about the hyperparameters and other experimental details. 
 """
 
 
