@@ -48,7 +48,7 @@ numbers. Both the datasets have various varying factors in terms of texture, vie
 appearence, etc. This is why their domains or distributions are different from one
 another.
 
-![](https://i.ibb.co/S596JgT/Data-Preview.png)
+![](https://i.imgur.com/dJFSJuT.png)
 
 Popular domain adaptation algorithms in deep learning include [Deep CORAL](https://arxiv.org/abs/1612.01939),
 [Moment Matching](https://arxiv.org/abs/1812.01754), etc. 
@@ -62,6 +62,9 @@ target datasets.
 """
 
 import tensorflow as tf
+
+tf.random.set_seed(42)
+
 import numpy as np
 
 from tensorflow import keras
@@ -77,6 +80,7 @@ tfds.disable_progress_bar()
 ## Datasets
 """
 
+## MNIST ##
 (
     (mnist_x_train, mnist_y_train),
     (mnist_x_test, mnist_y_test),
@@ -89,6 +93,7 @@ mnist_x_test = tf.expand_dims(mnist_x_test, -1)
 # Convert the labels to one-hot encoded vectors
 mnist_y_train = tf.one_hot(mnist_y_train, 10).numpy()
 
+## SVHN ##
 svhn_train, svhn_test = tfds.load(
     "svhn_cropped", split=["train", "test"], as_supervised=True
 )
@@ -97,7 +102,6 @@ svhn_train, svhn_test = tfds.load(
 ## Constants and hyperparameters
 """
 
-TF_PI = tf.constant(np.pi)
 RESIZE_TO = 32
 
 SOURCE_BATCH_SIZE = 64
@@ -191,9 +195,9 @@ target_ds_s = create_individual_ds(svhn_train, strong_augment, source=False)
 final_target_ds = tf.data.Dataset.zip((target_ds_w, target_ds_s))
 
 """
-Here's how the image batches look like:
+Here's how a single image batche looks like:
 
-![](https://i.ibb.co/FDVkbWL/Data-Viz.png)
+![](https://i.imgur.com/aver8cG.png)
 """
 
 """
@@ -212,12 +216,12 @@ def compute_loss_source(source_labels, logits_source_w, logits_source_s):
 
 
 def compute_loss_target(target_pseudo_labels_w, logits_target_s, mask):
-    loss_func = keras.losses.categorical_crossentropy
+    loss_func = keras.losses.CategoricalCrossentropy(from_logits=True, reduction="none")
     target_pseudo_labels_w = tf.stop_gradient(target_pseudo_labels_w)
     # For calculating loss for the target samples, we treat the pseudo labels
     # as the ground-truth. These are not considered during backpropagation
     # which is a standard SSL practice.
-    target_loss = loss_func(target_pseudo_labels_w, logits_target_s, from_logits=True)
+    target_loss = loss_func(target_pseudo_labels_w, logits_target_s)
 
     # More on `mask` later.
     mask = tf.cast(mask, target_loss.dtype)
@@ -226,36 +230,12 @@ def compute_loss_target(target_pseudo_labels_w, logits_target_s, mask):
 
 
 """
-Rather than using a fixed scalar quantity, a varying scalar is used in AdaMatch. It
-denotes the weight of the loss contibuted by the target samples.
-"""
-
-
-def mu_schedule():
-    global CURRENT_STEP
-    return (
-        0.5
-        - tf.cos(tf.math.minimum(TF_PI, (2 * TF_PI * CURRENT_STEP) / TOTAL_STEPS)) / 2
-    )
-
-
-"""
-Visually, the weight scheduler look like so:
-
-![](https://i.ibb.co/25B0yJb/weight-schedule.png)
-
-This scheduler increases the weight of the target domain loss from 0 to 1 for the first
-half of the training. Then it keeps that weight at 1 for the second half of the training.
-
-"""
-
-"""
 ## Subclassed model for AdaMatch trainer
 
 The figure below presents the overall workflow of AdaMatch (taken from the
 [original paper](https://arxiv.org/abs/2106.04732)):
 
-![](https://i.ibb.co/MSR8V8S/image.png)
+![](https://i.imgur.com/1QsEm2M.png)
 
 Here's a brief step-by-step breakdown of the workflow:
 
@@ -287,10 +267,20 @@ class AdaMatch(keras.Model):
         self.model = model
         self.tau = tau  # Denotes the confidence threshold
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
+        self.total_steps = TOTAL_STEPS
+        self.current_step = tf.Variable(0, dtype="int64")
 
     @property
     def metrics(self):
         return [self.loss_tracker]
+
+    # This is a warmup schedule to update the weight of the
+    # loss contributed by the target unlabeled samples. More
+    # on this in the text.
+    def compute_mu(self):
+        pi = tf.constant(np.pi, dtype="float32")
+        step = tf.cast(self.current_step, dtype="float32")
+        return 0.5 - tf.cos(tf.math.minimum(pi, (2 * pi * step) / self.total_steps)) / 2
 
     def train_step(self, data):
         ## Unpack and organize the data ##
@@ -354,11 +344,11 @@ class AdaMatch(keras.Model):
                 y_tilde_target_w, logits_target[tf.shape(target_w)[0] :], mask
             )
 
-            ## Compute the weight to be contributed by the loss from target samples ##
-            t = mu_schedule()
+            t = self.compute_mu()  # Compute weight for the target loss
             total_loss = source_loss + (t * target_loss)
-            global CURRENT_STEP
-            CURRENT_STEP += 1
+            self.current_step.assign_add(
+                1
+            )  # Update current training step for the scheduler
 
         gradients = tape.gradient(total_loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
@@ -382,15 +372,27 @@ is referred to as **random logit interpolation**.
 * **Distribution alignment** is used to align the source and target label distributions.
 This further helps the underlying model learn *domain-invariant representations*. In case
 of unsupervised domain adaptation, we don't have access to any labels of the target
-dataset. This is why pseudo labels are generated from the underlying model. 
+dataset. This is why pseudo labels are generated from the underlying model.
 * The underlying model generates pseudo-labels for the target samples. It's likely that
 the model would make faulty predictions. Those can propagate back as we make progress in
 the training and hurt the overall performance. To compensate for that, we filter the
-high-confidence predictions based on a threshold. In AdaMatch, this threshold is
-relatively adjusted which is why it's called **relative confidence thresholding**. 
+high-confidence predictions based on a threshold (hence the use of `mask` inside
+`compute_loss_target()`). In AdaMatch, this threshold is relatively adjusted which is why
+it's called **relative confidence thresholding**.
 
 For more details on these methods and to know how each of them contribute please refer to
-[the paper](https://arxiv.org/abs/2106.04732). 
+[the paper](https://arxiv.org/abs/2106.04732).
+
+**About `compute_mu()`**:
+
+Rather than using a fixed scalar quantity, a varying scalar is used in AdaMatch. It
+denotes the weight of the loss contibuted by the target samples. Visually, the weight
+scheduler look like so:
+
+![](https://i.imgur.com/3MiZNxN.png)
+
+This scheduler increases the weight of the target domain loss from 0 to 1 for the first
+half of the training. Then it keeps that weight at 1 for the second half of the training.
 """
 
 """
@@ -576,7 +578,7 @@ print(f"Accuracy on target test set: {accuracy * 100:.2f}%")
 
 """
 With more training this score improves. When this same network is trained with
-traditional classification objective, it yields an accuracy of **7.20%** which is
+standard classification objective, it yields an accuracy of **7.20%** which is
 significantly lower than what we got with AdaMatch. You can check out [this notebook](https://colab.research.google.com/github/sayakpaul/AdaMatch-TF/blob/main/Vanilla_WideResNet.ipynb)
 to know about the hyperparameters and other experimental details. 
 """
@@ -600,5 +602,5 @@ print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
 
 """
 You can reproduce the results by using these
-[model weights](https://github.com/sayakpaul/AdaMatch-TF/releases/download/v1.0.0/wide_resnet_adamatch.tar.gz).
+[model weights](https://github.com/sayakpaul/AdaMatch-TF/releases/tag/v1.0.0).
 """
