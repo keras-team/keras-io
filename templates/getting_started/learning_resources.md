@@ -13,8 +13,8 @@ If this is your first contact with Keras, you can also check out the guides
 
 ## Books
 
+- [Deep Learning with Python](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras&a_bid=76564dff) (second edition), by François Chollet
 - [Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow](https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/) (second edition), by Aurélien Géron
-- [Deep Learning with Python](https://www.manning.com/books/deep-learning-with-python-second-edition) (second edition), by François Chollet
 - [Practical Deep Learning for Cloud, Mobile, and Edge](https://www.oreilly.com/library/view/practical-deep-learning/9781492034858/), by Anirudh Koul, Siddha Ganju, and Meher Kasam
 - [Deep Learning for Computer Vision with Python](https://www.pyimagesearch.com/deep-learning-computer-vision-python-book/), by Adrian Rosebrock
 
