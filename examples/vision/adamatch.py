@@ -108,7 +108,6 @@ TARGET_BATCH_SIZE = 3 * SOURCE_BATCH_SIZE  # Reference: Section 3.2
 EPOCHS = 10
 STEPS_PER_EPOCH = len(mnist_x_train) // SOURCE_BATCH_SIZE
 TOTAL_STEPS = EPOCHS * STEPS_PER_EPOCH
-CURRENT_STEP = 0
 
 AUTO = tf.data.AUTOTUNE
 LEARNING_RATE = 0.03
@@ -257,12 +256,12 @@ we will discuss shortly).
 
 
 class AdaMatch(keras.Model):
-    def __init__(self, model, tau=0.9):
+    def __init__(self, model, total_steps, tau=0.9):
         super(AdaMatch, self).__init__()
         self.model = model
         self.tau = tau  # Denotes the confidence threshold
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
-        self.total_steps = TOTAL_STEPS
+        self.total_steps = total_steps
         self.current_step = tf.Variable(0, dtype="int64")
 
     @property
@@ -402,7 +401,7 @@ that the following model has a scaling layer inside it that scales the pixel val
 
 
 def wide_basic(n_input_plane, n_output_plane, stride):
-    def f(net):
+    def get_block(net):
         conv_params = [[3, 3, stride, "same"], [3, 3, (1, 1), "same"]]
 
         n_bottleneck_plane = n_output_plane
@@ -465,7 +464,7 @@ def wide_basic(n_input_plane, n_output_plane, stride):
 
 # Stacking residual Units on the same stage
 def layer(block, n_input_plane, n_output_plane, count, stride):
-    def f(net):
+    def get_block(net):
         net = block(n_input_plane, n_output_plane, stride)(net)
         for i in range(2, int(count + 1)):
             net = block(n_output_plane, n_output_plane, stride=(1, 1))(net)
@@ -549,7 +548,7 @@ print(f"Model has {wrn_model.count_params()/1e6} Million parameters.")
 reduce_lr = keras.optimizers.schedules.CosineDecay(LEARNING_RATE, TOTAL_STEPS, 0.25)
 optimizer = keras.optimizers.Adam(reduce_lr)
 
-adamatch_trainer = AdaMatch(wrn_model)
+adamatch_trainer = AdaMatch(model=wrn_model, total_steps=TOTAL_STEPS)
 adamatch_trainer.compile(optimizer=optimizer)
 
 """
