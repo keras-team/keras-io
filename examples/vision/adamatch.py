@@ -383,7 +383,7 @@ Rather than using a fixed scalar quantity, a varying scalar is used in AdaMatch.
 denotes the weight of the loss contibuted by the target samples. Visually, the weight
 scheduler look like so:
 
-![](https://i.imgur.com/3MiZNxN.png)
+![](https://i.imgur.com/dG7i9uH.png)
 
 This scheduler increases the weight of the target domain loss from 0 to 1 for the first
 half of the training. Then it keeps that weight at 1 for the second half of the training.
