@@ -1,11 +1,16 @@
-"""
-Title: Semi-supervision and domain adaptation with AdaMatch
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/06/19
-Last modified: 2021/06/19
-Description: Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
-"""
-"""
+# Semi-supervision and domain adaptation with AdaMatch
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/06/19<br>
+**Last modified:** 2021/06/19<br>
+**Description:** Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/adamatch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/adamatch.py)
+
+
+
+---
 ## Introduction
 
 In this example, we will implement the AdaMatch algorithm, proposed in
@@ -18,17 +23,15 @@ adaptation (SSDA).
 
 This example requires TensorFlow 2.5 or higher, as well as TensorFlow Models, which can
 be installed using the following command:
-"""
 
-"""shell
-pip install -q tf-models-official
-"""
 
-"""
+```python
+!pip install -q tf-models-official
+```
+
 Before we proceed, let's review a few preliminary concepts underlying this example.
-"""
 
-"""
+---
 ## Preliminaries
 
 In **semi-supervised learning (SSL)**, we use a small amount of labeled data to
@@ -54,12 +57,12 @@ another.
 Popular domain adaptation algorithms in deep learning include
 [Deep CORAL](https://arxiv.org/abs/1612.01939),
 [Moment Matching](https://arxiv.org/abs/1812.01754), etc.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import tensorflow as tf
 
 tf.random.set_seed(42)
@@ -74,11 +77,14 @@ from official.vision.image_classification.augment import RandAugment
 import tensorflow_datasets as tfds
 
 tfds.disable_progress_bar()
+```
 
-"""
+---
 ## Prepare the data
-"""
 
+
+```python
+---
 ## MNIST ##
 (
     (mnist_x_train, mnist_y_train),
@@ -92,15 +98,18 @@ mnist_x_test = tf.expand_dims(mnist_x_test, -1)
 # Convert the labels to one-hot encoded vectors
 mnist_y_train = tf.one_hot(mnist_y_train, 10).numpy()
 
+---
 ## SVHN ##
 svhn_train, svhn_test = tfds.load(
     "svhn_cropped", split=["train", "test"], as_supervised=True
 )
+```
 
-"""
+---
 ## Define constants and hyperparameters
-"""
 
+
+```python
 RESIZE_TO = 32
 
 SOURCE_BATCH_SIZE = 64
@@ -116,16 +125,18 @@ WEIGHT_DECAY = 0.0005
 INIT = "he_normal"
 DEPTH = 28
 WIDTH_MULT = 2
+```
 
-"""
+---
 ## Data augmentation utilities
 
 A standard element of SSL algorithms is to feed weakly and strongly augmented versions of
 the same images to the learning model to make its predictions consistent. For strong
 augmentation, [RandAugment](https://arxiv.org/abs/1909.13719) is a standard choice. For
 weak augmentation, we will use horizontal flipping and random cropping.
-"""
 
+
+```python
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 5.
 augmenter = RandAugment(num_layers=2, magnitude=5)
@@ -155,11 +166,13 @@ def strong_augment(image, source=True):
     image = augmenter.distort(image)
     return image
 
+```
 
-"""
+---
 ## Data loading utilities
-"""
 
+
+```python
 
 def create_individual_ds(ds, aug_func, source=True):
     if source:
@@ -178,11 +191,12 @@ def create_individual_ds(ds, aug_func, source=True):
     ds = ds.batch(batch_size).prefetch(AUTO)
     return ds
 
+```
 
-"""
 `_w` and `_s` suffixes denote weak and strong respectively.
-"""
 
+
+```python
 source_ds = tf.data.Dataset.from_tensor_slices((mnist_x_train, mnist_y_train))
 source_ds_w = create_individual_ds(source_ds, weak_augment)
 source_ds_s = create_individual_ds(source_ds, strong_augment)
@@ -191,17 +205,17 @@ final_source_ds = tf.data.Dataset.zip((source_ds_w, source_ds_s))
 target_ds_w = create_individual_ds(svhn_train, weak_augment, source=False)
 target_ds_s = create_individual_ds(svhn_train, strong_augment, source=False)
 final_target_ds = tf.data.Dataset.zip((target_ds_w, target_ds_s))
+```
 
-"""
 Here's what a single image batch looks like:
 
 ![](https://i.imgur.com/aver8cG.png)
-"""
 
-"""
+---
 ## Loss computation utilities
-"""
 
+
+```python
 
 def compute_loss_source(source_labels, logits_source_w, logits_source_s):
     loss_func = keras.losses.CategoricalCrossentropy(from_logits=True)
@@ -226,8 +240,9 @@ def compute_loss_target(target_pseudo_labels_w, logits_target_s, mask):
     target_loss *= mask
     return tf.reduce_mean(target_loss, 0)
 
+```
 
-"""
+---
 ## Subclassed model for AdaMatch training
 
 The figure below presents the overall workflow of AdaMatch (taken from the
@@ -252,8 +267,9 @@ are updated.
 5. The logits go through a series of transformations, introduced in the paper (which
 we will discuss shortly).
 6. We compute the loss and update the gradients of the underlying model.
-"""
 
+
+```python
 
 class AdaMatch(keras.Model):
     def __init__(self, model, total_steps, tau=0.9):
@@ -350,8 +366,8 @@ class AdaMatch(keras.Model):
         self.loss_tracker.update_state(total_loss)
         return {"loss": self.loss_tracker.result()}
 
+```
 
-"""
 The authors introduce three improvements in the paper:
 
 * In AdaMatch, we perform two forward passes, and only one of them is respsonsible for
@@ -387,9 +403,8 @@ scheduler look like so:
 
 This scheduler increases the weight of the target domain loss from 0 to 1 for the first
 half of the training. Then it keeps that weight at 1 for the second half of the training.
-"""
 
-"""
+---
 ## Instantiate a Wide-ResNet-28-2
 
 The authors use a [WideResNet-28-2](https://arxiv.org/abs/1605.07146) for the dataset
@@ -397,8 +412,9 @@ pairs we are using in this example. Most of the following code has been referred
 [this script](https://github.com/asmith26/wide_resnets_keras/blob/master/main.py). Note
 that the following model has a scaling layer inside it that scales the pixel values to
 [0, 1].
-"""
 
+
+```python
 
 def wide_basic(x, n_input_plane, n_output_plane, stride):
     conv_params = [[3, 3, stride, "same"], [3, 3, (1, 1), "same"]]
@@ -521,37 +537,77 @@ def get_network(image_size=32, num_classes=10):
 
     return keras.Model(inputs, outputs)
 
+```
 
-"""
 We can now instantiate a Wide ResNet model like so. Note that the purpose of using a
 Wide ResNet here is to keep the implementation as close to the original one
 as possible.
-"""
 
+
+```python
 wrn_model = get_network()
 print(f"Model has {wrn_model.count_params()/1e6} Million parameters.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model has 1.471226 Million parameters.
+
+```
+</div>
+---
 ## Instantiate AdaMatch model and compile it
-"""
 
+
+```python
 reduce_lr = keras.experimental.CosineDecay(LEARNING_RATE, TOTAL_STEPS, 0.25)
 optimizer = keras.optimizers.Adam(reduce_lr)
 
 adamatch_trainer = AdaMatch(model=wrn_model, total_steps=TOTAL_STEPS)
 adamatch_trainer.compile(optimizer=optimizer)
+```
 
-"""
+---
 ## Model training
-"""
 
+
+```python
 total_ds = tf.data.Dataset.zip((final_source_ds, final_target_ds))
 adamatch_trainer.fit(total_ds, epochs=EPOCHS)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+382/382 [==============================] - 53s 96ms/step - loss: 117866954752.0000
+Epoch 2/10
+382/382 [==============================] - 36s 95ms/step - loss: 2.6231
+Epoch 3/10
+382/382 [==============================] - 36s 94ms/step - loss: 4.1699
+Epoch 4/10
+382/382 [==============================] - 36s 95ms/step - loss: 8.2748
+Epoch 5/10
+382/382 [==============================] - 36s 95ms/step - loss: 28.8679
+Epoch 6/10
+382/382 [==============================] - 36s 94ms/step - loss: 14.7112
+Epoch 7/10
+382/382 [==============================] - 36s 94ms/step - loss: 7.8206
+Epoch 8/10
+382/382 [==============================] - 36s 94ms/step - loss: 18.1182
+Epoch 9/10
+382/382 [==============================] - 36s 94ms/step - loss: 22.4258
+Epoch 10/10
+382/382 [==============================] - 36s 95ms/step - loss: 22.1107
+
+<tensorflow.python.keras.callbacks.History at 0x7f9bc4990b50>
+
+```
+</div>
+---
 ## Evaluation on the target and source test sets
-"""
 
+
+```python
 # Compile the AdaMatch model to yield accuracy.
 adamatch_trained_model = adamatch_trainer.model
 adamatch_trained_model.compile(metrics=keras.metrics.SparseCategoricalAccuracy())
@@ -560,15 +616,23 @@ adamatch_trained_model.compile(metrics=keras.metrics.SparseCategoricalAccuracy()
 svhn_test = svhn_test.batch(TARGET_BATCH_SIZE).prefetch(AUTO)
 _, accuracy = adamatch_trained_model.evaluate(svhn_test)
 print(f"Accuracy on target test set: {accuracy * 100:.2f}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+136/136 [==============================] - 2s 10ms/step - loss: 572.9810 - sparse_categorical_accuracy: 0.1960
+Accuracy on target test set: 19.11%
+
+```
+</div>
 With more training, this score improves. When this same network is trained with
 standard classification objective, it yields an accuracy of **7.20%** which is
 significantly lower than what we got with AdaMatch. You can check out
 [this notebook](https://colab.research.google.com/github/sayakpaul/AdaMatch-TF/blob/main/Vanilla_WideResNet.ipynb)
 to learn more about the hyperparameters and other experimental details.
-"""
 
+
+```python
 
 # Utility function for preprocessing the source test set.
 def prepare_test_ds_source(image, label):
@@ -587,8 +651,14 @@ source_test_ds = (
 # Evaluation on the source test set.
 _, accuracy = adamatch_trained_model.evaluate(source_test_ds)
 print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+53/53 [==============================] - 1s 10ms/step - loss: 572.9810 - sparse_categorical_accuracy: 0.6532
+Accuracy on source test set: 65.32%
+
+```
+</div>
 You can reproduce the results by using these
 [model weights](https://github.com/sayakpaul/AdaMatch-TF/releases/tag/v1.0.0).
-"""
