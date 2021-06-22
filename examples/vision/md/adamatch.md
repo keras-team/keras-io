@@ -84,8 +84,7 @@ tfds.disable_progress_bar()
 
 
 ```python
----
-## MNIST ##
+# MNIST
 (
     (mnist_x_train, mnist_y_train),
     (mnist_x_test, mnist_y_test),
@@ -98,8 +97,7 @@ mnist_x_test = tf.expand_dims(mnist_x_test, -1)
 # Convert the labels to one-hot encoded vectors
 mnist_y_train = tf.one_hot(mnist_y_train, 10).numpy()
 
----
-## SVHN ##
+# SVHN
 svhn_train, svhn_test = tfds.load(
     "svhn_cropped", split=["train", "test"], as_supervised=True
 )
