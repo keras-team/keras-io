@@ -400,73 +400,70 @@ that the following model has a scaling layer inside it that scales the pixel val
 """
 
 
-def wide_basic(n_input_plane, n_output_plane, stride):
-    def get_block(x):
-        conv_params = [[3, 3, stride, "same"], [3, 3, (1, 1), "same"]]
+def wide_basic(x, n_input_plane, n_output_plane, stride):
+    conv_params = [[3, 3, stride, "same"], [3, 3, (1, 1), "same"]]
 
-        n_bottleneck_plane = n_output_plane
+    n_bottleneck_plane = n_output_plane
 
-        # Residual block
-        for i, v in enumerate(conv_params):
-            if i == 0:
-                if n_input_plane != n_output_plane:
-                    x = layers.BatchNormalization()(x)
-                    x = layers.Activation("relu")(x)
-                    convs = x
-                else:
-                    convs = layers.BatchNormalization()(x)
-                    convs = layers.Activation("relu")(convs)
-                convs = layers.Conv2D(
-                    n_bottleneck_plane,
-                    (v[0], v[1]),
-                    strides=v[2],
-                    padding=v[3],
-                    kernel_initializer=INIT,
-                    kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
-                    use_bias=False,
-                )(convs)
+    # Residual block
+    for i, v in enumerate(conv_params):
+        if i == 0:
+            if n_input_plane != n_output_plane:
+                x = layers.BatchNormalization()(x)
+                x = layers.Activation("relu")(x)
+                convs = x
             else:
-                convs = layers.BatchNormalization()(convs)
+                convs = layers.BatchNormalization()(x)
                 convs = layers.Activation("relu")(convs)
-                convs = layers.Conv2D(
-                    n_bottleneck_plane,
-                    (v[0], v[1]),
-                    strides=v[2],
-                    padding=v[3],
-                    kernel_initializer=INIT,
-                    kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
-                    use_bias=False,
-                )(convs)
-
-        # Shortcut connection: identity function or 1x1
-        # convolutional
-        #  (depends on difference between input & output shape - this
-        #   corresponds to whether we are using the first block in
-        #   each
-        #   group; see `block_series()`).
-        if n_input_plane != n_output_plane:
-            shortcut = layers.Conv2D(
-                n_output_plane,
-                (1, 1),
-                strides=stride,
-                padding="same",
+            convs = layers.Conv2D(
+                n_bottleneck_plane,
+                (v[0], v[1]),
+                strides=v[2],
+                padding=v[3],
                 kernel_initializer=INIT,
                 kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
                 use_bias=False,
-            )(x)
+            )(convs)
         else:
-            shortcut = x
+            convs = layers.BatchNormalization()(convs)
+            convs = layers.Activation("relu")(convs)
+            convs = layers.Conv2D(
+                n_bottleneck_plane,
+                (v[0], v[1]),
+                strides=v[2],
+                padding=v[3],
+                kernel_initializer=INIT,
+                kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
+                use_bias=False,
+            )(convs)
 
-        return layers.Add()([convs, shortcut])
+    # Shortcut connection: identity function or 1x1
+    # convolutional
+    #  (depends on difference between input & output shape - this
+    #   corresponds to whether we are using the first block in
+    #   each
+    #   group; see `block_series()`).
+    if n_input_plane != n_output_plane:
+        shortcut = layers.Conv2D(
+            n_output_plane,
+            (1, 1),
+            strides=stride,
+            padding="same",
+            kernel_initializer=INIT,
+            kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
+            use_bias=False,
+        )(x)
+    else:
+        shortcut = x
 
-    return get_block
+    return layers.Add()([convs, shortcut])
 
 
 # Stacking residual units on the same stage
 def block_series(x, block, n_input_plane, n_output_plane, count, stride):
-    x = block(n_input_plane, n_output_plane, stride)(x)
+    x = block(x, n_input_plane, n_output_plane, stride)
     for i in range(2, int(count + 1)):
-        x = block(n_output_plane, n_output_plane, stride=1)(x)
+        x = block(x, n_output_plane, n_output_plane, stride=1)
     return x
 
 
