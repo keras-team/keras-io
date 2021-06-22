@@ -401,7 +401,7 @@ that the following model has a scaling layer inside it that scales the pixel val
 
 
 def wide_basic(n_input_plane, n_output_plane, stride):
-    def get_block(net):
+    def get_block(x):
         conv_params = [[3, 3, stride, "same"], [3, 3, (1, 1), "same"]]
 
         n_bottleneck_plane = n_output_plane
@@ -410,11 +410,11 @@ def wide_basic(n_input_plane, n_output_plane, stride):
         for i, v in enumerate(conv_params):
             if i == 0:
                 if n_input_plane != n_output_plane:
-                    net = layers.BatchNormalization()(net)
-                    net = layers.Activation("relu")(net)
-                    convs = net
+                    x = layers.BatchNormalization()(x)
+                    x = layers.Activation("relu")(x)
+                    convs = x
                 else:
-                    convs = layers.BatchNormalization()(net)
+                    convs = layers.BatchNormalization()(x)
                     convs = layers.Activation("relu")(convs)
                 convs = layers.Conv2D(
                     n_bottleneck_plane,
@@ -443,7 +443,7 @@ def wide_basic(n_input_plane, n_output_plane, stride):
         #  (depends on difference between input & output shape - this
         #   corresponds to whether we are using the first block in
         #   each
-        #   group; see `layer()`).
+        #   group; see `block_series()`).
         if n_input_plane != n_output_plane:
             shortcut = layers.Conv2D(
                 n_output_plane,
@@ -453,24 +453,21 @@ def wide_basic(n_input_plane, n_output_plane, stride):
                 kernel_initializer=INIT,
                 kernel_regularizer=regularizers.l2(WEIGHT_DECAY),
                 use_bias=False,
-            )(net)
+            )(x)
         else:
-            shortcut = net
+            shortcut = x
 
         return layers.Add()([convs, shortcut])
 
-    return f
+    return get_block
 
 
-# Stacking residual Units on the same stage
-def layer(block, n_input_plane, n_output_plane, count, stride):
-    def get_block(net):
-        net = block(n_input_plane, n_output_plane, stride)(net)
-        for i in range(2, int(count + 1)):
-            net = block(n_output_plane, n_output_plane, stride=(1, 1))(net)
-        return net
-
-    return f
+# Stacking residual units on the same stage
+def block_series(x, block, n_input_plane, n_output_plane, count, stride):
+    x = block(n_input_plane, n_output_plane, stride)(x)
+    for i in range(2, int(count + 1)):
+        x = block(n_output_plane, n_output_plane, stride=1)(x)
+    return x
 
 
 def get_network(image_size=32, num_classes=10):
@@ -492,32 +489,31 @@ def get_network(image_size=32, num_classes=10):
 
     # Add wide residual blocks
     block_fn = wide_basic
-    conv2 = layer(
+    conv2 = block_series(
+        conv1,
         block_fn,
         n_input_plane=n_stages[0],
         n_output_plane=n_stages[1],
         count=n,
         stride=(1, 1),
-    )(
-        conv1
     )  # Stage 1
-    conv3 = layer(
+
+    conv3 = block_series(
+        conv2,
         block_fn,
         n_input_plane=n_stages[1],
         n_output_plane=n_stages[2],
         count=n,
         stride=(2, 2),
-    )(
-        conv2
     )  # Stage 2
-    conv4 = layer(
+
+    conv4 = block_series(
+        conv3,
         block_fn,
         n_input_plane=n_stages[2],
         n_output_plane=n_stages[3],
         count=n,
         stride=(2, 2),
-    )(
-        conv3
     )  # Stage 3
 
     batch_norm = layers.BatchNormalization()(conv4)
