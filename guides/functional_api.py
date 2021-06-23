@@ -381,7 +381,7 @@ model.compile(
 
 """
 Since the output layers have different names, you could also specify
-the loss like this:
+the losses and loss weights with the corresponding layer names:
 """
 
 model.compile(
@@ -390,7 +390,7 @@ model.compile(
         "priority": keras.losses.BinaryCrossentropy(from_logits=True),
         "department": keras.losses.CategoricalCrossentropy(from_logits=True),
     },
-    loss_weights=[1.0, 0.2],
+    loss_weights={"priority": 1.0, "department": 0.2},
 )
 
 """
