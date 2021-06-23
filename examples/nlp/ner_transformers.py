@@ -1,0 +1,326 @@
+"""
+Title: Named Entity Recognition using Transformers
+Author: Varun Singh
+Date created: Jun 23, 2021
+Last modified: Jun 23, 2021
+Description: NER using the Transformers and data from CoNLL 2003 shared task.
+"""
+"""
+# Named Entity Recognition (NER) using Transformers
+"""
+
+"""
+## Introduction
+"""
+
+"""
+Named Entity Recognition (NER) is the process of identifying named entities in text.
+Example of named entities are: "Person", "Location", "Organization", "Dates" etc. NER is
+essentially a token classification task where every token is classified into one or more
+predetermined categories.
+
+In this exercise, we will train a simple Transformer based model to perform NER. We will
+be using the data from CoNLL 2003 shared task. For more information about the dataset,
+please visi https://www.clips.uantwerpen.be/conll2003/ner/. However, since obtaining this
+data requires an additional step of getting a free license, we will be using
+HuggingFace's datasets library which contains a processed version of this dataset.
+"""
+
+"""
+## Install the open source datasets library from Huggingface
+"""
+
+"""shell
+!pip3 install datasets
+
+# The script used to evaluate NER models
+!wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
+"""
+
+import os
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from datasets import load_dataset
+from collections import Counter
+from conlleval import evaluate
+
+"""
+We will be using the transformer implementation from this fantastic example:
+https://keras.io/examples/nlp/text_classification_with_transformer/
+"""
+
+# The TransformerBlock layer
+
+
+class TransformerBlock(layers.Layer):
+    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+        super(TransformerBlock, self).__init__()
+        self.att = tf.keras.layers.MultiHeadAttention(
+            num_heads=num_heads, key_dim=embed_dim
+        )
+        self.ffn = tf.keras.Sequential(
+            [
+                tf.keras.layers.Dense(ff_dim, activation="relu"),
+                tf.keras.layers.Dense(embed_dim),
+            ]
+        )
+        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.dropout1 = tf.keras.layers.Dropout(rate)
+        self.dropout2 = tf.keras.layers.Dropout(rate)
+
+    def call(self, inputs, training):
+        attn_output = self.att(inputs, inputs)
+        attn_output = self.dropout1(attn_output, training=training)
+        out1 = self.layernorm1(inputs + attn_output)
+        ffn_output = self.ffn(out1)
+        ffn_output = self.dropout2(ffn_output, training=training)
+        return self.layernorm2(out1 + ffn_output)
+
+
+# The embedding layer
+
+
+class TokenAndPositionEmbedding(layers.Layer):
+    def __init__(self, maxlen, vocab_size, embed_dim):
+        super(TokenAndPositionEmbedding, self).__init__()
+        self.token_emb = tf.keras.layers.Embedding(
+            input_dim=vocab_size, output_dim=embed_dim
+        )
+        self.pos_emb = tf.keras.layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
+
+    def call(self, x):
+        maxlen = tf.shape(x)[-1]
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = self.pos_emb(positions)
+        x = self.token_emb(x)
+        return x + positions
+
+
+"""
+## Build the NER model class as a `keras.Model` implementation
+"""
+
+
+class NERModel(keras.Model):
+    def __init__(
+        self, num_tags, vocab_size, maxlen=128, embed_dim=32, num_heads=2, ff_dim=32
+    ):
+        super(NERModel, self).__init__()
+        self.embedding_layer = TokenAndPositionEmbedding(maxlen, vocab_size, embed_dim)
+        self.transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
+        self.dropout1 = layers.Dropout(0.1)
+        self.ff = layers.Dense(ff_dim, activation="relu")
+        self.dropout2 = layers.Dropout(0.1)
+        self.ff_final = layers.Dense(num_tags, activation="softmax")
+
+    def call(self, inputs, training=False):
+        x = self.embedding_layer(inputs)
+        x = self.transformer_block(x)
+        x = self.dropout1(x, training=training)
+        x = self.ff(x)
+        x = self.dropout2(x, training=training)
+        x = self.ff_final(x)
+        return x
+
+
+"""
+## Load the CoNLL 2003 dataset from the datasets library and process it
+"""
+
+conll_data = load_dataset("conll2003")
+
+"""
+We will export this data to a tab separated file format which will be easy to read as a
+`tf.data.Dataset` object
+"""
+
+
+def export_to_file(export_file_path, data):
+    with open(export_file_path, "w") as f:
+        for record in data:
+            ner_tags = record["ner_tags"]
+            tokens = record["tokens"]
+            f.write(
+                str(len(tokens))
+                + "\t"
+                + "\t".join(tokens)
+                + "\t"
+                + "\t".join(map(str, ner_tags))
+                + "\n"
+            )
+
+
+os.mkdir("data")
+export_to_file("./data/conll_train.txt", conll_data["train"])
+export_to_file("./data/conll_val.txt", conll_data["validation"])
+
+"""
+## Make the NER label lookup table
+"""
+
+"""
+NER labels are usually provided in IOB, IOB2 or IOBES formats. Checkout this link for
+more information:
+[Wikipedia](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))
+[Wikipedia](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))
+
+Note that we start our label numbering from 1 since 0 will be reserved for padding. We
+have a total of 10 labels: 9 from the NER dataset and one for padding
+"""
+
+
+def make_tag_lookup_table():
+    iob_labels = ["B", "I"]
+    ner_labels = ["PER", "ORG", "LOC", "MISC"]
+    all_labels = [(label1, label2) for label2 in ner_labels for label1 in iob_labels]
+    all_labels = ["-".join([a, b]) for a, b in all_labels]
+    all_labels = ["[PAD]", "O"] + all_labels
+    return dict(zip(range(0, len(all_labels) + 1), all_labels))
+
+
+mapping = make_tag_lookup_table()
+mapping
+
+"""
+Get a list of all tokens in the training dataset. This will be used to create the
+vocabulary
+"""
+
+all_tokens = sum(conll_data["train"]["tokens"], [])
+all_tokens_array = np.array(list(map(str.lower, all_tokens)))
+
+counter = Counter(all_tokens_array)
+len(counter)
+
+num_tags = len(mapping)
+vocab_size = 20000
+vocabulary = [token for token, count in counter.most_common(vocab_size - 2)]
+
+# The StringLook class will convert tokens to token IDs
+lookup_layer = tf.keras.layers.experimental.preprocessing.StringLookup(
+    vocabulary=vocabulary
+)
+
+"""
+Create 2 new `Dataset` objects from the training and validation data
+"""
+
+train_data = tf.data.TextLineDataset("./data/conll_train.txt")
+val_data = tf.data.TextLineDataset("./data/conll_val.txt")
+
+# Print out one line to make sure it looks good
+# The first record in the line is the number of tokens. After that we will
+# have all the tokens followed by all the ner tags
+
+list(train_data.take(1).as_numpy_iterator())
+
+"""
+We will be using the following map function to transform the data in the dataset:
+"""
+
+
+def map_func(record):
+    record = tf.strings.split(record, sep="\t")
+    length = tf.strings.to_number(record[0], out_type=tf.int32)
+    tokens = record[1 : length + 1]
+    tokens = tf.strings.lower(tokens)
+    tags = record[length + 1 :]
+    tags = tf.strings.to_number(tags, out_type=tf.int64)
+    tags += 1
+    return tokens, tags
+
+
+batch_size = 32
+train_dataset = (
+    train_data.map(map_func)
+    .map(lambda x, y: (lookup_layer(x), y))
+    .padded_batch(batch_size)
+)
+val_dataset = (
+    val_data.map(map_func)
+    .map(lambda x, y: (lookup_layer(x), y))
+    .padded_batch(batch_size)
+)
+
+ner_model = NERModel(num_tags, vocab_size, embed_dim=32, num_heads=4, ff_dim=64)
+
+"""
+We will be using a custom loss function that will ignore the loss from padded tokens.
+"""
+
+
+class CustomLoss(tf.keras.losses.Loss):
+    def __init__(self, name="custom_ner_loss"):
+        super().__init__(name=name)
+
+    def call(self, y_true, y_pred):
+        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
+            from_logits=True, reduction=tf.keras.losses.Reduction.NONE
+        )
+        loss = loss_fn(y_true, y_pred)
+        mask = tf.cast((y_true > 0), dtype=tf.float32)
+        loss = loss * mask
+        return tf.reduce_sum(loss) / tf.reduce_sum(mask)
+
+
+loss = CustomLoss()
+
+"""
+## Compile and fit the model
+"""
+
+ner_model.compile(optimizer="adam", loss=loss)
+
+ner_model.fit(train_dataset, epochs=10)
+
+sample_input = lookup_layer(
+    "eu rejects german call to boycott british lamb".lower().split()
+)
+sample_input = tf.reshape(sample_input, shape=[1, -1])
+sample_input
+
+output = ner_model.predict(sample_input)
+np.argmax(output, axis=-1)
+
+"""
+## Metrics calculation
+"""
+
+"""
+Here is a function to calculate the metrics. The function calculates F1 score for the
+overall NER dataset as well as individual scores for each NER tag
+"""
+
+
+def calculate_metrics(dataset):
+    all_true_tag_ids, all_predicted_tag_ids = [], []
+
+    for X, y in dataset:
+        output = ner_model.predict(X)
+        predictions = np.argmax(output, axis=-1)
+        predictions = np.reshape(predictions, [-1])
+
+        true_tag_ids = np.reshape(y, [-1])
+
+        mask = (true_tag_ids > 0) & (predictions > 0)
+        true_tag_ids = true_tag_ids[mask]
+        predicted_tag_ids = predictions[mask]
+
+        all_true_tag_ids.append(true_tag_ids)
+        all_predicted_tag_ids.append(predicted_tag_ids)
+
+    all_true_tag_ids = np.concatenate(all_true_tag_ids)
+    all_predicted_tag_ids = np.concatenate(all_predicted_tag_ids)
+
+    predicted_tags = [mapping[tag] for tag in all_predicted_tag_ids]
+    real_tags = [mapping[tag] for tag in all_true_tag_ids]
+
+    return predicted_tags, real_tags
+
+
+predicted_tags, real_tags = calculate_metrics(val_dataset)
+
+evaluate(real_tags, predicted_tags)
