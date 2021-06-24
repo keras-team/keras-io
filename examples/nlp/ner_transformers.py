@@ -15,8 +15,8 @@ predetermined categories.
 
 In this exercise, we will train a simple Transformer based model to perform NER. We will
 be using the data from CoNLL 2003 shared task. For more information about the dataset,
-please visit https://www.clips.uantwerpen.be/conll2003/ner/. However, since obtaining this
-data requires an additional step of getting a free license, we will be using
+please visit [the dataset website](https://www.clips.uantwerpen.be/conll2003/ner/).
+However, since obtaining this data requires an additional step of getting a free license, we will be using
 HuggingFace's datasets library which contains a processed version of this dataset.
 """
 
@@ -42,10 +42,9 @@ from conlleval import evaluate
 
 """
 We will be using the transformer implementation from this fantastic 
-[example](https://keras.io/examples/nlp/text_classification_with_transformer/)
-"""
-"""
-## The TransformerBlock layer
+[example](https://keras.io/examples/nlp/text_classification_with_transformer/).
+
+Let's start by defining a `TransformerBlock` layer:
 """
 
 
@@ -76,7 +75,7 @@ class TransformerBlock(layers.Layer):
 
 
 """
-## The embedding layer
+Next, let's define a `TokenAndPositionEmbedding` layer:
 """
 
 
