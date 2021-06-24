@@ -1,8 +1,8 @@
 """
 Title: Named Entity Recognition using Transformers
-Author: [Varun Singh](https://twitter.com/varun_singh3)
+Author: [Varun Singh](https://www.linkedin.com/in/varunsingh2/)
 Date created: Jun 23, 2021
-Last modified: Jun 23, 2021
+Last modified: Jun 24, 2021
 Description: NER using the Transformers and data from CoNLL 2003 shared task.
 """
 """
@@ -15,13 +15,13 @@ predetermined categories.
 
 In this exercise, we will train a simple Transformer based model to perform NER. We will
 be using the data from CoNLL 2003 shared task. For more information about the dataset,
-please visi https://www.clips.uantwerpen.be/conll2003/ner/. However, since obtaining this
+please visit https://www.clips.uantwerpen.be/conll2003/ner/. However, since obtaining this
 data requires an additional step of getting a free license, we will be using
 HuggingFace's datasets library which contains a processed version of this dataset.
 """
 
 """
-## Install the open source datasets library from Huggingface
+## Install the open source datasets library from HuggingFace
 """
 
 """shell
@@ -341,7 +341,7 @@ calculate_metrics(val_dataset)
 
 In this exercise, we created a simple transformer based named entity recognition model.
 We trained it on the CoNLL 2003 shared task data and got an overall F1 score of around 70%.
-State of the art NER models finetuned on pretrained models such as BERT or ELECTRA can easily
+State of the art NER models fine-tuned on pretrained models such as BERT or ELECTRA can easily
 get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge
 of words as part of the pretraining process and the usage of subword tokenization.
 """
