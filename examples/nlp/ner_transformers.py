@@ -41,29 +41,30 @@ from collections import Counter
 from conlleval import evaluate
 
 """
-We will be using the transformer implementation from this fantastic example:
-https://keras.io/examples/nlp/text_classification_with_transformer/
+We will be using the transformer implementation from this fantastic 
+[example](https://keras.io/examples/nlp/text_classification_with_transformer/)
 """
-
-# The TransformerBlock layer
+"""
+## The TransformerBlock layer
+"""
 
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
         super(TransformerBlock, self).__init__()
-        self.att = tf.keras.layers.MultiHeadAttention(
+        self.att = keras.layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embed_dim
         )
-        self.ffn = tf.keras.Sequential(
+        self.ffn = keras.Sequential(
             [
-                tf.keras.layers.Dense(ff_dim, activation="relu"),
-                tf.keras.layers.Dense(embed_dim),
+                keras.layers.Dense(ff_dim, activation="relu"),
+                keras.layers.Dense(embed_dim),
             ]
         )
-        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
-        self.dropout1 = tf.keras.layers.Dropout(rate)
-        self.dropout2 = tf.keras.layers.Dropout(rate)
+        self.layernorm1 = keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = keras.layers.LayerNormalization(epsilon=1e-6)
+        self.dropout1 = keras.layers.Dropout(rate)
+        self.dropout2 = keras.layers.Dropout(rate)
 
     def call(self, inputs, training=False):
         attn_output = self.att(inputs, inputs)
@@ -74,16 +75,18 @@ class TransformerBlock(layers.Layer):
         return self.layernorm2(out1 + ffn_output)
 
 
-# The embedding layer
+"""
+## The embedding layer
+"""
 
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
         super(TokenAndPositionEmbedding, self).__init__()
-        self.token_emb = tf.keras.layers.Embedding(
+        self.token_emb = keras.layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
-        self.pos_emb = tf.keras.layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
+        self.pos_emb = keras.layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
     def call(self, inputs):
         maxlen = tf.shape(inputs)[-1]
@@ -159,7 +162,7 @@ more information:
 [Wikipedia](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))
 
 Note that we start our label numbering from 1 since 0 will be reserved for padding. We
-have a total of 10 labels: 9 from the NER dataset and one for padding
+have a total of 10 labels: 9 from the NER dataset and one for padding.
 """
 
 
@@ -177,7 +180,7 @@ print(mapping)
 
 """
 Get a list of all tokens in the training dataset. This will be used to create the
-vocabulary
+vocabulary.
 """
 
 all_tokens = sum(conll_data["train"]["tokens"], [])
@@ -195,7 +198,7 @@ vocab_size = 20000
 vocabulary = [token for token, count in counter.most_common(vocab_size - 2)]
 
 # The StringLook class will convert tokens to token IDs
-lookup_layer = tf.keras.layers.experimental.preprocessing.StringLookup(
+lookup_layer = keras.layers.experimental.preprocessing.StringLookup(
     vocabulary=vocabulary
 )
 
@@ -206,9 +209,10 @@ Create 2 new `Dataset` objects from the training and validation data
 train_data = tf.data.TextLineDataset("./data/conll_train.txt")
 val_data = tf.data.TextLineDataset("./data/conll_val.txt")
 
-# Print out one line to make sure it looks good
-# The first record in the line is the number of tokens. After that we will
-# have all the tokens followed by all the ner tags
+"""
+Print out one line to make sure it looks good. The first record in the line is the number of tokens. 
+After that we will have all the tokens followed by all the ner tags.
+"""
 
 print(list(train_data.take(1).as_numpy_iterator()))
 
@@ -232,6 +236,8 @@ def lowercase_and_convert_to_ids(tokens):
     return lookup_layer(tokens)
 
 
+# We use `padded_batch` here because each record in the dataset has a
+# different length.
 batch_size = 32
 train_dataset = (
     train_data.map(map_record_to_training_data)
@@ -251,13 +257,13 @@ We will be using a custom loss function that will ignore the loss from padded to
 """
 
 
-class CustomNonPaddingTokenLoss(tf.keras.losses.Loss):
+class CustomNonPaddingTokenLoss(keras.losses.Loss):
     def __init__(self, name="custom_ner_loss"):
         super().__init__(name=name)
 
     def call(self, y_true, y_pred):
-        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
-            from_logits=True, reduction=tf.keras.losses.Reduction.NONE
+        loss_fn = keras.losses.SparseCategoricalCrossentropy(
+            from_logits=True, reduction=keras.losses.Reduction.NONE
         )
         loss = loss_fn(y_true, y_pred)
         mask = tf.cast((y_true > 0), dtype=tf.float32)
