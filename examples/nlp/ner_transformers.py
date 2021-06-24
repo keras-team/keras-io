@@ -1,6 +1,6 @@
 """
 Title: Named Entity Recognition using Transformers
-Author: Varun Singh
+Author: [Varun Singh](https://twitter.com/varun_singh3)
 Date created: Jun 23, 2021
 Last modified: Jun 23, 2021
 Description: NER using the Transformers and data from CoNLL 2003 shared task.
@@ -12,7 +12,6 @@ Description: NER using the Transformers and data from CoNLL 2003 shared task.
 """
 ## Introduction
 """
-
 """
 Named Entity Recognition (NER) is the process of identifying named entities in text.
 Example of named entities are: "Person", "Location", "Organization", "Dates" etc. NER is
@@ -71,7 +70,7 @@ class TransformerBlock(layers.Layer):
         self.dropout1 = tf.keras.layers.Dropout(rate)
         self.dropout2 = tf.keras.layers.Dropout(rate)
 
-    def call(self, inputs, training):
+    def call(self, inputs, training=False):
         attn_output = self.att(inputs, inputs)
         attn_output = self.dropout1(attn_output, training=training)
         out1 = self.layernorm1(inputs + attn_output)
@@ -91,12 +90,12 @@ class TokenAndPositionEmbedding(layers.Layer):
         )
         self.pos_emb = tf.keras.layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
-    def call(self, x):
-        maxlen = tf.shape(x)[-1]
+    def call(self, inputs):
+        maxlen = tf.shape(inputs)[-1]
         positions = tf.range(start=0, limit=maxlen, delta=1)
-        positions = self.pos_emb(positions)
-        x = self.token_emb(x)
-        return x + positions
+        position_embeddings = self.pos_emb(positions)
+        token_embeddings = self.token_emb(inputs)
+        return token_embeddings + position_embeddings
 
 
 """
@@ -160,7 +159,6 @@ export_to_file("./data/conll_val.txt", conll_data["validation"])
 """
 ## Make the NER label lookup table
 """
-
 """
 NER labels are usually provided in IOB, IOB2 or IOBES formats. Checkout this link for
 more information:
@@ -182,7 +180,7 @@ def make_tag_lookup_table():
 
 
 mapping = make_tag_lookup_table()
-mapping
+print(mapping)
 
 """
 Get a list of all tokens in the training dataset. This will be used to create the
@@ -193,10 +191,14 @@ all_tokens = sum(conll_data["train"]["tokens"], [])
 all_tokens_array = np.array(list(map(str.lower, all_tokens)))
 
 counter = Counter(all_tokens_array)
-len(counter)
+print(len(counter))
 
 num_tags = len(mapping)
 vocab_size = 20000
+
+# We only take (vocab_size - 2) most commons words from the training data since
+# the `StringLookup` class uses 2 additional tokens - one denoting an unknown
+# token and another one denoting a masking token
 vocabulary = [token for token, count in counter.most_common(vocab_size - 2)]
 
 # The StringLook class will convert tokens to token IDs
@@ -215,33 +217,37 @@ val_data = tf.data.TextLineDataset("./data/conll_val.txt")
 # The first record in the line is the number of tokens. After that we will
 # have all the tokens followed by all the ner tags
 
-list(train_data.take(1).as_numpy_iterator())
+print(list(train_data.take(1).as_numpy_iterator()))
 
 """
 We will be using the following map function to transform the data in the dataset:
 """
 
 
-def map_func(record):
+def map_record_to_training_data(record):
     record = tf.strings.split(record, sep="\t")
     length = tf.strings.to_number(record[0], out_type=tf.int32)
     tokens = record[1 : length + 1]
-    tokens = tf.strings.lower(tokens)
     tags = record[length + 1 :]
     tags = tf.strings.to_number(tags, out_type=tf.int64)
     tags += 1
     return tokens, tags
 
 
+def lowercase_and_convert_to_ids(tokens):
+    tokens = tf.strings.lower(tokens)
+    return lookup_layer(tokens)
+
+
 batch_size = 32
 train_dataset = (
-    train_data.map(map_func)
-    .map(lambda x, y: (lookup_layer(x), y))
+    train_data.map(map_record_to_training_data)
+    .map(lambda x, y: (lowercase_and_convert_to_ids(x), y))
     .padded_batch(batch_size)
 )
 val_dataset = (
-    val_data.map(map_func)
-    .map(lambda x, y: (lookup_layer(x), y))
+    val_data.map(map_record_to_training_data)
+    .map(lambda x, y: (lowercase_and_convert_to_ids(x), y))
     .padded_batch(batch_size)
 )
 
@@ -252,7 +258,7 @@ We will be using a custom loss function that will ignore the loss from padded to
 """
 
 
-class CustomLoss(tf.keras.losses.Loss):
+class CustomNonPaddingTokenLoss(tf.keras.losses.Loss):
     def __init__(self, name="custom_ner_loss"):
         super().__init__(name=name)
 
@@ -266,24 +272,34 @@ class CustomLoss(tf.keras.losses.Loss):
         return tf.reduce_sum(loss) / tf.reduce_sum(mask)
 
 
-loss = CustomLoss()
+loss = CustomNonPaddingTokenLoss()
 
 """
 ## Compile and fit the model
 """
 
 ner_model.compile(optimizer="adam", loss=loss)
-
 ner_model.fit(train_dataset, epochs=10)
 
-sample_input = lookup_layer(
-    "eu rejects german call to boycott british lamb".lower().split()
+
+def tokenize_and_convert_to_ids(text):
+    tokens = text.split()
+    return lowercase_and_convert_to_ids(tokens)
+
+
+# Sample inference using the trained model
+sample_input = tokenize_and_convert_to_ids(
+    "eu rejects german call to boycott british lamb"
 )
 sample_input = tf.reshape(sample_input, shape=[1, -1])
-sample_input
+print(sample_input)
 
 output = ner_model.predict(sample_input)
-np.argmax(output, axis=-1)
+prediction = np.argmax(output, axis=-1)[0]
+prediction = [mapping[i] for i in prediction]
+
+# eu -> B-ORG, german -> B-MISC, british -> B-MISC
+print(prediction)
 
 """
 ## Metrics calculation
@@ -298,8 +314,8 @@ overall NER dataset as well as individual scores for each NER tag
 def calculate_metrics(dataset):
     all_true_tag_ids, all_predicted_tag_ids = [], []
 
-    for X, y in dataset:
-        output = ner_model.predict(X)
+    for x, y in dataset:
+        output = ner_model.predict(x)
         predictions = np.argmax(output, axis=-1)
         predictions = np.reshape(predictions, [-1])
 
@@ -318,9 +334,14 @@ def calculate_metrics(dataset):
     predicted_tags = [mapping[tag] for tag in all_predicted_tag_ids]
     real_tags = [mapping[tag] for tag in all_true_tag_ids]
 
-    return predicted_tags, real_tags
+    evaluate(real_tags, predicted_tags)
 
 
-predicted_tags, real_tags = calculate_metrics(val_dataset)
+calculate_metrics(val_dataset)
 
-evaluate(real_tags, predicted_tags)
+"""
+## Conclusions
+"""
+"""
+In this exercise, we created a simple transformer based named entity recognition model. We trained it on the CoNLL 2003 shared task data and got an overall F1 score of around 70%. State of the art NER models finetuned on pretrained models such as BERT or ELECTRA can easily get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge of words as part of the pretraining process and the usage of subword tokenization.
+"""
