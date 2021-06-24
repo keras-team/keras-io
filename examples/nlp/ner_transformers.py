@@ -304,7 +304,6 @@ print(prediction)
 """
 ## Metrics calculation
 """
-
 """
 Here is a function to calculate the metrics. The function calculates F1 score for the
 overall NER dataset as well as individual scores for each NER tag
