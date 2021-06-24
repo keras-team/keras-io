@@ -6,13 +6,8 @@ Last modified: Jun 23, 2021
 Description: NER using the Transformers and data from CoNLL 2003 shared task.
 """
 """
-# Named Entity Recognition (NER) using Transformers
-"""
-
-"""
 ## Introduction
-"""
-"""
+
 Named Entity Recognition (NER) is the process of identifying named entities in text.
 Example of named entities are: "Person", "Location", "Organization", "Dates" etc. NER is
 essentially a token classification task where every token is classified into one or more
@@ -99,7 +94,7 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 """
-## Build the NER model class as a `keras.Model` implementation
+## Build the NER model class as a `keras.Model` subclass
 """
 
 
@@ -132,8 +127,8 @@ class NERModel(keras.Model):
 conll_data = load_dataset("conll2003")
 
 """
-We will export this data to a tab separated file format which will be easy to read as a
-`tf.data.Dataset` object
+We will export this data to a tab-separated file format which will be easy to read as a
+`tf.data.Dataset` object.
 """
 
 
@@ -158,11 +153,9 @@ export_to_file("./data/conll_val.txt", conll_data["validation"])
 
 """
 ## Make the NER label lookup table
-"""
-"""
+
 NER labels are usually provided in IOB, IOB2 or IOBES formats. Checkout this link for
 more information:
-[Wikipedia](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))
 [Wikipedia](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))
 
 Note that we start our label numbering from 1 since 0 will be reserved for padding. We
@@ -303,10 +296,9 @@ print(prediction)
 
 """
 ## Metrics calculation
-"""
-"""
+
 Here is a function to calculate the metrics. The function calculates F1 score for the
-overall NER dataset as well as individual scores for each NER tag
+overall NER dataset as well as individual scores for each NER tag.
 """
 
 
@@ -340,7 +332,10 @@ calculate_metrics(val_dataset)
 
 """
 ## Conclusions
-"""
-"""
-In this exercise, we created a simple transformer based named entity recognition model. We trained it on the CoNLL 2003 shared task data and got an overall F1 score of around 70%. State of the art NER models finetuned on pretrained models such as BERT or ELECTRA can easily get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge of words as part of the pretraining process and the usage of subword tokenization.
+
+In this exercise, we created a simple transformer based named entity recognition model.
+We trained it on the CoNLL 2003 shared task data and got an overall F1 score of around 70%.
+State of the art NER models finetuned on pretrained models such as BERT or ELECTRA can easily
+get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge
+of words as part of the pretraining process and the usage of subword tokenization.
 """
