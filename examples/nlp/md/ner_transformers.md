@@ -27,12 +27,11 @@ HuggingFace's datasets library which contains a processed version of this datase
 ---
 ## Install the open source datasets library from HuggingFace
 
+We also download the script used to evaluate NER models.
 
 ```python
-!!pip3 install datasets
-!
-!# The script used to evaluate NER models
-!!wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
+!pip3 install datasets
+!wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
 ```
 
 

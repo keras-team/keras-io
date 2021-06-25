@@ -22,13 +22,13 @@ HuggingFace's datasets library which contains a processed version of this datase
 
 """
 ## Install the open source datasets library from HuggingFace
+
+We also download the script used to evaluate NER models.
 """
 
 """shell
-!pip3 install datasets
-
-# The script used to evaluate NER models
-!wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
+pip3 install datasets
+wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
 """
 
 import os
@@ -41,7 +41,7 @@ from collections import Counter
 from conlleval import evaluate
 
 """
-We will be using the transformer implementation from this fantastic 
+We will be using the transformer implementation from this fantastic
 [example](https://keras.io/examples/nlp/text_classification_with_transformer/).
 
 Let's start by defining a `TransformerBlock` layer:
