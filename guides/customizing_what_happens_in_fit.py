@@ -421,3 +421,7 @@ gan.fit(dataset.take(100), epochs=1)
 """
 The ideas behind deep learning are simple, so why should their implementation be painful?
 """
+
+"""
+Note : It is recommended to wrap optimizer objects using `self._get_optimizer` when using Keras mixed-precision API 
+"""
