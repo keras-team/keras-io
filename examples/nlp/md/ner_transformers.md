@@ -48,22 +48,7 @@ from datasets import load_dataset
 from collections import Counter
 from conlleval import evaluate
 ```
-<div class="k-default-codeblock">
-```
-['--2021-06-25 13:32:29--  https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py',
- 'Resolving aws-proxy-dev.cloud.capitalone.com (aws-proxy-dev.cloud.capitalone.com)... 10.205.6.241, 10.205.6.154, 10.205.6.172',
- 'Connecting to aws-proxy-dev.cloud.capitalone.com (aws-proxy-dev.cloud.capitalone.com)|10.205.6.241|:8099... connected.',
- 'Proxy request sent, awaiting response... 200 OK',
- 'Length: 7502 (7.3K) [text/plain]',
- 'Saving to: ‘conlleval.py’',
- '',
- '     0K .......                                               100% 27.5M=0s',
- '',
- '2021-06-25 13:32:30 (27.5 MB/s) - ‘conlleval.py’ saved [7502/7502]',
- '']
 
-```
-</div>
 We will be using the transformer implementation from this fantastic
 [example](https://keras.io/examples/nlp/text_classification_with_transformer/).
 
@@ -158,12 +143,6 @@ class NERModel(keras.Model):
 conll_data = load_dataset("conll2003")
 ```
 
-<div class="k-default-codeblock">
-```
-Reusing dataset conll2003 (/home/ubuntu/.cache/huggingface/datasets/conll2003/conll2003/1.0.0/40e7cb6bcc374f7c349c83acd1e9352a4f09474eb691f64f364ee62eb65d0ca6)
-
-```
-</div>
 We will export this data to a tab-separated file format which will be easy to read as a
 `tf.data.Dataset` object.
 
