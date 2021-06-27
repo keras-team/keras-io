@@ -10,7 +10,11 @@ Description: Play Atari Breakout with a Deep Q-Network.
 
 This script shows an implementation of Deep Q-Learning on the
 `BreakoutNoFrameskip-v4` environment.
-This example requires next dependencies: baselines, atari-py, rows which can be installed via following commands:
+
+This example requires the following dependencies: `baselines`, `atari-py`, `rows`.
+They can be installed via:
+
+```
 git clone https://github.com/openai/baselines.git
 cd baselines
 pip install -e .
@@ -18,7 +22,7 @@ git clone https://github.com/openai/atari-py
 wget http://www.atarimania.com/roms/Roms.rar
 unrar x Roms.rar .
 python -m atari_py.import_roms .
-
+```
 
 ### Deep Q-Learning
 
