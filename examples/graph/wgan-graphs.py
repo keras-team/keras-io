@@ -1,9 +1,9 @@
 """
-Title: WGAN-GP with R-GCN for the generation fo small molecular graphs
+Title: WGAN-GP with R-GCN for the generation of small molecular graphs
 Author: [akensert](https://github.com/akensert)
 Date created: 2021/06/27
 Last modified: 2021/06/27
-Description: Complete implementation of WGAN-GP and R-GCN to generate novel molecules.
+Description: Complete implementation of WGAN-GP with R-GCN to generate novel molecules.
 """
 
 """
@@ -27,17 +27,16 @@ adverserial networks, see [GAN](https://arxiv.org/abs/1406.2661),
 """
 ## Setup
 
-### Install RDKit via conda in Google Colab
+### Install RDKit
 
 [RDKit](https://www.rdkit.org/) is a collection of cheminformatics and machine-learning
 software written in C++ and Python. In this tutorial, RDKit is used to conviently and
 efficiently transform
 [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system) to
-molecule objects, and then from those obtain sets of atoms and bonds. Installation
-normally takes about 1-2 minutes.
+molecule objects, and then from those obtain sets of atoms and bonds.
 
-RDKit is commonly installed via [Conda](https://www.rdkit.org/docs/Install.html). However,
-thanks to [kuelumbus'](https://github.com/kuelumbus/)
+Notice, RDKit is commonly installed via [Conda](https://www.rdkit.org/docs/Install.html).
+However, thanks to [kuelumbus'](https://github.com/kuelumbus/)
 [rdkit_platform_wheels](https://github.com/kuelumbus/rdkit_platform_wheels), rdkit
 can now (for the sake of this tutorial) be installed easily via pip.
 """
@@ -57,7 +56,6 @@ from rdkit.Chem.Draw import IPythonConsole, MolsToGridImage
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-import pandas as pd
 
 RDLogger.DisableLog("rdApp.*")
 
