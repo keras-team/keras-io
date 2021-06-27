@@ -202,7 +202,7 @@ def graph_to_mol(graph):
 graph_to_mol(smiles_to_graph(smiles))
 
 """
-### Generate molecular graphs
+### Generate training set
 
 To save training time, we'll only use a tenth of the QM9 dataset.
 """
@@ -267,7 +267,7 @@ generator.summary()
 
 **Graph convolutional layer**. The [relational graph convolutional
 layers](https://arxiv.org/abs/1703.06103) implements non-linearly transformed
-neighborhood aggregations. In this tutorial, we define these layers as follows:
+neighborhood aggregations. We can define these layers as follows:
 
 `H^{l+1} = σ(D^{-1} @ A @ H^{l+1} @ W^{l})`
 
@@ -488,8 +488,8 @@ class GraphWGAN(keras.Model):
         grads_A_penalty = (1 - tf.norm(grads[0], axis=1)) ** 2
         grads_H_penalty = (1 - tf.norm(grads[1], axis=2)) ** 2
         return tf.reduce_mean(
-            tf.reduce_mean(grads_A_penalty, axis=(-2, -1))
-            + tf.reduce_mean(grads_H_penalty, axis=(-1))
+            tf.reduce_mean(grads_A_penalty, axis=(-2, -1)) +
+            tf.reduce_mean(grads_H_penalty, axis=(-1))
         )
 
 
