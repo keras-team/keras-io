@@ -116,7 +116,7 @@ Characters present:  {'d', 'w', 'y', '4', 'f', '6', 'g', 'e', '3', '5', 'p', 'x'
 
 # Mapping characters to integers
 char_to_num = layers.experimental.preprocessing.StringLookup(
-    vocabulary=list(characters), num_oov_indices=0, mask_token=None
+    vocabulary=list(characters), mask_token=None
 )
 
 # Mapping integers back to original characters
