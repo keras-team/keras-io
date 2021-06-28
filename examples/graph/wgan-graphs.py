@@ -119,7 +119,8 @@ graphs `G = (V, E)`, where `V` is a set of vertices (atoms), and `E` a set of ed
 (bonds). As for this implementation, each graph (molecule) will be represented as an
 adjacency tensor `A`, which encodes existence/non-existence of atom-pairs with their
 one-hot encoded bond types stretching an extra dimension, and a feature tensor `H`, which
-for each atom, one-hot encodes its atom type.
+for each atom, one-hot encodes its atom type. Notice, as hydrogen atoms can be inferred by
+RDKit, hydrogen atoms are excluded from `A` and `H` for easier modeling.
 
 """
 
@@ -190,8 +191,8 @@ def graph_to_molecule(graph):
 
     # Remove "no atoms" & atoms with no bonds
     keep_idx = np.where(
-        (np.argmax(features, axis=1) != ATOM_DIM - 1)
-        & (np.sum(adjacency[:-1], axis=(0, 1)) != 0)
+        (np.argmax(features, axis=1) != ATOM_DIM - 1) &
+        (np.sum(adjacency[:-1], axis=(0, 1)) != 0)
     )[0]
     features = features[keep_idx]
     adjacency = adjacency[:, keep_idx, :][:, :, keep_idx]
@@ -402,8 +403,7 @@ def GraphDiscriminator(
     features_transformed = features
     for units in gconv_units:
         features_transformed = RelationalGraphConvLayer(units)(
-            [adjacency, features_transformed]
-        )
+            [adjacency, features_transformed])
 
     # Reduce 2-D representation of molecule to 1-D
     x = keras.layers.GlobalAveragePooling1D()(features_transformed)
@@ -526,8 +526,7 @@ class GraphWGAN(keras.Model):
             tape.watch(adjacency_interp)
             tape.watch(features_interp)
             logits = self.discriminator(
-                [adjacency_interp, features_interp], training=True
-            )
+                [adjacency_interp, features_interp], training=True)
 
         # Compute the gradients with respect to the interpolated graphs
         grads = tape.gradient(logits, [adjacency_interp, features_interp])
@@ -535,8 +534,8 @@ class GraphWGAN(keras.Model):
         grads_adjacency_penalty = (1 - tf.norm(grads[0], axis=1)) ** 2
         grads_features_penalty = (1 - tf.norm(grads[1], axis=2)) ** 2
         return tf.reduce_mean(
-            tf.reduce_mean(grads_adjacency_penalty, axis=(-2, -1))
-            + tf.reduce_mean(grads_features_penalty, axis=(-1))
+            tf.reduce_mean(grads_adjacency_penalty, axis=(-2, -1)) +
+            tf.reduce_mean(grads_features_penalty, axis=(-1))
         )
 
 
@@ -580,7 +579,8 @@ def sample(generator, batch_size):
 molecules = sample(wgan.generator, batch_size=48)
 
 MolsToGridImage(
-    [m for m in molecules if m is not None][:25], molsPerRow=5, subImgSize=(150, 150)
+    [m for m in molecules if m is not None][:25],
+    molsPerRow=5, subImgSize=(150, 150)
 )
 
 """
