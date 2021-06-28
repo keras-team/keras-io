@@ -116,7 +116,7 @@ Characters present:  {'d', 'w', 'y', '4', 'f', '6', 'g', 'e', '3', '5', 'p', 'x'
 
 # Mapping characters to integers
 char_to_num = layers.experimental.preprocessing.StringLookup(
-    vocabulary=list(characters), num_oov_indices=0, mask_token=None
+    vocabulary=list(characters), mask_token=None
 )
 
 # Mapping integers back to original characters
@@ -282,7 +282,9 @@ def build_model():
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=True, dropout=0.25))(x)
 
     # Output layer
-    x = layers.Dense(len(characters) + 1, activation="softmax", name="dense2")(x)
+    x = layers.Dense(
+        len(char_to_num.get_vocabulary()) + 1, activation="softmax", name="dense2"
+    )(x)
 
     # Add CTC layer for calculating CTC loss at each step
     output = CTCLayer(name="ctc_loss")(labels, x)
