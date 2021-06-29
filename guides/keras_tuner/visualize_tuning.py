@@ -35,6 +35,7 @@ The first step is to download and format the data.
 """
 
 import numpy as np
+import keras_tuner as kt
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -60,48 +61,45 @@ the number of units or filters, whether to use dropout.
 
 
 def build_model(hp):
-    num_classes = 10
-    input_shape = (28, 28, 1)
-    model = keras.Sequential()
-    model.add(keras.layers.InputLayer(input_shape=input_shape))
+    inputs = keras.Input(shape=(28, 28, 1))
     # Model type can be MLP or CNN.
     model_type = hp.Choice("model_type", ["mlp", "cnn"])
+    x = inputs
     if model_type == "mlp":
-        model.add(layers.Flatten())
+        x = layers.Flatten()(x)
         # Number of layers of the MLP is a hyperparameter.
         for i in range(hp.Int("mlp_layers", 1, 3)):
             # Number of units of each layer are
             # different hyperparameters with different names.
-            model.add(
-                layers.Dense(
-                    units=hp.Int("units_{i}".format(i=i), 32, 128, step=32),
-                    activation="relu",
-                )
-            )
+            output_node = layers.Dense(
+                units=hp.Int(f"units_{i}", 32, 128, step=32),
+                activation="relu",
+            )(x)
     else:
         # Number of layers of the CNN is also a hyperparameter.
         for i in range(hp.Int("cnn_layers", 1, 3)):
-            model.add(
-                layers.Conv2D(
-                    hp.Int("filters_{i}".format(i=i), 32, 128, step=32),
-                    kernel_size=(3, 3),
-                    activation="relu",
-                )
-            )
-            model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-        model.add(layers.Flatten())
+            x = layers.Conv2D(
+                hp.Int(f"filters_{i}", 32, 128, step=32),
+                kernel_size=(3, 3),
+                activation="relu",
+            )(x)
+            x = layers.MaxPooling2D(pool_size=(2, 2))(x)
+        x = layers.Flatten()(x)
 
     # A hyperparamter for whether to use dropout layer.
     if hp.Boolean("dropout"):
-        model.add(layers.Dropout(0.5))
+        x = layers.Dropout(0.5)(x)
 
-    model.add(layers.Dense(units=num_classes, activation="softmax"))
+    # The last layer contains 10 units,
+    # which is the same as the number of classes.
+    outputs = layers.Dense(units=10, activation="softmax")(x)
+    model = keras.Model(inputs=inputs, outputs=outputs)
 
     # Compile the model.
     model.compile(
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"],
-        optimizer=hp.Choice("optimizer", ["adam", "adadelta", "sgd"]),
+        optimizer="adam",
     )
     return model
 
@@ -111,7 +109,6 @@ We can do a quick test of the models to check if it build successfully for both
 CNN and MLP.
 """
 
-import keras_tuner as kt
 
 # Initialize the `HyperParameters` and set the values.
 hp = kt.HyperParameters()
@@ -152,7 +149,7 @@ to pass a `keras.callbacks.TensorBoard` instance to the callbacks.
 tuner.search(
     x_train,
     y_train,
-    validation_data=(x_test, y_test),
+    validation_split=0.2,
     epochs=2,
     # Use the TensorBoard callback.
     # The logs will be write to "/tmp/tb_logs".
