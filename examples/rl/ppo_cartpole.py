@@ -77,7 +77,9 @@ class Buffer:
     # Buffer for storing trajectories
     def __init__(self, observation_dimensions, size, gamma=0.99, lam=0.95):
         # Buffer initialization
-        self.observation_buffer = np.zeros((size, observation_dimensions), dtype=np.float32)
+        self.observation_buffer = np.zeros(
+            (size, observation_dimensions), dtype=np.float32
+        )
         self.action_buffer = np.zeros(size, dtype=np.int32)
         self.advantage_buffer = np.zeros(size, dtype=np.float32)
         self.reward_buffer = np.zeros(size, dtype=np.float32)
@@ -104,17 +106,30 @@ class Buffer:
 
         deltas = rewards[:-1] + self.gamma * values[1:] - values[:-1]
 
-        self.advantage_buffer[path_slice] = discounted_cumulative_sums(deltas, self.gamma * self.lam)
-        self.return_buffer[path_slice] = discounted_cumulative_sums(rewards, self.gamma)[:-1]
+        self.advantage_buffer[path_slice] = discounted_cumulative_sums(
+            deltas, self.gamma * self.lam
+        )
+        self.return_buffer[path_slice] = discounted_cumulative_sums(
+            rewards, self.gamma
+        )[:-1]
 
         self.trajectory_start_index = self.pointer
 
     def get(self):
         # Get all data of the buffer and normalize the advantages
         self.pointer, self.trajectory_start_index = 0, 0
-        advantage_mean, advantage_std = np.mean(self.advantage_buffer), np.std(self.advantage_buffer)
+        advantage_mean, advantage_std = (
+            np.mean(self.advantage_buffer),
+            np.std(self.advantage_buffer),
+        )
         self.advantage_buffer = (self.advantage_buffer - advantage_mean) / advantage_std
-        return self.observation_buffer, self.action_buffer, self.advantage_buffer, self.return_buffer, self.logprobability_buffer
+        return (
+            self.observation_buffer,
+            self.action_buffer,
+            self.advantage_buffer,
+            self.return_buffer,
+            self.logprobability_buffer,
+        )
 
 
 def mlp(x, sizes, activation=tf.tanh, output_activation=None):
@@ -127,36 +142,51 @@ def mlp(x, sizes, activation=tf.tanh, output_activation=None):
 def logprobabilities(logits, a):
     # Compute the log-probabilities of taking actions a by using the logits (i.e. the output of the actor)
     logprobabilities_all = tf.nn.log_softmax(logits)
-    logprobability = tf.reduce_sum(tf.one_hot(a, num_actions) * logprobabilities_all, axis=1)
+    logprobability = tf.reduce_sum(
+        tf.one_hot(a, num_actions) * logprobabilities_all, axis=1
+    )
     return logprobability
 
 
 # Train the policy by maxizing the PPO-Clip objective
 @tf.function
-def train_policy(observation_buffer, action_buffer, logprobability_buffer, advantage_buffer):
-    
+def train_policy(
+    observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
+):
+
     with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
-        ratio = tf.exp(logprobabilities(actor(observation_buffer), action_buffer) - logprobability_buffer)
+        ratio = tf.exp(
+            logprobabilities(actor(observation_buffer), action_buffer)
+            - logprobability_buffer
+        )
         min_advantage = tf.where(
-            advantage_buffer > 0, (1 + clip_ratio) * advantage_buffer, (1 - clip_ratio) * advantage_buffer
+            advantage_buffer > 0,
+            (1 + clip_ratio) * advantage_buffer,
+            (1 - clip_ratio) * advantage_buffer,
         )
 
-        policy_loss = -tf.reduce_mean(tf.minimum(ratio * advantage_buffer, min_advantage))
+        policy_loss = -tf.reduce_mean(
+            tf.minimum(ratio * advantage_buffer, min_advantage)
+        )
     policy_grads = tape.gradient(policy_loss, actor.trainable_variables)
     policy_optimizer.apply_gradients(zip(policy_grads, actor.trainable_variables))
 
-    kl = tf.reduce_mean(logprobability_buffer - logprobabilities(actor(observation_buffer), action_buffer))
+    kl = tf.reduce_mean(
+        logprobability_buffer
+        - logprobabilities(actor(observation_buffer), action_buffer)
+    )
     kl = tf.reduce_sum(kl)
     return kl
 
 
-#Train the value function by regression on mean-squared error
+# Train the value function by regression on mean-squared error
 @tf.function
 def train_value_function(observation_buffer, return_buffer):
     with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
         value_loss = tf.reduce_mean((return_buffer - critic(observation_buffer)) ** 2)
     value_grads = tape.gradient(value_loss, critic.trainable_variables)
     value_optimizer.apply_gradients(zip(value_grads, critic.trainable_variables))
+
 
 """
 ## Hyperparameters
@@ -195,7 +225,9 @@ buffer = Buffer(observation_dimensions, steps_per_epoch)
 observation_input = keras.Input(shape=(observation_dimensions,), dtype=tf.float32)
 logits = mlp(observation_input, list(hidden_sizes) + [num_actions], tf.tanh, None)
 actor = keras.Model(inputs=observation_input, outputs=logits)
-value = tf.squeeze(mlp(observation_input, list(hidden_sizes) + [1], tf.tanh, None), axis=1)
+value = tf.squeeze(
+    mlp(observation_input, list(hidden_sizes) + [1], tf.tanh, None), axis=1
+)
 critic = keras.Model(inputs=observation_input, outputs=value)
 
 # Initialize the policy and the value function optimizers
@@ -249,11 +281,19 @@ for epoch in range(epochs):
             observation, episode_return, episode_length = env.reset(), 0, 0
 
     # Get values from the buffer
-    observation_buffer, action_buffer, advantage_buffer, return_buffer, logprobability_buffer = buffer.get()
+    (
+        observation_buffer,
+        action_buffer,
+        advantage_buffer,
+        return_buffer,
+        logprobability_buffer,
+    ) = buffer.get()
 
     # Update the policy and implement early stopping using KL divergence
     for _ in range(train_policy_iterations):
-        kl = train_policy(observation_buffer, action_buffer, logprobability_buffer, advantage_buffer)
+        kl = train_policy(
+            observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
+        )
         if kl > 1.5 * target_kl:
             # Early Stopping
             break
@@ -263,8 +303,9 @@ for epoch in range(epochs):
         train_value_function(observation_buffer, return_buffer)
 
     # Print mean return and length for each epoch
-    print("\n Epoch: " + str(epoch + 1) + ". Mean Return: " + str(sum_return / num_episodes) + ". Mean Length: " + str(sum_length / num_episodes))
-
+    print(
+        f" Epoch: {epoch + 1}. Mean Return: {sum_return / num_episodes}. Mean Length: {sum_length / num_episodes}"
+    )
 
 """
 ## Visualizations
