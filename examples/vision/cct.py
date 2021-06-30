@@ -341,6 +341,10 @@ def run_experiment(model):
 cct_model = create_cct_model()
 history = run_experiment(cct_model)
 
+"""
+Let's now visualize the training progress of the model.
+"""
+
 plt.plot(history.history["loss"], label="train_loss")
 plt.plot(history.history["val_loss"], label="val_loss")
 plt.xlabel("Epochs")
@@ -352,9 +356,15 @@ plt.show()
 
 """
 The CCT model we just trained has just **0.408139 million** parameters and it gets us to
-77.63% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
+~78% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
 well. This means we can train this network for longers (perhaps with a bit more
-regularization) and may obtain even better performance.
+regularization) and may obtain even better performance. This performance can further be
+improved by additional recipes like cosine decay LR schedule, other data augmentation
+techniques like [AutoAugment](https://arxiv.org/abs/1805.09501),
+[MixUp](https://arxiv.org/abs/1710.09412) or
+[Cutmix](https://arxiv.org/abs/1905.04899. The authors also present a number of
+experiments to study how the number of convolution blocks, Transformers layers, etc.
+affect the final performance.
 
 For a comparison, a ViT model takes about **4.697572 million** parameters and **100
 epochs** of training to reach a top-1 accuracy of 78.22% on the CIFAR-10 dataset. You can
