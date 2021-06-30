@@ -69,6 +69,7 @@ are only active during training.
 - `RandomZoom` layer
 - `RandomHeight` layer
 - `RandomWidth` layer
+- `RandomContrast` layer
 
 ---
 ## The `adapt()` method
@@ -293,9 +294,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 12s 576ms/step - loss: 8.7839
+5/5 [==============================] - 23s 931ms/step - loss: 9.5173
 
-<tensorflow.python.keras.callbacks.History at 0x1550b7110>
+<tensorflow.python.keras.callbacks.History at 0x1625d0890>
 
 ```
 </div>
@@ -329,9 +330,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 2s 910us/step - loss: 2.1323
+1563/1563 [==============================] - 4s 2ms/step - loss: 2.1302
 
-<tensorflow.python.keras.callbacks.History at 0x15727b8d0>
+<tensorflow.python.keras.callbacks.History at 0x1647a2710>
 
 ```
 </div>
@@ -505,14 +506,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 2s 2s/step - loss: 0.5292
+1/1 [==============================] - 4s 4s/step - loss: 0.4916
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.01447889]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.02326627]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -590,14 +591,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 222ms/step - loss: 1.4333
+1/1 [==============================] - 1s 583ms/step - loss: 0.3378
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-0.89536154]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.7227254]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -673,14 +674,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 216ms/step - loss: 19.4452
+1/1 [==============================] - 1s 551ms/step - loss: 3.5459
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-0.36555034]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.51119524]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
