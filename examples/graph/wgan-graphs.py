@@ -1,15 +1,15 @@
 """
 Title: WGAN-GP with R-GCN for the generation of small molecular graphs
 Author: [akensert](https://github.com/akensert)
-Date created: 2021/06/28
-Last modified: 2021/06/28
+Date created: 2021/06/30
+Last modified: 2021/06/30
 Description: Complete implementation of WGAN-GP with R-GCN to generate novel molecules.
 """
 
 """
 ## Introduction
 
-In this tutorial, a generative model for graphs will be implemented to generate
+In this tutorial, we implement a generative model for graphs and use it to generate
 novel molecules.
 
 Motivation: The [development of new drugs](https://en.wikipedia.org/wiki/Drug_development)
@@ -22,9 +22,9 @@ generative models that can learn to generate novel molecules (which would otherw
 
 ### References (implementation)
 
-The implementation in this tutorial is based on/inspired by the [MolGAN
-paper](https://arxiv.org/abs/1805.11973) and DeepChem's [Basic
-MolGAN](https://deepchem.readthedocs.io/en/latest/api_reference/models.html#basicmolganmod
+The implementation in this tutorial is based on/inspired by the
+[MolGAN paper](https://arxiv.org/abs/1805.11973) and DeepChem's
+[Basic MolGAN](https://deepchem.readthedocs.io/en/latest/api_reference/models.html#basicmolganmod
 el).
 
 ### Further reading (generative models)
@@ -59,11 +59,11 @@ Notice, RDKit is commonly installed via [Conda](https://www.rdkit.org/docs/Insta
 However, thanks to
 [rdkit_platform_wheels](https://github.com/kuelumbus/rdkit_platform_wheels), rdkit
 can now (for the sake of this tutorial) be installed easily via pip, as follows:
-```python
+```
 pip -q install rdkit-pypi
 ```
 And to allow easy visualization of a molecule objects, Pillow needs to be installed:
-```python
+```
 pip -q install Pillow
 ```
 
@@ -191,8 +191,8 @@ def graph_to_molecule(graph):
 
     # Remove "no atoms" & atoms with no bonds
     keep_idx = np.where(
-        (np.argmax(features, axis=1) != ATOM_DIM - 1) &
-        (np.sum(adjacency[:-1], axis=(0, 1)) != 0)
+        (np.argmax(features, axis=1) != ATOM_DIM - 1)
+        & (np.sum(adjacency[:-1], axis=(0, 1)) != 0)
     )[0]
     features = features[keep_idx]
     adjacency = adjacency[:, keep_idx, :][:, :, keep_idx]
@@ -257,7 +257,7 @@ networks will then output (for each example in the batch) a tanh-activated vecto
 followed by a reshape and softmax to match that of a multi-dimensional adjacency/feature
 tensor.
 
-As the discriminator network will recieves as input a graph (A, H) from either the
+As the discriminator network will recieves as input a graph (`A`, `H`) from either the
 genrator or from the training set, we'll need to implement graph convolutional layers,
 which allows us to operate on graphs. This means that input to the discriminator network
 will first pass through graph convolutional layers, then an average-pooling layer,
@@ -305,11 +305,11 @@ generator = GraphGenerator(
 generator.summary()
 
 """
-## Graph discriminator
+### Graph discriminator
 
 
-**Graph convolutional layer**. The [relational graph convolutional
-layers](https://arxiv.org/abs/1703.06103) implements non-linearly transformed
+**Graph convolutional layer**. The
+[relational graph convolutional layers](https://arxiv.org/abs/1703.06103) implements non-linearly transformed
 neighborhood aggregations. We can define these layers as follows:
 
 `H^{l+1} = σ(D^{-1} @ A @ H^{l+1} @ W^{l})`
@@ -343,7 +343,7 @@ class RelationalGraphConvLayer(keras.layers.Layer):
         bias_regularizer=None,
         **kwargs
     ):
-        super(RelationalGraphConvLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.units = units
         self.activation = keras.activations.get(activation)
@@ -357,7 +357,7 @@ class RelationalGraphConvLayer(keras.layers.Layer):
         bond_dim = input_shape[0][1]
         atom_dim = input_shape[1][2]
 
-        self.W = self.add_weight(
+        self.kernel = self.add_weight(
             shape=(bond_dim, atom_dim, self.units),
             initializer=self.kernel_initializer,
             regularizer=self.kernel_regularizer,
@@ -367,7 +367,7 @@ class RelationalGraphConvLayer(keras.layers.Layer):
         )
 
         if self.use_bias:
-            self.b = self.add_weight(
+            self.bias = self.add_weight(
                 shape=(bond_dim, 1, self.units),
                 initializer=self.bias_initializer,
                 regularizer=self.bias_regularizer,
@@ -383,9 +383,9 @@ class RelationalGraphConvLayer(keras.layers.Layer):
         # Aggregate information from neighbors
         x = tf.matmul(adjacency, features[:, None, :, :])
         # Apply linear transformation
-        x = tf.matmul(x, self.W)
+        x = tf.matmul(x, self.kernel)
         if self.use_bias:
-            x += self.b
+            x += self.bias
         # Reduce bond types dim
         x_reduced = tf.reduce_sum(x, axis=1)
         # Apply non-linear transformation
@@ -403,7 +403,8 @@ def GraphDiscriminator(
     features_transformed = features
     for units in gconv_units:
         features_transformed = RelationalGraphConvLayer(units)(
-            [adjacency, features_transformed])
+            [adjacency, features_transformed]
+        )
 
     # Reduce 2-D representation of molecule to 1-D
     x = keras.layers.GlobalAveragePooling1D()(features_transformed)
@@ -526,7 +527,8 @@ class GraphWGAN(keras.Model):
             tape.watch(adjacency_interp)
             tape.watch(features_interp)
             logits = self.discriminator(
-                [adjacency_interp, features_interp], training=True)
+                [adjacency_interp, features_interp], training=True
+            )
 
         # Compute the gradients with respect to the interpolated graphs
         grads = tape.gradient(logits, [adjacency_interp, features_interp])
@@ -534,8 +536,8 @@ class GraphWGAN(keras.Model):
         grads_adjacency_penalty = (1 - tf.norm(grads[0], axis=1)) ** 2
         grads_features_penalty = (1 - tf.norm(grads[1], axis=2)) ** 2
         return tf.reduce_mean(
-            tf.reduce_mean(grads_adjacency_penalty, axis=(-2, -1)) +
-            tf.reduce_mean(grads_features_penalty, axis=(-1))
+            tf.reduce_mean(grads_adjacency_penalty, axis=(-2, -1))
+            + tf.reduce_mean(grads_features_penalty, axis=(-1))
         )
 
 
@@ -561,7 +563,7 @@ wgan.fit([adjacency_tensor, feature_tensor], epochs=10, batch_size=16)
 
 def sample(generator, batch_size):
     z = tf.random.normal((batch_size, LATENT_DIM))
-    graph = generator(z)
+    graph = generator.predict(z)
     # obtain one-hot encoded adjacency tensor
     adjacency = tf.argmax(graph[0], axis=1)
     adjacency = tf.one_hot(adjacency, depth=BOND_DIM, axis=1)
@@ -579,8 +581,7 @@ def sample(generator, batch_size):
 molecules = sample(wgan.generator, batch_size=48)
 
 MolsToGridImage(
-    [m for m in molecules if m is not None][:25],
-    molsPerRow=5, subImgSize=(150, 150)
+    [m for m in molecules if m is not None][:25], molsPerRow=5, subImgSize=(150, 150)
 )
 
 """
