@@ -369,6 +369,6 @@ affect the final performance.
 For a comparison, a ViT model takes about **4.697572 million** parameters and **100
 epochs** of training to reach a top-1 accuracy of 78.22% on the CIFAR-10 dataset. You can
 refer to
-[this notebook](https://colab.research.google.com/gist/sayakpaul/88a305b7042e8e5077e1c0a7eca5988d/image_classification_with_vision_transformer.ipynb)
+[this notebook](https://colab.research.google.com/gist/sayakpaul/1a80d9f582b044354a1a26c5cb3d69e5/image_classification_with_vision_transformer.ipynb)
 to know about the experimental setup.
 """
