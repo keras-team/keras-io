@@ -445,7 +445,7 @@ class GraphWGAN(keras.Model):
         gp_weight=10,
         **kwargs
     ):
-        super(GraphWGAN, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.generator = generator
         self.discriminator = discriminator
         self.discriminator_steps = discriminator_steps
@@ -454,7 +454,7 @@ class GraphWGAN(keras.Model):
         self.latent_dim = self.generator.input_shape[-1]
 
     def compile(self, optimizer_generator, optimizer_discriminator, **kwargs):
-        super(GraphWGAN, self).compile(**kwargs)
+        super().compile(**kwargs)
         self.optimizer_generator = optimizer_generator
         self.optimizer_discriminator = optimizer_discriminator
         self.metric_generator = keras.metrics.Mean(name="loss_gen")
