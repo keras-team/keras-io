@@ -65,6 +65,7 @@ are only active during training.
 - `RandomZoom` layer
 - `RandomHeight` layer
 - `RandomWidth` layer
+- `RandomContrast` layer
 
 """
 
