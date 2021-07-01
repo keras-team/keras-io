@@ -11,10 +11,10 @@ Description: Implementation of StyleGAN for image generation.
 The key idea of StyleGAN is to progressively increase the resolution of the generated
 images and to incorporate style features in the generative process.This
 [StyleGAN](https://arxiv.org/abs/1812.04948) implementation is based on the book
- [Hands-on Image Generation with TensorFlow](https://www.amazon.com/dp/1838826785).
-The code from the book's [Github
-repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2
-.0/tree/master/Chapter07) was refactored to leverage a custom `train_step()` to enable
+[Hands-on Image Generation with TensorFlow](https://www.amazon.com/dp/1838826785).
+The code from the book's
+[Github repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2.0/tree/master/Chapter07)
+was refactored to leverage a custom `train_step()` to enable
 faster training time via compilation and distribution.
 """
 
@@ -269,7 +269,7 @@ class Generator:
         self.to_rgb = []
         # list of noise input of different resolutions into g_blocks
         self.noise_inputs = []
-        # filter size to use at each stage, keys is log2(resolution)
+        # filter size to use at each stage, keys are log2(resolution)
         self.filter_nums = {
             0: 512,
             1: 512,
@@ -372,7 +372,7 @@ class Discriminator:
         self.start_res_log2 = start_res_log2
         self.target_res_log2 = target_res_log2
         self.num_stages = target_res_log2 - start_res_log2 + 1
-        # filter size to use at each stage, keys is log2(resolution)
+        # filter size to use at each stage, keys are log2(resolution)
         self.filter_nums = {
             0: 512,
             1: 512,
