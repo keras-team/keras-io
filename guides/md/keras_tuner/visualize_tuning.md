@@ -1,16 +1,15 @@
-"""
-Title: Visualize the hyperparameter tuning process
-Author: Haifeng Jin
-Date created: 2021/06/25
-Last modified: 2021/06/05
-Description: Using TensorBoard to visualize the hyperparameter tuning process in KerasTuner.
-"""
+# Visualize the hyperparameter tuning process
 
-"""shell
-pip install keras-tuner -q
-"""
+**Author:** Haifeng Jin<br>
+**Date created:** 2021/06/25<br>
+**Last modified:** 2021/06/05<br>
+**Description:** Using TensorBoard to visualize the hyperparameter tuning process in KerasTuner.
 
-"""
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_tuner/visualize_tuning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_tuner/visualize_tuning.py)
+
+
+---
 ## Introduction
 
 KerasTuner prints the logs to screen including the values of the
@@ -25,15 +24,14 @@ visualizing the machine learning experiments.  It can monitor the losses and
 metrics during the model training and visualize the model architectures.
 Running KerasTuner with TensorBoard will give you additional features for
 visualizing hyperparameter tuning results using its HParams plugin.
-"""
 
-"""
 We will use a simple example of tuning a model for the MNIST image
 classification dataset to show how to use KerasTuner with TensorBoard.
 
 The first step is to download and format the data.
-"""
 
+
+```python
 import numpy as np
 import keras_tuner as kt
 from tensorflow import keras
@@ -51,14 +49,26 @@ print(x_train.shape)
 print(y_train.shape)
 print(x_test.shape)
 print(y_test.shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+(60000, 28, 28, 1)
+(60000,)
+(10000, 28, 28, 1)
+(10000,)
+
+```
+</div>
 Then, we write a `build_model` function to build the model with hyperparameters
 and return the model. The hyperparameters include the type of model to use
 (multi-layer perceptron or convolutional neural network), the number of layers,
 the number of units or filters, whether to use dropout.
-"""
 
+
+```python
 
 def build_model(hp):
     inputs = keras.Input(shape=(28, 28, 1))
@@ -100,12 +110,13 @@ def build_model(hp):
     )
     return model
 
+```
 
-"""
 We can do a quick test of the models to check if it build successfully for both
 CNN and MLP.
-"""
 
+
+```python
 
 # Initialize the `HyperParameters` and set the values.
 hp = kt.HyperParameters()
@@ -122,12 +133,50 @@ hp.values["model_type"] = "mlp"
 model = build_model(hp)
 model(x_train[:100])
 model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "model"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         [(None, 28, 28, 1)]       0         
+_________________________________________________________________
+conv2d (Conv2D)              (None, 26, 26, 32)        320       
+_________________________________________________________________
+max_pooling2d (MaxPooling2D) (None, 13, 13, 32)        0         
+_________________________________________________________________
+flatten (Flatten)            (None, 5408)              0         
+_________________________________________________________________
+dense (Dense)                (None, 10)                54090     
+=================================================================
+Total params: 54,410
+Trainable params: 54,410
+Non-trainable params: 0
+_________________________________________________________________
+Model: "model_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_2 (InputLayer)         [(None, 28, 28, 1)]       0         
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 784)               0         
+_________________________________________________________________
+dense_2 (Dense)              (None, 10)                7850      
+=================================================================
+Total params: 7,850
+Trainable params: 7,850
+Non-trainable params: 0
+_________________________________________________________________
+
+```
+</div>
 Initialize the `RandomSearch` tuner with 10 trials and using validation
 accuracy as the metric for selecting models.
-"""
 
+
+```python
 tuner = kt.RandomSearch(
     build_model,
     max_trials=10,
@@ -137,12 +186,13 @@ tuner = kt.RandomSearch(
     # Set a directory to store the intermediate results.
     directory="/tmp/tb",
 )
+```
 
-"""
 Start the search by calling `tuner.search(...)`. To use TensorBoard, we need
 to pass a `keras.callbacks.TensorBoard` instance to the callbacks.
-"""
 
+
+```python
 tuner.search(
     x_train,
     y_train,
@@ -152,8 +202,23 @@ tuner.search(
     # The logs will be write to "/tmp/tb_logs".
     callbacks=[keras.callbacks.TensorBoard("/tmp/tb_logs")],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Trial 10 Complete [00h 00m 04s]
+val_accuracy: 0.9230833053588867
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Best val_accuracy So Far: 0.9890000224113464
+Total elapsed time: 00h 07m 43s
+INFO:tensorflow:Oracle triggered exit
+
+```
+</div>
 If running in Colab, the following two commands will show you the TensorBoard
 inside Colab.
 
@@ -175,8 +240,7 @@ table with the different hyperparameter values and evaluation metrics.
 ![Table view](https://i.imgur.com/OMcQdOw.png)
 
 On the left side, you can specify the filters for certain hyperparameters. For
-example, you can specify to only view the MLP models without the dropout layer
-and with 1 to 2 dense layers.
+example, you can specify to only view the MLP models without the dropout layer and with 1 to 2 dense layers.
 
 ![Filtered table view](https://i.imgur.com/yZpfaxN.png)
 
@@ -190,9 +254,7 @@ The axes are the hyperparameters and evaluation metrics.
 
 ![Parallel coordinates view](https://i.imgur.com/PJ7HQUQ.png)
 
-In the scatter plot matrix view, each dot is a trial. The plots are projections
-of the trials on planes with different hyperparameter and metrics as the axes.
+In the scatter plot matrix view, each dot is a trial.
+The plots are projections of the trials on planes with different hyperparameter and metrics as the axes.
 
 ![Scatter plot matrix view](https://i.imgur.com/zjPjh6o.png)
-
-"""
