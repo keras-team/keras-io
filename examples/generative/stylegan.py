@@ -1,25 +1,26 @@
 """
-Title: Face Generation and Mixing with StyleGAN
+Title: Face image generation with StyleGAN
 Author: Soon-Yau Cheong
 Date created: 2021/06/30
 Last modified: 2021/06/30
-Description: Implementation of StyleGAN with custom train step.
+Description: Implementation of StyleGAN for image generation.
 """
 """
-# StyleGAN
+## Introduction
 
+The key idea of StyleGAN is to
+progressively increase the resolution of the generated images and to incorporate
+style features in the generative process.
 
 This [StyleGAN](https://arxiv.org/abs/1812.04948) implementation is based on the book
-[Hands-on Image Generation with TensorFlow](https://www.amazon.com/dp/1838826785). The
-code from the book's [Github
-repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2
-.0/tree/master/Chapter07) is refactored into custom train step to enable faster training
-time in non-eager mode. The key features of StyleGAN is to grow the resolution
-progressively and to incorporate style features in the generative process.
+[Hands-on Image Generation with TensorFlow](https://www.amazon.com/dp/1838826785).
+The code from the book's [Github repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2
+.0/tree/master/Chapter07) was refactored to leverage a custom `train_step()`
+to enable faster training time via compilation and distribution.
 """
 
 """
-## Import modules
+## Setup
 """
 
 import os
@@ -41,8 +42,9 @@ from tensorflow_addons.layers import InstanceNormalization
 import tensorflow_datasets as tfds
 
 """
-## Prepare Dataset
-In this examples, we will train using CelebA from tensorflow dataset.
+## Prepare the dataset
+
+In this example, we will train using the CelebA from TensorFlow Datasets.
 """
 
 
@@ -107,8 +109,9 @@ def plot_images(images, log2_res, fname=""):
 
 """
 ## Custom Layers
+
 The following are building blocks that will be used to construct the generators and
-discriminators.
+discriminators of the StyleGAN model.
 """
 
 
@@ -132,7 +135,6 @@ def minibatch_std(input_tensor, epsilon=1e-8):
     group_std = tf.sqrt(group_var + epsilon)
     avg_std = tf.reduce_mean(group_std, axis=[1, 2, 3], keepdims=True)
     x = tf.tile(avg_std, [group_size, h, w, 1])
-
     return tf.concat([input_tensor, x], axis=-1)
 
 
@@ -146,7 +148,6 @@ class EqualizedConv(layers.Layer):
 
     def build(self, input_shape):
         self.in_channels = input_shape[-1]
-
         initializer = keras.initializers.RandomNormal(mean=0.0, stddev=1.0)
         self.w = self.add_weight(
             shape=[self.kernel, self.kernel, self.in_channels, self.out_channels],
@@ -154,11 +155,9 @@ class EqualizedConv(layers.Layer):
             trainable=True,
             name="kernel",
         )
-
         self.b = self.add_weight(
             shape=(self.out_channels,), initializer="zeros", trainable=True, name="bias"
         )
-
         fan_in = self.kernel * self.kernel * self.in_channels
         self.scale = tf.sqrt(self.gain / fan_in)
 
@@ -191,11 +190,9 @@ class EqualizedDense(layers.Layer):
             trainable=True,
             name="kernel",
         )
-
         self.b = self.add_weight(
             shape=(self.units,), initializer="zeros", trainable=True, name="bias"
         )
-
         fan_in = self.in_channels
         self.scale = tf.sqrt(self.gain / fan_in)
 
@@ -207,7 +204,6 @@ class EqualizedDense(layers.Layer):
 class AddNoise(layers.Layer):
     def build(self, input_shape):
         n, h, w, c = input_shape[0]
-
         initializer = keras.initializers.RandomNormal(mean=0.0, stddev=1.0)
         self.b = self.add_weight(
             shape=[1, 1, 1, c], initializer=initializer, trainable=True, name="kernel"
@@ -238,20 +234,20 @@ class AdaIN(layers.Layer):
         x, w = inputs
         ys = tf.reshape(self.dense_1(w), (-1, 1, 1, self.x_channels))
         yb = tf.reshape(self.dense_2(w), (-1, 1, 1, self.x_channels))
-
-        output = ys * x + yb
-        return output
+        return ys * x + yb
 
 
 """
 Next we build the following:
-- mapping to map the random noise into style code
-- generator
-- discriminator
 
-For generator, we build generator blocks at multi-resolutions .e.g 4x4, 8x8, .. to
-1024x1024 but we only use 4x4 at the beginning and progressively at
-larger-resolution-blocks as the training goes. Same for discriminator.
+- A model mapping to map the random noise into style code
+- The generator
+- The discriminator
+
+For the generator, we build generator blocks at multiple resolutions,
+e.g. 4x4, 8x8, ...up to 1024x1024. We only use 4x4 in the beginning
+and we use progressively larger-resolution blocks as the training proceeds.
+Same for the discriminator.
 """
 
 
@@ -316,11 +312,9 @@ class Generator:
             self.g_blocks.append(g_block)
 
     def build_block(self, filter_num, res, input_shape, is_base):
-
         input_tensor = layers.Input(shape=input_shape, name=f"g_{res}")
         noise = layers.Input(shape=(res, res, 1), name=f"noise_{res}")
         w = layers.Input(shape=512)
-
         x = input_tensor
 
         if not is_base:
@@ -337,7 +331,6 @@ class Generator:
         x = layers.LeakyReLU(0.2)(x)
         x = InstanceNormalization()(x)
         x = AdaIN()([x, w])
-
         return keras.Model([input_tensor, w, noise], x, name=f"genblock_{res}x{res}")
 
     def grow(self, res_log2):
@@ -421,7 +414,6 @@ class Discriminator:
             self.d_blocks.append(d_block)
 
     def build_base(self, filter_num, res):
-
         input_tensor = layers.Input(shape=(res, res, filter_num), name=f"d_{res}")
         x = minibatch_std(input_tensor)
         x = EqualizedConv(filter_num, 3)(x)
@@ -430,18 +422,15 @@ class Discriminator:
         x = EqualizedDense(filter_num)(x)
         x = layers.LeakyReLU(0.2)(x)
         x = EqualizedDense(1)(x)
-
         return keras.Model(input_tensor, x, name=f"d_{res}")
 
     def build_block(self, filter_num_1, filter_num_2, res):
         input_tensor = layers.Input(shape=(res, res, filter_num_1), name=f"d_{res}")
-
         x = EqualizedConv(filter_num_1, 3)(input_tensor)
         x = layers.LeakyReLU(0.2)(x)
         x = EqualizedConv(filter_num_2)(x)
         x = layers.LeakyReLU(0.2)(x)
         x = layers.AveragePooling2D((2, 2))(x)
-
         return keras.Model(input_tensor, x, name=f"d_{res}")
 
     def grow(self, res_log2):
@@ -459,7 +448,6 @@ class Discriminator:
 
             for i in range(idx, -1, -1):
                 x = self.d_blocks[i](x)
-
         return keras.Model([input_image, alpha], x, name=f"discriminator_{res}_x_{res}")
 
 
@@ -637,7 +625,7 @@ class StyleGAN(tf.keras.Model):
 """
 ## Training
 
-We first build the StyleGAN at smallest resolution such as 4x4 or 8x8. Then we
+We first build the StyleGAN at smallest resolution, such as 4x4 or 8x8. Then we
 progressively grow the model to higher resolution by appending new generator and
 discriminator blocks.
 """
@@ -649,9 +637,9 @@ style_gan = StyleGAN(start_res=START_RES, target_res=TARGET_RES)
 
 
 """
-Then training for each resolution happen in two phases - transition and stable. In the
-transition phase, the features from the previous resolution is mixed with the current
-resolution. This allow smoother transition when scalling up. We use 1 epoch in
+The training for each new resolution happen in two phases - "transition" and "stable".
+In the transition phase, the features from the previous resolution are mixed with the current
+resolution. This allows for a smoother transition when scalling up. We use each epoch in
 `model.fit()` as a phase.
 """
 
@@ -709,8 +697,8 @@ def train(
 
 
 """
-StyleGAN can take a long time to train, in code below, small  `steps_per_epoch` of 1 is
-used to sanity check the code is working alright. Larger `steps_per_epoch` of over 10000
+StyleGAN can take a long time to train, in the code below, a small `steps_per_epoch` value of 1 is
+used to sanity-check the code is working alright. In practice, a larger `steps_per_epoch` value (over 10000)
 is required to get decent results.
 """
 
@@ -718,9 +706,10 @@ train(steps_per_epoch=1, display_images=False)
 
 """
 ## Results
-We can now run some inference using pre-trained 64x64 checkpoints.  In general, the image
-fidelity increases with the resolution. You can try to train this Stylegan to resolution
-above 128x128 with CelebA HD dataset.
+
+We can now run some inference using pre-trained 64x64 checkpoints. In general, the image
+fidelity increases with the resolution. You can try to train this StyleGAN to resolutions
+above 128x128 with the CelebA HD dataset.
 """
 
 weights_path = keras.utils.get_file(
@@ -743,6 +732,7 @@ plot_images(images, 5)
 
 """
 ## Style Mixing
+
 We can also mix styles from two images to create a new image.
 """
 
