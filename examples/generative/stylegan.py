@@ -1,22 +1,21 @@
 """
 Title: Face image generation with StyleGAN
 Author: Soon-Yau Cheong
-Date created: 2021/06/30
-Last modified: 2021/06/30
+Date created: 2021/07/01
+Last modified: 2021/07/01
 Description: Implementation of StyleGAN for image generation.
 """
 """
 ## Introduction
 
-The key idea of StyleGAN is to
-progressively increase the resolution of the generated images and to incorporate
-style features in the generative process.
-
-This [StyleGAN](https://arxiv.org/abs/1812.04948) implementation is based on the book
-[Hands-on Image Generation with TensorFlow](https://www.amazon.com/dp/1838826785).
-The code from the book's [Github repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2
-.0/tree/master/Chapter07) was refactored to leverage a custom `train_step()`
-to enable faster training time via compilation and distribution.
+The key idea of StyleGAN is to progressively increase the resolution of the generated
+images and to incorporate style features in the generative process.This
+[StyleGAN](https://arxiv.org/abs/1812.04948) implementation is based on the book
+ [Hands-on Image Generation with TensorFlow](https://www.amazon.com/dp/1838826785).
+The code from the book's [Github
+repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2
+.0/tree/master/Chapter07) was refactored to leverage a custom `train_step()` to enable
+faster training time via compilation and distribution.
 """
 
 """
@@ -74,15 +73,13 @@ def resize_image(res, sample):
 
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
-    dl = ds_train.map(
-        partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE
-    )
+    dl = ds_train.map(partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE)
     dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
 
 
 """
-### Utility function to display images after each epoch
+## Utility function to display images after each epoch
 """
 
 
@@ -140,7 +137,7 @@ def minibatch_std(input_tensor, epsilon=1e-8):
 
 class EqualizedConv(layers.Layer):
     def __init__(self, out_channels, kernel=3, gain=2, **kwargs):
-        super(EqualizedConv, self).__init__(kwargs)
+        super(EqualizedConv, self).__init__(**kwargs)
         self.kernel = kernel
         self.out_channels = out_channels
         self.gain = gain
@@ -174,7 +171,7 @@ class EqualizedConv(layers.Layer):
 
 class EqualizedDense(layers.Layer):
     def __init__(self, units, gain=2, learning_rate_multiplier=1, **kwargs):
-        super(EqualizedDense, self).__init__(kwargs)
+        super(EqualizedDense, self).__init__(**kwargs)
         self.units = units
         self.gain = gain
         self.learning_rate_multiplier = learning_rate_multiplier
@@ -217,7 +214,7 @@ class AddNoise(layers.Layer):
 
 class AdaIN(layers.Layer):
     def __init__(self, gain=1, **kwargs):
-        super(AdaIN, self).__init__(kwargs)
+        super(AdaIN, self).__init__(**kwargs)
         self.gain = gain
 
     def build(self, input_shapes):
@@ -255,7 +252,7 @@ def Mapping(num_stages, input_shape=512):
     z = layers.Input(shape=(input_shape))
     w = pixel_norm(z)
     for i in range(8):
-        w = EqualizedDense(512, lrmul=0.01)(w)
+        w = EqualizedDense(512, learning_rate_multiplier=0.01)(w)
         w = layers.LeakyReLU(0.2)(w)
     w = tf.tile(tf.expand_dims(w, 1), (1, num_stages, 1))
     return keras.Model(z, w, name="mapping")
@@ -266,9 +263,13 @@ class Generator:
         self.start_res_log2 = start_res_log2
         self.target_res_log2 = target_res_log2
         self.num_stages = target_res_log2 - start_res_log2 + 1
-        self.to_rgb = []
+        # list of generator blocks at increasing resolution
         self.g_blocks = []
+        # list of layers to convert g_block activation to RGB
+        self.to_rgb = []
+        # list of noise input of different resolutions into g_blocks
         self.noise_inputs = []
+        # filter size to use at each stage, keys is log2(resolution)
         self.filter_nums = {
             0: 512,
             1: 512,
@@ -280,8 +281,8 @@ class Generator:
             7: 128,  # 128x128
             8: 64,  # 256x256
             9: 32,  # 512x512
-            10: 16,  # 1024x1024
-        }
+            10: 16,
+        }  # 1024x1024
 
         start_res = 2 ** start_res_log2
         self.input_shape = (start_res, start_res, self.filter_nums[start_res_log2])
@@ -296,7 +297,7 @@ class Generator:
             to_rgb = Sequential(
                 [
                     layers.InputLayer(input_shape=(res, res, filter_num)),
-                    EqualizedConv(3, 1, gain=1, activation=None),
+                    EqualizedConv(3, 1, gain=1),
                 ],
                 name=f"to_rgb_{res}x{res}",
             )
@@ -371,6 +372,7 @@ class Discriminator:
         self.start_res_log2 = start_res_log2
         self.target_res_log2 = target_res_log2
         self.num_stages = target_res_log2 - start_res_log2 + 1
+        # filter size to use at each stage, keys is log2(resolution)
         self.filter_nums = {
             0: 512,
             1: 512,
@@ -382,10 +384,12 @@ class Discriminator:
             7: 128,  # 128x128
             8: 64,  # 256x256
             9: 32,  # 512x512
-            10: 16,  # 1024x1024
-        }
-        self.from_rgb = []
+            10: 16,
+        }  # 1024x1024
+        # list of discriminator blocks at increasing resolution
         self.d_blocks = []
+        # list of layers to convert RGB into activation for d_blocks inputs
+        self.from_rgb = []
 
         for res_log2 in range(self.start_res_log2, self.target_res_log2 + 1):
             res = 2 ** res_log2
@@ -456,11 +460,6 @@ class Discriminator:
 """
 
 
-class Phase(Enum):
-    TRANSITION = 1
-    STABLE = 2
-
-
 class StyleGAN(tf.keras.Model):
     def __init__(self, z_dim=512, target_res=64, start_res=4):
         super(StyleGAN, self).__init__()
@@ -478,7 +477,7 @@ class StyleGAN(tf.keras.Model):
         self.g_builder = Generator(self.start_res_log2, self.target_res_log2)
         self.g_input_shape = self.g_builder.input_shape
 
-        self.phase = Phase.STABLE
+        self.phase = None
         self.train_step_counter = tf.Variable(0, dtype=tf.int32, trainable=False)
 
         self.loss_weights = {"gradient_penalty": 10, "drift": 0.001}
@@ -529,11 +528,11 @@ class StyleGAN(tf.keras.Model):
 
         self.train_step_counter.assign_add(1)
 
-        if self.phase == Phase.TRANSITION:
+        if self.phase == "TRANSITION":
             self.alpha.assign(
                 tf.cast(self.train_step_counter / self.steps_per_epoch, tf.float32)
             )
-        elif self.phase == Phase.STABLE:
+        elif self.phase == "STABLE":
             self.alpha.assign(1.0)
         else:
             raise NotImplementedError
@@ -553,9 +552,11 @@ class StyleGAN(tf.keras.Model):
             pred_fake = self.discriminator([fake_images, alpha])
             g_loss = wasserstein_loss(real_labels, pred_fake)
 
-            variables = self.mapping.variables + self.generator.variables
-            gradients = g_tape.gradient(g_loss, variables)
-            self.g_optimizer.apply_gradients(zip(gradients, variables))
+            trainable_weights = (
+                self.mapping.trainable_weights + self.generator.trainable_weights
+            )
+            gradients = g_tape.gradient(g_loss, trainable_weights)
+            self.g_optimizer.apply_gradients(zip(gradients, trainable_weights))
 
         # discriminator
         with tf.GradientTape() as gradient_tape, tf.GradientTape() as total_tape:
@@ -585,9 +586,11 @@ class StyleGAN(tf.keras.Model):
 
             d_loss = loss_fake + loss_real + gradient_penalty + drift_loss
 
-            gradients = total_tape.gradient(d_loss, self.discriminator.variables)
+            gradients = total_tape.gradient(
+                d_loss, self.discriminator.trainable_weights
+            )
             self.d_optimizer.apply_gradients(
-                zip(gradients, self.discriminator.variables)
+                zip(gradients, self.discriminator.trainable_weights)
             )
 
         # Update metrics
@@ -631,16 +634,15 @@ discriminator blocks.
 """
 
 START_RES = 4
-TARGET_RES = 64
+TARGET_RES = 128
 
 style_gan = StyleGAN(start_res=START_RES, target_res=TARGET_RES)
 
-
 """
 The training for each new resolution happen in two phases - "transition" and "stable".
-In the transition phase, the features from the previous resolution are mixed with the current
-resolution. This allows for a smoother transition when scalling up. We use each epoch in
-`model.fit()` as a phase.
+In the transition phase, the features from the previous resolution are mixed with the
+current resolution. This allows for a smoother transition when scalling up. We use each
+epoch in `model.fit()` as a phase.
 """
 
 
@@ -650,7 +652,7 @@ def train(
     steps_per_epoch=5000,
     display_images=True,
 ):
-    opt_cfg = {"learning_rate": 5e-4, "beta_1": 0.0, "beta_2": 0.99, "epsilon": 1e-8}
+    opt_cfg = {"learning_rate": 1e-3, "beta_1": 0.0, "beta_2": 0.99, "epsilon": 1e-8}
 
     val_batch_size = 16
     val_z = tf.random.normal((val_batch_size, style_gan.z_dim))
@@ -661,8 +663,8 @@ def train(
 
     for res_log2 in range(start_res_log2, target_res_log2 + 1):
         res = 2 ** res_log2
-        for phase in [Phase.TRANSITION, Phase.STABLE]:
-            if res == start_res and phase == Phase.TRANSITION:
+        for phase in ["TRANSITION", "STABLE"]:
+            if res == start_res and phase == "TRANSITION":
                 continue
 
             train_dl = create_dataloader(res)
@@ -697,31 +699,34 @@ def train(
 
 
 """
-StyleGAN can take a long time to train, in the code below, a small `steps_per_epoch` value of 1 is
-used to sanity-check the code is working alright. In practice, a larger `steps_per_epoch` value (over 10000)
+StyleGAN can take a long time to train, in the code below, a small `steps_per_epoch`
+value of 1 is used to sanity-check the code is working alright. In practice, a larger
+`steps_per_epoch` value (over 10000)
 is required to get decent results.
 """
 
-train(steps_per_epoch=1, display_images=False)
+train(start_res=4, target_res=16, steps_per_epoch=1, display_images=False)
 
 """
 ## Results
 
 We can now run some inference using pre-trained 64x64 checkpoints. In general, the image
 fidelity increases with the resolution. You can try to train this StyleGAN to resolutions
-above 128x128 with the CelebA HD dataset.
+above 128x128 with the CelebA HQ dataset.
 """
 
+url = "https://github.com/soon-yau/stylegan_keras/releases/download/keras_example_v1.0/stylegan_128x128.ckpt.zip"
+
 weights_path = keras.utils.get_file(
-    "stylegan_64x64.ckpt.zip",
-    "https://github.com/soon-yau/stylegan_keras/releases/download/keras_example/stylegan_64x64.ckpt.zip",
+    "stylegan_128x128.ckpt.zip",
+    url,
     extract=True,
     cache_dir=os.path.abspath("."),
     cache_subdir="pretrained",
 )
 
-style_gan.grow_model(64)
-style_gan.load_weights(os.path.join("pretrained/stylegan_64x64.ckpt"))
+style_gan.grow_model(128)
+style_gan.load_weights(os.path.join("pretrained/stylegan_128x128.ckpt"))
 
 batch_size = 2
 z = tf.random.normal((batch_size, style_gan.z_dim))
