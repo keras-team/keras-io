@@ -65,7 +65,7 @@ This is identical to the LSTM layer that keras provides -- and the good part is 
 replace your classification RNN models with this one, because the inputs are fully compatible!
 """
 
-import tensorflow.keras as keras
+from tensorflow import keras
 from tensorflow.keras import layers
 
 """
@@ -118,11 +118,11 @@ def build_model(input_shape, head_size, num_heads, ff_dim, dropout=0, num_layers
     for _ in range(num_layers):
       x = transformer_encoder(x, head_size, num_heads, ff_dim, dropout)
 
-    x = keras.layers.GlobalAveragePooling1D(data_format='channels_first')(x)
+    x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
     for dim in mlp:
-        x = keras.layers.Dense(dim, activation='relu')(x)
-        x = keras.layers.Dropout(mlp_dropout)(x)
-    outputs = keras.layers.Dense(n_classes, activation='softmax')(x)
+        x = layers.Dense(dim, activation='relu')(x)
+        x = layers.Dropout(mlp_dropout)(x)
+    outputs = layers.Dense(n_classes, activation='softmax')(x)
     return keras.Model(inputs, outputs)
 
 
@@ -132,10 +132,9 @@ def build_model(input_shape, head_size, num_heads, ff_dim, dropout=0, num_layers
 
 input_shape = x_train.shape[1:]
 
-optimizer = keras.optimizers.Adam(learning_rate=1e-4)
-model = build_model(input_shape, n_classes, num_heads=4, head_size=256, num_layers=4, mlp=[128], dropout=0.25, dropout_mlps=0.4, optimizer=opt)
+model = build_model(input_shape, head_size=256, num_heads=4, ff_dim=4, dropout=0.25, num_layers=4, mlp=[128], mlp_dropout=0.4)
 
-model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=['sparse_categorical_accuracy'])
+model.compile(loss='sparse_categorical_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=1e-4), metrics=['sparse_categorical_accuracy'])
 model.summary()
 
 callbacks = [keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)]
