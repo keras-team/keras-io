@@ -57,6 +57,15 @@ million frames which are processed in less than 24 hours on a modern machine.
 """
 ## Setup
 """
+import sys
+IN_COLAB = 'google.colab' in sys.modules
+if (IN_COLAB==True):
+  !pip install baselines 
+  ! wget http://www.atarimania.com/roms/Roms.rar
+  ! mkdir /content/ROM/
+  ! unrar e /content/Roms.rar /content/ROM/
+  ! python -m atari_py.import_roms /content/ROM/
+
 
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 import numpy as np
