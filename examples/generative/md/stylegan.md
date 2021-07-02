@@ -796,44 +796,7 @@ Downloading data from https://github.com/soon-yau/stylegan_keras/releases/downlo
 540540928/540534982 [==============================] - 30s 0us/step
 ```
 </div>
-    
-<div class="k-default-codeblock">
-```
-Model resolution:128x128
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Two checkpoint references resolved to different objects (<__main__.EqualizedConv object at 0x7f7f29328fa0> and <tensorflow.python.keras.layers.core.Flatten object at 0x7f7f292e77c0>).
 
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Two checkpoint references resolved to different objects (<__main__.EqualizedConv object at 0x7f7f29328fa0> and <tensorflow.python.keras.layers.core.Flatten object at 0x7f7f292e77c0>).
-
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Two checkpoint references resolved to different objects (<__main__.EqualizedDense object at 0x7f7f292e2400> and <__main__.EqualizedDense object at 0x7f7f292e7790>).
-
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Two checkpoint references resolved to different objects (<__main__.EqualizedDense object at 0x7f7f292e2400> and <__main__.EqualizedDense object at 0x7f7f292e7790>).
-
-```
-</div>
     
 ![png](/img/examples/generative/stylegan/stylegan_21_4.png)
     
