@@ -1,11 +1,16 @@
-"""
-Title: Face image generation with StyleGAN
-Author: [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/)
-Date created: 2021/07/01
-Last modified: 2021/07/01
-Description: Implementation of StyleGAN for image generation.
-"""
-"""
+# Face image generation with StyleGAN
+
+**Author:** [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/)<br>
+**Date created:** 2021/07/01<br>
+**Last modified:** 2021/07/01<br>
+**Description:** Implementation of StyleGAN for image generation.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/stylegan.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/stylegan.py)
+
+
+
+---
 ## Introduction
 
 The key idea of StyleGAN is to progressively increase the resolution of the generated
@@ -16,12 +21,12 @@ The code from the book's
 [Github repository](https://github.com/PacktPublishing/Hands-On-Image-Generation-with-TensorFlow-2.0/tree/master/Chapter07)
 was refactored to leverage a custom `train_step()` to enable
 faster training time via compilation and distribution.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import os
 import random
 import math
@@ -39,13 +44,15 @@ from tensorflow.keras.models import Sequential
 from tensorflow_addons.layers import InstanceNormalization
 
 import tensorflow_datasets as tfds
+```
 
-"""
+---
 ## Prepare the dataset
 
 In this example, we will train using the CelebA from TensorFlow Datasets.
-"""
 
+
+```python
 
 def log2(x):
     return int(np.log2(x))
@@ -77,11 +84,13 @@ def create_dataloader(res):
     dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
 
+```
 
-"""
+---
 ## Utility function to display images after each epoch
-"""
 
+
+```python
 
 def plot_images(images, log2_res, fname=""):
     scales = {2: 0.5, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 8: 6, 9: 7, 10: 8}
@@ -103,14 +112,16 @@ def plot_images(images, log2_res, fname=""):
     if fname:
         f.savefig(fname)
 
+```
 
-"""
+---
 ## Custom Layers
 
 The following are building blocks that will be used to construct the generators and
 discriminators of the StyleGAN model.
-"""
 
+
+```python
 
 def fade_in(alpha, a, b):
     return alpha * a + (1.0 - alpha) * b
@@ -233,8 +244,8 @@ class AdaIN(layers.Layer):
         yb = tf.reshape(self.dense_2(w), (-1, 1, 1, self.x_channels))
         return ys * x + yb
 
+```
 
-"""
 Next we build the following:
 
 - A model mapping to map the random noise into style code
@@ -245,8 +256,9 @@ For the generator, we build generator blocks at multiple resolutions,
 e.g. 4x4, 8x8, ...up to 1024x1024. We only use 4x4 in the beginning
 and we use progressively larger-resolution blocks as the training proceeds.
 Same for the discriminator.
-"""
 
+
+```python
 
 def Mapping(num_stages, input_shape=512):
     z = layers.Input(shape=(input_shape))
@@ -454,11 +466,13 @@ class Discriminator:
                 x = self.d_blocks[i](x)
         return keras.Model([input_image, alpha], x, name=f"discriminator_{res}_x_{res}")
 
+```
 
-"""
+---
 ## Build StyleGAN with custom train step
-"""
 
+
+```python
 
 class StyleGAN(tf.keras.Model):
     def __init__(self, z_dim=512, target_res=64, start_res=4):
@@ -624,27 +638,30 @@ class StyleGAN(tf.keras.Model):
 
         return images
 
+```
 
-"""
+---
 ## Training
 
 We first build the StyleGAN at smallest resolution, such as 4x4 or 8x8. Then we
 progressively grow the model to higher resolution by appending new generator and
 discriminator blocks.
-"""
 
+
+```python
 START_RES = 4
 TARGET_RES = 128
 
 style_gan = StyleGAN(start_res=START_RES, target_res=TARGET_RES)
+```
 
-"""
 The training for each new resolution happen in two phases - "transition" and "stable".
 In the transition phase, the features from the previous resolution are mixed with the
 current resolution. This allows for a smoother transition when scalling up. We use each
 epoch in `model.fit()` as a phase.
-"""
 
+
+```python
 
 def train(
     start_res=START_RES,
@@ -697,24 +714,60 @@ def train(
                 images = style_gan({"z": val_z, "noise": val_noise, "alpha": 1.0})
                 plot_images(images, res_log2)
 
+```
 
-"""
 StyleGAN can take a long time to train, in the code below, a small `steps_per_epoch`
 value of 1 is used to sanity-check the code is working alright. In practice, a larger
 `steps_per_epoch` value (over 10000)
 is required to get decent results.
-"""
 
+
+```python
 train(start_res=4, target_res=16, steps_per_epoch=1, display_images=False)
+```
 
-"""
+    
+<div class="k-default-codeblock">
+```
+Model resolution:4x4
+STABLE
+1/1 [==============================] - 3s 3s/step - d_loss: 2.0971 - g_loss: 2.5965
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model resolution:8x8
+TRANSITION
+1/1 [==============================] - 5s 5s/step - d_loss: 6.6954 - g_loss: 0.3432
+STABLE
+1/1 [==============================] - 4s 4s/step - d_loss: 3.3558 - g_loss: 3.7813
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model resolution:16x16
+TRANSITION
+1/1 [==============================] - 10s 10s/step - d_loss: 3.3166 - g_loss: 6.6047
+STABLE
+WARNING:tensorflow:5 out of the last 5 calls to <function Model.make_train_function.<locals>.train_function at 0x7f7f0e7005e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+WARNING:tensorflow:5 out of the last 5 calls to <function Model.make_train_function.<locals>.train_function at 0x7f7f0e7005e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+1/1 [==============================] - 8s 8s/step - d_loss: -6.1128 - g_loss: 17.0095
+
+```
+</div>
+---
 ## Results
 
 We can now run some inference using pre-trained 64x64 checkpoints. In general, the image
 fidelity increases with the resolution. You can try to train this StyleGAN to resolutions
 above 128x128 with the CelebA HQ dataset.
-"""
 
+
+```python
 url = "https://github.com/soon-yau/stylegan_keras/releases/download/keras_example_v1.0/stylegan_128x128.ckpt.zip"
 
 weights_path = keras.utils.get_file(
@@ -735,13 +788,64 @@ w = style_gan.mapping(z)
 noise = style_gan.generate_noise(batch_size=batch_size)
 images = style_gan({"style_code": w, "noise": noise, "alpha": 1.0})
 plot_images(images, 5)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://github.com/soon-yau/stylegan_keras/releases/download/keras_example_v1.0/stylegan_128x128.ckpt.zip
+540540928/540534982 [==============================] - 30s 0us/step
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Model resolution:128x128
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Two checkpoint references resolved to different objects (<__main__.EqualizedConv object at 0x7f7f29328fa0> and <tensorflow.python.keras.layers.core.Flatten object at 0x7f7f292e77c0>).
+
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Two checkpoint references resolved to different objects (<__main__.EqualizedConv object at 0x7f7f29328fa0> and <tensorflow.python.keras.layers.core.Flatten object at 0x7f7f292e77c0>).
+
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Two checkpoint references resolved to different objects (<__main__.EqualizedDense object at 0x7f7f292e2400> and <__main__.EqualizedDense object at 0x7f7f292e7790>).
+
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. Either the Trackable object references in the Python program have changed in an incompatible way, or the checkpoint was generated in an incompatible program.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Two checkpoint references resolved to different objects (<__main__.EqualizedDense object at 0x7f7f292e2400> and <__main__.EqualizedDense object at 0x7f7f292e7790>).
+
+```
+</div>
+    
+![png](/img/examples/generative/stylegan/stylegan_21_4.png)
+    
+
+
+---
 ## Style Mixing
 
 We can also mix styles from two images to create a new image.
-"""
 
+
+```python
 alpha = 0.4
 w_mix = np.expand_dims(alpha * w[0] + (1 - alpha) * w[1], 0)
 noise_a = [np.expand_dims(n[0], 0) for n in noise]
@@ -750,3 +854,18 @@ image_row = np.hstack([images[0], images[1], mix_images[0]])
 plt.figure(figsize=(9, 3))
 plt.imshow(image_row)
 plt.axis("off")
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+(-0.5, 383.5, 127.5, -0.5)
+
+```
+</div>
+    
+![png](/img/examples/generative/stylegan/stylegan_23_1.png)
+    
+
