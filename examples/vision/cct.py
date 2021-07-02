@@ -7,26 +7,26 @@ Description: Compact Convolutional Transformers for efficient image classificati
 """
 """
 As discussed in the [Vision Transformers (ViT)](https://arxiv.org/abs/2010.11929) paper,
-a Transformers-based architecture for vision typically requires a larger dataset than
-usual with a longer pre-training schedule. [ImageNet-1k](http://imagenet.org/) (which has
-about a million images) is considered to fall under the medium-sized data regime with
+a Transformer-based architecture for vision typically requires a larger dataset than
+usual, as well as a longer pre-training schedule. [ImageNet-1k](http://imagenet.org/)
+(which has about a million images) is considered to fall under the medium-sized data regime with
 respect to ViTs. This is primarily because, unlike CNNs, ViTs (or a typical
-Transformers-based architecture) do not have well-informed inductive biases (such as
-convolutions for processing images). So, this begs the question can't we combine the
-benefits of convolutions for better processing images and the benefits of Transformers
-into a single network architecture? These benefits include parameter efficiency,
+Transformer-based architecture) do not have well-informed inductive biases (such as
+convolutions for processing images). This begs the question: can't we combine the
+benefits of convolution and the benefits of Transformers
+in a single network architecture? These benefits include parameter-efficiency, and
 self-attention to process long-range and global dependencies (interactions between
 different regions in an image).
 
 In [Escaping the Big Data Paradigm with Compact Transformers](https://arxiv.org/abs/2104.05704),
-Hassani et al. present an approach of doing this. The propose
-**Compact Convolutional Transformer** (CCT). In this example, we will work on an
-implementation of CCT and we will see how well it performs on the CIFAR10 dataset.
+Hassani et al. present an approach for doing exactly this. They proposed the
+**Compact Convolutional Transformer** (CCT) architecture. In this example, we will work on an
+implementation of CCT and we will see how well it performs on the CIFAR-10 dataset.
 
 If you are unfamiliar with the concept of self-attention or Transformers, you can read
 [this chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11/r-3/312)
-from  François Chollet's book Deep Learning with Python. This example uses
-code snippets from another example
+from  François Chollet's book *Deep Learning with Python*. This example uses
+code snippets from another example,
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
 This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons, which can
@@ -98,7 +98,7 @@ figure below presents an illustration of how images are organized into patches.
 ![](https://i.imgur.com/IkBK9oY.png)
 
 We already know that convolutions are quite good at exploiting locality information. So,
-based on this, the authors introduce an all convolution mini-network to produce image
+based on this, the authors introduce an all-convolution mini-network to produce image
 patches.
 """
 
@@ -231,7 +231,7 @@ Another recipe introduced in CCT is attention pooling or sequence pooling. In Vi
 the feature map corresponding to the class token is pooled and is then used for the
 subsequent classification task (or any other downstream task). In CCT, outputs from the
 Transformers encoder are weighted and then passed on to the final task-specific layer (in
-this example which is classification).
+this example, we do classification).
 """
 
 
@@ -355,18 +355,18 @@ plt.grid()
 plt.show()
 
 """
-The CCT model we just trained has just **0.408139 million** parameters and it gets us to
+The CCT model we just trained has just **0.4 million** parameters, and it gets us to
 ~78% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
 well. This means we can train this network for longers (perhaps with a bit more
 regularization) and may obtain even better performance. This performance can further be
-improved by additional recipes like cosine decay LR schedule, other data augmentation
+improved by additional recipes like cosine decay learning rate schedule, other data augmentation
 techniques like [AutoAugment](https://arxiv.org/abs/1805.09501),
 [MixUp](https://arxiv.org/abs/1710.09412) or
 [Cutmix](https://arxiv.org/abs/1905.04899. The authors also present a number of
 experiments to study how the number of convolution blocks, Transformers layers, etc.
 affect the final performance.
 
-For a comparison, a ViT model takes about **4.697572 million** parameters and **100
+For a comparison, a ViT model takes about **4.7 million** parameters and **100
 epochs** of training to reach a top-1 accuracy of 78.22% on the CIFAR-10 dataset. You can
 refer to
 [this notebook](https://colab.research.google.com/gist/sayakpaul/1a80d9f582b044354a1a26c5cb3d69e5/image_classification_with_vision_transformer.ipynb)
