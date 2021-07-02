@@ -148,6 +148,14 @@ def logprobabilities(logits, a):
     return logprobability
 
 
+# Sample action from actor
+@tf.function
+def sample_action(observation):
+    logits = actor(observation)
+    action = tf.squeeze(tf.random.categorical(logits, 1), axis=1)
+    return logits, action
+
+
 # Train the policy by maxizing the PPO-Clip objective
 @tf.function
 def train_policy(
@@ -254,8 +262,7 @@ for epoch in range(epochs):
 
         # Get the logits, action, and take one step in the environment
         observation = observation.reshape(1, -1)
-        logits = actor(observation)
-        action = tf.squeeze(tf.random.categorical(logits, 1), axis=1)
+        logits, action = sample_action(observation)
         observation_new, reward, done, _ = env.step(action[0].numpy())
         episode_return += reward
         episode_length += 1
