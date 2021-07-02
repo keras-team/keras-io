@@ -371,4 +371,7 @@ epochs** of training to reach a top-1 accuracy of 78.22% on the CIFAR-10 dataset
 refer to
 [this notebook](https://colab.research.google.com/gist/sayakpaul/1a80d9f582b044354a1a26c5cb3d69e5/image_classification_with_vision_transformer.ipynb)
 to know about the experimental setup.
+
+The authors also demonstrate the performance of Compact Convolutional Transformers on
+NLP tasks and they report competitive results there.
 """
