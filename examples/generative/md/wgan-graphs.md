@@ -6,7 +6,7 @@
 **Description:** Complete implementation of WGAN-GP with R-GCN to generate novel molecules.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graph/ipynb/wgan-graphs.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graph/wgan-graphs.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/wgan-graphs.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/wgan-graphs.py)
 
 
 
@@ -120,7 +120,7 @@ Num heavy atoms: 7
 ```
 </div>
     
-![png](/img/examples/graph/wgan-graphs/wgan-graphs_6_1.png)
+![png](/img/examples/generative/wgan-graphs/wgan-graphs_6_1.png)
     
 
 
@@ -243,7 +243,7 @@ graph_to_molecule(smiles_to_graph(smiles))
 
 
     
-![png](/img/examples/graph/wgan-graphs/wgan-graphs_8_0.png)
+![png](/img/examples/generative/wgan-graphs/wgan-graphs_8_0.png)
     
 
 
@@ -741,7 +741,7 @@ MolsToGridImage(
 
 
     
-![png](/img/examples/graph/wgan-graphs/wgan-graphs_20_0.png)
+![png](/img/examples/generative/wgan-graphs/wgan-graphs_20_0.png)
     
 
 
