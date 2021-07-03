@@ -80,8 +80,8 @@ input_shape = (32, 32, 3)
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 
-y_train = tf.one_hot(y_train, num_classes).numpy().squeeze()
-y_test = tf.one_hot(y_test, num_classes).numpy().squeeze()
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
 
 print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
 print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
@@ -111,18 +111,19 @@ class CCTTokenizer(layers.Layer):
         padding=1,
         pooling_kernel_size=3,
         pooling_stride=2,
-        n_conv_layers=conv_layers,
-        n_output_channels=[64, 128],
+        num_conv_layers=conv_layers,
+        num_output_channels=[64, 128],
         positional_emb=positional_emb,
+        **kwargs,
     ):
-        super(CCTTokenizer, self).__init__()
+        super(CCTTokenizer, self).__init__(**kwargs)
 
         # This is our tokenizer.
         self.conv_model = keras.Sequential()
-        for i in range(n_conv_layers):
+        for i in range(num_conv_layers):
             self.conv_model.add(
                 layers.Conv2D(
-                    n_output_channels[i],
+                    num_output_channels[i],
                     kernel_size,
                     stride,
                     padding="valid",
@@ -179,8 +180,8 @@ encoder.
 
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
-    def __init__(self, drop_prop):
-        super(StochasticDepth, self).__init__()
+    def __init__(self, drop_prop, **kwargs):
+        super(StochasticDepth, self).__init__(**kwargs)
         self.drop_prob = drop_prop
 
     def call(self, x, training=None):
@@ -189,7 +190,7 @@ class StochasticDepth(layers.Layer):
             shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
             random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
             random_tensor = tf.floor(random_tensor)
-            return tf.math.divide(x, keep_prob) * random_tensor
+            return (x / keep_prob) * random_tensor
         return x
 
 
@@ -235,7 +236,14 @@ this example, we do classification).
 """
 
 
-def create_cct_model():
+def create_cct_model(
+    image_size=image_size,
+    input_shape=input_shape,
+    num_heads=num_heads,
+    projection_dim=projection_dim,
+    transformer_units=transformer_units,
+):
+
     inputs = layers.Input(input_shape)
 
     # Augment data.
