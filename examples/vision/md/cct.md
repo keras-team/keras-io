@@ -1,4 +1,3 @@
-
 # Compact Convolutional Transformers
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
