@@ -480,7 +480,7 @@ regularization) and may obtain even better performance. This performance can fur
 improved by additional recipes like cosine decay learning rate schedule, other data augmentation
 techniques like [AutoAugment](https://arxiv.org/abs/1805.09501),
 [MixUp](https://arxiv.org/abs/1710.09412) or
-[Cutmix](https://arxiv.org/abs/1905.04899. The authors also present a number of
+[Cutmix](https://arxiv.org/abs/1905.04899). The authors also present a number of
 experiments to study how the number of convolution blocks, Transformers layers, etc.
 affect the final performance.
 
