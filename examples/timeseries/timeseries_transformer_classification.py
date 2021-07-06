@@ -1,46 +1,26 @@
 """
-Title: Time Series Classification with a Self-Attention Transformer Model
+Title: Timeseries classification with a Transformer model
 Authors: [Theodoros Ntakouris](https://github.com/ntakouris)
 Date created: 2021/06/25
 Last modified: 2021/06/25
-Description: This notebook demonstrates how to do timeseries forecasting using 
-a transformer model.
+Description: This notebook demonstrates how to do timeseries classification using a Transformer model.
 """
 
 
 """
-##
-This is the [Attention Is All You Need Paper](https://arxiv.org/abs/1706.03762), 
-but for time series instead of natural language processing.
+## Introduction
 
-Over the past years, the Attention mechanism has become top of the leaderboards 
-for NLP (sequential in nature) tasks. There has also beensignificant adoption
-of the architecture for computer vision as well as time series. In general, 
-experiments have shown that this architecturescales well with big datasets. 
-Self attention might yield remarkable performance for a lot of tasks 
-(not only time series), expecially with simplistic datasets and model
-combinations topping off quickly at even 100% training or validation accuracy,
-but there are several disadvantages of using attention.
+This is the Transformer architecture from
+[Attention Is All You Need](https://arxiv.org/abs/1706.03762),
+applied to timeseries instead of natural language.
 
-Firstly, their complexity is quadratic with regards to the input length.
-This means that the memory and compute requirements for long sequences renders
-them unfit for training or deployment on resource contrained devices. Secondly,
-for time series tasks where the inputs are of a few dimensions long, or even 
-1-dimension long (univariate time series), there might be convergence problems.
-Lastly, due to the large learning capacity of the transformer architecture,
-smaller datasets might have better performance with a carefully tuned RNN 
-architecture. 
+This example requires TensorFlow 2.4 or higher.
 
-Note on tensorflow version: make sure you are on `tensorflow>=2.4` to run this 
-notebook. This is due to the `keras.layers.MultiHeadAttention` migrating from 
-`tensorflow_addons` to keras/tensorflow.
+## Load the dataset
 
-## Dataset Load
-
-We are going to use the same dataset and preprocessing as the 
-[Time Series Classification from Scratch](
-    https://keras.io/examples/timeseries/timeseries_classification_from_scratch
-) keras example.
+We are going to use the same dataset and preprocessing as the
+[TimeSeries Classification from Scratch](https://keras.io/examples/timeseries/timeseries_classification_from_scratch)
+example.
 """
 
 import numpy as np
@@ -71,15 +51,13 @@ y_train[y_train == -1] = 0
 y_test[y_test == -1] = 0
 
 """
-## Model Creation
+## Build the model
 
-The dataset is now ready and moving on, we are going to implement our model, 
-which first encodes a tensor of shape `(batch size, sequence length, features)`,
+Our model processes a tensor of shape `(batch size, sequence length, features)`,
 where `sequence length` is the number of time steps and `features` is each input
-time series. 
+timeseries.
 
-This is identical to the LSTM layer that keras provides -- and the good part is
-that you can replace your classification RNN models with this one, because the
+You can replace your classification RNN layers with this one: the
 inputs are fully compatible!
 """
 
@@ -87,22 +65,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """
-The MultiHeadAttention layer can perform
-self-attention, by generating each of {query, key, value}
-matrices, through the inputs.
-This corresponds to implementing an attention mechanism by:
-`Q = dense_q(x), K = dense_k(x), V = dense_v(x)` , where
-each `dense_x()` is a different instance of `keras.layers.Dense`.
+We include residual connections, layer normalization, and dropout.
+The resulting layer can be stacked multiple times.
 
-(The actual implementation is a much more optimized version.)
-
-The Self-Attention mechanism is weak on it's own. We need to add a residual 
-connection, (layer) normalization, dropout and projection layers for this to 
-work. The following layer can also be stacked multiple times.
-
-The projection layers are implemented through `keras.layers.Conv1D`, by 
-(automatically) broadcasting the compute to the last feature dimension of the
-input tensors.
+The projection layers are implemented through `keras.layers.Conv1D`.
 """
 
 
@@ -124,18 +90,13 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
 
 
 """
-
-The main part of our model is now complete. We can stack multiple of those 
-`transformer_encoder` blocks and we can also proceed to add the final 
-Multi-Layer Perceptron classification "head". Apart from a stack of `Dense`
+The main part of our model is now complete. We can stack multiple of those
+`transformer_encoder` blocks and we can also proceed to add the final
+Multi-Layer Perceptron classification head. Apart from a stack of `Dense`
 layers, we need to reduce the output tensor of the `TransformerEncoder` part of
-our model, down to a vector of features for each data point in the current 
-batch. A common way to achieve this is to use some sort of pooling layer. For 
+our model down to a vector of features for each data point in the current
+batch. A common way to achieve this is to use a pooling layer. For
 this example, a `GlobalAveragePooling1D` layer is sufficient.
-
-Feel free to experiment with different pooling layers if you wish, 
-encorporating domain expertise.
-
 """
 
 
@@ -163,7 +124,7 @@ def build_model(
 
 
 """
-## Training and Evaluation
+## Train and evaluate
 """
 
 input_shape = x_train.shape[1:]
@@ -204,15 +165,10 @@ model.evaluate(x_test, y_test, verbose=1)
 """
 ## Conclusions
 
-In about 110-120 epochs (25s each on google colab), the model reaches a training
-sparse categorical accuracy of ~0.95, validation accuracy of ~84 and a testing 
-accuracy of ~85, without much hyperparameter tuning. And that is for a model 
+In about 110-120 epochs (25s each on Colab), the model reaches a training
+accuracy of ~0.95, validation accuracy of ~84 and a testing
+accuracy of ~85, without hyperparameter tuning. And that is for a model
 with less than 100k parameters. Of course, parameter count and accuracy could be
-improved by a hyperparameter search and a more sophisticated learning rate 
-schedule, or a different optimizer, but the 
-[Time Series Classification from Scratch](
-    https://keras.io/examples/timeseries/timeseries_classification_from_scratch
-) keras example which uses convolutional and batch normalization layers, 
-contains a model that reaches > 90% test accuracy with just 25k parameters.
-
+improved by a hyperparameter search and a more sophisticated learning rate
+schedule, or a different optimizer.
 """
