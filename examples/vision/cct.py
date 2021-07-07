@@ -365,14 +365,15 @@ plt.show()
 """
 The CCT model we just trained has just **0.4 million** parameters, and it gets us to
 ~78% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
-well. This means we can train this network for longers (perhaps with a bit more
+well. This means we can train this network for longer (perhaps with a bit more
 regularization) and may obtain even better performance. This performance can further be
 improved by additional recipes like cosine decay learning rate schedule, other data augmentation
 techniques like [AutoAugment](https://arxiv.org/abs/1805.09501),
 [MixUp](https://arxiv.org/abs/1710.09412) or
-[Cutmix](https://arxiv.org/abs/1905.04899. The authors also present a number of
+[Cutmix](https://arxiv.org/abs/1905.04899). With these modifications, the authors present
+95.1% top-1 accuracy on the CIFAR-10 dataset. The authors also present a number of
 experiments to study how the number of convolution blocks, Transformers layers, etc.
-affect the final performance.
+affect the final performance of CCTs.
 
 For a comparison, a ViT model takes about **4.7 million** parameters and **100
 epochs** of training to reach a top-1 accuracy of 78.22% on the CIFAR-10 dataset. You can
