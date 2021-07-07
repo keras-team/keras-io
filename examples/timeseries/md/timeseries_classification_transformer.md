@@ -1,7 +1,6 @@
-
 # Timeseries classification with a Transformer model
 
-**Authors:** [Theodoros Ntakouris](https://github.com/ntakouris)<br>
+**Author:** [Theodoros Ntakouris](https://github.com/ntakouris)<br>
 **Date created:** 2021/06/25<br>
 **Last modified:** 2021/06/25<br>
 

@@ -1,6 +1,6 @@
 """
 Title: Timeseries classification with a Transformer model
-Authors: [Theodoros Ntakouris](https://github.com/ntakouris)
+Author: [Theodoros Ntakouris](https://github.com/ntakouris)
 Date created: 2021/06/25
 Last modified: 2021/06/25
 Description: This notebook demonstrates how to do timeseries classification using a Transformer model.
