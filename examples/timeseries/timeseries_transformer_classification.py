@@ -108,7 +108,7 @@ def build_model(
     num_transformer_blocks,
     mlp_units,
     dropout=0,
-    mlp_dropout=0
+    mlp_dropout=0,
 ):
     inputs = keras.Input(shape=input_shape)
     x = inputs
@@ -147,9 +147,7 @@ model.compile(
 )
 model.summary()
 
-callbacks = [
-    keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
-]
+callbacks = [keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)]
 
 model.fit(
     x_train,
