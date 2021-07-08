@@ -908,7 +908,7 @@ Our `GraphConvLayer` performs the following steps:
 1. **Prepare**: The input node representations are processed using a FFN to produce a *message*. You can simplify
 the processing by only applying linear transformation to the representations.
 2. **Aggregate**: The messages of the neighbours of each node are aggregated with
-respect to the `edge_weigts` using a *permutation invariant* pooling operation, such as *sum*, *mean*, and *max*,
+respect to the `edge_weights` using a *permutation invariant* pooling operation, such as *sum*, *mean*, and *max*,
 to prepare a single aggregated message for each node. See, for example, [tf.math.unsorted_segment_sum](https://www.tensorflow.org/api_docs/python/tf/math/unsorted_segment_sum)
 APIs used to aggregate neighbour messages.
 3. **Update**: The `node_repesentations` and `aggregated_messages`—both of shape `[num_nodes, representation_dim]`—
