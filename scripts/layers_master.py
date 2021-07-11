@@ -49,6 +49,8 @@ LAYERS_MASTER = {
                 'tensorflow.keras.initializers.Ones',
                 'tensorflow.keras.initializers.GlorotNormal',
                 'tensorflow.keras.initializers.GlorotUniform',
+                'tensorflow.keras.initializers.HeNormal',
+                'tensorflow.keras.initializers.HeUniform',
                 'tensorflow.keras.initializers.Identity',
                 'tensorflow.keras.initializers.Orthogonal',
                 'tensorflow.keras.initializers.Constant',
