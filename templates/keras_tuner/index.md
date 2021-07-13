@@ -11,7 +11,7 @@ experiment with new search algorithms.
 ---
 ## Quick links
 
-* [Getting started with KerasTuner](/guides/keras_tuner/getting_started)
+* [Getting started with KerasTuner](/guides/keras_tuner/getting_started/)
 * [KerasTuner developer guides](/guides/keras_tuner/)
 * [KerasTuner API reference](/api/keras_tuner/)
 
@@ -37,7 +37,7 @@ You can also check out other versions in our
 Import KerasTuner and TensorFlow:
 
 ```python
-import kerastuner as kt
+import keras_tuner as kt
 from tensorflow import keras
 ```
 
@@ -73,7 +73,7 @@ tuner.search(x_train, y_train, epochs=5, validation_data=(x_val, y_val))
 best_model = tuner.get_best_models()[0]
 ```
 
-To learn more about KerasTuner, check out [this starter guide](/keras-tuner/getting_started).
+To learn more about KerasTuner, check out [this starter guide](/guides/keras_tuner/getting_started/).
 
 
 ---

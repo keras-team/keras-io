@@ -49,6 +49,8 @@ LAYERS_MASTER = {
                 'tensorflow.keras.initializers.Ones',
                 'tensorflow.keras.initializers.GlorotNormal',
                 'tensorflow.keras.initializers.GlorotUniform',
+                'tensorflow.keras.initializers.HeNormal',
+                'tensorflow.keras.initializers.HeUniform',
                 'tensorflow.keras.initializers.Identity',
                 'tensorflow.keras.initializers.Orthogonal',
                 'tensorflow.keras.initializers.Constant',
@@ -274,8 +276,8 @@ LAYERS_MASTER = {
             'toc': True,
             'children': [
                 {
-                    'path': 'core_preprocessing_layers/',
-                    'title': 'Core preprocessing layers',
+                    'path': 'text/',
+                    'title': 'Text preprocessing',
                     'toc': True,
                     'children': [
                         {
@@ -283,16 +285,28 @@ LAYERS_MASTER = {
                             'title': 'TextVectorization layer',
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.TextVectorization']
                         },
+                    ]
+                },
+                {
+                    'path': 'numerical/',
+                    'title': 'Numerical features preprocessing layers',
+                    'toc': True,
+                    'children': [
                         {
                             'path': 'normalization',
                             'title': 'Normalization layer',
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.Normalization']
                         },
+                        {
+                            'path': 'discretization',
+                            'title': 'Discretization layer',
+                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Discretization'],
+                        },
                     ]
                 },
                 {
                     'path': 'categorical/',
-                    'title': 'Categorical data preprocessing layers',
+                    'title': 'Categorical features preprocessing layers',
                     'toc': True,
                     'children': [
                         {
@@ -306,11 +320,6 @@ LAYERS_MASTER = {
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.Hashing'],
                         },
                         {
-                            'path': 'discretization',
-                            'title': 'Discretization layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Discretization'],
-                        },
-                        {
                             'path': 'string_lookup',
                             'title': 'StringLookup layer',
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.StringLookup'],
@@ -320,16 +329,11 @@ LAYERS_MASTER = {
                             'title': 'IntegerLookup layer',
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.IntegerLookup'],
                         },
-                        {
-                            'path': 'category_crossing',
-                            'title': 'CategoryCrossing layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.CategoryCrossing'],
-                        },
                     ]
                 },
                 {
                     'path': 'image_preprocessing/',
-                    'title': 'Image preprocessing & augmentation layers',
+                    'title': 'Image preprocessing layers',
                     'toc': True,
                     'children': [
                         {
@@ -347,6 +351,13 @@ LAYERS_MASTER = {
                             'title': 'CenterCrop layer',
                             'generate': ['tensorflow.keras.layers.experimental.preprocessing.CenterCrop'],
                         },
+                    ]
+                },
+                {
+                    'path': 'image_augmentation/',
+                    'title': 'Image augmentation layers',
+                    'toc': True,
+                    'children': [
                         {
                             'path': 'random_crop',
                             'title': 'RandomCrop layer',

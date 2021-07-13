@@ -13,7 +13,7 @@
 ---
 ## Introduction
 
-The `Tuner` class at `kerastuner.engine.tuner.Tuner` can be subclassed to
+The `Tuner` class at `keras_tuner.engine.tuner.Tuner` can be subclassed to
 support advanced uses such as:
 
 * Custom training loops (GANs, reinforement learning, etc.)
@@ -21,8 +21,8 @@ support advanced uses such as:
 data augmentation, test time augmentation, etc.)
 
 This tutorial will not cover subclassing to support non-Keras models. To
-accomplish this, you can subclass the `kerastuner.engine.base_tuner.BaseTuner`
-class (See `kerastuner.tuners.sklearn.Sklearn` for an example).
+accomplish this, you can subclass the `keras_tuner.engine.base_tuner.BaseTuner`
+class (See `keras_tuner.tuners.sklearn.Sklearn` for an example).
 
 ---
 ## Understanding the search process
@@ -101,7 +101,7 @@ class MyTuner(kt.Tuner):
 
 
 ```python
-import kerastuner as kt
+import keras_tuner as kt
 import tensorflow as tf
 import numpy as np
 
@@ -222,17 +222,17 @@ best_model = tuner.get_best_models()[0]
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 01s]
-loss: 2.20495867729187
+Trial 2 Complete [00h 00m 00s]
+loss: 2.2953741550445557
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best loss So Far: 2.20495867729187
-Total elapsed time: 00h 00m 02s
+Best loss So Far: 2.294417381286621
+Total elapsed time: 00h 00m 01s
 INFO:tensorflow:Oracle triggered exit
-{'conv_layers': 3, 'filters_0': 12, 'kernel_size_0': 4, 'pooling0': 'avg', 'filters_1': 28, 'kernel_size_1': 4, 'pooling1': 'max', 'filters_2': 16, 'kernel_size_2': 3, 'pooling2': 'max', 'global_pooling': 'avg', 'optimizer': 'sgd', 'batch_size': 96, 'learning_rate': 0.003886450625081135}
+{'conv_layers': 2, 'filters_0': 12, 'kernel_size_0': 4, 'pooling0': 'max', 'filters_1': 16, 'kernel_size_1': 4, 'pooling1': 'avg', 'filters_2': 20, 'kernel_size_2': 4, 'pooling2': 'avg', 'global_pooling': 'avg', 'optimizer': 'adam', 'batch_size': 64, 'learning_rate': 0.001}
 
 ```
 </div>
