@@ -2,7 +2,7 @@
 Title: Writing your own callbacks
 Authors: Rick Chao, Francois Chollet
 Date created: 2019/03/20
-Last modified: 2020/04/15
+Last modified: 2020/07/12
 Description: Complete guide to writing new Keras callbacks.
 """
 """
@@ -209,10 +209,14 @@ epoch. Example includes the loss and mean absolute error.
 
 class LossAndErrorPrintingCallback(keras.callbacks.Callback):
     def on_train_batch_end(self, batch, logs=None):
-        print("For batch {}, loss is {:7.2f}.".format(batch, logs["loss"]))
+        print(
+            "Up to batch {}, the average loss is {:7.2f}.".format(batch, logs["loss"])
+        )
 
     def on_test_batch_end(self, batch, logs=None):
-        print("For batch {}, loss is {:7.2f}.".format(batch, logs["loss"]))
+        print(
+            "Up to batch {}, the average loss is {:7.2f}.".format(batch, logs["loss"])
+        )
 
     def on_epoch_end(self, epoch, logs=None):
         print(
