@@ -1,30 +1,30 @@
 """
-Title: Conditional GANs
+Title: Conditional GAN
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/07/13
 Last modified: 2021/07/15
 Description: Training a GAN conditioned on class labels to generate handwritten digits.
 """
 """
-Generative Adversarial Networks (GANs) let us generate novel samples from noise, adapt
-one domain into another, and so on. For the first case, the noise is generally sampled
-from a normal distribution and then it goes through a series of transformations that turn
-the noise into something plausible (image, video, audio, etc.). Now, what if we wanted
-to generate novel hand-written digits using a GAN and *condition* its outputs on the
-class of digit we want to generate i.e. zero, one, two, three, and so on?
-[Vanilla DCGAN](https://arxiv.org/abs/1511.06434) won't allow us to achieve this because
-it does have that conditional aspect in its setup.
+Generative Adversarial Networks (GANs) let us generate novel image data, video data,
+or audio data from a random input. Typically, the random input is sampled
+from a normal distribution, before going through a series of transformations that turn
+it into something plausible (image, video, audio, etc.).
 
-In this example, we'll be building a **Conditional GAN** that can generate handwritten
-digits with respect to a given class label. We'll be using the MNIST dataset for this
-purpose. But before we proceed let's try to understand why Conditional GANs might be
-useful in the first place:
+However, a simple [DCGAN](https://arxiv.org/abs/1511.06434) doesn't let us control
+the appearance (e.g. class) of the samples we're generating. For instance,
+with a GAN that generates MNIST handwritten digits, a simple DCGAN wouldn't let us
+choose the class of digits we're generating.
+To be able to control what we generate, we need to _condition_ the GAN output
+on a semantic input, such as the class of an image.
 
-* Consider you are dealing with an
-[imbalanced image dataset](https://developers.google.com/machine-learning/data-prep/construct/sampling-splitting/imbalanced-data).
-Instead of trying out different forms of sampling, your team decided to simply gather a
-few more examples for the skewed class to balance the dataset. Data collection can be a
-costly process on its own. On the other hand, you could train a Conditional GAN and use
+In this example, we'll build a **Conditional GAN** that can generate MNIST handwritten
+digits conditioned on a given class. Such a model can have various useful applications:
+
+* let's say you are dealing with an
+[imbalanced image dataset](https://developers.google.com/machine-learning/data-prep/construct/sampling-splitting/imbalanced-data),
+and you'd like to gather more examples for the skewed class to balance the dataset.
+Data collection can be a costly process on its own. You could instead train a Conditional GAN and use
 it to generate novel images for the class that needs balancing.
 * Since the generator learns to associate the generated samples with the class labels,
 its representations can also be used for [other downstream tasks](https://arxiv.org/abs/1809.11096).
@@ -92,15 +92,13 @@ print(f"Shape of training images: {all_digits.shape}")
 print(f"Shape of training labels: {all_labels.shape}")
 
 """
-## Calculating the channel dimensions for our GAN
+## Calculating the number of input channel for the generator and discriminator
 
-In the unconditional GANs, we first usually start by sampling noise (of some fixed
-dimension) from a normal distribution. But in this case, we also need to account
-for the class labels. To do this, we will add the number of classes to:
-
-* the noise vector dimension of the generator and
-* the number of input channels accepted by the discriminator
- 
+In a regular (unconditional) GAN, we start by sampling noise (of some fixed
+dimension) from a normal distribution. In our case, we also need to account
+for the class labels. We will have to add the number of classes to
+the input channels of the generator (noise input) as well as the discriminator
+(generated image input).
 """
 
 generator_in_channels = latent_dim + num_classes
@@ -111,7 +109,7 @@ print(generator_in_channels, discriminator_in_channels)
 ## Creating the discriminator and generator
 
 The model definitions (`discriminator`, `generator`, and `ConditionalGAN`) have been
-referred from [this example](https://keras.io/guides/customizing_what_happens_in_fit/).
+adapted from [this example](https://keras.io/guides/customizing_what_happens_in_fit/).
 """
 
 # Create the discriminator.
@@ -261,14 +259,14 @@ cond_gan.compile(
 cond_gan.fit(dataset, epochs=20)
 
 """
-## Interploating between classes with the trained generator
+## Interpolating between classes with the trained generator
 """
 
 # We first extract the trained generator from our Conditiona GAN.
 trained_gen = cond_gan.generator
 
 # Choose the number of intermediate images that would be generated in
-# between the interpolation + 2(start and last images).
+# between the interpolation + 2 (start and last images).
 num_interpolation = 9  # @param {type:"integer"}
 
 # Sample noise for the interpolation.
@@ -304,8 +302,9 @@ fake_images = interpolate_class(start_class, end_class)
 
 """
 Here, we first sample noise from a normal distribution and then we repeat that for
-`num_interpolation` times and reshape accordingly. We then distribute it uniformly for
-`num_interpolation` with the label indentities being present in some proportion.
+`num_interpolation` times and reshape the result accordingly.
+We then distribute it uniformly for `num_interpolation`
+with the label indentities being present in some proportion.
 """
 
 fake_images *= 255.0
@@ -315,9 +314,9 @@ imageio.mimsave("animation.gif", converted_images, fps=1)
 embed.embed_file("animation.gif")
 
 """
-We can furhter improve the performance of this model with recipes like
-[WGAN-GP](https://keras.io/examples/generative/wgan_gp). Also, it's good to note that
-conditional generation is widely used in many modern image generation architectures like
+We can further improve the performance of this model with recipes like
+[WGAN-GP](https://keras.io/examples/generative/wgan_gp).
+Conditional generation is also widely used in many modern image generation architectures like
 [VQ-GANs](https://arxiv.org/abs/2012.09841), [DALL-E](https://openai.com/blog/dall-e/),
 etc.
 """
