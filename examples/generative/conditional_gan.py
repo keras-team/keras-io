@@ -9,9 +9,9 @@ Description: Training a GAN conditioned on class labels to generate handwritten 
 Generative Adversarial Networks (GANs) let us generate novel samples from noise, adapt
 one domain into another, and so on. For the first case, the noise is generally sampled
 from a normal distribution and then it goes through a series of transformations that turn
-the noise into something plausible (image, video, audio, etc.). Now, if we wanted
-to generate novel hand-written digits using a GAN. But we also wanted to *condition* its
-outputs on the class of digit we want to generate i.e. zero, one, two, three, and so on.
+the noise into something plausible (image, video, audio, etc.). Now, what if we wanted
+to generate novel hand-written digits using a GAN and *condition* its outputs on the
+class of digit we want to generate i.e. zero, one, two, three, and so on?
 [Vanilla DCGAN](https://arxiv.org/abs/1511.06434) won't allow us to achieve this because
 it does have that conditional aspect in its setup.
 
@@ -95,7 +95,7 @@ print(f"Shape of training labels: {all_labels.shape}")
 ## Calculating the channel dimensions for our GAN
 
 In the unconditional GANs, we first usually start by sampling noise (of some fixed
-dimension) from a normal distribution. But in this case, we also need to need to account
+dimension) from a normal distribution. But in this case, we also need to account
 for the class labels. To do this, we will add the number of classes to:
 
 * the noise vector dimension of the generator and
