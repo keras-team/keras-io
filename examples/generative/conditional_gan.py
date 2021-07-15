@@ -1,8 +1,8 @@
 """
-Title: Conditional GANs.
+Title: Conditional GANs
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/07/13
-Last modified: 2021/07/13
+Last modified: 2021/07/15
 Description: Training a GAN conditioned on class labels to generate handwritten digits.
 """
 """
@@ -157,6 +157,12 @@ class ConditionalGAN(keras.Model):
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
+        self.gen_loss_tracker = keras.metrics.Mean(name="generator_loss")
+        self.disc_loss_tracker = keras.metrics.Mean(name="discriminator_loss")
+
+    @property
+    def metrics(self):
+        return [self.gen_loss_tracker, self.disc_loss_tracker]
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super(ConditionalGAN, self).compile()
@@ -229,7 +235,14 @@ class ConditionalGAN(keras.Model):
             g_loss = self.loss_fn(misleading_labels, predictions)
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
-        return {"d_loss": d_loss, "g_loss": g_loss}
+
+        # Monitor loss.
+        self.gen_loss_tracker.update_state(g_loss)
+        self.disc_loss_tracker.update_state(d_loss)
+        return {
+            "g_loss": self.gen_loss_tracker.result(),
+            "d_loss": self.disc_loss_tracker.result(),
+        }
 
 
 """
