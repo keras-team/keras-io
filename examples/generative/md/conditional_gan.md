@@ -1,4 +1,3 @@
-
 # Conditional GAN
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
