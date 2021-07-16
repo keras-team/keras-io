@@ -36,7 +36,7 @@ Following are the references used for developing this example:
 
 If you need a refresher on GANs, you can refer to the "Generative adversarial networks"
 section of
-[this resource](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-12/r-3/232). 
+[this resource](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-12/r-3/232).
 
 This example requires TensorFlow 2.5 or higher, as well as TensorFlow Docs, which can be
 installed using the following command:
@@ -67,6 +67,7 @@ batch_size = 64
 num_channels = 1
 num_classes = 10
 image_size = 28
+latent_dim = 128
 
 """
 ## Loading the MNIST dataset and preprocessing it
