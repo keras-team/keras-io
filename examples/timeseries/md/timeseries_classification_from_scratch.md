@@ -2,7 +2,7 @@
 
 **Author:** [hfawaz](https://github.com/hfawaz/)<br>
 **Date created:** 2020/07/21<br>
-**Last modified:** 2020/08/21<br>
+**Last modified:** 2020/07/16<br>
 **Description:** Training a timeseries classifier from scratch on the FordA dataset from the UCR/UEA archive.
 
 
@@ -88,7 +88,7 @@ plt.close()
 ---
 ## Standardize the data
 
-Our timeseries are already in a single length (176). However, their values are
+Our timeseries are already in a single length (500). However, their values are
 usually in various ranges. This is not ideal for a neural network;
 in general we should seek to make the input values normalized.
 For this specific dataset, the data is already z-normalized: each timeseries sample
