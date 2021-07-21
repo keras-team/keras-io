@@ -3,20 +3,19 @@ Title: Involutional Neural Networks
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2021/07/21
 Last modified: 2021/07/21
-Description: Deep dive into spatially specific and channel agnostic
-    **Involution** kernels.
+Description: Deep dive into spatially specific and channel agnostic **Involution** kernels.
 """
 
 """
 # Introduction
 
-This example demonstrates a minimal implementation of 
-[Involution: Inverting the Inherence of Convolution for Visual 
-Recognition](https://arxiv.org/abs/2103.06255) by Li et. al. We will 
-build the Involution Layer as a `tf.keras.layers.Layer` and try 
-building an image classification model on top of it. The idea behind 
-this layer is to invert the inherent properties of Convolution. Where 
-convolution is spatial-agnostic and channel-specific, involution is 
+This example demonstrates a minimal implementation of
+[Involution: Inverting the Inherence of Convolution for Visual
+Recognition](https://arxiv.org/abs/2103.06255) by Li et. al. We will
+build the Involution Layer as a `tf.keras.layers.Layer` and try
+building an image classification model on top of it. The idea behind
+this layer is to invert the inherent properties of Convolution. Where
+convolution is spatial-agnostic and channel-specific, involution is
 spatial-specific and channel-agnostic.
 """
 
@@ -26,6 +25,7 @@ spatial-specific and channel-agnostic.
 
 # set seed for reproducibility
 from tensorflow.random import set_seed
+
 set_seed(42)
 from tensorflow import multiply
 from tensorflow import identity
@@ -53,48 +53,48 @@ import matplotlib.pyplot as plt
 """
 # Convolution
 
-Convolution remains the building mainstay of deep neural networks. To 
-understand **Involution** it becomes necessary to talk about the 
+Convolution remains the building mainstay of deep neural networks. To
+understand **Involution** it becomes necessary to talk about the
 **Convolution** operation.
 
 ![Imgur](https://i.imgur.com/MSKLsm5.png)
 
-Consider an input tensor $X \in \mathbb{R}^{H \times W \times 
-C_{in}}$. We take a collection of $C_{out}$ convolution kernels each 
-of shape $(K \times K \times C_{in})$. With the multiply-add 
+Consider an input tensor $X \in \mathbb{R}^{H \times W \times
+C_{in}}$. We take a collection of $C_{out}$ convolution kernels each
+of shape $(K \times K \times C_{in})$. With the multiply-add
 operation between the input tensor and the kernels we obtain an
 output tensor $Y \in \mathbb{R}^{H \times W \times C_{out}}$.
 
-In the diagram above we have replaced $C_{out}$ with $3$. This makes 
-the output tensor of shape $H \times W \times 3$. One can notice 
-that the convoltuion kernel does not depend on the spatial position 
+In the diagram above we have replaced $C_{out}$ with $3$. This makes
+the output tensor of shape $H \times W \times 3$. One can notice
+that the convoltuion kernel does not depend on the spatial position
 of the input tensor which makes is **spatially agnostic**, on the
-other hand each channel in the output tensor is based on a specific 
+other hand each channel in the output tensor is based on a specific
 convolution filter which makes is **channel specific**.
 """
 
 """
 # Involution
 
-In the paper the authors have tried inverting the properties of 
-Convolution and named of operation Involution. The idea was to have 
+In the paper the authors have tried inverting the properties of
+Convolution and named of operation Involution. The idea was to have
 kernels that are **spatially specific** and **channel agnostic**.
 
-This brings to a problem, with a fixed number of involution kernels 
-we will not be able to process variable resolution input tensors. 
-To solve this, we would need to condition the generation of the 
+This brings to a problem, with a fixed number of involution kernels
+we will not be able to process variable resolution input tensors.
+To solve this, we would need to condition the generation of the
 kernel based on each pixel of the input tensor.
 
 $$
 \phi{(X_{i,j})}=W_{1}\sigma{(W_{0}X_{i,j})}
 $$
 
-Where 
-- $\phi$ is the mapping between $\mathbb{R}^{C}$ to 
+Where:
+- $\phi$ is the mapping between $\mathbb{R}^{C}$ to
     $\mathbb{R}^{K \times K \times G}$.
-- $W_{0} \in \mathbb{R}^{\frac{C}{r} \times C}$ reduces the tensor 
+- $W_{0} \in \mathbb{R}^{\frac{C}{r} \times C}$ reduces the tensor
     with a reduction size of $r$.
-- $W_{1} \in \mathbb{R}^{K \times K \times G \times \frac{C}{r}}$ 
+- $W_{1} \in \mathbb{R}^{K \times K \times G \times \frac{C}{r}}$
     expands the tensor.
 - $\sigma$ is the combination of batch normalization and relu.
 
@@ -104,8 +104,8 @@ Where
 
 class Involution(Layer):
     def __init__(
-        self, channel, group_number, kernel_size, stride,
-            reduction_ratio, name):
+        self, channel, group_number, kernel_size, stride, reduction_ratio, name
+    ):
         super().__init__(name=name)
 
         # capping the lower bound of reduction_ratio
@@ -114,9 +114,7 @@ class Involution(Layer):
         ), "reduction ratio must be less than or equal to channel size"
 
         # capping the higher bound of group_number
-        assert (
-            group_number < channel
-        ), "group number must be smaller than channel size"
+        assert group_number < channel, "group number must be smaller than channel size"
 
         assert (
             channel % group_number == 0
@@ -132,8 +130,7 @@ class Involution(Layer):
         # define layer o
         # this layer is important is stride is greater than 1
         self.o = (
-            AveragePooling2D(pool_size=self.stride, 
-                strides=self.stride, padding="same")
+            AveragePooling2D(pool_size=self.stride, strides=self.stride, padding="same")
             if self.stride > 1
             else identity
         )
@@ -141,8 +138,7 @@ class Involution(Layer):
         # define the kernel generation layer
         self.kernel_gen = Sequential(
             [
-                Conv2D(filters=self.channel // self.reduction_ratio,
-                    kernel_size=1),
+                Conv2D(filters=self.channel // self.reduction_ratio, kernel_size=1),
                 BatchNormalization(),
                 ReLU(),
                 Conv2D(
@@ -222,35 +218,31 @@ input_tensor = normal((32, 256, 256, 3))
 
 # with stride 1
 output_tensor, _ = Involution(
-    channel=3, group_number=1, kernel_size=5, stride=1,
-    reduction_ratio=1, name="inv_1"
+    channel=3, group_number=1, kernel_size=5, stride=1, reduction_ratio=1, name="inv_1"
 )(input_tensor)
 print(f"with stride 1 ouput shape: {output_tensor.shape}")
 
 # with stride 2
 output_tensor, _ = Involution(
-    channel=3, group_number=1, kernel_size=5, stride=2,
-    reduction_ratio=1, name="inv_2"
+    channel=3, group_number=1, kernel_size=5, stride=2, reduction_ratio=1, name="inv_2"
 )(input_tensor)
 print(f"with stride 2 ouput shape: {output_tensor.shape}")
 
 # with channel 16 and reduction ratio 2
 output_tensor, _ = Involution(
-    channel=16, group_number=1, kernel_size=5, stride=1,
-    reduction_ratio=2, name="inv_3"
+    channel=16, group_number=1, kernel_size=5, stride=1, reduction_ratio=2, name="inv_3"
 )(input_tensor)
 print(
-    "with channel 16 and reduction ratio 2 ouput shape: {}"
-    .format(output_tensor.shape)
+    "with channel 16 and reduction ratio 2 ouput shape: {}".format(output_tensor.shape)
 )
 
 """
 # Image Classification
 
-In this section, we will build an image classifier model. There will 
+In this section, we will build an image classifier model. There will
 be two models one with convolutions and the other with involutions.
 
-The image classification model is heavily inspired by [Convolutional 
+The image classification model is heavily inspired by [Convolutional
 Neural Network (CNN)](https://www.tensorflow.org/tutorials/images/cnn)
 tutorial from Google.
 """
@@ -261,21 +253,16 @@ tutorial from Google.
 
 # load the CIFAR10 dataset
 print("[INFO] loading the CIFAR10 dataset...")
-(train_images, train_labels), (test_images, test_labels) = (cifar10
-    .load_data())
+(train_images, train_labels), (test_images, test_labels) = cifar10.load_data()
 
 # normalize pixel values to be between 0 and 1
-(train_images, test_images) = (train_images / 255.0, 
-    test_images / 255.0)
+(train_images, test_images) = (train_images / 255.0, test_images / 255.0)
 
 # batch the dataset
 train_ds = (
-    Dataset.from_tensor_slices((train_images, train_labels))
-        .shuffle(256)
-        .batch(256)
+    Dataset.from_tensor_slices((train_images, train_labels)).shuffle(256).batch(256)
 )
-test_ds = (Dataset.from_tensor_slices((test_images, test_labels))
-    .batch(256))
+test_ds = Dataset.from_tensor_slices((test_images, test_labels)).batch(256)
 
 """
 ## Visualise the data
@@ -337,8 +324,7 @@ conv_model.compile(
 
 # train the model
 print("conv model training...")
-conv_hist = conv_model.fit(train_ds, epochs=20,
-    validation_data=test_ds)
+conv_hist = conv_model.fit(train_ds, epochs=20, validation_data=test_ds)
 
 """
 ## Involutional Neural Network
@@ -349,20 +335,17 @@ print("building the involution model...")
 
 inputs = Input((32, 32, 3))
 x, _ = Involution(
-    channel=3, group_number=1, kernel_size=3, stride=1,
-    reduction_ratio=2, name="inv_1"
+    channel=3, group_number=1, kernel_size=3, stride=1, reduction_ratio=2, name="inv_1"
 )(inputs)
 x = ReLU()(x)
 x = MaxPooling2D((2, 2))(x)
 x, _ = Involution(
-    channel=3, group_number=1, kernel_size=3, stride=1,
-    reduction_ratio=2, name="inv_2"
+    channel=3, group_number=1, kernel_size=3, stride=1, reduction_ratio=2, name="inv_2"
 )(x)
 x = ReLU()(x)
 x = MaxPooling2D((2, 2))(x)
 x, _ = Involution(
-    channel=3, group_number=1, kernel_size=3, stride=1,
-    reduction_ratio=2, name="inv_3"
+    channel=3, group_number=1, kernel_size=3, stride=1, reduction_ratio=2, name="inv_3"
 )(x)
 x = ReLU()(x)
 x = Flatten()(x)
@@ -392,20 +375,20 @@ a few pointers.
 """
 ## Parameters
 
-One can see that with a similar architecture the parameters in a 
-CNN is much more than that of an INN (Involutional Neural Network). 
+One can see that with a similar architecture the parameters in a
+CNN is much more than that of an INN (Involutional Neural Network).
 We are destined to learn a lot less from a similar architecture.
 """
 
-conv_model.summary()
+print(conv_model.summary())
 
-inv_model.summary()
+print(inv_model.summary())
 
 """
 ## Loss and Accuracy Plots
 
-Here, the loss and the accuracy plots demonstrate that INNs are slow learners (with lower
-parameters).
+Here, the loss and the accuracy plots demonstrate that INNs are
+slow learners (with lower parameters).
 """
 
 plt.figure(figsize=(20, 5))
@@ -437,11 +420,11 @@ plt.show()
 """
 # Visualizing Involution Kernels
 
-In the paper the authors have visualised the kernels. They also say 
-that **self-attention** is a complex and specific form of 
-**involution**. With the visualisation of the kernels we get a heat 
-map of the input tensor which can be losely translated to an 
-attention map of the input. The learned heat map indeed looks quite 
+In the paper the authors have visualised the kernels. They also say
+that **self-attention** is a complex and specific form of
+**involution**. With the visualisation of the kernels we get a heat
+map of the input tensor which can be losely translated to an
+attention map of the input. The learned heat map indeed looks quite
 promising to be called attention maps.
 """
 
@@ -452,9 +435,7 @@ vis_model = Model(inv_model.input, outputs)
 fig, axes = plt.subplots(nrows=10, ncols=4, figsize=(10, 30))
 
 for ax, test_image in zip(axes, test_images[:10]):
-    (inv1_out, inv2_out, inv3_out) = vis_model.predict(
-        test_image[None, ...]
-    )
+    (inv1_out, inv2_out, inv3_out) = vis_model.predict(test_image[None, ...])
 
     _, inv1_kernel = inv1_out
     _, inv2_kernel = inv2_out
@@ -479,19 +460,19 @@ for ax, test_image in zip(axes, test_images[:10]):
 """
 # Conclusion and Thoughts
 
-In the example the main focus was to build an `Involution` layer 
-which can be used off the shelf. The comparisons are based on a 
-specific task, feel free to use the layer for different tasks and 
-report your comparisons. 
+In the example the main focus was to build an `Involution` layer
+which can be used off the shelf. The comparisons are based on a
+specific task, feel free to use the layer for different tasks and
+report your comparisons.
 
-According to me the key take away of the layer is its uncanny 
-relationship with that of self-attention. The intuition of spatial 
-specific and channel spefic makes sense in a lot of tasks and this 
+According to me the key take away of the layer is its uncanny
+relationship with that of self-attention. The intuition of spatial
+specific and channel spefic makes sense in a lot of tasks and this
 layer should be taken forward.
 
 Moving forward one can:
-- Experiment with the various hyperparameters of the involution layer
-- Build different models with the involution layer
-- Try building a different $\phi$ which maps from $\mathbb{R}^{C}$ 
-    to $\mathbb{R}^{K \times K \times G}$
+- Experiment with the various hyperparameters of the involution layer.
+- Build different models with the involution layer.
+- Try building a different $\phi$ which maps from $\mathbb{R}^{C}$
+    to $\mathbb{R}^{K \times K \times G}$.
 """
