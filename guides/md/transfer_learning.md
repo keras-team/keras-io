@@ -34,7 +34,7 @@ Transfer learning is usually done for tasks where your dataset has too little da
  train a full-scale model from scratch.
 
 The most common incarnation of transfer learning in the context of deep learning is the
- following worfklow:
+ following workflow:
 
 1. Take layers from a previously trained model.
 2. Freeze them, so as to avoid destroying any of the information they contain during
