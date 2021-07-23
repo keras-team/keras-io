@@ -129,7 +129,7 @@ multi-GPU training, with the main difference being that you will use `MultiWorke
 Importantly, you should:
 
 - Make sure your dataset is so configured that all workers in the cluster are able to efficiently pull data from it (e.g. if your cluster in on GCP, it's a good idea to host your data on GCS).
-- Make sure your training is fault-tolerant (e.g. by configuring a `ModelCheckpoint` callback).
+- Make sure your training is fault-tolerant (e.g. by configuring a `BackupAndRestore` callback).
 
 
 ---
@@ -493,51 +493,40 @@ model.fit(dataset, epochs=10, validation_data=val_dataset)
 
 ---
 
-### How can I regularly save Keras models during training?
+### How can I ensure my training with Keras can withstand program interruptions?
 
 To ensure the ability to recover from an interrupted training run at any time (fault tolerance),
-you should use a callback that regularly saves your model to disk. You should also set up
-your code to optionally reload that model at startup. Here's a simple example.
+you should use a `tf.keras.callbacks.experimental.BackupAndRestore` that regularly saves your training progress,
+including the epoch number and weights, to disk, and loads it the next time you call `Model.fit`.
 
 ```python
-import os
+import tensorflow as tf
 from tensorflow import keras
 
-# Prepare a directory to store all the checkpoints.
-checkpoint_dir = './ckpt'
-if not os.path.exists(checkpoint_dir):
-    os.makedirs(checkpoint_dir)
+class InterruptingCallback(keras.callbacks.Callback):
+  """A callback to intentionally introduce interruption to training."""
+  def on_epoch_end(self, epoch, log=None):
+    if epoch == 15:
+      raise RuntimeError('Interruption')
 
+model = keras.Sequential([keras.layers.Dense(10)])
+optimizer = keras.optimizers.SGD()
+model.compile(optimizer, loss="mse")
 
-def make_model():
-    # Create a new linear regression model.
-    model = keras.Sequential([keras.layers.Dense(1)])
-    model.compile(optimizer='adam', loss='mse')
-    return model
+x = tf.random.uniform((24, 10))
+y = tf.random.uniform((24,))
+dataset = tf.data.Dataset.from_tensor_slices((x, y)).repeat().batch(2)
 
-
-def make_or_restore_model():
-    # Either restore the latest model, or create a fresh one
-    # if there is no checkpoint available.
-    checkpoints = [checkpoint_dir + '/' + name
-                   for name in os.listdir(checkpoint_dir)]
-    if checkpoints:
-        latest_checkpoint = max(checkpoints, key=os.path.getctime)
-        print('Restoring from', latest_checkpoint)
-        return keras.models.load_model(latest_checkpoint)
-    print('Creating a new model')
-    return make_model()
-
-
-model = make_or_restore_model()
-callbacks = [
-    # This callback saves a SavedModel every 100 batches.
-    # We include the training loss in the folder name.
-    keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + '/ckpt-loss={loss:.2f}',
-        save_freq=100)
-]
-model.fit(train_data, epochs=10, callbacks=callbacks)
+backup_callback = keras.callbacks.experimental.BackupAndRestore(
+    backup_dir='/tmp/backup')
+try:
+  model.fit(dataset, epochs=20, steps_per_epoch=5, 
+            callbacks=[backup_callback, InterruptingCallback()])
+except RuntimeError:
+  print('***Handling interruption***')
+  # This continues at the epoch where it left off.
+  model.fit(dataset, epochs=20, steps_per_epoch=5, 
+            callbacks=[backup_callback])
 ```
 
 Find out more in the [callbacks documentation](/api/callbacks/).
