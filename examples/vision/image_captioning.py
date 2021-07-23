@@ -386,8 +386,8 @@ class ImageCaptioningModel(keras.Model):
 
     def train_step(self, batch_data):
         batch_img, batch_seq = batch_data
-        loss = 0
-        acc = 0
+        batch_loss = 0
+        batch_acc = 0
 
         # 1. Get image embeddings
         img_embed = self.cnn_model(batch_img)
@@ -413,22 +413,26 @@ class ImageCaptioningModel(keras.Model):
                 )
 
                 # 6. Update loss and accuracy
-                loss += self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-                acc += self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+                caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+                caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
 
-            # 7. Get the list of all the trainable weights
+                # 7. Update the batch loss and batch accuracy
+                batch_loss += caption_loss
+                batch_acc += caption_acc
+
+            # 8. Get the list of all the trainable weights
             train_vars = (
                 self.encoder.trainable_variables + self.decoder.trainable_variables
             )
 
-            # 8. Get the gradients
-            grads = tape.gradient(loss, train_vars)
+            # 9. Get the gradients
+            grads = tape.gradient(caption_loss, train_vars)
 
-            # 9. Update the trainable weights
+            # 10. Update the trainable weights
             self.optimizer.apply_gradients(zip(grads, train_vars))
         
-        loss = loss / float(self.num_captions_per_image)
-        acc = acc / float(self.num_captions_per_image)
+        loss = batch_loss
+        acc = batch_acc / float(self.num_captions_per_image)
 
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
@@ -436,8 +440,8 @@ class ImageCaptioningModel(keras.Model):
 
     def test_step(self, batch_data):
         batch_img, batch_seq = batch_data
-        loss = 0
-        acc = 0
+        batch_loss = 0
+        batch_acc = 0
 
         # 1. Get image embeddings
         img_embed = self.cnn_model(batch_img)
@@ -461,12 +465,16 @@ class ImageCaptioningModel(keras.Model):
                 batch_seq_inp, encoder_out, training=False, mask=mask
             )
 
-            # 5. Update loss and accuracy
-            loss += self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-            acc += self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+            # 6. Update loss and accuracy
+            caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+            caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
 
-        loss = loss / float(self.num_captions_per_image)
-        acc = acc / float(self.num_captions_per_image)
+            # 7. Update the batch loss and batch accuracy
+            batch_loss += caption_loss
+            batch_acc += caption_acc
+
+        loss = batch_loss
+        acc = batch_acc / float(self.num_captions_per_image)
         
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
