@@ -412,7 +412,7 @@ class ImageCaptioningModel(keras.Model):
                     batch_seq_inp, encoder_out, training=True, mask=mask
                 )
 
-                # 6. Update loss and accuracy
+                # 6. Calculate loss and accuracy
                 caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
                 caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
 
@@ -465,7 +465,7 @@ class ImageCaptioningModel(keras.Model):
                 batch_seq_inp, encoder_out, training=False, mask=mask
             )
 
-            # 6. Update loss and accuracy
+            # 6. Calculate loss and accuracy
             caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
             caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
 
