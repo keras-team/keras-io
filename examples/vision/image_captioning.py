@@ -414,7 +414,9 @@ class ImageCaptioningModel(keras.Model):
 
                 # 6. Calculate loss and accuracy
                 caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-                caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+                caption_acc = self.calculate_accuracy(
+                    batch_seq_true, batch_seq_pred, mask
+                )
 
                 # 7. Update the batch loss and batch accuracy
                 batch_loss += caption_loss
@@ -430,7 +432,7 @@ class ImageCaptioningModel(keras.Model):
 
             # 10. Update the trainable weights
             self.optimizer.apply_gradients(zip(grads, train_vars))
-        
+
         loss = batch_loss
         acc = batch_acc / float(self.num_captions_per_image)
 
@@ -475,7 +477,7 @@ class ImageCaptioningModel(keras.Model):
 
         loss = batch_loss
         acc = batch_acc / float(self.num_captions_per_image)
-        
+
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
