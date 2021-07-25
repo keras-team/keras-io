@@ -53,7 +53,7 @@ If your example requires extra dependencies, don't include installation commands
 Instead, mention the dependencies in the text, alongside an example of the pip command to install them, e.g.
 
 
-```
+```md
 This example requires XYZ. You can install it via the following command: `pip install XYZ`
 ```
 
@@ -105,6 +105,7 @@ Never use any "filler" content.
 ### Proofreading
 
 Make sure to proofread your text paragraphs to avoid typos.
+Every sentence should start with a capital letter and should end with a period. This applies to code comments as well.
 
 ### Introduction and conclusion
 
@@ -118,3 +119,45 @@ There should be a conclusion section that recapitulates key takeaways from the e
 
 Do not use any LaTeX notation. Explain math operations with pseudocode.
 If you really must have an equation, then embed it as an image.
+
+### Line length
+
+Keep text lines relatively short (about 80 characters), unless it's a link.
+
+### Markdown links
+
+Each markdown link should fit on a single line, unbroken, like this:
+
+```md
+Here's a link:
+
+[This is the link text](https://github.com/keras-team/keras-io/blob/master/contributor_guide.md)
+```
+
+Do not break the link like this (or in any other way):
+
+```md
+[This is the link text](
+    https://github.com/keras-team/keras-io/blob/master/contributor_guide.md)
+```
+
+### Markdown lists
+
+There should be a line break before the first item in any list, e.g.
+
+This is good:
+
+```md
+Here's a list:
+
+- First item
+- Second item
+```
+
+This is bad:
+
+```md
+Here's a badly formatted list:
+- First item
+- Second item
+```
