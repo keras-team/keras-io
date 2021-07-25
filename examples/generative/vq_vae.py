@@ -11,24 +11,24 @@ VQ-VAE was proposed in
 [Neural Discrete Representation Learning](https://arxiv.org/abs/1711.00937)
 by van der Oord et al. In traditional VAEs, the latent space is continuous and is sampled
 from a Gaussian distribution. It is generally harder to learn such a continuous
-distribution from the perspectives of optimization. VQ-VAEs, on the other hand,
-operate on a discrete latent space making the optimization problem simpler. It does so
+distribution via gradient descent. VQ-VAEs, on the other hand,
+operate on a discrete latent space, making the optimization problem simpler. It does so
 by maintaining a discrete *codebook*. The codebook is developed by
-discretizing/quantizing the distance between continuous embeddings and the encoded
-outputs. These discrete codes are then fed to the decoder as inputs which is trained
-for the final generation.
+discretizing the distance between continuous embeddings and the encoded
+outputs. These discrete code words are then fed to the decoder, which is trained
+to generate reconstructed samples.
 
 For a detailed overview of VQ-VAEs, please refer to the original paper and 
 [this video explanation](https://www.youtube.com/watch?v=VZFVUrYcig0).
 If you need a refresher on VAEs, you can refer to 
-[this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-12/r-3/176).
+[this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-12/).
 VQ-VAEs are one of the main recipes behind [DALL-E](https://openai.com/blog/dall-e/)
 and the idea of a codebook is used in [VQ-GANs](https://arxiv.org/abs/2012.09841).
 
 This example uses references from the
 [official VQ-VAE tutorial](https://github.com/deepmind/sonnet/blob/master/sonnet/examples/vqvae_example.ipynb)
-from DeepMind. To run this example, you'd need TensorFlow 2.5 or higher and TensorFlow
-Probability which can be installed using the command below.
+from DeepMind. To run this example, you will need TensorFlow 2.5 or higher, as well as
+TensorFlow Probability, which can be installed using the command below.
 """
 
 """shell
@@ -50,26 +50,25 @@ import tensorflow as tf
 """
 ## `VectorQuantizer` layer
 
-Here, we will write a custom layer to encapsulate the functionalities of a vector
-quantizer, which is the meat of VQ-VAEs. Consider an output from the encoder having a
-shape of `(batch_size, height, width, num_channels)`. The vector quantizer will first
-flatten this output only keeping the `num_channels` dimension intact. So, the shape would
-become `(batch_size x height x width, num_channels)`. The rationale behind this is to
-treat the total number of channels as the space for the latent embeddings and the
-flattened dimensions are just some examples coming from that space. 
+Here, we will implement a custom layer to encapsulate the vector
+quantizer logic, which is the central component of VQ-VAEs.
+Consider an output from the encoder, with shape `(batch_size, height, width, num_channels)`.
+The vector quantizer will first
+flatten this output, only keeping the `num_channels` dimension intact. So, the shape would
+become `(batch_size * height * width, num_channels)`. The rationale behind this is to
+treat the total number of channels as the space for the latent embeddings.
 
 An embedding table is then initialized to learn a codebook. We measure the L2-normalized
-distance between the flattened encoder outputs and codes of this codebook. We take the
-code that yields the minimum distance and apply one-hot encoding to achieve quantization.
+distance between the flattened encoder outputs and code words of this codebook. We take the
+code that yields the minimum distance, and we apply one-hot encoding to achieve quantization.
 This way, the code yielding the minimum distance to the corresponding encoder output is
-mapped as one and the remaining codes are mapped as zeros. The code below will make this
-idea clearer. 
+mapped as one and the remaining codes are mapped as zeros.
 
 Since the quantization process is not differentiable, we apply a 
 [straight-through estimator](https://www.hassanaskary.com/python/pytorch/deep%20learning/2020/09/19/intuitive-explanation-of-straight-through-estimators.html)
-in between the decoder and the encoder i.e. the decoder gradients are directly propagated
-to the encoder. As the encoder and decoder share same channel space the hope is that the
-decoder gradients will still be meaningful for the encoder.
+in between the decoder and the encoder, so that the decoder gradients are directly propagated
+to the encoder. As the encoder and decoder share the same channel space, the hope is that the
+decoder gradients will still be meaningful to the encoder.
 """
 
 
@@ -78,9 +77,7 @@ class VectorQuantizer(layers.Layer):
         super().__init__(**kwargs)
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
-        self.beta = (
-            beta  # This hyperparameter is best kept between [0.25, 2] as per the paper.
-        )
+        self.beta = beta  # This parameter is best kept between [0.25, 2] as per the paper.
 
         # Initialize the embeddings which we will quantize.
         w_init = tf.random_uniform_initializer()
@@ -104,8 +101,8 @@ class VectorQuantizer(layers.Layer):
         quantized = tf.matmul(encodings, self.embeddings, transpose_b=True)
         quantized = tf.reshape(quantized, input_shape)
 
-        # Calculate vector quantization loss and add that to the layer. You can know more
-        # about adding losses to different layers from here:
+        # Calculate vector quantization loss and add that to the layer. You can learn more
+        # about adding losses to different layers here:
         # https://keras.io/guides/making_new_layers_and_models_via_subclassing/. Check
         # the original paper to get a handle on the formulation of the loss function.
         commitment_loss = self.beta * tf.reduce_mean(
@@ -136,17 +133,17 @@ class VectorQuantizer(layers.Layer):
 **A note on straight-through estimation**:
 
 This line of code does the straight-through estimation part: `quantized = x +
-tf.stop_gradient(quantized - x)`. So, during backpropagation, `(quantized - x)` won't be
-included in the computation graph and whatever the gradients we will have for `quantized`
+tf.stop_gradient(quantized - x)`. During backpropagation, `(quantized - x)` won't be
+included in the computation graph and th gradients obtaind for `quantized`
 will be copied for `inputs`. Thanks to [this video](https://youtu.be/VZFVUrYcig0?t=1393)
-that helped understanding this.  
+for helping me understand this technique.  
 """
 
 """
 ## Encoder and decoder
 
-We will now write the encoder and the decoder for the VQ-VAE. We will keep them small so
-that their capacity is a good fit for the MNIST dataset which we will use to demonstrate
+We will now implement the encoder and the decoder for the VQ-VAE. We will keep them small so
+that their capacity is a good fit for the MNIST dataset, which we will use to demonstrate
 the results. The definitions of the encoder and decoder come from 
 [this example](https://keras.io/examples/generative/vae). 
 """
@@ -182,7 +179,6 @@ def get_vqvae(latent_dim=16, num_embeddings=64):
     encoder = get_encoder(latent_dim)
     decoder = get_decoder(latent_dim)
     inputs = keras.Input(shape=(28, 28, 1))
-
     encoder_outputs = encoder(inputs)
     quantized_latents = vq_layer(encoder_outputs)
     reconstructions = decoder(quantized_latents)
@@ -301,15 +297,13 @@ for test_image, reconstructed_image in zip(test_images, reconstructions_test):
     show_subplot(test_image, reconstructed_image)
 
 """
-These results do not look bad. You are encouraged to play with different hyperparameters
-(especially the number of embeddings and the dimensions of the embeddings) and notice how
-that impacts the results. 
+These results look decent. You are encouraged to play with different hyperparameters
+(especially the number of embeddings and the dimensions of the embeddings) and observe how
+they affect the results. 
 """
 
 """
 ## Visualizing the discrete codes
-
-
 """
 
 encoder = vqvae_trainer.vqvae.get_layer("encoder")
@@ -334,14 +328,13 @@ for i in range(len(test_images)):
 
 """
 The figure above shows that the discrete codes have been able to capture some
-regularities from the dataset. Now you might wonder ***how do we use these codes to
+regularities from the dataset. Now, you might wonder, ***how do we use these codes to
 generate new samples?*** Specifically, how do we sample from this codebook to create
 novel examples? Since these codes are discrete and we imposed a categorical distribution
 on them, we cannot use them yet to generate anything meaningful. These codes were not
 updated during the training process as well. So, they need to be adjusted further so that
 we can use for them the subsequent image generation task. The authors use a PixelCNN to
 train these codes so that they can be used as powerful priors to generate novel examples.
-
 
 PixelCNN was proposed in
 [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)
@@ -368,7 +361,7 @@ Don't worry about the input shape. It'll become clear in the following sections.
 """
 ## PixelCNN model
 
-Majority of this comes from 
+Majority of this comes from
 [this example](https://keras.io/examples/generative/pixelcnn/). 
 """
 
@@ -453,11 +446,11 @@ pixel_cnn.summary()
 
 We will train the PixelCNN to learn a categorical distribution of the discrete codes.
 First, we will generate code indices using the encoder and vector quantizer we just
-trained. Our training objective will be to minimize the cross-entropy loss between these
+trained. Our training objective will be to minimize the crossentropy loss between these
 indices and the PixelCNN outputs. Here, the number of categories is equal to the number
-of embeddings present in our codebook (128 in our case). Since the PixelCNN model is
-trained to learn a distribution (as opposed to minimizing the L1/L2 loss) it gets its
-generative capabilities from there. 
+of embeddings present in our codebook (128 in our case). The PixelCNN model is
+trained to learn a distribution (as opposed to minimizing the L1/L2 loss), which is where
+it gets its generative capabilities from.
 """
 
 # Generate the codebook indices.
