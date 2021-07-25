@@ -68,7 +68,7 @@ FF_DIM = 512
 BATCH_SIZE = 64
 EPOCHS = 30
 AUTOTUNE = tf.data.AUTOTUNE
-
+LEARNING_RATE = 0.00001
 
 """
 ## Preparing the dataset
@@ -513,7 +513,9 @@ cross_entropy = keras.losses.SparseCategoricalCrossentropy(
 early_stopping = keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True)
 
 # Compile the model
-caption_model.compile(optimizer=keras.optimizers.Adam(), loss=cross_entropy)
+caption_model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=LEARNING_RATE), loss=cross_entropy
+)
 
 # Fit the model
 caption_model.fit(
