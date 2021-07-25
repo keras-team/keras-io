@@ -97,11 +97,11 @@ class Involution(keras.layers.Layer):
 
     def build(self, input_shape):
         # Get the shape of the input.
-        (_, H, W, C) = input_shape
+        (_, height, width, num_channels) = input_shape
 
         # Scale the height and width with respect to the strides.
-        H = H // self.stride
-        W = W // self.stride
+        height = height // self.stride
+        width = width // self.stride
 
         # Define a layer that average pools the input tensor
         # if stride is more than 1.
@@ -131,23 +131,25 @@ class Involution(keras.layers.Layer):
         # Define reshape layers
         self.kernel_reshape = keras.layers.Reshape(
             target_shape=(
-                H,
-                W,
+                height,
+                width,
                 self.kernel_size * self.kernel_size,
                 1,
                 self.group_number,
             )
         )
-        self.input_pathces_reshape = keras.layers.Reshape(
+        self.input_patches_reshape = keras.layers.Reshape(
             target_shape=(
-                H,
-                W,
+                height,
+                width,
                 self.kernel_size * self.kernel_size,
-                C // self.group_number,
+                num_channels // self.group_number,
                 self.group_number,
             )
         )
-        self.output_reshape = keras.layers.Reshape(target_shape=(H, W, C))
+        self.output_reshape = keras.layers.Reshape(
+            target_shape=(height, width, num_channels)
+        )
 
     def call(self, x):
         # Generate the kernel with respect to the input tensor.
@@ -171,7 +173,7 @@ class Involution(keras.layers.Layer):
 
         # Reshape the input patches to align with later operations.
         # B, H, W, K*K, C//G, G
-        input_patches = self.input_pathces_reshape(input_patches)
+        input_patches = self.input_patches_reshape(input_patches)
 
         # Compute the multiply-add operation of kernels and patches.
         # B, H, W, K*K, C//G, G
@@ -230,7 +232,7 @@ tutorial from Google.
 """
 
 # Load the CIFAR10 dataset.
-print("[INFO] loading the CIFAR10 dataset...")
+print("loading the CIFAR10 dataset...")
 (train_images, train_labels), (
     test_images,
     test_labels,
@@ -279,7 +281,7 @@ plt.show()
 """
 
 # Build the conv model.
-print("[INFO] building the convolution model...")
+print("building the convolution model...")
 conv_model = keras.Sequential(
     [
         keras.layers.Conv2D(32, (3, 3), input_shape=(32, 32, 3), padding="same"),
@@ -297,7 +299,7 @@ conv_model = keras.Sequential(
 )
 
 # Compile the mode with the necessary loss function and optimizer.
-print("[INFO] compiling the convolution model...")
+print("compiling the convolution model...")
 conv_model.compile(
     optimizer="adam",
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -305,7 +307,7 @@ conv_model.compile(
 )
 
 # Train the model.
-print("[INFO] conv model training...")
+print("conv model training...")
 conv_hist = conv_model.fit(train_ds, epochs=20, validation_data=test_ds)
 
 """
@@ -313,9 +315,9 @@ conv_hist = conv_model.fit(train_ds, epochs=20, validation_data=test_ds)
 """
 
 # Build the involution model.
-print("[INFO] building the involution model...")
+print("building the involution model...")
 
-inputs = keras.Input((32, 32, 3))
+inputs = keras.Input(shape=(32, 32, 3))
 x, _ = Involution(
     channel=3, group_number=1, kernel_size=3, stride=1, reduction_ratio=2, name="inv_1"
 )(inputs)
@@ -332,12 +334,12 @@ x, _ = Involution(
 x = keras.layers.ReLU()(x)
 x = keras.layers.Flatten()(x)
 x = keras.layers.Dense(64, activation="relu")(x)
-x = keras.layers.Dense(10)(x)
+outputs = keras.layers.Dense(10)(x)
 
-inv_model = keras.Model(inputs=[inputs], outputs=[x], name="inv_model")
+inv_model = keras.Model(inputs=[inputs], outputs=[outputs], name="inv_model")
 
 # Compile the mode with the necessary loss function and optimizer.
-print("[INFO] compiling the involution model...")
+print("compiling the involution model...")
 inv_model.compile(
     optimizer="adam",
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -345,7 +347,7 @@ inv_model.compile(
 )
 
 # train the model
-print("[INFO] inv model training...")
+print("inv model training...")
 inv_hist = inv_model.fit(train_ds, epochs=20, validation_data=test_ds)
 
 """
@@ -415,8 +417,8 @@ locations frame the corresponding heat map.**
 
 The authors mention:
 
-> Our proposed involution is reminiscent of self-attention and
-essentially could become a generalized version of it.
+"Our proposed involution is reminiscent of self-attention and
+essentially could become a generalized version of it."
 
 With the visualization of the kernel we can indeed obtain an attention
 map of the image. The learned involution kernels provides attention to
@@ -468,6 +470,7 @@ specific and channel spefic makes sense in a lot of tasks and this
 layer should be taken forward.
 
 Moving forward one can:
+
 - Look at [Yannick's video](https://youtu.be/pH2jZun8MoY) on 
     involution for a better understanding.
 - Experiment with the various hyperparameters of the involution layer.
