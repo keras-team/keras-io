@@ -1,14 +1,15 @@
+
 # Image Captioning
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
 **Date created:** 2021/05/29<br>
 **Last modified:** 2021/06/06<br>
-**Description:** Implement an image captioning model using a CNN and a Transformer.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/image_captioning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/image_captioning.py)
 
 
+**Description:** Implement an image captioning model using a CNN and a Transformer.
 
 ---
 ## Setup
@@ -75,7 +76,7 @@ FF_DIM = 512
 BATCH_SIZE = 64
 EPOCHS = 30
 AUTOTUNE = tf.data.AUTOTUNE
-
+LEARNING_RATE = 0.00001
 ```
 
 ---
@@ -406,7 +407,7 @@ class ImageCaptioningModel(keras.Model):
         mask = tf.cast(mask, dtype=tf.float32)
         return tf.reduce_sum(accuracy) / tf.reduce_sum(mask)
 
-    def _compute_loss_and_acc(self, batch_data, training=True):
+    def train_step(self, batch_data):
         batch_img, batch_seq = batch_data
         batch_loss = 0
         batch_acc = 0
@@ -420,7 +421,7 @@ class ImageCaptioningModel(keras.Model):
         for i in range(self.num_captions_per_image):
             with tf.GradientTape() as tape:
                 # 3. Pass image embeddings to encoder
-                encoder_out = self.encoder(img_embed, training=training)
+                encoder_out = self.encoder(img_embed, training=True)
 
                 batch_seq_inp = batch_seq[:, i, :-1]
                 batch_seq_true = batch_seq[:, i, 1:]
@@ -431,16 +432,18 @@ class ImageCaptioningModel(keras.Model):
                 # 5. Pass the encoder outputs, sequence inputs along with
                 # mask to the decoder
                 batch_seq_pred = self.decoder(
-                    batch_seq_inp, encoder_out, training=training, mask=mask
+                    batch_seq_inp, encoder_out, training=True, mask=mask
                 )
 
                 # 6. Calculate loss and accuracy
-                loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-                acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+                caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+                caption_acc = self.calculate_accuracy(
+                    batch_seq_true, batch_seq_pred, mask
+                )
 
                 # 7. Update the batch loss and batch accuracy
-                batch_loss += loss
-                batch_acc += acc
+                batch_loss += caption_loss
+                batch_acc += caption_acc
 
             # 8. Get the list of all the trainable weights
             train_vars = (
@@ -448,21 +451,56 @@ class ImageCaptioningModel(keras.Model):
             )
 
             # 9. Get the gradients
-            grads = tape.gradient(loss, train_vars)
+            grads = tape.gradient(caption_loss, train_vars)
 
             # 10. Update the trainable weights
             self.optimizer.apply_gradients(zip(grads, train_vars))
 
-        return batch_loss, batch_acc / float(self.num_captions_per_image)
+        loss = batch_loss
+        acc = batch_acc / float(self.num_captions_per_image)
 
-    def train_step(self, batch_data):
-        loss, acc = self._compute_loss_and_acc(batch_data)
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
 
     def test_step(self, batch_data):
-        loss, acc = self._compute_loss_and_acc(batch_data, training=False)
+        batch_img, batch_seq = batch_data
+        batch_loss = 0
+        batch_acc = 0
+
+        # 1. Get image embeddings
+        img_embed = self.cnn_model(batch_img)
+
+        # 2. Pass each of the five captions one by one to the decoder
+        # along with the encoder outputs and compute the loss as well as accuracy
+        # for each caption.
+        for i in range(self.num_captions_per_image):
+            # 3. Pass image embeddings to encoder
+            encoder_out = self.encoder(img_embed, training=False)
+
+            batch_seq_inp = batch_seq[:, i, :-1]
+            batch_seq_true = batch_seq[:, i, 1:]
+
+            # 4. Compute the mask for the input sequence
+            mask = tf.math.not_equal(batch_seq_inp, 0)
+
+            # 5. Pass the encoder outputs, sequence inputs along with
+            # mask to the decoder
+            batch_seq_pred = self.decoder(
+                batch_seq_inp, encoder_out, training=False, mask=mask
+            )
+
+            # 6. Calculate loss and accuracy
+            caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+            caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+
+            # 7. Update the batch loss and batch accuracy
+            batch_loss += caption_loss
+            batch_acc += caption_acc
+
+        loss = batch_loss
+        acc = batch_acc / float(self.num_captions_per_image)
+
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
@@ -486,6 +524,13 @@ caption_model = ImageCaptioningModel(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/keras-applications/efficientnetb0_notop.h5
+16711680/16705208 [==============================] - 0s 0us/step
+
+```
+</div>
 ---
 ## Model training
 
@@ -500,7 +545,9 @@ cross_entropy = keras.losses.SparseCategoricalCrossentropy(
 early_stopping = keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True)
 
 # Compile the model
-caption_model.compile(optimizer=keras.optimizers.Adam(), loss=cross_entropy)
+caption_model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=LEARNING_RATE), loss=cross_entropy
+)
 
 # Fit the model
 caption_model.fit(
@@ -514,67 +561,67 @@ caption_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-102/102 [==============================] - 108s 870ms/step - loss: 17.8187 - acc: 0.3348 - val_loss: 14.9386 - val_acc: 0.4246
+102/102 [==============================] - 155s 922ms/step - loss: 34.6627 - acc: 0.1033 - val_loss: 27.8439 - val_acc: 0.2325
 Epoch 2/30
-102/102 [==============================] - 87s 798ms/step - loss: 14.5171 - acc: 0.4263 - val_loss: 12.8639 - val_acc: 0.4591
+102/102 [==============================] - 115s 879ms/step - loss: 25.8440 - acc: 0.2300 - val_loss: 24.0169 - val_acc: 0.2735
 Epoch 3/30
-102/102 [==============================] - 87s 797ms/step - loss: 13.3328 - acc: 0.4546 - val_loss: 11.6439 - val_acc: 0.4827
+102/102 [==============================] - 107s 858ms/step - loss: 23.2253 - acc: 0.2836 - val_loss: 22.1275 - val_acc: 0.3070
 Epoch 4/30
-102/102 [==============================] - 87s 795ms/step - loss: 12.5629 - acc: 0.4680 - val_loss: 10.8319 - val_acc: 0.5024
+102/102 [==============================] - 106s 869ms/step - loss: 21.7652 - acc: 0.3112 - val_loss: 21.0069 - val_acc: 0.3278
 Epoch 5/30
-102/102 [==============================] - 87s 793ms/step - loss: 11.8896 - acc: 0.4844 - val_loss: 10.1778 - val_acc: 0.5200
+102/102 [==============================] - 106s 865ms/step - loss: 20.7829 - acc: 0.3260 - val_loss: 20.2055 - val_acc: 0.3416
 Epoch 6/30
-102/102 [==============================] - 87s 794ms/step - loss: 11.3603 - acc: 0.4961 - val_loss: 9.5783 - val_acc: 0.5377
+102/102 [==============================] - 106s 864ms/step - loss: 20.0375 - acc: 0.3402 - val_loss: 19.5960 - val_acc: 0.3537
 Epoch 7/30
-102/102 [==============================] - 86s 792ms/step - loss: 10.9604 - acc: 0.4997 - val_loss: 9.0548 - val_acc: 0.5532
+102/102 [==============================] - 105s 860ms/step - loss: 19.4587 - acc: 0.3498 - val_loss: 19.1222 - val_acc: 0.3608
 Epoch 8/30
-102/102 [==============================] - 87s 793ms/step - loss: 10.4629 - acc: 0.5191 - val_loss: 8.5665 - val_acc: 0.5708
+102/102 [==============================] - 105s 850ms/step - loss: 18.9792 - acc: 0.3577 - val_loss: 18.7386 - val_acc: 0.3668
 Epoch 9/30
-102/102 [==============================] - 87s 792ms/step - loss: 10.0396 - acc: 0.5294 - val_loss: 8.2714 - val_acc: 0.5793
+102/102 [==============================] - 104s 859ms/step - loss: 18.5739 - acc: 0.3644 - val_loss: 18.4164 - val_acc: 0.3726
 Epoch 10/30
-102/102 [==============================] - 87s 794ms/step - loss: 9.7202 - acc: 0.5363 - val_loss: 7.7541 - val_acc: 0.5999
+102/102 [==============================] - 106s 862ms/step - loss: 18.2274 - acc: 0.3662 - val_loss: 18.1283 - val_acc: 0.3755
 Epoch 11/30
-102/102 [==============================] - 87s 793ms/step - loss: 9.4190 - acc: 0.5497 - val_loss: 7.4767 - val_acc: 0.6108
+102/102 [==============================] - 104s 858ms/step - loss: 17.9170 - acc: 0.3743 - val_loss: 17.8802 - val_acc: 0.3799
 Epoch 12/30
-102/102 [==============================] - 86s 792ms/step - loss: 9.1445 - acc: 0.5578 - val_loss: 7.1285 - val_acc: 0.6236
+102/102 [==============================] - 104s 855ms/step - loss: 17.6385 - acc: 0.3780 - val_loss: 17.6730 - val_acc: 0.3824
 Epoch 13/30
-102/102 [==============================] - 86s 791ms/step - loss: 8.8761 - acc: 0.5697 - val_loss: 6.8233 - val_acc: 0.6355
+102/102 [==============================] - 105s 847ms/step - loss: 17.3839 - acc: 0.3808 - val_loss: 17.4764 - val_acc: 0.3855
 Epoch 14/30
-102/102 [==============================] - 86s 792ms/step - loss: 8.6291 - acc: 0.5795 - val_loss: 6.5597 - val_acc: 0.6460
+102/102 [==============================] - 104s 849ms/step - loss: 17.1597 - acc: 0.3854 - val_loss: 17.3072 - val_acc: 0.3887
 Epoch 15/30
-102/102 [==============================] - 86s 792ms/step - loss: 8.3854 - acc: 0.5871 - val_loss: 6.3434 - val_acc: 0.6560
+102/102 [==============================] - 111s 923ms/step - loss: 16.9417 - acc: 0.3898 - val_loss: 17.1631 - val_acc: 0.3909
 Epoch 16/30
-102/102 [==============================] - 87s 793ms/step - loss: 8.2089 - acc: 0.5938 - val_loss: 6.1205 - val_acc: 0.6641
+102/102 [==============================] - 105s 864ms/step - loss: 16.7453 - acc: 0.3908 - val_loss: 17.0177 - val_acc: 0.3932
 Epoch 17/30
-102/102 [==============================] - 86s 792ms/step - loss: 8.0622 - acc: 0.5986 - val_loss: 5.9047 - val_acc: 0.6761
+102/102 [==============================] - 106s 864ms/step - loss: 16.5563 - acc: 0.3932 - val_loss: 16.8836 - val_acc: 0.3957
 Epoch 18/30
-102/102 [==============================] - 86s 791ms/step - loss: 7.8163 - acc: 0.6077 - val_loss: 5.6701 - val_acc: 0.6850
+102/102 [==============================] - 106s 865ms/step - loss: 16.3796 - acc: 0.3996 - val_loss: 16.8035 - val_acc: 0.3975
 Epoch 19/30
-102/102 [==============================] - 86s 792ms/step - loss: 7.6717 - acc: 0.6130 - val_loss: 5.5881 - val_acc: 0.6870
+102/102 [==============================] - 106s 862ms/step - loss: 16.2123 - acc: 0.4016 - val_loss: 16.6716 - val_acc: 0.3992
 Epoch 20/30
-102/102 [==============================] - 86s 790ms/step - loss: 7.5109 - acc: 0.6168 - val_loss: 5.4276 - val_acc: 0.6941
+102/102 [==============================] - 105s 859ms/step - loss: 16.0561 - acc: 0.4040 - val_loss: 16.5663 - val_acc: 0.4016
 Epoch 21/30
-102/102 [==============================] - 86s 791ms/step - loss: 7.4174 - acc: 0.6180 - val_loss: 5.2176 - val_acc: 0.7046
+102/102 [==============================] - 106s 864ms/step - loss: 15.9063 - acc: 0.4063 - val_loss: 16.4795 - val_acc: 0.4032
 Epoch 22/30
-102/102 [==============================] - 86s 791ms/step - loss: 7.2118 - acc: 0.6278 - val_loss: 4.9934 - val_acc: 0.7147
+102/102 [==============================] - 105s 865ms/step - loss: 15.7618 - acc: 0.4092 - val_loss: 16.3817 - val_acc: 0.4055
 Epoch 23/30
-102/102 [==============================] - 86s 791ms/step - loss: 7.0644 - acc: 0.6357 - val_loss: 4.8968 - val_acc: 0.7175
+102/102 [==============================] - 106s 866ms/step - loss: 15.6290 - acc: 0.4128 - val_loss: 16.3064 - val_acc: 0.4063
 Epoch 24/30
-102/102 [==============================] - 86s 791ms/step - loss: 6.9504 - acc: 0.6428 - val_loss: 4.8188 - val_acc: 0.7227
+102/102 [==============================] - 106s 867ms/step - loss: 15.4904 - acc: 0.4160 - val_loss: 16.2328 - val_acc: 0.4081
 Epoch 25/30
-102/102 [==============================] - 86s 790ms/step - loss: 6.8367 - acc: 0.6450 - val_loss: 4.6168 - val_acc: 0.7325
+102/102 [==============================] - 106s 862ms/step - loss: 15.3690 - acc: 0.4175 - val_loss: 16.1724 - val_acc: 0.4079
 Epoch 26/30
-102/102 [==============================] - 86s 791ms/step - loss: 6.7263 - acc: 0.6510 - val_loss: 4.5875 - val_acc: 0.7332
+102/102 [==============================] - 105s 866ms/step - loss: 15.2403 - acc: 0.4204 - val_loss: 16.0990 - val_acc: 0.4099
 Epoch 27/30
-102/102 [==============================] - 86s 788ms/step - loss: 6.6951 - acc: 0.6481 - val_loss: 4.5294 - val_acc: 0.7334
+102/102 [==============================] - 105s 862ms/step - loss: 15.1224 - acc: 0.4209 - val_loss: 16.0572 - val_acc: 0.4108
 Epoch 28/30
-102/102 [==============================] - 86s 790ms/step - loss: 6.5242 - acc: 0.6582 - val_loss: 4.3365 - val_acc: 0.7444
+102/102 [==============================] - 106s 866ms/step - loss: 15.0076 - acc: 0.4242 - val_loss: 15.9932 - val_acc: 0.4109
 Epoch 29/30
-102/102 [==============================] - 86s 790ms/step - loss: 6.3877 - acc: 0.6614 - val_loss: 4.2305 - val_acc: 0.7493
+102/102 [==============================] - 105s 864ms/step - loss: 14.8971 - acc: 0.4284 - val_loss: 15.9385 - val_acc: 0.4118
 Epoch 30/30
-102/102 [==============================] - 86s 790ms/step - loss: 6.3973 - acc: 0.6652 - val_loss: 4.2088 - val_acc: 0.7502
+102/102 [==============================] - 105s 865ms/step - loss: 14.7772 - acc: 0.4323 - val_loss: 15.8880 - val_acc: 0.4130
 
-<tensorflow.python.keras.callbacks.History at 0x7fa9a47c6690>
+<tensorflow.python.keras.callbacks.History at 0x7f4a2fe7fb10>
 
 ```
 </div>
@@ -631,36 +678,30 @@ generate_caption()
 ```
 
 
-    
 ![png](/img/examples/vision/image_captioning/image_captioning_17_0.png)
-    
 
 
 <div class="k-default-codeblock">
 ```
-PREDICTED CAPTION: a cowboy in a white outfit just got bucked off an angry bull
+PREDICTED CAPTION: a man is jumping over a horse
 
 ```
 </div>
-    
 ![png](/img/examples/vision/image_captioning/image_captioning_17_2.png)
-    
 
 
 <div class="k-default-codeblock">
 ```
-PREDICTED CAPTION: two girls laugh in the waves
+PREDICTED CAPTION: a boy in a blue shirt is standing in a blue shirt and a blue shirt is standing on
 
 ```
 </div>
-    
 ![png](/img/examples/vision/image_captioning/image_captioning_17_4.png)
-    
 
 
 <div class="k-default-codeblock">
 ```
-PREDICTED CAPTION: two men one with a frisbee cap and a striped shirt
+PREDICTED CAPTION: a man and a woman in a blue shirt is holding a white shirt and a man in a
 
 ```
 </div>
