@@ -54,7 +54,7 @@ import sys
 
 Set project parameters. If you don't know what your `GCP_PROJECT_ID` or
 `GCS_BUCKET` should be, see 
-[Setting Up and Connecting To Your Google Cloud Account](google_cloud_project_setup_instructions.ipynb).
+[Setting Up and Connecting To Your Google Cloud Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb).
 
 The `JOB_NAME` is optional, and you can set it to any string. If you are doing
 multiple training experiemnts (for example) as part of a larger project, you may
