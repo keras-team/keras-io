@@ -34,14 +34,18 @@ Up and Connecting To Your Google Cloud
 Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb)
 if you don't have an account yet or are not sure how to set up a project in the
 console.
+"""
 
+"""
 ## Import required modules
+
+This guide requires TensorFlow Cloud, which you can install via:
+
+`pip install tensorflow-cloud`
 
 """
 
 import tensorflow as tf
-
-! pip install -q tensorflow-cloud
 import tensorflow_cloud as tfc
 
 import sys
