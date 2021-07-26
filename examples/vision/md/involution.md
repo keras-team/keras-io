@@ -1,4 +1,3 @@
-
 # Involutional neural networks
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)<br>

@@ -1,4 +1,3 @@
-
 # Vector-Quantized Variational Autoencoders
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>

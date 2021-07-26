@@ -232,9 +232,9 @@ tutorial from Google.
 
 # Load the CIFAR10 dataset.
 print("loading the CIFAR10 dataset...")
-(train_images, train_labels), (
-    test_images,
-    test_labels,
+(
+    (train_images, train_labels),
+    (test_images, test_labels,),
 ) = keras.datasets.cifar10.load_data()
 
 # Normalize pixel values to be between 0 and 1.
