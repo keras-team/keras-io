@@ -29,9 +29,8 @@ Cloud.
 
 You can just read through it to get an idea of how this works, or you can run
 the notebook in Google Colab. Running the notebook requires connecting to a
-Google Cloud account and entering your credentials and project ID. See [Setting
-Up and Connecting To Your Google Cloud
-Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb)
+Google Cloud account and entering your credentials and project ID. See
+[Setting Up and Connecting To Your Google Cloud Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb)
 if you don't have an account yet or are not sure how to set up a project in the
 console.
 """
@@ -54,8 +53,8 @@ import sys
 ## Project Configurations
 
 Set project parameters. If you don't know what your `GCP_PROJECT_ID` or
-`GCS_BUCKET` should be, see [Setting Up and Connecting To Your Google Cloud
-Account](google_cloud_project_setup_instructions.ipynb).
+`GCS_BUCKET` should be, see 
+[Setting Up and Connecting To Your Google Cloud Account](google_cloud_project_setup_instructions.ipynb).
 
 The `JOB_NAME` is optional, and you can set it to any string. If you are doing
 multiple training experiemnts (for example) as part of a larger project, you may
@@ -170,7 +169,7 @@ inside the runtime in which you are reading this.
 First, we set up callbacks which will:
 
 * Create logs for [TensorBoard](https://www.tensorflow.org/tensorboard).
-* Create [checkpoints](/guide/checkpoint) and save them to the checkpoints
+* Create [checkpoints](https://keras.io/api/callbacks/model_checkpoint/) and save them to the checkpoints
 directory specified above.
 * Stop model training if loss is not improving sufficiently.
 
