@@ -1,11 +1,16 @@
-"""
-Title: Vector-Quantized Variational Autoencoders
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/07/21
-Last modified: 2021/07/21
-Description: Training a VQ-VAE for image reconstruction and codebook sampling for generation.
-"""
-"""
+
+# Vector-Quantized Variational Autoencoders
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/07/21<br>
+**Last modified:** 2021/07/21<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/vq_vae.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/vq_vae.py)
+
+
+**Description:** Training a VQ-VAE for image reconstruction and codebook sampling for generation.
+
 In this example, we will develop a Vector Quantized Variational Autoencoder (VQ-VAE).
 VQ-VAE was proposed in
 [Neural Discrete Representation Learning](https://arxiv.org/abs/1711.00937)
@@ -29,16 +34,17 @@ This example uses references from the
 [official VQ-VAE tutorial](https://github.com/deepmind/sonnet/blob/master/sonnet/examples/vqvae_example.ipynb)
 from DeepMind. To run this example, you will need TensorFlow 2.5 or higher, as well as
 TensorFlow Probability, which can be installed using the command below.
-"""
 
-"""shell
-pip install -q tensorflow-probability
-"""
 
-"""
+```python
+!pip install -q tensorflow-probability
+```
+
+---
 ## Imports
-"""
 
+
+```python
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -46,8 +52,9 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_probability as tfp
 import tensorflow as tf
+```
 
-"""
+---
 ## `VectorQuantizer` layer
 
 Here, we will implement a custom layer to encapsulate the vector
@@ -69,8 +76,9 @@ Since the quantization process is not differentiable, we apply a
 in between the decoder and the encoder, so that the decoder gradients are directly propagated
 to the encoder. As the encoder and decoder share the same channel space, the hope is that the
 decoder gradients will still be meaningful to the encoder.
-"""
 
+
+```python
 
 class VectorQuantizer(layers.Layer):
     def __init__(self, num_embeddings, embedding_dim, beta=0.25, **kwargs):
@@ -130,8 +138,8 @@ class VectorQuantizer(layers.Layer):
         encoding_indices = tf.argmin(distances, axis=1)
         return encoding_indices
 
+```
 
-"""
 **A note on straight-through estimation**:
 
 This line of code does the straight-through estimation part: `quantized = x +
@@ -139,17 +147,17 @@ tf.stop_gradient(quantized - x)`. During backpropagation, `(quantized - x)` won'
 included in the computation graph and th gradients obtaind for `quantized`
 will be copied for `inputs`. Thanks to [this video](https://youtu.be/VZFVUrYcig0?t=1393)
 for helping me understand this technique.
-"""
 
-"""
+---
 ## Encoder and decoder
 
 We will now implement the encoder and the decoder for the VQ-VAE. We will keep them small so
 that their capacity is a good fit for the MNIST dataset, which we will use to demonstrate
 the results. The definitions of the encoder and decoder come from
 [this example](https://keras.io/examples/generative/vae).
-"""
 
+
+```python
 
 def get_encoder(latent_dim=16):
     encoder_inputs = keras.Input(shape=(28, 28, 1))
@@ -170,11 +178,13 @@ def get_decoder(latent_dim=16):
     decoder_outputs = layers.Conv2DTranspose(1, 3, padding="same")(x)
     return keras.Model(latent_inputs, decoder_outputs, name="decoder")
 
+```
 
-"""
+---
 ## Standalone VQ-VAE model
-"""
 
+
+```python
 
 def get_vqvae(latent_dim=16, num_embeddings=64):
     vq_layer = VectorQuantizer(num_embeddings, latent_dim, name="vector_quantizer")
@@ -188,16 +198,37 @@ def get_vqvae(latent_dim=16, num_embeddings=64):
 
 
 get_vqvae().summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "vq_vae"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_4 (InputLayer)         [(None, 28, 28, 1)]       0         
+_________________________________________________________________
+encoder (Functional)         (None, 7, 7, 16)          19856     
+_________________________________________________________________
+vector_quantizer (VectorQuan (None, 7, 7, 16)          1024      
+_________________________________________________________________
+decoder (Functional)         (None, 28, 28, 1)         28033     
+=================================================================
+Total params: 48,913
+Trainable params: 48,913
+Non-trainable params: 0
+_________________________________________________________________
+
+```
+</div>
 Note that the output channels of the encoder should match the `latent_dim` for the vector
 quantizer.
-"""
 
-"""
+---
 ## Wrapping up the training loop inside `VQVAETrainer`
-"""
 
+
+```python
 
 class VQVAETrainer(keras.models.Model):
     def __init__(self, train_variance, latent_dim=32, num_embeddings=128, **kwargs):
@@ -249,11 +280,13 @@ class VQVAETrainer(keras.models.Model):
             "vqvae_loss": self.vq_loss_tracker.result(),
         }
 
+```
 
-"""
+---
 ## Load and preprocess the MNIST dataset
-"""
 
+
+```python
 (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
 
 x_train = np.expand_dims(x_train, -1)
@@ -262,19 +295,97 @@ x_train_scaled = (x_train / 255.0) - 0.5
 x_test_scaled = (x_test / 255.0) - 0.5
 
 data_variance = np.var(x_train / 255.0)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+
+```
+</div>
+---
 ## Train the VQ-VAE model
-"""
 
+
+```python
 vqvae_trainer = VQVAETrainer(data_variance, latent_dim=16, num_embeddings=128)
 vqvae_trainer.compile(optimizer=keras.optimizers.Adam())
 vqvae_trainer.fit(x_train_scaled, epochs=30, batch_size=128)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/30
+469/469 [==============================] - 18s 6ms/step - loss: 2.2962 - reconstruction_loss: 0.3869 - vqvae_loss: 1.5950
+Epoch 2/30
+469/469 [==============================] - 3s 6ms/step - loss: 2.2980 - reconstruction_loss: 0.1692 - vqvae_loss: 2.1108
+Epoch 3/30
+469/469 [==============================] - 3s 6ms/step - loss: 1.1356 - reconstruction_loss: 0.1281 - vqvae_loss: 0.9997
+Epoch 4/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.6112 - reconstruction_loss: 0.1030 - vqvae_loss: 0.5031
+Epoch 5/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.4375 - reconstruction_loss: 0.0883 - vqvae_loss: 0.3464
+Epoch 6/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.3579 - reconstruction_loss: 0.0788 - vqvae_loss: 0.2775
+Epoch 7/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.3197 - reconstruction_loss: 0.0725 - vqvae_loss: 0.2457
+Epoch 8/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2960 - reconstruction_loss: 0.0673 - vqvae_loss: 0.2277
+Epoch 9/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2798 - reconstruction_loss: 0.0640 - vqvae_loss: 0.2152
+Epoch 10/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2681 - reconstruction_loss: 0.0612 - vqvae_loss: 0.2061
+Epoch 11/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2578 - reconstruction_loss: 0.0590 - vqvae_loss: 0.1986
+Epoch 12/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2551 - reconstruction_loss: 0.0574 - vqvae_loss: 0.1974
+Epoch 13/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2526 - reconstruction_loss: 0.0560 - vqvae_loss: 0.1961
+Epoch 14/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2485 - reconstruction_loss: 0.0546 - vqvae_loss: 0.1936
+Epoch 15/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2462 - reconstruction_loss: 0.0533 - vqvae_loss: 0.1926
+Epoch 16/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2445 - reconstruction_loss: 0.0523 - vqvae_loss: 0.1920
+Epoch 17/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2427 - reconstruction_loss: 0.0515 - vqvae_loss: 0.1911
+Epoch 18/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2405 - reconstruction_loss: 0.0505 - vqvae_loss: 0.1898
+Epoch 19/30
+469/469 [==============================] - 3s 6ms/step - loss: 0.2368 - reconstruction_loss: 0.0495 - vqvae_loss: 0.1871
+Epoch 20/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2310 - reconstruction_loss: 0.0486 - vqvae_loss: 0.1822
+Epoch 21/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2245 - reconstruction_loss: 0.0475 - vqvae_loss: 0.1769
+Epoch 22/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2205 - reconstruction_loss: 0.0469 - vqvae_loss: 0.1736
+Epoch 23/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2195 - reconstruction_loss: 0.0465 - vqvae_loss: 0.1730
+Epoch 24/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2187 - reconstruction_loss: 0.0461 - vqvae_loss: 0.1726
+Epoch 25/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2180 - reconstruction_loss: 0.0458 - vqvae_loss: 0.1721
+Epoch 26/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2163 - reconstruction_loss: 0.0454 - vqvae_loss: 0.1709
+Epoch 27/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2156 - reconstruction_loss: 0.0452 - vqvae_loss: 0.1704
+Epoch 28/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2146 - reconstruction_loss: 0.0449 - vqvae_loss: 0.1696
+Epoch 29/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2139 - reconstruction_loss: 0.0447 - vqvae_loss: 0.1692
+Epoch 30/30
+469/469 [==============================] - 3s 5ms/step - loss: 0.2127 - reconstruction_loss: 0.0444 - vqvae_loss: 0.1682
+
+<tensorflow.python.keras.callbacks.History at 0x7f96402f4e50>
+
+```
+</div>
+---
 ## Reconstruction results on the test set
-"""
 
+
+```python
 
 def show_subplot(original, reconstructed):
     plt.subplot(1, 2, 1)
@@ -297,17 +408,57 @@ reconstructions_test = trained_vqvae_model.predict(test_images)
 
 for test_image, reconstructed_image in zip(test_images, reconstructions_test):
     show_subplot(test_image, reconstructed_image)
+```
 
-"""
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_0.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_1.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_2.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_3.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_4.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_5.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_6.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_7.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_8.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_20_9.png)
+
+
 These results look decent. You are encouraged to play with different hyperparameters
 (especially the number of embeddings and the dimensions of the embeddings) and observe how
 they affect the results.
-"""
 
-"""
+---
 ## Visualizing the discrete codes
-"""
 
+
+```python
 encoder = vqvae_trainer.vqvae.get_layer("encoder")
 quantizer = vqvae_trainer.vqvae.get_layer("vector_quantizer")
 
@@ -327,8 +478,48 @@ for i in range(len(test_images)):
     plt.title("Code")
     plt.axis("off")
     plt.show()
+```
 
-"""
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_0.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_1.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_2.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_3.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_4.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_5.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_6.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_7.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_8.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_23_9.png)
+
+
 The figure above shows that the discrete codes have been able to capture some
 regularities from the dataset. Now, you might wonder, ***how do we use these codes to
 generate new samples?*** Specifically, how do we sample from this codebook to create
@@ -345,28 +536,34 @@ by van der Oord et al. We will borrow code from
 to develop a PixelCNN. It's an auto-regressive generative model where the current outputs
 are conditioned on the prior ones. In other words, a PixelCNN generates an image on a
 pixel-by-pixel basis.
-"""
 
-"""
+---
 ## PixelCNN hyperparameters
-"""
 
+
+```python
 num_residual_blocks = 2
 num_pixelcnn_layers = 2
 pixelcnn_input_shape = encoded_outputs.shape[1:-1]
 print(f"Input shape of the PixelCNN: {pixelcnn_input_shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Input shape of the PixelCNN: (7, 7)
+
+```
+</div>
 Don't worry about the input shape. It'll become clear in the following sections.
-"""
 
-"""
+---
 ## PixelCNN model
 
 Majority of this comes from
 [this example](https://keras.io/examples/generative/pixelcnn/).
-"""
 
+
+```python
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
@@ -442,8 +639,38 @@ out = keras.layers.Conv2D(
 
 pixel_cnn = keras.Model(pixelcnn_inputs, out, name="pixel_cnn")
 pixel_cnn.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "pixel_cnn"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_9 (InputLayer)         [(None, 7, 7)]            0         
+_________________________________________________________________
+tf.one_hot (TFOpLambda)      (None, 7, 7, 128)         0         
+_________________________________________________________________
+pixel_conv_layer (PixelConvL (None, 7, 7, 128)         802944    
+_________________________________________________________________
+residual_block (ResidualBloc (None, 7, 7, 128)         98624     
+_________________________________________________________________
+residual_block_1 (ResidualBl (None, 7, 7, 128)         98624     
+_________________________________________________________________
+pixel_conv_layer_3 (PixelCon (None, 7, 7, 128)         16512     
+_________________________________________________________________
+pixel_conv_layer_4 (PixelCon (None, 7, 7, 128)         16512     
+_________________________________________________________________
+conv2d_21 (Conv2D)           (None, 7, 7, 128)         16512     
+=================================================================
+Total params: 1,049,728
+Trainable params: 1,049,728
+Non-trainable params: 0
+_________________________________________________________________
+
+```
+</div>
+---
 ## Prepare data to train the PixelCNN
 
 We will train the PixelCNN to learn a categorical distribution of the discrete codes.
@@ -453,8 +680,9 @@ indices and the PixelCNN outputs. Here, the number of categories is equal to the
 of embeddings present in our codebook (128 in our case). The PixelCNN model is
 trained to learn a distribution (as opposed to minimizing the L1/L2 loss), which is where
 it gets its generative capabilities from.
-"""
 
+
+```python
 # Generate the codebook indices.
 encoded_outputs = encoder.predict(x_train_scaled)
 flat_enc_outputs = encoded_outputs.reshape(-1, encoded_outputs.shape[-1])
@@ -462,11 +690,19 @@ codebook_indices = quantizer.get_code_indices(flat_enc_outputs)
 
 codebook_indices = codebook_indices.numpy().reshape(encoded_outputs.shape[:-1])
 print(f"Shape of the training data for PixelCNN: {codebook_indices.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Shape of the training data for PixelCNN: (60000, 7, 7)
+
+```
+</div>
+---
 ## PixelCNN training
-"""
 
+
+```python
 pixel_cnn.compile(
     optimizer=keras.optimizers.Adam(3e-4),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -479,29 +715,97 @@ pixel_cnn.fit(
     epochs=30,
     validation_split=0.1,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/30
+422/422 [==============================] - 4s 8ms/step - loss: 1.8550 - accuracy: 0.5959 - val_loss: 1.3127 - val_accuracy: 0.6268
+Epoch 2/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.2207 - accuracy: 0.6402 - val_loss: 1.1722 - val_accuracy: 0.6482
+Epoch 3/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.1412 - accuracy: 0.6536 - val_loss: 1.1313 - val_accuracy: 0.6552
+Epoch 4/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.1060 - accuracy: 0.6601 - val_loss: 1.1058 - val_accuracy: 0.6596
+Epoch 5/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0828 - accuracy: 0.6646 - val_loss: 1.1020 - val_accuracy: 0.6603
+Epoch 6/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0649 - accuracy: 0.6682 - val_loss: 1.0809 - val_accuracy: 0.6638
+Epoch 7/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0515 - accuracy: 0.6710 - val_loss: 1.0712 - val_accuracy: 0.6659
+Epoch 8/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0406 - accuracy: 0.6733 - val_loss: 1.0647 - val_accuracy: 0.6671
+Epoch 9/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0312 - accuracy: 0.6752 - val_loss: 1.0633 - val_accuracy: 0.6674
+Epoch 10/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0235 - accuracy: 0.6771 - val_loss: 1.0554 - val_accuracy: 0.6695
+Epoch 11/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0162 - accuracy: 0.6788 - val_loss: 1.0518 - val_accuracy: 0.6694
+Epoch 12/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0105 - accuracy: 0.6799 - val_loss: 1.0541 - val_accuracy: 0.6693
+Epoch 13/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0050 - accuracy: 0.6811 - val_loss: 1.0481 - val_accuracy: 0.6705
+Epoch 14/30
+422/422 [==============================] - 3s 7ms/step - loss: 1.0011 - accuracy: 0.6820 - val_loss: 1.0462 - val_accuracy: 0.6709
+Epoch 15/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9964 - accuracy: 0.6831 - val_loss: 1.0459 - val_accuracy: 0.6709
+Epoch 16/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9922 - accuracy: 0.6840 - val_loss: 1.0444 - val_accuracy: 0.6704
+Epoch 17/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9884 - accuracy: 0.6848 - val_loss: 1.0405 - val_accuracy: 0.6725
+Epoch 18/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9846 - accuracy: 0.6859 - val_loss: 1.0400 - val_accuracy: 0.6722
+Epoch 19/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9822 - accuracy: 0.6864 - val_loss: 1.0394 - val_accuracy: 0.6728
+Epoch 20/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9787 - accuracy: 0.6872 - val_loss: 1.0393 - val_accuracy: 0.6717
+Epoch 21/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9761 - accuracy: 0.6878 - val_loss: 1.0398 - val_accuracy: 0.6725
+Epoch 22/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9733 - accuracy: 0.6884 - val_loss: 1.0376 - val_accuracy: 0.6726
+Epoch 23/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9708 - accuracy: 0.6890 - val_loss: 1.0352 - val_accuracy: 0.6732
+Epoch 24/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9685 - accuracy: 0.6894 - val_loss: 1.0369 - val_accuracy: 0.6723
+Epoch 25/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9660 - accuracy: 0.6901 - val_loss: 1.0384 - val_accuracy: 0.6733
+Epoch 26/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9638 - accuracy: 0.6908 - val_loss: 1.0355 - val_accuracy: 0.6728
+Epoch 27/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9619 - accuracy: 0.6912 - val_loss: 1.0325 - val_accuracy: 0.6739
+Epoch 28/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9594 - accuracy: 0.6917 - val_loss: 1.0334 - val_accuracy: 0.6736
+Epoch 29/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9582 - accuracy: 0.6920 - val_loss: 1.0366 - val_accuracy: 0.6733
+Epoch 30/30
+422/422 [==============================] - 3s 7ms/step - loss: 0.9561 - accuracy: 0.6926 - val_loss: 1.0336 - val_accuracy: 0.6728
+
+<tensorflow.python.keras.callbacks.History at 0x7f95838ef750>
+
+```
+</div>
 We can improve these scores with more training and hyperparameter tuning.
-"""
 
-"""
+---
 ## Codebook sampling
 
 Now that our PixelCNN is trained, we can sample distinct codes from its outputs and pass
 them to our decoder to generate novel images.
-"""
 
+
+```python
 # Create a mini sampler model.
 inputs = layers.Input(shape=pixel_cnn.input_shape[1:])
 x = pixel_cnn(inputs, training=False)
 dist = tfp.distributions.Categorical(logits=x)
 sampled = dist.sample()
 sampler = keras.Model(inputs, sampled)
+```
 
-"""
 We now construct a prior to generate images. Here, we will generate 10 images.
-"""
 
+
+```python
 # Create an empty array of priors.
 batch = 10
 priors = np.zeros(shape=(batch,) + (pixel_cnn.input_shape)[1:])
@@ -517,11 +821,18 @@ for row in range(rows):
         priors[:, row, col] = probs[:, row, col]
 
 print(f"Prior shape: {priors.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Prior shape: (10, 7, 7)
+
+```
+</div>
 We can now use our decoder to generate the images.
-"""
 
+
+```python
 # Perform an embedding lookup.
 pretrained_embeddings = quantizer.embeddings
 priors_ohe = tf.one_hot(priors.astype("int32"), vqvae_trainer.num_embeddings).numpy()
@@ -545,12 +856,51 @@ for i in range(batch):
     plt.title("Generated Sample")
     plt.axis("off")
     plt.show()
+```
 
-"""
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_0.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_1.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_2.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_3.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_4.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_5.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_6.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_7.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_8.png)
+
+
+
+![png](/img/examples/generative/vq_vae/vq_vae_40_9.png)
+
+
 We can enhance the quality of these generated samples by tweaking the PixelCNN.
-"""
 
-"""
+---
 ## Additional notes
 
 * After the VQ-VAE paper was initially released, the authors developed an exponential
@@ -560,4 +910,3 @@ interested you can check out
 * To further enhance the quality of the generated samples,
 [VQ-VAE-2](https://arxiv.org/abs/1906.00446) was proposed that follows a cascaded
 approach to learn the codebook and to generate the images.
-"""
