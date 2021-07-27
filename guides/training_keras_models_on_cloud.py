@@ -44,16 +44,16 @@ This guide requires TensorFlow Cloud, which you can install via:
 
 """
 
+import os
+import sys
 import tensorflow as tf
 import tensorflow_cloud as tfc
-
-import sys
 
 """
 ## Project Configurations
 
 Set project parameters. If you don't know what your `GCP_PROJECT_ID` or
-`GCS_BUCKET` should be, see 
+`GCS_BUCKET` should be, see
 [Setting Up and Connecting To Your Google Cloud Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb).
 
 The `JOB_NAME` is optional, and you can set it to any string. If you are doing
@@ -182,20 +182,12 @@ if tfc.remote():
     # Configure Tensorboard logs
     callbacks = [
         tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_LOGS_DIR),
-        tf.keras.callbacks.ModelCheckpoint(
-            MODEL_CHECKPOINT_DIR, save_best_only=True
-        ),
-        tf.keras.callbacks.EarlyStopping(
-            monitor="loss", min_delta=0.001, patience=3
-        ),
+        tf.keras.callbacks.ModelCheckpoint(MODEL_CHECKPOINT_DIR, save_best_only=True),
+        tf.keras.callbacks.EarlyStopping(monitor="loss", min_delta=0.001, patience=3),
     ]
 
     model.fit(
-        x=x_train,
-        y=y_train,
-        epochs=100,
-        validation_split=0.2,
-        callbacks=callbacks,
+        x=x_train, y=y_train, epochs=100, validation_split=0.2, callbacks=callbacks,
     )
 
     model.save(SAVED_MODEL_DIR)
