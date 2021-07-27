@@ -290,5 +290,5 @@ Once training is complete, you can retrieve your model from the GCS Bucket you
 specified above.
 """
 
-trained_model = tf.keras.models.load_model(SAVED_MODEL_DIR)
-trained_model.summary()
+# trained_model = tf.keras.models.load_model(SAVED_MODEL_DIR)
+# trained_model.summary()
