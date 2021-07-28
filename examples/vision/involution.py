@@ -3,7 +3,7 @@ Title: Involutional neural networks
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2021/07/25
 Last modified: 2021/07/25
-Description: Deep dive into position-specific and channel-agnostic "involution" kernels.
+Description: Deep dive into location-specific and channel-agnostic "involution" kernels.
 """
 """
 ## Introduction
@@ -19,8 +19,8 @@ long-range spatial interactions.
 To address the above issues, Li et. al. rethink the properties
 of convolution in
 [Involution: Inverting the Inherence of Convolution for VisualRecognition](https://arxiv.org/abs/2103.06255).
-The authors propose the "involution kernel", that is position-specific and
-channel-agnostic. Due to the position-specific nature of the operation,
+The authors propose the "involution kernel", that is location-specific and
+channel-agnostic. Due to the location-specific nature of the operation,
 the authors say that self-attention falls under the design paradigm of
 involution.
 
@@ -216,7 +216,7 @@ print(
 )
 
 """
-# Image Classification
+## Image Classification
 
 In this section, we will build an image-classifier model. There will
 be two models one with convolutions and the other with involutions.
@@ -350,14 +350,14 @@ print("inv model training...")
 inv_hist = inv_model.fit(train_ds, epochs=20, validation_data=test_ds)
 
 """
-# Comparisons
+## Comparisons
 
 In this section, we will be looking at both the models and compare a
 few pointers.
 """
 
 """
-## Parameters
+### Parameters
 
 One can see that with a similar architecture the parameters in a CNN
 is much larger than that of an INN (Involutional Neural Network).
@@ -368,7 +368,7 @@ conv_model.summary()
 inv_model.summary()
 
 """
-## Loss and Accuracy Plots
+### Loss and Accuracy Plots
 
 Here, the loss and the accuracy plots demonstrate that INNs are slow
 learners (with lower parameters).
@@ -407,7 +407,7 @@ plt.legend()
 plt.show()
 
 """
-# Visualizing Involution Kernels
+## Visualizing Involution Kernels
 
 To visualize the kernels, we take the sum of **K×K** values from each
 involution kernel. **All the representatives at different spatial
@@ -455,7 +455,7 @@ for ax, test_image in zip(axes, test_images[:10]):
     ax[3].set_title("Involution Kernel 3")
 
 """
-# Conclusions
+## Conclusions
 
 In this example, the main focus was to build an `Involution` layer which
 can be easily reused. While our comparisons were based on a specific

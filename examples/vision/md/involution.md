@@ -8,7 +8,7 @@
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/involution.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/involution.py)
 
 
-**Description:** Deep dive into position-specific and channel-agnostic "involution" kernels.
+**Description:** Deep dive into location-specific and channel-agnostic "involution" kernels.
 
 ---
 ## Introduction
@@ -24,8 +24,8 @@ long-range spatial interactions.
 To address the above issues, Li et. al. rethink the properties
 of convolution in
 [Involution: Inverting the Inherence of Convolution for VisualRecognition](https://arxiv.org/abs/2103.06255).
-The authors propose the "involution kernel", that is position-specific and
-channel-agnostic. Due to the position-specific nature of the operation,
+The authors propose the "involution kernel", that is location-specific and
+channel-agnostic. Due to the location-specific nature of the operation,
 the authors say that self-attention falls under the design paradigm of
 involution.
 
@@ -232,7 +232,7 @@ with channel 16 and reduction ratio 2 ouput shape: (32, 256, 256, 3)
 
 ```
 </div>
-# Image Classification
+## Image Classification
 
 In this section, we will build an image-classifier model. There will
 be two models one with convolutions and the other with involutions.
@@ -480,13 +480,13 @@ Epoch 20/20
 
 ```
 </div>
-# Comparisons
+## Comparisons
 
 In this section, we will be looking at both the models and compare a
 few pointers.
 
 ---
-## Parameters
+### Parameters
 
 One can see that with a similar architecture the parameters in a CNN
 is much larger than that of an INN (Involutional Neural Network).
@@ -566,7 +566,7 @@ _________________________________________________________________
 ```
 </div>
 ---
-## Loss and Accuracy Plots
+### Loss and Accuracy Plots
 
 Here, the loss and the accuracy plots demonstrate that INNs are slow
 learners (with lower parameters).
@@ -614,7 +614,7 @@ plt.show()
 ![png](/img/examples/vision/involution/involution_22_1.png)
 
 
-# Visualizing Involution Kernels
+## Visualizing Involution Kernels
 
 To visualize the kernels, we take the sum of **K×K** values from each
 involution kernel. **All the representatives at different spatial
@@ -667,7 +667,7 @@ for ax, test_image in zip(axes, test_images[:10]):
 ![png](/img/examples/vision/involution/involution_24_0.png)
 
 
-# Conclusions
+## Conclusions
 
 In this example, the main focus was to build an `Involution` layer which
 can be easily reused. While our comparisons were based on a specific
