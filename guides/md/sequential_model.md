@@ -94,9 +94,9 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x1024e6710>,
- <tensorflow.python.keras.layers.core.Dense at 0x13d632ed0>,
- <tensorflow.python.keras.layers.core.Dense at 0x14c6ddb50>]
+[<tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285a00>,
+ <tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285c70>,
+ <tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285ee0>]
 
 ```
 </div>
@@ -176,10 +176,10 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 <div class="k-default-codeblock">
 ```
 [<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[ 0.9168253 , -0.315467  ,  0.84068155],
-        [ 0.8220899 , -0.7972665 ,  0.18171883],
-        [-0.65188885, -0.890025  , -0.7620717 ],
-        [ 0.14732742, -0.2934308 ,  0.36235213]], dtype=float32)>,
+ array([[-0.5312456 , -0.02559239, -0.77284306],
+        [-0.18156391,  0.7774476 , -0.05044252],
+        [-0.3559971 ,  0.43751895,  0.3434813 ],
+        [-0.25133908,  0.8889308 , -0.6510118 ]], dtype=float32)>,
  <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
 
 ```
@@ -287,7 +287,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x14cd016d0>]
+[<tensorflow.python.keras.layers.core.Dense at 0x7fbd5f1776d0>]
 
 ```
 </div>
@@ -490,7 +490,7 @@ last one. Like this:
 
 ```python
 model = keras.Sequential([
-    keras.Input(shape=(784))
+    keras.Input(shape=(784)),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),

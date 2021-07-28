@@ -321,7 +321,7 @@ last one. Like this:
 
 ```python
 model = keras.Sequential([
-    keras.Input(shape=(784))
+    keras.Input(shape=(784)),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),
