@@ -452,10 +452,6 @@ features = feature_extractor(x)
 ```
 
 <div class="k-default-codeblock">
-```
-WARNING:tensorflow:Please add `keras.layers.InputLayer` instead of `keras.Input` to Sequential model. `keras.Input` is intended to be used by Functional model.
-
-```
 </div>
 Here's a similar example that only extract features from one layer:
 
@@ -479,10 +475,6 @@ features = feature_extractor(x)
 ```
 
 <div class="k-default-codeblock">
-```
-WARNING:tensorflow:Please add `keras.layers.InputLayer` instead of `keras.Input` to Sequential model. `keras.Input` is intended to be used by Functional model.
-
-```
 </div>
 ---
 ## Transfer learning with a Sequential model
