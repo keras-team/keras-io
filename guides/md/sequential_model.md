@@ -261,6 +261,7 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
+Model: "sequential_4"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
@@ -363,6 +364,7 @@ model.add(layers.Dense(10))
 
 <div class="k-default-codeblock">
 ```
+Model: "sequential_6"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
@@ -451,8 +453,6 @@ x = tf.ones((1, 250, 250, 3))
 features = feature_extractor(x)
 ```
 
-<div class="k-default-codeblock">
-</div>
 Here's a similar example that only extract features from one layer:
 
 
@@ -474,8 +474,6 @@ x = tf.ones((1, 250, 250, 3))
 features = feature_extractor(x)
 ```
 
-<div class="k-default-codeblock">
-</div>
 ---
 ## Transfer learning with a Sequential model
 
