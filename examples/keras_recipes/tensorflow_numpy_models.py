@@ -7,14 +7,15 @@ Description: Overview of how to use the TensorFlow NumPy API to write Keras mode
 """
 """
 ## Introduction
-[NumPy](https://numpy.org/) is a hugely successful python linear algebra library.
+
+[NumPy](https://numpy.org/) is a hugely successful Python linear algebra library.
 
 TensorFlow recently launched [tf_numpy](https://www.tensorflow.org/guide/tf_numpy), a
 TensorFlow implementation of a large subset of the NumPy API.
 Thanks to `tf_numpy`, you can write Keras layers or models in the NumPy style!
 
 The TensorFlow NumPy API has full integration with the TensorFlow ecosystem.
-Features such as automatic differentiation, Tensorboard, Keras model callbacks,
+Features such as automatic differentiation, TensorBoard, Keras model callbacks,
 TPU distribution and model exporting are all supported.
 
 Let's run through a few examples.
@@ -33,7 +34,7 @@ import numpy as np
 
 """
 Optionally, you can call `tnp.experimental_enable_numpy_behavior()` to enable type promotion in TensorFlow.
-This allows tnp to more closely follow the NumPy standard.
+This allows TNP to more closely follow the NumPy standard.
 """
 
 tnp.experimental_enable_numpy_behavior()
@@ -57,14 +58,15 @@ def evaluate_model(model: keras.Model):
 
 """
 ## Subclassing keras.Model with TNP
+
 The most flexible way to make use of the Keras API is to subclass the
 [`keras.Model`](https://keras.io/api/models/model/) class.  Subclassing the Model class
 gives you the ability to fully customize what occurs in the training loop.  This makes
 subclassing Model a popular option for researchers.
 
 In this example, we will implement a `Model` subclass that performs regression over the
-boston housing dataset using the `tnp` API.  Note that differentiation and gradient
-descent is handled automatically when using the `tnp` API alongside keras.
+boston housing dataset using the TNP API.  Note that differentiation and gradient
+descent is handled automatically when using the TNP API alongside keras.
 
 First let's define a simple `TNPForwardFeedRegressionNetwork` class.
 """
@@ -125,10 +127,8 @@ evaluate_model(model)
 
 """
 Great!  Our model seems to be effectively learning to solve the problem at hand.
-"""
 
-"""
-We can also write our own custom loss function using tnp. 
+We can also write our own custom loss function using TNP. 
 """
 
 
@@ -147,7 +147,8 @@ evaluate_model(model)
 
 """
 ## Implementing a Keras Layer Based Model with TNP
-If desired, `tnp` can also be used in layer oriented Keras code structure.  Let's
+
+If desired, TNP can also be used in layer oriented Keras code structure.  Let's
 implement the same model, but using a layered approach!
 """
 
@@ -205,7 +206,7 @@ model.summary()
 evaluate_model(model)
 
 """
-You can also seamlessly switch between `tnp` layers and native Keras layers!
+You can also seamlessly switch between TNP layers and native Keras layers!
 """
 
 
@@ -239,10 +240,10 @@ code can be a huge time saver in projects.
 
 """
 ## Distribution Strategy
-TensorFlow NumPy and Keras integrate with [TensorFlow distribution
-strategies](https://www.tensorflow.org/guide/distributed_training).  This makes it simple
-to perform distributed training across multiple GPUs, or even an entire TPU Pod.
 
+TensorFlow NumPy and Keras integrate with [TensorFlow Distribution
+Strategies](https://www.tensorflow.org/guide/distributed_training).  This makes it simple
+to perform distributed training across multiple GPUs, or even an entire TPU Pod.
 """
 
 gpus = tf.config.list_logical_devices("GPU")
@@ -265,16 +266,17 @@ with strategy.scope():
     evaluate_model(model)
 
 """
-## Tensorboard Integration
+## TensorBoard Integration
+
 One of the many benefits of using the Keras API is the ability to monitor training
-through Tensorboard.  Using the TensorFlow NumPy API alongside Keras allows you to easily
-leverage Tensorboard.
+through TensorBoard.  Using the TensorFlow NumPy API alongside Keras allows you to easily
+leverage TensorBoard.
 """
 
 keras.backend.clear_session()
 
 """
-To load the Tensorboard from a Jupyter notebook, you can run the following magic:
+To load the TensorBoard from a Jupyter notebook, you can run the following magic:
 ```
 %load_ext tensorboard
 ```
@@ -301,16 +303,17 @@ for model, model_name in models:
     )
 
 """
-To load the Tensorboard from a Jupyter notebook you can use the `%tensorboard` magic:
+To load the TensorBoard from a Jupyter notebook you can use the `%tensorboard` magic:
+
 ```
 %tensorboard --logdir logs
 ```
 
-The Tensorboard monitor metrics and examine the training curve.
+The TensorBoard monitor metrics and examine the training curve.
 
 ![Tensorboard training graph](https://i.imgur.com/wsOuFnz.png)
 
-The Tensorboard also allows you to explore the computation graph used in your models.
+The TensorBoard also allows you to explore the computation graph used in your models.
 
 ![Tensorboard graph exploration](https://i.imgur.com/tOrezDL.png)
 
@@ -319,11 +322,13 @@ The ability to introspect into your models can be valuable during debugging.
 
 """
 ## Conclusion
+
 Porting existing NumPy code to Keras models using the `tensorflow_numpy` API is easy!
 By integrating with Keras you gain the ability to use existing Keras callbacks, metrics
 and optimizers, easily distribute your training and use Tensorboard.
 
 Migrating a more complex model, such as a ResNet, to the TensorFlow NumPy API would be a
 great follow up learning exercise.
+
 Several open source NumPy ResNet implementations are available online.
 """
