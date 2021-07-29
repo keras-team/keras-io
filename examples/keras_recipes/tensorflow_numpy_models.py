@@ -241,9 +241,10 @@ code can be a huge time saver in projects.
 """
 ## Distribution Strategy
 
-TensorFlow NumPy and Keras integrate with [TensorFlow Distribution
-Strategies](https://www.tensorflow.org/guide/distributed_training).  This makes it simple
-to perform distributed training across multiple GPUs, or even an entire TPU Pod.
+TensorFlow NumPy and Keras integrate with
+[TensorFlow Distribution Strategies](https://www.tensorflow.org/guide/distributed_training).
+This makes it simple to perform distributed training across multiple GPUs,
+or even an entire TPU Pod.
 """
 
 gpus = tf.config.list_logical_devices("GPU")
