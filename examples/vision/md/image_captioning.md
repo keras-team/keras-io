@@ -1,4 +1,3 @@
-
 # Image Captioning
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
