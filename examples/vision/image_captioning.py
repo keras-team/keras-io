@@ -68,7 +68,7 @@ FF_DIM = 512
 BATCH_SIZE = 64
 EPOCHS = 30
 AUTOTUNE = tf.data.AUTOTUNE
-
+LEARNING_RATE = 0.00001
 
 """
 ## Preparing the dataset
@@ -384,7 +384,7 @@ class ImageCaptioningModel(keras.Model):
         mask = tf.cast(mask, dtype=tf.float32)
         return tf.reduce_sum(accuracy) / tf.reduce_sum(mask)
 
-    def _compute_loss_and_acc(self, batch_data, training=True):
+    def train_step(self, batch_data):
         batch_img, batch_seq = batch_data
         batch_loss = 0
         batch_acc = 0
@@ -398,7 +398,7 @@ class ImageCaptioningModel(keras.Model):
         for i in range(self.num_captions_per_image):
             with tf.GradientTape() as tape:
                 # 3. Pass image embeddings to encoder
-                encoder_out = self.encoder(img_embed, training=training)
+                encoder_out = self.encoder(img_embed, training=True)
 
                 batch_seq_inp = batch_seq[:, i, :-1]
                 batch_seq_true = batch_seq[:, i, 1:]
@@ -409,16 +409,18 @@ class ImageCaptioningModel(keras.Model):
                 # 5. Pass the encoder outputs, sequence inputs along with
                 # mask to the decoder
                 batch_seq_pred = self.decoder(
-                    batch_seq_inp, encoder_out, training=training, mask=mask
+                    batch_seq_inp, encoder_out, training=True, mask=mask
                 )
 
                 # 6. Calculate loss and accuracy
-                loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-                acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+                caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+                caption_acc = self.calculate_accuracy(
+                    batch_seq_true, batch_seq_pred, mask
+                )
 
                 # 7. Update the batch loss and batch accuracy
-                batch_loss += loss
-                batch_acc += acc
+                batch_loss += caption_loss
+                batch_acc += caption_acc
 
             # 8. Get the list of all the trainable weights
             train_vars = (
@@ -426,21 +428,56 @@ class ImageCaptioningModel(keras.Model):
             )
 
             # 9. Get the gradients
-            grads = tape.gradient(loss, train_vars)
+            grads = tape.gradient(caption_loss, train_vars)
 
             # 10. Update the trainable weights
             self.optimizer.apply_gradients(zip(grads, train_vars))
 
-        return batch_loss, batch_acc / float(self.num_captions_per_image)
+        loss = batch_loss
+        acc = batch_acc / float(self.num_captions_per_image)
 
-    def train_step(self, batch_data):
-        loss, acc = self._compute_loss_and_acc(batch_data)
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
 
     def test_step(self, batch_data):
-        loss, acc = self._compute_loss_and_acc(batch_data, training=False)
+        batch_img, batch_seq = batch_data
+        batch_loss = 0
+        batch_acc = 0
+
+        # 1. Get image embeddings
+        img_embed = self.cnn_model(batch_img)
+
+        # 2. Pass each of the five captions one by one to the decoder
+        # along with the encoder outputs and compute the loss as well as accuracy
+        # for each caption.
+        for i in range(self.num_captions_per_image):
+            # 3. Pass image embeddings to encoder
+            encoder_out = self.encoder(img_embed, training=False)
+
+            batch_seq_inp = batch_seq[:, i, :-1]
+            batch_seq_true = batch_seq[:, i, 1:]
+
+            # 4. Compute the mask for the input sequence
+            mask = tf.math.not_equal(batch_seq_inp, 0)
+
+            # 5. Pass the encoder outputs, sequence inputs along with
+            # mask to the decoder
+            batch_seq_pred = self.decoder(
+                batch_seq_inp, encoder_out, training=False, mask=mask
+            )
+
+            # 6. Calculate loss and accuracy
+            caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+            caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+
+            # 7. Update the batch loss and batch accuracy
+            batch_loss += caption_loss
+            batch_acc += caption_acc
+
+        loss = batch_loss
+        acc = batch_acc / float(self.num_captions_per_image)
+
         self.loss_tracker.update_state(loss)
         self.acc_tracker.update_state(acc)
         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
@@ -476,7 +513,9 @@ cross_entropy = keras.losses.SparseCategoricalCrossentropy(
 early_stopping = keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True)
 
 # Compile the model
-caption_model.compile(optimizer=keras.optimizers.Adam(), loss=cross_entropy)
+caption_model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=LEARNING_RATE), loss=cross_entropy
+)
 
 # Fit the model
 caption_model.fit(
