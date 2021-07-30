@@ -128,7 +128,7 @@ evaluate_model(model)
 """
 Great!  Our model seems to be effectively learning to solve the problem at hand.
 
-We can also write our own custom loss function using TNP. 
+We can also write our own custom loss function using TNP.
 """
 
 
