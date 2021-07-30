@@ -54,13 +54,6 @@ import tensorflow as tf
 import tensorflow_cloud as tfc
 ```
 
-<div class="k-default-codeblock">
-```
-2021-07-27 18:15:27.087654: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2021-07-27 18:15:27.087702: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 ---
 ## Project Configurations
 
@@ -168,11 +161,6 @@ model.compile(
 
 <div class="k-default-codeblock">
 ```
-2021-07-27 18:15:29.535437: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2021-07-27 18:15:29.535482: W tensorflow/stream_executor/cuda/cuda_driver.cc:326] failed call to cuInit: UNKNOWN ERROR (303)
-2021-07-27 18:15:29.535512: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (sina-dev.c.googlers.com): /proc/driver/nvidia/version does not exist
-2021-07-27 18:15:29.535748: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
 ```
 </div>
@@ -192,8 +180,6 @@ if not tfc.remote():
 
 <div class="k-default-codeblock">
 ```
-2021-07-27 18:15:29.818087: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:176] None of the MLIR Optimization Passes are enabled (registered 2)
-2021-07-27 18:15:29.818803: I tensorflow/core/platform/profile_utils/cpu_utils.cc:114] CPU Frequency: 2199995000 Hz
 
 3/3 [==============================] - 1s 78ms/step - loss: 2.3081 - accuracy: 0.1375 - val_loss: 1.7350 - val_accuracy: 0.5000
 
@@ -321,10 +307,9 @@ Note the results will show only after your training has started. This may take a
 few minutes.
 
 
-```python
-# Commented out IPython magic to ensure Python compatibility.
-# %load_ext tensorboard
-# %tensorboard --logdir $TENSORBOARD_LOGS_DIR
+```
+%load_ext tensorboard
+%tensorboard --logdir $TENSORBOARD_LOGS_DIR
 ```
 
 ---
@@ -335,6 +320,6 @@ specified above.
 
 
 ```python
-# trained_model = tf.keras.models.load_model(SAVED_MODEL_DIR)
-# trained_model.summary()
+trained_model = tf.keras.models.load_model(SAVED_MODEL_DIR)
+trained_model.summary()
 ```
