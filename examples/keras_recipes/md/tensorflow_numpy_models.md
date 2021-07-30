@@ -38,13 +38,6 @@ import keras.layers as layers
 import numpy as np
 ```
 
-<div class="k-default-codeblock">
-```
-2021-07-29 17:57:42.026605: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.026626: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 Optionally, you can call `tnp.experimental_enable_numpy_behavior()` to enable type promotion in TensorFlow.
 This allows TNP to more closely follow the NumPy standard.
 
@@ -145,27 +138,6 @@ evaluate_model(model)
 
 <div class="k-default-codeblock">
 ```
-2021-07-29 17:57:42.943880: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcuda.so.1
-2021-07-29 17:57:42.985693: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 0 with properties: 
-pciBusID: 0000:65:00.0 name: Quadro P1000 computeCapability: 6.1
-coreClock: 1.4805GHz coreCount: 5 deviceMemorySize: 3.94GiB deviceMemoryBandwidth: 74.65GiB/s
-2021-07-29 17:57:42.985856: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.985949: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcublas.so.11'; dlerror: libcublas.so.11: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986035: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcublasLt.so.11'; dlerror: libcublasLt.so.11: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986135: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcufft.so.10'; dlerror: libcufft.so.10: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986218: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcurand.so.10'; dlerror: libcurand.so.10: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986300: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcusolver.so.11'; dlerror: libcusolver.so.11: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986382: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcusparse.so.11'; dlerror: libcusparse.so.11: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986465: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudnn.so.8'; dlerror: libcudnn.so.8: cannot open shared object file: No such file or directory
-2021-07-29 17:57:42.986479: W tensorflow/core/common_runtime/gpu/gpu_device.cc:1766] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
-Skipping registering GPU devices...
-2021-07-29 17:57:42.986946: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2021-07-29 17:57:42.988383: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1258] Device interconnect StreamExecutor with strength 1 edge matrix:
-2021-07-29 17:57:42.988403: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1264]      
-2021-07-29 17:57:43.339481: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:176] None of the MLIR Optimization Passes are enabled (registered 2)
-2021-07-29 17:57:43.339883: I tensorflow/core/platform/profile_utils/cpu_utils.cc:114] CPU Frequency: 3699850000 Hz
-
 Mean absolute percent error before training:  422.45343017578125
 Mean absolute percent error after training: 97.24715423583984
 
@@ -424,97 +396,7 @@ for model, model_name in models:
         verbose=0,
         callbacks=[keras.callbacks.TensorBoard(log_dir=f"logs/{model_name}")],
     )
-```
-
-<div class="k-default-codeblock">
-```
-2021-07-29 17:58:14.405316: I tensorflow/core/profiler/lib/profiler_session.cc:126] Profiler session initializing.
-2021-07-29 17:58:14.405358: I tensorflow/core/profiler/lib/profiler_session.cc:141] Profiler session started.
-2021-07-29 17:58:14.405412: I tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1611] Profiler found 1 GPUs
-2021-07-29 17:58:14.405708: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcupti.so.11.2'; dlerror: libcupti.so.11.2: cannot open shared object file: No such file or directory
-2021-07-29 17:58:14.405798: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcupti.so'; dlerror: libcupti.so: cannot open shared object file: No such file or directory
-2021-07-29 17:58:14.405812: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1661] function cupti_interface_->Subscribe( &subscriber_, (CUpti_CallbackFunc)ApiCallback, this)failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:14.406093: I tensorflow/core/profiler/lib/profiler_session.cc:159] Profiler session tear down.
-2021-07-29 17:58:14.406121: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1752] function cupti_interface_->Finalize()failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:14.958623: I tensorflow/core/profiler/lib/profiler_session.cc:126] Profiler session initializing.
-2021-07-29 17:58:14.958654: I tensorflow/core/profiler/lib/profiler_session.cc:141] Profiler session started.
-2021-07-29 17:58:14.958761: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1661] function cupti_interface_->Subscribe( &subscriber_, (CUpti_CallbackFunc)ApiCallback, this)failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:14.960648: I tensorflow/core/profiler/lib/profiler_session.cc:66] Profiler session collecting data.
-2021-07-29 17:58:14.960699: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1752] function cupti_interface_->Finalize()failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:14.961077: I tensorflow/core/profiler/internal/gpu/cupti_collector.cc:673]  GpuTracer has collected 0 callback api events and 0 activity events. 
-2021-07-29 17:58:14.961770: I tensorflow/core/profiler/lib/profiler_session.cc:159] Profiler session tear down.
-2021-07-29 17:58:14.963236: I tensorflow/core/profiler/rpc/client/save_profile.cc:137] Creating directory: logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14
-2021-07-29 17:58:14.963851: I tensorflow/core/profiler/rpc/client/save_profile.cc:143] Dumped gzipped tool data for trace.json.gz to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.trace.json.gz
-2021-07-29 17:58:14.965368: I tensorflow/core/profiler/rpc/client/save_profile.cc:137] Creating directory: logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14
-2021-07-29 17:58:14.965447: I tensorflow/core/profiler/rpc/client/save_profile.cc:143] Dumped gzipped tool data for memory_profile.json.gz to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.memory_profile.json.gz
-2021-07-29 17:58:14.965608: I tensorflow/core/profiler/rpc/client/capture_profile.cc:251] Creating directory: logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14Dumped tool data for xplane.pb to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.xplane.pb
-Dumped tool data for overview_page.pb to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.overview_page.pb
-Dumped tool data for input_pipeline.pb to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.input_pipeline.pb
-Dumped tool data for tensorflow_stats.pb to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.tensorflow_stats.pb
-Dumped tool data for kernel_stats.pb to logs/TNPForwardFeedRegressionNetwork/train/plugins/profile/2021_07_29_17_58_14/yeti.sfo.corp.google.com.kernel_stats.pb
-```
-</div>
-    
-
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Model failed to serialize as JSON. Ignoring... Layer TNPDense has arguments in `__init__` and therefore must override `get_config`.
-
-2021-07-29 17:58:19.449655: I tensorflow/core/profiler/lib/profiler_session.cc:126] Profiler session initializing.
-2021-07-29 17:58:19.449734: I tensorflow/core/profiler/lib/profiler_session.cc:141] Profiler session started.
-2021-07-29 17:58:19.449892: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1661] function cupti_interface_->Subscribe( &subscriber_, (CUpti_CallbackFunc)ApiCallback, this)failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:19.449962: I tensorflow/core/profiler/lib/profiler_session.cc:159] Profiler session tear down.
-2021-07-29 17:58:19.449998: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1752] function cupti_interface_->Finalize()failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:22.011179: I tensorflow/core/profiler/lib/profiler_session.cc:126] Profiler session initializing.
-2021-07-29 17:58:22.011211: I tensorflow/core/profiler/lib/profiler_session.cc:141] Profiler session started.
-2021-07-29 17:58:22.011241: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1661] function cupti_interface_->Subscribe( &subscriber_, (CUpti_CallbackFunc)ApiCallback, this)failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:22.022699: I tensorflow/core/profiler/lib/profiler_session.cc:66] Profiler session collecting data.
-2021-07-29 17:58:22.022762: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1752] function cupti_interface_->Finalize()failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:22.023090: I tensorflow/core/profiler/internal/gpu/cupti_collector.cc:673]  GpuTracer has collected 0 callback api events and 0 activity events. 
-2021-07-29 17:58:22.023764: I tensorflow/core/profiler/lib/profiler_session.cc:159] Profiler session tear down.
-2021-07-29 17:58:22.024763: I tensorflow/core/profiler/rpc/client/save_profile.cc:137] Creating directory: logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22
-2021-07-29 17:58:22.025353: I tensorflow/core/profiler/rpc/client/save_profile.cc:143] Dumped gzipped tool data for trace.json.gz to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.trace.json.gz
-2021-07-29 17:58:22.026151: I tensorflow/core/profiler/rpc/client/save_profile.cc:137] Creating directory: logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22
-2021-07-29 17:58:22.026214: I tensorflow/core/profiler/rpc/client/save_profile.cc:143] Dumped gzipped tool data for memory_profile.json.gz to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.memory_profile.json.gz
-2021-07-29 17:58:22.026407: I tensorflow/core/profiler/rpc/client/capture_profile.cc:251] Creating directory: logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22Dumped tool data for xplane.pb to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.xplane.pb
-Dumped tool data for overview_page.pb to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.overview_page.pb
-Dumped tool data for input_pipeline.pb to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.input_pipeline.pb
-Dumped tool data for tensorflow_stats.pb to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.tensorflow_stats.pb
-Dumped tool data for kernel_stats.pb to logs/layered_tnp_model/train/plugins/profile/2021_07_29_17_58_22/yeti.sfo.corp.google.com.kernel_stats.pb
-```
-</div>
-    
-
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Model failed to serialize as JSON. Ignoring... Layer TNPDense has arguments in `__init__` and therefore must override `get_config`.
-
-2021-07-29 17:58:26.608574: I tensorflow/core/profiler/lib/profiler_session.cc:126] Profiler session initializing.
-2021-07-29 17:58:26.608649: I tensorflow/core/profiler/lib/profiler_session.cc:141] Profiler session started.
-2021-07-29 17:58:26.608706: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1661] function cupti_interface_->Subscribe( &subscriber_, (CUpti_CallbackFunc)ApiCallback, this)failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:26.608841: I tensorflow/core/profiler/lib/profiler_session.cc:159] Profiler session tear down.
-2021-07-29 17:58:26.608876: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1752] function cupti_interface_->Finalize()failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:27.255248: I tensorflow/core/profiler/lib/profiler_session.cc:126] Profiler session initializing.
-2021-07-29 17:58:27.255282: I tensorflow/core/profiler/lib/profiler_session.cc:141] Profiler session started.
-2021-07-29 17:58:27.255389: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1661] function cupti_interface_->Subscribe( &subscriber_, (CUpti_CallbackFunc)ApiCallback, this)failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:27.266298: I tensorflow/core/profiler/lib/profiler_session.cc:66] Profiler session collecting data.
-2021-07-29 17:58:27.266360: E tensorflow/core/profiler/internal/gpu/cupti_tracer.cc:1752] function cupti_interface_->Finalize()failed with error CUPTI could not be loaded or symbol could not be found.
-2021-07-29 17:58:27.266683: I tensorflow/core/profiler/internal/gpu/cupti_collector.cc:673]  GpuTracer has collected 0 callback api events and 0 activity events. 
-2021-07-29 17:58:27.267354: I tensorflow/core/profiler/lib/profiler_session.cc:159] Profiler session tear down.
-2021-07-29 17:58:27.268329: I tensorflow/core/profiler/rpc/client/save_profile.cc:137] Creating directory: logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27
-2021-07-29 17:58:27.268915: I tensorflow/core/profiler/rpc/client/save_profile.cc:143] Dumped gzipped tool data for trace.json.gz to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.trace.json.gz
-2021-07-29 17:58:27.269671: I tensorflow/core/profiler/rpc/client/save_profile.cc:137] Creating directory: logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27
-2021-07-29 17:58:27.269736: I tensorflow/core/profiler/rpc/client/save_profile.cc:143] Dumped gzipped tool data for memory_profile.json.gz to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.memory_profile.json.gz
-2021-07-29 17:58:27.269905: I tensorflow/core/profiler/rpc/client/capture_profile.cc:251] Creating directory: logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27Dumped tool data for xplane.pb to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.xplane.pb
-Dumped tool data for overview_page.pb to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.overview_page.pb
-Dumped tool data for input_pipeline.pb to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.input_pipeline.pb
-Dumped tool data for tensorflow_stats.pb to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.tensorflow_stats.pb
-Dumped tool data for kernel_stats.pb to logs/mixed_model/train/plugins/profile/2021_07_29_17_58_27/yeti.sfo.corp.google.com.kernel_stats.pb
-```
-</div>
-    
+``` 
 
 
 To load the TensorBoard from a Jupyter notebook you can use the `%tensorboard` magic:
