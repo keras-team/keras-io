@@ -1,6 +1,6 @@
 # Writing Keras Models With TensorFlow NumPy
 
-**Author:** lukewood<br>
+**Author:** [lukewood](https://lukewood.xyz)<br>
 **Date created:** 2021/08/28<br>
 **Last modified:** 2021/08/28<br>
 **Description:** Overview of how to use the TensorFlow NumPy API to write Keras models.
