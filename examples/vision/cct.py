@@ -173,7 +173,7 @@ class CCTTokenizer(layers.Layer):
 [Stochastic depth](https://arxiv.org/abs/1603.09382) is a regularization technique that
 randomly drops a set of layers. During inference, the layers are kept as they are. It is
 very much similar to [Dropout](https://jmlr.org/papers/v15/srivastava14a.html) but only
-that it operates on a block os layers rather than individual nodes present inside a
+that it operates on a block of layers rather than individual nodes present inside a
 layer. In CCT, stochastic depth is used just before the residual blocks of a Transformers
 encoder.
 """
