@@ -64,13 +64,13 @@ tfds.disable_progress_bar()
 ## Hyperparameters and contants
 """
 
-AUTO = tf.data.AUTOTUNE
+AUTO = tf.data.AUTOTUNE # Will be used to dynamically decide the level of parallelism.
 
 # Comes from Table 4 and "Training setup" section.
-TEMPERATURE = 10
-INIT_LR = 0.003
-WEIGHT_DECAY = 0.001
-CLIP_THRESHOLD = 1.0
+TEMPERATURE = 10 # Will be used to soften the logits before they go to softmax.
+INIT_LR = 0.003 # Initial learning rate that will be decayed over the training period.
+WEIGHT_DECAY = 0.001 # Will be used for regularization.
+CLIP_THRESHOLD = 1.0 # Will be used for clipping the gradients w.r.t their L2-norm.
 
 BATCH_SIZE = 64
 BIGGER = 160
@@ -294,6 +294,11 @@ class Distiller(tf.keras.Model):
         super(Distiller, self).__init__()
         self.student = student
         self.teacher = teacher
+        self.loss_tracker = keras.metrics.Mean(name="distillation_loss")
+
+    @property
+    def metrics(self):
+        return [self.loss_tracker]
 
     def compile(
         self, optimizer, metrics, distillation_loss_fn, temperature=TEMPERATURE,
@@ -327,8 +332,9 @@ class Distiller(tf.keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Report progress
+        self.loss_tracker.update_state(distillation_loss)
         results = {m.name: m.result() for m in self.metrics}
-        results.update({"distillation_loss": distillation_loss})
+        results.update({"distillation_loss": self.loss_tracker.result()})
         return results
 
     def test_step(self, data):
@@ -346,9 +352,10 @@ class Distiller(tf.keras.Model):
         )
 
         # Report progress
+        self.loss_tracker.update_state(distillation_loss)
         self.compiled_metrics.update_state(y, student_predictions)
         results = {m.name: m.result() for m in self.metrics}
-        results.update({"distillation_loss": distillation_loss})
+        results.update({"distillation_loss": self.loss_tracker.result()})
         return results
 
 
@@ -378,17 +385,16 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __call__(self, step):
         if self.total_steps < self.warmup_steps:
             raise ValueError("Total_steps must be larger or equal to warmup_steps.")
+
+        cos_annealed_lr = tf.cos(
+            self.pi
+            * (tf.cast(step, tf.float32) - self.warmup_steps)
+            / float(self.total_steps - self.warmup_steps)
+        )
         learning_rate = (
             0.5
             * self.learning_rate_base
-            * (
-                1
-                + tf.cos(
-                    self.pi
-                    * (tf.cast(step, tf.float32) - self.warmup_steps)
-                    / float(self.total_steps - self.warmup_steps)
-                )
-            )
+            * (1 + cos_annealed_lr)
         )
 
         if self.warmup_steps > 0:
