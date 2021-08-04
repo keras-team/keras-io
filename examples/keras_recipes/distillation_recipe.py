@@ -64,13 +64,13 @@ tfds.disable_progress_bar()
 ## Hyperparameters and contants
 """
 
-AUTO = tf.data.AUTOTUNE # Will be used to dynamically decide the level of parallelism.
+AUTO = tf.data.AUTOTUNE  # Will be used to dynamically decide the level of parallelism.
 
 # Comes from Table 4 and "Training setup" section.
-TEMPERATURE = 10 # Will be used to soften the logits before they go to softmax.
-INIT_LR = 0.003 # Initial learning rate that will be decayed over the training period.
-WEIGHT_DECAY = 0.001 # Will be used for regularization.
-CLIP_THRESHOLD = 1.0 # Will be used for clipping the gradients w.r.t their L2-norm.
+TEMPERATURE = 10  # Will be used to soften the logits before they go to softmax.
+INIT_LR = 0.003  # Initial learning rate that will be decayed over the training period.
+WEIGHT_DECAY = 0.001  # Will be used for regularization.
+CLIP_THRESHOLD = 1.0  # Will be used for clipping the gradients w.r.t their L2-norm.
 
 BATCH_SIZE = 64
 BIGGER = 160
@@ -391,11 +391,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             * (tf.cast(step, tf.float32) - self.warmup_steps)
             / float(self.total_steps - self.warmup_steps)
         )
-        learning_rate = (
-            0.5
-            * self.learning_rate_base
-            * (1 + cos_annealed_lr)
-        )
+        learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
 
         if self.warmup_steps > 0:
             if self.learning_rate_base < self.warmup_learning_rate:
