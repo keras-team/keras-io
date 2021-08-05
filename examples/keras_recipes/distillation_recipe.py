@@ -72,6 +72,8 @@ INIT_LR = 0.003  # Initial learning rate that will be decayed over the training 
 WEIGHT_DECAY = 0.001  # Will be used for regularization.
 CLIP_THRESHOLD = 1.0  # Will be used for clipping the gradients w.r.t their L2-norm.
 
+# We will first resize the training images to a bigger size and then we will take
+# random crops of a lower size.
 BATCH_SIZE = 64
 BIGGER = 160
 RESIZE = 128
@@ -298,7 +300,7 @@ class Distiller(tf.keras.Model):
 
     @property
     def metrics(self):
-        return [self.loss_tracker]
+        return super().metrics.append(self.loss_tracker)
 
     def compile(
         self, optimizer, metrics, distillation_loss_fn, temperature=TEMPERATURE,
@@ -333,9 +335,7 @@ class Distiller(tf.keras.Model):
 
         # Report progress
         self.loss_tracker.update_state(distillation_loss)
-        results = {m.name: m.result() for m in self.metrics}
-        results.update({"distillation_loss": self.loss_tracker.result()})
-        return results
+        return {"distillation_loss": self.loss_tracker.result()}
 
     def test_step(self, data):
         # Unpack data
@@ -355,7 +355,6 @@ class Distiller(tf.keras.Model):
         self.loss_tracker.update_state(distillation_loss)
         self.compiled_metrics.update_state(y, student_predictions)
         results = {m.name: m.result() for m in self.metrics}
-        results.update({"distillation_loss": self.loss_tracker.result()})
         return results
 
 
