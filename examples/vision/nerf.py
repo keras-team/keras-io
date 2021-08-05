@@ -1,0 +1,676 @@
+"""
+Title: 3-D Volumetric Rendering using NeRF
+Authors: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
+Date created: 2021/08/05
+Last modified: 2021/08/05
+Description: Minimal implementation of volumetric rendering as shown in NeRF.
+"""
+"""
+# Introduction
+
+In this example we minimally implement the research paper
+[**NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis**](https://arxiv.org/abs/2003.08934)
+by Ben Mildenhall et. al. The authors have proposed an ingenious way 
+to **synthesise novel views** of a scene by modelling the *volumetric
+scene function* through a neural network.
+
+To construct an intuition, let me ask you a simple question. *What 
+will happen if we input the co-ordinates of the image to a neural 
+network and ask it to predict the color at that co-ordinate?*
+
+| ![2d-train](https://i.imgur.com/DQM92vN.png) |
+| :---: |
+| **Figure 1**: A neural network being given co-ordinates of an image
+as inputs and asked to predict the color at the co-ordinates. |
+
+The neural network will hypothetically **memorize** (overfit on) the
+image. This means that our neural network has encoded the entire image
+in itself. We can query the neural network with all the co-ordinates
+and it will eventually reconstruct the entire image.
+
+| ![2d-test](https://i.imgur.com/6Qz5Hp1.png) |
+| :---: |
+| **Figure 2**: The trained neural network recreates the image from
+scratch. |
+
+A question now arises, how do we extend this idea and learn a 3-D
+volumentric scene? Implementing a similar process as above, would
+require the knowledge of every voxel (volume pixel). Turns out, this
+is quite a challenging task to do. 
+
+The authors in the paper propose a minimal and elegant way to learn a
+3-D scene using a **few images of the scene**. They discard the use of
+voxels for training and make the entire training efficient. The
+network learns to model the volumetric scene, thereby generating novel
+views (images) of the 3-D scene that the model was not shown in the
+training step.
+
+There are a few pre-requisites one needs to understand to fully
+appreciate the research. We structure the example in such a way that
+you will have all the required knowledge before going ahead with the
+implementation.
+"""
+
+"""
+# Setup
+"""
+
+import os
+import glob
+import imageio
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from tensorflow import keras
+from base64 import b64encode
+from tqdm.notebook import tqdm
+from IPython.display import HTML, Image
+
+AUTO = tf.data.AUTOTUNE
+
+# GLOBALS
+BATCH_SIZE = 5
+NUM_SAMPLES = 32
+POS_ENCODE_DIMS = 16
+EPOCHS = 10
+
+"""
+# Download and load the data
+
+The `npz` data file contains images, camera-poses and a focal length.
+The **images** are taken from multiple camera angles as shown in
+**Figure 3**.
+
+| ![camera-angles](https://i.imgur.com/FLsi2is.png) |
+| :---: |
+| **Figure 3**: Multiple camera angles <br>[Source: NeRF](https://arxiv.org/abs/2003.08934) |
+
+
+To understand **camera-poses** in this context we have to first allow
+ourselves to think that a *camera is a mapping between the real world
+and the 2-D image*.
+
+| ![mapping](https://www.mathworks.com/help/vision/ug/calibration_coordinate_blocks.png) |
+| :---: |
+| **Figure 4**: 3-D world to 2-D image mapping through a camera <br>
+[Source: Mathworks](https://www.mathworks.com/help/vision/ug/camera-calibration.html) |
+
+Consider the following equation:
+
+<img src="https://i.imgur.com/TQHKx5v.pngg" width="100" height="50"/>
+
+Where **x** is the 2-D image point, **X** is the 3-D world point and
+**P** is the camera-matrix. **P** is a `3x4` matrix that plays the
+crucial role of mapping the real world object onto an image plane.
+
+<img src="https://i.imgur.com/chvJct5.png" width="300" height="100"/>
+
+The camera-matrix is an **affine transform** matrix that is
+conactenated with a `3x1` column
+`[image height, image width, focal length]` to give the pose-matrix.
+This resultant matrix is of dimensions `3X5` where the first `3X3`
+block is in the point of view of the camera. The axes are
+`[down, right, backwards]` or `[-y,x,z]` where the camera is facing
+forwards `-z`. 
+
+| ![camera-mapping](https://i.imgur.com/kvjqbiO.png) |
+| :---: |
+| **Figure 5**: The affine transformation. |
+
+The COLMAP frame is `[right, down, forwards]` or `[x,-y,-z]`. Read 
+more about COLMAP [here](https://colmap.github.io/).
+"""
+
+# Download the data if does not already exist.
+file_name = "tiny_nerf_data.npz"
+url = "https://people.eecs.berkeley.edu/~bmild/nerf/tiny_nerf_data.npz"
+if not os.path.exists(file_name):
+    data = keras.utils.get_file(fname=file_name, origin=url)
+
+# Load the numpy data.
+data = np.load(data)
+
+# Get all the images.
+images = data["images"]
+im_shape = images.shape
+num_images = im_shape[0]
+H = im_shape[1]
+W = im_shape[2]
+
+# Get all the poses.
+poses = data["poses"]
+
+# Grab the focal length.
+focal = data["focal"]
+
+# Get a random index.
+rand_index = np.random.randint(low=0, high=num_images)
+
+# Get the random data point.
+test_image = images[rand_index]
+
+# Plot the image.
+plt.imshow(test_image)
+plt.axis("off")
+plt.show()
+
+"""
+# Data Pipeline
+
+With the intuition of camera matrix and the mapping from 3-D world to
+2-D image let's talk about the inverse mapping, i.e. from 2-D image to
+the 3-D world. 
+
+In computer graphics volumetric rendering with ray casting and tracing
+are proactively used. This section will help you get to speed with the
+techniques for an easy understanding of our data pipeline.
+
+Consider an image with `N` pixles. We shoot a ray through each pixel
+and sample some points on the ray. A ray is commonly parameterised by
+the eqaution `r(t) = o + td` where `t` is the parameter, `o` is the
+origin and `d` is the unit directional vector as shown in **Figure 6**.
+
+| ![img](https://i.imgur.com/ywrqlzt.gif) |
+| :---: |
+| **Figure 6**: `r(t) = o + td` where t is 3 |
+
+In **Figure 7** the ray is shot and we sample some random points on
+the ray. These sample points each have a unique location `(x, y, z)`
+and the ray has a viewing angle `(theta, phi)`. The viewing angle is
+particularly interesting as we can shoot a ray through a single pixel
+in a lot of different ways, each with a unique viewing angle. Another
+interesting thing to notice here is the noise that is added to the
+sampling process. We add a uniform noise to each sample so that the
+samples correspond to a continuous distribution. In **Figure 7** the
+blue points are the evenly distributed samples and the white points
+`(t1, t2, t3)` are randomly placed between the samples. 
+
+| ![img](https://i.imgur.com/r9TS2wv.gif) |
+| :---: |
+| **Figure 7**: Sampling the points from a ray. |
+
+**Figure 8** showcases the entire sampling process in 3-D where you
+can see the rays coming out from the white image. This means that each
+pixel will have its corresponding rays and each ray will be sampled at
+distinct points. 
+
+| ![3-d rays](https://i.imgur.com/hr4D2g2.gif) |
+| :---: |
+| **Figure 8**: Shooting rays from all the pixels of an image in 3-D |
+
+These sampled points act as the input to the NeRF model. The model is
+then asked to predict the rgb color and the volume density at that
+point.
+
+| ![3-Drender](https://i.imgur.com/HHb6tlQ.png) |
+| :---: |
+| **Figure 9**: Data pipeline <br>
+[Source: NeRF](https://arxiv.org/abs/2003.08934) |
+
+"""
+
+
+def pos_encode(x):
+    # create a positions list
+    positions = [x]
+
+    # iterate POS_ENCODE_DIMS times
+    for i in range(POS_ENCODE_DIMS):
+
+        # apply sin and cos function
+        for fn in [tf.sin, tf.cos]:
+
+            # apply positional encoding
+            positions.append(fn(2.0 ** i * x))
+
+    # return the positional encoding
+    return tf.concat(positions, axis=-1)
+
+
+def get_rays(height, width, focal, pose):
+    # Build a meshgrid for the rays.
+    i, j = tf.meshgrid(
+        tf.range(width, dtype=tf.float32),
+        tf.range(height, dtype=tf.float32),
+        indexing="xy",
+    )
+
+    # TODO: write comments
+    transformed_i = (i - width * 0.5) / focal
+
+    # TODO: write comments
+    transformed_j = (j - height * 0.5) / focal
+
+    # TODO: write comments
+    dirs = tf.stack([transformed_i, -transformed_j, -tf.ones_like(i)], axis=-1)
+
+    # Get the camera matrix.
+    camera_matrix = pose[:3, :3]
+    hwf = pose[:3, -1]
+
+    # Get origins and directions for the rays.
+    transformed_dirs = dirs[..., None, :]
+    camera_dirs = transformed_dirs * camera_matrix
+    ray_dirs = tf.reduce_sum(camera_dirs, axis=-1)
+    ray_oris = tf.broadcast_to(hwf, tf.shape(ray_dirs))
+
+    # Return the origins and directions.
+    return (ray_oris, ray_dirs)
+
+
+def render_flat_rays(ray_oris, ray_dirs, near, far, num_samples, rand=False):
+    # Compute 3D query points.
+    # r(t) = o+td -> Building the "t" here.
+    t_vals = tf.linspace(near, far, num_samples)
+    if rand:
+        # Inject uniform noise into the sample space to make the sampling
+        # continuous.
+        shape = list(ray_oris.shape[:-1]) + [num_samples]
+        noise = tf.random.uniform(shape=shape) * (far - near) / num_samples
+        t_vals = t_vals + noise
+
+    # r(t) = o + td -> Building the "r" here.
+    rays = ray_oris[..., None, :] + (ray_dirs[..., None, :] * t_vals[..., None])
+    rays_flat = tf.reshape(rays, [-1, 3])
+
+    # Apply positional encdoing.
+    rays_flat = pos_encode(rays_flat)
+
+    return (rays_flat, t_vals)
+
+
+def map_fn(pose):
+    # Get the ray origin and directions.
+    (ray_oris, ray_dirs) = get_rays(height=H, width=W, focal=focal, pose=pose)
+
+    # Render the rays from the origin and direction.
+    (rays_flat, t_vals) = render_flat_rays(
+        ray_oris=ray_oris,
+        ray_dirs=ray_dirs,
+        near=2.0,
+        far=6.0,
+        num_samples=NUM_SAMPLES,
+        rand=True,
+    )
+    return (rays_flat, t_vals)
+
+    # get_rays
+    (ray_oris, ray_dirs) = get_rays(H, W, focal, pose)
+    rays_flat, t_vals = render_flat_rays(
+        ray_oris, ray_dirs, near=2.0, far=6.0, num_samples=NUM_SAMPLES, rand=False
+    )
+    return rays_flat, t_vals
+
+
+# Make the `tf.data` pipeline.
+train_img_ds = tf.data.Dataset.from_tensor_slices(images)
+train_pose_ds = tf.data.Dataset.from_tensor_slices(poses)
+
+# Map the pose ds to get "flat_rays" and "t_vals" as dataset.
+train_ray_ds = train_pose_ds.map(map_fn, num_parallel_calls=AUTO)
+
+# Zip the image and rays dataset together.
+training_ds = tf.data.Dataset.zip((train_img_ds, train_ray_ds))
+
+# Shuffle and batch the dataset.
+train_ds = (
+    training_ds.shuffle(BATCH_SIZE)
+    .batch(BATCH_SIZE, drop_remainder=True, num_parallel_calls=AUTO)
+    .prefetch(AUTO)
+)
+
+"""
+# NeRF model
+
+The model is a multi-layer perceptron. It has relu as its non-linearity. 
+
+An exerpt from the paper:
+
+"We encourage the representation to be multiview consistent by
+restricting the network to predict the volume density sigma as a
+function of only the location x, while allowing the RGB color c to be
+predicted as a function of both location and viewing direction. To
+accomplish this, the MLP first processes the input 3D coordinate x
+with 8 fully-connected layers (using ReLU activations and 256 channels
+per layer), and outputs sigma and a 256-dimensional feature vector.
+This feature vector is then concatenated with the camera ray’s viewing
+direction and passed to one additional fully-connected layer (using a
+ReLU activation and 128 channels) that output the view-dependent RGB
+color."
+
+Here we have gone for a minimal implementation and have used `64`
+Dense units instead of `256` as that mentioned in the paper.
+"""
+
+
+def get_nerf_model(num_layers, num_pos):
+    # Initialize the input layer.
+    inputs = tf.keras.Input(shape=(num_pos, 2 * 3 * POS_ENCODE_DIMS + 3))
+    x = inputs
+    for i in range(num_layers):
+        # Define the Dense layers
+        x = tf.keras.layers.Dense(units=64, activation="relu")(x)
+        if i % 4 == 0 and i > 0:
+            # Inject residual connection.
+            x = tf.keras.layers.concatenate([x, inputs], axis=-1)
+
+    # Process the output.
+    outputs = tf.keras.layers.Dense(units=4)(x)
+
+    # Create the model.
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+
+    # Return the model.
+    return model
+
+
+def render_rgb_depth(model, rays_flat, t_vals, rand=True, train=True):
+    # Get the predictions from the nerf model and reshape it.
+    if train:
+        predictions = model(rays_flat)
+    else:
+        predictions = model.predict(rays_flat)
+    predictions = tf.reshape(predictions, shape=(BATCH_SIZE, H, W, NUM_SAMPLES, 4))
+
+    # Slice the predictions into rgb and sigma.
+    rgb = tf.sigmoid(predictions[..., :-1])
+    sigma_a = tf.nn.relu(predictions[..., -1])
+
+    # Get the distance of adjacent intervals.
+    delta = t_vals[..., 1:] - t_vals[..., :-1]
+    # delta shape = (num_samples)
+    if rand:
+        delta = tf.concat(
+            [delta, tf.broadcast_to([1e10], shape=(BATCH_SIZE, H, W, 1))], axis=-1
+        )
+        alpha = 1.0 - tf.exp(-sigma_a * delta)
+    else:
+        delta = tf.concat(
+            [delta, tf.broadcast_to([1e10], shape=(BATCH_SIZE, 1))], axis=-1
+        )
+        alpha = 1.0 - tf.exp(-sigma_a * delta[:, None, None, :])
+
+    # Get transmittance.
+    exp_term = 1.0 - alpha
+    epsilon = 1e-10
+    T = tf.math.cumprod(exp_term + epsilon, axis=-1, exclusive=True)
+    weights = alpha * T
+    rgb = tf.reduce_sum(weights[..., None] * rgb, axis=-2)
+
+    if rand:
+        depth_map = tf.reduce_sum(weights * t_vals, axis=-1)
+    else:
+        depth_map = tf.reduce_sum(weights * t_vals[:, None, None], axis=-1)
+    return (rgb, depth_map)
+
+
+"""
+# "Model.fit"
+
+The training step is gathered in a `keras.Model` class so that we can
+make use of the `model.fit` call.
+"""
+
+
+class NeRF(keras.Model):
+    def __init__(self, nerf_model):
+        super().__init__()
+        self.nerf_model = nerf_model
+
+    def compile(self, optimizer, loss):
+        super().compile()
+        self.optimizer = optimizer
+        self.loss = loss
+
+    def train_step(self, inputs):
+        # Get the images and the rays.
+        (images, rays) = inputs
+        (rays_flat, t_vals) = rays
+
+        with tf.GradientTape() as tape:
+            # Get the predictions from the model.
+            rgb, _ = render_rgb_depth(
+                model=self.nerf_model, rays_flat=rays_flat, t_vals=t_vals, rand=True
+            )
+            loss = self.loss(images, rgb)
+
+        # Get the trainable variables.
+        trainable_variables = self.nerf_model.trainable_variables
+
+        # Get the gradeints of the trainiable variables with respect to the loss.
+        gradients = tape.gradient(loss, trainable_variables)
+
+        # Apply the grads and optimize the model.
+        self.optimizer.apply_gradients(zip(gradients, trainable_variables))
+
+        # Get the PSNR of the reconstructed images and the source images.
+        psnr = tf.image.psnr(images, rgb, max_val=1.0)
+
+        # return the loss and the psnr value
+        return {"loss": loss, "psnr": psnr}
+
+
+test_imgs, test_rays = next(iter(train_ds))
+test_rays_flat, test_t_vals = test_rays
+
+loss_list = []
+
+
+class CustomCallback(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        loss = logs["loss"]
+        loss_list.append(loss)
+        test_recons_images, depth_maps = render_rgb_depth(
+            model=self.model.nerf_model,
+            rays_flat=test_rays_flat,
+            t_vals=test_t_vals,
+            rand=True,
+            train=False,
+        )
+
+        # Plot the rgb, depth and the loss plot.
+        fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
+        ax[0].imshow(keras.preprocessing.image.array_to_img(test_recons_images[0]))
+        ax[0].set_title(f"Predicted Image: {epoch:03d}")
+
+        ax[1].imshow(keras.preprocessing.image.array_to_img(depth_maps[0, ..., None]))
+        ax[1].set_title(f"Depth Map: {epoch:03d}")
+
+        ax[2].plot(loss_list)
+        ax[2].set_xticks(np.arange(0, EPOCHS + 1, 5.0))
+        ax[2].set_title(f"Loss Plot: {epoch:03d}")
+
+        fig.savefig(f"images/{epoch:03d}.png")
+        plt.close()
+
+
+num_pos = H * W * NUM_SAMPLES
+nerf_model = get_nerf_model(num_layers=8, num_pos=num_pos)
+
+model = NeRF(nerf_model)
+model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.MeanSquaredError())
+
+# Create a directory to save the images during training.
+if not os.path.exists("images"):
+    os.makedirs("images")
+
+model.fit(
+    train_ds,
+    batch_size=BATCH_SIZE,
+    epochs=EPOCHS,
+    callbacks=[CustomCallback()],
+    steps_per_epoch=num_images // BATCH_SIZE,
+)
+
+
+def create_gif(path_to_images, name_gif):
+    filenames = glob.glob(path_to_images)
+    filenames = sorted(filenames)
+    images = []
+    for filename in tqdm(filenames):
+        images.append(imageio.imread(filename))
+    kargs = {"duration": 0.25}
+    imageio.mimsave(name_gif, images, "GIF", **kargs)
+
+
+create_gif("images/*.png", "training.gif")
+
+"""
+## Visualize the training step
+
+Here we see the training step. With decreasing loss, the rendered
+image and the depth maps are getting better.
+"""
+
+Image(open("training.gif", "rb").read())
+
+"""
+# Inference
+
+In this section, we ask the model to build novel views of the scene.
+The model was given `106` views of the scene in the train step. The
+collections of training images cannot contain each and every angle of
+the scene. A trained model can represent the entire 3-D scene with the
+sparse set of training images.
+
+Here we provide different poses to the model and ask for it to give us
+the 2-D image corresponding to that camera view. If we infer the model
+for all the 360 degree views, it should provide an overview of the
+entire scenery from all around.
+"""
+
+nerf_model = model.nerf_model
+test_recons_images, depth_maps = render_rgb_depth(
+    model=nerf_model,
+    rays_flat=test_rays_flat,
+    t_vals=test_t_vals,
+    rand=True,
+    train=False,
+)
+
+fig, axes = plt.subplots(nrows=5, ncols=3, figsize=(10, 20))
+
+for ax, ori_img, recons_img, depth_map in zip(
+    axes, test_imgs, test_recons_images, depth_maps
+):
+    ax[0].imshow(keras.preprocessing.image.array_to_img(ori_img))
+    ax[0].set_title("Original")
+
+    ax[1].imshow(keras.preprocessing.image.array_to_img(recons_img))
+    ax[1].set_title("Reconstructed")
+
+    ax[2].imshow(
+        keras.preprocessing.image.array_to_img(depth_map[..., None]), cmap="inferno"
+    )
+    ax[2].set_title("Depth Map")
+
+
+def get_trans_t(t):
+    matrix = [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, t],
+        [0, 0, 0, 1],
+    ]
+    return tf.convert_to_tensor(matrix, dtype=tf.float32)
+
+
+def get_rot_phi(phi):
+    matrix = [
+        [1, 0, 0, 0],
+        [0, tf.cos(phi), -tf.sin(phi), 0],
+        [0, tf.sin(phi), tf.cos(phi), 0],
+        [0, 0, 0, 1],
+    ]
+    return tf.convert_to_tensor(matrix, dtype=tf.float32)
+
+
+def get_rot_theta(theta):
+    matrix = [
+        [tf.cos(theta), 0, -tf.sin(theta), 0],
+        [0, 1, 0, 0],
+        [tf.sin(theta), 0, tf.cos(theta), 0],
+        [0, 0, 0, 1],
+    ]
+    return tf.convert_to_tensor(matrix, dtype=tf.float32)
+
+
+def pose_spherical(theta, phi, t):
+    c2w = get_trans_t(t)
+    c2w = get_rot_phi(phi / 180.0 * np.pi) @ c2w
+    c2w = get_rot_theta(theta / 180.0 * np.pi) @ c2w
+    c2w = np.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]) @ c2w
+    return c2w
+
+
+rgb_frames = []
+batch_flat = []
+batch_t = []
+
+for index, theta in tqdm(enumerate(np.linspace(0.0, 360.0, 240, endpoint=False))):
+    c2w = pose_spherical(theta, -30.0, 4.0)
+    ray_oris, ray_dirs = get_rays(H, W, focal, c2w)
+    rays_flat, t_vals = render_flat_rays(
+        ray_oris, ray_dirs, near=2.0, far=6.0, num_samples=NUM_SAMPLES, rand=False
+    )
+
+    if index % BATCH_SIZE == 0 and index > 0:
+        batched_flat = tf.stack(batch_flat, axis=0)
+        batch_flat = [rays_flat]
+
+        batched_t = tf.stack(batch_t, axis=0)
+        batch_t = [t_vals]
+
+        rgb, _ = render_rgb_depth(
+            nerf_model, batched_flat, batched_t, rand=False, train=False
+        )
+
+        temp_rgb = [np.clip(255 * img, 0.0, 255.0).astype(np.uint8) for img in rgb]
+
+        rgb_frames = rgb_frames + temp_rgb
+    else:
+        batch_flat.append(rays_flat)
+        batch_t.append(t_vals)
+
+rgb_video = "rgb_video.mp4"
+imageio.mimwrite(rgb_video, rgb_frames, fps=30, quality=7, macro_block_size=None)
+
+mp4 = open("rgb_video.mp4", "rb").read()
+data_url = "data:video/mp4;base64," + b64encode(mp4).decode()
+HTML(
+    """
+<video width=400 controls autoplay loop>
+      <source src="%s" type="video/mp4">
+</video>
+"""
+    % data_url
+)
+
+"""
+# Conclusion
+
+We have minimally implemented NeRF to provide an intuition of its core
+ideas and methodologies. This paper has been used in various other
+researches in the computer graphics space.
+
+We would like to encourage our readers to use this code as an example
+and play with the hyperparameters and visualize the outputs. Below we
+have also given the outputs of the model trained for more epochs.
+
+| Epochs | GIF of the training step |
+| :--- | :---: |
+| **100** | ![100-epoch-training](https://i.imgur.com/2k9p8ez.gif) |
+| **200** | ![200-epoch-training](https://i.imgur.com/l3rG4HQ.gif) |
+
+# Reference
+
+These are the places we have refered to:
+
+- [NeRF paper](https://arxiv.org/abs/2003.08934): The paper on NeRF.
+- [Manim Repository](https://github.com/3b1b/manim): We have used
+    manim to build all theanimations.
+- [Mathworks](https://www.mathworks.com/help/vision/ug/camera-calibration.html):
+    Mathworks for the camera callibration article.
+- [Mathew's video](https://www.youtube.com/watch?v=dPWLybp4LL0): A
+    great video on NeRF.
+"""
