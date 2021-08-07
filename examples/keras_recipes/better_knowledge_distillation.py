@@ -1,44 +1,43 @@
 """
-Title: Recipes for better knowledge distillation
+Title: Knowledge distillation recipes
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/01
 Last modified: 2021/08/01
 Description: Training better student models via knowledge distillation with function matching.
 """
 """
+## Introduction
+
 Knowledge distillation ([Hinton et al.](https://arxiv.org/abs/1503.02531)) is a technique
-that allows us to compress bigger models into smaller ones. This allows us to reap the
-benefits of high performing bigger models while reducing storage costs attaining much
-better inference speed:
+that enables us to compress larger models into smaller ones. This allows us to reap the
+benefits of high performing larger models, while reducing storage and memory costs and
+achieving higher inference speed:
 
-* smaller models, hence smaller sizes
-* reduced complexity leads to less number of floating-point operations (FLOPs)
+* Smaller models -> smaller memory footprint
+* Reduced complexity -> fewer floating-point operations (FLOPs)
 
-This is why the practical importance of knowledge distillation may become immediately
-clear. In 
-[Knowledge distillation: A good teacher is patient and consistent](https://arxiv.org/abs/2106.05237),
+In [Knowledge distillation: A good teacher is patient and consistent](https://arxiv.org/abs/2106.05237),
 Beyer et al. investigate various existing setups for performing knowledge distillation
 and show that all of them lead to sub-optimal performance. Due to this,
-practitioners often settle with other alternatives (quantization, pruning, weight
-clustering, etc.) when operating with productions systems having a requirement to
-optimize model runtime. 
+practitioners often settle for other alternatives (quantization, pruning, weight
+clustering, etc.) when developing production systems that are resource-constrained.
 
-To this end, Beyer et al. investigate how we can improve the student models that come out
-of the knowledge distillation process and can actually always match the performance of
-their teacher models. In this example, we will study the recipes introduced by them with
+Beyer et al. investigate how we can improve the student models that come out
+of the knowledge distillation process and always match the performance of
+their teacher models. In this example, we will study the recipes introduced by them, using
 the [Flowers102 dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/). As a
 reference, with these recipes, the authors were able to produce a ResNet50 model that
-achieves 82.8% on the ImageNet-1k dataset.
+achieves 82.8% accuracy on the ImageNet-1k dataset.
 
-In case, you need a refresher on knowledge distillation and want to study how it is
+In case you need a refresher on knowledge distillation and want to study how it is
 implemented in Keras, you can refer to 
 [this example](https://keras.io/examples/vision/knowledge_distillation/).
 You can also follow 
 [this example](https://keras.io/examples/vision/consistency_training/) 
-that shows an extension of knowledge distillation being applied to consistency training. 
+that shows an extension of knowledge distillation applied to consistency training. 
 
-To follow this example, you'd need TensorFlow 2.5 of higher and TensorFlow Addons which
-can be installed using the command below:
+To follow this example, you will need TensorFlow 2.5 or higher as well as TensorFlow Addons,
+which can be installed using the command below:
 """
 
 """shell
@@ -64,17 +63,17 @@ tfds.disable_progress_bar()
 ## Hyperparameters and contants
 """
 
-AUTO = tf.data.AUTOTUNE  # Will be used to dynamically decide the level of parallelism.
+AUTO = tf.data.AUTOTUNE  # Used to dynamically adjust parallelism.
+BATCH_SIZE = 64
 
 # Comes from Table 4 and "Training setup" section.
-TEMPERATURE = 10  # Will be used to soften the logits before they go to softmax.
+TEMPERATURE = 10  # Used to soften the logits before they go to softmax.
 INIT_LR = 0.003  # Initial learning rate that will be decayed over the training period.
-WEIGHT_DECAY = 0.001  # Will be used for regularization.
-CLIP_THRESHOLD = 1.0  # Will be used for clipping the gradients w.r.t their L2-norm.
+WEIGHT_DECAY = 0.001  # Used for regularization.
+CLIP_THRESHOLD = 1.0  # Used for clipping the gradients by L2-norm.
 
 # We will first resize the training images to a bigger size and then we will take
 # random crops of a lower size.
-BATCH_SIZE = 64
 BIGGER = 160
 RESIZE = 128
 
@@ -94,27 +93,27 @@ print(f"Number of test examples: {tf.data.experimental.cardinality(test_ds)}.")
 """
 ## Teacher model
 
-As common with any distillation technique, it's important to first train a
-well-performing teacher model which is usually bigger than the subsequent student model.
+As is common with any distillation technique, it's important to first train a
+well-performing teacher model which is usually larger than the subsequent student model.
 The authors distill a BiT ResNet152x2 model (teacher) into a BiT ResNet50 model
-(student). 
+(student).
 
 BiT stands for Big Transfer and was introduced in
 [Big Transfer (BiT): General Visual Representation Learning](https://arxiv.org/abs/1912.11370).
 BiT variants of ResNets use Group Normalization ([Wu et al.](https://arxiv.org/abs/1803.08494))
 and Weight Standardization ([Qiao et al.](https://arxiv.org/abs/1903.10520v2))
 in place of Batch Normalization ([Ioffe et al.](https://arxiv.org/abs/1502.03167)).
-In order to keep the runtime of this example short, we will be using a BiT
-ResNet101x3 trained on the Flowers102 dataset. However, you can refer to
+In order to limit the time it takes to run this example, we will be using a BiT
+ResNet101x3 already trained on the Flowers102 dataset. You can refer to
 [this notebook](https://github.com/sayakpaul/FunMatch-Distillation/blob/main/train_bit.ipynb)
-to know more about the training process. This model produces 98.18% top-1 accuracy on the
+to learn more about the training process. This model reaches 98.18% accuracy on the
 test set of Flowers102.
 
-The model weights are hosted on Kaggle as a dataset. To download the weights you can do
-the following:
+The model weights are hosted on Kaggle as a dataset.
+To download the weights, follow these steps:
 
-1. Create an account on Kaggle at [this link](https://www.kaggle.com).
-2. Then go to the "Account" tab of your [user profile](https://www.kaggle.com/account).
+1. Create an account on Kaggle [here](https://www.kaggle.com).
+2. Go to the "Account" tab of your [user profile](https://www.kaggle.com/account).
 3. Select "Create API Token". This will trigger the download of `kaggle.json`, a file
 containing your API credentials.
 4. From that JSON file, copy your Kaggle username and API key.
@@ -128,7 +127,7 @@ os.environ["KAGGLE_USERNAME"] = "" # TODO: enter your Kaggle user name here
 os.environ["KAGGLE_KEY"] = "" # TODO: enter your Kaggle key here
 ```
 
-Once the environment variables are set run:
+Once the environment variables are set, run:
 
 ```shell
 $ kaggle datasets download -d spsayakpaul/bitresnet101x3flowers102
@@ -175,17 +174,16 @@ invariance MixUp is coupled with "Inception-style" cropping
 "function matching" term makes its way in the
 [original paper](https://arxiv.org/abs/2106.05237). 
 * Unlike other works ([Noisy Student Training](https://arxiv.org/abs/1911.04252) for
-example), both the teacher and student models receive the same copy of an image which is
+example), both the teacher and student models receive the same copy of an image, which is
 mixed up and randomly cropped. By providing the same inputs to both the models, the
 authors make the teacher consistent with the student.
-* With MixUp, we are essentially introducing a strong form of regularization during
-training the student. To help it capture these regularities it should be trained for a
+* With MixUp, we are essentially introducing a strong form of regularization when
+training the student. As such, it should be trained for a
 relatively long period of time (1000 epochs at least). Since the student is trained with
-strong regularization, the risks of overfitting that may arise due to a longer training
+strong regularization, the risk of overfitting due to a longer training
 schedule are also mitigated.
 
-So, long story short, one needs to be consistent and patient while training the student
-model.
+In summary, one needs to be consistent and patient while training the student model.
 """
 
 """
@@ -238,7 +236,7 @@ def prepare_dataset(dataset, train=True, batch_size=BATCH_SIZE):
 Note that for brevity, we used mild crops for the training set but in practice
 "Inception-style" preprocessing should be applied. You can refer to
 [this script](https://github.com/sayakpaul/FunMatch-Distillation/blob/main/crop_resize.py)
-for a closer implementation. Also, _**the ground-truth labels are not used during
+for a closer implementation. Also, _**the ground-truth labels are not used for
 training the student.**_
 """
 
@@ -279,15 +277,15 @@ def get_resnetv2():
 get_resnetv2().count_params()
 
 """
-Compared to the teacher model, this model has 358 Million less parameters. 
+Compared to the teacher model, this model has 358 Million fewer parameters. 
 """
 
 """
 ## Distillation utility
 
 We will reuse some code from
-[this example](https://keras.io/examples/vision/knowledge_distillation/) on knowledge
-distillation.
+[this example](https://keras.io/examples/vision/knowledge_distillation/)
+on knowledge distillation.
 """
 
 
@@ -365,7 +363,7 @@ A warmup cosine learning rate schedule is used in the paper. This schedule is al
 typical for many pre-training methods especially for computer vision.
 """
 
-# Some code is referred from here:
+# Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 
 
@@ -435,9 +433,9 @@ plt.show()
 
 
 """
-The original paper uses at least 1000 epochs and a batch size of 512 to perform the
-"function matching" recipes. The objective of this example is to present a workflow to
-implement the recipes and not to exhibit the results when they are applied at full scale.
+The original paper uses at least 1000 epochs and a batch size of 512 to perform
+"function matching". The objective of this example is to present a workflow to
+implement the recipe and not to demonstrate the results when they are applied at full scale.
 However, these recipes will transfer to the original settings from the paper. Please
 refer to [this repository](https://github.com/sayakpaul/FunMatch-Distillation) if you are
 interested in finding out more.
@@ -476,10 +474,9 @@ print(f"Top-1 accuracy on the test set: {round(top1_accuracy * 100, 2)}%")
 """
 ## Results
 
-With just 30 epochs of training, the results are nowhere expected. In fact, they are all
-over the place. This is where the benefits of patience aka a longer training schedule
-will come into play. With these same recipes if the model was trained for 1000 epochs the
-story would have been different. Let's investigate that.
+With just 30 epochs of training, the results are nowhere near expected.
+This is where the benefits of patience aka a longer training schedule
+will come into play. Let's investigate what the model trained for 1000 epochs can do.
 """
 
 """shell
@@ -503,15 +500,15 @@ print(f"Top-1 accuracy on the test set: {round(top1_accuracy * 100, 2)}%")
 With 100000 epochs of training, this same model leads to a top-1 accuracy of 95.54%. 
 
 There are a number of important ablations studies presented in the paper that show the
-effectiveness of these recipes compared to the prior art. So if you are doubtful about
-these recipes, definitely consult the paper. 
+effectiveness of these recipes compared to the prior art. So if you are skeptical about
+these recipes, definitely consult the paper.
 """
 
 """
 ## Note on training for longer
 
-With TPU-based hardware infrastructure, we can execute these training schedules in a
-faster manner. This does not even require adding a lot of changes to this codebase. You
+With TPU-based hardware infrastructure, we can train the model for 1000 epochs faster.
+This does not even require adding a lot of changes to this codebase. You
 are encouraged to check
 [this repository](https://github.com/sayakpaul/FunMatch-Distillation)
 as it presents TPU-compatible training workflows for these recipes and can be run on 
