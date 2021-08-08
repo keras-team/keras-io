@@ -27,49 +27,52 @@ handle feature normalization or feature value indexing on their own.
 
 ### Text preprocessing
 
-- `TextVectorization` layer: turns raw strings into an encoded representation that can be
-read by an `Embedding` layer or `Dense` layer.
+- `tf.keras.layers.TextVectorization`: turns raw strings into an encoded
+  representation that can be read by an `Embedding` layer or `Dense` layer.
 
 ### Numerical features preprocessing
 
-- `Normalization` layer: performs feature-wise normalize of input features.
-- `Discretization` layer: turns continuous numerical features into integer categorical
-features.
+- `tf.keras.layers.Normalization`: performs feature-wise normalize of
+  input features.
+- `tf.keras.layers.Discretization`: turns continuous numerical features
+  into integer categorical features.
 
 ### Categorical features preprocessing
 
-- `CategoryEncoding` layer: turns integer categorical features into one-hot, multi-hot,
-or count dense representations.
-- `Hashing` layer: performs categorical feature hashing, also known as the "hashing
-trick".
-- `StringLookup` layer: turns string categorical values an encoded representation that can be
-read by an `Embedding` layer or `Dense` layer.
-- `IntegerLookup` layer: turns integer categorical values into an encoded representation that can be
-read by an `Embedding` layer or `Dense` layer.
+- `tf.keras.layers.CategoryEncoding`: turns integer categorical features
+  into one-hot, multi-hot, or count dense representations.
+- `tf.keras.layers.Hashing`: performs categorical feature hashing, also known as
+  the "hashing trick".
+- `tf.keras.layers.StringLookup`: turns string categorical values an encoded
+  representation that can be read by an `Embedding` layer or `Dense` layer.
+- `tf.keras.layers.IntegerLookup`: turns integer categorical values into an
+  encoded representation that can be read by an `Embedding` layer or `Dense`
+  layer.
 
 
 ### Image preprocessing
 
 These layers are for standardizing the inputs of an image model.
 
-- `Resizing` layer: resizes a batch of images to a target size.
-- `Rescaling` layer: rescales and offsets the values of a batch of image (e.g. go from
-inputs in the `[0, 255]` range to inputs in the `[0, 1]` range.
-- `CenterCrop` layer: returns a center crop of a batch of images.
+- `tf.keras.layers.Resizing`: resizes a batch of images to a target size.
+- `tf.keras.layers.Rescaling`: rescales and offsets the values of a batch of
+  image (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
+  range.
+- `tf.keras.layers.CenterCrop`: returns a center crop of a batch of images.
 
 ### Image data augmentation
 
 These layers apply random augmentation transforms to a batch of images. They
 are only active during training.
 
-- `RandomCrop` layer
-- `RandomFlip` layer
-- `RandomTranslation` layer
-- `RandomRotation` layer
-- `RandomZoom` layer
-- `RandomHeight` layer
-- `RandomWidth` layer
-- `RandomContrast` layer
+- `tf.keras.layers.RandomCrop`
+- `tf.keras.layers.RandomFlip`
+- `tf.keras.layers.RandomTranslation`
+- `tf.keras.layers.RandomRotation`
+- `tf.keras.layers.RandomZoom`
+- `tf.keras.layers.RandomHeight`
+- `tf.keras.layers.RandomWidth`
+- `tf.keras.layers.RandomContrast`
 
 ---
 ## The `adapt()` method
@@ -294,9 +297,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 23s 931ms/step - loss: 9.5173
+5/5 [==============================] - 10s 493ms/step - loss: 9.7006
 
-<tensorflow.python.keras.callbacks.History at 0x1625d0890>
+<keras.callbacks.History at 0x7f51f445dd30>
 
 ```
 </div>
@@ -330,9 +333,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 4s 2ms/step - loss: 2.1302
+1563/1563 [==============================] - 3s 2ms/step - loss: 2.1282
 
-<tensorflow.python.keras.callbacks.History at 0x1647a2710>
+<keras.callbacks.History at 0x7f51b8fa0850>
 
 ```
 </div>
@@ -506,14 +509,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 4s 4s/step - loss: 0.4916
+1/1 [==============================] - 1s 1s/step - loss: 0.5380
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.02326627]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.00618662]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -591,14 +594,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 583ms/step - loss: 0.3378
+1/1 [==============================] - 0s 196ms/step - loss: 0.6429
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.7227254]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.03083934]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -674,14 +677,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 551ms/step - loss: 3.5459
+1/1 [==============================] - 0s 193ms/step - loss: 5.2748
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.51119524]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.39865965]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
