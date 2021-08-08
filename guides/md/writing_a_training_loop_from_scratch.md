@@ -300,9 +300,9 @@ Time taken: 5.07s
 ---
 ## Speeding-up your training step with `tf.function`
 
-The default runtime in TensorFlow 2.0 is
-[eager execution](https://www.tensorflow.org/guide/eager). As such, our training loop
-above executes eagerly.
+The default runtime in TensorFlow 2 is
+[eager execution](https://www.tensorflow.org/guide/eager).
+As such, our training loop above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
 advantage. Describing your computation as a static graph enables the framework
