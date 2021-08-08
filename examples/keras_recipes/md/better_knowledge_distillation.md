@@ -1,11 +1,16 @@
-"""
-Title: Knowledge distillation recipes
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/08/01
-Last modified: 2021/08/01
-Description: Training better student models via knowledge distillation with function matching.
-"""
-"""
+# Knowledge distillation recipes
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/08/01<br>
+**Last modified:** 2021/08/01<br>
+**Description:** Training better student models via knowledge distillation with function matching.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_recipes/ipynb/better_knowledge_distillation.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_recipes/better_knowledge_distillation.py)
+
+
+
+---
 ## Introduction
 
 Knowledge distillation ([Hinton et al.](https://arxiv.org/abs/1503.02531)) is a technique
@@ -38,16 +43,26 @@ that shows an extension of knowledge distillation applied to consistency trainin
 
 To follow this example, you will need TensorFlow 2.5 or higher as well as TensorFlow Addons,
 which can be installed using the command below:
-"""
 
-"""shell
-!pip install -q tensorflow-addons
-"""
 
-"""
+```python
+!!pip install -q tensorflow-addons
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+[]
+
+```
+</div>
+---
 ## Imports
-"""
 
+
+```python
 from tensorflow import keras
 import tensorflow_addons as tfa
 import tensorflow as tf
@@ -58,11 +73,13 @@ import numpy as np
 import tensorflow_datasets as tfds
 
 tfds.disable_progress_bar()
+```
 
-"""
+---
 ## Hyperparameters and contants
-"""
 
+
+```python
 AUTO = tf.data.AUTOTUNE  # Used to dynamically adjust parallelism.
 BATCH_SIZE = 64
 
@@ -76,11 +93,13 @@ CLIP_THRESHOLD = 1.0  # Used for clipping the gradients by L2-norm.
 # random crops of a lower size.
 BIGGER = 160
 RESIZE = 128
+```
 
-"""
+---
 ## Load the Flowers102 dataset
-"""
 
+
+```python
 train_ds, validation_ds, test_ds = tfds.load(
     "oxford_flowers102", split=["train", "validation", "test"], as_supervised=True
 )
@@ -89,8 +108,17 @@ print(
     f"Number of validation examples: {tf.data.experimental.cardinality(validation_ds)}."
 )
 print(f"Number of test examples: {tf.data.experimental.cardinality(test_ds)}.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Number of training examples: 1020.
+Number of validation examples: 1020.
+Number of test examples: 6149.
+
+```
+</div>
+---
 ## Teacher model
 
 As is common with any distillation technique, it's important to first train a
@@ -136,21 +164,27 @@ $ unzip -qq bitresnet101x3flowers102.zip
 
 This should generate a folder named `T-r101x3-128` which is essentially a teacher
 [`SavedModel`](https://www.tensorflow.org/guide/saved_model).
-"""
 
+
+```python
 import os
 
 os.environ["KAGGLE_USERNAME"] = ""  # TODO: enter your Kaggle user name here
 os.environ["KAGGLE_KEY"] = ""  # TODO: enter your Kaggle API key here
+```
 
-"""shell
-!kaggle datasets download -d spsayakpaul/bitresnet101x3flowers102
-"""
 
-"""shell
-!unzip -qq bitresnet101x3flowers102.zip
-"""
+```python
+!!kaggle datasets download -d spsayakpaul/bitresnet101x3flowers102
+```
 
+
+
+
+```python
+!!unzip -qq bitresnet101x3flowers102.zip
+```
+```python
 # Since the teacher model is not going to be trained further we make
 # it non-trainable.
 teacher_model = keras.models.load_model(
@@ -158,8 +192,33 @@ teacher_model = keras.models.load_model(
 )
 teacher_model.trainable = False
 teacher_model.summary()
+```
+<div class="k-default-codeblock">
+```
+['/bin/bash: kaggle: command not found']
 
-"""
+['unzip:  cannot find or open bitresnet101x3flowers102.zip, bitresnet101x3flowers102.zip.zip or bitresnet101x3flowers102.zip.ZIP.']
+
+WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
+
+WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
+
+Model: "my_bi_t_model_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_1 (Dense)              multiple                  626790    
+_________________________________________________________________
+keras_layer_1 (KerasLayer)   multiple                  381789888 
+=================================================================
+Total params: 382,416,678
+Trainable params: 0
+Non-trainable params: 382,416,678
+_________________________________________________________________
+
+```
+</div>
+---
 ## The "function matching" recipe
 
 To train a high-quality student model, the authors propose the following changes to the
@@ -186,12 +245,12 @@ strong regularization, the risk of overfitting due to a longer training
 schedule are also mitigated.
 
 In summary, one needs to be consistent and patient while training the student model.
-"""
 
-"""
+---
 ## Data input pipeline
-"""
 
+
+```python
 
 def mixup(images, labels):
     alpha = tf.random.uniform([], 0, 1)
@@ -233,23 +292,26 @@ def prepare_dataset(dataset, train=True, batch_size=BATCH_SIZE):
     dataset = dataset.prefetch(AUTO)
     return dataset
 
+```
 
-"""
 Note that for brevity, we used mild crops for the training set but in practice
 "Inception-style" preprocessing should be applied. You can refer to
 [this script](https://github.com/sayakpaul/FunMatch-Distillation/blob/main/crop_resize.py)
 for a closer implementation. Also, _**the ground-truth labels are not used for
 training the student.**_
-"""
 
+
+```python
 train_ds = prepare_dataset(train_ds, True)
 validation_ds = prepare_dataset(validation_ds, False)
 test_ds = prepare_dataset(test_ds, False)
+```
 
-"""
+---
 ## Visualization
-"""
 
+
+```python
 sample_images, _ = next(iter(train_ds))
 plt.figure(figsize=(10, 10))
 for n in range(25):
@@ -257,14 +319,22 @@ for n in range(25):
     plt.imshow(sample_images[n].numpy())
     plt.axis("off")
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/keras_recipes/better_knowledge_distillation/better_knowledge_distillation_20_0.png)
+    
+
+
+---
 ## Student model
 
 For the purpose of this example, we will use the standard ResNet50V2
 ([He et al.](https://arxiv.org/abs/1603.05027)).
-"""
 
+
+```python
 
 def get_resnetv2():
     resnet_v2 = keras.applications.ResNet50V2(
@@ -277,19 +347,28 @@ def get_resnetv2():
 
 
 get_resnetv2().count_params()
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+23773798
+
+```
+</div>
 Compared to the teacher model, this model has 358 Million fewer parameters.
-"""
 
-"""
+---
 ## Distillation utility
 
 We will reuse some code from
 [this example](https://keras.io/examples/vision/knowledge_distillation/)
 on knowledge distillation.
-"""
 
+
+```python
 
 class Distiller(tf.keras.Model):
     def __init__(self, student, teacher):
@@ -359,14 +438,16 @@ class Distiller(tf.keras.Model):
         results = {m.name: m.result() for m in self.metrics}
         return results
 
+```
 
-"""
+---
 ## Learning rate schedule
 
 A warmup cosine learning rate schedule is used in the paper. This schedule is also
 typical for many pre-training methods especially for computer vision.
-"""
 
+
+```python
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 
@@ -411,11 +492,12 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             step > self.total_steps, 0.0, learning_rate, name="learning_rate"
         )
 
+```
 
-"""
 We can now plot a a graph of learning rates generated using this schedule.
-"""
 
+
+```python
 ARTIFICIAL_EPOCHS = 1000
 ARTIFICIAL_BATCH_SIZE = 512
 DATASET_NUM_TRAIN_EXAMPLES = 1020
@@ -435,20 +517,26 @@ plt.xlabel("Step", fontsize=14)
 plt.ylabel("LR", fontsize=14)
 plt.show()
 
+```
 
-"""
+
+    
+![png](/img/examples/keras_recipes/better_knowledge_distillation/better_knowledge_distillation_29_0.png)
+    
+
+
 The original paper uses at least 1000 epochs and a batch size of 512 to perform
 "function matching". The objective of this example is to present a workflow to
 implement the recipe and not to demonstrate the results when they are applied at full scale.
 However, these recipes will transfer to the original settings from the paper. Please
 refer to [this repository](https://github.com/sayakpaul/FunMatch-Distillation) if you are
 interested in finding out more.
-"""
 
-"""
+---
 ## Training
-"""
 
+
+```python
 optimizer = tfa.optimizers.AdamW(
     weight_decay=WEIGHT_DECAY, learning_rate=scheduled_lrs, clipnorm=CLIP_THRESHOLD
 )
@@ -474,41 +562,156 @@ student = distiller.student
 student_model.compile(metrics=["accuracy"])
 _, top1_accuracy = student.evaluate(test_ds)
 print(f"Top-1 accuracy on the test set: {round(top1_accuracy * 100, 2)}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/30
+16/16 [==============================] - 74s 3s/step - distillation_loss: 0.0070 - val_sparse_categorical_accuracy: 0.0039 - val_distillation_loss: 0.0061
+Epoch 2/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0059 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0061
+Epoch 3/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0049 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0060
+Epoch 4/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0048 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0060
+Epoch 5/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0043 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0060
+Epoch 6/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0041 - val_sparse_categorical_accuracy: 0.0108 - val_distillation_loss: 0.0060
+Epoch 7/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0038 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0061
+Epoch 8/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0040 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0062
+Epoch 9/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0039 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0063
+Epoch 10/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0035 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0064
+Epoch 11/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0041 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0064
+Epoch 12/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0039 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0067
+Epoch 13/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0039 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0067
+Epoch 14/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0036 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0066
+Epoch 15/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0037 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0065
+Epoch 16/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0038 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0068
+Epoch 17/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0039 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0066
+Epoch 18/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0038 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0064
+Epoch 19/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0035 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0071
+Epoch 20/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0038 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0066
+Epoch 21/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0038 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0068
+Epoch 22/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0034 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0073
+Epoch 23/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0035 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0078
+Epoch 24/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0037 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0087
+Epoch 25/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0031 - val_sparse_categorical_accuracy: 0.0108 - val_distillation_loss: 0.0078
+Epoch 26/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0033 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0072
+Epoch 27/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0036 - val_sparse_categorical_accuracy: 0.0098 - val_distillation_loss: 0.0071
+Epoch 28/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0036 - val_sparse_categorical_accuracy: 0.0275 - val_distillation_loss: 0.0078
+Epoch 29/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0032 - val_sparse_categorical_accuracy: 0.0196 - val_distillation_loss: 0.0068
+Epoch 30/30
+16/16 [==============================] - 37s 2s/step - distillation_loss: 0.0034 - val_sparse_categorical_accuracy: 0.0147 - val_distillation_loss: 0.0071
+97/97 [==============================] - 7s 64ms/step - loss: 0.0000e+00 - accuracy: 0.0107
+Top-1 accuracy on the test set: 1.07%
+
+```
+</div>
+---
 ## Results
 
 With just 30 epochs of training, the results are nowhere near expected.
 This is where the benefits of patience aka a longer training schedule
 will come into play. Let's investigate what the model trained for 1000 epochs can do.
-"""
 
-"""shell
-# Download the pre-trained weights.
-!wget https://git.io/JBO3Y -O S-r50x1-128-1000.tar.gz
-!tar xf S-r50x1-128-1000.tar.gz
-"""
 
+```python
+!# Download the pre-trained weights.
+!!wget https://git.io/JBO3Y -O S-r50x1-128-1000.tar.gz
+!!tar xf S-r50x1-128-1000.tar.gz
+```
+
+
+
+
+```python
 pretrained_student = keras.models.load_model("S-r50x1-128-1000")
 pretrained_student.summary()
+```
+<div class="k-default-codeblock">
+```
+[]
 
-"""
+WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
+
+WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
+
+Model: "resnet"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+root_block (Sequential)      (None, 32, 32, 64)        9408      
+_________________________________________________________________
+block1 (Sequential)          (None, 32, 32, 256)       214912    
+_________________________________________________________________
+block2 (Sequential)          (None, 16, 16, 512)       1218048   
+_________________________________________________________________
+block3 (Sequential)          (None, 8, 8, 1024)        7095296   
+_________________________________________________________________
+block4 (Sequential)          (None, 4, 4, 2048)        14958592  
+_________________________________________________________________
+group_norm (GroupNormalizati multiple                  4096      
+_________________________________________________________________
+re_lu_97 (ReLU)              multiple                  0         
+_________________________________________________________________
+global_average_pooling2d_1 ( multiple                  0         
+_________________________________________________________________
+head/dense (Dense)           multiple                  208998    
+=================================================================
+Total params: 23,709,350
+Trainable params: 23,709,350
+Non-trainable params: 0
+_________________________________________________________________
+
+```
+</div>
 This model exactly follows what the authors have used in their student models. This is
 why the model summary is a bit different.
-"""
 
+
+```python
 _, top1_accuracy = pretrained_student.evaluate(test_ds)
 print(f"Top-1 accuracy on the test set: {round(top1_accuracy * 100, 2)}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+97/97 [==============================] - 14s 131ms/step - loss: 0.0000e+00 - accuracy: 0.8102
+Top-1 accuracy on the test set: 81.02%
+
+```
+</div>
 With 100000 epochs of training, this same model leads to a top-1 accuracy of 95.54%.
 
 There are a number of important ablations studies presented in the paper that show the
 effectiveness of these recipes compared to the prior art. So if you are skeptical about
 these recipes, definitely consult the paper.
-"""
 
-"""
+---
 ## Note on training for longer
 
 With TPU-based hardware infrastructure, we can train the model for 1000 epochs faster.
@@ -517,4 +720,3 @@ are encouraged to check
 [this repository](https://github.com/sayakpaul/FunMatch-Distillation)
 as it presents TPU-compatible training workflows for these recipes and can be run on
 [Kaggle Kernel](https://www.kaggle.com/kernels) leveraging their free TPU v3-8 hardware.
-"""
