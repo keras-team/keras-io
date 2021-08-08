@@ -46,18 +46,9 @@ which can be installed using the command below:
 
 
 ```python
-!!pip install -q tensorflow-addons
+!pip install -q tensorflow-addons
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-[]
-
-```
-</div>
 ---
 ## Imports
 
@@ -115,7 +106,6 @@ print(f"Number of test examples: {tf.data.experimental.cardinality(test_ds)}.")
 Number of training examples: 1020.
 Number of validation examples: 1020.
 Number of test examples: 6149.
-
 ```
 </div>
 ---
@@ -157,7 +147,7 @@ os.environ["KAGGLE_KEY"] = "" # TODO: enter your Kaggle key here
 
 Once the environment variables are set, run:
 
-```shell
+```
 $ kaggle datasets download -d spsayakpaul/bitresnet101x3flowers102
 $ unzip -qq bitresnet101x3flowers102.zip
 ```
@@ -175,15 +165,14 @@ os.environ["KAGGLE_KEY"] = ""  # TODO: enter your Kaggle API key here
 
 
 ```python
-!!kaggle datasets download -d spsayakpaul/bitresnet101x3flowers102
+!kaggle datasets download -d spsayakpaul/bitresnet101x3flowers102
 ```
-
-
 
 
 ```python
-!!unzip -qq bitresnet101x3flowers102.zip
+!unzip -qq bitresnet101x3flowers102.zip
 ```
+
 ```python
 # Since the teacher model is not going to be trained further we make
 # it non-trainable.
@@ -193,16 +182,9 @@ teacher_model = keras.models.load_model(
 teacher_model.trainable = False
 teacher_model.summary()
 ```
+
 <div class="k-default-codeblock">
 ```
-['/bin/bash: kaggle: command not found']
-
-['unzip:  cannot find or open bitresnet101x3flowers102.zip, bitresnet101x3flowers102.zip.zip or bitresnet101x3flowers102.zip.ZIP.']
-
-WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
-
-WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
-
 Model: "my_bi_t_model_1"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
@@ -640,12 +622,10 @@ will come into play. Let's investigate what the model trained for 1000 epochs ca
 
 
 ```python
-!# Download the pre-trained weights.
-!!wget https://git.io/JBO3Y -O S-r50x1-128-1000.tar.gz
-!!tar xf S-r50x1-128-1000.tar.gz
+# Download the pre-trained weights.
+!wget https://git.io/JBO3Y -O S-r50x1-128-1000.tar.gz
+!tar xf S-r50x1-128-1000.tar.gz
 ```
-
-
 
 
 ```python
@@ -654,12 +634,6 @@ pretrained_student.summary()
 ```
 <div class="k-default-codeblock">
 ```
-[]
-
-WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
-
-WARNING:tensorflow:SavedModel saved prior to TF 2.5 detected when loading Keras model. Please ensure that you are saving the model with model.save() or tf.keras.models.save_model(), *NOT* tf.saved_model.save(). To confirm, there should be a file named "keras_metadata.pb" in the SavedModel directory.
-
 Model: "resnet"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
