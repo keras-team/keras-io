@@ -2,9 +2,21 @@
 Title: An approach towards Depth Estimation with CNN
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2021/08/09
-Last modified: 2021/08/09
+Last modified: 2021/08/10
 Description: Implement an depth estimation model with CNN.
 """
+"""
+Title: An approach towards Depth Estimation with CNN.
+
+Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
+
+Date created: 2021/08/08
+
+Last modified: 2021/08/09
+
+Description: Implement an depth estimation model with CNN.
+"""
+
 """
 ## Introduction
 
@@ -226,11 +238,23 @@ for x in range(0, img.shape[0], STEP):
         ax.scatter([d[x, y]] * 3, [y] * 3, [x] * 3, c=tuple(img[x, y, :3] / 255), s=3)
     ax.view_init(15, 165)
 
+"""
+### angle-1
+"""
+
 ax.view_init(30, 135)
 fig
 
+"""
+### angle-2
+"""
+
 ax.view_init(5, 100)
 fig
+
+"""
+### angle-3
+"""
 
 ax.view_init(45, 220)
 fig

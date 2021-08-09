@@ -3,13 +3,23 @@
 
 **Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>
 **Date created:** 2021/08/09<br>
-**Last modified:** 2021/08/09<br>
+**Last modified:** 2021/08/10<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/depth_estimation.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/depth_estimation.py)
 
 
 **Description:** Implement an depth estimation model with CNN.
+
+Title: An approach towards Depth Estimation with CNN.
+
+Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
+
+Date created: 2021/08/08
+
+Last modified: 2021/08/09
+
+Description: Implement an depth estimation model with CNN.
 
 ---
 ## Introduction
@@ -80,7 +90,7 @@ if not os.path.exists(os.path.abspath(".") + annotation_folder):
 <div class="k-default-codeblock">
 ```
 Downloading data from http://diode-dataset.s3.amazonaws.com/val.tar.gz
-2774630400/2774625282 [==============================] - 75s 0us/step
+2774630400/2774625282 [==============================] - 95s 0us/step
 
 ```
 </div>
@@ -234,7 +244,7 @@ img = np.flipud(input[2].squeeze())
 ```
 
 
-![png](/img/examples/vision/depth_estimation/depth_estimation_11_0.png)
+![png](/img/examples/vision/depth_estimation/depth_estimation_12_0.png)
 
 
 ---
@@ -250,13 +260,46 @@ for x in range(0, img.shape[0], STEP):
     for y in range(0, img.shape[1], STEP):
         ax.scatter([d[x, y]] * 3, [y] * 3, [x] * 3, c=tuple(img[x, y, :3] / 255), s=3)
     ax.view_init(15, 165)
+```
 
+
+![png](/img/examples/vision/depth_estimation/depth_estimation_14_0.png)
+
+
+### angle-1
+
+
+```python
 ax.view_init(30, 135)
 fig
+```
 
+
+
+
+![png](/img/examples/vision/depth_estimation/depth_estimation_16_0.png)
+
+
+
+### angle-2
+
+
+```python
 ax.view_init(5, 100)
 fig
+```
 
+
+
+
+![png](/img/examples/vision/depth_estimation/depth_estimation_18_0.png)
+
+
+
+### angle-3
+
+
+```python
 ax.view_init(45, 220)
 fig
 ```
@@ -264,12 +307,8 @@ fig
 
 
 
-![png](/img/examples/vision/depth_estimation/depth_estimation_13_0.png)
+![png](/img/examples/vision/depth_estimation/depth_estimation_20_0.png)
 
-
-
-
-![png](/img/examples/vision/depth_estimation/depth_estimation_13_1.png)
 
 
 ---
@@ -471,67 +510,67 @@ DEM.fit(train_loader, epochs=config.EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-19/19 [==============================] - 121s 4s/step - Loss: 1.3768
+19/19 [==============================] - 162s 6s/step - Loss: 1.3823
 Epoch 2/30
-19/19 [==============================] - 55s 3s/step - Loss: 0.9001
+19/19 [==============================] - 45s 2s/step - Loss: 0.9109
 Epoch 3/30
-19/19 [==============================] - 31s 2s/step - Loss: 0.8061
+19/19 [==============================] - 36s 2s/step - Loss: 0.7956
 Epoch 4/30
-19/19 [==============================] - 28s 1s/step - Loss: 0.7382
+19/19 [==============================] - 20s 1s/step - Loss: 0.7200
 Epoch 5/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.6872
+19/19 [==============================] - 20s 1s/step - Loss: 0.6959
 Epoch 6/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.6451
+19/19 [==============================] - 21s 1s/step - Loss: 0.6535
 Epoch 7/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.6240
+19/19 [==============================] - 20s 1s/step - Loss: 0.6301
 Epoch 8/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.6019
+19/19 [==============================] - 21s 1s/step - Loss: 0.6139
 Epoch 9/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.6016
+19/19 [==============================] - 20s 1s/step - Loss: 0.6025
 Epoch 10/30
-19/19 [==============================] - 23s 1s/step - Loss: 0.5845
+19/19 [==============================] - 19s 1s/step - Loss: 0.5709
 Epoch 11/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5697
+19/19 [==============================] - 21s 1s/step - Loss: 0.5454
 Epoch 12/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5797
+19/19 [==============================] - 20s 1s/step - Loss: 0.5540
 Epoch 13/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5568
+19/19 [==============================] - 19s 1s/step - Loss: 0.5426
 Epoch 14/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5275
+19/19 [==============================] - 20s 1s/step - Loss: 0.5643
 Epoch 15/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5384
+19/19 [==============================] - 20s 1s/step - Loss: 0.5232
 Epoch 16/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5295
+19/19 [==============================] - 19s 1s/step - Loss: 0.5165
 Epoch 17/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5197
+19/19 [==============================] - 20s 1s/step - Loss: 0.5500
 Epoch 18/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5311
+19/19 [==============================] - 20s 1s/step - Loss: 0.5045
 Epoch 19/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5136
+19/19 [==============================] - 19s 1s/step - Loss: 0.4961
 Epoch 20/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5253
+19/19 [==============================] - 20s 1s/step - Loss: 0.5140
 Epoch 21/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5200
+19/19 [==============================] - 21s 1s/step - Loss: 0.4890
 Epoch 22/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4965
+19/19 [==============================] - 20s 1s/step - Loss: 0.5035
 Epoch 23/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5098
+19/19 [==============================] - 20s 1s/step - Loss: 0.4936
 Epoch 24/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.5125
+19/19 [==============================] - 20s 1s/step - Loss: 0.4884
 Epoch 25/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4940
+19/19 [==============================] - 20s 1s/step - Loss: 0.4914
 Epoch 26/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4863
+19/19 [==============================] - 20s 1s/step - Loss: 0.5002
 Epoch 27/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4798
+19/19 [==============================] - 19s 1s/step - Loss: 0.4694
 Epoch 28/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4904
+19/19 [==============================] - 20s 1s/step - Loss: 0.4893
 Epoch 29/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4618
+19/19 [==============================] - 21s 1s/step - Loss: 0.4835
 Epoch 30/30
-19/19 [==============================] - 24s 1s/step - Loss: 0.4779
+19/19 [==============================] - 19s 995ms/step - Loss: 0.4731
 
-<tensorflow.python.keras.callbacks.History at 0x7f9246cf8110>
+<tensorflow.python.keras.callbacks.History at 0x7f73d1844950>
 
 ```
 </div>
@@ -583,11 +622,11 @@ for i in range(6):
 ```
 
 
-![png](/img/examples/vision/depth_estimation/depth_estimation_21_0.png)
+![png](/img/examples/vision/depth_estimation/depth_estimation_28_0.png)
 
 
 
-![png](/img/examples/vision/depth_estimation/depth_estimation_21_1.png)
+![png](/img/examples/vision/depth_estimation/depth_estimation_28_1.png)
 
 
 ---
