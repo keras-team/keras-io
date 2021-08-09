@@ -1195,5 +1195,5 @@ keras.callbacks.TensorBoard(
 
 """
 For more information, see the
-[documentation for the `TensorBoard` callback](/api/callbacks/tensorboard/).
+[documentation for the `TensorBoard` callback](https://keras.io/api/callbacks/tensorboard/).
 """
