@@ -1,0 +1,565 @@
+"""
+Title: Learning Multimodal Entailment
+Author: [Sayak Paul](https://twitter.com/RisingSayak)
+Date created: 2021/08/08
+Last modified: 2021/08/08
+Description: Training a multimodal model for predicting entailment.
+"""
+"""
+## Introduction
+
+In today's world information is mostly found in unstructured or semi-structured forms
+like videos, texts, images, audios, etc. Therefore, to capture their inter-relationships
+we need to allow deep models to take multimodal inputs i.e. text, images, etc. On social
+media platforms, to audit and moderate content we often need to find answers to the
+following questions in near real-time:
+
+* Does a given piece of information contradict the other?
+* Does a given piece of information imply the other?
+
+In NLP, this task is referred to as recognizing textual entailment that only deals with
+texts as inputs. But in this case, we can have different inputs modalities. In this
+example, we will build and train a model for predicting multimodal entailment. We will be
+using the
+[multimodal entailment dataset](https://github.com/google-research-datasets/recognizing-multimodal-entailment)
+recently introduced by Google Research.
+
+This example requires TensorFlow 2.5 or higher. In addition, TensorFlow Hub and
+TensorFlow Text are required for the BERT model
+([Devlin et al.](https://arxiv.org/abs/1810.04805)). These libraries can be installed
+using the following command:
+"""
+
+"""shell
+!pip install -q tensorflow_text
+"""
+
+"""
+## Collect the dataset
+
+The original dataset is available
+[here](https://github.com/google-research-datasets/recognizing-multimodal-entailment).
+However, we will be using a better prepared version of the dataset. Thanks to
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked on
+the preparation. 
+"""
+
+"""shell
+!wget -q https://github.com/sayakpaul/Multimodal-Entailment-Baseline/releases/download/v1.0.0/tweet_images.tar.gz
+!tar xf tweet_images.tar.gz
+"""
+
+"""
+## Imports
+"""
+
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import os
+
+import tensorflow as tf
+import tensorflow_hub as hub
+import tensorflow_text as text
+from tensorflow import keras
+
+"""
+## Define a label map
+"""
+
+label_map = {"Contradictory": 0, "Implies": 1, "NoEntailment": 2}
+
+"""
+## Read the dataset and apply basic preprocessing
+"""
+
+df = pd.read_csv(
+    "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/csvs/tweets.csv"
+)
+df.sample(10)
+
+"""
+The columns we are interested in are the following:
+
+* `text_1`
+* `image_1`
+* `text_2`
+* `image_2`
+* `label`
+
+The entailment task is formulated as the following:
+
+***Given the pairs of (`text_1`, `image_1`) and (`text_2`, `image_2`) do they entail (or
+not entail or contradict) each other?*** 
+
+We have the images already downloaded. `image_1` is downloaded as `id1` as its filename
+and `image2` is downloaded as `id2` as its filename. In the next step, we will add two
+more columns to `df` - filepaths of `image_1`s and `image_2`s. 
+"""
+
+images_one_paths = []
+images_two_paths = []
+
+for idx in range(len(df)):
+    current_row = df.iloc[idx]
+    id_1 = current_row["id_1"]
+    id_2 = current_row["id_2"]
+    extentsion_one = current_row["image_1"].split(".")[-1]
+    extentsion_two = current_row["image_2"].split(".")[-1]
+
+    image_one_path = os.path.join("tweet_images", str(id_1) + f".{extentsion_one}")
+    image_two_path = os.path.join("tweet_images", str(id_2) + f".{extentsion_two}")
+
+    images_one_paths.append(image_one_path)
+    images_two_paths.append(image_two_path)
+
+df["image_1_path"] = images_one_paths
+df["image_2_path"] = images_two_paths
+
+# Create another column containing the integer ids of
+# the string labels.
+df["label_idx"] = df["label"].apply(lambda x: label_map[x])
+
+"""
+## Dataset visualization
+"""
+
+
+def visualize(idx):
+    current_row = df.iloc[idx]
+    image_1 = plt.imread(current_row["image_1_path"])
+    image_2 = plt.imread(current_row["image_2_path"])
+    text_1 = current_row["text_1"]
+    text_2 = current_row["text_2"]
+    label = current_row["label"]
+
+    plt.subplot(1, 2, 1)
+    plt.imshow(image_1)
+    plt.axis("off")
+    plt.title("Image One")
+    plt.subplot(1, 2, 2)
+    plt.imshow(image_1)
+    plt.axis("off")
+    plt.title("Image Two")
+    plt.show()
+
+    print(f"Text one: {text_1}")
+    print(f"Text two: {text_2}")
+    print(f"Label: {label}")
+
+
+random_idx = np.random.choice(len(df))
+visualize(random_idx)
+
+random_idx = np.random.choice(len(df))
+visualize(random_idx)
+
+"""
+## Train/test split
+
+The dataset suffers from
+[class imbalance problem](https://developers.google.com/machine-learning/glossary#class-imbalanced-dataset).
+We can confirm that in the following cell.
+"""
+
+df["label"].value_counts()
+
+"""
+To account for that we will go for a stratified split. 
+"""
+
+train_df, test_df = train_test_split(
+    df, test_size=0.15, stratify=df["label"].values, random_state=42
+)
+print(f"Total training examples: {len(train_df)}")
+print(f"Total test examples: {len(test_df)}")
+
+"""
+## Data input pipeline
+
+TensorFlow Hub
+[provides](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub)
+a variety of BERT family of models. Each of those models comes with a
+corresponding preprocessing layer. You can know more about these models and the
+preprocessing layers from
+[here](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+
+To keep the runtime of this example relatively shorter we will use a smaller variant of
+the original BERT model.
+"""
+
+# Define TF Hub paths to the BERT encoder and its preprocessor
+bert_model_path = (
+    "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-256_A-4/1"
+)
+bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
+
+"""
+Our text preprocessing code mostly comes from
+[this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
+You are highly encouraged to check out this tutorial to know more about the input
+preprocessing.
+"""
+
+
+def make_bert_preprocess_model(sentence_features, seq_length=128):
+    """Returns Model mapping string features to BERT inputs.
+
+  Args:
+    sentence_features: a list with the names of string-valued features.
+    seq_length: an integer that defines the sequence length of BERT inputs.
+
+  Returns:
+    A Keras Model that can be called on a list or dict of string Tensors
+    (with the order or names, resp., given by sentence_features) and
+    returns a dict of tensors for input to BERT.
+  """
+
+    input_segments = [
+        tf.keras.layers.Input(shape=(), dtype=tf.string, name=ft)
+        for ft in sentence_features
+    ]
+
+    # Tokenize the text to word pieces.
+    bert_preprocess = hub.load(bert_preprocess_path)
+    tokenizer = hub.KerasLayer(bert_preprocess.tokenize, name="tokenizer")
+    segments = [tokenizer(s) for s in input_segments]
+
+    # Optional: Trim segments in a smart way to fit seq_length.
+    # Simple cases (like this example) can skip this step and let
+    # the next step apply a default truncation to approximately equal lengths.
+    truncated_segments = segments
+
+    # Pack inputs. The details (start/end token ids, dict of output tensors)
+    # are model-dependent, so this gets loaded from the SavedModel.
+    packer = hub.KerasLayer(
+        bert_preprocess.bert_pack_inputs,
+        arguments=dict(seq_length=seq_length),
+        name="packer",
+    )
+    model_inputs = packer(truncated_segments)
+    return keras.Model(input_segments, model_inputs)
+
+
+bert_preprocess_model = make_bert_preprocess_model(["text_1", "text_2"])
+keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
+
+"""
+### Run the preprocessor on a sample input
+"""
+
+idx = np.random.choice(len(train_df))
+row = train_df.iloc[idx]
+sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
+print(f"Text 1: {sample_text_1}")
+print(f"Text 2: {sample_text_2}")
+
+test_text = [np.array([sample_text_1]), np.array([sample_text_2])]
+text_preprocessed = bert_preprocess_model(test_text)
+
+print("Keys           : ", list(text_preprocessed.keys()))
+print("Shape Word Ids : ", text_preprocessed["input_word_ids"].shape)
+print("Word Ids       : ", text_preprocessed["input_word_ids"][0, :16])
+print("Shape Mask     : ", text_preprocessed["input_mask"].shape)
+print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
+print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
+print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
+
+"""
+### Create `tf.data.Dataset` objects
+"""
+
+"""
+We will now create `tf.data.Dataset` objects from the dataframes for performance.
+
+Note that the text inputs will be preprocessed as a part of the data input pipeline. But
+the preprocessing modules can also be a part of their corresponding BERT models. This
+helps reduce the training/serving skew and lets our models operate with raw text inputs.
+Follow [this tutorial](https://www.tensorflow.org/text/tutorials/classify_text_with_bert)
+to know more about how to incorporate the preprocessing modules directly inside the
+models. 
+"""
+
+
+def dataframe_to_dataset(dataframe):
+    columns = ["image_1_path", "image_2_path", "text_1", "text_2", "label_idx"]
+    dataframe = dataframe[columns].copy()
+    labels = dataframe.pop("label_idx")
+    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
+    ds = ds.shuffle(buffer_size=len(dataframe))
+    return ds
+
+
+train_ds = dataframe_to_dataset(train_df)
+test_ds = dataframe_to_dataset(test_df)
+
+"""
+### Preprocessing utilities
+"""
+
+resize = (128, 128)
+bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
+
+
+def read_resize(image_path):
+    extension = tf.strings.split(image_path)[-1]
+
+    image = tf.io.read_file(image_path)
+    if extension == b"jpg":
+        image = tf.image.decode_jpeg(image, 3)
+    else:
+        image = tf.image.decode_png(image, 3)
+    image = tf.image.resize(image, resize)
+    return image
+
+
+def preprocess_text(text_1, text_2):
+    text_1 = tf.convert_to_tensor([text_1])
+    text_2 = tf.convert_to_tensor([text_2])
+    output = bert_preprocess_model([text_1, text_2])
+    output = {feature: tf.squeeze(output[feature]) for feature in bert_input_features}
+    return output
+
+
+def preprocess(sample):
+    image_1 = read_resize(sample["image_1_path"])
+    image_2 = read_resize(sample["image_2_path"])
+    text = preprocess_text(sample["text_1"], sample["text_2"])
+    return {"image_1": image_1, "image_2": image_2, "text": text}
+
+
+"""
+### Create the final datasets
+"""
+
+batch_size = 32
+auto = tf.data.AUTOTUNE
+
+
+def prepare_dataset(ds, training=True):
+    if training:
+        ds = ds.shuffle(len(train_df))
+    ds = ds.map(lambda x, y: (preprocess(x), y))
+    ds = ds.batch(batch_size).prefetch(auto)
+    return ds
+
+
+train_ds = prepare_dataset(train_ds)
+test_ds = prepare_dataset(test_ds, False)
+
+"""
+We will also create a hold-out validation set from the training set itself.
+"""
+
+# Reference:
+# https://www.tensorflow.org/neural_structured_learning/tutorials/graph_keras_lstm_imdb
+validation_fraction = 0.9
+validation_size = int(validation_fraction * int(len(train_df) / batch_size))
+print(f"Validation samples: {validation_size}")
+validation_ds = train_ds.take(validation_size)
+train_ds = train_ds.skip(validation_size)
+
+"""
+## Model building utilities
+
+Our final model will accept two images along with their text counterparts. While the
+images will be directly fed to the model the text inputs will first be preprocessed and
+then will make it to the model. Below is a pictorial depiction of this approach:
+
+![](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/figures/brief_architecture.png)
+
+
+The model consists of the following elements:
+
+* A standalone encoder for the images. We will use a
+[ResNet50V2](https://arxiv.org/abs/1603.05027) pre-trained on the ImageNet-1k dataset for
+this.
+* A standalone encoder for the images. A pre-trained BERT will be used for this.
+
+After extracting the individual embeddings, they will be projected in an identical space.
+Finally, their projections will be concatenated and be fed to the final classification
+layer.
+
+This is a multi-class classification problem involving the following classes:
+
+* NoEntailment     
+* Implies           
+* Contradictory     
+
+`project_embeddings()`, `create_vision_encoder()`, and `create_text_encoder()` utilities
+are referred from [this example](https://keras.io/examples/nlp/nl_image_search/).
+"""
+
+
+def project_embeddings(
+    embeddings, num_projection_layers, projection_dims, dropout_rate
+):
+    projected_embeddings = keras.layers.Dense(units=projection_dims)(embeddings)
+    for _ in range(num_projection_layers):
+        x = tf.nn.gelu(projected_embeddings)
+        x = keras.layers.Dense(projection_dims)(x)
+        x = keras.layers.Dropout(dropout_rate)(x)
+        x = keras.layers.Add()([projected_embeddings, x])
+        projected_embeddings = keras.layers.LayerNormalization()(x)
+    return projected_embeddings
+
+
+def create_vision_encoder(
+    num_projection_layers, projection_dims, dropout_rate, trainable=False
+):
+    # Load the pre-trained ResNet50V2 model to be used as the base encoder.
+    resnet_v2 = keras.applications.ResNet50V2(
+        include_top=False, weights="imagenet", pooling="avg"
+    )
+    # Set the trainability of the base encoder.
+    for layer in resnet_v2.layers:
+        layer.trainable = trainable
+
+    # Receive the images as inputs.
+    image_1 = keras.Input(shape=(128, 128, 3), name="image_1")
+    image_2 = keras.Input(shape=(128, 128, 3), name="image_2")
+
+    # Preprocess the input image.
+    preprocessed_1 = keras.applications.resnet_v2.preprocess_input(image_1)
+    preprocessed_2 = keras.applications.resnet_v2.preprocess_input(image_2)
+
+    # Generate the embeddings for the images using the resnet_v2 model
+    # concatenate them.
+    embeddings_1 = resnet_v2(preprocessed_1)
+    embeddings_2 = resnet_v2(preprocessed_2)
+    embeddings = keras.layers.Concatenate()([embeddings_1, embeddings_2])
+
+    # Project the embeddings produced by the model.
+    outputs = project_embeddings(
+        embeddings, num_projection_layers, projection_dims, dropout_rate
+    )
+    # Create the vision encoder model.
+    return keras.Model([image_1, image_2], outputs, name="vision_encoder")
+
+
+vision_encoder = create_vision_encoder(
+    num_projection_layers=1, projection_dims=256, dropout_rate=0.1
+)
+keras.utils.plot_model(vision_encoder, show_shapes=True)
+
+
+def create_text_encoder(
+    num_projection_layers, projection_dims, dropout_rate, trainable=False
+):
+    # Load the pre-trained BERT model to be used as the base encoder.
+    bert = hub.KerasLayer(bert_model_path, name="bert",)
+    # Set the trainability of the base encoder.
+    bert.trainable = trainable
+
+    # Receive the text as inputs.
+    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    inputs = {
+        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        for feature in bert_input_features
+    }
+
+    # Generate embeddings for the preprocessed text using the BERT model.
+    embeddings = bert(inputs)["pooled_output"]
+
+    # Project the embeddings produced by the model.
+    outputs = project_embeddings(
+        embeddings, num_projection_layers, projection_dims, dropout_rate
+    )
+    # Create the text encoder model.
+    return keras.Model(inputs, outputs, name="text_encoder")
+
+
+text_encoder = create_text_encoder(
+    num_projection_layers=1, projection_dims=256, dropout_rate=0.1
+)
+keras.utils.plot_model(text_encoder, show_shapes=True)
+
+
+def create_multimodal_model(
+    num_projection_layers=1,
+    projection_dims=256,
+    dropout_rate=0.1,
+    vision_trainable=False,
+    text_trainable=False,
+):
+    # Receive the images as inputs.
+    image_1 = keras.Input(shape=(128, 128, 3), name="image_1")
+    image_2 = keras.Input(shape=(128, 128, 3), name="image_2")
+
+    # Receive the text as inputs.
+    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    text_inputs = {
+        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        for feature in bert_input_features
+    }
+
+    # Create the encoders.
+    vision_encoder = create_vision_encoder(
+        num_projection_layers, projection_dims, dropout_rate, vision_trainable
+    )
+    text_encoder = create_text_encoder(
+        num_projection_layers, projection_dims, dropout_rate, text_trainable
+    )
+
+    # Fetch the embedding projections.
+    vision_projections = vision_encoder([image_1, image_2])
+    text_projections = text_encoder(text_inputs)
+
+    # Concatenate the projections and pass through the classification layer.
+    concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
+    outputs = keras.layers.Dense(3, activation="softmax")(concatenated)
+    return keras.Model([image_1, image_2, text_inputs], outputs)
+
+
+multimodal_model = create_multimodal_model()
+keras.utils.plot_model(multimodal_model, show_shapes=True)
+
+"""
+You are encouraged to play with the different hyperparameters involved in building this
+model and observe how the final performance is affected.
+"""
+
+"""
+## Compile and train the model
+"""
+
+multimodal_model.compile(
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics="accuracy"
+)
+
+history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
+
+"""
+## Evaluate the model
+"""
+
+_, acc = multimodal_model.evaluate(test_ds)
+print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
+
+"""
+## Notes
+
+* We used a smaller variant of the original BERT model. Chances are likely that with a
+larger variant, this performance will be improved. TensorFlow Hub
+[provides](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub)
+a number of different BERT models that you can experiment with.
+* The dataset suffers from class imbalance. If we had used a weighted loss then the
+training would have been more guided. You can check out
+[this tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
+to know more about handling imbalanced datasets.
+* What if we had only incorporated text inputs for the entailment task? Because of the
+nature of the text inputs encountered on social media platforms, text inputs alone would
+have hurt the final performance. Under a similar training setup, by only using text
+inputs we get to ~83% top-1 accuracy on the same test set. Refer to 
+[this notebook](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/blob/main/text_entailment.ipynb)
+for details.
+* We kept the pre-trained models frozen. Fine-tuning them on the multimodal entailment
+task would have resulted in a better performance.
+* We built a simple baseline model for the multimodal entailment task. There are various
+approaches that have been proposed to tackle the entailment problem.
+[This presentation deck](https://docs.google.com/presentation/d/1mAB31BCmqzfedreNZYn4hsKPFmgHA9Kxz219DzyRY3c/edit?usp=sharing)
+from the
+[Recognizing Multimodal Entailment](https://multimodal-entailment.github.io/)
+tutorial provides a comprehensive overview. 
+"""
