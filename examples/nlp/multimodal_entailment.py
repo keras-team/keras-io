@@ -169,10 +169,17 @@ df["label"].value_counts()
 To account for that we will go for a stratified split. 
 """
 
+# 10% for test
 train_df, test_df = train_test_split(
-    df, test_size=0.15, stratify=df["label"].values, random_state=42
+    df, test_size=0.1, stratify=df["label"].values, random_state=42
 )
+# 5% for validation
+train_df, val_df = train_test_split(
+    train_df, test_size=0.05, stratify=train_df["label"].values, random_state=42
+)
+
 print(f"Total training examples: {len(train_df)}")
+print(f"Total validation examples: {len(val_df)}")
 print(f"Total test examples: {len(test_df)}")
 
 """
@@ -266,9 +273,6 @@ print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
 print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
 print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
 
-"""
-### Create `tf.data.Dataset` objects
-"""
 
 """
 We will now create `tf.data.Dataset` objects from the dataframes for performance.
@@ -290,9 +294,6 @@ def dataframe_to_dataset(dataframe):
     ds = ds.shuffle(buffer_size=len(dataframe))
     return ds
 
-
-train_ds = dataframe_to_dataset(train_df)
-test_ds = dataframe_to_dataset(test_df)
 
 """
 ### Preprocessing utilities
@@ -337,7 +338,8 @@ batch_size = 32
 auto = tf.data.AUTOTUNE
 
 
-def prepare_dataset(ds, training=True):
+def prepare_dataset(dataframe, training=True):
+    ds = dataframe_to_dataset(dataframe)
     if training:
         ds = ds.shuffle(len(train_df))
     ds = ds.map(lambda x, y: (preprocess(x), y))
@@ -345,20 +347,10 @@ def prepare_dataset(ds, training=True):
     return ds
 
 
-train_ds = prepare_dataset(train_ds)
-test_ds = prepare_dataset(test_ds, False)
+train_ds = prepare_dataset(train_df)
+validation_ds = prepare_dataset(val_df, False)
+test_ds = prepare_dataset(test_df, False)
 
-"""
-We will also create a hold-out validation set from the training set itself.
-"""
-
-# Reference:
-# https://www.tensorflow.org/neural_structured_learning/tutorials/graph_keras_lstm_imdb
-validation_fraction = 0.9
-validation_size = int(validation_fraction * int(len(train_df) / batch_size))
-print(f"Validation samples: {validation_size}")
-validation_ds = train_ds.take(validation_size)
-train_ds = train_ds.skip(validation_size)
 
 """
 ## Model building utilities
@@ -538,22 +530,40 @@ _, acc = multimodal_model.evaluate(test_ds)
 print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 
 """
+The training logs suggest that the model is starting to overfit and may have benefitted
+from regularization.
+
+The dataset suffers from class imbalance. Investigating the confusion matrix of the
+above model reveals that it performs poorly on the minority classes. If we had used a
+weighted loss then the training would have been more guided. You can check out
+[this notebook](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/blob/main/multimodal_entailment.ipynb)
+that takes class-imbalance into account during model training.
+
+Also, what if we had only incorporated text inputs for the entailment task? Because of
+the nature of the text inputs encountered on social media platforms, text inputs alone
+would have hurt the final performance. Under a similar training setup, by only using
+text inputs we get to 67.14% top-1 accuracy on the same test set. Refer to 
+[this notebook](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/blob/main/text_entailment.ipynb)
+for details.
+
+Finally, here is a table comparing different approaches taken for the entailment task:
+
+| Type  | Standard<br>Cross-entropy     | Loss-weighted<br>Cross-entropy    | Focal Loss    |
+|:---:  |:---:  |---    |---    |
+| Multimodal    | 77.86%    | 67.86%    | 86.43%    |
+| Only text     | 67.14%    | 11.43%    | 37.86%    |
+
+You can check out [this repository](https://git.io/JR0HU) to learn more about how the
+experiments were conducted to obtain these numbers.
+"""
+
+"""
 ## Notes
 
 * We used a smaller variant of the original BERT model. Chances are likely that with a
 larger variant, this performance will be improved. TensorFlow Hub
 [provides](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub)
 a number of different BERT models that you can experiment with.
-* The dataset suffers from class imbalance. If we had used a weighted loss then the
-training would have been more guided. You can check out
-[this tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
-to know more about handling imbalanced datasets.
-* What if we had only incorporated text inputs for the entailment task? Because of the
-nature of the text inputs encountered on social media platforms, text inputs alone would
-have hurt the final performance. Under a similar training setup, by only using text
-inputs we get to ~83% top-1 accuracy on the same test set. Refer to 
-[this notebook](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/blob/main/text_entailment.ipynb)
-for details.
 * We kept the pre-trained models frozen. Fine-tuning them on the multimodal entailment
 task would have resulted in a better performance.
 * We built a simple baseline model for the multimodal entailment task. There are various
