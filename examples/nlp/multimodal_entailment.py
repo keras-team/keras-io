@@ -560,6 +560,8 @@ experiments were conducted to obtain these numbers.
 """
 ## Notes
 
+* The architecture we used in this example is an overkill for the number of data points
+we have for training. It's likely going to benefit from more data.
 * We used a smaller variant of the original BERT model. Chances are likely that with a
 larger variant, this performance will be improved. TensorFlow Hub
 [provides](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub)
