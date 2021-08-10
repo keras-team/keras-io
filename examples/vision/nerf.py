@@ -203,7 +203,7 @@ point.
 
 def encode_position(x):
     """Encodes the position into its corresponding Fourier feature.
-    
+
     Args:
         x: The input coordinate.
 
@@ -219,7 +219,7 @@ def encode_position(x):
 
 def get_rays(height, width, focal, pose):
     """Computes origin point and direction vector of rays.
-    
+
     Args:
         height: Height of the image.
         width: Width of the image.
@@ -261,7 +261,7 @@ def get_rays(height, width, focal, pose):
 
 def render_flat_rays(ray_origins, ray_directions, near, far, num_samples, rand=False):
     """Renders the rays and flattens it.
-    
+
     Args:
         ray_origins: The origin points for rays.
         ray_directions: The direction unit vectors for the rays.
@@ -269,7 +269,7 @@ def render_flat_rays(ray_origins, ray_directions, near, far, num_samples, rand=F
         far: The far bound of the volumetric scene.
         num_samples: Number of sample points in a ray.
         rand: Choice for randomising the sampling strategy.
-    
+
     Returns:
        Tuple of flattened rays and sample points on each rays.
     """
@@ -294,7 +294,7 @@ def render_flat_rays(ray_origins, ray_directions, near, far, num_samples, rand=F
 
 def map_fn(pose):
     """Maps individual pose to flattened rays and sample points.
-    
+
     Args:
         pose: The pose matrix of the camera.
 
@@ -377,7 +377,7 @@ def get_nerf_model(num_layers, num_pos):
     Args:
         num_layers: The number of MLP layers.
         num_pos: The number of dimensions of positional encoding.
-    
+
     Returns:
         The `tf.keras` model.
     """
@@ -403,7 +403,7 @@ def render_rgb_depth(model, rays_flat, t_vals, rand=True, train=True):
         t_vals: The sample points for the rays.
         rand: Choice to randomise the sampling strategy.
         train: Whether the model is in the training or testing phase.
-    
+
     Returns:
         Tuple of rgb image and depth map.
     """
@@ -499,7 +499,7 @@ class NeRF(keras.Model):
         # Get the images and the rays.
         (images, rays) = inputs
         (rays_flat, t_vals) = rays
-        
+
         # Get the predictions from the model.
         rgb, _ = render_rgb_depth(
             model=self.nerf_model, rays_flat=rays_flat, t_vals=t_vals, rand=True
@@ -517,6 +517,7 @@ class NeRF(keras.Model):
     @property
     def metrics(self):
         return [self.loss_tracker, self.psnr_metric]
+
 
 test_imgs, test_rays = next(iter(train_ds))
 test_rays_flat, test_t_vals = test_rays
@@ -557,7 +558,9 @@ num_pos = H * W * NUM_SAMPLES
 nerf_model = get_nerf_model(num_layers=8, num_pos=num_pos)
 
 model = NeRF(nerf_model)
-model.compile(optimizer=keras.optimizers.Adam(), loss_fn=keras.losses.MeanSquaredError())
+model.compile(
+    optimizer=keras.optimizers.Adam(), loss_fn=keras.losses.MeanSquaredError()
+)
 
 # Create a directory to save the images during training.
 if not os.path.exists("images"):
