@@ -15,8 +15,9 @@ to *synthesize novel views of a scene* by modelling the *volumetric
 scene function* through a neural network.
 
 To help you understand this intuitively, let's start with the following question:
-*what would happen if we were to input the pixel position of an image to a neural
-network and ask it to predict the color at that position?*
+*would it be possible to give to a neural
+network the position of a pixel in an image, and ask the network
+to predict the color at that position?*
 
 | ![2d-train](https://i.imgur.com/DQM92vN.png) |
 | :---: |
