@@ -304,7 +304,7 @@ molecule
 """
 """
 
-graph = graph_from_molecule(molecule_from_smiles(df.smiles[100]))
+graph = graph_from_molecule(molecule)
 print("Graph (including self-loops):")
 print("\tatom features\t", np.array(graph[0]).shape)
 print("\tbond features\t", np.array(graph[1]).shape)
@@ -337,7 +337,7 @@ def prepare_batch(X_batch, y_batch):
     atom_partition_indices = tf.repeat(molecule_indices, num_atoms)
     bond_partition_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
 
-    # Merge (sub-)graphs into a global (disconnected) graph
+    # Merge (sub-)graphs into a global (disconnected) graph.
     # Adding 'increment' to 'pair_indices' (and merging ragged tensors) actualizes
     # the global graph
     increment = tf.cumsum(num_atoms[:-1])
@@ -544,9 +544,8 @@ class NoInputLSTMCell(keras.layers.Layer):
 class SetGather(keras.layers.Layer):
     def __init__(self, batch_size, steps=8, **kwargs):
         super().__init__(**kwargs)
-        self.batch_size = (
-            batch_size  # batch size needs to be explicit for dynamic partition
-        )
+        # batch size needs to be explicit for dynamic partition
+        self.batch_size = batch_size
         self.steps = steps
 
     def build(self, input_shape):
@@ -575,22 +574,23 @@ class SetGather(keras.layers.Layer):
         # Perform a number of lstm steps (via the set-to-set procedure)
         for i in range(self.steps):
 
-            # Expand carry state based on atom_partition_indices
+            # Expand carry state (to match atom_features dim)
             carry_state_expanded = tf.gather(carry_state, atom_partition_indices)
 
-            # Perform a linear transformation on followed by a reduction
+            # Perform a linear transformation followed by reduction
             atom_features_reduced = tf.reduce_sum(
                 atom_features * carry_state_expanded, axis=1
             )
 
-            # Split 1-D feature tensor into parts correspoding to each molecule in the batch
-            features_list = tf.dynamic_partition(
+            # Split into parts correspoding to each molecule in the batch
+            atom_features_partitioned = tf.dynamic_partition(
                 atom_features_reduced, atom_partition_indices, self.batch_size
             )
 
             # Compute attention coefficients
             attention_coef = tf.concat(
-                [tf.nn.softmax(features) for features in features_list], axis=0
+                [tf.nn.softmax(features) for features in atom_features_partitioned],
+                axis=0,
             )
 
             # Apply attention to atom_features, and sum based on atom_partition_indices
