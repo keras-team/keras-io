@@ -92,7 +92,9 @@ import matplotlib.pyplot as plt
 import warnings
 from rdkit import Chem, RDLogger
 from rdkit.Chem.Draw import IPythonConsole, MolsToGridImage
+import logging
 
+tf.get_logger().setLevel(logging.ERROR)
 warnings.filterwarnings("ignore")
 RDLogger.DisableLog("rdApp.*")
 
@@ -683,7 +685,7 @@ test_dataset = MPNNDataset(X_test, y_test)
 history = mpnn.fit(
     train_dataset,
     validation_data=valid_dataset,
-    epochs=30,
+    epochs=20,
     verbose=2,
     class_weight={0: 2.0, 1: 0.5},
 )
@@ -701,7 +703,7 @@ plt.legend(fontsize=16)
 
 molecules = [molecule_from_smiles(df.smiles.values[index]) for index in test_index]
 y_true = [df.p_np.values[index] for index in test_index]
-y_pred = tf.squeeze(tf.nn.sigmoid(mpnn.predict(test_dataset)), axis=1)
+y_pred = tf.squeeze(mpnn.predict(test_dataset), axis=1)
 
 MolsToGridImage(
     molecules,
