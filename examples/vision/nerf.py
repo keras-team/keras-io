@@ -1,5 +1,5 @@
 """
-Title: 3-D Volumetric Rendering using NeRF
+Title: 3D volumetric rendering with NeRF
 Authors: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2021/08/09
 Last modified: 2021/08/09
@@ -8,46 +8,44 @@ Description: Minimal implementation of volumetric rendering as shown in NeRF.
 """
 ## Introduction
 
-In this example, we minimally implement the research paper
+In this example, we present a minimal implementation of the research paper
 [**NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis**](https://arxiv.org/abs/2003.08934)
 by Ben Mildenhall et. al. The authors have proposed an ingenious way
-to **synthesise novel views** of a scene by modelling the *volumetric
+to *synthesize novel views of a scene* by modelling the *volumetric
 scene function* through a neural network.
 
-To construct an intuition, let me ask you a simple question. *What
-will happen if we input the coordinates of an image to a neural
+To help you understand this intuitively, let's start with the following question:
+*what would happen if we were to input the coordinates of an image to a neural
 network and ask it to predict the color at that coordinate?*
 
 | ![2d-train](https://i.imgur.com/DQM92vN.png) |
 | :---: |
 | **Figure 1**: A neural network being given coordinates of an image
-as inputs and asked to predict the color at the coordinates. |
+as input and asked to predict the color at the coordinates. |
 
-The neural network will hypothetically **memorize** (overfit on) the
-image. This means that our neural network has encoded the entire image
-in itself. We can query the neural network with all the co-ordinates
-and it will eventually reconstruct the entire image.
+The neural network would hypothetically *memorize* (overfit on) the
+image. This means that our neural network would have encoded the entire image
+in its weights. We could query the neural network with each coordinate,
+and it would eventually reconstruct the entire image.
 
 | ![2d-test](https://i.imgur.com/6Qz5Hp1.png) |
 | :---: |
-| **Figure 2**: The trained neural network recreates the image from
-scratch. |
+| **Figure 2**: The trained neural network recreates the image from scratch. |
 
-A question now arises, how do we extend this idea and learn a 3-D
+A question now arises, how do we extend this idea to learn a 3D
 volumetric scene? Implementing a similar process as above would
 require the knowledge of every voxel (volume pixel). Turns out, this
 is quite a challenging task to do. 
 
-The authors in the paper propose a minimal and elegant way to learn a
-3-D scene using a **few images of the scene**. They discard the use of
-voxels for training and make the entire training efficient. The
-network learns to model the volumetric scene, thereby generating novel
-views (images) of the 3-D scene that the model was not shown in the
-training step.
+The authors of the paper propose a minimal and elegant way to learn a
+3D scene using a few images of the scene. They discard the use of
+voxels for training. The network learns to model the volumetric scene,
+thus generating novel views (images) of the 3D scene that the model
+was not shown at training time.
 
-There are a few pre-requisites one needs to understand to fully
-appreciate the research. We structure the example in such a way that
-you will have all the required knowledge before going ahead with the
+There are a few prerequisites one needs to understand to fully
+appreciate the process. We structure the example in such a way that
+you will have all the required knowledge before starting the
 implementation.
 """
 
@@ -55,7 +53,7 @@ implementation.
 ## Setup
 """
 
-# Setting random seed to build reproducible results.
+# Setting random seed to obtain reproducible results.
 import tensorflow as tf
 
 tf.random.set_seed(42)
@@ -79,8 +77,8 @@ EPOCHS = 20
 """
 ## Download and load the data
 
-The `npz` data file contains images, camera-poses and a focal length.
-The **images** are taken from multiple camera angles as shown in
+The `npz` data file contains images, camera poses, and a focal length.
+The images are taken from multiple camera angles as shown in
 **Figure 3**.
 
 | ![camera-angles](https://i.imgur.com/FLsi2is.png) |
@@ -89,7 +87,7 @@ The **images** are taken from multiple camera angles as shown in
 [Source: NeRF](https://arxiv.org/abs/2003.08934) |
 
 
-To understand **camera-poses** in this context we have to first allow
+To understand camera poses in this context we have to first allow
 ourselves to think that a *camera is a mapping between the real-world
 and the 2-D image*.
 
@@ -103,23 +101,23 @@ Consider the following equation:
 <img src="https://i.imgur.com/TQHKx5v.pngg" width="100" height="50"/>
 
 Where **x** is the 2-D image point, **X** is the 3-D world point and
-**P** is the camera-matrix. **P** is a `3x4` matrix that plays the
+**P** is the camera-matrix. **P** is a 3 x 4 matrix that plays the
 crucial role of mapping the real world object onto an image plane.
 
 <img src="https://i.imgur.com/chvJct5.png" width="300" height="100"/>
 
-The camera-matrix is an **affine transform** matrix that is
-concatenated with a `3x1` column `[image height, image width, focal
-length]` to give the pose-matrix. This resultant matrix is of
-dimensions `3X5` where the first `3X3` block is in the camera’s point
-of view. The axes are `[down, right, backwards]` or `[-y,x,z]`
+The camera-matrix is an *affine transform matrix* that is
+concatenated with a 3 x 1 column `[image height, image width, focal length]`
+to produce the *pose matrix*. This matrix is of
+dimensions 3 x 5 where the first 3 x 3 block is in the camera’s point
+of view. The axes are `[down, right, backwards]` or `[-y, x, z]`
 where the camera is facing forwards `-z`. 
 
 | ![camera-mapping](https://i.imgur.com/kvjqbiO.png) |
 | :---: |
 | **Figure 5**: The affine transformation. |
 
-The COLMAP frame is `[right, down, forwards]` or `[x,-y,-z]`. Read
+The COLMAP frame is `[right, down, forwards]` or `[x, -y, -z]`. Read
 more about COLMAP [here](https://colmap.github.io/).
 """
 
@@ -146,18 +144,18 @@ plt.axis("off")
 plt.show()
 
 """
-## Data Pipeline
+## Data pipeline
 
-With the intuition of camera matrix and the mapping from 3-D world to
-2-D image let's talk about the inverse mapping, i.e. from 2-D image to
-the 3-D world. 
+Now that you've understood the notion of camera matrix
+and the mapping from a 3D scene to 2D images,
+let's talk about the inverse mapping, i.e. from 2D image to the 3D scene. 
 
-In computer graphics, volumetric rendering with ray casting and tracing
-are proactively used. This section will help you get to speed with the
-techniques for an easy understanding of our data pipeline.
+We'll need to talk about volumetric rendering with ray casting and tracing,
+which are common computer graphics techniques.
+This section will help you get to speed with these techniques.
 
 Consider an image with `N` pixels. We shoot a ray through each pixel
-and sample some points on the ray. A ray is commonly parameterised by
+and sample some points on the ray. A ray is commonly parameterized by
 the equation `r(t) = o + td` where `t` is the parameter, `o` is the
 origin and `d` is the unit directional vector as shown in **Figure 6**.
 
@@ -165,7 +163,7 @@ origin and `d` is the unit directional vector as shown in **Figure 6**.
 | :---: |
 | **Figure 6**: `r(t) = o + td` where t is 3 |
 
-In **Figure 7** the ray is shot and we sample some random points on
+In **Figure 7**, we consider a ray, and we sample some random points on
 the ray. These sample points each have a unique location `(x, y, z)`
 and the ray has a viewing angle `(theta, phi)`. The viewing angle is
 particularly interesting as we can shoot a ray through a single pixel
@@ -180,8 +178,8 @@ blue points are the evenly distributed samples and the white points
 | :---: |
 | **Figure 7**: Sampling the points from a ray. |
 
-**Figure 8** showcases the entire sampling process in 3-D where you
-can see the rays coming out from the white image. This means that each
+**Figure 8** showcases the entire sampling process in 3D, where you
+can see the rays coming out of the white image. This means that each
 pixel will have its corresponding rays and each ray will be sampled at
 distinct points. 
 
@@ -190,7 +188,7 @@ distinct points.
 | **Figure 8**: Shooting rays from all the pixels of an image in 3-D |
 
 These sampled points act as the input to the NeRF model. The model is
-then asked to predict the rgb color and the volume density at that
+then asked to predict the RGB color and the volume density at that
 point.
 
 | ![3-Drender](https://i.imgur.com/HHb6tlQ.png) |
@@ -350,24 +348,24 @@ val_ds = (
 """
 ## NeRF model
 
-The model is a multi-layer perceptron. It has ReLU as its non-linearity. 
+The model is a multi-layer perceptron (MLP), with ReLU as its non-linearity. 
 
 An excerpt from the paper:
 
-"We encourage the representation to be multiview consistent by
+*"We encourage the representation to be multiview-consistent by
 restricting the network to predict the volume density sigma as a
-function of only the location x, while allowing the RGB color c to be
+function of only the location `x`, while allowing the RGB color `c` to be
 predicted as a function of both location and viewing direction. To
-accomplish this, the MLP first processes the input 3D coordinate x
+accomplish this, the MLP first processes the input 3D coordinate `x`
 with 8 fully-connected layers (using ReLU activations and 256 channels
 per layer), and outputs sigma and a 256-dimensional feature vector.
-This feature vector is then concatenated with the camera ray’s viewing
+This feature vector is then concatenated with the camera ray's viewing
 direction and passed to one additional fully-connected layer (using a
 ReLU activation and 128 channels) that output the view-dependent RGB
-color."
+color."*
 
-Here we have gone for a minimal implementation and have used `64`
-Dense units instead of `256` as mentioned in the paper.
+Here we have gone for a minimal implementation and have used 64
+Dense units instead of 256 as mentioned in the paper.
 """
 
 
@@ -393,7 +391,7 @@ def get_nerf_model(num_layers, num_pos):
 
 
 def render_rgb_depth(model, rays_flat, t_vals, rand=True, train=True):
-    """Generates the rgb image and depth map from model prediction.
+    """Generates the RGB image and depth map from model prediction.
 
     Args:
         model: The MLP model that is trained to predict the rgb and
@@ -449,8 +447,8 @@ def render_rgb_depth(model, rays_flat, t_vals, rand=True, train=True):
 """
 ## Training
 
-The training step is gathered in a `keras.Model` class so that we can
-make use of the `model.fit` call.
+The training step is implemented as part of a custom `keras.Model` subclass
+so that we can make use of the `model.fit` functionality.
 """
 
 
@@ -649,9 +647,7 @@ to render a video encompassing the 360-degree view.
 
 
 def get_translation_t(t):
-    """
-    Get the translation matrix for movement in t.
-    """
+    """Get the translation matrix for movement in t."""
     matrix = [
         [1, 0, 0, 0],
         [0, 1, 0, 0],
@@ -662,9 +658,7 @@ def get_translation_t(t):
 
 
 def get_rotation_phi(phi):
-    """
-    Get the rotation matrix for movement in phi.
-    """
+    """Get the rotation matrix for movement in phi."""
     matrix = [
         [1, 0, 0, 0],
         [0, tf.cos(phi), -tf.sin(phi), 0],
@@ -675,9 +669,7 @@ def get_rotation_phi(phi):
 
 
 def get_rotation_theta(theta):
-    """
-    Get the rotation matrix for movement in theta.
-    """
+    """Get the rotation matrix for movement in theta."""
     matrix = [
         [tf.cos(theta), 0, -tf.sin(theta), 0],
         [0, 1, 0, 0],
@@ -740,8 +732,8 @@ imageio.mimwrite(rgb_video, rgb_frames, fps=30, quality=7, macro_block_size=None
 
 Here we can see the rendered 360 degree view of the scene. The model
 has successfully learned the entire volumetric space through the
-sparse set of images in only **20 EPOCHS**. One can notice the
-rendered video in their local system named `rgb_video.mp4`.
+sparse set of images in **only 20 epochs**. You can view the
+rendered video saved locally, named `rgb_video.mp4`.
 
 ![rendered-video](https://i.imgur.com/j2sIkzW.gif)
 """
@@ -749,13 +741,13 @@ rendered video in their local system named `rgb_video.mp4`.
 """
 ## Conclusion
 
-We have minimally implemented NeRF to provide an intuition of its
-core ideas and methodologies. This paper has been used in various
-other researches in the computer graphics space.
+We have produced a minimal implementation of NeRF to provide an intuition of its
+core ideas and methodology. This method has been used in various
+other works in the computer graphics space.
 
 We would like to encourage our readers to use this code as an example
 and play with the hyperparameters and visualize the outputs. Below we
-have also given the outputs of the model trained for more epochs.
+have also provided the outputs of the model trained for more epochs.
 
 | Epochs | GIF of the training step |
 | :--- | :---: |
@@ -763,8 +755,6 @@ have also given the outputs of the model trained for more epochs.
 | **200** | ![200-epoch-training](https://i.imgur.com/l3rG4HQ.gif) |
 
 ## Reference
-
-These are the places we have referred to:
 
 - [NeRF repository](https://github.com/bmild/nerf): The official
     repository for NeRF.
