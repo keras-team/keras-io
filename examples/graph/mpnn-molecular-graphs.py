@@ -698,7 +698,7 @@ plt.ylabel("AUC", fontsize=16)
 plt.legend(fontsize=16)
 
 """
-###  Predicting
+### Predicting
 """
 
 molecules = [molecule_from_smiles(df.smiles.values[index]) for index in test_index]
