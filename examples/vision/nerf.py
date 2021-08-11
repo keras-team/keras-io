@@ -15,8 +15,8 @@ to *synthesize novel views of a scene* by modelling the *volumetric
 scene function* through a neural network.
 
 To help you understand this intuitively, let's start with the following question:
-*what would happen if we were to input the coordinates of an image to a neural
-network and ask it to predict the color at that coordinate?*
+*what would happen if we were to input the pixel position of an image to a neural
+network and ask it to predict the color at that position?*
 
 | ![2d-train](https://i.imgur.com/DQM92vN.png) |
 | :---: |
@@ -25,7 +25,7 @@ as input and asked to predict the color at the coordinates. |
 
 The neural network would hypothetically *memorize* (overfit on) the
 image. This means that our neural network would have encoded the entire image
-in its weights. We could query the neural network with each coordinate,
+in its weights. We could query the neural network with each position,
 and it would eventually reconstruct the entire image.
 
 | ![2d-test](https://i.imgur.com/6Qz5Hp1.png) |
