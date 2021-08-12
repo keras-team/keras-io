@@ -1,4 +1,3 @@
-
 # 3D volumetric rendering with NeRF
 
 **Authors:** [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
