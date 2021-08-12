@@ -2,7 +2,7 @@
 
 **Author:** [Theodoros Ntakouris](https://github.com/ntakouris)<br>
 **Date created:** 2021/06/25<br>
-**Last modified:** 2021/06/25<br>
+**Last modified:** 2021/08/05<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/timeseries/ipynb/timeseries_classification_transformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/timeseries/timeseries_classification_transformer.py)
@@ -81,19 +81,19 @@ The projection layers are implemented through `keras.layers.Conv1D`.
 ```python
 
 def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
-    # Normalization and Attention
-    x = layers.LayerNormalization(epsilon=1e-6)(inputs)
+    # Attention and Normalization
     x = layers.MultiHeadAttention(
         key_dim=head_size, num_heads=num_heads, dropout=dropout
-    )(x, x)
+    )(inputs, inputs)
     x = layers.Dropout(dropout)(x)
+    x = layers.LayerNormalization(epsilon=1e-6)(x)
     res = x + inputs
 
     # Feed Forward Part
-    x = layers.LayerNormalization(epsilon=1e-6)(res)
-    x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(x)
+    x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(res)
     x = layers.Dropout(dropout)(x)
     x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1)(x)
+    x = layers.LayerNormalization(epsilon=1e-6)(x)
     return x + res
 
 ```
