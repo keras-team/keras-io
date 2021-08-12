@@ -216,9 +216,7 @@ NUM_BLOCKS = ((DEPTH - 2) // 9) - 1
 def get_encoder():
     # Input and backbone.
     inputs = layers.Input((CROP_TO, CROP_TO, 3))
-    x = layers.Rescaling(scale=1.0 / 127.5, offset=-1)(
-        inputs
-    )
+    x = layers.Rescaling(scale=1.0 / 127.5, offset=-1)(inputs)
     x = resnet_cifar10_v2.stem(x)
     x = resnet_cifar10_v2.learner(x, NUM_BLOCKS)
     x = layers.GlobalAveragePooling2D(name="backbone_pool")(x)
