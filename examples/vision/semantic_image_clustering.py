@@ -87,10 +87,7 @@ but require a longer time to train.
 """
 
 data_preprocessing = keras.Sequential(
-    [
-        layers.Resizing(target_size, target_size),
-        layers.Normalization(),
-    ]
+    [layers.Resizing(target_size, target_size), layers.Normalization(),]
 )
 # Compute the mean and the variance from the data for normalization.
 data_preprocessing.layers[-1].adapt(x_data)
@@ -110,9 +107,7 @@ data_augmentation = keras.Sequential(
             height_factor=(-0.2, 0.2), width_factor=(-0.2, 0.2), fill_mode="nearest"
         ),
         layers.RandomFlip(mode="horizontal"),
-        layers.RandomRotation(
-            factor=0.15, fill_mode="nearest"
-        ),
+        layers.RandomRotation(factor=0.15, fill_mode="nearest"),
         layers.RandomZoom(
             height_factor=(-0.3, 0.1), width_factor=(-0.3, 0.1), fill_mode="nearest"
         ),
