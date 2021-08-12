@@ -237,7 +237,8 @@ error between the real data and the predictions:
 
 
 def custom_mean_squared_error(y_true, y_pred):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred))
+    #return tf.math.reduce_mean(tf.square(y_true - y_pred))
+    return tf.square(tf.math.reduce_mean((y_true - y_pred)**2))
 
 
 model = get_uncompiled_model()
