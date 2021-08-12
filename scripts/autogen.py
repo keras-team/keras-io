@@ -558,7 +558,11 @@ class KerasIO:
                 md_content = md_file.read()
                 md_file.close()
                 md_content = replace_links(md_content)
-                md_content = preprocess_code_blocks(md_content)
+
+                # Convert ```lang notation to the hilite syntax
+                md_content = md_content.replace('```python\n', '```\n:::python\n')
+                md_content = md_content.replace('```shell\n', '```\n:::none\n')
+
                 html_content = markdown.markdown(
                     md_content,
                     extensions=[
@@ -567,9 +571,13 @@ class KerasIO:
                         "codehilite",
                         "mdx_truly_sane_lists",
                     ],
+                    extension_configs={
+                        'codehilite': {
+                            'guess_lang': False,
+                        },
+                    }
                 )
                 html_content = insert_title_ids_in_html(html_content)
-                html_content = post_process_code_blocks(html_content)
                 local_nav = [
                     set_active_flag_in_nav_entry(entry, relative_url) for entry in nav
                 ]
@@ -688,31 +696,6 @@ def set_active_flag_in_nav_entry(entry, relative_url):
     ]
     entry["children"] = children
     return entry
-
-
-def preprocess_code_blocks(md):
-    md = md.replace("```shell\n", '<code class="k-shell">\n```\n')
-    md = md.replace("```endshell", "```\n</code>")
-    md = re.sub(r">>> # (.*?)\n", r">>>KCOMMENT_START # \1 KCOMMENT_END \n", md)
-    return md
-
-
-def post_process_code_blocks(html):
-    html = re.sub(
-        r'<span class="n">KCOMMENT_START</span>', r'<span class="k-code-comment">', html
-    )
-    html = re.sub(
-        r'<span class="nv">KCOMMENT_START</span>',
-        r'<span class="k-code-comment">',
-        html,
-    )
-    html = re.sub(r'<span class="n">KCOMMENT_END</span>', r"</span>", html)
-    html = re.sub(r'<span class="nv">KCOMMENT_END</span>', r"</span>", html)
-    html = re.sub(r"KCOMMENT_END", r"</span>", html)
-    if "KCOMMENT_" in html:
-        print(html)
-        raise ValueError("Comment tags left over in HTML")
-    return html
 
 
 def replace_links(content):
