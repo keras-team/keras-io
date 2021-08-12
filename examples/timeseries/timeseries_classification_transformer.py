@@ -73,7 +73,7 @@ The projection layers are implemented through `keras.layers.Conv1D`.
 
 
 def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
-    # Normalization and Attention
+    # Attention and Normalization
     x = layers.MultiHeadAttention(
         key_dim=head_size, num_heads=num_heads, dropout=dropout
     )(inputs, inputs)
