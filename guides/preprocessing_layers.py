@@ -95,10 +95,10 @@ You set the state of a preprocessing layer by exposing it to training data, via 
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras import layers
 
 data = np.array([[0.1, 0.2, 0.3], [0.8, 0.9, 1.0], [1.5, 1.6, 1.7],])
-layer = preprocessing.Normalization()
+layer = layers.Normalization()
 layer.adapt(data)
 normalized_data = layer(data)
 
@@ -120,7 +120,7 @@ data = [
     "οἱ δὲ διὰ ξεστῶν κεράων ἔλθωσι θύραζε,",
     "οἵ ῥ᾽ ἔτυμα κραίνουσι, βροτῶν ὅτε κέν τις ἴδηται.",
 ]
-layer = preprocessing.TextVectorization()
+layer = layers.TextVectorization()
 layer.adapt(data)
 vectorized_text = layer(data)
 print(vectorized_text)
@@ -139,7 +139,7 @@ Here's an example where we instantiate a `StringLookup` layer with precomputed v
 
 vocab = ["a", "b", "c", "d"]
 data = tf.constant([["a", "c", "d"], ["d", "z", "b"]])
-layer = preprocessing.StringLookup(vocabulary=vocab)
+layer = layers.StringLookup(vocabulary=vocab)
 vectorized_data = layer(data)
 print(vectorized_data)
 
@@ -235,9 +235,9 @@ from tensorflow.keras import layers
 # Create a data augmentation stage with horizontal flipping, rotations, zooms
 data_augmentation = keras.Sequential(
     [
-        preprocessing.RandomFlip("horizontal"),
-        preprocessing.RandomRotation(0.1),
-        preprocessing.RandomZoom(0.1),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
+        layers.RandomZoom(0.1),
     ]
 )
 
@@ -253,7 +253,7 @@ train_dataset = train_dataset.batch(16).map(lambda x, y: (data_augmentation(x), 
 
 # Create a model and train it on the augmented image data
 inputs = keras.Input(shape=input_shape)
-x = preprocessing.Rescaling(1.0 / 255)(inputs)  # Rescale inputs
+x = layers.Rescaling(1.0 / 255)(inputs)  # Rescale inputs
 outputs = keras.applications.ResNet50(  # Add the rest of the model
     weights=None, input_shape=input_shape, classes=classes
 )(x)
@@ -277,7 +277,7 @@ input_shape = x_train.shape[1:]
 classes = 10
 
 # Create a Normalization layer and set its internal state using the training data
-normalizer = preprocessing.Normalization()
+normalizer = layers.Normalization()
 normalizer.adapt(x_train)
 
 # Create a model that include the normalization layer
@@ -298,7 +298,7 @@ model.fit(x_train, y_train)
 data = tf.constant([["a"], ["b"], ["c"], ["b"], ["c"], ["a"]])
 
 # Use StringLookup to build an index of the feature values and encode output.
-lookup = preprocessing.StringLookup(output_mode="one_hot")
+lookup = layers.StringLookup(output_mode="one_hot")
 lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
@@ -323,7 +323,7 @@ example.
 data = tf.constant([[10], [20], [20], [10], [30], [0]])
 
 # Use IntegerLookup to build an index of the feature values and encode output.
-lookup = preprocessing.IntegerLookup(output_mode="one_hot")
+lookup = layers.IntegerLookup(output_mode="one_hot")
 lookup.adapt(data)
 
 # Convert new test data (which includes unknown feature values)
@@ -356,10 +356,10 @@ for explicit indexing.
 data = np.random.randint(0, 100000, size=(10000, 1))
 
 # Use the Hashing layer to hash the values to the range [0, 64]
-hasher = preprocessing.Hashing(num_bins=64, salt=1337)
+hasher = layers.Hashing(num_bins=64, salt=1337)
 
 # Use the CategoryEncoding layer to multi-hot encode the hashed values
-encoder = preprocessing.CategoryEncoding(num_tokens=64, output_mode="multi_hot")
+encoder = layers.CategoryEncoding(num_tokens=64, output_mode="multi_hot")
 encoded_data = encoder(hasher(data))
 print(encoded_data.shape)
 
@@ -380,7 +380,7 @@ adapt_data = tf.constant(
 )
 
 # Create a TextVectorization layer
-text_vectorizer = preprocessing.TextVectorization(output_mode="int")
+text_vectorizer = layers.TextVectorization(output_mode="int")
 # Index the vocabulary via `adapt()`
 text_vectorizer.adapt(adapt_data)
 
@@ -446,7 +446,7 @@ adapt_data = tf.constant(
 )
 # Instantiate TextVectorization with "multi_hot" output_mode
 # and ngrams=2 (index all bigrams)
-text_vectorizer = preprocessing.TextVectorization(output_mode="multi_hot", ngrams=2)
+text_vectorizer = layers.TextVectorization(output_mode="multi_hot", ngrams=2)
 # Index the bigrams via `adapt()`
 text_vectorizer.adapt(adapt_data)
 
@@ -501,7 +501,7 @@ adapt_data = tf.constant(
 )
 # Instantiate TextVectorization with "tf-idf" output_mode
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
-text_vectorizer = preprocessing.TextVectorization(output_mode="tf-idf", ngrams=2)
+text_vectorizer = layers.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
 text_vectorizer.adapt(adapt_data)
 

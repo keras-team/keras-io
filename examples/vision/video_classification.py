@@ -170,7 +170,7 @@ we will use the [`StringLookup`](https://keras.io/api/layers/preprocessing_layer
 layer encode the class labels as integers.
 """
 
-label_processor = keras.layers.experimental.preprocessing.StringLookup(
+label_processor = keras.layers.StringLookup(
     num_oov_indices=0, vocabulary=np.unique(train_df["tag"])
 )
 print(label_processor.get_vocabulary())

@@ -76,7 +76,7 @@ trial training on 4 GPUs by using
 [tf.distribute.MirroredStrategy](
 https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy).
 You can also run each trial on TPUs via
-[tf.distribute.experimental.TPUStrategy](
+[tf.distribute.TPUStrategy](
 https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/TPUStrategy).
 Currently
 [tf.distribute.MultiWorkerMirroredStrategy](

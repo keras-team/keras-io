@@ -145,7 +145,7 @@ for training and validation. We also preprocess the input by mapping the target 
 to an index.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 
 target_label_lookup = StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0

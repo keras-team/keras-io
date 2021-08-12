@@ -184,7 +184,7 @@ def get_training_model(num_classes=10):
     model = tf.keras.Sequential(
         [
             layers.Input((CROP_TO, CROP_TO, 3)),
-            layers.experimental.preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1),
+            layers.Rescaling(scale=1.0 / 127.5, offset=-1),
             resnet50_v2,
             layers.GlobalAveragePooling2D(),
             layers.Dense(num_classes),

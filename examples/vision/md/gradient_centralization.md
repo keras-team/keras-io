@@ -56,7 +56,7 @@ num_classes = 2
 input_shape = (300, 300, 3)
 dataset_name = "horses_or_humans"
 batch_size = 128
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 
 (train_ds, test_ds), metadata = tfds.load(
     name=dataset_name,
@@ -84,13 +84,13 @@ We will rescale the data to `[0, 1]` and perform simple augmentations to our dat
 
 
 ```python
-rescale = layers.experimental.preprocessing.Rescaling(1.0 / 255)
+rescale = layers.Rescaling(1.0 / 255)
 
 data_augmentation = tf.keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-        layers.experimental.preprocessing.RandomRotation(0.3),
-        layers.experimental.preprocessing.RandomZoom(0.2),
+        layers.RandomFlip("horizontal_and_vertical"),
+        layers.RandomRotation(0.3),
+        layers.RandomZoom(0.2),
     ]
 )
 

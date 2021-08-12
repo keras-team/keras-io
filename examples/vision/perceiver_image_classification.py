@@ -102,10 +102,10 @@ set `patch_size` to 1.
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.Normalization(),
-        layers.experimental.preprocessing.Resizing(image_size, image_size),
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomZoom(
+        layers.Normalization(),
+        layers.Resizing(image_size, image_size),
+        layers.RandomFlip("horizontal"),
+        layers.RandomZoom(
             height_factor=0.2, width_factor=0.2
         ),
     ],

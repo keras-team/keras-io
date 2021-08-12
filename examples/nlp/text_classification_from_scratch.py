@@ -139,7 +139,7 @@ for text_batch, label_batch in raw_train_ds.take(1):
 In particular, we remove `<br />` tags.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import string
 import re
 

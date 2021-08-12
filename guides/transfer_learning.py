@@ -475,8 +475,8 @@ from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(0.1),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
     ]
 )
 
@@ -530,7 +530,7 @@ x = data_augmentation(inputs)  # Apply random data augmentation
 # Pre-trained Xception weights requires that input be normalized
 # from (0, 255) to a range (-1., +1.), the normalization layer
 # does the following, outputs = (inputs - mean) / sqrt(var)
-norm_layer = keras.layers.experimental.preprocessing.Normalization()
+norm_layer = keras.layers.Normalization()
 mean = np.array([127.5] * 3)
 var = mean ** 2
 # Scale inputs to [-1, +1]

@@ -195,7 +195,7 @@ In particular, we remove `<br />` tags.
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import string
 import re
 

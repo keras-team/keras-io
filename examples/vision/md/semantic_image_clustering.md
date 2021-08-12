@@ -105,8 +105,8 @@ but require a longer time to train.
 ```python
 data_preprocessing = keras.Sequential(
     [
-        layers.experimental.preprocessing.Resizing(target_size, target_size),
-        layers.experimental.preprocessing.Normalization(),
+        layers.Resizing(target_size, target_size),
+        layers.Normalization(),
     ]
 )
 # Compute the mean and the variance from the data for normalization.
@@ -125,14 +125,14 @@ the [data augmentation tutorial](https://www.tensorflow.org/tutorials/images/dat
 ```python
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomTranslation(
+        layers.RandomTranslation(
             height_factor=(-0.2, 0.2), width_factor=(-0.2, 0.2), fill_mode="nearest"
         ),
-        layers.experimental.preprocessing.RandomFlip(mode="horizontal"),
-        layers.experimental.preprocessing.RandomRotation(
+        layers.RandomFlip(mode="horizontal"),
+        layers.RandomRotation(
             factor=0.15, fill_mode="nearest"
         ),
-        layers.experimental.preprocessing.RandomZoom(
+        layers.RandomZoom(
             height_factor=(-0.3, 0.1), width_factor=(-0.3, 0.1), fill_mode="nearest"
         )
     ]
@@ -303,7 +303,7 @@ representation_learner = RepresentationLearner(
     encoder, projection_units, num_augmentations=2, temperature=0.1
 )
 # Create a a Cosine decay learning rate scheduler.
-lr_scheduler = keras.experimental.CosineDecay(
+lr_scheduler = keras.optimizers.schedules.CosineDecay(
     initial_learning_rate=0.001, decay_steps=500, alpha=0.1
 )
 # Compile the model.

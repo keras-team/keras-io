@@ -262,7 +262,7 @@ the model to *generalize* well to unseen feature combinations.
 """
 
 
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 
 
 def encode_inputs(inputs, use_embedding=False):

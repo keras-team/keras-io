@@ -47,7 +47,7 @@ import tensorflow_probability as tfp
 """
 
 data = make_moons(3000, noise=0.05)[0].astype("float32")
-norm = layers.experimental.preprocessing.Normalization()
+norm = layers.Normalization()
 norm.adapt(data)
 normalized_data = norm(data)
 

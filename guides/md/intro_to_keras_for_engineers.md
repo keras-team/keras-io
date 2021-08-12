@@ -211,7 +211,7 @@ The state of a preprocessing layer is obtained by calling `layer.adapt(data)` on
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 
 # Example training data, of dtype `string`.
 training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
@@ -245,7 +245,7 @@ tf.Tensor(
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 
 # Example training data, of dtype `string`.
 training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
@@ -279,7 +279,7 @@ tf.Tensor(
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import Normalization
+from tensorflow.keras.layers import Normalization
 
 # Example image data, with values in the [0, 255] range
 training_data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
@@ -306,8 +306,8 @@ Both the `Rescaling` layer and the `CenterCrop` layer are stateless, so it isn't
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import CenterCrop
-from tensorflow.keras.layers.experimental.preprocessing import Rescaling
+from tensorflow.keras.layers import CenterCrop
+from tensorflow.keras.layers import Rescaling
 
 # Example image data, with values in the [0, 255] range
 training_data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
@@ -517,7 +517,7 @@ Let's look at it in practice with a toy example model that learns to classify MN
 
 # Build a simple model
 inputs = keras.Input(shape=(28, 28))
-x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(inputs)
+x = layers.Rescaling(1.0 / 255)(inputs)
 x = layers.Flatten()(x)
 x = layers.Dense(128, activation="relu")(x)
 x = layers.Dense(128, activation="relu")(x)

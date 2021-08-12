@@ -91,11 +91,11 @@ mlp_head_units = [2048, 1024]  # Size of the dense layers of the final classifie
 ```python
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.Normalization(),
-        layers.experimental.preprocessing.Resizing(image_size, image_size),
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(factor=0.02),
-        layers.experimental.preprocessing.RandomZoom(
+        layers.Normalization(),
+        layers.Resizing(image_size, image_size),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(factor=0.02),
+        layers.RandomZoom(
             height_factor=0.2, width_factor=0.2
         ),
     ],

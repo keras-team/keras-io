@@ -216,7 +216,7 @@ training and evaluation.
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 
 
 def process(features, target):

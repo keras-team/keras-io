@@ -405,7 +405,7 @@ def create_audio_ds(data):
     flist = [_["audio"] for _ in data]
     audio_ds = tf.data.Dataset.from_tensor_slices(flist)
     audio_ds = audio_ds.map(
-        path_to_audio, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        path_to_audio, num_parallel_calls=tf.data.AUTOTUNE
     )
     return audio_ds
 
@@ -416,7 +416,7 @@ def create_tf_dataset(data, bs=4):
     ds = tf.data.Dataset.zip((audio_ds, text_ds))
     ds = ds.map(lambda x, y: {"source": x, "target": y})
     ds = ds.batch(bs)
-    ds = ds.prefetch(tf.data.experimental.AUTOTUNE)
+    ds = ds.prefetch(tf.data.AUTOTUNE)
     return ds
 
 

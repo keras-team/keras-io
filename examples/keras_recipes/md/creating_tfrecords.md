@@ -318,7 +318,7 @@ train_filenames = tf.io.gfile.glob(f"{tfrecords_dir}/*.tfrec")
 batch_size = 32
 epochs = 1
 steps_per_epoch = 50
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 
 input_tensor = tf.keras.layers.Input(shape=(224, 224, 3), name="image")
 model = tf.keras.applications.EfficientNetB0(

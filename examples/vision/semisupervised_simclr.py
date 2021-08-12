@@ -71,7 +71,6 @@ import tensorflow_datasets as tfds
 
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental import preprocessing
 
 """
 ## Hyperparameters
@@ -202,10 +201,10 @@ def get_augmenter(min_area, brightness, jitter):
     return keras.Sequential(
         [
             keras.Input(shape=(image_size, image_size, image_channels)),
-            preprocessing.Rescaling(1 / 255),
-            preprocessing.RandomFlip("horizontal"),
-            preprocessing.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
-            preprocessing.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
+            layers.Rescaling(1 / 255),
+            layers.RandomFlip("horizontal"),
+            layers.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
+            layers.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
             RandomColorAffine(brightness, jitter),
         ]
     )

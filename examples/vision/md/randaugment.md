@@ -171,10 +171,10 @@ random flips, random rotations, and random zoomings.
 ```python
 simple_aug = tf.keras.Sequential(
     [
-        layers.experimental.preprocessing.Resizing(IMAGE_SIZE, IMAGE_SIZE),
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(factor=0.02),
-        layers.experimental.preprocessing.RandomZoom(
+        layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(factor=0.02),
+        layers.RandomZoom(
             height_factor=0.2, width_factor=0.2
         ),
     ]
@@ -249,7 +249,7 @@ def get_training_model():
     model = tf.keras.Sequential(
         [
             layers.Input((IMAGE_SIZE, IMAGE_SIZE, 3)),
-            layers.experimental.preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1),
+            layers.Rescaling(scale=1.0 / 127.5, offset=-1),
             resnet50_v2,
         ]
     )

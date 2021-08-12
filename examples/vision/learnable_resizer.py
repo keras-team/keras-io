@@ -136,7 +136,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     inputs = layers.Input(shape=[None, None, 3])
 
     # First, perform naive resizing.
-    naive_resize = layers.experimental.preprocessing.Resizing(
+    naive_resize = layers.Resizing(
         *TARGET_SIZE, interpolation=interpolation
     )(inputs)
 
@@ -150,7 +150,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     x = layers.BatchNormalization()(x)
 
     # Intermediate resizing as a bottleneck.
-    bottleneck = layers.experimental.preprocessing.Resizing(
+    bottleneck = layers.Resizing(
         *TARGET_SIZE, interpolation=interpolation
     )(x)
 
@@ -216,7 +216,7 @@ def get_model():
     backbone.trainable = True
 
     inputs = layers.Input((INP_SIZE[0], INP_SIZE[1], 3))
-    x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 255)(inputs)
+    x = layers.Rescaling(scale=1.0 / 255)(inputs)
     x = learnable_resizer(x)
     outputs = backbone(x)
 

@@ -39,7 +39,7 @@ with TensorFlow 2.3 or higher.
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import numpy as np
 import os
 import re
@@ -220,7 +220,7 @@ def prepare_lm_inputs_labels(text):
 
 
 text_ds = text_ds.map(prepare_lm_inputs_labels)
-text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
+text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
 
 ```
 <div class="k-default-codeblock">

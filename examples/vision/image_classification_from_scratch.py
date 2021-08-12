@@ -132,8 +132,8 @@ helps expose the model to different aspects of the training data while slowing d
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(0.1),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
     ]
 )
 
@@ -171,7 +171,7 @@ There are two ways you could be using the `data_augmentation` preprocessor:
 ```python
 inputs = keras.Input(shape=input_shape)
 x = data_augmentation(inputs)
-x = layers.experimental.preprocessing.Rescaling(1./255)(x)
+x = layers.Rescaling(1./255)(x)
 ...  # Rest of the model
 ```
 
@@ -233,7 +233,7 @@ def make_model(input_shape, num_classes):
     x = data_augmentation(inputs)
 
     # Entry block
-    x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(x)
+    x = layers.Rescaling(1.0 / 255)(x)
     x = layers.Conv2D(32, 3, strides=2, padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.Activation("relu")(x)

@@ -88,7 +88,7 @@ test_df = pd.read_csv("test.csv")
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
 
-center_crop_layer = layers.experimental.preprocessing.CenterCrop(IMG_SIZE, IMG_SIZE)
+center_crop_layer = layers.CenterCrop(IMG_SIZE, IMG_SIZE)
 
 
 def crop_center(frame):
@@ -138,7 +138,7 @@ feature_extractor = build_feature_extractor()
 
 
 # Label preprocessing with StringLookup.
-label_processor = keras.layers.experimental.preprocessing.StringLookup(
+label_processor = keras.layers.StringLookup(
     num_oov_indices=0, vocabulary=np.unique(train_df["tag"]), mask_token=None
 )
 print(label_processor.get_vocabulary())

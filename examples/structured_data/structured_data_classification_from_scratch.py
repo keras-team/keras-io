@@ -170,9 +170,9 @@ then one-hot encode these integer indices.
 - `encode_integer_categorical_feature` to one-hot encode integer categorical features.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import IntegerLookup
-from tensorflow.keras.layers.experimental.preprocessing import Normalization
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import IntegerLookup
+from tensorflow.keras.layers import Normalization
+from tensorflow.keras.layers import StringLookup
 
 
 def encode_numerical_feature(feature, name, dataset):

@@ -472,7 +472,7 @@ def get_network(image_size=32, num_classes=10):
     n_stages = [16, 16 * WIDTH_MULT, 32 * WIDTH_MULT, 64 * WIDTH_MULT]
 
     inputs = keras.Input(shape=(image_size, image_size, 3))
-    x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 255)(inputs)
+    x = layers.Rescaling(scale=1.0 / 255)(inputs)
 
     conv1 = layers.Conv2D(
         n_stages[0],
@@ -535,7 +535,7 @@ print(f"Model has {wrn_model.count_params()/1e6} Million parameters.")
 ## Instantiate AdaMatch model and compile it
 """
 
-reduce_lr = keras.experimental.CosineDecay(LEARNING_RATE, TOTAL_STEPS, 0.25)
+reduce_lr = keras.optimizers.schedules.CosineDecay(LEARNING_RATE, TOTAL_STEPS, 0.25)
 optimizer = keras.optimizers.Adam(reduce_lr)
 
 adamatch_trainer = AdaMatch(model=wrn_model, total_steps=TOTAL_STEPS)

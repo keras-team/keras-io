@@ -252,9 +252,9 @@ and flipping.
 # Note the rescaling layer. These layers have pre-defined inference behavior.
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.Rescaling(scale=1.0 / 255),
-        layers.experimental.preprocessing.RandomCrop(image_size, image_size),
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
+        layers.Rescaling(scale=1.0 / 255),
+        layers.RandomCrop(image_size, image_size),
+        layers.RandomFlip("horizontal"),
     ],
     name="data_augmentation",
 )

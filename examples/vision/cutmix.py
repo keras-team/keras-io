@@ -86,7 +86,7 @@ class_names = [
 ## Define hyperparameters
 """
 
-AUTO = tf.data.experimental.AUTOTUNE
+AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 32
 IMG_SIZE = 32
 

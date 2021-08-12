@@ -246,7 +246,7 @@ NUM_BLOCKS = ((DEPTH - 2) // 9) - 1
 def get_encoder():
     # Input and backbone.
     inputs = layers.Input((CROP_TO, CROP_TO, 3))
-    x = layers.experimental.preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1)(
+    x = layers.Rescaling(scale=1.0 / 127.5, offset=-1)(
         inputs
     )
     x = resnet_cifar10_v2.stem(x)
@@ -365,7 +365,7 @@ this should at least be 100 epochs.
 # Create a cosine decay learning scheduler.
 num_training_samples = len(x_train)
 steps = EPOCHS * (num_training_samples // BATCH_SIZE)
-lr_decayed_fn = tf.keras.experimental.CosineDecay(
+lr_decayed_fn = tf.keras.optimizers.schedules.CosineDecay(
     initial_learning_rate=0.03, decay_steps=steps
 )
 

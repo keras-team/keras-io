@@ -36,7 +36,7 @@ import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
 
 tfds.disable_progress_bar()
-autotune = tf.data.experimental.AUTOTUNE
+autotune = tf.data.AUTOTUNE
 
 
 """

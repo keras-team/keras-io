@@ -40,7 +40,6 @@ import tensorflow as tf
 from tensorflow import keras
 import tensorflow_datasets as tfds
 from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental import preprocessing
 
 # Define seed and fixed variables
 seed = 42
@@ -127,10 +126,10 @@ Define image augmentation using keras preprocessing layers and apply them to the
 # Define image augmentation model
 image_augmentation = keras.Sequential(
     [
-        preprocessing.RandomFlip(mode="horizontal"),
-        preprocessing.RandomRotation(factor=0.1),
-        preprocessing.RandomZoom(height_factor=(-0.1, -0)),
-        preprocessing.RandomContrast(factor=0.1),
+        layers.RandomFlip(mode="horizontal"),
+        layers.RandomRotation(factor=0.1),
+        layers.RandomZoom(height_factor=(-0.1, -0)),
+        layers.RandomContrast(factor=0.1),
     ],
 )
 
@@ -173,7 +172,7 @@ def build_model(num_classes, img_size=image_size[0], top_dropout=0.3):
 
     # Create input and pre-processing layers for MobileNetV2
     inputs = layers.Input(shape=(img_size, img_size, 3))
-    x = preprocessing.Rescaling(scale=1.0 / 127.5, offset=-1)(inputs)
+    x = layers.Rescaling(scale=1.0 / 127.5, offset=-1)(inputs)
     model = keras.applications.MobileNetV2(
         include_top=False, weights="imagenet", input_tensor=x
     )
