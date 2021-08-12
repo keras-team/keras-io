@@ -131,17 +131,11 @@ if not os.path.exists(file_name):
 data = np.load(data)
 images = data["images"]
 im_shape = images.shape
-num_images = im_shape[0]
-H = im_shape[1]
-W = im_shape[2]
-poses = data["poses"]
-focal = data["focal"]
+(num_images, H, W, _) = images.shape
+(poses, focal) = (data["poses"], data["focal"])
 
 # Plot a random image from the dataset for visualization.
-rand_index = np.random.randint(low=0, high=num_images)
-test_image = images[rand_index]
-plt.imshow(test_image)
-plt.axis("off")
+plt.imshow(images[np.random.randint(low=0, high=num_images)])
 plt.show()
 
 """
