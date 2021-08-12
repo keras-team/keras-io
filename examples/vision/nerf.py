@@ -36,7 +36,7 @@ and it would eventually reconstruct the entire image.
 A question now arises, how do we extend this idea to learn a 3D
 volumetric scene? Implementing a similar process as above would
 require the knowledge of every voxel (volume pixel). Turns out, this
-is quite a challenging task to do. 
+is quite a challenging task to do.
 
 The authors of the paper propose a minimal and elegant way to learn a
 3D scene using a few images of the scene. They discard the use of
@@ -112,7 +112,7 @@ concatenated with a 3 x 1 column `[image height, image width, focal length]`
 to produce the *pose matrix*. This matrix is of
 dimensions 3 x 5 where the first 3 x 3 block is in the camera’s point
 of view. The axes are `[down, right, backwards]` or `[-y, x, z]`
-where the camera is facing forwards `-z`. 
+where the camera is facing forwards `-z`.
 
 | ![camera-mapping](https://i.imgur.com/kvjqbiO.png) |
 | :---: |
@@ -149,7 +149,7 @@ plt.show()
 
 Now that you've understood the notion of camera matrix
 and the mapping from a 3D scene to 2D images,
-let's talk about the inverse mapping, i.e. from 2D image to the 3D scene. 
+let's talk about the inverse mapping, i.e. from 2D image to the 3D scene.
 
 We'll need to talk about volumetric rendering with ray casting and tracing,
 which are common computer graphics techniques.
@@ -173,7 +173,7 @@ interesting thing to notice here is the noise that is added to the
 sampling process. We add a uniform noise to each sample so that the
 samples correspond to a continuous distribution. In **Figure 7** the
 blue points are the evenly distributed samples and the white points
-`(t1, t2, t3)` are randomly placed between the samples. 
+`(t1, t2, t3)` are randomly placed between the samples.
 
 | ![img](https://i.imgur.com/r9TS2wv.gif) |
 | :---: |
@@ -182,7 +182,7 @@ blue points are the evenly distributed samples and the white points
 **Figure 8** showcases the entire sampling process in 3D, where you
 can see the rays coming out of the white image. This means that each
 pixel will have its corresponding rays and each ray will be sampled at
-distinct points. 
+distinct points.
 
 | ![3-d rays](https://i.imgur.com/hr4D2g2.gif) |
 | :---: |
@@ -349,7 +349,7 @@ val_ds = (
 """
 ## NeRF model
 
-The model is a multi-layer perceptron (MLP), with ReLU as its non-linearity. 
+The model is a multi-layer perceptron (MLP), with ReLU as its non-linearity.
 
 An excerpt from the paper:
 
