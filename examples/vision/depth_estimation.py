@@ -1,20 +1,9 @@
 """
-Title: An approach towards Depth Estimation with CNN
+Title: Monocular Depth Estimation
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
-Date created: 2021/08/09
-Last modified: 2021/08/10
-Description: Implement an depth estimation model with CNN.
-"""
-"""
-Title: An approach towards Depth Estimation with CNN.
-
-Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
-
-Date created: 2021/08/08
-
-Last modified: 2021/08/09
-
-Description: Implement an depth estimation model with CNN.
+Date created: 2021/08/12
+Last modified: 2021/08/12
+Description: Implement a depth estimation model with CNN.
 """
 
 """
@@ -25,10 +14,6 @@ The goal in monocular Depth Estimation is to predict the depth value of each pix
 only a single RGB image as input.
 
 This is an approach to build a depth estimation model with CNN and basic loss functions.
-While I was working on this topic I came across various research paper that explains
-solving this problem and to be honest my solution is not as good as in those papers. I
-would suggest you to go through those, just search depth estimation on
-"paperwithcode.com".
 
 ![depth](https://paperswithcode.com/media/thumbnails/task/task-0000000605-d9849a91.jpg)
 
@@ -41,7 +26,6 @@ would suggest you to go through those, just search depth estimation on
 
 import os
 import cv2
-import csv
 import logging
 import sys
 
@@ -52,8 +36,6 @@ import tensorflow.keras.backend as K
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
-from sklearn.utils import shuffle
 
 tf.compat.v1.set_random_seed(123)
 session_conf = tf.compat.v1.ConfigProto(
@@ -68,9 +50,9 @@ logging.disable(sys.maxsize)
 
 We will be using the **DIODE: A Dense Indoor and Outdoor Depth Dataset**  for this
 tutorial. We have used the validation set for training and validating our model. The
-reason we have used validation set and not training set of the orginal dataset because
-the training set consist of 81GB data which was a bit difficult to download compared to
-validation set which is only 2.6GB.
+reason we have used validation set and not training set of the original dataset because
+the training set consists of 81GB of data which was a bit difficult to download compared
+to validation set which is only 2.6GB.
 """
 
 annotation_folder = "/dataset/"
@@ -103,7 +85,7 @@ data = {
 }
 df = pd.DataFrame(data)
 
-df = shuffle(df)
+df = df.sample(frac=1, random_state=42)
 
 
 class config:
@@ -164,7 +146,7 @@ class DataGenerator(tf.keras.utils.Sequence):
             np.random.shuffle(self.index)
 
     def __load__(self, image_path, depth_map, mask):
-        "Load Target image"
+        "Load Input and Target image"
 
         image_ = cv2.imread(image_path)
         image_ = cv2.cvtColor(image_, cv2.COLOR_BGR2RGB)
@@ -188,8 +170,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         depth_map = cv2.resize(depth_map, self.dim)
         depth_map = np.expand_dims(depth_map, axis=2)
 
-        # depth_map = tf.image.convert_image_dtype(depth_map, tf.float32)
-
         return image_, depth_map
 
     def __data_generation(self, batch):
@@ -211,19 +191,34 @@ class DataGenerator(tf.keras.utils.Sequence):
 ## Visualizing Samples
 """
 
+
+def visualizeDepthMap(samples, test=False):
+    input, target = samples
+    cmap = plt.cm.jet
+    cmap.set_bad(color="black")
+
+    if test:
+        pred = model.predict(input)
+        fig, ax = plt.subplots(6, 3, figsize=(50, 50))
+        for i in range(6):
+            ax[i, 0].imshow((input[i].squeeze()))
+            ax[i, 1].imshow((target[i].squeeze()), cmap=cmap)
+            ax[i, 2].imshow((pred[i].squeeze()), cmap=cmap)
+
+    else:
+        fig, ax = plt.subplots(6, 2, figsize=(50, 50))
+        for i in range(6):
+            ax[i, 0].imshow((input[i].squeeze()))
+            ax[i, 1].imshow((target[i].squeeze()), cmap=cmap)
+
+
 visualize_samples = next(
     iter(DataGenerator(data=df, batch_size=6, dim=(config.HEIGHT, config.WIDTH)))
 )
-input, target = visualize_samples
-cmap = plt.cm.jet
-cmap.set_bad(color="black")
-fig, ax = plt.subplots(6, 2, figsize=(50, 50))
-for i in range(6):
-    ax[i, 0].imshow((input[i].squeeze()))
-    ax[i, 1].imshow((target[i].squeeze()), cmap=cmap)
+visualizeDepthMap(visualize_samples)
 
-d = np.flipud(target[2].squeeze())
-img = np.flipud(input[2].squeeze())
+depth_vis = np.flipud(visualize_samples[1][2].squeeze())  # target
+img_vis = np.flipud(visualize_samples[0][2].squeeze())  # input
 
 """
 ## 3D Point-Cloud Visualization
@@ -232,10 +227,16 @@ img = np.flipud(input[2].squeeze())
 fig = plt.figure(figsize=(15, 10))
 ax = plt.axes(projection="3d")
 
-STEP = 2
-for x in range(0, img.shape[0], STEP):
-    for y in range(0, img.shape[1], STEP):
-        ax.scatter([d[x, y]] * 3, [y] * 3, [x] * 3, c=tuple(img[x, y, :3] / 255), s=3)
+STEP = 3
+for x in range(0, img_vis.shape[0], STEP):
+    for y in range(0, img_vis.shape[1], STEP):
+        ax.scatter(
+            [depth_vis[x, y]] * 3,
+            [y] * 3,
+            [x] * 3,
+            c=tuple(img_vis[x, y, :3] / 255),
+            s=3,
+        )
     ax.view_init(15, 165)
 
 """
@@ -261,8 +262,8 @@ fig
 
 """
 ## Building the model
-1. The basic model architecture has been taken from U-NET.
-2. Residual-blocks has been used in the down-scale blocks of the U-NET architecture.
+1. The basic model architecture have been from U-Net.
+2. Residual-blocks has been used in the down-scale blocks of the U-Net architecture.
 """
 
 
@@ -406,7 +407,12 @@ class DepthEstimationModel(tf.keras.Model):
             l_ssim = tf.reduce_mean(
                 1
                 - tf.image.ssim(
-                    target, pred, max_val=256, filter_size=7, k1=0.01 ** 2, k2=0.03 ** 2
+                    target,
+                    pred,
+                    max_val=config.WIDTH,
+                    filter_size=7,
+                    k1=0.01 ** 2,
+                    k2=0.03 ** 2,
                 )
             )
             # Point-wise depth
@@ -465,15 +471,7 @@ test_loader = next(
         )
     )
 )
-input, target = test_loader
-pred = model.predict(input)
-cmap = plt.cm.jet
-cmap.set_bad(color="black")
-fig, ax = plt.subplots(6, 3, figsize=(50, 50))
-for i in range(6):
-    ax[i, 0].imshow((input[i].squeeze()))
-    ax[i, 1].imshow((target[i].squeeze()), cmap=cmap)
-    ax[i, 2].imshow((pred[i].squeeze()), cmap=cmap)
+visualizeDepthMap(test_loader, test=True)
 
 test_loader = next(
     iter(
@@ -484,24 +482,35 @@ test_loader = next(
         )
     )
 )
-input, target = test_loader
-pred = model.predict(input)
-cmap = plt.cm.jet
-cmap.set_bad(color="black")
-fig, ax = plt.subplots(6, 3, figsize=(50, 50))
-for i in range(6):
-    ax[i, 0].imshow((input[i].squeeze()))
-    ax[i, 1].imshow((target[i].squeeze()), cmap=cmap)
-    ax[i, 2].imshow((pred[i].squeeze()), cmap=cmap)
+visualizeDepthMap(test_loader, test=True)
 
 """
 ## Scopes of Improvement
 
 1. From the research papers that I read while I was working on this topic the encode part
-of the unet was replaced with DenseNet, ResNet or other pre-trained model, which could be
-applied for better model predictions.
+of the U-Net was replaced with DenseNet, ResNet or other pre-trained model, which could
+be applied for better model predictions.
 
-2. Loss functions plays an immense role in solving this problem, and different paper
+2. Loss functions play an immense role in solving this problem, and different paper
 explained different ways of developing the loss function out of which SSIM was common in
-all. so playing with the loss fuctions gives a huge scope of improvement in this case.
+all. So, playing with the loss functions gives a huge scope of improvement in this case.
+"""
+
+"""
+## References
+While I was working on this topic I came across various research paper that explains
+solving this problem and to be honest my solution is not as good as in those papers. I
+would suggest you to go through those, just search depth estimation on
+"paperwithcode.com".
+
+1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning
+from Monocular Videos](https://arxiv.org/pdf/1811.06152v1.pdf)
+
+2. [Digging Into Self-Supervised Monocular Depth
+Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
+Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
+
+3. [Deeper Depth Prediction with Fully Convolutional Residual
+Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
+
 """
