@@ -92,9 +92,7 @@ max_length = max([len(label) for label in labels])
 
 
 # Mapping characters to integers
-char_to_num = layers.StringLookup(
-    vocabulary=list(characters), mask_token=None
-)
+char_to_num = layers.StringLookup(vocabulary=list(characters), mask_token=None)
 
 # Mapping integers back to original characters
 num_to_char = layers.StringLookup(
@@ -146,18 +144,14 @@ def encode_single_sample(img_path, label):
 
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = (
-    train_dataset.map(
-        encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE
-    )
+    train_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
     .batch(batch_size)
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 
 validation_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
 validation_dataset = (
-    validation_dataset.map(
-        encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE
-    )
+    validation_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
     .batch(batch_size)
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )

@@ -131,10 +131,7 @@ helps expose the model to different aspects of the training data while slowing d
 """
 
 data_augmentation = keras.Sequential(
-    [
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1),
-    ]
+    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
 )
 
 """

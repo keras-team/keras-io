@@ -379,9 +379,7 @@ def path_to_audio(path):
 def create_audio_ds(data):
     flist = [_["audio"] for _ in data]
     audio_ds = tf.data.Dataset.from_tensor_slices(flist)
-    audio_ds = audio_ds.map(
-        path_to_audio, num_parallel_calls=tf.data.AUTOTUNE
-    )
+    audio_ds = audio_ds.map(path_to_audio, num_parallel_calls=tf.data.AUTOTUNE)
     return audio_ds
 
 

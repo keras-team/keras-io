@@ -279,9 +279,7 @@ def input_preprocess(image, label):
     return image, label
 
 
-ds_train = ds_train.map(
-    input_preprocess, num_parallel_calls=tf.data.AUTOTUNE
-)
+ds_train = ds_train.map(input_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.AUTOTUNE)
 

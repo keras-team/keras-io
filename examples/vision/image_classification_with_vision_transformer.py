@@ -78,9 +78,7 @@ data_augmentation = keras.Sequential(
         layers.Resizing(image_size, image_size),
         layers.RandomFlip("horizontal"),
         layers.RandomRotation(factor=0.02),
-        layers.RandomZoom(
-            height_factor=0.2, width_factor=0.2
-        ),
+        layers.RandomZoom(height_factor=0.2, width_factor=0.2),
     ],
     name="data_augmentation",
 )

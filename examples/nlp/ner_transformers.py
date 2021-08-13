@@ -197,9 +197,7 @@ vocab_size = 20000
 vocabulary = [token for token, count in counter.most_common(vocab_size - 2)]
 
 # The StringLook class will convert tokens to token IDs
-lookup_layer = keras.layers.StringLookup(
-    vocabulary=vocabulary
-)
+lookup_layer = keras.layers.StringLookup(vocabulary=vocabulary)
 
 """
 Create 2 new `Dataset` objects from the training and validation data

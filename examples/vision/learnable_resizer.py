@@ -136,9 +136,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     inputs = layers.Input(shape=[None, None, 3])
 
     # First, perform naive resizing.
-    naive_resize = layers.Resizing(
-        *TARGET_SIZE, interpolation=interpolation
-    )(inputs)
+    naive_resize = layers.Resizing(*TARGET_SIZE, interpolation=interpolation)(inputs)
 
     # First convolution block without batch normalization.
     x = layers.Conv2D(filters=filters, kernel_size=7, strides=1, padding="same")(inputs)
@@ -150,9 +148,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     x = layers.BatchNormalization()(x)
 
     # Intermediate resizing as a bottleneck.
-    bottleneck = layers.Resizing(
-        *TARGET_SIZE, interpolation=interpolation
-    )(x)
+    bottleneck = layers.Resizing(*TARGET_SIZE, interpolation=interpolation)(x)
 
     # Residual passes.
     for _ in range(num_res_blocks):
