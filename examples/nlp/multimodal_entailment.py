@@ -8,21 +8,28 @@ Description: Training a multimodal model for predicting entailment.
 """
 ## Introduction
 
-In today's world information is mostly found in unstructured or semi-structured forms
-like videos, texts, images, audios, etc. Therefore, to capture their inter-relationships
-we need to allow deep models to take multimodal inputs i.e. text, images, etc. On social
-media platforms, to audit and moderate content we often need to find answers to the
+In this example, we will build and train a model for predicting multimodal entailment. We will be
+using the
+[multimodal entailment dataset](https://github.com/google-research-datasets/recognizing-multimodal-entailment)
+recently introduced by Google Research.
+
+### What is multimodal entailment?
+
+On social media platforms, to audit and moderate content
+we may want to find answers to the
 following questions in near real-time:
 
 * Does a given piece of information contradict the other?
 * Does a given piece of information imply the other?
 
-In NLP, this task is referred to as recognizing textual entailment that only deals with
-texts as inputs. But in this case, we can have different inputs modalities. In this
-example, we will build and train a model for predicting multimodal entailment. We will be
-using the
-[multimodal entailment dataset](https://github.com/google-research-datasets/recognizing-multimodal-entailment)
-recently introduced by Google Research.
+In NLP, this task is called analyzing _textual entailment_. However, that's only
+when the information comes from text content.
+In practice, it's often the case the information available comes not just
+from text content, but from a multimodal combination of text, images, audio, video, etc.
+_Multimodal entailment_ is simply the extension of textual entailment to a variety
+of new input modalities.
+
+### Requirements
 
 This example requires TensorFlow 2.5 or higher. In addition, TensorFlow Hub and
 TensorFlow Text are required for the BERT model
@@ -65,8 +72,8 @@ the
 [Photo Blob Storage (PBS for short)](https://blog.twitter.com/engineering/en_us/a/2012/blobstore-twitter-s-in-house-photo-storage-system).
 We will be working with the downloaded images along with additional data that comes with
 the original dataset. Thanks to
-[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked on
-the preparation.
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked preparing
+the data.
 """
 
 image_base_path = keras.utils.get_file(
@@ -190,14 +197,14 @@ print(f"Total test examples: {len(test_df)}")
 """
 ## Data input pipeline
 
-TensorFlow Hub
-[provides](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub)
-a variety of BERT family of models. Each of those models comes with a
-corresponding preprocessing layer. You can know more about these models and the
+TensorFlow Hub provides
+[variety of BERT family of models](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+Each of those models comes with a
+corresponding preprocessing layer. You can learn more about these models and their
 preprocessing layers from
-[here](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+[this resource](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
 
-To keep the runtime of this example relatively shorter we will use a smaller variant of
+To keep the runtime of this example relatively short, we will use a smaller variant of
 the original BERT model.
 """
 
@@ -210,7 +217,7 @@ bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/
 """
 Our text preprocessing code mostly comes from
 [this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
-You are highly encouraged to check out this tutorial to know more about the input
+You are highly encouraged to check out the tutorial to learn more about the input
 preprocessing.
 """
 
@@ -219,8 +226,8 @@ def make_bert_preprocessing_model(sentence_features, seq_length=128):
     """Returns Model mapping string features to BERT inputs.
 
   Args:
-    sentence_features: a list with the names of string-valued features.
-    seq_length: an integer that defines the sequence length of BERT inputs.
+    sentence_features: A list with the names of string-valued features.
+    seq_length: An integer that defines the sequence length of BERT inputs.
 
   Returns:
     A Keras Model that can be called on a list or dict of string Tensors
@@ -280,13 +287,13 @@ print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
 
 
 """
-We will now create `tf.data.Dataset` objects from the dataframes for performance.
+We will now create `tf.data.Dataset` objects from the dataframes.
 
 Note that the text inputs will be preprocessed as a part of the data input pipeline. But
 the preprocessing modules can also be a part of their corresponding BERT models. This
 helps reduce the training/serving skew and lets our models operate with raw text inputs.
 Follow [this tutorial](https://www.tensorflow.org/text/tutorials/classify_text_with_bert)
-to know more about how to incorporate the preprocessing modules directly inside the
+to learn more about how to incorporate the preprocessing modules directly inside the
 models. 
 """
 
@@ -362,10 +369,9 @@ test_ds = prepare_dataset(test_df, False)
 
 Our final model will accept two images along with their text counterparts. While the
 images will be directly fed to the model the text inputs will first be preprocessed and
-then will make it to the model. Below is a pictorial depiction of this approach:
+then will make it into the model. Below is a visual illustration of this approach:
 
 ![](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/figures/brief_architecture.png)
-
 
 The model consists of the following elements:
 
@@ -541,12 +547,13 @@ print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 
 The training logs suggest that the model is starting to overfit and may have benefitted
 from regularization. Dropout ([Srivastava et al.](https://jmlr.org/papers/v15/srivastava14a.html))
-is a simple yet powerful regularization technique that we can use in our model. But how?
+is a simple yet powerful regularization technique that we can use in our model.
+But how should we apply it here?
 
-We can introduce Dropout (`keras.layers.Dropout`) in between different layers of model. 
+We could always introduce Dropout (`keras.layers.Dropout`) in between different layers of the model. 
 But here is another recipe. Our model expects inputs from two different data modalities.
 What if either of the modalities is not present during inference? To account for this,
-we can introduce Dropout to the individual projecttions just before they get concatenated:
+we can introduce Dropout to the individual projections just before they get concatenated:
 
 ```python
 vision_projections = keras.layers.Dropout(rate)(vision_projections)
@@ -557,7 +564,7 @@ concatenated = keras.layers.Concatenate()([vision_projections, text_projections]
 **Attending to what matters**:
 
 Do all parts of the images correspond equally to their textual counterparts? It's likely
-not. To make our model only focus on the most important bits of the images that relate
+not the case. To make our model only focus on the most important bits of the images that relate
 well to their corresponding textual parts we can use "cross-attention":
 
 ```python
@@ -608,14 +615,14 @@ experiments were conducted to obtain these numbers.
 """
 ## Final remarks
 
-* The architecture we used in this example is an overkill for the number of data points
-we have for training. It's likely going to benefit from more data.
-* We used a smaller variant of the original BERT model. Chances are likely that with a
+* The architecture we used in this example is too large for the number of data points
+available for training. It's going to benefit from more data.
+* We used a smaller variant of the original BERT model. Chances are high that with a
 larger variant, this performance will be improved. TensorFlow Hub
 [provides](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub)
 a number of different BERT models that you can experiment with.
 * We kept the pre-trained models frozen. Fine-tuning them on the multimodal entailment
-task would have resulted in a better performance.
+task would could resulted in better performance.
 * We built a simple baseline model for the multimodal entailment task. There are various
 approaches that have been proposed to tackle the entailment problem.
 [This presentation deck](https://docs.google.com/presentation/d/1mAB31BCmqzfedreNZYn4hsKPFmgHA9Kxz219DzyRY3c/edit?usp=sharing)
