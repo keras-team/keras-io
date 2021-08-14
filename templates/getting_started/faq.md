@@ -19,7 +19,7 @@ A list of frequently Asked Keras Questions.
 - [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-and-epoch-mean)
 - [Why is my training loss much higher than my testing loss?](#why-is-my-training-loss-much-higher-than-my-testing-loss)
 - [How can I use Keras with datasets that don't fit in memory?](#how-can-i-use-keras-with-datasets-that-dont-fit-in-memory)
-- [How can I regularly save Keras models during training?](#how-can-i-regularly-save-keras-models-during-training)
+- [How can I ensure my training run can recover from program interruptions?](#how-can-i-ensure-my-training-run-can-recover-from-program-interruptions)
 - [How can I interrupt training when the validation loss isn't decreasing anymore?](#how-can-i-interrupt-training-when-the-validation-loss-isnt-decreasing-anymore)
 - [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-finetuning)
 - [What's the difference between the `training` argument in `call()` and the `trainable` attribute?](#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute)
@@ -493,11 +493,11 @@ model.fit(dataset, epochs=10, validation_data=val_dataset)
 
 ---
 
-### How can I ensure my training with Keras can withstand program interruptions?
+### How can I ensure my training run can recover from program interruptions?
 
 To ensure the ability to recover from an interrupted training run at any time (fault tolerance),
 you should use a `tf.keras.callbacks.experimental.BackupAndRestore` that regularly saves your training progress,
-including the epoch number and weights, to disk, and loads it the next time you call `Model.fit`.
+including the epoch number and weights, to disk, and loads it the next time you call `Model.fit()`.
 
 ```python
 import tensorflow as tf
