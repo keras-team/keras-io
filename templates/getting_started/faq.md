@@ -228,13 +228,13 @@ $ PYTHONHASHSEED=0 python3 test_hash.py # reproducible hash
 4883664951434749476
 $ PYTHONHASHSEED=0 python3 test_hash.py # reproducible hash
 4883664951434749476
-```endshell
+```
 
 Moreover, whenrunning on a GPU, some operations have non-deterministic outputs, in particular `tf.reduce_sum()`. This is due to the fact that GPUs run many operations in parallel, so the order of execution is not always guaranteed. Due to the limited precision of floats, even adding several numbers together may give slightly different results depending on the order in which you add them. You can try to avoid the non-deterministic operations, but some may be created automatically by TensorFlow to compute the gradients, so it is much simpler to just run the code on the CPU. For this, you can set the `CUDA_VISIBLE_DEVICES` environment variable to an empty string, for example:
 
 ```shell
 $ CUDA_VISIBLE_DEVICES="" PYTHONHASHSEED=0 python your_program.py
-```endshell
+```
 
 The below snippet of code provides an example of how to obtain reproducible results:
 
@@ -571,7 +571,7 @@ All layers & models have a `layer.trainable` boolean attribute:
 >>> layer = Dense(3)
 >>> layer.trainable
 True
-```endshell
+```
 
 On all layers & models, the `trainable` attribute can be set (to True or False).
 When set to `False`, the `layer.trainable_weights` attribute is empty:
