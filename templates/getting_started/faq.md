@@ -19,7 +19,7 @@ A list of frequently Asked Keras Questions.
 - [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-and-epoch-mean)
 - [Why is my training loss much higher than my testing loss?](#why-is-my-training-loss-much-higher-than-my-testing-loss)
 - [How can I use Keras with datasets that don't fit in memory?](#how-can-i-use-keras-with-datasets-that-dont-fit-in-memory)
-- [How can I regularly save Keras models during training?](#how-can-i-regularly-save-keras-models-during-training)
+- [How can I ensure my training run can recover from program interruptions?](#how-can-i-ensure-my-training-run-can-recover-from-program-interruptions)
 - [How can I interrupt training when the validation loss isn't decreasing anymore?](#how-can-i-interrupt-training-when-the-validation-loss-isnt-decreasing-anymore)
 - [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-finetuning)
 - [What's the difference between the `training` argument in `call()` and the `trainable` attribute?](#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute)
@@ -128,8 +128,8 @@ multi-GPU training, with the main difference being that you will use `MultiWorke
 
 Importantly, you should:
 
-- Make sure your dataset is so configured that all workers in the cluster are able to efficiently pull data from it (e.g. if your custer in on GCP, it's a good idea to host your data on GCS).
-- Make sure your training is fault-tolerant (e.g. by configuring a `ModelCheckpoint` callback).
+- Make sure your dataset is so configured that all workers in the cluster are able to efficiently pull data from it (e.g. if your cluster in on GCP, it's a good idea to host your data on GCS).
+- Make sure your training is fault-tolerant (e.g. by configuring a `BackupAndRestore` callback).
 
 
 ---
@@ -230,7 +230,7 @@ $ PYTHONHASHSEED=0 python3 test_hash.py # reproducible hash
 4883664951434749476
 ```
 
-Moreover, whenrunning on a GPU, some operations have non-deterministic outputs, in particular `tf.reduce_sum()`. This is due to the fact that GPUs run many operations in parallel, so the order of execution is not always guaranteed. Due to the limited precision of floats, even adding several numbers together may give slightly different results depending on the order in which you add them. You can try to avoid the non-deterministic operations, but some may be created automatically by TensorFlow to compute the gradients, so it is much simpler to just run the code on the CPU. For this, you can set the `CUDA_VISIBLE_DEVICES` environment variable to an empty string, for example:
+Moreover, when running on a GPU, some operations have non-deterministic outputs, in particular `tf.reduce_sum()`. This is due to the fact that GPUs run many operations in parallel, so the order of execution is not always guaranteed. Due to the limited precision of floats, even adding several numbers together may give slightly different results depending on the order in which you add them. You can try to avoid the non-deterministic operations, but some may be created automatically by TensorFlow to compute the gradients, so it is much simpler to just run the code on the CPU. For this, you can set the `CUDA_VISIBLE_DEVICES` environment variable to an empty string, for example:
 
 ```shell
 $ CUDA_VISIBLE_DEVICES="" PYTHONHASHSEED=0 python your_program.py
@@ -275,12 +275,12 @@ by the combination of the seeds set above.
 
 Whole-model saving means creating a file that will contain:
 
-- the architecture of the model, allowing to re-create the model
+- the architecture of the model, allowing you to re-create the model
 - the weights of the model
 - the training configuration (loss, optimizer)
-- the state of the optimizer, allowing to resume training exactly where you left off.
+- the state of the optimizer, allowing you to resume training exactly where you left off.
 
-The default and recommend format to use is the TensorFlow [SavedModel format](https://www.tensorflow.org/guide/saved_model).
+The default and recommended format to use is the TensorFlow [SavedModel format](https://www.tensorflow.org/guide/saved_model).
 In TensorFlow 2.0 and higher, you can just do: `model.save(your_file_path)`.
 
 For explicitness, you can also use `model.save(your_file_path, save_format='tf')`.
@@ -345,7 +345,7 @@ model = Sequential()
 model.add(Dense(2, input_dim=3, name='dense_1'))  # will be loaded
 model.add(Dense(10, name='new_dense'))  # will not be loaded
 
-# load weights from first model; will only affect the first layer, dense_1.
+# load weights from the first model; will only affect the first layer, dense_1.
 model.load_weights(fname, by_name=True)
 ```
 
@@ -478,7 +478,7 @@ On the other hand, the testing loss for an epoch is computed using the model as 
 ### How can I use Keras with datasets that don't fit in memory?
 
 You should use the [`tf.data` API](https://www.tensorflow.org/guide/data) to create `tf.data.Dataset` objects -- an abstraction over a data pipeline
-that can pull data from local disk, from a distribtued filesystem, from GCS, etc., as well as efficiently apply various data transformations.
+that can pull data from local disk, from a distributed file system, from GCS, etc., as well as efficiently apply various data transformations.
 
 For instance, the utility [`tf.keras.preprocessing.image_dataset_from_directory`](https://keras.io/api/preprocessing/image/#imagedatasetfromdirectory-function)
 will create a dataset that reads image data from a local directory.
@@ -493,51 +493,40 @@ model.fit(dataset, epochs=10, validation_data=val_dataset)
 
 ---
 
-### How can I regularly save Keras models during training?
+### How can I ensure my training run can recover from program interruptions?
 
 To ensure the ability to recover from an interrupted training run at any time (fault tolerance),
-you should use a callback that regularly saves your model to disk. You should also set up
-your code to optionally reload that model at startup. Here's a simple example.
+you should use a `tf.keras.callbacks.experimental.BackupAndRestore` that regularly saves your training progress,
+including the epoch number and weights, to disk, and loads it the next time you call `Model.fit()`.
 
 ```python
-import os
+import tensorflow as tf
 from tensorflow import keras
 
-# Prepare a directory to store all the checkpoints.
-checkpoint_dir = './ckpt'
-if not os.path.exists(checkpoint_dir):
-    os.makedirs(checkpoint_dir)
+class InterruptingCallback(keras.callbacks.Callback):
+  """A callback to intentionally introduce interruption to training."""
+  def on_epoch_end(self, epoch, log=None):
+    if epoch == 15:
+      raise RuntimeError('Interruption')
 
+model = keras.Sequential([keras.layers.Dense(10)])
+optimizer = keras.optimizers.SGD()
+model.compile(optimizer, loss="mse")
 
-def make_model():
-    # Create a new linear regression model.
-    model = keras.Sequential([keras.layers.Dense(1)])
-    model.compile(optimizer='adam', loss='mse')
-    return model
+x = tf.random.uniform((24, 10))
+y = tf.random.uniform((24,))
+dataset = tf.data.Dataset.from_tensor_slices((x, y)).repeat().batch(2)
 
-
-def make_or_restore_model():
-    # Either restore the latest model, or create a fresh one
-    # if there is no checkpoint available.
-    checkpoints = [checkpoint_dir + '/' + name
-                   for name in os.listdir(checkpoint_dir)]
-    if checkpoints:
-        latest_checkpoint = max(checkpoints, key=os.path.getctime)
-        print('Restoring from', latest_checkpoint)
-        return keras.models.load_model(latest_checkpoint)
-    print('Creating a new model')
-    return make_model()
-
-
-model = make_or_restore_model()
-callbacks = [
-    # This callback saves a SavedModel every 100 batches.
-    # We include the training loss in the folder name.
-    keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + '/ckpt-loss={loss:.2f}',
-        save_freq=100)
-]
-model.fit(train_data, epochs=10, callbacks=callbacks)
+backup_callback = keras.callbacks.experimental.BackupAndRestore(
+    backup_dir='/tmp/backup')
+try:
+  model.fit(dataset, epochs=20, steps_per_epoch=5, 
+            callbacks=[backup_callback, InterruptingCallback()])
+except RuntimeError:
+  print('***Handling interruption***')
+  # This continues at the epoch where it left off.
+  model.fit(dataset, epochs=20, steps_per_epoch=5, 
+            callbacks=[backup_callback])
 ```
 
 Find out more in the [callbacks documentation](/api/callbacks/).
@@ -755,7 +744,7 @@ This behavior only applies for `BatchNormalization`. For every other layer, weig
 
 If you set the `validation_split` argument in `model.fit` to e.g. 0.1, then the validation data used will be the *last 10%* of the data. If you set it to 0.25, it will be the last 25% of the data, etc. Note that the data isn't shuffled before extracting the validation split, so the validation is literally just the *last* x% of samples in the input you passed.
 
-The same validation set is used for all epochs (within a same call to `fit`).
+The same validation set is used for all epochs (within the same call to `fit`).
 
 Note that the `validation_split` option is only available if your data is passed as Numpy arrays (not `tf.data.Datasets`, which are not indexable).
 
@@ -766,7 +755,7 @@ Note that the `validation_split` option is only available if your data is passed
 
 If you pass your data as NumPy arrays and if the `shuffle` argument in `model.fit()` is set to `True` (which is the default), the training data will be globally randomly shuffled at each epoch.
 
-If you pass your data as a `tf.data.Dataset` object and if the `shuffle` argument in `model.fit()` is set ot `True`, the dataset will be locally shuffled (buffered shuffling).
+If you pass your data as a `tf.data.Dataset` object and if the `shuffle` argument in `model.fit()` is set to `True`, the dataset will be locally shuffled (buffered shuffling).
 
 When using `tf.data.Dataset` objects, prefer shuffling your data beforehand (e.g. by calling `dataset = dataset.shuffle(buffer_size)`) so as to be in control of the buffer size.
 
@@ -778,7 +767,7 @@ Validation data is never shuffled.
 ### What's the recommended way to monitor my metrics when training with `fit()`?
 
 Loss values and metric values are reported via the default progress bar displayed by calls to `fit()`.
-However, staring at changing ascii numbers in a console ins't an optimal metric-monitoring experience.
+However, staring at changing ascii numbers in a console is not an optimal metric-monitoring experience.
 We recommend the use of [TensorBoard](https://www.tensorflow.org/tensorboard), which will display nice-looking graphs of your training and validation metrics, regularly
 updated during training, which you can access from your browser.
 
@@ -790,7 +779,7 @@ You can use TensorBoard with `fit()` via the [`TensorBoard` callback](/api/callb
 
 You have two options:
 
-**1) Write a low-level custom training looop**
+**1) Write a low-level custom training loop**
 
 This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
 
@@ -815,7 +804,7 @@ for inputs, targets in dataset:
     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 ```
 
-This examples does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
+This example does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
 updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
 
 
