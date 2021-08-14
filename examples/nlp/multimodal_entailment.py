@@ -35,21 +35,6 @@ using the following command:
 """
 
 """
-## Collect the dataset
-
-The original dataset is available
-[here](https://github.com/google-research-datasets/recognizing-multimodal-entailment).
-However, we will be using a better prepared version of the dataset. Thanks to
-[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked on
-the preparation. 
-"""
-
-"""shell
-!wget -q https://github.com/sayakpaul/Multimodal-Entailment-Baseline/releases/download/v1.0.0/tweet_images.tar.gz
-!tar xf tweet_images.tar.gz
-"""
-
-"""
 ## Imports
 """
 
@@ -69,6 +54,26 @@ from tensorflow import keras
 """
 
 label_map = {"Contradictory": 0, "Implies": 1, "NoEntailment": 2}
+
+"""
+## Collect the dataset
+
+The original dataset is available
+[here](https://github.com/google-research-datasets/recognizing-multimodal-entailment).
+It comes with URLs of images which are hosted on Twitter's photo storage system called
+the
+[Photo Blob Storage (PBS for short)](https://blog.twitter.com/engineering/en_us/a/2012/blobstore-twitter-s-in-house-photo-storage-system).
+We will be working with the downloaded images along with additional data that comes with
+the original dataset. Thanks to
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked on
+the preparation.
+"""
+
+image_base_path = keras.utils.get_file(
+    "tweet_images",
+    "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/releases/download/v1.0.0/tweet_images.tar.gz",
+    untar=True,
+)
 
 """
 ## Read the dataset and apply basic preprocessing
@@ -108,8 +113,8 @@ for idx in range(len(df)):
     extentsion_one = current_row["image_1"].split(".")[-1]
     extentsion_two = current_row["image_2"].split(".")[-1]
 
-    image_one_path = os.path.join("tweet_images", str(id_1) + f".{extentsion_one}")
-    image_two_path = os.path.join("tweet_images", str(id_2) + f".{extentsion_two}")
+    image_one_path = os.path.join(image_base_path, str(id_1) + f".{extentsion_one}")
+    image_two_path = os.path.join(image_base_path, str(id_2) + f".{extentsion_two}")
 
     images_one_paths.append(image_one_path)
     images_two_paths.append(image_two_path)
@@ -210,7 +215,7 @@ preprocessing.
 """
 
 
-def make_bert_preprocess_model(sentence_features, seq_length=128):
+def make_bert_preprocessing_model(sentence_features, seq_length=128):
     """Returns Model mapping string features to BERT inputs.
 
   Args:
@@ -249,7 +254,7 @@ def make_bert_preprocess_model(sentence_features, seq_length=128):
     return keras.Model(input_segments, model_inputs)
 
 
-bert_preprocess_model = make_bert_preprocess_model(["text_1", "text_2"])
+bert_preprocess_model = make_bert_preprocessing_model(["text_1", "text_2"])
 keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
 
 """
@@ -303,7 +308,7 @@ resize = (128, 128)
 bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
 
 
-def read_resize(image_path):
+def preprocess_image(image_path):
     extension = tf.strings.split(image_path)[-1]
 
     image = tf.io.read_file(image_path)
@@ -323,9 +328,9 @@ def preprocess_text(text_1, text_2):
     return output
 
 
-def preprocess(sample):
-    image_1 = read_resize(sample["image_1_path"])
-    image_2 = read_resize(sample["image_2_path"])
+def preprocess_text_and_image(sample):
+    image_1 = preprocess_image(sample["image_1_path"])
+    image_2 = preprocess_image(sample["image_2_path"])
     text = preprocess_text(sample["text_1"], sample["text_2"])
     return {"image_1": image_1, "image_2": image_2, "text": text}
 
@@ -342,7 +347,7 @@ def prepare_dataset(dataframe, training=True):
     ds = dataframe_to_dataset(dataframe)
     if training:
         ds = ds.shuffle(len(train_df))
-    ds = ds.map(lambda x, y: (preprocess(x), y))
+    ds = ds.map(lambda x, y: (preprocess_text_and_image(x), y)).cache()
     ds = ds.batch(batch_size).prefetch(auto)
     return ds
 
@@ -530,14 +535,57 @@ _, acc = multimodal_model.evaluate(test_ds)
 print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 
 """
+## Additional notes regarding training
+
+**Incorporating regularization**:
+
 The training logs suggest that the model is starting to overfit and may have benefitted
-from regularization.
+from regularization. Dropout ([Srivastava et al.](https://jmlr.org/papers/v15/srivastava14a.html))
+is a simple yet powerful regularization technique that we can use in our model. But how?
+
+We can introduce Dropout (`keras.layers.Dropout`) in between different layers of model. 
+But here is another recipe. Our model expects inputs from two different data modalities.
+What if either of the modalities is not present during inference? To account for this,
+we can introduce Dropout to the individual projecttions just before they get concatenated:
+
+```python
+vision_projections = keras.layers.Dropout(rate)(vision_projections)
+text_projections = keras.layers.Dropout(rate)(text_projections)
+concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
+```
+
+**Attending to what matters**:
+
+Do all parts of the images correspond equally to their textual counterparts? It's likely
+not. To make our model only focus on the most important bits of the images that relate
+well to their corresponding textual parts we can use "cross-attention":
+
+```python
+# Embeddings.
+vision_projections = vision_encoder([image_1, image_2])
+text_projections = text_encoder(text_inputs)
+
+# Cross-attention (Luong-style).
+query_value_attention_seq = keras.layers.Attention(use_scale=True, dropout=0.2)(
+    [vision_projections, text_projections]
+)
+# Concatenate.
+concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
+contextual = keras.layers.Concatenate()([concatenated, query_value_attention_seq])
+```
+
+To see this in action, refer to
+[this notebook](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/blob/main/multimodal_entailment_attn.ipynb).
+
+**Handling class imbalance**:
 
 The dataset suffers from class imbalance. Investigating the confusion matrix of the
 above model reveals that it performs poorly on the minority classes. If we had used a
 weighted loss then the training would have been more guided. You can check out
 [this notebook](https://github.com/sayakpaul/Multimodal-Entailment-Baseline/blob/main/multimodal_entailment.ipynb)
 that takes class-imbalance into account during model training.
+
+**Using only text inputs**:
 
 Also, what if we had only incorporated text inputs for the entailment task? Because of
 the nature of the text inputs encountered on social media platforms, text inputs alone
@@ -558,7 +606,7 @@ experiments were conducted to obtain these numbers.
 """
 
 """
-## Notes
+## Final remarks
 
 * The architecture we used in this example is an overkill for the number of data points
 we have for training. It's likely going to benefit from more data.
