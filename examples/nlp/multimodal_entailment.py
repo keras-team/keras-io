@@ -1,8 +1,8 @@
 """
-Title: Multimodal entailment
+Title: Learning Multimodal Entailment
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
-Last modified: 2021/08/08
+Last modified: 2021/08/15
 Description: Training a multimodal model for predicting entailment.
 """
 """
@@ -72,8 +72,8 @@ the
 [Photo Blob Storage (PBS for short)](https://blog.twitter.com/engineering/en_us/a/2012/blobstore-twitter-s-in-house-photo-storage-system).
 We will be working with the downloaded images along with additional data that comes with
 the original dataset. Thanks to
-[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked preparing
-the data.
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury)
+who worked on preparing the image data.
 """
 
 image_base_path = keras.utils.get_file(
@@ -394,6 +394,10 @@ This is a multi-class classification problem involving the following classes:
 are referred from [this example](https://keras.io/examples/nlp/nl_image_search/).
 """
 
+"""
+### Projection utility
+"""
+
 
 def project_embeddings(
     embeddings, num_projection_layers, projection_dims, dropout_rate
@@ -406,6 +410,11 @@ def project_embeddings(
         x = keras.layers.Add()([projected_embeddings, x])
         projected_embeddings = keras.layers.LayerNormalization()(x)
     return projected_embeddings
+
+
+"""
+### Vision encoder utility
+"""
 
 
 def create_vision_encoder(
@@ -441,10 +450,9 @@ def create_vision_encoder(
     return keras.Model([image_1, image_2], outputs, name="vision_encoder")
 
 
-vision_encoder = create_vision_encoder(
-    num_projection_layers=1, projection_dims=256, dropout_rate=0.1
-)
-keras.utils.plot_model(vision_encoder, show_shapes=True)
+"""
+### Text encoder utility
+"""
 
 
 def create_text_encoder(
@@ -473,10 +481,9 @@ def create_text_encoder(
     return keras.Model(inputs, outputs, name="text_encoder")
 
 
-text_encoder = create_text_encoder(
-    num_projection_layers=1, projection_dims=256, dropout_rate=0.1
-)
-keras.utils.plot_model(text_encoder, show_shapes=True)
+"""
+### Multimodal model utility
+"""
 
 
 def create_multimodal_model(
@@ -519,8 +526,10 @@ multimodal_model = create_multimodal_model()
 keras.utils.plot_model(multimodal_model, show_shapes=True)
 
 """
-You are encouraged to play with the different hyperparameters involved in building this
-model and observe how the final performance is affected.
+You can inspect the structure of the individual encoders as well by setting the
+`expand_nested` argument of `plot_model()` to `True. You are encouraged
+to play with the different hyperparameters involved in building this model and
+observe how the final performance is affected.
 """
 
 """
@@ -604,7 +613,7 @@ for details.
 Finally, here is a table comparing different approaches taken for the entailment task:
 
 | Type  | Standard<br>Cross-entropy     | Loss-weighted<br>Cross-entropy    | Focal Loss    |
-|:---:  |:---:  |---    |---    |
+|:---:  |:---:  |:---:    |:---:    |
 | Multimodal    | 77.86%    | 67.86%    | 86.43%    |
 | Only text     | 67.14%    | 11.43%    | 37.86%    |
 

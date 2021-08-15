@@ -1,8 +1,8 @@
-# Multimodal entailment
+# Learning Multimodal Entailment
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/08<br>
-**Last modified:** 2021/08/08<br>
+**Last modified:** 2021/08/15<br>
 **Description:** Training a multimodal model for predicting entailment.
 
 
@@ -81,8 +81,8 @@ the
 [Photo Blob Storage (PBS for short)](https://blog.twitter.com/engineering/en_us/a/2012/blobstore-twitter-s-in-house-photo-storage-system).
 We will be working with the downloaded images along with additional data that comes with
 the original dataset. Thanks to
-[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked preparing
-the data.
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury)
+who worked on preparing the image data.
 
 
 ```python
@@ -93,13 +93,6 @@ image_base_path = keras.utils.get_file(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://github.com/sayakpaul/Multimodal-Entailment-Baseline/releases/download/v1.0.0/tweet_images.tar.gz
-344276992/344273442 [==============================] - 5s 0us/step
-
-```
-</div>
 ---
 ## Read the dataset and apply basic preprocessing
 
@@ -114,7 +107,7 @@ df.sample(10)
 
 
 
-<div style="width: 100%; overflow-x: auto;">
+<div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -147,103 +140,103 @@ df.sample(10)
   </thead>
   <tbody>
     <tr>
-      <th>990</th>
-      <td>1382932004736536577</td>
-      <td>buy $IOTX on #binance @ 0.048767 https://t.co/...</td>
-      <td>http://pbs.twimg.com/media/EzEpU4eWgAAn7Vp.jpg</td>
-      <td>1383066642800902144</td>
-      <td>sell $FUN on #binance @ 0.042262 https://t.co/...</td>
-      <td>http://pbs.twimg.com/media/EzGjx5OXIAAJjk_.jpg</td>
+      <th>1100</th>
+      <td>1362793718927876099</td>
+      <td>A Tribute to Our Hero #AliSadpara From #Gilgit...</td>
+      <td>http://pbs.twimg.com/media/EumdqdFU4AEH6a9.jpg</td>
+      <td>1362840537863176193</td>
+      <td>Our pride, Tribute to @ali_sadpara at #Skardu ...</td>
+      <td>http://pbs.twimg.com/media/EunIPvsVEAAXo2o.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>854</th>
-      <td>1382134026144788481</td>
-      <td>I am looking at the Unidentified COSMOS-F160W-...</td>
-      <td>http://pbs.twimg.com/media/Ey5TkrTXIAMPns7.jpg</td>
-      <td>1383045031125250048</td>
-      <td>I am looking at the Unidentified COSMOS-F160W-...</td>
-      <td>http://pbs.twimg.com/media/EzGQIJBWUAcGLhu.jpg</td>
+      <th>400</th>
+      <td>1381744301646954498</td>
+      <td>#UNR on Fox full show for 04-12-21 https://t.c...</td>
+      <td>http://pbs.twimg.com/media/EyzxHsWXAAIT8tG.png</td>
+      <td>1382106900276387843</td>
+      <td>#UNR on Fox full show for 04-13-21 https://t.c...</td>
+      <td>http://pbs.twimg.com/media/Ey465tzWYAATcu2.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>90</th>
-      <td>1370198753240489985</td>
-      <td>Top tweeps for #TBZ:\n1 @_tnr1\n2 @01_Z_B\n3 @...</td>
-      <td>http://pbs.twimg.com/media/EwPsgTbUYAQ3mBE.jpg</td>
-      <td>1373463499867758593</td>
-      <td>Top tweeps for #TBZ:\n1 @JUTT__B\n2 @01_Z_B\n3...</td>
-      <td>http://pbs.twimg.com/media/Ew-FxfyUUAEwe4L.jpg</td>
+      <th>519</th>
+      <td>1354730630899245061</td>
+      <td>Shop more awesome tech deals on Avo: https://t...</td>
+      <td>http://pbs.twimg.com/media/EsvCobGW4AQM9a9.jpg</td>
+      <td>1364974021029335042</td>
+      <td>Shop more fantastic #TechThursday deals, only ...</td>
+      <td>http://pbs.twimg.com/media/EvFY-XuXYAEJ0ji.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1351</th>
-      <td>1381256604926967813</td>
-      <td>Finally completed the skin rendering. Will sta...</td>
-      <td>http://pbs.twimg.com/media/Eys1j7NVIAgF-YF.jpg</td>
-      <td>1381630932092784641</td>
-      <td>Hair rendering. Will finish the hair by tomorr...</td>
-      <td>http://pbs.twimg.com/media/EyyKAoaUUAElm-e.jpg</td>
+      <th>163</th>
+      <td>1374826528857600008</td>
+      <td>Please adopt our 501c3 non-profit World Marrow...</td>
+      <td>http://pbs.twimg.com/media/ExRaJnVXMAgpgpU.jpg</td>
+      <td>1378060044885954562</td>
+      <td>Remember to designate #WISEPlace as your chose...</td>
+      <td>http://pbs.twimg.com/media/Ex_aTtwWUAcRVaN.jpg</td>
+      <td>Contradictory</td>
+    </tr>
+    <tr>
+      <th>545</th>
+      <td>1356318781103083530</td>
+      <td>Here are the top-5 teams in Week 2 of the @NCA...</td>
+      <td>http://pbs.twimg.com/media/EtJ0bA9W8AEgiM6.jpg</td>
+      <td>1368981087666470919</td>
+      <td>Here are the top-5 teams in the 𝗣𝗿𝗲-𝗖𝗵𝗮𝗺𝗽𝗶𝗼𝗻𝘀𝗵...</td>
+      <td>http://pbs.twimg.com/media/Ev98BEUXAAcvFYM.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>331</th>
-      <td>1335817457018286080</td>
-      <td>Nokia 5.4 full specifications leak online ahea...</td>
-      <td>http://pbs.twimg.com/media/EonG2ybWEAEOjfo.png</td>
-      <td>1335819879350321153</td>
-      <td>Nokia 5.4 full specifications leak online ahea...</td>
-      <td>http://pbs.twimg.com/media/EonJGCNUYAAMdRC.jpg</td>
+      <th>1119</th>
+      <td>1372196378441625602</td>
+      <td>14:30 @CheltenhamRaces\n\n1st Heaven Help Us 3...</td>
+      <td>http://pbs.twimg.com/media/EwsFVYrXMAMd1nt.jpg</td>
+      <td>1375866809786699776</td>
+      <td>17:30 @WolvesRaces\n\n1st Artisan Bleu 12/1\n2...</td>
+      <td>http://pbs.twimg.com/media/ExgPknnXIAEPC10.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>533</th>
-      <td>1369797307256954882</td>
-      <td>#NowWatching ANOTHER ROUND https://t.co/bU09LO...</td>
-      <td>http://pbs.twimg.com/media/EwJ_Y0uXEAE51iq.jpg</td>
-      <td>1373038097483624453</td>
-      <td>#NowWatching Another Round https://t.co/ExMBaA...</td>
-      <td>http://pbs.twimg.com/media/Ew4C30KWQBkZ-dA.jpg</td>
+      <th>1165</th>
+      <td>1332007291575357440</td>
+      <td>Daily Benefit 04/11/1442-11/26/2020\n#فائدة_ال...</td>
+      <td>http://pbs.twimg.com/media/Enw9kXTVQAAI149.jpg</td>
+      <td>1355161473119444996</td>
+      <td>Daily Benefit 06/16/1442-01/29/2021\n#فائدة_ال...</td>
+      <td>http://pbs.twimg.com/media/Es6AJHRVgAQezN_.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1266</th>
-      <td>1333010336971108353</td>
-      <td>Daily almanac for November 29: https://t.co/NL...</td>
-      <td>http://pbs.twimg.com/media/En_N1ieXMAEanWD.png</td>
-      <td>1333010424627867653</td>
-      <td>Daily almanac for November 29: https://t.co/XO...</td>
-      <td>http://pbs.twimg.com/media/En_N6pnW4AYMDhW.png</td>
+      <th>1114</th>
+      <td>1356505064865636352</td>
+      <td>Budget will help increase rural consumption: F...</td>
+      <td>http://pbs.twimg.com/media/EtNGJ6_UYAAxzcF.jpg</td>
+      <td>1356505191722323973</td>
+      <td>@PMOIndia @narendramodi Budget will help incre...</td>
+      <td>http://pbs.twimg.com/media/EtNGGtHWYAEgAJR.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>804</th>
-      <td>1354138253591502848</td>
-      <td>Kuwait lists 505 new COVID-19 cases as infecti...</td>
-      <td>http://pbs.twimg.com/media/EsrdiKBXYAAFZkK.jpg</td>
-      <td>1362443439720325122</td>
-      <td>#kuwait_moh Announce #وزارة_الصحة 979 new case...</td>
-      <td>http://pbs.twimg.com/media/EuhfEfoXUAAjCBP.jpg</td>
+      <th>462</th>
+      <td>1370917615175139336</td>
+      <td>Tesla bought ~40,000 BTC for \n$1.5 Billion at...</td>
+      <td>http://pbs.twimg.com/media/EwZ6Tj1WYAAp37d.png</td>
+      <td>1379599843950219264</td>
+      <td>Tesla bought ~48,000 BTC for \n$1.5 Billion at...</td>
+      <td>http://pbs.twimg.com/media/EyVSvz1XMAA5lr3.png</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1019</th>
-      <td>1381034028355227653</td>
-      <td>My #RTRNaps are:\n\nO'Reilly @ 13:40\nHitman F...</td>
-      <td>http://pbs.twimg.com/media/EyprIQFWgAANzsp.jpg</td>
-      <td>1382154268338184195</td>
-      <td>My #RTRNaps are:\n\nThe Big Bite @ 14:05\nCapt...</td>
-      <td>http://pbs.twimg.com/media/Ey5l-1zWQAEFCwh.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>1280</th>
-      <td>1380242549336502274</td>
-      <td>$NUVB held up pretty well today too https://t....</td>
-      <td>http://pbs.twimg.com/media/EyebSFbU8AAhbid.jpg</td>
-      <td>1380606940644995072</td>
-      <td>$NUVB high of day near close. Nice. https://t....</td>
-      <td>http://pbs.twimg.com/media/EyjmsfkU4AIdaIQ.jpg</td>
+      <th>717</th>
+      <td>1382758563790131213</td>
+      <td>$SKX Was up 1.44 %. Turned negative -0.07% | (...</td>
+      <td>http://pbs.twimg.com/media/EzCLldqWEAIdZgh.jpg</td>
+      <td>1384277703466000385</td>
+      <td>$ZM Was up 2.38 %. Turned negative -1.70% | (G...</td>
+      <td>http://pbs.twimg.com/media/EzXxO6HVoAEBF2E.jpg</td>
       <td>NoEntailment</td>
     </tr>
   </tbody>
@@ -339,21 +332,22 @@ visualize(random_idx)
 
 <div class="k-default-codeblock">
 ```
-Text one: Join us for the Dell Power Cup!
+Text one: #XAUUSD SSI is at 3.17
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-https://t.co/kHsmpNJXjM
+Risk Warning: Losses can exceed deposits.
+Disclaimer: Past performance is not indicative of future results. https://t.co/yNbOEXfnYF
+Text two: #XAUUSD SSI is at 1.62
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#dellpowercup https://t.co/e2qjwDbzad
-Text two: Have you registered yet? Show your knowledge about Dell Technologies! You still have time to earn some extra points playing the individual games before the National Qualifiers start. CLICK TO REGISTER NOW! #ThePowerCup #DellPartner
- https://t.co/WdJ3xamoCP #Iwork4Dell https://t.co/FN4NMSzXE2
+Risk Warning: Losses can exceed deposits.
+Disclaimer: Past performance is not indicative of future results. https://t.co/J48zHrNX6m
 Label: NoEntailment
 
 ```
@@ -365,32 +359,28 @@ Label: NoEntailment
 
 <div class="k-default-codeblock">
 ```
-Text one: Do you know which hand wins?😆 Leave a comment and claim👇
+Text one: It's their guts for us. Millennials could never! 😂😂
+ 
+@gpennyfoods do am if e easy 😂
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Free chips🎁https://t.co/nfdHMPVkaA
+#GoldenPennyXBellaNaijaWeddings #NewlyNearly https://t.co/aRWXwx4zUt
+Text two: If you put your mind to it, you can def do it! What's your take-home? 😌
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#pokeronline #poker #pokerstar #pokerface #LosAngeles #PokerIndonesia #pokerplayer #LasVegas #casino #onlinecasino #macao #melbourne #포커 #parx #game #fun #home #WSOP #augupoker https://t.co/5ACLtIklSi
-Text two: Do you know which hand wins?😆
+#NewlyNearly by @gpennyfoods X @bellanaijaweddings 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Get it started👉 https://t.co/nfdHMPVkaA
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-#augupoker #bonus #rewards #pokerhands #PokerIndonesia https://t.co/g0mBOYHfpp
+#GoldenPennyXBellaNaijaWeddings https://t.co/SlCnUJFXnL
 Label: NoEntailment
 
 ```
@@ -552,37 +542,13 @@ print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
 
 <div class="k-default-codeblock">
 ```
-Text 1: #pahrumpweather Friday
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Sunny, with a high near 66. Northwest wind 11 to 14 mph, with gusts as high as 20 mph.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Tonight - Increasing clouds, with a low around 42. Northeast wind around 5 mph becoming calm. @visitpahrump @NWSVegas https://t.co/X2hNXwRxmf
-Text 2: #pahrumpweather Wednesday 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Mostly sunny, with a high near 66. East southeast wind 5 to 7 mph becoming south in the afternoon.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Tonight - Mostly cloudy, with a low around 45. East southeast wind around 7 mph. @visitpahrump @NWSVegas https://t.co/2oQnaIZRvX
-Keys           :  ['input_word_ids', 'input_type_ids', 'input_mask']
+Text 1: I've just watched episode S04 | E14 of Glee! #Glee  https://t.co/vwSCo6cENy #tvtime https://t.co/llvX9nZxMd
+Text 2: I've just watched episode S04 | E18 of Glee! #Glee  https://t.co/9pY52crT4h #tvtime https://t.co/Qr1vPUN1KN
+Keys           :  ['input_type_ids', 'input_word_ids', 'input_mask']
 Shape Word Ids :  (1, 128)
 Word Ids       :  tf.Tensor(
-[  101  1001  6643  8093 24237 28949  5958 11559  1010  2007  1037  2152
-  2379  5764  1012  4514], shape=(16,), dtype=int32)
+[  101  1045  1005  2310  2074  3427  2792  1055  2692  2549  1064  1041
+ 16932  1997 18874   999], shape=(16,), dtype=int32)
 Shape Mask     :  (1, 128)
 Input Mask     :  tf.Tensor([1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1], shape=(16,), dtype=int32)
 Shape Type Ids :  (1, 128)
@@ -700,6 +666,8 @@ This is a multi-class classification problem involving the following classes:
 `project_embeddings()`, `create_vision_encoder()`, and `create_text_encoder()` utilities
 are referred from [this example](https://keras.io/examples/nlp/nl_image_search/).
 
+### Projection utility
+
 
 ```python
 
@@ -715,6 +683,12 @@ def project_embeddings(
         projected_embeddings = keras.layers.LayerNormalization()(x)
     return projected_embeddings
 
+```
+
+### Vision encoder utility
+
+
+```python
 
 def create_vision_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
@@ -748,12 +722,12 @@ def create_vision_encoder(
     # Create the vision encoder model.
     return keras.Model([image_1, image_2], outputs, name="vision_encoder")
 
+```
 
-vision_encoder = create_vision_encoder(
-    num_projection_layers=1, projection_dims=256, dropout_rate=0.1
-)
-keras.utils.plot_model(vision_encoder, show_shapes=True)
+### Text encoder utility
 
+
+```python
 
 def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
@@ -780,12 +754,12 @@ def create_text_encoder(
     # Create the text encoder model.
     return keras.Model(inputs, outputs, name="text_encoder")
 
+```
 
-text_encoder = create_text_encoder(
-    num_projection_layers=1, projection_dims=256, dropout_rate=0.1
-)
-keras.utils.plot_model(text_encoder, show_shapes=True)
+### Multimodal model utility
 
+
+```python
 
 def create_multimodal_model(
     num_projection_layers=1,
@@ -827,21 +801,19 @@ multimodal_model = create_multimodal_model()
 keras.utils.plot_model(multimodal_model, show_shapes=True)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50v2_weights_tf_dim_ordering_tf_kernels_notop.h5
-94674944/94668760 [==============================] - 1s 0us/step
 
-```
-</div>
+
+
     
-![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_32_1.png)
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_39_0.png)
     
 
 
 
-You are encouraged to play with the different hyperparameters involved in building this
-model and observe how the final performance is affected.
+You can inspect the structure of the individual encoders as well by setting the
+`expand_nested` argument of `plot_model()` to `True. You are encouraged
+to play with the different hyperparameters involved in building this model and
+observe how the final performance is affected.
 
 ---
 ## Compile and train the model
@@ -858,25 +830,25 @@ history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-38/38 [==============================] - 40s 469ms/step - loss: 0.9932 - accuracy: 0.8279 - val_loss: 0.6666 - val_accuracy: 0.8571
+38/38 [==============================] - 49s 788ms/step - loss: 0.9190 - accuracy: 0.8279 - val_loss: 0.6966 - val_accuracy: 0.8571
 Epoch 2/10
-38/38 [==============================] - 3s 89ms/step - loss: 0.4068 - accuracy: 0.8772 - val_loss: 0.5720 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 86ms/step - loss: 0.4194 - accuracy: 0.8688 - val_loss: 0.5899 - val_accuracy: 0.8571
 Epoch 3/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.3627 - accuracy: 0.8864 - val_loss: 0.6029 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 87ms/step - loss: 0.3442 - accuracy: 0.8889 - val_loss: 0.6523 - val_accuracy: 0.8571
 Epoch 4/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.2852 - accuracy: 0.9006 - val_loss: 0.6908 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 87ms/step - loss: 0.2634 - accuracy: 0.9114 - val_loss: 0.8170 - val_accuracy: 0.8571
 Epoch 5/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1701 - accuracy: 0.9474 - val_loss: 0.9603 - val_accuracy: 0.8413
+38/38 [==============================] - 3s 87ms/step - loss: 0.1730 - accuracy: 0.9432 - val_loss: 0.9221 - val_accuracy: 0.8730
 Epoch 6/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.1029 - accuracy: 0.9666 - val_loss: 1.2907 - val_accuracy: 0.8730
+38/38 [==============================] - 3s 88ms/step - loss: 0.1508 - accuracy: 0.9499 - val_loss: 1.2248 - val_accuracy: 0.6508
 Epoch 7/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.0712 - accuracy: 0.9791 - val_loss: 1.3902 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 89ms/step - loss: 0.3271 - accuracy: 0.9073 - val_loss: 1.3959 - val_accuracy: 0.6508
 Epoch 8/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1101 - accuracy: 0.9607 - val_loss: 1.5143 - val_accuracy: 0.8413
+38/38 [==============================] - 3s 88ms/step - loss: 0.2380 - accuracy: 0.9198 - val_loss: 0.9946 - val_accuracy: 0.8730
 Epoch 9/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.0916 - accuracy: 0.9691 - val_loss: 1.2580 - val_accuracy: 0.8095
+38/38 [==============================] - 3s 89ms/step - loss: 0.1116 - accuracy: 0.9591 - val_loss: 0.9770 - val_accuracy: 0.8571
 Epoch 10/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.0595 - accuracy: 0.9799 - val_loss: 1.6426 - val_accuracy: 0.8413
+38/38 [==============================] - 3s 88ms/step - loss: 0.0470 - accuracy: 0.9833 - val_loss: 1.2293 - val_accuracy: 0.8095
 
 ```
 </div>
@@ -891,8 +863,8 @@ print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 3s 538ms/step - loss: 1.2403 - accuracy: 0.8500
-Accuracy on the test set: 85.0%.
+5/5 [==============================] - 6s 1s/step - loss: 1.0899 - accuracy: 0.8143
+Accuracy on the test set: 81.43%.
 
 ```
 </div>
@@ -960,7 +932,7 @@ for details.
 Finally, here is a table comparing different approaches taken for the entailment task:
 
 | Type  | Standard<br>Cross-entropy     | Loss-weighted<br>Cross-entropy    | Focal Loss    |
-|:---:  |:---:  |---    |---    |
+|:---:  |:---:  |:---:    |:---:    |
 | Multimodal    | 77.86%    | 67.86%    | 86.43%    |
 | Only text     | 67.14%    | 11.43%    | 37.86%    |
 
