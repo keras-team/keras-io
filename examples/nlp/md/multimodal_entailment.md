@@ -1,4 +1,4 @@
-# Learning Multimodal Entailment
+# Multimodal entailment
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/08<br>
@@ -114,7 +114,7 @@ df.sample(10)
 
 
 
-<div>
+<div style="width: 100%; overflow-x: auto;">
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;

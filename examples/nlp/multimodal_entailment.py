@@ -1,5 +1,5 @@
 """
-Title: Learning Multimodal Entailment
+Title: Multimodal entailment
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
 Last modified: 2021/08/08
