@@ -1,11 +1,16 @@
-"""
-Title: Learning Multimodal Entailment
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/08/08
-Last modified: 2021/08/08
-Description: Training a multimodal model for predicting entailment.
-"""
-"""
+# Learning Multimodal Entailment
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/08/08<br>
+**Last modified:** 2021/08/08<br>
+**Description:** Training a multimodal model for predicting entailment.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/multimodal_entailment.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/multimodal_entailment.py)
+
+
+
+---
 ## Introduction
 
 In this example, we will build and train a model for predicting multimodal entailment. We will be
@@ -35,16 +40,17 @@ This example requires TensorFlow 2.5 or higher. In addition, TensorFlow Hub and
 TensorFlow Text are required for the BERT model
 ([Devlin et al.](https://arxiv.org/abs/1810.04805)). These libraries can be installed
 using the following command:
-"""
 
-"""shell
-pip install -q tensorflow_text
-"""
 
-"""
+```python
+!pip install -q tensorflow_text
+```
+
+---
 ## Imports
-"""
 
+
+```python
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -55,14 +61,17 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_text as text
 from tensorflow import keras
+```
 
-"""
+---
 ## Define a label map
-"""
 
+
+```python
 label_map = {"Contradictory": 0, "Implies": 1, "NoEntailment": 2}
+```
 
-"""
+---
 ## Collect the dataset
 
 The original dataset is available
@@ -74,24 +83,175 @@ We will be working with the downloaded images along with additional data that co
 the original dataset. Thanks to
 [Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked preparing
 the data.
-"""
 
+
+```python
 image_base_path = keras.utils.get_file(
     "tweet_images",
     "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/releases/download/v1.0.0/tweet_images.tar.gz",
     untar=True,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://github.com/sayakpaul/Multimodal-Entailment-Baseline/releases/download/v1.0.0/tweet_images.tar.gz
+344276992/344273442 [==============================] - 5s 0us/step
+
+```
+</div>
+---
 ## Read the dataset and apply basic preprocessing
-"""
 
+
+```python
 df = pd.read_csv(
     "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/csvs/tweets.csv"
 )
 df.sample(10)
+```
 
-"""
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<div class="k-default-codeblock">
+```
+.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+```
+</div>
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id_1</th>
+      <th>text_1</th>
+      <th>image_1</th>
+      <th>id_2</th>
+      <th>text_2</th>
+      <th>image_2</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>990</th>
+      <td>1382932004736536577</td>
+      <td>buy $IOTX on #binance @ 0.048767 https://t.co/...</td>
+      <td>http://pbs.twimg.com/media/EzEpU4eWgAAn7Vp.jpg</td>
+      <td>1383066642800902144</td>
+      <td>sell $FUN on #binance @ 0.042262 https://t.co/...</td>
+      <td>http://pbs.twimg.com/media/EzGjx5OXIAAJjk_.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>854</th>
+      <td>1382134026144788481</td>
+      <td>I am looking at the Unidentified COSMOS-F160W-...</td>
+      <td>http://pbs.twimg.com/media/Ey5TkrTXIAMPns7.jpg</td>
+      <td>1383045031125250048</td>
+      <td>I am looking at the Unidentified COSMOS-F160W-...</td>
+      <td>http://pbs.twimg.com/media/EzGQIJBWUAcGLhu.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>90</th>
+      <td>1370198753240489985</td>
+      <td>Top tweeps for #TBZ:\n1 @_tnr1\n2 @01_Z_B\n3 @...</td>
+      <td>http://pbs.twimg.com/media/EwPsgTbUYAQ3mBE.jpg</td>
+      <td>1373463499867758593</td>
+      <td>Top tweeps for #TBZ:\n1 @JUTT__B\n2 @01_Z_B\n3...</td>
+      <td>http://pbs.twimg.com/media/Ew-FxfyUUAEwe4L.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>1351</th>
+      <td>1381256604926967813</td>
+      <td>Finally completed the skin rendering. Will sta...</td>
+      <td>http://pbs.twimg.com/media/Eys1j7NVIAgF-YF.jpg</td>
+      <td>1381630932092784641</td>
+      <td>Hair rendering. Will finish the hair by tomorr...</td>
+      <td>http://pbs.twimg.com/media/EyyKAoaUUAElm-e.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>331</th>
+      <td>1335817457018286080</td>
+      <td>Nokia 5.4 full specifications leak online ahea...</td>
+      <td>http://pbs.twimg.com/media/EonG2ybWEAEOjfo.png</td>
+      <td>1335819879350321153</td>
+      <td>Nokia 5.4 full specifications leak online ahea...</td>
+      <td>http://pbs.twimg.com/media/EonJGCNUYAAMdRC.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>533</th>
+      <td>1369797307256954882</td>
+      <td>#NowWatching ANOTHER ROUND https://t.co/bU09LO...</td>
+      <td>http://pbs.twimg.com/media/EwJ_Y0uXEAE51iq.jpg</td>
+      <td>1373038097483624453</td>
+      <td>#NowWatching Another Round https://t.co/ExMBaA...</td>
+      <td>http://pbs.twimg.com/media/Ew4C30KWQBkZ-dA.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>1266</th>
+      <td>1333010336971108353</td>
+      <td>Daily almanac for November 29: https://t.co/NL...</td>
+      <td>http://pbs.twimg.com/media/En_N1ieXMAEanWD.png</td>
+      <td>1333010424627867653</td>
+      <td>Daily almanac for November 29: https://t.co/XO...</td>
+      <td>http://pbs.twimg.com/media/En_N6pnW4AYMDhW.png</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>804</th>
+      <td>1354138253591502848</td>
+      <td>Kuwait lists 505 new COVID-19 cases as infecti...</td>
+      <td>http://pbs.twimg.com/media/EsrdiKBXYAAFZkK.jpg</td>
+      <td>1362443439720325122</td>
+      <td>#kuwait_moh Announce #وزارة_الصحة 979 new case...</td>
+      <td>http://pbs.twimg.com/media/EuhfEfoXUAAjCBP.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>1019</th>
+      <td>1381034028355227653</td>
+      <td>My #RTRNaps are:\n\nO'Reilly @ 13:40\nHitman F...</td>
+      <td>http://pbs.twimg.com/media/EyprIQFWgAANzsp.jpg</td>
+      <td>1382154268338184195</td>
+      <td>My #RTRNaps are:\n\nThe Big Bite @ 14:05\nCapt...</td>
+      <td>http://pbs.twimg.com/media/Ey5l-1zWQAEFCwh.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>1280</th>
+      <td>1380242549336502274</td>
+      <td>$NUVB held up pretty well today too https://t....</td>
+      <td>http://pbs.twimg.com/media/EyebSFbU8AAhbid.jpg</td>
+      <td>1380606940644995072</td>
+      <td>$NUVB high of day near close. Nice. https://t....</td>
+      <td>http://pbs.twimg.com/media/EyjmsfkU4AIdaIQ.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
 The columns we are interested in are the following:
 
 * `text_1`
@@ -108,8 +268,9 @@ not entail or contradict) each other?***
 We have the images already downloaded. `image_1` is downloaded as `id1` as its filename
 and `image2` is downloaded as `id2` as its filename. In the next step, we will add two
 more columns to `df` - filepaths of `image_1`s and `image_2`s.
-"""
 
+
+```python
 images_one_paths = []
 images_two_paths = []
 
@@ -132,11 +293,13 @@ df["image_2_path"] = images_two_paths
 # Create another column containing the integer ids of
 # the string labels.
 df["label_idx"] = df["label"].apply(lambda x: label_map[x])
+```
 
-"""
+---
 ## Dataset visualization
-"""
 
+
+```python
 
 def visualize(idx):
     current_row = df.iloc[idx]
@@ -166,21 +329,100 @@ visualize(random_idx)
 
 random_idx = np.random.choice(len(df))
 visualize(random_idx)
+```
 
-"""
+
+    
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_14_0.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+Text one: Join us for the Dell Power Cup!
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+https://t.co/kHsmpNJXjM
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#dellpowercup https://t.co/e2qjwDbzad
+Text two: Have you registered yet? Show your knowledge about Dell Technologies! You still have time to earn some extra points playing the individual games before the National Qualifiers start. CLICK TO REGISTER NOW! #ThePowerCup #DellPartner
+ https://t.co/WdJ3xamoCP #Iwork4Dell https://t.co/FN4NMSzXE2
+Label: NoEntailment
+
+```
+</div>
+    
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_14_2.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+Text one: Do you know which hand wins?😆 Leave a comment and claim👇
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Free chips🎁https://t.co/nfdHMPVkaA
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#pokeronline #poker #pokerstar #pokerface #LosAngeles #PokerIndonesia #pokerplayer #LasVegas #casino #onlinecasino #macao #melbourne #포커 #parx #game #fun #home #WSOP #augupoker https://t.co/5ACLtIklSi
+Text two: Do you know which hand wins?😆
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Get it started👉 https://t.co/nfdHMPVkaA
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#augupoker #bonus #rewards #pokerhands #PokerIndonesia https://t.co/g0mBOYHfpp
+Label: NoEntailment
+
+```
+</div>
+---
 ## Train/test split
 
 The dataset suffers from
 [class imbalance problem](https://developers.google.com/machine-learning/glossary#class-imbalanced-dataset).
 We can confirm that in the following cell.
-"""
 
+
+```python
 df["label"].value_counts()
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+NoEntailment     1182
+Implies           109
+Contradictory     109
+Name: label, dtype: int64
+
+```
+</div>
 To account for that we will go for a stratified split.
-"""
 
+
+```python
 # 10% for test
 train_df, test_df = train_test_split(
     df, test_size=0.1, stratify=df["label"].values, random_state=42
@@ -193,8 +435,17 @@ train_df, val_df = train_test_split(
 print(f"Total training examples: {len(train_df)}")
 print(f"Total validation examples: {len(val_df)}")
 print(f"Total test examples: {len(test_df)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total training examples: 1197
+Total validation examples: 63
+Total test examples: 140
+
+```
+</div>
+---
 ## Data input pipeline
 
 TensorFlow Hub provides
@@ -206,21 +457,23 @@ preprocessing layers from
 
 To keep the runtime of this example relatively short, we will use a smaller variant of
 the original BERT model.
-"""
 
+
+```python
 # Define TF Hub paths to the BERT encoder and its preprocessor
 bert_model_path = (
     "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-256_A-4/1"
 )
 bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
+```
 
-"""
 Our text preprocessing code mostly comes from
 [this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
 You are highly encouraged to check out the tutorial to learn more about the input
 preprocessing.
-"""
 
+
+```python
 
 def make_bert_preprocessing_model(sentence_features, seq_length=128):
     """Returns Model mapping string features to BERT inputs.
@@ -263,11 +516,21 @@ def make_bert_preprocessing_model(sentence_features, seq_length=128):
 
 bert_preprocess_model = make_bert_preprocessing_model(["text_1", "text_2"])
 keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
+```
 
-"""
+
+
+
+    
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_22_0.png)
+    
+
+
+
 ### Run the preprocessor on a sample input
-"""
 
+
+```python
 idx = np.random.choice(len(train_df))
 row = train_df.iloc[idx]
 sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
@@ -285,8 +548,48 @@ print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
 print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
 print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Text 1: #pahrumpweather Friday
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Sunny, with a high near 66. Northwest wind 11 to 14 mph, with gusts as high as 20 mph.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Tonight - Increasing clouds, with a low around 42. Northeast wind around 5 mph becoming calm. @visitpahrump @NWSVegas https://t.co/X2hNXwRxmf
+Text 2: #pahrumpweather Wednesday 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Mostly sunny, with a high near 66. East southeast wind 5 to 7 mph becoming south in the afternoon.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Tonight - Mostly cloudy, with a low around 45. East southeast wind around 7 mph. @visitpahrump @NWSVegas https://t.co/2oQnaIZRvX
+Keys           :  ['input_word_ids', 'input_type_ids', 'input_mask']
+Shape Word Ids :  (1, 128)
+Word Ids       :  tf.Tensor(
+[  101  1001  6643  8093 24237 28949  5958 11559  1010  2007  1037  2152
+  2379  5764  1012  4514], shape=(16,), dtype=int32)
+Shape Mask     :  (1, 128)
+Input Mask     :  tf.Tensor([1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1], shape=(16,), dtype=int32)
+Shape Type Ids :  (1, 128)
+Type Ids       :  tf.Tensor([0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0], shape=(16,), dtype=int32)
+
+```
+</div>
 We will now create `tf.data.Dataset` objects from the dataframes.
 
 Note that the text inputs will be preprocessed as a part of the data input pipeline. But
@@ -295,8 +598,9 @@ helps reduce the training/serving skew and lets our models operate with raw text
 Follow [this tutorial](https://www.tensorflow.org/text/tutorials/classify_text_with_bert)
 to learn more about how to incorporate the preprocessing modules directly inside the
 models.
-"""
 
+
+```python
 
 def dataframe_to_dataset(dataframe):
     columns = ["image_1_path", "image_2_path", "text_1", "text_2", "label_idx"]
@@ -306,11 +610,12 @@ def dataframe_to_dataset(dataframe):
     ds = ds.shuffle(buffer_size=len(dataframe))
     return ds
 
+```
 
-"""
 ### Preprocessing utilities
-"""
 
+
+```python
 resize = (128, 128)
 bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
 
@@ -341,11 +646,12 @@ def preprocess_text_and_image(sample):
     text = preprocess_text(sample["text_1"], sample["text_2"])
     return {"image_1": image_1, "image_2": image_2, "text": text}
 
+```
 
-"""
 ### Create the final datasets
-"""
 
+
+```python
 batch_size = 32
 auto = tf.data.AUTOTUNE
 
@@ -363,8 +669,9 @@ train_ds = prepare_dataset(train_df)
 validation_ds = prepare_dataset(val_df, False)
 test_ds = prepare_dataset(test_df, False)
 
+```
 
-"""
+---
 ## Model building utilities
 
 Our final model will accept two images along with their text counterparts. While the
@@ -392,8 +699,9 @@ This is a multi-class classification problem involving the following classes:
 
 `project_embeddings()`, `create_vision_encoder()`, and `create_text_encoder()` utilities
 are referred from [this example](https://keras.io/examples/nlp/nl_image_search/).
-"""
 
+
+```python
 
 def project_embeddings(
     embeddings, num_projection_layers, projection_dims, dropout_rate
@@ -517,30 +825,78 @@ def create_multimodal_model(
 
 multimodal_model = create_multimodal_model()
 keras.utils.plot_model(multimodal_model, show_shapes=True)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50v2_weights_tf_dim_ordering_tf_kernels_notop.h5
+94674944/94668760 [==============================] - 1s 0us/step
+
+```
+</div>
+    
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_32_1.png)
+    
+
+
+
 You are encouraged to play with the different hyperparameters involved in building this
 model and observe how the final performance is affected.
-"""
 
-"""
+---
 ## Compile and train the model
-"""
 
+
+```python
 multimodal_model.compile(
     optimizer="adam", loss="sparse_categorical_crossentropy", metrics="accuracy"
 )
 
 history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+38/38 [==============================] - 40s 469ms/step - loss: 0.9932 - accuracy: 0.8279 - val_loss: 0.6666 - val_accuracy: 0.8571
+Epoch 2/10
+38/38 [==============================] - 3s 89ms/step - loss: 0.4068 - accuracy: 0.8772 - val_loss: 0.5720 - val_accuracy: 0.8571
+Epoch 3/10
+38/38 [==============================] - 3s 90ms/step - loss: 0.3627 - accuracy: 0.8864 - val_loss: 0.6029 - val_accuracy: 0.8571
+Epoch 4/10
+38/38 [==============================] - 3s 90ms/step - loss: 0.2852 - accuracy: 0.9006 - val_loss: 0.6908 - val_accuracy: 0.8571
+Epoch 5/10
+38/38 [==============================] - 3s 91ms/step - loss: 0.1701 - accuracy: 0.9474 - val_loss: 0.9603 - val_accuracy: 0.8413
+Epoch 6/10
+38/38 [==============================] - 3s 90ms/step - loss: 0.1029 - accuracy: 0.9666 - val_loss: 1.2907 - val_accuracy: 0.8730
+Epoch 7/10
+38/38 [==============================] - 3s 91ms/step - loss: 0.0712 - accuracy: 0.9791 - val_loss: 1.3902 - val_accuracy: 0.8571
+Epoch 8/10
+38/38 [==============================] - 3s 91ms/step - loss: 0.1101 - accuracy: 0.9607 - val_loss: 1.5143 - val_accuracy: 0.8413
+Epoch 9/10
+38/38 [==============================] - 3s 91ms/step - loss: 0.0916 - accuracy: 0.9691 - val_loss: 1.2580 - val_accuracy: 0.8095
+Epoch 10/10
+38/38 [==============================] - 3s 91ms/step - loss: 0.0595 - accuracy: 0.9799 - val_loss: 1.6426 - val_accuracy: 0.8413
+
+```
+</div>
+---
 ## Evaluate the model
-"""
 
+
+```python
 _, acc = multimodal_model.evaluate(test_ds)
 print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+5/5 [==============================] - 3s 538ms/step - loss: 1.2403 - accuracy: 0.8500
+Accuracy on the test set: 85.0%.
+
+```
+</div>
+---
 ## Additional notes regarding training
 
 **Incorporating regularization**:
@@ -610,9 +966,8 @@ Finally, here is a table comparing different approaches taken for the entailment
 
 You can check out [this repository](https://git.io/JR0HU) to learn more about how the
 experiments were conducted to obtain these numbers.
-"""
 
-"""
+---
 ## Final remarks
 
 * The architecture we used in this example is too large for the number of data points
@@ -629,4 +984,3 @@ approaches that have been proposed to tackle the entailment problem.
 from the
 [Recognizing Multimodal Entailment](https://multimodal-entailment.github.io/)
 tutorial provides a comprehensive overview.
-"""
