@@ -1,4 +1,4 @@
-# Learning Multimodal Entailment
+# Multimodal entailment
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/08<br>
@@ -81,8 +81,8 @@ the
 [Photo Blob Storage (PBS for short)](https://blog.twitter.com/engineering/en_us/a/2012/blobstore-twitter-s-in-house-photo-storage-system).
 We will be working with the downloaded images along with additional data that comes with
 the original dataset. Thanks to
-[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury)
-who worked on preparing the image data.
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked on
+preparing the image data.
 
 
 ```python
@@ -140,103 +140,103 @@ df.sample(10)
   </thead>
   <tbody>
     <tr>
-      <th>1100</th>
-      <td>1362793718927876099</td>
-      <td>A Tribute to Our Hero #AliSadpara From #Gilgit...</td>
-      <td>http://pbs.twimg.com/media/EumdqdFU4AEH6a9.jpg</td>
-      <td>1362840537863176193</td>
-      <td>Our pride, Tribute to @ali_sadpara at #Skardu ...</td>
-      <td>http://pbs.twimg.com/media/EunIPvsVEAAXo2o.jpg</td>
+      <th>291</th>
+      <td>1330800194863190016</td>
+      <td>#KLM1167 (B738): #AMS (Amsterdam) to #HEL (Van...</td>
+      <td>http://pbs.twimg.com/media/EnfzuZAW4AE236p.png</td>
+      <td>1378695438480588802</td>
+      <td>#CKK205 (B77L): #PVG (Shanghai) to #AMS (Amste...</td>
+      <td>http://pbs.twimg.com/media/EyIcMexXEAE6gia.png</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>400</th>
-      <td>1381744301646954498</td>
-      <td>#UNR on Fox full show for 04-12-21 https://t.c...</td>
-      <td>http://pbs.twimg.com/media/EyzxHsWXAAIT8tG.png</td>
-      <td>1382106900276387843</td>
-      <td>#UNR on Fox full show for 04-13-21 https://t.c...</td>
-      <td>http://pbs.twimg.com/media/Ey465tzWYAATcu2.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>519</th>
-      <td>1354730630899245061</td>
-      <td>Shop more awesome tech deals on Avo: https://t...</td>
-      <td>http://pbs.twimg.com/media/EsvCobGW4AQM9a9.jpg</td>
-      <td>1364974021029335042</td>
-      <td>Shop more fantastic #TechThursday deals, only ...</td>
-      <td>http://pbs.twimg.com/media/EvFY-XuXYAEJ0ji.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>163</th>
-      <td>1374826528857600008</td>
-      <td>Please adopt our 501c3 non-profit World Marrow...</td>
-      <td>http://pbs.twimg.com/media/ExRaJnVXMAgpgpU.jpg</td>
-      <td>1378060044885954562</td>
-      <td>Remember to designate #WISEPlace as your chose...</td>
-      <td>http://pbs.twimg.com/media/Ex_aTtwWUAcRVaN.jpg</td>
+      <th>37</th>
+      <td>1366581728312057856</td>
+      <td>Friends, interested all go to have a look!\n@j...</td>
+      <td>http://pbs.twimg.com/media/EvcS1v4UcAEEXPO.jpg</td>
+      <td>1373810535066570759</td>
+      <td>Friends, interested all go to have a look!\n@f...</td>
+      <td>http://pbs.twimg.com/media/ExDBZqwVIAQ4LWk.jpg</td>
       <td>Contradictory</td>
     </tr>
     <tr>
-      <th>545</th>
-      <td>1356318781103083530</td>
-      <td>Here are the top-5 teams in Week 2 of the @NCA...</td>
-      <td>http://pbs.twimg.com/media/EtJ0bA9W8AEgiM6.jpg</td>
-      <td>1368981087666470919</td>
-      <td>Here are the top-5 teams in the 𝗣𝗿𝗲-𝗖𝗵𝗮𝗺𝗽𝗶𝗼𝗻𝘀𝗵...</td>
-      <td>http://pbs.twimg.com/media/Ev98BEUXAAcvFYM.jpg</td>
+      <th>315</th>
+      <td>1352551603258052608</td>
+      <td>#WINk Drops I have earned today🚀\n\nToday:1/22...</td>
+      <td>http://pbs.twimg.com/media/EsTdcLLVcAIiFKT.jpg</td>
+      <td>1354636016234098688</td>
+      <td>#WINk Drops I have earned today☀\n\nToday:1/28...</td>
+      <td>http://pbs.twimg.com/media/EsyhK-qU0AgfMAH.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1119</th>
-      <td>1372196378441625602</td>
-      <td>14:30 @CheltenhamRaces\n\n1st Heaven Help Us 3...</td>
-      <td>http://pbs.twimg.com/media/EwsFVYrXMAMd1nt.jpg</td>
-      <td>1375866809786699776</td>
-      <td>17:30 @WolvesRaces\n\n1st Artisan Bleu 12/1\n2...</td>
-      <td>http://pbs.twimg.com/media/ExgPknnXIAEPC10.jpg</td>
+      <th>761</th>
+      <td>1379795999493853189</td>
+      <td>#buythedip Ready to FLY even HIGHER  #pennysto...</td>
+      <td>http://pbs.twimg.com/media/EyYFJCzWgAMfTrT.jpg</td>
+      <td>1380190250144792576</td>
+      <td>#buythedip Ready to FLY even HIGHER  #pennysto...</td>
+      <td>http://pbs.twimg.com/media/Eydrt0ZXAAMmbfv.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1165</th>
-      <td>1332007291575357440</td>
-      <td>Daily Benefit 04/11/1442-11/26/2020\n#فائدة_ال...</td>
-      <td>http://pbs.twimg.com/media/Enw9kXTVQAAI149.jpg</td>
-      <td>1355161473119444996</td>
-      <td>Daily Benefit 06/16/1442-01/29/2021\n#فائدة_ال...</td>
-      <td>http://pbs.twimg.com/media/Es6AJHRVgAQezN_.jpg</td>
+      <th>146</th>
+      <td>1340185132293099523</td>
+      <td>I know sometimes I am weird to you.\n\nBecause...</td>
+      <td>http://pbs.twimg.com/media/EplLRriWwAAJ2AE.jpg</td>
+      <td>1359755419883814913</td>
+      <td>I put my sword down and get on my knees to swe...</td>
+      <td>http://pbs.twimg.com/media/Et7SWWeWYAICK-c.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1114</th>
-      <td>1356505064865636352</td>
-      <td>Budget will help increase rural consumption: F...</td>
-      <td>http://pbs.twimg.com/media/EtNGJ6_UYAAxzcF.jpg</td>
-      <td>1356505191722323973</td>
-      <td>@PMOIndia @narendramodi Budget will help incre...</td>
-      <td>http://pbs.twimg.com/media/EtNGGtHWYAEgAJR.jpg</td>
+      <th>1351</th>
+      <td>1381256604926967813</td>
+      <td>Finally completed the skin rendering. Will sta...</td>
+      <td>http://pbs.twimg.com/media/Eys1j7NVIAgF-YF.jpg</td>
+      <td>1381630932092784641</td>
+      <td>Hair rendering. Will finish the hair by tomorr...</td>
+      <td>http://pbs.twimg.com/media/EyyKAoaUUAElm-e.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>462</th>
-      <td>1370917615175139336</td>
-      <td>Tesla bought ~40,000 BTC for \n$1.5 Billion at...</td>
-      <td>http://pbs.twimg.com/media/EwZ6Tj1WYAAp37d.png</td>
-      <td>1379599843950219264</td>
-      <td>Tesla bought ~48,000 BTC for \n$1.5 Billion at...</td>
-      <td>http://pbs.twimg.com/media/EyVSvz1XMAA5lr3.png</td>
+      <th>368</th>
+      <td>1371883298805403649</td>
+      <td>📉 $LINK Number of Receiving Addresses (7d MA) ...</td>
+      <td>http://pbs.twimg.com/media/EwnoltOWEAAS4mG.jpg</td>
+      <td>1373216720974979072</td>
+      <td>📉 $LINK Number of Receiving Addresses (7d MA) ...</td>
+      <td>http://pbs.twimg.com/media/Ew6lVGYXEAE6Ugi.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>717</th>
-      <td>1382758563790131213</td>
-      <td>$SKX Was up 1.44 %. Turned negative -0.07% | (...</td>
-      <td>http://pbs.twimg.com/media/EzCLldqWEAIdZgh.jpg</td>
-      <td>1384277703466000385</td>
-      <td>$ZM Was up 2.38 %. Turned negative -1.70% | (G...</td>
-      <td>http://pbs.twimg.com/media/EzXxO6HVoAEBF2E.jpg</td>
+      <th>1112</th>
+      <td>1377679115159887873</td>
+      <td>April is National Distracted Driving Awareness...</td>
+      <td>http://pbs.twimg.com/media/Ex5_u7UVIAARjQ2.jpg</td>
+      <td>1379075258448281608</td>
+      <td>April is Distracted Driving Awareness Month.  ...</td>
+      <td>http://pbs.twimg.com/media/EyN1YjpWUAMc5ak.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>264</th>
+      <td>1330727515741167619</td>
+      <td>♥️Verse Of The Day♥️\n.\n#VerseOfTheDay #Quran...</td>
+      <td>http://pbs.twimg.com/media/EnexnydXIAYuI11.jpg</td>
+      <td>1332623263495819264</td>
+      <td>♥️Verse Of The Day♥️\n.\n#VerseOfTheDay #Quran...</td>
+      <td>http://pbs.twimg.com/media/En5ty1VXUAATALP.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>865</th>
+      <td>1377784616275296261</td>
+      <td>No white picket fence can keep us in. #TBT 200...</td>
+      <td>http://pbs.twimg.com/media/Ex7fzouWQAITAq8.jpg</td>
+      <td>1380175915804672012</td>
+      <td>Sometimes you just need to change your altitud...</td>
+      <td>http://pbs.twimg.com/media/EydernQXIAk2g5v.jpg</td>
       <td>NoEntailment</td>
     </tr>
   </tbody>
@@ -332,23 +332,11 @@ visualize(random_idx)
 
 <div class="k-default-codeblock">
 ```
-Text one: #XAUUSD SSI is at 3.17
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Risk Warning: Losses can exceed deposits.
-Disclaimer: Past performance is not indicative of future results. https://t.co/yNbOEXfnYF
-Text two: #XAUUSD SSI is at 1.62
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Risk Warning: Losses can exceed deposits.
-Disclaimer: Past performance is not indicative of future results. https://t.co/J48zHrNX6m
-Label: NoEntailment
+Text one: Friends, interested all go to have a look!
+@ThePartyGoddess @OurLadyAngels @BJsWholesale @Richard_Jeni @FashionLavidaG @RapaRooski @DMVTHING @DeMarcoReports @LobidaFo @DeMarcoMorgan https://t.co/cStULl7y7G
+Text two: Friends, interested all go to have a look!
+@smittyses @CYosabel @crum_7 @CrumDarrell @ElymalikU @jenloarn @SoCodiePrevost @roblowry82 @Crummy_14 @CSchmelzenbach https://t.co/IZphLTNzgl
+Label: Contradictory
 
 ```
 </div>
@@ -359,28 +347,46 @@ Label: NoEntailment
 
 <div class="k-default-codeblock">
 ```
-Text one: It's their guts for us. Millennials could never! 😂😂
- 
-@gpennyfoods do am if e easy 😂
+Text one: 👟 KICK OFF @ MARDEN SPORTS COMPLEX
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#GoldenPennyXBellaNaijaWeddings #NewlyNearly https://t.co/aRWXwx4zUt
-Text two: If you put your mind to it, you can def do it! What's your take-home? 😌
+We're underway in the Round 6 opener!
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#NewlyNearly by @gpennyfoods X @bellanaijaweddings 
+📺: @Foxtel, @kayosports
+📱: My Football Live app https://t.co/wHSpvQaoGC
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#GoldenPennyXBellaNaijaWeddings https://t.co/SlCnUJFXnL
+#WLeague #ADLvMVC #AUFC #MVFC https://t.co/3Smp8KXm8W
+Text two: 👟 KICK OFF @ MARSDEN SPORTS COMPLEX
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+We're underway in sunny Adelaide!
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+📺: @Foxtel, @kayosports
+📱: My Football Live app https://t.co/wHSpvQaoGC
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#ADLvCBR #WLeague #AUFC #UnitedAlways https://t.co/fG1PyLQXM4
 Label: NoEntailment
 
 ```
@@ -542,13 +548,14 @@ print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
 
 <div class="k-default-codeblock">
 ```
-Text 1: I've just watched episode S04 | E14 of Glee! #Glee  https://t.co/vwSCo6cENy #tvtime https://t.co/llvX9nZxMd
-Text 2: I've just watched episode S04 | E18 of Glee! #Glee  https://t.co/9pY52crT4h #tvtime https://t.co/Qr1vPUN1KN
-Keys           :  ['input_type_ids', 'input_word_ids', 'input_mask']
+Text 1: Renewables met 97% of Scotland's electricity demand in 2020!!!!
+https://t.co/wi5c9UFAUF https://t.co/arcuBgh0BP
+Text 2: Renewables met 97% of Scotland's electricity demand in 2020 https://t.co/SrhyqPnIkU https://t.co/LORgvTM7Sn
+Keys           :  ['input_mask', 'input_word_ids', 'input_type_ids']
 Shape Word Ids :  (1, 128)
 Word Ids       :  tf.Tensor(
-[  101  1045  1005  2310  2074  3427  2792  1055  2692  2549  1064  1041
- 16932  1997 18874   999], shape=(16,), dtype=int32)
+[  101 13918  2015  2777  5989  1003  1997  3885  1005  1055  6451  5157
+  1999 12609   999   999], shape=(16,), dtype=int32)
 Shape Mask     :  (1, 128)
 Input Mask     :  tf.Tensor([1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1], shape=(16,), dtype=int32)
 Shape Type Ids :  (1, 128)
@@ -666,7 +673,7 @@ This is a multi-class classification problem involving the following classes:
 `project_embeddings()`, `create_vision_encoder()`, and `create_text_encoder()` utilities
 are referred from [this example](https://keras.io/examples/nlp/nl_image_search/).
 
-### Projection utility
+Projection utilities
 
 
 ```python
@@ -685,7 +692,7 @@ def project_embeddings(
 
 ```
 
-### Vision encoder utility
+Vision encoder utilities
 
 
 ```python
@@ -724,7 +731,7 @@ def create_vision_encoder(
 
 ```
 
-### Text encoder utility
+Text encoder utilities
 
 
 ```python
@@ -756,7 +763,7 @@ def create_text_encoder(
 
 ```
 
-### Multimodal model utility
+Multimodal model utilities
 
 
 ```python
@@ -811,7 +818,7 @@ keras.utils.plot_model(multimodal_model, show_shapes=True)
 
 
 You can inspect the structure of the individual encoders as well by setting the
-`expand_nested` argument of `plot_model()` to `True. You are encouraged
+`expand_nested` argument of `plot_model()` to `True`. You are encouraged
 to play with the different hyperparameters involved in building this model and
 observe how the final performance is affected.
 
@@ -830,25 +837,25 @@ history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-38/38 [==============================] - 49s 788ms/step - loss: 0.9190 - accuracy: 0.8279 - val_loss: 0.6966 - val_accuracy: 0.8571
+38/38 [==============================] - 49s 789ms/step - loss: 1.0014 - accuracy: 0.8229 - val_loss: 0.5514 - val_accuracy: 0.8571
 Epoch 2/10
-38/38 [==============================] - 3s 86ms/step - loss: 0.4194 - accuracy: 0.8688 - val_loss: 0.5899 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 90ms/step - loss: 0.4019 - accuracy: 0.8814 - val_loss: 0.5866 - val_accuracy: 0.8571
 Epoch 3/10
-38/38 [==============================] - 3s 87ms/step - loss: 0.3442 - accuracy: 0.8889 - val_loss: 0.6523 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 90ms/step - loss: 0.3557 - accuracy: 0.8897 - val_loss: 0.5929 - val_accuracy: 0.8571
 Epoch 4/10
-38/38 [==============================] - 3s 87ms/step - loss: 0.2634 - accuracy: 0.9114 - val_loss: 0.8170 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 91ms/step - loss: 0.2877 - accuracy: 0.9006 - val_loss: 0.6272 - val_accuracy: 0.8571
 Epoch 5/10
-38/38 [==============================] - 3s 87ms/step - loss: 0.1730 - accuracy: 0.9432 - val_loss: 0.9221 - val_accuracy: 0.8730
+38/38 [==============================] - 3s 91ms/step - loss: 0.1796 - accuracy: 0.9398 - val_loss: 0.8545 - val_accuracy: 0.8254
 Epoch 6/10
-38/38 [==============================] - 3s 88ms/step - loss: 0.1508 - accuracy: 0.9499 - val_loss: 1.2248 - val_accuracy: 0.6508
+38/38 [==============================] - 3s 91ms/step - loss: 0.1292 - accuracy: 0.9566 - val_loss: 1.2276 - val_accuracy: 0.8413
 Epoch 7/10
-38/38 [==============================] - 3s 89ms/step - loss: 0.3271 - accuracy: 0.9073 - val_loss: 1.3959 - val_accuracy: 0.6508
+38/38 [==============================] - 3s 91ms/step - loss: 0.1015 - accuracy: 0.9666 - val_loss: 1.2914 - val_accuracy: 0.7778
 Epoch 8/10
-38/38 [==============================] - 3s 88ms/step - loss: 0.2380 - accuracy: 0.9198 - val_loss: 0.9946 - val_accuracy: 0.8730
+38/38 [==============================] - 3s 92ms/step - loss: 0.1253 - accuracy: 0.9524 - val_loss: 1.1944 - val_accuracy: 0.8413
 Epoch 9/10
-38/38 [==============================] - 3s 89ms/step - loss: 0.1116 - accuracy: 0.9591 - val_loss: 0.9770 - val_accuracy: 0.8571
+38/38 [==============================] - 3s 92ms/step - loss: 0.3064 - accuracy: 0.9131 - val_loss: 1.2162 - val_accuracy: 0.8095
 Epoch 10/10
-38/38 [==============================] - 3s 88ms/step - loss: 0.0470 - accuracy: 0.9833 - val_loss: 1.2293 - val_accuracy: 0.8095
+38/38 [==============================] - 3s 92ms/step - loss: 0.2212 - accuracy: 0.9248 - val_loss: 1.1080 - val_accuracy: 0.8413
 
 ```
 </div>
@@ -863,8 +870,8 @@ print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 6s 1s/step - loss: 1.0899 - accuracy: 0.8143
-Accuracy on the test set: 81.43%.
+5/5 [==============================] - 6s 1s/step - loss: 0.8390 - accuracy: 0.8429
+Accuracy on the test set: 84.29%.
 
 ```
 </div>

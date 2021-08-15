@@ -1,5 +1,5 @@
 """
-Title: Learning Multimodal Entailment
+Title: Multimodal entailment
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
 Last modified: 2021/08/15
@@ -72,8 +72,8 @@ the
 [Photo Blob Storage (PBS for short)](https://blog.twitter.com/engineering/en_us/a/2012/blobstore-twitter-s-in-house-photo-storage-system).
 We will be working with the downloaded images along with additional data that comes with
 the original dataset. Thanks to
-[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury)
-who worked on preparing the image data.
+[Nilabhra Roy Chowdhury](https://de.linkedin.com/in/nilabhraroychowdhury) who worked on
+preparing the image data.
 """
 
 image_base_path = keras.utils.get_file(
@@ -395,7 +395,7 @@ are referred from [this example](https://keras.io/examples/nlp/nl_image_search/)
 """
 
 """
-### Projection utility
+Projection utilities
 """
 
 
@@ -413,7 +413,7 @@ def project_embeddings(
 
 
 """
-### Vision encoder utility
+Vision encoder utilities
 """
 
 
@@ -451,7 +451,7 @@ def create_vision_encoder(
 
 
 """
-### Text encoder utility
+Text encoder utilities
 """
 
 
@@ -482,7 +482,7 @@ def create_text_encoder(
 
 
 """
-### Multimodal model utility
+Multimodal model utilities
 """
 
 
@@ -527,7 +527,7 @@ keras.utils.plot_model(multimodal_model, show_shapes=True)
 
 """
 You can inspect the structure of the individual encoders as well by setting the
-`expand_nested` argument of `plot_model()` to `True. You are encouraged
+`expand_nested` argument of `plot_model()` to `True`. You are encouraged
 to play with the different hyperparameters involved in building this model and
 observe how the final performance is affected.
 """
