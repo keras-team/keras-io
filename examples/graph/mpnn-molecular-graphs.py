@@ -345,9 +345,9 @@ molecule
 
 graph = graph_from_molecule(molecule)
 print("Graph (including self-loops):")
-print("\tatom features\t", np.array(graph[0]).shape)
-print("\tbond features\t", np.array(graph[1]).shape)
-print("\tpair indices\t", np.array(graph[2]).shape)
+print("\tatom features\t", graph[0].shape)
+print("\tbond features\t", graph[1].shape)
+print("\tpair indices\t", graph[2].shape)
 
 
 """
@@ -602,7 +602,7 @@ def MPNNModel(
     bond_dim,
     batch_size=32,
     message_units=64,
-    message_steps=6,
+    message_steps=4,
     num_attention_heads=8,
     dense_units=512,
 ):
