@@ -1,11 +1,16 @@
-"""
-Title: Message-passing neural network for molecular property prediction
-Author: [akensert](http://github.com/akensert)
-Date created: 2021/08/16
-Last modified: 2021/08/16
-Description: Implementation of an MPNN to predict blood-brain barrier permeability.
-"""
-"""
+# Message-passing neural network for molecular property prediction
+
+**Author:** [akensert](http://github.com/akensert)<br>
+**Date created:** 2021/08/16<br>
+**Last modified:** 2021/08/16<br>
+**Description:** Implementation of an MPNN to predict blood-brain barrier permeability.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graph/ipynb/mpnn-molecular-graphs.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graph/mpnn-molecular-graphs.py)
+
+
+
+---
 ## Introduction
 
 In this tutorial, we will implement a type of graph neural network (GNN) known as
@@ -35,9 +40,8 @@ and for further reading on the specific
 graph neural network implemented in this tutorial see
 [Neural Message Passing for Quantum Chemistry](https://arxiv.org/abs/1704.01212) and
 [DeepChem's MPNNModel](https://deepchem.readthedocs.io/en/latest/api_reference/models.html#mpnnmodel).
-"""
 
-"""
+---
 ## Setup
 
 ### Install RDKit and other dependencies
@@ -77,12 +81,11 @@ pip -q install matplotlib
 pip -q install pydot
 sudo apt-get -qq install graphviz
 ```
-"""
 
-"""
 ### Import packages
-"""
 
+
+```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -102,8 +105,9 @@ RDLogger.DisableLog("rdApp.*")
 
 np.random.seed(42)
 tf.random.set_seed(42)
+```
 
-"""
+---
 ## Dataset
 
 Information about the dataset can be found in
@@ -121,16 +125,102 @@ extracellular fluid, hence blocking out most drugs (molecules) from reaching
 the brain. Because of this, the BBBP has been important to study for the development of
 new drugs that aim to target the central nervous system. The labels for this
 data set are binary (1 or 0) and indicate the permeability of the molecules.
-"""
 
+
+```python
 csv_path = keras.utils.get_file(
     "BBBP.csv", "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/BBBP.csv"
 )
 
 df = pd.read_csv(csv_path, usecols=[1, 2, 3])
 df.iloc[96:104]
+```
 
-"""
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<div class="k-default-codeblock">
+```
+.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+```
+</div>
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>p_np</th>
+      <th>smiles</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>96</th>
+      <td>cefoxitin</td>
+      <td>1</td>
+      <td>CO[C@]1(NC(=O)Cc2sccc2)[C@H]3SCC(=C(N3C1=O)C(O...</td>
+    </tr>
+    <tr>
+      <th>97</th>
+      <td>Org34167</td>
+      <td>1</td>
+      <td>NC(CC=C)c1ccccc1c2noc3c2cccc3</td>
+    </tr>
+    <tr>
+      <th>98</th>
+      <td>9-OH Risperidone</td>
+      <td>1</td>
+      <td>OC1C(N2CCC1)=NC(C)=C(CCN3CCC(CC3)c4c5ccc(F)cc5...</td>
+    </tr>
+    <tr>
+      <th>99</th>
+      <td>acetaminophen</td>
+      <td>1</td>
+      <td>CC(=O)Nc1ccc(O)cc1</td>
+    </tr>
+    <tr>
+      <th>100</th>
+      <td>acetylsalicylate</td>
+      <td>0</td>
+      <td>CC(=O)Oc1ccccc1C(O)=O</td>
+    </tr>
+    <tr>
+      <th>101</th>
+      <td>allopurinol</td>
+      <td>0</td>
+      <td>O=C1N=CN=C2NNC=C12</td>
+    </tr>
+    <tr>
+      <th>102</th>
+      <td>Alprostadil</td>
+      <td>0</td>
+      <td>CCCCC[C@H](O)/C=C/[C@H]1[C@H](O)CC(=O)[C@@H]1C...</td>
+    </tr>
+    <tr>
+      <th>103</th>
+      <td>aminophylline</td>
+      <td>0</td>
+      <td>CN1C(=O)N(C)c2nc[nH]c2C1=O.CN3C(=O)N(C)c4nc[nH...</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
 ### Define features
 
 To encode features for atoms and bonds (which we will need later),
@@ -145,8 +235,9 @@ only about a handful of (atom and bond) features will be considered: \[atom feat
 \[bond features\]
 [(covalent) bond type](https://en.wikipedia.org/wiki/Covalent_bond), and
 [conjugation](https://en.wikipedia.org/wiki/Conjugated_system).
-"""
 
+
+```python
 
 class Featurizer:
     def __init__(self, allowable_sets):
@@ -220,8 +311,8 @@ bond_featurizer = BondFeaturizer(
     }
 )
 
+```
 
-"""
 ### Generate graphs
 
 Before we can generate complete graphs from SMILES, we need to implement the following functions:
@@ -239,8 +330,9 @@ and subsequently (2) on all SMILES of the training, validation and test datasets
 Notice: although scaffold splitting is recommended for this data set (see
 [here](https://arxiv.org/abs/1703.00564)), for simplicity, simple random splittings were
 performed.
-"""
 
+
+```python
 
 def molecule_from_smiles(smiles):
     # MolFromSmiles(m, sanitize=True) should be equivalent to
@@ -321,27 +413,52 @@ y_valid = df.iloc[valid_index].p_np
 test_index = permuted_indices[int(df.shape[0] * 0.99) :]
 x_test = graphs_from_smiles(df.iloc[test_index].smiles)
 y_test = df.iloc[test_index].p_np
+```
 
-"""
 ### Test the functions
-"""
 
+
+```python
 print(f"Name:\t{df.name[100]}\nSMILES:\t{df.smiles[100]}\nBBBP:\t{df.p_np[100]}")
 molecule = molecule_from_smiles(df.iloc[100].smiles)
 print("Molecule:")
 molecule
+```
 
-"""
-"""
+<div class="k-default-codeblock">
+```
+Name:	acetylsalicylate
+SMILES:	CC(=O)Oc1ccccc1C(O)=O
+BBBP:	0
+Molecule:
 
+```
+</div>
+    
+![png](/img/examples/graph/mpnn-molecular-graphs/mpnn-molecular-graphs_12_1.png)
+    
+
+
+
+
+```python
 graph = graph_from_molecule(molecule)
 print("Graph (including self-loops):")
 print("\tatom features\t", graph[0].shape)
 print("\tbond features\t", graph[1].shape)
 print("\tpair indices\t", graph[2].shape)
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Graph (including self-loops):
+	atom features	 (13, 29)
+	bond features	 (39, 7)
+	pair indices	 (39, 2)
+
+```
+</div>
 ### Create a `tf.data.Dataset`
 
 In this tutorial, the MPNN implementation will take as input (per iteration) a single graph.
@@ -349,8 +466,9 @@ Therefore, given a batch of (sub)graphs (molecules), we need to merge them into 
 single graph (we'll refer to this graph as *global graph*).
 This global graph is a disconnected graph where each subgraph is
 completely separated from the other subgraphs.
-"""
 
+
+```python
 
 def prepare_batch(x_batch, y_batch):
     """Merges (sub)graphs of batch into a single global (disconnected) graph
@@ -388,8 +506,9 @@ def MPNNDataset(X, y, batch_size=32, shuffle=False):
         dataset = dataset.shuffle(1024)
     return dataset.batch(batch_size).map(prepare_batch, -1)
 
+```
 
-"""
+---
 ## Model
 
 The MPNN model can take on various shapes and forms. In this tutorial, we will implement an
@@ -420,8 +539,9 @@ node state(s) are incorporated within the memory state of the GRU.
 
 Importantly, step (1) and (2) are repeated for `k steps`, and where at each step `1...k`,
 the radius (or # hops) of aggregated information from the source node `v` increases by 1.
-"""
 
+
+```python
 
 class EdgeNetwork(layers.Layer):
     def __init__(self, **kwargs):
@@ -494,8 +614,8 @@ class MessagePassing(layers.Layer):
             )
         return atom_features_updated
 
+```
 
-"""
 ### Readout
 
 When the message passing procedure ends, the k-step-aggregated node states are to be partitioned
@@ -512,8 +632,9 @@ by a `tf.stack(...)`;
 * the (stacked) padded tensor, encoding subgraphs (each subgraph containing sets of node states), are
 masked to make sure the paddings don't interfere with training;
 * finally, the padded tensor is passed to the transformer followed by an average pooling.
-"""
 
+
+```python
 
 class PartitionPadding(layers.Layer):
     def __init__(self, batch_size, **kwargs):
@@ -564,15 +685,16 @@ class TransformerEncoder(layers.Layer):
         proj_input = self.layernorm_1(inputs + attention_output)
         return self.layernorm_2(proj_input + self.dense_proj(proj_input))
 
+```
 
-"""
 ### Message Passing Neural Network (MPNN)
 
 It is now time to complete the MPNN model. In addition to the message passing
 and readout, a two-layer classification network will be implemented to make
 predictions of BBBP.
-"""
 
+
+```python
 
 def MPNNModel(
     atom_dim,
@@ -622,11 +744,21 @@ mpnn.compile(
 )
 
 keras.utils.plot_model(mpnn, show_dtype=True, show_shapes=True)
+```
 
-"""
+
+
+
+    
+![png](/img/examples/graph/mpnn-molecular-graphs/mpnn-molecular-graphs_21_0.png)
+    
+
+
+
 ### Training
-"""
 
+
+```python
 train_dataset = MPNNDataset(x_train, y_train)
 valid_dataset = MPNNDataset(x_valid, y_valid)
 test_dataset = MPNNDataset(x_test, y_test)
@@ -645,23 +777,125 @@ plt.plot(history.history["val_AUC"], label="valid AUC")
 plt.xlabel("Epochs", fontsize=16)
 plt.ylabel("AUC", fontsize=16)
 plt.legend(fontsize=16)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/40
+52/52 - 4s - loss: 0.5240 - AUC: 0.7202 - val_loss: 0.5523 - val_AUC: 0.8310
+Epoch 2/40
+52/52 - 1s - loss: 0.4704 - AUC: 0.7899 - val_loss: 0.5592 - val_AUC: 0.8381
+Epoch 3/40
+52/52 - 1s - loss: 0.4529 - AUC: 0.8088 - val_loss: 0.5911 - val_AUC: 0.8406
+Epoch 4/40
+52/52 - 1s - loss: 0.4385 - AUC: 0.8224 - val_loss: 0.5379 - val_AUC: 0.8435
+Epoch 5/40
+52/52 - 1s - loss: 0.4256 - AUC: 0.8348 - val_loss: 0.4765 - val_AUC: 0.8473
+Epoch 6/40
+52/52 - 1s - loss: 0.4143 - AUC: 0.8448 - val_loss: 0.4760 - val_AUC: 0.8518
+Epoch 7/40
+52/52 - 1s - loss: 0.3968 - AUC: 0.8600 - val_loss: 0.4917 - val_AUC: 0.8592
+Epoch 8/40
+52/52 - 1s - loss: 0.3823 - AUC: 0.8716 - val_loss: 0.5301 - val_AUC: 0.8607
+Epoch 9/40
+52/52 - 1s - loss: 0.3724 - AUC: 0.8785 - val_loss: 0.5795 - val_AUC: 0.8632
+Epoch 10/40
+52/52 - 1s - loss: 0.3610 - AUC: 0.8878 - val_loss: 0.6460 - val_AUC: 0.8655
+Epoch 11/40
+52/52 - 1s - loss: 0.3491 - AUC: 0.8956 - val_loss: 0.6604 - val_AUC: 0.8685
+Epoch 12/40
+52/52 - 1s - loss: 0.3311 - AUC: 0.9076 - val_loss: 0.6075 - val_AUC: 0.8745
+Epoch 13/40
+52/52 - 1s - loss: 0.3162 - AUC: 0.9165 - val_loss: 0.5659 - val_AUC: 0.8832
+Epoch 14/40
+52/52 - 1s - loss: 0.3214 - AUC: 0.9131 - val_loss: 0.6581 - val_AUC: 0.8886
+Epoch 15/40
+52/52 - 1s - loss: 0.3064 - AUC: 0.9213 - val_loss: 0.6957 - val_AUC: 0.8884
+Epoch 16/40
+52/52 - 1s - loss: 0.2999 - AUC: 0.9246 - val_loss: 0.7201 - val_AUC: 0.8868
+Epoch 17/40
+52/52 - 1s - loss: 0.2825 - AUC: 0.9338 - val_loss: 0.8034 - val_AUC: 0.8850
+Epoch 18/40
+52/52 - 1s - loss: 0.2813 - AUC: 0.9337 - val_loss: 0.8026 - val_AUC: 0.8812
+Epoch 19/40
+52/52 - 1s - loss: 0.2725 - AUC: 0.9376 - val_loss: 0.8710 - val_AUC: 0.8867
+Epoch 20/40
+52/52 - 1s - loss: 0.2698 - AUC: 0.9378 - val_loss: 0.8262 - val_AUC: 0.8959
+Epoch 21/40
+52/52 - 1s - loss: 0.2729 - AUC: 0.9358 - val_loss: 0.7017 - val_AUC: 0.8970
+Epoch 22/40
+52/52 - 1s - loss: 0.2707 - AUC: 0.9376 - val_loss: 0.5759 - val_AUC: 0.8897
+Epoch 23/40
+52/52 - 1s - loss: 0.2562 - AUC: 0.9440 - val_loss: 0.4482 - val_AUC: 0.8945
+Epoch 24/40
+52/52 - 1s - loss: 0.2693 - AUC: 0.9387 - val_loss: 0.4220 - val_AUC: 0.8944
+Epoch 25/40
+52/52 - 1s - loss: 0.2753 - AUC: 0.9356 - val_loss: 0.5671 - val_AUC: 0.9081
+Epoch 26/40
+52/52 - 1s - loss: 0.2315 - AUC: 0.9538 - val_loss: 0.4307 - val_AUC: 0.9105
+Epoch 27/40
+52/52 - 1s - loss: 0.2269 - AUC: 0.9545 - val_loss: 0.4037 - val_AUC: 0.9084
+Epoch 28/40
+52/52 - 1s - loss: 0.2318 - AUC: 0.9528 - val_loss: 0.4394 - val_AUC: 0.9133
+Epoch 29/40
+52/52 - 1s - loss: 0.2162 - AUC: 0.9584 - val_loss: 0.4683 - val_AUC: 0.9199
+Epoch 30/40
+52/52 - 1s - loss: 0.2038 - AUC: 0.9622 - val_loss: 0.4301 - val_AUC: 0.9186
+Epoch 31/40
+52/52 - 1s - loss: 0.1924 - AUC: 0.9656 - val_loss: 0.3870 - val_AUC: 0.9253
+Epoch 32/40
+52/52 - 1s - loss: 0.2012 - AUC: 0.9632 - val_loss: 0.4105 - val_AUC: 0.9164
+Epoch 33/40
+52/52 - 1s - loss: 0.2030 - AUC: 0.9624 - val_loss: 0.3595 - val_AUC: 0.9175
+Epoch 34/40
+52/52 - 1s - loss: 0.2041 - AUC: 0.9625 - val_loss: 0.3983 - val_AUC: 0.9116
+Epoch 35/40
+52/52 - 1s - loss: 0.2017 - AUC: 0.9631 - val_loss: 0.3790 - val_AUC: 0.9220
+Epoch 36/40
+52/52 - 1s - loss: 0.1986 - AUC: 0.9640 - val_loss: 0.3593 - val_AUC: 0.9289
+Epoch 37/40
+52/52 - 1s - loss: 0.1892 - AUC: 0.9657 - val_loss: 0.3663 - val_AUC: 0.9235
+Epoch 38/40
+52/52 - 1s - loss: 0.1948 - AUC: 0.9632 - val_loss: 0.4329 - val_AUC: 0.9160
+Epoch 39/40
+52/52 - 1s - loss: 0.1734 - AUC: 0.9701 - val_loss: 0.3298 - val_AUC: 0.9263
+Epoch 40/40
+52/52 - 1s - loss: 0.1800 - AUC: 0.9690 - val_loss: 0.3345 - val_AUC: 0.9246
+
+<matplotlib.legend.Legend at 0x7f6c584e7220>
+
+```
+</div>
+    
+![png](/img/examples/graph/mpnn-molecular-graphs/mpnn-molecular-graphs_23_2.png)
+    
+
+
 ### Predicting
-"""
 
+
+```python
 molecules = [molecule_from_smiles(df.smiles.values[index]) for index in test_index]
 y_true = [df.p_np.values[index] for index in test_index]
 y_pred = tf.squeeze(mpnn.predict(test_dataset), axis=1)
 
 legends = [f"y_true/y_pred = {y_true[i]}/{y_pred[i]:.2f}" for i in range(len(y_true))]
 MolsToGridImage(molecules, molsPerRow=4, legends=legends)
+```
 
-"""
+
+
+
+    
+![png](/img/examples/graph/mpnn-molecular-graphs/mpnn-molecular-graphs_25_0.png)
+    
+
+
+
+---
 ## Conclusions
 
 In this tutorial, we demonstarted a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
 first had to construct graphs from SMILES, and then build a Keras model that could
 operate on these graphs.
-"""
