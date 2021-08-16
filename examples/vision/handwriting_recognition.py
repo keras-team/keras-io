@@ -1,6 +1,6 @@
 """
-Title: Handwriting recognition
-Authors: [Aakash Kumar Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
+Title: Handwriting Recognition
+Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/16
 Last modified: 2021/08/16
 Description: Training a handwriting recognition model with variable-length sequences.
@@ -39,6 +39,7 @@ benchmarks so we hope this example serves as a good starting point.
 ## Imports
 """
 
+from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 from tensorflow import keras
 
 import matplotlib.pyplot as plt
@@ -173,7 +174,6 @@ vocabulary should be - (a, c, d, g, o, t) (without any special tokens). We will 
 p/) layer for this purpose. 
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 AUTOTUNE = tf.data.AUTOTUNE
 
@@ -308,7 +308,7 @@ for data in train_ds.take(1):
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
-        # Gather indices where label!= 99.
+        # Gather indices where label!= padding_token.
         label = labels[i]
         indices = tf.gather(label, tf.where(tf.math.not_equal(label, padding_token)))
         # Convert to string.
@@ -323,8 +323,8 @@ for data in train_ds.take(1):
 plt.show()
 
 """
-We can notice that the original image is kept as intact as possible and has been
-accordingly padded. 
+We can notice that the content of original image is kept as intact as possible and has
+been accordingly padded. 
 """
 
 """
@@ -427,10 +427,20 @@ model.summary()
 """
 
 epochs = 30  # To get good results this should be at least 50.
+eary_stopping_patience = 5
+early_stopping_callback = keras.callbacks.EarlyStopping(
+    patience=early_stopping_patience
+)
 
 # Train the model.
 model = build_model()
-history = model.fit(train_ds, validation_data=validation_ds, epochs=epochs)
+history = model.fit(
+    train_ds,
+    validation_data=validation_ds,
+    epochs=epochs,
+    callbacks=[early_stopping_callback],
+)
+
 
 """
 ## Inference
