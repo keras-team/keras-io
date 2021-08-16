@@ -514,19 +514,17 @@ class MessagePassing(layers.Layer):
 
 When the message passing procedure ends, the k-step-aggregated node states are to be partitioned
 into sub-graphs (correspoding to each molecule in the batch) and subsequently
-reduced to graph-level embeddings. An easy alternative is to perform a `tf.dynamic_partition(x, ...)`
-followed by a `tf.reduce_mean(x, axis=1)` (similar to `GlobalAveragePooling1D`).
-Another (more sophisticated) alternative to the average pooling, based on the
-[original paper]((https://arxiv.org/abs/1704.01212)), is to
-use a [set-to-set layer](https://arxiv.org/abs/1511.06391). However, in this tutorial
-we will implement a transformer encoder. Specifically:
+reduced to graph-level embeddings. In the
+[original paper](https://arxiv.org/abs/1704.01212), a
+[set-to-set layer](https://arxiv.org/abs/1511.06391) was used for this purpose.
+In this tutorial however, a transformer encoder will be used. Specifically:
 
-* the k-step-aggregated node states will be partitioned into the sub-graphs (again,
-corresponding to each molecule in the batch);
+* the k-step-aggregated node states will be partitioned into the sub-graphs
+(corresponding to each molecule in the batch);
 * each sub-graph will then be padded to match the sub-graph with the greatest number of nodes, followed
-by a `tf.stack(...)``;
-* the (stacked) padded tensor, encoding sub-graphs (each sub-graph containing sets of node-states), are
-masked to make sure the paddings don't have any influence in the subsequent layers;
+by a `tf.stack(...)`;
+* the (stacked) padded tensor, encoding sub-graphs (each sub-graph containing sets of node states), are
+masked to make sure the paddings don't interfere with training;
 * finally, the padded tensor is passed to the transformer followed by an average pooling.
 
 """
