@@ -1,8 +1,8 @@
 """
 Title: Handwriting recognition
 Authors: [Aakash Kumar Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2020/08/16
-Last modified: 2020/08/16
+Date created: 2021/08/16
+Last modified: 2021/08/16
 Description: Training a handwriting recognition model with variable-length sequences.
 """
 """
