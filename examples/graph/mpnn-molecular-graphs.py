@@ -147,7 +147,6 @@ To reduce the lines of code, i.e., to keep this tutorial short and concise, only
 
 
 class _Featurizer:
-
     def __init__(self, allowable_sets):
         self.dim = 0
         self.features_mapping = {}
