@@ -1,34 +1,33 @@
 """
-Title: Message Passing Neural Network for molecular property predictions
+Title: Message-passing neural network for molecular property prediction
 Author: [akensert](http://github.com/akensert)
 Date created: 2021/08/16
 Last modified: 2021/08/16
-Description: Implementation of an MPNN to predict blood-brain-barrier permeability.
+Description: Implementation of an MPNN to predict blood-brain barrier permeability.
 """
 """
 ## Introduction
 
-In this tutorial, we will implement a type of graph neural network (GNN) known as message
-passing neural network (MPNN) to predict graph properties. Specifically, we will
-implement an MPNN to predict a molecular property known as blood-brain barrier
-permeability (BBBP).
+In this tutorial, we will implement a type of graph neural network (GNN) known as
+_ message passing neural network_ (MPNN) to predict graph properties. Specifically, we will
+implement an MPNN to predict a molecular property known as
+_blood-brain barrier permeability_ (BBBP).
 
 Motivation: as molecules are naturally represented as an undirected graph `G = (V, E)`,
 where `V` is a set or vertices (nodes; atoms) and `E` a set of edges (bonds), GNNs (such
-as the MPNN) are both an interesting and important option for predicting molecular
-properties.
+as MPNN) are proving to be a useful method for predicting molecular properties.
 
-*More traditional methods, such as random forests, support vector machines, etc., are
-until today commonly used to predict molecular properties. In contrast to GNNs, these
+Until now, more traditional methods, such as random forests, support vector machines, etc.,
+have been commonly used to predict molecular properties. In contrast to GNNs, these
 traditional approaches often operate on precomputed molecular features such as
 molecular weight, polarity, charge, number of carbon atoms, etc. Although these
 molecular features prove to be good predictors for various molecular properties, it is
 hypothesized that operating on these more "raw", "low-level", features could prove even
-better.*
+better.
 
 ### References
 
-In recent years, a lot of effort has been put into developing graph neural networks for
+In recent years, a lot of effort has been put into developing neural networks for
 graph data, including molecular graphs. For a summary of graph neural networks, see e.g.,
 [A Comprehensive Survey on Graph Neural Networks](https://arxiv.org/abs/1901.00596) and
 [Graph Neural Networks: A Review of Methods and Applications](https://arxiv.org/abs/1812.08434);
@@ -43,8 +42,8 @@ graph neural network implemented in this tutorial see
 
 ### Install RDKit and other dependencies
 
-(Text below extracted from
-[this tutorial](https://keras.io/examples/generative/wgan-graphs/))
+(Text below taken from
+[this tutorial](https://keras.io/examples/generative/wgan-graphs/)).
 
 [RDKit](https://www.rdkit.org/) is a collection of cheminformatics and machine-learning
 software written in C++ and Python. In this tutorial, RDKit is used to conviently and
@@ -113,7 +112,8 @@ and [MoleculeNet: A Benchmark for Molecular Machine Learning](https://arxiv.org/
 The dataset will be downloaded from [MoleculeNet.ai](http://moleculenet.ai/datasets-1).
 
 ### About
-The dataset contains **2,050** molecules; each molecule come with a **name**, **label**
+
+The dataset contains **2,050** molecules. Each molecule come with a **name**, **label**
 and **SMILES** string.
 
 The blood-brain barrier (BBB) is a membrane separating the blood from the brain
@@ -133,9 +133,11 @@ df.iloc[96:104]
 """
 ### Define features
 
-To encode features for atoms and bonds (which is needed for later), we'll define two classes: `AtomFeaturizer` and `BondFeatuzier` respectively.
+To encode features for atoms and bonds (which we will need later),
+we'll define two classes: `AtomFeaturizer` and `BondFeatuzier` respectively.
 
-To reduce the lines of code, i.e., to keep this tutorial short and concise, only about a handful of (atom and bond) features will be considered: \[atom features\]
+To reduce the lines of code, i.e., to keep this tutorial short and concise,
+only about a handful of (atom and bond) features will be considered: \[atom features\]
 [symbol (element)](https://en.wikipedia.org/wiki/Chemical_element),
 [number of valence electrons](https://en.wikipedia.org/wiki/Valence_electron),
 [number of hydrogen bonds](https://en.wikipedia.org/wiki/Hydrogen),
@@ -146,7 +148,7 @@ To reduce the lines of code, i.e., to keep this tutorial short and concise, only
 """
 
 
-class _Featurizer:
+class Featurizer:
     def __init__(self, allowable_sets):
         self.dim = 0
         self.features_mapping = {}
@@ -156,19 +158,16 @@ class _Featurizer:
             self.dim += len(s)
 
     def encode(self, inputs):
-
         output = np.zeros((self.dim,))
-
         for name_feature, feature_mapping in self.features_mapping.items():
             feature = getattr(self, name_feature)(inputs)
             if feature not in feature_mapping:
                 continue
             output[feature_mapping[feature]] = 1.0
-
         return output
 
 
-class AtomFeaturizer(_Featurizer):
+class AtomFeaturizer(Featurizer):
     def __init__(self, allowable_sets):
         super().__init__(allowable_sets)
 
@@ -185,19 +184,16 @@ class AtomFeaturizer(_Featurizer):
         return atom.GetHybridization().name.lower()
 
 
-class BondFeaturizer(_Featurizer):
+class BondFeaturizer(Featurizer):
     def __init__(self, allowable_sets):
         super().__init__(allowable_sets)
         self.dim += 1
 
     def encode(self, bond):
-
         output = np.zeros((self.dim,))
-
         if bond is None:
             output[-1] = 1.0
             return output
-
         output = super().encode(bond)
         return output
 
@@ -247,7 +243,6 @@ performed.
 
 
 def molecule_from_smiles(smiles):
-
     # MolFromSmiles(m, sanitize=True) should be equivalent to
     # MolFromSmiles(m, sanitize=False) -> SanitizeMol(m) -> AssignStereochemistry(m, ...)
     molecule = Chem.MolFromSmiles(smiles, sanitize=False)
@@ -263,7 +258,6 @@ def molecule_from_smiles(smiles):
 
 
 def graph_from_molecule(molecule):
-
     # Initialize graph
     atom_features = []
     bond_features = []
@@ -289,16 +283,13 @@ def graph_from_molecule(molecule):
 
 
 def graphs_from_smiles(smiles_list):
-
     # Initialize graphs
     atom_features_list = []
     bond_features_list = []
     pair_indices_list = []
 
     for smiles in smiles_list:
-
         molecule = molecule_from_smiles(smiles)
-
         atom_features, bond_features, pair_indices = graph_from_molecule(molecule)
 
         atom_features_list.append(atom_features)
@@ -332,7 +323,7 @@ x_test = graphs_from_smiles(df.iloc[test_index].smiles)
 y_test = df.iloc[test_index].p_np
 
 """
-### Test out the functions
+### Test the functions
 """
 
 print(f"Name:\t{df.name[100]}\nSMILES:\t{df.smiles[100]}\nBBBP:\t{df.p_np[100]}")
@@ -351,18 +342,18 @@ print("\tpair indices\t", graph[2].shape)
 
 
 """
-### Create tf.data.Dataset
+### Create a `tf.data.Dataset`
 
 In this tutorial, the MPNN implementation will take as input (per iteration) a single graph.
-Therefore, given a batch of (sub-)graphs (molecules), we need to merge them into a
+Therefore, given a batch of (sub)graphs (molecules), we need to merge them into a
 single graph (we'll refer to this graph as *global graph*).
-This global graph is a disconnected graph where each sub-graph is
-completely separated from the other sub-graphs.
+This global graph is a disconnected graph where each subgraph is
+completely separated from the other subgraphs.
 """
 
 
 def prepare_batch(x_batch, y_batch):
-    """Merges (sub-)graphs of batch into a single global (disconnected) graph
+    """Merges (sub)graphs of batch into a single global (disconnected) graph
     """
 
     atom_features, bond_features, pair_indices = x_batch
@@ -372,12 +363,12 @@ def prepare_batch(x_batch, y_batch):
     num_bonds = bond_features.row_lengths()
 
     # Obtain partition indices. atom_partition_indices will be used to
-    # gather (sub-)graphs from global graph in model later on
+    # gather (sub)graphs from global graph in model later on
     molecule_indices = tf.range(len(num_atoms))
     atom_partition_indices = tf.repeat(molecule_indices, num_atoms)
     bond_partition_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
 
-    # Merge (sub-)graphs into a global (disconnected) graph. Adding 'increment' to
+    # Merge (sub)graphs into a global (disconnected) graph. Adding 'increment' to
     # 'pair_indices' (and merging ragged tensors) actualizes the global graph
     increment = tf.cumsum(num_atoms[:-1])
     increment = tf.pad(
@@ -413,7 +404,7 @@ classification.
 
 The message passing step itself consists of two parts:
 
-1. the *edge network*, which passes messages from 1-hop neighbors `w^{t}_{i}` of `v^{t}`
+1. The *edge network*, which passes messages from 1-hop neighbors `w^{t}_{i}` of `v^{t}`
 to `v^{t}`, based on the edge features between them (`e_{v^{t}w^{t}_{i}}`, where `t =
 0`), resulting in an updated node state `v^{t+1}`. `_{i}` denotes the `i:th` neighbor of
 `v^{t}` and `^{t}` the `t:th` state of `v` or `w`. An important feature of the edge
@@ -422,7 +413,7 @@ allows for non-discrete edge features. However, in this tutorial, only discrete 
 features will be used.
 
 
-2. the *gated recurrent unit* (GRU), which takes as input the most recent node state
+2. The *gated recurrent unit* (GRU), which takes as input the most recent node state
 (e.g., `v^{t+1}`) and updates it based on previous node state(s) (e.g., `v^{t}`). In
 other words, the most recent node states serves as the input to the GRU, while the previous
 node state(s) are incorporated within the memory state of the GRU.
@@ -450,7 +441,6 @@ class EdgeNetwork(layers.Layer):
         self.built = True
 
     def call(self, inputs):
-
         atom_features, bond_features, pair_indices = inputs
 
         # Apply linear transformation to bond features
@@ -469,7 +459,6 @@ class EdgeNetwork(layers.Layer):
         aggregated_features = tf.math.segment_sum(
             transformed_features, pair_indices[:, 0]
         )
-
         return aggregated_features
 
 
@@ -487,7 +476,6 @@ class MessagePassing(layers.Layer):
         self.built = True
 
     def call(self, inputs):
-
         atom_features, bond_features, pair_indices = inputs
 
         # Pad atom features if number of desired units exceeds atom_features dim
@@ -495,7 +483,6 @@ class MessagePassing(layers.Layer):
 
         # Perform a number of steps of message passing
         for i in range(self.steps):
-
             # Aggregate atom_features from neighbors
             atom_features_aggregated = self.message_step(
                 [atom_features_updated, bond_features, pair_indices]
@@ -505,7 +492,6 @@ class MessagePassing(layers.Layer):
             atom_features_updated, _ = self.update_step(
                 atom_features_aggregated, atom_features_updated
             )
-
         return atom_features_updated
 
 
@@ -538,7 +524,6 @@ class PartitionPadding(layers.Layer):
         self.batch_size = batch_size
 
     def call(self, inputs):
-
         atom_features, atom_partition_indices = inputs
 
         # Obtain sub-graphs
@@ -569,7 +554,6 @@ class TransformerEncoder(layers.Layer):
         super().__init__(**kwargs)
 
         self.attention = layers.MultiHeadAttention(num_heads, embed_dim)
-
         self.dense_proj = keras.Sequential(
             [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
         )
@@ -578,13 +562,9 @@ class TransformerEncoder(layers.Layer):
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
-
         attention_mask = mask[:, tf.newaxis, :] if mask is not None else None
-
         attention_output = self.attention(inputs, inputs, attention_mask=attention_mask)
-
         proj_input = self.layernorm_1(inputs + attention_output)
-
         return self.layernorm_2(proj_input + self.dense_proj(proj_input))
 
 
@@ -592,7 +572,7 @@ class TransformerEncoder(layers.Layer):
 ### Message Passing Neural Network (MPNN)
 
 It is now time to complete the MPNN model. In addition to the message passing
-and readout, a two-layered classification network will be implemented to make
+and readout, a two-layer classification network will be implemented to make
 predictions of BBBP.
 """
 
@@ -606,13 +586,9 @@ def MPNNModel(
     num_attention_heads=8,
     dense_units=512,
 ):
-
     atom_features = layers.Input((atom_dim), dtype="float32", name="atom_features")
-
     bond_features = layers.Input((bond_dim), dtype="float32", name="bond_features")
-
     pair_indices = layers.Input((2), dtype="int32", name="pair_indices")
-
     atom_partition_indices = layers.Input(
         (), dtype="int32", name="atom_partition_indices"
     )
@@ -628,9 +604,7 @@ def MPNNModel(
     x = TransformerEncoder(num_attention_heads, message_units, dense_units)(x)
 
     x = layers.GlobalAveragePooling1D()(x)
-
     x = layers.Dense(dense_units, activation="relu")(x)
-
     x = layers.Dense(1, activation="sigmoid")(x)
 
     model = keras.Model(
@@ -687,9 +661,9 @@ legends = [f"y_true/y_pred = {y_true[i]}/{y_pred[i]:.2f}" for i in range(len(y_t
 MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 
 """
-## Concluding thoughts
+## Conclusions
 
-In this tutorial, a message passing neural network (MPNN) was succesfully implemented to
+In this tutorial, we demonstarted a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
 first had to construct graphs from SMILES, and then build a Keras model that could
 operate on these graphs.
