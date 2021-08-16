@@ -1,8 +1,8 @@
 """
 Title: Message Passing Neural Network for molecular property predictions
 Author: [akensert](http://github.com/akensert)
-Date created: 2021/08/11
-Last modified: 2021/08/11
+Date created: 2021/08/16
+Last modified: 2021/08/16
 Description: Implementation of an MPNN to predict blood-brain-barrier permeability.
 """
 """
@@ -86,12 +86,15 @@ sudo apt-get -qq install graphviz
 
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras import layers
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import warnings
-from rdkit import Chem, RDLogger
-from rdkit.Chem.Draw import IPythonConsole, MolsToGridImage
+from rdkit import Chem
+from rdkit import RDLogger
+from rdkit.Chem.Draw import IPythonConsole
+from rdkit.Chem.Draw import MolsToGridImage
 import logging
 
 tf.get_logger().setLevel(logging.ERROR)
@@ -128,72 +131,112 @@ df = pd.read_csv(csv_path, usecols=[1, 2, 3])
 df.iloc[96:104]
 
 """
-### Define helper functions
+### Define features
 
-The functions below will help us generate graph features, namely, atom and bond features.
-Thanks to RDKit this can be done conventiently with only a few lines of code. Feel free
-to look up additional features that can be generated with
-[RDKit](https://www.rdkit.org/docs/Cookbook.html).
+To encode features for atoms and bonds (which is needed for later), we'll define two classes: `AtomFeaturizer` and `BondFeatuzier` respectively.
+
+To reduce the lines of code, i.e., to keep this tutorial short and concise, only about a handful of (atom and bond) features will be considered: \[atom features\]
+[symbol (element)](https://en.wikipedia.org/wiki/Chemical_element),
+[number of valence electrons](https://en.wikipedia.org/wiki/Valence_electron),
+[number of hydrogen bonds](https://en.wikipedia.org/wiki/Hydrogen),
+[orbital hybridization](https://en.wikipedia.org/wiki/Orbital_hybridisation),
+\[bond features\]
+[(covalent) bond type](https://en.wikipedia.org/wiki/Covalent_bond), and
+[conjugation](https://en.wikipedia.org/wiki/Conjugated_system).
 """
 
 
-def onehot_encode(x, allowable_set):
-    return list(map(lambda s: float(x == s), allowable_set))
+class _Featurizer:
+
+    def __init__(self, allowable_sets):
+        self.dim = 0
+        self.features_mapping = {}
+        for k, s in allowable_sets.items():
+            s = sorted(list(s))
+            self.features_mapping[k] = dict(zip(s, range(self.dim, len(s) + self.dim)))
+            self.dim += len(s)
+
+    def encode(self, inputs):
+
+        output = np.zeros((self.dim,))
+
+        for name_feature, feature_mapping in self.features_mapping.items():
+            feature = getattr(self, name_feature)(inputs)
+            if feature not in feature_mapping:
+                continue
+            output[feature_mapping[feature]] = 1.0
+
+        return output
 
 
-# Atom features
+class AtomFeaturizer(_Featurizer):
+    def __init__(self, allowable_sets):
+        super().__init__(allowable_sets)
+
+    def symbol(self, atom):
+        return atom.GetSymbol()
+
+    def n_valence(self, atom):
+        return atom.GetTotalValence()
+
+    def n_hydrogens(self, atom):
+        return atom.GetTotalNumHs()
+
+    def hybridization(self, atom):
+        return atom.GetHybridization().name.lower()
 
 
-def atom_type(atom):
-    """Reference: https://en.wikipedia.org/wiki/Chemical_element"""
-    allowable_set = ["B", "Br", "C", "Ca", "Cl", "F", "I", "N", "Na", "O", "P", "S"]
-    return onehot_encode(atom.GetSymbol(), allowable_set)
+class BondFeaturizer(_Featurizer):
+    def __init__(self, allowable_sets):
+        super().__init__(allowable_sets)
+        self.dim += 1
+
+    def encode(self, bond):
+
+        output = np.zeros((self.dim,))
+
+        if bond is None:
+            output[-1] = 1.0
+            return output
+
+        output = super().encode(bond)
+        return output
+
+    def bond_type(self, bond):
+        return bond.GetBondType().name.lower()
+
+    def conjugated(self, bond):
+        return bond.GetIsConjugated()
 
 
-def num_hydrogens(atom):
-    """Reference: https://en.wikipedia.org/wiki/Hydrogen"""
-    allowable_set = [0, 1, 2, 3, 4]
-    return onehot_encode(min(atom.GetTotalNumHs(), 4), allowable_set)
+atom_featurizer = AtomFeaturizer(
+    allowable_sets={
+        "symbol": {"B", "Br", "C", "Ca", "Cl", "F", "H", "I", "N", "Na", "O", "P", "S"},
+        "n_valence": {0, 1, 2, 3, 4, 5, 6},
+        "n_hydrogens": {0, 1, 2, 3, 4},
+        "hybridization": {"s", "sp", "sp2", "sp3"},
+    }
+)
 
-
-def num_valence(atom):
-    """Reference: https://en.wikipedia.org/wiki/Valence_electron"""
-    allowable_set = [0, 1, 2, 3, 4, 5]
-    return onehot_encode(min(atom.GetTotalValence(), 5), allowable_set)
-
-
-def hybridization(atom):
-    """Reference: https://en.wikipedia.org/wiki/Orbital_hybridisation"""
-    allowable_set = ["s", "sp", "sp2", "sp3"]
-    return onehot_encode(atom.GetHybridization().name.lower(), allowable_set)
-
-
-# Bond features
-
-
-def bond_type(bond):
-    """Reference: https://en.wikipedia.org/wiki/Covalent_bond"""
-    allowable_set = ["single", "double", "triple", "aromatic"]
-    return onehot_encode(bond.GetBondType().name.lower(), allowable_set)
-
-
-def is_conjugated(bond):
-    """Reference: https://en.wikipedia.org/wiki/Conjugated_system"""
-    allowable_set = [True]
-    return onehot_encode(bond.GetIsConjugated(), allowable_set)
+bond_featurizer = BondFeaturizer(
+    allowable_sets={
+        "bond_type": {"single", "double", "triple", "aromatic"},
+        "conjugated": {True, False},
+    }
+)
 
 
 """
 ### Generate graphs
 
-Before we can generate complete graphs from SMILES, we need to implement two more functions:
+Before we can generate complete graphs from SMILES, we need to implement the following functions:
 
 1. `molecule_from_smiles`, which takes as input a SMILES and returns a molecule object.
 This is all handled by RDKit.
 
 2. `graph_from_molecule`, which takes as input a molecule object and returns a graph,
 represented as a three-tuple (atom_features, bond_features, pair_indices). For this we
-will use the helper functions defined previously.
+will make use of the classes defined previously.
 
 Finally, we can now implement the function `graphs_from_smiles`, which applies function (1)
 and subsequently (2) on all SMILES of the training, validation and test datasets.
@@ -228,27 +271,22 @@ def graph_from_molecule(molecule):
     pair_indices = []
 
     for atom in molecule.GetAtoms():
+        atom_features.append(atom_featurizer.encode(atom))
 
-        atom_features.append(
-            atom_type(atom)
-            + num_hydrogens(atom)
-            + num_valence(atom)
-            + hybridization(atom)
-        )
         # Add self-loop. Notice, this also helps against some edge cases where the
-        # last node has no edges. Alternatively, if no self-loops are used, for
-        # these edge cases, zero-padding on the output of the edge network is needed.
+        # last node has no edges. Alternatively, if no self-loops are used, for these
+        # edge cases, zero-padding on the output of the edge network is needed.
         pair_indices.append([atom.GetIdx(), atom.GetIdx()])
-        bond_features.append([1.0] + [0.0, 0.0, 0.0, 0.0] + [0.0])
+        bond_features.append(bond_featurizer.encode(None))
 
         atom_neighbors = atom.GetNeighbors()
 
         for neighbor in atom_neighbors:
             bond = molecule.GetBondBetweenAtoms(atom.GetIdx(), neighbor.GetIdx())
             pair_indices.append([atom.GetIdx(), neighbor.GetIdx()])
-            bond_features.append([0.0] + bond_type(bond) + is_conjugated(bond))
+            bond_features.append(bond_featurizer.encode(bond))
 
-    return atom_features, bond_features, pair_indices
+    return np.array(atom_features), np.array(bond_features), np.array(pair_indices)
 
 
 def graphs_from_smiles(smiles_list):
@@ -281,21 +319,21 @@ permuted_indices = np.random.permutation(np.arange(df.shape[0]))
 
 # Train set: 80 % of data
 train_index = permuted_indices[: int(df.shape[0] * 0.8)]
-X_train = graphs_from_smiles(df.iloc[train_index].smiles)
+x_train = graphs_from_smiles(df.iloc[train_index].smiles)
 y_train = df.iloc[train_index].p_np
 
 # Valid set: 19 % of data
 valid_index = permuted_indices[int(df.shape[0] * 0.8) : int(df.shape[0] * 0.99)]
-X_valid = graphs_from_smiles(df.iloc[valid_index].smiles)
+x_valid = graphs_from_smiles(df.iloc[valid_index].smiles)
 y_valid = df.iloc[valid_index].p_np
 
 # Test set: 1 % of data
 test_index = permuted_indices[int(df.shape[0] * 0.99) :]
-X_test = graphs_from_smiles(df.iloc[test_index].smiles)
+x_test = graphs_from_smiles(df.iloc[test_index].smiles)
 y_test = df.iloc[test_index].p_np
 
 """
-### Test out helper functions
+### Test out the functions
 """
 
 print(f"Name:\t{df.name[100]}\nSMILES:\t{df.smiles[100]}\nBBBP:\t{df.p_np[100]}")
@@ -318,16 +356,17 @@ print("\tpair indices\t", np.array(graph[2]).shape)
 
 In this tutorial, the MPNN implementation will take as input (per iteration) a single graph.
 Therefore, given a batch of (sub-)graphs (molecules), we need to merge them into a
-single *global* graph. This global graph is a disconnected graph where each sub-graph is
+single graph (we'll refer to this graph as *global graph*).
+This global graph is a disconnected graph where each sub-graph is
 completely separated from the other sub-graphs.
 """
 
 
-def prepare_batch(X_batch, y_batch):
+def prepare_batch(x_batch, y_batch):
     """Merges (sub-)graphs of batch into a single global (disconnected) graph
     """
 
-    atom_features, bond_features, pair_indices = X_batch
+    atom_features, bond_features, pair_indices = x_batch
 
     # Obtain number of atoms and bonds for each graph (molecule)
     num_atoms = atom_features.row_lengths()
@@ -339,9 +378,8 @@ def prepare_batch(X_batch, y_batch):
     atom_partition_indices = tf.repeat(molecule_indices, num_atoms)
     bond_partition_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
 
-    # Merge (sub-)graphs into a global (disconnected) graph.
-    # Adding 'increment' to 'pair_indices' (and merging ragged tensors) actualizes
-    # the global graph
+    # Merge (sub-)graphs into a global (disconnected) graph. Adding 'increment' to
+    # 'pair_indices' (and merging ragged tensors) actualizes the global graph
     increment = tf.cumsum(num_atoms[:-1])
     increment = tf.pad(
         tf.gather(increment, bond_partition_indices), [(num_bonds[0], 0)]
@@ -395,7 +433,7 @@ the radius (or # hops) of aggregated information from the source node `v` increa
 """
 
 
-class EdgeNetwork(keras.layers.Layer):
+class EdgeNetwork(layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -436,7 +474,7 @@ class EdgeNetwork(keras.layers.Layer):
         return aggregated_features
 
 
-class MessagePassing(keras.layers.Layer):
+class MessagePassing(layers.Layer):
     def __init__(self, units, steps=4, **kwargs):
         super().__init__(**kwargs)
         self.units = units
@@ -446,7 +484,7 @@ class MessagePassing(keras.layers.Layer):
         self.atom_dim = input_shape[0][-1]
         self.message_step = EdgeNetwork()
         self.pad_length = max(0, self.units - self.atom_dim)
-        self.update_step = keras.layers.GRUCell(self.atom_dim + self.pad_length)
+        self.update_step = layers.GRUCell(self.atom_dim + self.pad_length)
         self.built = True
 
     def call(self, inputs):
@@ -463,15 +501,6 @@ class MessagePassing(keras.layers.Layer):
             atom_features_aggregated = self.message_step(
                 [atom_features_updated, bond_features, pair_indices]
             )
-            # # If no self-loops, zero-pad here.
-            # pad_len = (
-            #     tf.shape(atom_features_updated)[0] -
-            #     tf.shape(atom_features_aggregated)[0]
-            # )
-            # if pad_len > 0:
-            #     atom_features_aggregated = tf.pad(
-            #         atom_features_aggregated, [(0, pad_len), (0, 0)]
-            #     )
 
             # Update aggregated atom_features via a step of GRU
             atom_features_updated, _ = self.update_step(
@@ -484,132 +513,80 @@ class MessagePassing(keras.layers.Layer):
 """
 ### Readout
 
-When the message passing procedure ends, the k-step-aggregated node states are to be
-reduced to a graph-level embedding. The easy alternative of performing this reduction is
-to use an average pooling layer. However, following the original paper, a set-to-set
-layer will be implemented. The set-to-set (*SetGather*) layer is a sequence-to-sequence layer
-for sets, for which the order does not matter. I.e., the resulting graph-level embedding
-is invariant to the order of the elements of the input sequence. The implementation is
-based on the paper
-[Order Matters: Sequence to sequence for sets](https://arxiv.org/abs/1511.06391) and
-[DeepChem's SetGather](https://deepchem.readthedocs.io/en/latest/api_reference/layers.html).
+When the message passing procedure ends, the k-step-aggregated node states are to be partitioned
+into sub-graphs (correspoding to each molecule in the batch) and subsequently
+reduced to graph-level embeddings. An easy alternative is to perform a `tf.dynamic_partition(x, ...)`
+followed by a `tf.reduce_mean(x, axis=1)` (similar to `GlobalAveragePooling1D`).
+Another (more sophisticated) alternative to the average pooling, based on the
+[original paper]((https://arxiv.org/abs/1704.01212)), is to
+use a [set-to-set layer](https://arxiv.org/abs/1511.06391). However, in this tutorial
+we will implement a transformer encoder. Specifically:
+
+* the k-step-aggregated node states will be partitioned into the sub-graphs (again,
+corresponding to each molecule in the batch);
+* each sub-graph will then be padded to match the sub-graph with the greatest number of nodes, followed
+by a `tf.stack(...)``;
+* the (stacked) padded tensor, encoding sub-graphs (each sub-graph containing sets of node-states), are
+masked to make sure the paddings don't have any influence in the subsequent layers;
+* finally, the padded tensor is passed to the transformer followed by an average pooling.
+
 """
 
 
-class NoInputLSTMCell(keras.layers.Layer):
-    """Custom LSTM Cell that takes no input"""
-
-    def __init__(self, **kwargs):
+class PartitionPadding(layers.Layer):
+    def __init__(self, batch_size, **kwargs):
         super().__init__(**kwargs)
-
-    def build(self, input_shape):
-        memory_state_dim = input_shape[0][-1]
-        carry_state_dim = input_shape[1][-1]
-        self.recurrent_kernel = self.add_weight(
-            shape=(carry_state_dim, memory_state_dim * 4),
-            trainable=True,
-            initializer="glorot_uniform",
-        )
-        self.bias = self.add_weight(
-            shape=(memory_state_dim * 4), trainable=True, initializer="zeros",
-        )
-
-    def call(self, inputs):
-
-        # Unpack states
-        memory_state, carry_state = inputs
-
-        # Perform linear transformation on carry_state
-        z = tf.matmul(carry_state, self.recurrent_kernel) + self.bias
-
-        # Split transformed carry_state into four units (gates/states)
-        update_gate, forget_gate, memory_state_candidate, output_gate = tf.split(
-            z, num_or_size_splits=4, axis=1
-        )
-
-        # Apply non-linearity to all units
-        update_gate = tf.nn.sigmoid(update_gate)
-        forget_gate = tf.nn.sigmoid(forget_gate)
-        output_gate = tf.nn.sigmoid(output_gate)
-        memory_state_candidate = tf.nn.tanh(memory_state_candidate)
-
-        # Forget and update memory state
-        memory_state = forget_gate * memory_state + update_gate * memory_state_candidate
-
-        # Update carry state
-        carry_state = output_gate * tf.nn.tanh(memory_state)
-
-        # Return (updated) memory state and carry state
-        return memory_state, carry_state
-
-
-class SetGather(keras.layers.Layer):
-    def __init__(self, batch_size, steps=8, **kwargs):
-        super().__init__(**kwargs)
-        # batch size needs to be explicit for dynamic partition
         self.batch_size = batch_size
-        self.steps = steps
-
-    def build(self, input_shape):
-        self.atom_dim = input_shape[0][-1]
-        self.lstm_cell = NoInputLSTMCell()
 
     def call(self, inputs):
 
-        # Unpack inputs
         atom_features, atom_partition_indices = inputs
 
-        # Obtain the number of molecules in the batch
-        num_molecules = tf.reduce_max(atom_partition_indices) + 1
-
-        # Assert that self.batch_size is equal to or greater than num_molecules
-        tf.debugging.assert_greater_equal(
-            x=self.batch_size,
-            y=num_molecules,
-            message="batch_size has to be >= tf.reduce_max(atom_partition_indices) + 1",
+        # Obtain sub-graphs
+        atom_features = tf.dynamic_partition(
+            atom_features, atom_partition_indices, self.batch_size
         )
 
-        # Initialize states
-        memory_state = tf.zeros((num_molecules, self.atom_dim))
-        carry_state = tf.zeros((num_molecules, self.atom_dim))
+        # Pad and stack sub-graphs
+        num_atoms = [tf.shape(f)[0] for f in atom_features]
+        max_num_atoms = tf.reduce_max(num_atoms)
+        atom_features_padded = tf.stack(
+            [
+                tf.pad(f, [(0, max_num_atoms - n), (0, 0)])
+                for f, n in zip(atom_features, num_atoms)
+            ],
+            axis=0,
+        )
 
-        # Perform a number of lstm steps (via the set-to-set procedure)
-        for i in range(self.steps):
+        # Remove empty sub-graphs (usually for last batch)
+        nonempty_examples = tf.where(tf.reduce_sum(atom_features_padded, (1, 2)) != 0)
+        nonempty_examples = tf.squeeze(nonempty_examples, axis=-1)
 
-            # Expand carry state (to match atom_features dim)
-            carry_state_expanded = tf.gather(carry_state, atom_partition_indices)
+        return tf.gather(atom_features_padded, nonempty_examples, axis=0)
 
-            # Perform a linear transformation followed by reduction
-            atom_features_reduced = tf.reduce_sum(
-                atom_features * carry_state_expanded, axis=1
-            )
 
-            # Split into parts correspoding to each molecule in the batch
-            atom_features_partitioned = tf.dynamic_partition(
-                atom_features_reduced, atom_partition_indices, self.batch_size
-            )
+class TransformerEncoder(layers.Layer):
+    def __init__(self, num_heads=8, embed_dim=64, dense_dim=512, **kwargs):
+        super().__init__(**kwargs)
 
-            # Compute attention coefficients
-            attention_coef = tf.concat(
-                [tf.nn.softmax(features) for features in atom_features_partitioned],
-                axis=0,
-            )
+        self.attention = layers.MultiHeadAttention(num_heads, embed_dim)
 
-            # Apply attention to atom_features, and sum based on atom_partition_indices
-            attention_readout = tf.math.segment_sum(
-                tf.reshape(attention_coef, [-1, 1]) * atom_features,
-                atom_partition_indices,
-            )
+        self.dense_proj = keras.Sequential(
+            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+        )
+        self.layernorm_1 = layers.LayerNormalization()
+        self.layernorm_2 = layers.LayerNormalization()
+        self.supports_masking = True
 
-            # Concatenate (previous) carry_state and attention readout
-            carry_state_evolved = tf.concat([carry_state, attention_readout], axis=1)
+    def call(self, inputs, mask=None):
 
-            # Perform a LSTM step (with only a memory state and carry state)
-            memory_state, carry_state = self.lstm_cell(
-                [memory_state, carry_state_evolved]
-            )
+        attention_mask = mask[:, tf.newaxis, :] if mask is not None else None
 
-        return carry_state_evolved
+        attention_output = self.attention(inputs, inputs, attention_mask=attention_mask)
+
+        proj_input = self.layernorm_1(inputs + attention_output)
+
+        return self.layernorm_2(proj_input + self.dense_proj(proj_input))
 
 
 """
@@ -626,34 +603,36 @@ def MPNNModel(
     bond_dim,
     batch_size=32,
     message_units=64,
-    message_steps=4,
-    lstm_steps=8,
-    dense_units=256,
+    message_steps=6,
+    num_attention_heads=8,
+    dense_units=512,
 ):
 
-    atom_features = keras.layers.Input(
-        shape=(atom_dim), dtype="float32", name="atom_features"
-    )
+    atom_features = layers.Input((atom_dim), dtype="float32", name="atom_features")
 
-    bond_features = keras.layers.Input(
-        shape=(bond_dim), dtype="float32", name="bond_features"
-    )
+    bond_features = layers.Input((bond_dim), dtype="float32", name="bond_features")
 
-    pair_indices = keras.layers.Input(shape=(2), dtype="int32", name="pair_indices")
+    pair_indices = layers.Input((2), dtype="int32", name="pair_indices")
 
-    atom_partition_indices = keras.layers.Input(
-        shape=(), dtype="int32", name="atom_partition_indices"
+    atom_partition_indices = layers.Input(
+        (), dtype="int32", name="atom_partition_indices"
     )
 
     x = MessagePassing(message_units, message_steps)(
         [atom_features, bond_features, pair_indices]
     )
 
-    x = SetGather(batch_size, lstm_steps)([x, atom_partition_indices])
+    x = PartitionPadding(batch_size)([x, atom_partition_indices])
 
-    x = keras.layers.Dense(dense_units, activation="relu")(x)
+    x = layers.Masking()(x)
 
-    x = keras.layers.Dense(1, activation="sigmoid")(x)
+    x = TransformerEncoder(num_attention_heads, message_units, dense_units)(x)
+
+    x = layers.GlobalAveragePooling1D()(x)
+
+    x = layers.Dense(dense_units, activation="relu")(x)
+
+    x = layers.Dense(1, activation="sigmoid")(x)
 
     model = keras.Model(
         inputs=[atom_features, bond_features, pair_indices, atom_partition_indices],
@@ -663,7 +642,7 @@ def MPNNModel(
 
 
 mpnn = MPNNModel(
-    atom_dim=X_train[0][0][0].shape[0], bond_dim=X_train[1][0][0].shape[0],
+    atom_dim=x_train[0][0][0].shape[0], bond_dim=x_train[1][0][0].shape[0],
 )
 
 mpnn.compile(
@@ -678,14 +657,14 @@ keras.utils.plot_model(mpnn, show_dtype=True, show_shapes=True)
 ### Training
 """
 
-train_dataset = MPNNDataset(X_train, y_train)
-valid_dataset = MPNNDataset(X_valid, y_valid)
-test_dataset = MPNNDataset(X_test, y_test)
+train_dataset = MPNNDataset(x_train, y_train)
+valid_dataset = MPNNDataset(x_valid, y_valid)
+test_dataset = MPNNDataset(x_test, y_test)
 
 history = mpnn.fit(
     train_dataset,
     validation_data=valid_dataset,
-    epochs=20,
+    epochs=30,
     verbose=2,
     class_weight={0: 2.0, 1: 0.5},
 )
@@ -705,13 +684,8 @@ molecules = [molecule_from_smiles(df.smiles.values[index]) for index in test_ind
 y_true = [df.p_np.values[index] for index in test_index]
 y_pred = tf.squeeze(mpnn.predict(test_dataset), axis=1)
 
-MolsToGridImage(
-    molecules,
-    molsPerRow=4,
-    legends=[
-        f"y_true/y_pred = {y_true[i]}/{y_pred[i]:.2f}" for i in range(len(y_true))
-    ],
-)
+legends = [f"y_true/y_pred = {y_true[i]}/{y_pred[i]:.2f}" for i in range(len(y_true))]
+MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 
 """
 ## Concluding thoughts
