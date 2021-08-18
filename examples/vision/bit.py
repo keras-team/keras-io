@@ -42,13 +42,15 @@ tf.random.set_seed(SEEDS)
 We will be using Image-Scene-Classification dataset which comprises of 30 classes.
 """
 
-!wget -q http://data.vision.ee.ethz.ch/ihnatova/camera_scene_detection_train.zip
-!unzip -qq camera_scene_detection_train.zip
-!rm -rf camera_scene_detection_train.zip
+"""shell
+wget -q http://data.vision.ee.ethz.ch/ihnatova/camera_scene_detection_train.zip
+unzip -qq camera_scene_detection_train.zip
+rm -rf camera_scene_detection_train.zip
+"""
 
 """
 ## Data Parsing
-# """
+"""
 
 image_paths = list(paths.list_images("training"))
 np.random.shuffle(image_paths)
