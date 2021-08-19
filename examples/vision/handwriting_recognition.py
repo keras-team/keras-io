@@ -11,8 +11,10 @@ Description: Training a handwriting recognition model with variable-length seque
 This example shows how the [Captcha OCR](https://keras.io/examples/vision/captcha_ocr/)
 example can be extended to the
 [IAM Dataset](https://fki.tic.heia-fr.ch/databases/iam-handwriting-database)
-that has variable length ground-truths. IAM Dataset is widely used across many OCR
-benchmarks so we hope this example serves as a good starting point. 
+that has variable length ground-truths. Each sample in the dataset is an image of some
+handwritten text and the target is the string present inside the image. IAM Dataset is
+widely used across many OCR benchmarks so we hope this example serves as a
+good starting point.
 """
 
 """
