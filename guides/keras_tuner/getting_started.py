@@ -227,7 +227,60 @@ tuner = RandomSearch(
 tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 """
-## KerasTuner includes pre-made tunable applications: HyperResNet and HyperXception
+## Use a custom metric as the tuning objective
+
+You may implement your own metric and use it as the objective to select the
+best set of hyperparameter values.
+
+Here we use mean squared error (MSE) as an example.
+
+Note: MSE is actully a build-in metric, which can be imported with
+`keras.metrics.mse`.  This is just an example to show how to use a custom
+metric as the objective.  For more information about implementing custom metric
+please see [this
+tutorial](https://keras.io/api/metrics/#creating-custom-metrics).
+
+First, we implement the MSE metric as a function, and pass it to the
+`.compile()` function.
+
+Then, we use `kt.Objective(name='val_mse', direction='min')` as the `objective`
+of the `Tuner`. The `name` should be in the form of `'val_' + metric_name`,
+meaning applying the metric on the validation data. Our MSE metric is just a
+function, so the metric name is the function name. For subclasses of
+`keras.metrics.Metric`, the name is specified in the initializer. The
+`direction` should be either `'min'` (the lower the better) or `'max'` (the
+higher the better).
+
+"""
+
+import tensorflow as tf
+
+
+def mse(y_true, y_pred):
+    return tf.math.reduce_mean(tf.math.squared_difference(y_pred, y_true), axis=-1)
+
+
+def build_model(hp):
+    model = keras.Sequential(
+        [
+            layers.Dense(10, activation="relu"),
+            layers.Dense(hp.Int("units", 5, 50), activation="relu"),
+            layers.Dense(1, activation="sigmoid"),
+        ]
+    )
+    model.compile(loss="mae", metrics=[mse])  # Use mse as a metric
+    return model
+
+
+tuner = kt.RandomSearch(
+    build_model,
+    objective=kt.Objective("val_mse", direction="min"),
+    max_trials=3,
+    overwrite=True,
+)
+
+"""
+## Pre-made tunable applications: HyperResNet and HyperXception
 
 These are ready-to-use hypermodels for computer vision.
 
