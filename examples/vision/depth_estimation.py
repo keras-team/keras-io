@@ -1,8 +1,8 @@
 """
 Title: Monocular Depth Estimation
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
-Date created: 2021/08/12
-Last modified: 2021/08/12
+Date created: 2021/08/21
+Last modified: 2021/08/21
 Description: Implement a depth estimation model with CNN.
 """
 
@@ -10,10 +10,15 @@ Description: Implement a depth estimation model with CNN.
 ## Introduction
 
 **Depth Estimation** is a crucial step towards inferring scene geometry from 2D images.
-The goal in monocular Depth Estimation is to predict the depth value of each pixel, given
-only a single RGB image as input.
+The goal in monocular Depth Estimation is to predict the depth value of each pixel or
+inferring depth information, given only a single RGB image as input. Monocular images is
+a static or sequential image and Monocular solutions tend to achieve this goal using only
+one image.
 
-This is an approach to build a depth estimation model with CNN and basic loss functions.
+
+
+This example will show an approach to build a depth estimation model with CNN and basic
+loss functions.
 
 ![depth](https://paperswithcode.com/media/thumbnails/task/task-0000000605-d9849a91.jpg)
 
@@ -26,24 +31,16 @@ This is an approach to build a depth estimation model with CNN and basic loss fu
 
 import os
 import cv2
-import logging
 import sys
 
 import tensorflow as tf
 from tensorflow.keras import layers
-import tensorflow.keras.backend as K
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-tf.compat.v1.set_random_seed(123)
-session_conf = tf.compat.v1.ConfigProto(
-    intra_op_parallelism_threads=1, inter_op_parallelism_threads=1
-)
-sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-tf.compat.v1.keras.backend.set_session(sess)
-logging.disable(sys.maxsize)
+tf.random.set_seed(123)
 
 """
 ## Download the dataset
@@ -53,6 +50,8 @@ tutorial. We have used the validation set for training and validating our model.
 reason we have used validation set and not training set of the original dataset because
 the training set consists of 81GB of data which was a bit difficult to download compared
 to validation set which is only 2.6GB.
+
+Other datasets that you could prefer are **NYU-v2** and **KITTI**.
 """
 
 annotation_folder = "/dataset/"
@@ -69,12 +68,11 @@ if not os.path.exists(os.path.abspath(".") + annotation_folder):
 """
 
 path = "val"
-# we shall store all the file names in this list
+
 filelist = []
 
 for root, dirs, files in os.walk(path):
     for file in files:
-        # append the file name to the list
         filelist.append(os.path.join(root, file))
 
 filelist.sort()
@@ -87,14 +85,15 @@ df = pd.DataFrame(data)
 
 df = df.sample(frac=1, random_state=42)
 
+"""
+## Prepare Hyperparameters
+"""
 
-class config:
-    HEIGHT = 256
-    WIDTH = 256
-    LR = 1e-4
-    EPOCHS = 30
-    BATCH_SIZE = 32
-
+HEIGHT = 256
+WIDTH = 256
+LR = 0.0001
+EPOCHS = 30
+BATCH_SIZE = 32
 
 """
 ## Building Dataset Loader Pipeline
@@ -151,14 +150,14 @@ class DataGenerator(tf.keras.utils.Sequence):
         image_ = cv2.imread(image_path)
         image_ = cv2.cvtColor(image_, cv2.COLOR_BGR2RGB)
         image_ = cv2.resize(image_, self.dim)
-        image_ = (image_) / 255.0
+        image_ = tf.image.convert_image_dtype(image_, tf.float32)
 
         depth_map = np.load(depth_map).squeeze()
 
         mask = np.load(mask)
         mask = mask > 0
 
-        MIN_DEPTH = 0.1
+        MIN_DEPTH = 0.5
 
         MAX_DEPTH = min(300, np.percentile(depth_map, 99))
         depth_map = np.clip(depth_map, MIN_DEPTH, MAX_DEPTH)
@@ -169,6 +168,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         depth_map = np.clip(depth_map, 0.1, np.log(MAX_DEPTH))
         depth_map = cv2.resize(depth_map, self.dim)
         depth_map = np.expand_dims(depth_map, axis=2)
+        depth_map = tf.image.convert_image_dtype(depth_map, tf.float32)
 
         return image_, depth_map
 
@@ -192,7 +192,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 """
 
 
-def visualizeDepthMap(samples, test=False):
+def visualize_depth_map(samples, test=False):
     input, target = samples
     cmap = plt.cm.jet
     cmap.set_bad(color="black")
@@ -213,16 +213,16 @@ def visualizeDepthMap(samples, test=False):
 
 
 visualize_samples = next(
-    iter(DataGenerator(data=df, batch_size=6, dim=(config.HEIGHT, config.WIDTH)))
+    iter(DataGenerator(data=df, batch_size=6, dim=(HEIGHT, WIDTH)))
 )
-visualizeDepthMap(visualize_samples)
-
-depth_vis = np.flipud(visualize_samples[1][2].squeeze())  # target
-img_vis = np.flipud(visualize_samples[0][2].squeeze())  # input
+visualize_depth_map(visualize_samples)
 
 """
 ## 3D Point-Cloud Visualization
 """
+
+depth_vis = np.flipud(visualize_samples[1][1].squeeze())  # target
+img_vis = np.flipud(visualize_samples[0][1].squeeze())  # input
 
 fig = plt.figure(figsize=(15, 10))
 ax = plt.axes(projection="3d")
@@ -237,28 +237,7 @@ for x in range(0, img_vis.shape[0], STEP):
             c=tuple(img_vis[x, y, :3] / 255),
             s=3,
         )
-    ax.view_init(15, 165)
-
-"""
-### angle-1
-"""
-
-ax.view_init(30, 135)
-fig
-
-"""
-### angle-2
-"""
-
-ax.view_init(5, 100)
-fig
-
-"""
-### angle-3
-"""
-
-ax.view_init(45, 220)
-fig
+    ax.view_init(45, 135)
 
 """
 ## Building the model
@@ -335,7 +314,7 @@ class BottleNeckBlock(layers.Layer):
         return x
 
 
-def UnetModel(height, width):
+def unet_model(height, width):
 
     f = [16, 32, 64, 128, 256]
 
@@ -409,7 +388,7 @@ class DepthEstimationModel(tf.keras.Model):
                 - tf.image.ssim(
                     target,
                     pred,
-                    max_val=config.WIDTH,
+                    max_val=WIDTH,
                     filter_size=7,
                     k1=0.01 ** 2,
                     k2=0.03 ** 2,
@@ -423,7 +402,7 @@ class DepthEstimationModel(tf.keras.Model):
             w2 = 0.1
             w3 = 1.0
 
-            loss = (w1 * l_ssim) + w2 * l1_loss + (w3 * l_edges)
+            loss = (w1 * l_ssim) + (w2 * l1_loss) + (w3 * l_edges)
 
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
@@ -441,19 +420,17 @@ class DepthEstimationModel(tf.keras.Model):
 """
 
 optimizer = tf.keras.optimizers.Adam(
-    learning_rate=config.LR,
+    learning_rate=LR,
     amsgrad=True,
 )
-model = UnetModel(config.HEIGHT, config.WIDTH)
+model = unet_model(HEIGHT, WIDTH)
 DEM = DepthEstimationModel(model=model)
 DEM.compile(optimizer)
 
 train_loader = DataGenerator(
-    data=df[:600].reset_index(drop="true"),
-    batch_size=config.BATCH_SIZE,
-    dim=(config.HEIGHT, config.WIDTH),
+    data=df[:600].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
 )
-DEM.fit(train_loader, epochs=config.EPOCHS)
+DEM.fit(train_loader, epochs=EPOCHS)
 
 """
 ## Visualizing Model output.
@@ -465,31 +442,27 @@ and the third one is the predicted depth-map image.
 test_loader = next(
     iter(
         DataGenerator(
-            data=df[601:].reset_index(drop="true"),
-            batch_size=6,
-            dim=(config.HEIGHT, config.WIDTH),
+            data=df[601:].reset_index(drop="true"), batch_size=6, dim=(HEIGHT, WIDTH)
         )
     )
 )
-visualizeDepthMap(test_loader, test=True)
+visualize_depth_map(test_loader, test=True)
 
 test_loader = next(
     iter(
         DataGenerator(
-            data=df[701:].reset_index(drop="true"),
-            batch_size=6,
-            dim=(config.HEIGHT, config.WIDTH),
+            data=df[701:].reset_index(drop="true"), batch_size=6, dim=(HEIGHT, WIDTH)
         )
     )
 )
-visualizeDepthMap(test_loader, test=True)
+visualize_depth_map(test_loader, test=True)
 
 """
 ## Scopes of Improvement
 
-1. From the research papers that I read while I was working on this topic the encode part
-of the U-Net was replaced with DenseNet, ResNet or other pre-trained model, which could
-be applied for better model predictions.
+1. You can improve this model by replacing the encode part of the U-Net was replaced with
+DenseNet, ResNet or other pre-trained model, which could be applied for better model
+predictions.
 
 2. Loss functions play an immense role in solving this problem, and different paper
 explained different ways of developing the loss function out of which SSIM was common in
