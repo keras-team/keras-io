@@ -425,7 +425,70 @@ model = build_model()
 model.summary()
 
 """
+## Evaluation metric
+
+[Edit Distance](https://en.wikipedia.org/wiki/Edit_distance)
+is the most widely used metric for evaluating OCR models. In this section, we will
+implement it and use it as a callback to monitor our model.
+"""
+
+"""
+We first segregate the validation images and their labels for convenience.
+"""
+validation_images = []
+validation_labels = []
+
+for batch in validation_ds:
+    validation_images.append(batch["image"])
+    validation_labels.append(batch["label"])
+
+"""
+Now, we create a callback to monitor the edit distances.
+"""
+
+
+def calculate_edit_distance(labels, predictions):
+    # Get a single batch and convert its labels to sparse tensors.
+    saprse_labels = tf.cast(tf.sparse.from_dense(labels), dtype=tf.int64)
+
+    # Make predictions and convert them to sparse tensors.
+    input_len = np.ones(predictions.shape[0]) * predictions.shape[1]
+    predictions_decoded = keras.backend.ctc_decode(
+        predictions, input_length=input_len, greedy=True
+    )[0][0][:, :max_len]
+    sparse_predictions = tf.cast(
+        tf.sparse.from_dense(predictions_decoded), dtype=tf.int64
+    )
+
+    # Compute individual edit distances and average them out.
+    edit_distances = tf.edit_distance(
+        sparse_predictions, saprse_labels, normalize=False
+    )
+    return tf.reduce_mean(edit_distances)
+
+
+class EditDistanceCallback(keras.callbacks.Callback):
+    def __init__(self, pred_model):
+        super().__init__()
+        self.prediction_model = pred_model
+
+    def on_epoch_end(self, epoch, logs=None):
+        edit_distances = []
+
+        for i in range(len(validation_images)):
+            labels = validation_labels[i]
+            predictions = self.prediction_model.predict(validation_images[i])
+            edit_distances.append(calculate_edit_distance(labels, predictions).numpy())
+
+        print(
+            f"Mean edit distance for epoch {epoch + 1}: {np.mean(edit_distances):.4f}"
+        )
+
+
+"""
 ## Training
+
+Now we are ready to kick off model training.
 """
 
 epochs = 30  # To get good results this should be at least 50.
@@ -434,13 +497,18 @@ early_stopping_callback = keras.callbacks.EarlyStopping(
     patience=early_stopping_patience
 )
 
-# Train the model.
 model = build_model()
+prediction_model = keras.models.Model(
+    model.get_layer(name="image").input, model.get_layer(name="dense2").output
+)
+edit_distance_callback = EditDistanceCallback(prediction_model)
+
+# Train the model.
 history = model.fit(
     train_ds,
     validation_data=validation_ds,
     epochs=epochs,
-    callbacks=[early_stopping_callback],
+    callbacks=[early_stopping_callback, edit_distance_callback],
 )
 
 
