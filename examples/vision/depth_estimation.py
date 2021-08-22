@@ -11,7 +11,7 @@ Description: Implement a depth estimation model with CNN.
 
 **Depth Estimation** is a crucial step towards inferring scene geometry from 2D images.
 The goal in monocular Depth Estimation is to predict the depth value of each pixel or
-inferring depth information, given only a single RGB image as input. Monocular images is
+inferring depth information, given only a single RGB image as input. Monocular image is
 a static or sequential image and Monocular solutions tend to achieve this goal using only
 one image.
 
@@ -30,7 +30,6 @@ loss functions.
 """
 
 import os
-import cv2
 import sys
 
 import tensorflow as tf
@@ -38,6 +37,7 @@ from tensorflow.keras import layers
 
 import pandas as pd
 import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 
 tf.random.set_seed(123)
@@ -83,7 +83,7 @@ data = {
 }
 df = pd.DataFrame(data)
 
-df = df.sample(frac=1, random_state=42)
+df = df.sample(frac=1, random_state=123)
 
 """
 ## Prepare Hyperparameters
@@ -91,7 +91,7 @@ df = df.sample(frac=1, random_state=42)
 
 HEIGHT = 256
 WIDTH = 256
-LR = 0.0001
+LR = 0.0002
 EPOCHS = 30
 BATCH_SIZE = 32
 
@@ -221,8 +221,8 @@ visualize_depth_map(visualize_samples)
 ## 3D Point-Cloud Visualization
 """
 
-depth_vis = np.flipud(visualize_samples[1][1].squeeze())  # target
-img_vis = np.flipud(visualize_samples[0][1].squeeze())  # input
+depth_vis = np.flipud(visualize_samples[1][2].squeeze())  # target
+img_vis = np.flipud(visualize_samples[0][2].squeeze())  # input
 
 fig = plt.figure(figsize=(15, 10))
 ax = plt.axes(projection="3d")
@@ -421,7 +421,6 @@ class DepthEstimationModel(tf.keras.Model):
 
 optimizer = tf.keras.optimizers.Adam(
     learning_rate=LR,
-    amsgrad=True,
 )
 model = unet_model(HEIGHT, WIDTH)
 DEM = DepthEstimationModel(model=model)
