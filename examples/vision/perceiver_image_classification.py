@@ -379,7 +379,7 @@ class Perceiver(keras.Model):
             "data_array": encoded_patches,
         }
         # Apply the cross-attention and the Transformer modules iteratively.
-        for _ in range(num_iterations):
+        for _ in range(self.num_iterations):
             # Apply cross-attention from the latent array to the data array.
             latent_array = self.cross_attention(cross_attention_inputs)
             # Apply self-attention Transformer to the latent array.
