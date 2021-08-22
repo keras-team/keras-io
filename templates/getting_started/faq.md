@@ -117,22 +117,26 @@ with tf.device_scope('/cpu:0'):
 
 ### How can I distribute training across multiple machines?
 
-Using Keras with `tf.distribute` strategies is the
-recommended method to perform distributed training on multiple machines. Once a
-Keras model is built, add a `tf.distribute`'s strategy scope enclosing the model
+TensorFlow 2 enables you to write code that is mostly
+agnostic to how you will distribute it:
+any code that can run locally can be distributed to multiple
+workers and accelerators by only adding to it a distribution strategy
+(`tf.distribute.Strategy`) corresponding to your hardware of choice,
+without any other code changes.
+
+This also applies to any Keras model: just
+add a `tf.distribute` distribution strategy scope enclosing the model
 building and compiling code, and the training will be distributed according to
-the `tf.distribute` strategy.
+the `tf.distribute` distribution strategy.
 
-TF2 allows you to write model and training code that is mostly
-"agnostic" to how you will distribute it. You will run your code under a
-`tf.distribute.Strategy` based on your hardward of choice. But other than this,
-expect that your code which works locally, can be distributed to multiple
-workers and accelerators without much change.
+For distributed training across multiple machines (as opposed to training that only leverages
+multiple devices on a single machine), there are two distribution strategies you
+could use: `MultiWorkerMirroredStrategy` and `ParameterServerStrategy`:
 
-`tf.distribute.MultiWorkerMirroredStrategy` was created as a synchronous CPU/GPU
+- `tf.distribute.MultiWorkerMirroredStrategy` implements a synchronous CPU/GPU
 multi-worker solution to work with Keras-style model building and training loop,
-using synchronous reduction of gradients across the replicas, and
-`tf.distribute.experimental.ParameterServerStrategy` as an asynchronous CPU/GPU
+using synchronous reduction of gradients across the replicas.
+- `tf.distribute.experimental.ParameterServerStrategy` implements an asynchronous CPU/GPU
 multi-worker solution, where the parameters are stored on parameter servers, and
 workers update the gradients to parameter servers asynchronously.
 
@@ -148,10 +152,14 @@ single-machine training, with the main difference being that you will use
 `ParameterServerStrategy` or `MultiWorkerMirroredStrategy` as your distribution strategy.
 
 Importantly, you should:
-- Make sure your dataset is so configured that all workers in the cluster are able to efficiently pull data from it (e.g. if your cluster in on GCP, it's a good idea to host your data on GCS).
-- Make sure your training is fault-tolerant (e.g. by configuring a `BackupAndRestore` callback).
 
-This answer provides a couple of snippets for the basic flow. For more information
+- Make sure your dataset is so configured that all workers in the cluster are able to
+efficiently pull data from it (e.g. if your cluster is running on Google Cloud,
+it's a good idea to host your data on Google Cloud Storage).
+- Make sure your training is fault-tolerant
+(e.g. by configuring a `keras.callbacks.BackupAndRestore` callback).
+
+Below, we provide a couple of code snippets that cover the basic workflow. For more information
 about CPU/GPU multi-worker training, see 
 [Multi-GPU and distributed training](/guides/distributed_training/); for TPU
 training, see [How can I train a Keras model on TPU?](#how-can-i-train-a-keras-model-on-tpu).
@@ -162,8 +170,10 @@ With `ParameterServerStrategy`:
 cluster_resolver = ...
 if cluster_resolver.task_type in ("worker", "ps"):
   # Start a `tf.distribute.Server` and wait.
+  ...
 elif cluster_resolver.task_type == "evaluator":
   # Run an (optional) side-car evaluation
+  ...
 
 # Otherwise, this is the coordinator that controls the training w/ the strategy.
 strategy = tf.distribute.experimental.ParameterServerStrategy(
@@ -190,9 +200,6 @@ model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
 With `MultiWorkerMirroredStrategy`:
 
 ```python
-import tensorflow as tf
-from tensorflow.keras import layers
-
 # By default `MultiWorkerMirroredStrategy` uses cluster information
 # from `TF_CONFIG`, and "AUTO" collective op communication.
 strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
@@ -214,7 +221,6 @@ with strategy.scope():
       metrics=['accuracy'])
 model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
 ```
-
 
 ---
 
