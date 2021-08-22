@@ -83,7 +83,7 @@ data = {
 }
 df = pd.DataFrame(data)
 
-df = df.sample(frac=1, random_state=123)
+df = df.sample(frac=1, random_state=42)
 
 """
 ## Prepare Hyperparameters
@@ -421,6 +421,7 @@ class DepthEstimationModel(tf.keras.Model):
 
 optimizer = tf.keras.optimizers.Adam(
     learning_rate=LR,
+    amsgrad=False,
 )
 model = unet_model(HEIGHT, WIDTH)
 DEM = DepthEstimationModel(model=model)
