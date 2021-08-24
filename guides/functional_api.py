@@ -150,7 +150,7 @@ x_test = x_test.reshape(10000, 784).astype("float32") / 255
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.RMSprop(),
-    metrics=["accuracy"],
+    metrics=["accuracy"]
 )
 
 history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=0.2)
@@ -376,7 +376,7 @@ model.compile(
         keras.losses.BinaryCrossentropy(from_logits=True),
         keras.losses.CategoricalCrossentropy(from_logits=True),
     ],
-    loss_weights=[1.0, 0.2],
+    loss_weights=[1.0, 0.2]
 )
 
 """
@@ -390,7 +390,7 @@ model.compile(
         "priority": keras.losses.BinaryCrossentropy(from_logits=True),
         "department": keras.losses.CategoricalCrossentropy(from_logits=True),
     },
-    loss_weights={"priority": 1.0, "department": 0.2},
+    loss_weights={"priority": 1.0, "department": 0.2}
 )
 
 """
@@ -476,7 +476,7 @@ y_test = keras.utils.to_categorical(y_test, 10)
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss=keras.losses.CategoricalCrossentropy(from_logits=True),
-    metrics=["acc"],
+    metrics=["acc"]
 )
 # We restrict the data to the first 1000 samples so as to limit execution time
 # on Colab. Try to train on the entire dataset until convergence!
