@@ -516,11 +516,6 @@ history = model.fit(
 ## Inference
 """
 
-# Get the prediction model by extracting layers till the output layer.
-prediction_model = keras.models.Model(
-    model.get_layer(name="image").input, model.get_layer(name="dense2").output
-)
-prediction_model.summary()
 
 # A utility function to decode the output of the network.
 def decode_batch_predictions(pred):
