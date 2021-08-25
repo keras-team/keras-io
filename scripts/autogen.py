@@ -141,7 +141,11 @@ class KerasIO:
             + ")  "
             '<span class="k-dot">•</span>'
             '<img class="k-inline-icon" src="https://github.com/favicon.ico"/> '
-            "[**GitHub source**](https://github.com/" + github_repo_dir + "/" + fname + ")",
+            "[**GitHub source**](https://github.com/"
+            + github_repo_dir
+            + "/"
+            + fname
+            + ")",
             "\n",
         ]
         md_content_lines = md_content_lines[:6] + button_lines + md_content_lines[6:]
@@ -510,7 +514,6 @@ class KerasIO:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
     def make_map_of_symbol_names_to_api_urls(self):
-
         def recursive_make_map(entry, current_url):
             current_url /= entry["path"]
             entry_map = {}
@@ -518,20 +521,23 @@ class KerasIO:
                 for symbol in entry["generate"]:
                     object_ = docstrings.import_object(symbol)
                     object_type = docstrings.get_type(object_)
-                    object_name = symbol.split('.')[-1]
+                    object_name = symbol.split(".")[-1]
 
-                    if symbol.startswith('tensorflow.keras.'):
-                        symbol = symbol.replace('tensorflow.keras.', 'keras.')
-                    object_name = object_name.lower().replace('_', '')
-                    entry_map[symbol] = str(current_url) + '#' + object_name + '-' + object_type
+                    if symbol.startswith("tensorflow.keras."):
+                        symbol = symbol.replace("tensorflow.keras.", "keras.")
+                    object_name = object_name.lower().replace("_", "")
+                    entry_map[symbol] = (
+                        str(current_url) + "#" + object_name + "-" + object_type
+                    )
 
             if "children" in entry:
                 for child in entry["children"]:
                     entry_map.update(recursive_make_map(child, current_url))
             return entry_map
 
-        self._map_of_symbol_names_to_api_urls = recursive_make_map(self.master, Path(""))
-
+        self._map_of_symbol_names_to_api_urls = recursive_make_map(
+            self.master, Path("")
+        )
 
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
@@ -551,7 +557,9 @@ class KerasIO:
 
             pool = multiprocessing.Pool(processes=8)
             workers = [
-                pool.apply_async(self.render_single_file, args=(src_location, fname, nav))
+                pool.apply_async(
+                    self.render_single_file, args=(src_location, fname, nav)
+                )
                 for fname in fnames
             ]
 
@@ -561,7 +569,6 @@ class KerasIO:
                     all_urls_list.append(url)
             pool.close()
             pool.join()
-
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -625,9 +632,7 @@ class KerasIO:
                 pass
 
         # Load metadata for page
-        metadata_file = open(
-            str(Path(src_location) / fname[:-3]) + "_metadata.json"
-        )
+        metadata_file = open(str(Path(src_location) / fname[:-3]) + "_metadata.json")
         metadata = json.loads(metadata_file.read())
         metadata_file.close()
         if fname == "index.md":
@@ -641,9 +646,7 @@ class KerasIO:
             full_target_dir = Path(target_dir) / fname_no_ext
             os.makedirs(full_target_dir)
             target_path = full_target_dir / "index.html"
-            relative_url = (str(full_target_dir) + "/").replace(
-                self.site_dir, "/"
-            )
+            relative_url = (str(full_target_dir) + "/").replace(self.site_dir, "/")
             relative_url = relative_url.replace("//", "/")
 
         md_file = open(src_dir / fname, encoding="utf-8")
@@ -654,51 +657,46 @@ class KerasIO:
         # Convert Keras symbols to links to the Keras docs
         for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
             md_content = re.sub(
-                r'`((tf\.|)' + symbol + ')`',
-                r'[`\1`](' + symbol_url + ')', md_content)
+                r"`((tf\.|)" + symbol + ")`", r"[`\1`](" + symbol_url + ")", md_content
+            )
 
         # Convert TF symbols to links to tensorflow.org
         tmp_content = copy.copy(md_content)
         replacements = {}
         while "`tf." in tmp_content:
             index = tmp_content.find("`tf.")
-            if tmp_content[index - 1] == '[':
-                tmp_content = tmp_content[tmp_content.find("`tf.") + 1:]
-                tmp_content = tmp_content[tmp_content.find("`") + 1:]
+            if tmp_content[index - 1] == "[":
+                tmp_content = tmp_content[tmp_content.find("`tf.") + 1 :]
+                tmp_content = tmp_content[tmp_content.find("`") + 1 :]
             else:
-                tmp_content = tmp_content[tmp_content.find("`tf.") + 1:]
-                symbol = tmp_content[:tmp_content.find("`")]
-                tmp_content = tmp_content[tmp_content.find("`") + 1:]
-                if '/' not in symbol:
-                    path = symbol.replace('.', '/')
-                    path = path.replace('(', '')
-                    path = path.replace(')', '')
-                    replacements["`" + symbol + "`"] = "[`" + symbol + "`](https://www.tensorflow.org/api_docs/python/" + path + ")"
+                tmp_content = tmp_content[tmp_content.find("`tf.") + 1 :]
+                symbol = tmp_content[: tmp_content.find("`")]
+                tmp_content = tmp_content[tmp_content.find("`") + 1 :]
+                if "/" not in symbol:
+                    path = symbol.replace(".", "/")
+                    path = path.replace("(", "")
+                    path = path.replace(")", "")
+                    replacements["`" + symbol + "`"] = (
+                        "[`"
+                        + symbol
+                        + "`](https://www.tensorflow.org/api_docs/python/"
+                        + path
+                        + ")"
+                    )
         for key, value in replacements.items():
             md_content = md_content.replace(key, value)
 
         # Convert ```lang notation to the hilite syntax
-        md_content = md_content.replace('```python\n', '```\n:::python\n')
-        md_content = md_content.replace('```shell\n', '```\n:::none\n')
+        md_content = md_content.replace("```python\n", "```\n:::python\n")
+        md_content = md_content.replace("```shell\n", "```\n:::none\n")
 
         html_content = markdown.markdown(
             md_content,
-            extensions=[
-                "fenced_code",
-                "tables",
-                "codehilite",
-                "mdx_truly_sane_lists",
-            ],
-            extension_configs={
-                'codehilite': {
-                    'guess_lang': False,
-                },
-            }
+            extensions=["fenced_code", "tables", "codehilite", "mdx_truly_sane_lists",],
+            extension_configs={"codehilite": {"guess_lang": False,},},
         )
         html_content = insert_title_ids_in_html(html_content)
-        local_nav = [
-            set_active_flag_in_nav_entry(entry, relative_url) for entry in nav
-        ]
+        local_nav = [set_active_flag_in_nav_entry(entry, relative_url) for entry in nav]
 
         title = md_content[2 : md_content.find("\n")]
         html_docs = docs_template.render(
@@ -711,12 +709,7 @@ class KerasIO:
             }
         )
         html_page = base_template.render(
-            {
-                "title": title,
-                "nav": local_nav,
-                "base_url": self.url,
-                "main": html_docs,
-            }
+            {"title": title, "nav": local_nav, "base_url": self.url, "main": html_docs,}
         )
         save_file(target_path, html_page)
         return relative_url
