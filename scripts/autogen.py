@@ -650,10 +650,31 @@ class KerasIO:
         md_file.close()
         md_content = replace_links(md_content)
 
+        # Convert Keras symbols to links to the Keras docs
         for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
             md_content = re.sub(
                 r'`((tf\.|)' + symbol + ')`',
                 r'[`\1`](' + symbol_url + ')', md_content)
+
+        # Convert TF symbols to links to tensorflow.org
+        tmp_content = copy.copy(md_content)
+        replacements = {}
+        while "`tf." in tmp_content:
+            index = tmp_content.find("`tf.")
+            if tmp_content[index - 1] == '[':
+                tmp_content = tmp_content[tmp_content.find("`tf.") + 1:]
+                tmp_content = tmp_content[tmp_content.find("`") + 1:]
+            else:
+                tmp_content = tmp_content[tmp_content.find("`tf.") + 1:]
+                symbol = tmp_content[:tmp_content.find("`")]
+                tmp_content = tmp_content[tmp_content.find("`") + 1:]
+                if '/' not in symbol:
+                    path = symbol.replace('.', '/')
+                    path = path.replace('(', '')
+                    path = path.replace(')', '')
+                    replacements["`" + symbol + "`"] = "[`" + symbol + "`](https://www.tensorflow.org/api_docs/python/" + path + ")"
+        for key, value in replacements.items():
+            md_content = md_content.replace(key, value)
 
         # Convert ```lang notation to the hilite syntax
         md_content = md_content.replace('```python\n', '```\n:::python\n')
