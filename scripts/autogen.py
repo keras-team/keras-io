@@ -29,6 +29,7 @@ import docstrings
 import jinja2
 import markdown
 import requests
+import multiprocessing
 
 from master import MASTER
 import tutobooks
@@ -508,7 +509,32 @@ class KerasIO:
             for entry in children:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
+    def make_map_of_symbol_names_to_api_urls(self):
+
+        def recursive_make_map(entry, current_url):
+            current_url /= entry["path"]
+            entry_map = {}
+            if "generate" in entry:
+                for symbol in entry["generate"]:
+                    object_ = docstrings.import_object(symbol)
+                    object_type = docstrings.get_type(object_)
+                    object_name = symbol.split('.')[-1]
+
+                    if symbol.startswith('tensorflow.keras.'):
+                        symbol = symbol.replace('tensorflow.keras.', 'keras.')
+                    object_name = object_name.lower().replace('_', '')
+                    entry_map[symbol] = str(current_url) + '#' + object_name + '-' + object_type
+
+            if "children" in entry:
+                for child in entry["children"]:
+                    entry_map.update(recursive_make_map(child, current_url))
+            return entry_map
+
+        self._map_of_symbol_names_to_api_urls = recursive_make_map(self.master, Path(""))
+
+
     def render_md_sources_to_html(self):
+        self.make_map_of_symbol_names_to_api_urls()
         print("Rendering md sources to HTML")
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
@@ -522,86 +548,20 @@ class KerasIO:
         nav = self.make_nav_index()
 
         for src_location, _, fnames in os.walk(self.md_sources_dir):
-            src_dir = Path(src_location)
-            target_dir = src_location.replace(self.md_sources_dir, self.site_dir)
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
 
-            for fname in fnames:
-                if not fname.endswith(".md"):
-                    continue
+            pool = multiprocessing.Pool(processes=8)
+            workers = [
+                pool.apply_async(self.render_single_file, args=(src_location, fname, nav))
+                for fname in fnames
+            ]
 
-                print("...Rendering", Path(target_dir) / fname)
+            for worker in workers:
+                url = worker.get()
+                if url is not None:
+                    all_urls_list.append(url)
+            pool.close()
+            pool.join()
 
-                # Load metadata for page
-                metadata_file = open(
-                    str(Path(src_location) / fname[:-3]) + "_metadata.json"
-                )
-                metadata = json.loads(metadata_file.read())
-                metadata_file.close()
-                if fname == "index.md":
-                    # Render as index.html
-                    target_path = Path(target_dir) / "index.html"
-                    relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
-                    relative_url = relative_url.replace("//", "/")
-                else:
-                    # Render as fname_no_ext/index.tml
-                    fname_no_ext = ".".join(fname.split(".")[:-1])
-                    full_target_dir = Path(target_dir) / fname_no_ext
-                    os.makedirs(full_target_dir)
-                    target_path = full_target_dir / "index.html"
-                    relative_url = (str(full_target_dir) + "/").replace(
-                        self.site_dir, "/"
-                    )
-
-                md_file = open(src_dir / fname, encoding="utf-8")
-                md_content = md_file.read()
-                md_file.close()
-                md_content = replace_links(md_content)
-
-                # Convert ```lang notation to the hilite syntax
-                md_content = md_content.replace('```python\n', '```\n:::python\n')
-                md_content = md_content.replace('```shell\n', '```\n:::none\n')
-
-                html_content = markdown.markdown(
-                    md_content,
-                    extensions=[
-                        "fenced_code",
-                        "tables",
-                        "codehilite",
-                        "mdx_truly_sane_lists",
-                    ],
-                    extension_configs={
-                        'codehilite': {
-                            'guess_lang': False,
-                        },
-                    }
-                )
-                html_content = insert_title_ids_in_html(html_content)
-                local_nav = [
-                    set_active_flag_in_nav_entry(entry, relative_url) for entry in nav
-                ]
-
-                title = md_content[2 : md_content.find("\n")]
-                html_docs = docs_template.render(
-                    {
-                        "title": title,
-                        "content": html_content,
-                        "location_history": metadata["location_history"],
-                        "base_url": self.url,
-                        "outline": metadata["outline"],
-                    }
-                )
-                html_page = base_template.render(
-                    {
-                        "title": title,
-                        "nav": local_nav,
-                        "base_url": self.url,
-                        "main": html_docs,
-                    }
-                )
-                save_file(target_path, html_page)
-                all_urls_list.append("https://keras.io" + relative_url)
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -647,6 +607,97 @@ class KerasIO:
         self.sync_tutobook_media()
         sitemap = "\n".join(all_urls_list) + "\n"
         save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
+
+    def render_single_file(self, src_location, fname, nav):
+        if not fname.endswith(".md"):
+            return
+
+        base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
+        docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
+
+        src_dir = Path(src_location)
+        target_dir = src_location.replace(self.md_sources_dir, self.site_dir)
+        if not os.path.exists(target_dir):
+            try:
+                os.makedirs(target_dir)
+            except FileExistsError:
+                # Might be created by a concurrent process.
+                pass
+
+        # Load metadata for page
+        metadata_file = open(
+            str(Path(src_location) / fname[:-3]) + "_metadata.json"
+        )
+        metadata = json.loads(metadata_file.read())
+        metadata_file.close()
+        if fname == "index.md":
+            # Render as index.html
+            target_path = Path(target_dir) / "index.html"
+            relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
+            relative_url = relative_url.replace("//", "/")
+        else:
+            # Render as fname_no_ext/index.tml
+            fname_no_ext = ".".join(fname.split(".")[:-1])
+            full_target_dir = Path(target_dir) / fname_no_ext
+            os.makedirs(full_target_dir)
+            target_path = full_target_dir / "index.html"
+            relative_url = (str(full_target_dir) + "/").replace(
+                self.site_dir, "/"
+            )
+
+        md_file = open(src_dir / fname, encoding="utf-8")
+        md_content = md_file.read()
+        md_file.close()
+        md_content = replace_links(md_content)
+
+        for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
+            md_content = re.sub(
+                r'`((tf\.|)' + symbol + ')`',
+                r'[`\1`](' + symbol_url + ')', md_content)
+
+        # Convert ```lang notation to the hilite syntax
+        md_content = md_content.replace('```python\n', '```\n:::python\n')
+        md_content = md_content.replace('```shell\n', '```\n:::none\n')
+
+        html_content = markdown.markdown(
+            md_content,
+            extensions=[
+                "fenced_code",
+                "tables",
+                "codehilite",
+                "mdx_truly_sane_lists",
+            ],
+            extension_configs={
+                'codehilite': {
+                    'guess_lang': False,
+                },
+            }
+        )
+        html_content = insert_title_ids_in_html(html_content)
+        local_nav = [
+            set_active_flag_in_nav_entry(entry, relative_url) for entry in nav
+        ]
+
+        title = md_content[2 : md_content.find("\n")]
+        html_docs = docs_template.render(
+            {
+                "title": title,
+                "content": html_content,
+                "location_history": metadata["location_history"],
+                "base_url": self.url,
+                "outline": metadata["outline"],
+            }
+        )
+        html_page = base_template.render(
+            {
+                "title": title,
+                "nav": local_nav,
+                "base_url": self.url,
+                "main": html_docs,
+            }
+        )
+        save_file(target_path, html_page)
+        return relative_url
 
     def make(self):
         self.make_md_sources()
