@@ -644,6 +644,7 @@ class KerasIO:
             relative_url = (str(full_target_dir) + "/").replace(
                 self.site_dir, "/"
             )
+            relative_url = relative_url.replace("//", "/")
 
         md_file = open(src_dir / fname, encoding="utf-8")
         md_content = md_file.read()
