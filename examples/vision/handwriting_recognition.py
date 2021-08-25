@@ -1,5 +1,5 @@
 """
-Title: Handwriting Recognition
+Title: Handwriting recognition
 Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/16
 Last modified: 2021/08/16
@@ -10,11 +10,11 @@ Description: Training a handwriting recognition model with variable-length seque
 
 This example shows how the [Captcha OCR](https://keras.io/examples/vision/captcha_ocr/)
 example can be extended to the
-[IAM Dataset](https://fki.tic.heia-fr.ch/databases/iam-handwriting-database)
-that has variable length ground-truths. Each sample in the dataset is an image of some
-handwritten text and the target is the string present inside the image. IAM Dataset is
-widely used across many OCR benchmarks so we hope this example serves as a
-good starting point.
+[IAM Dataset](https://fki.tic.heia-fr.ch/databases/iam-handwriting-database),
+which has variable length ground-truth targets. Each sample in the dataset is an image of some
+handwritten text, and its corresponding target is the string present in the image.
+The IAM Dataset is widely used across many OCR benchmarks, so we hope this example can serve as a
+good starting point for building OCR systems.
 """
 
 """
@@ -71,7 +71,7 @@ len(words_list)
 np.random.shuffle(words_list)
 
 """
-We will split the dataset into 90:5:5 ratio (train:validation:test). 
+We will split the dataset into three subsets with a 90:5:5 ratio (train:validation:test). 
 """
 
 split_idx = int(0.9 * len(words_list))
@@ -126,7 +126,7 @@ validation_img_paths, validation_labels = get_image_paths_and_labels(validation_
 test_img_paths, test_labels = get_image_paths_and_labels(test_samples)
 
 """
-Then we segregate the ground-truth labels.
+Then we prepare the ground-truth labels.
 """
 
 # Find maximum length and the size of the vocabulary in the training data.
@@ -168,12 +168,12 @@ test_labels_cleaned = clean_labels(test_labels)
 ### Building the character vocabulary
 
 Keras provides different preprocessing layers to deal with different modalities of data.
-[Here](https://keras.io/guides/preprocessing_layers/) you can get a comprehensive
-introduction about all of them. Our example involves preprocessing labels at a character
-level. This means that if there are two labels namely "cat" and "dog" then our character
-vocabulary should be - (a, c, d, g, o, t) (without any special tokens). We will use the
-[`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_looku
-p/) layer for this purpose. 
+[This guide](https://keras.io/guides/preprocessing_layers/) provids a comprehensive introduction.
+Our example involves preprocessing labels at the character
+level. This means that if there are two labels, e.g. "cat" and "dog", then our character
+vocabulary should be {a, c, d, g, o, t} (without any special tokens). We use the
+[`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup/)
+layer for this purpose. 
 """
 
 
@@ -194,11 +194,11 @@ Instead of square images, many OCR models work with rectangular images. This wil
 clearer in a moment when we will visualize a few samples from the dataset. While
 aspect-unaware resizing square images does not introduce a significant amount of
 distortion this is not the case for rectangular images. But resizing images to a uniform
-size is a requirement for mini-batching. So, we need to perform our resizing such that
-the following criteria are maintained:
+size is a requirement for mini-batching. So we need to perform our resizing such that
+the following criteria are met:
 
-* Aspect ratio is preserved. 
-* Content of the images is not disturbed. 
+* Aspect ratio is preserved.
+* Content of the images is not affected. 
 """
 
 
@@ -325,15 +325,15 @@ for data in train_ds.take(1):
 plt.show()
 
 """
-We can notice that the content of original image is kept as intact as possible and has
-been accordingly padded. 
+You will notice that the content of original image is kept as faithful as possible and has
+been padded accordingly.
 """
 
 """
 ## Model
 
 Our model will use the CTC loss as an endpoint layer. For a detailed understanding of the
-CTC loss, refer to [this post](https://distill.pub/2017/ctc/). 
+CTC loss, refer to [this post](https://distill.pub/2017/ctc/).
 """
 
 
