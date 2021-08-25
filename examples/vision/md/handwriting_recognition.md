@@ -1,4 +1,3 @@
-
 # Handwriting recognition
 
 **Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)<br>
