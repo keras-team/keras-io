@@ -1,8 +1,8 @@
 """
 Title: Monocular Depth Estimation
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
-Date created: 2021/08/21
-Last modified: 2021/08/21
+Date created: 2021/08/26
+Last modified: 2021/08/26
 Description: Implement a depth estimation model with CNN.
 """
 
@@ -11,9 +11,9 @@ Description: Implement a depth estimation model with CNN.
 
 **Depth Estimation** is a crucial step towards inferring scene geometry from 2D images.
 The goal in monocular Depth Estimation is to predict the depth value of each pixel or
-inferring depth information, given only a single RGB image as input. Monocular image is
-a static or sequential image and Monocular solutions tend to achieve this goal using only
-one image.
+inferring depth information, given only a single RGB image as input. Monocular image is a
+static image or sequential images and Monocular solutions tend to achieve this goal using
+only one image.
 
 
 
@@ -65,9 +65,11 @@ if not os.path.exists(os.path.abspath(".") + annotation_folder):
 
 """
 ##  Preparing the dataset
+
+Here we have used only the indoor images to train our depth estimation model.
 """
 
-path = "val"
+path = "val/indoors"
 
 filelist = []
 
@@ -118,6 +120,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         self.n_channels = n_channels
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.min_depth = 0.1
         self.on_epoch_end()
 
     def __len__(self):
@@ -131,9 +134,9 @@ class DataGenerator(tf.keras.utils.Sequence):
         index = self.indices[index * self.batch_size : (index + 1) * self.batch_size]
         # Find list of IDs
         batch = [self.indices[k] for k in index]
-        X, y = self.__data_generation(batch)
+        x, y = self.data_generation(batch)
 
-        return X, y
+        return x, y
 
     def on_epoch_end(self):
 
@@ -144,7 +147,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         if self.shuffle == True:
             np.random.shuffle(self.index)
 
-    def __load__(self, image_path, depth_map, mask):
+    def load(self, image_path, depth_map, mask):
         "Load Input and Target image"
 
         image_ = cv2.imread(image_path)
@@ -157,34 +160,32 @@ class DataGenerator(tf.keras.utils.Sequence):
         mask = np.load(mask)
         mask = mask > 0
 
-        MIN_DEPTH = 0.5
-
-        MAX_DEPTH = min(300, np.percentile(depth_map, 99))
-        depth_map = np.clip(depth_map, MIN_DEPTH, MAX_DEPTH)
+        max_depth = min(300, np.percentile(depth_map, 99))
+        depth_map = np.clip(depth_map, self.min_depth, max_depth)
         depth_map = np.log(depth_map, where=mask)
 
         depth_map = np.ma.masked_where(~mask, depth_map)
 
-        depth_map = np.clip(depth_map, 0.1, np.log(MAX_DEPTH))
+        depth_map = np.clip(depth_map, 0.1, np.log(max_depth))
         depth_map = cv2.resize(depth_map, self.dim)
         depth_map = np.expand_dims(depth_map, axis=2)
         depth_map = tf.image.convert_image_dtype(depth_map, tf.float32)
 
         return image_, depth_map
 
-    def __data_generation(self, batch):
+    def data_generation(self, batch):
 
-        X = np.empty((self.batch_size, *self.dim, self.n_channels))
+        x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 
         for i, id_ in enumerate(batch):
-            X[i,], y[i,] = self.__load__(
+            x[i,], y[i,] = self.load(
                 self.data["image"][id_],
                 self.data["depth"][id_],
                 self.data["mask"][id_],
             )
 
-        return X, y
+        return x, y
 
 
 """
@@ -192,7 +193,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 """
 
 
-def visualize_depth_map(samples, test=False):
+def visualize_depth_map(samples, test=False, model=None):
     input, target = samples
     cmap = plt.cm.jet
     cmap.set_bad(color="black")
@@ -221,8 +222,8 @@ visualize_depth_map(visualize_samples)
 ## 3D Point-Cloud Visualization
 """
 
-depth_vis = np.flipud(visualize_samples[1][2].squeeze())  # target
-img_vis = np.flipud(visualize_samples[0][2].squeeze())  # input
+depth_vis = np.flipud(visualize_samples[1][1].squeeze())  # target
+img_vis = np.flipud(visualize_samples[0][1].squeeze())  # input
 
 fig = plt.figure(figsize=(15, 10))
 ax = plt.axes(projection="3d")
@@ -241,6 +242,7 @@ for x in range(0, img_vis.shape[0], STEP):
 
 """
 ## Building the model
+
 1. The basic model architecture have been from U-Net.
 2. Residual-blocks has been used in the down-scale blocks of the U-Net architecture.
 """
@@ -353,11 +355,37 @@ class DepthEstimationModel(tf.keras.Model):
     def __init__(self, model):
         super().__init__()
         self.model = model
-
-    def compile(self, optimizer):
-        super(DepthEstimationModel, self).compile()
-        self.optimizer = optimizer
+        self.w1 = 0.85
+        self.w2 = 0.1
+        self.w3 = 1.0
         self.loss_metric = tf.keras.metrics.Mean(name="loss")
+
+    def calculate_loss(self, target, pred):
+        # Edges
+        dy_true, dx_true = tf.image.image_gradients(target)
+        dy_pred, dx_pred = tf.image.image_gradients(pred)
+        weights_x = tf.exp(tf.reduce_mean(tf.abs(dx_true)))
+        weights_y = tf.exp(tf.reduce_mean(tf.abs(dy_true)))
+
+        # depth_smoothness
+        smoothness_x = dx_pred * weights_x
+        smoothness_y = dy_pred * weights_y
+
+        l_edges = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(abs(smoothness_y))
+
+        # Structural similarity (SSIM) index
+        l_ssim = tf.reduce_mean(
+            1
+            - tf.image.ssim(
+                target, pred, max_val=WIDTH, filter_size=7, k1=0.01 ** 2, k2=0.03 ** 2
+            )
+        )
+        # Point-wise depth
+        l1_loss = tf.reduce_mean(tf.abs(target - pred))
+
+        loss = (self.w1 * l_ssim) + (self.w2 * l1_loss) + (self.w3 * l_edges)
+
+        return loss
 
     @property
     def metrics(self):
@@ -367,48 +395,24 @@ class DepthEstimationModel(tf.keras.Model):
         input, target = batch_data
         with tf.GradientTape() as tape:
             pred = self.model(input, training=True)
-
-            # Edges
-            dy_true, dx_true = tf.image.image_gradients(target)
-            dy_pred, dx_pred = tf.image.image_gradients(pred)
-            weights_x = tf.exp(tf.reduce_mean(tf.abs(dx_true)))
-            weights_y = tf.exp(tf.reduce_mean(tf.abs(dy_true)))
-
-            # depth_smoothness
-            smoothness_x = dx_pred * weights_x
-            smoothness_y = dy_pred * weights_y
-
-            l_edges = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(
-                abs(smoothness_y)
-            )
-
-            # Structural similarity (SSIM) index
-            l_ssim = tf.reduce_mean(
-                1
-                - tf.image.ssim(
-                    target,
-                    pred,
-                    max_val=WIDTH,
-                    filter_size=7,
-                    k1=0.01 ** 2,
-                    k2=0.03 ** 2,
-                )
-            )
-            # Point-wise depth
-            l1_loss = tf.reduce_mean(tf.abs(target - pred))
-
-            # Weights
-            w1 = 0.85
-            w2 = 0.1
-            w3 = 1.0
-
-            loss = (w1 * l_ssim) + (w2 * l1_loss) + (w3 * l_edges)
+            loss = self.calculate_loss(target, pred)
 
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
         self.loss_metric.update_state(loss)
         return {
-            "Loss": self.loss_metric.result(),
+            "loss": self.loss_metric.result(),
+        }
+
+    def test_step(self, batch_data):
+        input, target = batch_data
+
+        pred = self.model(input, training=False)
+        loss = self.calculate_loss(target, pred)
+
+        self.loss_metric.update_state(loss)
+        return {
+            "loss": self.loss_metric.result(),
         }
 
     def call(self, x):
@@ -424,13 +428,25 @@ optimizer = tf.keras.optimizers.Adam(
     amsgrad=False,
 )
 model = unet_model(HEIGHT, WIDTH)
-DEM = DepthEstimationModel(model=model)
-DEM.compile(optimizer)
+dem = DepthEstimationModel(model=model)
+# Define the loss function
+cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
+    from_logits=True, reduction="none"
+)
+# Compile the model
+dem.compile(optimizer, loss=cross_entropy)
 
 train_loader = DataGenerator(
-    data=df[:600].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
+    data=df[:260].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
 )
-DEM.fit(train_loader, epochs=EPOCHS)
+validation_loader = DataGenerator(
+    data=df[260:].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
+)
+dem.fit(
+    train_loader,
+    epochs=EPOCHS,
+    validation_data=validation_loader,
+)
 
 """
 ## Visualizing Model output.
@@ -442,20 +458,20 @@ and the third one is the predicted depth-map image.
 test_loader = next(
     iter(
         DataGenerator(
-            data=df[601:].reset_index(drop="true"), batch_size=6, dim=(HEIGHT, WIDTH)
+            data=df[265:].reset_index(drop="true"), batch_size=6, dim=(HEIGHT, WIDTH)
         )
     )
 )
-visualize_depth_map(test_loader, test=True)
+visualize_depth_map(test_loader, test=True, model=model)
 
 test_loader = next(
     iter(
         DataGenerator(
-            data=df[701:].reset_index(drop="true"), batch_size=6, dim=(HEIGHT, WIDTH)
+            data=df[300:].reset_index(drop="true"), batch_size=6, dim=(HEIGHT, WIDTH)
         )
     )
 )
-visualize_depth_map(test_loader, test=True)
+visualize_depth_map(test_loader, test=True, model=model)
 
 """
 ## Scopes of Improvement
