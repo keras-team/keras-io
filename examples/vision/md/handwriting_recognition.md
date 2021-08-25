@@ -1,11 +1,17 @@
-"""
-Title: Handwriting recognition
-Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/08/16
-Last modified: 2021/08/16
-Description: Training a handwriting recognition model with variable-length sequences.
-"""
-"""
+
+# Handwriting recognition
+
+**Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/08/16<br>
+**Last modified:** 2021/08/16<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/handwriting_recognition.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/handwriting_recognition.py)
+
+
+**Description:** Training a handwriting recognition model with variable-length sequences.
+
+---
 ## Introduction
 
 This example shows how the [Captcha OCR](https://keras.io/examples/vision/captcha_ocr/)
@@ -15,32 +21,61 @@ which has variable length ground-truth targets. Each sample in the dataset is an
 handwritten text, and its corresponding target is the string present in the image.
 The IAM Dataset is widely used across many OCR benchmarks, so we hope this example can serve as a
 good starting point for building OCR systems.
-"""
 
-"""
+---
 ## Data collection
-"""
 
-"""shell
-!wget -q https://git.io/J0fjL -O IAM_Words.zip
-!unzip -qq IAM_Words.zip
 
-!mkdir data
-!mkdir data/words
-!tar -xf IAM_Words/words.tgz -C data/words
-!mv IAM_Words/words.txt data
-"""
+```python
+!!wget -q https://git.io/J0fjL -O IAM_Words.zip
+!!unzip -qq IAM_Words.zip
+!
+!!mkdir data
+!!mkdir data/words
+!!tar -xf IAM_Words/words.tgz -C data/words
+!!mv IAM_Words/words.txt data
+```
 
-"""shell
-# Preview how the dataset is organized. Lines prepended by "#"
-# are just metadata information.
-!head -20 data/words.txt
-"""
 
-"""
+
+
+```python
+!# Preview how the dataset is organized. Lines prepended by "#"
+!# are just metadata information.
+!!head -20 data/words.txt
+```
+<div class="k-default-codeblock">
+```
+[]
+
+['#--- words.txt ---------------------------------------------------------------#',
+ '#',
+ '# iam database word information',
+ '#',
+ '# format: a01-000u-00-00 ok 154 1 408 768 27 51 AT A',
+ '#',
+ '#     a01-000u-00-00  -> word id for line 00 in form a01-000u',
+ '#     ok              -> result of word segmentation',
+ '#                            ok: word was correctly',
+ '#                            er: segmentation of word can be bad',
+ '#',
+ '#     154             -> graylevel to binarize the line containing this word',
+ '#     1               -> number of components for this word',
+ '#     408 768 27 51   -> bounding box around this word in x,y,w,h format',
+ '#     AT              -> the grammatical tag for this word, see the',
+ '#                        file tagset.txt for an explanation',
+ '#     A               -> the transcription for this word',
+ '#',
+ 'a01-000u-00-00 ok 154 408 768 27 51 AT A',
+ 'a01-000u-00-01 ok 154 507 766 213 48 NN MOVE']
+
+```
+</div>
+---
 ## Imports
-"""
 
+
+```python
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 from tensorflow import keras
 
@@ -51,11 +86,13 @@ import os
 
 np.random.seed(42)
 tf.random.set_seed(42)
+```
 
-"""
+---
 ## Dataset splitting
-"""
 
+
+```python
 base_path = "data"
 words_list = []
 
@@ -69,11 +106,12 @@ for line in words:
 len(words_list)
 
 np.random.shuffle(words_list)
+```
 
-"""
 We will split the dataset into three subsets with a 90:5:5 ratio (train:validation:test).
-"""
 
+
+```python
 split_idx = int(0.9 * len(words_list))
 train_samples = words_list[:split_idx]
 test_samples = words_list[split_idx:]
@@ -89,13 +127,23 @@ assert len(words_list) == len(train_samples) + len(validation_samples) + len(
 print(f"Total training samples: {len(train_samples)}")
 print(f"Total validation samples: {len(validation_samples)}")
 print(f"Total test samples: {len(test_samples)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total training samples: 86810
+Total validation samples: 4823
+Total test samples: 4823
+
+```
+</div>
+---
 ## Data input pipeline
 
 We start building our data input pipeline by first preparing the image paths.
-"""
 
+
+```python
 base_image_path = os.path.join(base_path, "words")
 
 
@@ -124,11 +172,12 @@ def get_image_paths_and_labels(samples):
 train_img_paths, train_labels = get_image_paths_and_labels(train_samples)
 validation_img_paths, validation_labels = get_image_paths_and_labels(validation_samples)
 test_img_paths, test_labels = get_image_paths_and_labels(test_samples)
+```
 
-"""
 Then we prepare the ground-truth labels.
-"""
 
+
+```python
 # Find maximum length and the size of the vocabulary in the training data.
 train_labels_cleaned = []
 characters = set()
@@ -147,11 +196,30 @@ print("Vocab size: ", len(characters))
 
 # Check some label samples.
 train_labels_cleaned[:10]
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Maximum length:  21
+Vocab size:  78
+
+['sure',
+ 'he',
+ 'during',
+ 'of',
+ 'booty',
+ 'gastronomy',
+ 'boy',
+ 'The',
+ 'and',
+ 'in']
+
+```
+</div>
 Now we clean the validation and the test labels as well.
-"""
 
+
+```python
 
 def clean_labels(labels):
     cleaned_labels = []
@@ -163,8 +231,8 @@ def clean_labels(labels):
 
 validation_labels_cleaned = clean_labels(validation_labels)
 test_labels_cleaned = clean_labels(test_labels)
+```
 
-"""
 ### Building the character vocabulary
 
 Keras provides different preprocessing layers to deal with different modalities of data.
@@ -174,8 +242,9 @@ level. This means that if there are two labels, e.g. "cat" and "dog", then our c
 vocabulary should be {a, c, d, g, o, t} (without any special tokens). We use the
 [`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup/)
 layer for this purpose.
-"""
 
+
+```python
 
 AUTOTUNE = tf.data.AUTOTUNE
 
@@ -186,8 +255,8 @@ char_to_num = StringLookup(vocabulary=list(characters), mask_token=None)
 num_to_char = StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
+```
 
-"""
 ### Resizing images without distortion
 
 Instead of square images, many OCR models work with rectangular images. This will become
@@ -199,8 +268,9 @@ the following criteria are met:
 
 * Aspect ratio is preserved.
 * Content of the images is not affected.
-"""
 
+
+```python
 
 def distortion_free_resize(image, img_size):
     w, h = img_size
@@ -238,19 +308,18 @@ def distortion_free_resize(image, img_size):
     image = tf.image.flip_left_right(image)
     return image
 
+```
 
-"""
 If we just go with the plain resizing then the images would look like so:
 
 ![](https://i.imgur.com/eqq3s4N.png)
 
 Notice how this resizing would have introduced unnecessary stretching.
-"""
 
-"""
 ### Putting the utilities together
-"""
 
+
+```python
 batch_size = 64
 padding_token = 99
 image_width = 128
@@ -285,19 +354,23 @@ def prepare_dataset(image_paths, labels):
     )
     return dataset.batch(batch_size).cache().prefetch(AUTOTUNE)
 
+```
 
-"""
+---
 ## Prepare `tf.data.Dataset` objects
-"""
 
+
+```python
 train_ds = prepare_dataset(train_img_paths, train_labels_cleaned)
 validation_ds = prepare_dataset(validation_img_paths, validation_labels_cleaned)
 test_ds = prepare_dataset(test_img_paths, test_labels_cleaned)
+```
 
-"""
+---
 ## Visualize a few samples
-"""
 
+
+```python
 for data in train_ds.take(1):
     images, labels = data["image"], data["label"]
 
@@ -323,19 +396,23 @@ for data in train_ds.take(1):
 
 
 plt.show()
+```
 
-"""
+
+![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_27_0.png)
+
+
 You will notice that the content of original image is kept as faithful as possible and has
 been padded accordingly.
-"""
 
-"""
+---
 ## Model
 
 Our model will use the CTC loss as an endpoint layer. For a detailed understanding of the
 CTC loss, refer to [this post](https://distill.pub/2017/ctc/).
-"""
 
+
+```python
 
 class CTCLayer(keras.layers.Layer):
     def __init__(self, name=None):
@@ -423,29 +500,71 @@ def build_model():
 # Get the model.
 model = build_model()
 model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "handwriting_recognizer"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+image (InputLayer)              [(None, 128, 32, 1)] 0                                            
+__________________________________________________________________________________________________
+Conv1 (Conv2D)                  (None, 128, 32, 32)  320         image[0][0]                      
+__________________________________________________________________________________________________
+pool1 (MaxPooling2D)            (None, 64, 16, 32)   0           Conv1[0][0]                      
+__________________________________________________________________________________________________
+Conv2 (Conv2D)                  (None, 64, 16, 64)   18496       pool1[0][0]                      
+__________________________________________________________________________________________________
+pool2 (MaxPooling2D)            (None, 32, 8, 64)    0           Conv2[0][0]                      
+__________________________________________________________________________________________________
+reshape (Reshape)               (None, 32, 512)      0           pool2[0][0]                      
+__________________________________________________________________________________________________
+dense1 (Dense)                  (None, 32, 64)       32832       reshape[0][0]                    
+__________________________________________________________________________________________________
+dropout (Dropout)               (None, 32, 64)       0           dense1[0][0]                     
+__________________________________________________________________________________________________
+bidirectional (Bidirectional)   (None, 32, 256)      197632      dropout[0][0]                    
+__________________________________________________________________________________________________
+bidirectional_1 (Bidirectional) (None, 32, 128)      164352      bidirectional[0][0]              
+__________________________________________________________________________________________________
+label (InputLayer)              [(None, None)]       0                                            
+__________________________________________________________________________________________________
+dense2 (Dense)                  (None, 32, 81)       10449       bidirectional_1[0][0]            
+__________________________________________________________________________________________________
+ctc_loss (CTCLayer)             (None, 32, 81)       0           label[0][0]                      
+                                                                 dense2[0][0]                     
+==================================================================================================
+Total params: 424,081
+Trainable params: 424,081
+Non-trainable params: 0
+__________________________________________________________________________________________________
+
+```
+</div>
+---
 ## Evaluation metric
 
 [Edit Distance](https://en.wikipedia.org/wiki/Edit_distance)
 is the most widely used metric for evaluating OCR models. In this section, we will
 implement it and use it as a callback to monitor our model.
-"""
 
-"""
 We first segregate the validation images and their labels for convenience.
-"""
+
+
+```python
 validation_images = []
 validation_labels = []
 
 for batch in validation_ds:
     validation_images.append(batch["image"])
     validation_labels.append(batch["label"])
+```
 
-"""
 Now, we create a callback to monitor the edit distances.
-"""
 
+
+```python
 
 def calculate_edit_distance(labels, predictions):
     # Get a single batch and convert its labels to sparse tensors.
@@ -484,13 +603,15 @@ class EditDistanceCallback(keras.callbacks.Callback):
             f"Mean edit distance for epoch {epoch + 1}: {np.mean(edit_distances):.4f}"
         )
 
+```
 
-"""
+---
 ## Training
 
 Now we are ready to kick off model training.
-"""
 
+
+```python
 epochs = 10  # To get good results this should be at least 50.
 
 model = build_model()
@@ -507,11 +628,48 @@ history = model.fit(
     callbacks=[edit_distance_callback],
 )
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+1357/1357 [==============================] - 110s 65ms/step - loss: 13.6589 - val_loss: 12.1796
+Mean edit distance for epoch 1: 20.4730
+Epoch 2/10
+1357/1357 [==============================] - 64s 47ms/step - loss: 11.0238 - val_loss: 9.9272
+Mean edit distance for epoch 2: 20.1453
+Epoch 3/10
+1357/1357 [==============================] - 63s 46ms/step - loss: 9.4262 - val_loss: 8.3980
+Mean edit distance for epoch 3: 19.8384
+Epoch 4/10
+1357/1357 [==============================] - 63s 46ms/step - loss: 8.0044 - val_loss: 6.6746
+Mean edit distance for epoch 4: 19.1790
+Epoch 5/10
+1357/1357 [==============================] - 63s 46ms/step - loss: 6.7339 - val_loss: 5.5326
+Mean edit distance for epoch 5: 18.8079
+Epoch 6/10
+1357/1357 [==============================] - 62s 46ms/step - loss: 5.8100 - val_loss: 4.7118
+Mean edit distance for epoch 6: 18.3978
+Epoch 7/10
+1357/1357 [==============================] - 63s 47ms/step - loss: 5.1084 - val_loss: 4.1018
+Mean edit distance for epoch 7: 18.2252
+Epoch 8/10
+1357/1357 [==============================] - 62s 46ms/step - loss: 4.5947 - val_loss: 3.7933
+Mean edit distance for epoch 8: 18.1273
+Epoch 9/10
+1357/1357 [==============================] - 63s 46ms/step - loss: 4.2143 - val_loss: 3.4364
+Mean edit distance for epoch 9: 17.9910
+Epoch 10/10
+1357/1357 [==============================] - 62s 46ms/step - loss: 3.9139 - val_loss: 3.2646
+Mean edit distance for epoch 10: 17.9137
+
+```
+</div>
+---
 ## Inference
-"""
 
+
+```python
 
 # A utility function to decode the output of the network.
 def decode_batch_predictions(pred):
@@ -550,12 +708,15 @@ for batch in test_ds.take(1):
         ax[i // 4, i % 4].axis("off")
 
 plt.show()
+```
 
-"""
+
+![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_39_0.png)
+
+
 To get better results the model should be trained for at least 50 epochs.
-"""
 
-"""
+---
 ## Final remarks
 
 * The `prediction_model` is fully compatible with TensorFlow Lite. If you are interested,
@@ -566,4 +727,3 @@ to be useful in this regard.
 can hurt model performance for complex sequences. To this end, we can leverage
 Spatial Transformer Networks ([Jaderberg et al.](https://arxiv.org/abs/1506.02025))
 that can help the model learn affine transformations that maximize its performance.
-"""
