@@ -772,18 +772,14 @@ def set_active_flag_in_nav_entry(entry, relative_url):
 
 
 def replace_links(content):
-    content = content.replace(
-        "https://www.tensorflow.org/guide/keras/custom_layers_and_models",
-        "https://keras.io/guides/making_new_layers_and_models_via_subclassing/",
-    )
-    content = content.replace(
-        "https://www.tensorflow.org/guide/keras/masking_and_padding",
-        "https://keras.io/guides/understanding_masking_and_padding/",
-    )
-    content = content.replace(
-        "https://www.tensorflow.org/guide/keras/rnn",
-        "https://keras.io/guides/working_with_rnns/",
-    )
+    # Make sure all Keras guides point to keras.io.
+    for entry in generate_tf_guides.CONFIG:
+        keras_name = entry["source_name"]
+        tf_name = entry["target_name"]
+        content = content.replace(
+          "https://www.tensorflow.org/guide/keras/" + tf_name,
+          "https://keras.io/guides/" + keras_name,
+        )
     return content
 
 
