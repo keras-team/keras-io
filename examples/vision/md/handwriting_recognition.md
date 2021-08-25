@@ -1,3 +1,4 @@
+
 # Handwriting recognition
 
 **Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)<br>
@@ -26,47 +27,44 @@ good starting point for building OCR systems.
 
 
 ```python
-!!wget -q https://git.io/J0fjL -O IAM_Words.zip
-!!unzip -qq IAM_Words.zip
+!wget -q https://git.io/J0fjL -O IAM_Words.zip
+!unzip -qq IAM_Words.zip
 !
-!!mkdir data
-!!mkdir data/words
-!!tar -xf IAM_Words/words.tgz -C data/words
-!!mv IAM_Words/words.txt data
+!mkdir data
+!mkdir data/words
+!tar -xf IAM_Words/words.tgz -C data/words
+!mv IAM_Words/words.txt data
 ```
 
-
+Preview how the dataset is organized. Lines prepended by "#" are just metadata information.
 
 
 ```python
-!# Preview how the dataset is organized. Lines prepended by "#"
-!# are just metadata information.
-!!head -20 data/words.txt
+!head -20 data/words.txt
 ```
+
 <div class="k-default-codeblock">
 ```
-[]
-
-['#--- words.txt ---------------------------------------------------------------#',
- '#',
- '# iam database word information',
- '#',
- '# format: a01-000u-00-00 ok 154 1 408 768 27 51 AT A',
- '#',
- '#     a01-000u-00-00  -> word id for line 00 in form a01-000u',
- '#     ok              -> result of word segmentation',
- '#                            ok: word was correctly',
- '#                            er: segmentation of word can be bad',
- '#',
- '#     154             -> graylevel to binarize the line containing this word',
- '#     1               -> number of components for this word',
- '#     408 768 27 51   -> bounding box around this word in x,y,w,h format',
- '#     AT              -> the grammatical tag for this word, see the',
- '#                        file tagset.txt for an explanation',
- '#     A               -> the transcription for this word',
- '#',
- 'a01-000u-00-00 ok 154 408 768 27 51 AT A',
- 'a01-000u-00-01 ok 154 507 766 213 48 NN MOVE']
+#--- words.txt ---------------------------------------------------------------#
+#
+# iam database word information
+#
+# format: a01-000u-00-00 ok 154 1 408 768 27 51 AT A
+#
+#     a01-000u-00-00  -> word id for line 00 in form a01-000u
+#     ok              -> result of word segmentation
+#                            ok: word was correctly
+#                            er: segmentation of word can be bad
+#
+#     154             -> graylevel to binarize the line containing this word
+#     1               -> number of components for this word
+#     408 768 27 51   -> bounding box around this word in x,y,w,h format
+#     AT              -> the grammatical tag for this word, see the
+#                        file tagset.txt for an explanation
+#     A               -> the transcription for this word
+#
+a01-000u-00-00 ok 154 408 768 27 51 AT A
+a01-000u-00-01 ok 154 507 766 213 48 NN MOVE
 
 ```
 </div>
@@ -398,7 +396,7 @@ plt.show()
 ```
 
 
-![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_27_0.png)
+![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_28_0.png)
 
 
 You will notice that the content of original image is kept as faithful as possible and has
@@ -632,35 +630,35 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-1357/1357 [==============================] - 110s 65ms/step - loss: 13.6589 - val_loss: 12.1796
-Mean edit distance for epoch 1: 20.4730
+1357/1357 [==============================] - 89s 51ms/step - loss: 13.6670 - val_loss: 11.8041
+Mean edit distance for epoch 1: 20.5117
 Epoch 2/10
-1357/1357 [==============================] - 64s 47ms/step - loss: 11.0238 - val_loss: 9.9272
-Mean edit distance for epoch 2: 20.1453
+1357/1357 [==============================] - 48s 36ms/step - loss: 10.6864 - val_loss: 9.6994
+Mean edit distance for epoch 2: 20.1167
 Epoch 3/10
-1357/1357 [==============================] - 63s 46ms/step - loss: 9.4262 - val_loss: 8.3980
-Mean edit distance for epoch 3: 19.8384
+1357/1357 [==============================] - 48s 35ms/step - loss: 9.0437 - val_loss: 8.0355
+Mean edit distance for epoch 3: 19.7270
 Epoch 4/10
-1357/1357 [==============================] - 63s 46ms/step - loss: 8.0044 - val_loss: 6.6746
-Mean edit distance for epoch 4: 19.1790
+1357/1357 [==============================] - 48s 35ms/step - loss: 7.6098 - val_loss: 6.4239
+Mean edit distance for epoch 4: 19.1106
 Epoch 5/10
-1357/1357 [==============================] - 63s 46ms/step - loss: 6.7339 - val_loss: 5.5326
-Mean edit distance for epoch 5: 18.8079
+1357/1357 [==============================] - 48s 35ms/step - loss: 6.3194 - val_loss: 4.9814
+Mean edit distance for epoch 5: 18.4894
 Epoch 6/10
-1357/1357 [==============================] - 62s 46ms/step - loss: 5.8100 - val_loss: 4.7118
-Mean edit distance for epoch 6: 18.3978
+1357/1357 [==============================] - 48s 35ms/step - loss: 5.3417 - val_loss: 4.1307
+Mean edit distance for epoch 6: 18.1909
 Epoch 7/10
-1357/1357 [==============================] - 63s 47ms/step - loss: 5.1084 - val_loss: 4.1018
-Mean edit distance for epoch 7: 18.2252
+1357/1357 [==============================] - 48s 35ms/step - loss: 4.6396 - val_loss: 3.7706
+Mean edit distance for epoch 7: 18.1224
 Epoch 8/10
-1357/1357 [==============================] - 62s 46ms/step - loss: 4.5947 - val_loss: 3.7933
-Mean edit distance for epoch 8: 18.1273
+1357/1357 [==============================] - 48s 35ms/step - loss: 4.1926 - val_loss: 3.3682
+Mean edit distance for epoch 8: 17.9387
 Epoch 9/10
-1357/1357 [==============================] - 63s 46ms/step - loss: 4.2143 - val_loss: 3.4364
-Mean edit distance for epoch 9: 17.9910
+1357/1357 [==============================] - 48s 36ms/step - loss: 3.8532 - val_loss: 3.1829
+Mean edit distance for epoch 9: 17.9074
 Epoch 10/10
-1357/1357 [==============================] - 62s 46ms/step - loss: 3.9139 - val_loss: 3.2646
-Mean edit distance for epoch 10: 17.9137
+1357/1357 [==============================] - 49s 36ms/step - loss: 3.5769 - val_loss: 2.9221
+Mean edit distance for epoch 10: 17.7960
 
 ```
 </div>
@@ -710,7 +708,7 @@ plt.show()
 ```
 
 
-![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_39_0.png)
+![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_40_0.png)
 
 
 To get better results the model should be trained for at least 50 epochs.
