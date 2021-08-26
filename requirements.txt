@@ -10,3 +10,4 @@ tensorflow
 PyYAML
 jupyter
 keras-tuner
+pandas
