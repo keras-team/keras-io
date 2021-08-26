@@ -318,6 +318,7 @@ class BottleNeckBlock(layers.Layer):
 
 """
 ## Optimizing Loss
+
 We have tried to optimize 3 losses in our model.
 1. Structural similarity index(SSIM).
 2. L1-loss, or Point-wise depth in our case.
@@ -455,6 +456,7 @@ dem.fit(
 
 """
 ## Visualizing Model output.
+
 Visualizing model output over validation set.
 The first image is the RGB image, the second image is the ground truth depth-map image
 and the third one is the predicted depth-map image.
