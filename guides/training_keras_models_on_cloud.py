@@ -39,9 +39,10 @@ console.
 ## Import required modules
 
 This guide requires TensorFlow Cloud, which you can install via:
+"""
 
-`pip install tensorflow-cloud`
-
+"""shell
+pip install -q tensorflow_cloud
 """
 
 import os
