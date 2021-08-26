@@ -178,11 +178,11 @@ class DataGenerator(tf.keras.utils.Sequence):
         x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 
-        for i, id_ in enumerate(batch):
+        for i, batch_id in enumerate(batch):
             x[i,], y[i,] = self.load(
-                self.data["image"][id_],
-                self.data["depth"][id_],
-                self.data["mask"][id_],
+                self.data["image"][batch_id],
+                self.data["depth"][batch_id],
+                self.data["mask"][batch_id],
             )
 
         return x, y
@@ -316,30 +316,6 @@ class BottleNeckBlock(layers.Layer):
         return x
 
 
-def unet_model(height, width):
-
-    f = [16, 32, 64, 128, 256]
-
-    inputs = layers.Input((height, width, 3))
-
-    c1, p1 = DownscaleBlock(f[0])(inputs)
-    c2, p2 = DownscaleBlock(f[1])(p1)
-    c3, p3 = DownscaleBlock(f[2])(p2)
-    c4, p4 = DownscaleBlock(f[3])(p3)
-
-    bn = BottleNeckBlock(f[4])(p4)
-
-    u1 = UpscaleBlock(f[3])(bn, c4)
-    u2 = UpscaleBlock(f[2])(u1, c3)
-    u3 = UpscaleBlock(f[1])(u2, c2)
-    u4 = UpscaleBlock(f[0])(u3, c1)
-
-    outputs = layers.Conv2D(1, (1, 1), padding="same", activation="tanh")(u4)
-
-    model = tf.keras.Model(inputs, outputs)
-    return model
-
-
 """
 ## Optimizing Loss
 We have tried to optimize 3 losses in our model.
@@ -352,13 +328,27 @@ Out of the three loss functions SSIM contributed the most in improving model per
 
 
 class DepthEstimationModel(tf.keras.Model):
-    def __init__(self, model):
+    def __init__(self):
         super().__init__()
-        self.model = model
-        self.w1 = 0.85
-        self.w2 = 0.1
-        self.w3 = 1.0
+        self.ssim_loss_weight = 0.85
+        self.l1_loss_weight = 0.1
+        self.edge_loss_weight = 0.9
         self.loss_metric = tf.keras.metrics.Mean(name="loss")
+        f = [16, 32, 64, 128, 256]
+        self.downscale_blocks = [
+            DownscaleBlock(f[0]),
+            DownscaleBlock(f[1]),
+            DownscaleBlock(f[2]),
+            DownscaleBlock(f[3]),
+        ]
+        self.bottle_neck_block = BottleNeckBlock(f[4])
+        self.upscale_blocks = [
+            UpscaleBlock(f[3]),
+            UpscaleBlock(f[2]),
+            UpscaleBlock(f[1]),
+            UpscaleBlock(f[0]),
+        ]
+        self.conv_layer = layers.Conv2D(1, (1, 1), padding="same", activation="tanh")
 
     def calculate_loss(self, target, pred):
         # Edges
@@ -383,7 +373,11 @@ class DepthEstimationModel(tf.keras.Model):
         # Point-wise depth
         l1_loss = tf.reduce_mean(tf.abs(target - pred))
 
-        loss = (self.w1 * l_ssim) + (self.w2 * l1_loss) + (self.w3 * l_edges)
+        loss = (
+            (self.ssim_loss_weight * l_ssim)
+            + (self.l1_loss_weight * l1_loss)
+            + (self.edge_loss_weight * l_edges)
+        )
 
         return loss
 
@@ -394,11 +388,11 @@ class DepthEstimationModel(tf.keras.Model):
     def train_step(self, batch_data):
         input, target = batch_data
         with tf.GradientTape() as tape:
-            pred = self.model(input, training=True)
+            pred = self(input, training=True)
             loss = self.calculate_loss(target, pred)
 
-        gradients = tape.gradient(loss, self.model.trainable_variables)
-        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+        gradients = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
         self.loss_metric.update_state(loss)
         return {
             "loss": self.loss_metric.result(),
@@ -407,7 +401,7 @@ class DepthEstimationModel(tf.keras.Model):
     def test_step(self, batch_data):
         input, target = batch_data
 
-        pred = self.model(input, training=False)
+        pred = self(input, training=False)
         loss = self.calculate_loss(target, pred)
 
         self.loss_metric.update_state(loss)
@@ -416,7 +410,19 @@ class DepthEstimationModel(tf.keras.Model):
         }
 
     def call(self, x):
-        pass
+        c1, p1 = self.downscale_blocks[0](x)
+        c2, p2 = self.downscale_blocks[1](p1)
+        c3, p3 = self.downscale_blocks[2](p2)
+        c4, p4 = self.downscale_blocks[3](p3)
+
+        bn = self.bottle_neck_block(p4)
+
+        u1 = self.upscale_blocks[0](bn, c4)
+        u2 = self.upscale_blocks[1](u1, c3)
+        u3 = self.upscale_blocks[2](u2, c2)
+        u4 = self.upscale_blocks[3](u3, c1)
+
+        return self.conv_layer(u4)
 
 
 """
@@ -427,8 +433,7 @@ optimizer = tf.keras.optimizers.Adam(
     learning_rate=LR,
     amsgrad=False,
 )
-model = unet_model(HEIGHT, WIDTH)
-dem = DepthEstimationModel(model=model)
+dem = DepthEstimationModel()
 # Define the loss function
 cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction="none"
@@ -462,7 +467,7 @@ test_loader = next(
         )
     )
 )
-visualize_depth_map(test_loader, test=True, model=model)
+visualize_depth_map(test_loader, test=True, model=dem)
 
 test_loader = next(
     iter(
@@ -471,7 +476,7 @@ test_loader = next(
         )
     )
 )
-visualize_depth_map(test_loader, test=True, model=model)
+visualize_depth_map(test_loader, test=True, model=dem)
 
 """
 ## Scopes of Improvement
@@ -487,10 +492,8 @@ all. So, playing with the loss functions gives a huge scope of improvement in th
 
 """
 ## References
-While I was working on this topic I came across various research paper that explains
-solving this problem and to be honest my solution is not as good as in those papers. I
-would suggest you to go through those, just search depth estimation on
-"paperwithcode.com".
+This is an intro and does not go as deep as various papers. The following
+papers go deeper into possible approaches for depth estimation.
 
 1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning
 from Monocular Videos](https://arxiv.org/pdf/1811.06152v1.pdf)
@@ -501,5 +504,7 @@ Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Diggin
 
 3. [Deeper Depth Prediction with Fully Convolutional Residual
 Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
+
+You can also find helpful implementations in the papers with code depth estimation task.
 
 """
