@@ -567,6 +567,59 @@ whatever quantity you pass to it. You can reset the value of these metrics
 by calling `layer.reset_metrics()` on any layer or model.
 """
 
+import tensorflow as tf
+from tensorflow import keras
+
+class F1Score(keras.metrics.Metric):
+
+  def __init__(self, name='f1_score', threshold=0.5, **kwargs):
+    super().__init__(name=name, **kwargs)
+    self.threshold = 0.5
+    self.true_positives = self.add_weight(name='tp', initializer='zeros')
+    self.false_positives = self.add_weight(name='fp', initializer='zeros')
+    self.false_negatives = self.add_weight(name='fn', initializer='zeros')
+
+  def update_state(self, y_true, y_pred, sample_weight=None):
+    y_pred = tf.math.greater_equal(y_pred, self.threshold)
+    y_true = tf.cast(y_true, tf.bool)
+    y_pred = tf.cast(y_pred, tf.bool)
+
+    true_positives = tf.logical_and(tf.equal(y_true, True), tf.equal(y_pred, True))
+    false_positives = tf.logical_and(tf.equal(y_true, False), tf.equal(y_pred, True))
+    false_negatives = tf.logical_and(tf.equal(y_true, True), tf.equal(y_pred, False))
+
+    true_positives = tf.cast(true_positives, self.dtype)
+    false_positives = tf.cast(false_positives, self.dtype)
+    false_negatives = tf.cast(false_negatives, self.dtype)
+
+    if sample_weight is not None:
+      sample_weight = tf.cast(sample_weight, self.dtype)
+      true_positives = tf.multiply(true_positives, sample_weight)
+      false_positives = tf.multiply(false_positives, sample_weight)
+      false_negatives = tf.multiply(false_negatives, sample_weight)
+
+    self.true_positives.assign_add(tf.reduce_sum(true_positives))
+    self.false_positives.assign_add(tf.reduce_sum(false_positives))
+    self.false_negatives.assign_add(tf.reduce_sum(false_negatives))
+
+  def result(self):
+    precision = tf.math.divide_no_nan(self.true_positives, self.true_positives + self.false_positives)
+    recall = tf.math.divide_no_nan(self.true_positives, self.true_positives + self.false_negatives)
+    return tf.math.divide_no_nan(precision * recall, precision + recall) * 2.0
+
+  def reset_states(self):
+    self.true_positives.assign(0)
+    self.false_positives.assign(0)
+    self.false_negatives.assign(0)
+
+m = F1Score()
+m.update_state([0, 1, 0, 0], [0.3, 0.5, 0.8, 0.9])
+print('Intermediate result:', float(m.result()))
+
+m.update_state([1, 1, 1, 1], [0.1, 0.7, 0.6, 0.0])
+print('Final result:', float(m.result()))
+
+
 """
 ## Compiled functions
 
