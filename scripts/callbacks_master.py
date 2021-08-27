@@ -63,5 +63,10 @@ CALLBACKS_MASTER = {
             'title': 'ProgbarLogger',
             'generate': ['tensorflow.keras.callbacks.ProgbarLogger']
         },
+        {
+            'path': 'backup_and_restore',
+            'title': 'BackupAndRestore',
+            'generate': ['tensorflow.keras.callbacks.experimental.BackupAndRestore']
+        },
     ]
 }

@@ -672,7 +672,7 @@ class KerasIO:
                 tmp_content = tmp_content[tmp_content.find("`tf.") + 1 :]
                 symbol = tmp_content[: tmp_content.find("`")]
                 tmp_content = tmp_content[tmp_content.find("`") + 1 :]
-                if "/" not in symbol:
+                if "/" not in symbol and "(" not in symbol:
                     path = symbol.replace(".", "/")
                     path = path.replace("(", "")
                     path = path.replace(")", "")
