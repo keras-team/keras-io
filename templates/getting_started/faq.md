@@ -869,41 +869,16 @@ You can use TensorBoard with `fit()` via the [`TensorBoard` callback](/api/callb
 
 You have two options:
 
-**1) Write a low-level custom training loop**
-
-This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
-
-```python
-# Prepare an optimizer.
-optimizer = tf.keras.optimizers.Adam()
-# Prepare a loss function.
-loss_fn = tf.keras.losses.kl_divergence
-
-# Iterate over the batches of a dataset.
-for inputs, targets in dataset:
-    # Open a GradientTape.
-    with tf.GradientTape() as tape:
-        # Forward pass.
-        predictions = model(inputs)
-        # Compute the loss value for this batch.
-        loss_value = loss_fn(targets, predictions)
-
-    # Get gradients of loss wrt the weights.
-    gradients = tape.gradient(loss_value, model.trainable_weights)
-    # Update the weights of the model.
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
-```
-
-This example does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
-updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
-
-
-**2) Subclass the `Model` class and override the `train_step` (and `test_step`) methods**
+**1) Subclass the `Model` class and override the `train_step` (and `test_step`) methods**
 
 This is a better option if you want to use custom update rules but still want to leverage the functionality provided by `fit()`,
 such as callbacks, efficient step fusing, etc.
 
-Note that this pattern does not prevent you from building models with the Functional API (or even Sequential models).
+Note that this pattern does not prevent you from building models with the
+Functional API, in which case you will use the class you created to instantiate
+the model with the `inputs` and `outputs`. Same goes for Sequential models, in
+which case you will subclass `keras.Sequential` and override its `train_step`
+instead of `keras.Model`.
 
 The example below shows a Functional model with a custom `train_step`.
 
@@ -1019,6 +994,35 @@ class MyCustomModel(keras.Model):
       # Note that it will include the loss (tracked in self.metrics).
       return {m.name: m.result() for m in self.metrics}
 ```
+
+**2) Write a low-level custom training loop**
+
+This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
+
+```python
+# Prepare an optimizer.
+optimizer = tf.keras.optimizers.Adam()
+# Prepare a loss function.
+loss_fn = tf.keras.losses.kl_divergence
+
+# Iterate over the batches of a dataset.
+for inputs, targets in dataset:
+    # Open a GradientTape.
+    with tf.GradientTape() as tape:
+        # Forward pass.
+        predictions = model(inputs)
+        # Compute the loss value for this batch.
+        loss_value = loss_fn(targets, predictions)
+
+    # Get gradients of loss wrt the weights.
+    gradients = tape.gradient(loss_value, model.trainable_weights)
+    # Update the weights of the model.
+    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+```
+
+This example does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
+updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
+
 
 ---
 
