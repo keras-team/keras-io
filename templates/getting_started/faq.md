@@ -117,20 +117,110 @@ with tf.device_scope('/cpu:0'):
 
 ### How can I distribute training across multiple machines?
 
-Like for single-machine parallelism, the best way to do distributed training with Keras is to use
-the `tf.distribute` API, in particular [`MultiWorkerMirroredStrategy`](https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy).
-Make sure to read our [guide about using `tf.distribute` with Keras](/guides/distributed_training/).
+TensorFlow 2 enables you to write code that is mostly
+agnostic to how you will distribute it:
+any code that can run locally can be distributed to multiple
+workers and accelerators by only adding to it a distribution strategy
+(`tf.distribute.Strategy`) corresponding to your hardware of choice,
+without any other code changes.
 
-Distributed training is somewhat more involved than single-machine multi-device training. Roughly, you will need
-to launch a remote cluster of machines, then run your code on a "chief" machine that holds a `TF_CONFIG` environment variable
-that specifies how to communicate with the other machines in the cluster. From there, the workflow is similar to using single-machine
-multi-GPU training, with the main difference being that you will use `MultiWorkerMirroredStrategy` as your distribution strategy.
+This also applies to any Keras model: just
+add a `tf.distribute` distribution strategy scope enclosing the model
+building and compiling code, and the training will be distributed according to
+the `tf.distribute` distribution strategy.
+
+For distributed training across multiple machines (as opposed to training that only leverages
+multiple devices on a single machine), there are two distribution strategies you
+could use: `MultiWorkerMirroredStrategy` and `ParameterServerStrategy`:
+
+- `tf.distribute.MultiWorkerMirroredStrategy` implements a synchronous CPU/GPU
+multi-worker solution to work with Keras-style model building and training loop,
+using synchronous reduction of gradients across the replicas.
+- `tf.distribute.experimental.ParameterServerStrategy` implements an asynchronous CPU/GPU
+multi-worker solution, where the parameters are stored on parameter servers, and
+workers update the gradients to parameter servers asynchronously.
+
+Distributed training is somewhat more involved than single-machine multi-device training. 
+With `ParameterServerStrategy`, you will need to launch a remote cluster of machines
+consisting "worker" and "ps", each running a `tf.distribute.Server`, then run your 
+python program on a "chief" machine that holds a `TF_CONFIG` environment variable
+that specifies how to communicate with the other machines in the cluster. With
+`MultiWorkerMirroredStrategy`, you will run the same program on each of the
+chief and workers, again with a `TF_CONFIG` environment variable that specifies 
+how to communicate with the cluster. From there, the workflow is similar to using 
+single-machine training, with the main difference being that you will use 
+`ParameterServerStrategy` or `MultiWorkerMirroredStrategy` as your distribution strategy.
 
 Importantly, you should:
 
-- Make sure your dataset is so configured that all workers in the cluster are able to efficiently pull data from it (e.g. if your cluster in on GCP, it's a good idea to host your data on GCS).
-- Make sure your training is fault-tolerant (e.g. by configuring a `BackupAndRestore` callback).
+- Make sure your dataset is so configured that all workers in the cluster are able to
+efficiently pull data from it (e.g. if your cluster is running on Google Cloud,
+it's a good idea to host your data on Google Cloud Storage).
+- Make sure your training is fault-tolerant
+(e.g. by configuring a `keras.callbacks.BackupAndRestore` callback).
 
+Below, we provide a couple of code snippets that cover the basic workflow. For more information
+about CPU/GPU multi-worker training, see 
+[Multi-GPU and distributed training](/guides/distributed_training/); for TPU
+training, see [How can I train a Keras model on TPU?](#how-can-i-train-a-keras-model-on-tpu).
+
+With `ParameterServerStrategy`:
+
+```python
+cluster_resolver = ...
+if cluster_resolver.task_type in ("worker", "ps"):
+  # Start a `tf.distribute.Server` and wait.
+  ...
+elif cluster_resolver.task_type == "evaluator":
+  # Run an (optional) side-car evaluation
+  ...
+
+# Otherwise, this is the coordinator that controls the training w/ the strategy.
+strategy = tf.distribute.experimental.ParameterServerStrategy(
+    cluster_resolver=...)
+train_dataset = ...
+
+with strategy.scope():
+  model = tf.keras.Sequential([
+      layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
+      layers.MaxPooling2D(),
+      layers.Flatten(),
+      layers.Dense(64, activation='relu'),
+      layers.Dense(10, activation='softmax')
+  ])
+  model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.SGD(learning_rate=0.001),
+      metrics=['accuracy'],
+      steps_per_execution=10)
+
+model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
+```
+
+With `MultiWorkerMirroredStrategy`:
+
+```python
+# By default `MultiWorkerMirroredStrategy` uses cluster information
+# from `TF_CONFIG`, and "AUTO" collective op communication.
+strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
+train_dataset = get_training_dataset()
+with strategy.scope():
+  # Define and compile the model in the scope of the strategy. Doing so
+  # ensures the variables created are distributed and initialized properly
+  # according to the strategy.
+  model = tf.keras.Sequential([
+      layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
+      layers.MaxPooling2D(),
+      layers.Flatten(),
+      layers.Dense(64, activation='relu'),
+      layers.Dense(10, activation='softmax')
+  ])
+  model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.SGD(learning_rate=0.001),
+      metrics=['accuracy'])
+model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
+```
 
 ---
 
@@ -779,41 +869,16 @@ You can use TensorBoard with `fit()` via the [`TensorBoard` callback](/api/callb
 
 You have two options:
 
-**1) Write a low-level custom training loop**
-
-This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
-
-```python
-# Prepare an optimizer.
-optimizer = tf.keras.optimizers.Adam()
-# Prepare a loss function.
-loss_fn = tf.keras.losses.kl_divergence
-
-# Iterate over the batches of a dataset.
-for inputs, targets in dataset:
-    # Open a GradientTape.
-    with tf.GradientTape() as tape:
-        # Forward pass.
-        predictions = model(inputs)
-        # Compute the loss value for this batch.
-        loss_value = loss_fn(targets, predictions)
-
-    # Get gradients of loss wrt the weights.
-    gradients = tape.gradient(loss_value, model.trainable_weights)
-    # Update the weights of the model.
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
-```
-
-This example does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
-updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
-
-
-**2) Subclass the `Model` class and override the `train_step` (and `test_step`) methods**
+**1) Subclass the `Model` class and override the `train_step` (and `test_step`) methods**
 
 This is a better option if you want to use custom update rules but still want to leverage the functionality provided by `fit()`,
 such as callbacks, efficient step fusing, etc.
 
-Note that this pattern does not prevent you from building models with the Functional API (or even Sequential models).
+Note that this pattern does not prevent you from building models with the
+Functional API, in which case you will use the class you created to instantiate
+the model with the `inputs` and `outputs`. Same goes for Sequential models, in
+which case you will subclass `keras.Sequential` and override its `train_step`
+instead of `keras.Model`.
 
 The example below shows a Functional model with a custom `train_step`.
 
@@ -929,6 +994,35 @@ class MyCustomModel(keras.Model):
       # Note that it will include the loss (tracked in self.metrics).
       return {m.name: m.result() for m in self.metrics}
 ```
+
+**2) Write a low-level custom training loop**
+
+This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
+
+```python
+# Prepare an optimizer.
+optimizer = tf.keras.optimizers.Adam()
+# Prepare a loss function.
+loss_fn = tf.keras.losses.kl_divergence
+
+# Iterate over the batches of a dataset.
+for inputs, targets in dataset:
+    # Open a GradientTape.
+    with tf.GradientTape() as tape:
+        # Forward pass.
+        predictions = model(inputs)
+        # Compute the loss value for this batch.
+        loss_value = loss_fn(targets, predictions)
+
+    # Get gradients of loss wrt the weights.
+    gradients = tape.gradient(loss_value, model.trainable_weights)
+    # Update the weights of the model.
+    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+```
+
+This example does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
+updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
+
 
 ---
 

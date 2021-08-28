@@ -107,7 +107,7 @@ df.sample(10)
 
 
 
-<div>
+<div style="overflow-x: scroll; width: 100%;">
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
