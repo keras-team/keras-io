@@ -220,6 +220,7 @@ module = hub.KerasLayer(model_url, trainable=True)
 ## BiT Model
 """
 
+
 class MyBiTModel(keras.Model):
     def __init__(self, num_classes, module):
         super().__init__()
@@ -287,6 +288,7 @@ history = model.fit(
 """
 ## Plot the Model
 """
+
 
 def plot_hist(hist):
     plt.plot(hist.history["accuracy"])
