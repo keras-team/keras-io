@@ -64,10 +64,10 @@ MASTER = {
                                 'tensorflow.keras.preprocessing.image_dataset_from_directory',
                                 'tensorflow.keras.preprocessing.image.load_img',
                                 'tensorflow.keras.preprocessing.image.img_to_array',
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory',  # LEGACY
                             ],
                         },
                         {
@@ -76,7 +76,7 @@ MASTER = {
                             'generate': [
                                 'tensorflow.keras.preprocessing.timeseries_dataset_from_array',
                                 'tensorflow.keras.preprocessing.sequence.pad_sequences',
-                                'tensorflow.keras.preprocessing.sequence.TimeseriesGenerator',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.sequence.TimeseriesGenerator',  # LEGACY
                             ]
                         },
                         {
@@ -84,7 +84,7 @@ MASTER = {
                             'title': 'Text data preprocessing',
                             'generate': [
                                 'tensorflow.keras.preprocessing.text_dataset_from_directory',
-                                'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
                             ]
                         },
                     ]
@@ -182,6 +182,7 @@ MASTER = {
                                 'tensorflow.keras.metrics.Accuracy',
                                 'tensorflow.keras.metrics.BinaryAccuracy',
                                 'tensorflow.keras.metrics.CategoricalAccuracy',
+                                'tensorflow.keras.metrics.SparseCategoricalAccuracy',
                                 'tensorflow.keras.metrics.TopKCategoricalAccuracy',
                                 'tensorflow.keras.metrics.SparseTopKCategoricalAccuracy',
                             ],
@@ -432,6 +433,16 @@ MASTER = {
                         },
                     ]
                 },
+                # {  # TODO: add subpages, add index
+                #     'path': 'mixed_precision/',
+                #     'title': 'Mixed precision',
+                #     'generate': [
+                #         'tensorflow.keras.mixed_precision.Policy',
+                #         'tensorflow.keras.mixed_precision.global_policy',
+                #         'tensorflow.keras.mixed_precision.set_global_policy',
+                #         'tensorflow.keras.mixed_precision.LossScaleOptimizer',
+                #     ]
+                # },
                 UTILS_MASTER,
                 KT_API_MASTER,
             ]

@@ -227,7 +227,100 @@ tuner = RandomSearch(
 tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 """
-## KerasTuner includes pre-made tunable applications: HyperResNet and HyperXception
+## Use a custom metric as the tuning objective
+
+You may implement your own metric and use it as the hyperparameter search objective.
+
+Here, we use mean squared error (MSE) as an example.
+
+First, we implement the MSE metric by extending the `keras.metrics.Metric`
+class. Remember to give a name to your metric using the `name` argument of
+`super().__init__()`, which will be used later.
+
+Note: MSE is actully a build-in metric, which can be imported with
+`keras.metrics.MeanSquaredError`. This is just an example to show how to use a custom metric
+as the hyperparameter search objective.
+For more information about implementing custom metrics, please
+see [this tutorial](https://keras.io/api/metrics/#creating-custom-metrics). If
+you would like a metric with a different function signature than
+`update_state(y_true, y_pred, sample_weight)`, you can override the
+`train_step()` method of your model following
+[this tutorial](https://keras.io/guides/customizing_what_happens_in_fit/#going-lowerlevel).
+"""
+
+import tensorflow as tf
+
+class MeanSquaredError(keras.metrics.Metric):
+    def __init__(self, **kwargs):
+        super().__init__(name="mean_squared_error", **kwargs)
+        self.sum = self.add_weight(name="sum", initializer="zeros")
+        self.count = self.add_weight(name="count", dtype=tf.int32, initializer="zeros")
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        values = tf.math.squared_difference(y_pred, y_true)
+        count = tf.shape(y_true)[0]
+        if sample_weight is not None:
+            sample_weight = tf.cast(sample_weight, self.dtype)
+            values = tf.multiply(values, sample_weight)
+            count = tf.multiply(count, sample_weight)
+        self.sum.assign_add(tf.reduce_sum(values))
+        self.count.assign_add(count)
+
+    def result(self):
+        return tf.math.divide(self.sum, tf.cast(self.count, tf.float32))
+
+    def reset_states(self):
+        self.sum.assign(0)
+        self.count.assign(0)
+
+
+"""
+Second, we pass a `MeanSquaredError` instance to `model.compile()` in `build_model()`.
+"""
+
+
+def build_model(hp):
+    model = keras.Sequential(
+        [
+            layers.Dense(10, activation="relu"),
+            layers.Dense(hp.Int("units", 5, 50), activation="relu"),
+            layers.Dense(1, activation="sigmoid"),
+        ]
+    )
+    model.compile(loss="mae", metrics=[MeanSquaredError()])  # Use mse as a metric
+    return model
+
+
+"""
+Finally, we use `Objective(name='val_mean_squared_error', direction='min')`
+as the `objective` of the `Tuner`. The `name` should be in the form of
+`'val_' + metric_name`, referring the metric on the validation data. We
+specified the metric name as `'mean_squared_error'` in the initializer.
+Therefore, the name for the objective is `'val_mean_squared_error'`.  The
+`direction` should be either `'min'` (the lower the better) or `'max'` (the
+higher the better).
+
+"""
+
+from keras_tuner import Objective
+
+tuner = RandomSearch(
+    build_model,
+    objective=Objective("val_mean_squared_error", direction="min"),
+    max_trials=3,
+    overwrite=True,
+)
+
+# Run the search as a quick test.
+tuner.search(
+    x=np.random.rand(100, 10),
+    y=np.random.rand(100, 1),
+    epochs=2,
+    validation_data=(np.random.rand(20, 10), np.random.rand(20, 1))
+)
+
+"""
+## Pre-made tunable applications: HyperResNet and HyperXception
 
 These are ready-to-use hypermodels for computer vision.
 

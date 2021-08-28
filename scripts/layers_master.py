@@ -283,7 +283,7 @@ LAYERS_MASTER = {
                         {
                             'path': 'text_vectorization',
                             'title': 'TextVectorization layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.TextVectorization']
+                            'generate': ['tensorflow.keras.layers.TextVectorization']
                         },
                     ]
                 },
@@ -295,12 +295,12 @@ LAYERS_MASTER = {
                         {
                             'path': 'normalization',
                             'title': 'Normalization layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Normalization']
+                            'generate': ['tensorflow.keras.layers.Normalization']
                         },
                         {
                             'path': 'discretization',
                             'title': 'Discretization layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Discretization'],
+                            'generate': ['tensorflow.keras.layers.Discretization'],
                         },
                     ]
                 },
@@ -312,22 +312,22 @@ LAYERS_MASTER = {
                         {
                             'path': 'category_encoding',
                             'title': 'CategoryEncoding layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.CategoryEncoding'],
+                            'generate': ['tensorflow.keras.layers.CategoryEncoding'],
                         },
                         {
                             'path': 'hashing',
                             'title': 'Hashing layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Hashing'],
+                            'generate': ['tensorflow.keras.layers.Hashing'],
                         },
                         {
                             'path': 'string_lookup',
                             'title': 'StringLookup layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.StringLookup'],
+                            'generate': ['tensorflow.keras.layers.StringLookup'],
                         },
                         {
                             'path': 'integer_lookup',
                             'title': 'IntegerLookup layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.IntegerLookup'],
+                            'generate': ['tensorflow.keras.layers.IntegerLookup'],
                         },
                     ]
                 },
@@ -339,17 +339,17 @@ LAYERS_MASTER = {
                         {
                             'path': 'resizing',
                             'title': 'Resizing layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Resizing'],
+                            'generate': ['tensorflow.keras.layers.Resizing'],
                         },
                         {
                             'path': 'rescaling',
                             'title': 'Rescaling layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.Rescaling'],
+                            'generate': ['tensorflow.keras.layers.Rescaling'],
                         },
                         {
                             'path': 'center_crop',
                             'title': 'CenterCrop layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.CenterCrop'],
+                            'generate': ['tensorflow.keras.layers.CenterCrop'],
                         },
                     ]
                 },
@@ -361,37 +361,42 @@ LAYERS_MASTER = {
                         {
                             'path': 'random_crop',
                             'title': 'RandomCrop layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomCrop'],
+                            'generate': ['tensorflow.keras.layers.RandomCrop'],
                         },
                         {
                             'path': 'random_flip',
                             'title': 'RandomFlip layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomFlip'],
+                            'generate': ['tensorflow.keras.layers.RandomFlip'],
                         },
                         {
                             'path': 'random_translation',
                             'title': 'RandomTranslation layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomTranslation'],
+                            'generate': ['tensorflow.keras.layers.RandomTranslation'],
                         },
                         {
                             'path': 'random_rotation',
                             'title': 'RandomRotation layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomRotation'],
+                            'generate': ['tensorflow.keras.layers.RandomRotation'],
                         },
                         {
                             'path': 'random_zoom',
                             'title': 'RandomZoom layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomZoom'],
+                            'generate': ['tensorflow.keras.layers.RandomZoom'],
                         },
                         {
                             'path': 'random_height',
                             'title': 'RandomHeight layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomHeight'],
+                            'generate': ['tensorflow.keras.layers.RandomHeight'],
                         },
                         {
                             'path': 'random_width',
                             'title': 'RandomWidth layer',
-                            'generate': ['tensorflow.keras.layers.experimental.preprocessing.RandomWidth'],
+                            'generate': ['tensorflow.keras.layers.RandomWidth'],
+                        },
+                        {
+                            'path': 'random_contrast',
+                            'title': 'RandomContrast layer',
+                            'generate': ['tensorflow.keras.layers.RandomContrast'],
                         },
                     ]
                 },

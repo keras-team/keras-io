@@ -26,7 +26,7 @@ You could simply do:
 
 ```python
 from tensorflow import keras
-from tensorflow.keras.preprocessing.image import image_dataset_from_directory
+from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 train_ds = image_dataset_from_directory(
     directory='training_data/',
