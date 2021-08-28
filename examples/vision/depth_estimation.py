@@ -15,8 +15,6 @@ inferring depth information, given only a single RGB image as input. Monocular i
 static image or sequential images and Monocular solutions tend to achieve this goal using
 only one image.
 
-
-
 This example will show an approach to build a depth estimation model with CNN and basic
 loss functions.
 
@@ -43,15 +41,15 @@ import matplotlib.pyplot as plt
 tf.random.set_seed(123)
 
 """
-## Download the dataset
+## Downloading the dataset
 
 We will be using the **DIODE: A Dense Indoor and Outdoor Depth Dataset**  for this
 tutorial. We have used the validation set for training and validating our model. The
-reason we have used validation set and not training set of the original dataset because
+reason we have used validation set and not training set of the original dataset is because
 the training set consists of 81GB of data which was a bit difficult to download compared
 to validation set which is only 2.6GB.
 
-Other datasets that you could prefer are **NYU-v2** and **KITTI**.
+Other datasets that you could use are **[NYU-v2](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html)** and **[KITTI](http://www.cvlibs.net/datasets/kitti/)**.
 """
 
 annotation_folder = "/dataset/"
@@ -88,7 +86,7 @@ df = pd.DataFrame(data)
 df = df.sample(frac=1, random_state=42)
 
 """
-## Prepare Hyperparameters
+## Preparing Hyperparameters
 """
 
 HEIGHT = 256
@@ -243,8 +241,8 @@ for x in range(0, img_vis.shape[0], STEP):
 """
 ## Building the model
 
-1. The basic model architecture have been from U-Net.
-2. Residual-blocks has been used in the down-scale blocks of the U-Net architecture.
+1. The basic model is from U-Net.
+2. Skip connection via addition is implemented in the down-scale block.
 """
 
 
@@ -319,12 +317,12 @@ class BottleNeckBlock(layers.Layer):
 """
 ## Optimizing Loss
 
-We have tried to optimize 3 losses in our model.
+We will optimize 3 losses in our mode.
 1. Structural similarity index(SSIM).
 2. L1-loss, or Point-wise depth in our case.
 3. Edge wide depth with depth smoothness.
 
-Out of the three loss functions SSIM contributed the most in improving model performance.
+Out of the three loss functions SSIM contributes the most in improving model performance.
 """
 
 
@@ -457,7 +455,7 @@ dem.fit(
 """
 ## Visualizing Model output.
 
-Visualizing model output over validation set.
+Visualize model output over the validation set.
 The first image is the RGB image, the second image is the ground truth depth-map image
 and the third one is the predicted depth-map image.
 """
