@@ -247,8 +247,8 @@ for x in range(0, img_vis.shape[0], STEP):
 
 
 class DownscaleBlock(layers.Layer):
-    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1):
-        super().__init__()
+    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1,**kwargs):
+        super().__init__(**kwargs)
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
         self.reluA = layers.LeakyReLU(alpha=0.2)
@@ -273,8 +273,8 @@ class DownscaleBlock(layers.Layer):
 
 
 class UpscaleBlock(layers.Layer):
-    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1):
-        super().__init__()
+    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1,**kwargs):
+        super().__init__(**kwargs)
         self.us = layers.UpSampling2D((2, 2))
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
@@ -299,8 +299,8 @@ class UpscaleBlock(layers.Layer):
 
 
 class BottleNeckBlock(layers.Layer):
-    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1):
-        super().__init__()
+    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1,**kwargs):
+        super().__init__(**kwargs)
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
         self.reluA = layers.LeakyReLU(alpha=0.2)
@@ -320,7 +320,7 @@ class BottleNeckBlock(layers.Layer):
 We will optimize 3 losses in our mode.
 1. Structural similarity index(SSIM).
 2. L1-loss, or Point-wise depth in our case.
-3. Edge wide depth with depth smoothness.
+3. Depth smoothness loss.
 
 Out of the three loss functions SSIM contributes the most in improving model performance.
 """
@@ -360,10 +360,10 @@ class DepthEstimationModel(tf.keras.Model):
         smoothness_x = dx_pred * weights_x
         smoothness_y = dy_pred * weights_y
 
-        l_edges = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(abs(smoothness_y))
+        depth_smoothness_loss = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(abs(smoothness_y))
 
         # Structural similarity (SSIM) index
-        l_ssim = tf.reduce_mean(
+        ssim_loss = tf.reduce_mean(
             1
             - tf.image.ssim(
                 target, pred, max_val=WIDTH, filter_size=7, k1=0.01 ** 2, k2=0.03 ** 2
@@ -373,9 +373,9 @@ class DepthEstimationModel(tf.keras.Model):
         l1_loss = tf.reduce_mean(tf.abs(target - pred))
 
         loss = (
-            (self.ssim_loss_weight * l_ssim)
+            (self.ssim_loss_weight * ssim_loss)
             + (self.l1_loss_weight * l1_loss)
-            + (self.edge_loss_weight * l_edges)
+            + (self.edge_loss_weight * depth_smoothness_loss)
         )
 
         return loss
@@ -432,13 +432,13 @@ optimizer = tf.keras.optimizers.Adam(
     learning_rate=LR,
     amsgrad=False,
 )
-dem = DepthEstimationModel()
+model = DepthEstimationModel()
 # Define the loss function
 cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction="none"
 )
 # Compile the model
-dem.compile(optimizer, loss=cross_entropy)
+model.compile(optimizer, loss=cross_entropy)
 
 train_loader = DataGenerator(
     data=df[:260].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
@@ -446,7 +446,7 @@ train_loader = DataGenerator(
 validation_loader = DataGenerator(
     data=df[260:].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
 )
-dem.fit(
+model.fit(
     train_loader,
     epochs=EPOCHS,
     validation_data=validation_loader,
@@ -467,7 +467,7 @@ test_loader = next(
         )
     )
 )
-visualize_depth_map(test_loader, test=True, model=dem)
+visualize_depth_map(test_loader, test=True, model=model)
 
 test_loader = next(
     iter(
@@ -476,7 +476,7 @@ test_loader = next(
         )
     )
 )
-visualize_depth_map(test_loader, test=True, model=dem)
+visualize_depth_map(test_loader, test=True, model=model)
 
 """
 ## Scopes of Improvement
