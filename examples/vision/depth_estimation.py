@@ -247,7 +247,9 @@ for x in range(0, img_vis.shape[0], STEP):
 
 
 class DownscaleBlock(layers.Layer):
-    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1,**kwargs):
+    def __init__(
+        self, filters, kernel_size=(3, 3), padding="same", strides=1, **kwargs
+    ):
         super().__init__(**kwargs)
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
@@ -273,7 +275,9 @@ class DownscaleBlock(layers.Layer):
 
 
 class UpscaleBlock(layers.Layer):
-    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1,**kwargs):
+    def __init__(
+        self, filters, kernel_size=(3, 3), padding="same", strides=1, **kwargs
+    ):
         super().__init__(**kwargs)
         self.us = layers.UpSampling2D((2, 2))
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
@@ -299,7 +303,9 @@ class UpscaleBlock(layers.Layer):
 
 
 class BottleNeckBlock(layers.Layer):
-    def __init__(self, filters, kernel_size=(3, 3), padding="same", strides=1,**kwargs):
+    def __init__(
+        self, filters, kernel_size=(3, 3), padding="same", strides=1, **kwargs
+    ):
         super().__init__(**kwargs)
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
@@ -360,7 +366,9 @@ class DepthEstimationModel(tf.keras.Model):
         smoothness_x = dx_pred * weights_x
         smoothness_y = dy_pred * weights_y
 
-        depth_smoothness_loss = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(abs(smoothness_y))
+        depth_smoothness_loss = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(
+            abs(smoothness_y)
+        )
 
         # Structural similarity (SSIM) index
         ssim_loss = tf.reduce_mean(
