@@ -494,9 +494,11 @@ Tuning the loss functions may yield significant improvement.
 
 """
 ## References
+
 The following papers go deeper into possible approaches for depth estimation.
 1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning from Monocular Videos](https://arxiv.org/pdf/1811.06152v1.pdf)
 2. [Digging Into Self-Supervised Monocular Depth Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
 3. [Deeper Depth Prediction with Fully Convolutional Residual Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
+
 You can also find helpful implementations in the papers with code depth estimation task.
 """
