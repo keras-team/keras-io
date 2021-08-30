@@ -14,6 +14,7 @@ The goal in _monocular depth estimation_ is to predict the depth value of each p
 inferring depth information, given only a single RGB image as input.
 This example will show an approach to build a depth estimation model with a convnet
 and simple loss functions.
+
 ![depth](https://paperswithcode.com/media/thumbnails/task/task-0000000605-d9849a91.jpg)
 
 """
