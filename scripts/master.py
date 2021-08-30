@@ -433,16 +433,29 @@ MASTER = {
                         },
                     ]
                 },
-                # {  # TODO: add subpages, add index
-                #     'path': 'mixed_precision/',
-                #     'title': 'Mixed precision',
-                #     'generate': [
-                #         'tensorflow.keras.mixed_precision.Policy',
-                #         'tensorflow.keras.mixed_precision.global_policy',
-                #         'tensorflow.keras.mixed_precision.set_global_policy',
-                #         'tensorflow.keras.mixed_precision.LossScaleOptimizer',
-                #     ]
-                # },
+                {
+                    'path': 'mixed_precision/',
+                    'title': 'Mixed precision',
+                    'toc': True,
+                    'children': [
+                        {
+                            'path': 'policy',
+                            'title': 'Mixed precision policy API',
+                            'generate': [
+                                'tensorflow.keras.mixed_precision.Policy',
+                                'tensorflow.keras.mixed_precision.global_policy',
+                                'tensorflow.keras.mixed_precision.set_global_policy',
+                            ]
+                        },
+                        {
+                            'path': 'loss_scale_optimizer',
+                            'title': 'LossScaleOptimizer',
+                            'generate': [
+                                'tensorflow.keras.mixed_precision.LossScaleOptimizer',
+                            ]
+                        },
+                    ]
+                },
                 UTILS_MASTER,
                 KT_API_MASTER,
             ]
