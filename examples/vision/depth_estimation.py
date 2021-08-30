@@ -1,30 +1,26 @@
 """
-Title: Monocular Depth Estimation
+Title: Monocular depth estimation
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2021/08/26
 Last modified: 2021/08/26
-Description: Implement a depth estimation model with CNN.
+Description: Implement a depth estimation model with a convnet.
 """
 
 """
 ## Introduction
 
-**Depth Estimation** is a crucial step towards inferring scene geometry from 2D images.
-The goal in monocular Depth Estimation is to predict the depth value of each pixel or
-inferring depth information, given only a single RGB image as input. Monocular image is a
-static image or sequential images and Monocular solutions tend to achieve this goal using
-only one image.
+_Depth estimation_ is a crucial step towards inferring scene geometry from 2D images.
+The goal in _monocular depth estimation_ is to predict the depth value of each pixel or
+inferring depth information, given only a single RGB image as input.
 
-This example will show an approach to build a depth estimation model with CNN and basic
-loss functions.
+This example will show an approach to build a depth estimation model with a convnet
+and simple loss functions.
 
 ![depth](https://paperswithcode.com/media/thumbnails/task/task-0000000605-d9849a91.jpg)
-
-
 """
 
 """
-##Setup
+## Setup
 """
 
 import os
@@ -43,13 +39,15 @@ tf.random.set_seed(123)
 """
 ## Downloading the dataset
 
-We will be using the **DIODE: A Dense Indoor and Outdoor Depth Dataset**  for this
-tutorial. We have used the validation set for training and validating our model. The
-reason we have used validation set and not training set of the original dataset is because
-the training set consists of 81GB of data which was a bit difficult to download compared
-to validation set which is only 2.6GB.
+We will be using the dataset **DIODE: A Dense Indoor and Outdoor Depth Dataset**  for this
+tutorial. However, we use the validation set generating training and evaluation subsets
+for our model. The reason we use the validation set rather than the training set of the original dataset is because
+the training set consists of 81GB of data, which is challenging to download compared
+to the validation set which is only 2.6GB.
 
-Other datasets that you could use are **[NYU-v2](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html)** and **[KITTI](http://www.cvlibs.net/datasets/kitti/)**.
+Other datasets that you could use are
+**[NYU-v2](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html)**
+and **[KITTI](http://www.cvlibs.net/datasets/kitti/)**.
 """
 
 annotation_folder = "/dataset/"
@@ -64,7 +62,7 @@ if not os.path.exists(os.path.abspath(".") + annotation_folder):
 """
 ##  Preparing the dataset
 
-Here we have used only the indoor images to train our depth estimation model.
+We only use the indoor images to train our depth estimation model.
 """
 
 path = "val/indoors"
@@ -86,7 +84,7 @@ df = pd.DataFrame(data)
 df = df.sample(frac=1, random_state=42)
 
 """
-## Preparing Hyperparameters
+## Preparing hyperparameters
 """
 
 HEIGHT = 256
@@ -96,22 +94,19 @@ EPOCHS = 30
 BATCH_SIZE = 32
 
 """
-## Building Dataset Loader Pipeline
+## Building a data pipeline
 
-1. The pipeline takes dataframe mainintaing the path for RGB, depth and depth mask files
-as input.
-2. Reads and resize the RGB images
-3. Reads the depth and depth_mask files, process them to generate the depth-map image and
+1. The pipeline takes a dataframe containing the path for the RGB images,
+as well as the depth and depth mask files.
+2. It reads and resize the RGB images.
+3. It reads the depth and depth mask files, process them to generate the depth map image and
 resize it.
-4. Returns the RGB images and the depth-map images for a batch.
+4. It returns the RGB images and the depth map images for a batch.
 """
 
 
 class DataGenerator(tf.keras.utils.Sequence):
     def __init__(self, data, batch_size=6, dim=(768, 1024), n_channels=3, shuffle=True):
-        """
-        Initialization
-        """
         self.data = data
         self.indices = self.data.index.tolist()
         self.dim = dim
@@ -133,20 +128,16 @@ class DataGenerator(tf.keras.utils.Sequence):
         # Find list of IDs
         batch = [self.indices[k] for k in index]
         x, y = self.data_generation(batch)
-
         return x, y
 
     def on_epoch_end(self):
-
-        """
-        Updates indexes after each epoch
-        """
+        """Updates indexes after each epoch."""
         self.index = np.arange(len(self.indices))
         if self.shuffle == True:
             np.random.shuffle(self.index)
 
     def load(self, image_path, depth_map, mask):
-        "Load Input and Target image"
+        """Load input and target image."""
 
         image_ = cv2.imread(image_path)
         image_ = cv2.cvtColor(image_, cv2.COLOR_BGR2RGB)
@@ -172,7 +163,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return image_, depth_map
 
     def data_generation(self, batch):
-
         x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 
@@ -182,12 +172,11 @@ class DataGenerator(tf.keras.utils.Sequence):
                 self.data["depth"][batch_id],
                 self.data["mask"][batch_id],
             )
-
         return x, y
 
 
 """
-## Visualizing Samples
+## Visualizing samples
 """
 
 
@@ -217,7 +206,7 @@ visualize_samples = next(
 visualize_depth_map(visualize_samples)
 
 """
-## 3D Point-Cloud Visualization
+## 3D point cloud visualization
 """
 
 depth_vis = np.flipud(visualize_samples[1][1].squeeze())  # target
@@ -241,8 +230,8 @@ for x in range(0, img_vis.shape[0], STEP):
 """
 ## Building the model
 
-1. The basic model is from U-Net.
-2. Skip connection via addition is implemented in the down-scale block.
+1. The basic model is a U-Net.
+2. Addditive skip-connections are implemented in the downscaling block.
 """
 
 
@@ -255,7 +244,6 @@ class DownscaleBlock(layers.Layer):
         self.reluB = layers.LeakyReLU(alpha=0.2)
         self.bn2a = tf.keras.layers.BatchNormalization()
         self.bn2b = tf.keras.layers.BatchNormalization()
-
         self.pool = layers.MaxPool2D((2, 2), (2, 2))
 
     def call(self, input_tensor):
@@ -294,7 +282,6 @@ class UpscaleBlock(layers.Layer):
         x = self.convB(x)
         x = self.bn2b(x)
         x = self.reluB(x)
-
         return x
 
 
@@ -315,14 +302,15 @@ class BottleNeckBlock(layers.Layer):
 
 
 """
-## Optimizing Loss
+## Defining the loss
 
 We will optimize 3 losses in our mode.
-1. Structural similarity index(SSIM).
-2. L1-loss, or Point-wise depth in our case.
+
+1. Structural similarity index (SSIM).
+2. L1 loss, or point-wise depth in our case.
 3. Edge wide depth with depth smoothness.
 
-Out of the three loss functions SSIM contributes the most in improving model performance.
+Out of the three loss functions, SSIM contributes the most to improving model performance.
 """
 
 
@@ -356,7 +344,7 @@ class DepthEstimationModel(tf.keras.Model):
         weights_x = tf.exp(tf.reduce_mean(tf.abs(dx_true)))
         weights_y = tf.exp(tf.reduce_mean(tf.abs(dy_true)))
 
-        # depth_smoothness
+        # Depth smoothness
         smoothness_x = dx_pred * weights_x
         smoothness_y = dy_pred * weights_y
 
@@ -377,7 +365,6 @@ class DepthEstimationModel(tf.keras.Model):
             + (self.l1_loss_weight * l1_loss)
             + (self.edge_loss_weight * l_edges)
         )
-
         return loss
 
     @property
@@ -420,7 +407,6 @@ class DepthEstimationModel(tf.keras.Model):
         u2 = self.upscale_blocks[1](u1, c3)
         u3 = self.upscale_blocks[2](u2, c2)
         u4 = self.upscale_blocks[3](u3, c1)
-
         return self.conv_layer(u4)
 
 
@@ -433,6 +419,7 @@ optimizer = tf.keras.optimizers.Adam(
     amsgrad=False,
 )
 dem = DepthEstimationModel()
+
 # Define the loss function
 cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction="none"
@@ -453,11 +440,11 @@ dem.fit(
 )
 
 """
-## Visualizing Model output.
+## Visualizing model output
 
-Visualize model output over the validation set.
-The first image is the RGB image, the second image is the ground truth depth-map image
-and the third one is the predicted depth-map image.
+We visualize the model output over the validation set.
+The first image is the RGB image, the second image is the ground truth depth map image
+and the third one is the predicted depth map image.
 """
 
 test_loader = next(
@@ -479,32 +466,23 @@ test_loader = next(
 visualize_depth_map(test_loader, test=True, model=dem)
 
 """
-## Scopes of Improvement
+## Possible improvements
 
-1. You can improve this model by replacing the encode part of the U-Net was replaced with
-DenseNet, ResNet or other pre-trained model, which could be applied for better model
-predictions.
+1. You can improve this model by replacing the encoding part of the U-Net with a
+pretrained DenseNet or ResNet.
 
-2. Loss functions play an immense role in solving this problem, and different paper
-explained different ways of developing the loss function out of which SSIM was common in
-all. So, playing with the loss functions gives a huge scope of improvement in this case.
+2. Loss functions play an important role in solving this problem.
+Tuning the loss functions may yield significant improvement.
 """
 
 """
 ## References
-This is an intro and does not go as deep as various papers. The following
-papers go deeper into possible approaches for depth estimation.
 
-1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning
-from Monocular Videos](https://arxiv.org/pdf/1811.06152v1.pdf)
+The following papers go deeper into possible approaches for depth estimation.
 
-2. [Digging Into Self-Supervised Monocular Depth
-Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
-Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
-
-3. [Deeper Depth Prediction with Fully Convolutional Residual
-Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
+1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning from Monocular Videos](https://arxiv.org/pdf/1811.06152v1.pdf)
+2. [Digging Into Self-Supervised Monocular Depth Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
+3. [Deeper Depth Prediction with Fully Convolutional Residual Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
 
 You can also find helpful implementations in the papers with code depth estimation task.
-
 """
