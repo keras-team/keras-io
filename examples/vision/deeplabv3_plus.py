@@ -103,20 +103,19 @@ dataset
 """
 
 """
-DeepLabV3+ improves on DeepLab family of segmentation models in the following way:
+DeepLabv3+ extends DeepLabv3 by employing a encoder-decoder structure. The encoder module 
+encodes multi-scale contextual information by applying atrous convolution at multiple 
+scales, while the simple yet effective decoder module refines the segmentation results 
+along object boundaries.
 
-1. It employs an encoder-decoder structure which uses DeepLabv3 as a powerful encoder
-module.
-
-2. The encoder features are first bilinearly upsampled by a
-factor of 4 and then concatenated with the corresponding low-level features from the
-network backbone that have the same spatial resolution.
-
-4. For this example, we would be using Resnet50 pre-trained on ImageNet as the backbone
-model and we would use the low-level features from the Conv2 block of the backbone.
+The encoder features are first bilinearly upsampled by a factor of 4 and then 
+concatenated with the corresponding low-level features from the network 
+backbone that have the same spatial resolution. For this example, we would be 
+using Resnet50 pre-trained on ImageNet as the backbone model and we would use 
+the low-level features from the Conv2 block of the backbone.
 
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
-![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
+
 
 
 """
