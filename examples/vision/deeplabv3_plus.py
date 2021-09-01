@@ -1,9 +1,9 @@
 """
-Title: Multi-class Semantic Segmentation using DeepLabV3+
-Author: [Soumik Rakshit](https://github.com/soumik12345)
-Date created: 2021/08/31
-Last modified: 2021/08/31
-Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation
+Title: FILLME
+Author: FILLME
+Date created: FILLME
+Last modified: FILLME
+Description: FILLME
 """
 """
 ## Introduction
@@ -23,6 +23,7 @@ multi-class semantic segmentation.
 ## Download Dataset
 """
 
+import os
 import cv2
 import numpy as np
 from glob import glob
@@ -44,25 +45,18 @@ import matplotlib.pyplot as plt
 """
 
 """
-We would be using 200 images from the instance-level human parsing dataset to train our
-model.
+For this example, we would be using 200 images from the instance-level human parsing
+dataset to train our model.
 """
-
-train_images = sorted(
-    glob(
-        "./instance-level_human_parsing/instance-level_human_parsing/Training/Images/*"
-    )
-)[:200]
-train_masks = sorted(
-    glob(
-"./instance-level_human_parsing/instance-level_human_parsing/Training/Category_ids/*"
-"./instance-level_human_parsing/instance-level_human_parsing/Training/Category_ids/*"
-    )
-)[:200]
 
 IMAGE_SIZE = 512
 BATCH_SIZE = 4
 NUM_CLASSES = 20
+DATA_DIR = "./instance-level_human_parsing/instance-level_human_parsing/Training"
+MAX_IMAGES = 200
+
+train_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[:MAX_IMAGES]
+train_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[:MAX_IMAGES]
 
 
 def read_image(image_path, mask=False):
@@ -103,21 +97,26 @@ dataset
 """
 
 """
-DeepLabv3+ extends DeepLabv3 by employing a encoder-decoder structure. The encoder module 
-encodes multi-scale contextual information by applying atrous convolution at multiple 
-scales, while the simple yet effective decoder module refines the segmentation results 
+DeepLabv3+ extends DeepLabv3 by employing a encoder-decoder structure. The encoder module
+encodes multi-scale contextual information by applying atrous convolution at multiple
+scales, while the simple yet effective decoder module refines the segmentation results
 along object boundaries.
 
-The encoder features are first bilinearly upsampled by a factor of 4 and then 
-concatenated with the corresponding low-level features from the network 
-backbone that have the same spatial resolution. For this example, we would be 
-using Resnet50 pre-trained on ImageNet as the backbone model and we would use 
-the low-level features from the Conv2 block of the backbone.
-
+![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 
 
+"""
 
+"""
+**Atrous Convolution:** With Atrous convolution, as we go deeper, we can keep the stride
+constant but with larger field-of-view without increasing the number of parameters or the
+amount of computation. And finally, we can have larger output feature map which is good
+for semantic segmentation.
+
+The reason for using **Atrous Spatial Pyramid Pooling** is that it is discovered as the
+sampling rate becomes larger, the number of valid filter weights (i.e., the weights that
+are applied to the valid feature region, instead of padded zeros) becomes smaller.
 """
 
 
@@ -166,6 +165,15 @@ def AtrousSpatialPyramidPooling(aspp_input):
     output = convolution_block(layer, kernel_size=1)
 
     return output
+
+
+"""
+The encoder features are first bilinearly upsampled by a factor of 4 and then 
+concatenated with the corresponding low-level features from the network backbone that
+have the same spatial resolution. For this example, we would be 
+using Resnet50 pre-trained on ImageNet as the backbone model and we would use 
+the low-level features from the Conv2 block of the backbone.
+"""
 
 
 def DeeplabV3Plus():
