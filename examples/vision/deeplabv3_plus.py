@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: Multiclass Semantic Segmentation using DeepLabV3+
+Author: [Soumik Rakshit](http://github.com/soumik12345)
+Date created: 2021/08/31
+Last modified: 2021/09/1
+Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation
 """
 """
 ## Introduction
