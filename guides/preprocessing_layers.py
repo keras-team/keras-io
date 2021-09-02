@@ -503,12 +503,18 @@ adapt_data = tf.constant(
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
 text_vectorizer = layers.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
-text_vectorizer.adapt(adapt_data)
+
+with tf.device("CPU"):
+    # A bug that prevents this from running on GPU for now.
+    text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
     "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
+
+"""
+"""
 
 # Create a simple model
 inputs = keras.Input(shape=(text_vectorizer.vocabulary_size(),))
@@ -526,6 +532,9 @@ train_dataset = train_dataset.batch(2).map(lambda x, y: (text_vectorizer(x), y))
 print("\nTraining model...")
 model.compile(optimizer="rmsprop", loss="mse")
 model.fit(train_dataset)
+
+"""
+"""
 
 # For inference, you can export a model that accepts strings as input
 inputs = keras.Input(shape=(1,), dtype="string")
