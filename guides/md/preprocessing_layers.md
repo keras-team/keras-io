@@ -297,9 +297,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 10s 506ms/step - loss: 9.1874
+5/5 [==============================] - 10s 510ms/step - loss: 9.0162
 
-<keras.callbacks.History at 0x7f48f35102e0>
+<keras.callbacks.History at 0x7f558864e580>
 
 ```
 </div>
@@ -333,9 +333,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 3s 2ms/step - loss: 2.1330
+1563/1563 [==============================] - 3s 2ms/step - loss: 2.1250
 
-<keras.callbacks.History at 0x7f48e81c6730>
+<keras.callbacks.History at 0x7f557bfd2df0>
 
 ```
 </div>
@@ -509,14 +509,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 1s/step - loss: 0.4855
+1/1 [==============================] - 2s 2s/step - loss: 0.5208
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.02873181]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.01588821]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -585,7 +585,7 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:5 out of the last 1567 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f48f0202d30> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 1567 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f5588352790> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
   0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]]
@@ -595,14 +595,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 225ms/step - loss: 1.4221
+1/1 [==============================] - 0s 183ms/step - loss: 0.5923
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.80972135]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.66376257]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -634,9 +634,7 @@ with tf.device("CPU"):
 print(
     "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
-```
 
-```python
 # Create a simple model
 inputs = keras.Input(shape=(text_vectorizer.vocabulary_size(),))
 outputs = layers.Dense(1)(inputs)
@@ -653,22 +651,7 @@ train_dataset = train_dataset.batch(2).map(lambda x, y: (text_vectorizer(x), y))
 print("\nTraining model...")
 model.compile(optimizer="rmsprop", loss="mse")
 model.fit(train_dataset)
-```
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:6 out of the last 1568 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f48f2e49dc0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-Encoded text:
- [[5.461647  1.6945957 0.        0.        0.        0.        0.
-  0.        0.        0.        0.        0.        0.        0.
-  0.        0.        1.0986123 1.0986123 1.0986123 0.        0.
-  0.        0.        0.        0.        0.        0.        0.
-  1.0986123 0.        0.        0.        0.        0.        0.
-  0.        1.0986123 1.0986123 0.        0.        0.       ]]
 
-```
-</div>
-    
-```python
 # For inference, you can export a model that accepts strings as input
 inputs = keras.Input(shape=(1,), dtype="string")
 x = text_vectorizer(inputs)
@@ -682,20 +665,31 @@ test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
 
 ```
+
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:6 out of the last 1568 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f557b99cee0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+Encoded text:
+ [[5.461647  1.6945957 0.        0.        0.        0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.        1.0986123 1.0986123 1.0986123 0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  1.0986123 0.        0.        0.        0.        0.        0.
+  0.        1.0986123 1.0986123 0.        0.        0.       ]]
+```
+</div>
+    
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 421ms/step - loss: 0.5784
-
-<keras.callbacks.History at 0x7f48f2e04d60>
-
+1/1 [==============================] - 0s 404ms/step - loss: 0.7536
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-0.24778448]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.73941016]], shape=(1, 1), dtype=float32)
 
 ```
 </div>

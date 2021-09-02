@@ -513,9 +513,6 @@ print(
     "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
-"""
-"""
-
 # Create a simple model
 inputs = keras.Input(shape=(text_vectorizer.vocabulary_size(),))
 outputs = layers.Dense(1)(inputs)
@@ -532,9 +529,6 @@ train_dataset = train_dataset.batch(2).map(lambda x, y: (text_vectorizer(x), y))
 print("\nTraining model...")
 model.compile(optimizer="rmsprop", loss="mse")
 model.fit(train_dataset)
-
-"""
-"""
 
 # For inference, you can export a model that accepts strings as input
 inputs = keras.Input(shape=(1,), dtype="string")
