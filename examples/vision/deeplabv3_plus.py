@@ -171,44 +171,41 @@ def AtrousSpatialPyramidPooling(aspp_input):
 The encoder features are first bilinearly upsampled by a factor of 4 and then 
 concatenated with the corresponding low-level features from the network backbone that
 have the same spatial resolution. For this example, we would be 
-using Resnet50 pre-trained on ImageNet as the backbone model and we would use 
+using Resnet101 pre-trained on ImageNet as the backbone model and we would use 
 the low-level features from the Conv2 block of the backbone.
 """
 
 
 def DeeplabV3Plus():
     model_input = tf.keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
-    resnet50 = tf.keras.applications.ResNet50(
-        weights="imagenet", include_top=False, input_tensor=model_input
-    )
-    layer = resnet50.get_layer("conv4_block6_2_relu").output
+    resnet101 = tf.keras.applications.ResNet101(
+        weights = 'imagenet', include_top = False, input_tensor = model_input)
+    layer = resnet101.get_layer('conv4_block6_2_relu').output
     layer = AtrousSpatialPyramidPooling(layer)
-
+    
     input_a = tf.keras.layers.UpSampling2D(
-        size=(IMAGE_SIZE // 4 // layer.shape[1], IMAGE_SIZE // 4 // layer.shape[2]),
-        interpolation="bilinear",
+        size=(
+            IMAGE_SIZE // 4 // layer.shape[1],
+            IMAGE_SIZE // 4 // layer.shape[2]
+        ), interpolation = 'bilinear'
     )(layer)
-
-    input_b = resnet50.get_layer("conv2_block3_2_relu").output
+    
+    input_b = resnet101.get_layer('conv2_block3_2_relu').output
     input_b = convolution_block(input_b, n_filters=48, kernel_size=1)
-
+    
     layer = tf.keras.layers.Concatenate(axis=-1)([input_a, input_b])
     layer = convolution_block(layer)
     layer = convolution_block(layer)
     layer = tf.keras.layers.UpSampling2D(
-        size=(IMAGE_SIZE // layer.shape[1], IMAGE_SIZE // layer.shape[2]),
-        interpolation="bilinear",
-    )(layer)
-
+        size=(
+            IMAGE_SIZE // layer.shape[1],
+            IMAGE_SIZE // layer.shape[2]
+        ), interpolation='bilinear')(layer)
+    
     model_output = tf.keras.layers.Conv2D(
-        NUM_CLASSES, kernel_size=(1, 1), padding="same"
-    )(layer)
-
+        NUM_CLASSES, kernel_size=(1, 1), padding='same')(layer)
+    
     return tf.keras.Model(inputs=model_input, outputs=model_output)
-
-
-model = DeeplabV3Plus()
-model.summary()
 
 """
 ## Training
