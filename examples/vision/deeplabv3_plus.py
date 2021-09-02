@@ -179,7 +179,7 @@ the low-level features from the Conv2 block of the backbone.
 def DeeplabV3Plus():
     model_input = tf.keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
     resnet101 = tf.keras.applications.ResNet101(
-        weights = 'imagenet', include_top = False, input_tensor = model_input)
+        weights='imagenet', include_top=False, input_tensor=model_input)
     layer = resnet101.get_layer('conv4_block6_2_relu').output
     layer = AtrousSpatialPyramidPooling(layer)
     
