@@ -65,6 +65,11 @@ hours. The MelGAN training is only concerned with the audio waves so we process 
 WAV files and ignore the audio annotations.
 """
 
+"""shell
+!wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
+!tar -xf /content/LJSpeech-1.1.tar.bz2
+"""
+
 # Splitting the dataset into training and testing splits
 wavs = glob.glob("LJSpeech-1.1/wavs/*.wav")
 train, test = train_test_split(wavs, test_size=TEST_SPLIT)
