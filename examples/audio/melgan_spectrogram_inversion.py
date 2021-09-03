@@ -438,7 +438,7 @@ discriminator.
             fm_loss += mae(real_pred[i][j], fake_pred[i][j])
 
     # Calculating final generator loss
-    gen_loss += lambda_feature * fm_loss / (i + 1) * (j + 1)
+    gen_loss += lambda_feature * fm_loss / ((i + 1) * (j + 1))
 
     return gen_loss
 
