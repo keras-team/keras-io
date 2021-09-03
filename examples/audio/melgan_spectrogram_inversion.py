@@ -120,8 +120,9 @@ class MelSpec(tf.keras.layers.Layer):
         n_mel_channels=80,
         fmin=0,
         fmax=7600,
+        **kwargs
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.frame_length = frame_length
         self.frame_step = frame_step
         self.fft_length = fft_length
@@ -433,7 +434,7 @@ discriminator.
     fm_loss = 0
     lambda_feature = 10
     for i in range(len(fake_pred)):
-        for j in range(len(fake_pred[i])):
+        for j in range(len(fake_pred[i]) - 1):
             fm_loss += mae(real_pred[i][j], fake_pred[i][j])
 
     # Calculating final generator loss
