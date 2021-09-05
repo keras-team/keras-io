@@ -106,7 +106,7 @@ fig, axes = plt.subplots(4, 5, figsize=(10, 8))
 # Plot each of the sequential images for one random data example.
 data_choice = np.random.choice(range(len(train_dataset)), size=1)[0]
 for idx, ax in enumerate(axes.flat):
-    ax.imshow(np.squeeze(train_dataset[data_choice][idx]), cmap='gray')
+    ax.imshow(np.squeeze(train_dataset[data_choice][idx]), cmap="gray")
     ax.set_title(f"Frame {idx + 1}")
     ax.axis("off")
 
@@ -158,7 +158,8 @@ x = layers.Conv3D(
 # Next, we will build the complete model and compile it.
 model = keras.models.Model(inp, x)
 model.compile(
-    loss=keras.losses.binary_crossentropy, optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.binary_crossentropy,
+    optimizer=keras.optimizers.Adam(),
 )
 
 """
