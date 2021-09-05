@@ -2,17 +2,21 @@
 Title: MelGAN Based Spectrogram Inversion using Feature Matching
 Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 02/09/2021
-Last modified: 02/09/2021
+Last modified: 05/09/2021
 Description: Inversion of audio from mel-spectrograms using the MelGAN architecture and feature matching.
 """
+
 """
 ## Introduction
 
-Autoregressive vocoders have been ubiquitous for a majority of the speech processing history
-but they lack parallelism. [MelGAN](https://arxiv.org/pdf/1910.06711v3.pdf) is a
+Autoregressive vocoders have been ubiquitous for a majority of the speech processing
+history
+but they lacked parallelism for most of their existence.
+[MelGAN](https://arxiv.org/pdf/1910.06711v3.pdf) is a
 non-autoregressive, fully convolutional vocoder architecture used for purposes ranging
-from spectral inversion and speech enhancement to speech synthesis when used as a decoder
-with models like Tacotron2 or FastSpeech.
+from spectral inversion and speech enhancement to present day SoTA speech synthesis when
+used as a decoder
+with models like Tacotron2 or FastSpeech that convert text to mel spectrograms.
 
 In this tutorial, we will have a look at the MelGAN architecture and how it can achieve
 fast spectral inversion, i.e. conversion of spectrograms to audio waves. The MelGAN
@@ -22,27 +26,30 @@ reflect padding.
 """
 
 """
-## Imports
+## Importing and Defining Hyperparameters
 """
 
 """shell
-!pip install -qqq tensorflow_addons
-!pip install -qqq tensorflow-io
+pip install -qqq tensorflow_addons
+pip install -qqq tensorflow-io
 """
 
 import tensorflow as tf
 import tensorflow_io as tfio
-import numpy as np
+from tensorflow.keras.layers import (
+    Input,
+    Dense,
+    Conv1D,
+    Conv1DTranspose,
+    AveragePooling1D,
+    LeakyReLU,
+)
+from tensorflow_addons import layers as addon_layers
 import librosa.display
-import glob
-from tensorflow.keras.layers import *
-from tensorflow_addons.layers import WeightNormalization
-from sklearn.model_selection import train_test_split
 
 # Defining hyperparameters
 
 DESIRED_SAMPLES = 8192
-TEST_SPLIT = 0.2
 LEARNING_RATE_GEN = 1e-5
 LEARNING_RATE_DISC = 1e-6
 BATCH_SIZE = 16
@@ -66,31 +73,30 @@ WAV files and ignore the audio annotations.
 """
 
 """shell
-!wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
-!tar -xf /content/LJSpeech-1.1.tar.bz2
+wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
+tar -xf /content/LJSpeech-1.1.tar.bz2
+"""
+
+"""
+We will now create a `tf.data.Dataset` to load and process the audio files on the fly.
+The `preprocess` function takes the file path as input and returns two instances of the
+wave, one for input and one as the ground truth for comparsion. The input wave will be
+mapped to a spectrogram using the custom `MelSpec` layer as shown later in this example.
 """
 
 # Splitting the dataset into training and testing splits
-wavs = glob.glob("LJSpeech-1.1/wavs/*.wav")
-train, test = train_test_split(wavs, test_size=TEST_SPLIT)
-
-print(f"Number of training audio files: {len(train)}")
-print(f"Number of testing audio files: {len(test)}")
+wavs = tf.io.gfile.glob("LJSpeech-1.1/wavs/*.wav")
+print(f"Number of audio files: {len(wavs)}")
 
 # Mapper function for loading the audio. This function returns two instances of the wave
-
-
 def preprocess(filename):
     audio = tf.audio.decode_wav(tf.io.read_file(filename), 1, DESIRED_SAMPLES).audio
     return audio, audio
 
 
 # Create tf.data.Datasets and mapping the dataset
-train_dataset = tf.data.Dataset.from_tensor_slices(train,)
+train_dataset = tf.data.Dataset.from_tensor_slices((wavs,))
 train_dataset = train_dataset.map(preprocess, tf.data.AUTOTUNE)
-
-test_dataset = tf.data.Dataset.from_tensor_slices(test,)
-test_dataset = test_dataset.map(preprocess, tf.data.AUTOTUNE)
 
 """
 ## Defining custom layers for MelGAN
@@ -103,8 +109,11 @@ The MelGAN architecture consists of 3 main modules:
 """
 
 """
-Since the network inputs a mel-spectrogram, we will create an additional custom layer
-which can convert the raw audio wave to a spectrogram on-the-fly.
+Since the network takes a mel-spectrogram as input, we will create an additional custom
+layer
+which can convert the raw audio wave to a spectrogram on-the-fly. We use the raw audio
+tensor from `train_dataset` and map it to a mel-spectrogram using the `MelSpec` layer
+below
 """
 
 # Custom keras layer for on-the-fly audio to spectrogram conversion
@@ -118,9 +127,9 @@ class MelSpec(tf.keras.layers.Layer):
         fft_length=None,
         sampling_rate=22050,
         n_mel_channels=80,
-        fmin=0,
+        fmin=125,
         fmax=7600,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.frame_length = frame_length
@@ -139,24 +148,28 @@ class MelSpec(tf.keras.layers.Layer):
             upper_edge_hertz=self.fmax,
         )
 
-    def call(self, audio):
-        # Taking the Short Time Fourier Transform. Ensure that the audio is padded.
-        # In the paper, the STFT output is padded using the 'REFLECT' strategy.
-        stft = tf.signal.stft(
-            tf.squeeze(audio, -1),
-            self.frame_length,
-            self.frame_step,
-            self.fft_length,
-            pad_end=True,
-        )
+    def call(self, audio, training=True):
+        # We will only perform the transformation during training.
+        if training:
+            # Taking the Short Time Fourier Transform. Ensure that the audio is padded.
+            # In the paper, the STFT output is padded using the 'REFLECT' strategy.
+            stft = tf.signal.stft(
+                tf.squeeze(audio, -1),
+                self.frame_length,
+                self.frame_step,
+                self.fft_length,
+                pad_end=True,
+            )
 
-        # Taking the magnitude of the STFT output
-        magnitude = tf.abs(stft)
+            # Taking the magnitude of the STFT output
+            magnitude = tf.abs(stft)
 
-        # Multiplying the Mel-filterbank with the magnitude and scaling it using the db scale
-        mel = tf.matmul(tf.square(magnitude), self.mel_filterbank)
-        log_mel_spec = tfio.audio.dbscale(mel, 80)
-        return log_mel_spec
+# Multiplying the Mel-filterbank with the magnitude and scaling it using the db scale
+            mel = tf.matmul(tf.square(magnitude), self.mel_filterbank)
+            log_mel_spec = tfio.audio.dbscale(mel, 80)
+            return log_mel_spec
+        else:
+            return audio
 
     def get_config(self):
         config = super(MelSpec, self).get_config()
@@ -173,12 +186,20 @@ class MelSpec(tf.keras.layers.Layer):
         )
         return config
 
+
 """
 The Residual Convolutional Block extensively uses dilations and has a total receptive
-field of 27 timesteps per block.
+field of 27 timesteps per block. The dilations must grow as a power of the `kernel_size`
+to ensure reduction of hissing noise in the output. The network proposed by the paper is
+as follows:
+
+<p align="center">
+<img src="https://i.imgur.com/gENKH91.png" alt="drawing" height="500"/>
+</p>
 """
 
 # Creating the Residual Stack Layer
+
 
 class ResidualStack(tf.keras.layers.Layer):
     """
@@ -191,22 +212,22 @@ class ResidualStack(tf.keras.layers.Layer):
     def __init__(self, filters, **kwargs):
         super().__init__(**kwargs)
         self.filters = filters
-        self.c1 = WeightNormalization(
+        self.c1 = addon_layers.WeightNormalization(
             Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
         )
-        self.c2 = WeightNormalization(
+        self.c2 = addon_layers.WeightNormalization(
             Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
         )
-        self.c3 = WeightNormalization(
+        self.c3 = addon_layers.WeightNormalization(
             Conv1D(filters, 3, dilation_rate=3, padding="same"), data_init=False
         )
-        self.c4 = WeightNormalization(
+        self.c4 = addon_layers.WeightNormalization(
             Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
         )
-        self.c5 = WeightNormalization(
+        self.c5 = addon_layers.WeightNormalization(
             Conv1D(filters, 3, dilation_rate=9, padding="same"), data_init=False
         )
-        self.c6 = WeightNormalization(
+        self.c6 = addon_layers.WeightNormalization(
             Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
         )
         self.lrelu = LeakyReLU
@@ -238,14 +259,14 @@ class ResidualStack(tf.keras.layers.Layer):
 
 
 """
-The Dilated Convolutional Block uses the dilations offered by the residual stack
+Each Convolutional Block uses the dilations offered by the residual stack
 and upsamples the input data by the `upsampling_factor`.
 """
 
-# Dilated Convolutional Block
+# Dilated Convolutional Block consisting of the Residual stack
 
 
-class DilatedConvBlock(tf.keras.layers.Layer):
+class ConvBlock(tf.keras.layers.Layer):
     """
   Dilated Convolutional Block with weight normalization.
 
@@ -259,7 +280,7 @@ class DilatedConvBlock(tf.keras.layers.Layer):
         super().__init__(**kwargs)
         self.conv_dim = conv_dim
         self.upsampling_factor = upsampling_factor
-        self.conv_t = WeightNormalization(
+        self.conv_t = addon_layers.WeightNormalization(
             Conv1DTranspose(self.conv_dim, 16, self.upsampling_factor, padding="same"),
             data_init=False,
         )
@@ -275,7 +296,7 @@ class DilatedConvBlock(tf.keras.layers.Layer):
         return out
 
     def get_config(self):
-        config = super(DilatedConvBlock, self).get_config()
+        config = super(ConvBlock, self).get_config()
         config.update(
             {"conv_dim": self.conv_dim, "upsampling_factor": self.upsampling_factor}
         )
@@ -297,26 +318,36 @@ class DiscriminatorBlock(tf.keras.layers.Layer):
 
         self.convs = []
         self.convs.append(
-            WeightNormalization(Conv1D(16, 15, 1, "same"), data_init=False)
+            addon_layers.WeightNormalization(Conv1D(16, 15, 1, "same"), data_init=False)
         )
         self.convs.append(
-            WeightNormalization(Conv1D(64, 41, 4, "same", groups=4), data_init=False)
+            addon_layers.WeightNormalization(
+                Conv1D(64, 41, 4, "same", groups=4), data_init=False
+            )
         )
         self.convs.append(
-            WeightNormalization(Conv1D(256, 41, 4, "same", groups=16), data_init=False)
+            addon_layers.WeightNormalization(
+                Conv1D(256, 41, 4, "same", groups=16), data_init=False
+            )
         )
         self.convs.append(
-            WeightNormalization(Conv1D(1024, 41, 4, "same", groups=64), data_init=False)
+            addon_layers.WeightNormalization(
+                Conv1D(1024, 41, 4, "same", groups=64), data_init=False
+            )
         )
         self.convs.append(
-            WeightNormalization(
+            addon_layers.WeightNormalization(
                 Conv1D(1024, 41, 4, "same", groups=256), data_init=False
             )
         )
         self.convs.append(
-            WeightNormalization(Conv1D(1024, 5, 1, "same"), data_init=False)
+            addon_layers.WeightNormalization(
+                Conv1D(1024, 5, 1, "same"), data_init=False
+            )
         )
-        self.convs.append(WeightNormalization(Conv1D(1, 3, 1, "same"), data_init=False))
+        self.convs.append(
+            addon_layers.WeightNormalization(Conv1D(1, 3, 1, "same"), data_init=False)
+        )
         self.lrelu = LeakyReLU
 
     def call(self, input):
@@ -339,11 +370,13 @@ def create_generator(input_shape):
     x = MelSpec()(inp)
     x = Conv1D(512, 7, padding="same")(x)
     x = LeakyReLU()(x)
-    x = DilatedConvBlock(256, 8)(x)
-    x = DilatedConvBlock(128, 8)(x)
-    x = DilatedConvBlock(64, 2)(x)
-    x = DilatedConvBlock(32, 2)(x)
-    x = WeightNormalization(Conv1D(1, 7, padding="same", activation="tanh"))(x)
+    x = ConvBlock(256, 8)(x)
+    x = ConvBlock(128, 8)(x)
+    x = ConvBlock(64, 2)(x)
+    x = ConvBlock(32, 2)(x)
+    x = addon_layers.WeightNormalization(
+        Conv1D(1, 7, padding="same", activation="tanh")
+    )(x)
     return tf.keras.models.Model(inp, x)
 
 
@@ -356,9 +389,6 @@ tf.keras.utils.plot_model(generator, show_shapes=True)
 ### Create the discriminator
 """
 
-# We use a dynamic input shape for the discriminator
-# This is done because the input shape for the generator is unknown
-
 
 def create_discriminator(input_shape):
     inp = Input(input_shape)
@@ -370,7 +400,10 @@ def create_discriminator(input_shape):
     return tf.keras.models.Model(inp, [out_map1, out_map2, out_map3])
 
 
+# We use a dynamic input shape for the discriminator
+# This is done because the input shape for the generator is unknown
 discriminator = create_discriminator((None, 1))
+
 discriminator.summary()
 tf.keras.utils.plot_model(discriminator, show_shapes=True)
 
@@ -393,7 +426,7 @@ Loss = ||1 - D(G(s))||^2
 2. Feature Matching Loss:
 
 This loss involves extracting the outputs of every layer from the discriminator for both
-the generator and ground truth and compare each layer output using Mean Squared Error.
+the generator and ground truth and compare each layer output using Mean Absolute Error.
 
 \begin{align}
 Loss_{fm} = \frac{1}{N} \sum_{i=0}^N ||D_k^{(i)}(x) - D_k^{(i)}(G(s))||_1
@@ -407,7 +440,6 @@ with ones and generated predictions with zeros.
 \begin{align}
 Loss = \frac{1}{N} \sum_{i=0}^N (||1 -D_k^{(i)}(x)||^2 + ||0 - D_k^{(i)}(G(s))||)
 \end{align}
-
 
 """
 
@@ -487,6 +519,9 @@ class MelGAN(tf.keras.models.Model):
         self.generator_loss = generator_loss
         self.discriminator_loss = discriminator_loss
 
+    def call(self, tensor, training=False):
+        return self.generator(tensor, training=training)
+
     def train_step(self, batch):
         x_batch_train, y_batch_train = batch
 
@@ -514,12 +549,18 @@ class MelGAN(tf.keras.models.Model):
 """
 ## Training
 
-The paper suggests that the training with dynamic shapes takes around 400,000 steps. For
-this example, we will run it only for three epochs
+The paper suggests that the training with dynamic shapes takes around 400,000 steps (~500
+epochs). For
+this example, we will run it only for a single epoch (819 steps). Longer training time
+(greater than 300 epochs) will almost certainly provide better results.
 """
 
-gen_optimizer = tf.keras.optimizers.Adam(LEARNING_RATE_GEN, beta_1=0.5, beta_2=0.9, clipnorm=1)
-disc_optimizer = tf.keras.optimizers.Adam(LEARNING_RATE_DISC, beta_1=0.5, beta_2=0.9, clipnorm=1)
+gen_optimizer = tf.keras.optimizers.Adam(
+    LEARNING_RATE_GEN, beta_1=0.5, beta_2=0.9, clipnorm=1
+)
+disc_optimizer = tf.keras.optimizers.Adam(
+    LEARNING_RATE_DISC, beta_1=0.5, beta_2=0.9, clipnorm=1
+)
 
 # Start training
 generator = create_generator((None, 1))
@@ -527,22 +568,53 @@ discriminator = create_discriminator((None, 1))
 
 mel_gan = MelGAN(generator, discriminator)
 mel_gan.compile(gen_optimizer, disc_optimizer, generator_loss, discriminator_loss)
-mel_gan.fit(train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE), epochs=3)
+mel_gan.fit(
+    train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE), epochs=1
+)
 
+"""
+## Testing the model
+"""
+
+"""
+The trained model can now be used for real time text-to-speech translation tasks.
+To test how fast the MelGAN inference can be, let us take a sample audio mel-spectrogram
+and convert it. Note that the actual model pipeline will not include the `MelSpec` layer
+and hence this layer will be disabled during inference. The inference input will be a
+mel-spectrogram processed similar to the `MelSpec` layer configuration. 
+
+For testing this, we will create a randomly uniformly distributed tensor to simulate the
+behavior of the inference pipeline.
+"""
+
+# Sampling a random tensor with the shape [50, 80] to mimic a spectrogram
+audio_sample = tf.random.uniform([1, 50, 80])
+
+
+%%timeit
+mel_gan(audio_sample, training=False)
 """
 # Conclusion
 
-The MelGAN is a highly effective algorithm for spectral inversion and beats the Griffin
-Lim algorithm by a Mean Opinion Score difference of 2.95 which is a considerable
-improvement. In contrast with the purely algortithmic techniques, the MelGAN outperforms
-the WaveGlow and WaveNet architectures on text-to-speech and speech enhancement tasks on
-the LJSpeech and VCTK datasets.
+The MelGAN is a highly effective architecture for spectral inversion that has a Mean
+Opinion Score (MOS) of 3.61 that  considerably outperforms the Griffin
+Lim algorithm having a MOS of just 1.57. In contrast with this, the MelGAN compares with
+the state-of-the-art WaveGlow and WaveNet architectures on text-to-speech and speech
+enhancement tasks on
+the LJSpeech and VCTK datasets <sup>[1]</sup>.
+
+This tutorial highlights:
+1. The advantages of using dilated convolutions that grow with the filter size
+2. Implementation of a custom layer for on-the-fly conversion of audio waves to
+mel-spectrograms
+3. Effectiveness of using the feature matching loss function for training GAN generators.
 
 Further reading
 
-1. MelGAN paper to understand the reasoning behind the architecture and training process
+1. [MelGAN paper](https://arxiv.org/pdf/1910.06711v3.pdf) (Kundan Kumar et al.) to
+understand the reasoning behind the architecture and training process
 
-2. For in depth understanding of the feature matching loss, you can refer to [Improved
+2. For in-depth understanding of the feature matching loss, you can refer to [Improved
 Techniques for Training GANs](https://arxiv.org/pdf/1606.03498v1.pdf) (Tim Salimans et
 al.).
 """
