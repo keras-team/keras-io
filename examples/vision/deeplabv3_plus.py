@@ -104,10 +104,6 @@ along object boundaries.
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 
-
-"""
-
-"""
 **Dilated Convolution:** With Dilated convolution, as we go deeper, we can keep the
 stride constant but with larger field-of-view without increasing the number of parameters
 or the amount of computation. And finally, we can have larger output feature map which is
@@ -207,9 +203,7 @@ model.summary()
 
 """
 ## Training
-"""
 
-"""
 We would train the model using Sparse Categorical Cross-entropy as the loss function and
 use Adam as the optimizer.
 """
