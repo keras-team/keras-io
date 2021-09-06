@@ -38,7 +38,6 @@ import tensorflow as tf
 import tensorflow_io as tfio
 from tensorflow.keras.layers import (
     Input,
-    Dense,
     Conv1D,
     Conv1DTranspose,
     AveragePooling1D,
@@ -417,19 +416,19 @@ The generator architecture uses a combination of two losses
 1. MeanSquaredError:
 
 This is the standard MSE generator loss calculated between ones and the outputs from the
-discriminator
+discriminator with _N_ layers.
 
 \begin{align}
-Loss = ||1 - D(G(s))||^2
+Loss = \frac{1}{3}\sum_{k=0}^3||1 - D_k^{(N)}(G(s))||_2
 \end{align}
 
 2. Feature Matching Loss:
 
 This loss involves extracting the outputs of every layer from the discriminator for both
-the generator and ground truth and compare each layer output using Mean Absolute Error.
+the generator and ground truth and compare each layer output _k_ using Mean Absolute Error.
 
 \begin{align}
-Loss_{fm} = \frac{1}{N} \sum_{i=0}^N ||D_k^{(i)}(x) - D_k^{(i)}(G(s))||_1
+Loss_{fm} = \frac{1}{N \times 3} \sum_{i=0}^N ||D_k^{(i)}(x) - D_k^{(i)}(G(s))||_1
 \end{align}
 
 **Discriminator Loss**
@@ -438,7 +437,7 @@ The discriminator uses the Mean Absolute Error and compares the real data predic
 with ones and generated predictions with zeros.
 
 \begin{align}
-Loss = \frac{1}{N} \sum_{i=0}^N (||1 -D_k^{(i)}(x)||^2 + ||0 - D_k^{(i)}(G(s))||)
+Loss = \frac{1}{3} \sum_{k=0}^3 (||1 -D_k^{(N)}(x)||^2 + ||0 - D_k^{(N)}(G(s))||)
 \end{align}
 
 """
