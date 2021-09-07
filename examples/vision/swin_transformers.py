@@ -148,3 +148,78 @@ class Mlp(layers.Layer):
         x = layers.Dense(self.filter_num[1])(x)
         x = layers.Dropout(self.drop)(x)        
         return x
+
+"""
+## Window based multi-head self attention
+
+Usually Transformers conduct global self attention, where the relationships between a token 
+and all other tokens are computed. The global computation leads to quadratic complexity with 
+respect to the number of tokens. Here as the [original paper](https://arxiv.org/abs/2103.14030) suggests we compute self-attention within local 
+windows, in a non-overlapping manner. Global self attention introduces quadratic computational 
+complexity to the patch number whereas window based self-attention would be linear and easily scalable.
+"""
+
+class WindowAttention(tf.keras.layers.Layer):
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0):
+        super(WindowAttention, self).__init__()
+        self.dim = dim
+        self.window_size = window_size
+        self.num_heads = num_heads
+        self.scale = (dim // num_heads) ** -0.5
+        self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
+        self.dropout = layers.Dropout(drop_rate)
+        self.proj = layers.Dense(dim)
+
+    def build(self):
+        num_window_elements = (2*self.window_size[0] - 1) * (2*self.window_size[1] - 1)
+        self.relative_position_bias_table = self.add_weight(shape=(num_window_elements, self.num_heads),
+                                                            initializer=tf.initializers.Zeros(), trainable=True)
+        coords_h = np.arange(self.window_size[0])
+        coords_w = np.arange(self.window_size[1])
+        coords_matrix = np.meshgrid(coords_h, coords_w, indexing='ij')
+        coords = np.stack(coords_matrix)
+        coords_flatten = coords.reshape(2, -1)
+        relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :]
+        relative_coords = relative_coords.transpose([1, 2, 0])
+        relative_coords[:, :, 0] += self.window_size[0] - 1
+        relative_coords[:, :, 1] += self.window_size[1] - 1
+        relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
+        relative_position_index = relative_coords.sum(-1)
+        
+        self.relative_position_index = tf.Variable(
+            initial_value=tf.convert_to_tensor(relative_position_index), trainable=False)
+        
+    def call(self, x, mask=None):
+        _, N, C = x.get_shape().as_list()
+        head_dim = C//self.num_heads 
+        x_qkv = self.qkv(x)
+        x_qkv = tf.reshape(x_qkv, shape=(-1, N, 3, self.num_heads, head_dim))
+        x_qkv = tf.transpose(x_qkv, perm=(2, 0, 3, 1, 4))
+        q, k, v = x_qkv[0], x_qkv[1], x_qkv[2]
+        q = q * self.scale
+        k = tf.transpose(k, perm=(0, 1, 3, 2))
+        attn = (q @ k)
+        
+        num_window_elements = self.window_size[0] * self.window_size[1]
+        relative_position_index_flat = tf.reshape(self.relative_position_index, shape=(-1,))
+        relative_position_bias = tf.gather(self.relative_position_bias_table, relative_position_index_flat)
+        relative_position_bias = tf.reshape(relative_position_bias, shape=(num_window_elements, num_window_elements, -1))
+        relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1))
+        attn = attn + tf.expand_dims(relative_position_bias, axis=0)
+
+        if mask is not None:
+            nW = mask.get_shape()[0]
+            mask_float = tf.cast(tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32)
+            attn = tf.reshape(attn, shape=(-1, nW, self.num_heads, N, N)) + mask_float
+            attn = tf.reshape(attn, shape=(-1, self.num_heads, N, N))
+            attn = keras.activations.softmax(attn, axis=-1)
+        else:
+            attn = keras.activations.softmax(attn, axis=-1)  
+        attn = self.droput(attn)
+        
+        x_qkv = (attn @ v)
+        x_qkv = tf.transpose(x_qkv, perm=(0, 2, 1, 3))
+        x_qkv = tf.reshape(x_qkv, shape=(-1, N, C))
+        x_qkv = self.proj(x_qkv)
+        x_qkv = self.dropout(x_qkv)
+        return x_qkv
