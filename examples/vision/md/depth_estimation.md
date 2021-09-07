@@ -1,4 +1,3 @@
-
 # Monocular depth estimation
 
 **Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>

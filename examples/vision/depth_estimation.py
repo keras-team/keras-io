@@ -433,10 +433,7 @@ class DepthEstimationModel(tf.keras.Model):
 ## Model training
 """
 
-optimizer = tf.keras.optimizers.Adam(
-    learning_rate=LR,
-    amsgrad=False,
-)
+optimizer = tf.keras.optimizers.Adam(learning_rate=LR, amsgrad=False,)
 model = DepthEstimationModel()
 # Define the loss function
 cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
@@ -452,9 +449,7 @@ validation_loader = DataGenerator(
     data=df[260:].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
 )
 model.fit(
-    train_loader,
-    epochs=EPOCHS,
-    validation_data=validation_loader,
+    train_loader, epochs=EPOCHS, validation_data=validation_loader,
 )
 
 """
