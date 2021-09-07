@@ -3,7 +3,7 @@ Title: CIFAR-10 Image Classification with Swin Transformers
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/08
 Last modified: 2021/09/08
-Description: Image Classification using a new Swwin Transformers bringing greater efficiency.
+Description: Image Classification using Swin Transformers, a general-purpose backbone for computer vision.
 """
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
@@ -174,11 +174,12 @@ class Mlp(layers.Layer):
 """
 ## Window based multi-head self attention
 
-Usually Transformers conduct global self attention, where the relationships between a token 
-and all other tokens are computed. The global computation leads to quadratic complexity with 
-respect to the number of tokens. Here as the [original paper](https://arxiv.org/abs/2103.14030) suggests we compute self-attention within local 
-windows, in a non-overlapping manner. Global self attention introduces quadratic computational 
-complexity to the patch number whereas window based self-attention would be linear and easily scalable.
+Usually Transformers conduct global self attention, where the relationships between 
+a token and all other tokens are computed. The global computation leads to quadratic 
+complexity with respect to the number of tokens. Here as the [original paper](https://arxiv.org/abs/2103.14030) 
+suggests we compute self-attention within local windows, in a non-overlapping manner. 
+Global self attention introduces quadratic computational complexity to the patch 
+number whereas window based self-attention would be linear and easily scalable.
 """
 
 
@@ -265,10 +266,12 @@ class WindowAttention(tf.keras.layers.Layer):
 """
 ## The final Swin Transformer model
 
-We will now put together a Swin Transformer by replacing the standard multi-head self attention (MSA) in a Transformer 
-with shifted windows. As suggested in the original paper we will create a model comprising of a shifted window based MSA
-layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying `LayerNormalization` before each MSA layer and 
-each MLP, and a residual connection after each of these layers.
+We will now put together a Swin Transformer by replacing the standard multi-head 
+self attention (MSA) in a Transformer with shifted windows. As suggested in the 
+original paper we will create a model comprising of a shifted window based MSA
+layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying 
+`LayerNormalization` before each MSA layer and each MLP, and a residual 
+connection after each of these layers.
 """
 
 
@@ -527,14 +530,15 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 
 """
-The Swin Transformer model we just trained has just 152K parameters, and it gets us to
-~96.3% top-5 accuracy within just 20 epochs without any signs of overfitting as well as seen in above graph. This means 
-we can train this network for longer (perhaps with a bit more regularization) and may obtain 
-even better performance. The authors present a top-1 accuracy of 87.3% on ImageNet. The authors 
-also present a number of experiments to study how input sizes, optimizers etc. affect the final 
-performance of this model. The authors further present using this model for object detection and 
-image segmentation as well. You are strongly advised to check out the [original paper](https://arxiv.org/abs/2103.14030) 
-as well.
+The Swin Transformer model we just trained has just 152K parameters, and it gets 
+us to ~96.3% top-5 accuracy within just 20 epochs without any signs of overfitting 
+as well as seen in above graph. This means we can train this network for longer 
+(perhaps with a bit more regularization) and may obtain even better performance. 
+The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present 
+a number of experiments to study how input sizes, optimizers etc. affect the final 
+performance of this model. The authors further present using this model for object 
+detection and image segmentation as well. You are strongly advised to check out 
+the [original paper](https://arxiv.org/abs/2103.14030) as well.
 
 This example takes inspiration from the official PyTorch and TensorFlow implementations.
 """
