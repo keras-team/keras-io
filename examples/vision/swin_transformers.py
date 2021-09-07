@@ -89,3 +89,27 @@ clipvalue=0.5
 batch_size=32
 num_epochs=20
 validation_split=0.1
+
+"""
+## Helper Functions
+
+We will now create two helper functions which can help us get a sequence of 
+patches from the image and allow us to merge patches to spatial frames.
+"""
+
+def window_partition(x, window_size):
+    _, H, W, C = x.get_shape().as_list()
+    patch_num_H = H//window_size
+    patch_num_W = W//window_size
+    x = tf.reshape(x, shape=(-1, patch_num_H, window_size, patch_num_W, window_size, C))
+    x = tf.transpose(x, (0, 1, 3, 2, 4, 5))
+    windows = tf.reshape(x, shape=(-1, window_size, window_size, C))
+    return windows
+
+def window_reverse(windows, window_size, H, W, C):
+    patch_num_H = H//window_size
+    patch_num_W = W//window_size
+    x = tf.reshape(windows, shape=(-1, patch_num_H, patch_num_W, window_size, window_size, C))
+    x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
+    x = tf.reshape(x, shape=(-1, H, W, C))    
+    return x
