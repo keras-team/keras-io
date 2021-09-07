@@ -47,12 +47,21 @@ We will now load the CIFAR-10 dataset through
 
 num_classes = 10
 input_shape = (32, 32, 3)
+class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 x_train, x_test = x_train / 255.0, x_test / 255.0
-
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
-
 print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
 print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
+
+plt.figure(figsize=(10,10))
+for i in range(25):
+    plt.subplot(5,5,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(x_train[i])
+    plt.xlabel(class_names[int(y_train[i][0])])
+plt.show()
