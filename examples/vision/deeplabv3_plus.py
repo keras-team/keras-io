@@ -133,7 +133,7 @@ def convolution_block(
     return tf.nn.relu(x)
 
 
-def AtrousSpatialPyramidPooling(aspp_input):
+def DilatedSpatialPyramidPooling(aspp_input):
     dims = aspp_input.shape
     x = layers.AveragePooling2D(pool_size=(dims[-3], dims[-2]))(aspp_input)
     x = convolution_block(x, kernel_size=1, use_bias=True)
@@ -167,7 +167,7 @@ def DeeplabV3Plus(image_size, num_classes):
         weights="imagenet", include_top=False, input_tensor=model_input
     )
     x = resnet101.get_layer("conv4_block6_2_relu").output
-    x = AtrousSpatialPyramidPooling(x)
+    x = DilatedSpatialPyramidPooling(x)
 
     input_a = layers.UpSampling2D(
         size=(image_size // 4 // x.shape[1], image_size // 4 // x.shape[2]),
