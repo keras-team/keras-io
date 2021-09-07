@@ -139,16 +139,13 @@ We will now create a simple multi-layered perceptron with 2 Dense and 2 Dropout 
 class Mlp(layers.Layer):
     def __init__(self, filter_num, drop=0., **kwargs):
         super(Mlp, self).__init__(**kwargs)
-        self.filter_num = filter_num
-        self.drop = drop
-        
+        self.net = keras.Sequential([layers.Dense(filter_num[0]),
+                                     layers.Activation(keras.activations.gelu),
+                                     layers.Dropout(drop),
+                                     layers.Dense(filter_num[1]),
+                                     layers.Dropout(drop)])
     def call(self, x):
-        x = layers.Dense(self.filter_num[0])(x)
-        x= layers.Activation(keras.activations.gelu)(x)
-        x = layers.Dropout(self.drop)(x)
-        x = layers.Dense(self.filter_num[1])(x)
-        x = layers.Dropout(self.drop)(x)        
-        return x
+        return self.net(x)
 
 """
 ## Window based multi-head self attention
@@ -171,7 +168,7 @@ class WindowAttention(tf.keras.layers.Layer):
         self.dropout = layers.Dropout(drop_rate)
         self.proj = layers.Dense(dim)
 
-    def build(self):
+    def build(self, input_shape):
         num_window_elements = (2*self.window_size[0] - 1) * (2*self.window_size[1] - 1)
         self.relative_position_bias_table = self.add_weight(shape=(num_window_elements, self.num_heads),
                                                             initializer=tf.initializers.Zeros(), trainable=True)
@@ -216,7 +213,7 @@ class WindowAttention(tf.keras.layers.Layer):
             attn = keras.activations.softmax(attn, axis=-1)
         else:
             attn = keras.activations.softmax(attn, axis=-1)  
-        attn = self.droput(attn)
+        attn = self.dropout(attn)
         
         x_qkv = (attn @ v)
         x_qkv = tf.transpose(x_qkv, perm=(0, 2, 1, 3))
@@ -256,7 +253,7 @@ class SwinTransformer(layers.Layer):
             self.shift_size = 0
             self.window_size = min(self.num_patch)
             
-    def build(self):
+    def build(self, input_shape):
         if self.shift_size > 0:
             H, W = self.num_patch
             h_slices = (slice(0, -self.window_size), slice(-self.window_size, -self.shift_size), slice(-self.shift_size, None))
@@ -379,7 +376,7 @@ x = SwinTransformer(dim=embed_dim, num_patch=(num_patch_x, num_patch_y), num_hea
                              window_size=window_size, shift_size=shift_size, num_mlp=num_mlp, qkv_bias=qkv_bias, drop_rate = drop_rate)(x)                             
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
 x = GlobalAveragePooling1D()(x)
-output = layers.Dense(num_classes, activation='softmax')
+output = layers.Dense(num_classes, activation='softmax')(x)
 
 """
 ### Train on CIFAR-10
