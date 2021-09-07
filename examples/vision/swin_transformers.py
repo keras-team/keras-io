@@ -498,3 +498,16 @@ model.fit(
     epochs=num_epochs,
     validation_split=validation_split,
 )
+
+"""
+The Swin Transformer model we just trained has just 152K parameters, and it gets us to
+~63.5% accuracy within just 20 epochs without any signs of overfitting as well. This means 
+we can train this network for longer (perhaps with a bit more regularization) and may obtain 
+even better performance. The authors present a top-1 accuracy of 87.3% on ImageNet. The authors 
+also present a number of experiments to study how input sizes, optimizers etc. affect the final 
+performance of this model. The authors further present using this model for object detection and 
+image segmentation as well. You are strongly advised to check out the [original paper](https://arxiv.org/abs/2103.14030) 
+as well.
+
+This example takes inspiration from the official PyTorch and TensorFlow implentations.
+"""
