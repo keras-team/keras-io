@@ -68,6 +68,8 @@ plt.show()
 
 """
 ## Configure the hyperparameters
+
+In order to use each pixel as an individual input, you can set `patch_size` to (1, 1).
 """
 
 patch_size = (2, 2) # 2-by-2 sized patches
