@@ -94,7 +94,7 @@ validation_split=0.1
 ## Helper Functions
 
 We will now create two helper functions which can help us get a sequence of 
-patches from the image and allow us to merge patches to spatial frames.
+patches from the image, allow us to merge patches to spatial frames and dropout.
 """
 
 def window_partition(x, window_size):
@@ -113,3 +113,18 @@ def window_reverse(windows, window_size, H, W, C):
     x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
     x = tf.reshape(x, shape=(-1, H, W, C))    
     return x
+
+class DropPath(layers.Layer):
+    def __init__(self, drop_prob=None, **kwargs):
+        super(DropPath, self).__init__(**kwargs)
+        self.drop_prob = drop_prob
+
+    def call(self, x):
+        input_shape = tf.shape(x)
+        batch_num = input_shape[0]
+        rank = len(input_shape)
+        shape = (batch_num,) + (1,) * (rank - 1)
+        random_tensor = (1-self.drop_prob) + tf.random.uniform(shape, dtype=x.dtype)
+        path_mask = tf.floor(random_tensor)
+        output = tf.math.divide(x, 1-self.drop_prob) * path_mask
+        return output
