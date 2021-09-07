@@ -1,5 +1,5 @@
 """
-Title: Multiclass Semantic Segmentation using DeepLabV3+
+Title: Multiclass semantic segmentation using DeepLabV3+
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/08/31
 Last modified: 2021/09/1
@@ -23,10 +23,10 @@ architecture that performs well on semantic segmentation benchmarks.
 """
 ## Downloading the data
 
-We would be using the [Crowd Instance-level Human Parsing Dataset](https://arxiv.org/abs/1811.12596) 
+We will use the [Crowd Instance-level Human Parsing Dataset](https://arxiv.org/abs/1811.12596) 
 for training our model. The Crowd Instance-level Human Parsing (CIHP) dataset has 38,280 diverse human images. 
-Each image in CIHP is labeled with pixel-wise annotations on 20 categories and instance-level identification. 
-The dataset can be used for the human part segmentation task.
+Each image in CIHP is labeled with pixel-wise annotations for 20 categories, as well as instance-level identification. 
+This dataset can be used for the "human part segmentation" task.
 """
 
 import os
@@ -221,9 +221,9 @@ plt.show()
 ## Inference using Colormap Overlay
 
 The raw predictions from the model represent a one-hot encoded tensor of shape `(N, 512, 512, 20)` 
-where each one of the 20 channels is a binary mask corresponding to a particular label preddicted. 
-In order to visualize the results, we would plot them as RGB segmentation masks where each pixel 
-is represented by a unique color corresponding to the particular label preddicted. We can easily 
+where each one of the 20 channels is a binary mask corresponding to a predicted label. 
+In order to visualize the results, we plot them as RGB segmentation masks where each pixel 
+is represented by a unique color corresponding to the particular label predicted. We can easily 
 find the color corresponding to each label from the `human_colormap.mat` file provided as part 
 of the dataset. We would also plot an overlay of the RGB segmentation mask on the input image as 
 this further helps us to identify the different categories present in the image more intuitively.
