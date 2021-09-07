@@ -509,5 +509,5 @@ performance of this model. The authors further present using this model for obje
 image segmentation as well. You are strongly advised to check out the [original paper](https://arxiv.org/abs/2103.14030) 
 as well.
 
-This example takes inspiration from the official PyTorch and TensorFlow implentations.
+This example takes inspiration from the official PyTorch and TensorFlow implementations.
 """
