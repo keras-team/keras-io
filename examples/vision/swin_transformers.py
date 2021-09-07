@@ -36,6 +36,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.python.keras.layers.pooling import GlobalAveragePooling1D
 
 """
 ## Prepare the data
@@ -233,10 +234,10 @@ layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying `La
 each MLP, and a residual connection after each of these layers.
 """
 
-class SwinTransformerBlock(layers.Layer):
+class SwinTransformer(layers.Layer):
     def __init__(self, dim, num_patch, num_heads, window_size=7, shift_size=0, num_mlp=1024,
                  qkv_bias=True, drop_rate=0.):
-        super(SwinTransformerBlock, self).__init__()
+        super(SwinTransformer, self).__init__()
         
         self.dim = dim # number of input dimensions
         self.num_patch = num_patch # number of embedded patches
@@ -309,3 +310,83 @@ class SwinTransformerBlock(layers.Layer):
         x = self.drop_path(x)
         x = x_skip + x
         return x
+
+"""
+## Model training and evaluation
+"""
+""""
+### Extract and Embed patches
+
+We will first create 3 layers to help us extract, embed and merge patches from the 
+images on top of which we will later use the Swin Transfromer class we built.
+"""
+
+class PatchExtract(layers.Layer):
+    def __init__(self, patch_size):
+        super(PatchExtract, self).__init__()
+        self.patch_size_x = patch_size[0]
+        self.patch_size_y = patch_size[0]        
+    def call(self, images):
+        batch_size = tf.shape(images)[0]
+        patches = tf.image.extract_patches(images=images,
+                                  sizes=(1, self.patch_size_x, self.patch_size_y, 1),
+                                  strides=(1, self.patch_size_x, self.patch_size_y, 1),
+                                  rates=(1, 1, 1, 1), padding='VALID',)        
+        patch_dim = patches.shape[-1]
+        patch_num = patches.shape[1]
+        return tf.reshape(patches, (batch_size, patch_num*patch_num, patch_dim))        
+
+class PatchEmbedding(layers.Layer):
+    def __init__(self, num_patch, embed_dim):
+        super(PatchEmbedding, self).__init__()
+        self.num_patch = num_patch
+        self.proj = layers.Dense(embed_dim)
+        self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
+    def call(self, patch):
+        pos = tf.range(start=0, limit=self.num_patch, delta=1)
+        return self.proj(patch) + self.pos_embed(pos)
+
+class PatchMerging(tf.keras.layers.Layer):
+    def __init__(self, num_patch, embed_dim):
+        super(PatchMerging, self).__init__()
+        self.num_patch = num_patch
+        self.embed_dim = embed_dim
+        self.linear_trans = layers.Dense(2*embed_dim, use_bias=False)
+    def call(self, x):
+        H, W = self.num_patch
+        _, _, C = x.get_shape().as_list()
+        x = tf.reshape(x, shape=(-1, H, W, C))
+        x0 = x[:, 0::2, 0::2, :]
+        x1 = x[:, 1::2, 0::2, :]
+        x2 = x[:, 0::2, 1::2, :]
+        x3 = x[:, 1::2, 1::2, :]
+        x = tf.concat((x0, x1, x2, x3), axis=-1)
+        x = tf.reshape(x, shape=(-1, (H//2)*(W//2), 4*C))
+        return self.linear_trans(x)
+
+"""
+### Build the model
+
+We will now put together the Swin Transformer model.
+"""
+
+input = layers.Input(input_shape)
+x = PatchExtract(patch_size)(input)
+x = PatchEmbedding(num_patch_x*num_patch_y, embed_dim)(x)
+x = SwinTransformer(dim=embed_dim, num_patch=(num_patch_x, num_patch_y), num_heads=num_heads, 
+                             window_size=window_size, shift_size=0, num_mlp=num_mlp, qkv_bias=qkv_bias, drop_rate = drop_rate)(x)
+x = SwinTransformer(dim=embed_dim, num_patch=(num_patch_x, num_patch_y), num_heads=num_heads, 
+                             window_size=window_size, shift_size=shift_size, num_mlp=num_mlp, qkv_bias=qkv_bias, drop_rate = drop_rate)(x)                             
+x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
+x = GlobalAveragePooling1D()(x)
+output = layers.Dense(num_classes, activation='softmax')
+
+"""
+### Train on CIFAR-10
+
+We will now finally train the model on CIFAR-10.
+"""
+
+model = keras.Model(inputs=[input,], outputs=[output,])
+model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(learning_rate=learning_rate, clipvalue=clipvalue), metrics=['accuracy',])
+model.fit(x_train, y_train, batch_size=batch_size, epochs=num_epochs, validation_split=validation_split)
