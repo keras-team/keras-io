@@ -36,3 +36,23 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+
+"""
+## Prepare the data
+
+We will now load the CIFAR-10 dataset through 
+[tf.keras.datasets](https://www.tensorflow.org/api_docs/python/tf/keras/datasets)
+, normalize the images and convert label integers to matrices.
+"""
+
+num_classes = 10
+input_shape = (32, 32, 3)
+
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
+
+print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
+print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
