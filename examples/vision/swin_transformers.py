@@ -128,3 +128,23 @@ class DropPath(layers.Layer):
         path_mask = tf.floor(random_tensor)
         output = tf.math.divide(x, 1-self.drop_prob) * path_mask
         return output
+
+"""
+## MLP layer
+
+We will now create a simple multi-layered perceptron with 2 Dense and 2 Dropout layers.
+"""
+
+class Mlp(layers.Layer):
+    def __init__(self, filter_num, drop=0., **kwargs):
+        super(Mlp, self).__init__(**kwargs)
+        self.filter_num = filter_num
+        self.drop = drop
+        
+    def call(self, x):
+        x = layers.Dense(self.filter_num[0])(x)
+        x= layers.Activation(keras.activations.gelu)(x)
+        x = layers.Dropout(self.drop)(x)
+        x = layers.Dense(self.filter_num[1])(x)
+        x = layers.Dropout(self.drop)(x)        
+        return x
