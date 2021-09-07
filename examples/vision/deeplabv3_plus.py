@@ -23,7 +23,10 @@ architecture that performs well on semantic segmentation benchmarks.
 """
 ## Downloading the data
 
-TODO: describe what the dataset contains.
+We would be using the [Crowd Instance-level Human Parsing Dataset](https://arxiv.org/abs/1811.12596) 
+for training our model. The Crowd Instance-level Human Parsing (CIHP) dataset has 38,280 diverse human images. 
+Each image in CIHP is labeled with pixel-wise annotations on 20 categories and instance-level identification. 
+The dataset can be used for the human part segmentation task.
 """
 
 import os
@@ -45,8 +48,8 @@ unzip -q instance-level-human-parsing.zip
 """
 ## Creating a TensorFlow Dataset
 
-For this example, we use 200 images from the instance-level human parsing
-dataset to train our model.
+Training on the entire CIHP dataset with 38,280 images takes a lot of time, hence we will be using 
+a smaller subset of 200 images for training our model in this example.
 """
 
 IMAGE_SIZE = 512
@@ -217,7 +220,13 @@ plt.show()
 """
 ## Inference using Colormap Overlay
 
-TODO: describe results
+The raw predictions from the model represent a one-hot encoded tensor of shape `(N, 512, 512, 20)` 
+where each one of the 20 channels is a binary mask corresponding to a particular label preddicted. 
+In order to visualize the results, we would plot them as RGB segmentation masks where each pixel 
+is represented by a unique color corresponding to the particular label preddicted. We can easily 
+find the color corresponding to each label from the `human_colormap.mat` file provided as part 
+of the dataset. We would also plot an overlay of the RGB segmentation mask on the input image as 
+this further helps us to identify the different categories present in the image more intuitively.
 """
 
 # Loading the Colormap
