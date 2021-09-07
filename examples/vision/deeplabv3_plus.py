@@ -8,23 +8,22 @@ Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmenta
 """
 ## Introduction
 
-Semantic segmentation with the goal to assign semantic labels to every pixel in an image
-is one of the fundamental topics in computer vision. Deep convolutional neural networks
-based on the Fully Convolutional Neural Network show striking improvement over systems
-relying on hand-crafted features on benchmark tasks. In this example, we would implement
-the **DeepLabV3+** model for multi-class semantic segmentation.
+Semantic segmentation, with the goal to assign semantic labels to every pixel in an image,
+is an essential computer vision task. In this example, we implement
+the **DeepLabV3+** model for multi-class semantic segmentation, a fully-convolutional
+architecture that performs well on semantic segmentation benchmarks.
 
-References:
+### References:
 
 - [Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation](https://arxiv.org/pdf/1802.02611.pdf)
-
 - [Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587)
-
 - [DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs](https://arxiv.org/abs/1606.00915)
 """
 
 """
-## Download Dataset
+## Downloading the data
+
+TODO: describe what the dataset contains.
 """
 
 import os
@@ -44,9 +43,9 @@ unzip -q instance-level-human-parsing.zip
 """
 
 """
-## Building Tensorflow Dataset
+## Creating a TensorFlow Dataset
 
-For this example, we would be using 200 images from the instance-level human parsing
+For this example, we use 200 images from the instance-level human parsing
 dataset to train our model.
 """
 
@@ -91,25 +90,22 @@ dataset = data_generator(train_images, train_masks)
 dataset
 
 """
-## Building DeepLabV3+ Model
-"""
+## Building the DeepLabV3+ model
 
-"""
-DeepLabv3+ extends DeepLabv3 by employing a encoder-decoder structure. The encoder module
-encodes multi-scale contextual information by applying atrous convolution at multiple
-scales, while the simple yet effective decoder module refines the segmentation results
-along object boundaries.
+DeepLabv3+ extends DeepLabv3 by adding an encoder-decoder structure. The encoder module
+processes multiscale contextual information by applying dilated convolution at multiple
+scales, while the decoder module refines the segmentation results along object boundaries.
 
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 
-**Dilated Convolution:** With Dilated convolution, as we go deeper, we can keep the
+**Dilated convolution:** With dilated convolution, as we go deeper in the network, we can keep the
 stride constant but with larger field-of-view without increasing the number of parameters
-or the amount of computation. And finally, we can have larger output feature map which is
-good for semantic segmentation.
+or the amount of computation. Besides, it enables larger output feature maps, which is
+useful for semantic segmentation.
 
-The reason for using **Atrous Spatial Pyramid Pooling** is that it is discovered as the
-sampling rate becomes larger, the number of valid filter weights (i.e., the weights that
+The reason for using **Dilated Spatial Pyramid Pooling** is that it was shown that as the
+sampling rate becomes larger, the number of valid filter weights (i.e., weights that
 are applied to the valid feature region, instead of padded zeros) becomes smaller.
 """
 
@@ -122,7 +118,6 @@ def convolution_block(
     padding="same",
     use_bias=False,
 ):
-
     x = layers.Conv2D(
         num_filters,
         kernel_size=kernel_size,
@@ -136,12 +131,9 @@ def convolution_block(
 
 
 def AtrousSpatialPyramidPooling(aspp_input):
-
     dims = aspp_input.shape
-
     x = layers.AveragePooling2D(pool_size=(dims[-3], dims[-2]))(aspp_input)
     x = convolution_block(x, kernel_size=1, use_bias=True)
-
     out_pool = layers.UpSampling2D(
         size=(dims[-3] // x.shape[1], dims[-2] // x.shape[2]),
         interpolation="bilinear",
@@ -153,18 +145,16 @@ def AtrousSpatialPyramidPooling(aspp_input):
     out_18 = convolution_block(aspp_input, kernel_size=3, dilation_rate=18)
 
     x = layers.Concatenate(axis=-1)([out_pool, out_1, out_6, out_12, out_18])
-
     output = convolution_block(x, kernel_size=1)
-
     return output
 
 
 """
-The encoder features are first bilinearly upsampled by a factor of 4 and then 
+The encoder features are first bilinearly upsampled by a factor 4, and then 
 concatenated with the corresponding low-level features from the network backbone that
-have the same spatial resolution. For this example, we would be 
-using Resnet50 pre-trained on ImageNet as the backbone model and we would use 
-the low-level features from the Conv2 block of the backbone.
+have the same spatial resolution. For this example, we
+use a ResNet50 pretrained on ImageNet as the backbone model, and we use 
+the low-level features from the `conv2_block3` block of the backbone.
 """
 
 
@@ -180,7 +170,6 @@ def DeeplabV3Plus(image_size, num_classes):
         size=(image_size // 4 // x.shape[1], image_size // 4 // x.shape[2]),
         interpolation="bilinear",
     )(x)
-
     input_b = resnet101.get_layer("conv2_block3_2_relu").output
     input_b = convolution_block(input_b, num_filters=48, kernel_size=1)
 
@@ -191,9 +180,7 @@ def DeeplabV3Plus(image_size, num_classes):
         size=(image_size // x.shape[1], image_size // x.shape[2]),
         interpolation="bilinear",
     )(x)
-
     model_output = layers.Conv2D(num_classes, kernel_size=(1, 1), padding="same")(x)
-
     return keras.Model(inputs=model_input, outputs=model_output)
 
 
@@ -203,8 +190,8 @@ model.summary()
 """
 ## Training
 
-We would train the model using Sparse Categorical Cross-entropy as the loss function and
-use Adam as the optimizer.
+We train the model using sparse categorical crossentropy as the loss function, and
+Adam as the optimizer.
 """
 
 loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -229,6 +216,8 @@ plt.show()
 
 """
 ## Inference using Colormap Overlay
+
+TODO: describe results
 """
 
 # Loading the Colormap
