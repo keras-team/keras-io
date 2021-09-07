@@ -490,8 +490,13 @@ model = keras.Model(input, output)
 model.compile(
     loss=keras.losses.categorical_crossentropy,
     optimizer=keras.optimizers.Adam(learning_rate=learning_rate, clipvalue=clipvalue),
+    metrics=[
+        keras.metrics.CategoricalAccuracy(name="accuracy"),
+        keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
 )
-model.fit(
+
+history = model.fit(
     x_train,
     y_train,
     batch_size=batch_size,
@@ -500,8 +505,30 @@ model.fit(
 )
 
 """
+Let's now visualize the training progress of the model.
+"""
+
+plt.plot(history.history["loss"], label="train_loss")
+plt.plot(history.history["val_loss"], label="val_loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.title("Train and Validation Losses Over Epochs", fontsize=14)
+plt.legend()
+plt.grid()
+plt.show()
+
+"""
+Let's see final results of the training on CIFAR-10
+"""
+
+loss, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
+print(f"Test loss: {round(loss, 2)}")
+print(f"Test accuracy: {round(accuracy * 100, 2)}%")
+print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
+
+"""
 The Swin Transformer model we just trained has just 152K parameters, and it gets us to
-~63.5% accuracy within just 20 epochs without any signs of overfitting as well. This means 
+~96.3% top-5 accuracy within just 20 epochs without any signs of overfitting as well as seen in above graph. This means 
 we can train this network for longer (perhaps with a bit more regularization) and may obtain 
 even better performance. The authors present a top-1 accuracy of 87.3% on ImageNet. The authors 
 also present a number of experiments to study how input sizes, optimizers etc. affect the final 
