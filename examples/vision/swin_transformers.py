@@ -65,3 +65,25 @@ for i in range(25):
     plt.imshow(x_train[i])
     plt.xlabel(class_names[int(y_train[i][0])])
 plt.show()
+
+"""
+## Configure the hyperparameters
+"""
+
+patch_size = (2, 2) # 2-by-2 sized patches
+drop_rate = 0.01 # Dropout rate
+num_heads = 8 # Attention heads
+embed_dim = 64 # Embedded dimensions
+num_mlp = 256 # MLP nodes
+qkv_bias = True # Convert embedded patches to query, key, and values with a learnable additive value
+window_size = 2 # Size of attention window
+shift_size = 1 # Size of shifting
+
+num_patch_x = input_shape[0]//patch_size[0]
+num_patch_y = input_shape[1]//patch_size[1]
+
+learning_rate=1e-4
+clipvalue=0.5
+batch_size=32
+num_epochs=20
+validation_split=0.1
