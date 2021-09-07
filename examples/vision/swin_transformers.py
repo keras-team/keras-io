@@ -223,3 +223,89 @@ class WindowAttention(tf.keras.layers.Layer):
         x_qkv = self.proj(x_qkv)
         x_qkv = self.dropout(x_qkv)
         return x_qkv
+
+"""
+## The final Swin Transformer model
+
+We will now put together a Swin Transformer by replacing the standard multi-head self attention (MSA) in a Transformer 
+with shifted windows. As suggested in the original paper we will create a model comprising of a shifted window based MSA
+layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying `LayerNormalization` before each MSA layer and 
+each MLP, and a residual connection after each of these layers.
+"""
+
+class SwinTransformerBlock(layers.Layer):
+    def __init__(self, dim, num_patch, num_heads, window_size=7, shift_size=0, num_mlp=1024,
+                 qkv_bias=True, drop_rate=0.):
+        super(SwinTransformerBlock, self).__init__()
+        
+        self.dim = dim # number of input dimensions
+        self.num_patch = num_patch # number of embedded patches
+        self.num_heads = num_heads # number of attention heads
+        self.window_size = window_size # size of window
+        self.shift_size = shift_size # size of window shift
+        self.num_mlp = num_mlp # number of MLP nodes
+        
+        self.norm1 = layers.LayerNormalization(epsilon=1e-5)
+        self.attn = WindowAttention(dim, window_size=(self.window_size, self.window_size), num_heads=num_heads,
+                                    qkv_bias=qkv_bias, drop_rate=drop_rate)
+        self.drop_path = DropPath(drop_rate)
+        self.norm2 = layers.LayerNormalization(epsilon=1e-5)
+        self.mlp = Mlp([num_mlp, dim], drop=drop_rate)
+        if min(self.num_patch) < self.window_size:
+            self.shift_size = 0
+            self.window_size = min(self.num_patch)
+            
+    def build(self):
+        if self.shift_size > 0:
+            H, W = self.num_patch
+            h_slices = (slice(0, -self.window_size), slice(-self.window_size, -self.shift_size), slice(-self.shift_size, None))
+            w_slices = (slice(0, -self.window_size), slice(-self.window_size, -self.shift_size), slice(-self.shift_size, None))
+            mask_array = np.zeros((1, H, W, 1))
+            count = 0
+            for h in h_slices:
+                for w in w_slices:
+                    mask_array[:, h, w, :] = count
+                    count += 1
+            mask_array = tf.convert_to_tensor(mask_array)
+            
+            # mask array to windows
+            mask_windows = window_partition(mask_array, self.window_size)
+            mask_windows = tf.reshape(mask_windows, shape=[-1, self.window_size * self.window_size])
+            attn_mask = tf.expand_dims(mask_windows, axis=1) - tf.expand_dims(mask_windows, axis=2)
+            attn_mask = tf.where(attn_mask != 0, -100.0, attn_mask)
+            attn_mask = tf.where(attn_mask == 0, 0.0, attn_mask)
+            self.attn_mask = tf.Variable(initial_value=attn_mask, trainable=False)
+        else:
+            self.attn_mask = None
+
+    def call(self, x):
+        H, W = self.num_patch
+        B, L, C = x.get_shape().as_list()
+        x_skip = x
+        x = self.norm1(x)
+        x = tf.reshape(x, shape=(-1, H, W, C))
+        if self.shift_size > 0:
+            shifted_x = tf.roll(x, shift=[-self.shift_size, -self.shift_size], axis=[1, 2])
+        else:
+            shifted_x = x
+
+        x_windows = window_partition(shifted_x, self.window_size)
+        x_windows = tf.reshape(x_windows, shape=(-1, self.window_size * self.window_size, C))
+        attn_windows = self.attn(x_windows, mask=self.attn_mask)
+
+        attn_windows = tf.reshape(attn_windows, shape=(-1, self.window_size, self.window_size, C))
+        shifted_x = window_reverse(attn_windows, self.window_size, H, W, C)
+        if self.shift_size > 0:
+            x = tf.roll(shifted_x, shift=[self.shift_size, self.shift_size], axis=[1, 2])
+        else:
+            x = shifted_x
+            
+        x = tf.reshape(x, shape=(-1, H*W, C))
+        x = self.drop_path(x)
+        x = x_skip +  x
+        x_skip = x
+        x = self.norm2(x)
+        x = self.mlp(x)
+        x = self.drop_path(x)
+        x = x_skip + x
+        return x
