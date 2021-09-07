@@ -1,9 +1,9 @@
 """
-Title: CIFAR-10 Image Classificatiion with Swin Transformers
+Title: CIFAR-10 Image Classification with Swin Transformers
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/08
 Last modified: 2021/09/08
-Description: (one-line text description)
+Description: Image Classification using a new Swwin Transformers bringing greater efficiency.
 """
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
