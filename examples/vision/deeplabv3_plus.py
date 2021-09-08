@@ -3,7 +3,7 @@ Title: Multiclass semantic segmentation using DeepLabV3+
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/08/31
 Last modified: 2021/09/1
-Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation
+Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
 """
 """
 ## Introduction
@@ -23,9 +23,9 @@ architecture that performs well on semantic segmentation benchmarks.
 """
 ## Downloading the data
 
-We will use the [Crowd Instance-level Human Parsing Dataset](https://arxiv.org/abs/1811.12596) 
-for training our model. The Crowd Instance-level Human Parsing (CIHP) dataset has 38,280 diverse human images. 
-Each image in CIHP is labeled with pixel-wise annotations for 20 categories, as well as instance-level identification. 
+We will use the [Crowd Instance-level Human Parsing Dataset](https://arxiv.org/abs/1811.12596)
+for training our model. The Crowd Instance-level Human Parsing (CIHP) dataset has 38,280 diverse human images.
+Each image in CIHP is labeled with pixel-wise annotations for 20 categories, as well as instance-level identification.
 This dataset can be used for the "human part segmentation" task.
 """
 
@@ -48,7 +48,7 @@ unzip -q instance-level-human-parsing.zip
 """
 ## Creating a TensorFlow Dataset
 
-Training on the entire CIHP dataset with 38,280 images takes a lot of time, hence we will be using 
+Training on the entire CIHP dataset with 38,280 images takes a lot of time, hence we will be using
 a smaller subset of 200 images for training our model in this example.
 """
 
@@ -138,8 +138,7 @@ def DilatedSpatialPyramidPooling(dspp_input):
     x = layers.AveragePooling2D(pool_size=(dims[-3], dims[-2]))(dspp_input)
     x = convolution_block(x, kernel_size=1, use_bias=True)
     out_pool = layers.UpSampling2D(
-        size=(dims[-3] // x.shape[1], dims[-2] // x.shape[2]),
-        interpolation="bilinear",
+        size=(dims[-3] // x.shape[1], dims[-2] // x.shape[2]), interpolation="bilinear",
     )(x)
 
     out_1 = convolution_block(dspp_input, kernel_size=1, dilation_rate=1)
@@ -153,10 +152,10 @@ def DilatedSpatialPyramidPooling(dspp_input):
 
 
 """
-The encoder features are first bilinearly upsampled by a factor 4, and then 
+The encoder features are first bilinearly upsampled by a factor 4, and then
 concatenated with the corresponding low-level features from the network backbone that
 have the same spatial resolution. For this example, we
-use a ResNet50 pretrained on ImageNet as the backbone model, and we use 
+use a ResNet50 pretrained on ImageNet as the backbone model, and we use
 the low-level features from the `conv2_block3` block of the backbone.
 """
 
@@ -220,12 +219,12 @@ plt.show()
 """
 ## Inference using Colormap Overlay
 
-The raw predictions from the model represent a one-hot encoded tensor of shape `(N, 512, 512, 20)` 
-where each one of the 20 channels is a binary mask corresponding to a predicted label. 
-In order to visualize the results, we plot them as RGB segmentation masks where each pixel 
-is represented by a unique color corresponding to the particular label predicted. We can easily 
-find the color corresponding to each label from the `human_colormap.mat` file provided as part 
-of the dataset. We would also plot an overlay of the RGB segmentation mask on the input image as 
+The raw predictions from the model represent a one-hot encoded tensor of shape `(N, 512, 512, 20)`
+where each one of the 20 channels is a binary mask corresponding to a predicted label.
+In order to visualize the results, we plot them as RGB segmentation masks where each pixel
+is represented by a unique color corresponding to the particular label predicted. We can easily
+find the color corresponding to each label from the `human_colormap.mat` file provided as part
+of the dataset. We would also plot an overlay of the RGB segmentation mask on the input image as
 this further helps us to identify the different categories present in the image more intuitively.
 """
 
