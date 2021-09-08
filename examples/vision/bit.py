@@ -1,16 +1,15 @@
 """
 Title: Image Classification using BigTransfer(BiT)
 Author: [Sayan Nath](https://twitter.com/sayannath2350)
-Date created: 2021/08/29 
-Last modified: 2021/08/29
+Date created: 2021/09/09
+Last modified: 2021/09/09
 Description: BigTransfer (BiT) State-of-the-art transfer learning for image classification.
 """
 
 """
 ## Introduction
 
-
-BigTransfer known as BiT is a State-of-the-art transfer learning method for Image Classification Tasks. a set of pre-trained image models that can be transferred to obtain excellent performance on new datasets, even with only a few examples per class. BiT performs well across a surprisingly wide range of data regimes — from 1 example per class to 1M total examples. A detailed analysis of the main components are described [here](https://arxiv.org/pdf/1912.11370.pdf) which leads to high transfer performance.
+BigTransfer known as BiT is a State-of-the-art transfer learning method for Image Classification Tasks. A set of pre-trained image models that can be transferred to obtain excellent performance on new datasets, even with only a few examples per class. BiT performs well across a surprisingly wide range of data regimes — from 1 example per class to 1M total examples.
 """
 
 """
@@ -30,7 +29,6 @@ from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
 from tensorflow import keras
 import tensorflow_hub as hub
-from tensorflow.keras.utils import to_categorical
 
 SEEDS = 42
 
@@ -55,7 +53,7 @@ download_dataset(
 )
 
 """
-## Data Parsing
+## Data parsing
 """
 
 image_paths = list(paths.list_images("training"))
@@ -90,7 +88,7 @@ NUM_CLASSES = 30
 STEPS_PER_EPOCH = 140
 
 """
-## Splitting the Dataset
+## Splitting the dataset
 """
 
 TRAIN_LENGTH = int(len(image_paths) * TRAIN_SPLIT)
@@ -103,22 +101,22 @@ validation_labels = labels[TRAIN_LENGTH:]
 print(len(train_paths), len(validation_paths))
 
 """
-## Encding the Labels
+## Encoding the labels
 """
 
 label_encoder = LabelEncoder()
-train_labels_le = label_encoder.fit_transform(train_labels)
-validation_labels_le = label_encoder.transform(validation_labels)
-print(train_labels_le[:5])
+train_labels_encoded = label_encoder.fit_transform(train_labels)
+validation_labels_encoded = label_encoder.transform(validation_labels)
+print(train_labels_encoded[:5])
 
 """
 Since the dataset has class imbalance issue, it's good to supply class weights while training the model.
 """
 
-train_labels = to_categorical(train_labels_le)
+train_labels = keras.utils.to_categorical(train_labels_encoded)
 class_totals = train_labels.sum(axis=0)
 class_weight = dict()
-# loop over all classes and calculate the class weight
+# Loop over all classes and calculate the class weight
 for i in range(0, len(class_totals)):
     class_weight[i] = class_totals.max() / class_totals[i]
 
@@ -142,8 +140,10 @@ else:
 ## Convert the data into TensorFlow Dataset objects
 """
 
-train_ds = tf.data.Dataset.from_tensor_slices((train_paths, train_labels_le))
-val_ds = tf.data.Dataset.from_tensor_slices((validation_paths, validation_labels_le))
+train_ds = tf.data.Dataset.from_tensor_slices((train_paths, train_labels_encoded))
+val_ds = tf.data.Dataset.from_tensor_slices(
+    (validation_paths, validation_labels_encoded)
+)
 
 """
 ## Preprocessing helper functions
@@ -158,7 +158,7 @@ def preprocess_train(image_path, label):
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize(image, (RESIZE_TO, RESIZE_TO))
     image = tf.image.random_crop(image, (CROP_TO, CROP_TO, 3))
-    image = tf.cast(image, tf.float32) / 255.0
+    image = image / 255.0
     return (image, label)
 
 
@@ -167,24 +167,24 @@ def preprocess_test(image_path, label):
     image = tf.io.read_file(image_path)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize(image, (RESIZE_TO, RESIZE_TO))
-    image = tf.cast(image, tf.float32) / 255.0
+    image = image / 255.0
     return (image, label)
 
 
 DATASET_NUM_TRAIN_EXAMPLES = len(train_paths)
+repeat_count = int(
+    SCHEDULE_LENGTH * BATCH_SIZE / DATASET_NUM_TRAIN_EXAMPLES * STEPS_PER_EPOCH
+)
+repeat_count += 50 + 1  # To ensure at least there are 50 epochs of training
 
 """
-## Create Data Pipeline for training
+## Create data pipeline for training
 """
 
 # Training Pipeline
 pipeline_train = (
     train_ds.shuffle(10000)
-    .repeat(
-        int(SCHEDULE_LENGTH * BATCH_SIZE / DATASET_NUM_TRAIN_EXAMPLES * STEPS_PER_EPOCH)
-        + 1
-        + 50
-    )  # Repeat dataset_size / num_steps
+    .repeat(repeat_count)  # Repeat dataset_size / num_steps
     .map(preprocess_train, num_parallel_calls=AUTO)
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
@@ -198,7 +198,7 @@ pipeline_test = (
 )
 
 """
-## Visualise the Dataset
+## Visualise the dataset
 """
 
 image_batch, label_batch = next(iter(pipeline_train))
@@ -258,12 +258,14 @@ optimizer = keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 """
-## Compile the Model
+## Compile the model
 """
 
 model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
 
-"""## Setting the Callback"""
+"""
+## Setting the callback
+"""
 
 train_callbacks = [
     keras.callbacks.EarlyStopping(
@@ -272,7 +274,7 @@ train_callbacks = [
 ]
 
 """
-## Train the Model
+## Train the model
 """
 
 history = model.fit(
@@ -286,7 +288,7 @@ history = model.fit(
 )
 
 """
-## Plot the Model
+## Plot the model
 """
 
 
