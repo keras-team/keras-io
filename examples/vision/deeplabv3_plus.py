@@ -154,7 +154,7 @@ def DilatedSpatialPyramidPooling(dspp_input):
 The encoder features are first bilinearly upsampled by a factor 4, and then
 concatenated with the corresponding low-level features from the network backbone that
 have the same spatial resolution. For this example, we
-use a ResNet50 pretrained on ImageNet as the backbone model, and we use
+use a ResNet101 pretrained on ImageNet as the backbone model, and we use
 the low-level features from the `conv2_block3` block of the backbone.
 """
 
