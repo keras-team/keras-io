@@ -100,7 +100,6 @@ processes multiscale contextual information by applying dilated convolution at m
 scales, while the decoder module refines the segmentation results along object boundaries.
 
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
-![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 
 **Dilated convolution:** With dilated convolution, as we go deeper in the network, we can keep the
 stride constant but with larger field-of-view without increasing the number of parameters
