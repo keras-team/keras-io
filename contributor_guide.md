@@ -57,9 +57,13 @@ Instead, mention the dependencies in the text, alongside an example of the pip c
 This example requires XYZ. You can install it via the following command: `pip install XYZ`
 ```
 
-### Model development style
+---
 
-Use Functional models wherever possible.
+## Model development best practices
+
+### Model types
+
+**Use Functional models wherever possible.**
 Only use subclassing if your model cannot straightforwardly be implemented as a Functional model.
 If writing a subclassed Model or Layer, do not instantiate any Layer as part of the `call()` method.
 
@@ -85,11 +89,53 @@ class MyLayer(layers.Layer):
         ...
 ```
 
+### Training loop types
 
-### Input validation
+**Use `model.fit()` whenever possible.** If you cannot use the built-in `fit()`
+(e.g. in the case of a GAN, VAE, similarity model, etc.) then use
+a custom `train_step()` method to customize `fit()` ([see guide](https://keras.io/guides/customizing_what_happens_in_fit/)).
 
-In general, input argument validation is not required.
+If you need to customize how the model iterates on the data (e.g. in the case of a RL algorithm or a curriculum learning algorithm),
+then write a training loop from scratch using `tf.GradientTape`.
+
+
+### Demonstrate generalization power
+
+Whenever you call `fit()` (or otherwise run a training loop), make sure to
+use a validation dataset (`validation_data` argument) to monitor the model's performance
+on data it has not seen during training. Likewise, when showing inference results,
+use samples from a validation or test set, not training samples.
+
+The only exception to this rule is in the case of generative models.
+
+
+### Demonstrate the full power of your model, but keep the run time short
+
+We need to keep the run time of the notebooks short (typically no more than 20 minutes on a V100 GPU).
+However, many models need to be trained for much longer in order to achieve good results. In such
+cases:
+
+- Keep the run time short by limiting the number of epochs (e.g. train for a single epoch).
+- Highlight the fact that the model should actually be trained for `N` epochs to achieve the expected results
+(in a text paragraph and in code comments).
+- Showcase the results of the full model trained for `N` epochs, by providing accuracy numbers and showing
+inference results of the full model. You can simply insert images in the text paragraphs, hosted on
+[imgur.com](imgur.com).
+
+
+### Argument validation
+
+In general, user-provided input argument validation is not required in custom classes / functions in a keras.io code example.
 If you want to add input validation, do so with `ValueError`; do not use `assert` statements.
+
+
+### Data input
+
+Prefer using either NumPy arrays or a `tf.data.Dataset` for data input whenever possible.
+If impossible, then use a `keras.utils.Sequence` subclass. Do not use regular Python generators.
+
+When using `.map()` with a `tf.data.Dataset`, make sure to pass a value for `num_parallel_calls`.
+Typically, you can set the value to be 4, 8, or `tf.data.AUTOTUNE`.
 
 
 ---
