@@ -154,24 +154,24 @@ def DilatedSpatialPyramidPooling(dspp_input):
 The encoder features are first bilinearly upsampled by a factor 4, and then
 concatenated with the corresponding low-level features from the network backbone that
 have the same spatial resolution. For this example, we
-use a ResNet101 pretrained on ImageNet as the backbone model, and we use
+use a ResNet50 pretrained on ImageNet as the backbone model, and we use
 the low-level features from the `conv4_block6_2_relu` block of the backbone.
 """
 
 
 def DeeplabV3Plus(image_size, num_classes):
     model_input = keras.Input(shape=(image_size, image_size, 3))
-    resnet101 = keras.applications.ResNet101(
+    resnet50 = keras.applications.ResNet50(
         weights="imagenet", include_top=False, input_tensor=model_input
     )
-    x = resnet101.get_layer("conv4_block6_2_relu").output
+    x = resnet50.get_layer("conv4_block6_2_relu").output
     x = DilatedSpatialPyramidPooling(x)
 
     input_a = layers.UpSampling2D(
         size=(image_size // 4 // x.shape[1], image_size // 4 // x.shape[2]),
         interpolation="bilinear",
     )(x)
-    input_b = resnet101.get_layer("conv2_block3_2_relu").output
+    input_b = resnet50.get_layer("conv2_block3_2_relu").output
     input_b = convolution_block(input_b, num_filters=48, kernel_size=1)
 
     x = layers.Concatenate(axis=-1)([input_a, input_b])
