@@ -164,7 +164,7 @@ def DeeplabV3Plus(image_size, num_classes):
     resnet101 = keras.applications.ResNet101(
         weights="imagenet", include_top=False, input_tensor=model_input
     )
-    x = resnet101.get_layer("conv4_block6_2_relu").output
+    x = resnet101.get_layer("conv2_block3_2_relu").output
     x = DilatedSpatialPyramidPooling(x)
 
     input_a = layers.UpSampling2D(
