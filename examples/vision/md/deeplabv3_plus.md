@@ -57,8 +57,8 @@ from tensorflow.keras import layers
 ```
 Downloading...
 From: https://drive.google.com/uc?id=1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz
-To: /content/keras-io/scripts/tmp_1094556/instance-level-human-parsing.zip
-2.91GB [00:24, 121MB/s]
+To: /content/keras-io/scripts/tmp_3004573/instance-level-human-parsing.zip
+2.91GB [00:31, 93.9MB/s]
 
 ```
 </div>
@@ -211,7 +211,6 @@ def DeeplabV3Plus(image_size, num_classes):
         size=(image_size // x.shape[1], image_size // x.shape[2]),
         interpolation="bilinear",
     )(x)
-
     model_output = layers.Conv2D(num_classes, kernel_size=(1, 1), padding="same")(x)
     return keras.Model(inputs=model_input, outputs=model_output)
 
@@ -628,55 +627,55 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-50/50 [==============================] - 43s 348ms/step - loss: 1.4921 - accuracy: 0.5683
+50/50 [==============================] - 43s 348ms/step - loss: 1.4708 - accuracy: 0.5831
 Epoch 2/25
-50/50 [==============================] - 18s 356ms/step - loss: 1.1417 - accuracy: 0.6450
+50/50 [==============================] - 18s 352ms/step - loss: 1.1615 - accuracy: 0.6399
 Epoch 3/25
-50/50 [==============================] - 18s 360ms/step - loss: 1.0267 - accuracy: 0.6755
+50/50 [==============================] - 18s 356ms/step - loss: 1.0280 - accuracy: 0.6739
 Epoch 4/25
-50/50 [==============================] - 18s 367ms/step - loss: 0.9270 - accuracy: 0.7050
+50/50 [==============================] - 18s 359ms/step - loss: 0.9256 - accuracy: 0.7015
 Epoch 5/25
-50/50 [==============================] - 19s 373ms/step - loss: 0.8466 - accuracy: 0.7310
+50/50 [==============================] - 18s 362ms/step - loss: 0.8407 - accuracy: 0.7279
 Epoch 6/25
-50/50 [==============================] - 19s 382ms/step - loss: 0.7859 - accuracy: 0.7467
+50/50 [==============================] - 18s 364ms/step - loss: 0.7785 - accuracy: 0.7486
 Epoch 7/25
-50/50 [==============================] - 19s 390ms/step - loss: 0.7481 - accuracy: 0.7613
+50/50 [==============================] - 18s 366ms/step - loss: 0.7274 - accuracy: 0.7671
 Epoch 8/25
-50/50 [==============================] - 19s 382ms/step - loss: 0.6815 - accuracy: 0.7822
+50/50 [==============================] - 19s 368ms/step - loss: 0.6763 - accuracy: 0.7829
 Epoch 9/25
-50/50 [==============================] - 19s 379ms/step - loss: 0.6274 - accuracy: 0.7975
+50/50 [==============================] - 19s 369ms/step - loss: 0.6052 - accuracy: 0.8056
 Epoch 10/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.5566 - accuracy: 0.8250
+50/50 [==============================] - 19s 370ms/step - loss: 0.5698 - accuracy: 0.8197
 Epoch 11/25
-50/50 [==============================] - 19s 386ms/step - loss: 0.5019 - accuracy: 0.8417
+50/50 [==============================] - 19s 375ms/step - loss: 0.5104 - accuracy: 0.8395
 Epoch 12/25
-50/50 [==============================] - 19s 385ms/step - loss: 0.4402 - accuracy: 0.8631
+50/50 [==============================] - 19s 376ms/step - loss: 0.4546 - accuracy: 0.8589
 Epoch 13/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.3931 - accuracy: 0.8781
+50/50 [==============================] - 19s 378ms/step - loss: 0.4079 - accuracy: 0.8737
 Epoch 14/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.3950 - accuracy: 0.8790
+50/50 [==============================] - 19s 379ms/step - loss: 0.3503 - accuracy: 0.8936
 Epoch 15/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.3332 - accuracy: 0.8995
+50/50 [==============================] - 19s 381ms/step - loss: 0.3069 - accuracy: 0.9076
 Epoch 16/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.3007 - accuracy: 0.9099
+50/50 [==============================] - 19s 382ms/step - loss: 0.2787 - accuracy: 0.9167
 Epoch 17/25
-50/50 [==============================] - 19s 385ms/step - loss: 0.2766 - accuracy: 0.9171
+50/50 [==============================] - 19s 382ms/step - loss: 0.2550 - accuracy: 0.9241
 Epoch 18/25
-50/50 [==============================] - 19s 386ms/step - loss: 0.2523 - accuracy: 0.9256
+50/50 [==============================] - 19s 383ms/step - loss: 0.2379 - accuracy: 0.9297
 Epoch 19/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.2324 - accuracy: 0.9317
+50/50 [==============================] - 19s 382ms/step - loss: 0.2223 - accuracy: 0.9351
 Epoch 20/25
-50/50 [==============================] - 19s 385ms/step - loss: 0.2194 - accuracy: 0.9359
+50/50 [==============================] - 19s 383ms/step - loss: 0.2106 - accuracy: 0.9382
 Epoch 21/25
-50/50 [==============================] - 19s 385ms/step - loss: 0.2102 - accuracy: 0.9387
+50/50 [==============================] - 19s 384ms/step - loss: 0.2002 - accuracy: 0.9414
 Epoch 22/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.1977 - accuracy: 0.9420
+50/50 [==============================] - 19s 382ms/step - loss: 0.1961 - accuracy: 0.9425
 Epoch 23/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.1913 - accuracy: 0.9436
+50/50 [==============================] - 19s 382ms/step - loss: 0.1921 - accuracy: 0.9434
 Epoch 24/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.1835 - accuracy: 0.9460
+50/50 [==============================] - 19s 383ms/step - loss: 0.1883 - accuracy: 0.9445
 Epoch 25/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.1807 - accuracy: 0.9465
+50/50 [==============================] - 19s 382ms/step - loss: 0.1805 - accuracy: 0.9464
 
 ```
 </div>

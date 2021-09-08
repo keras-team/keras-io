@@ -181,7 +181,6 @@ def DeeplabV3Plus(image_size, num_classes):
         size=(image_size // x.shape[1], image_size // x.shape[2]),
         interpolation="bilinear",
     )(x)
-
     model_output = layers.Conv2D(num_classes, kernel_size=(1, 1), padding="same")(x)
     return keras.Model(inputs=model_input, outputs=model_output)
 
