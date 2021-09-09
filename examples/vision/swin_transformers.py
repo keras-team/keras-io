@@ -425,7 +425,7 @@ class PatchEmbedding(layers.Layer):
         return self.proj(patch) + self.pos_embed(pos)
 
 
-class PatchMerging(tf.keras.layers.Layer):
+class PatchMerging(layers.Layer):
     def __init__(self, num_patch, embed_dim):
         super(PatchMerging, self).__init__()
         self.num_patch = num_patch
