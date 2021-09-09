@@ -1,5 +1,5 @@
 """
-Title: CIFAR-10 Image Classification with Swin Transformers
+Title: Image Classification with Swin Transformers
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/08
 Last modified: 2021/09/08
@@ -41,27 +41,15 @@ from tensorflow.python.keras.layers.pooling import GlobalAveragePooling1D
 """
 ## Prepare the data
 
-We will now load the CIFAR-10 dataset through 
+We will now load the CIFAR-100 dataset through 
 [tf.keras.datasets](https://www.tensorflow.org/api_docs/python/tf/keras/datasets)
 , normalize the images and convert label integers to matrices.
 """
 
-num_classes = 10
+num_classes = 100
 input_shape = (32, 32, 3)
-class_names = [
-    "airplane",
-    "automobile",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck",
-]
 
-(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
 x_train, x_test = x_train / 255.0, x_test / 255.0
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
@@ -75,7 +63,6 @@ for i in range(25):
     plt.yticks([])
     plt.grid(False)
     plt.imshow(x_train[i])
-    plt.xlabel(class_names[int(y_train[i][0])])
 plt.show()
 
 """
