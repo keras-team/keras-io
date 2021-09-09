@@ -2,7 +2,7 @@
 Title: Serialization and saving
 Authors: Kathy Wu, Francois Chollet
 Date created: 2020/04/28
-Last modified: 2020/04/28
+Last modified: 2021/09/06
 Description: Complete guide to saving & serializing models.
 """
 
@@ -421,37 +421,109 @@ compatible with the Keras architecture- and model-saving APIs.
 object that is created from the config.
 The default implementation returns `cls(**config)`.
 
-**Example:**
+**Custom Model Example**
+
+When you subclass a `keras.Model`, the `get_config` should return a dictionary
+specifying the values of the parameters in the constructor. This dictionary
+is passed as the argument list when constructing an instance of the class.
+
 """
 
+class SimpleModel(keras.Model):
+
+  def __init__(self, output_dim):
+    super(SimpleModel, self).__init__()
+    self.output_dim = output_dim
+    self.dense = keras.layers.Dense(output_dim, name="predictions")
+
+  def call(self, inputs):
+    return self.dense(inputs)
+
+  def get_config(self):
+    return {"output_dim": self.output_dim}
+
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)
+
+
+model = SimpleModel(2)
+model(tf.ones((1, 784)))
+model.save("simple_model")
+keras.models.load_model("simple_model")
+
+"""
+**Functional Model Subclass Example**
+
+If you are following the functional API for building models, note that functional
+API creates models that already have a `get_config` method. When creating a
+subclassed model with a functional constructor, you should not override the
+`get_config` method. You must make sure that the `from_config` class method is
+able to create an instance of your model using the config dictionary as
+parameters to the constructor.
+"""
+
+class SmallModel(keras.Model):
+  def __init__(self):
+    inputs = keras.Input((3,))
+    x = keras.layers.Dense(3)(inputs)
+    outputs = keras.layers.Dense(1)(x)
+    super().__init__(inputs, outputs)
+
+  # Note: this only applies to building subclassed models that use the
+  # functional API.
+  @classmethod
+  def from_config(cls, config):
+    return cls()
+
+model = SmallModel()
+model.save('small_model')
+print(keras.models.load_model('small_model', custom_objects={'SmallModel': SmallModel}))
+del SmallModel
+print(keras.models.load_model('small_model'))
+
+"""
+**Custom Layer Example:**
+
+When defining the `get/from_config` methods of a custom layer, you must make
+sure that the `from_config` method can construct an instance of the class using
+the kwarg dictionary returned by `get_config`.
+
+In the example below, we extend the `keras.layers.Layer.get_config` method with
+the argument `factor`. Since `CustomLayer` only takes in `factor` as a parameter
+to its constructor, `CustomLayer.from_config` method specifies that the class 
+only accepts `factor` as a constructor parameter.
+"""
 
 class CustomLayer(keras.layers.Layer):
-    def __init__(self, a):
-        self.var = tf.Variable(a, name="var_a")
 
-    def call(self, inputs, training=False):
-        if training:
-            return inputs * self.var
-        else:
-            return inputs
+  def __init__(self, factor):
+    super(CustomLayer, self).__init__()
+    self.factor = tf.Variable(factor, name="factor")
 
-    def get_config(self):
-        return {"a": self.var.numpy()}
+  def call(self, inputs, training=False):
+    if training:
+      return inputs * self.factor
+    else:
+      return inputs
 
-    # There's actually no need to define `from_config` here, since returning
-    # `cls(**config)` is the default behavior.
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
+  def get_config(self):
+    config = super(CustomLayer, self).get_config()
+    config.update({"factor": self.factor.numpy()})
+    return config
+
+  @classmethod
+  def from_config(cls, config):
+    return cls(config["factor"])
 
 
 layer = CustomLayer(5)
-layer.var.assign(2)
 
 serialized_layer = keras.layers.serialize(layer)
 new_layer = keras.layers.deserialize(
     serialized_layer, custom_objects={"CustomLayer": CustomLayer}
 )
+print(new_layer)
 
 """
 #### Registering the custom object
@@ -461,7 +533,11 @@ From the example above, `tf.keras.layers.serialize`
 generates a serialized form of the custom layer:
 
 ```
-{'class_name': 'CustomLayer', 'config': {'a': 2}}
+{'class_name': 'CustomLayer',
+ 'config': {'name': 'custom_layer',
+  'trainable': True,
+  'dtype': 'float32',
+  'factor': 5}}
 ```
 
 Keras keeps a master list of all built-in layer, model, optimizer,
@@ -477,12 +553,16 @@ in section above "Defining the config methods")
 
 """
 #### Custom layer and function example
+
+Here is another example of a custom (subclassed) layer. Note that the
+constructor of the layer takes in `**kwargs`. Since `get_config` returns a
+dictionary with many items as the config , this enables us to use the default
+`from_config` which calls `cls(**config)`.
 """
 
-
-class CustomLayer(keras.layers.Layer):
+class CustomLayer2(keras.layers.Layer):
     def __init__(self, units=32, **kwargs):
-        super(CustomLayer, self).__init__(**kwargs)
+        super(CustomLayer2, self).__init__(**kwargs)
         self.units = units
 
     def build(self, input_shape):
@@ -499,7 +579,7 @@ class CustomLayer(keras.layers.Layer):
         return tf.matmul(inputs, self.w) + self.b
 
     def get_config(self):
-        config = super(CustomLayer, self).get_config()
+        config = super(CustomLayer2, self).get_config()
         config.update({"units": self.units})
         return config
 
@@ -510,7 +590,7 @@ def custom_activation(x):
 
 # Make a model with the CustomLayer and custom_activation
 inputs = keras.Input((32,))
-x = CustomLayer(32)(inputs)
+x = CustomLayer2(32)(inputs)
 outputs = keras.layers.Activation(custom_activation)(x)
 model = keras.Model(inputs, outputs)
 
@@ -518,7 +598,7 @@ model = keras.Model(inputs, outputs)
 config = model.get_config()
 
 # At loading time, register the custom objects with a `custom_object_scope`:
-custom_objects = {"CustomLayer": CustomLayer, "custom_activation": custom_activation}
+custom_objects = {"CustomLayer2": CustomLayer2, "custom_activation": custom_activation}
 with keras.utils.custom_object_scope(custom_objects):
     new_model = keras.Model.from_config(config)
 
