@@ -18,13 +18,17 @@ non-overlapping local windows while also allowing for cross-window connection.
 This architecture also has the flexibility to model at various scales and has 
 linear computational complexity with respect to image size.
 
-This example requires TensorFlow 2.5 or higher, as well as 
-[Matplotlib](https://matplotlib.org/), which can be installed using the 
-following command:
+This example requires TensorFlow 2.5 or higher, 
+[Matplotlib](https://matplotlib.org/) and TensorFlow Addons, which can be 
+installed using the following commands:
 """
 
 """shell
 pip install -U matplotlib
+"""
+
+"""shell
+pip install -U tensorflow-addons
 """
 
 """
@@ -36,7 +40,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.python.keras.layers.pooling import GlobalAveragePooling1D
+import tensorflow_addons as tfa
 
 """
 ## Prepare the data
@@ -69,25 +73,29 @@ plt.show()
 ## Configure the hyperparameters
 
 In order to use each pixel as an individual input, you can set `patch_size` to (1, 1).
+We take inspirration from the original paper where they share the experimental settings
+for training on ImageNet-1K, keeping quite some of the settings same for this example.
 """
 
 patch_size = (2, 2)  # 2-by-2 sized patches
-drop_rate = 0.01  # Dropout rate
+drop_rate = 0.03  # Dropout rate
 num_heads = 8  # Attention heads
 embed_dim = 64  # Embedded dimensions
 num_mlp = 256  # MLP nodes
 qkv_bias = True  # Convert embedded patches to query, key, and values with a learnable additive value
 window_size = 2  # Size of attention window
 shift_size = 1  # Size of shifting
+image_dimension = 32
 
 num_patch_x = input_shape[0] // patch_size[0]
 num_patch_y = input_shape[1] // patch_size[1]
 
-learning_rate = 1e-4
-clipvalue = 0.5
-batch_size = 32
-num_epochs = 20
+learning_rate = 1e-3
+batch_size = 128
+num_epochs = 40
 validation_split = 0.1
+weight_decay = 0.0001
+label_smoothing=0.1
 
 """
 ## Helper Functions
@@ -444,8 +452,8 @@ We will now put together the Swin Transformer model.
 """
 
 input = layers.Input(input_shape)
-x = PatchExtract(patch_size)(input)
-x = PatchEmbedding(num_patch_x * num_patch_y, embed_dim)(x)
+x = layers.RandomCrop(image_dimension, image_dimension)(input)
+x = layers.RandomFlip("horizontal")(x)
 x = SwinTransformer(
     dim=embed_dim,
     num_patch=(num_patch_x, num_patch_y),
@@ -467,7 +475,7 @@ x = SwinTransformer(
     drop_rate=drop_rate,
 )(x)
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
-x = GlobalAveragePooling1D()(x)
+x = layers.pooling.GlobalAveragePooling1D()(x)
 output = layers.Dense(num_classes, activation="softmax")(x)
 
 """
@@ -478,8 +486,8 @@ We will now finally train the model on CIFAR-10.
 
 model = keras.Model(input, output)
 model.compile(
-    loss=keras.losses.categorical_crossentropy,
-    optimizer=keras.optimizers.Adam(learning_rate=learning_rate, clipvalue=clipvalue),
+    loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
+    optimizer=tfa.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay),
     metrics=[
         keras.metrics.CategoricalAccuracy(name="accuracy"),
         keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
@@ -518,7 +526,7 @@ print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 
 """
 The Swin Transformer model we just trained has just 152K parameters, and it gets 
-us to ~96.3% top-5 accuracy within just 20 epochs without any signs of overfitting 
+us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfitting 
 as well as seen in above graph. This means we can train this network for longer 
 (perhaps with a bit more regularization) and may obtain even better performance. 
 The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present 
