@@ -1,3 +1,4 @@
+
 # Multiclass semantic segmentation using DeepLabV3+
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>
@@ -56,8 +57,8 @@ from tensorflow.keras import layers
 ```
 Downloading...
 From: https://drive.google.com/uc?id=1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz
-To: /content/keras-io/scripts/tmp_3778414/instance-level-human-parsing.zip
-2.91GB [00:21, 137MB/s]
+To: /content/keras-io/scripts/tmp_4374681/instance-level-human-parsing.zip
+2.91GB [00:36, 79.6MB/s]
 
 ```
 </div>
@@ -73,10 +74,17 @@ IMAGE_SIZE = 512
 BATCH_SIZE = 4
 NUM_CLASSES = 20
 DATA_DIR = "./instance-level_human_parsing/instance-level_human_parsing/Training"
-MAX_IMAGES = 200
+NUM_TRAIN_IMAGES = 1000
+NUM_VAL_IMAGES = 50
 
-train_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[:MAX_IMAGES]
-train_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[:MAX_IMAGES]
+train_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[:NUM_TRAIN_IMAGES]
+train_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[:NUM_TRAIN_IMAGES]
+val_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[
+    NUM_TRAIN_IMAGES : NUM_VAL_IMAGES + NUM_TRAIN_IMAGES
+]
+val_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[
+    NUM_TRAIN_IMAGES : NUM_VAL_IMAGES + NUM_TRAIN_IMAGES
+]
 
 
 def read_image(image_path, mask=False):
@@ -106,16 +114,17 @@ def data_generator(image_list, mask_list):
     return dataset
 
 
-dataset = data_generator(train_images, train_masks)
-dataset
+train_dataset = data_generator(train_images, train_masks)
+val_dataset = data_generator(val_images, val_masks)
+
+print("Train Dataset:", train_dataset)
+print("Val Dataset:", val_dataset)
 ```
-
-
-
 
 <div class="k-default-codeblock">
 ```
-<BatchDataset shapes: ((4, 512, 512, 3), (4, 512, 512, 1)), types: (tf.float32, tf.float32)>
+Train Dataset: <BatchDataset shapes: ((4, 512, 512, 3), (4, 512, 512, 1)), types: (tf.float32, tf.float32)>
+Val Dataset: <BatchDataset shapes: ((4, 512, 512, 3), (4, 512, 512, 1)), types: (tf.float32, tf.float32)>
 
 ```
 </div>
@@ -221,8 +230,8 @@ model.summary()
 <div class="k-default-codeblock">
 ```
 Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5
-94773248/94765736 [==============================] - 0s 0us/step
-94781440/94765736 [==============================] - 0s 0us/step
+94773248/94765736 [==============================] - 1s 0us/step
+94781440/94765736 [==============================] - 1s 0us/step
 Model: "model"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
@@ -611,7 +620,8 @@ model.compile(
     loss=loss,
     metrics=["accuracy"],
 )
-history = model.fit(dataset, epochs=25)
+
+history = model.fit(train_dataset, validation_data=val_dataset, epochs=25)
 
 plt.plot(history.history["loss"])
 plt.title("Training Loss")
@@ -624,60 +634,72 @@ plt.title("Training Accuracy")
 plt.ylabel("accuracy")
 plt.xlabel("epoch")
 plt.show()
+
+plt.plot(history.history["val_loss"])
+plt.title("Validation Loss")
+plt.ylabel("val_loss")
+plt.xlabel("epoch")
+plt.show()
+
+plt.plot(history.history["val_accuracy"])
+plt.title("Validation Accuracy")
+plt.ylabel("val_accuracy")
+plt.xlabel("epoch")
+plt.show()
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-50/50 [==============================] - 44s 347ms/step - loss: 1.5536 - accuracy: 0.5857
+250/250 [==============================] - 115s 359ms/step - loss: 1.1765 - accuracy: 0.6424 - val_loss: 2.3559 - val_accuracy: 0.5960
 Epoch 2/25
-50/50 [==============================] - 18s 350ms/step - loss: 1.0815 - accuracy: 0.6661
+250/250 [==============================] - 92s 366ms/step - loss: 0.9413 - accuracy: 0.6998 - val_loss: 1.7349 - val_accuracy: 0.5593
 Epoch 3/25
-50/50 [==============================] - 18s 355ms/step - loss: 0.9506 - accuracy: 0.6974
+250/250 [==============================] - 93s 371ms/step - loss: 0.8415 - accuracy: 0.7310 - val_loss: 1.3097 - val_accuracy: 0.6281
 Epoch 4/25
-50/50 [==============================] - 18s 360ms/step - loss: 0.8234 - accuracy: 0.7383
+250/250 [==============================] - 93s 372ms/step - loss: 0.7640 - accuracy: 0.7552 - val_loss: 1.0175 - val_accuracy: 0.6885
 Epoch 5/25
-50/50 [==============================] - 18s 363ms/step - loss: 0.7513 - accuracy: 0.7606
+250/250 [==============================] - 93s 372ms/step - loss: 0.7139 - accuracy: 0.7706 - val_loss: 1.2226 - val_accuracy: 0.6107
 Epoch 6/25
-50/50 [==============================] - 18s 365ms/step - loss: 0.7500 - accuracy: 0.7607
+250/250 [==============================] - 93s 373ms/step - loss: 0.6647 - accuracy: 0.7867 - val_loss: 0.8583 - val_accuracy: 0.7178
 Epoch 7/25
-50/50 [==============================] - 18s 366ms/step - loss: 0.6802 - accuracy: 0.7825
+250/250 [==============================] - 94s 375ms/step - loss: 0.5986 - accuracy: 0.8080 - val_loss: 0.9724 - val_accuracy: 0.7135
 Epoch 8/25
-50/50 [==============================] - 18s 368ms/step - loss: 0.6063 - accuracy: 0.8058
+250/250 [==============================] - 93s 372ms/step - loss: 0.5599 - accuracy: 0.8212 - val_loss: 0.9722 - val_accuracy: 0.7064
 Epoch 9/25
-50/50 [==============================] - 19s 370ms/step - loss: 0.5549 - accuracy: 0.8215
+250/250 [==============================] - 93s 372ms/step - loss: 0.5161 - accuracy: 0.8364 - val_loss: 0.9023 - val_accuracy: 0.7471
 Epoch 10/25
-50/50 [==============================] - 19s 371ms/step - loss: 0.5235 - accuracy: 0.8336
+250/250 [==============================] - 93s 373ms/step - loss: 0.4719 - accuracy: 0.8515 - val_loss: 0.8803 - val_accuracy: 0.7540
 Epoch 11/25
-50/50 [==============================] - 19s 374ms/step - loss: 0.4600 - accuracy: 0.8553
+250/250 [==============================] - 93s 372ms/step - loss: 0.4337 - accuracy: 0.8636 - val_loss: 0.9682 - val_accuracy: 0.7377
 Epoch 12/25
-50/50 [==============================] - 19s 376ms/step - loss: 0.4227 - accuracy: 0.8688
+250/250 [==============================] - 93s 373ms/step - loss: 0.4079 - accuracy: 0.8718 - val_loss: 0.9586 - val_accuracy: 0.7551
 Epoch 13/25
-50/50 [==============================] - 19s 379ms/step - loss: 0.3839 - accuracy: 0.8817
+250/250 [==============================] - 93s 373ms/step - loss: 0.3694 - accuracy: 0.8856 - val_loss: 0.9676 - val_accuracy: 0.7606
 Epoch 14/25
-50/50 [==============================] - 19s 381ms/step - loss: 0.3354 - accuracy: 0.8977
+250/250 [==============================] - 93s 373ms/step - loss: 0.3493 - accuracy: 0.8913 - val_loss: 0.8375 - val_accuracy: 0.7706
 Epoch 15/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.3029 - accuracy: 0.9080
+250/250 [==============================] - 93s 373ms/step - loss: 0.3217 - accuracy: 0.9008 - val_loss: 0.9956 - val_accuracy: 0.7469
 Epoch 16/25
-50/50 [==============================] - 19s 385ms/step - loss: 0.2782 - accuracy: 0.9168
+250/250 [==============================] - 93s 372ms/step - loss: 0.3018 - accuracy: 0.9075 - val_loss: 0.9614 - val_accuracy: 0.7474
 Epoch 17/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.2542 - accuracy: 0.9239
+250/250 [==============================] - 93s 372ms/step - loss: 0.2870 - accuracy: 0.9122 - val_loss: 0.9652 - val_accuracy: 0.7626
 Epoch 18/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.2436 - accuracy: 0.9271
+250/250 [==============================] - 93s 373ms/step - loss: 0.2685 - accuracy: 0.9182 - val_loss: 0.8913 - val_accuracy: 0.7824
 Epoch 19/25
-50/50 [==============================] - 19s 382ms/step - loss: 0.2279 - accuracy: 0.9331
+250/250 [==============================] - 93s 373ms/step - loss: 0.2574 - accuracy: 0.9216 - val_loss: 1.0205 - val_accuracy: 0.7417
 Epoch 20/25
-50/50 [==============================] - 19s 382ms/step - loss: 0.2088 - accuracy: 0.9385
+250/250 [==============================] - 93s 372ms/step - loss: 0.2619 - accuracy: 0.9199 - val_loss: 0.9237 - val_accuracy: 0.7788
 Epoch 21/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.1938 - accuracy: 0.9430
+250/250 [==============================] - 93s 372ms/step - loss: 0.2372 - accuracy: 0.9280 - val_loss: 0.9076 - val_accuracy: 0.7796
 Epoch 22/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.1875 - accuracy: 0.9446
+250/250 [==============================] - 93s 372ms/step - loss: 0.2175 - accuracy: 0.9344 - val_loss: 0.9797 - val_accuracy: 0.7742
 Epoch 23/25
-50/50 [==============================] - 19s 383ms/step - loss: 0.1854 - accuracy: 0.9450
+250/250 [==============================] - 93s 372ms/step - loss: 0.2084 - accuracy: 0.9370 - val_loss: 0.9981 - val_accuracy: 0.7870
 Epoch 24/25
-50/50 [==============================] - 19s 384ms/step - loss: 0.1845 - accuracy: 0.9448
+250/250 [==============================] - 93s 373ms/step - loss: 0.2077 - accuracy: 0.9370 - val_loss: 1.0494 - val_accuracy: 0.7767
 Epoch 25/25
-50/50 [==============================] - 19s 382ms/step - loss: 0.1823 - accuracy: 0.9455
+250/250 [==============================] - 93s 372ms/step - loss: 0.2059 - accuracy: 0.9377 - val_loss: 0.9640 - val_accuracy: 0.7651
 
 ```
 </div>
@@ -686,6 +708,14 @@ Epoch 25/25
 
 
 ![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_12_2.png)
+
+
+
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_12_3.png)
+
+
+
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_12_4.png)
 
 
 ---
@@ -756,22 +786,50 @@ def plot_predictions(images_list, colormap, model):
             [image_tensor, overlay, prediction_colormap], figsize=(18, 14)
         )
 
+```
 
+### Inference on Train Images
+
+
+```python
 plot_predictions(train_images[:4], colormap, model=model)
 ```
 
 
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_14_0.png)
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_16_0.png)
 
 
 
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_14_1.png)
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_16_1.png)
 
 
 
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_14_2.png)
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_16_2.png)
 
 
 
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_14_3.png)
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_16_3.png)
+
+
+### Inference on Validation Images
+
+
+```python
+plot_predictions(val_images[:4], colormap, model=model)
+```
+
+
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_0.png)
+
+
+
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_1.png)
+
+
+
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_2.png)
+
+
+
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_3.png)
 
