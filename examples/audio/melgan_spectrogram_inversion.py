@@ -518,7 +518,7 @@ generator = create_generator((None, 1))
 discriminator = create_discriminator((None, 1))
 
 mel_gan = MelGAN(generator, discriminator)
-mel_gan.compile(gen_optimizer, disc_optimizer, generator_loss, discriminator_loss)
+mel_gan.compile(gen_optimizer, disc_optimizer, generator_loss, feature_matching_loss, discriminator_loss)
 mel_gan.fit(
     train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE), epochs=1
 )
