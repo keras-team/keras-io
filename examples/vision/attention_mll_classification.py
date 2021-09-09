@@ -68,7 +68,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-import tempfile
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
@@ -441,51 +440,50 @@ def train(train_data, train_labels, val_data, val_labels, model):
     # Train model.
     # Prepare callbacks.
     # Path where to save best weights.
-    with tempfile.NamedTemporaryFile(suffix=".h5") as tmp:
 
-        # Take the file name from the wrapper.
-        file_path = tmp.name
+    # Take the file name from the wrapper.
+    file_path = "/tmp/best_model_weights.h5"
 
-        # Initialize model checkpoint callback.
-        model_checkpoint = keras.callbacks.ModelCheckpoint(
-            file_path,
-            monitor="val_loss",
-            verbose=0,
-            mode="min",
-            save_best_only=True,
-            save_weights_only=True,
-        )
+    # Initialize model checkpoint callback.
+    model_checkpoint = keras.callbacks.ModelCheckpoint(
+        file_path,
+        monitor="val_loss",
+        verbose=0,
+        mode="min",
+        save_best_only=True,
+        save_weights_only=True,
+    )
 
-        # Initialze early stopping callback.
-        # The model performance is monitored across the unseen data and stops training
-        # when the generalization error cease to decrease.
-        early_stopping = keras.callbacks.EarlyStopping(
-            monitor="val_loss", patience=10, mode="min"
-        )
+    # Initialze early stopping callback.
+    # The model performance is monitored across the unseen data and stops training
+    # when the generalization error cease to decrease.
+    early_stopping = keras.callbacks.EarlyStopping(
+        monitor="val_loss", patience=10, mode="min"
+    )
 
-        # Compile model.
-        model.compile(
-            optimizer="adam",
-            loss="sparse_categorical_crossentropy",
-            metrics=["accuracy"],
-        )
+    # Compile model.
+    model.compile(
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
 
-        # Fit model.
-        model.fit(
-            train_data,
-            train_labels,
-            validation_data=(val_data, val_labels),
-            epochs=20,
-            class_weight=calculate_weights(train_labels),
-            batch_size=1,
-            callbacks=[early_stopping, model_checkpoint],
-            verbose=0,
-        )
+    # Fit model.
+    model.fit(
+        train_data,
+        train_labels,
+        validation_data=(val_data, val_labels),
+        epochs=20,
+        class_weight=calculate_weights(train_labels),
+        batch_size=1,
+        callbacks=[early_stopping, model_checkpoint],
+        verbose=0,
+    )
 
-        # Load best weights.
-        model.load_weights(file_path)
+    # Load best weights.
+    model.load_weights(file_path)
 
-        return model
+    return model
 
 
 # Building model(s).
