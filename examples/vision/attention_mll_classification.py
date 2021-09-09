@@ -2,7 +2,7 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/09/08
+Last modified: 2021/09/09
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
@@ -24,22 +24,24 @@ receives a single label for a single image. In case of **MIL**, the learner rece
 label for a set of images.
 
 The motivation behind this model is to:
-* know which instance (in this case: image) has contributed the most to the class label
+
+- know which instance (in this case: image) has contributed the most to the class label
 prediction.
-* leverage from weakly labelled samples.
+- leverage from weakly labelled samples.
 
 ### MIL Classifier: Attention-based approach
 
 The MIL classifier is modelled using neural networks. The attention mechanism as MIL pooling:
-* Trainable MIL operator.
-* Interpretable results using attention scores.
+
+- Trainable MIL operator.
+- Interpretable results using attention scores.
 
 Using attention scores or weights could be very useful for results interpretability as it will
 not merely predict the final output class but the instance scores that led to those
 classification results.
 
 Another reason why this method could be helpful is: weakly labelled data. Since labelling
-individual samples is often perfomed manually, it is considered to be a time consuming task.
+individual samples is often performed manually, it is considered to be a time consuming task.
 This task is also prone to errors (especially in computer vision problems).
 
 Therefore, instead of having individual labelled data points or instances, this algorithm
@@ -53,8 +55,7 @@ Besides the implementation of this mechanism, some **regularization** techniques
 
 ## References
 
-- The paper [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf)
-is authored by Maximilian Ilse, Jakub M. Tomczak and Max Welling.
+- [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf).
 - Some of attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
 - Imbalanced data [tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
 by TensorFlow.
@@ -66,26 +67,22 @@ by TensorFlow.
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import datasets
 from tensorflow.keras import layers
-from tensorflow.keras import callbacks
-import os
 import tempfile
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 plt.style.use("ggplot")
 
 """
-## Create Dataset
+## Create dataset
+`mnist` and `fashion_mnist` datasets have been tested using this implementation. In this
+example, I will be using `mnist`.
 
-In this example, either of `mnist` or `fashion_mnist` data can be used.
 At first we will set up the configurations and then prepare the datasets.
 
 ### Configurations
 
-- `DATASET`: Either mnist digits or fashion mnist data.
 - `POS_CLASS`: The desired class to be kept in the positive bag.
 - `BAG_COUNT`: The number of training bags.
 - `VAL_BAG_COUNT`: The number of validation bags.
@@ -95,7 +92,6 @@ At first we will set up the configurations and then prepare the datasets.
 often results in better performance - set to 1 for single model)
 """
 
-DATASET = {"mnist": datasets.mnist, "fashion_mnist": datasets.fashion_mnist}
 POS_CLASS = 1
 BAG_COUNT = 1000
 VAL_BAG_COUNT = 300
@@ -104,91 +100,89 @@ PLOT_SIZE = 3
 ENSEMBLE_AVG_COUNT = 5
 
 """
-### Prepare Bags
-
+### Prepare bags
 Since the attention operator is a permutation-invariant operator, an instance with a
 positive class label is randomly placed among the instances in the positive bag.
 """
 
 
-def create_bags(x, y, pos_class, bag_count, instance_count):
+def create_bags(input_data, input_labels, pos_class, bag_count, instance_count):
 
     # Set up bags.
     bags = []
     bag_labels = []
 
     # Normalize input data.
-    x = np.divide(x, 255.0)
+    input_data = np.divide(input_data, 255.0)
 
     # Count positive samples.
     count = 0
 
     # Take out the filter for specific class.
-    filter_class = np.where(y == pos_class)[0]
+    filter_class = np.where(input_labels == pos_class)[0]
 
     # Assign new variables consisting of this class.
-    x_pos_class = x[filter_class]
-    y_pos_class = y[filter_class]
+    data_pos_class = input_data[filter_class]
+    labels_pos_class = input_labels[filter_class]
 
     # From overall data, remove this class.
-    x_neg_classes = np.delete(x, filter_class, 0)
-    y_neg_classes = np.delete(y, filter_class, 0)
+    data_neg_classes = np.delete(input_data, filter_class, 0)
+    labels_neg_classes = np.delete(input_labels, filter_class, 0)
 
     # Merge both inputs and labels to each another.
-    x_merged = np.concatenate([x_pos_class, x_neg_classes], axis=0)
-    y_merged = np.concatenate([y_pos_class, y_neg_classes], axis=0)
+    data = np.concatenate([data_pos_class, data_neg_classes], axis=0)
+    labels = np.concatenate([labels_pos_class, labels_neg_classes], axis=0)
 
-    # Data are ordered in such a way: [pos_class... neg_classes]
+    # Data are ordered in such a way: [pos_class... neg_classes].
     # Shuffle the data randomly.
-    order = np.arange(len(x_merged))
+    order = np.arange(len(data))
     np.random.shuffle(order)
-    x = x_merged[order]
-    y = y_merged[order]
+    data = data[order]
+    labels = labels[order]
 
     for _ in range(bag_count):
 
         # Pick a fixed size random subset of samples.
-        index = np.random.choice(x.shape[0], instance_count, replace=False)
-        images = x[index]
-        labels = y[index]
+        index = np.random.choice(data.shape[0], instance_count, replace=False)
+        instances_data = data[index]
+        instances_labels = labels[index]
 
         # By default, all bags are labelled as 0.
-        label = 0
+        bag_label = 0
 
-        # Check if there is atleast a positive class in the bag.
-        if pos_class in labels:
+        # Check if there is at least a positive class in the bag.
+        if pos_class in instances_labels:
 
             # Positive bag will be labelled as 1.
-            label = 1
+            bag_label = 1
 
             # Increment count by 1.
             count += 1
 
-        bags.append(images)
-        bag_labels.append(np.array([label]))
+        bags.append(instances_data)
+        bag_labels.append(np.array([bag_label]))
 
     print(f"Positive bags: {count}")
-    print(f"Negatice bags: {bag_count - count}")
+    print(f"Negative bags: {bag_count - count}")
 
     return (list(np.swapaxes(bags, 0, 1)), np.array(bag_labels))
 
 
-# Load data.
-(x, y), (x_val, y_val) = DATASET["mnist"].load_data()
+# Load desired data.
+(x_train, y_train), (x_val, y_val) = keras.datasets.mnist.load_data()
 
 # Create training data.
-train_data, train_labels = create_bags(x, y, POS_CLASS, BAG_COUNT, BAG_SIZE)
+train_data, train_labels = create_bags(x_train, y_train, POS_CLASS, BAG_COUNT, BAG_SIZE)
 
 # Create validation data.
 val_data, val_labels = create_bags(x_val, y_val, POS_CLASS, VAL_BAG_COUNT, BAG_SIZE)
 
 """
-# Create and Train Neural Networks.
-
+# Create and train neural networks
 We will now build the attention layer, prepare some utilities, build and train the
 entire model.
 
-## Attention Operator Implementation
+## Attention operator implementation
 
 The output size of this layer is decided by the size of a single bag.
 
@@ -233,12 +227,14 @@ class AttentionLayer(layers.Layer):
         super(AttentionLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        assert isinstance(input_shape, list)
+        if not isinstance(input_shape, list):
+            raise TypeError("Input should be of type of list")
+
         # Input Shape
         # List of 2D tensors with shape: (batch_size, input_dim).
         input_dim = input_shape[0][1]
 
-        self.v = self.add_weight(
+        self.v_weight_params = self.add_weight(
             shape=(input_dim, self.l_dim),
             initializer=self.v_init,
             name="v",
@@ -246,7 +242,7 @@ class AttentionLayer(layers.Layer):
             trainable=True,
         )
 
-        self.w = self.add_weight(
+        self.w_weight_params = self.add_weight(
             shape=(self.l_dim, 1),
             initializer=self.w_init,
             name="w",
@@ -255,7 +251,7 @@ class AttentionLayer(layers.Layer):
         )
 
         if self.use_gated:
-            self.u = self.add_weight(
+            self.u_weight_params = self.add_weight(
                 shape=(input_dim, self.l_dim),
                 initializer=self.u_init,
                 name="u",
@@ -263,53 +259,48 @@ class AttentionLayer(layers.Layer):
                 trainable=True,
             )
         else:
-            self.u = None
+            self.u_weight_params = None
 
         self.input_built = True
 
-    def call(self, x, mask=None):
-        def compute(x):
-
-            # in-case "gated mechanism" used.
-            ori_x = x
-
-            # tanh(v*h_k^T)
-            x = tf.math.tanh(tf.tensordot(x, self.v, axes=1))
-
-            # for learning non-linear relations efficiently.
-            if self.use_gated:
-
-                # sigmoid(u*h_k^T).
-                gate_x = tf.math.sigmoid(tf.tensordot(ori_x, self.u, axes=1))
-
-                # element-wise multiplication.
-                ac_x = x * gate_x
-
-            else:
-                ac_x = x
-
-            # w^T*(tanh(v*h_k^T)) / w^T*(tanh(v*h_k^T)*sigmoid(u*h_k^T)).
-            soft_x = tf.tensordot(ac_x, self.w, axes=1)
-
-            return soft_x
+    def call(self, inputs):
 
         # Assigning variables from the number of inputs.
-        instances = [compute(instance) for instance in x]
+        instances = [self.compute_weights(instance) for instance in inputs]
 
         # such that each row summation is equal to 1.
         alpha = tf.math.softmax(instances, axis=0)
 
         return [alpha[i] for i in range(alpha.shape[0])]
 
-    def compute_output_shape(self, input_shapes):
+    def compute_weights(self, instance):
 
-        assert isinstance(input_shapes, list)
+        # in-case "gated mechanism" used.
+        ori_instance = instance
 
-        return [(shape[0], self.output_dim) for shape in input_shapes]
+        # tanh(v*h_k^T)
+        instance = tf.math.tanh(tf.tensordot(instance, self.v_weight_params, axes=1))
+
+        # for learning non-linear relations efficiently.
+        if self.use_gated:
+
+            # sigmoid(u*h_k^T).
+            gate_instance = tf.math.sigmoid(
+                tf.tensordot(ori_instance, self.u_weight_params, axes=1)
+            )
+
+            # element-wise multiplication.
+            ac_instance = instance * gate_instance
+
+        else:
+            ac_instance = instance
+
+        # w^T*(tanh(v*h_k^T)) / w^T*(tanh(v*h_k^T)*sigmoid(u*h_k^T))
+        return tf.tensordot(ac_instance, self.w_weight_params, axes=1)
 
 
 """
-## Visualizer Tool
+## Visualizer tool
 
 Plot the number of bags (given by `PLOT_SIZE`) with respect to the class.
 
@@ -361,7 +352,7 @@ plot(val_data, val_labels, "pos")
 plot(val_data, val_labels, "neg")
 
 """
-## Create Model
+## Create model
 
 First we will create some embeddings per instance, invoke the attention operator and then
 use the softmax function to output the class probabilities.
@@ -374,11 +365,11 @@ def create_model(instance_shape):
         inputs, embeddings = [], []
         for _ in range(BAG_SIZE):
             inp = layers.Input(instance_shape)
-            x = layers.Flatten()(inp)
-            x = layers.Dense(126, activation="relu")(x)
-            x = layers.Dense(64, activation="relu")(x)
+            flatten = layers.Flatten()(inp)
+            dense_1 = layers.Dense(128, activation="relu")(flatten)
+            dense_2 = layers.Dense(64, activation="relu")(dense_1)
             inputs.append(inp)
-            embeddings.append(x)
+            embeddings.append(dense_2)
 
         return inputs, embeddings
 
@@ -407,7 +398,7 @@ def create_model(instance_shape):
 
 
 """
-## Class Weights
+## Class weights
 
 Since this kind of problem could simply turn into imbalanced data classification problem,
 class weights should be considered.
@@ -436,7 +427,7 @@ def calculate_weights(labels):
 
 
 """
-## Build and Train Model
+## Build and train model
 
 The model is built and trained in this section.
 
@@ -455,8 +446,8 @@ def train(train_data, train_labels, val_data, val_labels, model):
         # Take the file name from the wrapper.
         file_path = tmp.name
 
-        # Initialze model checkpoint callback.
-        mc = callbacks.ModelCheckpoint(
+        # Initialize model checkpoint callback.
+        model_checkpoint = keras.callbacks.ModelCheckpoint(
             file_path,
             monitor="val_loss",
             verbose=0,
@@ -467,8 +458,10 @@ def train(train_data, train_labels, val_data, val_labels, model):
 
         # Initialze early stopping callback.
         # The model performance is monitored across the unseen data and stops training
-        # when the generalization error cease to decrease
-        es = callbacks.EarlyStopping(monitor="val_loss", patience=10, mode="min")
+        # when the generalization error cease to decrease.
+        early_stopping = keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=10, mode="min"
+        )
 
         # Compile model.
         model.compile(
@@ -485,7 +478,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
             epochs=20,
             class_weight=calculate_weights(train_labels),
             batch_size=1,
-            callbacks=[es, mc],
+            callbacks=[early_stopping, model_checkpoint],
             verbose=0,
         )
 
@@ -506,16 +499,20 @@ trained_models = [
 ]
 
 """
-# Model Evaluation
+## Model evaluation
 
 The models are in their deterministic state now and ready for evaluation.
+With each model we also create an associated intermediate models to get the
+weights from the attention layer.
 
 Based on the number of models (`ENSEMBLE_AVG_COUNT`), the models predict the results
-and then averaged out (equal contribution per model).
+and then averaged out (equal contribution per model). 
 """
 
 
 def predict(data, labels, trained_models):
+
+    # Collect info per model.
     predictions = []
     attention_weights = []
     losses = []
@@ -534,22 +531,22 @@ def predict(data, labels, trained_models):
         pred_interm = interm_model.predict(data)
 
         # Reshape list of arrays.
-        a_w = np.squeeze(np.swapaxes(pred_interm, 1, 0))
-        attention_weights.append(a_w)
+        model_attention_weights = np.squeeze(np.swapaxes(pred_interm, 1, 0))
+        attention_weights.append(model_attention_weights)
 
         loss, acc = model.evaluate(data, labels, verbose=0)
         losses.append(loss)
         accuracies.append(acc)
 
-    def average(data_list):
-        return np.sum(data_list, axis=0) / ENSEMBLE_AVG_COUNT
-
     print(
-        f"The average loss and accuracy are {average(losses):.2f}"
-        f" and {100 * average(accuracies):.2f} % resp."
+        f"The average loss and accuracy are {np.sum(losses, axis=0) / ENSEMBLE_AVG_COUNT:.2f}"
+        f" and {100 * np.sum(accuracies, axis=0) / ENSEMBLE_AVG_COUNT:.2f} % resp."
     )
 
-    return average(predictions), average(attention_weights)
+    return (
+        np.sum(predictions, axis=0) / ENSEMBLE_AVG_COUNT,
+        np.sum(attention_weights, axis=0) / ENSEMBLE_AVG_COUNT,
+    )
 
 
 pred_class, atten_weights = predict(val_data, val_labels, trained_models)
@@ -559,7 +556,7 @@ plot(val_data, val_labels, "pos", pred=pred_class, attention_weights=atten_weigh
 plot(val_data, val_labels, "neg", pred=pred_class, attention_weights=atten_weights)
 
 """
-# Conclusion
+## Conclusion
 
 From the above plot, you can notice that the weights are always summing to 1. If it is a
 negative predicted bag, the weights will somehow be equally distributed. However, in a
@@ -570,10 +567,8 @@ substantial higher attention score among that bag.
 
 - If the model is overfitted, the weights will be equally distributed for all bags. Hence,
 the regularization techniques are necessary.
-
 - In the paper, the bags' sizes can differ from one bag to another. For simplicity, the
 bags' sizes are fixed here.
-
 - In order not to rely on the random initial weights of a single model, averaging ensemble
 methods are considered.
 """
