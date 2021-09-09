@@ -492,6 +492,9 @@ def train(train_data, train_labels, val_data, val_labels, model):
 instance_shape = train_data[0][0].shape
 models = [create_model(instance_shape) for _ in range(ENSEMBLE_AVG_COUNT)]
 
+# Show single model architecture.
+print(models[0].summary())
+
 # Training model(s).
 trained_models = [
     train(train_data, train_labels, val_data, val_labels, model)
@@ -502,11 +505,11 @@ trained_models = [
 ## Model evaluation
 
 The models are in their deterministic state now and ready for evaluation.
-With each model we also create an associated intermediate models to get the
+With each model we also create an associated intermediate model to get the
 weights from the attention layer.
 
 Based on the number of models (`ENSEMBLE_AVG_COUNT`), the models predict the results
-and then averaged out (equal contribution per model). 
+and then averaged out (equal contribution per model).
 """
 
 
