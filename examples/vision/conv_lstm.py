@@ -158,8 +158,7 @@ x = layers.Conv3D(
 # Next, we will build the complete model and compile it.
 model = keras.models.Model(inp, x)
 model.compile(
-    loss=keras.losses.binary_crossentropy,
-    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.binary_crossentropy, optimizer=keras.optimizers.Adam(),
 )
 
 """
