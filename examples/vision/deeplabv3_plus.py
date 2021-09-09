@@ -1,12 +1,12 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: Multiclass semantic segmentation using DeepLabV3+
+Author: [Soumik Rakshit](http://github.com/soumik12345)
+Date created: 2021/08/31
+Last modified: 2021/09/1
+Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
 """
 """
- Introduction
+## Introduction
 
 Semantic segmentation, with the goal to assign semantic labels to every pixel in an image,
 is an essential computer vision task. In this example, we implement
@@ -15,23 +15,17 @@ architecture that performs well on semantic segmentation benchmarks.
 
 ### References:
 
-- [Encoder-Decoder with Atrous Separable Convolution for Semantic Image
-Segmentation](https://arxiv.org/pdf/1802.02611.pdf)
-- [Rethinking Atrous Convolution for Semantic Image
-Segmentation](https://arxiv.org/abs/1706.05587)
-- [DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution,
-and Fully Connected CRFs](https://arxiv.org/abs/1606.00915)
+- [Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation](https://arxiv.org/pdf/1802.02611.pdf)
+- [Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587)
+- [DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs](https://arxiv.org/abs/1606.00915)
 """
 
 """
 ## Downloading the data
 
-We will use the [Crowd Instance-level Human Parsing
-Dataset](https://arxiv.org/abs/1811.12596)
-for training our model. The Crowd Instance-level Human Parsing (CIHP) dataset has 38,280
-diverse human images.
-Each image in CIHP is labeled with pixel-wise annotations for 20 categories, as well as
-instance-level identification.
+We will use the [Crowd Instance-level Human Parsing Dataset](https://arxiv.org/abs/1811.12596)
+for training our model. The Crowd Instance-level Human Parsing (CIHP) dataset has 38,280 diverse human images.
+Each image in CIHP is labeled with pixel-wise annotations for 20 categories, as well as instance-level identification.
 This dataset can be used for the "human part segmentation" task.
 """
 
@@ -47,16 +41,15 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """shell
-!gdown https://drive.google.com/uc?id=1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz
-!unzip -q instance-level-human-parsing.zip
+gdown https://drive.google.com/uc?id=1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz
+unzip -q instance-level-human-parsing.zip
 """
 
 """
 ## Creating a TensorFlow Dataset
 
-Training on the entire CIHP dataset with 38,280 images takes a lot of time, hence we will
-be using a smaller subset of 1000 images for training our model and 50 images for validation
-in this example.
+Training on the entire CIHP dataset with 38,280 images takes a lot of time, hence we will be using
+a smaller subset of 200 images for training our model in this example.
 """
 
 IMAGE_SIZE = 512
@@ -117,27 +110,14 @@ processes multiscale contextual information by applying dilated convolution at m
 scales, while the decoder module refines the segmentation results along object boundaries.
 
 ![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
-![](https://github.com/lattice-ai/DeepLabV3-Plus/raw/master/assets/deeplabv3_plus_diagram.png)
 
-**Dilated convolution:** With dilated convolution, as we go deeper in the network, we can
-keep the
+**Dilated convolution:** With dilated convolution, as we go deeper in the network, we can keep the
 stride constant but with larger field-of-view without increasing the number of parameters
 or the amount of computation. Besides, it enables larger output feature maps, which is
 useful for semantic segmentation.
 
 The reason for using **Dilated Spatial Pyramid Pooling** is that it was shown that as the
 sampling rate becomes larger, the number of valid filter weights (i.e., weights that
-are applied to the valid feature region, instead of padded zeros) becomes smaller.
-"""
-
-"""
-**Dilated Convolution:** With Dilated convolution, as we go deeper, we can keep the
-stride constant but with larger field-of-view without increasing the number of parameters
-or the amount of computation. And finally, we can have larger output feature map which is
-good for semantic segmentation.
-
-The reason for using **Atrous Spatial Pyramid Pooling** is that it is discovered as the
-sampling rate becomes larger, the number of valid filter weights (i.e., the weights that
 are applied to the valid feature region, instead of padded zeros) becomes smaller.
 """
 
@@ -261,18 +241,13 @@ plt.show()
 """
 ## Inference using Colormap Overlay
 
-The raw predictions from the model represent a one-hot encoded tensor of shape `(N, 512,
-512, 20)`
+The raw predictions from the model represent a one-hot encoded tensor of shape `(N, 512, 512, 20)`
 where each one of the 20 channels is a binary mask corresponding to a predicted label.
 In order to visualize the results, we plot them as RGB segmentation masks where each pixel
-is represented by a unique color corresponding to the particular label predicted. We can
-easily
-find the color corresponding to each label from the `human_colormap.mat` file provided as
-part
-of the dataset. We would also plot an overlay of the RGB segmentation mask on the input
-image as
-this further helps us to identify the different categories present in the image more
-intuitively.
+is represented by a unique color corresponding to the particular label predicted. We can easily
+find the color corresponding to each label from the `human_colormap.mat` file provided as part
+of the dataset. We would also plot an overlay of the RGB segmentation mask on the input image as
+this further helps us to identify the different categories present in the image more intuitively.
 """
 
 # Loading the Colormap
