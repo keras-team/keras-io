@@ -336,7 +336,6 @@ class SwinTransformer(layers.Layer):
 
     def call(self, x):
         H, W = self.num_patch
-        print(x.get_shape())
         B, L, C = x.get_shape().as_list()
         x_skip = x
         x = self.norm1(x)
