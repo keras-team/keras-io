@@ -174,8 +174,8 @@ number whereas window based self-attention would be linear and easily scalable.
 
 
 class WindowAttention(layers.Layer):
-    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0):
-        super(WindowAttention, self).__init__()
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0, **kwargs):
+        super(WindowAttention, self).__init__(**kwargs)
         self.dim = dim
         self.window_size = window_size
         self.num_heads = num_heads
@@ -276,8 +276,9 @@ class SwinTransformer(layers.Layer):
         num_mlp=1024,
         qkv_bias=True,
         drop_rate=0.0,
+        **kwargs
     ):
-        super(SwinTransformer, self).__init__()
+        super(SwinTransformer, self).__init__(**kwargs)
 
         self.dim = dim  # number of input dimensions
         self.num_patch = num_patch  # number of embedded patches
@@ -389,8 +390,8 @@ images on top of which we will later use the Swin Transfromer class we built.
 
 
 class PatchExtract(layers.Layer):
-    def __init__(self, patch_size):
-        super(PatchExtract, self).__init__()
+    def __init__(self, patch_size, **kwargs):
+        super(PatchExtract, self).__init__(**kwargs)
         self.patch_size_x = patch_size[0]
         self.patch_size_y = patch_size[0]
 
@@ -409,8 +410,8 @@ class PatchExtract(layers.Layer):
 
 
 class PatchEmbedding(layers.Layer):
-    def __init__(self, num_patch, embed_dim):
-        super(PatchEmbedding, self).__init__()
+    def __init__(self, num_patch, embed_dim, **kwargs):
+        super(PatchEmbedding, self).__init__(**kwargs)
         self.num_patch = num_patch
         self.proj = layers.Dense(embed_dim)
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
@@ -421,8 +422,8 @@ class PatchEmbedding(layers.Layer):
 
 
 class PatchMerging(layers.Layer):
-    def __init__(self, num_patch, embed_dim):
-        super(PatchMerging, self).__init__()
+    def __init__(self, num_patch, embed_dim, **kwargs):
+        super(PatchMerging, self).__init__(**kwargs)
         self.num_patch = num_patch
         self.embed_dim = embed_dim
         self.linear_trans = layers.Dense(2 * embed_dim, use_bias=False)
