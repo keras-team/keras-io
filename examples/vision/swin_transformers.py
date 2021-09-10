@@ -488,9 +488,9 @@ x = GlobalAveragePooling1D()(x)
 output = layers.Dense(num_classes, activation="softmax")(x)
 
 """
-### Train on CIFAR-10
+### Train on CIFAR-100
 
-We will now finally train the model on CIFAR-10.
+We will now finally train the model on CIFAR-100.
 """
 
 model = keras.Model(input, output)
@@ -527,7 +527,7 @@ plt.grid()
 plt.show()
 
 """
-Let's see final results of the training on CIFAR-10
+Let's see final results of the training on CIFAR-100
 """
 
 loss, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
