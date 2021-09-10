@@ -174,8 +174,8 @@ number whereas window based self-attention would be linear and easily scalable.
 
 
 class WindowAttention(tf.keras.layers.Layer):
-    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0):
-        super(WindowAttention, self).__init__()
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0, **kwargs):
+        super(WindowAttention, self).__init__(**kwargs)
         self.dim = dim
         self.window_size = window_size
         self.num_heads = num_heads
@@ -274,8 +274,9 @@ class SwinTransformer(layers.Layer):
         num_mlp=1024,
         qkv_bias=True,
         drop_rate=0.0,
+        **kwargs
     ):
-        super(SwinTransformer, self).__init__()
+        super(SwinTransformer, self).__init__(**kwargs)
 
         self.dim = dim  # number of input dimensions
         self.num_patch = num_patch  # number of embedded patches
