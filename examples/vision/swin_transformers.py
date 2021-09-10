@@ -33,9 +33,9 @@ pip install -U tensorflow-addons
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 from tensorflow import keras
 from tensorflow.keras import layers
-import tensorflow_addons as tfa
 
 """
 ## Prepare the data
