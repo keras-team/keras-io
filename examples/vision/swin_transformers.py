@@ -18,13 +18,8 @@ non-overlapping local windows while also allowing for cross-window connection.
 This architecture also has the flexibility to model at various scales and has 
 linear computational complexity with respect to image size.
 
-This example requires TensorFlow 2.5 or higher, 
-[Matplotlib](https://matplotlib.org/) and TensorFlow Addons, which can be 
-installed using the following commands:
-"""
-
-"""shell
-pip install -U matplotlib
+This example requires TensorFlow 2.5 or higheras well as TensorFlow Addons, 
+which can be installed using the following commands:
 """
 
 """shell
