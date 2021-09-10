@@ -12,34 +12,34 @@ then any model loaded from this repository will get built according to the Tenso
 
 ## Available models
 
-| Model | Size | Top-1 Accuracy | Top-5 Accuracy | Parameters | Depth | Time per inference step (CPU) | Time per inference step (GPU) |
+| Model | Size (MB)| Top-1 Accuracy | Top-5 Accuracy | Parameters | Depth | Time (ms) per inference step (CPU) | Time (ms) per inference step (GPU) |
 | ----- | ----: | --------------: | --------------: |  ----------: | -----: | ----------------: | ----------------: |
-| [Xception](xception) | 88 MB | 0.790 | 0.945 | 22,910,480 | 126 | 109.42ms | 8.06ms | 
-| [VGG16](vgg/#vgg16-function) | 528 MB | 0.713 | 0.901 | 138,357,544 | 23 | 69.50ms | 4.16ms | 
-| [VGG19](vgg/#vgg19-function) | 549 MB | 0.713 | 0.900 | 143,667,240 | 26 | 84.75ms | 4.38ms | 
-| [ResNet50](resnet/#resnet50-function) | 98 MB | 0.749 | 0.921 | 25,636,712 | - | 58.20ms | 4.55ms | 
-| [ResNet101](resnet/#resnet101-function) | 171 MB | 0.764 | 0.928 | 44,707,176 | - | 89.59ms | 5.19ms | 
-| [ResNet152](resnet/#resnet152-function) | 232 MB | 0.766 | 0.931 | 60,419,944 | - | 127.43ms | 6.54ms | 
-| [ResNet50V2](resnet/#resnet50v2-function) | 98 MB | 0.760 | 0.930 | 25,613,800 | - | 45.63ms | 4.42ms | 
-| [ResNet101V2](resnet/#resnet101v2-function) | 171 MB | 0.772 | 0.938 | 44,675,560 | - | 72.73ms | 5.43ms | 
-| [ResNet152V2](resnet/#resnet152v2-function) | 232 MB | 0.780 | 0.942 | 60,380,648 | - | 107.50ms | 6.64ms | 
-| [InceptionV3](inceptionv3) | 92 MB | 0.779 | 0.937 | 23,851,784 | 159 | 42.25ms | 6.86ms | 
-| [InceptionResNetV2](inceptionresnetv2) | 215 MB | 0.803 | 0.953 | 55,873,736 | 572 | 130.19ms | 10.02ms | 
-| [MobileNet](mobilenet) | 16 MB | 0.704 | 0.895 | 4,253,864 | 88 | 22.60ms | 3.44ms | 
-| [MobileNetV2](mobilenet/#mobilenetv2-function) | 14 MB | 0.713 | 0.901 | 3,538,984 | 88 | 25.90ms | 3.83ms | 
-| [DenseNet121](densenet/#densenet121-function) | 33 MB | 0.750 | 0.923 | 8,062,504 | 121 | 77.14ms | 5.38ms | 
-| [DenseNet169](densenet/#densenet169-function) | 57 MB | 0.762 | 0.932 | 14,307,880 | 169 | 96.40ms | 6.28ms | 
-| [DenseNet201](densenet/#densenet201-function) | 80 MB | 0.773 | 0.936 | 20,242,984 | 201 | 127.24ms | 6.67ms | 
-| [NASNetMobile](nasnet/#nasnetmobile-function) | 23 MB | 0.744 | 0.919 | 5,326,716 | - | 27.04ms | 6.70ms | 
-| [NASNetLarge](nasnet/#nasnetlarge-function) | 343 MB | 0.825 | 0.960 | 88,949,818 | - | 344.51ms | 19.96ms | 
-| [EfficientNetB0](efficientnet/#efficientnetb0-function) | 29 MB | - | - | 5,330,571 | - | 46.00ms | 4.91ms | 
-| [EfficientNetB1](efficientnet/#efficientnetb1-function) | 31 MB | - | - | 7,856,239 | - | 60.20ms | 5.55ms | 
-| [EfficientNetB2](efficientnet/#efficientnetb2-function) | 36 MB | - | - | 9,177,569 | - | 80.79ms | 6.50ms | 
-| [EfficientNetB3](efficientnet/#efficientnetb3-function) | 48 MB | - | - | 12,320,535 | - | 139.97ms | 8.77ms | 
-| [EfficientNetB4](efficientnet/#efficientnetb4-function) | 75 MB | - | - | 19,466,823 | - | 308.33ms | 15.12ms | 
-| [EfficientNetB5](efficientnet/#efficientnetb5-function) | 118 MB | - | - | 30,562,527 | - | 579.18ms | 25.29ms | 
-| [EfficientNetB6](efficientnet/#efficientnetb6-function) | 166 MB | - | - | 43,265,143 | - | 958.12ms | 40.45ms | 
-| [EfficientNetB7](efficientnet/#efficientnetb7-function) | 256 MB | - | - | 66,658,687 | - | 1578.90ms | 61.62ms | 
+| [Xception](xception) | 88 | 0.790 | 0.945 | 22,910,480 | 126 | 109.42 | 8.06 | 
+| [VGG16](vgg/#vgg16-function) | 528 | 0.713 | 0.901 | 138,357,544 | 23 | 69.50 | 4.16 | 
+| [VGG19](vgg/#vgg19-function) | 549 | 0.713 | 0.900 | 143,667,240 | 26 | 84.75 | 4.38 | 
+| [ResNet50](resnet/#resnet50-function) | 98 | 0.749 | 0.921 | 25,636,712 | - | 58.20 | 4.55 | 
+| [ResNet101](resnet/#resnet101-function) | 171 | 0.764 | 0.928 | 44,707,176 | - | 89.59 | 5.19 | 
+| [ResNet152](resnet/#resnet152-function) | 232 | 0.766 | 0.931 | 60,419,944 | - | 127.43 | 6.54 | 
+| [ResNet50V2](resnet/#resnet50v2-function) | 98 | 0.760 | 0.930 | 25,613,800 | - | 45.63 | 4.42 | 
+| [ResNet101V2](resnet/#resnet101v2-function) | 171 | 0.772 | 0.938 | 44,675,560 | - | 72.73 | 5.43 | 
+| [ResNet152V2](resnet/#resnet152v2-function) | 232 | 0.780 | 0.942 | 60,380,648 | - | 107.50 | 6.64 | 
+| [InceptionV3](inceptionv3) | 92 | 0.779 | 0.937 | 23,851,784 | 159 | 42.25 | 6.86 | 
+| [InceptionResNetV2](inceptionresnetv2) | 215 | 0.803 | 0.953 | 55,873,736 | 572 | 130.19 | 10.02 | 
+| [MobileNet](mobilenet) | 16 | 0.704 | 0.895 | 4,253,864 | 88 | 22.60 | 3.44 | 
+| [MobileNetV2](mobilenet/#mobilenetv2-function) | 14 | 0.713 | 0.901 | 3,538,984 | 88 | 25.90 | 3.83 | 
+| [DenseNet121](densenet/#densenet121-function) | 33 | 0.750 | 0.923 | 8,062,504 | 121 | 77.14 | 5.38 | 
+| [DenseNet169](densenet/#densenet169-function) | 57 | 0.762 | 0.932 | 14,307,880 | 169 | 96.40 | 6.28 | 
+| [DenseNet201](densenet/#densenet201-function) | 80 | 0.773 | 0.936 | 20,242,984 | 201 | 127.24 | 6.67 | 
+| [NASNetMobile](nasnet/#nasnetmobile-function) | 23 | 0.744 | 0.919 | 5,326,716 | - | 27.04 | 6.70 | 
+| [NASNetLarge](nasnet/#nasnetlarge-function) | 343 | 0.825 | 0.960 | 88,949,818 | - | 344.51 | 19.96 | 
+| [EfficientNetB0](efficientnet/#efficientnetb0-function) | 29 | - | - | 5,330,571 | - | 46.00 | 4.91 | 
+| [EfficientNetB1](efficientnet/#efficientnetb1-function) | 31 | - | - | 7,856,239 | - | 60.20 | 5.55 | 
+| [EfficientNetB2](efficientnet/#efficientnetb2-function) | 36 | - | - | 9,177,569 | - | 80.79 | 6.50 | 
+| [EfficientNetB3](efficientnet/#efficientnetb3-function) | 48 | - | - | 12,320,535 | - | 139.97 | 8.77 | 
+| [EfficientNetB4](efficientnet/#efficientnetb4-function) | 75 | - | - | 19,466,823 | - | 308.33 | 15.12 | 
+| [EfficientNetB5](efficientnet/#efficientnetb5-function) | 118 | - | - | 30,562,527 | - | 579.18 | 25.29 | 
+| [EfficientNetB6](efficientnet/#efficientnetb6-function) | 166 | - | - | 43,265,143 | - | 958.12 | 40.45 | 
+| [EfficientNetB7](efficientnet/#efficientnetb7-function) | 256 | - | - | 66,658,687 | - | 1578.90 | 61.62 | 
 
 <br>
 The top-1 and top-5 accuracy refers to the model's performance on the ImageNet validation dataset.

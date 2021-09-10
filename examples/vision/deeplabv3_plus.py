@@ -56,10 +56,17 @@ IMAGE_SIZE = 512
 BATCH_SIZE = 4
 NUM_CLASSES = 20
 DATA_DIR = "./instance-level_human_parsing/instance-level_human_parsing/Training"
-MAX_IMAGES = 200
+NUM_TRAIN_IMAGES = 1000
+NUM_VAL_IMAGES = 50
 
-train_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[:MAX_IMAGES]
-train_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[:MAX_IMAGES]
+train_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[:NUM_TRAIN_IMAGES]
+train_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[:NUM_TRAIN_IMAGES]
+val_images = sorted(glob(os.path.join(DATA_DIR, "Images/*")))[
+    NUM_TRAIN_IMAGES : NUM_VAL_IMAGES + NUM_TRAIN_IMAGES
+]
+val_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[
+    NUM_TRAIN_IMAGES : NUM_VAL_IMAGES + NUM_TRAIN_IMAGES
+]
 
 
 def read_image(image_path, mask=False):
@@ -89,8 +96,11 @@ def data_generator(image_list, mask_list):
     return dataset
 
 
-dataset = data_generator(train_images, train_masks)
-dataset
+train_dataset = data_generator(train_images, train_masks)
+val_dataset = data_generator(val_images, val_masks)
+
+print("Train Dataset:", train_dataset)
+print("Val Dataset:", val_dataset)
 
 """
 ## Building the DeepLabV3+ model
@@ -201,7 +211,8 @@ model.compile(
     loss=loss,
     metrics=["accuracy"],
 )
-history = model.fit(dataset, epochs=25)
+
+history = model.fit(train_dataset, validation_data=val_dataset, epochs=25)
 
 plt.plot(history.history["loss"])
 plt.title("Training Loss")
@@ -212,6 +223,18 @@ plt.show()
 plt.plot(history.history["accuracy"])
 plt.title("Training Accuracy")
 plt.ylabel("accuracy")
+plt.xlabel("epoch")
+plt.show()
+
+plt.plot(history.history["val_loss"])
+plt.title("Validation Loss")
+plt.ylabel("val_loss")
+plt.xlabel("epoch")
+plt.show()
+
+plt.plot(history.history["val_accuracy"])
+plt.title("Validation Accuracy")
+plt.ylabel("val_accuracy")
 plt.xlabel("epoch")
 plt.show()
 
@@ -283,4 +306,14 @@ def plot_predictions(images_list, colormap, model):
         )
 
 
+"""
+### Inference on Train Images
+"""
+
 plot_predictions(train_images[:4], colormap, model=model)
+
+"""
+### Inference on Validation Images
+"""
+
+plot_predictions(val_images[:4], colormap, model=model)
