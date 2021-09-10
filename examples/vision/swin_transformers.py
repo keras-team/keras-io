@@ -8,7 +8,7 @@ Description: Image Classification using Swin Transformers, a general-purpose bac
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
 paper by Liu et al. for image classification, and demonstrates it on the 
-[CIFAR-10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
+[CIFAR-100 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 
 Swin Transformer (**S**hifted **Wi**ndow) capably serves as a general-purpose backbone 
 for computer vision. Swin Transformer is a hierarchical Transformer whose 
@@ -535,5 +535,7 @@ segmentation and instance segmentation as well and report competitive results
 for these. You are strongly advised to also check out the 
 [original paper](https://arxiv.org/abs/2103.14030).
 
-This example takes inspiration from the official PyTorch and TensorFlow implementations.
+This example takes inspiration from the official 
+[PyTorch](https://github.com/microsoft/Swin-Transformer) and 
+[TensorFlow](https://github.com/VcampSoldiers/Swin-Transformer-Tensorflow) implementations.
 """
