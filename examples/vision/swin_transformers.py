@@ -74,7 +74,7 @@ for training on ImageNet-1K, keeping quite some of the settings same for this ex
 """
 
 patch_size = (2, 2)  # 2-by-2 sized patches
-drop_rate = 0.03  # Dropout rate
+dropout_rate = 0.03  # Dropout rate
 num_heads = 8  # Attention heads
 embed_dim = 64  # Embedded dimensions
 num_mlp = 256  # MLP nodes
@@ -102,23 +102,23 @@ patches from the image, allow us to merge patches to spatial frames and dropout.
 
 
 def window_partition(x, window_size):
-    _, H, W, C = x.get_shape().as_list()
-    patch_num_H = H // window_size
-    patch_num_W = W // window_size
-    x = tf.reshape(x, shape=(-1, patch_num_H, window_size, patch_num_W, window_size, C))
+    _, height, width, channels = x.shape
+    patch_num_H = height // window_size
+    patch_num_W = width // window_size
+    x = tf.reshape(x, shape=(-1, patch_num_H, window_size, patch_num_W, window_size, channels))
     x = tf.transpose(x, (0, 1, 3, 2, 4, 5))
-    windows = tf.reshape(x, shape=(-1, window_size, window_size, C))
+    windows = tf.reshape(x, shape=(-1, window_size, window_size, channels))
     return windows
 
 
-def window_reverse(windows, window_size, H, W, C):
-    patch_num_H = H // window_size
-    patch_num_W = W // window_size
+def window_reverse(windows, window_size, height, width, channels):
+    patch_num_H = height // window_size
+    patch_num_W = width // window_size
     x = tf.reshape(
-        windows, shape=(-1, patch_num_H, patch_num_W, window_size, window_size, C)
+        windows, shape=(-1, patch_num_H, patch_num_W, window_size, window_size, channels)
     )
     x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-    x = tf.reshape(x, shape=(-1, H, W, C))
+    x = tf.reshape(x, shape=(-1, height, width, channels))
     return x
 
 
@@ -174,14 +174,14 @@ number whereas window based self-attention would be linear and easily scalable.
 
 
 class WindowAttention(tf.keras.layers.Layer):
-    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0, **kwargs):
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs):
         super(WindowAttention, self).__init__(**kwargs)
         self.dim = dim
         self.window_size = window_size
         self.num_heads = num_heads
         self.scale = (dim // num_heads) ** -0.5
         self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
-        self.dropout = layers.Dropout(drop_rate)
+        self.dropout = layers.Dropout(dropout_rate)
         self.proj = layers.Dense(dim)
 
     def build(self, input_shape):
@@ -210,10 +210,10 @@ class WindowAttention(tf.keras.layers.Layer):
         )
 
     def call(self, x, mask=None):
-        _, N, C = x.get_shape().as_list()
-        head_dim = C // self.num_heads
+        _, size, channels = x.shape
+        head_dim = channels // self.num_heads
         x_qkv = self.qkv(x)
-        x_qkv = tf.reshape(x_qkv, shape=(-1, N, 3, self.num_heads, head_dim))
+        x_qkv = tf.reshape(x_qkv, shape=(-1, size, 3, self.num_heads, head_dim))
         x_qkv = tf.transpose(x_qkv, perm=(2, 0, 3, 1, 4))
         q, k, v = x_qkv[0], x_qkv[1], x_qkv[2]
         q = q * self.scale
@@ -238,8 +238,8 @@ class WindowAttention(tf.keras.layers.Layer):
             mask_float = tf.cast(
                 tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32
             )
-            attn = tf.reshape(attn, shape=(-1, nW, self.num_heads, N, N)) + mask_float
-            attn = tf.reshape(attn, shape=(-1, self.num_heads, N, N))
+            attn = tf.reshape(attn, shape=(-1, nW, self.num_heads, size, size)) + mask_float
+            attn = tf.reshape(attn, shape=(-1, self.num_heads, size, size))
             attn = keras.activations.softmax(attn, axis=-1)
         else:
             attn = keras.activations.softmax(attn, axis=-1)
@@ -247,7 +247,7 @@ class WindowAttention(tf.keras.layers.Layer):
 
         x_qkv = attn @ v
         x_qkv = tf.transpose(x_qkv, perm=(0, 2, 1, 3))
-        x_qkv = tf.reshape(x_qkv, shape=(-1, N, C))
+        x_qkv = tf.reshape(x_qkv, shape=(-1, size, channels))
         x_qkv = self.proj(x_qkv)
         x_qkv = self.dropout(x_qkv)
         return x_qkv
@@ -273,7 +273,7 @@ class SwinTransformer(layers.Layer):
         shift_size=0,
         num_mlp=1024,
         qkv_bias=True,
-        drop_rate=0.0,
+        dropout_rate=0.0,
         **kwargs
     ):
         super(SwinTransformer, self).__init__(**kwargs)
@@ -291,11 +291,11 @@ class SwinTransformer(layers.Layer):
             window_size=(self.window_size, self.window_size),
             num_heads=num_heads,
             qkv_bias=qkv_bias,
-            drop_rate=drop_rate,
+            dropout_rate=dropout_rate,
         )
-        self.drop_path = DropPath(drop_rate)
+        self.drop_path = DropPath(dropout_rate)
         self.norm2 = layers.LayerNormalization(epsilon=1e-5)
-        self.mlp = Mlp([num_mlp, dim], drop=drop_rate)
+        self.mlp = Mlp([num_mlp, dim], drop=dropout_rate)
         if min(self.num_patch) < self.window_size:
             self.shift_size = 0
             self.window_size = min(self.num_patch)
@@ -336,11 +336,11 @@ class SwinTransformer(layers.Layer):
             self.attn_mask = None
 
     def call(self, x):
-        H, W = self.num_patch
-        B, L, C = x.get_shape().as_list()
+        height, width = self.num_patch
+        _, num_patches_before, channels = x.shape
         x_skip = x
         x = self.norm1(x)
-        x = tf.reshape(x, shape=(-1, H, W, C))
+        x = tf.reshape(x, shape=(-1, height, width, channels))
         if self.shift_size > 0:
             shifted_x = tf.roll(
                 x, shift=[-self.shift_size, -self.shift_size], axis=[1, 2]
@@ -350,14 +350,14 @@ class SwinTransformer(layers.Layer):
 
         x_windows = window_partition(shifted_x, self.window_size)
         x_windows = tf.reshape(
-            x_windows, shape=(-1, self.window_size * self.window_size, C)
+            x_windows, shape=(-1, self.window_size * self.window_size, channels)
         )
         attn_windows = self.attn(x_windows, mask=self.attn_mask)
 
         attn_windows = tf.reshape(
-            attn_windows, shape=(-1, self.window_size, self.window_size, C)
+            attn_windows, shape=(-1, self.window_size, self.window_size, channels)
         )
-        shifted_x = window_reverse(attn_windows, self.window_size, H, W, C)
+        shifted_x = window_reverse(attn_windows, self.window_size, height, width, channels)
         if self.shift_size > 0:
             x = tf.roll(
                 shifted_x, shift=[self.shift_size, self.shift_size], axis=[1, 2]
@@ -365,7 +365,7 @@ class SwinTransformer(layers.Layer):
         else:
             x = shifted_x
 
-        x = tf.reshape(x, shape=(-1, H * W, C))
+        x = tf.reshape(x, shape=(-1, height * width, channels))
         x = self.drop_path(x)
         x = x_skip + x
         x_skip = x
@@ -458,7 +458,7 @@ x = SwinTransformer(
     shift_size=0,
     num_mlp=num_mlp,
     qkv_bias=qkv_bias,
-    drop_rate=drop_rate,
+    dropout_rate=dropout_rate,
 )(x)
 x = SwinTransformer(
     dim=embed_dim,
@@ -468,7 +468,7 @@ x = SwinTransformer(
     shift_size=shift_size,
     num_mlp=num_mlp,
     qkv_bias=qkv_bias,
-    drop_rate=drop_rate,
+    dropout_rate=dropout_rate,
 )(x)
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
 x = GlobalAveragePooling1D()(x)
