@@ -91,7 +91,7 @@ batch_size = 128
 num_epochs = 40
 validation_split = 0.1
 weight_decay = 0.0001
-label_smoothing=0.1
+label_smoothing = 0.1
 
 """
 ## Helper Functions
@@ -105,7 +105,9 @@ def window_partition(x, window_size):
     _, height, width, channels = x.shape
     patch_num_H = height // window_size
     patch_num_W = width // window_size
-    x = tf.reshape(x, shape=(-1, patch_num_H, window_size, patch_num_W, window_size, channels))
+    x = tf.reshape(
+        x, shape=(-1, patch_num_H, window_size, patch_num_W, window_size, channels)
+    )
     x = tf.transpose(x, (0, 1, 3, 2, 4, 5))
     windows = tf.reshape(x, shape=(-1, window_size, window_size, channels))
     return windows
@@ -115,7 +117,8 @@ def window_reverse(windows, window_size, height, width, channels):
     patch_num_H = height // window_size
     patch_num_W = width // window_size
     x = tf.reshape(
-        windows, shape=(-1, patch_num_H, patch_num_W, window_size, window_size, channels)
+        windows,
+        shape=(-1, patch_num_H, patch_num_W, window_size, window_size, channels),
     )
     x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
     x = tf.reshape(x, shape=(-1, height, width, channels))
@@ -136,6 +139,7 @@ class DropPath(layers.Layer):
         path_mask = tf.floor(random_tensor)
         output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
         return output
+
 
 """
 ## MLP layer
@@ -174,7 +178,9 @@ number whereas window based self-attention would be linear and easily scalable.
 
 
 class WindowAttention(tf.keras.layers.Layer):
-    def __init__(self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs):
+    def __init__(
+        self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs
+    ):
         super(WindowAttention, self).__init__(**kwargs)
         self.dim = dim
         self.window_size = window_size
@@ -238,7 +244,10 @@ class WindowAttention(tf.keras.layers.Layer):
             mask_float = tf.cast(
                 tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32
             )
-            attn = tf.reshape(attn, shape=(-1, nW, self.num_heads, size, size)) + mask_float
+            attn = (
+                tf.reshape(attn, shape=(-1, nW, self.num_heads, size, size))
+                + mask_float
+            )
             attn = tf.reshape(attn, shape=(-1, self.num_heads, size, size))
             attn = keras.activations.softmax(attn, axis=-1)
         else:
@@ -252,6 +261,7 @@ class WindowAttention(tf.keras.layers.Layer):
         x_qkv = self.dropout(x_qkv)
         return x_qkv
 
+
 """
 ## The final Swin Transformer model
 
@@ -262,6 +272,7 @@ layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying
 `LayerNormalization` before each MSA layer and each MLP, and a residual 
 connection after each of these layers.
 """
+
 
 class SwinTransformer(layers.Layer):
     def __init__(
@@ -274,7 +285,7 @@ class SwinTransformer(layers.Layer):
         num_mlp=1024,
         qkv_bias=True,
         dropout_rate=0.0,
-        **kwargs
+        **kwargs,
     ):
         super(SwinTransformer, self).__init__(**kwargs)
 
@@ -357,7 +368,9 @@ class SwinTransformer(layers.Layer):
         attn_windows = tf.reshape(
             attn_windows, shape=(-1, self.window_size, self.window_size, channels)
         )
-        shifted_x = window_reverse(attn_windows, self.window_size, height, width, channels)
+        shifted_x = window_reverse(
+            attn_windows, self.window_size, height, width, channels
+        )
         if self.shift_size > 0:
             x = tf.roll(
                 shifted_x, shift=[self.shift_size, self.shift_size], axis=[1, 2]
@@ -374,7 +387,6 @@ class SwinTransformer(layers.Layer):
         x = self.drop_path(x)
         x = x_skip + x
         return x
-
 
 
 """
@@ -439,6 +451,7 @@ class PatchMerging(tf.keras.layers.Layer):
         x = tf.reshape(x, shape=(-1, (height // 2) * (width // 2), 4 * C))
         return self.linear_trans(x)
 
+
 """
 ### Build the model
 
@@ -483,7 +496,9 @@ We will now finally train the model on CIFAR-10.
 model = keras.Model(input, output)
 model.compile(
     loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
-    optimizer=tfa.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay),
+    optimizer=tfa.optimizers.AdamW(
+        learning_rate=learning_rate, weight_decay=weight_decay
+    ),
     metrics=[
         keras.metrics.CategoricalAccuracy(name="accuracy"),
         keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
