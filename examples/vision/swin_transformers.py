@@ -523,12 +523,17 @@ print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 The Swin Transformer model we just trained has just 152K parameters, and it gets 
 us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfitting 
 as well as seen in above graph. This means we can train this network for longer 
-(perhaps with a bit more regularization) and may obtain even better performance. 
+(perhaps with a bit more regularization) and obtain even better performance.
+This performance can further be improved by additional techniques like cosine 
+decay learning rate schedule, other data augmentation techniques.
 The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present 
 a number of experiments to study how input sizes, optimizers etc. affect the final 
-performance of this model. The authors further present using this model for object 
-detection and image segmentation as well. You are strongly advised to check out 
-the [original paper](https://arxiv.org/abs/2103.14030) as well.
+performance of this model.
+
+The authors further present using this model for object detection, semantic 
+segmentation and instance segmentation as well and report competitive results 
+for these. You are strongly advised to also check out the 
+[original paper](https://arxiv.org/abs/2103.14030).
 
 This example takes inspiration from the official PyTorch and TensorFlow implementations.
 """
