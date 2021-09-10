@@ -129,9 +129,9 @@ class DropPath(layers.Layer):
 
     def call(self, x):
         input_shape = tf.shape(x)
-        batch_num = input_shape[0]
+        batch_size = input_shape[0]
         rank = len(input_shape)
-        shape = (batch_num,) + (1,) * (rank - 1)
+        shape = (batch_size,) + (1,) * (rank - 1)
         random_tensor = (1 - self.drop_prob) + tf.random.uniform(shape, dtype=x.dtype)
         path_mask = tf.floor(random_tensor)
         output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
@@ -301,8 +301,10 @@ class SwinTransformer(layers.Layer):
             self.window_size = min(self.num_patch)
 
     def build(self, input_shape):
-        if self.shift_size > 0:
-            H, W = self.num_patch
+        if self.shift_size == 0:
+            self.attn_mask = None
+        else:
+            height, width = self.num_patch
             h_slices = (
                 slice(0, -self.window_size),
                 slice(-self.window_size, -self.shift_size),
@@ -313,7 +315,7 @@ class SwinTransformer(layers.Layer):
                 slice(-self.window_size, -self.shift_size),
                 slice(-self.shift_size, None),
             )
-            mask_array = np.zeros((1, H, W, 1))
+            mask_array = np.zeros((1, height, width, 1))
             count = 0
             for h in h_slices:
                 for w in w_slices:
@@ -332,8 +334,6 @@ class SwinTransformer(layers.Layer):
             attn_mask = tf.where(attn_mask != 0, -100.0, attn_mask)
             attn_mask = tf.where(attn_mask == 0, 0.0, attn_mask)
             self.attn_mask = tf.Variable(initial_value=attn_mask, trainable=False)
-        else:
-            self.attn_mask = None
 
     def call(self, x):
         height, width = self.num_patch
@@ -428,15 +428,15 @@ class PatchMerging(tf.keras.layers.Layer):
         self.linear_trans = layers.Dense(2 * embed_dim, use_bias=False)
 
     def call(self, x):
-        H, W = self.num_patch
+        height, width = self.num_patch
         _, _, C = x.get_shape().as_list()
-        x = tf.reshape(x, shape=(-1, H, W, C))
+        x = tf.reshape(x, shape=(-1, height, width, C))
         x0 = x[:, 0::2, 0::2, :]
         x1 = x[:, 1::2, 0::2, :]
         x2 = x[:, 0::2, 1::2, :]
         x3 = x[:, 1::2, 1::2, :]
         x = tf.concat((x0, x1, x2, x3), axis=-1)
-        x = tf.reshape(x, shape=(-1, (H // 2) * (W // 2), 4 * C))
+        x = tf.reshape(x, shape=(-1, (height // 2) * (width // 2), 4 * C))
         return self.linear_trans(x)
 
 """
