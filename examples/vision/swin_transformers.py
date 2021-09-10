@@ -73,7 +73,7 @@ for training on ImageNet-1K, keeping quite some of the settings same for this ex
 """
 
 patch_size = (2, 2)  # 2-by-2 sized patches
-drop_rate = 0.03  # Dropout rate
+dropout_rate = 0.03  # Dropout rate
 num_heads = 8  # Attention heads
 embed_dim = 64  # Embedded dimensions
 num_mlp = 256  # MLP nodes
@@ -122,18 +122,18 @@ def window_reverse(windows, window_size, H, W, C):
 
 
 class DropPath(layers.Layer):
-    def __init__(self, drop_prob=None, **kwargs):
+    def __init__(self, dropout_prob=None, **kwargs):
         super(DropPath, self).__init__(**kwargs)
-        self.drop_prob = drop_prob
+        self.dropout_prob = dropout_prob
 
     def call(self, x):
         input_shape = tf.shape(x)
         batch_num = input_shape[0]
         rank = len(input_shape)
         shape = (batch_num,) + (1,) * (rank - 1)
-        random_tensor = (1 - self.drop_prob) + tf.random.uniform(shape, dtype=x.dtype)
+        random_tensor = (1 - self.dropout_prob) + tf.random.uniform(shape, dtype=x.dtype)
         path_mask = tf.floor(random_tensor)
-        output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
+        output = tf.math.divide(x, 1 - self.dropout_prob) * path_mask
         return output
 
 
@@ -145,15 +145,15 @@ We will now create a simple multi-layered perceptron with 2 Dense and 2 Dropout 
 
 
 class Mlp(layers.Layer):
-    def __init__(self, filter_num, drop=0.0, **kwargs):
+    def __init__(self, filter_num, dropout_rate=0.0, **kwargs):
         super(Mlp, self).__init__(**kwargs)
         self.net = keras.Sequential(
             [
                 layers.Dense(filter_num[0]),
                 layers.Activation(keras.activations.gelu),
-                layers.Dropout(drop),
+                layers.Dropout(dropout_rate),
                 layers.Dense(filter_num[1]),
-                layers.Dropout(drop),
+                layers.Dropout(dropout_rate),
             ]
         )
 
@@ -174,14 +174,14 @@ number whereas window based self-attention would be linear and easily scalable.
 
 
 class WindowAttention(layers.Layer):
-    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0, **kwargs):
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs):
         super(WindowAttention, self).__init__(**kwargs)
         self.dim = dim
         self.window_size = window_size
         self.num_heads = num_heads
         self.scale = (dim // num_heads) ** -0.5
         self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
-        self.dropout = layers.Dropout(drop_rate)
+        self.dropout = layers.Dropout(dropout_rate)
         self.proj = layers.Dense(dim)
 
     def build(self, input_shape):
@@ -275,7 +275,7 @@ class SwinTransformer(layers.Layer):
         shift_size=0,
         num_mlp=1024,
         qkv_bias=True,
-        drop_rate=0.0,
+        dropout_rate=0.0,
         **kwargs
     ):
         super(SwinTransformer, self).__init__(**kwargs)
@@ -293,11 +293,11 @@ class SwinTransformer(layers.Layer):
             window_size=(self.window_size, self.window_size),
             num_heads=num_heads,
             qkv_bias=qkv_bias,
-            drop_rate=drop_rate,
+            dropout_rate=dropout_rate,
         )
-        self.drop_path = DropPath(drop_rate)
+        self.drop_path = DropPath(dropout_rate)
         self.norm2 = layers.LayerNormalization(epsilon=1e-5)
-        self.mlp = Mlp([num_mlp, dim], drop=drop_rate)
+        self.mlp = Mlp([num_mlp, dim], dropout_rate=dropout_rate)
         if min(self.num_patch) < self.window_size:
             self.shift_size = 0
             self.window_size = min(self.num_patch)
@@ -458,7 +458,7 @@ x = SwinTransformer(
     shift_size=0,
     num_mlp=num_mlp,
     qkv_bias=qkv_bias,
-    drop_rate=drop_rate,
+    dropout_rate=dropout_rate,
 )(x)
 x = SwinTransformer(
     dim=embed_dim,
@@ -468,7 +468,7 @@ x = SwinTransformer(
     shift_size=shift_size,
     num_mlp=num_mlp,
     qkv_bias=qkv_bias,
-    drop_rate=drop_rate,
+    dropout_rate=dropout_rate,
 )(x)
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
 x = layers.pooling.GlobalAveragePooling1D()(x)
