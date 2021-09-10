@@ -36,6 +36,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.python.keras.layers.pooling import GlobalAveragePooling1D
 
 """
 ## Prepare the data
@@ -73,7 +74,7 @@ for training on ImageNet-1K, keeping quite some of the settings same for this ex
 """
 
 patch_size = (2, 2)  # 2-by-2 sized patches
-dropout_rate = 0.03  # Dropout rate
+drop_rate = 0.03  # Dropout rate
 num_heads = 8  # Attention heads
 embed_dim = 64  # Embedded dimensions
 num_mlp = 256  # MLP nodes
@@ -122,20 +123,19 @@ def window_reverse(windows, window_size, H, W, C):
 
 
 class DropPath(layers.Layer):
-    def __init__(self, dropout_prob=None, **kwargs):
+    def __init__(self, drop_prob=None, **kwargs):
         super(DropPath, self).__init__(**kwargs)
-        self.dropout_prob = dropout_prob
+        self.drop_prob = drop_prob
 
     def call(self, x):
         input_shape = tf.shape(x)
         batch_num = input_shape[0]
         rank = len(input_shape)
         shape = (batch_num,) + (1,) * (rank - 1)
-        random_tensor = (1 - self.dropout_prob) + tf.random.uniform(shape, dtype=x.dtype)
+        random_tensor = (1 - self.drop_prob) + tf.random.uniform(shape, dtype=x.dtype)
         path_mask = tf.floor(random_tensor)
-        output = tf.math.divide(x, 1 - self.dropout_prob) * path_mask
+        output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
         return output
-
 
 """
 ## MLP layer
@@ -145,15 +145,15 @@ We will now create a simple multi-layered perceptron with 2 Dense and 2 Dropout 
 
 
 class Mlp(layers.Layer):
-    def __init__(self, filter_num, dropout_rate=0.0, **kwargs):
+    def __init__(self, filter_num, drop=0.0, **kwargs):
         super(Mlp, self).__init__(**kwargs)
         self.net = keras.Sequential(
             [
                 layers.Dense(filter_num[0]),
                 layers.Activation(keras.activations.gelu),
-                layers.Dropout(dropout_rate),
+                layers.Dropout(drop),
                 layers.Dense(filter_num[1]),
-                layers.Dropout(dropout_rate),
+                layers.Dropout(drop),
             ]
         )
 
@@ -173,15 +173,15 @@ number whereas window based self-attention would be linear and easily scalable.
 """
 
 
-class WindowAttention(layers.Layer):
-    def __init__(self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs):
-        super(WindowAttention, self).__init__(**kwargs)
+class WindowAttention(tf.keras.layers.Layer):
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, drop_rate=0.0):
+        super(WindowAttention, self).__init__()
         self.dim = dim
         self.window_size = window_size
         self.num_heads = num_heads
         self.scale = (dim // num_heads) ** -0.5
         self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
-        self.dropout = layers.Dropout(dropout_rate)
+        self.dropout = layers.Dropout(drop_rate)
         self.proj = layers.Dense(dim)
 
     def build(self, input_shape):
@@ -252,7 +252,6 @@ class WindowAttention(layers.Layer):
         x_qkv = self.dropout(x_qkv)
         return x_qkv
 
-
 """
 ## The final Swin Transformer model
 
@@ -264,7 +263,6 @@ layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying
 connection after each of these layers.
 """
 
-
 class SwinTransformer(layers.Layer):
     def __init__(
         self,
@@ -275,10 +273,9 @@ class SwinTransformer(layers.Layer):
         shift_size=0,
         num_mlp=1024,
         qkv_bias=True,
-        dropout_rate=0.0,
-        **kwargs
+        drop_rate=0.0,
     ):
-        super(SwinTransformer, self).__init__(**kwargs)
+        super(SwinTransformer, self).__init__()
 
         self.dim = dim  # number of input dimensions
         self.num_patch = num_patch  # number of embedded patches
@@ -293,11 +290,11 @@ class SwinTransformer(layers.Layer):
             window_size=(self.window_size, self.window_size),
             num_heads=num_heads,
             qkv_bias=qkv_bias,
-            dropout_rate=dropout_rate,
+            drop_rate=drop_rate,
         )
-        self.drop_path = DropPath(dropout_rate)
+        self.drop_path = DropPath(drop_rate)
         self.norm2 = layers.LayerNormalization(epsilon=1e-5)
-        self.mlp = Mlp([num_mlp, dim], dropout_rate=dropout_rate)
+        self.mlp = Mlp([num_mlp, dim], drop=drop_rate)
         if min(self.num_patch) < self.window_size:
             self.shift_size = 0
             self.window_size = min(self.num_patch)
@@ -339,6 +336,7 @@ class SwinTransformer(layers.Layer):
 
     def call(self, x):
         H, W = self.num_patch
+        print(x.get_shape())
         B, L, C = x.get_shape().as_list()
         x_skip = x
         x = self.norm1(x)
@@ -378,6 +376,7 @@ class SwinTransformer(layers.Layer):
         return x
 
 
+
 """
 ## Model training and evaluation
 """
@@ -390,8 +389,8 @@ images on top of which we will later use the Swin Transfromer class we built.
 
 
 class PatchExtract(layers.Layer):
-    def __init__(self, patch_size, **kwargs):
-        super(PatchExtract, self).__init__(**kwargs)
+    def __init__(self, patch_size):
+        super(PatchExtract, self).__init__()
         self.patch_size_x = patch_size[0]
         self.patch_size_y = patch_size[0]
 
@@ -410,8 +409,8 @@ class PatchExtract(layers.Layer):
 
 
 class PatchEmbedding(layers.Layer):
-    def __init__(self, num_patch, embed_dim, **kwargs):
-        super(PatchEmbedding, self).__init__(**kwargs)
+    def __init__(self, num_patch, embed_dim):
+        super(PatchEmbedding, self).__init__()
         self.num_patch = num_patch
         self.proj = layers.Dense(embed_dim)
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
@@ -421,9 +420,9 @@ class PatchEmbedding(layers.Layer):
         return self.proj(patch) + self.pos_embed(pos)
 
 
-class PatchMerging(layers.Layer):
-    def __init__(self, num_patch, embed_dim, **kwargs):
-        super(PatchMerging, self).__init__(**kwargs)
+class PatchMerging(tf.keras.layers.Layer):
+    def __init__(self, num_patch, embed_dim):
+        super(PatchMerging, self).__init__()
         self.num_patch = num_patch
         self.embed_dim = embed_dim
         self.linear_trans = layers.Dense(2 * embed_dim, use_bias=False)
@@ -440,7 +439,6 @@ class PatchMerging(layers.Layer):
         x = tf.reshape(x, shape=(-1, (H // 2) * (W // 2), 4 * C))
         return self.linear_trans(x)
 
-
 """
 ### Build the model
 
@@ -450,6 +448,8 @@ We will now put together the Swin Transformer model.
 input = layers.Input(input_shape)
 x = layers.RandomCrop(image_dimension, image_dimension)(input)
 x = layers.RandomFlip("horizontal")(x)
+x = PatchExtract(patch_size)(x)
+x = PatchEmbedding(num_patch_x * num_patch_y, embed_dim)(x)
 x = SwinTransformer(
     dim=embed_dim,
     num_patch=(num_patch_x, num_patch_y),
@@ -458,7 +458,7 @@ x = SwinTransformer(
     shift_size=0,
     num_mlp=num_mlp,
     qkv_bias=qkv_bias,
-    dropout_rate=dropout_rate,
+    drop_rate=drop_rate,
 )(x)
 x = SwinTransformer(
     dim=embed_dim,
@@ -468,10 +468,10 @@ x = SwinTransformer(
     shift_size=shift_size,
     num_mlp=num_mlp,
     qkv_bias=qkv_bias,
-    dropout_rate=dropout_rate,
+    drop_rate=drop_rate,
 )(x)
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
-x = layers.pooling.GlobalAveragePooling1D()(x)
+x = GlobalAveragePooling1D()(x)
 output = layers.Dense(num_classes, activation="softmax")(x)
 
 """
