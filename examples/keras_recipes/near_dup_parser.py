@@ -78,14 +78,13 @@ labels = np.array(labels)
 """
 In this section, we load our image classification model that was trained on the
 `tf_flowers` dataset. 85% of the total images were used to build the training set. For
-more details on the training, you check out [this
-notebook](https://github.com/sayakpaul/near-dup-parser/blob/main/bit-supervised-training.ipynb).
-notebook](https://github.com/sayakpaul/near-dup-parser/blob/main/bit-supervised-training.ipynb).
+more details on the training, you check out
+[this notebook](https://github.com/sayakpaul/near-dup-parser/blob/main/bit-supervised-training.ipynb).
 
-The underlying model is a BiT-ResNet (proposed in [Big Transfer (BiT): General Visual
-Representation Learning](https://arxiv.org/abs/1912.11370)). BiT-ResNet family of models
-are known to have excellent transfer performance across a wide variety of different
-downstream tasks. 
+The underlying model is a BiT-ResNet (proposed in
+[Big Transfer (BiT): General Visual Representation Learning](https://arxiv.org/abs/1912.11370)).
+BiT-ResNet family of models are known to provide excellent transfer performance across
+a wide variety of different downstream tasks. 
 """
 
 """shell
