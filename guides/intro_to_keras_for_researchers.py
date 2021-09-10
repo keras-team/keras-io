@@ -705,10 +705,63 @@ In your research workflows, you may often find yourself mix-and-matching OO mode
 Functional models.
 
 Note that the `Model` class also features built-in training & evaluation loops
-(`fit()` and `evaluate()`). You can always subclass the `Model` class
-(it works exactly like subclassing `Layer`) if you want to leverage these loops
-for your OO models.
+(`fit()` and `evaluate()`). You can implement the model for MNIST dataset above
+with the following code.
 """
+
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = tf.keras.Model(inputs, outputs)
+
+# Specifying the loss, optimizer, and metrics with `compile()`.
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()])
+
+# Train the model with the dataset for 2 epochs.
+model.fit(dataset, epochs=2)
+model.evaluate(dataset)
+
+"""
+You can always subclass the `Model` class (it works exactly like subclassing
+`Layer`) if you want to leverage these loops for your OO models.  You can
+override `train_step` to customize what happens in the training loop. The
+`train_step` function is called with every batch of training data. The `fit`
+function will compile the training code with `tf.function` by default to make
+it faster.
+"""
+
+class CustomModel(keras.Model):
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            loss = self.compiled_loss(y, y_pred,
+                                      regularization_losses=self.losses)
+        gradients = tape.gradient(loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_weights))
+        # Update metrics (includes the metric that tracks the loss)
+        self.compiled_metrics.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
+
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = CustomModel(inputs, outputs)
+
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()])
+
+model.fit(dataset, epochs=2)
 
 """
 ## End-to-end experiment example 1: variational autoencoders.
