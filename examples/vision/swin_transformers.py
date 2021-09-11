@@ -389,8 +389,8 @@ images on top of which we will later use the Swin Transfromer class we built.
 
 
 class PatchExtract(layers.Layer):
-    def __init__(self, patch_size):
-        super(PatchExtract, self).__init__()
+    def __init__(self, patch_size, **kwargs):
+        super(PatchExtract, self).__init__(**kwargs)
         self.patch_size_x = patch_size[0]
         self.patch_size_y = patch_size[0]
 
