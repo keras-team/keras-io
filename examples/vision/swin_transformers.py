@@ -1,24 +1,24 @@
 """
-Title: Image Classification with Swin Transformers
+Title: Image classification with Swin Transformers
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/08
 Last modified: 2021/09/08
-Description: Image Classification using Swin Transformers, a general-purpose backbone for computer vision.
+Description: Image classification using Swin Transformers, a general-purpose backbone for computer vision.
 """
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
-paper by Liu et al. for image classification, and demonstrates it on the 
+by Liu et al. for image classification, and demonstrates it on the 
 [CIFAR-100 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 
-Swin Transformer (**S**hifted **Wi**ndow) capably serves as a general-purpose backbone 
+Swin Transformer (**S**hifted **Win**dow Transformer) can serve as a general-purpose backbone 
 for computer vision. Swin Transformer is a hierarchical Transformer whose 
-representation is computed with shifted windows. The shifted windowing scheme 
+representations are computed with _shifted windows_. The shifted window scheme 
 brings greater efficiency by limiting self-attention computation to 
-non-overlapping local windows while also allowing for cross-window connection. 
-This architecture also has the flexibility to model at various scales and has 
-linear computational complexity with respect to image size.
+non-overlapping local windows while also allowing for cross-window connections. 
+This architecture has the flexibility to model information at various scales and has 
+a linear computational complexity with respect to image size.
 
-This example requires TensorFlow 2.5 or higheras well as TensorFlow Addons, 
+This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons, 
 which can be installed using the following commands:
 """
 
@@ -40,9 +40,8 @@ from tensorflow.keras import layers
 """
 ## Prepare the data
 
-We will now load the CIFAR-100 dataset through 
-[tf.keras.datasets](https://www.tensorflow.org/api_docs/python/tf/keras/datasets)
-, normalize the images and convert label integers to matrices.
+We load the CIFAR-100 dataset through `tf.keras.datasets`,
+normalize the images, and convert the integer labels to one-hot encoded vectors.
 """
 
 num_classes = 100
@@ -67,20 +66,21 @@ plt.show()
 """
 ## Configure the hyperparameters
 
-In order to use each pixel as an individual input, you can set `patch_size` to (1, 1).
-We take inspirration from the original paper where they share the experimental settings
-for training on ImageNet-1K, keeping quite some of the settings same for this example.
+A key parameter to pick is the `patch_size`, the size of the input patches.
+In order to use each pixel as an individual input, you can set `patch_size` to `(1, 1)`.
+Below, we take inspiration from the original paper settings
+for training on ImageNet-1K, keeping most of the original settings for this example.
 """
 
 patch_size = (2, 2)  # 2-by-2 sized patches
 dropout_rate = 0.03  # Dropout rate
 num_heads = 8  # Attention heads
-embed_dim = 64  # Embedded dimensions
-num_mlp = 256  # MLP nodes
+embed_dim = 64  # Embedding dimension
+num_mlp = 256  # MLP layer size
 qkv_bias = True  # Convert embedded patches to query, key, and values with a learnable additive value
 window_size = 2  # Size of attention window
-shift_size = 1  # Size of shifting
-image_dimension = 32
+shift_size = 1  # Size of shifting window
+image_dimension = 32  # Initial image size
 
 num_patch_x = input_shape[0] // patch_size[0]
 num_patch_y = input_shape[1] // patch_size[1]
@@ -93,10 +93,10 @@ weight_decay = 0.0001
 label_smoothing = 0.1
 
 """
-## Helper Functions
+## Helper functions
 
-We will now create two helper functions which can help us get a sequence of 
-patches from the image, allow us to merge patches to spatial frames and dropout.
+We create two helper functions to help us get a sequence of 
+patches from the image, merge patches, and apply dropout.
 """
 
 
@@ -141,18 +141,18 @@ class DropPath(layers.Layer):
 
 
 """
-## Window based multi-head self attention
+## Window based multi-head self-attention
 
-Usually Transformers conduct global self attention, where the relationships between 
+Usually Transformers perform global self-attention, where the relationships between 
 a token and all other tokens are computed. The global computation leads to quadratic 
-complexity with respect to the number of tokens. Here as the [original paper](https://arxiv.org/abs/2103.14030) 
-suggests we compute self-attention within local windows, in a non-overlapping manner. 
-Global self attention introduces quadratic computational complexity to the patch 
-number whereas window based self-attention would be linear and easily scalable.
+complexity with respect to the number of tokens. Here, as the [original paper](https://arxiv.org/abs/2103.14030) 
+suggests, we compute self-attention within local windows, in a non-overlapping manner. 
+Global self-attention leads to quadratic computational complexity in the number of patches,
+whereas window-based self-attention leads to linear complexity and is easily scalable.
 """
 
 
-class WindowAttention(tf.keras.layers.Layer):
+class WindowAttention(layers.Layer):
     def __init__(
         self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs
     ):
@@ -238,16 +238,16 @@ class WindowAttention(tf.keras.layers.Layer):
 
 
 """
-## The final Swin Transformer model
+## The complete Swin Transformer model
 
-We will now put together a Swin Transformer by replacing the standard multi-head 
-self attention (MSA) in a Transformer with shifted windows. As suggested in the 
-original paper we will create a model comprising of a shifted window based MSA
+Finally, we put together the complete Swin Transformer by replacing the standard multi-head 
+attention (MHA) with shifted windows attention. As suggested in the 
+original paper, we create a model comprising of a shifted window-based MHA
 layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying 
 `LayerNormalization` before each MSA layer and each MLP, and a residual 
 connection after each of these layers.
 
-Notice that we only create a simple multi-layered perceptron with 2 Dense and 
+Notice that we only create a simple MLP with 2 Dense and 
 2 Dropout layers. Often you will see models using ResNet-50 as the MLP which is 
 quite standard in the literature. However in this paper the authors use a 
 2-layer MLP with GELU nonlinearity in between.
@@ -383,10 +383,10 @@ class SwinTransformer(layers.Layer):
 ## Model training and evaluation
 """
 """"
-### Extract and Embed patches
+### Extract and embed patches
 
-We will first create 3 layers to help us extract, embed and merge patches from the 
-images on top of which we will later use the Swin Transfromer class we built.
+We first create 3 layers to help us extract, embed and merge patches from the 
+images on top of which we will later use the Swin Transformer class we built.
 """
 
 
@@ -445,7 +445,7 @@ class PatchMerging(tf.keras.layers.Layer):
 """
 ### Build the model
 
-We will now put together the Swin Transformer model.
+We put together the Swin Transformer model.
 """
 
 input = layers.Input(input_shape)
@@ -480,8 +480,9 @@ output = layers.Dense(num_classes, activation="softmax")(x)
 """
 ### Train on CIFAR-100
 
-We will now finally train the model on CIFAR-100. We will only train the model 
-here for 40 epochs to keep the training time short in this example.
+We train the model on CIFAR-100. Here, we only train the model 
+for 40 epochs to keep the training time short in this example.
+In practice, you should train for 150 epochs to reach convergence.
 """
 
 model = keras.Model(input, output)
@@ -505,7 +506,7 @@ history = model.fit(
 )
 
 """
-Let's now visualize the training progress of the model.
+Let's visualize the training progress of the model.
 """
 
 plt.plot(history.history["loss"], label="train_loss")
@@ -518,7 +519,7 @@ plt.grid()
 plt.show()
 
 """
-Let's see final results of the training on CIFAR-100
+Let's display the final results of the training on CIFAR-100.
 """
 
 loss, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
@@ -532,9 +533,9 @@ us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfi
 as well as seen in above graph. This means we can train this network for longer 
 (perhaps with a bit more regularization) and obtain even better performance.
 This performance can further be improved by additional techniques like cosine 
-decay learning rate schedule, other data augmentation techniques. While experimenting
-, I tried training the model for 150 epochs with a slightly higher dropout and greater 
-embedding dimensions which push the performance to ~72% test accuracy on CIFAR-100
+decay learning rate schedule, other data augmentation techniques. While experimenting,
+I tried training the model for 150 epochs with a slightly higher dropout and greater 
+embedding dimensions which pushes the performance to ~72% test accuracy on CIFAR-100
 as you can see in the screenshot.
 
 ![Results of training for longer](https://i.imgur.com/9vnQesZ.png)
