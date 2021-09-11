@@ -36,7 +36,6 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.python.keras.layers.pooling import GlobalAveragePooling1D
 
 """
 ## Prepare the data
@@ -484,7 +483,7 @@ x = SwinTransformer(
     dropout_rate=dropout_rate,
 )(x)
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
-x = GlobalAveragePooling1D()(x)
+x = layers.pooling.GlobalAveragePooling1D()(x)
 output = layers.Dense(num_classes, activation="softmax")(x)
 
 """
