@@ -409,8 +409,8 @@ class PatchExtract(layers.Layer):
 
 
 class PatchEmbedding(layers.Layer):
-    def __init__(self, num_patch, embed_dim):
-        super(PatchEmbedding, self).__init__()
+    def __init__(self, num_patch, embed_dim, **kwargs):
+        super(PatchEmbedding, self).__init__(**kwargs)
         self.num_patch = num_patch
         self.proj = layers.Dense(embed_dim)
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
