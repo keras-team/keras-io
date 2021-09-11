@@ -3,7 +3,7 @@ Title: Near duplicate image parsing
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/09/10
 Last modified: 2021/09/10
-Description: Building a near duplicate image parser using image classification, LSH, and more.
+Description: Building a near duplicate image parser using image classifiers, LSH, and more.
 """
 """
 ## Introduction
@@ -17,7 +17,7 @@ of a pre-trained image classifier. We will also look into optimizing the perform
 our parser given a commodity GPU-based environment. These kinds of parsers are also known
 as _near duplicate (or near-dup) image detectors_.
 
-There are other examples in [keras.io/examples/vision](https://keras.io/examples/vision)
+There are other examples under [keras.io/examples/vision](https://keras.io/examples/vision)
 that are worth checking out in this regard:
 
 * [Metric learning for image similarity search](https://keras.io/examples/vision/metric_learning)
@@ -88,7 +88,7 @@ a wide variety of different downstream tasks.
 """
 
 """shell
-!gdown --id 19VxuBZyn9BUedwRCZRsXQ0-1HFbF7x3u
+!wget -q https://git.io/JuV8G
 !tar xf flower_model_bit_0.96875.gz
 """
 
@@ -301,12 +301,16 @@ we will be benchmarking performance between optimized and unoptimized embedding 
 will also warm up our GPU to avoid any unfair comparison.
 """
 
-"""
-Here is a simple utility to warm up a GPU.
+# Utility to warm up the GPU.
 def warmup():
     dummy_sample = tf.ones((1, IMAGE_SIZE, IMAGE_SIZE, 3))
     for _ in range(100):
         _ = embedding_model.predict(dummy_sample)
+
+
+"""
+Now we can first do the GPU wamr-up and proceed to build the master LSH table with
+`embedding_model`.
 """
 
 warmup()
@@ -493,6 +497,8 @@ and it helps set the right recall required for your application.
 
 
 def benchmark(lsh_class):
+    warmup()
+
     start_time = time.time()
     for _ in range(1000):
         image = np.ones((1, 224, 224, 3)).astype("float32")
@@ -506,7 +512,7 @@ benchmark(lsh_builder)
 benchmark(lsh_builder_trt)
 
 """
-We can immediately notice a stark difference in betwee the query performance of the two
+We can immediately notice a stark difference in between the query performance of the two
 models. 
 """
 
@@ -522,8 +528,8 @@ frameworks that cater to different hardware platforms:
 * [Apache TVM](https://tvm.apache.org/), compiler for machine learning models covering
 various platforms.
 
-FInally, here are a few resources you might want to check out in case you want to know
-more about vector similary search in general:
+Here are a few resources you might want to check out in case you want to learn more
+about applications based on vector similary search in general:
 
 * [ANN Benchmarks](http://ann-benchmarks.com/)
 * [Accelerating Large-Scale Inference with Anisotropic Vector Quantization(ScaNN)](https://arxiv.org/abs/1908.10396)
