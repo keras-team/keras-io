@@ -472,7 +472,7 @@ x = SwinTransformer(
     dropout_rate=dropout_rate,
 )(x)
 x = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)(x)
-x = layers.pooling.GlobalAveragePooling1D()(x)
+x = layers.GlobalAveragePooling1D()(x)
 output = layers.Dense(num_classes, activation="softmax")(x)
 
 """
