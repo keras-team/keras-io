@@ -1,8 +1,8 @@
 """
 Title: Graph Attention Networks for node classification
 Author: [akensert](https://github.com/akensert)
-Date created: 2021/09/08
-Last modified: 2021/09/08
+Date created: 2021/09/11
+Last modified: 2021/09/11
 Description: Graph Attention Networks (GAT) for node classification.
 """
 """
@@ -26,21 +26,6 @@ scientific papers based on the papers they cite (see
 For more information on GAT see the original paper
 [Graph Attention Networks](https://arxiv.org/abs/1710.10903) and
 [dgl's Graph Attention Networks](https://docs.dgl.ai/en/0.4.x/tutorials/models/1_gnn/9_gat.html).
-"""
-
-"""
-### Install dependencies
-
-(For easier data preparation)
-```
-pip -q install pandas
-```
-
-(For visualization of models)
-```
-pip -q install pydot
-sudo apt-get -qq install graphviz
-```
 """
 
 """
@@ -102,32 +87,20 @@ citations["source"] = citations["source"].apply(lambda name: paper_idx[name])
 citations["target"] = citations["target"].apply(lambda name: paper_idx[name])
 papers["subject"] = papers["subject"].apply(lambda value: class_idx[value])
 
-"""
-"""
+print(citations)
 
-citations
-
-"""
-"""
-
-papers
+print(papers)
 
 """
 ### Split dataset
-
-Notice, splits differ somewhat from that of
-[Node Classification with Graph Neural Networks](https://keras.io/examples/graph/gnn_citations/).
 """
 
 # Obtain random indices
 random_indices = np.random.permutation(range(papers.shape[0]))
 
-# train data: 50%
-train_data = papers.iloc[random_indices[:1354]]
-# valid data: 10%
-valid_data = papers.iloc[random_indices[1354:1625]]
-# test data:  40%
-test_data = papers.iloc[random_indices[1625:]]
+# 50/50 split
+train_data = papers.iloc[random_indices[: len(random_indices) // 2]]
+test_data = papers.iloc[random_indices[len(random_indices) // 2 :]]
 
 """
 ### Prepare graph
@@ -136,25 +109,19 @@ test_data = papers.iloc[random_indices[1625:]]
 # Obtain paper indices which will be used to gather node states
 # from the graph later on when training the model
 train_indices = train_data["paper_id"].to_numpy()
-valid_indices = valid_data["paper_id"].to_numpy()
 test_indices = test_data["paper_id"].to_numpy()
 
 # Obtain ground truth labels corresponding to each paper_id
 train_labels = train_data["subject"].to_numpy()
-valid_labels = valid_data["subject"].to_numpy()
 test_labels = test_data["subject"].to_numpy()
 
 # Define graph, namely an adjacency tensor and a node feature tensor
 adjacency = tf.convert_to_tensor(citations[["source", "target"]])
 node_features = tf.convert_to_tensor(papers.sort_values("paper_id").iloc[:, 1:-1])
 
-# Define global constants, which will be used for building the model
-NODE_DIM = node_features.shape[1]
-OUTPUT_DIM = len(class_values)
-
 # Print shapes of the graph
-print("Adjacency shape:", adjacency.shape)
-print("Nodes shape:\t", node_features.shape)
+print("Adjacency shape:\t", adjacency.shape)
+print("Node features shape:", node_features.shape)
 
 """
 ## Model
@@ -168,21 +135,6 @@ to aggregate information from neighboring nodes. In other words, instead of simp
 averaging/summing node states from neighbors to the source node, GAT first applies
 normalized attention scores to each neighbor node state and then sums.
 """
-
-"""
-### Hyper-parameters
-"""
-
-# GAT
-HIDDEN_UNITS = 100
-NUM_HEADS = 8
-NUM_LAYERS = 3
-
-NUM_ITERATIONS = 141
-
-# SGD
-LEARNING_RATE = 3e-1
-MOMENTUM = 0.9
 
 """
 ### (Multi-head) graph attention layer
@@ -200,7 +152,7 @@ does the following:
 2. Computes pair-wise attention scores `a^{l}^{T}(z^{l}_{i}||z^{l}_{j})` for all `j`,
 resulting in `e_{ij}` (for all `j`). `||` denotes a concatenation, `_{i}` corresponds to
 the source node, and `_{j}` corresponds to a given 1-hop neighbor node.
-3. Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores
+3. Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores to the source node
 (`sum_{k}{e_{norm}_{ik}}`) will add up to 1. (Notice, in this tutorial, *incoming edges*
 are defined as edges pointing from the *source paper* (the paper *citing*) to the *target
 paper* (the paper *cited*), which is counter inuitive. However, this seems to work better
@@ -303,91 +255,128 @@ class MultiHeadGraphAttention(layers.Layer):
         return tf.nn.relu(outputs)
 
 
-def GraphAttentionNetwork(hidden_units, num_heads, num_layers):
-
-    node_features = layers.Input((NODE_DIM), dtype="float32")
-    adjacency = layers.Input((2), dtype="int32")
-
-    x = layers.Dense(hidden_units * num_heads, activation="relu")(node_features)
-
-    for _ in range(num_layers):
-        x_updated = MultiHeadGraphAttention(hidden_units, num_heads)([x, adjacency])
-        x = layers.Add()([x_updated, x])
-
-    out = layers.Dense(OUTPUT_DIM)(x)
-
-    model = keras.Model(inputs=[node_features, adjacency], outputs=[out])
-
-    return model
-
-
-# Build graph attention network model
-gat_model = GraphAttentionNetwork(HIDDEN_UNITS, NUM_HEADS, NUM_LAYERS)
-
-# Visualize built model
-keras.utils.plot_model(gat_model, show_shapes=True, show_layer_names=False)
-
 """
-### Define custom `train_step`
+### Define model with custom `train_step`, `test_step` and `predict_step`
 """
 
 
-def get_train_step_fn(model, loss_fn, optimizer):
-    @tf.function
-    def train_step(inputs, labels, indices):
+class GraphAttentionNetwork(keras.Model):
+    def __init__(
+        self,
+        node_features,
+        adjacency,
+        hidden_units,
+        num_heads,
+        num_layers,
+        output_dim,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.node_features = node_features
+        self.adjacency = adjacency
+        self.preprocess = layers.Dense(hidden_units * num_heads, activation="relu")
+        self.attention_layers = [
+            MultiHeadGraphAttention(hidden_units, num_heads) for _ in range(num_layers)
+        ]
+        self.output_layer = layers.Dense(output_dim)
+
+    def call(self, inputs):
+        node_features, adjacency = inputs
+        x = self.preprocess(node_features)
+        for attention_layer in self.attention_layers:
+            x = attention_layer([x, adjacency]) + x
+        outputs = self.output_layer(x)
+        return outputs
+
+    def train_step(self, data):
+
+        indices, labels = data
+
         with tf.GradientTape() as tape:
-            outputs = model(inputs)
-            loss = loss_fn(labels, tf.gather(outputs, indices))
-        grads = tape.gradient(loss, model.trainable_weights)
-        optimizer.apply_gradients(zip(grads, model.trainable_weights))
-        return loss, outputs
 
-    return train_step
+            outputs = self([self.node_features, self.adjacency])
+
+            loss = self.compiled_loss(labels, tf.gather(outputs, indices))
+
+        grads = tape.gradient(loss, self.trainable_weights)
+
+        optimizer.apply_gradients(zip(grads, self.trainable_weights))
+
+        self.compiled_metrics.update_state(labels, tf.gather(outputs, indices))
+
+        return {m.name: m.result() for m in self.metrics}
+
+    def predict_step(self, data):
+
+        indices = data
+
+        outputs = self([self.node_features, self.adjacency])
+
+        return tf.nn.softmax(tf.gather(outputs, indices))
+
+    def test_step(self, data):
+
+        indices, labels = data
+
+        outputs = self([self.node_features, self.adjacency])
+
+        loss = self.compiled_loss(labels, tf.gather(outputs, indices))
+
+        self.compiled_metrics.update_state(labels, tf.gather(outputs, indices))
+
+        return {m.name: m.result() for m in self.metrics}
 
 
 """
 ### Train and predict
 """
 
+# Define hyper-parameters
+HIDDEN_UNITS = 100
+NUM_HEADS = 8
+NUM_LAYERS = 3
+OUTPUT_DIM = len(class_values)
+
+NUM_EPOCHS = 100
+BATCH_SIZE = 256
+VALIDATION_SPLIT = 0.1
+LEARNING_RATE = 3e-1
+MOMENTUM = 0.9
+
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 optimizer = keras.optimizers.SGD(LEARNING_RATE, momentum=MOMENTUM)
-accuracy_fn = lambda y_true, y_pred: tf.reduce_mean(
-    keras.metrics.sparse_categorical_accuracy(y_true, y_pred)
+accuracy_fn = keras.metrics.SparseCategoricalAccuracy(name="acc")
+early_stopping = keras.callbacks.EarlyStopping(
+    monitor="val_acc", min_delta=0, patience=20, restore_best_weights=True
 )
 
-train_step = get_train_step_fn(gat_model, loss_fn, optimizer)
+# Build model
+gat_model = GraphAttentionNetwork(
+    node_features, adjacency, HIDDEN_UNITS, NUM_HEADS, NUM_LAYERS, OUTPUT_DIM
+)
 
-best_accuracy = 0.0
-for i in range(NUM_ITERATIONS):
-
-    loss, preds = train_step(
-        inputs=(node_features, adjacency), labels=train_labels, indices=train_indices
-    )
-
-    # Obtain valid accuracy, and if best so far, obtain test accuracy
-    # and test probabilities (for later use)
-    valid_preds = tf.gather(preds, valid_indices)
-    valid_accuracy = accuracy_fn(valid_labels, valid_preds)
-    if valid_accuracy > best_accuracy:
-        best_accuracy = valid_accuracy
-        test_preds = tf.gather(preds, test_indices)
-        test_accuracy = accuracy_fn(test_labels, test_preds)
-        test_probs = tf.nn.softmax(test_preds).numpy()
-
-    if i % 10 == 0:
-        print(
-            f"Iteration {i:03d} : "
-            + f"Loss {loss:.3f} : "
-            + f"Valid Accuracy {valid_accuracy*100:.1f}%"
-        )
+# Compile model
+gat_model.compile(loss=loss_fn, optimizer=optimizer, metrics=[accuracy_fn])
 
 
-print("--" * 26)
-print(f"\t\t\t  Test Accuracy {test_accuracy*100:.1f}%")
+gat_model.fit(
+    x=train_indices,
+    y=train_labels,
+    validation_split=VALIDATION_SPLIT,
+    batch_size=BATCH_SIZE,
+    epochs=NUM_EPOCHS,
+    callbacks=[early_stopping],
+    verbose=2,
+)
+
+_, test_accuracy = gat_model.evaluate(x=test_indices, y=test_labels, verbose=0)
+
+print("--" * 38 + f"\nTest Accuracy {test_accuracy*100:.1f}%")
 
 """
-### Inspect predictions
+### Predict (probabilities)
 """
+test_probs = gat_model.predict(x=test_indices)
 
 mapping = {v: k for (k, v) in class_idx.items()}
 
@@ -398,5 +387,12 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
     print("---" * 20)
 
 """
-**Not too bad!**
+## Conclusions
+
+Results look OK! The GAT model seems to correctly predict the subjects of the papers,
+based on what they cite, 80-85% of the time. Further improvements could possible be
+made in finetuning the hyperparameters of the GAT. For instance, the number of layers,
+hidden units, optimizer/learning rate, dropout, or to modify the preprocessing step.
+We could also try to implement *self-loops*
+(i.e., paper X cites paper X) and/or make the graph *undirected*.
 """
