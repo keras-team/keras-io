@@ -139,6 +139,7 @@ class DropPath(layers.Layer):
         output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
         return output
 
+
 """
 ## Window based multi-head self attention
 
@@ -251,6 +252,7 @@ Notice that we only create a simple multi-layered perceptron with 2 Dense and
 quite standard in the literature. However in this paper the authors use a 
 2-layer MLP with GELU nonlinearity in between.
 """
+
 
 class SwinTransformer(layers.Layer):
     def __init__(
@@ -478,7 +480,8 @@ output = layers.Dense(num_classes, activation="softmax")(x)
 """
 ### Train on CIFAR-100
 
-We will now finally train the model on CIFAR-100.
+We will now finally train the model on CIFAR-100. We will only train the model 
+here for 40 epochs to keep the training time short in this example.
 """
 
 model = keras.Model(input, output)
@@ -529,13 +532,17 @@ us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfi
 as well as seen in above graph. This means we can train this network for longer 
 (perhaps with a bit more regularization) and obtain even better performance.
 This performance can further be improved by additional techniques like cosine 
-decay learning rate schedule, other data augmentation techniques.
+decay learning rate schedule, other data augmentation techniques. While experimenting
+, I tried training the model for 150 epochs with a slightly higher dropout and greater 
+embedding dimensions which push the performance to ~72% test accuracy on CIFAR-100
+as you can see in the screenshot.
+
+![Results of training for longer](https://i.imgur.com/9vnQesZ.png)
+
 The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present 
 a number of experiments to study how input sizes, optimizers etc. affect the final 
-performance of this model.
-
-The authors further present using this model for object detection, semantic 
-segmentation and instance segmentation as well and report competitive results 
+performance of this model. The authors further present using this model for object detection, 
+semantic segmentation and instance segmentation as well and report competitive results 
 for these. You are strongly advised to also check out the 
 [original paper](https://arxiv.org/abs/2103.14030).
 
