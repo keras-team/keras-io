@@ -390,9 +390,9 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
 ## Conclusions
 
 Results look OK! The GAT model seems to correctly predict the subjects of the papers,
-based on what they cite, 80-85% of the time. Further improvements could possible be
-made in finetuning the hyperparameters of the GAT. For instance, the number of layers,
-hidden units, optimizer/learning rate, dropout, or to modify the preprocessing step.
+based on what they cite, about 80-85% of the time. Further improvements could possible be
+made in finetuning the hyperparameters of the GAT. For instance, the number of layers
+and hidden units, optimizer/learning rate, dropout, or to modify the preprocessing step.
 We could also try to implement *self-loops*
 (i.e., paper X cites paper X) and/or make the graph *undirected*.
 """
