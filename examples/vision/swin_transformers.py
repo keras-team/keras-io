@@ -139,31 +139,6 @@ class DropPath(layers.Layer):
         output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
         return output
 
-
-"""
-## MLP layer
-
-We will now create a simple multi-layered perceptron with 2 Dense and 2 Dropout layers.
-"""
-
-
-class Mlp(layers.Layer):
-    def __init__(self, filter_num, drop=0.0, **kwargs):
-        super(Mlp, self).__init__(**kwargs)
-        self.net = keras.Sequential(
-            [
-                layers.Dense(filter_num[0]),
-                layers.Activation(keras.activations.gelu),
-                layers.Dropout(drop),
-                layers.Dense(filter_num[1]),
-                layers.Dropout(drop),
-            ]
-        )
-
-    def call(self, x):
-        return self.net(x)
-
-
 """
 ## Window based multi-head self attention
 
@@ -270,8 +245,12 @@ original paper we will create a model comprising of a shifted window based MSA
 layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying 
 `LayerNormalization` before each MSA layer and each MLP, and a residual 
 connection after each of these layers.
-"""
 
+Notice that we only create a simple multi-layered perceptron with 2 Dense and 
+2 Dropout layers. Often you will see models using ResNet-50 as the MLP which is 
+quite standard in the literature. However in this paper the authors use a 
+2-layer MLP with GELU nonlinearity in between.
+"""
 
 class SwinTransformer(layers.Layer):
     def __init__(
@@ -305,7 +284,17 @@ class SwinTransformer(layers.Layer):
         )
         self.drop_path = DropPath(dropout_rate)
         self.norm2 = layers.LayerNormalization(epsilon=1e-5)
-        self.mlp = Mlp([num_mlp, dim], drop=dropout_rate)
+
+        self.mlp = keras.Sequential(
+            [
+                layers.Dense(num_mlp),
+                layers.Activation(keras.activations.gelu),
+                layers.Dropout(dropout_rate),
+                layers.Dense(dim),
+                layers.Dropout(dropout_rate),
+            ]
+        )
+
         if min(self.num_patch) < self.window_size:
             self.shift_size = 0
             self.window_size = min(self.num_patch)
