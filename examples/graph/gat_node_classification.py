@@ -3,29 +3,27 @@ Title: Graph Attention Networks for node classification
 Author: [akensert](https://github.com/akensert)
 Date created: 2021/09/12
 Last modified: 2021/09/12
-Description: Graph Attention Networks (GAT) for node classification.
+Description: An implementation of Graph Attention Networks (GAT) for node classification.
 """
 """
 ## Introduction
 
-Neural networks are commonly used to learn something useful from data (e.g., predict a
-future outcome based on some input data). These input data are sometimes structured as
-graphs (for example, social networks and molecules), for which
-[graph neural networks](https://en.wikipedia.org/wiki/Graph_neural_network)
-would be preferred over other neural network architectures (such as fully-connected networks or convolutional
-networks).
+[Graph neural networks](https://en.wikipedia.org/wiki/Graph_neural_network)
+is the prefered neural network architecture for processing data structured as
+graphs (for example, social networks or molecule structures), yielding
+better results than fully-connected networks or convolutional networks.
 
 In this tutorial, we will implement a specific graph neural network known as a
-[graph attention network](https://arxiv.org/abs/1710.10903) (GAT) to predict labels of
-scientific papers based on the papers they cite (see
-[Cora](https://linqs.soe.ucsc.edu/data)).
-
+[Graph Attention Network](https://arxiv.org/abs/1710.10903) (GAT) to predict labels of
+scientific papers based on the papers they cite (using the
+[Cora](https://linqs.soe.ucsc.edu/data) dataset).
 
 ### References
 
-For more information on GAT see the original paper
-[Graph Attention Networks](https://arxiv.org/abs/1710.10903) and
-[dgl's Graph Attention Networks](https://docs.dgl.ai/en/0.4.x/tutorials/models/1_gnn/9_gat.html).
+For more information on GAT, see the original paper
+[Graph Attention Networks](https://arxiv.org/abs/1710.10903) as well as
+[DGL's Graph Attention Networks](https://docs.dgl.ai/en/0.4.x/tutorials/models/1_gnn/9_gat.html)
+documentation.
 """
 
 """
@@ -45,13 +43,12 @@ pd.set_option("display.max_columns", 6)
 pd.set_option("display.max_rows", 6)
 
 """
-## Dataset
+## Obtain the dataset
 
-The preparation of the [Cora dataset](https://linqs.soe.ucsc.edu/data) follow that of the
-[Node Classification with Graph Neural Networks](https://keras.io/examples/graph/gnn_citations/)
-tutorial. For more details on the dataset and exploratory data analysis see
-[Node Classification with Graph Neural Networks](https://keras.io/examples/graph/gnn_citations/).
-In brief, the Cora dataset consist of two files: `cora.cites` which contains *directed links* (citations) between
+The preparation of the [Cora dataset](https://linqs.soe.ucsc.edu/data) follows that of the
+[Node classification with Graph Neural Networks](https://keras.io/examples/graph/gnn_citations/)
+tutorial. Refer to this tutorial for more details on the dataset and exploratory data analysis.
+In brief, the Cora dataset consists of two files: `cora.cites` which contains *directed links* (citations) between
 papers; and `cora.content` which contains *features* of the corresponding papers and one
 of seven labels (the *subject* of the paper).
 """
@@ -92,7 +89,7 @@ print(citations)
 print(papers)
 
 """
-### Split dataset
+### Split the dataset
 """
 
 # Obtain random indices
@@ -103,7 +100,7 @@ train_data = papers.iloc[random_indices[: len(random_indices) // 2]]
 test_data = papers.iloc[random_indices[len(random_indices) // 2 :]]
 
 """
-### Prepare graph
+### Prepare the graph data
 """
 
 # Obtain paper indices which will be used to gather node states
@@ -124,13 +121,14 @@ print("Adjacency shape:\t", edges.shape)
 print("Node features shape:", node_features.shape)
 
 """
-## Model
+## Build the model
 
 GAT takes as input a graph (namely an adjacecy tensor and a node feature tensor) and
 outputs \[updated\] node states. The node states are, for each source node, neighborhood
 aggregated information of *N*-hops (where *N* is decided by the number of layers of the
-GAT). Importantly, in contrast to the [graph convolutional
-network](https://arxiv.org/abs/1609.02907) (GCN) the GAT make use of attention machanisms
+GAT). Importantly, in contrast to the
+[graph convolutional network](https://arxiv.org/abs/1609.02907) (GCN)
+the GAT make use of attention machanisms
 to aggregate information from neighboring nodes. In other words, instead of simply
 averaging/summing node states from neighbors to the source node, GAT first applies
 normalized attention scores to each neighbor node state and then sums.
@@ -144,14 +142,22 @@ layer is simply a concatenation (or averaging) of multiple graph attention layer
 (`GraphAttention`), each with separate learnable weights `W`. The `GraphAttention` layer
 does the following:
 
-> (1) Inputs node states `h^{l}` which are linearly transformed by `W^{l}`, resulting in `z^{l}`.
+Consider inputs node states `h^{l}` which are linearly transformed by `W^{l}`, resulting in `z^{l}`.
 
-> *For each source node:*
->> (2) Computes pair-wise attention scores `a^{l}^{T}(z^{l}_{i}||z^{l}_{j})` for all `j`, resulting in `e_{ij}` (for all `j`). `||` denotes a concatenation, `_{i}` corresponds to the source node, and `_{j}` corresponds to a given 1-hop neighbor node.<br>
+For each source node:
 
->> (3) Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores to the source node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1. (Notice, in this tutorial, *incoming edges* are defined as edges pointing from the *source paper* (the paper *citing*) to the *target paper* (the paper *cited*), which is counter inuitive. However, this seems to work better in practice. In other words, we want to learn the label of the source paper based on what it cites (target papers).)<br>
-
->> (4) Applies attention scores `e_{norm}_{ij}` to `z_{j}` and adds it to the new source node state `h^{l+1}_{i}`, for all `j`.
+1. Computes pair-wise attention scores `a^{l}^{T}(z^{l}_{i}||z^{l}_{j})` for all `j`,
+resulting in `e_{ij}` (for all `j`).
+`||` denotes a concatenation, `_{i}` corresponds to the source node, and `_{j}`
+corresponds to a given 1-hop neighbor node.
+2. Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores
+to the source node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1.
+(Notice, in this tutorial, *incoming edges* are defined as edges
+pointing from the *source paper* (the paper *citing*) to the *target paper* (the paper *cited*),
+which is counter inuitive. However, this seems to work better in practice.
+In other words, we want to learn the label of the source paper based on what it cites (target papers).)
+3. Applies attention scores `e_{norm}_{ij}` to `z_{j}`
+and adds it to the new source node state `h^{l+1}_{i}`, for all `j`.
 """
 
 
@@ -247,7 +253,7 @@ class MultiHeadGraphAttention(layers.Layer):
 
 
 """
-### Define model with custom `train_step`, `test_step` and `predict_step`
+### Implement training logic with custom `train_step`, `test_step`, and `predict_step` methods
 
 Notice, the GAT model operates on the entire graph (namely, `node_features` and
 `edges`) in all phases (training, validation and testing). Hence, `node_features` and
@@ -287,7 +293,6 @@ class GraphAttentionNetwork(keras.Model):
         return outputs
 
     def train_step(self, data):
-
         indices, labels = data
 
         with tf.GradientTape() as tape:
@@ -354,7 +359,6 @@ gat_model = GraphAttentionNetwork(
 # Compile model
 gat_model.compile(loss=loss_fn, optimizer=optimizer, metrics=[accuracy_fn])
 
-
 gat_model.fit(
     x=train_indices,
     y=train_labels,
@@ -385,10 +389,10 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
 """
 ## Conclusions
 
-Results look pretty good! The GAT model seems to correctly predict the subjects of the papers,
-based on what they cite, about 80-85% of the time. Further improvements could possible be
-made in finetuning the hyper-parameters of the GAT. For instance, change the number of layers,
-hidden units or optimizer/learning rate; add regularization (e.g., dropout);
+The results look pretty good! The GAT model seems to correctly predict the subjects of the papers,
+based on what they cite, about 80-85% of the time. Further improvements could be
+made by fine-tuning the hyper-parameters of the GAT. For instance, try changing the number of layers,
+the number of hidden units, or the optimizer/learning rate; add regularization (e.g., dropout);
 or modify the preprocessing step. We could also try to implement *self-loops*
 (i.e., paper X cites paper X) and/or make the graph *undirected*.
 """
