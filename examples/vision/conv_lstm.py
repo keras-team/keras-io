@@ -106,7 +106,7 @@ fig, axes = plt.subplots(4, 5, figsize=(10, 8))
 # Plot each of the sequential images for one random data example.
 data_choice = np.random.choice(range(len(train_dataset)), size=1)[0]
 for idx, ax in enumerate(axes.flat):
-    ax.imshow(train_dataset[data_choice][idx], cmap="gray")
+    ax.imshow(np.squeeze(train_dataset[data_choice][idx]), cmap="gray")
     ax.set_title(f"Frame {idx + 1}")
     ax.axis("off")
 
