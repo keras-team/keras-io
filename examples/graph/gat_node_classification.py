@@ -115,12 +115,12 @@ test_indices = test_data["paper_id"].to_numpy()
 train_labels = train_data["subject"].to_numpy()
 test_labels = test_data["subject"].to_numpy()
 
-# Define graph, namely an adjacency tensor and a node feature tensor
-adjacency = tf.convert_to_tensor(citations[["source", "target"]])
+# Define graph, namely an edges tensor and a node feature tensor
+edges = tf.convert_to_tensor(citations[["source", "target"]])
 node_features = tf.convert_to_tensor(papers.sort_values("paper_id").iloc[:, 1:-1])
 
 # Print shapes of the graph
-print("Adjacency shape:\t", adjacency.shape)
+print("Adjacency shape:\t", edges.shape)
 print("Node features shape:", node_features.shape)
 
 """
@@ -259,8 +259,8 @@ class MultiHeadGraphAttention(layers.Layer):
 ### Define model with custom `train_step`, `test_step` and `predict_step`
 
 Notice, the GAT model operates on the entire graph (namely, `node_features` and
-`adjacency`) in all phases (training, validation and testing). Hence, `node_features` and
-`adjacency` are passed to the constructor of the `keras.Model` and used as attributes.
+`edges`) in all phases (training, validation and testing). Hence, `node_features` and
+`edges` are passed to the constructor of the `keras.Model` and used as attributes.
 The difference between the phases are the indices (and labels), which gathers
 certain output units (`tf.gather(outputs, indices)`).
 
@@ -271,7 +271,7 @@ class GraphAttentionNetwork(keras.Model):
     def __init__(
         self,
         node_features,
-        adjacency,
+        edges,
         hidden_units,
         num_heads,
         num_layers,
@@ -280,7 +280,7 @@ class GraphAttentionNetwork(keras.Model):
     ):
         super().__init__(**kwargs)
         self.node_features = node_features
-        self.adjacency = adjacency
+        self.edges = edges
         self.preprocess = layers.Dense(hidden_units * num_heads, activation="relu")
         self.attention_layers = [
             MultiHeadGraphAttention(hidden_units, num_heads) for _ in range(num_layers)
@@ -288,10 +288,10 @@ class GraphAttentionNetwork(keras.Model):
         self.output_layer = layers.Dense(output_dim)
 
     def call(self, inputs):
-        node_features, adjacency = inputs
+        node_features, edges = inputs
         x = self.preprocess(node_features)
         for attention_layer in self.attention_layers:
-            x = attention_layer([x, adjacency]) + x
+            x = attention_layer([x, edges]) + x
         outputs = self.output_layer(x)
         return outputs
 
@@ -301,7 +301,7 @@ class GraphAttentionNetwork(keras.Model):
 
         with tf.GradientTape() as tape:
 
-            outputs = self([self.node_features, self.adjacency])
+            outputs = self([self.node_features, self.edges])
 
             loss = self.compiled_loss(labels, tf.gather(outputs, indices))
 
@@ -317,7 +317,7 @@ class GraphAttentionNetwork(keras.Model):
 
         indices = data
 
-        outputs = self([self.node_features, self.adjacency])
+        outputs = self([self.node_features, self.edges])
 
         return tf.nn.softmax(tf.gather(outputs, indices))
 
@@ -325,7 +325,7 @@ class GraphAttentionNetwork(keras.Model):
 
         indices, labels = data
 
-        outputs = self([self.node_features, self.adjacency])
+        outputs = self([self.node_features, self.edges])
 
         loss = self.compiled_loss(labels, tf.gather(outputs, indices))
 
@@ -359,7 +359,7 @@ early_stopping = keras.callbacks.EarlyStopping(
 
 # Build model
 gat_model = GraphAttentionNetwork(
-    node_features, adjacency, HIDDEN_UNITS, NUM_HEADS, NUM_LAYERS, OUTPUT_DIM
+    node_features, edges, HIDDEN_UNITS, NUM_HEADS, NUM_LAYERS, OUTPUT_DIM
 )
 
 # Compile model
