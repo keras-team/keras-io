@@ -144,23 +144,14 @@ layer is simply a concatenation (or averaging) of multiple graph attention layer
 (`GraphAttention`), each with separate learnable weights `W`. The `GraphAttention` layer
 does the following:
 
-1. Inputs node states `h^{l}` which are linearly transformed by `W^{l}`, resulting in
-`z^{l}`.
+> (1) Inputs node states `h^{l}` which are linearly transformed by `W^{l}`, resulting in `z^{l}`.
 
-*(for each source node)*
+> *For each source node:*
+>> (2) Computes pair-wise attention scores `a^{l}^{T}(z^{l}_{i}||z^{l}_{j})` for all `j`, resulting in `e_{ij}` (for all `j`). `||` denotes a concatenation, `_{i}` corresponds to the source node, and `_{j}` corresponds to a given 1-hop neighbor node.<br>
 
-2. Computes pair-wise attention scores `a^{l}^{T}(z^{l}_{i}||z^{l}_{j})` for all `j`,
-resulting in `e_{ij}` (for all `j`). `||` denotes a concatenation, `_{i}` corresponds to
-the source node, and `_{j}` corresponds to a given 1-hop neighbor node.
-3. Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores to the source node
-(`sum_{k}{e_{norm}_{ik}}`) will add up to 1. (Notice, in this tutorial, *incoming edges*
-are defined as edges pointing from the *source paper* (the paper *citing*) to the *target
-paper* (the paper *cited*), which is counter inuitive. However, this seems to work better
-in practice. In other words, we want to learn the label of the source paper based on what
-it cites (target papers).)
-4. Applies attention scores `e_{norm}_{ij}` to `z_{j}` and adds it to the new source node
-state `h^{l+1}_{i}`, for all `j`.
+>> (3) Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores to the source node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1. (Notice, in this tutorial, *incoming edges* are defined as edges pointing from the *source paper* (the paper *citing*) to the *target paper* (the paper *cited*), which is counter inuitive. However, this seems to work better in practice. In other words, we want to learn the label of the source paper based on what it cites (target papers).)<br>
 
+>> (4) Applies attention scores `e_{norm}_{ij}` to `z_{j}` and adds it to the new source node state `h^{l+1}_{i}`, for all `j`.
 """
 
 
@@ -344,7 +335,7 @@ NUM_HEADS = 8
 NUM_LAYERS = 3
 OUTPUT_DIM = len(class_values)
 
-NUM_EPOCHS = 100
+NUM_EPOCHS = 1
 BATCH_SIZE = 256
 VALIDATION_SPLIT = 0.1
 LEARNING_RATE = 3e-1
