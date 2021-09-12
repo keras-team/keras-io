@@ -1,5 +1,5 @@
 """
-Title: Near duplicate image parsing
+Title: Near duplicate image search
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/09/10
 Last modified: 2021/09/10
@@ -10,7 +10,7 @@ Description: Building a near duplicate image parser using image classifiers, LSH
 
 Fetching similar images in (near) real time is an important use-case in information
 retrieval systems. Some popular examples utilizing this include Pinterest, Google Image
-Search, etc. In this example, we will build a similar image parsing utility using
+Search, etc. In this example, we will build a similar image search utility using
 [Locality Sensitive Hashing](https://towardsdatascience.com/understanding-locality-sensitive-hashing-49f6d1f6134)
 (LSH) and [Random Projection](https://en.wikipedia.org/wiki/Random_projection) on top
 of a pre-trained image classifier. We will also look into optimizing the performance of
@@ -105,10 +105,10 @@ classifier such that it becomes apt for our purpose.
 
 embedding_model = tf.keras.Sequential(
     [
-        tf.keras.layers.InputLayer((IMAGE_SIZE, IMAGE_SIZE, 3)),
-        tf.keras.layers.experimental.preprocessing.Rescaling(scale=1.0 / 255),
+        tf.keras.layers.Input((IMAGE_SIZE, IMAGE_SIZE, 3)),
+        tf.keras.layers.Rescaling(scale=1.0 / 255),
         bit_model.layers[1],
-        tf.keras.layers.Lambda(tf.math.l2_normalize),
+        tf.keras.layers.Normalization(mean=0, variance=1),
     ],
     name="embedding_model",
 )
@@ -126,8 +126,7 @@ representation vectors to the space of unit-spheres.
 
 
 def hash_func(embedding, random_vectors):
-    if not isinstance(embedding, np.ndarray):
-        embedding = embedding.numpy()
+    embedding = np.array(embedding)
 
     # Random projection.
     bools = np.dot(embedding, random_vectors) > 0
@@ -166,21 +165,30 @@ can so happen that similar images are not mapped to the same hash bucket everyti
 process run. So, to reduce this effect, we will take results from multiple tables into
 consideration. So, the number of tables and the reduction dimensionality are the key
 hyperparameters here.
+
+It is crucial to note that you'd never reimplement hashing yourself when working with
+real world applications. You'd use the following widely popular libraries:
+
+* [ScaNN](https://github.com/google-research/google-research/tree/master/scann)
+* [Annoy](https://github.com/spotify/annoy)
+* [Vald](https://github.com/vdaas/vald)
+
+
 """
 
 
 class Table:
     def __init__(self, hash_size, dim):
-        self.table = dict()
+        self.table = {}
         self.hash_size = hash_size
         self.random_vectors = np.random.randn(hash_size, dim).T
 
-    def add(self, id, vecs, label):
+    def add(self, id, vectors, label):
         # Create a unique indentifier.
         entry = {"id_label": str(id) + "_" + str(label)}
 
         # Compute the hash values.
-        hashes = hash_func(vecs, self.random_vectors)
+        hashes = hash_func(vectors, self.random_vectors)
 
         # Add the hash values to the current table.
         for h in hashes:
@@ -189,10 +197,10 @@ class Table:
             else:
                 self.table[h] = [entry]
 
-    def query(self, vecs):
+    def query(self, vectors):
         # Compute hash value for the query vector.
-        hashes = hash_func(vecs, self.random_vectors)
-        results = list()
+        hashes = hash_func(vectors, self.random_vectors)
+        results = []
 
         # Loop over the query hashes and determine if they exist in
         # the current table.
@@ -210,18 +218,18 @@ In the following `LSH` class we will pack the utilities to have multiple hash ta
 class LSH:
     def __init__(self, hash_size, dim, num_tables):
         self.num_tables = num_tables
-        self.tables = list()
+        self.tables = []
         for i in range(self.num_tables):
             self.tables.append(Table(hash_size, dim))
 
-    def add(self, id, vecs, label):
+    def add(self, id, vectors, label):
         for table in self.tables:
-            table.add(id, vecs, label)
+            table.add(id, vectors, label)
 
-    def query(self, vecs):
-        results = list()
+    def query(self, vectors):
+        results = []
         for table in self.tables:
-            results.extend(table.query(vecs))
+            results.extend(table.query(vectors))
         return results
 
 
@@ -282,7 +290,7 @@ class BuildLSHTable:
             print("Matches:", len(results))
 
         # Calculate Jaccard index to quantify the similarity.
-        counts = dict()
+        counts = {}
         for r in results:
             if r["id_label"] in counts:
                 counts[r["id_label"]] += 1
