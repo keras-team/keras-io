@@ -1,8 +1,8 @@
 """
 Title: Graph Attention Networks for node classification
 Author: [akensert](https://github.com/akensert)
-Date created: 2021/09/11
-Last modified: 2021/09/11
+Date created: 2021/09/12
+Last modified: 2021/09/12
 Description: Graph Attention Networks (GAT) for node classification.
 """
 """
@@ -291,42 +291,40 @@ class GraphAttentionNetwork(keras.Model):
         indices, labels = data
 
         with tf.GradientTape() as tape:
-
+            # Forward pass
             outputs = self([self.node_features, self.edges])
-
+            # Compute loss
             loss = self.compiled_loss(labels, tf.gather(outputs, indices))
-
+        # Compute gradients
         grads = tape.gradient(loss, self.trainable_weights)
-
+        # Apply gradients (update weights)
         optimizer.apply_gradients(zip(grads, self.trainable_weights))
-
+        # Update metric(s)
         self.compiled_metrics.update_state(labels, tf.gather(outputs, indices))
 
         return {m.name: m.result() for m in self.metrics}
 
     def predict_step(self, data):
-
         indices = data
-
+        # Forward pass
         outputs = self([self.node_features, self.edges])
-
+        # Compute probabilities
         return tf.nn.softmax(tf.gather(outputs, indices))
 
     def test_step(self, data):
-
         indices, labels = data
-
+        # Forward pass
         outputs = self([self.node_features, self.edges])
-
+        # Compute loss
         loss = self.compiled_loss(labels, tf.gather(outputs, indices))
-
+        # Update metric(s)
         self.compiled_metrics.update_state(labels, tf.gather(outputs, indices))
 
         return {m.name: m.result() for m in self.metrics}
 
 
 """
-### Train and predict
+### Train and evaluate
 """
 
 # Define hyper-parameters
@@ -387,10 +385,10 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
 """
 ## Conclusions
 
-Results look OK! The GAT model seems to correctly predict the subjects of the papers,
+Results look pretty good! The GAT model seems to correctly predict the subjects of the papers,
 based on what they cite, about 80-85% of the time. Further improvements could possible be
-made in finetuning the hyperparameters of the GAT. For instance, the number of layers
-and hidden units, optimizer/learning rate, dropout, or to modify the preprocessing step.
-We could also try to implement *self-loops*
+made in finetuning the hyper-parameters of the GAT. For instance, change the number of layers,
+hidden units or optimizer/learning rate; add regularization (e.g., dropout);
+or modify the preprocessing step. We could also try to implement *self-loops*
 (i.e., paper X cites paper X) and/or make the graph *undirected*.
 """
