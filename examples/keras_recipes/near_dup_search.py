@@ -369,7 +369,7 @@ to-be-converted model.
 cached to handle dynamic operations (operations with unknown shapes).
 
 To know more about the other options, check out the
-[officialc documentation](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt/ConversionParams).
+[official documentation](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt/ConversionParams).
 You can also explore the different quantization options provided by the
 `tf.experimental.tensorrt` module catering to different purposes.
 """
