@@ -7,18 +7,18 @@ Description: Image classification using Swin Transformers, a general-purpose bac
 """
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
-by Liu et al. for image classification, and demonstrates it on the 
+by Liu et al. for image classification, and demonstrates it on the
 [CIFAR-100 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 
-Swin Transformer (**S**hifted **Win**dow Transformer) can serve as a general-purpose backbone 
-for computer vision. Swin Transformer is a hierarchical Transformer whose 
-representations are computed with _shifted windows_. The shifted window scheme 
-brings greater efficiency by limiting self-attention computation to 
-non-overlapping local windows while also allowing for cross-window connections. 
-This architecture has the flexibility to model information at various scales and has 
+Swin Transformer (**S**hifted **Win**dow Transformer) can serve as a general-purpose backbone
+for computer vision. Swin Transformer is a hierarchical Transformer whose
+representations are computed with _shifted windows_. The shifted window scheme
+brings greater efficiency by limiting self-attention computation to
+non-overlapping local windows while also allowing for cross-window connections.
+This architecture has the flexibility to model information at various scales and has
 a linear computational complexity with respect to image size.
 
-This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons, 
+This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons,
 which can be installed using the following commands:
 """
 
@@ -95,7 +95,7 @@ label_smoothing = 0.1
 """
 ## Helper functions
 
-We create two helper functions to help us get a sequence of 
+We create two helper functions to help us get a sequence of
 patches from the image, merge patches, and apply dropout.
 """
 
@@ -143,10 +143,10 @@ class DropPath(layers.Layer):
 """
 ## Window based multi-head self-attention
 
-Usually Transformers perform global self-attention, where the relationships between 
-a token and all other tokens are computed. The global computation leads to quadratic 
-complexity with respect to the number of tokens. Here, as the [original paper](https://arxiv.org/abs/2103.14030) 
-suggests, we compute self-attention within local windows, in a non-overlapping manner. 
+Usually Transformers perform global self-attention, where the relationships between
+a token and all other tokens are computed. The global computation leads to quadratic
+complexity with respect to the number of tokens. Here, as the [original paper](https://arxiv.org/abs/2103.14030)
+suggests, we compute self-attention within local windows, in a non-overlapping manner.
 Global self-attention leads to quadratic computational complexity in the number of patches,
 whereas window-based self-attention leads to linear complexity and is easily scalable.
 """
@@ -240,16 +240,16 @@ class WindowAttention(layers.Layer):
 """
 ## The complete Swin Transformer model
 
-Finally, we put together the complete Swin Transformer by replacing the standard multi-head 
-attention (MHA) with shifted windows attention. As suggested in the 
+Finally, we put together the complete Swin Transformer by replacing the standard multi-head
+attention (MHA) with shifted windows attention. As suggested in the
 original paper, we create a model comprising of a shifted window-based MHA
-layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying 
-`LayerNormalization` before each MSA layer and each MLP, and a residual 
+layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying
+`LayerNormalization` before each MSA layer and each MLP, and a residual
 connection after each of these layers.
 
-Notice that we only create a simple MLP with 2 Dense and 
-2 Dropout layers. Often you will see models using ResNet-50 as the MLP which is 
-quite standard in the literature. However in this paper the authors use a 
+Notice that we only create a simple MLP with 2 Dense and
+2 Dropout layers. Often you will see models using ResNet-50 as the MLP which is
+quite standard in the literature. However in this paper the authors use a
 2-layer MLP with GELU nonlinearity in between.
 """
 
@@ -384,7 +384,7 @@ class SwinTransformer(layers.Layer):
 
 ### Extract and embed patches
 
-We first create 3 layers to help us extract, embed and merge patches from the 
+We first create 3 layers to help us extract, embed and merge patches from the
 images on top of which we will later use the Swin Transformer class we built.
 """
 
@@ -479,7 +479,7 @@ output = layers.Dense(num_classes, activation="softmax")(x)
 """
 ### Train on CIFAR-100
 
-We train the model on CIFAR-100. Here, we only train the model 
+We train the model on CIFAR-100. Here, we only train the model
 for 40 epochs to keep the training time short in this example.
 In practice, you should train for 150 epochs to reach convergence.
 """
@@ -527,26 +527,26 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 
 """
-The Swin Transformer model we just trained has just 152K parameters, and it gets 
-us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfitting 
-as well as seen in above graph. This means we can train this network for longer 
+The Swin Transformer model we just trained has just 152K parameters, and it gets
+us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfitting
+as well as seen in above graph. This means we can train this network for longer
 (perhaps with a bit more regularization) and obtain even better performance.
-This performance can further be improved by additional techniques like cosine 
+This performance can further be improved by additional techniques like cosine
 decay learning rate schedule, other data augmentation techniques. While experimenting,
-I tried training the model for 150 epochs with a slightly higher dropout and greater 
+I tried training the model for 150 epochs with a slightly higher dropout and greater
 embedding dimensions which pushes the performance to ~72% test accuracy on CIFAR-100
 as you can see in the screenshot.
 
 ![Results of training for longer](https://i.imgur.com/9vnQesZ.png)
 
-The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present 
-a number of experiments to study how input sizes, optimizers etc. affect the final 
-performance of this model. The authors further present using this model for object detection, 
-semantic segmentation and instance segmentation as well and report competitive results 
-for these. You are strongly advised to also check out the 
+The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present
+a number of experiments to study how input sizes, optimizers etc. affect the final
+performance of this model. The authors further present using this model for object detection,
+semantic segmentation and instance segmentation as well and report competitive results
+for these. You are strongly advised to also check out the
 [original paper](https://arxiv.org/abs/2103.14030).
 
-This example takes inspiration from the official 
-[PyTorch](https://github.com/microsoft/Swin-Transformer) and 
+This example takes inspiration from the official
+[PyTorch](https://github.com/microsoft/Swin-Transformer) and
 [TensorFlow](https://github.com/VcampSoldiers/Swin-Transformer-Tensorflow) implementations.
 """
