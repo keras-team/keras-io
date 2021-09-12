@@ -381,8 +381,7 @@ class SwinTransformer(layers.Layer):
 
 """
 ## Model training and evaluation
-"""
-""""
+
 ### Extract and embed patches
 
 We first create 3 layers to help us extract, embed and merge patches from the 
