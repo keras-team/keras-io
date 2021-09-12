@@ -18,12 +18,11 @@ simultaneously preserving the high-resolution spatial details.
 
 ### References:
 
-- [Learning Enriched Features for Real Image Restoration and Enhancement
-](https://arxiv.org/abs/2003.06792)
+- [Learning Enriched Features for Real Image Restoration and Enhancement](https://arxiv.org/abs/2003.06792)
 
-- [The Retinex Theory of Color
-Vision](http://www.cnbc.cmu.edu/~tai/cp_papers/E.Land_Retinex_Theory_ScientifcAmerican.pdf)
-Vision](http://www.cnbc.cmu.edu/~tai/cp_papers/E.Land_Retinex_Theory_ScientifcAmerican.pdf)
+- [The Retinex Theory of Color Vision](http://www.cnbc.cmu.edu/~tai/cp_papers/E.Land_Retinex_Theory_ScientifcAmerican.pdf)
+
+- [Two deterministic half-quadratic regularization algorithms for computed imaging](https://ieeexplore.ieee.org/document/413553)
 """
 
 """
@@ -389,8 +388,8 @@ model = mirnet_model(num_rrg=3, num_mrb=2, channels=64)
 """
 ## Training
 
-- We train MIRNet using **Mean Absolute Error** as the loss function and **Adam
-Optimizer** with a learning rate of `1e-4`.
+- We train MIRNet using **Charbonnier Loss** as the loss function and **Adam Optimizer**
+with a learning rate of `1e-4`.
 
 - We use **Peak Signal Noise Ratio** or PSNR as a metric which is an expression for the
 ratio between the maximum possible value (power) of a signal and the power of distorting
@@ -398,13 +397,22 @@ noise that affects the quality of its representation.
 """
 
 
+def charbonnier_loss(y_true, y_pred):
+    return tf.reduce_mean(
+        tf.sqrt(tf.square(y_true - y_pred) + tf.square(1e-3))
+    )
+
+
 def peak_signal_noise_ratio(y_true, y_pred):
     return tf.image.psnr(y_pred, y_true, max_val=255.0)
 
 
-loss = keras.losses.MeanAbsoluteError()
 optimizer = keras.optimizers.Adam(learning_rate=1e-4)
-model.compile(optimizer=optimizer, loss=loss, metrics=[peak_signal_noise_ratio])
+model.compile(
+    optimizer=optimizer,
+    loss=charbonnier_loss,
+    metrics=[peak_signal_noise_ratio]
+)
 
 history = model.fit(
     train_dataset,
