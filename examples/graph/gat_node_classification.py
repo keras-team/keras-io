@@ -257,6 +257,13 @@ class MultiHeadGraphAttention(layers.Layer):
 
 """
 ### Define model with custom `train_step`, `test_step` and `predict_step`
+
+Notice, the GAT model operates on the entire graph (namely, `node_features` and
+`adjacency`) in all phases (training, validation and testing). Hence, `node_features` and
+`adjacency` are passed to the constructor of the `keras.Model` and used as attributes.
+The difference between training and testing are the indices (and labels), which gathers
+certain output units (`tf.gather(outputs, indices)`).
+
 """
 
 
