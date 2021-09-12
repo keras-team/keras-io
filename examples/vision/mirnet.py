@@ -398,9 +398,7 @@ noise that affects the quality of its representation.
 
 
 def charbonnier_loss(y_true, y_pred):
-    return tf.reduce_mean(
-        tf.sqrt(tf.square(y_true - y_pred) + tf.square(1e-3))
-    )
+    return tf.reduce_mean(tf.sqrt(tf.square(y_true - y_pred) + tf.square(1e-3)))
 
 
 def peak_signal_noise_ratio(y_true, y_pred):
@@ -409,9 +407,7 @@ def peak_signal_noise_ratio(y_true, y_pred):
 
 optimizer = keras.optimizers.Adam(learning_rate=1e-4)
 model.compile(
-    optimizer=optimizer,
-    loss=charbonnier_loss,
-    metrics=[peak_signal_noise_ratio]
+    optimizer=optimizer, loss=charbonnier_loss, metrics=[peak_signal_noise_ratio]
 )
 
 history = model.fit(
