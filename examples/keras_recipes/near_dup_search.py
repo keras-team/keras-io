@@ -272,7 +272,9 @@ class BuildLSHTable:
             # Compute embeddings and update the LSH tables.
             # More on `self.concrete_function()` later.
             if self.concrete_function:
-                features = self.prediction_model(tf.constant(image))["normalization"].numpy()
+                features = self.prediction_model(tf.constant(image))[
+                    "normalization"
+                ].numpy()
             else:
                 features = self.prediction_model.predict(image)
             self.lsh.add(id, features, label)
@@ -283,7 +285,9 @@ class BuildLSHTable:
             image = image[None, ...]
 
         if self.concrete_function:
-            features = self.prediction_model(tf.constant(image))["normalization"].numpy()
+            features = self.prediction_model(tf.constant(image))[
+                "normalization"
+            ].numpy()
         else:
             features = self.prediction_model.predict(image)
 
