@@ -562,7 +562,6 @@ trained for more epochs for better performance.
 The following two metrics can be used for monitoring the pretraining performance which we
 also log (taken from [this Keras
 example](https://keras.io/examples/vision/semisupervised_simclr/#selfsupervised-model-for-contrastive-pretraining)):
-example](https://keras.io/examples/vision/semisupervised_simclr/#selfsupervised-model-for-contrastive-pretraining)):
 
 - Contrastive accuracy: Self-supervised metric, the ratio of cases in which the
 representation of an image is more similar to its differently augmented version's one,
