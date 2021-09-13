@@ -1,11 +1,16 @@
-"""
-Title: Graph attention networks for node classification
-Author: [akensert](https://github.com/akensert)
-Date created: 2021/09/13
-Last modified: 2021/09/13
-Description: An implementation of Graph Attention Networks (GATs) for node classification.
-"""
-"""
+# Graph attention networks for node classification
+
+**Author:** [akensert](https://github.com/akensert)<br>
+**Date created:** 2021/09/13<br>
+**Last modified:** 2021/09/13<br>
+**Description:** An implementation of Graph Attention Networks (GATs) for node classification.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graph/ipynb/gat_node_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graph/gat_node_classification.py)
+
+
+
+---
 ## Introduction
 
 [Graph neural networks](https://en.wikipedia.org/wiki/Graph_neural_network)
@@ -24,12 +29,11 @@ For more information on GAT, see the original paper
 [Graph Attention Networks](https://arxiv.org/abs/1710.10903) as well as
 [DGL's Graph Attention Networks](https://docs.dgl.ai/en/0.4.x/tutorials/models/1_gnn/9_gat.html)
 documentation.
-"""
 
-"""
 ### Import packages
-"""
 
+
+```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -42,8 +46,9 @@ warnings.filterwarnings("ignore")
 pd.set_option("display.max_columns", 6)
 pd.set_option("display.max_rows", 6)
 np.random.seed(2)
+```
 
-"""
+---
 ## Obtain the dataset
 
 The preparation of the [Cora dataset](https://linqs.soe.ucsc.edu/data) follows that of the
@@ -52,8 +57,9 @@ tutorial. Refer to this tutorial for more details on the dataset and exploratory
 In brief, the Cora dataset consists of two files: `cora.cites` which contains *directed links* (citations) between
 papers; and `cora.content` which contains *features* of the corresponding papers and one
 of seven labels (the *subject* of the paper).
-"""
 
+
+```python
 zip_file = keras.utils.get_file(
     fname="cora.tgz",
     origin="https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz",
@@ -88,22 +94,57 @@ papers["subject"] = papers["subject"].apply(lambda value: class_idx[value])
 print(citations)
 
 print(papers)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+      target  source
+0          0      21
+1          0     905
+2          0     906
+...      ...     ...
+5426    1874    2586
+5427    1876    1874
+5428    1897    2707
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+[5429 rows x 2 columns]
+      paper_id  term_0  term_1  ...  term_1431  term_1432  subject
+0          462       0       0  ...          0          0        2
+1         1911       0       0  ...          0          0        5
+2         2002       0       0  ...          0          0        4
+...        ...     ...     ...  ...        ...        ...      ...
+2705      2372       0       0  ...          0          0        1
+2706       955       0       0  ...          0          0        0
+2707       376       0       0  ...          0          0        2
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+[2708 rows x 1435 columns]
+
+```
+</div>
 ### Split the dataset
-"""
 
+
+```python
 # Obtain random indices
 random_indices = np.random.permutation(range(papers.shape[0]))
 
 # 50/50 split
 train_data = papers.iloc[random_indices[: len(random_indices) // 2]]
 test_data = papers.iloc[random_indices[len(random_indices) // 2 :]]
+```
 
-"""
 ### Prepare the graph data
-"""
 
+
+```python
 # Obtain paper indices which will be used to gather node states
 # from the graph later on when training the model
 train_indices = train_data["paper_id"].to_numpy()
@@ -120,8 +161,16 @@ node_features = tf.convert_to_tensor(papers.sort_values("paper_id").iloc[:, 1:-1
 # Print shapes of the graph
 print("Edges shape:\t\t", edges.shape)
 print("Node features shape:", node_features.shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Edges shape:		 (5429, 2)
+Node features shape: (2708, 1433)
+
+```
+</div>
+---
 ## Build the model
 
 GAT takes as input a graph (namely an edge tensor and a node feature tensor) and
@@ -133,9 +182,7 @@ the GAT make use of attention machanisms
 to aggregate information from neighboring nodes. In other words, instead of simply
 averaging/summing node states from neighbors to the source node, GAT first applies
 normalized attention scores to each neighbor node state and then sums.
-"""
 
-"""
 ### (Multi-head) graph attention layer
 
 The GAT model implements multi-head graph attention layers. The `MultiHeadGraphAttention`
@@ -159,8 +206,9 @@ which is counter inuitive. However, this seems to work better in practice.
 In other words, we want to learn the label of the source paper based on what it cites (target papers).)
 3. Applies attention scores `e_{norm}_{ij}` to `z_{j}`
 and adds it to the new source node state `h^{l+1}_{i}`, for all `j`.
-"""
 
+
+```python
 
 class GraphAttention(layers.Layer):
     def __init__(
@@ -252,8 +300,8 @@ class MultiHeadGraphAttention(layers.Layer):
         # Activate and return node states
         return tf.nn.relu(outputs)
 
+```
 
-"""
 ### Implement training logic with custom `train_step`, `test_step`, and `predict_step` methods
 
 Notice, the GAT model operates on the entire graph (namely, `node_features` and
@@ -262,8 +310,8 @@ Notice, the GAT model operates on the entire graph (namely, `node_features` and
 The difference between the phases are the indices (and labels), which gathers
 certain output units (`tf.gather(outputs, indices)`).
 
-"""
 
+```python
 
 class GraphAttentionNetwork(keras.Model):
     def __init__(
@@ -328,11 +376,12 @@ class GraphAttentionNetwork(keras.Model):
 
         return {m.name: m.result() for m in self.metrics}
 
+```
 
-"""
 ### Train and evaluate
-"""
 
+
+```python
 # Define hyper-parameters
 HIDDEN_UNITS = 100
 NUM_HEADS = 8
@@ -373,10 +422,49 @@ gat_model.fit(
 _, test_accuracy = gat_model.evaluate(x=test_indices, y=test_labels, verbose=0)
 
 print("--" * 38 + f"\nTest Accuracy {test_accuracy*100:.1f}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/100
+5/5 - 9s - loss: 2.2267 - acc: 0.2833 - val_loss: 1.5847 - val_acc: 0.3309
+Epoch 2/100
+5/5 - 1s - loss: 1.4020 - acc: 0.4565 - val_loss: 1.1424 - val_acc: 0.6029
+Epoch 3/100
+5/5 - 1s - loss: 0.8604 - acc: 0.7184 - val_loss: 0.8028 - val_acc: 0.7647
+Epoch 4/100
+5/5 - 1s - loss: 0.5779 - acc: 0.8448 - val_loss: 0.7113 - val_acc: 0.8162
+Epoch 5/100
+5/5 - 1s - loss: 0.3292 - acc: 0.9064 - val_loss: 0.6348 - val_acc: 0.8162
+Epoch 6/100
+5/5 - 1s - loss: 0.2339 - acc: 0.9401 - val_loss: 0.4791 - val_acc: 0.8309
+Epoch 7/100
+5/5 - 1s - loss: 0.1407 - acc: 0.9655 - val_loss: 0.5073 - val_acc: 0.8456
+Epoch 8/100
+5/5 - 1s - loss: 0.0779 - acc: 0.9893 - val_loss: 0.5812 - val_acc: 0.8235
+Epoch 9/100
+5/5 - 1s - loss: 0.0519 - acc: 0.9885 - val_loss: 0.4581 - val_acc: 0.8529
+Epoch 10/100
+5/5 - 1s - loss: 0.0328 - acc: 0.9943 - val_loss: 0.4530 - val_acc: 0.8603
+Epoch 11/100
+5/5 - 1s - loss: 0.0241 - acc: 0.9959 - val_loss: 0.4564 - val_acc: 0.8603
+Epoch 12/100
+5/5 - 1s - loss: 0.0169 - acc: 0.9975 - val_loss: 0.4877 - val_acc: 0.8529
+Epoch 13/100
+5/5 - 1s - loss: 0.0130 - acc: 0.9984 - val_loss: 0.5321 - val_acc: 0.8456
+Epoch 14/100
+5/5 - 1s - loss: 0.0104 - acc: 0.9984 - val_loss: 0.5419 - val_acc: 0.8529
+Epoch 15/100
+5/5 - 1s - loss: 0.0086 - acc: 0.9992 - val_loss: 0.5257 - val_acc: 0.8456
+----------------------------------------------------------------------------
+Test Accuracy 84.5%
+
+```
+</div>
 ### Predict (probabilities)
-"""
+
+
+```python
 test_probs = gat_model.predict(x=test_indices)
 
 mapping = {v: k for (k, v) in class_idx.items()}
@@ -386,8 +474,104 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
     for j, c in zip(probs, class_idx.keys()):
         print(f"\tProbability of {c: <24} = {j*100:7.3f}%")
     print("---" * 20)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Example 1: Probabilistic_Methods
+	Probability of Case_Based               =   0.000%
+	Probability of Genetic_Algorithms       =   0.000%
+	Probability of Neural_Networks          =   0.003%
+	Probability of Probabilistic_Methods    =  99.996%
+	Probability of Reinforcement_Learning   =   0.000%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.000%
+------------------------------------------------------------
+Example 2: Genetic_Algorithms
+	Probability of Case_Based               =   0.000%
+	Probability of Genetic_Algorithms       =  99.996%
+	Probability of Neural_Networks          =   0.000%
+	Probability of Probabilistic_Methods    =   0.000%
+	Probability of Reinforcement_Learning   =   0.004%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.000%
+------------------------------------------------------------
+Example 3: Theory
+	Probability of Case_Based               =   1.351%
+	Probability of Genetic_Algorithms       =   0.077%
+	Probability of Neural_Networks          =   0.032%
+	Probability of Probabilistic_Methods    =   2.875%
+	Probability of Reinforcement_Learning   =   0.258%
+	Probability of Rule_Learning            =   8.995%
+	Probability of Theory                   =  86.413%
+------------------------------------------------------------
+Example 4: Neural_Networks
+	Probability of Case_Based               =   0.000%
+	Probability of Genetic_Algorithms       =   0.001%
+	Probability of Neural_Networks          =  99.999%
+	Probability of Probabilistic_Methods    =   0.000%
+	Probability of Reinforcement_Learning   =   0.000%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.000%
+------------------------------------------------------------
+Example 5: Theory
+	Probability of Case_Based               =   7.421%
+	Probability of Genetic_Algorithms       =   0.024%
+	Probability of Neural_Networks          =   9.141%
+	Probability of Probabilistic_Methods    =   3.939%
+	Probability of Reinforcement_Learning   =   0.074%
+	Probability of Rule_Learning            =  10.938%
+	Probability of Theory                   =  68.463%
+------------------------------------------------------------
+Example 6: Genetic_Algorithms
+	Probability of Case_Based               =   0.000%
+	Probability of Genetic_Algorithms       =  99.999%
+	Probability of Neural_Networks          =   0.000%
+	Probability of Probabilistic_Methods    =   0.000%
+	Probability of Reinforcement_Learning   =   0.001%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.000%
+------------------------------------------------------------
+Example 7: Neural_Networks
+	Probability of Case_Based               =   0.120%
+	Probability of Genetic_Algorithms       =   0.511%
+	Probability of Neural_Networks          =  99.127%
+	Probability of Probabilistic_Methods    =   0.081%
+	Probability of Reinforcement_Learning   =   0.097%
+	Probability of Rule_Learning            =   0.035%
+	Probability of Theory                   =   0.029%
+------------------------------------------------------------
+Example 8: Genetic_Algorithms
+	Probability of Case_Based               =   0.000%
+	Probability of Genetic_Algorithms       =  99.957%
+	Probability of Neural_Networks          =   0.000%
+	Probability of Probabilistic_Methods    =   0.000%
+	Probability of Reinforcement_Learning   =   0.043%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.000%
+------------------------------------------------------------
+Example 9: Theory
+	Probability of Case_Based               =   0.024%
+	Probability of Genetic_Algorithms       =   0.001%
+	Probability of Neural_Networks          =   0.272%
+	Probability of Probabilistic_Methods    =  74.309%
+	Probability of Reinforcement_Learning   =   0.002%
+	Probability of Rule_Learning            =   0.067%
+	Probability of Theory                   =  25.326%
+------------------------------------------------------------
+Example 10: Case_Based
+	Probability of Case_Based               = 100.000%
+	Probability of Genetic_Algorithms       =   0.000%
+	Probability of Neural_Networks          =   0.000%
+	Probability of Probabilistic_Methods    =   0.000%
+	Probability of Reinforcement_Learning   =   0.000%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.000%
+------------------------------------------------------------
+
+```
+</div>
+---
 ## Conclusions
 
 The results look OK! The GAT model seems to correctly predict the subjects of the papers,
@@ -396,4 +580,3 @@ made by fine-tuning the hyper-parameters of the GAT. For instance, try changing 
 the number of hidden units, or the optimizer/learning rate; add regularization (e.g., dropout);
 or modify the preprocessing step. We could also try to implement *self-loops*
 (i.e., paper X cites paper X) and/or make the graph *undirected*.
-"""
