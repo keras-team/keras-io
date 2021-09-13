@@ -86,12 +86,12 @@ more details on the training, refer to
 The underlying model is a BiT-ResNet (proposed in
 [Big Transfer (BiT): General Visual Representation Learning](https://arxiv.org/abs/1912.11370)).
 The BiT-ResNet family of models is known to provide excellent transfer performance across
-a wide variety of different downstream tasks. 
+a wide variety of different downstream tasks.
 """
 
 """shell
-!wget -q https://git.io/JuV8G
-!tar xf flower_model_bit_0.96875.gz
+wget -q https://git.io/JuMq0 -O flower_model_bit_0.96875.zip
+unzip -qq flower_model_bit_0.96875.zip
 """
 
 bit_model = tf.keras.models.load_model("flower_model_bit_0.96875")
@@ -411,7 +411,7 @@ for hash, entry in lsh_builder_trt.lsh.tables[0].table.items():
 
 In this section we will first writing a couple of utility functions to visualize the
 similar image parsing process. Then we will benchmark the query performance of the models
-with and without optimization. 
+with and without optimization.
 """
 
 """
@@ -523,7 +523,7 @@ benchmark(lsh_builder_trt)
 
 """
 We can immediately notice a stark difference between the query performance of the two
-models. 
+models.
 """
 
 """
@@ -534,7 +534,7 @@ It's best suited for GPU-based inference servers. There are other choices for su
 frameworks that cater to different hardware platforms:
 
 * [TensorFlow Lite](https://www.tensorflow.org/lite) for mobile and edge devices.
-* [ONNX](hhttps://onnx.ai/) for commodity CPU-based servers. 
+* [ONNX](hhttps://onnx.ai/) for commodity CPU-based servers.
 * [Apache TVM](https://tvm.apache.org/), compiler for machine learning models covering
 various platforms.
 
