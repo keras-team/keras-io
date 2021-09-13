@@ -406,3 +406,8 @@ td {
   border: solid 1px gray;
   padding: 0.3rem;
 }
+.gh-btn-container {
+  margin-left: 4.7em;
+  padding-bottom: 10px;
+  padding-top: 5px;
+}
