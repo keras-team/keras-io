@@ -81,7 +81,6 @@ import tensorflow_datasets as tfds
 from tensorflow import keras
 from tensorflow.keras import layers
 
-
 """
 ## Hyperparameters
 
