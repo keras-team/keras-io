@@ -6,9 +6,6 @@ Last modified: 2021/09/13
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
 """
 """
-*Many thanks to [Debidatta Dwibedi](https://twitter.com/debidatta) (Google Research),
-primary author of the NNCLR paper for his super-insightful reviews for this example.*
-
 ### Self-supervised learning
 
 Self-supervised representation learning aims to obtain robust representations of samples
@@ -641,4 +638,8 @@ intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-mat
 intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/)
 
 You are also advised to check out the [original paper](https://arxiv.org/abs/2104.14548).
+
+*Many thanks to [Debidatta Dwibedi](https://twitter.com/debidatta) (Google Research),
+primary author of the NNCLR paper for his super-insightful reviews for this example.
+This example also takes inspiration from the [SimCLR Keras Example](https://keras.io/examples/vision/semisupervised_simclr/).*
 """
