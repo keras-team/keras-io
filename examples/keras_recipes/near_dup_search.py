@@ -1,21 +1,23 @@
 """
-Title: Near duplicate image search
+Title: Near-duplicate image search
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/09/10
 Last modified: 2021/09/10
-Description: Building a near duplicate image parser using image classifiers, LSH, and more.
+Description: Building a near-duplicate image search utility using deep learning and locality-sensitive hashing.
 """
 """
 ## Introduction
 
-Fetching similar images in (near) real time is an important use-case in information
-retrieval systems. Some popular examples utilizing this include Pinterest, Google Image
+Fetching similar images in (near) real time is an important use case of information
+retrieval systems. Some popular products utilizing it include Pinterest, Google Image
 Search, etc. In this example, we will build a similar image search utility using
 [Locality Sensitive Hashing](https://towardsdatascience.com/understanding-locality-sensitive-hashing-49f6d1f6134)
-(LSH) and [Random Projection](https://en.wikipedia.org/wiki/Random_projection) on top
-of a pre-trained image classifier. We will also look into optimizing the performance of
-our parser given a commodity GPU-based environment. These kinds of parsers are also known
-as _near duplicate (or near-dup) image detectors_.
+(LSH) and [random projection](https://en.wikipedia.org/wiki/Random_projection) on top
+of the image representations computed by a pretrained image classifier.
+This kind of search engine is also known
+as a _near-duplicate (or near-dup) image detector_.
+We will also look into optimizing the inference performance of
+our search utility on GPU using [TensorRT](https://developer.nvidia.com/tensorrt).
 
 There are other examples under [keras.io/examples/vision](https://keras.io/examples/vision)
 that are worth checking out in this regard:
@@ -23,12 +25,12 @@ that are worth checking out in this regard:
 * [Metric learning for image similarity search](https://keras.io/examples/vision/metric_learning)
 * [Image similarity estimation using a Siamese Network with a triplet loss](https://keras.io/examples/vision/siamese_network)
 
-Finally, this example uses the following resource as a reference and as such reuses code
-from there:
+Finally, this example uses the following resource as a reference and as such reuses some
+of its code:
 [Locality Sensitive Hashing for Similar Item Search](https://towardsdatascience.com/locality-sensitive-hashing-for-music-search-f2f1940ace23).
 
-_Note that in order to optimize the performance of our parser, you should be connected to
-a GPU._
+_Note that in order to optimize the performance of our parser,
+you should have a GPU runtime available._
 """
 
 """
@@ -45,9 +47,9 @@ import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 
 """
-## Load dataset and create a training set of 1000 images
+## Load the dataset and create a training set of 1,000 images
 
-To keep the runtime of the example short, we will be using a subset of 1000 images from
+To keep the run time of the example short, we will be using a subset of 1,000 images from
 the `tf_flowers` dataset (available through
 [TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/tf_flowers))
 to build our vocabulary.
@@ -72,18 +74,18 @@ images = np.array(images)
 labels = np.array(labels)
 
 """
-## Pre-trained model
+## Load a pre-trained model
 """
 
 """
-In this section, we load our image classification model that was trained on the
+In this section, we load an image classification model that was trained on the
 `tf_flowers` dataset. 85% of the total images were used to build the training set. For
-more details on the training, you check out
+more details on the training, refer to
 [this notebook](https://github.com/sayakpaul/near-dup-parser/blob/main/bit-supervised-training.ipynb).
 
 The underlying model is a BiT-ResNet (proposed in
 [Big Transfer (BiT): General Visual Representation Learning](https://arxiv.org/abs/1912.11370)).
-BiT-ResNet family of models are known to provide excellent transfer performance across
+The BiT-ResNet family of models is known to provide excellent transfer performance across
 a wide variety of different downstream tasks. 
 """
 
@@ -98,9 +100,10 @@ bit_model.count_params()
 """
 ## Create an embedding model
 
-To parse the similar images given a query image, we need to first generate vector
-representations of the images. For this purpose, we will be branching the above image
-classifier such that it becomes apt for our purpose.
+To retrieve similar images given a query image, we need to first generate vector
+representations of all the images involved. We do this via an
+embedding model that extracts output features from our pretrained classifier and
+normalizes the resulting feature vectors.
 """
 
 embedding_model = tf.keras.Sequential(
@@ -142,11 +145,12 @@ def bool2int(x):
 
 
 """
-The dimensionality coming out of `embedding_model` is (2048, ) and considering practical
+The shape of the vectors coming out of `embedding_model` is `(2048,)`, and considering practical
 aspects (storage, retrieval performance, etc.) it is quite large. So, there arises a need
-to reduce this dimensionality without reducing the information content. This is where
-Random Projections come into the picture. It is based on the principle that if the
-distance between a group of points on a given plane is _approximately_ preserved the
+to reduce the dimensionality of the embedding vectors without reducing their information
+content. This is where *random projection* comes into the picture.
+It is based on the principle that if the
+distance between a group of points on a given plane is _approximately_ preserved, the
 dimensionality of that plane can further be reduced.
 
 Inside `hash_func()`, we first reduce the dimensionality of the embedding vectors. Then
@@ -156,24 +160,22 @@ perspective, bitwise hash values are cheaper to store and operate on.
 """
 
 """
-## LSH builders
+## Query utilities
 
 The `Table` class is responsible for building a single hash table. Each entry in the hash
 table is a mapping between the reduced embedding of an image from our dataset and a
 unique identifier. Because our dimensionality reduction technique involves randomness, it
 can so happen that similar images are not mapped to the same hash bucket everytime the
-process run. So, to reduce this effect, we will take results from multiple tables into
-consideration. So, the number of tables and the reduction dimensionality are the key
+process run. To reduce this effect, we will take results from multiple tables into
+consideration -- the number of tables and the reduction dimensionality are the key
 hyperparameters here.
 
-It is crucial to note that you'd never reimplement hashing yourself when working with
-real world applications. You'd use the following widely popular libraries:
+Crucially, you wouldn't reimplement locality-sensitive hashing yourself when working with
+real world applications. Instead, you'd likely use one of the following popular libraries:
 
 * [ScaNN](https://github.com/google-research/google-research/tree/master/scann)
 * [Annoy](https://github.com/spotify/annoy)
 * [Vald](https://github.com/vdaas/vald)
-
-
 """
 
 
@@ -238,7 +240,7 @@ Now we can encapsulate the logic for building and operating with the master LSH 
 collection of many tables) inside a class. It has two methods:
 
 * `train()`: Responsible for building the final LSH table.
-* `query()`: Calculates the number of matches given a query image and also quantifies the
+* `query()`: Computes the number of matches given a query image and also quantifies the
 similarity score.
 """
 
@@ -305,7 +307,7 @@ class BuildLSHTable:
 ## Create LSH tables
 
 With our helper utilities and classes implemented, we can now build our LSH table. Since
-we will be benchmarking performance between optimized and unoptimized embedding models we
+we will be benchmarking performance between optimized and unoptimized embedding models, we
 will also warm up our GPU to avoid any unfair comparison.
 """
 
@@ -317,7 +319,7 @@ def warmup():
 
 
 """
-Now we can first do the GPU wamr-up and proceed to build the master LSH table with
+Now we can first do the GPU wam-up and proceed to build the master LSH table with
 `embedding_model`.
 """
 
@@ -329,12 +331,12 @@ lsh_builder.train(training_files)
 
 
 """
-At the time of writing the wall time was 54.1 seconds on a Tesla T4 GPU. This timing may
+At the time of writing, the wall time was 54.1 seconds on a Tesla T4 GPU. This timing may
 vary based on the GPU you are using.
 """
 
 """
-## Optimizing the model with TensorRT
+## Optimize the model with TensorRT
 
 For NVIDIA-based GPUs, the
 [TensorRT framework](https://docs.nvidia.com/deeplearning/frameworks/tf-trt-user-guide/index.html)
@@ -368,10 +370,10 @@ to-be-converted model.
 * `maximum_cached_engines` specifies the maximum number of TRT engines that will be
 cached to handle dynamic operations (operations with unknown shapes).
 
-To know more about the other options, check out the
+To learn more about the other options, refer to the
 [official documentation](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt/ConversionParams).
 You can also explore the different quantization options provided by the
-`tf.experimental.tensorrt` module catering to different purposes.
+`tf.experimental.tensorrt` module.
 """
 
 # Load the converted model.
@@ -405,7 +407,7 @@ for hash, entry in lsh_builder_trt.lsh.tables[0].table.items():
         idx += 1
 
 """
-## Visualization with validation images
+## Visualize results on validation images
 
 In this section we will first writing a couple of utility functions to visualize the
 similar image parsing process. Then we will benchmark the query performance of the models
@@ -488,15 +490,15 @@ for _ in range(5):
     visualize_lsh(lsh_builder_trt)
 
 """
-As you may have spotted there are a couple of incorrect results. This can be mitigated in
-a couple of ways:
+As you may have noticed, there are a couple of incorrect results. This can be mitigated in
+a few ways:
 
-* Better model for generating the initial embeddings especially for noisy samples. We can
+* Better models for generating the initial embeddings especially for noisy samples. We can
 use techniques like [ArcFace](https://arxiv.org/abs/1801.07698),
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362), etc.
 that implicitly encourage better learning of representations for retrieval purposes.
-* Trade-off between the number of tables and the reduction dimensionality is very crucial
-and it helps set the right recall required for your application.
+* The trade-off between the number of tables and the reduction dimensionality is crucial
+and helps set the right recall required for your application.
 """
 
 """
@@ -520,7 +522,7 @@ benchmark(lsh_builder)
 benchmark(lsh_builder_trt)
 
 """
-We can immediately notice a stark difference in between the query performance of the two
+We can immediately notice a stark difference between the query performance of the two
 models. 
 """
 
@@ -536,7 +538,7 @@ frameworks that cater to different hardware platforms:
 * [Apache TVM](https://tvm.apache.org/), compiler for machine learning models covering
 various platforms.
 
-Here are a few resources you might want to check out in case you want to learn more
+Here are a few resources you might want to check out to learn more
 about applications based on vector similary search in general:
 
 * [ANN Benchmarks](http://ann-benchmarks.com/)
