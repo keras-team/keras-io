@@ -2,7 +2,7 @@
 Title: MelGAN Based Spectrogram Inversion using Feature Matching
 Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 02/09/2021
-Last modified: 05/09/2021
+Last modified: 15/09/2021
 Description: Inversion of audio from mel-spectrograms using the MelGAN architecture and feature matching.
 """
 
@@ -39,6 +39,9 @@ import tensorflow_io as tfio
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow_addons import layers as addon_layers
+
+# Setting logger level to avoid input shape warnings
+tf.get_logger().setLevel("ERROR")
 
 # Defining hyperparameters
 
@@ -177,26 +180,27 @@ class MelSpec(layers.Layer):
         )
         return config
 
+
 """
 The Residual Convolutional Block extensively uses dilations and has a total receptive
 field of 27 timesteps per block. The dilations must grow as a power of the `kernel_size`
 to ensure reduction of hissing noise in the output. The network proposed by the paper is
 as follows:
 
-<p align="center">
-<img src="https://i.imgur.com/gENKH91.png" alt="drawing" height="500"/>
-</p>
+![ConvBlock](https://i.imgur.com/gENKH91.png)
 """
 
 # Creating the Residual Stack Layer
 
-def residual_stack(input, filters):
-    """
-    Convolutional residual stack with weight normalization.
 
-    input: filter: int, determines filter size for the residual stack.
-    output: convolutional stack output.
-    """
+def residual_stack(input, filters):
+    """Convolutional residual stack with weight normalization.
+
+	Args:
+		filter: int, determines filter size for the residual stack.
+	Returns:
+		Residual stack output.
+	"""
     c1 = addon_layers.WeightNormalization(
         layers.Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
     )(input)
@@ -228,6 +232,7 @@ def residual_stack(input, filters):
 
     return add3
 
+
 """
 Each Convolutional Block uses the dilations offered by the residual stack
 and upsamples the input data by the `upsampling_factor`.
@@ -235,15 +240,17 @@ and upsamples the input data by the `upsampling_factor`.
 
 # Dilated Convolutional Block consisting of the Residual stack
 
+
 def conv_block(input, conv_dim, upsampling_factor):
-    """
-    Dilated Convolutional Block with weight normalization.
+    """Dilated Convolutional Block with weight normalization.
 
-    input:  conv_dim: int, determines filter size for the block
-          upsampling_factor: int, scale for upsampling
+	Args:
+		conv_dim: int, determines filter size for the block.
+		upsampling_factor: int, scale for upsampling.
 
-    output: keras layer, convolutional stack output
-    """
+	Returns:
+		Dilated convolution block.
+	"""
     conv_t = addon_layers.WeightNormalization(
         layers.Conv1DTranspose(conv_dim, 16, upsampling_factor, padding="same"),
         data_init=False,
@@ -253,6 +260,7 @@ def conv_block(input, conv_dim, upsampling_factor):
     lrelu2 = layers.LeakyReLU()(res_stack)
     return lrelu2
 
+
 """
 The discriminator block consists of convolutions and downsampling layers. This block is
 essential for the implementation of the feature matching technique.
@@ -260,6 +268,7 @@ essential for the implementation of the feature matching technique.
 Each discriminator outputs a list of feature maps that will be compared during training
 to calculate the feature matching loss.
 """
+
 
 def discriminator_block(input):
     conv1 = addon_layers.WeightNormalization(
@@ -289,11 +298,13 @@ def discriminator_block(input):
     conv7 = addon_layers.WeightNormalization(
         layers.Conv1D(1, 3, 1, "same"), data_init=False
     )(lrelu6)
-    return conv7
+    return [lrelu1, lrelu2, lrelu3, lrelu4, lrelu5, lrelu6, conv7]
+
 
 """
 ### Create the generator
 """
+
 
 def create_generator(input_shape):
     inp = keras.Input(input_shape)
@@ -319,6 +330,7 @@ keras.utils.plot_model(generator, show_shapes=True)
 ### Create the discriminator
 """
 
+
 def create_discriminator(input_shape):
     inp = keras.Input(input_shape)
     out_map1 = discriminator_block(inp)
@@ -341,13 +353,9 @@ keras.utils.plot_model(discriminator, show_shapes=True)
 
 **Generator Loss**
 
-## Defining the loss functions
-
-**Generator Loss**
-
 The generator architecture uses a combination of two losses
 
-1. MeanSquaredError:
+1. Mean Squared Error:
 
 This is the standard MSE generator loss calculated between ones and the outputs from the
 discriminator with _N_ layers.
@@ -377,30 +385,34 @@ with ones and generated predictions with zeros.
 
 # Generator loss
 
-def generator_loss(real_pred, fake_pred):
-    """
-    inputs: real_pred: tensor, Output of the ground truth wave passed through the
-    discriminator.
-    fake_pred: tensor, Output of the generator prediction passed through the
-    discriminator.
 
-    outputs: generator loss: float, Loss for the generator
-    """
+def generator_loss(real_pred, fake_pred):
+    """Loss function for the generator.
+
+	Args:
+		real_pred: tensor, Output of the ground truth wave passed through the discriminator.
+		fake_pred: tensor, Output of the generator prediction passed through the discriminator.
+
+	Returns:
+		Loss for the generator.
+	"""
     gen_loss = []
     for i in range(len(fake_pred)):
         gen_loss.append(mse(tf.ones_like(fake_pred[i][-1]), fake_pred[i][-1]))
 
     return tf.reduce_mean(gen_loss)
 
-def feature_matching_loss(real_pred, fake_pred):
-    """
-    inputs: real_pred: tensor, Output of the ground truth wave passed through the
-    discriminator.
-    fake_pred: tensor, Output of the generator prediction passed through the
-    discriminator.
 
-    outputs: fm_loss: float, Feature Matching Loss
-    """
+def feature_matching_loss(real_pred, fake_pred):
+    """Implements the feature matching loss.
+
+	Args:
+		real_pred: tensor, Output of the ground truth wave passed through the discriminator.
+		fake_pred: tensor, Output of the generator prediction passed through the discriminator.
+
+	Returns:
+		Feature Matching Loss.
+	"""
     fm_loss = []
     for i in range(len(fake_pred)):
         for j in range(len(fake_pred[i]) - 1):
@@ -408,15 +420,17 @@ def feature_matching_loss(real_pred, fake_pred):
 
     return tf.reduce_mean(fm_loss)
 
-def discriminator_loss(real_pred, fake_pred):
-    """
-    inputs: real_pred: tensor, Output of the ground truth wave passed through the
-    discriminator.
-    fake_pred: tensor, Output of the generator prediction passed through the
-    discriminator.
 
-    outputs: discriminator loss: float, Loss for the discriminator
-    """
+def discriminator_loss(real_pred, fake_pred):
+    """Implements the discriminator loss.
+
+	Args:
+		real_pred: tensor, Output of the ground truth wave passed through the discriminator.
+		fake_pred: tensor, Output of the generator prediction passed through the discriminator.
+
+	Returns:
+		Discriminator Loss.
+	"""
     real_loss, fake_loss = [], []
     for i in range(len(real_pred)):
         real_loss.append(mse(tf.ones_like(real_pred[i][-1]), real_pred[i][-1]))
@@ -431,25 +445,36 @@ def discriminator_loss(real_pred, fake_pred):
 Defining the MelGAN model for training. This subclass will override the `train_step()` call during training
 """
 
+
 class MelGAN(keras.Model):
     def __init__(self, generator, discriminator, **kwargs):
-        """
-        inputs: generator: keras.model.Model, Generator model
-                discriminator: keras.model.Model, Discriminator model
-        """
+        """MelGAN trainer class
+
+		Args:
+			generator: keras.Model, Generator model
+			discriminator: keras.Model, Discriminator model
+		"""
         super().__init__(**kwargs)
         self.generator = generator
         self.discriminator = discriminator
 
     def compile(
-            self, gen_optimizer, disc_optimizer, generator_loss, feature_matching_loss, discriminator_loss):
-        """
-        inputs: gen_optimizer: keras.optimizer, Optimizer to be used for training
-                disc_optimizer: keras.optimizer, Optimizer to be used for training
-                generator_loss: callable, Loss function for generator
-                feature_matching_loss: callable, Loss function for feature matching
-                discriminator_loss: callable, Loss function for discriminator
-        """
+        self,
+        gen_optimizer,
+        disc_optimizer,
+        generator_loss,
+        feature_matching_loss,
+        discriminator_loss,
+    ):
+        """MelGAN compile method.
+
+		Args:
+			gen_optimizer: keras.optimizer, Optimizer to be used for training
+			disc_optimizer: keras.optimizer, Optimizer to be used for training
+			generator_loss: callable, Loss function for generator
+			feature_matching_loss: callable, Loss function for feature matching
+			discriminator_loss: callable, Loss function for discriminator
+		"""
         super().compile()
 
         # Optimizers
@@ -495,7 +520,11 @@ class MelGAN(keras.Model):
         self.gen_loss_tracker.update_state(gen_fm_loss)
         self.disc_loss_tracker.update_state(disc_loss)
 
-        return {"gen_loss": self.gen_loss_tracker.result(), "disc_loss": self.disc_loss_tracker.result()}
+        return {
+            "gen_loss": self.gen_loss_tracker.result(),
+            "disc_loss": self.disc_loss_tracker.result(),
+        }
+
 
 """
 ## Training
@@ -518,7 +547,13 @@ generator = create_generator((None, 1))
 discriminator = create_discriminator((None, 1))
 
 mel_gan = MelGAN(generator, discriminator)
-mel_gan.compile(gen_optimizer, disc_optimizer, generator_loss, feature_matching_loss, discriminator_loss)
+mel_gan.compile(
+    gen_optimizer,
+    disc_optimizer,
+    generator_loss,
+    feature_matching_loss,
+    discriminator_loss,
+)
 mel_gan.fit(
     train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE), epochs=1
 )
@@ -538,14 +573,15 @@ For testing this, we will create a randomly uniformly distributed tensor to simu
 behavior of the inference pipeline.
 """
 
-# Sampling a random tensor with the shape [50, 80] to mimic a spectrogram
-audio_sample = tf.random.uniform([1, 50, 80])
+# Sampling a random tensor to mimic a batch of 128 spectrograms of shape [50, 80]
+audio_sample = tf.random.uniform([128, 50, 80])
 
 """
-Timing the inference speed of a single sample.
+Timing the inference speed of a single sample. Running this, you can see that the average
+inference time per spectrogram ranges from 8 milliseconds to 10 milliseconds on a K80 GPU which is
+pretty fast.
 """
-%%timeit
-generator(audio_sample, training=False)
+pred = generator.predict(audio_sample, batch_size=32, verbose=1)
 """
 ## Conclusion
 
@@ -567,7 +603,6 @@ Further reading
 
 1. [MelGAN paper](https://arxiv.org/pdf/1910.06711v3.pdf) (Kundan Kumar et al.) to
 understand the reasoning behind the architecture and training process
-
 2. For in-depth understanding of the feature matching loss, you can refer to [Improved
 Techniques for Training GANs](https://arxiv.org/pdf/1606.03498v1.pdf) (Tim Salimans et
 al.).
