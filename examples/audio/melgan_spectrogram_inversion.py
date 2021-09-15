@@ -9,13 +9,12 @@ Description: Inversion of audio from mel-spectrograms using the MelGAN architect
 """
 ## Introduction
 
-Autoregressive vocoders have been ubiquitous for a majority of the speech processing
-history
-but they lacked parallelism for most of their existence.
+Autoregressive vocoders have been ubiquitous for a majority of the history of speech processing,
+but for most of their existence they have lacked parallelism.
 [MelGAN](https://arxiv.org/pdf/1910.06711v3.pdf) is a
 non-autoregressive, fully convolutional vocoder architecture used for purposes ranging
-from spectral inversion and speech enhancement to present day SoTA speech synthesis when
-used as a decoder
+from spectral inversion and speech enhancement to present-day state-of-the-art
+speech synthesis when used as a decoder
 with models like Tacotron2 or FastSpeech that convert text to mel spectrograms.
 
 In this tutorial, we will have a look at the MelGAN architecture and how it can achieve
@@ -70,8 +69,8 @@ tar -xf /content/LJSpeech-1.1.tar.bz2
 """
 
 """
-We will now create a `tf.data.Dataset` to load and process the audio files on the fly.
-The `preprocess` function takes the file path as input and returns two instances of the
+We create a `tf.data.Dataset` to load and process the audio files on the fly.
+The `preprocess()` function takes the file path as input and returns two instances of the
 wave, one for input and one as the ground truth for comparsion. The input wave will be
 mapped to a spectrogram using the custom `MelSpec` layer as shown later in this example.
 """
@@ -86,7 +85,7 @@ def preprocess(filename):
     return audio, audio
 
 
-# Create tf.data.Datasets and mapping the dataset
+# Create tf.data.Dataset objects and apply preprocessing
 train_dataset = tf.data.Dataset.from_tensor_slices((wavs,))
 train_dataset = train_dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)
 
@@ -95,9 +94,9 @@ train_dataset = train_dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUN
 
 The MelGAN architecture consists of 3 main modules:
 
-1. The Residual Block
-2. Dilated Conv Block
-3. Discriminator Block
+1. The residual block
+2. Dilated convolutional block
+3. Discriminator block
 
 ![MelGAN](https://i.imgur.com/ZdxwzPG.png)
 """
@@ -107,7 +106,7 @@ Since the network takes a mel-spectrogram as input, we will create an additional
 layer
 which can convert the raw audio wave to a spectrogram on-the-fly. We use the raw audio
 tensor from `train_dataset` and map it to a mel-spectrogram using the `MelSpec` layer
-below
+below.
 """
 
 # Custom keras layer for on-the-fly audio to spectrogram conversion
@@ -182,7 +181,7 @@ class MelSpec(layers.Layer):
 
 
 """
-The Residual Convolutional Block extensively uses dilations and has a total receptive
+The residual convolutional block extensively uses dilations and has a total receptive
 field of 27 timesteps per block. The dilations must grow as a power of the `kernel_size`
 to ensure reduction of hissing noise in the output. The network proposed by the paper is
 as follows:
@@ -190,17 +189,18 @@ as follows:
 ![ConvBlock](https://i.imgur.com/gENKH91.png)
 """
 
-# Creating the Residual Stack Layer
+# Creating the residual stack block
 
 
 def residual_stack(input, filters):
     """Convolutional residual stack with weight normalization.
 
-	Args:
-		filter: int, determines filter size for the residual stack.
-	Returns:
-		Residual stack output.
-	"""
+    Args:
+        filter: int, determines filter size for the residual stack.
+
+    Returns:
+        Residual stack output.
+    """
     c1 = addon_layers.WeightNormalization(
         layers.Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
     )(input)
@@ -234,23 +234,23 @@ def residual_stack(input, filters):
 
 
 """
-Each Convolutional Block uses the dilations offered by the residual stack
+Each convolutional block uses the dilations offered by the residual stack
 and upsamples the input data by the `upsampling_factor`.
 """
 
-# Dilated Convolutional Block consisting of the Residual stack
+# Dilated convolutional block consisting of the Residual stack
 
 
 def conv_block(input, conv_dim, upsampling_factor):
     """Dilated Convolutional Block with weight normalization.
 
-	Args:
-		conv_dim: int, determines filter size for the block.
-		upsampling_factor: int, scale for upsampling.
+    Args:
+        conv_dim: int, determines filter size for the block.
+        upsampling_factor: int, scale for upsampling.
 
-	Returns:
-		Dilated convolution block.
-	"""
+    Returns:
+        Dilated convolution block.
+    """
     conv_t = addon_layers.WeightNormalization(
         layers.Conv1DTranspose(conv_dim, 16, upsampling_factor, padding="same"),
         data_init=False,
@@ -266,7 +266,7 @@ The discriminator block consists of convolutions and downsampling layers. This b
 essential for the implementation of the feature matching technique.
 
 Each discriminator outputs a list of feature maps that will be compared during training
-to calculate the feature matching loss.
+to compute the feature matching loss.
 """
 
 
@@ -389,13 +389,13 @@ with ones and generated predictions with zeros.
 def generator_loss(real_pred, fake_pred):
     """Loss function for the generator.
 
-	Args:
-		real_pred: tensor, Output of the ground truth wave passed through the discriminator.
-		fake_pred: tensor, Output of the generator prediction passed through the discriminator.
+    Args:
+        real_pred: Tensor, output of the ground truth wave passed through the discriminator.
+        fake_pred: Tensor, output of the generator prediction passed through the discriminator.
 
-	Returns:
-		Loss for the generator.
-	"""
+    Returns:
+        Loss for the generator.
+    """
     gen_loss = []
     for i in range(len(fake_pred)):
         gen_loss.append(mse(tf.ones_like(fake_pred[i][-1]), fake_pred[i][-1]))
@@ -406,13 +406,13 @@ def generator_loss(real_pred, fake_pred):
 def feature_matching_loss(real_pred, fake_pred):
     """Implements the feature matching loss.
 
-	Args:
-		real_pred: tensor, Output of the ground truth wave passed through the discriminator.
-		fake_pred: tensor, Output of the generator prediction passed through the discriminator.
+    Args:
+        real_pred: Tensor, output of the ground truth wave passed through the discriminator.
+        fake_pred: Tensor, output of the generator prediction passed through the discriminator.
 
-	Returns:
-		Feature Matching Loss.
-	"""
+    Returns:
+        Feature Matching Loss.
+    """
     fm_loss = []
     for i in range(len(fake_pred)):
         for j in range(len(fake_pred[i]) - 1):
@@ -424,13 +424,13 @@ def feature_matching_loss(real_pred, fake_pred):
 def discriminator_loss(real_pred, fake_pred):
     """Implements the discriminator loss.
 
-	Args:
-		real_pred: tensor, Output of the ground truth wave passed through the discriminator.
-		fake_pred: tensor, Output of the generator prediction passed through the discriminator.
+    Args:
+        real_pred: Tensor, output of the ground truth wave passed through the discriminator.
+        fake_pred: Tensor, output of the generator prediction passed through the discriminator.
 
-	Returns:
-		Discriminator Loss.
-	"""
+    Returns:
+        Discriminator Loss.
+    """
     real_loss, fake_loss = [], []
     for i in range(len(real_pred)):
         real_loss.append(mse(tf.ones_like(real_pred[i][-1]), real_pred[i][-1]))
@@ -442,7 +442,8 @@ def discriminator_loss(real_pred, fake_pred):
 
 
 """
-Defining the MelGAN model for training. This subclass will override the `train_step()` call during training
+Defining the MelGAN model for training.
+This subclass overrides the `train_step()` method to implement the training logic.
 """
 
 
@@ -450,10 +451,10 @@ class MelGAN(keras.Model):
     def __init__(self, generator, discriminator, **kwargs):
         """MelGAN trainer class
 
-		Args:
-			generator: keras.Model, Generator model
-			discriminator: keras.Model, Discriminator model
-		"""
+        Args:
+            generator: keras.Model, Generator model
+            discriminator: keras.Model, Discriminator model
+        """
         super().__init__(**kwargs)
         self.generator = generator
         self.discriminator = discriminator
@@ -468,13 +469,13 @@ class MelGAN(keras.Model):
     ):
         """MelGAN compile method.
 
-		Args:
-			gen_optimizer: keras.optimizer, Optimizer to be used for training
-			disc_optimizer: keras.optimizer, Optimizer to be used for training
-			generator_loss: callable, Loss function for generator
-			feature_matching_loss: callable, Loss function for feature matching
-			discriminator_loss: callable, Loss function for discriminator
-		"""
+        Args:
+            gen_optimizer: keras.optimizer, optimizer to be used for training
+            disc_optimizer: keras.optimizer, optimizer to be used for training
+            generator_loss: callable, loss function for generator
+            feature_matching_loss: callable, loss function for feature matching
+            discriminator_loss: callable, loss function for discriminator
+        """
         super().compile()
 
         # Optimizers
@@ -530,9 +531,8 @@ class MelGAN(keras.Model):
 ## Training
 
 The paper suggests that the training with dynamic shapes takes around 400,000 steps (~500
-epochs). For
-this example, we will run it only for a single epoch (819 steps). Longer training time
-(greater than 300 epochs) will almost certainly provide better results.
+epochs). For this example, we will run it only for a single epoch (819 steps).
+Longer training time (greater than 300 epochs) will almost certainly provide better results.
 """
 
 gen_optimizer = keras.optimizers.Adam(
@@ -560,9 +560,7 @@ mel_gan.fit(
 
 """
 ## Testing the model
-"""
 
-"""
 The trained model can now be used for real time text-to-speech translation tasks.
 To test how fast the MelGAN inference can be, let us take a sample audio mel-spectrogram
 and convert it. Note that the actual model pipeline will not include the `MelSpec` layer
