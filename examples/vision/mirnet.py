@@ -2,7 +2,7 @@
 Title: Low-light Image Enhancement using MIRNet
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/11
-Last modified: 2021/09/11
+Last modified: 2021/09/15
 Description: Implement MIRNet architecture for Low-light Image Enhancement.
 """
 """
@@ -19,18 +19,16 @@ simultaneously preserving the high-resolution spatial details.
 ### References:
 
 - [Learning Enriched Features for Real Image Restoration and Enhancement](https://arxiv.org/abs/2003.06792)
-
 - [The Retinex Theory of Color Vision](http://www.cnbc.cmu.edu/~tai/cp_papers/E.Land_Retinex_Theory_ScientifcAmerican.pdf)
-
 - [Two deterministic half-quadratic regularization algorithms for computed imaging](https://ieeexplore.ieee.org/document/413553)
 """
 
 """
 ## Downloading LOLDataset
 
-The **LoL Dataset** has been created for low-light image enhancement problem. It provides
-485 images for training and 15 for testing. Each image pair in the dataset consists of a
-low-light input image and its corresponding well-exposed reference image.
+The **LoL Dataset** has been created for low-light image enhancement problem.
+It provides 485 images for training and 15 for testing. Each image pair in the dataset
+consists of a low-light input image and its corresponding well-exposed reference image.
 """
 
 import os
@@ -46,8 +44,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """shell
-!gdown https://drive.google.com/uc?id=157bjO1_cFuSd0HWDUuAmcHRJDVyWpOxB
-!unzip -q LOLdataset.zip
+!gdown https://drive.google.com/uc?id=1AST_wClpDMZ0dzaSvXdZ_YFWork5-egD
+!unzip -q lol_dataset.zip
 """
 
 """
@@ -107,10 +105,14 @@ def get_dataset(low_light_images, enhanced_images):
     return dataset
 
 
-train_low_light_images = sorted(glob("./our485/low/*"))[:MAX_TRAIN_IMAGES]
-train_enhanced_images = sorted(glob("./our485/high/*"))[:MAX_TRAIN_IMAGES]
-val_low_light_images = sorted(glob("./eval15/low/*"))
-val_enhanced_images = sorted(glob("./eval15/high/*"))
+train_low_light_images = sorted(glob("./lol_dataset/our485/low/*"))[:MAX_TRAIN_IMAGES]
+train_enhanced_images = sorted(glob("./lol_dataset/our485/high/*"))[:MAX_TRAIN_IMAGES]
+
+val_low_light_images = sorted(glob("./lol_dataset/our485/low/*"))[MAX_TRAIN_IMAGES:]
+val_enhanced_images = sorted(glob("./lol_dataset/our485/high/*"))[MAX_TRAIN_IMAGES:]
+
+test_low_light_images = sorted(glob("./lol_dataset/eval15/low/*"))
+test_enhanced_images = sorted(glob("./lol_dataset/eval15/high/*"))
 
 
 train_dataset = get_dataset(train_low_light_images, train_enhanced_images)
@@ -128,21 +130,17 @@ Main features of the MIRNet model are:
 - A feature extraction model that obtains a complementary set of features across multiple
 spatial scales, while maintaining the original high-resolution features to preserve
 precise spatial details.
-
 - A regularly repeated mechanism for information exchange, where the features across
 multi-resolution branches are progressively fused together for improved representation
 learning.
-
 - A new approach to fuse multi-scale features using a selective kernel network
 that dynamically combines variable receptive fields and faithfully preserves
 the original feature information at each spatial resolution.
-
 - A recursive residual design that progressively breaks down the input signal
 in order to simplify the overall learning process, and allows the construction
 of very deep networks.
 
 
-![](https://raw.githubusercontent.com/soumik12345/MIRNet/master/assets/mirnet_architecture.png)
 ![](https://raw.githubusercontent.com/soumik12345/MIRNet/master/assets/mirnet_architecture.png)
 """
 
@@ -159,14 +157,13 @@ streams) followed by their aggregation.
 different scales of information. We first combine these multi-scale features using an
 element-wise sum, on which we apply Global Average Pooling (GAP) across the spatial
 dimension. Next, we apply a channel- downscaling convolution layer to generate a compact
-feature representation which passes
-through three parallel channel-upscaling convolution layers (one for each resolution
-stream) and provides us with three feature descriptors.
+feature representation which passes through three parallel channel-upscaling convolution
+layers (one for each resolution stream) and provides us with three feature descriptors.
 
 **Select**: This operator applies the softmax function to the feature descriptors to
 obtain the corresponding activations that are used to adaptively recalibrate multi-scale
-feature maps. The aggregated features are defined as the sum of product of the
-corresponding multi-scale feature and the feature descriptor.
+feature maps. The aggregated features are defined as the sum of product of the corresponding
+multi-scale feature and the feature descriptor.
 
 ![](https://i.imgur.com/7U6ixF6.png)
 """
@@ -181,20 +178,18 @@ def selective_kernel_feature_fusion(
     )
     gap = layers.GlobalAveragePooling2D()(combined_feature)
     channel_wise_statistics = tf.reshape(gap, shape=(-1, 1, 1, channels))
-    compact_feature_representation = layers.ReLU()(
-        layers.Conv2D(filters=channels // 8, kernel_size=(1, 1))(
-            channel_wise_statistics
-        )
-    )
-    feature_descriptor_1 = tf.nn.softmax(
-        layers.Conv2D(channels, kernel_size=(1, 1))(compact_feature_representation)
-    )
-    feature_descriptor_2 = tf.nn.softmax(
-        layers.Conv2D(channels, kernel_size=(1, 1))(compact_feature_representation)
-    )
-    feature_descriptor_3 = tf.nn.softmax(
-        layers.Conv2D(channels, kernel_size=(1, 1))(compact_feature_representation)
-    )
+    compact_feature_representation = layers.Conv2D(
+        filters=channels // 8, kernel_size=(1, 1), activation="relu"
+    )(channel_wise_statistics)
+    feature_descriptor_1 = layers.Conv2D(
+        channels, kernel_size=(1, 1), activation="softmax"
+    )(compact_feature_representation)
+    feature_descriptor_2 = layers.Conv2D(
+        channels, kernel_size=(1, 1), activation="softmax"
+    )(compact_feature_representation)
+    feature_descriptor_3 = layers.Conv2D(
+        channels, kernel_size=(1, 1), activation="softmax"
+    )(compact_feature_representation)
     feature_1 = multi_scale_feature_1 * feature_descriptor_1
     feature_2 = multi_scale_feature_2 * feature_descriptor_2
     feature_3 = multi_scale_feature_3 * feature_descriptor_3
@@ -249,21 +244,20 @@ def channel_attention_block(input_tensor):
     channels = list(input_tensor.shape)[-1]
     average_pooling = layers.GlobalAveragePooling2D()(input_tensor)
     feature_descriptor = tf.reshape(average_pooling, shape=(-1, 1, 1, channels))
-    feature_activations = layers.ReLU()(
-        layers.Conv2D(filters=channels // 8, kernel_size=(1, 1))(feature_descriptor)
-    )
-    feature_activations = tf.nn.sigmoid(
-        layers.Conv2D(filters=channels, kernel_size=(1, 1))(feature_activations)
-    )
+    feature_activations = layers.Conv2D(
+        filters=channels // 8, kernel_size=(1, 1), activation="relu"
+    )(feature_descriptor)
+    feature_activations = layers.Conv2D(
+        filters=channels, kernel_size=(1, 1), activation="sigmoid"
+    )(feature_activations)
     return input_tensor * feature_activations
 
 
 def dual_attention_unit_block(input_tensor):
     channels = list(input_tensor.shape)[-1]
-    feature_map = layers.Conv2D(channels, kernel_size=(3, 3), padding="same")(
-        input_tensor
-    )
-    feature_map = layers.ReLU()(feature_map)
+    feature_map = layers.Conv2D(
+        channels, kernel_size=(3, 3), padding="same", activation="relu"
+    )(input_tensor)
     feature_map = layers.Conv2D(channels, kernel_size=(3, 3), padding="same")(
         feature_map
     )
@@ -296,12 +290,12 @@ Residual Block.
 
 def down_sampling_module(input_tensor):
     channels = list(input_tensor.shape)[-1]
-    main_branch = layers.Conv2D(channels, kernel_size=(1, 1))(input_tensor)
-    main_branch = tf.nn.relu(main_branch)
-    main_branch = layers.Conv2D(channels, kernel_size=(3, 3), padding="same")(
-        main_branch
+    main_branch = layers.Conv2D(channels, kernel_size=(1, 1), activation="relu")(
+        input_tensor
     )
-    main_branch = tf.nn.relu(main_branch)
+    main_branch = layers.Conv2D(
+        channels, kernel_size=(3, 3), padding="same", activation="relu"
+    )(main_branch)
     main_branch = layers.MaxPooling2D()(main_branch)
     main_branch = layers.Conv2D(channels * 2, kernel_size=(1, 1))(main_branch)
     skip_branch = layers.MaxPooling2D()(input_tensor)
@@ -311,12 +305,12 @@ def down_sampling_module(input_tensor):
 
 def up_sampling_module(input_tensor):
     channels = list(input_tensor.shape)[-1]
-    main_branch = layers.Conv2D(channels, kernel_size=(1, 1))(input_tensor)
-    main_branch = tf.nn.relu(main_branch)
-    main_branch = layers.Conv2D(channels, kernel_size=(3, 3), padding="same")(
-        main_branch
+    main_branch = layers.Conv2D(channels, kernel_size=(1, 1), activation="relu")(
+        input_tensor
     )
-    main_branch = tf.nn.relu(main_branch)
+    main_branch = layers.Conv2D(
+        channels, kernel_size=(3, 3), padding="same", activation="relu"
+    )(main_branch)
     main_branch = layers.UpSampling2D()(main_branch)
     main_branch = layers.Conv2D(channels // 2, kernel_size=(1, 1))(main_branch)
     skip_branch = layers.UpSampling2D()(input_tensor)
@@ -388,9 +382,8 @@ model = mirnet_model(num_rrg=3, num_mrb=2, channels=64)
 """
 ## Training
 
-- We train MIRNet using **Charbonnier Loss** as the loss function and **Adam Optimizer**
-with a learning rate of `1e-4`.
-
+- We train MIRNet using **Charbonnier Loss** as the loss function and **Adam
+Optimizer** with a learning rate of `1e-4`.
 - We use **Peak Signal Noise Ratio** or PSNR as a metric which is an expression for the
 ratio between the maximum possible value (power) of a signal and the power of distorting
 noise that affects the quality of its representation.
@@ -447,42 +440,19 @@ plt.show()
 
 """
 ## Inference
-
-For inference, we need the dimensions of the input image to be multiples of 4. Hence we
-resize the input image to the closest possible dimension that is acceptable by the model
-before inference.
 """
 
 
-def closest_number(n, m):
-    q = int(n / m)
-    n1 = m * q
-    if (n * m) > 0:
-        n2 = m * (q + 1)
-    else:
-        n2 = m * (q - 1)
-    if abs(n - n1) < abs(n - n2):
-        return n1
-    return n2
-
-
-def plot_result(image, enhanced):
-    fig = plt.figure(figsize=(12, 12))
-    fig.add_subplot(1, 2, 1).set_title("Original Image")
-    _ = plt.imshow(image)
-    plt.axis("off")
-    fig.add_subplot(1, 2, 2).set_title("Enhanced Image")
-    _ = plt.imshow(enhanced)
-    plt.axis("off")
+def plot_results(images, titles, figure_size=(12, 12)):
+    fig = plt.figure(figsize=figure_size)
+    for i in range(len(images)):
+        fig.add_subplot(1, len(images), i + 1).set_title(titles[i])
+        _ = plt.imshow(images[i])
+        plt.axis("off")
     plt.show()
 
 
 def infer(original_image):
-    width, height = original_image.size
-    target_width, target_height = (closest_number(width, 4), closest_number(height, 4))
-    original_image = original_image.resize(
-        (target_width, target_height), Image.ANTIALIAS
-    )
     image = keras.preprocessing.image.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
@@ -504,7 +474,7 @@ def infer(original_image):
 for low_light_image in random.sample(train_low_light_images, 4):
     original_image = Image.open(low_light_image)
     enhanced_image = infer(original_image)
-    plot_result(original_image, enhanced_image)
+    plot_results([original_image, enhanced_image], ["Original", "Enhanced"])
 
 """
 ### Inference on Validation Images
@@ -513,4 +483,26 @@ for low_light_image in random.sample(train_low_light_images, 4):
 for low_light_image in random.sample(val_low_light_images, 4):
     original_image = Image.open(low_light_image)
     enhanced_image = infer(original_image)
-    plot_result(original_image, enhanced_image)
+    plot_results([original_image, enhanced_image], ["Original", "Enhanced"])
+
+"""
+### Inference on Test Images
+
+We compare the test images from LOLDataset enhanced by MIRNet against the image
+brightness correction feature available for
+[Pinetools](https://pinetools.com/change-image-brightness).
+"""
+
+# Test Images in LOLDataset enhanced using automated brightness correction
+# option in Pinetools (https://pinetools.com/change-image-brightness)
+test_pinetools_enhanced_images = sorted(glob("./lol_dataset/eval15/pinetools/*"))
+
+for index in random.sample(range(len(test_low_light_images)), 4):
+    original_image = Image.open(test_low_light_images[index])
+    enhanced_image = infer(original_image)
+    pinetools_enhanced_image = cv2.imread(test_pinetools_enhanced_images[index])
+    plot_results(
+        [original_image, pinetools_enhanced_image, enhanced_image],
+        ["Original", "Pinetools Enhanced", "MIRNet Enhanced"],
+        (20, 12),
+    )
