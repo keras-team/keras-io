@@ -148,6 +148,12 @@ Examples should be clear and detailed, but not overly verbose. You can add as mu
 long as each additional sentence / paragraph provides useful information that helps with understanding the example.
 Never use any "filler" content.
 
+### Style
+
+- Use present tense ("We present... we implement...")
+- Always define abbreviations / acronyms the first time you use them ("We implement a Graph Attention Network (GAT)...")
+- All and any sentence should convey a useful idea; avoid filler at all costs.
+
 ### Proofreading
 
 Make sure to proofread your text paragraphs to avoid typos.
@@ -160,6 +166,12 @@ and why it is useful/interesting.
 If the example presents a specific technique,
 the introduction should also include an overview of the technique as well as links to external references.
 There should be a conclusion section that recapitulates key takeaways from the example, and offers pointers to next steps.
+
+### Code elements
+
+All code keywords should be formatted with backticks, e.g. `like_this` (standard Markdown code formatting).
+
+When refering to a function or method name, it should be followed with parens, like this: `my_function()` or `my_method()`.
 
 ### Mathematical notation
 
