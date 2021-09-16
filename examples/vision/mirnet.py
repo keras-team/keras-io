@@ -36,7 +36,7 @@ import cv2
 import random
 import numpy as np
 from glob import glob
-from PIL import Image
+from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -44,7 +44,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """shell
-!gdown https://drive.google.com/uc?id=1AST_wClpDMZ0dzaSvXdZ_YFWork5-egD
+!gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
 !unzip -q lol_dataset.zip
 """
 
@@ -468,41 +468,18 @@ def infer(original_image):
 
 
 """
-### Inference on Train Images
-"""
-
-for low_light_image in random.sample(train_low_light_images, 4):
-    original_image = Image.open(low_light_image)
-    enhanced_image = infer(original_image)
-    plot_results([original_image, enhanced_image], ["Original", "Enhanced"])
-
-"""
-### Inference on Validation Images
-"""
-
-for low_light_image in random.sample(val_low_light_images, 4):
-    original_image = Image.open(low_light_image)
-    enhanced_image = infer(original_image)
-    plot_results([original_image, enhanced_image], ["Original", "Enhanced"])
-
-"""
 ### Inference on Test Images
 
-We compare the test images from LOLDataset enhanced by MIRNet against the image
-brightness correction feature available for
-[Pinetools](https://pinetools.com/change-image-brightness).
+We compare the test images from LOLDataset enhanced by MIRNet against
+`PIL.ImageOps.autocontrast` which maximizes image contrast.
 """
 
-# Test Images in LOLDataset enhanced using automated brightness correction
-# option in Pinetools (https://pinetools.com/change-image-brightness)
-test_pinetools_enhanced_images = sorted(glob("./lol_dataset/eval15/pinetools/*"))
 
-for index in random.sample(range(len(test_low_light_images)), 4):
-    original_image = Image.open(test_low_light_images[index])
+for low_light_image in random.sample(test_low_light_images, 6):
+    original_image = Image.open(low_light_image)
     enhanced_image = infer(original_image)
-    pinetools_enhanced_image = cv2.imread(test_pinetools_enhanced_images[index])
     plot_results(
-        [original_image, pinetools_enhanced_image, enhanced_image],
-        ["Original", "Pinetools Enhanced", "MIRNet Enhanced"],
+        [original_image, ImageOps.autocontrast(original_image), enhanced_image],
+        ["Original", "PIL Autocontrast", "MIRNet Enhanced"],
         (20, 12),
     )
