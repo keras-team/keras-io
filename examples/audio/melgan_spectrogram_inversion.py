@@ -186,7 +186,7 @@ field of 27 timesteps per block. The dilations must grow as a power of the `kern
 to ensure reduction of hissing noise in the output. The network proposed by the paper is
 as follows:
 
-![ConvBlock](https://i.imgur.com/gENKH91.png)
+![ConvBlock](https://i.imgur.com/sFnnsCll.jpg)
 """
 
 # Creating the residual stack block
@@ -324,7 +324,6 @@ def create_generator(input_shape):
 # We use a dynamic input shape for the generator since the model is fully convolutional
 generator = create_generator((None, 1))
 generator.summary()
-keras.utils.plot_model(generator, show_shapes=True)
 
 """
 ### Create the discriminator
@@ -346,7 +345,6 @@ def create_discriminator(input_shape):
 discriminator = create_discriminator((None, 1))
 
 discriminator.summary()
-keras.utils.plot_model(discriminator, show_shapes=True)
 
 """
 ## Defining the loss functions
