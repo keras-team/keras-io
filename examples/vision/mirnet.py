@@ -1,16 +1,16 @@
 """
-Title: Low-light Image Enhancement using MIRNet
+Title: Low-light image enhancement using MIRNet
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/11
 Last modified: 2021/09/15
-Description: Implement MIRNet architecture for Low-light Image Enhancement.
+Description: Implementing the MIRNet architecture for low-light image enhancement.
 """
 """
 ## Introduction
 
 With the goal of recovering high-quality image content from its degraded version, image
-restoration enjoys numerous applications, such as in surveillance, computational
-photography, medical imaging, and remote sensing. In this example, we implement the
+restoration enjoys numerous applications, such as in
+photography, security, medical imaging, and remote sensing. In this example, we implement the
 **MIRNet** model for low-light image enhancement, a fully-convolutional architecture that
 learns an enriched set of
 features that combines contextual information from multiple scales, while
@@ -26,7 +26,7 @@ simultaneously preserving the high-resolution spatial details.
 """
 ## Downloading LOLDataset
 
-The **LoL Dataset** has been created for low-light image enhancement problem.
+The **LoL Dataset** has been created for low-light image enhancement.
 It provides 485 images for training and 15 for testing. Each image pair in the dataset
 consists of a low-light input image and its corresponding well-exposed reference image.
 """
@@ -44,17 +44,17 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """shell
-!gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-!unzip -q lol_dataset.zip
+gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
+unzip -q lol_dataset.zip
 """
 
 """
 ## Creating a TensorFlow Dataset
 
-In order to restrict the training time to an hour, we would use 300 image pairs from the
-LoL Dataset's training set and would use the 15 image pairs for evaluation as validation
-data. We would generate random crops of size `128 x 128` from the image pairs that would
-be used for both training and validation.
+We use 300 image pairs from the LoL Dataset's training set for training,
+and we use the remaining 185 image pairs for validation.
+We generate random crops of size `128 x 128` from the image pairs to be
+used for both training and validation.
 """
 
 random.seed(10)
@@ -125,9 +125,9 @@ print("Val Dataset:", val_dataset)
 """
 ## MIRNet Model
 
-Main features of the MIRNet model are:
+Here are the main features of the MIRNet model:
 
-- A feature extraction model that obtains a complementary set of features across multiple
+- A feature extraction model that computes a complementary set of features across multiple
 spatial scales, while maintaining the original high-resolution features to preserve
 precise spatial details.
 - A regularly repeated mechanism for information exchange, where the features across
@@ -470,8 +470,8 @@ def infer(original_image):
 """
 ### Inference on Test Images
 
-We compare the test images from LOLDataset enhanced by MIRNet against
-`PIL.ImageOps.autocontrast` which maximizes image contrast.
+We compare the test images from LOLDataset enhanced by MIRNet with images
+enhanced via the `PIL.ImageOps.autocontrast()` function.
 """
 
 
