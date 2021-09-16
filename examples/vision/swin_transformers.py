@@ -132,7 +132,7 @@ class DropPath(layers.Layer):
     def call(self, x):
         input_shape = tf.shape(x)
         batch_size = input_shape[0]
-        rank = len(input_shape)
+        rank = x.shape.rank
         shape = (batch_size,) + (1,) * (rank - 1)
         random_tensor = (1 - self.drop_prob) + tf.random.uniform(shape, dtype=x.dtype)
         path_mask = tf.floor(random_tensor)
