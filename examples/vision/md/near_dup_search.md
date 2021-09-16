@@ -389,7 +389,7 @@ For NVIDIA-based GPUs, the
 can be used to dramatically enhance the inference latency by using various model
 optimization techniques like pruning, constant folding, layer fusion, and so on. Here we
 will use the
-[`tf.experimental.tensorrt`](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt)
+`tf.experimental.tensorrt`
 module to optimize our embedding model.
 
 

@@ -346,9 +346,7 @@ For NVIDIA-based GPUs, the
 [TensorRT framework](https://docs.nvidia.com/deeplearning/frameworks/tf-trt-user-guide/index.html)
 can be used to dramatically enhance the inference latency by using various model
 optimization techniques like pruning, constant folding, layer fusion, and so on. Here we
-will use the
-[`tf.experimental.tensorrt`](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt)
-module to optimize our embedding model.
+will use the `tf.experimental.tensorrt` module to optimize our embedding model.
 """
 
 # First serialize the embedding model as a SavedModel.
