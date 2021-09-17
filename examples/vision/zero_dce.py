@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: Zero-DCE for low-light image enhancement
+Author: [Soumik Rakshit](http://github.com/soumik12345)
+Date created: 2021/09/18
+Last modified: 2021/09/18
+Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement
 """
 """
 ## Introduction
@@ -18,6 +18,11 @@ is appealing in its relaxed assumption on reference images, i.e., it does not re
 paired or unpaired data during training. This is achieved through a set of carefully
 formulated non-reference loss functions, which implicitly
 measure the enhancement quality and drive the learning of the network.
+
+### References:
+
+- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/abs/2001.06826)
+- [A spatial processor model for object colour perception](https://www.sciencedirect.com/science/article/abs/pii/0016003280900587)
 """
 
 """
