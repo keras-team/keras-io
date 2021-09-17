@@ -569,13 +569,16 @@ by calling `layer.reset_metrics()` on any layer or model.
 
 """
 You can also define your own metrics by subclassing `keras.metrics.Metric`.
-You need to override the three functions called above.
-Override `update_state` to update the statistic values.
-Override `result` to return the metric value.
-Override `reset_state` to reset the metric to its initial state.
+You need to override the three functions called above:
 
-Here is an example of F1-score.
+- Override `update_state()` to update the statistic values.
+- Override `result()` to return the metric value.
+- Override `reset_state()` to reset the metric to its initial state.
+
+Here is an example where we implement the F1-score metric
+(with support for sample weighting).
 """
+
 class F1Score(keras.metrics.Metric):
 
   def __init__(self, name='f1_score', dtype='float32', threshold=0.5, **kwargs):
@@ -615,8 +618,9 @@ class F1Score(keras.metrics.Metric):
     self.false_negatives.assign(0)
 
 """
-You can quickly verify the metric with the following code.
+Let's test-drive it:
 """
+
 m = F1Score()
 m.update_state([0, 1, 0, 0], [0.3, 0.5, 0.8, 0.9])
 print('Intermediate result:', float(m.result()))
