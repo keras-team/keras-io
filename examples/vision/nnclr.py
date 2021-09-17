@@ -627,14 +627,9 @@ You should also take a look at the blogs for these papers which neatly show that
 possible to achieve good results with few class labels by first pretraining on a large
 unlabeled dataset and then fine-tuning on a smaller labeled dataset:
 
-- [Advancing Self-Supervised and Semi-Supervised Learning with
-SimCLR](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html)
-- [High-performance self-supervised image classification with contrastive
-clustering](https://ai.facebook.com/blog/high-performance-self-supervised-image-classification-with-contrastive-clustering/)
-clustering](https://ai.facebook.com/blog/high-performance-self-supervised-image-classification-with-contrastive-clustering/)
-- [Self-supervised learning: The dark matter of
-intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/)
-intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/)
+- [Advancing Self-Supervised and Semi-Supervised Learning with SimCLR](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html)
+- [High-performance self-supervised image classification with contrastive clustering](https://ai.facebook.com/blog/high-performance-self-supervised-image-classification-with-contrastive-clustering/)
+- [Self-supervised learning: The dark matter of intelligence](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/)
 
 You are also advised to check out the [original paper](https://arxiv.org/abs/2104.14548).
 
