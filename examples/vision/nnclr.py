@@ -165,7 +165,7 @@ Other self-supervised techniques like [SimCLR](https://arxiv.org/abs/2002.05709)
 rely heavily on a well designed data augmentation pipeline to get the best performance.
 However, NNCLR is _less_ dependent on complex augmentations as nearest-neighbors already
 provide richness in sample variations. A few common techniques often included
-augmentation pipeliness are:
+augmentation pipelines are:
 
 - Random resized crops
 - Color distortions
@@ -555,8 +555,8 @@ a `queue_size` of 10,000 as explained earlier. We use Adam as our contrastive an
 optimizer. For this example we train the model for only 30 epochs but it should be
 trained for more epochs for better performance.
 
-The following two metrics can be used for monitoring the pretraining performance which we
-also log (taken from 
+The following two metrics can be used for monitoring the pretraining performance
+which we also log (taken from
 [this Keras example](https://keras.io/examples/vision/semisupervised_simclr/#selfsupervised-model-for-contrastive-pretraining)):
 
 - Contrastive accuracy: Self-supervised metric, the ratio of cases in which the
