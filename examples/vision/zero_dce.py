@@ -8,16 +8,15 @@ Description: Implementing Zero-Reference Deep Curve Estimation for low-light ima
 """
 ## Introduction
 
-**Zero-Reference Deep Curve Estimation** or **Zero-DCE** formulates light
-enhancement as a task of image-specific curve estimation with a deep neural network. In
-this example, we would train a lightweight deep network, **DCE-Net**, to estimate
-pixel-wise and high-order curves for dynamic range adjustment of a given image. The curve
-estimation is specially designed, considering pixel value range, monotonicity, and
-differentiability. Zero-DCE
-is appealing in its relaxed assumption on reference images, i.e., it does not require any
-paired or unpaired data during training. This is achieved through a set of carefully
-formulated non-reference loss functions, which implicitly
-measure the enhancement quality and drive the learning of the network.
+**Zero-Reference Deep Curve Estimation** or **Zero-DCE** formulates light enhancement
+as a task of image-specific curve estimation with a deep neural network. In this example,
+we would train a lightweight deep network, **DCE-Net**, to estimate pixel-wise and
+high-order curves for dynamic range adjustment of a given image. The curve estimation is
+specially designed, considering pixel value range, monotonicity, and differentiability.
+Zero-DCE is appealing in its relaxed assumption on reference images, i.e., it does not
+require any paired or unpaired data during training. This is achieved through a set of
+carefully formulated non-reference loss functions, which implicitly measure the enhancement
+quality and drive the learning of the network.
 
 ### References:
 
@@ -98,21 +97,19 @@ channels by applying the curves iteratively for obtaining the final enhanced ima
 
 ### Light-Enhancement Curve
 
-It is a kind of curve that can map a low-light image to its enhanced version
-automatically, where the self-adaptive curve parameters are solely dependent on the input
-image. There are three objectives
-in the design of such a curve:
+It is a kind of curve that can map a low-light image to its enhanced version automatically,
+where the self-adaptive curve parameters are solely dependent on the input image. There are
+three objectives in the design of such a curve:
 - Each pixel value of the enhanced image should be in the normalized range of `[0,1]` to
 avoid information loss induced by overflow truncation.
 - It should be monotonous to preserve the differences (contrast) of neighboring pixels.
 - The form of this curve should be as simple as possible and differentiable in the
 process of gradient backpropagation.
 
-The Light-Enhancement Curve is seperately applied to three RGB channels
-instead of solely on the illumination channel. The three-channel adjustment can better
-preserve the inherent color and reduce the risk of over-saturation. The Light-Enhancement
-Curve can be applied iteratively to enable more versatile adjustment to cope with
-challenging low-light conditions.
+The Light-Enhancement Curve is seperately applied to three RGB channels instead of solely
+on the illumination channel. The three-channel adjustment can better preserve the inherent
+color and reduce the risk of over-saturation. The Light-Enhancement Curve can be applied
+iteratively to enable more versatile adjustment to cope with challenging low-light conditions.
 
 ![](https://li-chongyi.github.io/Zero-DCE_files/framework.png)
 
@@ -224,8 +221,8 @@ def illumination_smoothness_loss(x):
 """
 ### Spatial Consistancy Loss
 
-The spatial consistency loss encourages spatial coherence of the enhanced image
-through preserving the difference of neighboring regions between the input image and its
+The spatial consistency loss encourages spatial coherence of the enhanced image through
+preserving the difference of neighboring regions between the input image and its
 enhanced version.
 """
 
