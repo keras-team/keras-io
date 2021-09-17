@@ -169,6 +169,7 @@ rely heavily on a well designed data augmentation pipeline to get the best perfo
 However, NNCLR is _less_ dependent on complex augmentations as nearest-neighbors already
 provide richness in sample variations. A few common techniques often included
 augmentation pipeliness are:
+
 - Random resized crops
 - Color distortions
 - Gaussian blur
