@@ -93,7 +93,7 @@ shuffle_buffer = 5000
 labelled_train_images = 5000
 unlabelled_images = 100000
 
-temperature = (0.1,)
+temperature = 0.1
 queue_size = 10000
 contrastive_augmenter = {
     "brightness": 0.5,
