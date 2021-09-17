@@ -626,6 +626,7 @@ more.
 You should also take a look at the blogs for these papers which neatly show that it is
 possible to achieve good results with few class labels by first pretraining on a large
 unlabeled dataset and then fine-tuning on a smaller labeled dataset:
+
 - [Advancing Self-Supervised and Semi-Supervised Learning with
 SimCLR](https://ai.googleblog.com/2020/04/advancing-self-supervised-and-semi.html)
 - [High-performance self-supervised image classification with contrastive
