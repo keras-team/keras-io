@@ -10,37 +10,37 @@ Description: Implementation of NNCLR, a self-supervised learning method for comp
 
 Self-supervised representation learning aims to obtain robust representations of samples
 from raw data without expensive labels or annotations. Early methods in this field
-focused on defining pre-text tasks which involved a surrogate task on a domain with ample
-weak supervision labels. Encoders trained to solve such pre-text tasks are expected to
+focused on defining pretraining tasks which involved a surrogate task on a domain with ample
+weak supervision labels. Encoders trained to solve such tasks are expected to
 learn general features that might be useful for other downstream tasks requiring
 expensive annotations like image classification.
 
 ### Contrastive Learning
 
-A broad category of self-supervised learning techniques are those that use contrastive
-losses, which have been used in a wide range of computer vision applications like
-[image similarity](https://www.jmlr.org/papers/v11/chechik10a.html)
-, [Dimensionality reduction (DrLIM)](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf)
-and [Face verification/identification](https://openaccess.thecvf.com/content_cvpr_2015/html/Schroff_FaceNet_A_Unified_2015_CVPR_paper.html)
-. These methods learn a latent space that draws positive samples together while
+A broad category of self-supervised learning techniques are those that use *contrastive
+losses*, which have been used in a wide range of computer vision applications like
+[image similarity](https://www.jmlr.org/papers/v11/chechik10a.html),
+[dimensionality reduction (DrLIM)](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf)
+and [face verification/identification](https://openaccess.thecvf.com/content_cvpr_2015/html/Schroff_FaceNet_A_Unified_2015_CVPR_paper.html).
+These methods learn a latent space that clusters positive samples together while
 pushing apart negative samples.
 
 ### NNCLR
 
-In this example we will be implementing NNCLR as proposed in the paper
-[With a Little Help from My Friends: Nearest-Neighbor Contrastive Learning of Visual Representations](https://arxiv.org/abs/2104.14548)
-, by Google Research and DeepMind which:
+In this example, we implement NNCLR as proposed in the paper
+[With a Little Help from My Friends: Nearest-Neighbor Contrastive Learning of Visual Representations](https://arxiv.org/abs/2104.14548),
+by Google Research and DeepMind.
 
-- learns  self-supervised representations that go beyond single instance positives which
-allows to learn better features that are invariant to different viewpoints, deformations,
-and even intra-class variations
-- Clustering based methods offer a great approach to go beyond single instance positives,
-but assuming the entire cluster  to be positives could hurt performance due to early
-over-generalization. Instead NNCLR uses nearest neighbors in the learned representation
-space as positives
-- increases the performance of existing contrastive learning methods like
+NNCLR learns self-supervised representations that go beyond single-instance positives, which
+allows for learning better features that are invariant to different viewpoints, deformations,
+and even intra-class variations.
+Clustering based methods offer a great approach to go beyond single instance positives,
+but assuming the entire cluster to be positives could hurt performance due to early
+over-generalization. Instead, NNCLR uses nearest neighbors in the learned representation
+space as positives.
+In addition, NNCLR increases the performance of existing contrastive learning methods like
 [SimCLR](https://arxiv.org/abs/2002.05709)([Keras Example](https://keras.io/examples/vision/semisupervised_simclr))
-- reduces the reliance of self-supervised methods on data augmentation strategies
+and reduces the reliance of self-supervised methods on data augmentation strategies.
 
 Here is a great visualization by the paper authors showing how NNCLR builds on ideas from
 SimCLR:
@@ -52,10 +52,10 @@ views, which are produced using random data augmentations, are fed through an en
 obtain the positive embedding pair, we end up using two augmentations. NNCLR instead
 keeps a _support set_ of embeddings representing the full data distribution, and forms
 the positive pairs using nearest-neighbours. A support set is used as memory during
-training; similar to a queue (i.e. first-in-first-out) like in
+training, similar to a queue (i.e. first-in-first-out) as in
 [MoCo](https://arxiv.org/abs/1911.05722).
 
-This example requires TensorFlow 2.6 or higher as well as `tensorflow_datasets` which can
+This example requires TensorFlow 2.6 or higher, as well as `tensorflow_datasets`, which can
 be installed with this command:
 """
 
@@ -78,8 +78,8 @@ from tensorflow.keras import layers
 """
 ## Hyperparameters
 
-A greater `queue_size` most likely means better performance as also shown in the original
-paper but introduces a huge computational overhead. The authors show that the best
+A greater `queue_size` most likely means better performance as shown in the original
+paper, but introduces significant computational overhead. The authors show that the best
 results of NNCLR are achieved with a queue size of 98,304 (the largest `queue_size` they
 experimented on). We here use 10,000 to show a working example.
 """
@@ -116,11 +116,10 @@ steps_per_epoch = 200
 """
 ## Load the Dataset
 
-We will now load the [STL-10](http://ai.stanford.edu/~acoates/stl10/) dataset from
-TensorFlow Datasets which is an image recognition dataset for developing unsupervised
+We load the [STL-10](http://ai.stanford.edu/~acoates/stl10/) dataset from
+TensorFlow Datasets, an image recognition dataset for developing unsupervised
 feature learning, deep learning, self-taught learning algorithms. It is inspired by the
-CIFAR-
-10 dataset but with some modifications.
+CIFAR-10 dataset, with some modifications.
 """
 
 dataset_name = "stl10"
@@ -162,7 +161,7 @@ batch_size, train_dataset, labeled_train_dataset, test_dataset = prepare_dataset
 
 Other self-supervised techniques like [SimCLR](https://arxiv.org/abs/2002.05709),
 [BYOL](https://arxiv.org/abs/2006.07733), [SwAV](https://arxiv.org/abs/2006.09882) etc.
-rely heavily on a well designed data augmentation pipeline to get the best performance.
+rely heavily on a well-designed data augmentation pipeline to get the best performance.
 However, NNCLR is _less_ dependent on complex augmentations as nearest-neighbors already
 provide richness in sample variations. A few common techniques often included
 augmentation pipelines are:
@@ -171,15 +170,12 @@ augmentation pipelines are:
 - Color distortions
 - Gaussian blur
 
-Having said NNCLR is less dependent on complex augmentations, as shown in the original
-paper we will only use random crops and color jitters while augmenting.
+Since NNCLR is less dependent on complex augmentations,
+we will only use random crops and color jitters for augmenting the input images.
 """
 
 """
 ### Random Resized Crops
-
-We will now do Random resized crop augmentation where a crop of random size of the
-original size and a random aspect ratio of the original aspect ratio is made.
 """
 
 
@@ -221,9 +217,6 @@ class RandomResizedCrop(layers.Layer):
 
 """
 ### Color augmentation
-
-We will now do Random color jitters augmentation where we randomly change the brightness,
-contrast and saturation of an image.
 """
 
 
@@ -291,11 +284,7 @@ class RandomColorJitter(layers.Layer):
 
 
 """
-### Implement augmentation layers
-
-We will now create a set of pre-processing layers we can ise in our training pipeline, we
-will later use this function as both the contrastive augmenter and classification
-augmenter.
+### Prepare augmentation module
 """
 
 
@@ -315,14 +304,14 @@ def augmenter(brightness, contrast, saturation, hue, name, scale):
 
 
 """
-### Encoder Architecture
+### Encoder architecture
 
-We will now create an encoder architecture. Using a ResNet-50 as the encoder architecture
-is quite standard in the literature. In the original paper the authore use ResNet-50 as
-the encoder architecture and spatially average the outputs of ResNet-50. However keep in
-mind, that more powerful models will not only increase training time but will also
+Using a ResNet-50 as the encoder architecture
+is standard in the literature. In the original paper, the authors use ResNet-50 as
+the encoder architecture and spatially average the outputs of ResNet-50. However, keep in
+mind that more powerful models will not only increase training time but will also
 require more memory and will limit the maximal batch size you can use. For the purpose of
-this example we just use 4 Convolutional layers.
+this example, we just use four convolutional layers.
 """
 
 
@@ -550,7 +539,7 @@ class NNCLR(keras.Model):
 """
 ## Pre-train NNCLR
 
-We will now train the network using a `temperature` of 0.1 as suggested in the paper and
+We train the network using a `temperature` of 0.1 as suggested in the paper and
 a `queue_size` of 10,000 as explained earlier. We use Adam as our contrastive and probe
 optimizer. For this example we train the model for only 30 epochs but it should be
 trained for more epochs for better performance.
@@ -559,12 +548,12 @@ The following two metrics can be used for monitoring the pretraining performance
 which we also log (taken from
 [this Keras example](https://keras.io/examples/vision/semisupervised_simclr/#selfsupervised-model-for-contrastive-pretraining)):
 
-- Contrastive accuracy: Self-supervised metric, the ratio of cases in which the
+- Contrastive accuracy: self-supervised metric, the ratio of cases in which the
 representation of an image is more similar to its differently augmented version's one,
 than to the representation of any other image in the current batch. Self-supervised
 metrics can be used for hyperparameter tuning even in the case when there are no labeled
 examples.
-- Linear probing accuracy: Linear probing is a popular metric to evaluate self-supervised
+- Linear probing accuracy: linear probing is a popular metric to evaluate self-supervised
 classifiers. It is computed as the accuracy of a logistic regression classifier trained
 on top of the encoder's features. In our case, this is done by training a single dense
 layer on top of the frozen encoder. Note that contrary to traditional approach where the
@@ -614,13 +603,13 @@ finetuning_history = finetuning_model.fit(
 )
 
 """
-Self supervised learning is particularly very helpful when you do not have access to very
+Self supervised learning is particularly helpful when you do only have access to very
 limited labeled training data but you can manage to build a large corpus of unlabeled
 data as shown by previous methods like [SEER](https://arxiv.org/abs/2103.01988),
 [SimCLR](https://arxiv.org/abs/2002.05709), [SwAV](https://arxiv.org/abs/2006.09882) and
 more.
 
-You should also take a look at the blogs for these papers which neatly show that it is
+You should also take a look at the blog posts for these papers which neatly show that it is
 possible to achieve good results with few class labels by first pretraining on a large
 unlabeled dataset and then fine-tuning on a smaller labeled dataset:
 
