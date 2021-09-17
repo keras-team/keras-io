@@ -305,8 +305,8 @@ def augmenter(brightness, contrast, saturation, hue, name, scale):
     return keras.Sequential(
         [
             layers.Input(shape=input_shape),
-            layers.experimental.preprocessing.Rescaling(1 / 255),
-            layers.experimental.preprocessing.RandomFlip("horizontal"),
+            layers.Rescaling(1 / 255),
+            layers.RandomFlip("horizontal"),
             RandomResizedCrop(scale=scale, ratio=(3 / 4, 4 / 3)),
             RandomColorJitter(
                 brightness=brightness, contrast=contrast, saturation=saturation, hue=hue
