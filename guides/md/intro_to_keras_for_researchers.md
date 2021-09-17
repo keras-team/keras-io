@@ -150,8 +150,8 @@ print(a)
 <div class="k-default-codeblock">
 ```
 <tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
-array([[ 0.6405563 ,  0.03973103],
-       [-0.6126285 , -0.71384406]], dtype=float32)>
+array([[ 0.57964617,  2.0584428 ],
+       [-1.1712747 ,  0.7081559 ]], dtype=float32)>
 
 ```
 </div>
@@ -213,8 +213,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.3224076   0.69120544]
- [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+[[ 0.5081781  -0.26667532]
+ [ 0.6077829   0.91629493]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -233,8 +233,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.3224076   0.69120544]
- [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+[[ 0.5081781  -0.26667532]
+ [ 0.6077829   0.91629493]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -254,8 +254,8 @@ with tf.GradientTape() as outer_tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[1.6652625  0.6523223 ]
- [0.20117798 0.41852283]], shape=(2, 2), dtype=float32)
+[[1.602469   0.85908425]
+ [0.8836864  0.16556603]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -411,16 +411,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.386174201965332
-Step: 100 Loss: 2.22518253326416
-Step: 200 Loss: 2.1162631511688232
-Step: 300 Loss: 2.047822952270508
-Step: 400 Loss: 2.025263547897339
-Step: 500 Loss: 1.9544496536254883
-Step: 600 Loss: 1.8216196298599243
-Step: 700 Loss: 1.7630621194839478
-Step: 800 Loss: 1.756800651550293
-Step: 900 Loss: 1.6689152717590332
+Step: 0 Loss: 2.483438491821289
+Step: 100 Loss: 2.381361484527588
+Step: 200 Loss: 2.246344804763794
+Step: 300 Loss: 2.179429054260254
+Step: 400 Loss: 2.0340209007263184
+Step: 500 Loss: 2.0043013095855713
+Step: 600 Loss: 1.9037692546844482
+Step: 700 Loss: 1.7935802936553955
+Step: 800 Loss: 1.7824013233184814
+Step: 900 Loss: 1.7184176445007324
 
 ```
 </div>
@@ -579,7 +579,7 @@ print(mlp.losses)  # List containing one float32 scalar
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.16569461>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.2839636>]
 
 ```
 </div>
@@ -638,16 +638,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 6.238003730773926
-Step: 100 Loss: 2.5299227237701416
-Step: 200 Loss: 2.435337543487549
-Step: 300 Loss: 2.3858678340911865
-Step: 400 Loss: 2.3544323444366455
-Step: 500 Loss: 2.3284459114074707
-Step: 600 Loss: 2.3211910724639893
-Step: 700 Loss: 2.3177292346954346
-Step: 800 Loss: 2.322242259979248
-Step: 900 Loss: 2.310494899749756
+Step: 0 Loss: 6.30183744430542
+Step: 100 Loss: 2.5793704986572266
+Step: 200 Loss: 2.403972625732422
+Step: 300 Loss: 2.3772311210632324
+Step: 400 Loss: 2.3582746982574463
+Step: 500 Loss: 2.3301682472229004
+Step: 600 Loss: 2.3364264965057373
+Step: 700 Loss: 2.3272597789764404
+Step: 800 Loss: 2.317638874053955
+Step: 900 Loss: 2.3263416290283203
 
 ```
 </div>
@@ -664,7 +664,7 @@ To use a metric in a custom training loop, you would:
 - Call its `metric.udpate_state(targets, predictions)` method for each batch of data
 - Query its result via `metric.result()`
 - Reset the metric's state at the end of an epoch or at the start of an evaluation via
-`metric.reset_states()`
+`metric.reset_state()`
 
 Here's a simple example:
 
@@ -705,31 +705,31 @@ for epoch in range(2):
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
     # Reset the metric's state at the end of an epoch
-    accuracy.reset_states()
+    accuracy.reset_state()
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.047
+Total running accuracy so far: 0.016
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.755
+Total running accuracy so far: 0.750
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.826
+Total running accuracy so far: 0.827
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.855
+Total running accuracy so far: 0.857
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.872
+Total running accuracy so far: 0.875
 Epoch: 1 Step: 0
-Total running accuracy so far: 0.938
+Total running accuracy so far: 0.969
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.941
+Total running accuracy so far: 0.939
 Epoch: 1 Step: 400
-Total running accuracy so far: 0.943
+Total running accuracy so far: 0.939
 Epoch: 1 Step: 600
-Total running accuracy so far: 0.944
+Total running accuracy so far: 0.940
 Epoch: 1 Step: 800
-Total running accuracy so far: 0.943
+Total running accuracy so far: 0.941
 
 ```
 </div>
@@ -738,6 +738,84 @@ to an `self.add_metric()` method on layers. It tracks the average of
 whatever quantity you pass to it. You can reset the value of these metrics
 by calling `layer.reset_metrics()` on any layer or model.
 
+You can also define your own metrics by subclassing `keras.metrics.Metric`.
+You need to override the three functions called above:
+
+- Override `update_state()` to update the statistic values.
+- Override `result()` to return the metric value.
+- Override `reset_state()` to reset the metric to its initial state.
+
+Here is an example where we implement the F1-score metric
+(with support for sample weighting).
+
+
+```python
+
+class F1Score(keras.metrics.Metric):
+    def __init__(self, name="f1_score", dtype="float32", threshold=0.5, **kwargs):
+        super().__init__(name=name, dtype=dtype, **kwargs)
+        self.threshold = 0.5
+        self.true_positives = self.add_weight(
+            name="tp", dtype=dtype, initializer="zeros"
+        )
+        self.false_positives = self.add_weight(
+            name="fp", dtype=dtype, initializer="zeros"
+        )
+        self.false_negatives = self.add_weight(
+            name="fn", dtype=dtype, initializer="zeros"
+        )
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.math.greater_equal(y_pred, self.threshold)
+        y_true = tf.cast(y_true, tf.bool)
+        y_pred = tf.cast(y_pred, tf.bool)
+
+        true_positives = tf.cast(y_true & y_pred, self.dtype)
+        false_positives = tf.cast(~y_true & y_pred, self.dtype)
+        false_negatives = tf.cast(y_true & ~y_pred, self.dtype)
+
+        if sample_weight is not None:
+            sample_weight = tf.cast(sample_weight, self.dtype)
+            true_positives *= sample_weight
+            false_positives *= sample_weight
+            false_negatives *= sample_weight
+
+        self.true_positives.assign_add(tf.reduce_sum(true_positives))
+        self.false_positives.assign_add(tf.reduce_sum(false_positives))
+        self.false_negatives.assign_add(tf.reduce_sum(false_negatives))
+
+    def result(self):
+        precision = self.true_positives / (self.true_positives + self.false_positives)
+        recall = self.true_positives / (self.true_positives + self.false_negatives)
+        return precision * recall * 2.0 / (precision + recall)
+
+    def reset_state(self):
+        self.true_positives.assign(0)
+        self.false_positives.assign(0)
+        self.false_negatives.assign(0)
+
+```
+
+Let's test-drive it:
+
+
+```python
+m = F1Score()
+m.update_state([0, 1, 0, 0], [0.3, 0.5, 0.8, 0.9])
+print("Intermediate result:", float(m.result()))
+
+m.update_state([1, 1, 1, 1], [0.1, 0.7, 0.6, 0.0])
+print("Final result:", float(m.result()))
+
+```
+
+<div class="k-default-codeblock">
+```
+Intermediate result: 0.5
+Final result: 0.6000000238418579
+
+```
+</div>
 ---
 ## Compiled functions
 
@@ -787,16 +865,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.307070016860962
-Step: 100 Loss: 0.7121144533157349
-Step: 200 Loss: 0.45566993951797485
-Step: 300 Loss: 0.47507303953170776
-Step: 400 Loss: 0.23864206671714783
-Step: 500 Loss: 0.2954753041267395
-Step: 600 Loss: 0.31291744112968445
-Step: 700 Loss: 0.15316027402877808
-Step: 800 Loss: 0.32832837104797363
-Step: 900 Loss: 0.10866784304380417
+Step: 0 Loss: 2.3006701469421387
+Step: 100 Loss: 0.39556410908699036
+Step: 200 Loss: 0.31732460856437683
+Step: 300 Loss: 0.31814849376678467
+Step: 400 Loss: 0.23942124843597412
+Step: 500 Loss: 0.4277012050151825
+Step: 600 Loss: 0.26037153601646423
+Step: 700 Loss: 0.29441630840301514
+Step: 800 Loss: 0.633674144744873
+Step: 900 Loss: 0.19014623761177063
 
 ```
 </div>
@@ -1058,17 +1136,17 @@ for step, x in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.3283705711364746
-Step: 100 Loss: 0.12607811022512982
-Step: 200 Loss: 0.09977191104669476
-Step: 300 Loss: 0.0897256354383654
-Step: 400 Loss: 0.08479013259608549
-Step: 500 Loss: 0.08158575140400799
-Step: 600 Loss: 0.07913740716886997
-Step: 700 Loss: 0.07780108796950753
-Step: 800 Loss: 0.07658983394503593
-Step: 900 Loss: 0.07564939806583057
-Step: 1000 Loss: 0.0746984266928145
+Step: 0 Loss: 0.3166165351867676
+Step: 100 Loss: 0.1252804195674339
+Step: 200 Loss: 0.09944908850969959
+Step: 300 Loss: 0.08949342685630947
+Step: 400 Loss: 0.08455682370319331
+Step: 500 Loss: 0.08139740330670885
+Step: 600 Loss: 0.07902435987518354
+Step: 700 Loss: 0.07770300999326304
+Step: 800 Loss: 0.07646914515248994
+Step: 900 Loss: 0.07556770330545111
+Step: 1000 Loss: 0.07461526579819955
 
 ```
 </div>
@@ -1138,9 +1216,9 @@ vae.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 2s 999us/step - loss: 0.0838
+1875/1875 [==============================] - 3s 1ms/step - loss: 0.0715
 
-<tensorflow.python.keras.callbacks.History at 0x1456bf250>
+<keras.callbacks.History at 0x15c810d90>
 
 ```
 </div>
@@ -1279,17 +1357,17 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 3.346794843673706
-Step: 100 Loss: 2.5347713479901306
-Step: 200 Loss: 2.3532673210943518
-Step: 300 Loss: 2.105134464552208
-Step: 400 Loss: 1.9224171297462687
-Step: 500 Loss: 1.8143611295096513
-Step: 600 Loss: 1.7148052298323655
-Step: 700 Loss: 1.6695872197209294
-Step: 800 Loss: 1.616796940164684
-Step: 900 Loss: 1.5303113453757042
-Step: 1000 Loss: 1.4919751342148413
+Step: 0 Loss: 2.269472599029541
+Step: 100 Loss: 2.395726864733318
+Step: 200 Loss: 2.1413526021277725
+Step: 300 Loss: 1.9517147915102881
+Step: 400 Loss: 1.9125741058504766
+Step: 500 Loss: 1.8005842943550483
+Step: 600 Loss: 1.740590222531361
+Step: 700 Loss: 1.6740981624629072
+Step: 800 Loss: 1.6432227824319274
+Step: 900 Loss: 1.5765889552989445
+Step: 1000 Loss: 1.541528965677365
 
 ```
 </div>

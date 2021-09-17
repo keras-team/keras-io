@@ -579,43 +579,50 @@ Here is an example where we implement the F1-score metric
 (with support for sample weighting).
 """
 
+
 class F1Score(keras.metrics.Metric):
+    def __init__(self, name="f1_score", dtype="float32", threshold=0.5, **kwargs):
+        super().__init__(name=name, dtype=dtype, **kwargs)
+        self.threshold = 0.5
+        self.true_positives = self.add_weight(
+            name="tp", dtype=dtype, initializer="zeros"
+        )
+        self.false_positives = self.add_weight(
+            name="fp", dtype=dtype, initializer="zeros"
+        )
+        self.false_negatives = self.add_weight(
+            name="fn", dtype=dtype, initializer="zeros"
+        )
 
-  def __init__(self, name='f1_score', dtype='float32', threshold=0.5, **kwargs):
-    super().__init__(name=name, dtype=dtype, **kwargs)
-    self.threshold = 0.5
-    self.true_positives = self.add_weight(name='tp', dtype=dtype, initializer='zeros')
-    self.false_positives = self.add_weight(name='fp', dtype=dtype, initializer='zeros')
-    self.false_negatives = self.add_weight(name='fn', dtype=dtype, initializer='zeros')
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.math.greater_equal(y_pred, self.threshold)
+        y_true = tf.cast(y_true, tf.bool)
+        y_pred = tf.cast(y_pred, tf.bool)
 
-  def update_state(self, y_true, y_pred, sample_weight=None):
-    y_pred = tf.math.greater_equal(y_pred, self.threshold)
-    y_true = tf.cast(y_true, tf.bool)
-    y_pred = tf.cast(y_pred, tf.bool)
+        true_positives = tf.cast(y_true & y_pred, self.dtype)
+        false_positives = tf.cast(~y_true & y_pred, self.dtype)
+        false_negatives = tf.cast(y_true & ~y_pred, self.dtype)
 
-    true_positives = tf.cast(y_true & y_pred, self.dtype)
-    false_positives = tf.cast(~y_true & y_pred, self.dtype)
-    false_negatives = tf.cast(y_true & ~y_pred, self.dtype)
+        if sample_weight is not None:
+            sample_weight = tf.cast(sample_weight, self.dtype)
+            true_positives *= sample_weight
+            false_positives *= sample_weight
+            false_negatives *= sample_weight
 
-    if sample_weight is not None:
-      sample_weight = tf.cast(sample_weight, self.dtype)
-      true_positives *= sample_weight
-      false_positives *= sample_weight
-      false_negatives *= sample_weight
+        self.true_positives.assign_add(tf.reduce_sum(true_positives))
+        self.false_positives.assign_add(tf.reduce_sum(false_positives))
+        self.false_negatives.assign_add(tf.reduce_sum(false_negatives))
 
-    self.true_positives.assign_add(tf.reduce_sum(true_positives))
-    self.false_positives.assign_add(tf.reduce_sum(false_positives))
-    self.false_negatives.assign_add(tf.reduce_sum(false_negatives))
+    def result(self):
+        precision = self.true_positives / (self.true_positives + self.false_positives)
+        recall = self.true_positives / (self.true_positives + self.false_negatives)
+        return precision * recall * 2.0 / (precision + recall)
 
-  def result(self):
-    precision = self.true_positives / (self.true_positives + self.false_positives)
-    recall = self.true_positives / (self.true_positives + self.false_negatives)
-    return precision * recall * 2.0 / (precision + recall) 
+    def reset_state(self):
+        self.true_positives.assign(0)
+        self.false_positives.assign(0)
+        self.false_negatives.assign(0)
 
-  def reset_state(self):
-    self.true_positives.assign(0)
-    self.false_positives.assign(0)
-    self.false_negatives.assign(0)
 
 """
 Let's test-drive it:
@@ -623,10 +630,10 @@ Let's test-drive it:
 
 m = F1Score()
 m.update_state([0, 1, 0, 0], [0.3, 0.5, 0.8, 0.9])
-print('Intermediate result:', float(m.result()))
+print("Intermediate result:", float(m.result()))
 
 m.update_state([1, 1, 1, 1], [0.1, 0.7, 0.6, 0.0])
-print('Final result:', float(m.result()))
+print("Final result:", float(m.result()))
 
 
 """
