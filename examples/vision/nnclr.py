@@ -58,7 +58,7 @@ the positive pairs using nearest-neighbours. A support set is used as memory dur
 training; similar to a queue (i.e. first-in-first-out) like in
 [MoCo](https://arxiv.org/abs/1911.05722).
 
-This example requires TensorFlow 2.4 or higher as well as `tensorflow_datasets` which can
+This example requires TensorFlow 2.6 or higher as well as `tensorflow_datasets` which can
 be installed with this command:
 """
 
