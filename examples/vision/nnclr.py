@@ -18,21 +18,19 @@ expensive annotations like image classification.
 ### Contrastive Learning
 
 A broad category of self-supervised learning techniques are those that use contrastive
-losses, which have been used in a wide range of computer vision applications like [image
-similarity](https://www.jmlr.org/papers/v11/chechik10a.html), [Dimensionality reduction
-(DrLIM)](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf) and [Face
-verification/
-identification](https://openaccess.thecvf.com/content_cvpr_2015/html/Schroff_FaceNet_A_Uni
-fied_2015_CVPR_paper.html). These methods learn a latent space that draws positive
-samples together while pushing apart negative samples.
+losses, which have been used in a wide range of computer vision applications like
+[image similarity](https://www.jmlr.org/papers/v11/chechik10a.html)
+, [Dimensionality reduction (DrLIM)](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf)
+and [Face verification/identification](https://openaccess.thecvf.com/content_cvpr_2015/html/Schroff_FaceNet_A_Unified_2015_CVPR_paper.html)
+. These methods learn a latent space that draws positive samples together while
+pushing apart negative samples.
 
 ### NNCLR
 
-In this example we will be implementing NNCLR as proposed in the paper [With a Little
-Help from My Friends:
-Nearest-Neighbor Contrastive Learning of Visual
-Representations](https://arxiv.org/abs/2104.14548), by Google Research and DeepMind
-which:
+In this example we will be implementing NNCLR as proposed in the paper
+[With a Little Help from My Friends: Nearest-Neighbor Contrastive Learning of Visual Representations](https://arxiv.org/abs/2104.14548)
+, by Google Research and DeepMind which:
+
 - learns  self-supervised representations that go beyond single instance positives which
 allows to learn better features that are invariant to different viewpoints, deformations,
 and even intra-class variations
@@ -41,8 +39,7 @@ but assuming the entire cluster  to be positives could hurt performance due to e
 over-generalization. Instead NNCLR uses nearest neighbors in the learned representation
 space as positives
 - increases the performance of existing contrastive learning methods like
-[SimCLR](https://arxiv.org/abs/2002.05709)([Keras
-Example](https://keras.io/examples/vision/semisupervised_simclr))
+[SimCLR](https://arxiv.org/abs/2002.05709)([Keras Example](https://keras.io/examples/vision/semisupervised_simclr))
 - reduces the reliance of self-supervised methods on data augmentation strategies
 
 Here is a great visualization by the paper authors showing how NNCLR builds on ideas from
@@ -559,8 +556,8 @@ optimizer. For this example we train the model for only 30 epochs but it should 
 trained for more epochs for better performance.
 
 The following two metrics can be used for monitoring the pretraining performance which we
-also log (taken from [this Keras
-example](https://keras.io/examples/vision/semisupervised_simclr/#selfsupervised-model-for-contrastive-pretraining)):
+also log (taken from 
+[this Keras example](https://keras.io/examples/vision/semisupervised_simclr/#selfsupervised-model-for-contrastive-pretraining)):
 
 - Contrastive accuracy: Self-supervised metric, the ratio of cases in which the
 representation of an image is more similar to its differently augmented version's one,
