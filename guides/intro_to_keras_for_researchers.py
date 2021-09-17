@@ -518,7 +518,7 @@ To use a metric in a custom training loop, you would:
 - Call its `metric.udpate_state(targets, predictions)` method for each batch of data
 - Query its result via `metric.result()`
 - Reset the metric's state at the end of an epoch or at the start of an evaluation via
-`metric.reset_states()`
+`metric.reset_state()`
 
 Here's a simple example:
 """
@@ -558,7 +558,7 @@ for epoch in range(2):
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
     # Reset the metric's state at the end of an epoch
-    accuracy.reset_states()
+    accuracy.reset_state()
 
 """
 In addition to this, similarly to the `self.add_loss()` method, you have access
@@ -612,7 +612,7 @@ class F1Score(keras.metrics.Metric):
     recall = self.true_positives / (self.true_positives + self.false_negatives)
     return precision * recall * 2.0 / (precision + recall) 
 
-  def reset_states(self):
+  def reset_state(self):
     self.true_positives.assign(0)
     self.false_positives.assign(0)
     self.false_negatives.assign(0)
