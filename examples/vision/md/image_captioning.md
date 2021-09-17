@@ -224,9 +224,9 @@ vectorization.adapt(text_data)
 # Data augmentation for image data
 image_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-        layers.experimental.preprocessing.RandomRotation(0.2),
-        layers.experimental.preprocessing.RandomContrast(0.3),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.2),
+        layers.RandomContrast(0.3),
     ]
 )
 
@@ -234,19 +234,19 @@ image_augmentation = keras.Sequential(
 
 <div class="k-default-codeblock">
 ```
-2021-09-16 16:56:59.091205: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.100543: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.101212: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.102760: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+2021-09-17 05:17:57.047819: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.058177: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.106007: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.107650: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2021-09-16 16:56:59.127434: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.128169: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.128786: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.607002: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.607693: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.608370: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-16 16:56:59.608990: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 14684 MB memory:  -> device: 0, name: Tesla V100-SXM2-16GB, pci bus id: 0000:00:04.0, compute capability: 7.0
-2021-09-16 16:57:00.147836: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2021-09-17 05:17:57.134387: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.135154: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.135806: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.680010: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.680785: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.681439: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-17 05:17:57.682067: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 14684 MB memory:  -> device: 0, name: Tesla V100-SXM2-16GB, pci bus id: 0000:00:04.0, compute capability: 7.0
+2021-09-17 05:17:58.229404: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
 
 ```
 </div>
@@ -485,7 +485,7 @@ class ImageCaptioningModel(keras.Model):
     def calculate_loss(self, y_true, y_pred, mask):
         loss = self.loss(y_true, y_pred)
         mask = tf.cast(mask, dtype=loss.dtype)
-        loss = loss * mask
+        loss *= mask
         return tf.reduce_sum(loss) / tf.reduce_sum(mask)
 
     def calculate_accuracy(self, y_true, y_pred, mask):
@@ -513,7 +513,7 @@ class ImageCaptioningModel(keras.Model):
         batch_acc = 0
 
         # 1. Get image embeddings
-        img_embed = self.cnn_model(batch_img, training=False)
+        img_embed = self.cnn_model(batch_img)
 
         # 2. Pass each of the five captions one by one to the decoder
         # along with the encoder outputs and compute the loss as well as accuracy
@@ -553,7 +553,7 @@ class ImageCaptioningModel(keras.Model):
         batch_acc = 0
 
         # 1. Get image embeddings
-        img_embed = self.cnn_model(batch_img, training=False)
+        img_embed = self.cnn_model(batch_img)
 
         # 2. Pass each of the five captions one by one to the decoder
         # along with the encoder outputs and compute the loss as well as accuracy
@@ -646,103 +646,103 @@ caption_model.fit(
 ```
 Epoch 1/30
 
-2021-09-16 16:57:24.328377: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 60 of 256
-2021-09-16 16:57:31.129947: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-2021-09-16 16:57:31.522379: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8005
+2021-09-17 05:18:22.943796: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 59 of 256
+2021-09-17 05:18:30.137746: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:18:30.598020: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8005
 
-96/96 [==============================] - 60s 319ms/step - loss: 28.1483 - acc: 0.1312 - val_loss: 20.5120 - val_acc: 0.3114
+96/96 [==============================] - 62s 327ms/step - loss: 28.1409 - acc: 0.1313 - val_loss: 20.4968 - val_acc: 0.3116
 Epoch 2/30
 
-2021-09-16 16:58:13.799018: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 60 of 256
-2021-09-16 16:58:19.668069: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:19:13.829127: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 59 of 256
+2021-09-17 05:19:19.872802: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 19.3795 - acc: 0.3199 - val_loss: 18.1520 - val_acc: 0.3496
+96/96 [==============================] - 43s 278ms/step - loss: 19.3393 - acc: 0.3207 - val_loss: 18.0922 - val_acc: 0.3514
 Epoch 3/30
 
-2021-09-16 16:58:56.412842: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 16:59:02.076969: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:19:56.772506: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
+2021-09-17 05:20:02.481758: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 17.4874 - acc: 0.3534 - val_loss: 17.0551 - val_acc: 0.3680
+96/96 [==============================] - 42s 278ms/step - loss: 17.4184 - acc: 0.3552 - val_loss: 17.0022 - val_acc: 0.3698
 Epoch 4/30
 
-2021-09-16 16:59:38.916092: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 16:59:44.604026: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:20:39.367542: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
+2021-09-17 05:20:45.149089: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 16.3907 - acc: 0.3729 - val_loss: 16.3731 - val_acc: 0.3826
+96/96 [==============================] - 43s 278ms/step - loss: 16.3052 - acc: 0.3760 - val_loss: 16.3026 - val_acc: 0.3845
 Epoch 5/30
 
-2021-09-16 17:00:21.308229: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:00:26.956162: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:21:21.930582: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
+2021-09-17 05:21:27.608503: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 15.6105 - acc: 0.3874 - val_loss: 15.9310 - val_acc: 0.3911
+96/96 [==============================] - 42s 278ms/step - loss: 15.5097 - acc: 0.3901 - val_loss: 15.8929 - val_acc: 0.3925
 Epoch 6/30
 
-2021-09-16 17:01:03.709990: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:01:09.332123: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:22:04.553717: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
+2021-09-17 05:22:10.210087: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 14.9760 - acc: 0.4037 - val_loss: 15.6378 - val_acc: 0.3991
+96/96 [==============================] - 42s 278ms/step - loss: 14.8596 - acc: 0.4069 - val_loss: 15.5456 - val_acc: 0.4005
 Epoch 7/30
 
-2021-09-16 17:01:46.189064: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:01:51.919328: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:22:47.100594: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
+2021-09-17 05:22:52.466539: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 14.4720 - acc: 0.4088 - val_loss: 15.4178 - val_acc: 0.4031
+96/96 [==============================] - 42s 277ms/step - loss: 14.3454 - acc: 0.4131 - val_loss: 15.3313 - val_acc: 0.4045
 Epoch 8/30
 
-2021-09-16 17:02:28.740450: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:02:34.460254: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:23:29.226300: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
+2021-09-17 05:23:34.808841: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 14.0151 - acc: 0.4209 - val_loss: 15.2860 - val_acc: 0.4051
+96/96 [==============================] - 42s 277ms/step - loss: 13.8745 - acc: 0.4251 - val_loss: 15.2011 - val_acc: 0.4078
 Epoch 9/30
 
-2021-09-16 17:03:11.146260: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:03:16.797609: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:24:11.615058: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
+2021-09-17 05:24:17.030769: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 13.6238 - acc: 0.4299 - val_loss: 15.1603 - val_acc: 0.4089
+96/96 [==============================] - 42s 277ms/step - loss: 13.4640 - acc: 0.4350 - val_loss: 15.0905 - val_acc: 0.4107
 Epoch 10/30
 
-2021-09-16 17:03:53.570072: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:03:59.246994: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:24:53.832807: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
+2021-09-17 05:24:59.506573: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 13.2563 - acc: 0.4367 - val_loss: 15.1064 - val_acc: 0.4092
+96/96 [==============================] - 42s 277ms/step - loss: 13.0922 - acc: 0.4414 - val_loss: 15.0083 - val_acc: 0.4113
 Epoch 11/30
 
-2021-09-16 17:04:36.055973: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:04:41.735149: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:25:36.242501: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
+2021-09-17 05:25:41.723206: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 12.9321 - acc: 0.4410 - val_loss: 15.0471 - val_acc: 0.4118
+96/96 [==============================] - 42s 277ms/step - loss: 12.7538 - acc: 0.4464 - val_loss: 14.9455 - val_acc: 0.4143
 Epoch 12/30
 
-2021-09-16 17:05:18.472973: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:05:24.176078: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:26:18.532009: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
+2021-09-17 05:26:23.985106: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 12.6135 - acc: 0.4479 - val_loss: 15.0591 - val_acc: 0.4125
+96/96 [==============================] - 42s 277ms/step - loss: 12.4233 - acc: 0.4547 - val_loss: 14.9816 - val_acc: 0.4133
 Epoch 13/30
 
-2021-09-16 17:06:00.893043: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:06:06.589285: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:27:00.696082: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 63 of 256
+2021-09-17 05:27:05.812571: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 277ms/step - loss: 12.3273 - acc: 0.4583 - val_loss: 14.9946 - val_acc: 0.4145
+96/96 [==============================] - 42s 277ms/step - loss: 12.1264 - acc: 0.4636 - val_loss: 14.9451 - val_acc: 0.4158
 Epoch 14/30
 
-2021-09-16 17:06:43.255368: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 60 of 256
-2021-09-16 17:06:49.116008: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:27:42.513445: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 63 of 256
+2021-09-17 05:27:47.675342: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 12.0375 - acc: 0.4642 - val_loss: 15.0070 - val_acc: 0.4144
+96/96 [==============================] - 42s 277ms/step - loss: 11.8244 - acc: 0.4724 - val_loss: 14.9751 - val_acc: 0.4148
 Epoch 15/30
 
-2021-09-16 17:07:25.681309: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:07:31.310483: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:28:24.371225: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 63 of 256
+2021-09-17 05:28:29.829654: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 11.7873 - acc: 0.4694 - val_loss: 15.0781 - val_acc: 0.4141
+96/96 [==============================] - 42s 277ms/step - loss: 11.5644 - acc: 0.4776 - val_loss: 15.0377 - val_acc: 0.4167
 Epoch 16/30
 
-2021-09-16 17:08:07.874384: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-16 17:08:13.552983: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
+2021-09-17 05:29:06.564650: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
+2021-09-17 05:29:11.945996: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
 
-96/96 [==============================] - 42s 276ms/step - loss: 11.5483 - acc: 0.4765 - val_loss: 15.1069 - val_acc: 0.4138
+96/96 [==============================] - 42s 277ms/step - loss: 11.3046 - acc: 0.4852 - val_loss: 15.0575 - val_acc: 0.4135
 
-<keras.callbacks.History at 0x7f6b2c0c6d50>
+<keras.callbacks.History at 0x7fb3d4b1b1d0>
 
 ```
 </div>
@@ -769,7 +769,7 @@ def generate_caption():
 
     # Pass the image to the CNN
     img = tf.expand_dims(sample_img, 0)
-    img = caption_model.cnn_model(img, training=False)
+    img = caption_model.cnn_model(img)
 
     # Pass the image features to the Transformer encoder
     encoded_img = caption_model.encoder(img, training=False)
@@ -807,7 +807,7 @@ generate_caption()
 
 <div class="k-default-codeblock">
 ```
-Predicted Caption:  a group of dogs race around a track
+Predicted Caption:  a group of dogs race in the snow
 
 ```
 </div>
@@ -818,7 +818,7 @@ Predicted Caption:  a group of dogs race around a track
 
 <div class="k-default-codeblock">
 ```
-Predicted Caption:  a man in a yellow kayak is paddling a kayak on a boat
+Predicted Caption:  a man in a blue canoe on a lake
 
 ```
 </div>
@@ -829,7 +829,7 @@ Predicted Caption:  a man in a yellow kayak is paddling a kayak on a boat
 
 <div class="k-default-codeblock">
 ```
-Predicted Caption:  a black and white dog is running through a red tunnel
+Predicted Caption:  a black and white dog is running through a green grass
 
 ```
 </div>

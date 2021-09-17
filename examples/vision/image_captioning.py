@@ -204,9 +204,9 @@ vectorization.adapt(text_data)
 # Data augmentation for image data
 image_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-        layers.experimental.preprocessing.RandomRotation(0.2),
-        layers.experimental.preprocessing.RandomContrast(0.3),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.2),
+        layers.RandomContrast(0.3),
     ]
 )
 
@@ -443,7 +443,7 @@ class ImageCaptioningModel(keras.Model):
     def calculate_loss(self, y_true, y_pred, mask):
         loss = self.loss(y_true, y_pred)
         mask = tf.cast(mask, dtype=loss.dtype)
-        loss = loss * mask
+        loss *= mask
         return tf.reduce_sum(loss) / tf.reduce_sum(mask)
 
     def calculate_accuracy(self, y_true, y_pred, mask):
@@ -471,7 +471,7 @@ class ImageCaptioningModel(keras.Model):
         batch_acc = 0
 
         # 1. Get image embeddings
-        img_embed = self.cnn_model(batch_img, training=False)
+        img_embed = self.cnn_model(batch_img)
 
         # 2. Pass each of the five captions one by one to the decoder
         # along with the encoder outputs and compute the loss as well as accuracy
@@ -511,7 +511,7 @@ class ImageCaptioningModel(keras.Model):
         batch_acc = 0
 
         # 1. Get image embeddings
-        img_embed = self.cnn_model(batch_img, training=False)
+        img_embed = self.cnn_model(batch_img)
 
         # 2. Pass each of the five captions one by one to the decoder
         # along with the encoder outputs and compute the loss as well as accuracy
@@ -619,7 +619,7 @@ def generate_caption():
 
     # Pass the image to the CNN
     img = tf.expand_dims(sample_img, 0)
-    img = caption_model.cnn_model(img, training=False)
+    img = caption_model.cnn_model(img)
 
     # Pass the image features to the Transformer encoder
     encoded_img = caption_model.encoder(img, training=False)
