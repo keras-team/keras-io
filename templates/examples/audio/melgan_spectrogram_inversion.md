@@ -1,5 +1,4 @@
-
-# MelGAN Based Spectrogram Inversion using Feature Matching
+# MelGAN-based spectrogram inversion using feature matching
 
 **Author:** [Darshan Deshpande](https://twitter.com/getdarshan)<br>
 **Date created:** 02/09/2021<br>

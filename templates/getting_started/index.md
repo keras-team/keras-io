@@ -16,3 +16,29 @@ You're going to need more than a one-pager. And you're in luck:
 - [The Keras ecosystem](/getting_started/ecosystem)
 - [Learning resources](/getting_started/learning_resources)
 - [Frequently Asked Questions](/getting_started/faq)
+
+---
+
+
+## Installing Keras
+
+The simplest way to install Keras is to via `pip`:
+
+```
+pip install keras
+```
+
+You will need to have the TensorFlow package installed. [See detailed instructions](https://www.tensorflow.org/install).
+
+
+The Keras codebase is also available on GitHub:
+
+```
+git clone https://github.com/keras-team/keras.git
+```
+
+You can download an archive of the Keras code below:
+
+<div class="col-md px-1">
+    <a href='https://github.com/keras-team/keras/archive/refs/heads/master.zip' class="btn btn-med btn-secondary">Download the Keras code archive</a>
+</div>

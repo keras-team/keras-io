@@ -1,4 +1,3 @@
-
 # Low-light image enhancement using MIRNet
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>

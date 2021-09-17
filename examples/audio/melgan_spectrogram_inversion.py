@@ -1,5 +1,5 @@
 """
-Title: MelGAN Based Spectrogram Inversion using Feature Matching
+Title: MelGAN-based spectrogram inversion using feature matching
 Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 02/09/2021
 Last modified: 15/09/2021
