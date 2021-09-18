@@ -6,6 +6,8 @@ Last modified: 2021/09/13
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
 """
 """
+## Introduction
+
 ### Self-supervised learning
 
 Self-supervised representation learning aims to obtain robust representations of samples
