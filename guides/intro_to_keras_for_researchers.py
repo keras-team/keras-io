@@ -704,28 +704,26 @@ Learn more about the Functional API [here](/guides/functional_api/).
 In your research workflows, you may often find yourself mix-and-matching OO models and
 Functional models.
 
-Note that the `Model` class also features built-in training & evaluation loops
-(`fit()`, `predict()` and `evaluate()`).
-These built-in functions would give you access to the
-following features of the built-in training infrastructure.
+Note that the `Model` class also features built-in training & evaluation loops:
+`fit()`, `predict()` and `evaluate()` (configured via the `compile()` method).
+These built-in functions give you access to the
+following uilt-in training infrastructure features:
 
-* [Callbacks](https://keras.io/api/callbacks/). You can leverage the built-in
-callbacks for some common features like early-stopping, model checkpointing,
-and tensorboard. You may also [implement a customized
-callback](https://keras.io/guides/writing_your_own_callbacks/) if needed.
-
+* [Callbacks](/api/callbacks/). You can leverage built-in
+callbacks for early-stopping, model checkpointing,
+and monitoring training with TensorBoard. You can also
+[implement custom callbacks](/guides/writing_your_own_callbacks/) if needed.
 * [Distributed training](https://keras.io/guides/distributed_training/). You
-can easily scale up your training to multiple GPUs or even multiple machines
-with `tf.distribute` Strategies.
-
+can easily scale up your training to multiple GPUs, TPU, or even multiple machines
+with the `tf.distribute` API -- with no changes to your code.
 * [Step fusing](https://keras.io/api/models/model_training_apis/#compile-method).
-With the `steps_per_execution` argument in `Model.compile()` can help you run
+With the `steps_per_execution` argument in `Model.compile()`, you can process
 multiple batches in a single `tf.function` call, which greatly improves
-performance on TPUs.
+device utilization on TPUs.
 
-We will not go into too many details but only provide a simple code example
-below.  It uses the built-in training infrastructure to implement the MNIST
-example above. The code is much shorter now.
+We won't go into the details, but we provide a simple code example
+below. It leverages the built-in training infrastructure to implement the MNIST
+example above.
 """
 
 inputs = tf.keras.Input(shape=(784,), dtype="float32")
@@ -734,7 +732,7 @@ x = keras.layers.Dense(32, activation="relu")(x)
 outputs = keras.layers.Dense(10)(x)
 model = tf.keras.Model(inputs, outputs)
 
-# Specifying the loss, optimizer, and metrics with `compile()`.
+# Specify the loss, optimizer, and metrics with `compile()`.
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.Adam(learning_rate=1e-3),
@@ -748,14 +746,12 @@ model.evaluate(dataset)
 """
 You can always subclass the `Model` class (it works exactly like subclassing
 `Layer`) if you want to leverage built-in training loops for your OO models.
-Now, you may both customize what happens in the training loop, and using the
-built-in training infrastructure mentioned above, for example, callbacks,
-distributed training, and step fusing. You can override `train_step()` to
-customize what happens in the training loop. The `train_step` function is
-called with every batch of training data. The `fit` function will compile the
-training code with `tf.function` by default to make it faster. You may also
-override `test_step()` to customize what happens in `evaluate()`, and override
-`predict_step()` to customize what happens in `predict()`. For more
+Just override the `Model.train_step()` to
+customize what happens in `fit()` while retaining support
+for the built-in infrastructure features outlined above -- callbacks,
+zero-code distribution support, and step fusing support. 
+You may also override `test_step()` to customize what happens in `evaluate()`,
+and override `predict_step()` to customize what happens in `predict()`. For more
 information, please refer to
 [this guide](https://keras.io/guides/customizing_what_happens_in_fit/).
 """
