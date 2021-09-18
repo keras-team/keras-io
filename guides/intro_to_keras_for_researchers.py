@@ -707,7 +707,7 @@ Functional models.
 Note that the `Model` class also features built-in training & evaluation loops:
 `fit()`, `predict()` and `evaluate()` (configured via the `compile()` method).
 These built-in functions give you access to the
-following uilt-in training infrastructure features:
+following built-in training infrastructure features:
 
 * [Callbacks](/api/callbacks/). You can leverage built-in
 callbacks for early-stopping, model checkpointing,
