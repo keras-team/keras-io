@@ -67,8 +67,6 @@ pip install tensorflow-datasets
 ## Setup
 """
 
-import random
-
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -94,23 +92,17 @@ temperature = 0.1
 queue_size = 10000
 contrastive_augmenter = {
     "brightness": 0.5,
-    "contrast": 0.5,
-    "saturation": 0.5,
-    "hue": 0.2,
     "name": "contrastive_augmenter",
     "scale": (0.2, 1.0),
 }
 classification_augmenter = {
     "brightness": 0.2,
-    "contrast": 0.2,
-    "saturation": 0.2,
-    "hue": 0.1,
     "name": "classification_augmenter",
     "scale": (0.5, 1.0),
 }
 input_shape = (96, 96, 3)
 width = 128
-num_epochs = 20
+num_epochs = 25
 steps_per_epoch = 200
 
 """
@@ -167,11 +159,11 @@ provide richness in sample variations. A few common techniques often included
 augmentation pipelines are:
 
 - Random resized crops
-- Color distortions
+- Multiple color distortions
 - Gaussian blur
 
-Since NNCLR is less dependent on complex augmentations,
-we will only use random crops and color jitters for augmenting the input images.
+Since NNCLR is less dependent on complex augmentations, we will only use random
+crops and random brightness for augmenting the input images.
 """
 
 """
@@ -216,38 +208,17 @@ class RandomResizedCrop(layers.Layer):
 
 
 """
-### Color augmentation
+### Random Brightness
 """
 
 
-class RandomColorJitter(layers.Layer):
-    def __init__(self, brightness, contrast, saturation, hue):
-        super(RandomColorJitter, self).__init__()
+class RandomBrightness(layers.Layer):
+    def __init__(self, brightness):
+        super(RandomBrightness, self).__init__()
         self.brightness = brightness
-        self.contrast = contrast
-        self.saturation = saturation
-        self.hue = hue
-        self.color_augmentations = [
-            self.random_brightness,
-            self.random_contrast,
-            self.random_saturation,
-            self.random_hue,
-        ]
 
     def blend(self, images_1, images_2, ratios):
         return tf.clip_by_value(ratios * images_1 + (1.0 - ratios) * images_2, 0, 1)
-
-    def random_contrast(self, images):
-        mean = tf.reduce_mean(
-            tf.image.rgb_to_grayscale(images), axis=(1, 2), keepdims=True
-        )
-        return self.blend(
-            images,
-            mean,
-            tf.random.uniform(
-                (tf.shape(images)[0], 1, 1, 1), 1 - self.contrast, 1 + self.contrast
-            ),
-        )
 
     def random_brightness(self, images):
         # random interpolation/extrapolation between the image and darkness
@@ -259,27 +230,8 @@ class RandomColorJitter(layers.Layer):
             ),
         )
 
-    def random_saturation(self, images):
-        return self.blend(
-            images,
-            tf.image.rgb_to_grayscale(images),
-            tf.random.uniform(
-                (tf.shape(images)[0], 1, 1, 1), 1 - self.saturation, 1 + self.saturation
-            ),
-        )
-
-    def random_hue(self, images):
-        images = tf.image.rgb_to_hsv(images)
-        images += tf.random.uniform(
-            (tf.shape(images)[0], 1, 1, 3), (-self.hue, 0, 0), (self.hue, 0, 0)
-        )
-        images = tf.where(images < 0.0, images + 1.0, images)
-        images = tf.where(images > 1.0, images - 1.0, images)
-        return tf.image.hsv_to_rgb(images)
-
     def call(self, images):
-        for color_augmentation in random.sample(self.color_augmentations, 4):
-            images = color_augmentation(images)
+        images = self.random_brightness(images)
         return images
 
 
@@ -288,16 +240,14 @@ class RandomColorJitter(layers.Layer):
 """
 
 
-def augmenter(brightness, contrast, saturation, hue, name, scale):
+def augmenter(brightness, name, scale):
     return keras.Sequential(
         [
             layers.Input(shape=input_shape),
             layers.Rescaling(1 / 255),
             layers.RandomFlip("horizontal"),
             RandomResizedCrop(scale=scale, ratio=(3 / 4, 4 / 3)),
-            RandomColorJitter(
-                brightness=brightness, contrast=contrast, saturation=saturation, hue=hue
-            ),
+            RandomBrightness(brightness=brightness),
         ],
         name=name,
     )
