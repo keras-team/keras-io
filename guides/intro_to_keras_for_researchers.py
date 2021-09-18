@@ -705,8 +705,27 @@ In your research workflows, you may often find yourself mix-and-matching OO mode
 Functional models.
 
 Note that the `Model` class also features built-in training & evaluation loops
-(`fit()` and `evaluate()`). You can implement the model for MNIST dataset above
-with the following code.
+(`fit()`, `predict()` and `evaluate()`).
+These built-in functions would give you access to the
+following features of the built-in training infrastructure.
+
+* [Callbacks](https://keras.io/api/callbacks/). You can leverage the built-in
+callbacks for some common features like early-stopping, model checkpointing,
+and tensorboard. You may also [implement a customized
+callback](https://keras.io/guides/writing_your_own_callbacks/) if needed.
+
+* [Distributed training](https://keras.io/guides/distributed_training/). You
+can easily scale up your training to multiple GPUs or even multiple machines
+with `tf.distribute` Strategies.
+
+* [Step fusing](https://keras.io/api/models/model_training_apis/#compile-method).
+With the `steps_per_execution` argument in `Model.compile()` can help you run
+multiple batches in a single `tf.function` call, which greatly improves
+performance on TPUs.
+
+We will not go into too many details but only provide a simple code example
+below.  It uses the built-in training infrastructure to implement the MNIST
+example above. The code is much shorter now.
 """
 
 inputs = tf.keras.Input(shape=(784,), dtype="float32")
@@ -723,44 +742,60 @@ model.compile(
 
 # Train the model with the dataset for 2 epochs.
 model.fit(dataset, epochs=2)
+model.predict(dataset)
 model.evaluate(dataset)
 
 """
 You can always subclass the `Model` class (it works exactly like subclassing
-`Layer`) if you want to leverage these loops for your OO models.  You can
-override `train_step` to customize what happens in the training loop. The
-`train_step` function is called with every batch of training data. The `fit`
-function will compile the training code with `tf.function` by default to make
-it faster.
+`Layer`) if you want to leverage built-in training loops for your OO models.
+Now, you may both customize what happens in the training loop, and using the
+built-in training infrastructure mentioned above, for example, callbacks,
+distributed training, and step fusing. You can override `train_step()` to
+customize what happens in the training loop. The `train_step` function is
+called with every batch of training data. The `fit` function will compile the
+training code with `tf.function` by default to make it faster. You may also
+override `test_step()` to customize what happens in `evaluate()`, and override
+`predict_step()` to customize what happens in `predict()`. For more
+information, please refer to
+[this guide](https://keras.io/guides/customizing_what_happens_in_fit/).
 """
 
 class CustomModel(keras.Model):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.accuracy = keras.metrics.SparseCategoricalAccuracy()
+        self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+
     def train_step(self, data):
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
         x, y = data
         with tf.GradientTape() as tape:
             y_pred = self(x, training=True)  # Forward pass
-            loss = self.compiled_loss(y, y_pred,
-                                      regularization_losses=self.losses)
+            loss = self.loss_fn(y, y_pred)
         gradients = tape.gradient(loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_weights))
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(y, y_pred)
+        self.loss_tracker.update_state(loss)
+        self.accuracy.update_state(y, y_pred)
         # Return a dict mapping metric names to current value
-        return {m.name: m.result() for m in self.metrics}
+        return {"loss": self.loss_tracker.result(), "accuracy": self.accuracy.result()}
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch.
+        return [self.loss_tracker, self.accuracy]
 
 inputs = tf.keras.Input(shape=(784,), dtype="float32")
 x = keras.layers.Dense(32, activation="relu")(inputs)
 x = keras.layers.Dense(32, activation="relu")(x)
 outputs = keras.layers.Dense(10)(x)
 model = CustomModel(inputs, outputs)
-
-model.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()])
-
+model.compile()
 model.fit(dataset, epochs=2)
 
 """
