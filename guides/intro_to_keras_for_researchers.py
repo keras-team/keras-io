@@ -805,7 +805,8 @@ model = tf.keras.Model(inputs, outputs)
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.Adam(learning_rate=1e-3),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()])
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+)
 
 # Train the model with the dataset for 2 epochs.
 model.fit(dataset, epochs=2)
@@ -818,15 +819,15 @@ You can always subclass the `Model` class (it works exactly like subclassing
 Just override the `Model.train_step()` to
 customize what happens in `fit()` while retaining support
 for the built-in infrastructure features outlined above -- callbacks,
-zero-code distribution support, and step fusing support. 
+zero-code distribution support, and step fusing support.
 You may also override `test_step()` to customize what happens in `evaluate()`,
 and override `predict_step()` to customize what happens in `predict()`. For more
 information, please refer to
 [this guide](https://keras.io/guides/customizing_what_happens_in_fit/).
 """
 
-class CustomModel(keras.Model):
 
+class CustomModel(keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.loss_tracker = keras.metrics.Mean(name="loss")
@@ -854,6 +855,7 @@ class CustomModel(keras.Model):
         # We list our `Metric` objects here so that `reset_states()` can be
         # called automatically at the start of each epoch.
         return [self.loss_tracker, self.accuracy]
+
 
 inputs = tf.keras.Input(shape=(784,), dtype="float32")
 x = keras.layers.Dense(32, activation="relu")(inputs)
