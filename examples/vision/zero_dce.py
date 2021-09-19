@@ -180,8 +180,8 @@ enhanced image and also build the relations among the three adjusted channels.
 
 
 def color_constancy_loss(x, **kwargs):
-    mean_rgb = tf.reduce_mean(x, kwargs.get('axis', (1, 2)), keepdims=True)
-    mr, mg, mb = mean_rgb[:, :, :, 0], mean_rgb[:, :, :, 1], mean_rgb[:, :, :, 2] 
+    mean_rgb = tf.reduce_mean(x, kwargs.get("axis", (1, 2)), keepdims=True)
+    mr, mg, mb = mean_rgb[:, :, :, 0], mean_rgb[:, :, :, 1], mean_rgb[:, :, :, 2]
     d_rg = tf.square(mr - mg)
     d_rb = tf.square(mr - mb)
     d_gb = tf.square(mb - mg)
@@ -198,9 +198,9 @@ to the well-exposedness level which is set to `0.6`.
 
 
 def exposure_loss(x, **kwargs):
-    x = tf.reduce_mean(x, kwargs.get('axis', 3), keepdims=True)
-    mean = tf.nn.avg_pool2d(x, ksize=16, strides=16, padding='VALID')
-    return tf.reduce_mean(tf.square(mean - kwargs.get('mean_val', 0.6)))
+    x = tf.reduce_mean(x, kwargs.get("axis", 3), keepdims=True)
+    mean = tf.nn.avg_pool2d(x, ksize=16, strides=16, padding="VALID")
+    return tf.reduce_mean(tf.square(mean - kwargs.get("mean_val", 0.6)))
 
 
 """
@@ -234,61 +234,59 @@ preserving the difference of neighboring regions between the input image and its
 
 
 class SpatialConsistancyLoss(keras.losses.Loss):
-
     def __init__(self, **kwargs):
-        super(SpatialConsistancyLoss, self).__init__(reduction=kwargs.get('reduction', 'none'))
-        
-        self.left_kernel = tf.constant(
-            [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32)
-        self.right_kernel = tf.constant(
-            [[[[0, 0, 0]], [[0, 1, -1]], [[0, 0, 0]]]], dtype=tf.float32)
-        self.up_kernel = tf.constant(
-            [[[[0, -1, 0]], [[0, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32)
-        self.down_kernel = tf.constant(
-            [[[[0, 0, 0]], [[0, 1, 0]], [[0, -1, 0]]]], dtype=tf.float32)
+        super(SpatialConsistancyLoss, self).__init__(
+            reduction=kwargs.get("reduction", "none")
+        )
 
-    
+        self.left_kernel = tf.constant(
+            [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
+        )
+        self.right_kernel = tf.constant(
+            [[[[0, 0, 0]], [[0, 1, -1]], [[0, 0, 0]]]], dtype=tf.float32
+        )
+        self.up_kernel = tf.constant(
+            [[[[0, -1, 0]], [[0, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
+        )
+        self.down_kernel = tf.constant(
+            [[[[0, 0, 0]], [[0, 1, 0]], [[0, -1, 0]]]], dtype=tf.float32
+        )
+
     def call(self, y_true, y_pred):
-        
+
         original_mean = tf.reduce_mean(y_true, 3, keepdims=True)
         enhanced_mean = tf.reduce_mean(y_pred, 3, keepdims=True)
         original_pool = tf.nn.avg_pool2d(
-            original_mean, ksize=4, strides=4, padding='VALID')	
+            original_mean, ksize=4, strides=4, padding="VALID"
+        )
         enhanced_pool = tf.nn.avg_pool2d(
-            enhanced_mean, ksize=4, strides=4, padding='VALID')
-        
+            enhanced_mean, ksize=4, strides=4, padding="VALID"
+        )
+
         d_original_left = tf.nn.conv2d(
-            original_pool, self.left_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            original_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_original_right = tf.nn.conv2d(
-            original_pool, self.right_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            original_pool, self.right_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_original_up = tf.nn.conv2d(
-            original_pool, self.up_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            original_pool, self.up_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_original_down = tf.nn.conv2d(
-            original_pool, self.down_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            original_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
 
         d_enhanced_left = tf.nn.conv2d(
-            enhanced_pool, self.left_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            enhanced_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_enhanced_right = tf.nn.conv2d(
-            enhanced_pool, self.right_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            enhanced_pool, self.right_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_enhanced_up = tf.nn.conv2d(
-            enhanced_pool, self.up_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            enhanced_pool, self.up_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_enhanced_down = tf.nn.conv2d(
-            enhanced_pool, self.down_kernel,
-            strides=[1, 1, 1, 1], padding='SAME'
+            enhanced_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
 
         d_left = tf.square(d_original_left - d_enhanced_left)
@@ -326,7 +324,6 @@ def get_enhanced_image(data, output):
 
 
 class ZeroDCE(keras.Model):
-
     def __init__(self, **kwargs):
         super(ZeroDCE, self).__init__(**kwargs)
         self.dce_model = build_dce_net()
@@ -334,12 +331,12 @@ class ZeroDCE(keras.Model):
     def compile(self, learning_rate, **kwargs):
         super(ZeroDCE, self).compile(**kwargs)
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-        self.spatial_constancy_loss = SpatialConsistancyLoss(reduction='none')
-    
+        self.spatial_constancy_loss = SpatialConsistancyLoss(reduction="none")
+
     def call(self, data):
         dce_net_output = self.dce_model(data)
         return get_enhanced_image(data, dce_net_output)
-    
+
     def compute_losses(self, data, output):
         enhanced_image = get_enhanced_image(data, output)
         loss_illumination = 200 * illumination_smoothness_loss(output)
@@ -352,42 +349,48 @@ class ZeroDCE(keras.Model):
         loss_exposure = 10 * tf.reduce_mean(
             exposure_loss(enhanced_image, mean_val=0.6, axis=3)
         )
-        total_loss = loss_illumination + loss_spatial_constancy + loss_color_constancy + loss_exposure
+        total_loss = (
+            loss_illumination
+            + loss_spatial_constancy
+            + loss_color_constancy
+            + loss_exposure
+        )
         return {
-            'total_loss': total_loss,
-            'illumination_smoothness_loss': loss_illumination,
-            'spatial_constancy_loss': loss_spatial_constancy,
-            'color_constancy_loss': loss_color_constancy,
-            'exposure_loss': loss_exposure
+            "total_loss": total_loss,
+            "illumination_smoothness_loss": loss_illumination,
+            "spatial_constancy_loss": loss_spatial_constancy,
+            "color_constancy_loss": loss_color_constancy,
+            "exposure_loss": loss_exposure,
         }
-    
+
     def train_step(self, data):
         with tf.GradientTape() as tape:
             output = self.dce_model(data)
             losses = self.compute_losses(data, output)
         gradients = tape.gradient(
-            losses['total_loss'], self.dce_model.trainable_weights)
-        self.optimizer.apply_gradients(zip(
-            gradients, self.dce_model.trainable_weights))
-        
+            losses["total_loss"], self.dce_model.trainable_weights
+        )
+        self.optimizer.apply_gradients(zip(gradients, self.dce_model.trainable_weights))
+
         return losses
-    
+
     def test_step(self, data):
         output = self.dce_model(data)
         return self.compute_losses(data, output)
-    
+
     def save_weights(self, filepath, overwrite=True, save_format=None, options=None):
         """While saving the weights, we simply save the weights of the DCE-Net"""
         self.dce_model.save_weights(
-            filepath, overwrite=overwrite,
-            save_format=save_format, options=options
+            filepath, overwrite=overwrite, save_format=save_format, options=options
         )
-    
+
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
         """While loading the weights, we simply load the weights of the DCE-Net"""
         self.dce_model.load_weights(
-            filepath=filepath, by_name=by_name,
-            skip_mismatch=skip_mismatch, options=options
+            filepath=filepath,
+            by_name=by_name,
+            skip_mismatch=skip_mismatch,
+            options=options,
         )
 
 
