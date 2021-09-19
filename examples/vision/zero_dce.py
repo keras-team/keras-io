@@ -234,7 +234,6 @@ preserving the difference of neighboring regions between the input image and its
 
 
 class SpatialConsistancyLoss(keras.losses.Loss):
-    
     def __init__(self):
         super(SpatialConsistancyLoss, self).__init__(reduction="none")
 
