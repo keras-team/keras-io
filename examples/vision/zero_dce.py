@@ -2,26 +2,33 @@
 Title: Zero-DCE for low-light image enhancement
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/18
-Last modified: 2021/09/18
+Last modified: 2021/09/19
 Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement
 """
 """
 ## Introduction
 
-**Zero-Reference Deep Curve Estimation** or **Zero-DCE** formulates light enhancement
-as a task of image-specific curve estimation with a deep neural network. In this example,
-we would train a lightweight deep network, **DCE-Net**, to estimate pixel-wise and
-high-order curves for dynamic range adjustment of a given image. The curve estimation is
-specially designed, considering pixel value range, monotonicity, and differentiability.
+**Zero-Reference Deep Curve Estimation** or **Zero-DCE** formulates light
+enhancement as a task of image-specific curve estimation with a deep neural network. In
+this example, we would train a lightweight deep network, **DCE-Net**, to estimate
+pixel-wise and high-order curves for dynamic range adjustment of a given image.
+
+Zero-DCE takes a low-light image as input and produces high-order curves as its output.
+These curves are then used for pixel-wise adjustment on the dynamic range of the input to
+obtain an enhanced image. The curve estimation has been formulated so that it maintains
+the range of the enhanced image and preserves the contrast of neighboring pixels. This
+curve estimation is inspired by curves adjustment used in photo editing softwares such as
+Adobe Photoshop where we adjust points throughout an image’s tonal range.
+
 Zero-DCE is appealing in its relaxed assumption on reference images, i.e., it does not
 require any paired or unpaired data during training. This is achieved through a set of
-carefully formulated non-reference loss functions, which implicitly measure the enhancement
-quality and drive the learning of the network.
+carefully formulated non-reference loss functions, which implicitly measure the
+enhancement quality and drive the learning of the network.
 
-### References:
+### References
 
-- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/abs/2001.06826)
-- [A spatial processor model for object colour perception](https://www.sciencedirect.com/science/article/abs/pii/0016003280900587)
+- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/pdf/2001.06826.pdf)
+- [Curves adjustment in Adobe Photoshop](https://helpx.adobe.com/photoshop/using/curves-adjustment.html)
 """
 
 """
@@ -44,22 +51,22 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 """shell
-!gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-!unzip -q lol_dataset.zip
+gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
+unzip -q lol_dataset.zip
 """
 
 """
 ## Creating a TensorFlow Dataset
 
 We use 300 low-light images from the LoL Dataset's training set for training, and we use
-the remaining 185 low-light images for validation. We resize the images to size 512 x 512
-to be used for both training and validation. Note that in order to train the DCE-Net, we
-will not require the corresponding enhanced images.
+the remaining 185 low-light images for validation. We resize the images to size `256 x
+256` to be used for both training and validation. Note that in order to train the DCE-Net,
+we will not require the corresponding enhanced images.
 """
 
-IMAGE_SIZE = 512
-BATCH_SIZE = 8
-MAX_TRAIN_IMAGES = 300
+IMAGE_SIZE = 256
+BATCH_SIZE = 16
+MAX_TRAIN_IMAGES = 400
 
 
 def load_data(image_path):
@@ -103,13 +110,13 @@ three objectives in the design of such a curve:
 - Each pixel value of the enhanced image should be in the normalized range of `[0,1]` to
 avoid information loss induced by overflow truncation.
 - It should be monotonous to preserve the differences (contrast) of neighboring pixels.
-- The form of this curve should be as simple as possible and differentiable in the
-process of gradient backpropagation.
+- The form of this curve should be as simple as possible and differentiable in the process
+of gradient backpropagation.
 
-The Light-Enhancement Curve is seperately applied to three RGB channels instead of solely
-on the illumination channel. The three-channel adjustment can better preserve the inherent
-color and reduce the risk of over-saturation. The Light-Enhancement Curve can be applied
-iteratively to enable more versatile adjustment to cope with challenging low-light conditions.
+The Light-Enhancement Curve is seperately applied to three RGB channels instead of solely on the
+illumination channel. The three-channel adjustment can better preserve the inherent color and reduce
+the risk of over-saturation. The Light-Enhancement Curve can be applied iteratively to enable more
+versatile adjustment to cope with challenging low-light conditions.
 
 ![](https://li-chongyi.github.io/Zero-DCE_files/framework.png)
 
@@ -192,7 +199,7 @@ to the well-exposedness level which is set to `0.6`.
 
 def exposure_loss(x, mean_val=0.6):
     x = tf.reduce_mean(x, 3, keepdims=True)
-    mean = tf.keras.layers.AveragePooling2D(pool_size=16, strides=16)(x)
+    mean = tf.nn.avg_pool2d(x, ksize=16, strides=16, padding="VALID")
     return tf.reduce_mean(tf.pow(mean - mean_val, 2))
 
 
@@ -222,13 +229,14 @@ def illumination_smoothness_loss(x):
 ### Spatial Consistancy Loss
 
 The spatial consistency loss encourages spatial coherence of the enhanced image through
-preserving the difference of neighboring regions between the input image and its
-enhanced version.
+preserving the difference of neighboring regions between the input image and its enhanced version.
 """
 
 
-class SpatialConsistancyLoss:
+class SpatialConsistancyLoss(keras.losses.Loss):
+    
     def __init__(self):
+        super(SpatialConsistancyLoss, self).__init__(reduction="none")
 
         self.left_kernel = tf.constant(
             [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
@@ -243,14 +251,16 @@ class SpatialConsistancyLoss:
             [[[[0, 0, 0]], [[0, 1, 0]], [[0, -1, 0]]]], dtype=tf.float32
         )
 
-        self.pool = tf.keras.layers.AveragePooling2D(pool_size=4)
+    def call(self, y_true, y_pred):
 
-    def __call__(self, original, enhanced):
-
-        original_mean = tf.reduce_mean(original, 3, keepdims=True)
-        enhanced_mean = tf.reduce_mean(enhanced, 3, keepdims=True)
-        original_pool = self.pool(original_mean)
-        enhanced_pool = self.pool(enhanced_mean)
+        original_mean = tf.reduce_mean(y_true, 3, keepdims=True)
+        enhanced_mean = tf.reduce_mean(y_pred, 3, keepdims=True)
+        original_pool = tf.nn.avg_pool2d(
+            original_mean, ksize=4, strides=4, padding="VALID"
+        )
+        enhanced_pool = tf.nn.avg_pool2d(
+            enhanced_mean, ksize=4, strides=4, padding="VALID"
+        )
 
         d_original_left = tf.nn.conv2d(
             original_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
@@ -292,6 +302,26 @@ We implement the Zero-DCE framework as a Keras subclassed model.
 """
 
 
+def get_enhanced_image(data, output):
+    r1 = output[:, :, :, :3]
+    r2 = output[:, :, :, 3:6]
+    r3 = output[:, :, :, 6:9]
+    r4 = output[:, :, :, 9:12]
+    r5 = output[:, :, :, 12:15]
+    r6 = output[:, :, :, 15:18]
+    r7 = output[:, :, :, 18:21]
+    r8 = output[:, :, :, 21:24]
+    x = data + r1 * (tf.pow(data, 2) - data)
+    x = x + r2 * (tf.pow(x, 2) - x)
+    x = x + r3 * (tf.pow(x, 2) - x)
+    enhanced_image = x + r4 * (tf.pow(x, 2) - x)
+    x = enhanced_image + r5 * (tf.pow(enhanced_image, 2) - enhanced_image)
+    x = x + r6 * (tf.pow(x, 2) - x)
+    x = x + r7 * (tf.pow(x, 2) - x)
+    enhanced_image = x + r8 * (tf.pow(x, 2) - x)
+    return enhanced_image
+
+
 class ZeroDCE(keras.Model):
     def __init__(self, **kwargs):
         super(ZeroDCE, self).__init__(**kwargs)
@@ -302,32 +332,12 @@ class ZeroDCE(keras.Model):
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.spatial_constancy_loss = SpatialConsistancyLoss()
 
-    def get_enhanced_image(self, data, output):
-        r1 = output[:, :, :, :3]
-        r2 = output[:, :, :, 3:6]
-        r3 = output[:, :, :, 6:9]
-        r4 = output[:, :, :, 9:12]
-        r5 = output[:, :, :, 12:15]
-        r6 = output[:, :, :, 15:18]
-        r7 = output[:, :, :, 18:21]
-        r8 = output[:, :, :, 21:24]
-        x = data + r1 * (tf.pow(data, 2) - data)
-        x = x + r2 * (tf.pow(x, 2) - x)
-        x = x + r3 * (tf.pow(x, 2) - x)
-        enhanced_image = x + r4 * (tf.pow(x, 2) - x)
-        x = enhanced_image + r5 * (tf.pow(enhanced_image, 2) - enhanced_image)
-        x = x + r6 * (tf.pow(x, 2) - x)
-        x = x + r7 * (tf.pow(x, 2) - x)
-        enhanced_image = x + r8 * (tf.pow(x, 2) - x)
-        return enhanced_image
-
     def call(self, data):
         dce_net_output = self.dce_model(data)
-        return self.get_enhanced_image(data, dce_net_output)
+        return get_enhanced_image(data, dce_net_output)
 
-    def _calculate_losses(self, data, output):
-        output = self.dce_model(data)
-        enhanced_image = self.get_enhanced_image(data, output)
+    def compute_losses(self, data, output):
+        enhanced_image = get_enhanced_image(data, output)
         loss_illumination = 200 * illumination_smoothness_loss(output)
         loss_spatial_constancy = tf.reduce_mean(
             self.spatial_constancy_loss(enhanced_image, data)
@@ -351,7 +361,7 @@ class ZeroDCE(keras.Model):
     def train_step(self, data):
         with tf.GradientTape() as tape:
             output = self.dce_model(data)
-            losses = self._calculate_losses(data, output)
+            losses = self.compute_losses(data, output)
         gradients = tape.gradient(
             losses["total_loss"], self.dce_model.trainable_weights
         )
@@ -361,14 +371,16 @@ class ZeroDCE(keras.Model):
 
     def test_step(self, data):
         output = self.dce_model(data)
-        return self._calculate_losses(data, output)
+        return self.compute_losses(data, output)
 
     def save_weights(self, filepath, overwrite=True, save_format=None, options=None):
+        """While saving the weights, we simply save the weights of the DCE-Net"""
         self.dce_model.save_weights(
             filepath, overwrite=overwrite, save_format=save_format, options=options
         )
 
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
+        """While loading the weights, we simply load the weights of the DCE-Net"""
         self.dce_model.load_weights(
             filepath=filepath,
             by_name=by_name,
@@ -418,7 +430,7 @@ def plot_results(images, titles, figure_size=(12, 12)):
 
 
 def infer(original_image):
-    image = tf.keras.preprocessing.image.img_to_array(original_image)
+    image = keras.preprocessing.image.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
     output_image = zero_dce_model(image)
@@ -434,7 +446,7 @@ We compare the test images from LOLDataset enhanced by MIRNet with images enhanc
 the `PIL.ImageOps.autocontrast()` function.
 """
 
-for val_image_file in random.sample(test_low_light_images, 6):
+for val_image_file in test_low_light_images:
     original_image = Image.open(val_image_file)
     enhanced_image = infer(original_image)
     plot_results(
