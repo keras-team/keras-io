@@ -182,10 +182,10 @@ enhanced image and also build the relations among the three adjusted channels.
 def color_constancy_loss(x):
     mean_rgb = tf.reduce_mean(x, [1, 2], keepdims=True)
     mr, mg, mb = mean_rgb[:, :, :, 0], mean_rgb[:, :, :, 1], mean_rgb[:, :, :, 2]
-    d_rg = tf.pow(mr - mg, 2)
-    d_rb = tf.pow(mr - mb, 2)
-    d_gb = tf.pow(mb - mg, 2)
-    return tf.pow(tf.pow(d_rg, 2) + tf.pow(d_rb, 2) + tf.pow(d_gb, 2), 0.5)
+    d_rg = tf.square(mr - mg)
+    d_rb = tf.square(mr - mb)
+    d_gb = tf.square(mb - mg)
+    return tf.sqrt(tf.square(d_rg) + tf.square(d_rb) + tf.square(d_gb))
 
 
 """
@@ -200,7 +200,7 @@ to the well-exposedness level which is set to `0.6`.
 def exposure_loss(x, mean_val=0.6):
     x = tf.reduce_mean(x, 3, keepdims=True)
     mean = tf.nn.avg_pool2d(x, ksize=16, strides=16, padding="VALID")
-    return tf.reduce_mean(tf.pow(mean - mean_val, 2))
+    return tf.reduce_mean(tf.square(mean - mean_val))
 
 
 """
@@ -217,8 +217,8 @@ def illumination_smoothness_loss(x):
     w_x = tf.shape(x)[2]
     count_h = (tf.shape(x)[2] - 1) * tf.shape(x)[3]
     count_w = tf.shape(x)[2] * (tf.shape(x)[3] - 1)
-    h_tv = tf.reduce_sum(tf.pow((x[:, 1:, :, :] - x[:, : h_x - 1, :, :]), 2))
-    w_tv = tf.reduce_sum(tf.pow((x[:, :, 1:, :] - x[:, :, : w_x - 1, :]), 2))
+    h_tv = tf.reduce_sum(tf.square((x[:, 1:, :, :] - x[:, : h_x - 1, :, :])))
+    w_tv = tf.reduce_sum(tf.square((x[:, :, 1:, :] - x[:, :, : w_x - 1, :])))
     batch_size = tf.cast(batch_size, dtype=tf.float32)
     count_h = tf.cast(count_h, dtype=tf.float32)
     count_w = tf.cast(count_w, dtype=tf.float32)
@@ -235,6 +235,7 @@ preserving the difference of neighboring regions between the input image and its
 
 class SpatialConsistancyLoss(keras.losses.Loss):
     def __init__(self):
+
         super(SpatialConsistancyLoss, self).__init__(reduction="none")
 
         self.left_kernel = tf.constant(
@@ -287,10 +288,10 @@ class SpatialConsistancyLoss(keras.losses.Loss):
             enhanced_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
 
-        d_left = tf.pow(d_original_left - d_enhanced_left, 2)
-        d_right = tf.pow(d_original_right - d_enhanced_right, 2)
-        d_up = tf.pow(d_original_up - d_enhanced_up, 2)
-        d_down = tf.pow(d_original_down - d_enhanced_down, 2)
+        d_left = tf.square(d_original_left - d_enhanced_left)
+        d_right = tf.square(d_original_right - d_enhanced_right)
+        d_up = tf.square(d_original_up - d_enhanced_up)
+        d_down = tf.square(d_original_down - d_enhanced_down)
         return d_left + d_right + d_up + d_down
 
 
@@ -310,14 +311,14 @@ def get_enhanced_image(data, output):
     r6 = output[:, :, :, 15:18]
     r7 = output[:, :, :, 18:21]
     r8 = output[:, :, :, 21:24]
-    x = data + r1 * (tf.pow(data, 2) - data)
-    x = x + r2 * (tf.pow(x, 2) - x)
-    x = x + r3 * (tf.pow(x, 2) - x)
-    enhanced_image = x + r4 * (tf.pow(x, 2) - x)
-    x = enhanced_image + r5 * (tf.pow(enhanced_image, 2) - enhanced_image)
-    x = x + r6 * (tf.pow(x, 2) - x)
-    x = x + r7 * (tf.pow(x, 2) - x)
-    enhanced_image = x + r8 * (tf.pow(x, 2) - x)
+    x = data + r1 * (tf.square(data) - data)
+    x = x + r2 * (tf.square(x) - x)
+    x = x + r3 * (tf.square(x) - x)
+    enhanced_image = x + r4 * (tf.square(x) - x)
+    x = enhanced_image + r5 * (tf.square(enhanced_image) - enhanced_image)
+    x = x + r6 * (tf.square(x) - x)
+    x = x + r7 * (tf.square(x) - x)
+    enhanced_image = x + r8 * (tf.square(x) - x)
     return enhanced_image
 
 
