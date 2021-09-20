@@ -3,27 +3,28 @@ Title: Zero-DCE for low-light image enhancement
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/18
 Last modified: 2021/09/19
-Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement
+Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement.
 """
 """
 ## Introduction
 
-**Zero-Reference Deep Curve Estimation** or **Zero-DCE** formulates light
-enhancement as a task of image-specific curve estimation with a deep neural network. In
-this example, we would train a lightweight deep network, **DCE-Net**, to estimate
-pixel-wise and high-order curves for dynamic range adjustment of a given image.
+**Zero-Reference Deep Curve Estimation** or **Zero-DCE** formulates low-light image
+enhancement as the task of estimating an image-specific
+[*tonal curve*](https://en.wikipedia.org/wiki/Curve_(tonality)) with a deep neural network.
+In this example, we train a lightweight deep network, **DCE-Net**, to estimate
+pixel-wise and high-order tonal curves for dynamic range adjustment of a given image.
 
-Zero-DCE takes a low-light image as input and produces high-order curves as its output.
+Zero-DCE takes a low-light image as input and produces high-order tonal curves as its output.
 These curves are then used for pixel-wise adjustment on the dynamic range of the input to
-obtain an enhanced image. The curve estimation has been formulated so that it maintains
+obtain an enhanced image. The curve estimation process is done in such a way that it maintains
 the range of the enhanced image and preserves the contrast of neighboring pixels. This
-curve estimation is inspired by curves adjustment used in photo editing softwares such as
-Adobe Photoshop where we adjust points throughout an image’s tonal range.
+curve estimation is inspired by curves adjustment used in photo editing software such as
+Adobe Photoshop where users can adjust points throughout an image’s tonal range.
 
-Zero-DCE is appealing in its relaxed assumption on reference images, i.e., it does not
-require any paired or unpaired data during training. This is achieved through a set of
-carefully formulated non-reference loss functions, which implicitly measure the
-enhancement quality and drive the learning of the network.
+Zero-DCE is appealing because of its relaxed assumptions with regard tp reference images:
+it does not require any input/output image pairs during training.
+This is achieved through a set of carefully formulated non-reference loss functions,
+which implicitly measure the enhancement quality and guide the training of the network.
 
 ### References
 
@@ -58,7 +59,7 @@ unzip -q lol_dataset.zip
 """
 ## Creating a TensorFlow Dataset
 
-We use 300 low-light images from the LoL Dataset's training set for training, and we use
+We use 300 low-light images from the LoL Dataset training set for training, and we use
 the remaining 185 low-light images for validation. We resize the images to size `256 x
 256` to be used for both training and validation. Note that in order to train the DCE-Net,
 we will not require the corresponding enhanced images.
@@ -98,25 +99,26 @@ print("Validation Dataset:", val_dataset)
 """
 ## The Zero-DCE Framework
 
-The DCE-Net is devised to estimate a set of best-fitting Light-Enhancement curves
+The goal of DCE-Net is to estimate a set of best-fitting light-enhancement curves
 (LE-curves) given an input image. The framework then maps all pixels of the input’s RGB
-channels by applying the curves iteratively for obtaining the final enhanced image.
+channels by applying the curves iteratively to obtain the final enhanced image.
 
-### Light-Enhancement Curve
+### Understanding light-enhancement curves
 
-It is a kind of curve that can map a low-light image to its enhanced version automatically,
-where the self-adaptive curve parameters are solely dependent on the input image. There are
-three objectives in the design of such a curve:
-- Each pixel value of the enhanced image should be in the normalized range of `[0,1]` to
+A ligh-enhancement curve is a kind of curve that can map a low-light image
+to its enhanced version automatically,
+where the self-adaptive curve parameters are solely dependent on the input image.
+When designing such a curve, three objectives should be taken into account:
+
+- Each pixel value of the enhanced image should be in the normalized range `[0,1]`, in order to
 avoid information loss induced by overflow truncation.
-- It should be monotonous to preserve the differences (contrast) of neighboring pixels.
-- The form of this curve should be as simple as possible and differentiable in the process
-of gradient backpropagation.
+- It should be monotonous, to preserve the contrast between neighboring pixels.
+- The shape of this curve should be as simple as possible,
+and the curve should be differentiable to allow backpropagation.
 
-The Light-Enhancement Curve is seperately applied to three RGB channels instead of solely on the
+The light-enhancement curve is separately applied to three RGB channels instead of solely on the
 illumination channel. The three-channel adjustment can better preserve the inherent color and reduce
-the risk of over-saturation. The Light-Enhancement Curve can be applied iteratively to enable more
-versatile adjustment to cope with challenging low-light conditions.
+the risk of over-saturation.
 
 ![](https://li-chongyi.github.io/Zero-DCE_files/framework.png)
 
@@ -165,17 +167,17 @@ def build_dce_net():
 
 
 """
-## Loss Functions
+## Loss functions
 
-To enable zero-reference learning in DCE-Net, we would use a set of differentiable
-non-reference losses that allow us to evaluate the quality of enhanced images.
+To enable zero-reference learning in DCE-Net, we use a set of differentiable
+zero-reference losses that allow us to evaluate the quality of enhanced images.
 """
 
 """
-### Color Constancy Loss
+### Color constancy loss
 
-The Color Constancy Loss is used to correct the potential color deviations in the
-enhanced image and also build the relations among the three adjusted channels.
+The *color constancy loss* is used to correct the potential color deviations in the
+enhanced image.
 """
 
 
@@ -191,9 +193,9 @@ def color_constancy_loss(x):
 """
 ### Exposure loss
 
-To restrain under-/over-exposed regions, the Exposure Control Loss is used. The exposure
-control loss measures the distance between the average intensity value of a local region
-to the well-exposedness level which is set to `0.6`.
+To restrain under-/over-exposed regions, we use the *exposure control loss*.
+It measures the distance between the average intensity value of a local region
+and a preset well-exposedness level (set to `0.6`).
 """
 
 
@@ -204,10 +206,10 @@ def exposure_loss(x, mean_val=0.6):
 
 
 """
-### Illumination Smoothness Loss
+### Illumination smoothness loss
 
-To preserve the monotonicity relations between neighboring pixels, the Illumination
-Smoothness Loss is added to each curve parameter map.
+To preserve the monotonicity relations between neighboring pixels, the
+*illumination smoothness loss* is added to each curve parameter map.
 """
 
 
@@ -226,16 +228,16 @@ def illumination_smoothness_loss(x):
 
 
 """
-### Spatial Consistancy Loss
+### Spatial consistency loss
 
-The spatial consistency loss encourages spatial coherence of the enhanced image through
-preserving the difference of neighboring regions between the input image and its enhanced version.
+The *spatial consistency loss* encourages spatial coherence of the enhanced image by
+preserving the contrast between neighboring regions across the input image and its enhanced version.
 """
 
 
-class SpatialConsistancyLoss(keras.losses.Loss):
+class SpatialConsistencyLoss(keras.losses.Loss):
     def __init__(self, **kwargs):
-        super(SpatialConsistancyLoss, self).__init__(reduction="none")
+        super(SpatialConsistencyLoss, self).__init__(reduction="none")
 
         self.left_kernel = tf.constant(
             [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
@@ -295,7 +297,7 @@ class SpatialConsistancyLoss(keras.losses.Loss):
 
 
 """
-### Deep Curve Estimation Model
+### Deep curve estimation model
 
 We implement the Zero-DCE framework as a Keras subclassed model.
 """
@@ -309,7 +311,7 @@ class ZeroDCE(keras.Model):
     def compile(self, learning_rate, **kwargs):
         super(ZeroDCE, self).compile(**kwargs)
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-        self.spatial_constancy_loss = SpatialConsistancyLoss(reduction="none")
+        self.spatial_constancy_loss = SpatialConsistencyLoss(reduction="none")
 
     def get_enhanced_image(self, data, output):
         r1 = output[:, :, :, :3]
@@ -437,7 +439,7 @@ def infer(original_image):
 
 
 """
-### Inference on Test Images
+### Inference on test images
 
 We compare the test images from LOLDataset enhanced by MIRNet with images enhanced via
 the `PIL.ImageOps.autocontrast()` function.
