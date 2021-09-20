@@ -954,7 +954,7 @@ architecture choices, layer sizes, etc. Human intuition can only go so far, so y
  want to leverage a systematic approach: hyperparameter search.
 
 You can use
-[KerasTuner](https://keras-team.github.io/keras-tuner/documentation/tuners/) to find
+[KerasTuner](https://keras.io/api/keras_tuner/tuners/) to find
  the best hyperparameter for your Keras models. It's as easy as calling `fit()`.
 
 Here how it works.

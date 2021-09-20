@@ -10,7 +10,7 @@ There are a few built-in `Tuner` subclasses available for widely-used tuning
 algorithms: `RandomSearch`, `BayesianOptimization` and `Hyperband`.
 
 You can also subclass the `Tuner` class to customize your tuning process.
-In particular, you can [override the `run_trial` function](/guides/keras-tuner/custom_tuner/#overriding-runtrial)
+In particular, you can [override the `run_trial` function](/guides/keras_tuner/custom_tuner/#overriding-runtrial)
 to customize model building and training.
 
 {{toc}}
