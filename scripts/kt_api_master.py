@@ -131,7 +131,7 @@ TUNER_MASTER = {
 
 KT_API_MASTER = {
     'path': 'keras_tuner/',
-    'title': 'Keras Tuner',
+    'title': 'KerasTuner',
     'toc': True,
     'children': [
         {

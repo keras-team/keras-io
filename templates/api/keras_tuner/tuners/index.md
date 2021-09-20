@@ -1,4 +1,4 @@
-# The Tuner classes in Keras Tuner
+# The Tuner classes in KerasTuner
 
 The base `Tuner` class is the class that manages the hyperparameter search process,
 including model creation, training, and evaluation.  For each trial, a `Tuner` receives new

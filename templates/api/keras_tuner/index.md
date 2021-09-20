@@ -1,4 +1,4 @@
-# Keras Tuner API
+# KerasTuner API
 
 The **Hyperparameters** class is used to specify a set of hyperparameters
 and their values, to be used in the model building function.

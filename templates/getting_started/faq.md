@@ -297,7 +297,7 @@ and cached model weights files from Keras Applications are stored by default in 
 ### How to do hyperparameter tuning with Keras?
 
 
-We recommend using [Keras Tuner](https://keras-team.github.io/keras-tuner/).
+We recommend using [KerasTuner](https://keras-team.github.io/keras-tuner/).
 
 ---
 
