@@ -179,8 +179,8 @@ enhanced image and also build the relations among the three adjusted channels.
 """
 
 
-def color_constancy_loss(x, **kwargs):
-    mean_rgb = tf.reduce_mean(x, kwargs.get("axis", (1, 2)), keepdims=True)
+def color_constancy_loss(x):
+    mean_rgb = tf.reduce_mean(x, axis=(1, 2), keepdims=True)
     mr, mg, mb = mean_rgb[:, :, :, 0], mean_rgb[:, :, :, 1], mean_rgb[:, :, :, 2]
     d_rg = tf.square(mr - mg)
     d_rb = tf.square(mr - mb)
@@ -197,10 +197,10 @@ to the well-exposedness level which is set to `0.6`.
 """
 
 
-def exposure_loss(x, **kwargs):
-    x = tf.reduce_mean(x, kwargs.get("axis", 3), keepdims=True)
+def exposure_loss(x, mean_val=0.6):
+    x = tf.reduce_mean(x, axis=3, keepdims=True)
     mean = tf.nn.avg_pool2d(x, ksize=16, strides=16, padding="VALID")
-    return tf.reduce_mean(tf.square(mean - kwargs.get("mean_val", 0.6)))
+    return tf.reduce_mean(tf.square(mean - mean_val))
 
 
 """
@@ -235,9 +235,7 @@ preserving the difference of neighboring regions between the input image and its
 
 class SpatialConsistancyLoss(keras.losses.Loss):
     def __init__(self, **kwargs):
-        super(SpatialConsistancyLoss, self).__init__(
-            reduction=kwargs.get("reduction", "none")
-        )
+        super(SpatialConsistancyLoss, self).__init__(reduction="none")
 
         self.left_kernel = tf.constant(
             [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
@@ -303,26 +301,6 @@ We implement the Zero-DCE framework as a Keras subclassed model.
 """
 
 
-def get_enhanced_image(data, output):
-    r1 = output[:, :, :, :3]
-    r2 = output[:, :, :, 3:6]
-    r3 = output[:, :, :, 6:9]
-    r4 = output[:, :, :, 9:12]
-    r5 = output[:, :, :, 12:15]
-    r6 = output[:, :, :, 15:18]
-    r7 = output[:, :, :, 18:21]
-    r8 = output[:, :, :, 21:24]
-    x = data + r1 * (tf.square(data) - data)
-    x = x + r2 * (tf.square(x) - x)
-    x = x + r3 * (tf.square(x) - x)
-    enhanced_image = x + r4 * (tf.square(x) - x)
-    x = enhanced_image + r5 * (tf.square(enhanced_image) - enhanced_image)
-    x = x + r6 * (tf.square(x) - x)
-    x = x + r7 * (tf.square(x) - x)
-    enhanced_image = x + r8 * (tf.square(x) - x)
-    return enhanced_image
-
-
 class ZeroDCE(keras.Model):
     def __init__(self, **kwargs):
         super(ZeroDCE, self).__init__(**kwargs)
@@ -333,22 +311,37 @@ class ZeroDCE(keras.Model):
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.spatial_constancy_loss = SpatialConsistancyLoss(reduction="none")
 
+    def get_enhanced_image(self, data, output):
+        r1 = output[:, :, :, :3]
+        r2 = output[:, :, :, 3:6]
+        r3 = output[:, :, :, 6:9]
+        r4 = output[:, :, :, 9:12]
+        r5 = output[:, :, :, 12:15]
+        r6 = output[:, :, :, 15:18]
+        r7 = output[:, :, :, 18:21]
+        r8 = output[:, :, :, 21:24]
+        x = data + r1 * (tf.square(data) - data)
+        x = x + r2 * (tf.square(x) - x)
+        x = x + r3 * (tf.square(x) - x)
+        enhanced_image = x + r4 * (tf.square(x) - x)
+        x = enhanced_image + r5 * (tf.square(enhanced_image) - enhanced_image)
+        x = x + r6 * (tf.square(x) - x)
+        x = x + r7 * (tf.square(x) - x)
+        enhanced_image = x + r8 * (tf.square(x) - x)
+        return enhanced_image
+
     def call(self, data):
         dce_net_output = self.dce_model(data)
-        return get_enhanced_image(data, dce_net_output)
+        return self.get_enhanced_image(data, dce_net_output)
 
     def compute_losses(self, data, output):
-        enhanced_image = get_enhanced_image(data, output)
+        enhanced_image = self.get_enhanced_image(data, output)
         loss_illumination = 200 * illumination_smoothness_loss(output)
         loss_spatial_constancy = tf.reduce_mean(
             self.spatial_constancy_loss(enhanced_image, data)
         )
-        loss_color_constancy = 5 * tf.reduce_mean(
-            color_constancy_loss(enhanced_image, axis=(1, 2))
-        )
-        loss_exposure = 10 * tf.reduce_mean(
-            exposure_loss(enhanced_image, mean_val=0.6, axis=3)
-        )
+        loss_color_constancy = 5 * tf.reduce_mean(color_constancy_loss(enhanced_image))
+        loss_exposure = 10 * tf.reduce_mean(exposure_loss(enhanced_image))
         total_loss = (
             loss_illumination
             + loss_spatial_constancy
@@ -371,7 +364,6 @@ class ZeroDCE(keras.Model):
             losses["total_loss"], self.dce_model.trainable_weights
         )
         self.optimizer.apply_gradients(zip(gradients, self.dce_model.trainable_weights))
-
         return losses
 
     def test_step(self, data):
