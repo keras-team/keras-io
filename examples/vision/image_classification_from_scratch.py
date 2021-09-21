@@ -214,7 +214,7 @@ val_ds = val_ds.prefetch(buffer_size=32)
 We'll build a small version of the Xception network. We haven't particularly tried to
 optimize the architecture; if you want to do a systematic search for the best model
  configuration, consider using
-[Keras Tuner](https://github.com/keras-team/keras-tuner).
+[KerasTuner](https://github.com/keras-team/keras-tuner).
 
 Note that:
 

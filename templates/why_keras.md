@@ -79,7 +79,7 @@ Keras is at the center of a wide ecosystem of tightly-connected projects that to
 
 - Rapid model prototyping with [AutoKeras](https://autokeras.com/)
 - Scalable model training in on GCP via [TF Cloud](https://github.com/tensorflow/cloud)
-- Hyperparameter tuning with [Keras Tuner](https://keras-team.github.io/keras-tuner/)
+- Hyperparameter tuning with [KerasTuner](https://keras.io/keras_tuner/)
 - Extra layers, losses, metrics, callbacks... via [TensorFlow Addons](https://www.tensorflow.org/addons/api_docs/python/tfa)
 - Inference model quantization & pruning with the [TF Model Optimization Toolkit](https://www.tensorflow.org/model_optimization)
 - Model deployment on mobile or on an embedded with [TF Lite](https://www.tensorflow.org/lite)
