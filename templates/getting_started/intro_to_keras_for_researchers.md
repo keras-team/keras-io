@@ -150,8 +150,8 @@ print(a)
 <div class="k-default-codeblock">
 ```
 <tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
-array([[ 0.57964617,  2.0584428 ],
-       [-1.1712747 ,  0.7081559 ]], dtype=float32)>
+array([[-1.7639292,  0.4263797],
+       [-0.3954156, -0.6072024]], dtype=float32)>
 
 ```
 </div>
@@ -213,8 +213,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.5081781  -0.26667532]
- [ 0.6077829   0.91629493]], shape=(2, 2), dtype=float32)
+[[ 0.99851996 -0.56305575]
+ [-0.99985445 -0.773933  ]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -233,8 +233,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.5081781  -0.26667532]
- [ 0.6077829   0.91629493]], shape=(2, 2), dtype=float32)
+[[ 0.99851996 -0.56305575]
+ [-0.99985445 -0.773933  ]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -254,8 +254,8 @@ with tf.GradientTape() as outer_tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[1.602469   0.85908425]
- [0.8836864  0.16556603]], shape=(2, 2), dtype=float32)
+[[1.2510717e-03 4.4079739e-01]
+ [2.1326542e-04 3.7843192e-01]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -411,16 +411,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.483438491821289
-Step: 100 Loss: 2.381361484527588
-Step: 200 Loss: 2.246344804763794
-Step: 300 Loss: 2.179429054260254
-Step: 400 Loss: 2.0340209007263184
-Step: 500 Loss: 2.0043013095855713
-Step: 600 Loss: 1.9037692546844482
-Step: 700 Loss: 1.7935802936553955
-Step: 800 Loss: 1.7824013233184814
-Step: 900 Loss: 1.7184176445007324
+Step: 0 Loss: 2.4605865478515625
+Step: 100 Loss: 2.3112568855285645
+Step: 200 Loss: 2.1920084953308105
+Step: 300 Loss: 2.1255125999450684
+Step: 400 Loss: 2.020744562149048
+Step: 500 Loss: 2.060229539871216
+Step: 600 Loss: 1.9214580059051514
+Step: 700 Loss: 1.7613574266433716
+Step: 800 Loss: 1.6828575134277344
+Step: 900 Loss: 1.6320191621780396
 
 ```
 </div>
@@ -579,7 +579,7 @@ print(mlp.losses)  # List containing one float32 scalar
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.2839636>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.21796302>]
 
 ```
 </div>
@@ -638,16 +638,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 6.30183744430542
-Step: 100 Loss: 2.5793704986572266
-Step: 200 Loss: 2.403972625732422
-Step: 300 Loss: 2.3772311210632324
-Step: 400 Loss: 2.3582746982574463
-Step: 500 Loss: 2.3301682472229004
-Step: 600 Loss: 2.3364264965057373
-Step: 700 Loss: 2.3272597789764404
-Step: 800 Loss: 2.317638874053955
-Step: 900 Loss: 2.3263416290283203
+Step: 0 Loss: 6.307978630065918
+Step: 100 Loss: 2.5283541679382324
+Step: 200 Loss: 2.4068050384521484
+Step: 300 Loss: 2.3749840259552
+Step: 400 Loss: 2.34563946723938
+Step: 500 Loss: 2.3380157947540283
+Step: 600 Loss: 2.3201656341552734
+Step: 700 Loss: 2.3250539302825928
+Step: 800 Loss: 2.344613790512085
+Step: 900 Loss: 2.3183579444885254
 
 ```
 </div>
@@ -711,25 +711,25 @@ for epoch in range(2):
 <div class="k-default-codeblock">
 ```
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.016
+Total running accuracy so far: 0.141
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.750
+Total running accuracy so far: 0.751
 Epoch: 0 Step: 400
 Total running accuracy so far: 0.827
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.857
+Total running accuracy so far: 0.859
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.875
+Total running accuracy so far: 0.876
 Epoch: 1 Step: 0
-Total running accuracy so far: 0.969
+Total running accuracy so far: 0.938
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.939
+Total running accuracy so far: 0.944
 Epoch: 1 Step: 400
-Total running accuracy so far: 0.939
+Total running accuracy so far: 0.944
 Epoch: 1 Step: 600
-Total running accuracy so far: 0.940
+Total running accuracy so far: 0.945
 Epoch: 1 Step: 800
-Total running accuracy so far: 0.941
+Total running accuracy so far: 0.945
 
 ```
 </div>
@@ -865,16 +865,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.3006701469421387
-Step: 100 Loss: 0.39556410908699036
-Step: 200 Loss: 0.31732460856437683
-Step: 300 Loss: 0.31814849376678467
-Step: 400 Loss: 0.23942124843597412
-Step: 500 Loss: 0.4277012050151825
-Step: 600 Loss: 0.26037153601646423
-Step: 700 Loss: 0.29441630840301514
-Step: 800 Loss: 0.633674144744873
-Step: 900 Loss: 0.19014623761177063
+Step: 0 Loss: 2.291861057281494
+Step: 100 Loss: 0.5378965735435486
+Step: 200 Loss: 0.48008084297180176
+Step: 300 Loss: 0.3359006941318512
+Step: 400 Loss: 0.28147661685943604
+Step: 500 Loss: 0.31419697403907776
+Step: 600 Loss: 0.2735794484615326
+Step: 700 Loss: 0.3001103401184082
+Step: 800 Loss: 0.18827161192893982
+Step: 900 Loss: 0.15798673033714294
 
 ```
 </div>
@@ -973,11 +973,124 @@ Learn more about the Functional API [here](/guides/functional_api/).
 In your research workflows, you may often find yourself mix-and-matching OO models and
 Functional models.
 
-Note that the `Model` class also features built-in training & evaluation loops
-(`fit()` and `evaluate()`). You can always subclass the `Model` class
-(it works exactly like subclassing `Layer`) if you want to leverage these loops
-for your OO models.
+Note that the `Model` class also features built-in training & evaluation loops:
+`fit()`, `predict()` and `evaluate()` (configured via the `compile()` method).
+These built-in functions give you access to the
+following built-in training infrastructure features:
 
+* [Callbacks](/api/callbacks/). You can leverage built-in
+callbacks for early-stopping, model checkpointing,
+and monitoring training with TensorBoard. You can also
+[implement custom callbacks](/guides/writing_your_own_callbacks/) if needed.
+* [Distributed training](https://keras.io/guides/distributed_training/). You
+can easily scale up your training to multiple GPUs, TPU, or even multiple machines
+with the `tf.distribute` API -- with no changes to your code.
+* [Step fusing](https://keras.io/api/models/model_training_apis/#compile-method).
+With the `steps_per_execution` argument in `Model.compile()`, you can process
+multiple batches in a single `tf.function` call, which greatly improves
+device utilization on TPUs.
+
+We won't go into the details, but we provide a simple code example
+below. It leverages the built-in training infrastructure to implement the MNIST
+example above.
+
+
+```python
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = tf.keras.Model(inputs, outputs)
+
+# Specify the loss, optimizer, and metrics with `compile()`.
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+)
+
+# Train the model with the dataset for 2 epochs.
+model.fit(dataset, epochs=2)
+model.predict(dataset)
+model.evaluate(dataset)
+```
+
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+938/938 [==============================] - 1s 1ms/step - loss: 0.3958 - sparse_categorical_accuracy: 0.8872
+Epoch 2/2
+938/938 [==============================] - 1s 1ms/step - loss: 0.1916 - sparse_categorical_accuracy: 0.9447
+938/938 [==============================] - 1s 798us/step - loss: 0.1729 - sparse_categorical_accuracy: 0.9485
+
+[0.1728748232126236, 0.9484500288963318]
+
+```
+</div>
+You can always subclass the `Model` class (it works exactly like subclassing
+`Layer`) if you want to leverage built-in training loops for your OO models.
+Just override the `Model.train_step()` to
+customize what happens in `fit()` while retaining support
+for the built-in infrastructure features outlined above -- callbacks,
+zero-code distribution support, and step fusing support.
+You may also override `test_step()` to customize what happens in `evaluate()`,
+and override `predict_step()` to customize what happens in `predict()`. For more
+information, please refer to
+[this guide](https://keras.io/guides/customizing_what_happens_in_fit/).
+
+
+```python
+
+class CustomModel(keras.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.accuracy = keras.metrics.SparseCategoricalAccuracy()
+        self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            loss = self.loss_fn(y, y_pred)
+        gradients = tape.gradient(loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_weights))
+        # Update metrics (includes the metric that tracks the loss)
+        self.loss_tracker.update_state(loss)
+        self.accuracy.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {"loss": self.loss_tracker.result(), "accuracy": self.accuracy.result()}
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch.
+        return [self.loss_tracker, self.accuracy]
+
+
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = CustomModel(inputs, outputs)
+model.compile()
+model.fit(dataset, epochs=2)
+```
+
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+938/938 [==============================] - 1s 1ms/step - loss: 0.3737 - accuracy: 0.8340
+Epoch 2/2
+938/938 [==============================] - 1s 946us/step - loss: 0.1934 - accuracy: 0.9405
+
+<keras.callbacks.History at 0x15dfae110>
+
+```
+</div>
 ---
 ## End-to-end experiment example 1: variational autoencoders.
 
@@ -1136,17 +1249,17 @@ for step, x in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.3166165351867676
-Step: 100 Loss: 0.1252804195674339
-Step: 200 Loss: 0.09944908850969959
-Step: 300 Loss: 0.08949342685630947
-Step: 400 Loss: 0.08455682370319331
-Step: 500 Loss: 0.08139740330670885
-Step: 600 Loss: 0.07902435987518354
-Step: 700 Loss: 0.07770300999326304
-Step: 800 Loss: 0.07646914515248994
-Step: 900 Loss: 0.07556770330545111
-Step: 1000 Loss: 0.07461526579819955
+Step: 0 Loss: 0.3246927559375763
+Step: 100 Loss: 0.12636583357459247
+Step: 200 Loss: 0.099717023916802
+Step: 300 Loss: 0.0896754782535507
+Step: 400 Loss: 0.08474012454065896
+Step: 500 Loss: 0.08153954131933981
+Step: 600 Loss: 0.07914437327577349
+Step: 700 Loss: 0.07779341802723738
+Step: 800 Loss: 0.07658644887466406
+Step: 900 Loss: 0.07564477964855325
+Step: 1000 Loss: 0.07468595038671474
 
 ```
 </div>
@@ -1216,9 +1329,9 @@ vae.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 3s 1ms/step - loss: 0.0715
+1875/1875 [==============================] - 3s 1ms/step - loss: 0.0713
 
-<keras.callbacks.History at 0x15c810d90>
+<keras.callbacks.History at 0x15e150f10>
 
 ```
 </div>
@@ -1357,17 +1470,17 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.269472599029541
-Step: 100 Loss: 2.395726864733318
-Step: 200 Loss: 2.1413526021277725
-Step: 300 Loss: 1.9517147915102881
-Step: 400 Loss: 1.9125741058504766
-Step: 500 Loss: 1.8005842943550483
-Step: 600 Loss: 1.740590222531361
-Step: 700 Loss: 1.6740981624629072
-Step: 800 Loss: 1.6432227824319274
-Step: 900 Loss: 1.5765889552989445
-Step: 1000 Loss: 1.541528965677365
+Step: 0 Loss: 1.3274627923965454
+Step: 100 Loss: 2.5709669510326765
+Step: 200 Loss: 2.2051062234700542
+Step: 300 Loss: 2.0191424489686534
+Step: 400 Loss: 1.8865989956417193
+Step: 500 Loss: 1.7706833476604333
+Step: 600 Loss: 1.6479115988951523
+Step: 700 Loss: 1.603230944064981
+Step: 800 Loss: 1.533307248778922
+Step: 900 Loss: 1.513232192888781
+Step: 1000 Loss: 1.4671869220568465
 
 ```
 </div>

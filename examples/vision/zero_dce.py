@@ -21,7 +21,7 @@ the range of the enhanced image and preserves the contrast of neighboring pixels
 curve estimation is inspired by curves adjustment used in photo editing software such as
 Adobe Photoshop where users can adjust points throughout an image’s tonal range.
 
-Zero-DCE is appealing because of its relaxed assumptions with regard tp reference images:
+Zero-DCE is appealing because of its relaxed assumptions with regard to reference images:
 it does not require any input/output image pairs during training.
 This is achieved through a set of carefully formulated non-reference loss functions,
 which implicitly measure the enhancement quality and guide the training of the network.

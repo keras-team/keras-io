@@ -4,6 +4,13 @@ This is a constantly-updated list of code examples that we're currently interest
 
 --
 
+## Structured data examples featuring Keras Preprocessing Layers (KPL)
+
+E.g. feature hashing, feature indexing with handling of missing values,
+mixing numerical, categorical, and text features, doing feature engineering with KPL, etc.
+
+--
+
 ## Transformer model for MIDI music generation
 
 [Reference TF/Keras implementation](https://github.com/jason9693/MusicTransformer-tensorflow2.0)
@@ -78,4 +85,10 @@ The dataset should have at least 50k samples and there should be at least a doze
 ## Timeseries imputation
 
 --
+
+## Customer lifetime value prediction
+
+--
+
+
 
