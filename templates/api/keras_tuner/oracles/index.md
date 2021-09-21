@@ -1,4 +1,4 @@
-# Keras Tuner Oracles
+# KerasTuner Oracles
 
 The `Oracle` class is the base class for all the search algorithms in KerasTuner. 
 An `Oracle` object receives evaluation results for a model (from a `Tuner` class)
