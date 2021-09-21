@@ -1,4 +1,4 @@
-# Keras Tuner HyperModels
+# KerasTuner HyperModels
 
 The `HyperModel` base class makes the search space better encapsulated for
 sharing and reuse.  A `HyperModel` subclass only needs to implement a
