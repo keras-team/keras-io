@@ -126,9 +126,9 @@ history = model.fit(
 ```
 Fit model on training data
 Epoch 1/2
-782/782 [==============================] - 2s 2ms/step - loss: 0.5776 - sparse_categorical_accuracy: 0.8435 - val_loss: 0.1810 - val_sparse_categorical_accuracy: 0.9475
+782/782 [==============================] - 2s 2ms/step - loss: 0.3402 - sparse_categorical_accuracy: 0.9048 - val_loss: 0.1810 - val_sparse_categorical_accuracy: 0.9475
 Epoch 2/2
-782/782 [==============================] - 1s 978us/step - loss: 0.1679 - sparse_categorical_accuracy: 0.9511 - val_loss: 0.1637 - val_sparse_categorical_accuracy: 0.9529
+782/782 [==============================] - 1s 978us/step - loss: 0.1561 - sparse_categorical_accuracy: 0.9537 - val_loss: 0.1637 - val_sparse_categorical_accuracy: 0.9529
 
 ```
 </div>

@@ -169,24 +169,24 @@ def prepare_all_videos(df, root_dir):
         frames = frames[None, ...]
 
         # Initialize placeholder to store the features of the current video.
-        temp_frame_featutes = np.zeros(
+        temp_frame_features = np.zeros(
             shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32"
         )
 
         # Extract features from the frames of the current video.
         for i, batch in enumerate(frames):
-            video_length = batch.shape[1]
+            video_length = batch.shape[0]
             length = min(MAX_SEQ_LENGTH, video_length)
             for j in range(length):
                 if np.mean(batch[j, :]) > 0.0:
-                    temp_frame_featutes[i, j, :] = feature_extractor.predict(
+                    temp_frame_features[i, j, :] = feature_extractor.predict(
                         batch[None, j, :]
                     )
 
                 else:
-                    temp_frame_featutes[i, j, :] = 0.0
+                    temp_frame_features[i, j, :] = 0.0
 
-        frame_features[idx,] = temp_frame_featutes.squeeze()
+        frame_features[idx,] = temp_frame_features.squeeze()
 
     return frame_features, labels
 
@@ -339,7 +339,7 @@ Transformer model works best with a larger dataset and a longer pre-training sch
 
 
 def prepare_single_video(frames):
-    frame_featutes = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
+    frame_features = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
 
     # Pad shorter videos.
     if len(frames) < MAX_SEQ_LENGTH:
@@ -351,15 +351,15 @@ def prepare_single_video(frames):
 
     # Extract features from the frames of the current video.
     for i, batch in enumerate(frames):
-        video_length = batch.shape[1]
+        video_length = batch.shape[0]
         length = min(MAX_SEQ_LENGTH, video_length)
         for j in range(length):
             if np.mean(batch[j, :]) > 0.0:
-                frame_featutes[i, j, :] = feature_extractor.predict(batch[None, j, :])
+                frame_features[i, j, :] = feature_extractor.predict(batch[None, j, :])
             else:
-                frame_featutes[i, j, :] = 0.0
+                frame_features[i, j, :] = 0.0
 
-    return frame_featutes
+    return frame_features
 
 
 def predict_action(path):

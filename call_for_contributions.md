@@ -10,10 +10,9 @@ This is a constantly-updated list of code examples that we're currently interest
 
 --
 
-## StyleGAN / StyleGAN2
+## StyleGAN2
 
-- [Reference paper 1](https://arxiv.org/abs/1812.04948)
-- [2](https://arxiv.org/abs/1912.04958)
+- [Paper](https://arxiv.org/abs/1912.04958)
 - [Reference TF implementation](https://github.com/NVlabs/stylegan2)
 
 

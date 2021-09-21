@@ -1,4 +1,3 @@
-
 # Multiclass semantic segmentation using DeepLabV3+
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>

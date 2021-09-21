@@ -202,21 +202,21 @@ def prepare_all_videos(df, root_dir):
 
         # Initialize placeholders to store the masks and features of the current video.
         temp_frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
-        temp_frame_featutes = np.zeros(
+        temp_frame_features = np.zeros(
             shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32"
         )
 
         # Extract features from the frames of the current video.
         for i, batch in enumerate(frames):
-            video_length = batch.shape[1]
+            video_length = batch.shape[0]
             length = min(MAX_SEQ_LENGTH, video_length)
             for j in range(length):
-                temp_frame_featutes[i, j, :] = feature_extractor.predict(
+                temp_frame_features[i, j, :] = feature_extractor.predict(
                     batch[None, j, :]
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
-        frame_features[idx,] = temp_frame_featutes.squeeze()
+        frame_features[idx,] = temp_frame_features.squeeze()
         frame_masks[idx,] = temp_frame_mask.squeeze()
 
     return (frame_features, frame_masks), labels
@@ -305,16 +305,16 @@ data from the UCF101 dataset using [the notebook](https://colab.research.google.
 def prepare_single_video(frames):
     frames = frames[None, ...]
     frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
-    frame_featutes = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
+    frame_features = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
 
     for i, batch in enumerate(frames):
-        video_length = batch.shape[1]
+        video_length = batch.shape[0]
         length = min(MAX_SEQ_LENGTH, video_length)
         for j in range(length):
-            frame_featutes[i, j, :] = feature_extractor.predict(batch[None, j, :])
+            frame_features[i, j, :] = feature_extractor.predict(batch[None, j, :])
         frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
-    return frame_featutes, frame_mask
+    return frame_features, frame_mask
 
 
 def sequence_prediction(path):

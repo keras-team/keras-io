@@ -518,7 +518,7 @@ To use a metric in a custom training loop, you would:
 - Call its `metric.udpate_state(targets, predictions)` method for each batch of data
 - Query its result via `metric.result()`
 - Reset the metric's state at the end of an epoch or at the start of an evaluation via
-`metric.reset_states()`
+`metric.reset_state()`
 
 Here's a simple example:
 """
@@ -558,7 +558,7 @@ for epoch in range(2):
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
     # Reset the metric's state at the end of an epoch
-    accuracy.reset_states()
+    accuracy.reset_state()
 
 """
 In addition to this, similarly to the `self.add_loss()` method, you have access
@@ -566,6 +566,75 @@ to an `self.add_metric()` method on layers. It tracks the average of
 whatever quantity you pass to it. You can reset the value of these metrics
 by calling `layer.reset_metrics()` on any layer or model.
 """
+
+"""
+You can also define your own metrics by subclassing `keras.metrics.Metric`.
+You need to override the three functions called above:
+
+- Override `update_state()` to update the statistic values.
+- Override `result()` to return the metric value.
+- Override `reset_state()` to reset the metric to its initial state.
+
+Here is an example where we implement the F1-score metric
+(with support for sample weighting).
+"""
+
+
+class F1Score(keras.metrics.Metric):
+    def __init__(self, name="f1_score", dtype="float32", threshold=0.5, **kwargs):
+        super().__init__(name=name, dtype=dtype, **kwargs)
+        self.threshold = 0.5
+        self.true_positives = self.add_weight(
+            name="tp", dtype=dtype, initializer="zeros"
+        )
+        self.false_positives = self.add_weight(
+            name="fp", dtype=dtype, initializer="zeros"
+        )
+        self.false_negatives = self.add_weight(
+            name="fn", dtype=dtype, initializer="zeros"
+        )
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.math.greater_equal(y_pred, self.threshold)
+        y_true = tf.cast(y_true, tf.bool)
+        y_pred = tf.cast(y_pred, tf.bool)
+
+        true_positives = tf.cast(y_true & y_pred, self.dtype)
+        false_positives = tf.cast(~y_true & y_pred, self.dtype)
+        false_negatives = tf.cast(y_true & ~y_pred, self.dtype)
+
+        if sample_weight is not None:
+            sample_weight = tf.cast(sample_weight, self.dtype)
+            true_positives *= sample_weight
+            false_positives *= sample_weight
+            false_negatives *= sample_weight
+
+        self.true_positives.assign_add(tf.reduce_sum(true_positives))
+        self.false_positives.assign_add(tf.reduce_sum(false_positives))
+        self.false_negatives.assign_add(tf.reduce_sum(false_negatives))
+
+    def result(self):
+        precision = self.true_positives / (self.true_positives + self.false_positives)
+        recall = self.true_positives / (self.true_positives + self.false_negatives)
+        return precision * recall * 2.0 / (precision + recall)
+
+    def reset_state(self):
+        self.true_positives.assign(0)
+        self.false_positives.assign(0)
+        self.false_negatives.assign(0)
+
+
+"""
+Let's test-drive it:
+"""
+
+m = F1Score()
+m.update_state([0, 1, 0, 0], [0.3, 0.5, 0.8, 0.9])
+print("Intermediate result:", float(m.result()))
+
+m.update_state([1, 1, 1, 1], [0.1, 0.7, 0.6, 0.0])
+print("Final result:", float(m.result()))
+
 
 """
 ## Compiled functions
@@ -704,11 +773,97 @@ Learn more about the Functional API [here](/guides/functional_api/).
 In your research workflows, you may often find yourself mix-and-matching OO models and
 Functional models.
 
-Note that the `Model` class also features built-in training & evaluation loops
-(`fit()` and `evaluate()`). You can always subclass the `Model` class
-(it works exactly like subclassing `Layer`) if you want to leverage these loops
-for your OO models.
+Note that the `Model` class also features built-in training & evaluation loops:
+`fit()`, `predict()` and `evaluate()` (configured via the `compile()` method).
+These built-in functions give you access to the
+following built-in training infrastructure features:
+
+* [Callbacks](/api/callbacks/). You can leverage built-in
+callbacks for early-stopping, model checkpointing,
+and monitoring training with TensorBoard. You can also
+[implement custom callbacks](/guides/writing_your_own_callbacks/) if needed.
+* [Distributed training](https://keras.io/guides/distributed_training/). You
+can easily scale up your training to multiple GPUs, TPU, or even multiple machines
+with the `tf.distribute` API -- with no changes to your code.
+* [Step fusing](https://keras.io/api/models/model_training_apis/#compile-method).
+With the `steps_per_execution` argument in `Model.compile()`, you can process
+multiple batches in a single `tf.function` call, which greatly improves
+device utilization on TPUs.
+
+We won't go into the details, but we provide a simple code example
+below. It leverages the built-in training infrastructure to implement the MNIST
+example above.
 """
+
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = tf.keras.Model(inputs, outputs)
+
+# Specify the loss, optimizer, and metrics with `compile()`.
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+)
+
+# Train the model with the dataset for 2 epochs.
+model.fit(dataset, epochs=2)
+model.predict(dataset)
+model.evaluate(dataset)
+
+"""
+You can always subclass the `Model` class (it works exactly like subclassing
+`Layer`) if you want to leverage built-in training loops for your OO models.
+Just override the `Model.train_step()` to
+customize what happens in `fit()` while retaining support
+for the built-in infrastructure features outlined above -- callbacks,
+zero-code distribution support, and step fusing support.
+You may also override `test_step()` to customize what happens in `evaluate()`,
+and override `predict_step()` to customize what happens in `predict()`. For more
+information, please refer to
+[this guide](https://keras.io/guides/customizing_what_happens_in_fit/).
+"""
+
+
+class CustomModel(keras.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.accuracy = keras.metrics.SparseCategoricalAccuracy()
+        self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            loss = self.loss_fn(y, y_pred)
+        gradients = tape.gradient(loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_weights))
+        # Update metrics (includes the metric that tracks the loss)
+        self.loss_tracker.update_state(loss)
+        self.accuracy.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {"loss": self.loss_tracker.result(), "accuracy": self.accuracy.result()}
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch.
+        return [self.loss_tracker, self.accuracy]
+
+
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = CustomModel(inputs, outputs)
+model.compile()
+model.fit(dataset, epochs=2)
 
 """
 ## End-to-end experiment example 1: variational autoencoders.

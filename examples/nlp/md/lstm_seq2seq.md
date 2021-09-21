@@ -457,8 +457,8 @@ encoder_states = [state_h_enc, state_c_enc]
 encoder_model = keras.Model(encoder_inputs, encoder_states)
 
 decoder_inputs = model.input[1]  # input_2
-decoder_state_input_h = keras.Input(shape=(latent_dim,), name="input_3")
-decoder_state_input_c = keras.Input(shape=(latent_dim,), name="input_4")
+decoder_state_input_h = keras.Input(shape=(latent_dim,))
+decoder_state_input_c = keras.Input(shape=(latent_dim,))
 decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
 decoder_lstm = model.layers[3]
 decoder_outputs, state_h_dec, state_c_dec = decoder_lstm(
