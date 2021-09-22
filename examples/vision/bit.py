@@ -42,9 +42,7 @@ tf.random.set_seed(SEEDS)
 """
 
 train_ds, validation_ds = tfds.load(
-    "tf_flowers",
-    split=["train[:85%]", "train[85%:]"],
-    as_supervised=True,
+    "tf_flowers", split=["train[:85%]", "train[85%:]"], as_supervised=True,
 )
 
 """
