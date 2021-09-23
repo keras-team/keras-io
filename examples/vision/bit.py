@@ -8,10 +8,8 @@ Description: BigTransfer (BiT) State-of-the-art transfer learning for image clas
 
 """
 ## Introduction
-"""
 
-"""
-BigTransfer known as BiT is a State-of-the-art transfer learning method for Image Classification Tasks. 
+BigTransfer (also known as BiT) is a state-of-the-art transfer learning method for image classification. 
 A set of pre-trained image models that can be transferred to obtain excellent performance on new datasets, 
 even with only a few examples per class. BiT performs well across a surprisingly wide range of data regimes — 
 from 1 example per class to 1M total examples.
@@ -76,7 +74,7 @@ SCHEDULE_BOUNDARIES = [
 ]  # more the dataset size the schedule length increase
 
 """
-## Preprocessing helper functions
+## Define preprocessing helper functions
 """
 
 SCHEDULE_LENGTH = SCHEDULE_LENGTH * 512 / BATCH_SIZE
@@ -109,7 +107,7 @@ repeat_count += 50 + 1  # To ensure at least there are 50 epochs of training
 ## Create data pipeline for training
 """
 
-# Training Pipeline
+# Define the data pipeline
 pipeline_train = (
     train_ds.shuffle(10000)
     .repeat(repeat_count)  # Repeat dataset_size / num_steps
@@ -118,7 +116,7 @@ pipeline_train = (
     .prefetch(AUTO)
 )
 
-# Validation Pipeline
+# Validation pipeline
 pipeline_validation = (
     validation_ds.map(preprocess_test, num_parallel_calls=AUTO)
     .batch(BATCH_SIZE)
@@ -139,21 +137,19 @@ for n in range(25):
     plt.axis("off")
 
 """
-## Load model into KerasLayer
+## Load pretrained TF-Hub model into a `KerasLayer`
 """
 
 bit_model_url = "https://tfhub.dev/google/bit/m-r50x1/1"
 bit_module = hub.KerasLayer(bit_model_url, trainable=True)
 
 """
-## BigTransfer(BiT) model
+## Create BigTransfer (BiT) model
 """
 
-
 class MyBiTModel(keras.Model):
-    def __init__(self, num_classes, module):
-        super().__init__()
-
+    def __init__(self, num_classes, module, **kwargs):
+        super().__init__(**kwargs)
         self.num_classes = num_classes
         self.head = keras.layers.Dense(num_classes, kernel_initializer="zeros")
         self.bit_model = module
@@ -193,7 +189,7 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
 
 """
-## Setting the callback
+## Set up callbacks
 """
 
 train_callbacks = [
@@ -216,7 +212,7 @@ history = model.fit(
 )
 
 """
-## Plot the model
+## Plot the training and validation metrics
 """
 
 
@@ -235,7 +231,7 @@ def plot_hist(hist):
 plot_hist(history)
 
 """
-## Evaluate the Model
+## Evaluate the model
 """
 
 accuracy = model.evaluate(pipeline_validation)[1] * 100
