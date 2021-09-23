@@ -422,7 +422,7 @@ class DisplayOutputs(keras.callbacks.Callback):
 """
 
 # Define the number of epochs
-epochs = 100
+epochs = 1
 # Callback function to check transcription on the val set.
 validation_DisplayOutputs = DisplayOutputs(validation_dataset)
 # Train the model
@@ -432,31 +432,6 @@ history = model.fit(
     epochs=epochs,
     callbacks=[validation_DisplayOutputs],
 )
-
-"""
-## Learning plot to monitor the model's learning
-"""
-
-
-def learning_plots(history):
-    plt.figure(figsize=(17, 4))
-    ax1 = plt.subplot(1, 1, 1)
-    for l in history.history:
-        if l == "loss" or l == "val_loss":
-            loss = history.history[l]
-            plt.plot(range(1, len(loss) + 1), loss, label=l)
-
-    plt.title("Training and validation loss")
-    plt.xlabel("Epochs")
-    plt.ylabel("CTC Loss")
-    plt.grid()
-    plt.legend()
-    ax1.set_xlim(left=0)
-    ax1.set_ylim(bottom=0)
-    plt.show()
-
-
-learning_plots(history)
 
 """
 ## Inference
@@ -473,7 +448,26 @@ for batch in validation_dataset.take(1):
         label = tf.strings.reduce_join(num_to_char(label)).numpy().decode("utf-8")
         orig_texts.append(label)
 
-    for i in range(16):
+    for i in range(5):
         print("-" * 50)
         print(f"Target    : {orig_texts[i].replace('#', '')}")
         print(f"Prediction: {pred_texts[i].replace('#', '')}")
+
+"""
+Some of the transcriptions around epoch 100 (results keep improving after that):
+
+**Audio LJ003-0224.wav**
+
+- `Target    :` supplies of common necessaries such as have now been part of the furniture of every british jail for many years
+- `Prediction:` suppliys of common necessaries such as have now been part of the firniture of every britih jail for mny years
+
+**Audio LJ001-0085.wav**
+
+- `Target    :` it was reserved for the founders of the later eighteenth century to produce letters which are positively ugly and which it may be added
+- `Prediction:` it was reservf for the founders of the later eigh8enth century to produce letters which ae possictively ugly and wich it may be added
+
+**Audio LJ006-0004.wav**
+
+- `Target    :` but this digression was necessary in order to present a more complete picture of the state of jails in the early part of the present century
+- `Prediction:` but this digresion was necessary in oderd to present a more complete picture of the state of jails in thearly part of the presen century
+"""
