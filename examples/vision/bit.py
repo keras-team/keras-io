@@ -1,18 +1,38 @@
 """
 Title: Image Classification using BigTransfer(BiT)
-Author: [Sayan Nath](https://twitter.com/sayannath2350)
-Date created: 2021/09/22
-Last modified: 2021/09/22
-Description: BigTransfer (BiT) State-of-the-art transfer learning for image classification.
+Author: [Sayan Nath](https://twitter.com/sayannath)
+Date created: 2021/09/24
+Last modified: 2021/09/24
+Description: BigTransfer (BiT) State-of-the-art transfer learning for image
+classification.
 """
 
 """
 ## Introduction
 
-BigTransfer (also known as BiT) is a state-of-the-art transfer learning method for image classification. 
-A set of pre-trained image models that can be transferred to obtain excellent performance on new datasets, 
-even with only a few examples per class. BiT performs well across a surprisingly wide range of data regimes — 
-from 1 example per class to 1M total examples.
+BigTransfer (also known as BiT) is a state-of-the-art transfer learning method for image
+classification. Transfer of pre-trained representations improves sample efficiency and
+simplifies hyperparameter tuning when training deep neural networks for vision. BiT
+revisit the paradigm of pre-training on large supervised datasets and fine-tuning the
+model on a target task. The importance of appropriately choosing normalization layers and
+scaling the architecture capacity as the amount of pre-training data increases.
+
+BigTransfer(BiT) is trained on public datasets, along with code in [TF2, Jax and
+Pytorch](https://github.com/google-research/big_transfer). This will help anyone to reach
+state of the art performance on their task of interest, even with just a handful of
+labeled images per class.
+
+You can find BiT models pre-trained on
+[ImageNet](https://image-net.org/challenges/LSVRC/2012/index) and ImageNet-21k in
+[TFHub](https://tfhub.dev/google/collections/bit/1) as TensorFlow2 SavedModels that you
+can use easily as Keras Layers. There are a variety of sizes ranging from a standard
+ResNet50 to a ResNet152x4 (152 layers deep, 4x wider than a typical ResNet50) for users
+with larger computational and memory budgets but higher accuracy requirements.
+
+![](https://i.imgur.com/XeWVfe7.jpeg)
+Figure: The x-axis shows the number of images used per class, ranging from 1 to the full
+dataset. On the plots on the left, the curve in blue above is our BiT-L model, whereas
+the curve below is a ResNet-50 pre-trained on ImageNet (ILSVRC-2012).
 """
 
 """
@@ -74,6 +94,19 @@ SCHEDULE_BOUNDARIES = [
 ]  # more the dataset size the schedule length increase
 
 """
+The hyperparamteres like `SCHEDULE_LENGTH` and `SCHEDULE_BOUNDARIES` are determined based
+on empirical results. The method has been explained in the [original
+paper](https://arxiv.org/abs/1912.11370) and in their [Google AI Blog
+Post](https://ai.googleblog.com/2020/05/open-sourcing-bit-exploring-large-scale.html).
+
+The `SCHEDULE_LENGTH` is aslo determined whether to use [MixUp
+Augmentation](https://arxiv.org/abs/1710.09412) or not. You can also find an easy MixUp
+Implementation in [Keras Coding Examples](https://keras.io/examples/vision/mixup/).
+
+![](https://i.imgur.com/oSaIBYZ.jpeg)
+"""
+
+"""
 ## Define preprocessing helper functions
 """
 
@@ -104,10 +137,10 @@ repeat_count = int(
 repeat_count += 50 + 1  # To ensure at least there are 50 epochs of training
 
 """
-## Create data pipeline for training
+## Define the data pipeline
 """
 
-# Define the data pipeline
+# Training pipeline
 pipeline_train = (
     train_ds.shuffle(10000)
     .repeat(repeat_count)  # Repeat dataset_size / num_steps
@@ -141,21 +174,32 @@ for n in range(25):
 """
 
 bit_model_url = "https://tfhub.dev/google/bit/m-r50x1/1"
-bit_module = hub.KerasLayer(bit_model_url, trainable=True)
+bit_module = hub.KerasLayer(bit_model_url)
 
 """
 ## Create BigTransfer (BiT) model
+
+To create the new model, we:
+
+1. Cut off the BiT model’s original head. This leaves us with the “pre-logits” output.
+- We do not have to do this if we use the ‘feature extractor’ models (i.e. all those in
+subdirectories titled `feature_vectors`), since for those models the head has already
+been cut off.
+
+2. Add a new head with the number of outputs equal to the number of classes of our new
+task. Note that it is important that we initialise the head to all zeroes.
 """
+
 
 class MyBiTModel(keras.Model):
     def __init__(self, num_classes, module, **kwargs):
         super().__init__(**kwargs)
+
         self.num_classes = num_classes
         self.head = keras.layers.Dense(num_classes, kernel_initializer="zeros")
         self.bit_model = module
 
     def call(self, images):
-        # No need to cut head off since we are using feature extractor model
         bit_embedding = self.bit_model(images)
         return self.head(bit_embedding)
 
@@ -240,12 +284,15 @@ print("Accuracy: {:.2f}%".format(accuracy))
 """
 ## Note:
 
-In this example, we trained our model for 5 epochs. In our experiment, the BigTransfer(BiT) Model performs amazing 
-by giving us a good validation accuracy. BiT performs well across a surprisingly wide range of 
-data regimes -- from 1 example per class to 1M total examples. BiT achieves 87.5% top-1 accuracy on ILSVRC-2012, 99.4% on CIFAR-10, 
-and 76.3% on the 19 task Visual Task Adaptation Benchmark (VTAB). On small datasets, BiT attains 76.8% on ILSVRC-2012 with 10 examples per class, 
+In our experiment, the BigTransfer(BiT) Model performs amazing by giving us a good
+validation accuracy. BiT performs well across a surprisingly wide range of data regimes
+-- from 1 example per class to 1M total examples. BiT achieves 87.5% top-1 accuracy on
+ILSVRC-2012, 99.4% on CIFAR-10, and 76.3% on the 19 task Visual Task Adaptation Benchmark
+(VTAB). On small datasets, BiT attains 76.8% on ILSVRC-2012 with 10 examples per class,
 and 97.0% on CIFAR-10 with 10 examples per class.
 
-You can experiment further with the BigTransfer Method by following the [original paper](https://arxiv.org/pdf/1912.11370.pdf).
-TensorFlow Team also published on BigTransfer(BiT). You can find it [here](https://blog.tensorflow.org/2020/05/bigtransfer-bit-state-of-art-transfer-learning-computer-vision.html)
+![](https://i.imgur.com/b1Lw5fz.png)
+
+You can experiment further with the BigTransfer Method by following the [original
+paper](https://arxiv.org/pdf/1912.11370.pdf).
 """
