@@ -273,7 +273,6 @@ with tf.device("/CPU:0"):
 def make_model():
     shallow_mlp_model = keras.Sequential(
         [
-            # keras.Input(shape=(), dtype=tf.string),
             text_vectorizer,
             layers.Dense(512, activation="relu"),
             layers.Dense(256, activation="relu"),
@@ -334,32 +333,39 @@ plot_result("loss")
 plot_result("categorical_accuracy")
 
 """
-## Evaluate the model
+While training, we notice an initial sharp fall in the loss followed by a gradual decay.
+"""
+
+"""
+### Evaluate the model
 """
 
 _, categorical_acc = shallow_mlp_model.evaluate(test_dataset)
 print(f"Categorical accuracy on the test set: {round(categorical_acc * 100, 2)}%.")
 
 """
-### Sample Inference on Test Data
+The trained model gives us a validation accuracy of ~70%.
+"""
+
+"""
+## Inference
 """
 
 text_batch, label_batch = next(iter(test_dataset))
+predicted_probabilities = shallow_mlp_model.predict(text_batch)
 
 for i, text in enumerate(text_batch[:5]):
     label = label_batch[i].numpy()[None, ...]
     print(f"Abstract: {text[0]}")
     print(f"Label(s): {mlb.inverse_transform(label)[0]}")
-    predicted_proba = shallow_mlp_model(text_batch)[0]
-    predicted_proba = [float(proba.numpy()) for proba in predicted_proba]
+    predicted_proba = [proba for proba in predicted_probabilities[i]]
     top_3_labels = [
         x
         for _, x in sorted(
-            zip(predicted_proba, mlb.classes_), key=lambda pair: pair[0], reverse=True
+            zip(predicted_probabilities[i], mlb.classes_),
+            key=lambda pair: pair[0],
+            reverse=True,
         )
     ][:3]
-    print(f"Label(s): {', '.join([label for label in top_3_labels])}")
+    print(f"Predicted Label(s): ({', '.join([label for label in top_3_labels])})")
     print(" ")
-
-predicted_proba = shallow_mlp_model(text_batch)[0]
-predicted_proba = [float(proba.numpy()) for proba in predicted_proba]
