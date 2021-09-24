@@ -25,7 +25,7 @@ You're going to need more than a one-pager. And you're in luck:
 The simplest way to install Keras is to via `pip`:
 
 ```
-pip install tensorflow as tf
+pip install tensorflow
 from tensorflow import keras
 ```
 
