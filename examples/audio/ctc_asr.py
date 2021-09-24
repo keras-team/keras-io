@@ -454,20 +454,21 @@ for batch in validation_dataset.take(1):
         print(f"Prediction: {pred_texts[i].replace('#', '')}")
 
 """
-Some of the transcriptions around epoch 100 (results keep improving after that):
+In practice, you should train for around 100 epochs or more.
 
-**Audio LJ003-0224.wav**
+Some of the transcriptions around epoch 50 (results keep improving after that):
 
+```
+Audio file: LJ003-0224.wav
 - `Target    :` supplies of common necessaries such as have now been part of the furniture of every british jail for many years
 - `Prediction:` suppliys of common necessaries such as have now been part of the firniture of every britih jail for mny years
 
-**Audio LJ001-0085.wav**
-
+Audio file: LJ001-0085.wav
 - `Target    :` it was reserved for the founders of the later eighteenth century to produce letters which are positively ugly and which it may be added
 - `Prediction:` it was reservf for the founders of the later eigh8enth century to produce letters which ae possictively ugly and wich it may be added
 
-**Audio LJ006-0004.wav**
-
+Audio file: LJ006-0004.wav
 - `Target    :` but this digression was necessary in order to present a more complete picture of the state of jails in the early part of the present century
 - `Prediction:` but this digresion was necessary in oderd to present a more complete picture of the state of jails in thearly part of the presen century
+```
 """
