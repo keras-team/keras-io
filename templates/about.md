@@ -140,7 +140,7 @@ To start using Keras, simply [install TensorFlow 2](https://www.tensorflow.org/i
 
 Keras/TensorFlow are compatible with:
 
-- Python 3.5–3.8
+- Python 3.6–3.9
 - Ubuntu 16.04 or later
 - Windows 7 or later
 - macOS 10.12.6 (Sierra) or later.
