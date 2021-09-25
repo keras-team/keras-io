@@ -3,7 +3,7 @@ Title: Large-scale multi-label text classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2020/09/25
 Last modified: 2020/09/25
-Description: Implementing a large-scale multi-label text classification model
+Description: Implementing a large-scale multi-label text classification model.
 """
 """
 ## Introduction
@@ -14,12 +14,11 @@ conference submission portals like [OpenReview](https://openreview.net/). Given 
 abstract, the portal could provide suggestions on which areas the underlying paper would
 best belong to.
 
-The dataset was collected using the [`arXiv` Python
-library](https://github.com/lukasschwab/arxiv.py) that provides a wrapper around the
+The dataset was collected using the
+[`arXiv` Python library](https://github.com/lukasschwab/arxiv.py)
+that provides a wrapper around the
 [original arXiv API](http://arxiv.org/help/api/index). To know more, please refer to
-[this
-notebook](https://github.com/soumik12345/multi-label-text-classification/blob/master/arxiv
-_scrape.ipynb). 
+[this notebook](https://github.com/soumik12345/multi-label-text-classification/blob/master/arxiv_scrape.ipynb).
 """
 
 """
@@ -32,8 +31,9 @@ import tensorflow as tf
 
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 from ast import literal_eval
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
@@ -46,14 +46,13 @@ some basic exploratory data analysis (EDA).
 
 arxiv_data = pd.read_csv(
     "https://github.com/soumik12345/multi-label-text-classification/releases/download/v0.2/arxiv_data.csv"
-    "https://github.com/soumik12345/multi-label-text-classification/releases/download/v0.2/arxiv_data.csv"
 )
 arxiv_data.head()
 
 """
 Our text features are present in the `summaries` column and their corresponding labels
 are in `terms`. As we can notice there are multiple categories associated with a
-particular entry. 
+particular entry.
 """
 
 print(f"There are {len(arxiv_data)} rows in the dataset.")
@@ -95,7 +94,7 @@ arxiv_data_filtered.shape
 ## Convert the string labels to list of strings
 
 The initial labels are represented as raw strings. Here we make them `List[str]` for a
-more compact representation. 
+more compact representation.
 """
 
 arxiv_data_filtered["terms"] = arxiv_data_filtered["terms"].apply(
@@ -106,15 +105,14 @@ arxiv_data_filtered["terms"].values[:5]
 """
 ## Stratified splits because of class imbalance
 
-The dataset has a [class imbalance
-problem](https://developers.google.com/machine-learning/glossary/#class-imbalanced-dataset
-). So, to have a fair evaluation result, we need to ensure the datasets are sampled with
+The dataset has a
+[class imbalance problem](https://developers.google.com/machine-learning/glossary/#class-imbalanced-dataset).
+So, to have a fair evaluation result, we need to ensure the datasets are sampled with
 stratification. To know more about different strategies to deal with the class imbalance
-problem, you can follow [this
-tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data). For an
-end-to-end demonstration of classification with imbablanced data, refer to [Imbalanced
-classification: credit card fraud
-detection](https://keras.io/examples/structured_data/imbalanced_classification/).
+problem, you can follow
+[this tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data). 
+For an end-to-end demonstration of classification with imbablanced data, refer to 
+[Imbalanced classification: credit card fraud detection](https://keras.io/examples/structured_data/imbalanced_classification/).
 """
 
 test_split = 0.1
@@ -139,8 +137,7 @@ print(f"Number of rows in test set: {len(test_df)}")
 ## Multi-label binarization
 
 Now we preprocess our labels using
-[`MultiLabelBinarizer`](http://scikit-learn.org/stable/modules/generated/sklearn.preproces
-sing.MultiLabelBinarizer.html). 
+[`MultiLabelBinarizer`](http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer.html). 
 """
 
 mlb = MultiLabelBinarizer()
@@ -150,7 +147,7 @@ mlb.classes_
 """
 `MultiLabelBinarizer`separates out the individual unique classes available from the label
 pool and then uses this information to represent a given label set with 0's and 1's.
-Below is an example. 
+Below is an example.
 """
 
 sample_label = train_df["terms"].iloc[0]
@@ -171,10 +168,10 @@ train_df["summaries"].apply(lambda x: len(x.split(" "))).describe()
 """
 Notice that 50% of the abstracts have a length of 154 (you may get a different number
 based on the split). So, any number near that is a good enough approximate for the
-maximum sequence length. 
+maximum sequence length.
 
 Now, we write utilities to prepare our datasets that would go straight to the text
-classifier model. 
+classifier model.
 """
 
 max_seqlen = 150
@@ -235,10 +232,10 @@ for i, text in enumerate(text_batch[:5]):
 ## Vocabulary size for vectorization
 
 Before we feed the data to our model we need to represent them as numbers. For that
-purpose, we will use the [`TextVectorization`
-layer](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization). It can
-operate as a part of your main model so that the model is excluded from the core
-preprocessing logic. This greatly reduces the chances of training and serving skew. 
+purpose, we will use the
+[`TextVectorization` layer](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
+It can operate as a part of your main model so that the model is excluded from the core
+preprocessing logic. This greatly reduces the chances of training and serving skew.
 
 We first calculate the number of unique words present in the abstracts.
 """
@@ -262,8 +259,8 @@ first create bi-grams out of the sequences and then represent them using
 be passed to the shallow model responsible for text classification. 
 
 To know more about other possible configurations with `TextVectorizer`, please consult
-the [official
-documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
+the 
+[official documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 
 """
 
@@ -309,9 +306,10 @@ are not disjoint. For a given abstract, we may have multiple categories. So, we 
 divide the prediction task into a series of multiple binary classification problems. This
 is also why we kept the activation function of the classification layer in our model to
 sigmoid. Researchers have used other combinations of loss function and activation
-function as well. For example, in [Exploring the Limits of Weakly Supervised
-Pretraining](https://arxiv.org/abs/1805.00932), Mahajan et al. used the softmax
-activation function and cross-entropy loss to train their models. 
+function as well. For example, in
+[Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932),
+Mahajan et al. used the softmax activation function and cross-entropy loss to train
+their models.
 """
 
 epochs = 20
