@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: Large-scale multi-label text classification
+Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
+Date created: 2020/09/25
+Last modified: 2020/09/25
+Description: Implementing a large-scale multi-label text classification model
 """
 """
 ## Introduction
@@ -256,8 +256,15 @@ inside it.
 ## Create model with `TextVectorization`
 
 A batch of raw text will first go through the `TextVectorization` layer and it will
-generate their integer representations. These will then be passed to the shallow model
-responsible for text classification. 
+generate their integer representations. Internally, the `TextVectorization` layer will
+first create bi-grams out of the sequences and then represent them using
+[TF-IDF](https://wikipedia.org/wiki/Tf%E2%80%93idf). The output representations will then
+be passed to the shallow model responsible for text classification. 
+
+To know more about other possible configurations with `TextVectorizer`, please consult
+the [official
+documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
+
 """
 
 text_vectorizer = layers.TextVectorization(
@@ -373,5 +380,5 @@ for i, text in enumerate(text_batch[:5]):
 """
 The prediction results are not that great but not below the par for a simple model like
 ours. We can improve this performance with models that consider word order like LSTM or
-even those that use Transformers.
+even those that use Transformers ([Vaswani et al.](https://arxiv.org/abs/1706.03762)).
 """
