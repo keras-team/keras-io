@@ -1,12 +1,17 @@
-"""
-Title: Image Classification using BigTransfer(BiT)
-Author: [Sayan Nath](https://twitter.com/sayannath)
-Date created: 2021/09/24
-Last modified: 2021/09/24
-Description: BigTransfer (BiT) State-of-the-art transfer learning for image classification.
-"""
 
-"""
+# Image Classification using BigTransfer(BiT)
+
+**Author:** [Sayan Nath](https://twitter.com/sayannath)<br>
+**Date created:** 2021/09/24<br>
+**Last modified:** 2021/09/24<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/bit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/bit.py)
+
+
+**Description:** BigTransfer (BiT) State-of-the-art transfer learning for image classification.
+
+---
 ## Introduction
 
 BigTransfer (also known as BiT) is a state-of-the-art transfer learning method for image
@@ -32,12 +37,12 @@ with larger computational and memory budgets but higher accuracy requirements.
 Figure: The x-axis shows the number of images used per class, ranging from 1 to the full
 dataset. On the plots on the left, the curve in blue above is our BiT-L model, whereas
 the curve below is a ResNet-50 pre-trained on ImageNet (ILSVRC-2012).
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -53,30 +58,59 @@ SEEDS = 42
 
 np.random.seed(SEEDS)
 tf.random.set_seed(SEEDS)
+```
 
-"""
+---
 ## Gather Flower Dataset
-"""
 
+
+```python
 train_ds, validation_ds = tfds.load(
     "tf_flowers", split=["train[:85%]", "train[85%:]"], as_supervised=True,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1mDownloading and preparing dataset tf_flowers/3.0.1 (download: 218.21 MiB, generated: 221.83 MiB, total: 440.05 MiB) to /root/tensorflow_datasets/tf_flowers/3.0.1...[0m
+
+WARNING:absl:Dataset tf_flowers is hosted on GCS. It will automatically be downloaded to your
+local data directory. If you'd instead prefer to read directly from our public
+GCS bucket (recommended if you're running on GCP), you can instead pass
+`try_gcs=True` to `tfds.load` or set `data_dir=gs://tfds-data/datasets`.
+```
+</div>
+    
+
+
+<div class="k-default-codeblock">
+```
+[1mDataset tf_flowers downloaded and prepared to /root/tensorflow_datasets/tf_flowers/3.0.1. Subsequent calls will reuse this data.[0m
+
+```
+</div>
+---
 ## Visualise the dataset
-"""
 
+
+```python
 plt.figure(figsize=(10, 10))
 for i, (image, label) in enumerate(train_ds.take(9)):
     ax = plt.subplot(3, 3, i + 1)
     plt.imshow(image)
     plt.title(int(label))
     plt.axis("off")
+```
 
-"""
+
+![png](/img/examples/vision/bit/bit_7_0.png)
+
+
+---
 ## Define hyperparameters
-"""
 
+
+```python
 RESIZE_TO = 384
 CROP_TO = 224
 BATCH_SIZE = 64
@@ -91,8 +125,8 @@ SCHEDULE_BOUNDARIES = [
     300,
     400,
 ]  # more the dataset size the schedule length increase
+```
 
-"""
 The hyperparamteres like `SCHEDULE_LENGTH` and `SCHEDULE_BOUNDARIES` are determined based
 on empirical results. The method has been explained in the [original
 paper](https://arxiv.org/abs/1912.11370) and in their [Google AI Blog
@@ -103,12 +137,12 @@ Augmentation](https://arxiv.org/abs/1710.09412) or not. You can also find an eas
 Implementation in [Keras Coding Examples](https://keras.io/examples/vision/mixup/).
 
 ![](https://i.imgur.com/oSaIBYZ.jpeg)
-"""
 
-"""
+---
 ## Define preprocessing helper functions
-"""
 
+
+```python
 SCHEDULE_LENGTH = SCHEDULE_LENGTH * 512 / BATCH_SIZE
 
 
@@ -134,11 +168,13 @@ repeat_count = int(
     SCHEDULE_LENGTH * BATCH_SIZE / DATASET_NUM_TRAIN_EXAMPLES * STEPS_PER_EPOCH
 )
 repeat_count += 50 + 1  # To ensure at least there are 50 epochs of training
+```
 
-"""
+---
 ## Define the data pipeline
-"""
 
+
+```python
 # Training pipeline
 pipeline_train = (
     train_ds.shuffle(10000)
@@ -154,11 +190,13 @@ pipeline_validation = (
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
 )
+```
 
-"""
+---
 ## Visualise the training samples
-"""
 
+
+```python
 image_batch, label_batch = next(iter(pipeline_train))
 
 plt.figure(figsize=(10, 10))
@@ -167,15 +205,22 @@ for n in range(25):
     plt.imshow(image_batch[n])
     plt.title(label_batch[n].numpy())
     plt.axis("off")
+```
 
-"""
+
+![png](/img/examples/vision/bit/bit_16_0.png)
+
+
+---
 ## Load pretrained TF-Hub model into a `KerasLayer`
-"""
 
+
+```python
 bit_model_url = "https://tfhub.dev/google/bit/m-r50x1/1"
 bit_module = hub.KerasLayer(bit_model_url)
+```
 
-"""
+---
 ## Create BigTransfer (BiT) model
 
 To create the new model, we:
@@ -187,8 +232,9 @@ been cut off.
 
 2. Add a new head with the number of outputs equal to the number of classes of our new
 task. Note that it is important that we initialise the head to all zeroes.
-"""
 
+
+```python
 
 class MyBiTModel(keras.Model):
     def __init__(self, num_classes, module, **kwargs):
@@ -204,11 +250,13 @@ class MyBiTModel(keras.Model):
 
 
 model = MyBiTModel(num_classes=NUM_CLASSES, module=bit_module)
+```
 
-"""
+---
 ## Define optimizer and loss
-"""
 
+
+```python
 learning_rate = 0.003 * BATCH_SIZE / 512
 
 # Decay learning rate by a factor of 10 at SCHEDULE_BOUNDARIES.
@@ -224,27 +272,33 @@ lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
 optimizer = keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
 
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+```
 
-"""
+---
 ## Compile the model
-"""
 
+
+```python
 model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
+```
 
-"""
+---
 ## Set up callbacks
-"""
 
+
+```python
 train_callbacks = [
     keras.callbacks.EarlyStopping(
         monitor="val_accuracy", patience=2, restore_best_weights=True
     )
 ]
+```
 
-"""
+---
 ## Train the model
-"""
 
+
+```python
 history = model.fit(
     pipeline_train,
     batch_size=BATCH_SIZE,
@@ -253,11 +307,28 @@ history = model.fit(
     validation_data=pipeline_validation,
     callbacks=train_callbacks,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/400
+10/10 [==============================] - 41s 1s/step - loss: 0.7440 - accuracy: 0.7844 - val_loss: 0.1837 - val_accuracy: 0.9582
+Epoch 2/400
+10/10 [==============================] - 8s 904ms/step - loss: 0.1499 - accuracy: 0.9547 - val_loss: 0.1094 - val_accuracy: 0.9709
+Epoch 3/400
+10/10 [==============================] - 8s 905ms/step - loss: 0.1674 - accuracy: 0.9422 - val_loss: 0.0874 - val_accuracy: 0.9727
+Epoch 4/400
+10/10 [==============================] - 8s 905ms/step - loss: 0.1314 - accuracy: 0.9578 - val_loss: 0.0829 - val_accuracy: 0.9727
+Epoch 5/400
+10/10 [==============================] - 8s 903ms/step - loss: 0.1336 - accuracy: 0.9500 - val_loss: 0.0765 - val_accuracy: 0.9727
+
+```
+</div>
+---
 ## Plot the training and validation metrics
-"""
 
+
+```python
 
 def plot_hist(hist):
     plt.plot(hist.history["accuracy"])
@@ -272,15 +343,29 @@ def plot_hist(hist):
 
 
 plot_hist(history)
+```
 
-"""
+
+![png](/img/examples/vision/bit/bit_30_0.png)
+
+
+---
 ## Evaluate the model
-"""
 
+
+```python
 accuracy = model.evaluate(pipeline_validation)[1] * 100
 print("Accuracy: {:.2f}%".format(accuracy))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+9/9 [==============================] - 6s 646ms/step - loss: 0.0874 - accuracy: 0.9727
+Accuracy: 97.27%
+
+```
+</div>
+---
 ## Note:
 
 In our experiment, the BigTransfer(BiT) Model performs amazing by giving us a good
@@ -294,4 +379,3 @@ and 97.0% on CIFAR-10 with 10 examples per class.
 
 You can experiment further with the BigTransfer Method by following the [original
 paper](https://arxiv.org/pdf/1912.11370.pdf).
-"""
