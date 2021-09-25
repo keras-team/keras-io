@@ -28,6 +28,7 @@ A list of frequently Asked Keras Questions.
 - [What's the recommended way to monitor my metrics when training with `fit()`?](#whats-the-recommended-way-to-monitor-my-metrics-when-training-with-fit)
 - [What if I need to customize what `fit()` does?](#what-if-i-need-to-customize-what-fit-does)
 - [How can I train models in mixed precision?](#how-can-i-train-models-in-mixed-precision)
+- [What's the difference between `Model` methods `predict()` and `__call__()`?](#whats-the-difference-between-model-methods-predict-and-call)
 
 ## Modeling-related questions
 
@@ -1030,6 +1031,38 @@ updating metrics, etc. You would have to do this yourself. It's not difficult at
 
 Keras has built-in support for mixed precision training on GPU and TPU.
 See [this extensive guide](https://www.tensorflow.org/guide/keras/mixed_precision). 
+
+---
+
+### What's the difference between `Model` methods `predict()` and `__call__()`?
+
+Let's answer with an extract from
+[Deep Learning with Python, Second Edition](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras&a_bid=76564dff):
+
+> Both `y = model.predict(x)` and `y = model(x)` (where `x` is an array of input data)
+> mean "run the model on `x` and retrieve the output `y`." Yet they aren't exactly
+> the same thing.
+
+> `predict()` loops over the data in batches
+> (in fact, you can specify the batch size via `predict(x, batch_size=64)`),
+> and it extracts the NumPy value of the outputs. It's schematically equivalent to this:
+```python
+def predict(x):
+    y_batches = []
+    for x_batch in get_batches(x):
+        y_batch = model(x).numpy()
+        y_batches.append(y_batch)
+    return np.concatenate(y_batches)
+```
+> This means that `predict()` calls can scale to very large arrays. Meanwhile,
+> `model(x)` happens in-memory and doesn't scale.
+> On the other hand, `predict()` is not differentiable: you cannot retrieve its gradient
+> if you call it in a `GradientTape` scope.
+
+> You should use `model(x)` when you need to retrieve the gradients of the model call,
+> and you should use `predict()` if you just need the output value. In other words,
+> always use `predict()` unless you're in the middle of writing a low-level gradient
+> descent loop (as we are now).
 
 ---
 
