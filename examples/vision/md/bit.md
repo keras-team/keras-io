@@ -1,4 +1,3 @@
-
 # Image Classification using BigTransfer(BiT)
 
 **Author:** [Sayan Nath](https://twitter.com/sayannath)<br>
