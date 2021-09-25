@@ -1,6 +1,6 @@
 """
 Title: Automatic Speech Recognition using CTC
-Author: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/)
+Author: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and Ngoc Dung Huynh
 Date created: 2021/09/23
 Last modified: 2021/09/23
 Description: Training a CTC-based model for automatic speech recognition.
@@ -44,18 +44,24 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from tensorflow.keras.layers import (
-    Embedding,
-    LSTM,
+    BatchNormalization,
+    Bidirectional,
+    Conv1D,
     Dense,
     Dropout,
-    Bidirectional,
+    Embedding,
+    Input,
     InputLayer,
+    LSTM,
+    Permute,
 )
 from tensorflow.keras.optimizers import Adam
 from tensorflow import keras
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from IPython import display
+from jiwer import wer
+
 
 """
 ## Load the data: [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
@@ -68,6 +74,7 @@ wavs_path = data_path + "/wavs/"
 metadata = data_path + "/metadata.csv"
 # Read metadata file and parse it
 metadata_df = pd.read_csv(metadata, sep="|", header=None)
+
 
 """
 ## Preprocessing
@@ -106,6 +113,7 @@ print("The maximum length of the audio file is maxlen_x: ", maxlen_x)
 print("Number of wav files found: ", len(wav_files))
 print("=" * 50)
 
+
 """
 Let's now preprocess the labels.
 """
@@ -113,9 +121,9 @@ Let's now preprocess the labels.
 # Get a list of all labels
 labels = list(metadata_df[1])
 # Remove punctuation from the labels
+punctuation = "!?.:;|[]()”“\"'-"
 labels = [
-    "".join(l for l in stringIn if l not in "!?.:;|[](),’”“\",'-").lower()
-    for stringIn in labels
+    "".join(l for l in stringIn if l not in punctuation).lower() for stringIn in labels
 ]
 # Replace letters with accent marks
 labels = [
@@ -146,6 +154,7 @@ print("Characters present: ", characters)
 print("maxlen_x:", maxlen_x)
 print("maxlen_y:", maxlen_y)
 
+
 """
 Let's get mappings for the labels.
 """
@@ -157,6 +166,7 @@ char_to_num = keras.layers.StringLookup(vocabulary=list(characters), mask_token=
 num_to_char = keras.layers.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
+
 
 """
 We now split the data into training and validation set.
@@ -188,6 +198,7 @@ def split_data(wav_files, labels, train_size=0.9, shuffle=True):
 x_train, x_valid, y_train, y_valid = split_data(
     np.array(wav_files), np.array(padded_labels)
 )
+
 
 """
 ## Create `Dataset` objects
@@ -252,6 +263,7 @@ validation_dataset = (
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 
+
 """
 ## Visualize the data
 
@@ -281,6 +293,7 @@ for batch in train_dataset.shuffle(buffer_size=16).take(1):
         ax.set_xlim(0, len(audio))
         display.display(display.Audio(audio, rate=16000))
 plt.show()
+
 
 """
 ## Model
@@ -383,7 +396,7 @@ def decode_batch_predictions(pred):
     output_text = []
     for res in results:
         res = tf.strings.reduce_join(num_to_char(res)).numpy().decode("utf-8")
-        output_text.append(res)
+        output_text.append(res.replace("#", ""))
     return output_text
 
 
@@ -398,7 +411,24 @@ class DisplayOutputs(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if epoch % 5 != 0 or epoch == 0:
             return
-        # Get the prediction model by extracting layers till the output layer
+        # Compute the Word Error Rate
+        labels = list(map(lambda x: x[1], self.dataset))  # Get labels
+        labels = tf.concat(labels, axis=0)
+        orig_texts = []
+        for label in labels:
+            label = (
+                tf.strings.reduce_join(num_to_char(label))
+                .numpy()
+                .decode("utf-8")
+                .replace("#", "")
+            )
+            orig_texts.append(label)
+        preds = model.predict(self.dataset)
+        pred_texts = decode_batch_predictions(preds)
+        wer_score = wer(orig_texts, pred_texts)
+        print("-" * 100)
+        print(f"Word Error Rate (WER) SCORE: {wer_score:.3f}")
+        # Print anecdotal examples
         for batch in self.dataset.shuffle(buffer_size=512).take(1):
             spectrograms = batch[0]
             labels = batch[1]
@@ -413,8 +443,9 @@ class DisplayOutputs(keras.callbacks.Callback):
             # Print two elements for verification.
             for i in range(2):
                 print("-" * 100)
-                print(f"Target    : {orig_texts[i].replace('#', '')}")
-                print(f"Prediction: {pred_texts[i].replace('#', '')}")
+                print(f"Target    : {orig_texts[i].replace('#','')}")
+                print(f"Prediction: {pred_texts[i]}")
+            print("-" * 100)
 
 
 """
@@ -448,10 +479,11 @@ for batch in validation_dataset.take(1):
         label = tf.strings.reduce_join(num_to_char(label)).numpy().decode("utf-8")
         orig_texts.append(label)
 
-    for i in range(5):
+    for i in range(16):
         print("-" * 50)
-        print(f"Target    : {orig_texts[i].replace('#', '')}")
-        print(f"Prediction: {pred_texts[i].replace('#', '')}")
+        print(f"Target    : {orig_texts[i].replace('#','')}")
+        print(f"Prediction: {pred_texts[i].replace('#','')}")
+
 
 """
 In practice, you should train for around 100 epochs or more.
@@ -460,15 +492,23 @@ Some of the transcriptions around epoch 50 (results keep improving after that):
 
 ```
 Audio file: LJ003-0224.wav
-- `Target    :` supplies of common necessaries such as have now been part of the furniture of every british jail for many years
-- `Prediction:` suppliys of common necessaries such as have now been part of the firniture of every britih jail for mny years
+- `Target    :` supplies of common necessaries such as have now been part of the
+furniture of every british jail for many years
+- `Prediction:` suppliys of common necessaries such as have now been part of the
+firniture of every britih jail for mny years
 
 Audio file: LJ001-0085.wav
-- `Target    :` it was reserved for the founders of the later eighteenth century to produce letters which are positively ugly and which it may be added
-- `Prediction:` it was reservf for the founders of the later eigh8enth century to produce letters which ae possictively ugly and wich it may be added
+- `Target    :` it was reserved for the founders of the later eighteenth century to
+produce letters which are positively ugly and which it may be added
+- `Prediction:` it was reservf for the founders of the later eigh8enth century to produce
+letters which ae possictively ugly and wich it may be added
 
 Audio file: LJ006-0004.wav
-- `Target    :` but this digression was necessary in order to present a more complete picture of the state of jails in the early part of the present century
-- `Prediction:` but this digresion was necessary in oderd to present a more complete picture of the state of jails in thearly part of the presen century
+- `Target    :` but this digression was necessary in order to present a more complete
+picture of the state of jails in the early part of the present century
+- `Prediction:` but this digresion was necessary in oderd to present a more complete
+picture of the state of jails in thearly part of the presen century
 ```
+
+
 """
