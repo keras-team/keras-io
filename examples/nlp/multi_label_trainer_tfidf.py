@@ -369,3 +369,9 @@ for i, text in enumerate(text_batch[:5]):
     ][:3]
     print(f"Predicted Label(s): ({', '.join([label for label in top_3_labels])})")
     print(" ")
+
+"""
+The prediction results are not that great but not below the par for a simple model like
+ours. We can improve this performance with models that consider word order like LSTM or
+even those that use Transformers.
+"""
