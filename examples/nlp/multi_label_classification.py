@@ -2,7 +2,7 @@
 Title: Large-scale multi-label text classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2020/09/25
-Last modified: 2020/09/25
+Last modified: 2020/09/26
 Description: Implementing a large-scale multi-label text classification model.
 """
 """
@@ -19,6 +19,8 @@ The dataset was collected using the
 that provides a wrapper around the
 [original arXiv API](http://arxiv.org/help/api/index). To know more, please refer to
 [this notebook](https://github.com/soumik12345/multi-label-text-classification/blob/master/arxiv_scrape.ipynb).
+Additionally, you can also find the dataset on
+[Kaggle](https://www.kaggle.com/spsayakpaul/arxiv-paper-abstracts).
 """
 
 """
@@ -177,6 +179,7 @@ classifier model.
 max_seqlen = 150
 batch_size = 128
 padding_token = "<pad>"
+auto = tf.data.AUTOTUNE
 
 
 def unify_text_length(text, label):
@@ -204,7 +207,7 @@ def make_dataset(dataframe, is_train=True):
         (dataframe["summaries"].values, label_binarized)
     )
     dataset = dataset.shuffle(batch_size * 10) if is_train else dataset
-    dataset = dataset.map(unify_text_length).cache()
+    dataset = dataset.map(unify_text_length, num_parallel_calls=auto).cache()
     return dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
 
@@ -229,7 +232,7 @@ for i, text in enumerate(text_batch[:5]):
     print(" ")
 
 """
-## Vocabulary size for vectorization
+## Vectorization
 
 Before we feed the data to our model we need to represent them as numbers. For that
 purpose, we will use the
@@ -237,15 +240,10 @@ purpose, we will use the
 It can operate as a part of your main model so that the model is excluded from the core
 preprocessing logic. This greatly reduces the chances of training and serving skew.
 
-We first calculate the number of unique words present in the abstracts.
 """
 
-train_df["total_words"] = train_df["summaries"].str.split().str.len()
-vocabulary_size = train_df["total_words"].max()
-print(f"Vocabulary size: {vocabulary_size}")
-
 """
-Now we can create our text classifier model with the `TextVectorization` layer present
+We now create our text classifier model with the `TextVectorization` layer present
 inside it. 
 """
 
@@ -265,7 +263,7 @@ the
 """
 
 text_vectorizer = layers.TextVectorization(
-    max_tokens=vocabulary_size, ngrams=2, output_mode="tf_idf"
+    max_tokens=20000, ngrams=2, output_mode="tf_idf"
 )
 
 # `TextVectorization` needs to be adapted as per the vocabulary from our
@@ -287,12 +285,7 @@ def make_model():
 
 
 """
-Without the CPU placement, we run into: 
-
-```
-(1) Invalid argument: During Variant Host->Device Copy: non-DMA-copy attempted of tensor
-type: string
-```
+Let's take a quick look at the summary of our shallow model.
 """
 
 shallow_mlp_model = make_model()
