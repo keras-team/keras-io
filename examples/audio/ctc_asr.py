@@ -1,8 +1,8 @@
 """
 Title: Automatic Speech Recognition using CTC
-Author: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and Ngoc Dung Huynh
-Date created: 2021/09/23
-Last modified: 2021/09/23
+Author: [Ngoc Dung Huynh](https://www.linkedin.com/in/parkerhuynh/) and [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/)
+Date created: 2021/09/26
+Last modified: 2021/09/26
 Description: Training a CTC-based model for automatic speech recognition.
 """
 
@@ -19,61 +19,115 @@ engineering fields.
 
 
 
-This demonstration shows how to combine 1D CNN, RNN and a CTC loss to
-build an ASR. We will use the LJSpeech dataset from the
+This demonstration shows how to combine 2D CNN, RNN and a Connectionist
+Temporal Classification (CTC) loss to build an ASR. CTC is an algorithm
+used to train deep neural networks in speech recognition, handwriting
+recognition and other sequence problems. CTC is used when  we don’t know
+how the input alligns with the outputs (how the characters in the transcript
+align to the audio). The model we create is similar to the
+[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
+
+To extract speech features we will used the
+[`python_speech_features's`
+package](https://python-speech-features.readthedocs.io/en/latest/)
+This library provides common speech features for ASR including
+Mel-frequency cepstral coefficients (MFCCs) and filterbank energies.
+To install `python_speech_features's` package, use the following command line:
+
+```
+> pip install python_speech_features
+
+```
+
+
+We will use the LJSpeech dataset from the
 [LibriVox](https://librivox.org/) project. It consists of short
 audio clips of a single speaker reading passages from 7 non-fiction books.
+
+We will evaluate the quality of the model using [Word Error Rate
+(WER)](https://en.wikipedia.org/wiki/Word_error_rate). WER is obtained by adding up
+the substitutions, insertions, and deletions that occur in a sequence of
+recognized words. Divide that number by the total number of words originally
+spoken. The result is the WER. To get the WER score you need to install the
+[jiwer](https://pypi.org/project/jiwer/) package. Use the following command line:
+
+```
+> pip install jiwer
+
+```
+
+
 
 
 
 **References:**
 
 - [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
-- [Connectionist temporal
-classification](https://en.wikipedia.org/wiki/Connectionist_temporal_classification)
 - [Speech recognition](https://en.wikipedia.org/wiki/Speech_recognition)
 - [Sequence Modeling With CTC](https://distill.pub/2017/ctc/)
+- [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
+
 """
 
 """
 ## Setup
 """
 
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 import pandas as pd
 import numpy as np
-from tensorflow.keras.layers import (
-    BatchNormalization,
-    Bidirectional,
-    Conv1D,
-    Dense,
-    Dropout,
-    Embedding,
-    Input,
-    InputLayer,
-    LSTM,
-    Permute,
-)
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import layers
 from tensorflow import keras
 import tensorflow as tf
-from sklearn.model_selection import train_test_split
-from IPython import display
+from scipy.io import wavfile
+import python_speech_features
 from jiwer import wer
 
 
 """
-## Load the data: [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
-Let's download the data.
+## Load the LJSpeech Dataset
+
+Let's download the [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/).
+The dataset contains 13,100 audio files as `wav` files in the `/wavs/`.
+The label (transcript) for each audio file is a string
+given in the `metadata.csv` file. The fields are:
+
+- `ID:` this is the name of the corresponding .wav file
+- `Transcription:` words spoken by the reader (UTF-8)
+- `Normalized Transcription:` transcription with numbers,
+ordinals, and monetary units expanded into full words b(UTF-8).
+
+For this demo we will use on the `Normalized Transcription` field.
+
+Each audio file is a single-channel 16-bit PCM WAV with a sample rate of 22050 Hz.
+
+
 """
 
 data_url = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
 data_path = keras.utils.get_file("LJSpeech-1.1", data_url, untar=True)
 wavs_path = data_path + "/wavs/"
-metadata = data_path + "/metadata.csv"
+metadata_path = data_path + "/metadata.csv"
+
+
 # Read metadata file and parse it
-metadata_df = pd.read_csv(metadata, sep="|", header=None)
+metadata_df = pd.read_csv(metadata_path, sep="|", header=None, quoting=3)
+metadata_df.columns = ["file_name", "transcription", "normalized_transcription"]
+metadata_df = metadata_df[["file_name", "normalized_transcription"]]
+metadata_df = metadata_df.sample(frac=1).reset_index(drop=True)
+metadata_df.head(3)
+
+
+"""
+We now split the data into training and validation set.
+
+"""
+
+split = int(len(metadata_df) * 0.90)
+df_train = metadata_df[:split]
+df_val = metadata_df[split:]
+
+print(f"Size of the training set: {len(df_train)}")
+print(f"Size of the training set: {len(df_val)}")
 
 
 """
@@ -81,218 +135,167 @@ metadata_df = pd.read_csv(metadata, sep="|", header=None)
 """
 
 """
-The dataset contains 13,100 audio files as `wav` files in the `/wavs/`.
-The label (transcript) for each audio file is a string
-given in the `metadata.csv` file.
+Now, let's create a class DataGenerator, which will be used for
+real-time data feeding to the Keras model. We make the latter
+inherit the properties of `keras.utils.Sequence` class so that
+we can leverage nice functionalities.
 
 """
 
+
+class DataGenerator(keras.utils.Sequence):
+    """
+    Create a data generator to  be used for real-time data feeding to the Keras model.
+    """
+
+    def __init__(self, dataset, wavs_path, vocabulary, nfilt, batch_size=32):
+        """
+        Initialization.
+        """
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.max_len_train = 0
+        self.vocabulary = vocabulary
+        self.on_epoch_end()
+        self.wavs_path = wavs_path
+        self.nfilt = nfilt
+
+    def __len__(self):
+        """
+        Returns the number of batches per epoch
+        """
+        return int(np.floor(len(self.dataset) / self.batch_size))
+
+    def __getitem__(self, index):
+        """
+        Returns one batch of data.
+        """
+        # Generate indexes of the batch
+        indexes = self.indexes[index * self.batch_size : (index + 1) * self.batch_size]
+        batch_data = [self.dataset.iloc[k] for k in indexes]
+        audios, labels = self.__data_generation(batch_data)
+        return audios, labels
+
+    def text_to_idx(self, text):
+        """
+        Convert a label to indexes.
+        """
+        text = text.lower()
+        idx = []
+        for char in text:
+            if char in self.vocabulary:
+                idx.append(self.vocabulary.index(char))
+        return idx
+
+    def normalize(self, audio):
+        """
+        Normalize raw audio by deviding by the max value.
+        """
+        gain = 1.0 / (np.max(np.abs(audio)) + 1e-5)
+        return audio * gain
+
+    def standardize(self, features):
+        """
+        Standardize the Mel-filter bank coefficients (FBANK).
+        """
+        mean = np.mean(features)
+        std = np.std(features)
+        return (features - mean) / std
+
+    def audio_to_features(self, audio):
+        """
+        Generat the logarithmic Mel-filter bank coefficients (FBANK).
+        """
+        sf, audio = wavfile.read(f"{self.wavs_path}{audio}.wav")
+        audio = self.normalize(audio.astype(np.float32))
+        audio = (audio * np.iinfo(np.int16).max).astype(np.int16)
+        features = python_speech_features.logfbank(
+            audio, nfilt=self.nfilt, winlen=0.02, winstep=0.01
+        )
+        return self.standardize(features)
+
+    def on_epoch_end(self):
+        """
+        Updates indexes after each epoch.
+        """
+        self.indexes = np.arange(len(self.dataset))
+
+    def __data_generation(self, batch_data):
+        """
+        Returns one batch of data.
+        """
+        audios = []
+        labels = []
+        label_len = []
+        audio_len = []
+
+        for filename, transcript in batch_data:
+            # Process audio
+            audio = self.audio_to_features(filename)
+            audios.append(audio)
+            audio_len.append(len(audio))
+            # Process labels
+            label = self.text_to_idx(transcript)
+            labels.append(label)
+            label_len.append(len(label))
+
+        max_audio_len = max(audio_len)
+        max_label_len = max(label_len)
+        audios = keras.preprocessing.sequence.pad_sequences(
+            audios, maxlen=max_audio_len, dtype="float32", value=0, padding="post"
+        )
+        labels = keras.preprocessing.sequence.pad_sequences(
+            labels,
+            maxlen=max_label_len,
+            value=self.vocabulary.index(""),
+            padding="post",
+        )
+        return audios, labels
+
+
 """
-Let's first get the max lenght of the audio which will be used for padding.
-Also, we need to get a list of audio files.
-"""
+## Create `DataGenerator` objects
 
-# Get the max lenght of the audio which will be used for padding.
-# This requires to first parse all audio data.
-maxlen_x = 0
-with tqdm(total=len(metadata_df)) as pbar:
-    for index, row in metadata_df.iterrows():
-        wav_file = wavs_path + row[0] + ".wav"
-        wav_file = tf.io.read_file(wav_file)
-        audio, _ = tf.audio.decode_wav(wav_file)
-        audio = tf.squeeze(audio, axis=-1)
-        maxlen_x = max(maxlen_x, tf.shape(audio).numpy()[0])
-        pbar.update(1)
-
-# Get list of all wav files
-wav_files = [wavs_path + x + ".wav" for x in metadata_df[0]]
-
-print("")
-print("=" * 50)
-print("The maximum length of the audio file is maxlen_x: ", maxlen_x)
-print("Number of wav files found: ", len(wav_files))
-print("=" * 50)
-
+We first prepare the vocabulary to be used.
 
 """
-Let's now preprocess the labels.
-"""
 
-# Get a list of all labels
-labels = list(metadata_df[1])
-# Remove punctuation from the labels
-punctuation = "!?.:;|[]()”“\"'-"
-labels = [
-    "".join(l for l in stringIn if l not in punctuation).lower() for stringIn in labels
-]
-# Replace letters with accent marks
-labels = [
-    label.replace("ê", "e")
-    .replace("é", "e")
-    .replace("è", "e")
-    .replace("ü", "u")
-    .replace("â", "a")
-    .replace("à", "a")
-    .replace("ü", "u")
-    for label in labels
-]
-
-# Get maximum length of any transcription in the dataset.
-# This will be used for padding during training.
-maxlen_y = max([len(label) for label in labels])
-# Pad the labels
-padded_labels = []
-for label in labels:
-    while len(label) < maxlen_y:
-        label += "#"
-    padded_labels.append(label)
-characters = set(char for label in padded_labels for char in label)
-
-print("Number of labels found: ", len(labels))
-print("Number of unique characters: ", len(characters))
-print("Characters present: ", characters)
-print("maxlen_x:", maxlen_x)
-print("maxlen_y:", maxlen_y)
-
-
-"""
-Let's get mappings for the labels.
-"""
-
+# The set of characters accepted in the transcription.
+characters = [x for x in "abcdefghijklmnopqrstuvwxyz'?! "]
+# Add a special characters to be used for padding
+characters.append("")
 # Mapping characters to integers
-char_to_num = keras.layers.StringLookup(vocabulary=list(characters), mask_token=None)
-
+char_to_num = keras.layers.StringLookup(
+    vocabulary=characters, mask_token=None, num_oov_indices=0
+)
 # Mapping integers back to original characters
 num_to_char = keras.layers.StringLookup(
-    vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
+    vocabulary=char_to_num.get_vocabulary(),
+    mask_token=None,
+    invert=True,
+    num_oov_indices=0,
 )
 
+print(f"The vocabulary is: {char_to_num.get_vocabulary()}")
+
 
 """
-We now split the data into training and validation set.
+We now create our `DataGenerator` objects that contain
+the transformed elements, in the same order as they
+appeared in the input.
 """
 
-
-def split_data(wav_files, labels, train_size=0.9, shuffle=True):
-    # 1. Get the total size of the dataset
-    size = len(wav_files)
-    # 2. Make an indices array and shuffle it, if required
-    indices = np.arange(size)
-    if shuffle:
-        np.random.shuffle(indices)
-    # 3. Get the size of training samples
-    train_samples = int(size * train_size)
-    # 4. Split data into training and validation sets
-    x_train, y_train = (
-        wav_files[indices[:train_samples]],
-        labels[indices[:train_samples]],
-    )
-    x_valid, y_valid = (
-        wav_files[indices[train_samples:]],
-        labels[indices[train_samples:]],
-    )
-    return x_train, x_valid, y_train, y_valid
-
-
-# Splitting data into training and validation sets
-x_train, x_valid, y_train, y_valid = split_data(
-    np.array(wav_files), np.array(padded_labels)
+# Batch size used
+batch_size = 32
+#  The number of filters in the filterbank.
+nfilt = 160
+# Create our two data generators
+train_dataset = DataGenerator(
+    df_train, wavs_path, char_to_num.get_vocabulary(), nfilt, batch_size
 )
-
-
-"""
-## Create `Dataset` objects
-
-We first create the function that describes the transformation that we apply to each
-element of our dataset.
-"""
-
-frame_length = 255
-frame_step = 128
-
-
-def encode_single_sample(wav_file, label):
-    # 1. Read wav file
-    file = tf.io.read_file(wav_file)
-    # 2. Decode the wav file
-    audio, _ = tf.audio.decode_wav(file)
-    audio = tf.squeeze(audio, axis=-1)
-    # 3. Compute the padding tensor
-    zero_padding = tf.zeros([maxlen_x] - tf.shape(audio), dtype=tf.float32)
-    # 4. Change type to float
-    audio = tf.cast(audio, tf.float32)
-    # 5. Pad the audio
-    equal_length = tf.concat([audio, zero_padding], 0)
-    # 6. Get the spectrogram
-    spectrogram = tf.signal.stft(
-        equal_length, frame_length=frame_length, frame_step=frame_step
-    )
-    # 7. We only need the magnitude, which can be derived by applying tf.abs
-    spectrogram = tf.abs(spectrogram)
-    # 8. Add dimension
-    # 9. Map the characters in label to numbers
-    label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
-    # 10. Return a dict as our model is expecting two inputs
-    return spectrogram, label
-
-
-"""
-We now create our `tf.data.Dataset` object returns a new dataset
-containing the transformed elements, in the same order as they
-appeared in the input. The function `encode_single_sample` is
-used to change both the values and the structure of a dataset's elements.
-
-"""
-
-# Define the batch size
-batch_size = 128
-
-# Define the trainig dataset
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = (
-    train_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-    .batch(batch_size)
-    .prefetch(buffer_size=tf.data.AUTOTUNE)
+validation_dataset = DataGenerator(
+    df_val, wavs_path, char_to_num.get_vocabulary(), nfilt, batch_size
 )
-
-# Define the validation dataset
-validation_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
-validation_dataset = (
-    validation_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-    .batch(batch_size)
-    .prefetch(buffer_size=tf.data.AUTOTUNE)
-)
-
-
-"""
-## Visualize the data
-
-Let's visualize an example in our dataset, including the
-audio clip, the spectrogram and the corresponding label.
-"""
-
-fig = plt.figure(figsize=(20, 5))
-for batch in train_dataset.shuffle(buffer_size=16).take(1):
-    spectrograms = batch[0]
-    labels = batch[1]
-    for i in range(1):
-        input_shape = (spectrograms[i].shape[0], spectrograms[i].shape[1])
-        label = tf.strings.reduce_join(num_to_char(labels[i])).numpy().decode("utf-8")
-        ax = plt.subplot(2, 1, 1)
-        ax.imshow(np.transpose(spectrograms[i]), vmax=1)
-        ax.set_title(label.replace("#", ""))
-        ax.axis("off")
-        # Convert to wave format
-        spectrograms_ = tf.expand_dims(spectrograms[i], axis=2)
-        audio = tf.signal.inverse_stft(
-            tf.cast(spectrograms[i], tf.complex128), frame_length, frame_step
-        )
-        ax = plt.subplot(2, 1, 2)
-        plt.plot(audio)
-        ax.set_title("Signal Wave")
-        ax.set_xlim(0, len(audio))
-        display.display(display.Audio(audio, rate=16000))
-plt.show()
 
 
 """
@@ -318,61 +321,68 @@ def CTCLoss(y_true, y_pred):
 
 
 """
-We now define our model.
+We now define our model. We will define a model similar to
+[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
 """
 
 
-def build_model():
-    # Inputs to the model
-    input_spectrogram = keras.layers.Input(
-        shape=input_shape, name="spectrogram", dtype="float32"
-    )
-    # First conv block
-    x = keras.layers.Conv1D(
-        64,
-        (32),
-        activation="relu",
-        kernel_initializer="he_normal",
+def build_model(input_dim, output_dim, rnn_layers=5, rnn_units=128):
+    """
+    This model is similar to DeepSpeech 2
+    https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html
+    """
+    # Model's input
+    input_spectrogram = layers.Input([None, input_dim], name="input")
+    # Expand the dimension to use 2D CNN.
+    x = layers.Reshape((-1, input_dim, 1), name="expand_dim")(input_spectrogram)
+    # Convolution layer 1
+    x = layers.Conv2D(
+        filters=32,
+        kernel_size=[11, 41],
+        strides=[2, 2],
         padding="same",
-        name="Conv1",
-    )(input_spectrogram)
-    x = keras.layers.BatchNormalization()(x)
-    # Second conv block
-    x = keras.layers.Conv1D(
-        64,
-        (32),
-        activation="relu",
-        kernel_initializer="he_normal",
+        use_bias=False,
+        name="conv_1",
+    )(x)
+    x = layers.BatchNormalization(name="conv_1_bn")(x)
+    x = layers.ReLU(name="conv_1_relu")(x)
+    # Convolution layer 2
+    x = layers.Conv2D(
+        filters=32,
+        kernel_size=[11, 21],
+        strides=[1, 2],
         padding="same",
-        name="Conv2",
+        use_bias=False,
+        name="conv_2",
     )(x)
-    x = keras.layers.BatchNormalization()(x)
-    # RNNs
-    x = keras.layers.Bidirectional(
-        keras.layers.LSTM(64, return_sequences=True, dropout=0.25)
-    )(x)
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Bidirectional(
-        keras.layers.LSTM(128, return_sequences=True, dropout=0.25)
-    )(x)
-    x = keras.layers.BatchNormalization()(x)
-    # Compression layer
-    x = keras.layers.Permute((2, 1))(x)
-    x = keras.layers.Dense(768, activation="relu", name="compress_layer_1")(x)
-    x = keras.layers.Dropout(0.2)(x)
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Dense(768, activation="relu", name="compress_layer_2")(x)
-    x = keras.layers.Dropout(0.2)(x)
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Permute((2, 1))(x)
-    # Output layer
-    output = keras.layers.Dense(
-        len(char_to_num.get_vocabulary()) + 1, activation="softmax", name="output_layer"
-    )(x)
-    # Define the model
-    model = keras.models.Model(
-        inputs=input_spectrogram, outputs=output, name="speech_transcript_v1"
-    )
+    x = layers.BatchNormalization(name="conv_2_bn")(x)
+    x = layers.ReLU(name="conv_2_relu")(x)
+    # Reshape the resulted volume to feed the RNNs layers
+    x = layers.Reshape([-1, input_dim // 4 * 32])(x)
+    # RNN layers
+    for i in range(1, rnn_layers + 1):
+        recurrent = layers.GRU(
+            units=rnn_units,
+            activation="tanh",
+            recurrent_activation="sigmoid",
+            use_bias=True,
+            return_sequences=True,
+            reset_after=True,
+            name=f"gru_{i}",
+        )
+        x = layers.Bidirectional(
+            recurrent, name=f"bidirectional_{i}", merge_mode="concat"
+        )(x)
+        if i < rnn_layers:
+            x = layers.Dropout(rate=0.5)(x)
+    # Dense layer
+    x = layers.TimeDistributed(layers.Dense(units=rnn_units * 2))(x)
+    x = layers.ReLU(name="dense_1_relu")(x)
+    x = layers.Dropout(rate=0.5)(x)
+    # Classification layer
+    output = layers.Dense(units=output_dim + 1, activation="softmax")(x)
+    # Model
+    model = keras.Model(input_spectrogram, output, name="DeepSpeech_2")
     # Optimizer
     opt = keras.optimizers.Adam(learning_rate=1e-4)
     # Compile the model and return
@@ -381,7 +391,9 @@ def build_model():
 
 
 # Get the model
-model = build_model()
+model = build_model(
+    input_dim=nfilt, output_dim=char_to_num.vocabulary_size(), rnn_units=512
+)
 model.summary(line_length=110)
 
 
@@ -389,125 +401,125 @@ model.summary(line_length=110)
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]
     # Use greedy search. For complex tasks, you can use beam search
-    results = keras.backend.ctc_decode(pred, input_length=input_len, greedy=True)[0][0][
-        :, :maxlen_y
-    ]
+    results = keras.backend.ctc_decode(pred, input_length=input_len, greedy=True)[0][0]
     # Iterate over the results and get back the text
     output_text = []
-    for res in results:
-        res = tf.strings.reduce_join(num_to_char(res)).numpy().decode("utf-8")
-        output_text.append(res.replace("#", ""))
+    for result in results:
+        result = tf.strings.reduce_join(num_to_char(result)).numpy().decode("utf-8")
+        output_text.append(result)
     return output_text
 
 
-class DisplayOutputs(keras.callbacks.Callback):
+# A callback class to output a few transcriptions during training
+class callback(keras.callbacks.Callback):
     """
     Displays a batch of outputs after every epoch.
     """
 
     def __init__(self, dataset):
+        super().__init__()
         self.dataset = dataset
 
-    def on_epoch_end(self, epoch, logs=None):
-        if epoch % 5 != 0 or epoch == 0:
-            return
-        # Compute the Word Error Rate
-        labels = list(map(lambda x: x[1], self.dataset))  # Get labels
-        labels = tf.concat(labels, axis=0)
-        orig_texts = []
-        for label in labels:
-            label = (
-                tf.strings.reduce_join(num_to_char(label))
-                .numpy()
-                .decode("utf-8")
-                .replace("#", "")
-            )
-            orig_texts.append(label)
-        preds = model.predict(self.dataset)
-        pred_texts = decode_batch_predictions(preds)
-        wer_score = wer(orig_texts, pred_texts)
-        print("-" * 100)
-        print(f"Word Error Rate (WER) SCORE: {wer_score:.3f}")
-        # Print anecdotal examples
-        for batch in self.dataset.shuffle(buffer_size=512).take(1):
-            spectrograms = batch[0]
-            labels = batch[1]
-            preds = model.predict(spectrograms)
-            pred_texts = decode_batch_predictions(preds)
-            orig_texts = []
-            for label in labels:
+    def on_epoch_end(self, epoch: int, logs=None):
+        predictions = []
+        targets = []
+        for batch in self.dataset:
+            X, y = batch
+            batch_predictions = model.predict(X)
+            batch_predictions = decode_batch_predictions(batch_predictions)
+            predictions.extend(batch_predictions)
+            for label in y:
                 label = (
                     tf.strings.reduce_join(num_to_char(label)).numpy().decode("utf-8")
                 )
-                orig_texts.append(label)
-            # Print two elements for verification.
-            for i in range(2):
-                print("-" * 100)
-                print(f"Target    : {orig_texts[i].replace('#','')}")
-                print(f"Prediction: {pred_texts[i]}")
+                targets.append(label)
+        wer_score = wer(targets, predictions)
+        print("-" * 100)
+        print(f"Word Error Rate: {wer_score:.4f}")
+        print("-" * 100)
+        for i in np.random.randint(0, len(predictions), 2):
+            print(f"Target    : {targets[i]}")
+            print(f"Prediction: {predictions[i]}")
             print("-" * 100)
 
 
 """
-## Training
+## Training and Evaluating
 """
 
-# Define the number of epochs
+# Define the number of epochs.
 epochs = 1
 # Callback function to check transcription on the val set.
-validation_DisplayOutputs = DisplayOutputs(validation_dataset)
+validation_callback = callback(validation_dataset)
 # Train the model
 history = model.fit(
     train_dataset,
     validation_data=validation_dataset,
     epochs=epochs,
-    callbacks=[validation_DisplayOutputs],
+    callbacks=[validation_callback],
 )
+
 
 """
 ## Inference
 """
 
 #  Let's check results on more validation samples
-for batch in validation_dataset.take(1):
-    spectrograms = batch[0]
-    labels = batch[1]
-    preds = model.predict(spectrograms)
-    pred_texts = decode_batch_predictions(preds)
-    orig_texts = []
-    for label in labels:
+predictions = []
+targets = []
+for batch in validation_dataset:
+    X, y = batch
+    batch_predictions = model.predict(X)
+    batch_predictions = decode_batch_predictions(batch_predictions)
+    predictions.extend(batch_predictions)
+    for label in y:
         label = tf.strings.reduce_join(num_to_char(label)).numpy().decode("utf-8")
-        orig_texts.append(label)
-
-    for i in range(16):
-        print("-" * 50)
-        print(f"Target    : {orig_texts[i].replace('#','')}")
-        print(f"Prediction: {pred_texts[i].replace('#','')}")
+        targets.append(label)
+wer_score = wer(targets, predictions)
+print("-" * 100)
+print(f"Word Error Rate: {wer_score:.4f}")
+print("-" * 100)
+for i in np.random.randint(0, len(predictions), 5):
+    print(f"Target    : {targets[i]}")
+    print(f"Prediction: {predictions[i]}")
+    print("-" * 100)
 
 
 """
-In practice, you should train for around 100 epochs or more.
+## Conclusion
 
-Some of the transcriptions around epoch 50 (results keep improving after that):
+
+In practice, you should train for around 20-30 epochs or more. Each epoch
+took approximately 5-6mn using a `GeForce RTX 2080 Ti` GPU.
+The model we trained at 30 epochs has a `Word Error Rate (WER) = 16.45%`.
+
+Some of the transcriptions around epoch 30 (results keep improving after that):
+
+
+
+**Audio file: LJ017-0048.wav**
+```
+- Target    : people came to stare at the supposed coldblooded prisoner
+- Prediction: people came to stair at the supposed cold blooded prisoner
 
 ```
-Audio file: LJ003-0224.wav
-- `Target    :` supplies of common necessaries such as have now been part of the
-furniture of every british jail for many years
-- `Prediction:` suppliys of common necessaries such as have now been part of the
-firniture of every britih jail for mny years
 
-Audio file: LJ001-0085.wav
-- `Target    :` it was reserved for the founders of the later eighteenth century to
-produce letters which are positively ugly and which it may be added
-- `Prediction:` it was reservf for the founders of the later eigh8enth century to produce
-letters which ae possictively ugly and wich it may be added
 
-Audio file: LJ006-0004.wav
-- `Target    :` but this digression was necessary in order to present a more complete
-picture of the state of jails in the early part of the present century
-- `Prediction:` but this digresion was necessary in oderd to present a more complete
-picture of the state of jails in thearly part of the presen century
+**Audio file: LJ007-0204.wav**
+```
+- Target    : which has been demonstrably proved to be the fruitful source of all the
+abuses and irregularities which have so long disgraced newgate
+- Prediction: which has been demostrably proved to be the footful source of allf the
+abuses and irregularities which have so long desquraced newgate
+```
+
+**Audio file: LJ019-0233.wav**
+```
+- Target    : and when it was completed both sides of the prison were brought into
+harmony with modern ideas
+- Prediction: and when at was completed both side of the prison were brought into harmany
+with modern ideas
+
 ```
 
 
