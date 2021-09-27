@@ -1,6 +1,6 @@
 """
 Title: Image Classification using BigTransfer (BiT)
-Author: [Sayan Nath](https://twitter.com/sayannath)
+Author: [Sayan Nath](https://twitter.com/sayannath2350)
 Date created: 2021/09/24
 Last modified: 2021/09/24
 Description: BigTransfer (BiT) State-of-the-art transfer learning for image classification.

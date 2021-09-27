@@ -1,6 +1,6 @@
 # Image Classification using BigTransfer (BiT)
 
-**Author:** [Sayan Nath](https://twitter.com/sayannath)<br>
+**Author:** [Sayan Nath](https://twitter.com/sayannath2350)<br>
 **Date created:** 2021/09/24<br>
 **Last modified:** 2021/09/24<br>
 
