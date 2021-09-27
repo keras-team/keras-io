@@ -1,4 +1,4 @@
-# Image Classification using BigTransfer(BiT)
+# Image Classification using BigTransfer (BiT)
 
 **Author:** [Sayan Nath](https://twitter.com/sayannath)<br>
 **Date created:** 2021/09/24<br>

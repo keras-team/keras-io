@@ -1,5 +1,5 @@
 """
-Title: Image Classification using BigTransfer(BiT)
+Title: Image Classification using BigTransfer (BiT)
 Author: [Sayan Nath](https://twitter.com/sayannath)
 Date created: 2021/09/24
 Last modified: 2021/09/24
