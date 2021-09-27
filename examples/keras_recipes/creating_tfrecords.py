@@ -115,13 +115,13 @@ pprint.pprint(annotations[60])
 
 `num_samples` is the number of data samples on each TFRecord file.
 
-`num_tfrecods` is total number of TFRecords that we will create.
+`num_tfrecords` is total number of TFRecords that we will create.
 """
 
 num_samples = 4096
-num_tfrecods = len(annotations) // num_samples
+num_tfrecords = len(annotations) // num_samples
 if len(annotations) % num_samples:
-    num_tfrecods += 1  # add one record if there are any remaining samples
+    num_tfrecords += 1  # add one record if there are any remaining samples
 
 if not os.path.exists(tfrecords_dir):
     os.makedirs(tfrecords_dir)  # creating TFRecords output folder
@@ -195,7 +195,7 @@ Let's generate the COCO2017 data in the TFRecord format. The format will be
 names can make counting easier).
 """
 
-for tfrec_num in range(num_tfrecods):
+for tfrec_num in range(num_tfrecords):
     samples = annotations[(tfrec_num * num_samples) : ((tfrec_num + 1) * num_samples)]
 
     with tf.io.TFRecordWriter(
