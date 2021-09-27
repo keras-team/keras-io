@@ -16,8 +16,8 @@ revisit the paradigm of pre-training on large supervised datasets and fine-tunin
 model on a target task. The importance of appropriately choosing normalization layers and
 scaling the architecture capacity as the amount of pre-training data increases.
 
-BigTransfer(BiT) is trained on public datasets, along with code in [TF2, Jax and
-Pytorch](https://github.com/google-research/big_transfer). This will help anyone to reach
+BigTransfer(BiT) is trained on public datasets, along with code in
+[TF2, Jax and Pytorch](https://github.com/google-research/big_transfer). This will help anyone to reach
 state of the art performance on their task of interest, even with just a handful of
 labeled images per class.
 
@@ -181,7 +181,7 @@ bit_module = hub.KerasLayer(bit_model_url)
 To create the new model, we:
 
 1. Cut off the BiT model’s original head. This leaves us with the “pre-logits” output.
-- We do not have to do this if we use the ‘feature extractor’ models (i.e. all those in
+We do not have to do this if we use the ‘feature extractor’ models (i.e. all those in
 subdirectories titled `feature_vectors`), since for those models the head has already
 been cut off.
 
@@ -281,10 +281,9 @@ accuracy = model.evaluate(pipeline_validation)[1] * 100
 print("Accuracy: {:.2f}%".format(accuracy))
 
 """
-## Note:
+## Conclusion
 
-In our experiment, the BigTransfer(BiT) Model performs amazing by giving us a good
-validation accuracy. BiT performs well across a surprisingly wide range of data regimes
+BiT performs well across a surprisingly wide range of data regimes
 -- from 1 example per class to 1M total examples. BiT achieves 87.5% top-1 accuracy on
 ILSVRC-2012, 99.4% on CIFAR-10, and 76.3% on the 19 task Visual Task Adaptation Benchmark
 (VTAB). On small datasets, BiT attains 76.8% on ILSVRC-2012 with 10 examples per class,
@@ -292,6 +291,6 @@ and 97.0% on CIFAR-10 with 10 examples per class.
 
 ![](https://i.imgur.com/b1Lw5fz.png)
 
-You can experiment further with the BigTransfer Method by following the [original
-paper](https://arxiv.org/pdf/1912.11370.pdf).
+You can experiment further with the BigTransfer Method by following the
+[original paper](https://arxiv.org/abs/1912.11370).
 """
