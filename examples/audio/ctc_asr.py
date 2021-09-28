@@ -309,7 +309,7 @@ def build_model(input_dim, output_dim, rnn_layers=5, rnn_units=128):
         if i < rnn_layers:
             x = layers.Dropout(rate=0.5)(x)
     # Dense layer
-    x = layers.TimeDistributed(layers.Dense(units=rnn_units * 2))(x)
+    x = layers.Dense(units=rnn_units * 2, name="dense_1")(x)
     x = layers.ReLU(name="dense_1_relu")(x)
     x = layers.Dropout(rate=0.5)(x)
     # Classification layer
