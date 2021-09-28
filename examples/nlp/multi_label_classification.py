@@ -297,14 +297,14 @@ To know more about other possible configurations with `TextVectorizer`, please c
 the 
 [official documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 
-**Note**: Specifying the `max_tokens` argument inside the `TextVectorization` layer is not a
-requirement. 
+**Note**: Setting the `max_tokens` argument to a pre-calculated vocabulary size is
+not a requirement. 
 """
 
 """
 ## Create a text classification model
 
-We will keep our model simple -- it will be a small stack of fully connected layers with
+We will keep our model simple -- it will be a small stack of fully-connected layers with
 ReLU as the non-linearity.
 
 """
@@ -381,7 +381,7 @@ The trained model gives us an evaluation accuracy of ~87%.
 
 The beauty of the
 [preprocessing layers provided by Keras](https://keras.io/guides/preprocessing_layers/)
-is that they can included inside a `tf.keras.Model`. We will export an inference model
+is that they can be included inside a `tf.keras.Model`. We will export an inference model
 by including the `text_vectorization` layer on top of `shallow_mlp_model`. This will
 allow our inference model to directly operate on raw strings. 
 
@@ -425,7 +425,7 @@ even those that use Transformers ([Vaswani et al.](https://arxiv.org/abs/1706.03
 """
 ## Acknowledgements
 
-We would like thank to [Matt Watson](https://github.com/mattdangerw) for helping us
+We would like to thank [Matt Watson](https://github.com/mattdangerw) for helping us
 tackle the multi-label binarization part and inverse-transforming the processed labels
 to the original form.
 """
