@@ -178,20 +178,25 @@ linear_layer = Linear(32)
 # The layer's weights are created dynamically the first time the layer is called
 y = linear_layer(x)
 
+
+"""
+Implementing `build()` separately as shown nicely separates creating weights
+only once from using weights in every call. However, for some advanced custom
+layers, it becomes impractical to separate the two. Layer implementers are
+allowed to defer weight creation to the first `__call__()` but need to take
+care that later calls use the same weights, and wrap any non-Keras ways of
+creating state in a`tf.init_scope()`.
+""""
+
 """
 ## Layers are recursively composable
 
 If you assign a Layer instance as an attribute of another Layer, the outer layer
-will start tracking the weights of the inner layer.
+will start tracking the weights created by the inner layer.
 
-We recommend creating such sublayers in the `__init__()` method (since the
-sublayers will typically have a build method, they will be built when the
-outer layer gets built).
+We recommend creating such sublayers in the `__init__()` method and leave it to
+the first `__call__()` to trigger building their weights.
 """
-
-# Let's assume we are reusing the Linear class
-# with a `build` method that we defined above.
-
 
 class MLPBlock(keras.layers.Layer):
     def __init__(self):
