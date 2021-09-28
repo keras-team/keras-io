@@ -31,7 +31,6 @@ from tensorflow.keras import layers
 from tensorflow import keras
 import tensorflow as tf
 
-from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
 from ast import literal_eval
 
@@ -138,24 +137,37 @@ print(f"Number of rows in test set: {len(test_df)}")
 """
 ## Multi-label binarization
 
-Now we preprocess our labels using
-[`MultiLabelBinarizer`](http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer.html). 
+Now we preprocess our labels using the
+[`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup)
+layer. 
 """
 
-mlb = MultiLabelBinarizer()
-mlb.fit_transform(train_df["terms"])
-mlb.classes_
+terms = tf.ragged.constant(train_df["terms"].values)
+lookup = tf.keras.layers.StringLookup(output_mode="multi_hot")
+lookup.adapt(terms)
+vocab = lookup.get_vocabulary()
+
+
+def invert_multi_hot(encoded_labels):
+    """Reverse a single multi-hot encoded label to a tuple of vocab terms."""
+    hot_indices = np.argwhere(encoded_labels == 1.0)[..., 0]
+    return np.take(vocab, hot_indices)
+
+
+print("Vocabulary:\n")
+print(vocab)
+
 
 """
-`MultiLabelBinarizer`separates out the individual unique classes available from the label
-pool and then uses this information to represent a given label set with 0's and 1's.
+Here we are separating the individual unique classes available from the label
+pool and then using this information to represent a given label set with 0's and 1's.
 Below is an example.
 """
 
 sample_label = train_df["terms"].iloc[0]
 print(f"Original label: {sample_label}")
 
-label_binarized = mlb.transform([sample_label])
+label_binarized = lookup([sample_label])
 print(f"Label-binarized representation: {label_binarized}")
 
 """
@@ -202,13 +214,14 @@ def unify_text_length(text, label):
 
 
 def make_dataset(dataframe, is_train=True):
-    label_binarized = mlb.transform(dataframe["terms"].values)
+    labels = tf.ragged.constant(dataframe["terms"].values)
+    label_binarized = lookup(labels).numpy()
     dataset = tf.data.Dataset.from_tensor_slices(
         (dataframe["summaries"].values, label_binarized)
     )
     dataset = dataset.shuffle(batch_size * 10) if is_train else dataset
     dataset = dataset.map(unify_text_length, num_parallel_calls=auto).cache()
-    return dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    return dataset.batch(batch_size)
 
 
 """
@@ -240,15 +253,39 @@ purpose, we will use the
 It can operate as a part of your main model so that the model is excluded from the core
 preprocessing logic. This greatly reduces the chances of training and serving skew.
 
-"""
+We first calculate the number of unique words present in the abstracts.
 
 """
-We now create our text classifier model with the `TextVectorization` layer present
-inside it. 
-"""
+train_df["total_words"] = train_df["summaries"].str.split().str.len()
+vocabulary_size = train_df["total_words"].max()
+print(f"Vocabulary size: {vocabulary_size}")
 
 """
-## Create model with `TextVectorization`
+We now create our vectorization layer and `map()` to the `tf.data.Dataset`s created
+earlier.
+"""
+
+text_vectorizer = layers.TextVectorization(
+    max_tokens=vocabulary_size, ngrams=2, output_mode="tf_idf"
+)
+
+# `TextVectorization` layer needs to be adapted as per the vocabulary from our
+# training set.
+with tf.device("/CPU:0"):
+    text_vectorizer.adapt(train_dataset.map(lambda text, label: text))
+
+train_dataset = train_dataset.map(
+    lambda text, label: (text_vectorizer(text), label), num_parallel_calls=auto
+).prefetch(auto)
+validation_dataset = validation_dataset.map(
+    lambda text, label: (text_vectorizer(text), label), num_parallel_calls=auto
+).prefetch(auto)
+test_dataset = test_dataset.map(
+    lambda text, label: (text_vectorizer(text), label), num_parallel_calls=auto
+).prefetch(auto)
+
+
+"""
 
 A batch of raw text will first go through the `TextVectorization` layer and it will
 generate their integer representations. Internally, the `TextVectorization` layer will
@@ -260,36 +297,29 @@ To know more about other possible configurations with `TextVectorizer`, please c
 the 
 [official documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 
+**Note**: Specifying the `max_tokens` argument inside the `TextVectorization` layer is not a
+requirement. 
 """
 
-text_vectorizer = layers.TextVectorization(
-    max_tokens=20000, ngrams=2, output_mode="tf_idf"
-)
+"""
+## Create a text classification model
 
-# `TextVectorization` needs to be adapted as per the vocabulary from our
-# training set.
-with tf.device("/CPU:0"):
-    text_vectorizer.adapt(train_dataset.map(lambda text, label: text))
+We will keep our model simple -- it will be a small stack of fully connected layers with
+ReLU as the non-linearity.
+
+"""
 
 
 def make_model():
     shallow_mlp_model = keras.Sequential(
         [
-            text_vectorizer,
             layers.Dense(512, activation="relu"),
             layers.Dense(256, activation="relu"),
             layers.Dense(len(mlb.classes_), activation="sigmoid"),
-        ]
+        ]  # More on why "sigmoid" has been used here in a moment.
     )
     return shallow_mlp_model
 
-
-"""
-Let's take a quick look at the summary of our shallow model.
-"""
-
-shallow_mlp_model = make_model()
-shallow_mlp_model.summary()
 
 """
 ## Train the model
@@ -307,6 +337,7 @@ their models.
 
 epochs = 20
 
+shallow_mlp_model = make_model()
 shallow_mlp_model.compile(
     loss="binary_crossentropy", optimizer="adam", metrics=["categorical_accuracy"]
 )
@@ -342,25 +373,42 @@ _, categorical_acc = shallow_mlp_model.evaluate(test_dataset)
 print(f"Categorical accuracy on the test set: {round(categorical_acc * 100, 2)}%.")
 
 """
-The trained model gives us a validation accuracy of ~70%.
+The trained model gives us an evaluation accuracy of ~87%.
 """
 
 """
 ## Inference
+
+The beauty of the
+[preprocessing layers provided by Keras](https://keras.io/guides/preprocessing_layers/)
+is that they can included inside a `tf.keras.Model`. We will export an inference model
+by including the `text_vectorization` layer on top of `shallow_mlp_model`. This will
+allow our inference model to directly operate on raw strings. 
+
+**Note** that during training it is always preferable to use these preprocessing
+layers as a part of the data input pipeline rather than the model to avoid
+surfacing bottlenecks for the hardware accelerators. This also allows for
+asynchronous data processing.
 """
 
-text_batch, label_batch = next(iter(test_dataset))
+# Create a model for inference.
+model_for_inference = keras.Sequential([text_vectorizer, shallow_mlp_model])
+
+# Create a small dataset just for demoing inference.
+inference_dataset = make_dataset(test_df.sample(100), is_train=False)
+text_batch, label_batch = next(iter(inference_dataset))
 predicted_probabilities = shallow_mlp_model.predict(text_batch)
 
+# Perform inference.
 for i, text in enumerate(text_batch[:5]):
     label = label_batch[i].numpy()[None, ...]
     print(f"Abstract: {text[0]}")
-    print(f"Label(s): {mlb.inverse_transform(label)[0]}")
+    print(f"Label(s): {invert_multi_hot(label[0])}")
     predicted_proba = [proba for proba in predicted_probabilities[i]]
     top_3_labels = [
         x
         for _, x in sorted(
-            zip(predicted_probabilities[i], mlb.classes_),
+            zip(predicted_probabilities[i], lookup.get_vocabulary()),
             key=lambda pair: pair[0],
             reverse=True,
         )
@@ -372,4 +420,12 @@ for i, text in enumerate(text_batch[:5]):
 The prediction results are not that great but not below the par for a simple model like
 ours. We can improve this performance with models that consider word order like LSTM or
 even those that use Transformers ([Vaswani et al.](https://arxiv.org/abs/1706.03762)).
+"""
+
+"""
+## Acknowledgements
+
+We would like thank to [Matt Watson](https://github.com/mattdangerw) for helping us
+tackle the multi-label binarization part and inverse-transforming the processed labels
+to the original form.
 """
