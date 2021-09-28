@@ -22,14 +22,13 @@ You're going to need more than a one-pager. And you're in luck:
 
 ## Installing Keras
 
-The simplest way to install Keras is to via `pip`:
+To use Keras, will need to have the TensorFlow package installed. [See detailed instructions](https://www.tensorflow.org/install).
 
+Once TensorFlow is installed, just import Keras via:
+
+```python
+from tensorflow import keras
 ```
-pip install keras
-```
-
-You will need to have the TensorFlow package installed. [See detailed instructions](https://www.tensorflow.org/install).
-
 
 The Keras codebase is also available on GitHub:
 

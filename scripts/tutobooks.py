@@ -334,9 +334,15 @@ def validate(py):
     os.remove(fpath)
     if formatted != pre_formatting:
         raise ValueError(
-            "You python file did not follow `black` conventions. "
+            "Your python file did not follow `black` conventions. "
             "Run `black your_file.py` to autoformat it."
         )
+
+    # Extra checks.
+    if '//arxiv.org/pdf/' in py:
+        raise ValueError(
+            "Do not link to arXiv PDFs directly. "
+            "Instead, link to the abstract page.")
 
 
 def count_locs_in_file(py_path):
