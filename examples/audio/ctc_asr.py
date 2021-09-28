@@ -17,35 +17,29 @@ computer speech recognition or speech to text (STT). It incorporates
 knowledge and research in the computer science, linguistics and computer
 engineering fields.
 
-
-
-This demonstration shows how to combine 2D CNN, RNN and a Connectionist
+This demonstration shows how to combine a 2D CNN, RNN and a Connectionist
 Temporal Classification (CTC) loss to build an ASR. CTC is an algorithm
 used to train deep neural networks in speech recognition, handwriting
 recognition and other sequence problems. CTC is used when  we don’t know
-how the input alligns with the outputs (how the characters in the transcript
-align to the audio). The model we create is similar to the
+how the input aligns with the output (how the characters in the transcript
+align to the audio). The model we create is similar to
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 
 We will use the LJSpeech dataset from the
 [LibriVox](https://librivox.org/) project. It consists of short
 audio clips of a single speaker reading passages from 7 non-fiction books.
 
-We will evaluate the quality of the model using [Word Error Rate
-(WER)](https://en.wikipedia.org/wiki/Word_error_rate). WER is obtained by adding up
+We will evaluate the quality of the model using
+[Word Error Rate (WER)](https://en.wikipedia.org/wiki/Word_error_rate).
+WER is obtained by adding up
 the substitutions, insertions, and deletions that occur in a sequence of
 recognized words. Divide that number by the total number of words originally
 spoken. The result is the WER. To get the WER score you need to install the
-[jiwer](https://pypi.org/project/jiwer/) package. Use the following command line:
+[jiwer](https://pypi.org/project/jiwer/) package. You can use the following command line:
 
 ```
-> pip install jiwer
-
+pip install jiwer
 ```
-
-
-
-
 
 **References:**
 
@@ -74,20 +68,18 @@ from jiwer import wer
 ## Load the LJSpeech Dataset
 
 Let's download the [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/).
-The dataset contains 13,100 audio files as `wav` files in the `/wavs/`.
+The dataset contains 13,100 audio files as `wav` files in the `/wavs/` folder.
 The label (transcript) for each audio file is a string
 given in the `metadata.csv` file. The fields are:
 
-- `ID:` this is the name of the corresponding .wav file
-- `Transcription:` words spoken by the reader (UTF-8)
-- `Normalized Transcription:` transcription with numbers,
-ordinals, and monetary units expanded into full words b(UTF-8).
+- **ID**: this is the name of the corresponding .wav file
+- **Transcription**: words spoken by the reader (UTF-8)
+- **Normalized transcription**: transcription with numbers,
+ordinals, and monetary units expanded into full words (UTF-8).
 
-For this demo we will use on the `Normalized Transcription` field.
+For this demo we will use on the "Normalized transcription" field.
 
-Each audio file is a single-channel 16-bit PCM WAV with a sample rate of 22050 Hz.
-
-
+Each audio file is a single-channel 16-bit PCM WAV with a sample rate of 22,050 Hz.
 """
 
 data_url = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
@@ -106,7 +98,6 @@ metadata_df.head(3)
 
 """
 We now split the data into training and validation set.
-
 """
 
 split = int(len(metadata_df) * 0.90)
@@ -120,11 +111,7 @@ print(f"Size of the training set: {len(df_val)}")
 """
 ## Preprocessing
 
-"""
-
-"""
 We first prepare the vocabulary to be used.
-
 """
 
 # The set of characters accepted in the transcription.
@@ -144,7 +131,6 @@ print(
 """
 Next, we create the function that describes the transformation that we apply to each
 element of our dataset.
-
 """
 
 # An integer scalar Tensor. The window length in samples.
@@ -194,11 +180,9 @@ def encode_single_sample(wav_file, label):
 """
 ## Creating `Dataset` objects
 
-We create our `tf.data.Dataset` object that returns a new dataset
-containing the transformed elements, in the same order as they
-appeared in the input. The function `encode_single_sample` is
-used to change both the values and the structure of a dataset's elements.
-
+We create a `tf.data.Dataset` object that yields
+the transformed elements, in the same order as they
+appeared in the input.
 """
 
 batch_size = 32
@@ -228,7 +212,6 @@ validation_dataset = (
 
 Let's visualize an example in our dataset, including the
 audio clip, the spectrogram and the corresponding label.
-
 """
 
 fig = plt.figure(figsize=(8, 5))
@@ -255,9 +238,7 @@ plt.show()
 
 """
 ## Model
-"""
 
-"""
 We first define the CTC Loss function.
 """
 
@@ -282,10 +263,7 @@ We now define our model. We will define a model similar to
 
 
 def build_model(input_dim, output_dim, rnn_layers=5, rnn_units=128):
-    """
-    This model is similar to DeepSpeech 2
-    https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html
-    """
+    """Model similar to DeepSpeech2."""
     # Model's input
     input_spectrogram = layers.Input((None, input_dim), name="input")
     # Expand the dimension to use 2D CNN.
@@ -372,9 +350,7 @@ def decode_batch_predictions(pred):
 
 # A callback class to output a few transcriptions during training
 class CallbackEval(keras.callbacks.Callback):
-    """
-    Displays a batch of outputs after every epoch.
-    """
+    """Displays a batch of outputs after every epoch."""
 
     def __init__(self, dataset):
         super().__init__()
@@ -424,7 +400,7 @@ history = model.fit(
 ## Inference
 """
 
-#  Let's check results on more validation samples
+# Let's check results on more validation samples
 predictions = []
 targets = []
 for batch in validation_dataset:
@@ -448,14 +424,11 @@ for i in np.random.randint(0, len(predictions), 5):
 """
 ## Conclusion
 
-
 In practice, you should train for around 50 epochs or more. Each epoch
 takes approximately 5-6mn using a `GeForce RTX 2080 Ti` GPU.
 The model we trained at 50 epochs has a `Word Error Rate (WER) ≈ 16% to 17%`.
 
 Some of the transcriptions around epoch 50:
-
-
 
 **Audio file: LJ017-0009.wav**
 ```
@@ -463,9 +436,7 @@ Some of the transcriptions around epoch 50:
 of james the first
 - Prediction: cer thomas overbery was undoubtedly poisoned by lordrochester in the reign
 of james the first
-
 ```
-
 
 **Audio file: LJ003-0340.wav**
 ```
@@ -481,8 +452,6 @@ only and proberly replace
 thirtytwo
 - Prediction: still no sentence of death was carried out for the offense and in eighteen
 thirtytwo
-
 ```
-
 
 """
