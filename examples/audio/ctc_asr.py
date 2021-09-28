@@ -1,6 +1,6 @@
 """
 Title: Automatic Speech Recognition using CTC
-Author: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dung Huynh](https://www.linkedin.com/in/parkerhuynh/)
+Authors: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dung Huynh](https://www.linkedin.com/in/parkerhuynh/)
 Date created: 2021/09/26
 Last modified: 2021/09/26
 Description: Training a CTC-based model for automatic speech recognition.
