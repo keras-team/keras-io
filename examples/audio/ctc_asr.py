@@ -159,11 +159,11 @@ def encode_single_sample(wav_file, label):
     )
     # 5. We only need the magnitude, which can be derived by applying tf.abs
     spectrogram = tf.abs(spectrogram)
-    spectrogram = tf.math.pow(tf.abs(spectrogram), 0.5)
+    spectrogram = tf.math.pow(spectrogram, 0.5)
     # 6. normalisation
     means = tf.math.reduce_mean(spectrogram, 1, keepdims=True)
     stddevs = tf.math.reduce_std(spectrogram, 1, keepdims=True)
-    spectrogram = (spectrogram - means) / stddevs
+    spectrogram = (spectrogram - means) / (stddevs + 1e-10)
     ###########################################
     ##  Process the label
     ##########################################
