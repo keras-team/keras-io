@@ -469,7 +469,7 @@ of james the first
 
 **Audio file: LJ003-0340.wav**
 ```
-- Target    :  the committee does not seem to have yet understood that newgate could be
+- Target    : the committee does not seem to have yet understood that newgate could be
 only and properly replaced
 - Prediction: the committee does not seem to have yet understood that newgate could be
 only and proberly replace
