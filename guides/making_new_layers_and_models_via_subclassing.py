@@ -180,13 +180,14 @@ y = linear_layer(x)
 
 
 """
-Implementing `build()` separately as shown nicely separates creating weights
+Implementing `build()` separately as shown above nicely separates creating weights
 only once from using weights in every call. However, for some advanced custom
-layers, it becomes impractical to separate the two. Layer implementers are
-allowed to defer weight creation to the first `__call__()` but need to take
-care that later calls use the same weights, and wrap any non-Keras ways of
-creating state in a`tf.init_scope()`.
-""""
+layers, it can become impractical to separate the state creation and computation.
+Layer implementers are allowed to defer weight creation to the first `__call__()`,
+but need to take care that later calls use the same weights. In addition, since
+`__call__()` is likely to be executed for the first time inside a `tf.function`,
+any variable creation that takes place in `__call__()` should be wrapped in a`tf.init_scope`.
+"""
 
 """
 ## Layers are recursively composable
@@ -197,6 +198,7 @@ will start tracking the weights created by the inner layer.
 We recommend creating such sublayers in the `__init__()` method and leave it to
 the first `__call__()` to trigger building their weights.
 """
+
 
 class MLPBlock(keras.layers.Layer):
     def __init__(self):
