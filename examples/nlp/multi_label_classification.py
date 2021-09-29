@@ -68,7 +68,7 @@ total_duplicate_titles = sum(arxiv_data["titles"].duplicated())
 print(f"There are {total_duplicate_titles} duplicate titles.")
 
 """
-Before proceeding further, we drop these entries. 
+Before proceeding further, we drop these entries.
 """
 
 arxiv_data = arxiv_data[~arxiv_data["titles"].duplicated()]
@@ -84,7 +84,7 @@ print(arxiv_data["terms"].nunique())
 As observed above, out of 3,157 unique combinations of `terms`, 2,321 entries have the
 lowest occurrence. To prepare our train, validation, and test sets with
 [stratification](https://en.wikipedia.org/wiki/Stratified_sampling), we need to drop
-these terms. 
+these terms.
 """
 
 # Filtering the rare terms.
@@ -111,8 +111,8 @@ The dataset has a
 So, to have a fair evaluation result, we need to ensure the datasets are sampled with
 stratification. To know more about different strategies to deal with the class imbalance
 problem, you can follow
-[this tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data). 
-For an end-to-end demonstration of classification with imbablanced data, refer to 
+[this tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data).
+For an end-to-end demonstration of classification with imbablanced data, refer to
 [Imbalanced classification: credit card fraud detection](https://keras.io/examples/structured_data/imbalanced_classification/).
 """
 
@@ -139,7 +139,7 @@ print(f"Number of rows in test set: {len(test_df)}")
 
 Now we preprocess our labels using the
 [`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup)
-layer. 
+layer.
 """
 
 terms = tf.ragged.constant(train_df["terms"].values)
@@ -225,7 +225,7 @@ def make_dataset(dataframe, is_train=True):
 
 
 """
-Now we can prepare the `tf.data.Dataset` objects. 
+Now we can prepare the `tf.data.Dataset` objects.
 """
 
 train_dataset = make_dataset(train_df, is_train=True)
@@ -241,7 +241,7 @@ text_batch, label_batch = next(iter(train_dataset))
 for i, text in enumerate(text_batch[:5]):
     label = label_batch[i].numpy()[None, ...]
     print(f"Abstract: {text[0]}")
-    print(f"Label(s): {mlb.inverse_transform(label)[0]}")
+    print(f"Label(s): {invert_multi_hot(label[0])}")
     print(" ")
 
 """
@@ -289,14 +289,14 @@ A batch of raw text will first go through the `TextVectorization` layer and it w
 generate their integer representations. Internally, the `TextVectorization` layer will
 first create bi-grams out of the sequences and then represent them using
 [TF-IDF](https://wikipedia.org/wiki/Tf%E2%80%93idf). The output representations will then
-be passed to the shallow model responsible for text classification. 
+be passed to the shallow model responsible for text classification.
 
 To learn more about other possible configurations with `TextVectorizer`, please consult
-the 
+the
 [official documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 
 **Note**: Setting the `max_tokens` argument to a pre-calculated vocabulary size is
-not a requirement. 
+not a requirement.
 """
 
 """
@@ -313,7 +313,7 @@ def make_model():
         [
             layers.Dense(512, activation="relu"),
             layers.Dense(256, activation="relu"),
-            layers.Dense(len(mlb.classes_), activation="sigmoid"),
+            layers.Dense(lookup.vocabulary_size(), activation="sigmoid"),
         ]  # More on why "sigmoid" has been used here in a moment.
     )
     return shallow_mlp_model
@@ -381,7 +381,7 @@ An important feature of the
 [preprocessing layers provided by Keras](https://keras.io/guides/preprocessing_layers/)
 is that they can be included inside a `tf.keras.Model`. We will export an inference model
 by including the `text_vectorization` layer on top of `shallow_mlp_model`. This will
-allow our inference model to directly operate on raw strings. 
+allow our inference model to directly operate on raw strings.
 
 **Note** that during training it is always preferable to use these preprocessing
 layers as a part of the data input pipeline rather than the model to avoid
@@ -395,7 +395,7 @@ model_for_inference = keras.Sequential([text_vectorizer, shallow_mlp_model])
 # Create a small dataset just for demoing inference.
 inference_dataset = make_dataset(test_df.sample(100), is_train=False)
 text_batch, label_batch = next(iter(inference_dataset))
-predicted_probabilities = shallow_mlp_model.predict(text_batch)
+predicted_probabilities = model_for_inference.predict(text_batch)
 
 # Perform inference.
 for i, text in enumerate(text_batch[:5]):
