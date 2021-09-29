@@ -11,13 +11,14 @@ Description: Implementing a large-scale multi-label text classification model.
 In this example, we will build a multi-label text classifier to predict the subject areas
 of arXiv papers from their abstract bodies. This type of classifier can be useful for
 conference submission portals like [OpenReview](https://openreview.net/). Given a paper
-abstract, the portal could provide suggestions on which areas the underlying paper would
+abstract, the portal could provide suggestions for which areas the paper would
 best belong to.
 
 The dataset was collected using the
 [`arXiv` Python library](https://github.com/lukasschwab/arxiv.py)
 that provides a wrapper around the
-[original arXiv API](http://arxiv.org/help/api/index). To know more, please refer to
+[original arXiv API](http://arxiv.org/help/api/index).
+To learn more about the data collection process, please refer to
 [this notebook](https://github.com/soumik12345/multi-label-text-classification/blob/master/arxiv_scrape.ipynb).
 Additionally, you can also find the dataset on
 [Kaggle](https://www.kaggle.com/spsayakpaul/arxiv-paper-abstracts).
@@ -39,7 +40,7 @@ import pandas as pd
 import numpy as np
 
 """
-## Read data and perform basic EDA
+## Perform exploratory data analysis
 
 In this section, we first load the dataset into a `pandas` dataframe and then perform
 some basic exploratory data analysis (EDA).
@@ -52,23 +53,22 @@ arxiv_data.head()
 
 """
 Our text features are present in the `summaries` column and their corresponding labels
-are in `terms`. As we can notice there are multiple categories associated with a
+are in `terms`. As you can notice, there are multiple categories associated with a
 particular entry.
 """
 
 print(f"There are {len(arxiv_data)} rows in the dataset.")
 
 """
-Real-world data is noisy. One of the most commonly observed such noise is data
+Real-world data is noisy. One of the most commonly observed source of noise is data
 duplication. Here we notice that our initial dataset has got about 13k duplicate entries.
-
 """
 
 total_duplicate_titles = sum(arxiv_data["titles"].duplicated())
 print(f"There are {total_duplicate_titles} duplicate titles.")
 
 """
-Before proceeding further we first drop these entries. 
+Before proceeding further, we drop these entries. 
 """
 
 arxiv_data = arxiv_data[~arxiv_data["titles"].duplicated()]
@@ -81,7 +81,7 @@ print(sum(arxiv_data["terms"].value_counts() == 1))
 print(arxiv_data["terms"].nunique())
 
 """
-As observed above, out of 3157 unique combinations of `terms`, 2321 entries have the
+As observed above, out of 3,157 unique combinations of `terms`, 2,321 entries have the
 lowest occurrence. To prepare our train, validation, and test sets with
 [stratification](https://en.wikipedia.org/wiki/Stratified_sampling), we need to drop
 these terms. 
@@ -92,7 +92,7 @@ arxiv_data_filtered = arxiv_data.groupby("terms").filter(lambda x: len(x) > 1)
 arxiv_data_filtered.shape
 
 """
-## Convert the string labels to list of strings
+## Convert the string labels to lists of strings
 
 The initial labels are represented as raw strings. Here we make them `List[str]` for a
 more compact representation.
@@ -104,7 +104,7 @@ arxiv_data_filtered["terms"] = arxiv_data_filtered["terms"].apply(
 arxiv_data_filtered["terms"].values[:5]
 
 """
-## Stratified splits because of class imbalance
+## Use stratified splits because of class imbalance
 
 The dataset has a
 [class imbalance problem](https://developers.google.com/machine-learning/glossary/#class-imbalanced-dataset).
@@ -181,10 +181,10 @@ train_df["summaries"].apply(lambda x: len(x.split(" "))).describe()
 
 """
 Notice that 50% of the abstracts have a length of 154 (you may get a different number
-based on the split). So, any number near that is a good enough approximate for the
+based on the split). So, any number close to that value is a good enough approximate for the
 maximum sequence length.
 
-Now, we write utilities to prepare our datasets that would go straight to the text
+Now, we implement utilities to prepare our datasets that would go straight to the text
 classifier model.
 """
 
@@ -247,14 +247,13 @@ for i, text in enumerate(text_batch[:5]):
 """
 ## Vectorization
 
-Before we feed the data to our model we need to represent them as numbers. For that
-purpose, we will use the
+Before we feed the data to our model, we need to vectorize it (represent it in a numerical form).
+For that purpose, we will use the
 [`TextVectorization` layer](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 It can operate as a part of your main model so that the model is excluded from the core
-preprocessing logic. This greatly reduces the chances of training and serving skew.
+preprocessing logic. This greatly reduces the chances of training / serving skew during inference.
 
 We first calculate the number of unique words present in the abstracts.
-
 """
 train_df["total_words"] = train_df["summaries"].str.split().str.len()
 vocabulary_size = train_df["total_words"].max()
@@ -286,14 +285,13 @@ test_dataset = test_dataset.map(
 
 
 """
-
 A batch of raw text will first go through the `TextVectorization` layer and it will
 generate their integer representations. Internally, the `TextVectorization` layer will
 first create bi-grams out of the sequences and then represent them using
 [TF-IDF](https://wikipedia.org/wiki/Tf%E2%80%93idf). The output representations will then
 be passed to the shallow model responsible for text classification. 
 
-To know more about other possible configurations with `TextVectorizer`, please consult
+To learn more about other possible configurations with `TextVectorizer`, please consult
 the 
 [official documentation](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 
@@ -324,7 +322,7 @@ def make_model():
 """
 ## Train the model
 
-We will train our model using the binary cross-entropy loss. This is because the labels
+We will train our model using the binary crossentropy loss. This is because the labels
 are not disjoint. For a given abstract, we may have multiple categories. So, we will
 divide the prediction task into a series of multiple binary classification problems. This
 is also why we kept the activation function of the classification layer in our model to
@@ -379,7 +377,7 @@ The trained model gives us an evaluation accuracy of ~87%.
 """
 ## Inference
 
-The beauty of the
+An important feature of the
 [preprocessing layers provided by Keras](https://keras.io/guides/preprocessing_layers/)
 is that they can be included inside a `tf.keras.Model`. We will export an inference model
 by including the `text_vectorization` layer on top of `shallow_mlp_model`. This will
