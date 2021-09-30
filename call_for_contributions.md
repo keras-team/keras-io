@@ -35,14 +35,6 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 [Reference Kaggle competition](https://www.kaggle.com/c/wm-2017-learning-to-rank)
 
----
-
-## Large-scale multi-label text classification
-
-Using word bi-grams + TF-IDF + a small MLP, from raw text strings.
-The tokenization and extraction of TF-IDF ngrams should be done with the `TextVectorization` layer.
-
-The dataset should have at least 50k samples and there should be at least a dozen of labels.
 
 ---
 
