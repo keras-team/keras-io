@@ -2,6 +2,8 @@
 
 This is a constantly-updated list of code examples that we're currently interested in.
 
+If you're not sure whether your idea would make a good code example, please ask us first!
+
 ---
 
 ## Structured data examples featuring Keras Preprocessing Layers (KPL)

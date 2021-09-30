@@ -1,4 +1,3 @@
-
 # Large-scale multi-label text classification
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)<br>
@@ -264,16 +263,6 @@ Number of rows in training set: 32985
 Number of rows in validation set: 1833
 Number of rows in test set: 1833
 
-/usr/local/lib/python3.7/dist-packages/pandas/core/frame.py:4174: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  errors=errors,
-
 ```
 </div>
 ---
@@ -478,17 +467,6 @@ print(f"Vocabulary size: {vocabulary_size}")
 <div class="k-default-codeblock">
 ```
 Vocabulary size: 498
-
-/usr/local/lib/python3.7/dist-packages/ipykernel_launcher.py:1: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame.
-Try using .loc[row_indexer,col_indexer] = value instead
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  """Entry point for launching an IPython kernel.
 
 ```
 </div>
