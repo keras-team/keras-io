@@ -1,18 +1,20 @@
 """
 Title: Metric learning for image similarity search
-Author: [Mat Kelcey](https://twitter.com/mat_kelcey)
-Date created: 2020/06/05
-Last modified: 2020/06/09
+Author: [Owen Vallis](https://twitter.com/owenvallis)
+Date created: 2021/09/30
+Last modified: 2021/09/30
 Description: Example of using similarity metric learning on CIFAR-10 images.
 """
+
 """
 ## Overview
 
-Metric learning aims to train models that can embed inputs into a high-dimensional space
-such that "similar" inputs, as defined by the training scheme, are located close to each
-other. These models once trained can produce embeddings for downstream systems where such
-similarity is useful; examples include as a ranking signal for search or as a form of
-pretrained embedding model for another supervised problem.
+Metric learning aims to train models that can embed inputs into a
+high-dimensional space such that "similar" inputs are pulled closer to each
+other and "dissimilar" inputs are pushed farther apart. Once trained, these
+models can produce embeddings for downstream systems where such similarity is
+useful, e.g., as a ranking signal for search or as a form of pretrained
+embedding model for another supervised problem.
 
 For a more detailed overview of metric learning see:
 
@@ -22,290 +24,380 @@ For a more detailed overview of metric learning see:
 
 """
 ## Setup
+
+This tutorial will use [Tensorflow Similarity](https://github.com/tensorflow/similarity)
+to learn and evaluate the similarity embedding. The tensorflow similarity
+package provides a number of components that:
+
+* Simplify constructing contrastive models.
+* Make it easier to ensure that batches contain pairs of examples.
+* Enable the evaluation of the quality of the embedding.
 """
 
 import random
-import matplotlib.pyplot as plt
+
+from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
 import numpy as np
+
 import tensorflow as tf
-from collections import defaultdict
-from PIL import Image
-from sklearn.metrics import ConfusionMatrixDisplay
-from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras.optimizers import Adam
+
+import tensorflow_similarity as tfsim
+from tensorflow_similarity.layers import MetricEmbedding  # row wise L2 norm
+from tensorflow_similarity.losses import MultiSimilarityLoss  # specialized similarity loss
+from tensorflow_similarity.models import SimilarityModel  # TF model with additional features
+from tensorflow_similarity.samplers import TFDatasetMultiShotMemorySampler  # Get and samples TF dataset catalog
+from tensorflow_similarity.visualization import confusion_matrix  # matching performance
+from tensorflow_similarity.visualization import projector  # allows to interactively explore the samples in 2D space
+from tensorflow_similarity.visualization import viz_neigbors_imgs  # neighbors visualization
+
+
+tfsim.utils.tf_cap_memory()
+
+print('TensorFlow:', tf.__version__)
+print('TensorFlow Similarity', tfsim.__version__)
 
 """
-## Dataset
+# Dataset Samplers
 
-For this example we will be using the
-[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset.
-"""
+We will be using the
+[CIFAR-10](https://www.tensorflow.org/datasets/catalog/cifar10) dataset for this
+tutorial.
 
-from tensorflow.keras.datasets import cifar10
+For a similarity model to learn efficiently, each batch must contains at least 2
+examples of each class.
 
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+To make this easy, tf_similarity offers `Samplers()` that enable you to set both
+the number of classes and the minimum number of examples of each class per
+batch.
 
-x_train = x_train.astype("float32") / 255.0
-y_train = np.squeeze(y_train)
-x_test = x_test.astype("float32") / 255.0
-y_test = np.squeeze(y_test)
+The train and test datasets will be created using the
+`TFDatasetMultiShotMemorySampler()`. This creates a sampler that loads datasets
+from [tensorflow datasets](https://www.tensorflow.org/datasets) and yields
+batches containing a target number of classes and a target number of examples
+per class. Additionally, we can restrict the sampler to only yield the subset of
+classes defined in class_list, enabling us to train on a subset of the classes
+and then test how the embedding generalizes to the unseen classes. This can be
+useful when working on few-shot learning problems.
 
-"""
-To get a sense of the dataset we can visualise a grid of 25 random examples.
+The following cell creates a train_ds sample that:
 
+* Loads the cifar10 dataset from tfds and then takes the
+examples_per_class_per_batch.
+* Normalizes the images by applying the preprocess function to each image.
+* Ensures the sampler restricts the classes to those defined in the class_list.
+* Ensures each batch contains 4 different classes with 16 examples each.
 
-"""
-
-height_width = 32
-
-
-def show_collage(examples):
-    box_size = height_width + 2
-    num_rows, num_cols = examples.shape[:2]
-
-    collage = Image.new(
-        mode="RGB",
-        size=(num_cols * box_size, num_rows * box_size),
-        color=(250, 250, 250),
-    )
-    for row_idx in range(num_rows):
-        for col_idx in range(num_cols):
-            array = (np.array(examples[row_idx, col_idx]) * 255).astype(np.uint8)
-            collage.paste(
-                Image.fromarray(array), (col_idx * box_size, row_idx * box_size)
-            )
-
-    # Double size for visualisation.
-    collage = collage.resize((2 * num_cols * box_size, 2 * num_rows * box_size))
-    return collage
-
-
-# Show a collage of 5x5 random images.
-sample_idxs = np.random.randint(0, 50000, size=(5, 5))
-examples = x_train[sample_idxs]
-show_collage(examples)
-
-"""
-Metric learning provides training data not as explicit `(X, y)` pairs but instead uses
-multiple instances that are related in the way we want to express similarity. In our
-example we will use instances of the same class to represent similarity; a single
-training instance will not be one image, but a pair of images of the same class. When
-referring to the images in this pair we'll use the common metric learning names of the
-`anchor` (a randomly chosen image) and the `positive` (another randomly chosen image of
-the same class).
-
-To facilitate this we need to build a form of lookup that maps from classes to the
-instances of that class. When generating data for training we will sample from this
-lookup.
-"""
-
-class_idx_to_train_idxs = defaultdict(list)
-for y_train_idx, y in enumerate(y_train):
-    class_idx_to_train_idxs[y].append(y_train_idx)
-
-class_idx_to_test_idxs = defaultdict(list)
-for y_test_idx, y in enumerate(y_test):
-    class_idx_to_test_idxs[y].append(y_test_idx)
-
-"""
-For this example we are using the simplest approach to training; a batch will consist of
-`(anchor, positive)` pairs spread across the classes. The goal of learning will be to
-move the anchor and positive pairs closer together and further away from other instances
-in the batch. In this case the batch size will be dictated by the number of classes; for
-CIFAR-10 this is 10.
-"""
-
-num_classes = 10
-
-
-class AnchorPositivePairs(keras.utils.Sequence):
-    def __init__(self, num_batchs):
-        self.num_batchs = num_batchs
-
-    def __len__(self):
-        return self.num_batchs
-
-    def __getitem__(self, _idx):
-        x = np.empty((2, num_classes, height_width, height_width, 3), dtype=np.float32)
-        for class_idx in range(num_classes):
-            examples_for_class = class_idx_to_train_idxs[class_idx]
-            anchor_idx = random.choice(examples_for_class)
-            positive_idx = random.choice(examples_for_class)
-            while positive_idx == anchor_idx:
-                positive_idx = random.choice(examples_for_class)
-            x[0, class_idx] = x_train[anchor_idx]
-            x[1, class_idx] = x_train[positive_idx]
-        return x
-
-
-"""
-We can visualise a batch in another collage. The top row shows randomly chosen anchors
-from the 10 classes, the bottom row shows the corresponding 10 positives.
-"""
-
-examples = next(iter(AnchorPositivePairs(num_batchs=1)))
-
-show_collage(examples)
-
-"""
-## Embedding model
-
-We define a custom model with a `train_step` that first embeds both anchors and positives
-and then uses their pairwise dot products as logits for a softmax.
+We also create a train_ds in the same way, but we limit the total number of
+examples per class to 100 and the examples per class per batch is set to the
+default of 2.
 """
 
 
-class EmbeddingModel(keras.Model):
-    def train_step(self, data):
-        # Note: Workaround for open issue, to be removed.
-        if isinstance(data, tuple):
-            data = data[0]
-        anchors, positives = data[0], data[1]
+def normalize(img, label):
+    "Scale the images to between [0,1]."
+    img = tf.cast(img, dtype='float32') / 255.0
+    return img, label
 
-        with tf.GradientTape() as tape:
-            # Run both anchors and positives through model.
-            anchor_embeddings = self(anchors, training=True)
-            positive_embeddings = self(positives, training=True)
 
-            # Calculate cosine similarity between anchors and positives. As they have
-            # been normalised this is just the pair wise dot products.
-            similarities = tf.einsum(
-                "ae,pe->ap", anchor_embeddings, positive_embeddings
-            )
+examples_per_class_per_batch = 8
+classes_per_batch = 10
+class_list = random.sample(range(10), 10)
 
-            # Since we intend to use these as logits we scale them by a temperature.
-            # This value would normally be chosen as a hyper parameter.
-            temperature = 0.2
-            similarities /= temperature
+print(" Create Training Data ".center(34, '#'))
+train_ds = TFDatasetMultiShotMemorySampler(
+    'cifar10',
+    classes_per_batch=classes_per_batch,
+    splits='train',
+    steps_per_epoch=5000,
+    examples_per_class_per_batch=examples_per_class_per_batch,
+    class_list=class_list,
+    preprocess_fn=normalize)
 
-            # We use these similarities as logits for a softmax. The labels for
-            # this call are just the sequence [0, 1, 2, ..., num_classes] since we
-            # want the main diagonal values, which correspond to the anchor/positive
-            # pairs, to be high. This loss will move embeddings for the
-            # anchor/positive pairs together and move all other pairs apart.
-            sparse_labels = tf.range(num_classes)
-            loss = self.compiled_loss(sparse_labels, similarities)
-
-        # Calculate gradients and apply via optimizer.
-        gradients = tape.gradient(loss, self.trainable_variables)
-        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
-
-        # Update and return metrics (specifically the one for the loss value).
-        self.compiled_metrics.update_state(sparse_labels, similarities)
-        return {m.name: m.result() for m in self.metrics}
-
+print("\n" + " Create Test Data ".center(34, '#'))
+test_ds = TFDatasetMultiShotMemorySampler('cifar10',
+                                          classes_per_batch=classes_per_batch,
+                                          splits='test',
+                                          total_examples_per_class=100,
+                                          preprocess_fn=normalize)
 
 """
-Next we describe the architecture that maps from an image to an embedding. This model
-simply consists of a sequence of 2d convolutions followed by global pooling with a final
-linear projection to an embedding space. As is common in metric learning we normalise the
-embeddings so that we can use simple dot products to measure similarity. For simplicity
-this model is intentionally small.
+## Visualize the dataset
+
+The samplers will shuffle the dataset, so we can get a sense of the dataset by
+plotting the first 25 images.
+
+The samplers provide a `get_slice(begin, size)` method that allows us to easily
+select a block of samples.
 """
 
-inputs = layers.Input(shape=(height_width, height_width, 3))
-x = layers.Conv2D(filters=32, kernel_size=3, strides=2, activation="relu")(inputs)
-x = layers.Conv2D(filters=64, kernel_size=3, strides=2, activation="relu")(x)
-x = layers.Conv2D(filters=128, kernel_size=3, strides=2, activation="relu")(x)
-x = layers.GlobalAveragePooling2D()(x)
-embeddings = layers.Dense(units=8, activation=None)(x)
-embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
+num_cols = num_rows = 5
+# Get the first 25 examples.
+X, y = train_ds.get_slice(begin=0, size=num_cols * num_rows)
 
-model = EmbeddingModel(inputs, embeddings)
+fig = plt.figure(figsize=(6., 6.))
+grid = ImageGrid(fig, 111, nrows_ncols=(num_cols, num_rows), axes_pad=0.1)
 
-"""
-Finally we run the training. On a Google Colab GPU instance this takes about a minute.
-"""
-
-model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-)
-
-history = model.fit(AnchorPositivePairs(num_batchs=1000), epochs=20)
-
-plt.plot(history.history["loss"])
-plt.show()
+for ax, im, label in zip(grid, X, y):
+    ax.imshow(im)
+    ax.axis('off')
 
 """
-## Testing
+## Batch Sizes
 
-We can review the quality of this model by applying it to the test set and considering
-near neighbours in the embedding space.
-
-First we embed the test set and calculate all near neighbours. Recall that since the
-embeddings are unit length we can calculate cosine similarity via dot products.
+Additionally, we can use the `generate_batch()` method to yield a batch and
+check that it contains the expected number of classes and examples per class.
 """
 
-near_neighbours_per_example = 10
-
-embeddings = model.predict(x_test)
-gram_matrix = np.einsum("ae,be->ab", embeddings, embeddings)
-near_neighbours = np.argsort(gram_matrix.T)[:, -(near_neighbours_per_example + 1) :]
-
-"""
-As a visual check of these embeddings we can build a collage of the near neighbours for 5
-random examples. The first column of the image below is a randomly selected image, the
-following 10 columns show the nearest neighbours in order of similarity.
-"""
-
-num_collage_examples = 5
-
-examples = np.empty(
-    (
-        num_collage_examples,
-        near_neighbours_per_example + 1,
-        height_width,
-        height_width,
-        3,
-    ),
-    dtype=np.float32,
-)
-for row_idx in range(num_collage_examples):
-    examples[row_idx, 0] = x_test[row_idx]
-    anchor_near_neighbours = reversed(near_neighbours[row_idx][:-1])
-    for col_idx, nn_idx in enumerate(anchor_near_neighbours):
-        examples[row_idx, col_idx + 1] = x_test[nn_idx]
-
-show_collage(examples)
+x_batch, y_batch = train_ds.generate_batch(0)
+unique_class_ids, _, class_counts = tf.unique_with_counts(y_batch)
+print(f'The batch contains {len(x_batch)} examples in total\n')
+for cid, cc in zip(unique_class_ids, class_counts):
+    print(f'Class ID {cid} has {cc} examples in the batch')
 
 """
-We can also get a quantified view of the performance by considering the correctness of
-near neighbours in terms of a confusion matrix.
+# Embedding Model
 
-Let us sample 10 examples from each of the 10 classes and consider their near neighbours
-as a form of prediction; that is, does the example and its near neighbours share the same
-class?
+Next we define a `SimilarityModel()` using the functional Keras API. The model
+is a standard ConvNet with the addition of a `MetricEmbedding()` layer that
+applies L2 normalization. The metric embedding layer is helpful when using
+`Cosine` distance as we only care about the angle between the vectors.
 
-We observe that each animal class does generally well, and is confused the most with the
-other animal classes. The vehicle classes follow the same pattern.
+Additionally, the `SimilarityModel()` provides a number of helper methods for:
+
+* indexing embedded examples
+* performing example lookups
+* evaluating the classification
+* evaluating the quality of the embedding space
 """
 
-confusion_matrix = np.zeros((num_classes, num_classes))
+embedding_size = 256
 
-# For each class.
-for class_idx in range(num_classes):
-    # Consider 10 examples.
-    example_idxs = class_idx_to_test_idxs[class_idx][:10]
-    for y_test_idx in example_idxs:
-        # And count the classes of its near neighbours.
-        for nn_idx in near_neighbours[y_test_idx][:-1]:
-            nn_class_idx = y_test[nn_idx]
-            confusion_matrix[class_idx, nn_class_idx] += 1
+inputs = layers.Input((32, 32, 3))
+x = inputs
+x = layers.Conv2D(64, 3, activation='relu')(x)
+x = layers.BatchNormalization()(x)
+x = layers.Conv2D(128, 3, activation='relu')(x)
+x = layers.BatchNormalization()(x)
+x = layers.MaxPool2D((4, 4))(x)
+x = layers.Conv2D(256, 3, activation='relu')(x)
+x = layers.BatchNormalization()(x)
+x = layers.Conv2D(256, 3, activation='relu')(x)
+x = layers.GlobalMaxPool2D()(x)
+outputs = MetricEmbedding(embedding_size)(x)
 
-# Display a confusion matrix.
+# building model
+model = SimilarityModel(inputs, outputs)
+model.summary()
+
+"""
+## Similarity Loss
+
+The similarity loss expects batches containing at least 2 examples of each
+class, from which it computes the loss over the pairwise positive and negative
+distances. Here we are using `MultiSimilarityLoss()`, one of several losses in
+Tensorflow Similarity. This loss attempts to use all informative pairs in the
+batch, taking into account the self-similarity, positive-similarity, and the
+negative-similarity.
+
+For more information on the MS loss see
+[Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](https://arxiv.org/pdf/1904.06627.pdf)
+"""
+
+epochs = 10
+LR = 0.002
+val_steps = 50
+
+# init similarity loss
+loss = MultiSimilarityLoss()
+
+# compiling and training
+model.compile(optimizer=Adam(LR), loss=loss, steps_per_execution=10)
+history = model.fit(train_ds,
+                    epochs=epochs,
+                    validation_data=test_ds,
+                    validation_steps=val_steps)
+
+"""
+# Indexing
+
+Now that we have trained our model, we can create an index of examples. Here we
+batch index the first 200 test examples by passing the x and y to the index
+along with storing the image in the data parameter. The x_index values are
+embedded and then added to the index to make them searchable. The y_index and
+data parameters are optional but allow the user to associate metadata with the
+embedded example.
+"""
+
+x_index, y_index = test_ds.get_slice(begin=0, size=200)
+model.reset_index()
+model.index(x_index, y_index, data=x_index)
+
+"""
+# Calibration
+
+Once the index is built, we can calibrate a distance threshold using a matching
+strategy and a calibration metric.
+
+Here we are searching for the optimal F1 score while using K=1 as our
+classifier. All matches at or below the calibrated threshold distance will be
+labeled as a Positive match between the query example and the label associated
+with the match result, while all matches above the threshold distance will be
+labeled as a Negative match.
+
+Additionally, we pass in extra metrics to compute as well. All values in the
+output are computed at the calibrated threshold.
+
+Finally, `model.calibrate()` returns a `CalibrationResults` object containing:
+
+* cutpoints: A Python Dict mapping the cutpoint name to a Dict containing the
+`ClassificationMetric` values associated with a particular distance threshold,
+e.g., 'optimal' : {'acc': 0.90, 'f1': 0.92}.
+* thresholds: A Python Dict mapping `ClassificationMetric` names to a list
+containing the metric's value computed at each of the distance thresholds, e.g.,
+{'f1': [0.99, 0.80], 'distance': [0.0, 1.0]}.
+"""
+
+x_train, y_train = train_ds.get_slice(begin=0, size=1000)
+calibration = model.calibrate(
+    x_train,
+    y_train,
+    calibration_metric='f1',
+    matcher='match_nearest',
+    extra_metrics=['precision', 'recall', 'binary_accuracy'],
+    verbose=1)
+
+"""
+# Visualization
+
+It may be difficult to get a sense of the model quality from the metrics alone.
+A complementary approach is to manually inspect a set of query results to get a
+feel for the match quality.
+
+Here we take 10 test examples and plot them with their 5 nearest neighbors and
+the distances to the query example. Looking at the results, we see that while
+they are imperfect they still represent meaningfully similar images, and that
+the model is able to find similar images irrespective of their pose or image
+illumination.
+
+We can also see that the model is very confident with certain images, resulting
+in very small distances between the query and the neighbors. Conversely, we see
+more mistakes in the class labels as the distances become larger. This is one of
+the reasons why calibration is critical for matching applications.
+"""
+
+num_neighbors = 5
 labels = [
-    "Airplane",
-    "Automobile",
-    "Bird",
-    "Cat",
-    "Deer",
-    "Dog",
-    "Frog",
-    "Horse",
-    "Ship",
-    "Truck",
+    "Airplane", "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse",
+    "Ship", "Truck"
 ]
-disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
-disp.plot(include_values=True, cmap="viridis", ax=None, xticks_rotation="vertical")
+
+x_display, y_display = test_ds.get_slice(begin=200, size=10)
+# lookup nearest neighbors in the index
+nns = model.lookup(x_display, k=num_neighbors)
+
+# display
+for idx in np.argsort(y_display):
+    viz_neigbors_imgs(x_display[idx],
+                      y_display[idx],
+                      nns[idx],
+                      class_mapping=labels,
+                      fig_size=(16, 2))
+
+"""
+# Metrics
+
+We can also plot the extra metrics contained in the `CalibrationResults` to get
+a sense of the matching performance as the distance threshold increases.
+
+The following plots show the Precision, Recall, and F1 Score. We can see that
+the matching precision degrades as the distance increases, but that the
+percentage of the queries that we accept as positive matches (recall) grows
+faster up to the calibrated distance threshold.
+"""
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+x = calibration.thresholds['distance']
+
+ax1.plot(x, calibration.thresholds['precision'], label='precision')
+ax1.plot(x, calibration.thresholds['recall'], label='recall')
+ax1.plot(x, calibration.thresholds['f1'], label='f1 score')
+ax1.legend()
+ax1.set_title("Metric evolution as distance increase")
+ax1.set_xlabel('Distance')
+ax1.set_ylim((-0.05, 1.05))
+
+ax2.plot(calibration.thresholds['recall'], calibration.thresholds['precision'])
+ax2.set_title("Precision recall curve")
+ax2.set_xlabel('Recall')
+ax2.set_ylabel('Precision')
+ax2.set_ylim((-0.05, 1.05))
 plt.show()
+
+"""
+We can also take 100 examples for each class and plot the confusion matrix for
+each example and their nearest match. We also add an "extra" 10th class to
+represent the matches above the calibrated distance threshold.
+
+We can see that most of the errors are between the animal classes with an
+interesting number of confusions between Airplane and Bird. Additionally, we see
+that only a few of the 100 examples for each class returned matches outside of
+the calibrated distance threshold.
+"""
+
+cutpoint = 'optimal'
+
+# This yields 100 examples for each class.
+# We defined this when we created the test_ds sampler.
+x_confusion, y_confusion = test_ds.get_slice(0, -1)
+
+matches = model.match(x_confusion, cutpoint=cutpoint, no_match_label=10)
+confusion_matrix(matches,
+                 y_confusion,
+                 labels=labels,
+                 title='Confusion matrix for cutpoint:%s' % cutpoint,
+                 normalize=False)
+
+"""
+## No Match
+
+We can plot the examples outside of the calibrated threshold to see which images
+are not matching any indexed examples.
+
+This may provide insight into what other examples may need to be indexed or
+surface anomalous examples within the class.
+"""
+
+idx_no_match = np.where(np.array(matches) == 10)
+no_match_queries = x_confusion[idx_no_match]
+if len(no_match_queries):
+    plt.imshow(no_match_queries[0])
+else:
+    print("All queries have a match below the distance threshold.")
+
+"""
+# Visualize clusters
+
+One of the best ways to quickly get a sense of the quality of how the model is
+doing and understand it's short comings is to project the embedding into a 2D
+space.
+
+This allows us to inspect clusters of images and understand which classes are
+entangled.
+"""
+
+num_examples_to_clusters = 720
+thumb_size = 96
+plot_size = 800
+class_mapping = {k: v for k, v in zip(range(10), labels)}
+vx, vy = test_ds.get_slice(0, num_examples_to_clusters)
+
+# Uncomment to run the interactive projector.
+# projector(model.predict(vx),
+#           labels=vy,
+#           images=vx,
+#           class_mapping=class_mapping,
+#           image_size=thumb_size,
+#           plot_size=plot_size)
