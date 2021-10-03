@@ -2,53 +2,54 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/09/09
+Last modified: 2021/10/03
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
-Suppose there is a locked door and several key chains with each chain containing few keys.
-The goal here is to be able to know which key chain (in general) and key (in specific) can
-open up the locked door.
-
-In order to solve this task, we shall find the key that can opens the door. If the key was
-correctly found, then the entire key chain will be classified as positive. If the key chain
-doesn't contain any compatible key, it will be classified as negative.
-
-In the context of MIL, each of the key chains are known as **bags**, in which each can be
-labelled as positive or negative. Each key within the key chains are known as **instances**.
+## Multiple instance learning
+As the name suggests, this supervised learning algorithm learns from multiple instances.
+Usually for supervised learning  algorithms, the learner receives labels for a set of
+instances. In case of MIL, the learner receives labels for a set of bags in which each
+bags contains a set of instances. The bag is labelled positive if it contains atleast
+one positive instance and negative if it does not contain any.
 
 ## Introduction
+It is often assumed in image classification tasks that each instance (image) clearly
+represents a class label. However, in many real-world applications multiple instances
+are recognized and only a broad statement is assigned. Such a problem where there is a
+lack of labelling individual data points could be referred to as weakly labelled data
+problem. The problem is widely spread in medical imaging (e.g. computational pathology,
+mammography or CT lung screening) where an entire image is represented by a single class
+label (benign/malignant) or a region of interest could be given. In this context, the
+image(s) will be divided and the subimages will form the bag of instances.
 
-Usually for image classification tasks using **supervised learning**  algorithms, the learner
-receives a single label for a single image. In case of **MIL**, the learner receives a single
-label for a set of images.
+Therefore, the goals are to:
 
-The motivation behind this model is to:
-
-- know which instance (in this case: image) has contributed the most to the class label
+1. learn a model to predict class label of a bag of instances.
+2. know the score of the instances within the bag which resulted to the class label
 prediction.
-- leverage from weakly labelled samples.
 
-### MIL Classifier: Attention-based approach
+The second goal is of high interest because it will incorporate interpretability to
+the MIL approach. Such interpretability is deduced by using attention scores or weights
+as it will not merely predict the final output class but the instance scores that led
+to those classification results.
 
-The MIL classifier is modelled using neural networks. The attention mechanism as MIL pooling:
+## Implementation
+
+The MIL classifier is modelled using neural networks. The attention mechanism as MIL
+pooling:
 
 - Trainable MIL operator.
 - Interpretable results using attention scores.
 
-Using attention scores or weights could be very useful for results interpretability as it will
-not merely predict the final output class but the instance scores that led to those
-classification results.
+In the paper, both [histopathology](https://www.kaggle.com/paultimothymooney/breast-histopathology-images)
+and MNIST data were experimented with. In this example, we will experiment with MNIST
+data which can be simply called by `keras.datasets.mnist`.
 
-Another reason why this method could be helpful is: weakly labelled data. Since labelling
-individual samples is often performed manually, it is considered to be a time consuming task.
-This task is also prone to errors (especially in computer vision problems).
-
-Therefore, instead of having individual labelled data points or instances, this algorithm
-receives a single label for each bag of instances. The bag is labelled positive if it contains
-atleast one positive instance and negative if it does not contain any.
-
-The attention mechanism provides insight into the contribution of each instance to the bag label.
+We will begin by creating the datasets (both, train and validation sets) and visualizing
+a sample of the dataset. Then we will build and train the model. Finally we will evaluate,
+check and visualize the classification results as well as the attention scores of the
+instances.
 
 Besides the implementation of this mechanism, some **regularization** techniques,
 **ensemble averaging** (for stability) and dealing with **imbalanced data** will be covered.
@@ -75,10 +76,12 @@ plt.style.use("ggplot")
 
 """
 ## Create dataset
-`mnist` and `fashion_mnist` datasets have been tested using this implementation. In this
-example, I will be using `mnist`.
-
 At first we will set up the configurations and then prepare the datasets.
+
+We will create a set of bags and assign their labels accordingly. This is performed by choosing
+a positive instance and forming associated bags of instances. If atleast one positive instance
+is available in a bag, the bag is considered as a positive bag. If it does not contain any
+positive instance, the bag will be considered as negative.
 
 ### Configurations
 
@@ -198,7 +201,7 @@ by hyperbolic tangent non-linearity.
 """
 
 
-class AttentionLayer(layers.Layer):
+class MILAttentionLayer(layers.Layer):
     def __init__(
         self,
         l_dim,
@@ -223,7 +226,7 @@ class AttentionLayer(layers.Layer):
         self.w_regularizer = self.kernel_regularizer
         self.u_regularizer = self.kernel_regularizer
 
-        super(AttentionLayer, self).__init__(**kwargs)
+        super(MILAttentionLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
         if not isinstance(input_shape, list):
@@ -376,7 +379,7 @@ def create_model(instance_shape):
     inputs, embeddings = dense_layers()
 
     # Invoke the attention layer.
-    alpha = AttentionLayer(
+    alpha = MILAttentionLayer(
         l_dim=256,
         output_dim=1,
         kernel_regularizer=keras.regularizers.l2(0.01),
