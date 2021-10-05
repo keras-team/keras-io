@@ -407,7 +407,7 @@ that of the abundant one.
 """
 
 
-def calculate_class_weights(labels):
+def compute_class_weights(labels):
 
     # Count number of postive and negative bags.
     negative_count = len(np.where(labels == 0)[0])
