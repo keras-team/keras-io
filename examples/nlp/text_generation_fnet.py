@@ -1,8 +1,8 @@
 """
 Title: Text Generation using FNet
 Author: [Darshan Deshpande](https://twitter.com/getdarshan)
-Date created: 2021/09/30
-Last modified: 2021/09/30
+Date created: 2021/10/05
+Last modified: 2021/10/05
 Description: FNet transformer for text generation in Keras.
 """
 """
@@ -30,18 +30,17 @@ Dialog corpus to show the applicability of this model to text generation.
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.preprocessing import text
-from tensorflow.keras.preprocessing import sequence
 import os
+import re
 
 # Defining hyperparameters
 
+VOCAB_SIZE = 8192
 MAX_SAMPLES = 50000
 BUFFER_SIZE = 20000
 MAX_LENGTH = 40
-
 EMBED_DIM = 256
-LATENT_DIM = 2048
+LATENT_DIM = 512
 NUM_HEADS = 8
 BATCH_SIZE = 64
 
@@ -61,7 +60,6 @@ path_to_zip = keras.utils.get_file(
 path_to_dataset = os.path.join(
     os.path.dirname(path_to_zip), "cornell movie-dialogs corpus"
 )
-
 path_to_movie_lines = os.path.join(path_to_dataset, "movie_lines.txt")
 path_to_movie_conversations = os.path.join(path_to_dataset, "movie_conversations.txt")
 
@@ -92,64 +90,62 @@ def load_conversations():
 
 questions, answers = load_conversations()
 
-"""
-### Creating and fitting the tokenizer
-"""
+# Splitting training and validation sets
 
-tokenizer = text.Tokenizer(
-    2 ** 13, oov_token="OOV", filters='!"#$%&*+,-/<=>?@[\\]^_`{|}~\t\n'
-)
-tokenizer.fit_on_texts(questions + answers)
-
-# Defining separate start and end tokens
-START_TOKEN, END_TOKEN = [tokenizer.num_words], [tokenizer.num_words + 1]
-
-# The final vocabulary size is the original size plus the start and end tokens
-VOCAB_SIZE = tokenizer.num_words + 2
+train_dataset = tf.data.Dataset.from_tensor_slices((questions[:40000], answers[:40000]))
+val_dataset = tf.data.Dataset.from_tensor_slices((questions[40000:], answers[40000:]))
 
 """
-### Tokenizing, filtering and padding sentences
+### Preprocessing and Tokenization
+
+
 """
 
 
-def tokenize_and_filter(inputs, outputs):
-    tokenized_inputs, tokenized_outputs = [], []
-
-    # Converting the loaded text to integer sequences
-    sentence1 = tokenizer.texts_to_sequences(inputs)
-    sentence2 = tokenizer.texts_to_sequences(outputs)
-
-    for (s1, s2) in zip(sentence1, sentence2):
-        # Taking only those sentences that are less than the maximum allowed length
-        if len(s1) <= MAX_LENGTH and len(s2) <= MAX_LENGTH:
-            # Adding the start and end tokens
-            tokenized_inputs.append(START_TOKEN + s1 + END_TOKEN)
-            tokenized_outputs.append(START_TOKEN + s2 + END_TOKEN)
-
-    # Padding sequences
-    tokenized_inputs = sequence.pad_sequences(
-        tokenized_inputs, maxlen=MAX_LENGTH, padding="post"
-    )
-    tokenized_outputs = sequence.pad_sequences(
-        tokenized_outputs, maxlen=MAX_LENGTH + 1, padding="post"
-    )
-
-    return tokenized_inputs, tokenized_outputs
+def preprocess_text(sentence):
+    sentence = tf.strings.lower(sentence)
+    sentence = tf.strings.regex_replace(sentence, r"([?.!,])", r" \1 ")
+    sentence = tf.strings.regex_replace(sentence, r"\s\s+", " ")
+    sentence = tf.strings.regex_replace(sentence, r"[^a-z?.!,]+", " ")
+    sentence = tf.strings.strip(sentence)
+    sentence = tf.strings.join(["[start]", sentence, "[end]"], separator=" ")
+    return sentence
 
 
-questions, answers = tokenize_and_filter(questions, answers)
-
-
-# Creating a tf.data.Dataset
-dataset = tf.data.Dataset.from_tensor_slices(
-    (
-        {"encoder_inputs": questions, "decoder_inputs": answers[:, :-1]},
-        {"outputs": answers[:, 1:]},
-    )
+vectorizer = layers.TextVectorization(
+    VOCAB_SIZE,
+    standardize=preprocess_text,
+    output_mode="int",
+    output_sequence_length=MAX_LENGTH,
 )
 
-dataset = dataset.cache().shuffle(BUFFER_SIZE)
-dataset = dataset.batch(BATCH_SIZE).prefetch(tf.data.experimental.AUTOTUNE)
+vectorizer.adapt(tf.data.Dataset.from_tensor_slices((questions + answers)).batch(128))
+
+"""
+### Tokenizing and padding sentences using `TextVectorization`
+"""
+
+
+def vectorize_text(inputs, outputs):
+    inputs, outputs = vectorizer(inputs), vectorizer(outputs)
+    # One extra padding token to the right to match the output shape
+    outputs = tf.pad(inputs, [[0, 1]])
+    return (
+        {"encoder_inputs": inputs, "decoder_inputs": outputs[:-1]},
+        {"outputs": outputs[1:]},
+    )
+
+
+train_dataset = train_dataset.map(vectorize_text, num_parallel_calls=tf.data.AUTOTUNE)
+val_dataset = val_dataset.map(vectorize_text, num_parallel_calls=tf.data.AUTOTUNE)
+
+train_dataset = (
+    train_dataset.cache()
+    .shuffle(BUFFER_SIZE)
+    .batch(BATCH_SIZE)
+    .prefetch(tf.data.AUTOTUNE)
+)
+val_dataset = val_dataset.cache().batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
 """
 ## Creating the FNet Encoder
@@ -167,9 +163,9 @@ the frequency domain.
 """
 
 
-class TransformerEncoder(layers.Layer):
+class FNetEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
+        super(FNetEncoder, self).__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.dense_proj = keras.Sequential(
@@ -193,7 +189,9 @@ class TransformerEncoder(layers.Layer):
 ## Creating the Decoder
 The decoder architecture remains the same as the one proposed by (Vaswani et al., 2017)
 in the original transformer architecture, consisting of an embedding, positional
-encoding, two masked multiheaded attention layers and finally the dense output layers
+encoding, two masked multiheaded attention layers and finally the dense output layers.
+The architecture that follows is taken from [Deep Learning with
+Python](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
 
 
 """
@@ -223,9 +221,9 @@ class PositionalEmbedding(layers.Layer):
         return tf.math.not_equal(inputs, 0)
 
 
-class TransformerDecoder(layers.Layer):
+class FNetDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(TransformerDecoder, self).__init__(**kwargs)
+        super(FNetDecoder, self).__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads
@@ -279,44 +277,33 @@ class TransformerDecoder(layers.Layer):
         return tf.tile(mask, mult)
 
 
-"""
-## Defining the full model
-"""
-
-
 def create_model():
-    encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
+    encoder_inputs = keras.Input(shape=(None,), dtype="int32", name="encoder_inputs")
     x = PositionalEmbedding(MAX_LENGTH, VOCAB_SIZE, EMBED_DIM)(encoder_inputs)
-    encoder_outputs = TransformerEncoder(EMBED_DIM, LATENT_DIM)(x)
+    encoder_outputs = FNetEncoder(EMBED_DIM, LATENT_DIM)(x)
     encoder = keras.Model(encoder_inputs, encoder_outputs)
-
-    decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
+    decoder_inputs = keras.Input(shape=(None,), dtype="int32", name="decoder_inputs")
     encoded_seq_inputs = keras.Input(
         shape=(None, EMBED_DIM), name="decoder_state_inputs"
     )
     x = PositionalEmbedding(MAX_LENGTH, VOCAB_SIZE, EMBED_DIM)(decoder_inputs)
-    x = TransformerDecoder(EMBED_DIM, LATENT_DIM, NUM_HEADS)(x, encoded_seq_inputs)
+    x = FNetDecoder(EMBED_DIM, LATENT_DIM, NUM_HEADS)(x, encoded_seq_inputs)
     x = layers.Dropout(0.5)(x)
     decoder_outputs = layers.Dense(VOCAB_SIZE, activation="softmax")(x)
     decoder = keras.Model(
         [decoder_inputs, encoded_seq_inputs], decoder_outputs, name="outputs"
     )
-
     decoder_outputs = decoder([decoder_inputs, encoder_outputs])
-    transformer = keras.Model(
-        [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer"
-    )
-    return transformer
+    fnet = keras.Model([encoder_inputs, decoder_inputs], decoder_outputs, name="fnet")
+    return fnet
 
 
 """
 ## Creating and Training the model
 """
 
-transformer = create_model()
-transformer.compile(
-    "adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
-)
+fnet = create_model()
+fnet.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
 """
 The default `epochs` parameter is set to a single epoch but the model will take around
@@ -325,49 +312,47 @@ is not a good measure for this task, we will use it just to get a hint of the im
 of the network.
 """
 
-transformer.fit(dataset, epochs=1)
+fnet.fit(train_dataset, epochs=1, validation_data=val_dataset)
 
 """
 ## Performing inference
 """
 
+VOCAB = vectorizer.get_vocabulary()
+
 
 def decode_sentence(input_sentence):
     # Mapping the input sentence to tokens and adding start and end tokens
-    tokenized_input_sentence = tf.expand_dims(
-        START_TOKEN + tokenizer.texts_to_sequences([input_sentence])[0] + END_TOKEN,
-        axis=0,
+    tokenized_input_sentence = vectorizer(
+        tf.constant("[start] " + preprocess_text(input_sentence) + " [end]")
     )
-    # Padding the sequence to MAX_LENGTH
-    tokenized_input_sentence = sequence.pad_sequences(
-        tokenized_input_sentence, MAX_LENGTH, padding="post"
-    )
-
     # Initializing the initial sentence consisting of only the start token.
-    tokenized_target_sentence = tf.expand_dims(START_TOKEN, 0)
+    tokenized_target_sentence = tf.expand_dims(VOCAB.index("[start]"), 0)
     decoded_sentence = ""
 
     for i in range(MAX_LENGTH):
         # Get the predictions
-        predictions = transformer(
-            [
-                tokenized_input_sentence,
-                sequence.pad_sequences(
-                    tokenized_target_sentence, MAX_LENGTH, padding="post"
+        predictions = fnet.predict(
+            {
+                "encoder_inputs": tf.expand_dims(tokenized_input_sentence, 0),
+                "decoder_inputs": tf.expand_dims(
+                    tf.pad(
+                        tokenized_target_sentence,
+                        [[0, MAX_LENGTH - tf.shape(tokenized_target_sentence)[0]]],
+                    ),
+                    0,
                 ),
-            ]
+            }
         )
         # Calculating the token with maximum probability and getting the corresponding word
         sampled_token_index = tf.argmax(predictions[0, i, :])
-        sampled_token = tokenizer.index_word.get(sampled_token_index.numpy())
-
+        sampled_token = VOCAB[sampled_token_index.numpy()]
         # If sampled token is the end token then stop generating and return the sentence
-        if tf.equal(sampled_token_index, END_TOKEN[0]):
+        if tf.equal(sampled_token_index, VOCAB.index("[end]")):
             break
-
-        decoded_sentence += " " + sampled_token
+        decoded_sentence += sampled_token + " "
         tokenized_target_sentence = tf.concat(
-            [tokenized_target_sentence, [[sampled_token_index]]], 1
+            [tokenized_target_sentence, [sampled_token_index]], 0
         )
 
     return decoded_sentence
@@ -381,13 +366,13 @@ decode_sentence("Where have you been all this time?")
 This example successfully shows how to train and perform inference using the FNet model.
 For getting insight into the architecture or for further reading, you can refer to:
 
-1. [FNet: Mixing Tokens with Fourier Transforms](https://arxiv.org/pdf/2105.03824v3.pdf)
+1. [FNet: Mixing Tokens with Fourier Transforms](https://arxiv.org/abs/2105.03824v3)
 (Lee-Thorp et al., 2021)
-2. [Attention Is All You Need](https://arxiv.org/pdf/1706.03762v5.pdf) (Vaswani et al.,
+2. [Attention Is All You Need](https://arxiv.org/abs/1706.03762v5) (Vaswani et al.,
 2017)
 
 Thanks to François Chollet for his Keras example on [English-to-Spanish translation with
 a sequence-to-sequence
 Transformer](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
-from which a major part of the decoder and transformer implementation was extracted.
+from which the decoder implementation was extracted.
 """
