@@ -122,6 +122,11 @@ classes_per_batch = 10
 # upper limit of the batch size is restricted by the memory.
 examples_per_class_per_batch = 8
 
+print(
+    "Batch size is: "
+    f"{min(classes_per_batch, num_known_classes) * examples_per_class_per_batch}"
+)
+
 print(" Create Training Data ".center(34, "#"))
 train_ds = TFDatasetMultiShotMemorySampler(
     "cifar10",
