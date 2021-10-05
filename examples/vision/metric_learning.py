@@ -1,5 +1,5 @@
 """
-Title: Metric learning for image similarity search
+Title: Metric learning for image similarity search using Tensorflow similarity
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
 Last modified: 2021/09/30
@@ -8,6 +8,10 @@ Description: Example of using similarity metric learning on CIFAR-10 images.
 
 """
 ## Overview
+
+This example is based on the 'Metric learning for image similarity search'
+vision example. We aim to use the same data set but implement the model using
+[Tensorflow Similarity](https://github.com/tensorflow/similarity).
 
 Metric learning aims to train models that can embed inputs into a
 high-dimensional space such that "similar" inputs are pulled closer to each
@@ -29,7 +33,7 @@ This tutorial will use [Tensorflow Similarity](https://github.com/tensorflow/sim
 to learn and evaluate the similarity embedding. The tensorflow similarity
 package provides a number of components that:
 
-* Simplify constructing contrastive models.
+* Make training contrastive models simple and fast.
 * Make it easier to ensure that batches contain pairs of examples.
 * Enable the evaluation of the quality of the embedding.
 """
@@ -46,21 +50,31 @@ from tensorflow.keras.optimizers import Adam
 
 import tensorflow_similarity as tfsim
 from tensorflow_similarity.layers import MetricEmbedding  # row wise L2 norm
-from tensorflow_similarity.losses import MultiSimilarityLoss  # specialized similarity loss
-from tensorflow_similarity.models import SimilarityModel  # TF model with additional features
-from tensorflow_similarity.samplers import TFDatasetMultiShotMemorySampler  # Get and samples TF dataset catalog
+from tensorflow_similarity.losses import (
+    MultiSimilarityLoss,
+)  # specialized similarity loss
+from tensorflow_similarity.models import (
+    SimilarityModel,
+)  # TF model with additional features
+from tensorflow_similarity.samplers import (
+    TFDatasetMultiShotMemorySampler,
+)  # Get and samples TF dataset catalog
 from tensorflow_similarity.visualization import confusion_matrix  # matching performance
-from tensorflow_similarity.visualization import projector  # allows to interactively explore the samples in 2D space
-from tensorflow_similarity.visualization import viz_neigbors_imgs  # neighbors visualization
+from tensorflow_similarity.visualization import (
+    projector,
+)  # allows to interactively explore the samples in 2D space
+from tensorflow_similarity.visualization import (
+    viz_neigbors_imgs,
+)  # neighbors visualization
 
 
 tfsim.utils.tf_cap_memory()
 
-print('TensorFlow:', tf.__version__)
-print('TensorFlow Similarity', tfsim.__version__)
+print("TensorFlow:", tf.__version__)
+print("TensorFlow Similarity", tfsim.__version__)
 
 """
-# Dataset Samplers
+## Dataset Samplers
 
 We will be using the
 [CIFAR-10](https://www.tensorflow.org/datasets/catalog/cifar10) dataset for this
@@ -84,44 +98,48 @@ useful when working on few-shot learning problems.
 
 The following cell creates a train_ds sample that:
 
-* Loads the cifar10 dataset from tfds and then takes the
-examples_per_class_per_batch.
+* Loads the cifar10 dataset from tfds and then takes the examples_per_class_per_batch.
 * Normalizes the images by applying the preprocess function to each image.
 * Ensures the sampler restricts the classes to those defined in the class_list.
 * Ensures each batch contains 4 different classes with 16 examples each.
 
-We also create a train_ds in the same way, but we limit the total number of
+We also create a test_ds in the same way, but we limit the total number of
 examples per class to 100 and the examples per class per batch is set to the
 default of 2.
 """
+# This determines the number of classes used during training.
+# Here we are using all the classes.
+num_known_classes = 10
+class_list = random.sample(population=range(10), k=num_known_classes)
 
-
-def normalize(img, label):
-    "Scale the images to between [0,1]."
-    img = tf.cast(img, dtype='float32') / 255.0
-    return img, label
-
-
-examples_per_class_per_batch = 8
 classes_per_batch = 10
-class_list = random.sample(range(10), 10)
+# Passing multiple examples per class per batch ensures that each example has
+# multiple positive pairs. This can be useful when performing triplet mining or
+# when using losses like MultiSimilarityLoss or CircleLoss as these can take a
+# weighted mix of all the positive pairs. In general, more examples per class
+# will lead to more information for the positive pairs, while more classes per
+# batch will provide more varied information in the negative pairs. However, the
+# losses compute the pairwise distance between the examples in a batch so the
+# upper limit of the batch size is restricted by the memory.
+examples_per_class_per_batch = 8
 
-print(" Create Training Data ".center(34, '#'))
+print(" Create Training Data ".center(34, "#"))
 train_ds = TFDatasetMultiShotMemorySampler(
-    'cifar10',
-    classes_per_batch=classes_per_batch,
-    splits='train',
-    steps_per_epoch=5000,
+    "cifar10",
+    classes_per_batch=min(classes_per_batch, num_known_classes),
+    splits="train",
+    steps_per_epoch=4000,
     examples_per_class_per_batch=examples_per_class_per_batch,
     class_list=class_list,
-    preprocess_fn=normalize)
+)
 
-print("\n" + " Create Test Data ".center(34, '#'))
-test_ds = TFDatasetMultiShotMemorySampler('cifar10',
-                                          classes_per_batch=classes_per_batch,
-                                          splits='test',
-                                          total_examples_per_class=100,
-                                          preprocess_fn=normalize)
+print("\n" + " Create Test Data ".center(34, "#"))
+test_ds = TFDatasetMultiShotMemorySampler(
+    "cifar10",
+    classes_per_batch=classes_per_batch,
+    splits="test",
+    total_examples_per_class=100,
+)
 
 """
 ## Visualize the dataset
@@ -131,34 +149,25 @@ plotting the first 25 images.
 
 The samplers provide a `get_slice(begin, size)` method that allows us to easily
 select a block of samples.
+
+Alternatively, we can use the `generate_batch()` method to yield a batch. This
+can allow us to check that a batch contains the expected number of classes and
+examples per class.
 """
 
 num_cols = num_rows = 5
 # Get the first 25 examples.
 X, y = train_ds.get_slice(begin=0, size=num_cols * num_rows)
 
-fig = plt.figure(figsize=(6., 6.))
+fig = plt.figure(figsize=(6.0, 6.0))
 grid = ImageGrid(fig, 111, nrows_ncols=(num_cols, num_rows), axes_pad=0.1)
 
 for ax, im, label in zip(grid, X, y):
     ax.imshow(im)
-    ax.axis('off')
+    ax.axis("off")
 
 """
-## Batch Sizes
-
-Additionally, we can use the `generate_batch()` method to yield a batch and
-check that it contains the expected number of classes and examples per class.
-"""
-
-x_batch, y_batch = train_ds.generate_batch(0)
-unique_class_ids, _, class_counts = tf.unique_with_counts(y_batch)
-print(f'The batch contains {len(x_batch)} examples in total\n')
-for cid, cc in zip(unique_class_ids, class_counts):
-    print(f'Class ID {cid} has {cc} examples in the batch')
-
-"""
-# Embedding Model
+## Embedding Model
 
 Next we define a `SimilarityModel()` using the functional Keras API. The model
 is a standard ConvNet with the addition of a `MetricEmbedding()` layer that
@@ -171,20 +180,24 @@ Additionally, the `SimilarityModel()` provides a number of helper methods for:
 * performing example lookups
 * evaluating the classification
 * evaluating the quality of the embedding space
+
+See [Tensorflow Similarity](https://github.com/tensorflow/similarity) for more
+details.
 """
 
 embedding_size = 256
 
 inputs = layers.Input((32, 32, 3))
 x = inputs
-x = layers.Conv2D(64, 3, activation='relu')(x)
+x = layers.Rescaling(scale=1.0 / 255)(x)
+x = layers.Conv2D(64, 3, activation="relu")(x)
 x = layers.BatchNormalization()(x)
-x = layers.Conv2D(128, 3, activation='relu')(x)
+x = layers.Conv2D(128, 3, activation="relu")(x)
 x = layers.BatchNormalization()(x)
 x = layers.MaxPool2D((4, 4))(x)
-x = layers.Conv2D(256, 3, activation='relu')(x)
+x = layers.Conv2D(256, 3, activation="relu")(x)
 x = layers.BatchNormalization()(x)
-x = layers.Conv2D(256, 3, activation='relu')(x)
+x = layers.Conv2D(256, 3, activation="relu")(x)
 x = layers.GlobalMaxPool2D()(x)
 outputs = MetricEmbedding(embedding_size)(x)
 
@@ -197,16 +210,14 @@ model.summary()
 
 The similarity loss expects batches containing at least 2 examples of each
 class, from which it computes the loss over the pairwise positive and negative
-distances. Here we are using `MultiSimilarityLoss()`, one of several losses in
-Tensorflow Similarity. This loss attempts to use all informative pairs in the
-batch, taking into account the self-similarity, positive-similarity, and the
-negative-similarity.
-
-For more information on the MS loss see
-[Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](https://arxiv.org/pdf/1904.06627.pdf)
+distances. Here we are using `MultiSimilarityLoss()`
+([paper](ihttps://arxiv.org/abs/1904.06627)), one of several losses in
+[Tensorflow Similarity](https://github.com/tensorflow/similarity). This loss
+attempts to use all informative pairs in the batch, taking into account the
+self-similarity, positive-similarity, and the negative-similarity.
 """
 
-epochs = 10
+epochs = 3
 LR = 0.002
 val_steps = 50
 
@@ -215,13 +226,12 @@ loss = MultiSimilarityLoss()
 
 # compiling and training
 model.compile(optimizer=Adam(LR), loss=loss, steps_per_execution=10)
-history = model.fit(train_ds,
-                    epochs=epochs,
-                    validation_data=test_ds,
-                    validation_steps=val_steps)
+history = model.fit(
+    train_ds, epochs=epochs, validation_data=test_ds, validation_steps=val_steps
+)
 
 """
-# Indexing
+## Indexing
 
 Now that we have trained our model, we can create an index of examples. Here we
 batch index the first 200 test examples by passing the x and y to the index
@@ -236,7 +246,7 @@ model.reset_index()
 model.index(x_index, y_index, data=x_index)
 
 """
-# Calibration
+## Calibration
 
 Once the index is built, we can calibrate a distance threshold using a matching
 strategy and a calibration metric.
@@ -264,13 +274,14 @@ x_train, y_train = train_ds.get_slice(begin=0, size=1000)
 calibration = model.calibrate(
     x_train,
     y_train,
-    calibration_metric='f1',
-    matcher='match_nearest',
-    extra_metrics=['precision', 'recall', 'binary_accuracy'],
-    verbose=1)
+    calibration_metric="f1",
+    matcher="match_nearest",
+    extra_metrics=["precision", "recall", "binary_accuracy"],
+    verbose=1,
+)
 
 """
-# Visualization
+## Visualization
 
 It may be difficult to get a sense of the model quality from the metrics alone.
 A complementary approach is to manually inspect a set of query results to get a
@@ -290,9 +301,19 @@ the reasons why calibration is critical for matching applications.
 
 num_neighbors = 5
 labels = [
-    "Airplane", "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse",
-    "Ship", "Truck"
+    "Airplane",
+    "Automobile",
+    "Bird",
+    "Cat",
+    "Deer",
+    "Dog",
+    "Frog",
+    "Horse",
+    "Ship",
+    "Truck",
+    "Unknown",
 ]
+class_mapping = {c_id: c_lbl for c_id, c_lbl in zip(range(11), labels)}
 
 x_display, y_display = test_ds.get_slice(begin=200, size=10)
 # lookup nearest neighbors in the index
@@ -300,14 +321,16 @@ nns = model.lookup(x_display, k=num_neighbors)
 
 # display
 for idx in np.argsort(y_display):
-    viz_neigbors_imgs(x_display[idx],
-                      y_display[idx],
-                      nns[idx],
-                      class_mapping=labels,
-                      fig_size=(16, 2))
+    viz_neigbors_imgs(
+        x_display[idx],
+        y_display[idx],
+        nns[idx],
+        class_mapping=class_mapping,
+        fig_size=(16, 2),
+    )
 
 """
-# Metrics
+## Metrics
 
 We can also plot the extra metrics contained in the `CalibrationResults` to get
 a sense of the matching performance as the distance threshold increases.
@@ -319,20 +342,20 @@ faster up to the calibrated distance threshold.
 """
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
-x = calibration.thresholds['distance']
+x = calibration.thresholds["distance"]
 
-ax1.plot(x, calibration.thresholds['precision'], label='precision')
-ax1.plot(x, calibration.thresholds['recall'], label='recall')
-ax1.plot(x, calibration.thresholds['f1'], label='f1 score')
+ax1.plot(x, calibration.thresholds["precision"], label="precision")
+ax1.plot(x, calibration.thresholds["recall"], label="recall")
+ax1.plot(x, calibration.thresholds["f1"], label="f1 score")
 ax1.legend()
 ax1.set_title("Metric evolution as distance increase")
-ax1.set_xlabel('Distance')
+ax1.set_xlabel("Distance")
 ax1.set_ylim((-0.05, 1.05))
 
-ax2.plot(calibration.thresholds['recall'], calibration.thresholds['precision'])
+ax2.plot(calibration.thresholds["recall"], calibration.thresholds["precision"])
 ax2.set_title("Precision recall curve")
-ax2.set_xlabel('Recall')
-ax2.set_ylabel('Precision')
+ax2.set_xlabel("Recall")
+ax2.set_ylabel("Precision")
 ax2.set_ylim((-0.05, 1.05))
 plt.show()
 
@@ -347,18 +370,20 @@ that only a few of the 100 examples for each class returned matches outside of
 the calibrated distance threshold.
 """
 
-cutpoint = 'optimal'
+cutpoint = "optimal"
 
 # This yields 100 examples for each class.
 # We defined this when we created the test_ds sampler.
 x_confusion, y_confusion = test_ds.get_slice(0, -1)
 
 matches = model.match(x_confusion, cutpoint=cutpoint, no_match_label=10)
-confusion_matrix(matches,
-                 y_confusion,
-                 labels=labels,
-                 title='Confusion matrix for cutpoint:%s' % cutpoint,
-                 normalize=False)
+confusion_matrix(
+    matches,
+    y_confusion,
+    labels=labels,
+    title="Confusion matrix for cutpoint:%s" % cutpoint,
+    normalize=False,
+)
 
 """
 ## No Match
@@ -378,7 +403,7 @@ else:
     print("All queries have a match below the distance threshold.")
 
 """
-# Visualize clusters
+## Visualize clusters
 
 One of the best ways to quickly get a sense of the quality of how the model is
 doing and understand it's short comings is to project the embedding into a 2D
@@ -388,10 +413,10 @@ This allows us to inspect clusters of images and understand which classes are
 entangled.
 """
 
-num_examples_to_clusters = 720
+# Each class in test_ds was restricted to 100 examples.
+num_examples_to_clusters = 1000
 thumb_size = 96
 plot_size = 800
-class_mapping = {k: v for k, v in zip(range(10), labels)}
 vx, vy = test_ds.get_slice(0, num_examples_to_clusters)
 
 # Uncomment to run the interactive projector.
