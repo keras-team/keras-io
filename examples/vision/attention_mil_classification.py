@@ -2,7 +2,7 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/10/03
+Last modified: 2021/10/05
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
@@ -85,7 +85,7 @@ positive instance, the bag will be considered as negative.
 
 ### Configurations
 
-- `POS_CLASS`: The desired class to be kept in the positive bag.
+- `POSITIVE_CLASS`: The desired class to be kept in the positive bag.
 - `BAG_COUNT`: The number of training bags.
 - `VAL_BAG_COUNT`: The number of validation bags.
 - `BAG_SIZE`: The number of instances in a bag.
@@ -94,7 +94,7 @@ positive instance, the bag will be considered as negative.
 often results in better performance - set to 1 for single model)
 """
 
-POS_CLASS = 1
+POSITIVE_CLASS = 1
 BAG_COUNT = 1000
 VAL_BAG_COUNT = 300
 BAG_SIZE = 3
@@ -108,7 +108,7 @@ positive class label is randomly placed among the instances in the positive bag.
 """
 
 
-def create_bags(input_data, input_labels, pos_class, bag_count, instance_count):
+def create_bags(input_data, input_labels, positive_class, bag_count, instance_count):
 
     # Set up bags.
     bags = []
@@ -121,21 +121,21 @@ def create_bags(input_data, input_labels, pos_class, bag_count, instance_count):
     count = 0
 
     # Take out the filter for specific class.
-    filter_class = np.where(input_labels == pos_class)[0]
+    filter_class = np.where(input_labels == positive_class)[0]
 
     # Assign new variables consisting of this class.
-    data_pos_class = input_data[filter_class]
-    labels_pos_class = input_labels[filter_class]
+    data_positive_class = input_data[filter_class]
+    labels_positive_class = input_labels[filter_class]
 
     # From overall data, remove this class.
-    data_neg_classes = np.delete(input_data, filter_class, 0)
-    labels_neg_classes = np.delete(input_labels, filter_class, 0)
+    data_negative_classes = np.delete(input_data, filter_class, 0)
+    labels_negative_classes = np.delete(input_labels, filter_class, 0)
 
     # Merge both inputs and labels to each another.
-    data = np.concatenate([data_pos_class, data_neg_classes], axis=0)
-    labels = np.concatenate([labels_pos_class, labels_neg_classes], axis=0)
+    data = np.concatenate([data_positive_class, data_negative_classes], axis=0)
+    labels = np.concatenate([labels_positive_class, labels_negative_classes], axis=0)
 
-    # Data are ordered in such a way: [pos_class... neg_classes].
+    # Data are ordered in such a way: [positive_class... negative_classes].
     # Shuffle the data randomly.
     order = np.arange(len(data))
     np.random.shuffle(order)
@@ -153,7 +153,7 @@ def create_bags(input_data, input_labels, pos_class, bag_count, instance_count):
         bag_label = 0
 
         # Check if there is at least a positive class in the bag.
-        if pos_class in instances_labels:
+        if positive_class in instances_labels:
 
             # Positive bag will be labelled as 1.
             bag_label = 1
@@ -174,10 +174,14 @@ def create_bags(input_data, input_labels, pos_class, bag_count, instance_count):
 (x_train, y_train), (x_val, y_val) = keras.datasets.mnist.load_data()
 
 # Create training data.
-train_data, train_labels = create_bags(x_train, y_train, POS_CLASS, BAG_COUNT, BAG_SIZE)
+train_data, train_labels = create_bags(
+    x_train, y_train, POSITIVE_CLASS, BAG_COUNT, BAG_SIZE
+)
 
 # Create validation data.
-val_data, val_labels = create_bags(x_val, y_val, POS_CLASS, VAL_BAG_COUNT, BAG_SIZE)
+val_data, val_labels = create_bags(
+    x_val, y_val, POSITIVE_CLASS, VAL_BAG_COUNT, BAG_SIZE
+)
 
 """
 # Create and train neural networks
@@ -211,6 +215,9 @@ class MILAttentionLayer(layers.Layer):
         use_gated=False,
         **kwargs,
     ):
+
+        super().__init__(**kwargs)
+
         self.l_dim = l_dim
         self.output_dim = output_dim
         self.use_gated = use_gated
@@ -226,11 +233,7 @@ class MILAttentionLayer(layers.Layer):
         self.w_regularizer = self.kernel_regularizer
         self.u_regularizer = self.kernel_regularizer
 
-        super(MILAttentionLayer, self).__init__(**kwargs)
-
     def build(self, input_shape):
-        if not isinstance(input_shape, list):
-            raise TypeError("Input should be of type of list")
 
         # Input Shape
         # List of 2D tensors with shape: (batch_size, input_dim).
@@ -278,7 +281,7 @@ class MILAttentionLayer(layers.Layer):
     def compute_weights(self, instance):
 
         # in-case "gated mechanism" used.
-        ori_instance = instance
+        original_instance = instance
 
         # tanh(v*h_k^T)
         instance = tf.math.tanh(tf.tensordot(instance, self.v_weight_params, axes=1))
@@ -286,19 +289,12 @@ class MILAttentionLayer(layers.Layer):
         # for learning non-linear relations efficiently.
         if self.use_gated:
 
-            # sigmoid(u*h_k^T).
-            gate_instance = tf.math.sigmoid(
-                tf.tensordot(ori_instance, self.u_weight_params, axes=1)
+            instance = instance * tf.math.sigmoid(
+                tf.tensordot(original_instance, self.u_weight_params, axes=1)
             )
 
-            # element-wise multiplication.
-            ac_instance = instance * gate_instance
-
-        else:
-            ac_instance = instance
-
         # w^T*(tanh(v*h_k^T)) / w^T*(tanh(v*h_k^T)*sigmoid(u*h_k^T))
-        return tf.tensordot(ac_instance, self.w_weight_params, axes=1)
+        return tf.tensordot(instance, self.w_weight_params, axes=1)
 
 
 """
@@ -311,25 +307,25 @@ for each bag (after the model has been trained) can be seen.
 """
 
 # Function for plotting.
-def plot(data, labels, bag_class, pred=None, attention_weights=None):
+def plot(data, labels, bag_class, predictions=None, attention_weights=None):
 
-    labels_re = np.array(labels).reshape(-1)
+    labels = np.array(labels).reshape(-1)
 
-    if bag_class == "pos":
-        if pred is not None:
-            labels = np.where(pred.argmax(1) == 1)[0]
+    if bag_class == "positive":
+        if predictions is not None:
+            labels = np.where(predictions.argmax(1) == 1)[0]
             bags = np.array(data)[:, labels[0:PLOT_SIZE]]
 
         else:
-            labels = np.where(labels_re == 1)[0]
+            labels = np.where(labels == 1)[0]
             bags = np.array(data)[:, labels[0:PLOT_SIZE]]
 
-    elif bag_class == "neg":
-        if pred is not None:
-            labels = np.where(pred.argmax(1) == 0)[0]
+    elif bag_class == "negative":
+        if predictions is not None:
+            labels = np.where(predictions.argmax(1) == 0)[0]
             bags = np.array(data)[:, labels[0:PLOT_SIZE]]
         else:
-            labels = np.where(labels_re == 0)[0]
+            labels = np.where(labels == 0)[0]
             bags = np.array(data)[:, labels[0:PLOT_SIZE]]
 
     else:
@@ -337,21 +333,21 @@ def plot(data, labels, bag_class, pred=None, attention_weights=None):
         return
 
     for i in range(PLOT_SIZE):
-        fig = plt.figure(figsize=(8, 8))
+        figure = plt.figure(figsize=(8, 8))
         print(f"Bag number: {labels[i]}")
         for j in range(BAG_SIZE):
-            img = bags[j][i]
-            fig.add_subplot(1, BAG_SIZE, j + 1)
+            image = bags[j][i]
+            figure.add_subplot(1, BAG_SIZE, j + 1)
             plt.grid(False)
             if attention_weights is not None:
                 plt.title(np.around(attention_weights[labels[i]][j], 2))
-            plt.imshow(img)
+            plt.imshow(image)
         plt.show()
 
 
 # Plot some of validation data bags per class.
-plot(val_data, val_labels, "pos")
-plot(val_data, val_labels, "neg")
+plot(val_data, val_labels, "positive")
+plot(val_data, val_labels, "negative")
 
 """
 ## Create model
@@ -362,21 +358,16 @@ use the softmax function to output the class probabilities.
 
 
 def create_model(instance_shape):
-    def dense_layers():
 
-        inputs, embeddings = [], []
-        for _ in range(BAG_SIZE):
-            inp = layers.Input(instance_shape)
-            flatten = layers.Flatten()(inp)
-            dense_1 = layers.Dense(128, activation="relu")(flatten)
-            dense_2 = layers.Dense(64, activation="relu")(dense_1)
-            inputs.append(inp)
-            embeddings.append(dense_2)
-
-        return inputs, embeddings
-
-    # Create layers that form embeddings.
-    inputs, embeddings = dense_layers()
+    # Extract features from inputs.
+    inputs, embeddings = [], []
+    for _ in range(BAG_SIZE):
+        inp = layers.Input(instance_shape)
+        flatten = layers.Flatten()(inp)
+        dense_1 = layers.Dense(128, activation="relu")(flatten)
+        dense_2 = layers.Dense(64, activation="relu")(dense_1)
+        inputs.append(inp)
+        embeddings.append(dense_2)
 
     # Invoke the attention layer.
     alpha = MILAttentionLayer(
@@ -388,10 +379,12 @@ def create_model(instance_shape):
     )(embeddings)
 
     # Multiply attention weights with the input layers.
-    mul_layers = [layers.multiply([alpha[i], embeddings[i]]) for i in range(len(alpha))]
+    multiply_layers = [
+        layers.multiply([alpha[i], embeddings[i]]) for i in range(len(alpha))
+    ]
 
     # Concatenate layers.
-    concat = layers.concatenate(mul_layers, axis=1)
+    concat = layers.concatenate(multiply_layers, axis=1)
 
     # Classification output node.
     output = layers.Dense(2, activation="softmax")(concat)
@@ -414,17 +407,17 @@ that of the abundant one.
 """
 
 
-def calculate_weights(labels):
+def calculate_class_weights(labels):
 
     # Count number of postive and negative bags.
-    neg_count = len(np.where(labels == 0)[0])
-    pos_count = len(np.where(labels == 1)[0])
-    total_count = neg_count + pos_count
+    negative_count = len(np.where(labels == 0)[0])
+    positive_count = len(np.where(labels == 1)[0])
+    total_count = negative_count + positive_count
 
     # Build class weight dictionary.
     return {
-        0: (1 / neg_count) * (total_count / 2),
-        1: (1 / pos_count) * (total_count / 2),
+        0: (1 / negative_count) * (total_count / 2),
+        1: (1 / positive_count) * (total_count / 2),
     }
 
 
@@ -477,7 +470,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
         train_labels,
         validation_data=(val_data, val_labels),
         epochs=20,
-        class_weight=calculate_weights(train_labels),
+        class_weight=calculate_class_weights(train_labels),
         batch_size=1,
         callbacks=[early_stopping, model_checkpoint],
         verbose=0,
@@ -517,47 +510,60 @@ and then averaged out (equal contribution per model).
 def predict(data, labels, trained_models):
 
     # Collect info per model.
-    predictions = []
-    attention_weights = []
-    losses = []
-    accuracies = []
+    models_predictions = []
+    models_attention_weights = []
+    models_losses = []
+    models_accuracies = []
 
     for model in trained_models:
 
-        # Predict output classes on validation data.
-        pred = model.predict(data)
-        predictions.append(pred)
+        # Predict output classes on data.
+        predictions = model.predict(data)
+        models_predictions.append(predictions)
 
-        # Create intermediate model to get attention layer weights.
-        interm_model = keras.Model(model.input, model.get_layer("alpha").output)
+        # Create intermediate model to get MIL attention layer weights.
+        intermediate_model = keras.Model(model.input, model.get_layer("alpha").output)
 
-        # Predict attention layer weights.
-        pred_interm = interm_model.predict(data)
+        # Predict MIL attention layer weights.
+        intermediate_predictions = intermediate_model.predict(data)
 
         # Reshape list of arrays.
-        model_attention_weights = np.squeeze(np.swapaxes(pred_interm, 1, 0))
-        attention_weights.append(model_attention_weights)
+        attention_weights = np.squeeze(np.swapaxes(intermediate_predictions, 1, 0))
+        models_attention_weights.append(attention_weights)
 
-        loss, acc = model.evaluate(data, labels, verbose=0)
-        losses.append(loss)
-        accuracies.append(acc)
+        loss, accuracy = model.evaluate(data, labels, verbose=0)
+        models_losses.append(loss)
+        models_accuracies.append(accuracy)
 
     print(
-        f"The average loss and accuracy are {np.sum(losses, axis=0) / ENSEMBLE_AVG_COUNT:.2f}"
-        f" and {100 * np.sum(accuracies, axis=0) / ENSEMBLE_AVG_COUNT:.2f} % resp."
+        f"The average loss and accuracy are {np.sum(models_losses, axis=0) / ENSEMBLE_AVG_COUNT:.2f}"
+        f" and {100 * np.sum(models_accuracies, axis=0) / ENSEMBLE_AVG_COUNT:.2f} % resp."
     )
 
     return (
-        np.sum(predictions, axis=0) / ENSEMBLE_AVG_COUNT,
-        np.sum(attention_weights, axis=0) / ENSEMBLE_AVG_COUNT,
+        np.sum(models_predictions, axis=0) / ENSEMBLE_AVG_COUNT,
+        np.sum(models_attention_weights, axis=0) / ENSEMBLE_AVG_COUNT,
     )
 
 
-pred_class, atten_weights = predict(val_data, val_labels, trained_models)
+# Evaluate and predict classes and attention scores on validation data.
+class_predictions, attention_params = predict(val_data, val_labels, trained_models)
 
 # Plot some results of validation data bags per class.
-plot(val_data, val_labels, "pos", pred=pred_class, attention_weights=atten_weights)
-plot(val_data, val_labels, "neg", pred=pred_class, attention_weights=atten_weights)
+plot(
+    val_data,
+    val_labels,
+    "positive",
+    predictions=class_predictions,
+    attention_weights=attention_params,
+)
+plot(
+    val_data,
+    val_labels,
+    "negative",
+    predictions=class_predictions,
+    attention_weights=attention_params,
+)
 
 """
 ## Conclusion
