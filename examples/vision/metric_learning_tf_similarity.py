@@ -1,5 +1,5 @@
 """
-Title: Metric learning for image similarity search using Tensorflow similarity
+Title: Metric learning for image similarity search using TensorFlow similarity
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
 Last modified: 2021/09/30
@@ -9,18 +9,19 @@ Description: Example of using similarity metric learning on CIFAR-10 images.
 """
 ## Overview
 
-This example is based on the `Metric learning for image similarity search`
-vision example. We aim to use the same data set but implement the model using
-[Tensorflow Similarity](https://github.com/tensorflow/similarity).
+This example is based on the
+["Metric learning for image similarity search" example](https://keras.io/examples/vision/metric_learning/).
+We aim to use the same data set but implement the model using
+[TensorFlow Similarity](https://github.com/tensorflow/similarity).
 
 Metric learning aims to train models that can embed inputs into a
 high-dimensional space such that "similar" inputs are pulled closer to each
 other and "dissimilar" inputs are pushed farther apart. Once trained, these
 models can produce embeddings for downstream systems where such similarity is
-useful, e.g., as a ranking signal for search or as a form of pretrained
+useful, for instance as a ranking signal for search or as a form of pretrained
 embedding model for another supervised problem.
 
-For a more detailed overview of metric learning see:
+For a more detailed overview of metric learning, see:
 
 * [What is metric learning?](http://contrib.scikit-learn.org/metric-learn/introduction.html)
 * ["Using crossentropy for metric learning" tutorial](https://www.youtube.com/watch?v=Jb4Ewl5RzkI)
@@ -29,9 +30,9 @@ For a more detailed overview of metric learning see:
 """
 ## Setup
 
-This tutorial will use [Tensorflow Similarity](https://github.com/tensorflow/similarity)
-to learn and evaluate the similarity embedding. The tensorflow similarity
-package provides a number of components that:
+This tutorial will use the [TensorFlow Similarity](https://github.com/tensorflow/similarity) library
+to learn and evaluate the similarity embedding.
+TensorFlow Similarity provides components that:
 
 * Make training contrastive models simple and fast.
 * Make it easier to ensure that batches contain pairs of examples.
@@ -56,22 +57,22 @@ print("TensorFlow:", tf.__version__)
 print("TensorFlow Similarity:", tfsim.__version__)
 
 """
-## Dataset Samplers
+## Dataset samplers
 
 We will be using the
-[CIFAR-10](https://www.tensorflow.org/datasets/catalog/cifar10) dataset for this
-tutorial.
+[CIFAR-10](https://www.tensorflow.org/datasets/catalog/cifar10)
+dataset for this tutorial.
 
 For a similarity model to learn efficiently, each batch must contains at least 2
 examples of each class.
 
-To make this easy, tf_similarity offers `Samplers()` that enable you to set both
+To make this easy, tf_similarity offers `Sampler` objects that enable you to set both
 the number of classes and the minimum number of examples of each class per
 batch.
 
 The train and validation datasets will be created using the
-`TFDatasetMultiShotMemorySampler()`. This creates a sampler that loads datasets
-from [tensorflow datasets](https://www.tensorflow.org/datasets) and yields
+`TFDatasetMultiShotMemorySampler` object. This creates a sampler that loads datasets
+from [TensorFlow Datasets](https://www.tensorflow.org/datasets) and yields
 batches containing a target number of classes and a target number of examples
 per class. Additionally, we can restrict the sampler to only yield the subset of
 classes defined in `class_list`, enabling us to train on a subset of the classes
@@ -80,11 +81,11 @@ useful when working on few-shot learning problems.
 
 The following cell creates a train_ds sample that:
 
-* Loads the cifar10 dataset from tfds and then takes the `examples_per_class_per_batch`.
+* Loads the CIFAR-10 dataset from TFDS and then takes the `examples_per_class_per_batch`.
 * Ensures the sampler restricts the classes to those defined in `class_list`.
 * Ensures each batch contains 10 different classes with 8 examples each.
 
-We also create a val_ds in the same way, but we limit the total number of
+We also create a validation dataset in the same way, but we limit the total number of
 examples per class to 100 and the examples per class per batch is set to the
 default of 2.
 """
@@ -96,7 +97,7 @@ class_list = random.sample(population=range(10), k=num_known_classes)
 classes_per_batch = 10
 # Passing multiple examples per class per batch ensures that each example has
 # multiple positive pairs. This can be useful when performing triplet mining or
-# when using losses like `MultiSimilarityLoss()` or `CircleLoss()` as these can
+# when using losses like `MultiSimilarityLoss` or `CircleLoss` as these can
 # take a weighted mix of all the positive pairs. In general, more examples per
 # class will lead to more information for the positive pairs, while more classes
 # per batch will provide more varied information in the negative pairs. However,
@@ -153,22 +154,22 @@ for ax, im, label in zip(grid, x_slice, y_slice):
     ax.axis("off")
 
 """
-## Embedding Model
+## Embedding model
 
-Next we define a `SimilarityModel()` using the functional Keras API. The model
-is a standard ConvNet with the addition of a `MetricEmbedding()` layer that
+Next we define a `SimilarityModel` using the Keras Functional API. The model
+is a standard convnet with the addition of a `MetricEmbedding` layer that
 applies L2 normalization. The metric embedding layer is helpful when using
 `Cosine` distance as we only care about the angle between the vectors.
 
-Additionally, the `SimilarityModel()` provides a number of helper methods for:
+Additionally, the `SimilarityModel` provides a number of helper methods for:
 
-* indexing embedded examples
-* performing example lookups
-* evaluating the classification
-* evaluating the quality of the embedding space
+* Indexing embedded examples
+* Performing example lookups
+* Evaluating the classification
+* Evaluating the quality of the embedding space
 
-See [Tensorflow Similarity](https://github.com/tensorflow/similarity) for more
-details.
+See the [TensorFlow Similarity documentation](https://github.com/tensorflow/similarity)
+for more details.
 """
 
 embedding_size = 256
@@ -191,13 +192,13 @@ model = tfsim.models.SimilarityModel(inputs, outputs)
 model.summary()
 
 """
-## Similarity Loss
+## Similarity loss
 
 The similarity loss expects batches containing at least 2 examples of each
 class, from which it computes the loss over the pairwise positive and negative
 distances. Here we are using `MultiSimilarityLoss()`
 ([paper](ihttps://arxiv.org/abs/1904.06627)), one of several losses in
-[Tensorflow Similarity](https://github.com/tensorflow/similarity). This loss
+[TensorFlow Similarity](https://github.com/tensorflow/similarity). This loss
 attempts to use all informative pairs in the batch, taking into account the
 self-similarity, positive-similarity, and the negative-similarity.
 """
@@ -249,12 +250,12 @@ output are computed at the calibrated threshold.
 
 Finally, `model.calibrate()` returns a `CalibrationResults` object containing:
 
-* cutpoints: A Python Dict mapping the cutpoint name to a Dict containing the
+* `"cutpoints"`: A Python dict mapping the cutpoint name to a dict containing the
 `ClassificationMetric` values associated with a particular distance threshold,
-e.g., 'optimal' : {'acc': 0.90, 'f1': 0.92}.
-* thresholds: A Python Dict mapping `ClassificationMetric` names to a list
+e.g., `"optimal" : {"acc": 0.90, "f1": 0.92}`.
+* `"thresholds"`: A Python dict mapping `ClassificationMetric` names to a list
 containing the metric's value computed at each of the distance thresholds, e.g.,
-{'f1': [0.99, 0.80], 'distance': [0.0, 1.0]}.
+`{"f1": [0.99, 0.80], "distance": [0.0, 1.0]}`.
 """
 
 x_train, y_train = train_ds.get_slice(begin=0, size=1000)
