@@ -9,11 +9,11 @@ Description: FNet transformer for text generation in Keras.
 ## Introduction
 
 The original transformer implementation (Vaswani et al., 2017) was one of the major
-breakthroughs in Natural Language Processing, giving rise to eminent architectures as the
-ones derived from BERT and GPT. However, the drawback of such complex architectures is
-that the self attention mechanism used by them can cause slow processing speeds. The FNet
-architecture proposes a Fourier transformation based linear mixer for input tokens that
-replaces this self attention.
+breakthroughs in Natural Language Processing, giving rise to important architectures such BERT and GPT.
+However, the drawback of these architectures is
+that the self-attention mechanism they use is computationally expensive. The FNet
+architecture proposes to replace this self-attention attention with a leaner mechanism:
+a Fourier transformation-based linear mixer for input tokens.
 
 The FNet model was able to achieve 92-97% of BERT's accuracy while training 80% faster on
 GPUs and almost 70% faster on TPUs. This type of design provides an efficient and small
@@ -158,8 +158,8 @@ Transformer architecture (Vaswani et al., 2017).
 
 ![Architecture](https://i.imgur.com/rLg47qU.png)
 
-The outputs of the FFT layer are complex in nature. To avoid processing complex layers,
-only the real part(magnitude) is extracted.
+The outputs of the FFT layer are complex numbers. To avoid dealing with complex layers,
+only the real part (the magnitude) is extracted.
 
 The dense layers that follow the Fourier transformation act as convolutions applied on
 the frequency domain.
@@ -190,12 +190,12 @@ class FNetEncoder(layers.Layer):
 
 """
 ## Creating the Decoder
+
 The decoder architecture remains the same as the one proposed by (Vaswani et al., 2017)
 in the original transformer architecture, consisting of an embedding, positional
-encoding, two masked multiheaded attention layers and finally the dense output layers.
-The architecture that follows is taken from [Deep Learning with
-Python](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
-
+encoding, two masked multihead attention layers and finally the dense output layers.
+The architecture that follows is taken from
+[Deep Learning with Python, second edition, chapter 11](https://www.manning.com/books/deep-learning-with-python-second-edition).
 
 """
 
@@ -309,8 +309,8 @@ fnet = create_model()
 fnet.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
 """
-The default `epochs` parameter is set to a single epoch but the model will take around
-20-30 epochs of training to start outputting comprehensible sentences. Although accuracy
+Here, the `epochs` parameter is set to a single epoch, but in practice the model will take around
+**20-30 epochs** of training to start outputting comprehensible sentences. Although accuracy
 is not a good measure for this task, we will use it just to get a hint of the improvement
 of the network.
 """
@@ -366,7 +366,7 @@ decode_sentence("Where have you been all this time?")
 """
 ## Conclusion
 
-This example successfully shows how to train and perform inference using the FNet model.
+This example shows how to train and perform inference using the FNet model.
 For getting insight into the architecture or for further reading, you can refer to:
 
 1. [FNet: Mixing Tokens with Fourier Transforms](https://arxiv.org/abs/2105.03824v3)
@@ -374,8 +374,7 @@ For getting insight into the architecture or for further reading, you can refer 
 2. [Attention Is All You Need](https://arxiv.org/abs/1706.03762v5) (Vaswani et al.,
 2017)
 
-Thanks to François Chollet for his Keras example on [English-to-Spanish translation with
-a sequence-to-sequence
-Transformer](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
+Thanks to François Chollet for his Keras example on
+[English-to-Spanish translation with a sequence-to-sequence Transformer](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
 from which the decoder implementation was extracted.
 """
