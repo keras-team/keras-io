@@ -97,15 +97,16 @@ val_dataset = tf.data.Dataset.from_tensor_slices((questions[40000:], answers[400
 
 """
 ### Preprocessing and Tokenization
-
-
 """
 
 
 def preprocess_text(sentence):
     sentence = tf.strings.lower(sentence)
+    # Adding a space between the punctuation and the last word to allow better tokenization
     sentence = tf.strings.regex_replace(sentence, r"([?.!,])", r" \1 ")
+    # Replacing multiple continuous spaces with a single space
     sentence = tf.strings.regex_replace(sentence, r"\s\s+", " ")
+    # Replacing non english words with spaces
     sentence = tf.strings.regex_replace(sentence, r"[^a-z?.!,]+", " ")
     sentence = tf.strings.strip(sentence)
     sentence = tf.strings.join(["[start]", sentence, "[end]"], separator=" ")
@@ -119,6 +120,8 @@ vectorizer = layers.TextVectorization(
     output_sequence_length=MAX_LENGTH,
 )
 
+# We will adapt the vectorizer to both the questions and answers
+# This dataset is batched to parallelize and speed up the process
 vectorizer.adapt(tf.data.Dataset.from_tensor_slices((questions + answers)).batch(128))
 
 """
