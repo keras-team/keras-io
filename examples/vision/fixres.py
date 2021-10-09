@@ -2,14 +2,14 @@
 Title: FixRes: Fixing train-test resolution discrepency
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/08
-Last modified: 2021/10/08
-Description: Mitigating resolution discrepency between training and test sets.
+Last modified: 2021/10/10
+Description: Mitigating resolution discrepancy between training and test sets.
 """
 """
 ## Introduction 
 
-It is a common practice to use the same input image resolution while training vision
-models. However, as investigated in
+It is a common practice to use the same input image resolution while training and testing
+vision models. However, as investigated in
 [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423)
 (Touvron et al.), this practice leads to suboptimal performance. Data augmentation
 is an inseparable component for training deep neural networks. For vision models, we
@@ -44,8 +44,8 @@ train_dataset, val_dataset = tfds.load(
     "tf_flowers", split=["train[:90%]", "train[90%:]"], as_supervised=True
 )
 
-num_train = tf.data.experimental.cardinality(train_dataset)
-num_val = tf.data.experimental.cardinality(val_dataset)
+num_train = train_dataset.cardinality()
+num_val = val_dataset.cardinality()
 print(f"Number of training examples: {num_train}")
 print(f"Number of validation examples: {num_val}")
 
