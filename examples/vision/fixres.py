@@ -1,25 +1,25 @@
 """
-Title: FixRes: Fixing train-test resolution discrepency
+Title: FixRes: Fixing train-test resolution discrepancy
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/08
 Last modified: 2021/10/10
 Description: Mitigating resolution discrepancy between training and test sets.
 """
 """
-## Introduction 
+## Introduction
 
 It is a common practice to use the same input image resolution while training and testing
 vision models. However, as investigated in
 [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423)
 (Touvron et al.), this practice leads to suboptimal performance. Data augmentation
-is an inseparable component for training deep neural networks. For vision models, we
+is an indispensable part of the training process of deep neural networks. For vision models, we
 typically use random resized crops during training and center crops during inference.
-This introduces a discrepency in the object sizes seen during training and inference.
-As shown by Touvron et al., if we can fix this discrepency then we can significantly
-boost model performance. 
+This introduces a discrepancy in the object sizes seen during training and inference.
+As shown by Touvron et al., if we can fix this discrepancy, we can significantly
+boost model performance.
 
-In this example, we will implement the techniques introduced by Touvron et al. in this
-regard. As a note, these techniques are collectively referred to as **FixRes**.
+In this example, we implement the **FixRes** techniques introduced by Touvron et al.
+to fix this discrepancy.
 """
 
 """
@@ -54,15 +54,15 @@ print(f"Number of validation examples: {num_val}")
 """
 
 """
-We will create three datasets:
+We create three datasets:
 
 1. A dataset with a smaller resolution - 128x128.
-2. Two dataset with a larger resolution - 224x224.
+2. Two datasets with a larger resolution - 224x224.
 
-Datasets with a larger resolution will differ in terms of the augmentation transforms.
+We will apply different augmentation transforms to the larger-resolution datasets.
 
-The idea of FixRes is to first train a model on a smaller resolution and then fine-tune
-it on the larger one. This simple yet effective recipe leads to non-trivial performance
+The idea of FixRes is to first train a model on a smaller resolution dataset and then fine-tune
+it on a larger resolution dataset. This simple yet effective recipe leads to non-trivial performance
 improvements. Please refer to the [original paper](https://arxiv.org/abs/1906.06423) for
 results.
 """
@@ -190,11 +190,11 @@ def visualize_dataset(batch_images):
 initial_sample_images, _ = next(iter(initial_train_dataset))
 visualize_dataset(initial_sample_images)
 
-# Bigger resolution but only for fine-tuning purposes.
+# Bigger resolution, only for fine-tuning.
 finetune_sample_images, _ = next(iter(finetune_train_dataset))
 visualize_dataset(finetune_sample_images)
 
-# Bigger resolution with the same augmentation applied as
+# Bigger resolution, with the same augmentation transforms as
 # the smaller resolution dataset.
 vanilla_sample_images, _ = next(iter(vanilla_train_dataset))
 visualize_dataset(vanilla_sample_images)
@@ -202,14 +202,14 @@ visualize_dataset(vanilla_sample_images)
 """
 ## Model training utilities
 
-We will train multiple variants of ResNet50V2
+We train multiple variants of ResNet50V2
 ([He et al.](https://arxiv.org/abs/1603.05027)):
 
 1. On the smaller resolution dataset (128x128). It will be trained from scratch.
-2. Then fine-tune the model from 1 on the larger resolution (224x224) dataset. 
-3. Train another ResNet50V2 from scratch on the larger resolution dataset. 
+2. Then fine-tune the model from 1 on the larger resolution (224x224) dataset.
+3. Train another ResNet50V2 from scratch on the larger resolution dataset.
 
-As a reminder, the larger resolution datasets will differ in terms of the augmentation
+As a reminder, the larger resolution datasets differ in terms of their augmentation
 transforms.
 """
 
@@ -264,9 +264,9 @@ smaller_res_model = train_and_evaluate(
 )
 
 """
-### Freeze all the layers except for the final Batch Norm layer
+### Freeze all the layers except for the final Batch Normalization layer
 
-For fine-tuning, we will be training only two layers:
+For fine-tuning, we train only two layers:
 
 * The final Batch Normalization ([Ioffe et al.](https://arxiv.org/abs/1502.03167)) layer.
 * The classification layer.
@@ -274,10 +274,10 @@ For fine-tuning, we will be training only two layers:
 We are unfreezing the final Batch Normalization layer to compensate for the change in
 activation statistics before the global average pooling layer. As shown in
 [the paper](https://arxiv.org/abs/1906.06423), unfreezing the final Batch
-Normalization layer purpose is enough for this purpose.
+Normalization layer is enough.
 
 For a comprehensive guide on fine-tuning models in Keras, refer to
-[this tutorial](https://keras.io/guides/transfer_learning/). 
+[this tutorial](https://keras.io/guides/transfer_learning/).
 """
 
 for layer in smaller_res_model.layers[1].layers:
@@ -300,7 +300,7 @@ bigger_res_model = train_and_evaluate(
 ## Experiment 2: Train a model on 224x224 resolution from scratch
 
 Now, we train another model from scratch on the larger resolution dataset. Recall that
-the augmentation used in this dataset are different from above. 
+the augmentation transforms used in this dataset are different from before.
 """
 
 epochs = 30
@@ -312,8 +312,8 @@ vanilla_bigger_res_model = train_and_evaluate(
 
 """
 As we can notice from the above cells, FixRes leads to a better performance. Another
-advantage of FixRes is the improved total training time keeping GPU memory usage under
-control. FixRes is model agnostic, you can use it on any image classification network
+advantage of FixRes is the improved total training time and reduction in GPU memory usage.
+FixRes is model-agnostic, you can use it on any image classification model
 to potentially boost performance.
 
 You can find more results
