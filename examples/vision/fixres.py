@@ -54,7 +54,7 @@ print(f"Number of validation examples: {num_val}")
 """
 
 """
-We will three datasets:
+We will create three datasets:
 
 1. A dataset with a smaller resolution - 128x128.
 2. Two dataset with a larger resolution - 224x224.
@@ -78,55 +78,56 @@ size_for_resizing = int((bigger_size / smaller_size) * bigger_size)
 central_crop_layer = layers.CenterCrop(bigger_size, bigger_size)
 
 
+def preprocess_initial(image, label):
+    """Initial preprocessing function for training on smaller resolution.
+
+    For training, do random_horizontal_flip -> random_crop.
+    For validation, just resize.
+    No color-jittering has been used.
+    """
+    if train:
+        channels = image.shape[-1]
+        begin, size, _ = tf.image.sample_distorted_bounding_box(
+            tf.shape(image),
+            tf.zeros([0, 0, 4], tf.float32),
+            area_range=(0.05, 1.0),
+            min_object_covered=0,
+            use_image_if_no_bounding_boxes=True,
+        )
+        image = tf.slice(image, begin, size)
+
+        image.set_shape([None, None, channels])
+        image = tf.image.resize(image, [image_size, image_size])
+        image = tf.image.random_flip_left_right(image)
+    else:
+        image = tf.image.resize(image, [image_size, image_size])
+
+    return image, label
+
+
+def preprocess_finetune(image, label):
+    """Preprocessing function for fine-tuning on a higher resolution.
+
+    For training, resize to a bigger resolution to maintain the ratio ->
+        random_horizontal_flip -> center_crop.
+    For validation, do the same without any horizontal flipping.
+    No color-jittering has been used.
+    """
+    image = tf.image.resize(image, [size_for_resizing, size_for_resizing])
+    if train:
+        image = tf.image.random_flip_left_right(image)
+    image = central_crop_layer(image[None, ...])[0]
+
+    return image, label
+
+
 def make_dataset(
     dataset: tf.data.Dataset,
     train: bool,
     image_size: int = smaller_size,
     fixres: bool = True,
+    num_parallel_calls=auto,
 ):
-    def preprocess_initial(image, label):
-        """
-        Initial preprocessing function for training on smaller resolution.
-        For training, do random_horizontal_flip -> random_crop.
-        For validation, just resize.
-        No color-jittering has been used.
-        """
-        if train:
-            channels = image.shape[-1]
-            begin, size, _ = tf.image.sample_distorted_bounding_box(
-                tf.shape(image),
-                tf.zeros([0, 0, 4], tf.float32),
-                area_range=(0.05, 1.0),
-                min_object_covered=0,
-                use_image_if_no_bounding_boxes=True,
-            )
-            image = tf.slice(image, begin, size)
-
-            image.set_shape([None, None, channels])
-            image = tf.image.resize(image, [image_size, image_size])
-            image = tf.image.random_flip_left_right(image)
-        else:
-            image = tf.image.resize(image, [image_size, image_size])
-
-        image = (image - 127.5) / 127.5
-        return image, label
-
-    def preprocess_finetune(image, label):
-        """
-        Preprocessing function for fine-tuning on a higher resolution.
-        For training, resize to a bigger resolution to maintain the ratio ->
-            random_horizontal_flip -> center_crop.
-        For validation, do the same without any horizontal flipping.
-        No color-jittering has been used.
-        """
-        image = tf.image.resize(image, [size_for_resizing, size_for_resizing])
-        if train:
-            image = tf.image.random_flip_left_right(image)
-        image = central_crop_layer(image[None, ...])[0]
-        image = (image - 127.5) / 127.5
-
-        return image, label
-
     if image_size not in [smaller_size, bigger_size]:
         raise ValueError(f"{image_size} resolution is not supported.")
 
@@ -141,7 +142,11 @@ def make_dataset(
     if train:
         dataset = dataset.shuffle(batch_size * 10)
 
-    return dataset.map(preprocess_func, auto).batch(batch_size).prefetch(auto)
+    return (
+        dataset.map(preprocess_func, auto)
+        .batch(batch_size)
+        .prefetch(num_parallel_calls)
+    )
 
 
 """
@@ -216,36 +221,30 @@ def get_training_model(num_classes=5):
     )
     resnet_base.trainable = True
 
-    x = resnet_base(inputs)
+    x = layers.Rescaling(scale=1.0 / 127.5, offset=-1)(inputs)
+    x = resnet_base(x)
     outputs = layers.Dense(num_classes, activation="softmax")(x)
     return keras.Model(inputs, outputs)
 
 
-def train_and_evaluate(model, datasets, epochs, lr=None, use_es=False):
-    if lr:
-        optimizer = keras.optimizers.Adam(learning_rate=lr)
-    else:
-        optimizer = "adam"
-
+def train_and_evaluate(
+    model, train_ds, val_ds, epochs, learning_rate=1e-3, use_early_stopping=False
+):
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
         optimizer=optimizer,
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"],
     )
 
-    if use_es:
+    if use_early_stopping:
         es_callback = keras.callbacks.EarlyStopping(patience=5)
         callbacks = [es_callback]
     else:
         callbacks = None
 
-    training_dataset = datasets[0]
-    validation_dataset = datasets[1]
     model.fit(
-        training_dataset,
-        validation_data=validation_dataset,
-        epochs=epochs,
-        callbacks=callbacks,
+        train_ds, validation_data=val_ds, epochs=epochs, callbacks=callbacks,
     )
 
     _, accuracy = model.evaluate(validation_dataset)
@@ -261,7 +260,7 @@ epochs = 30
 
 smaller_res_model = get_training_model()
 smaller_res_model = train_and_evaluate(
-    smaller_res_model, (initial_train_dataset, initial_val_dataset), epochs
+    smaller_res_model, initial_train_dataset, initial_val_dataset, epochs
 )
 
 """
@@ -290,7 +289,11 @@ epochs = 10
 
 # Use a lower learning rate during fine-tuning.
 bigger_res_model = train_and_evaluate(
-    smaller_res_model, (finetune_train_dataset, finetune_val_dataset), epochs, lr=1e-4
+    smaller_res_model,
+    finetune_train_dataset,
+    finetune_val_dataset,
+    epochs,
+    learning_rate=1e-4,
 )
 
 """
@@ -304,11 +307,11 @@ epochs = 30
 
 vanilla_bigger_res_model = get_training_model()
 vanilla_bigger_res_model = train_and_evaluate(
-    vanilla_bigger_res_model, (vanilla_train_dataset, vanilla_val_dataset), epochs
+    vanilla_bigger_res_model, vanilla_train_dataset, vanilla_val_dataset, epochs
 )
 
 """
-As we can notice from the above cells, FixRes does lead to a good performance. Another
+As we can notice from the above cells, FixRes leads to a better performance. Another
 advantage of FixRes is the improved total training time keeping GPU memory usage under
 control. FixRes is model agnostic, you can use it on any image classification network
 to potentially boost performance.
