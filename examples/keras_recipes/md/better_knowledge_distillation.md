@@ -94,11 +94,11 @@ RESIZE = 128
 train_ds, validation_ds, test_ds = tfds.load(
     "oxford_flowers102", split=["train", "validation", "test"], as_supervised=True
 )
-print(f"Number of training examples: {tf.data.experimental.cardinality(train_ds)}.")
+print(f"Number of training examples: {train_ds.cardinality()}.")
 print(
-    f"Number of validation examples: {tf.data.experimental.cardinality(validation_ds)}."
+    f"Number of validation examples: {validation_ds.cardinality()}."
 )
-print(f"Number of test examples: {tf.data.experimental.cardinality(test_ds)}.")
+print(f"Number of test examples: {test_ds.cardinality()}.")
 ```
 
 <div class="k-default-codeblock">

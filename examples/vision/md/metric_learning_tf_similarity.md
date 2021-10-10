@@ -1,4 +1,4 @@
-# Metric learning for image similarity search using TensorFlow similarity
+# Metric learning for image similarity search using TensorFlow Similarity
 
 **Author:** [Owen Vallis](https://twitter.com/owenvallis)<br>
 **Date created:** 2021/09/30<br>
@@ -63,17 +63,8 @@ print("TensorFlow Similarity:", tfsim.__version__)
 
 <div class="k-default-codeblock">
 ```
-Your CPU supports instructions that this binary was not compiled to use: SSE3 SSE4.1 SSE4.2 AVX AVX2
-For maximum performance, you can install NMSLIB from sources 
-pip install --no-binary :all: nmslib
-
 TensorFlow: 2.6.0
 TensorFlow Similarity: 0.14
-
-2021-10-07 22:48:06.586612: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-07 22:48:06.592125: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcusolver.so.11'; dlerror: libcusolver.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /usr/local/cuda/lib64:/usr/local/nccl2/lib:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/lib64:/usr/local/nccl2/lib:/usr/local/cuda/extras/CUPTI/lib64
-2021-10-07 22:48:06.593020: W tensorflow/core/common_runtime/gpu/gpu_device.cc:1835] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
-Skipping registering GPU devices...
 
 ```
 </div>

@@ -127,7 +127,7 @@ experimented on). We here use 10,000 to show a working example.
 
 
 ```python
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 shuffle_buffer = 5000
 # The below two values are taken from https://www.tensorflow.org/datasets/catalog/stl10
 labelled_train_images = 5000

@@ -26,10 +26,8 @@ from functools import partial
 import matplotlib.pyplot as plt
 
 try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
     print("Device:", tpu.master())
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
     strategy = tf.distribute.TPUStrategy(tpu)
 except:
     strategy = tf.distribute.get_strategy()

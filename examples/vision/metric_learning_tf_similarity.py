@@ -1,5 +1,5 @@
 """
-Title: Metric learning for image similarity search using TensorFlow similarity
+Title: Metric learning for image similarity search using TensorFlow Similarity
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
 Last modified: 2021/09/30

@@ -137,10 +137,8 @@ c.configure_tpu_version(tf.__version__, restart_type="always")
 import tensorflow as tf
 
 try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
-    print("Running on TPU ", tpu.cluster_spec().as_dict()["worker"])
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
+    print("Device:", tpu.master())
     strategy = tf.distribute.TPUStrategy(tpu)
 except ValueError:
     print("Not connected to a TPU runtime. Using CPU/GPU strategy")

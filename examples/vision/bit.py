@@ -128,7 +128,7 @@ def preprocess_test(image, label):
     return (image, label)
 
 
-DATASET_NUM_TRAIN_EXAMPLES = tf.data.experimental.cardinality(train_ds).numpy()
+DATASET_NUM_TRAIN_EXAMPLES = train_ds.cardinality().numpy()
 
 repeat_count = int(
     SCHEDULE_LENGTH * BATCH_SIZE / DATASET_NUM_TRAIN_EXAMPLES * STEPS_PER_EPOCH

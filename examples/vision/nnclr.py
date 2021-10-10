@@ -84,7 +84,7 @@ results of NNCLR are achieved with a queue size of 98,304 (the largest `queue_si
 experimented on). We here use 10,000 to show a working example.
 """
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 shuffle_buffer = 5000
 # The below two values are taken from https://www.tensorflow.org/datasets/catalog/stl10
 labelled_train_images = 5000
