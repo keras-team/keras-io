@@ -186,7 +186,7 @@ def visualize_dataset(batch_images):
     plt.figure(figsize=(10, 10))
     for n in range(25):
         ax = plt.subplot(5, 5, n + 1)
-        plt.imshow((batch_images[n].numpy() + 1) / 2)
+        plt.imshow(batch_images[n].numpy().astype("int"))
         plt.axis("off")
     plt.show()
 
@@ -254,7 +254,7 @@ def train_and_evaluate(
         train_ds, validation_data=val_ds, epochs=epochs, callbacks=callbacks,
     )
 
-    _, accuracy = model.evaluate(validation_dataset)
+    _, accuracy = model.evaluate(val_ds)
     print(f"Top-1 accuracy on the validation set: {accuracy*100:.2f}%.")
     return model
 
@@ -287,10 +287,10 @@ For a comprehensive guide on fine-tuning models in Keras, refer to
 [this tutorial](https://keras.io/guides/transfer_learning/).
 """
 
-for layer in smaller_res_model.layers[1].layers:
+for layer in smaller_res_model.layers[2].layers:
     layer.trainable = False
 
-smaller_res_model.layers[1].get_layer("post_bn").trainable = True
+smaller_res_model.layers[2].get_layer("post_bn").trainable = True
 
 epochs = 10
 
