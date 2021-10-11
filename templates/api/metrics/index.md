@@ -149,7 +149,7 @@ which can maintain a state across batches. It's easy:
 
 - Create the state variables in `__init__`
 - Update the variables given `y_true` and `y_pred` in `update_state()`
-- Return the metric result in `result()`
+- Return the scalar metric result in `result()`
 - Clear the state in `reset_states()`
 
 Here's a simple example computing binary true positives:
