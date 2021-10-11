@@ -85,9 +85,7 @@ train_ds, validation_ds, test_ds = tfds.load(
     "oxford_flowers102", split=["train", "validation", "test"], as_supervised=True
 )
 print(f"Number of training examples: {train_ds.cardinality()}.")
-print(
-    f"Number of validation examples: {validation_ds.cardinality()}."
-)
+print(f"Number of validation examples: {validation_ds.cardinality()}.")
 print(f"Number of test examples: {test_ds.cardinality()}.")
 
 """
