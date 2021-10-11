@@ -78,34 +78,38 @@ size_for_resizing = int((bigger_size / smaller_size) * bigger_size)
 central_crop_layer = layers.CenterCrop(bigger_size, bigger_size)
 
 
-def preprocess_initial(image, label):
+def preprocess_initial(train, image_size):
     """Initial preprocessing function for training on smaller resolution.
 
     For training, do random_horizontal_flip -> random_crop.
     For validation, just resize.
     No color-jittering has been used.
     """
-    if train:
-        channels = image.shape[-1]
-        begin, size, _ = tf.image.sample_distorted_bounding_box(
-            tf.shape(image),
-            tf.zeros([0, 0, 4], tf.float32),
-            area_range=(0.05, 1.0),
-            min_object_covered=0,
-            use_image_if_no_bounding_boxes=True,
-        )
-        image = tf.slice(image, begin, size)
 
-        image.set_shape([None, None, channels])
-        image = tf.image.resize(image, [image_size, image_size])
-        image = tf.image.random_flip_left_right(image)
-    else:
-        image = tf.image.resize(image, [image_size, image_size])
+    def _pp(image, label, train):
+        if train:
+            channels = image.shape[-1]
+            begin, size, _ = tf.image.sample_distorted_bounding_box(
+                tf.shape(image),
+                tf.zeros([0, 0, 4], tf.float32),
+                area_range=(0.05, 1.0),
+                min_object_covered=0,
+                use_image_if_no_bounding_boxes=True,
+            )
+            image = tf.slice(image, begin, size)
 
-    return image, label
+            image.set_shape([None, None, channels])
+            image = tf.image.resize(image, [image_size, image_size])
+            image = tf.image.random_flip_left_right(image)
+        else:
+            image = tf.image.resize(image, [image_size, image_size])
+
+        return image, label
+
+    return _pp
 
 
-def preprocess_finetune(image, label):
+def preprocess_finetune(image, label, train):
     """Preprocessing function for fine-tuning on a higher resolution.
 
     For training, resize to a bigger resolution to maintain the ratio ->
@@ -133,9 +137,9 @@ def make_dataset(
 
     # Determine which preprocessing function we are using.
     if image_size == smaller_size:
-        preprocess_func = preprocess_initial
+        preprocess_func = preprocess_initial(train, image_size)
     elif not fixres and image_size == bigger_size:
-        preprocess_func = preprocess_initial
+        preprocess_func = preprocess_initial(train, image_size)
     else:
         preprocess_func = preprocess_finetune
 
@@ -143,7 +147,10 @@ def make_dataset(
         dataset = dataset.shuffle(batch_size * 10)
 
     return (
-        dataset.map(preprocess_func, auto)
+        dataset.map(
+            lambda x, y: preprocess_func(x, y, train),
+            num_parallel_calls=num_parallel_calls,
+        )
         .batch(batch_size)
         .prefetch(num_parallel_calls)
     )
