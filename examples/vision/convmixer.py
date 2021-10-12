@@ -24,7 +24,7 @@ the idea of using patches to train an all-convolutional network and demonstrate
 competitive results. Their architecture namely **ConvMixer** uses recipes from the recent
 isotrophic architectures like ViT, MLP-Mixer
 ([Tolstikhin et al.](https://arxiv.org/abs/2105.01601)) and these include using same
-depth across different layers in the network, same resolution, residual connections,
+depth and resolution across different layers in the network, residual connections,
 and so on.
 
 In this example, we will implement the ConvMixer model and demonstrate its performance on
@@ -47,13 +47,12 @@ from tensorflow import keras
 import matplotlib.pyplot as plt
 import tensorflow_addons as tfa
 import tensorflow as tf
-import numpy as np
 
 """
 ## Hyperparameters
 
-For the purpose of this example, we will only train the model for 10 epochs. To focus on
-the core ideas of ConvMixer, we will note use other training-specific elements like
+For the purpose of this example, we will train the model for only 10 epochs. To focus on
+the core ideas of ConvMixer, we will not use other training-specific elements like
 RandAugment ([Cubuk et al.](https://arxiv.org/abs/1909.13719)). If you are interested to
 learn those details, please refer to the
 [original paper](https://openreview.net/pdf?id=TVHS5Y4dNvM). 
@@ -127,7 +126,7 @@ The following figure (taken from the original paper) depicts the ConvMixer model
 
 ![](https://i.imgur.com/yF8actg.png)
 
-The ConvMixer model is very similar to the MLP-Mixer model with the following key
+ConvMixer is very similar to the MLP-Mixer model with the following key
 differences:
 
 * Instead of using fully-connected layers, it uses standard convolution layers.
@@ -171,7 +170,7 @@ def get_conv_mixer_256_8(
 ):
     """ConvMixer-256/8: https://openreview.net/pdf?id=TVHS5Y4dNvM.
     
-    The values are taken from the paper. 
+    The hyperparameter values are taken from the paper. 
     """
     inputs = keras.Input((image_size, image_size, 3))
 
