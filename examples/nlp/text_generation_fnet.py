@@ -132,7 +132,7 @@ vectorizer.adapt(tf.data.Dataset.from_tensor_slices((questions + answers)).batch
 def vectorize_text(inputs, outputs):
     inputs, outputs = vectorizer(inputs), vectorizer(outputs)
     # One extra padding token to the right to match the output shape
-    outputs = tf.pad(inputs, [[0, 1]])
+    outputs = tf.pad(outputs, [[0, 1]])
     return (
         {"encoder_inputs": inputs, "decoder_inputs": outputs[:-1]},
         {"outputs": outputs[1:]},
