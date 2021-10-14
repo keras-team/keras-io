@@ -1,27 +1,29 @@
 """
-Title: Evaluationg and Exporting scikit-learn Metrics in a Keras callback
+Title: Evaluating and exporting scikit-learn metrics in a Keras callback
 Author: [lukewood](https://lukewood.xyz)
 Date created: 10/07/2021
 Last modified: 10/07/2021
-Description: Example shows how to use Keras callbacks to evaluate and export non-TensorFlow based metrics.
+Description: This example shows how to use Keras callbacks to evaluate and export non-TensorFlow based metrics.
 """
 """
 ## Introduction
+
 [Keras callbacks](https://keras.io/api/callbacks/) allow for the execution of arbitrary
-code at various stages of the Keras training process.  While Keras offers first class
-support for metric evaluation, Keras [metrics](https://keras.io/api/metrics/) may only
+code at various stages of the Keras training process.  While Keras offers first-class
+support for metric evaluation, [Keras metrics](https://keras.io/api/metrics/) may only
 rely on TensorFlow code internally.
 
-While there are TensorFlow implementations of many metrics online, many metrics are
-implemented using [NumPy](https://numpy.org/) or another numerical computation library.
+While there are TensorFlow implementations of many metrics online, some metrics are
+implemented using [NumPy](https://numpy.org/) or another Python-based numerical computation library.
 By performing metric evaluation inside of a Keras callback, we can leverage any existing
 metric, and ultimately export the result to TensorBoard.
 """
 
 """
-## Jaccard Score Metric
+## Jaccard score metric
+
 This example makes use of a sklearn metric, `sklearn.metrics.jarrard_score()`, and
-writes the result to a TensorBoard using the `tf.summary` API.
+writes the result to TensorBoard using the `tf.summary` API.
 
 This template can be modified slightly to make it work with any existing sklearn metric.
 """
@@ -35,7 +37,7 @@ import os
 
 
 class JaccardScoreCallback(keras.callbacks.Callback):
-    """Computes the jaccard score and logs the results to TensorBoard."""
+    """Computes the Jaccard score and logs the results to TensorBoard."""
 
     def __init__(self, model, x_test, y_test, log_dir):
         self.model = model
@@ -68,14 +70,15 @@ class JaccardScoreCallback(keras.callbacks.Callback):
 
 
 """
-## Sample Usage
-Let's test our `JaccardScoreCallback` class with a real keras model.
+## Sample usage
+
+Let's test our `JaccardScoreCallback` class with a Keras model.
 """
 # Model / data parameters
 num_classes = 10
 input_shape = (28, 28, 1)
 
-# the data, split between train and test sets
+# The data, split between train and test sets
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Scale images to the [0, 1] range
@@ -89,7 +92,7 @@ print(x_train.shape[0], "train samples")
 print(x_test.shape[0], "test samples")
 
 
-# convert class vectors to binary class matrices
+# Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
@@ -123,16 +126,17 @@ model.fit(
 )
 
 """
-If you now launch a TensorBoard instance using `tensorboard --logdir=logs`, you will now
-see the jaccard_score metric alongside any other exported metrics!
+If you now launch a TensorBoard instance using `tensorboard --logdir=logs`, you will
+see the `jaccard_score` metric alongside any other exported metrics!
 
 ![TensorBoard Jaccard Score](https://i.imgur.com/T4qzrdn.png)
 """
 
 """
 ## Conclusion
+
 Many ML practitioners and researchers rely on metrics that may not yet have a TensorFlow
-implementation.  Keras users can still leverage the wide variety of existing metric
+implementation. Keras users can still leverage the wide variety of existing metric
 implementations in other frameworks by using a Keras callback.  These metrics can be
 exported, viewed and analyzed in the TensorBoard like any other metric.
 """
