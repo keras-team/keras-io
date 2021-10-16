@@ -89,11 +89,7 @@ image_size = 32
 auto = tf.data.AUTOTUNE
 
 data_augmentation = keras.Sequential(
-    [
-        layers.Rescaling(scale=1.0 / 255),
-        layers.RandomCrop(image_size, image_size),
-        layers.RandomFlip("horizontal"),
-    ],
+    [layers.RandomCrop(image_size, image_size), layers.RandomFlip("horizontal"),],
     name="data_augmentation",
 )
 
@@ -106,11 +102,6 @@ def make_datasets(images, labels, is_train=False):
     if is_train:
         dataset = dataset.map(
             lambda x, y: (data_augmentation(x), y), num_parallel_calls=auto
-        )
-    else:
-        dataset = dataset.map(
-            lambda x, y: (tf.image.convert_image_dtype(x, tf.float32), y),
-            num_parallel_calls=auto,
         )
     return dataset.prefetch(auto)
 
@@ -173,9 +164,10 @@ def get_conv_mixer_256_8(
     The hyperparameter values are taken from the paper. 
     """
     inputs = keras.Input((image_size, image_size, 3))
+    x = layers.Rescaling(scale=1.0 / 255)(inputs)
 
     # Extract patch embeddings.
-    x = conv_stem(inputs, filters, patch_size)
+    x = conv_stem(x, filters, patch_size)
 
     # ConvMixer blocks.
     for _ in range(depth):
@@ -278,7 +270,7 @@ def visualization_plot(weights, idx=1):
         idx += 1
 
 
-patch_embeddings = conv_mixer_model.layers[1].get_weights()[0]
+patch_embeddings = conv_mixer_model.layers[2].get_weights()[0]
 visualization_plot(patch_embeddings)
 
 """
@@ -297,7 +289,7 @@ for i, layer in enumerate(conv_mixer_model.layers):
         if layer.get_config()["kernel_size"] == (5, 5):
             print(i, layer)
 
-idx = 25  # Taking a kernel from the middle of the network.
+idx = 26  # Taking a kernel from the middle of the network.
 
 kernel = conv_mixer_model.layers[idx].get_weights()[0]
 visualization_plot(kernel)
