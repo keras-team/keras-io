@@ -11,26 +11,26 @@ Description: An all-convolutional network applied to patches of images.
 Vision Transformers (ViT; [Dosovitskiy et al.](https://arxiv.org/abs/1612.00593)) extract
 small patches from the input images, linearly project them, and then apply the
 Transformer ([Vaswani et al.](https://arxiv.org/abs/1706.03762)) blocks. The application
-of ViTs to image recognition tasks is quickly becoming a promising area of research
-because ViTs eliminate the need to have strong inductive biases such convolutions for
+of ViTs to image recognition tasks is quickly becoming a promising area of research,
+because ViTs eliminate the need to have strong inductive biases (such as convolutions) for
 modeling locality. This presents them as a general computation primititive capable of
 learning just from the training data with as minimal inductive priors as possible. ViTs
-yield tremendous downstream performance when trained with proper regularization, data
-augmentation, and relatively larger datasets. 
+yield great downstream performance when trained with proper regularization, data
+augmentation, and relatively large datasets. 
 
-In the [Patches Are All You Need](https://openreview.net/pdf?id=TVHS5Y4dNvM) paper, (at
-the time of writing it is a submission to the ICLR 2022 conference), the authors extend
+In the [Patches Are All You Need](https://openreview.net/pdf?id=TVHS5Y4dNvM) paper (note: at
+the time of writing, it is a submission to the ICLR 2022 conference), the authors extend
 the idea of using patches to train an all-convolutional network and demonstrate
 competitive results. Their architecture namely **ConvMixer** uses recipes from the recent
 isotrophic architectures like ViT, MLP-Mixer
-([Tolstikhin et al.](https://arxiv.org/abs/2105.01601)) and these include using same
+([Tolstikhin et al.](https://arxiv.org/abs/2105.01601)), such as using the same
 depth and resolution across different layers in the network, residual connections,
 and so on.
 
 In this example, we will implement the ConvMixer model and demonstrate its performance on
 the CIFAR-10 dataset.
 
-To use the AdamW optimizer, we need to install TensorFlow Addons.
+To use the AdamW optimizer, we need to install TensorFlow Addons:
 
 ```shell
 pip install -U -q tensorflow-addons
@@ -51,10 +51,10 @@ import tensorflow as tf
 """
 ## Hyperparameters
 
-For the purpose of this example, we will train the model for only 10 epochs. To focus on
+To keep run time short, we will train the model for only 10 epochs. To focus on
 the core ideas of ConvMixer, we will not use other training-specific elements like
-RandAugment ([Cubuk et al.](https://arxiv.org/abs/1909.13719)). If you are interested to
-learn those details, please refer to the
+RandAugment ([Cubuk et al.](https://arxiv.org/abs/1909.13719)). If you are interested in
+learning more about those details, please refer to the
 [original paper](https://openreview.net/pdf?id=TVHS5Y4dNvM). 
 """
 
@@ -82,7 +82,7 @@ print(f"Test data samples: {len(x_test)}")
 ## Prepare `tf.data.Dataset` objects
 
 Our data augmentation pipeline is different from what the authors used for the CIFAR-10
-dataset which is fine for the purpose of the example. 
+dataset, which is fine for the purpose of the example. 
 """
 
 image_size = 32
@@ -117,12 +117,11 @@ The following figure (taken from the original paper) depicts the ConvMixer model
 
 ![](https://i.imgur.com/yF8actg.png)
 
-ConvMixer is very similar to the MLP-Mixer model with the following key
+ConvMixer is very similar to the MLP-Mixer, model with the following key
 differences:
 
 * Instead of using fully-connected layers, it uses standard convolution layers.
-* Instead of LayerNorm (which is typical for ViTs and MLP-Mixers), BatchNorm has been
-used. 
+* Instead of LayerNorm (which is typical for ViTs and MLP-Mixers), it uses BatchNorm.
 
 Two types of convolution layers are used in ConvMixer. **(1)**: Depthwise convolutions,
 for mixing spatial locations of the images, **(2)**: Pointwise convolutions (which follow
@@ -234,14 +233,14 @@ history, conv_mixer_model = run_experiment(conv_mixer_model)
 
 """
 The gap in training and validation performance can be mitigated by using additional
-regularization techniques. But nevertheless, being able to get to ~83% accuracy within 10
-epochs with 0.8 million parameters is a competitive result. 
+regularization techniques. Nevertheless, being able to get to ~83% accuracy within 10
+epochs with 0.8 million parameters is a strong result. 
 """
 
 """
 ## Visualizing the internals of ConvMixer
 
-We can visualize how the patch embeddings and the learned convolution filters. Recall
+We can visualize the patch embeddings and the learned convolution filters. Recall
 that each patch embedding and intermediate feature map have the same number of channels
 (256 in this case). This will make our visualization utility easier to implement. 
 """
@@ -274,11 +273,11 @@ patch_embeddings = conv_mixer_model.layers[2].get_weights()[0]
 visualization_plot(patch_embeddings)
 
 """
-Even though we did not train the network to convergence we can notice that different
-patches have different patterns. Some share similarity with others while some are very
-different. These visualizations are best perceived with larger image sizes. 
+Even though we did not train the network to convergence, we can notice that different
+patches show different patterns. Some share similarity with others while some are very
+different. These visualizations are more salient with larger image sizes. 
 
-Similarly, we can visualize the raw convolution kernels and this would help us understand
+Similarly, we can visualize the raw convolution kernels. This can help us understand
 the patterns to which a given kernel is receptive. 
 """
 
@@ -295,7 +294,7 @@ kernel = conv_mixer_model.layers[idx].get_weights()[0]
 visualization_plot(kernel)
 
 """
-We see that different filters in the kernel have different locality span and this pattern
+We see that different filters in the kernel have different locality spans, and this pattern
 is likely to evolve with more training. 
 """
 
