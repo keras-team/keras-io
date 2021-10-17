@@ -143,7 +143,7 @@ def conv_stem(x, filters: int, patch_size: int):
 def conv_mixer_block(x, filters: int, kernel_size: int):
     # Depthwise convolution.
     x0 = x
-    x = layers.Conv2D(filters, kernel_size=kernel_size, groups=filters, padding="same")(
+    x = layers.DepthwiseConv2D(kernel_size=kernel_size, padding="same")(
         x
     )
     x = layers.Add()([activation_block(x), x0])  # Residual.
