@@ -50,7 +50,20 @@ BATCH_SIZE = 512
 noise_dim = 128
 
 fashion_mnist = keras.datasets.fashion_mnist
-(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+(train_images, train_labels), (_, _) = fashion_mnist.load_data()
+train_images=train_images[train_labels.flatten()==0]
+"""
+0	T-shirt/top
+1	Trouser
+2	Pullover
+3	Dress
+4	Coat
+5	Sandal
+6	Shirt
+7	Sneaker
+8	Bag
+9	Ankle boot
+"""
 print(f"Number of examples: {len(train_images)}")
 print(f"Shape of the images in the dataset: {train_images.shape[1:]}")
 
