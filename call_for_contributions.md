@@ -84,9 +84,4 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ---
 
-## Keras reproducibility recipes
-
----
-
-
 
