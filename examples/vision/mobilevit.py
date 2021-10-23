@@ -118,11 +118,7 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(
-            x3,
-            hidden_units=[x.shape[-1] * 2, x.shape[-1]],
-            dropout_rate=0.1,
-        )
+        x3 = mlp(x3, hidden_units=[x.shape[-1] * 2, x.shape[-1]], dropout_rate=0.1,)
         # Skip connection 2.
         x = layers.Add()([x3, x2])
 
@@ -137,9 +133,7 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
     )
 
     # Unfold into patches and then pass through Transformers.
-    num_patches = int(
-        (local_features.shape[1] * local_features.shape[2]) / patch_size
-    )
+    num_patches = int((local_features.shape[1] * local_features.shape[2]) / patch_size)
     non_overlapping_patches = layers.Reshape((patch_size, num_patches, projection_dim))(
         local_features
     )
@@ -148,9 +142,9 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
     )
 
     # Fold into conv-like feature-maps.
-    folded_feature_map = layers.Reshape(
-        (*local_features.shape[1:-1], projection_dim)
-    )(global_features)
+    folded_feature_map = layers.Reshape((*local_features.shape[1:-1], projection_dim))(
+        global_features
+    )
 
     # Apply point-wise conv -> concatenate with the input features.
     folded_feature_map = conv_block(
