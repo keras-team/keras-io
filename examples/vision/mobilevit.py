@@ -3,7 +3,7 @@ Title: MobileViT: A mobile-friendly Transformer-based model for image classifica
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/20
 Last modified: 2021/10/20
-Description: Implementing the MobileViT image classification model, combining benefits of convolutions and Transformers.
+Description: MobileViT for image classification with combined benefits of convolutions and Transformers.
 """
 """
 ## Introduction
@@ -29,7 +29,6 @@ for example), while being efficient on mobile devices.
 
 import tensorflow as tf
 
-from tensorflow.keras import backend as K
 from keras.applications import imagenet_utils
 from tensorflow.keras import layers
 from tensorflow import keras
@@ -53,7 +52,7 @@ expansion_factor = 2  # expansion factor for the MobileNetV2 blocks.
 
 The MobileViT architecture is comprised of the following blocks:
 
-* Strided 3x3 convolutions that process the input image. 
+* Strided 3x3 convolutions that process the input image.
 * [MobileNetV2](https://arxiv.org/abs/1801.04381)-style inverted residual blocks for
 downsampling the resolution of the intermediate feature maps.
 * MobileViT blocks that combine the benefits of Transformers and convolutions. It is
@@ -73,6 +72,7 @@ def conv_block(x, filters=16, kernel_size=3, strides=2):
 
 
 # Reference: https://git.io/JKgtC
+
 
 def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     m = layers.Conv2D(expanded_channels, 1, padding="same", use_bias=False)(x)
@@ -97,6 +97,7 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
 
 # Reference:
 # https://keras.io/examples/vision/image_classification_with_vision_transformer/
+
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
@@ -161,23 +162,23 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 
 
 """
-**More on the MobileViT block**: 
+**More on the MobileViT block**:
 
 * First, the feature representations (A) go through convolution blocks that capture local
-relationships. The expected shape of a single entry here would be `(h, w, num_channels)`. 
+relationships. The expected shape of a single entry here would be `(h, w, num_channels)`.
 * Then they get unfolded into another vector with shape `(p, n, num_channels)`,
 where `p` is the area of a small patch, and `n` is `(h * w) / p`. So, we end up with `n`
-non-overlapping patches. 
+non-overlapping patches.
 * This unfolded vector is then passed through a Tranformer block that captures global
-relationships between the patches. 
+relationships between the patches.
 * The output vector (B) is again folded into a vector of shape `(h, w, num_channels)`
-resembling a feature map coming out of convolutions. 
+resembling a feature map coming out of convolutions.
 
 Vectors A and B are then passed through two more convolutional layers to fuse the local
 and global representations. Notice how the spatial resolution of the final vector remains
 unchanged at this point. The authors also present an explanation of how the MobileViT
 block resembles a convolution block of a CNN. For more details, please refer to the
-original paper. 
+original paper.
 """
 
 """
@@ -362,5 +363,5 @@ open("mobilevit_xxs.tflite", "wb").write(tflite_model)
 """
 To learn more about different quantization recipes available in TFLite and running
 inference with TFLite models, check out
-[this official resource](https://www.tensorflow.org/lite/performance/post_training_quantization). 
+[this official resource](https://www.tensorflow.org/lite/performance/post_training_quantization).
 """
