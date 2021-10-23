@@ -3,14 +3,14 @@ Title: MobileViT: A mobile-friendly Transformer-based model for image classifica
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/20
 Last modified: 2021/10/20
-Description: Implementing the MobileViT image classification model combining benefits of convolutions and Transformers.
+Description: Implementing the MobileViT image classification model, combining benefits of convolutions and Transformers.
 """
 """
 ## Introduction
 
-In this example, we will implement MobileViT
-([Mehta et al.](https://arxiv.org/abs/2110.02178))
-that combines the benefits of Transformers
+In this example, we implement the MobileViT architecture
+([Mehta et al.](https://arxiv.org/abs/2110.02178)),
+which combines the benefits of Transformers
 ([Vaswani et al.](https://arxiv.org/abs/1706.03762))
 and convolutions. With Transformers, we can capture long-range dependencies that result
 in global representations. With convolutions, we can capture spatial relationships that
@@ -18,9 +18,9 @@ model locality.
 
 Besides combining the properties of Transformers and convolutions, the authors introduce
 MobileViT as a general-purpose mobile-friendly backbone for different image recognition
-tasks. Their findings suggest that performance-wise, MobileViT is better than other
-models with same or more complexity ([MobileNetV3](https://arxiv.org/abs/1905.02244), for
-example) while being efficient on mobile phones.
+tasks. Their findings suggest that, performance-wise, MobileViT is better than other
+models with the same or higher complexity ([MobileNetV3](https://arxiv.org/abs/1905.02244),
+for example), while being efficient on mobile devices.
 """
 
 """
@@ -51,12 +51,12 @@ expansion_factor = 2  # expansion factor for the MobileNetV2 blocks.
 """
 ## MobileViT utilities
 
-MobileViT's architecture is comprised of the following blocks:
+The MobileViT architecture is comprised of the following blocks:
 
-* Strided 3x3 convolution that receives an input image. 
-* [MobileNetV2](https://arxiv.org/abs/1801.04381)'s inverted residual block for
+* Strided 3x3 convolutions that process the input image. 
+* [MobileNetV2](https://arxiv.org/abs/1801.04381)-style inverted residual blocks for
 downsampling the resolution of the intermediate feature maps.
-* MobileViT block where the benefits of Transformers and convolutions are combined. It is
+* MobileViT blocks that combine the benefits of Transformers and convolutions. It is
 presented in the figure below (taken from the
 [original paper](https://arxiv.org/abs/2110.02178)):
 
@@ -73,6 +73,7 @@ def conv_block(x, filters=16, kernel_size=3, strides=2):
 
 
 # Reference: https://git.io/JKgtC
+
 def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     m = layers.Conv2D(expanded_channels, 1, padding="same", use_bias=False)(x)
     m = layers.BatchNormalization()(m)
@@ -96,7 +97,6 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
 
 # Reference:
 # https://keras.io/examples/vision/image_classification_with_vision_transformer/
-
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
@@ -163,15 +163,14 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 """
 **More on the MobileViT block**: 
 
-* First, the feature representations (A) go through convolution blocks where local
-relationships are captured. Expected shape of a single entry here would be `(h, w,
-num_channels)`. 
-* Then it gets unfolded into another vector having a shape of `(p, n, num_channels)`
-where p is the area of a small patch, n is (h * w) / p. So, we end up with n
+* First, the feature representations (A) go through convolution blocks that capture local
+relationships. The expected shape of a single entry here would be `(h, w, num_channels)`. 
+* Then they get unfolded into another vector with shape `(p, n, num_channels)`,
+where `p` is the area of a small patch, and `n` is `(h * w) / p`. So, we end up with `n`
 non-overlapping patches. 
-* This unfolded vector is then passed through a Tranformer block capturing global
-relationships in between the patches. 
-* The resultant vector (B) is again folded into a vector of shape `(h, w, num_channels)`
+* This unfolded vector is then passed through a Tranformer block that captures global
+relationships between the patches. 
+* The output vector (B) is again folded into a vector of shape `(h, w, num_channels)`
 resembling a feature map coming out of convolutions. 
 
 Vectors A and B are then passed through two more convolutional layers to fuse the local
@@ -182,7 +181,7 @@ original paper.
 """
 
 """
-Next up, we put these above blocks together and implement the MobileViT architecture (XXS
+Next, we combine these blocks together and implement the MobileViT architecture (XXS
 variant). The following figure (taken from the original paper) presents a schematic
 representation of the architecture:
 
@@ -245,7 +244,7 @@ mobilevit_xxs.summary()
 
 We will be using the
 [`tf_flowers`](https://www.tensorflow.org/datasets/catalog/tf_flowers)
-dataset to demonstrate the results. Unlike other Transformer-fused architectures,
+dataset to demonstrate the model. Unlike other Transformer-based architectures,
 MobileViT uses a simple augmentation pipeline primarily because it has the properties
 of a CNN.
 """
@@ -281,7 +280,7 @@ def prepare_dataset(dataset, is_training=True):
 
 """
 The authors use a multi-scale data sampler to help the model learn representations of
-varied scales. For this example, we will discard this part.
+varied scales. In this example, we discard this part.
 """
 
 """
@@ -341,7 +340,7 @@ mobilevit_xxs = run_experiment()
 """
 ## Results and TFLite conversion
 
-With about a million parameters, getting to ~85% top-1 accuracy on 256x256 resolution is
+With about one million parameters, getting to ~85% top-1 accuracy on 256x256 resolution is
 a strong result. This MobileViT mobile is fully compatible with TensorFlow Lite (TFLite)
 and can be converted with the following code:
 """
@@ -361,7 +360,7 @@ tflite_model = converter.convert()
 open("mobilevit_xxs.tflite", "wb").write(tflite_model)
 
 """
-To know more about different quantization recipes available in TFLite and running
-inference with TFLite models check out
+To learn more about different quantization recipes available in TFLite and running
+inference with TFLite models, check out
 [this official resource](https://www.tensorflow.org/lite/performance/post_training_quantization). 
 """
