@@ -619,4 +619,4 @@ def sample_point_cloud(point_cloud, n_sample_points: int):
 
 idx = np.random.choice(len(validation_batch[0]))
 print(f"Index selected: {idx}")
-visualize_single_point_cloud(validation_batch[0], validation_batch[1], idx)
+visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
