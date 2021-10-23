@@ -603,13 +603,16 @@ val_predictions = segmentation_model.predict(validation_batch[0])
 print(f"Validation prediction shape: {val_predictions.shape}")
 
 
-def visualize_single_point_cloud(point_clouds, label_cloudss, idx):
+def visualize_single_point_cloud(point_clouds, label_clouds, idx):
     label_map = LABELS + ["none"]
     point_cloud = point_clouds[idx]
-    label_cloud = label_cloudss[idx]
+    label_cloud = label_clouds[idx]
     visualize_data(point_cloud, [label_map[np.argmax(label)] for label in label_cloud])
 
 
 idx = np.random.choice(len(validation_batch[0]))
 print(f"Index selected: {idx}")
+# Plotting with ground truth
+visualize_single_point_cloud(validation_batch[0], validation_batch[1], idx)
+# Plotting with predicted labels
 visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
