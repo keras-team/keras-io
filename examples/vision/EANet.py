@@ -3,7 +3,7 @@ Title: Image classification with EANet
 Author: [ZhiYong Chang](https://github.com/czy00000)
 Date created: 2021/10/19
 Last modified: 2021/10/19
-Description: Implementing the EANet model for image classification.
+Description: Image classification with a Transformer that leverages external attention.
 """
 
 
@@ -66,11 +66,11 @@ patch_size = 2  # Size of the patches to be extracted from the input images.
 num_patches = (input_shape[0] // patch_size) ** 2  # Number of patch
 embedding_dim = 64  # Number of hidden units.
 mlp_dim = 64
-coef = 4
+dim_coefficient = 4
 num_heads = 4
-attn_drop = 0.2
-proj_drop = 0.2
-depth = 8  # Number of repetitions of the transformer layer
+attention_dropout = 0.2
+projection_dropout = 0.2
+num_transformer_blocks = 8  # Number of repetitions of the transformer layer
 
 print(f"Patch size: {patch_size} X {patch_size} = {patch_size ** 2} ")
 print(f"Patches per image: {num_patches}")
@@ -136,29 +136,29 @@ class PatchEmbedding(layers.Layer):
 """
 
 
-def external_attention(x, dim, num_heads, coef=4, attn_drop=0, proj_drop=0):
+def external_attention(x, dim, num_heads, dim_coefficient=4, attention_dropout=0, projection_dropout=0):
     _, num_patch, channel = x.shape
     assert dim % num_heads == 0
-    num_heads = num_heads * coef
+    num_heads = num_heads * dim_coefficient
 
-    x = layers.Dense(dim * coef)(x)
-    # create tensor [batch_size, num_patches, num_heads, dim*coef//num_heads]
-    x = tf.reshape(x, shape=(-1, num_patch, num_heads, dim * coef // num_heads))
+    x = layers.Dense(dim * dim_coefficient)(x)
+    # create tensor [batch_size, num_patches, num_heads, dim*dim_coefficient//num_heads]
+    x = tf.reshape(x, shape=(-1, num_patch, num_heads, dim * dim_coefficient // num_heads))
     x = tf.transpose(x, perm=[0, 2, 1, 3])
     # a linear layer M_k
-    attn = layers.Dense(dim // coef)(x)
+    attn = layers.Dense(dim // dim_coefficient)(x)
     # normalize attention map
     attn = layers.Softmax(axis=2)(attn)
     # dobule-normalization
     attn = attn / (1e-9 + tf.reduce_sum(attn, axis=-1, keepdims=True))
-    attn = layers.Dropout(attn_drop)(attn)
+    attn = layers.Dropout(attention_dropout)(attn)
     # a linear layer M_v
-    x = layers.Dense(dim * coef // num_heads)(attn)
+    x = layers.Dense(dim * dim_coefficient // num_heads)(attn)
     x = tf.transpose(x, perm=[0, 2, 1, 3])
-    x = tf.reshape(x, [-1, num_patch, dim * coef])
+    x = tf.reshape(x, [-1, num_patch, dim * dim_coefficient])
     # a linear layer to project original dim
     x = layers.Dense(dim)(x)
-    x = layers.Dropout(proj_drop)(x)
+    x = layers.Dropout(projection_dropout)(x)
     return x
 
 
@@ -187,18 +187,18 @@ def transformer_encoder(
     embedding_dim,
     mlp_dim,
     num_heads,
-    coef,
-    attn_drop,
-    proj_drop,
+    dim_coefficient,
+    attention_dropout,
+    projection_dropout,
     attention_type="external_attention",
 ):
     residual_1 = x
     x = layers.LayerNormalization(epsilon=1e-5)(x)
     if attention_type == "external_attention":
-        x = external_attention(x, embedding_dim, num_heads, coef, attn_drop, proj_drop)
+        x = external_attention(x, embedding_dim, num_heads, dim_coefficient, attention_dropout, projection_dropout)
     elif attention_type == "self_attention":
         x = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=embedding_dim, dropout=attn_drop
+            num_heads=num_heads, key_dim=embedding_dim, dropout=attention_dropout
         )(x, x)
     x = layers.add([x, residual_1])
     residual_2 = x
@@ -215,13 +215,13 @@ def transformer_encoder(
 
 """
 The EANet model is a structure composed of external attention.
-The computational complexity of traditional self attention is $O(dN^{2})$,
+The computational complexity of traditional self attention is O(dN^2),
 d is embedding size, N is the number of patch.
 the authors find that most pixels are closely related to just a few other
 pixels, and an N-to-N attention matrix may be redundant.
 Thus, the refined features can be fulfilled
 by using the needed values. So, they propose as an alternative an external
-attention module,The computational complexity of external attention is $O(dSN)$.
+attention module,The computational complexity of external attention is O(dSN).
 As d and S are hyper-parameters,
 the proposed algorithm is linear in the number of pixels.In fact, this is more equivalent
 to a drop patch operation, because a lot of information contained in a patch
@@ -229,7 +229,7 @@ in an image is redundant and unimportant.
 """
 
 
-def get_EANet(attention_type="external_attention"):
+def get_model(attention_type="external_attention"):
     inputs = layers.Input(shape=input_shape)
     # Image augment
     x = data_augmentation(inputs)
@@ -238,15 +238,15 @@ def get_EANet(attention_type="external_attention"):
     # Create patch embedding.
     x = PatchEmbedding(num_patches, embedding_dim)(x)
     # Create Transformer block.
-    for _ in range(depth):
+    for _ in range(num_transformer_blocks):
         x = transformer_encoder(
             x,
             embedding_dim,
             mlp_dim,
             num_heads,
-            coef,
-            attn_drop,
-            proj_drop,
+            dim_coefficient,
+            attention_dropout,
+            projection_dropout,
             attention_type,
         )
 
@@ -262,7 +262,7 @@ def get_EANet(attention_type="external_attention"):
 """
 
 
-model = get_EANet(attention_type="external_attention")
+model = get_model(attention_type="external_attention")
 
 model.compile(
     loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
