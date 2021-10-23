@@ -610,13 +610,6 @@ def visualize_single_point_cloud(point_clouds, label_cloudss, idx):
     visualize_data(point_cloud, [label_map[np.argmax(label)] for label in label_cloud])
 
 
-def sample_point_cloud(point_cloud, n_sample_points: int):
-    n_points = len(point_cloud)
-    sampled_indices = random.sample(list(range(n_points)), n_sample_points)
-    sampled_point_cloud = np.array([point_cloud[i] for i in sampled_indices])
-    return sampled_point_cloud
-
-
 idx = np.random.choice(len(validation_batch[0]))
 print(f"Index selected: {idx}")
 visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
