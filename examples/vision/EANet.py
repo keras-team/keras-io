@@ -1,25 +1,25 @@
 """
-Title: Image classification with EANet
+Title: Image classification with EANet (External Attention Transformer)
 Author: [ZhiYong Chang](https://github.com/czy00000)
 Date created: 2021/10/19
 Last modified: 2021/10/19
 Description: Image classification with a Transformer that leverages external attention.
 """
 
-
 """
 ## Introduction
 
 This example implements the [EANet](https://arxiv.org/abs/2105.02358)
 model for image classification, and demonstrates it on the CIFAR-100 dataset.
-The EANet introduces a novel attention mechanism
+EANet introduces a novel attention mechanism
 named ***external attention***, based on two external, small, learnable, and
 shared memories, which can be implemented easily by simply using two cascaded
-linear layers and two normalization layers; it conveniently replaces self-attention
-in existing popular architectures, External attention has linear complexity and
+linear layers and two normalization layers. It conveniently replaces self-attention
+as used in existing architectures. External attention has linear complexity, as it only
 implicitly considers the correlations between all samples.
+
 This example requires TensorFlow 2.5 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
+[TensorFlow Addons](https://www.tensorflow.org/addons/overview) package,
 which can be installed using the following command:
 
 ```python
@@ -94,8 +94,7 @@ data_augmentation = keras.Sequential(
 data_augmentation.layers[0].adapt(x_train)
 
 """
-## Implement the patch extracting and encoding layer
-
+## Implement the patch extraction and encoding layer
 """
 
 
@@ -131,8 +130,7 @@ class PatchEmbedding(layers.Layer):
 
 
 """
-## Implement the external attention
-
+## Implement the external attention block
 """
 
 
@@ -163,8 +161,7 @@ def external_attention(x, dim, num_heads, dim_coefficient=4, attention_dropout=0
 
 
 """
-## Implement the MLP
-
+## Implement the MLP block
 """
 
 
@@ -178,7 +175,6 @@ def mlp(x, embedding_dim, mlp_dim, drop_rate=0.2):
 
 """
 ## Implement the Transformer block
-
 """
 
 
@@ -209,21 +205,19 @@ def transformer_encoder(
 
 
 """
-## Implement the EANet Model
-
+## Implement the EANet model
 """
 
 """
-The EANet model is a structure composed of external attention.
-The computational complexity of traditional self attention is O(dN^2),
-d is embedding size, N is the number of patch.
+The EANet model leverages external attention.
+The computational complexity of traditional self attention is `O(d * N ** 2)`,
+where `d` is the embedding size, and `N` is the number of patch.
 the authors find that most pixels are closely related to just a few other
-pixels, and an N-to-N attention matrix may be redundant.
-Thus, the refined features can be fulfilled
-by using the needed values. So, they propose as an alternative an external
-attention module,The computational complexity of external attention is O(dSN).
-As d and S are hyper-parameters,
-the proposed algorithm is linear in the number of pixels.In fact, this is more equivalent
+pixels, and an `N`-to-`N` attention matrix may be redundant.
+So, they propose as an alternative an external
+attention module where the computational complexity of external attention is `O(d * S * N)`.
+As `d` and `S` are hyper-parameters,
+the proposed algorithm is linear in the number of pixels. In fact, this is equivalent
 to a drop patch operation, because a lot of information contained in a patch
 in an image is redundant and unimportant.
 """
@@ -312,9 +306,10 @@ EANet just replaces self attention in Vit with external attention.
 The traditional Vit achieved a ~73% test top-5 accuracy and ~41 top-1 accuracy after
 training 50 epochs, but with 0.6M parameters. Under the same experimental environment
 and the same hyperparameters, The EANet model we just trained has just 0.3M parameters,
-and it
-gets us to ~73% test top-5 accuracy and ~43% top-1 accuracy. This fully demonstrates the
-effectiveness of external attention. We only show the training
+and it gets us to ~73% test top-5 accuracy and ~43% top-1 accuracy. This fully demonstrates the
+effectiveness of external attention.
+
+We only show the training
 process of EANet, you can train Vit under the same experimental conditions and observe
 the test results.
 """
