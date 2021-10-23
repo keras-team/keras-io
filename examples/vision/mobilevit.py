@@ -1,9 +1,9 @@
 """
-Title: MobileViT: A mobile-friendly Transformer-based model
+Title: MobileViT: A mobile-friendly Transformer-based model for image classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/20
 Last modified: 2021/10/20
-Description: Implementing MobileViT to combine the benefits of convolutions and Transformers.
+Description: Implementing the MobileViT image classification model combining benefits of convolutions and Transformers.
 """
 """
 ## Introduction
@@ -89,7 +89,7 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     m = layers.Conv2D(output_channels, 1, padding="same", use_bias=False)(m)
     m = layers.BatchNormalization()(m)
 
-    if tf.math.equal(K.int_shape(x)[-1], output_channels) and strides == 1:
+    if tf.math.equal(x.shape[-1], output_channels) and strides == 1:
         return layers.Add()([m, x])
     return m
 
@@ -120,7 +120,7 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # MLP.
         x3 = mlp(
             x3,
-            hidden_units=[K.int_shape(x)[-1] * 2, K.int_shape(x)[-1]],
+            hidden_units=[x.shape[-1] * 2, x.shape[-1]],
             dropout_rate=0.1,
         )
         # Skip connection 2.
@@ -138,7 +138,7 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 
     # Unfold into patches and then pass through Transformers.
     num_patches = int(
-        (K.int_shape(local_features)[1] * K.int_shape(local_features)[2]) / patch_size
+        (local_features.shape[1] * local_features.shape[2]) / patch_size
     )
     non_overlapping_patches = layers.Reshape((patch_size, num_patches, projection_dim))(
         local_features
@@ -149,12 +149,12 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 
     # Fold into conv-like feature-maps.
     folded_feature_map = layers.Reshape(
-        (*K.int_shape(local_features)[1:-1], projection_dim)
+        (*local_features.shape[1:-1], projection_dim)
     )(global_features)
 
     # Apply point-wise conv -> concatenate with the input features.
     folded_feature_map = conv_block(
-        folded_feature_map, filters=K.int_shape(x)[-1], kernel_size=1, strides=strides
+        folded_feature_map, filters=x.shape[-1], kernel_size=1, strides=strides
     )
     local_global_features = layers.Concatenate(axis=-1)([x, folded_feature_map])
 
@@ -345,6 +345,8 @@ def run_experiment(epochs=epochs):
 mobilevit_xxs = run_experiment()
 
 """
+## Results and TFLite conversion
+
 With about a million parameters, getting to ~85% top-1 accuracy on 256x256 resolution is
 a strong result. This MobileViT mobile is fully compatible with TensorFlow Lite (TFLite)
 and can be converted with the following code:
