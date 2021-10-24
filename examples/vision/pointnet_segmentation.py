@@ -594,3 +594,11 @@ visualize_single_point_cloud(validation_batch[0], validation_batch[1], idx)
 
 # Plotting with predicted labels.
 visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
+
+"""
+## Final notes
+
+If you are interested to learn more about this topic, you may find
+[this repository](https://github.com/soumik12345/point-cloud-segmentation)
+useful.
+"""
