@@ -134,14 +134,18 @@ class PatchEmbedding(layers.Layer):
 """
 
 
-def external_attention(x, dim, num_heads, dim_coefficient=4, attention_dropout=0, projection_dropout=0):
+def external_attention(
+    x, dim, num_heads, dim_coefficient=4, attention_dropout=0, projection_dropout=0
+):
     _, num_patch, channel = x.shape
     assert dim % num_heads == 0
     num_heads = num_heads * dim_coefficient
 
     x = layers.Dense(dim * dim_coefficient)(x)
     # create tensor [batch_size, num_patches, num_heads, dim*dim_coefficient//num_heads]
-    x = tf.reshape(x, shape=(-1, num_patch, num_heads, dim * dim_coefficient // num_heads))
+    x = tf.reshape(
+        x, shape=(-1, num_patch, num_heads, dim * dim_coefficient // num_heads)
+    )
     x = tf.transpose(x, perm=[0, 2, 1, 3])
     # a linear layer M_k
     attn = layers.Dense(dim // dim_coefficient)(x)
@@ -191,7 +195,14 @@ def transformer_encoder(
     residual_1 = x
     x = layers.LayerNormalization(epsilon=1e-5)(x)
     if attention_type == "external_attention":
-        x = external_attention(x, embedding_dim, num_heads, dim_coefficient, attention_dropout, projection_dropout)
+        x = external_attention(
+            x,
+            embedding_dim,
+            num_heads,
+            dim_coefficient,
+            attention_dropout,
+            projection_dropout,
+        )
     elif attention_type == "self_attention":
         x = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embedding_dim, dropout=attention_dropout
