@@ -2,7 +2,7 @@
 Title: Point cloud segmentation with PointNet
 Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://github.com/sayakpaul)
 Date created: 2020/10/23
-Last modified: 2020/10/23
+Last modified: 2020/10/24
 Description: Implementation of a PointNet-based model for segmenting point clouds.
 """
 """
@@ -40,16 +40,8 @@ from glob import glob
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import (
-    layers,
-    losses,
-    initializers,
-    optimizers,
-    callbacks,
-    regularizers,
-)
+from tensorflow.keras import layers
 
-import plotly.express as px
 import matplotlib.pyplot as plt
 
 """
@@ -87,7 +79,7 @@ visualization.
 with open("/tmp/.keras/datasets/PartAnnotation/metadata.json") as json_file:
     metadata = json.load(json_file)
 
-metadata
+print(metadata)
 
 """
 For this example, we will train PointNet to segment the parts of an `Airplane` model.
@@ -101,9 +93,11 @@ labels_dir = "/tmp/.keras/datasets/PartAnnotation/{}/points_label".format(
 )
 LABELS = metadata["Airplane"]["lables"]
 COLORS = metadata["Airplane"]["colors"]
+
 VAL_SPLIT = 0.2
-N_SAMPLE_POINTS = 1024
+NUM_SAMPLE_POINTS = 1024
 BATCH_SIZE = 32
+EPOCHS = 60
 INITIAL_LR = 1e-3
 
 """
@@ -132,7 +126,7 @@ point_cloud_labels, all_labels = [], []
 points_files = glob(os.path.join(points_dir, "*.pts"))
 for point_file in tqdm(points_files):
     point_cloud = np.loadtxt(point_file)
-    if point_cloud.shape[0] < N_SAMPLE_POINTS:
+    if point_cloud.shape[0] < NUM_SAMPLE_POINTS:
         continue
 
     # Get the file-id of the current point cloud for parsing its
@@ -225,9 +219,9 @@ for index in tqdm(range(len(point_clouds))):
     current_point_cloud = point_clouds[index]
     current_label_cloud = point_cloud_labels[index]
     current_labels = all_labels[index]
-    n_points = len(current_point_cloud)
+    num_points = len(current_point_cloud)
     # Randomly sampling respective indices.
-    sampled_indices = random.sample(list(range(n_points)), N_SAMPLE_POINTS)
+    sampled_indices = random.sample(list(range(num_points)), NUM_SAMPLE_POINTS)
     # Sampling points corresponding to sampled indices.
     sampled_point_cloud = np.array([current_point_cloud[i] for i in sampled_indices])
     # Sampling corresponding one-hot encoded labels.
@@ -258,8 +252,8 @@ We  also augment the train point clouds by applying random jitter to them.
 
 
 def load_data(point_cloud_batch, label_cloud_batch):
-    point_cloud_batch.set_shape([N_SAMPLE_POINTS, 3])
-    label_cloud_batch.set_shape([N_SAMPLE_POINTS, len(LABELS) + 1])
+    point_cloud_batch.set_shape([NUM_SAMPLE_POINTS, 3])
+    label_cloud_batch.set_shape([NUM_SAMPLE_POINTS, len(LABELS) + 1])
     return point_cloud_batch, label_cloud_batch
 
 
@@ -287,6 +281,7 @@ def generate_dataset(point_clouds, label_clouds, is_training=True):
 split_index = int(len(point_clouds) * (1 - VAL_SPLIT))
 train_point_clouds = point_clouds[:split_index]
 train_label_cloud = point_cloud_labels[:split_index]
+total_training_examples = len(train_point_clouds)
 
 val_point_clouds = point_clouds[split_index:]
 val_label_cloud = point_cloud_labels[split_index:]
@@ -385,7 +380,7 @@ that the magnitudes of the transformed features do not vary too much.
 """
 
 
-class OrthogonalRegularizer(regularizers.Regularizer):
+class OrthogonalRegularizer(keras.regularizers.Regularizer):
     """Reference: https://keras.io/examples/vision/pointnet/#build-a-model"""
 
     def __init__(self, num_features, l2reg=0.001):
@@ -426,7 +421,7 @@ def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Te
     return layers.Dense(
         num_features * num_features,
         kernel_initializer="zeros",
-        bias_initializer=initializers.Constant(np.eye(num_features).flatten()),
+        bias_initializer=keras.initializers.Constant(np.eye(num_features).flatten()),
         activity_regularizer=OrthogonalRegularizer(num_features),
         name=f"{name}_final",
     )(x)
@@ -504,41 +499,22 @@ For the training the authors recommend using a learning rate schedule that decay
 initial learning rate by half every 20 epochs. In this example, we resort to 15 epochs. 
 """
 
+training_step_size = total_training_examples // BATCH_SIZE
+total_training_steps = training_step_size * EPOCHS
+print(f"Total training steps: {total_training_steps}.")
 
-class LRStepDecay:
-    """
-Reference:
-https://www.pyimagesearch.com/2019/07/22/keras-learning-rate-schedules-and-decay/
-    """
-
-    def __init__(self, initial_lr: float, drop_every: int, decay_factor: float) -> None:
-        super().__init__()
-        self.initial_lr = initial_lr
-        self.drop_every = drop_every
-        self.decay_factor = decay_factor
-
-    def __call__(self, epoch: int) -> float:
-        exp = np.floor((1 + epoch) / self.drop_every)
-        new_lr = self.initial_lr * (self.decay_factor ** exp)
-        return new_lr
-
-    def plot(self, epochs: int) -> None:
-        lrs = [self(i) for i in range(epochs)]
-        plt.style.use("ggplot")
-        plt.figure()
-        plt.plot(range(epochs), lrs)
-        plt.title("Learning Rate Schedule")
-        plt.xlabel("Epoch")
-        plt.ylabel("Learning Rate")
-        plt.show()
-
-
-step_decay_scheduler = LRStepDecay(INITIAL_LR, 15, 0.5)
-step_decay_scheduler.plot(60)
-
-lr_callback = tf.keras.callbacks.LearningRateScheduler(
-    lambda epoch: step_decay_scheduler(epoch), verbose=True
+lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
+    boundaries=[training_step_size * 15, training_step_size * 15],
+    values=[INIT_LR, INIT_LR * 0.5, INIT_LR * 0.25],
 )
+
+steps = tf.range(total_training_steps, dtype=tf.int32)
+lrs = [lr_schedule(step) for step in steps]
+
+plt.plot(lrs)
+plt.xlabel("Steps")
+plt.ylabel("Learning Rate")
+plt.show()
 
 """
 Finally, we implement a utility for running our experiments and launch model training.
@@ -549,13 +525,13 @@ def run_experiment(epochs):
 
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
     segmentation_model.compile(
-        optimizer=optimizers.Adam(learning_rate=INITIAL_LR),
-        loss=losses.CategoricalCrossentropy(),
+        optimizer=keras.optimizers.Adam(learning_rate=INITIAL_LR),
+        loss=keras.losses.CategoricalCrossentropy(),
         metrics=["accuracy"],
     )
 
     checkpoint_filepath = "/tmp/checkpoint"
-    checkpoint_callback = callbacks.ModelCheckpoint(
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",
         save_best_only=True,
@@ -573,7 +549,7 @@ def run_experiment(epochs):
     return segmentation_model, history
 
 
-segmentation_model, history = run_experiment(epochs=60)
+segmentation_model, history = run_experiment(epochs=EPOCHS)
 
 """
 ## Visualize the training landscape
@@ -612,7 +588,9 @@ def visualize_single_point_cloud(point_clouds, label_clouds, idx):
 
 idx = np.random.choice(len(validation_batch[0]))
 print(f"Index selected: {idx}")
-# Plotting with ground truth
+
+# Plotting with ground-truth.
 visualize_single_point_cloud(validation_batch[0], validation_batch[1], idx)
-# Plotting with predicted labels
+
+# Plotting with predicted labels.
 visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
