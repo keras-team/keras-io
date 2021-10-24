@@ -26,7 +26,7 @@ metric, and ultimately export the result to TensorBoard.
 ---
 ## Jaccard score metric
 
-This example makes use of a sklearn metric, `sklearn.metrics.jarrard_score()`, and
+This example makes use of a sklearn metric, `sklearn.metrics.jaccard_score()`, and
 writes the result to TensorBoard using the `tf.summary` API.
 
 This template can be modified slightly to make it work with any existing sklearn metric.
@@ -139,7 +139,6 @@ model.fit(
 x_train shape: (60000, 28, 28, 1)
 60000 train samples
 10000 test samples
-WARNING:tensorflow:Please add `keras.layers.InputLayer` instead of `keras.Input` to Sequential model. `keras.Input` is intended to be used by Functional model.
 Model: "sequential"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   

@@ -22,7 +22,7 @@ metric, and ultimately export the result to TensorBoard.
 """
 ## Jaccard score metric
 
-This example makes use of a sklearn metric, `sklearn.metrics.jarrard_score()`, and
+This example makes use of a sklearn metric, `sklearn.metrics.jaccard_score()`, and
 writes the result to TensorBoard using the `tf.summary` API.
 
 This template can be modified slightly to make it work with any existing sklearn metric.

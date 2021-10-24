@@ -31,7 +31,7 @@ Keras ranked as #1 for deep learning both among primary frameworks and among all
 ## Keras has broad adoption in the industry and the research community
 
 
-With over 400,000 individual users as of early 2021, Keras has strong adoption across both the industry and the research community. Together with TensorFlow 2, Keras has more adoption than any other deep learning solution -- in every vertical.
+With over one million individual users as of late 2021, Keras has strong adoption across both the industry and the research community. Together with TensorFlow 2, Keras has more adoption than any other deep learning solution -- in every vertical.
 
 You are already constantly interacting with features built with Keras -- it is in use at Netflix, Uber, Yelp, Instacart, Zocdoc, Square, and many others. It is especially popular among startups that place deep learning at the core of their products.
 
