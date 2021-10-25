@@ -213,7 +213,7 @@ visualize_data(point_clouds[300], all_labels[300])
 ### Preprocessing
 
 Note that all the point clouds that we have loaded consist of a variable number of points,
-which makes it difficult for us to batch them together. In order to overcome this problem, we 
+which makes it difficult for us to batch them together. In order to overcome this problem, we
 randomly sample a fixed number of points from each point cloud. We also normalize the
 point clouds in order to make the data scale-invariant.
 """
@@ -315,7 +315,7 @@ of point cloud data:
 
 Given the unstructured nature of point cloud data, a scan made up of `n` points has `n!`
 permutations. The subsequent data processing must be invariant to the different
-representations. In order to make PointNet invariant to input permutations, we use a 
+representations. In order to make PointNet invariant to input permutations, we use a
 symmetric function (such as max-pooling) once the `n` input points are mapped to
 higher-dimensional space. The result is a **global feature vector** that aims to capture
 an aggregate signature of the `n` input points. The global feature vector is used alongside
@@ -357,7 +357,7 @@ with global point features.
 """
 Now that we know the pieces that compose the PointNet model, we can implement the model.
 We start by implementing the basic blocks i.e., the convolutional block and the multi-layer
-perceptron block. 
+perceptron block.
 """
 
 
@@ -411,7 +411,7 @@ def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Te
     Reference: https://keras.io/examples/vision/pointnet/#build-a-model.
 
     The `filters` values come from the original paper:
-    https://arxiv.org/pdf/1612.00593.pdf.
+    https://arxiv.org/abs/1612.00593.
     """
     x = conv_block(inputs, filters=64, name=f"{name}_1")
     x = conv_block(x, filters=128, name=f"{name}_2")
@@ -497,7 +497,7 @@ segmentation_model.summary()
 ## Training
 
 For the training the authors recommend using a learning rate schedule that decays the
-initial learning rate by half every 20 epochs. In this example, we resort to 15 epochs. 
+initial learning rate by half every 20 epochs. In this example, we resort to 15 epochs.
 """
 
 training_step_size = total_training_examples // BATCH_SIZE
@@ -506,7 +506,7 @@ print(f"Total training steps: {total_training_steps}.")
 
 lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
     boundaries=[training_step_size * 15, training_step_size * 15],
-    values=[INIT_LR, INIT_LR * 0.5, INIT_LR * 0.25],
+    values=[INITIAL_LR, INITIAL_LR * 0.5, INITIAL_LR * 0.25],
 )
 
 steps = tf.range(total_training_steps, dtype=tf.int32)
@@ -526,7 +526,7 @@ def run_experiment(epochs):
 
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
     segmentation_model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=INITIAL_LR),
+        optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
         loss=keras.losses.CategoricalCrossentropy(),
         metrics=["accuracy"],
     )
@@ -543,7 +543,7 @@ def run_experiment(epochs):
         train_dataset,
         validation_data=val_dataset,
         epochs=epochs,
-        callbacks=[checkpoint_callback, lr_callback],
+        callbacks=[checkpoint_callback],
     )
 
     segmentation_model.load_weights(checkpoint_filepath)
