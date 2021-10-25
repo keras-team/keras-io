@@ -1037,7 +1037,7 @@ See [this extensive guide](https://www.tensorflow.org/guide/keras/mixed_precisio
 ### What's the difference between `Model` methods `predict()` and `__call__()`?
 
 Let's answer with an extract from
-[Deep Learning with Python, Second Edition](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras&a_bid=76564dff):
+[Deep Learning with Python, Second Edition](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras):
 
 > Both `y = model.predict(x)` and `y = model(x)` (where `x` is an array of input data)
 > mean "run the model on `x` and retrieve the output `y`." Yet they aren't exactly

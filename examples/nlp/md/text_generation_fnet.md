@@ -218,7 +218,7 @@ The decoder architecture remains the same as the one proposed by (Vaswani et al.
 in the original transformer architecture, consisting of an embedding, positional
 encoding, two masked multihead attention layers and finally the dense output layers.
 The architecture that follows is taken from
-[Deep Learning with Python, second edition, chapter 11](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras&a_bid=76564dff).
+[Deep Learning with Python, second edition, chapter 11](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras).
 
 
 ```python

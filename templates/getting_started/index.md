@@ -8,7 +8,7 @@ Check out our **[Introduction to Keras for researchers](/getting_started/intro_t
 
 Are you a beginner looking for both an introduction to machine learning and an introduction to Keras and TensorFlow?
 You're going to need more than a one-pager. And you're in luck:
-**[we've got just the book for you](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras&a_bid=76564dff)**.
+**[we've got just the book for you](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras)**.
 
 
 ## Further starter resources
