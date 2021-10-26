@@ -115,7 +115,7 @@ the same dataset, and apply a lambda value within the [0, 1] range sampled from 
 
 ```python
 
-def sample_beta_distribution(size, concentration_0=alpha, concentration_1=alpha):
+def sample_beta_distribution(size, concentration_0=0.2, concentration_1=0.2):
     gamma_1_sample = tf.random.gamma(shape=[size], alpha=concentration_1)
     gamma_2_sample = tf.random.gamma(shape=[size], alpha=concentration_0)
     return gamma_1_sample / (gamma_1_sample + gamma_2_sample)
