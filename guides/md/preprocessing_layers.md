@@ -585,7 +585,6 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:5 out of the last 1567 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f5588352790> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
   0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]]
@@ -668,7 +667,6 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:6 out of the last 1568 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f557b99cee0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[5.461647  1.6945957 0.        0.        0.        0.        0.
   0.        0.        0.        0.        0.        0.        0.
