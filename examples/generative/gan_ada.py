@@ -82,7 +82,7 @@ dataset_name = "caltech_birds2011"
 max_translation = 0.125
 max_rotation = 0.125
 max_zoom = 0.25
-target_accuracy = 0.8
+target_accuracy = 0.85
 integration_steps = 1000
 
 # architecture
