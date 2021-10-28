@@ -72,7 +72,7 @@ from tensorflow.keras import layers
 """
 
 # data
-num_epochs = 10
+num_epochs = 10  # train for 400 epochs for good results
 image_size = 64
 kid_image_size = 75  # resolution of KID measurement
 padding = 0.25
