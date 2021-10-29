@@ -297,9 +297,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 11s 527ms/step - loss: 9.2445
+5/5 [==============================] - 10s 510ms/step - loss: 9.0162
 
-<keras.callbacks.History at 0x160bb6710>
+<keras.callbacks.History at 0x7f558864e580>
 
 ```
 </div>
@@ -333,9 +333,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 2s 889us/step - loss: 2.1196
+1563/1563 [==============================] - 3s 2ms/step - loss: 2.1250
 
-<keras.callbacks.History at 0x162738a50>
+<keras.callbacks.History at 0x7f557bfd2df0>
 
 ```
 </div>
@@ -509,14 +509,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 2s 2s/step - loss: 0.5064
+1/1 [==============================] - 2s 2s/step - loss: 0.5208
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.04655712]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.01588821]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -594,14 +594,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 186ms/step - loss: 0.2771
+1/1 [==============================] - 0s 183ms/step - loss: 0.5923
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-0.96185416]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.66376257]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -624,7 +624,10 @@ adapt_data = tf.constant(
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
 text_vectorizer = layers.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
-text_vectorizer.adapt(adapt_data)
+
+with tf.device("CPU"):
+    # A bug that prevents this from running on GPU for now.
+    text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
@@ -677,14 +680,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 241ms/step - loss: 9.6274
+1/1 [==============================] - 0s 404ms/step - loss: 0.7536
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-1.0759696]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.73941016]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
