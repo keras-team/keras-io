@@ -90,10 +90,7 @@ would then be passed through an Embedding layer. To make this tokenization proce
 faster, we use the `map()` function with it's parallelization functionality.
 """
 
-vectorizer = layers.TextVectorization(
-    3000,
-    output_sequence_length=150,
-)
+vectorizer = layers.TextVectorization(3000, output_sequence_length=150,)
 vectorizer.adapt(
     train_dataset.map(lambda x, y: x, num_parallel_calls=tf.data.AUTOTUNE).batch(256)
 )
@@ -184,8 +181,7 @@ model.compile(
     ],
 )
 
-# We will save the best model at every epoch and load the best one for evaluation on the
-test set
+# We will save the best model at every epoch and load the best one for evaluation on the test set
 history = model.fit(
     full_train.batch(256),
     epochs=20,
@@ -291,27 +287,23 @@ def train_small_models(
 
         print("-" * 100)
         print(
-f"Number of zeros incorrectly classified: {counter_zeros}, Number of ones incorrectly
-classified: {counter_ones}"
+            f"Number of zeros incorrectly classified: {counter_zeros}, Number of ones incorrectly classified: {counter_ones}"
         )
 
         # This technique of active learning demonstrates ratio based sampling where
-# Number of ones/zeros to sample = Number of ones/zeros incorrectly classified / Total
-incorrectly classified
+        # Number of ones/zeros to sample = Number of ones/zeros incorrectly classified / Total incorrectly classified
         if counter_zeros != 0 and counter_ones != 0:
             total = counter_zeros + counter_ones
             sample_ratio_ones, sample_ratio_zeros = (
                 counter_ones / total,
                 counter_zeros / total,
             )
-# In the case where all samples are correctly predicted, we can sample both classes
-equally
+        # In the case where all samples are correctly predicted, we can sample both classes equally
         else:
             sample_ratio_ones, sample_ratio_zeros = 0.5, 0.5
 
         print(
-f"Sample ratio ones: {sample_ratio_ones}, Sample ratio zeros:
-{sample_ratio_zeros}"
+            f"Sample ratio ones: {sample_ratio_ones}, Sample ratio zeros:{sample_ratio_zeros}"
         )
 
         # Sample the required number of ones and zeros
