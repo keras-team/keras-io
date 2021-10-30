@@ -35,9 +35,9 @@ available. They propose Adaptive Discriminator Augmentation to mitigate this iss
 Applying data augmentation to GANs however is not straightforward. Since the generator is
 updated using the discriminator's gradients, if the generated images are augmented, the
 augmentation pipeline has to be differentiable and also has to be GPU-compatible for
-computational efficiency. Luckily, the [Keras image augmentation
-layers](https://keras.io/api/layers/preprocessing_layers/image_augmentation/) fulfill
-both these requirements, and are therefore very well suited for this task.
+computational efficiency. Luckily, the
+[Keras image augmentation layers](https://keras.io/api/layers/preprocessing_layers/image_augmentation/)
+fulfill both these requirements, and are therefore very well suited for this task.
 
 ### Invertible data augmentation
 
@@ -74,7 +74,8 @@ from tensorflow.keras import layers
 # data
 num_epochs = 10  # train for 400 epochs for good results
 image_size = 64
-kid_image_size = 75  # resolution of KID measurement
+# resolution of Kernel Inception Distance measurement, see related section
+kid_image_size = 75
 padding = 0.25
 dataset_name = "caltech_birds2011"
 
@@ -105,7 +106,7 @@ In this example, we will use the
 [Caltech Birds (2011)](https://www.tensorflow.org/datasets/catalog/caltech_birds2011) dataset for
 generating images of birds, which is a diverse natural dataset containing less then 6000
 images for training. When working with such low amounts of data, one has to take extra
-care to retain as high data quality as possible. In this example, I use the provided
+care to retain as high data quality as possible. In this example, we use the provided
 bounding boxes of the birds to cut them out with square crops while preserving their
 aspect ratios when possible.
 """
@@ -179,8 +180,9 @@ After preprocessing the training images look like the following:
 ## Kernel inception distance
 
 [Kernel Inception Distance (KID)](https://arxiv.org/abs/1801.01401) was proposed as a
-replacement for the popular [Frechet Inception Distance
-(FID)](https://arxiv.org/abs/1706.08500) metric for measuring image generation quality.
+replacement for the popular
+[Frechet Inception Distance (FID)](https://arxiv.org/abs/1706.08500)
+metric for measuring image generation quality.
 Both metrics measure the difference in the generated and training distributions in the
 representation space of an [InceptionV3](https://keras.io/api/applications/inceptionv3/)
 network pretrained on
@@ -275,16 +277,17 @@ Note, that their controlled variable is actually the average sign of the discrim
 logits (r_t in the paper), which corresponds to 2 * accuracy - 1.
 
 This method requires two hyperparameters:
-1. target_accuracy: the target value for the discriminator's accuracy on real images. I
+1. `target_accuracy`: the target value for the discriminator's accuracy on real images. I
 recommend selecting its value from the 80-90% range.
-2. [integration_steps](https://en.wikipedia.org/wiki/PID_controller#Mathematical_form):
+2. [`integration_steps`](https://en.wikipedia.org/wiki/PID_controller#Mathematical_form):
 the number of update steps required for an accuracy error of 100% to transform into an
 augmentation probability increase of 100%. To give an intuition, this defines how slowly
 the augmentation probability is changed. I recommend setting this to a relatively high
 value (1000 in this case) so that the augmentation strength is only adjusted slowly.
 
 The main motivation for this procedure is that the optimal value of the target accuracy
-is similar across different dataset sizes (see [figure 4 and 5 in the paper](https://arxiv.org/abs/2006.06676)), so it does not have to be retuned, because the
+is similar across different dataset sizes (see [figure 4 and 5 in the paper](https://arxiv.org/abs/2006.06676)),
+so it does not have to be retuned, because the
 process automatically applies stronger data augmentation when it is needed.
 
 """
@@ -358,23 +361,24 @@ class AdaptiveAugmenter(keras.Model):
 ## Network architecture
 
 Here we specify the architecture of the two networks:
+
 * generator: maps a random vector to an image, which should be as realistic as possible
 * discriminator: maps an image to a scalar score, which should be high for real and low
 for generated images
 
 GANs tend to be sensitive to the network architecture, I implemented a DCGAN architecture
 in this example, because it is relatively stable during training while being simple to
-implement. I use a constant number of filters throughout the network, use a sigmoid
+implement. We use a constant number of filters throughout the network, use a sigmoid
 instead of tanh in the last layer of the generator, and use default initialization
 instead of random normal as further simplifications.
 
-As a good practice, I disable the learnable scale parameter in the batch normalization
+As a good practice, we disable the learnable scale parameter in the batch normalization
 layers, because on one hand the following relu + convolutional layers make it redundant
 (as noted in the
 [documentation](https://keras.io/api/layers/normalization_layers/batch_normalization/)).
 But also because it should be disabled based on theory when using [spectral normalization
 (section 4.1)](https://arxiv.org/abs/1802.05957), which is not used here, but is common
-in GANs. I also disable the bias in the fully connected and convolutional layers, because
+in GANs. We also disable the bias in the fully connected and convolutional layers, because
 the following batch normalization makes it redundant.
 """
 
@@ -571,7 +575,7 @@ probability is increased, and vice versa. In my experience, during a healthy GAN
 training, the discriminator accuracy should stay in the 80-95% range. Below that, the
 discriminator is too weak, above that it is too strong.
 
-Note that I track the exponential moving average of the generator's weights, and use that
+Note that we track the exponential moving average of the generator's weights, and use that
 for image generation and KID evaluation.
 """
 
@@ -645,8 +649,9 @@ I recommend checking out the [DCGAN paper](https://arxiv.org/abs/1511.06434), th
 [large scale GAN study](https://arxiv.org/abs/1711.10337) for others' takes on this subject.
 
 ### Architectural tips
+
 * **resolution**: Training GANs at higher resolutions tends to get more difficult, I
-recommend experimenting at 32x32 or 64x64 resolutions initially
+recommend experimenting at 32x32 or 64x64 resolutions initially.
 * **initialization**: If you see strong colorful patterns early on in the training, the
 initalization might be the issue. Set the kernel_initializer parameters of layers to
 [random normal](https://keras.io/api/layers/initializers/#randomnormal-class), and
@@ -677,6 +682,7 @@ ReLU activations in the discriminator to make its gradients less sparse. Recomme
 slope/alpha is 0.2 following DCGAN.
 
 ### Algorithmic tips
+
 * **loss functions**: Numerous losses have been proposed over the years for training
 GANs, promising improved performance and stability. I have implemented 5 of them in
 [this repository](https://github.com/beresandras/gan-flavours-keras), and my experience is in
@@ -712,6 +718,7 @@ work well.
 ## Related works
 
 Other GAN-related Keras code examples:
+
 * [DCGAN + CelebA](https://keras.io/examples/generative/dcgan_overriding_train_step/)
 * [WGAN + FashionMNIST](https://keras.io/examples/generative/wgan_gp/)
 * [WGAN + Molecules](https://keras.io/examples/generative/wgan-graphs/)
@@ -720,6 +727,7 @@ Other GAN-related Keras code examples:
 * [StyleGAN](https://keras.io/examples/generative/stylegan/)
 
 Modern GAN architecture-lines:
+
 * [SAGAN](https://arxiv.org/abs/1805.08318), [BigGAN](https://arxiv.org/abs/1809.11096)
 * [ProgressiveGAN](https://arxiv.org/abs/1710.10196),
 [StyleGAN](https://arxiv.org/abs/1812.04948),
