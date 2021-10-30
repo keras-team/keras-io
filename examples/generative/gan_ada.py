@@ -277,6 +277,7 @@ Note, that their controlled variable is actually the average sign of the discrim
 logits (r_t in the paper), which corresponds to 2 * accuracy - 1.
 
 This method requires two hyperparameters:
+
 1. `target_accuracy`: the target value for the discriminator's accuracy on real images. I
 recommend selecting its value from the 80-90% range.
 2. [`integration_steps`](https://en.wikipedia.org/wiki/PID_controller#Mathematical_form):
@@ -658,14 +659,14 @@ initalization might be the issue. Set the kernel_initializer parameters of layer
 decrease the standard deviation (recommended value: 0.02, following DCGAN) until the
 issue disappears.
 * **upsampling**: There are two main methods for upsampling in the generator:
-* [transposed convolution](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/):
-Slightly higher quality, but can lead to
-[checkerboard artifacts](https://distill.pub/2016/deconv-checkerboard/), which can be reduced by using
-a kernel size that is divisible with the stride (kernel size=4, stride=2).
-* [upsampling](https://keras.io/api/layers/reshaping_layers/up_sampling2d/) +
-[standard convolution](https://keras.io/api/layers/convolution_layers/convolution2d/): Slightly
-slower, but checkerboard artifacts are not an issue. I recommend using nearest-neighbor
-interpolation over bilinear for upsampling.
+    * [transposed convolution](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/):
+    Slightly higher quality, but can lead to
+    [checkerboard artifacts](https://distill.pub/2016/deconv-checkerboard/), which can be reduced by using
+    a kernel size that is divisible with the stride (kernel size=4, stride=2).
+    * [upsampling](https://keras.io/api/layers/reshaping_layers/up_sampling2d/) +
+    [standard convolution](https://keras.io/api/layers/convolution_layers/convolution2d/): Slightly
+    slower, but checkerboard artifacts are not an issue. I recommend using nearest-neighbor
+    interpolation over bilinear for upsampling.
 * **batch normalization in discriminator**: Sometimes has a high impact, I recommend
 trying out both ways.
 * **[spectral normalization](https://www.tensorflow.org/addons/api_docs/python/tfa/layers/SpectralNormalization)**:
@@ -704,7 +705,7 @@ If one has the resources, it can help
 to tune the learning rates of the two networks separately. A similar idea is to update
 either network's (usually the discriminator's) weights multiple times for each of the
 other network's updates. I recommend using the same learning rate of 2e-4 (Adam),
-following DCGAN for both networks as a default.
+following DCGAN for both networks, and only updating both of them once as a default.
 * **label noise**: [One-sided label smoothing](https://arxiv.org/abs/1606.03498) (using
 less than 1.0 for real labels), or adding noise to the labels can regularize the
 discriminator not to get overconfident, however in my case they did not improve
