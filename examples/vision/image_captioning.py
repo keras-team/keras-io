@@ -163,15 +163,6 @@ train_data, valid_data = train_val_split(captions_mapping)
 print("Number of training samples: ", len(train_data))
 print("Number of validation samples: ", len(valid_data))
 
-
-# Load the dataset
-captions_mapping, text_data = load_captions_data("Flickr8k.token.txt")
-
-# Split the dataset into training and validation sets
-train_data, valid_data = train_val_split(captions_mapping)
-print("Number of training samples: ", len(train_data))
-print("Number of validation samples: ", len(valid_data))
-
 """
 ## Vectorizing the text data
 
