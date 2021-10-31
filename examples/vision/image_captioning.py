@@ -243,21 +243,16 @@ def read_valid_image(img_path, size=IMAGE_SIZE):
 
 
 def make_dataset(images, captions, split="train"):
-    if split == "train":
-        img_dataset = tf.data.Dataset.from_tensor_slices(images).map(
-            read_train_image, num_parallel_calls=AUTOTUNE
-        )
-    else:
-        img_dataset = tf.data.Dataset.from_tensor_slices(images).map(
-            read_valid_image, num_parallel_calls=AUTOTUNE
-        )
+    read_image_fn = read_train_image if split == "train" else read_valid_image
 
-    cap_dataset = tf.data.Dataset.from_tensor_slices(captions).map(
-        vectorization, num_parallel_calls=AUTOTUNE
-    )
+    def process_input(img_path, captions):
+        return read_image_fn(img_path), vectorization(captions)
 
-    dataset = tf.data.Dataset.zip((img_dataset, cap_dataset))
-    dataset = dataset.batch(BATCH_SIZE).shuffle(256).prefetch(AUTOTUNE)
+    dataset = tf.data.Dataset.from_tensor_slices((images, captions))
+    dataset = dataset.shuffle(len(images))
+    dataset = dataset.map(process_input, num_parallel_calls=AUTOTUNE)
+    dataset = dataset.batch(BATCH_SIZE).prefetch(AUTOTUNE)
+
     return dataset
 
 
