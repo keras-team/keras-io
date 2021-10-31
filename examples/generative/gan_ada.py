@@ -718,21 +718,21 @@ work well.
 """
 ## Related works
 
-Other GAN-related Keras code examples:
-
-* [DCGAN + CelebA](https://keras.io/examples/generative/dcgan_overriding_train_step/)
-* [WGAN + FashionMNIST](https://keras.io/examples/generative/wgan_gp/)
-* [WGAN + Molecules](https://keras.io/examples/generative/wgan-graphs/)
-* [ConditionalGAN + MNIST](https://keras.io/examples/generative/conditional_gan/)
-* [CycleGAN + Horse2Zebra](https://keras.io/examples/generative/cyclegan/)
-* [StyleGAN](https://keras.io/examples/generative/stylegan/)
-
-Modern GAN architecture-lines:
-
-* [SAGAN](https://arxiv.org/abs/1805.08318), [BigGAN](https://arxiv.org/abs/1809.11096)
-* [ProgressiveGAN](https://arxiv.org/abs/1710.10196),
-[StyleGAN](https://arxiv.org/abs/1812.04948),
-[StyleGAN2](https://arxiv.org/abs/1912.04958),
-[StyleGAN2-ADA](https://arxiv.org/abs/2006.06676),
-[AliasFreeGAN](https://arxiv.org/abs/2106.12423)
+* Other GAN-related Keras code examples:
+    * [DCGAN + CelebA](https://keras.io/examples/generative/dcgan_overriding_train_step/)
+    * [WGAN + FashionMNIST](https://keras.io/examples/generative/wgan_gp/)
+    * [WGAN + Molecules](https://keras.io/examples/generative/wgan-graphs/)
+    * [ConditionalGAN + MNIST](https://keras.io/examples/generative/conditional_gan/)
+    * [CycleGAN + Horse2Zebra](https://keras.io/examples/generative/cyclegan/)
+    * [StyleGAN](https://keras.io/examples/generative/stylegan/)
+* Modern GAN architecture-lines:
+    * [SAGAN](https://arxiv.org/abs/1805.08318), [BigGAN](https://arxiv.org/abs/1809.11096)
+    * [ProgressiveGAN](https://arxiv.org/abs/1710.10196),
+    [StyleGAN](https://arxiv.org/abs/1812.04948),
+    [StyleGAN2](https://arxiv.org/abs/1912.04958),
+    [StyleGAN2-ADA](https://arxiv.org/abs/2006.06676),
+    [AliasFreeGAN](https://arxiv.org/abs/2106.12423)
+* Concurrent papers on discriminator data augmentation:
+[1](https://arxiv.org/abs/2006.02595), [2](https://arxiv.org/abs/2006.05338), [3](https://arxiv.org/abs/2006.10738)
+* Recent literature overview on GANs: [talk](https://www.youtube.com/watch?v=3ktD752xq5k)
 """
