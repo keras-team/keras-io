@@ -2,7 +2,7 @@
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
 **Date created:** 2021/05/29<br>
-**Last modified:** 2021/09/16<br>
+**Last modified:** 2021/10/31<br>
 **Description:** Implement an image captioning model using a CNN and a Transformer.
 
 

@@ -2,7 +2,7 @@
 Title: Image Captioning
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2021/05/29
-Last modified: 2021/09/16
+Last modified: 2021/10/31
 Description: Implement an image captioning model using a CNN and a Transformer.
 """
 
