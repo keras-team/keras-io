@@ -441,7 +441,7 @@ class ImageCaptioningModel(keras.Model):
         batch_acc = 0
 
         if self.image_aug:
-            batch_img = self.image_augmentation(batch_img)
+            batch_img = self.image_aug(batch_img)
 
         # 1. Get image embeddings
         img_embed = self.cnn_model(batch_img)
