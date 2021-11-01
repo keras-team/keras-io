@@ -2,26 +2,25 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/10/05
+Last modified: 2021/11/01
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
-## Multiple instance learning
-As the name suggests, this supervised learning algorithm learns from multiple instances.
+## Introduction
+
+### What is Multiple Instance Learning (MIL)?
 Usually for supervised learning  algorithms, the learner receives labels for a set of
-instances. In case of MIL, the learner receives labels for a set of bags in which each
+instances. In the case of MIL, the learner receives labels for a set of bags in which each
 bags contains a set of instances. The bag is labelled positive if it contains atleast
 one positive instance and negative if it does not contain any.
 
-## Introduction
-It is often assumed in image classification tasks that each instance (image) clearly
-represents a class label. However, in many real-world applications multiple instances
-are recognized and only a broad statement is assigned. Such a problem where there is a
-lack of labelling individual data points could be referred to as weakly labelled data
-problem. The problem is widely spread in medical imaging (e.g. computational pathology,
-mammography or CT lung screening) where an entire image is represented by a single class
-label (benign/malignant) or a region of interest could be given. In this context, the
-image(s) will be divided and the subimages will form the bag of instances.
+#### Motivation
+It is often assumed in image classification tasks that each image clearly represents a
+class label. In medical imaging (e.g. computational pathology, etc.) an *entire image*
+is represented by a single class label (cancerous/non-cancerous) or a region of interest
+could be given. However, one will be interested in knowing which patterns in the image
+is actually causing it to belong to that class. In this context, the image(s) will be
+divided and the subimages will form the bag of instances.
 
 Therefore, the goals are to:
 
@@ -29,37 +28,35 @@ Therefore, the goals are to:
 2. know the score of the instances within the bag which resulted to the class label
 prediction.
 
-The second goal is of high interest because it will incorporate interpretability to
-the MIL approach. Such interpretability is deduced by using attention scores or weights
-as it will not merely predict the final output class but the instance scores that led
-to those classification results.
+#### Implementation
 
-## Implementation
+The classifier is modelled using neural networks. This means that the MIL attention
+layer will also be trainable. The end-to-end model is mainly composed of:
 
-The MIL classifier is modelled using neural networks. The attention mechanism as MIL
-pooling:
+1. The backbone (feature extractor layers) of the model.
+2. The extracted features fed into the MIL attention layer. The layer is modelled
+as permutation-invariant.
+3. The attention scores of each feature multipled by their respective input features
+(instances).
+4. The multipled features are passed to a softmax function for getting the vector of
+probabilities (classification results).
 
-- Trainable MIL operator.
-- Interpretable results using attention scores.
-
-In the paper, both [histopathology](https://www.kaggle.com/paultimothymooney/breast-histopathology-images)
-and MNIST data were experimented with. In this example, we will experiment with MNIST
-data which can be simply called by `keras.datasets.mnist`.
-
-We will begin by creating the datasets (both, train and validation sets) and visualizing
-a sample of the dataset. Then we will build and train the model. Finally we will evaluate,
-check and visualize the classification results as well as the attention scores of the
-instances.
-
-Besides the implementation of this mechanism, some **regularization** techniques,
-**ensemble averaging** (for stability) and dealing with **imbalanced data** will be covered.
-
-## References
+#### References
 
 - [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf).
 - Some of attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
 - Imbalanced data [tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
 by TensorFlow.
+
+## What will you learn in this example?
+The approach to find a target feature (without explicitly labelling them in prior)
+among a bag of features will be taught. You will mainly learn:
+
+* about attention-based deep MIL, its applications (applied on MNIST dataset in the
+example; can be applied on other image classification datasets) and its results'
+interpretability.
+* that its a weakly supervised learning algorithm which means it will be of very
+helpful if you suffer from weakly labelled data.
 """
 """
 ## Setup
@@ -206,10 +203,22 @@ by hyperbolic tangent non-linearity.
 
 
 class MILAttentionLayer(layers.Layer):
+    """Implementation of the attention-based Deep MIL layer.
+
+    Args:
+      weight_params_dim: Positive Integer. Dimension of the weight matrix.
+      kernel_initializer: Initializer for the `kernel` matrix.
+      kernel_regularizer: Regularizer function applied to the `kernel` matrix.
+      use_gated: Boolean, whether or not to use the gated mechanism.
+
+    Returns:
+      List of 2D tensors with BAG_SIZE length.
+      The tensors are the attention scores after softmax with shape `(batch_size, 1)`.
+    """
+
     def __init__(
         self,
-        l_dim,
-        output_dim,
+        weight_params_dim,
         kernel_initializer="glorot_uniform",
         kernel_regularizer=None,
         use_gated=False,
@@ -218,8 +227,7 @@ class MILAttentionLayer(layers.Layer):
 
         super().__init__(**kwargs)
 
-        self.l_dim = l_dim
-        self.output_dim = output_dim
+        self.weight_params_dim = weight_params_dim
         self.use_gated = use_gated
 
         self.kernel_initializer = keras.initializers.get(kernel_initializer)
@@ -240,7 +248,7 @@ class MILAttentionLayer(layers.Layer):
         input_dim = input_shape[0][1]
 
         self.v_weight_params = self.add_weight(
-            shape=(input_dim, self.l_dim),
+            shape=(input_dim, self.weight_params_dim),
             initializer=self.v_init,
             name="v",
             regularizer=self.v_regularizer,
@@ -248,7 +256,7 @@ class MILAttentionLayer(layers.Layer):
         )
 
         self.w_weight_params = self.add_weight(
-            shape=(self.l_dim, 1),
+            shape=(self.weight_params_dim, 1),
             initializer=self.w_init,
             name="w",
             regularizer=self.w_regularizer,
@@ -257,7 +265,7 @@ class MILAttentionLayer(layers.Layer):
 
         if self.use_gated:
             self.u_weight_params = self.add_weight(
-                shape=(input_dim, self.l_dim),
+                shape=(input_dim, self.weight_params_dim),
                 initializer=self.u_init,
                 name="u",
                 regularizer=self.u_regularizer,
@@ -371,8 +379,7 @@ def create_model(instance_shape):
 
     # Invoke the attention layer.
     alpha = MILAttentionLayer(
-        l_dim=256,
-        output_dim=1,
+        weight_params_dim=256,
         kernel_regularizer=keras.regularizers.l2(0.01),
         use_gated=True,
         name="alpha",
@@ -459,9 +466,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
 
     # Compile model.
     model.compile(
-        optimizer="adam",
-        loss="sparse_categorical_crossentropy",
-        metrics=["accuracy"],
+        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"],
     )
 
     # Fit model.
@@ -470,7 +475,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
         train_labels,
         validation_data=(val_data, val_labels),
         epochs=20,
-        class_weight=calculate_class_weights(train_labels),
+        class_weight=compute_class_weights(train_labels),
         batch_size=1,
         callbacks=[early_stopping, model_checkpoint],
         verbose=0,
