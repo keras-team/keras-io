@@ -7,8 +7,8 @@ Description: The basics of using KerasTuner to tune model hyperparameters.
 """
 
 """
-## Setup
-!pip install keras-tuner==1.1.0rc0 -q
+## shell
+pip install keras-tuner -q
 """
 
 
