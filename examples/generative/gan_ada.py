@@ -203,7 +203,7 @@ validation set for computational efficiency.
 
 
 class KID(keras.metrics.Metric):
-    def __init__(self, name="KID", **kwargs):
+    def __init__(self, name="kid", **kwargs):
         super().__init__(name=name, **kwargs)
 
         # KID is estimated per batch and is averaged across batches
@@ -211,7 +211,7 @@ class KID(keras.metrics.Metric):
 
         # a pretrained InceptionV3 is used without its classification layer
         # transform the pixel values to the 0-255 range, then use the same
-        # preprocessing as  during pretraining
+        # preprocessing as during pretraining
         self.encoder = keras.Sequential(
             [
                 layers.InputLayer(input_shape=(image_size, image_size, 3)),
@@ -658,15 +658,15 @@ initalization might be the issue. Set the kernel_initializer parameters of layer
 [random normal](https://keras.io/api/layers/initializers/#randomnormal-class), and
 decrease the standard deviation (recommended value: 0.02, following DCGAN) until the
 issue disappears.
-* **upsampling**: There are two main methods for upsampling in the generator:
-    * [transposed convolution](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/):
-    Slightly higher quality, but can lead to
-    [checkerboard artifacts](https://distill.pub/2016/deconv-checkerboard/), which can be reduced by using
-    a kernel size that is divisible with the stride (kernel size=4, stride=2).
-    * [upsampling](https://keras.io/api/layers/reshaping_layers/up_sampling2d/) +
-    [standard convolution](https://keras.io/api/layers/convolution_layers/convolution2d/): Slightly
-    slower, but checkerboard artifacts are not an issue. I recommend using nearest-neighbor
-    interpolation over bilinear for upsampling.
+* **upsampling**: There are two main methods for upsampling in the generator.
+[Transposed convolution](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/)
+is faster, but can lead to
+[checkerboard artifacts](https://distill.pub/2016/deconv-checkerboard/), which can be reduced by using
+a kernel size that is divisible with the stride (recommended kernel size is 4 for a stride of 2).
+[Upsampling](https://keras.io/api/layers/reshaping_layers/up_sampling2d/) +
+[standard convolution](https://keras.io/api/layers/convolution_layers/convolution2d/) can have slightly
+lower quality, but checkerboard artifacts are not an issue. I recommend using nearest-neighbor
+interpolation over bilinear for it.
 * **batch normalization in discriminator**: Sometimes has a high impact, I recommend
 trying out both ways.
 * **[spectral normalization](https://www.tensorflow.org/addons/api_docs/python/tfa/layers/SpectralNormalization)**:
@@ -718,21 +718,26 @@ work well.
 """
 ## Related works
 
-* Other GAN-related Keras code examples:
-    * [DCGAN + CelebA](https://keras.io/examples/generative/dcgan_overriding_train_step/)
-    * [WGAN + FashionMNIST](https://keras.io/examples/generative/wgan_gp/)
-    * [WGAN + Molecules](https://keras.io/examples/generative/wgan-graphs/)
-    * [ConditionalGAN + MNIST](https://keras.io/examples/generative/conditional_gan/)
-    * [CycleGAN + Horse2Zebra](https://keras.io/examples/generative/cyclegan/)
-    * [StyleGAN](https://keras.io/examples/generative/stylegan/)
-* Modern GAN architecture-lines:
-    * [SAGAN](https://arxiv.org/abs/1805.08318), [BigGAN](https://arxiv.org/abs/1809.11096)
-    * [ProgressiveGAN](https://arxiv.org/abs/1710.10196),
-    [StyleGAN](https://arxiv.org/abs/1812.04948),
-    [StyleGAN2](https://arxiv.org/abs/1912.04958),
-    [StyleGAN2-ADA](https://arxiv.org/abs/2006.06676),
-    [AliasFreeGAN](https://arxiv.org/abs/2106.12423)
-* Concurrent papers on discriminator data augmentation:
+Other GAN-related Keras code examples:
+
+* [DCGAN + CelebA](https://keras.io/examples/generative/dcgan_overriding_train_step/)
+* [WGAN + FashionMNIST](https://keras.io/examples/generative/wgan_gp/)
+* [WGAN + Molecules](https://keras.io/examples/generative/wgan-graphs/)
+* [ConditionalGAN + MNIST](https://keras.io/examples/generative/conditional_gan/)
+* [CycleGAN + Horse2Zebra](https://keras.io/examples/generative/cyclegan/)
+* [StyleGAN](https://keras.io/examples/generative/stylegan/)
+
+Modern GAN architecture-lines:
+
+* [SAGAN](https://arxiv.org/abs/1805.08318), [BigGAN](https://arxiv.org/abs/1809.11096)
+* [ProgressiveGAN](https://arxiv.org/abs/1710.10196),
+[StyleGAN](https://arxiv.org/abs/1812.04948),
+[StyleGAN2](https://arxiv.org/abs/1912.04958),
+[StyleGAN2-ADA](https://arxiv.org/abs/2006.06676),
+[AliasFreeGAN](https://arxiv.org/abs/2106.12423)
+
+Concurrent papers on discriminator data augmentation:
 [1](https://arxiv.org/abs/2006.02595), [2](https://arxiv.org/abs/2006.05338), [3](https://arxiv.org/abs/2006.10738)
-* Recent literature overview on GANs: [talk](https://www.youtube.com/watch?v=3ktD752xq5k)
+
+Recent literature overview on GANs: [talk](https://www.youtube.com/watch?v=3ktD752xq5k)
 """
