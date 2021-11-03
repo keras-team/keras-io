@@ -15,10 +15,11 @@ pip install keras-tuner -q
 """
 ## Introduction
 
-KerasTuner is a hyperparameter tuning library for Keras models or anything you
-would like to tune. In this tutorial, you will see how to tune model
-architecture, training process, and data preprocessing steps with KerasTuner.
-Let's start from a simple example.
+KerasTuner is a general-purpose hyperparameter tuning library. It has strong
+integration with Keras workflows, but it isn't limited to them: you could use
+it to tune scikit-learn models, or anything else. In this tutorial, you will
+see how to tune model architecture, training process, and data preprocessing
+steps with KerasTuner. Let's start from a simple example.
 
 ## Tune the model architecture
 
@@ -149,9 +150,16 @@ build_model(kt.HyperParameters())
 Each of the hyperparameters is uniquely identified by its name (the first
 argument). To tune the number of units in different `Dense` layers separately
 as different hyperparameters, we give them different names as `f"units_{i}"`.
-Notably, this is also an example of conditional hyperparameters. The value of
-the hyperparameter specifying the number of `Dense` layers decides how many
-other hyperparameters follows it.
+
+Notably, this is also an example of creating conditional hyperparameters.
+There are many hyperparameters specifying the number of units in the `Dense`
+layers. The number of such hyperparameters is decided by the number of layers,
+which is also a hyperparameter. Therefore, the total number of hyperparameters
+used may be different from trial to trial. Some hyperparameter is only used
+when a certain condition is satisfied. For example, `units_3` is only used
+when `num_layers` is larger than 3. With KerasTuner, you can easily define
+such hyperparameters dynamically while creating the model.
+
 """
 
 
@@ -192,13 +200,10 @@ search. You may choose from `RandomSearch`, `BayesianOptimization` and
 To initialize the tuner, we need to specify several arguments in the initializer.
 
 * `hypermodel`. The model-building function, which is `build_model` in our case.
-
 * `objective`. The name of the objective to optimize (whether to minimize or
 maximize is automatically inferred for built-in metrics). We will introduce how
 to use custom metrics later in this tutorial.
-
 * `max_trials`. The total number of trials to run during the search.
-
 * `executions_per_trial`. The number of models that should be built and fit for
 each trial. Different trials have different hyperparameter values. The
 executions within the same trial have the same hyperparameter values. The
@@ -206,13 +211,10 @@ purpose of having multiple executions per trial is to reduce results variance
 and therefore be able to more accurately assess the performance of a model. If
 you want to get results faster, you could set `executions_per_trial=1` (single
 round of training for each model configuration).
-
 * `overwrite`. Control whether to overwrite the previous results in the same
 directory or resume the previous search instead. Here we set `overwrite=True`
 to start a new search and ignore any previous results.
-
 * `directory`. A path to a directory for storing the search results.
-
 * `project_name`. The name of the sub-directory in the `directory`.
 
 """
@@ -296,8 +298,8 @@ You will find detailed logs, checkpoints, etc, in the folder
 `my_dir/helloworld`, i.e. `directory/project_name`.
 
 You can also visualize the tuning results using TensorBoard and HParams plugin.
-For more information, please following [this
-link](https://keras.io/guides/keras_tuner/visualize_tuning/).
+For more information, please following
+[this link](https://keras.io/guides/keras_tuner/visualize_tuning/).
 
 ### Retrain the model
 
@@ -694,7 +696,7 @@ tuner.results_summary()
 
 """
 If you have multiple metrics to track in KerasTuner, but only use one of them
-as the objective. You can return a dictionary, whose keys are the metric names
+as the objective, you can return a dictionary, whose keys are the metric names
 and the values are the metrics values, for example, return `{"metric_a": 1.0,
 "metric_b", 2.0}`. Use one of the keys as the objective name, for example,
 `kt.Objective("metric_a", "min")`.
