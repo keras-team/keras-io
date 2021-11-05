@@ -19,6 +19,10 @@ KT_GUIDES_MASTER = {
             'path': 'visualize_tuning',
             'title': 'Visualize the hyperparameter tuning process',
         },
+        {
+            'path': 'tailor_the_search_space',
+            'title': 'Tailor the search space',
+        },
     ]
 }
 
