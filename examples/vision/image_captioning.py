@@ -2,7 +2,7 @@
 Title: Image Captioning
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2021/05/29
-Last modified: 2021/09/16
+Last modified: 2021/10/31
 Description: Implement an image captioning model using a CNN and a Transformer.
 """
 
@@ -163,15 +163,6 @@ train_data, valid_data = train_val_split(captions_mapping)
 print("Number of training samples: ", len(train_data))
 print("Number of validation samples: ", len(valid_data))
 
-
-# Load the dataset
-captions_mapping, text_data = load_captions_data("Flickr8k.token.txt")
-
-# Split the dataset into training and validation sets
-train_data, valid_data = train_val_split(captions_mapping)
-print("Number of training samples: ", len(train_data))
-print("Number of validation samples: ", len(valid_data))
-
 """
 ## Vectorizing the text data
 
@@ -222,32 +213,19 @@ The pipeline consists of two steps:
 """
 
 
-def decode_and_resize(img_path, size=IMAGE_SIZE):
+def decode_and_resize(img_path):
     img = tf.io.read_file(img_path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.resize(img, IMAGE_SIZE)
-    return img
-
-
-def read_train_image(img_path, size=IMAGE_SIZE):
-    img = decode_and_resize(img_path)
-    img = image_augmentation(tf.expand_dims(img, 0))[0]
     img = tf.image.convert_image_dtype(img, tf.float32)
     return img
 
 
-def read_valid_image(img_path, size=IMAGE_SIZE):
-    img = decode_and_resize(img_path)
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    return img
+def process_input(img_path, captions):
+    return decode_and_resize(img_path), vectorization(captions)
 
 
-def make_dataset(images, captions, split="train"):
-    read_image_fn = read_train_image if split == "train" else read_valid_image
-
-    def process_input(img_path, captions):
-        return read_image_fn(img_path), vectorization(captions)
-
+def make_dataset(images, captions):
     dataset = tf.data.Dataset.from_tensor_slices((images, captions))
     dataset = dataset.shuffle(len(images))
     dataset = dataset.map(process_input, num_parallel_calls=AUTOTUNE)
@@ -257,13 +235,9 @@ def make_dataset(images, captions, split="train"):
 
 
 # Pass the list of images and the list of corresponding captions
-train_dataset = make_dataset(
-    list(train_data.keys()), list(train_data.values()), split="train"
-)
+train_dataset = make_dataset(list(train_data.keys()), list(train_data.values()))
 
-valid_dataset = make_dataset(
-    list(valid_data.keys()), list(valid_data.values()), split="valid"
-)
+valid_dataset = make_dataset(list(valid_data.keys()), list(valid_data.values()))
 
 
 """
@@ -425,7 +399,7 @@ class TransformerDecoderBlock(layers.Layer):
 
 class ImageCaptioningModel(keras.Model):
     def __init__(
-        self, cnn_model, encoder, decoder, num_captions_per_image=5,
+        self, cnn_model, encoder, decoder, num_captions_per_image=5, image_aug=None,
     ):
         super().__init__()
         self.cnn_model = cnn_model
@@ -434,6 +408,7 @@ class ImageCaptioningModel(keras.Model):
         self.loss_tracker = keras.metrics.Mean(name="loss")
         self.acc_tracker = keras.metrics.Mean(name="accuracy")
         self.num_captions_per_image = num_captions_per_image
+        self.image_aug = image_aug
 
     def calculate_loss(self, y_true, y_pred, mask):
         loss = self.loss(y_true, y_pred)
@@ -464,6 +439,9 @@ class ImageCaptioningModel(keras.Model):
         batch_img, batch_seq = batch_data
         batch_loss = 0
         batch_acc = 0
+
+        if self.image_aug:
+            batch_img = self.image_aug(batch_img)
 
         # 1. Get image embeddings
         img_embed = self.cnn_model(batch_img)
@@ -540,7 +518,7 @@ cnn_model = get_cnn_model()
 encoder = TransformerEncoderBlock(embed_dim=EMBED_DIM, dense_dim=FF_DIM, num_heads=1)
 decoder = TransformerDecoderBlock(embed_dim=EMBED_DIM, ff_dim=FF_DIM, num_heads=2)
 caption_model = ImageCaptioningModel(
-    cnn_model=cnn_model, encoder=encoder, decoder=decoder
+    cnn_model=cnn_model, encoder=encoder, decoder=decoder, image_aug=image_augmentation,
 )
 
 """
@@ -607,7 +585,7 @@ def generate_caption():
     sample_img = np.random.choice(valid_images)
 
     # Read the image from the disk
-    sample_img = read_valid_image(sample_img)
+    sample_img = decode_and_resize(sample_img)
     img = sample_img.numpy().clip(0, 255).astype(np.uint8)
     plt.imshow(img)
     plt.show()
