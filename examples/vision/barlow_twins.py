@@ -49,7 +49,7 @@ Taken from the original paper: [Barlow Twins: Self-Supervised Learning via Redun
 """
 
 """
-#High-Level Theory
+# High-Level Theory
 
 """
 
@@ -81,7 +81,7 @@ where:
 """
 
 """
-#Setup
+# Setup
 """
 
 """shell
@@ -930,6 +930,7 @@ plt.show()
 a linear dense layer at the end and freeze the main model's weights, only letting the dense layer to be tuned. If the model actually learned something, then the accuracy would be significantly higher than random chance.
 
 **Accuracy on CIFAR-10** : 64% for this notebook. This is much better than the 10% we get from random guessing.
+(I tried on a resnet-50 model and got approx 59-60% accuracy there)
 """
 
 # Approx: 64% accuracy with this barlow twins model.
