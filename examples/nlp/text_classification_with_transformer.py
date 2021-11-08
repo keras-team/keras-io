@@ -104,7 +104,7 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 ## Train and Evaluate
 """
 
-model.compile("adam", "sparse_categorical_crossentropy", metrics=["accuracy"])
+model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 history = model.fit(
     x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val)
 )
