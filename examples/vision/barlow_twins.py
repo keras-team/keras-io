@@ -1,6 +1,6 @@
 """
 Title: Barlow Twins
-Author: Abhiraam Eranti
+Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
 Last modified: 11/4/21
 Description: A keras implemenation of Barlow Twins(constrastive SSL with redundancy reduction).
