@@ -9,37 +9,40 @@ Description: Demonstrating the advantages of active learning through review clas
 ## Introduction
 
 With the growth of data-centric Machine Learning, Active Learning has grown in popularity
-amongst businesses and researchers. Active Learning is a technique of progressively
-training ML models so that the resultant model requires lesser amount of training data to
+amongst businesses and researchers. Active Learning seeks to progressively
+train ML models so that the resultant model requires lesser amount of training data to
 achieve competitive scores.
 
-The structure of an active learning pipeline involves a classifier and an Oracle. An
-oracle is an annotator who cleans, selects and labels the data and feeds it to the model
-as and when required. The oracle is a trained individual or a group of individuals that
+The structure of an Active Learning pipeline involves a classifier and an oracle. The
+oracle is an annotator that cleans, selects, labels the data, and feeds it to the model
+when required. The oracle is a trained individual or a group of individuals that
 ensure consistency in labeling of new data.
 
-The total process entails annotating a small subset of the full dataset and training an
+The process starts with annotating a small subset of the full dataset and training an
 initial model. The best model checkpoint is saved and then tested on a balanced test
 set. The test set must be carefully sampled because the full training process will be
-dependent on it. Once we have the initial evaluation scores, the Oracle is tasked with
+dependent on it. Once we have the initial evaluation scores, the oracle is tasked with
 labeling more samples; the number of data points to be sampled is usually determined by
 the business requirements. After that, the newly sampled data is added to the training
-set, and the training procedure is repeated. This cycle is repeated until either an
+set, and the training procedure repeats. This cycle continues until either an
 acceptable score is reached or some other business metric is met.
 
 This tutorial provides a basic demonstration of how active learning works by
 demonstrating a ratio-based (least confidence) sampling strategy that results in lower
 overall false positive and negative rates when compared to a model trained on the entire
-dataset. This sampling falls under the domain of uncertanity sampling, in which new
+dataset. This sampling falls under the domain of *uncertanity sampling*, in which new
 datasets are sampled based on the uncertanity that the model outputs for the
 corresponding label. In our example, we compare our model's false positive and false
 negative rates and annotate the new data based on their ratio.
 
 Some other sampling techniques include:
 
-1. [Committee sampling](https://www.researchgate.net/publication/51909346_Committee-Based_Sample_Selection_for_Probabilistic_Classifiers): Using multiple models to vote for the best data points to be sampled
-2. [Entropy reduction](https://www.researchgate.net/publication/51909346_Committee-Based_Sample_Selection_for_Probabilistic_Classifiers): Sampling according to an entropy threshold, selecting more of the samples that produce the highest entropy score.
-3. [Minimum margin based sampling](https://arxiv.org/abs/1906.00025v1): Selects data points closest to the decision boundary
+1. [Committee sampling](https://www.researchgate.net/publication/51909346_Committee-Based_Sample_Selection_for_Probabilistic_Classifiers):
+Using multiple models to vote for the best data points to be sampled
+2. [Entropy reduction](https://www.researchgate.net/publication/51909346_Committee-Based_Sample_Selection_for_Probabilistic_Classifiers):
+Sampling according to an entropy threshold, selecting more of the samples that produce the highest entropy score.
+3. [Minimum margin based sampling](https://arxiv.org/abs/1906.00025v1):
+Selects data points closest to the decision boundary
 """
 
 """
@@ -76,8 +79,8 @@ reviews, labels = tfds.as_numpy(dataset)
 print("Total examples:", reviews.shape[0])
 
 """
-The basic concept of active learning involves labelling a subset of data at first. For
-the ratio sampling technique that we will be using, we will need well balanced training,
+Active learning starts with labelling a subset of data.
+For the ratio sampling technique that we will be using, we will need well-balanced training,
 validation and testing splits.
 """
 
@@ -156,11 +159,11 @@ print(f"Unlabeled negative pool: {len(pool_negatives)}")
 print(f"Unlabeled positive pool: {len(pool_positives)}")
 
 """
-### Fitting the TextVectorization layer
+### Fitting the `TextVectorization` layer
 
-Since we are working with textual data, we will need to encode the text as vectors which
-would then be passed through an Embedding layer. To make this tokenization process
-faster, we use the `map()` function with it's parallelization functionality.
+Since we are working with text data, we will need to encode the text strings as vectors which
+would then be passed through an `Embedding` layer. To make this tokenization process
+faster, we use the `map()` function with its parallelization functionality.
 """
 
 
@@ -232,9 +235,9 @@ def plot_history(losses, val_losses, accuracies, val_accuracies):
 """
 ## Creating the Model
 
-We create a small, bidirectional LSTM model. When using active learning, it must be
-ensured that the model architecutre is capable of overfitting the initial data. This
-overfitting gives a strong hint that the model will have enough capacity to fit to
+We create a small bidirectional LSTM model. When using active learning, you should make sure
+that the model architecture is capable of overfitting to the initial data.
+Overfitting gives a strong hint that the model will have enough capacity for
 future, unseen data.
 """
 
@@ -320,7 +323,8 @@ full_dataset_model = train_full_model(full_train_dataset, val_dataset, test_data
 
 """
 ## Training via Active Learning
-A general pipeline that we follow when performing active learning is demonstrated below:
+
+The general process we follow when performing active learning is demonstrated below:
 
 ![Active Learning](https://i.imgur.com/dmNKusp.png)
 
@@ -344,8 +348,8 @@ for Early Stopping can help minimize overfitting and the time required. We have 
 `patience=4` for now but since the model is robust, we can increase the patience level if
 desired.
 
-Note: We are not loading the checkpoint after the first training iteration. Throughout my
-experience with working on active learning techniques, this helps the model probe the
+Note: We are not loading the checkpoint after the first training iteration. In my
+experience working on active learning techniques, this helps the model probe the
 newly formed loss landscape. Even if the model fails to improve in the second iteration,
 we will still gain insight about the possible future false positive and negative rates.
 This will help us sample a better set in the next iteration where the model will have a
@@ -496,7 +500,7 @@ active_learning_model = train_active_learning_models(
 """
 ## Conclusion
 
-Active Learning is a growing area of research. This example demonstrates the business
+Active Learning is a growing area of research. This example demonstrates the cost-efficiency
 benefits of using Active Learning, as it eliminates the need to annotate large amounts of
 data, saving resources.
 
