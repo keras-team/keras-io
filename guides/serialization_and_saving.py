@@ -267,10 +267,20 @@ reconstructed_model.fit(test_input, test_target)
 
 """
 
-#### Limitations
+## Format Limitations
 
-Compared to the SavedModel format, there are two things that don't
-get included in the H5 file:
+SavedModel limitations:
+- Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
+- Does not support layers with masks (`layer.supports_masking=True`)
+- Does not support models that have a custom training loop 
+  (model overrides `train_step`). 
+  
+Unsupported objects can still be saved and loaded from SavedModel, except they 
+must override `get_config`/`from_config`, and the classes must be passed to the 
+`custom_objects` argument when loading.
+
+
+H5 limitations:
 
 - **External losses & metrics** added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
@@ -283,7 +293,7 @@ these losses & metrics are kept, since they are part of the `call` method of the
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
 See [Custom objects](#custom-objects).
-
+- Does not support preprocessing layers.
 
 """
 
