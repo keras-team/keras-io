@@ -64,6 +64,13 @@ import tensorflow as tf
 from tensorflow import keras
 ```
 
+<div class="k-default-codeblock">
+```
+2021-11-09 15:11:57.030489: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2021-11-09 15:11:57.030544: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+
+```
+</div>
 ---
 ## Whole-model saving & loading
 
@@ -134,9 +141,20 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 833us/step - loss: 0.2464
+2021-11-09 15:11:59.097804: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2021-11-09 15:11:59.097859: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2021-11-09 15:11:59.097888: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (penguin): /proc/driver/nvidia/version does not exist
+2021-11-09 15:11:59.098145: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
-<tensorflow.python.keras.callbacks.History at 0x1511b87d0>
+4/4 [==============================] - 0s 2ms/step - loss: 0.3577
+
+2021-11-09 15:11:59.631545: W tensorflow/python/util/util.cc:368] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+
+INFO:tensorflow:Assets written to: my_model/assets
+4/4 [==============================] - 0s 1ms/step - loss: 0.3145
+
+<keras.callbacks.History at 0x79fb1c1f0828>
 
 ```
 </div>
@@ -152,7 +170,7 @@ containing the following:
 
 <div class="k-default-codeblock">
 ```
-[34massets[m[m         saved_model.pb [34mvariables[m[m
+assets	keras_metadata.pb  saved_model.pb  variables
 
 ```
 </div>
@@ -238,9 +256,9 @@ print("Model loaded without the custom object class:", loaded_2)
 INFO:tensorflow:Assets written to: my_model/assets
 WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
 WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-Original model: <__main__.CustomModel object at 0x151ad0990>
-Model Loaded with custom objects: <__main__.CustomModel object at 0x151b03850>
-Model loaded without the custom object class: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x151bb0310>
+Original model: <__main__.CustomModel object at 0x79fb1c1206a0>
+Model Loaded with custom objects: <__main__.CustomModel object at 0x79fb1c05deb8>
+Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x79fb1c05d940>
 
 ```
 </div>
@@ -292,17 +310,26 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 967us/step - loss: 0.8106
-4/4 [==============================] - 0s 1ms/step - loss: 0.7184
+4/4 [==============================] - 0s 2ms/step - loss: 0.2871
+4/4 [==============================] - 0s 2ms/step - loss: 0.2784
 
-<tensorflow.python.keras.callbacks.History at 0x151d5ac90>
+<keras.callbacks.History at 0x79fb1454b4a8>
 
 ```
 </div>
-#### Limitations
+### Format Limitations
 
-Compared to the SavedModel format, there are two things that don't
-get included in the H5 file:
+SavedModel limitations:
+- Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
+- Does not support layers with masks (`layer.supports_masking=True`)
+- Does not support models that have a custom training loop.
+  (model overrides `train_step`).
+
+Unsupported objects can still be saved and loaded from SavedModel, except they
+must override `get_config`/`from_config`, and the classes must be passed to the
+`custom_objects` argument when loading.
+
+H5 limitations:
 
 - **External losses & metrics** added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
@@ -315,7 +342,7 @@ these losses & metrics are kept, since they are part of the `call` method of the
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
 See [Custom objects](#custom-objects).
-
+- Does not support preprocessing layers.
 
 ---
 ## Saving the architecture
@@ -427,6 +454,7 @@ predicted = tensorflow_graph(x).numpy()
 
 <div class="k-default-codeblock">
 ```
+WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
 INFO:tensorflow:Assets written to: my_model/assets
 
 ```
@@ -731,7 +759,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x151f01150>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x79fb14474668>
 
 ```
 </div>
@@ -771,8 +799,8 @@ ckpt_reader.get_variable_to_dtype_map()
 <div class="k-default-codeblock">
 ```
 {'save_counter/.ATTRIBUTES/VARIABLE_VALUE': tf.int64,
- 'layer/var/.ATTRIBUTES/VARIABLE_VALUE': tf.int32,
- '_CHECKPOINTABLE_OBJECT_GRAPH': tf.string}
+ '_CHECKPOINTABLE_OBJECT_GRAPH': tf.string,
+ 'layer/var/.ATTRIBUTES/VARIABLE_VALUE': tf.int32}
 
 ```
 </div>
@@ -844,13 +872,14 @@ pretrained_model.load_weights("pretrained_ckpt")
 ```
 Model: "pretrained_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-digits (InputLayer)          [(None, 784)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
+ digits (InputLayer)         [(None, 784)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
 =================================================================
 Total params: 54,400
 Trainable params: 54,400
@@ -864,15 +893,16 @@ _________________________________________________________________
  --------------------------------------------------
 Model: "new_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-digits (InputLayer)          [(None, 784)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-predictions (Dense)          (None, 5)                 325       
+ digits (InputLayer)         [(None, 784)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
+ predictions (Dense)         (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
@@ -880,18 +910,19 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "sequential_3"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-pretrained (Functional)      (None, 64)                54400     
-_________________________________________________________________
-predictions (Dense)          (None, 5)                 325       
+ pretrained (Functional)     (None, 64)                54400     
+                                                                 
+ predictions (Dense)         (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x10e58f3d0>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x79fb14354828>
 
 ```
 </div>
@@ -942,7 +973,12 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x151ed1110>
+/home/kathywu/.local/lib/python3.7/site-packages/ipykernel_launcher.py:15: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use `layer.add_weight` method instead.
+  from ipykernel import kernelapp as app
+/home/kathywu/.local/lib/python3.7/site-packages/ipykernel_launcher.py:16: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use `layer.add_weight` method instead.
+  app.launch_new_instance()
+
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x79fb143626a0>
 
 ```
 </div>
@@ -1055,13 +1091,14 @@ model.summary()
 ```
 Model: "sequential_6"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-dense_3 (Dense)              (None, 5)                 325       
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
+ dense_3 (Dense)             (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
