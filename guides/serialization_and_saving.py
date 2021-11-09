@@ -267,7 +267,7 @@ reconstructed_model.fit(test_input, test_target)
 
 """
 
-## Format Limitations
+### Format Limitations
 
 SavedModel limitations:
 - Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
