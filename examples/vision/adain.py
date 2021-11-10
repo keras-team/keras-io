@@ -343,7 +343,7 @@ in the deocder network and do indeed go onto show that including
 batch normalization or instance normalization hurts the performance
 of the overall network.
 
-This is the only portion of the entire architecture that is trainable. 
+This is the only portion of the entire architecture that is trainable.
 """
 
 
@@ -439,7 +439,7 @@ def get_loss_net():
 
 This is the trainer module. We wrap the encoder and decoder inside of
 a `tf.keras.Model` subclass. This allows us to customize what happens
-in the `model.fit()` loop. 
+in the `model.fit()` loop.
 """
 
 
