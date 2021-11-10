@@ -64,13 +64,6 @@ import tensorflow as tf
 from tensorflow import keras
 ```
 
-<div class="k-default-codeblock">
-```
-2021-11-09 15:11:57.030489: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2021-11-09 15:11:57.030544: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 ---
 ## Whole-model saving & loading
 
@@ -141,20 +134,11 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-2021-11-09 15:11:59.097804: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2021-11-09 15:11:59.097859: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2021-11-09 15:11:59.097888: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (penguin): /proc/driver/nvidia/version does not exist
-2021-11-09 15:11:59.098145: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+4/4 [==============================] - 1s 6ms/step - loss: 0.3206
 
-4/4 [==============================] - 0s 2ms/step - loss: 0.3577
+4/4 [==============================] - 0s 1ms/step - loss: 0.2839
 
-2021-11-09 15:11:59.631545: W tensorflow/python/util/util.cc:368] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
-
-INFO:tensorflow:Assets written to: my_model/assets
-4/4 [==============================] - 0s 1ms/step - loss: 0.3145
-
-<keras.callbacks.History at 0x79fb1c1f0828>
+<keras.callbacks.History at 0x7894c86e7b00>
 
 ```
 </div>
@@ -253,12 +237,9 @@ print("Model loaded without the custom object class:", loaded_2)
 
 <div class="k-default-codeblock">
 ```
-INFO:tensorflow:Assets written to: my_model/assets
-WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-Original model: <__main__.CustomModel object at 0x79fb1c1206a0>
-Model Loaded with custom objects: <__main__.CustomModel object at 0x79fb1c05deb8>
-Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x79fb1c05d940>
+Original model: <__main__.CustomModel object at 0x7894c8613668>
+Model Loaded with custom objects: <__main__.CustomModel object at 0x7894c85807b8>
+Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x7894c85214e0>
 
 ```
 </div>
@@ -310,18 +291,19 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 2ms/step - loss: 0.2871
-4/4 [==============================] - 0s 2ms/step - loss: 0.2784
+4/4 [==============================] - 0s 2ms/step - loss: 0.2321
+4/4 [==============================] - 0s 1ms/step - loss: 0.2229
 
-<keras.callbacks.History at 0x79fb1454b4a8>
+<keras.callbacks.History at 0x7894c828b470>
 
 ```
 </div>
 ### Format Limitations
 
 SavedModel limitations:
+
 - Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
-- Does not support layers with masks (`layer.supports_masking=True`)
+- Can not serialize the mask argument in custom layers (`layer.supports_masking=True`)
 - Does not support models that have a custom training loop.
   (model overrides `train_step`).
 
@@ -452,13 +434,6 @@ x = np.random.uniform(size=(4, 32)).astype(np.float32)
 predicted = tensorflow_graph(x).numpy()
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-INFO:tensorflow:Assets written to: my_model/assets
-
-```
-</div>
 Note that this method has several drawbacks:
 * For traceability reasons, you should always have access to the custom
 objects that were used. You wouldn't want to put in production a model
@@ -759,7 +734,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x79fb14474668>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7894c80c0710>
 
 ```
 </div>
@@ -922,7 +897,7 @@ Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x79fb14354828>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7894c85f32e8>
 
 ```
 </div>
@@ -973,12 +948,7 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-/home/kathywu/.local/lib/python3.7/site-packages/ipykernel_launcher.py:15: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use `layer.add_weight` method instead.
-  from ipykernel import kernelapp as app
-/home/kathywu/.local/lib/python3.7/site-packages/ipykernel_launcher.py:16: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use `layer.add_weight` method instead.
-  app.launch_new_instance()
-
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x79fb143626a0>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7894c8087940>
 
 ```
 </div>

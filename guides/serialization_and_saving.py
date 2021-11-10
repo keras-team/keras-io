@@ -270,8 +270,9 @@ reconstructed_model.fit(test_input, test_target)
 ### Format Limitations
 
 SavedModel limitations:
+
 - Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
-- Does not support layers with masks (`layer.supports_masking=True`)
+- Can not serialize the mask argument in custom layers (`layer.supports_masking=True`)
 - Does not support models that have a custom training loop.
   (model overrides `train_step`).
 
