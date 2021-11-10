@@ -33,7 +33,7 @@ for Neural Style Transfer. We show in the below figure the inference
 on our AdaIN (Adaptive Instance Normalization) model trained for
 only **30 epochs**.
 
-![img](https://i.imgur.com/zDjDuea.png)
+![Style transfer sample gallery](https://i.imgur.com/zDjDuea.png)
 
 You can also try out the model with your own images with this
 [Hugging Face demo](https://huggingface.co/spaces/ariG23498/nst).
@@ -67,7 +67,7 @@ EPOCHS = 1
 AUTOTUNE = tf.data.AUTOTUNE
 
 """
-# Downloading the dataset
+# Style transfer sample galleryDownloading the dataset
 
 For Neural Style Transfer we need style images and content images. In
 this example we will use the
@@ -288,7 +288,7 @@ The AdIN (Adaptive Instance Normalization) layer takes in the features
 of the content and style image. The layer can be defined using the
 following equation:
 
-![img](https://i.imgur.com/tWq3VKP.png)
+![AdaIn formula](https://i.imgur.com/tWq3VKP.png)
 
 where `sigma` is the standard deviation and `mu` is the mean for the
 concerned variable. In the above equation the mean and variance of the
