@@ -271,9 +271,7 @@ by the authors in their paper.
 
 def get_encoder():
     vgg19 = keras.applications.VGG19(
-        include_top=False,
-        weights="imagenet",
-        input_shape=(*IMAGE_SIZE, 3),
+        include_top=False, weights="imagenet", input_shape=(*IMAGE_SIZE, 3),
     )
     vgg19.trainable = False
     mini_vgg19 = keras.Model(vgg19.input, vgg19.get_layer("block4_conv1").output)
