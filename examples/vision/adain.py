@@ -3,7 +3,7 @@ Title: Neural Style Transfer with AdaIN
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2021/11/08
 Last modified: 2021/11/08
-Description: Implementing Neural Style Transfer with Adaptive Instance Normalization.
+Description: Neural Style Transfer with Adaptive Instance Normalization.
 """
 """
 # Introduction
@@ -12,15 +12,18 @@ Description: Implementing Neural Style Transfer with Adaptive Instance Normaliza
 is the process of transferring the style of one image onto the content
 of another. This was first introduced in the seminal paper
 ["A Neural Algorithm of Artistic Style"](https://arxiv.org/abs/1508.06576)
-by Gatys et al. This work was however limited in its scope because it
-required a *slow iterative optimization process*.
+by Gatys et al. A major limitation of the technique proposed in this
+work is in it's runtime, as the algorithm uses a slow iterative
+optimization process.
 
-This was tackled by future papers that introduced
+Future papers that introduced
 [Batch Normalization](https://arxiv.org/abs/1502.03167),
 [Instance Normalization](https://arxiv.org/abs/1701.02096) and
-[Conditional Instance Normalization](https://arxiv.org/abs/1610.07629).
+[Conditional Instance Normalization](https://arxiv.org/abs/1610.07629)
+allowed Style Transfer to be performed in new ways, no longer
+requiring a slow iterative process.
 
-In line with this interpretation the authors Xun Huang and Serge
+Following these papers, the authors Xun Huang and Serge
 Belongie propose
 [Adaptive Instance Normalization](https://arxiv.org/abs/1703.06868)
 that allows arbitrary style transfer in real time.
@@ -55,11 +58,6 @@ import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 from tensorflow.keras import layers
 
-# For reproducibility setting seed.
-SEED = 111
-tf.random.set_seed(SEED)
-np.random.seed(SEED)
-
 # Defining the global variables.
 IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 64
@@ -82,8 +80,7 @@ This is a deviation from the original paper implementation by the
 authors, where they use
 [WIKI-Art](https://paperswithcode.com/dataset/wikiart) as style and
 [MSCOCO](https://cocodataset.org/#home) as content datasets
-respectively. We do this to create a minimal yet reproducible example
-for the community.
+respectively. We do this to create a minimal yet reproducible example.
 
 ## Pointers for downloading dataset from Kaggle
 
@@ -121,7 +118,7 @@ For the style dataset, we decode, convert and resize the images from
 the folder. For the content images we are already presented with a
 `tf.data` dataset as we use the `tfds` module.
 
-After we have out style and content data pipeline ready, we zip the
+After we have our style and content data pipeline ready, we zip the
 two together to obtain the data pipeline that our model will consume.
 """
 
@@ -222,28 +219,22 @@ test_ds = (
 """
 # Visualizing the data
 
-It is always better to visualize the data while going ahead. Here we
-iterate over the zipped dataset and take 10 pairs of images depicting
-the style and content images.
+It is always better to visualize the data while going ahead. To ensure
+the correctness of our preprocessing pipeline, we visualize 10 samples
+from our dataset.
 """
 
 style, content = next(iter(train_ds))
 fig, axes = plt.subplots(nrows=10, ncols=2, figsize=(5, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
-for (
-    (
-        ax_s,
-        ax_c,
-    ),
-    s_im,
-    c_im,
-) in zip(axes, style[0:10], content[0:10]):
-    ax_s.imshow(s_im)
-    ax_s.set_title("Style Image")
+for (axis, style_image, content_image) in zip(axes, style[0:10], content[0:10]):
+    (ax_style, ax_content) = axis
+    ax_style.imshow(style_image)
+    ax_style.set_title("Style Image")
 
-    ax_c.imshow(c_im)
-    ax_c.set_title("Content Image")
+    ax_content.imshow(content_image)
+    ax_content.set_title("Content Image")
 
 """
 # Architecture
@@ -271,10 +262,10 @@ fed to the AdaIN layer. This layer produced the combined feature map
 """
 ## Encoder
 
-The encoder is a part of the pretrained (pretrianed on
+The encoder is a part of the pretrained (pretrained on
 [imagenet](https://www.image-net.org/)) VGG19 model. We slice the
-model from the `block4-conv1` layer. The choice of the output layer
-is as suggested by the authors in their paper.
+model from the `block4-conv1` layer. The output layer is as suggested
+by the authors in their paper.
 """
 
 
@@ -308,25 +299,23 @@ style feature maps `fs`.
 
 It is important to note that the AdaIN layer proposed by the authors
 uses no other parameters apart from mean and variance. The layer also
-does not have any learning parameters. This is why we use a
+does not have any trainable parameters. This is why we use a
 *python function* instead of using a *keras layer*. The function takes
 style and content feature maps, computes the mean and standard deviation
 of the images and returns the adaptive instance normalized feature map.
 """
 
 
-def get_mean_std(tensor, epsilon=1e-5):
+def get_mean_std(x, epsilon=1e-5):
     axes = [1, 2]
 
     # Compute the mean and standard deviation of a tensor.
-    tensor_mean, tensor_var = tf.nn.moments(tensor, axes=axes, keepdims=True)
-    tensor_std = tf.sqrt(tensor_var + epsilon)
-
-    # Return the mean and standard deviation
-    return tensor_mean, tensor_std
+    mean, variance = tf.nn.moments(x, axes=axes, keepdims=True)
+    standard_deviation = tf.sqrt(variance + epsilon)
+    return mean, standard_deviation
 
 
-def ada_in(style, content, epsilon=1e-5):
+def ada_in(style, content):
     """Computes the adaptive instance normalized feature map from the style and
     content feature map.
 
@@ -337,16 +326,16 @@ def ada_in(style, content, epsilon=1e-5):
     Returns:
         The AdaIN feature map.
     """
-    c_mean, c_std = get_mean_std(content)
-    s_mean, s_std = get_mean_std(style)
-    t = s_std * (content - c_mean) / c_std + s_mean
+    content_mean, content_std = get_mean_std(content)
+    style_mean, style_std = get_mean_std(style)
+    t = style_std * (content - content_mean) / content_std + style_mean
     return t
 
 
 """
 ## Decoder
 
-The authors specify that the deocder network must mirror the encoder
+The authors specify that the decoder network must mirror the encoder
 network.  We have symmetrically inverted the encoder to build our
 decoder. We have used `UpSampling2D` layers to increase the spatial
 resolution of the feature maps.
@@ -356,8 +345,7 @@ in the deocder network and do indeed go onto show that including
 batch normalization or instance normalization hurts the performance
 of the overall network.
 
-Out of the entire architecture, this is the only portion that is
-trainable. 
+This is the only portion of the entire architecture that is trainable. 
 """
 
 
@@ -451,19 +439,19 @@ def get_loss_net():
 """
 ## Neural Style Transfer
 
-This is the trainer module. We wrap the encoder and decoder inside a
-trainer module so that we can harness the beautiful `model.fit` API. 
+This is the trainer module. We wrap the encoder and decoder inside of
+a `tf.keras.Model` subclass. This allows us to customize what happens
+in the `model.fit()` loop. 
 """
 
 
-class NST(tf.keras.Model):
-    def __init__(self, encoder, decoder, ada_in, loss_net, lamb):
-        super().__init__()
+class NeuralStyleTransfer(tf.keras.Model):
+    def __init__(self, encoder, decoder, loss_net, style_weight, **kwargs):
+        super().__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
-        self.ada_in = ada_in
         self.loss_net = loss_net
-        self.lamb = lamb
+        self.style_weight = style_weight
 
     def compile(self, optimizer, loss_fn):
         super().compile()
@@ -482,26 +470,26 @@ class NST(tf.keras.Model):
 
         with tf.GradientTape() as tape:
             # Encode the style and content image.
-            style_enc = self.encoder(style)
-            content_enc = self.encoder(content)
+            style_encoded = self.encoder(style)
+            content_encoded = self.encoder(content)
 
-            # Compute the AdaIN feature map.
-            t = self.ada_in(style=style_enc, content=content_enc)
+            # Compute the AdaIN target feature maps.
+            t = ada_in(style=style_encoded, content=content_encoded)
 
             # Generate the neural style transferred image.
-            recons_image = self.decoder(t)
+            reconstructed_image = self.decoder(t)
 
             # Compute the losses.
-            recons_vgg_feats = self.loss_net(recons_image)
-            style_vgg_feats = self.loss_net(style)
-            loss_content = self.loss_fn(t, recons_vgg_feats[-1])
-            for inp, out in zip(style_vgg_feats, recons_vgg_feats):
+            reconstructed_vgg_features = self.loss_net(reconstructed_image)
+            style_vgg_features = self.loss_net(style)
+            loss_content = self.loss_fn(t, reconstructed_vgg_features[-1])
+            for inp, out in zip(style_vgg_features, reconstructed_vgg_features):
                 mean_inp, std_inp = get_mean_std(inp)
                 mean_out, std_out = get_mean_std(out)
                 loss_style += self.loss_fn(mean_inp, mean_out) + self.loss_fn(
                     std_inp, std_out
                 )
-            loss_style = self.lamb * loss_style
+            loss_style = self.style_weight * loss_style
             total_loss = loss_content + loss_style
 
         # Compute gradients and optimize the decoder.
@@ -521,23 +509,35 @@ class NST(tf.keras.Model):
 
     def test_step(self, inputs):
         style, content = inputs
+
+        # Initialize the content and style loss.
         loss_content = 0.0
         loss_style = 0.0
-        style_enc = self.encoder(style)
-        content_enc = self.encoder(content)
-        t = self.ada_in(style=style_enc, content=content_enc)
-        recons_image = self.decoder(t)
-        recons_vgg_feats = self.loss_net(recons_image)
-        style_vgg_feats = self.loss_net(style)
-        loss_content = self.loss_fn(t, recons_vgg_feats[-1])
-        for inp, out in zip(style_vgg_feats, recons_vgg_feats):
+
+        # Encode the style and content image.
+        style_encoded = self.encoder(style)
+        content_encoded = self.encoder(content)
+
+        # Compute the AdaIN target feature maps.
+        t = ada_in(style=style_encoded, content=content_encoded)
+
+        # Generate the neural style transferred image.
+        reconstructed_image = self.decoder(t)
+
+        # Compute the losses.
+        recons_vgg_features = self.loss_net(reconstructed_image)
+        style_vgg_features = self.loss_net(style)
+        loss_content = self.loss_fn(t, recons_vgg_features[-1])
+        for inp, out in zip(style_vgg_features, recons_vgg_features):
             mean_inp, std_inp = get_mean_std(inp)
             mean_out, std_out = get_mean_std(out)
             loss_style += self.loss_fn(mean_inp, mean_out) + self.loss_fn(
                 std_inp, std_out
             )
-        loss_style = self.lamb * loss_style
+        loss_style = self.style_weight * loss_style
         total_loss = loss_content + loss_style
+
+        # Update the trackers.
         self.style_loss_tracker.update_state(loss_style)
         self.content_loss_tracker.update_state(loss_content)
         self.total_loss_tracker.update_state(total_loss)
@@ -562,8 +562,8 @@ class NST(tf.keras.Model):
 This callback is used to visualize the style transfer capability of
 the model on each epoch. The objective of style transfer is not
 quantified properly and is mostly upto the audience to call is good
-or bad. For this reason, visualization falls into a key aspect of
-training the model.
+or bad. For this reason, visualization is a key aspect of training the
+model.
 """
 
 test_style, test_content = next(iter(test_ds))
@@ -572,12 +572,12 @@ test_style, test_content = next(iter(test_ds))
 class TrainMonitor(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         # Encode the style and content image.
-        test_style_enc = self.model.encoder(test_style)
-        test_content_enc = self.model.encoder(test_content)
+        test_style_encoded = self.model.encoder(test_style)
+        test_content_encoded = self.model.encoder(test_content)
 
         # Compute the AdaIN features.
-        test_t = self.model.ada_in(style=test_style_enc, content=test_content_enc)
-        test_recons_image = self.model.decoder(test_t)
+        test_t = ada_in(style=test_style_encoded, content=test_content_encoded)
+        test_reconstructed_image = self.model.decoder(test_t)
 
         # Plot the Style, Content and the NST image.
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
@@ -587,7 +587,9 @@ class TrainMonitor(tf.keras.callbacks.Callback):
         ax[1].imshow(tf.keras.preprocessing.image.array_to_img(test_content[0]))
         ax[1].set_title(f"Content: {epoch:03d}")
 
-        ax[2].imshow(tf.keras.preprocessing.image.array_to_img(test_recons_image[0]))
+        ax[2].imshow(
+            tf.keras.preprocessing.image.array_to_img(test_reconstructed_image[0])
+        )
         ax[2].set_title(f"NST: {epoch:03d}")
 
         plt.show()
@@ -612,8 +614,8 @@ encoder = get_encoder()
 loss_net = get_loss_net()
 decoder = get_decoder()
 
-model = NST(
-    encoder=encoder, decoder=decoder, ada_in=ada_in, loss_net=loss_net, lamb=4.0
+model = NeuralStyleTransfer(
+    encoder=encoder, decoder=decoder, loss_net=loss_net, style_weight=4.0
 )
 
 model.compile(optimizer=optimizer, loss_fn=loss_fn)
@@ -639,32 +641,32 @@ the NST images.
 """
 
 for style, content in test_ds.take(1):
-    style_enc = model.encoder(style)
-    content_enc = model.encoder(content)
-    t = model.ada_in(style=style_enc, content=content_enc)
-    recons_image = model.decoder(t)
+    style_encoded = model.encoder(style)
+    content_encoded = model.encoder(content)
+    t = ada_in(style=style_encoded, content=content_encoded)
+    reconstructed_image = model.decoder(t)
     fig, axes = plt.subplots(nrows=10, ncols=3, figsize=(10, 30))
     [ax.axis("off") for ax in np.ravel(axes)]
 
-    for (ax_s, ax_c, ax_r), s_im, c_im, r_im in zip(
-        axes, style[0:10], content[0:10], recons_image[0:10]
+    for axis, style_image, content_image, reconstructed_image in zip(
+        axes, style[0:10], content[0:10], reconstructed_image[0:10]
     ):
-        ax_s.imshow(s_im)
-        ax_s.set_title("Style Image")
-        ax_c.imshow(c_im)
-        ax_c.set_title("Content Image")
-        ax_r.imshow(r_im)
-        ax_r.set_title("NST Image")
+        (ax_style, ax_content, ax_reconstructed) = axis
+        ax_style.imshow(style_image)
+        ax_style.set_title("Style Image")
+        ax_content.imshow(content_image)
+        ax_content.set_title("Content Image")
+        ax_reconstructed.imshow(reconstructed_image)
+        ax_reconstructed.set_title("NST Image")
 
 """
 # Conclusion
 
-Adaptive Instance Normalization is an important step in the direction
-of Neural Style Transfer research beacuse it allows arbitrary style
-transfer in real time. It is also important to note that the novel
-proposition of the authors is to achive this only by aligning the
-statistical features (mean and standard deviation) of the style and the
-content images.
+Adaptive Instance Normalization allows arbitrary style transfer in
+real time. It is also important to note that the novel proposition of
+the authors is to achieve this only by aligning the statistical
+features (mean and standard deviation) of the style and the content
+images.
 
 *Note*: Despite being this simple, AdaIN forms the base for
 [Style-GANs](https://arxiv.org/abs/1812.04948).
@@ -672,4 +674,9 @@ content images.
 # Reference
 
 - https://github.com/ftokarev/tf-adain
+
+# Acknowledgement
+
+We thank [Luke Wood](https://twitter.com/puppet_pals1) for his
+detailed review.
 """
