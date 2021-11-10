@@ -27,7 +27,7 @@ the business requirements. After that, the newly sampled data is added to the tr
 set, and the training procedure repeats. This cycle continues until either an
 acceptable score is reached or some other business metric is met.
 
-This tutorial provides a basic demonstration of how active learning works by
+This tutorial provides a basic demonstration of how Active Learning works by
 demonstrating a ratio-based (least confidence) sampling strategy that results in lower
 overall false positive and negative rates when compared to a model trained on the entire
 dataset. This sampling falls under the domain of *uncertanity sampling*, in which new
@@ -79,7 +79,7 @@ reviews, labels = tfds.as_numpy(dataset)
 print("Total examples:", reviews.shape[0])
 
 """
-Active learning starts with labelling a subset of data.
+Active learning starts with labeling a subset of data.
 For the ratio sampling technique that we will be using, we will need well-balanced training,
 validation and testing splits.
 """
@@ -130,7 +130,7 @@ x_train, y_train = (
     ),
 )
 
-# Remaining pool of samples are stored separately. These are only labelled as and when required
+# Remaining pool of samples are stored separately. These are only labeled as and when required
 x_pool_positives, y_pool_positives = (
     x_positives[val_split + test_split + train_split :],
     y_positives[val_split + test_split + train_split :],
@@ -235,7 +235,7 @@ def plot_history(losses, val_losses, accuracies, val_accuracies):
 """
 ## Creating the Model
 
-We create a small bidirectional LSTM model. When using active learning, you should make sure
+We create a small bidirectional LSTM model. When using Active Learning, you should make sure
 that the model architecture is capable of overfitting to the initial data.
 Overfitting gives a strong hint that the model will have enough capacity for
 future, unseen data.
@@ -245,7 +245,8 @@ future, unseen data.
 def create_model():
     model = keras.models.Sequential(
         [
-            layers.Embedding(3000, 128),
+            layers.Input(shape=(150,)),
+            layers.Embedding(input_dim=3000, output_dim=128),
             layers.Bidirectional(layers.LSTM(32, return_sequences=True)),
             layers.GlobalMaxPool1D(),
             layers.Dense(20, activation="relu"),
@@ -324,7 +325,7 @@ full_dataset_model = train_full_model(full_train_dataset, val_dataset, test_data
 """
 ## Training via Active Learning
 
-The general process we follow when performing active learning is demonstrated below:
+The general process we follow when performing Active Learning is demonstrated below:
 
 ![Active Learning](https://i.imgur.com/dmNKusp.png)
 
@@ -349,7 +350,7 @@ for Early Stopping can help minimize overfitting and the time required. We have 
 desired.
 
 Note: We are not loading the checkpoint after the first training iteration. In my
-experience working on active learning techniques, this helps the model probe the
+experience working on Active Learning techniques, this helps the model probe the
 newly formed loss landscape. Even if the model fails to improve in the second iteration,
 we will still gain insight about the possible future false positive and negative rates.
 This will help us sample a better set in the next iteration where the model will have a
@@ -372,7 +373,7 @@ def train_active_learning_models(
 
     model = create_model()
     # We will monitor the false positives and false negatives predicted by our model
-    # These will decide the subsequent sampling ratio for every active learning loop
+    # These will decide the subsequent sampling ratio for every Active Learning loop
     model.compile(
         loss="binary_crossentropy",
         optimizer="rmsprop",
@@ -420,7 +421,7 @@ def train_active_learning_models(
             f"Number of zeros incorrectly classified: {false_negatives}, Number of ones incorrectly classified: {false_positives}"
         )
 
-        # This technique of active learning demonstrates ratio based sampling where
+        # This technique of Active Learning demonstrates ratio based sampling where
         # Number of ones/zeros to sample = Number of ones/zeros incorrectly classified / Total incorrectly classified
         if false_negatives != 0 and false_positives != 0:
             total = false_negatives + false_positives
@@ -519,5 +520,5 @@ open source libraries/implementations, you can refer to the resources below:
 
 1. [Active Learning Literature Survey](http://burrsettles.com/pub/settles.activelearning.pdf) (Burr Settles, 2010).
 2. [modAL](https://github.com/modAL-python/modAL): A Modular Active Learning framework.
-3. Google's unofficial [active learning playground](https://github.com/google/active-learning).
+3. Google's unofficial [Active Learning playground](https://github.com/google/active-learning).
 """
