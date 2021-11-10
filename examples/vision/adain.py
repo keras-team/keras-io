@@ -675,6 +675,6 @@ images.
 
 # Acknowledgement
 
-We thank [Luke Wood](https://twitter.com/puppet_pals1) for his
+We thank [Luke Wood](https://lukewood.xyz) for his
 detailed review.
 """
