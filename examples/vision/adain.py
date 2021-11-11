@@ -13,10 +13,10 @@ is the process of transferring the style of one image onto the content
 of another. This was first introduced in the seminal paper
 ["A Neural Algorithm of Artistic Style"](https://arxiv.org/abs/1508.06576)
 by Gatys et al. A major limitation of the technique proposed in this
-work is in it's runtime, as the algorithm uses a slow iterative
+work is in its runtime, as the algorithm uses a slow iterative
 optimization process.
 
-Future papers that introduced
+Follow-up papers that introduced
 [Batch Normalization](https://arxiv.org/abs/1502.03167),
 [Instance Normalization](https://arxiv.org/abs/1701.02096) and
 [Conditional Instance Normalization](https://arxiv.org/abs/1610.07629)
@@ -25,12 +25,12 @@ requiring a slow iterative process.
 
 Following these papers, the authors Xun Huang and Serge
 Belongie propose
-[Adaptive Instance Normalization](https://arxiv.org/abs/1703.06868)
-that allows arbitrary style transfer in real time.
+[Adaptive Instance Normalization](https://arxiv.org/abs/1703.06868) (AdaIN),
+which allows arbitrary style transfer in real time.
 
 In this example we implement Adapative Instance Normalization
-for Neural Style Transfer. We show in the below figure the inference
-on our AdaIN (Adaptive Instance Normalization) model trained for
+for Neural Style Transfer. We show in the below figure the output
+of our AdaIN model trained for
 only **30 epochs**.
 
 ![Style transfer sample gallery](https://i.imgur.com/zDjDuea.png)
@@ -67,7 +67,7 @@ EPOCHS = 1
 AUTOTUNE = tf.data.AUTOTUNE
 
 """
-# Style transfer sample galleryDownloading the dataset
+## Style transfer sample gallery
 
 For Neural Style Transfer we need style images and content images. In
 this example we will use the
@@ -82,22 +82,24 @@ authors, where they use
 [MSCOCO](https://cocodataset.org/#home) as content datasets
 respectively. We do this to create a minimal yet reproducible example.
 
-## Pointers for downloading dataset from Kaggle
+## Downloading the dataset from Kaggle
 
-The
-[Best Artworks of All Time](https://www.kaggle.com/ikarus777/best-artworks-of-all-time)
-dataset is hosted in Kaggle and one can easily download it in colab by
+The [Best Artworks of All Time](https://www.kaggle.com/ikarus777/best-artworks-of-all-time)
+dataset is hosted on Kaggle and one can easily download it in Colab by
 following these steps:
 
 - Follow the instructions [here](https://github.com/Kaggle/kaggle-api)
 in order to obtain your Kaggle API keys in case you don't have them.
 - Use the following command to upload the Kaggle API keys.
+
 ```python
 from google.colab import files
 files.upload()
 ```
+
 - Use the following commands to move the API keys to the proper
 directory and download the dataset.
+
 ```shell
 $ mkdir ~/.kaggle
 $ cp kaggle.json ~/.kaggle/
@@ -111,7 +113,7 @@ $ rm best-artworks-of-all-time.zip artists.csv
 """
 
 """
-# `tf.data` pipeline
+## `tf.data` pipeline
 
 In this section, we will build the `tf.data` pipeline for the project.
 For the style dataset, we decode, convert and resize the images from
@@ -141,7 +143,7 @@ def decode_and_resize(image_path):
 
 
 def extract_image_from_voc(element):
-    """Extracts image from the pascal voc dataset.
+    """Extracts image from the PascalVOC dataset.
 
     Args:
         element: A dictionary of data.
@@ -217,9 +219,9 @@ test_ds = (
 )
 
 """
-# Visualizing the data
+## Visualizing the data
 
-It is always better to visualize the data while going ahead. To ensure
+It is always better to visualize the data before training. To ensure
 the correctness of our preprocessing pipeline, we visualize 10 samples
 from our dataset.
 """
@@ -237,7 +239,7 @@ for (axis, style_image, content_image) in zip(axes, style[0:10], content[0:10]):
     ax_content.set_title("Content Image")
 
 """
-# Architecture
+## Architecture
 
 The style transfer network takes a content image and a style image as
 inputs and outputs the style transfered image. The authors of AdaIN
@@ -260,7 +262,7 @@ fed to the AdaIN layer. This layer produced the combined feature map
 """
 
 """
-## Encoder
+### Encoder
 
 The encoder is a part of the pretrained (pretrained on
 [imagenet](https://www.image-net.org/)) VGG19 model. We slice the
@@ -282,10 +284,10 @@ def get_encoder():
 
 
 """
-## Adaptive Instance Normalization
+### Adaptive Instance Normalization
 
-The AdIN (Adaptive Instance Normalization) layer takes in the features
-of the content and style image. The layer can be defined using the
+The AdaIN layer takes in the features
+of the content and style image. The layer can be defined via the
 following equation:
 
 ![AdaIn formula](https://i.imgur.com/tWq3VKP.png)
@@ -298,7 +300,7 @@ style feature maps `fs`.
 It is important to note that the AdaIN layer proposed by the authors
 uses no other parameters apart from mean and variance. The layer also
 does not have any trainable parameters. This is why we use a
-*python function* instead of using a *keras layer*. The function takes
+*Python function* instead of using a *Keras layer*. The function takes
 style and content feature maps, computes the mean and standard deviation
 of the images and returns the adaptive instance normalized feature map.
 """
@@ -314,8 +316,7 @@ def get_mean_std(x, epsilon=1e-5):
 
 
 def ada_in(style, content):
-    """Computes the adaptive instance normalized feature map from the style and
-    content feature map.
+    """Computes the AdaIn feature map.
 
     Args:
         style: The style feature map.
@@ -331,7 +332,7 @@ def ada_in(style, content):
 
 
 """
-## Decoder
+### Decoder
 
 The authors specify that the decoder network must mirror the encoder
 network.  We have symmetrically inverted the encoder to build our
@@ -339,7 +340,7 @@ decoder. We have used `UpSampling2D` layers to increase the spatial
 resolution of the feature maps.
 
 Note that the authors warn against using any normalization layer
-in the deocder network and do indeed go onto show that including
+in the decoder network, and do indeed go on to show that including
 batch normalization or instance normalization hurts the performance
 of the overall network.
 
@@ -376,7 +377,7 @@ def get_decoder():
 
 
 """
-## Loss Network
+### Loss functions
 
 Here we build the loss functions for the neural style transfer model.
 The authors propose to use a pretrained VGG-19 to compute the loss
@@ -397,15 +398,15 @@ and the features of the neural style transferred image.
 
 Here the authors propose to use the output from the AdaIn layer `t` as
 the content target rather than using features of the original image as
-target. This is done to optimize faster convergence of the loss.
+target. This is done to speed up convergence.
 
 ### Style Loss
 
-Rather than using the more commonly used [Gram
-Matrix](https://mathworld.wolfram.com/GramMatrix.html) the authors
-propose to compute the difference between the statistical features
-(mean and variance) which makes it conceptually cleaner. This can
-easily visualized in the following equation
+Rather than using the more commonly used
+[Gram Matrix](https://mathworld.wolfram.com/GramMatrix.html),
+the authors propose to compute the difference between the statistical features
+(mean and variance) which makes it conceptually cleaner. This can be
+easily visualized via the following equation:
 
 ![The style loss](https://i.imgur.com/Ctclhn3.png)
 
@@ -557,11 +558,10 @@ class NeuralStyleTransfer(tf.keras.Model):
 """
 ## Train Monitor callback
 
-This callback is used to visualize the style transfer capability of
-the model on each epoch. The objective of style transfer is not
-quantified properly and is mostly upto the audience to call is good
-or bad. For this reason, visualization is a key aspect of training the
-model.
+This callback is used to visualize the style transfer output of
+the model at the end of each epoch. The objective of style transfer cannot be
+quantified properly, and is to be subjectively evaluated by an audience.
+For this reason, visualization is a key aspect of evaluating the model.
 """
 
 test_style, test_content = next(iter(test_ds))
@@ -595,9 +595,9 @@ class TrainMonitor(tf.keras.callbacks.Callback):
 
 
 """
-# Train the model
+## Train the model
 
-In this section, we initialize the optimizer, loss funtion and the
+In this section, we define the optimizer, the loss funtion, and the
 trainer module. We compile the trainer module with the optimizer and
 the loss function and then train it.
 
@@ -628,13 +628,13 @@ history = model.fit(
 )
 
 """
-# Inference
+## Inference
 
-After we train the model, we now need to run inference on it. We will
-pass arbitrary content and style images from the test dataset and see
-the NST images.
+After we train the model, we now need to run inference with it. We will
+pass arbitrary content and style images from the test dataset and take a look at
+the output images.
 
-*NOTE*: To try out the model on your own images you can go to this
+*NOTE*: To try out the model on your own images, you can use this
 [Hugging Face demo](https://huggingface.co/spaces/ariG23498/nst).
 """
 
@@ -658,7 +658,7 @@ for style, content in test_ds.take(1):
         ax_reconstructed.set_title("NST Image")
 
 """
-# Conclusion
+## Conclusion
 
 Adaptive Instance Normalization allows arbitrary style transfer in
 real time. It is also important to note that the novel proposition of
@@ -666,14 +666,14 @@ the authors is to achieve this only by aligning the statistical
 features (mean and standard deviation) of the style and the content
 images.
 
-*Note*: Despite being this simple, AdaIN forms the base for
+*Note*: AdaIN also serves as the base for
 [Style-GANs](https://arxiv.org/abs/1812.04948).
 
-# Reference
+## Reference
 
 - https://github.com/ftokarev/tf-adain
 
-# Acknowledgement
+## Acknowledgement
 
 We thank [Luke Wood](https://lukewood.xyz) for his
 detailed review.
