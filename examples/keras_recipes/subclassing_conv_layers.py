@@ -3,7 +3,7 @@ Title: Customizing the convolution operation of a Conv2D layer
 Author: [lukewood](https://lukewood.xyz)
 Date created: 11/03/2021
 Last modified: 11/03/2021
-Description: This example shows how to implement custom convolution layers using the new `Conv.convolution_op()` API.
+Description: This example shows how to implement custom convolution layers using the `Conv.convolution_op()` API.
 """
 """
 ## Introduction
