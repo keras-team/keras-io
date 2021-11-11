@@ -3,25 +3,29 @@ Title: Customizing the convolution operation of a Conv2D layer
 Author: [lukewood](https://lukewood.xyz)
 Date created: 11/03/2021
 Last modified: 11/03/2021
-Description: This example shows how to implement custom convolution layers using the new `Conv.convolution_op()` api.
+Description: This example shows how to implement custom convolution layers using the new `Conv.convolution_op()` API.
 """
 """
 ## Introduction
-A common use case for Keras is implementing custom convolutional layers.  In Keras 2.7.0,
-we released the `Conv.convolution_op()` API to streamline the process.
 
-This API is only available in the most recent Keras release.  Before using the
-`Conv.convolution_op()` API, ensure that you are running Keras version 2.7.0 or greater.
+You may sometimes need to implement custom versions of convolution layers like `Conv1D` and `Conv2D`.
+Keras enables you do this without implementing the entire layer from scratch: you can reuse
+most of the base convolution layer and just customize the convolution op itself via the
+`convolution_op()` method.
+
+This method was introduced in Keras 2.7. So before using the
+`convolution_op()` API, ensure that you are running Keras version 2.7.0 or greater.
 """
 import tensorflow.keras as keras
 
 print(keras.__version__)
 """
-## A Simple StandardizedConv2D Implementation
-There are two ways to use the `Conv.convolution_op()` API.  The first way to use the
-`Conv.convolution_op()` API is to override the `convolution_op()` method.
-Using this approach we can quickly implement a
-[StandardizedConv2D](https://arxiv.org/abs/1903.10520).
+## A Simple `StandardizedConv2D` implementation
+
+There are two ways to use the `Conv.convolution_op()` API. The first way
+is to override the `convolution_op()` method on a convolution layer subclass.
+Using this approach, we can quickly implement a
+[StandardizedConv2D](https://arxiv.org/abs/1903.10520) as shown below.
 """
 import tensorflow as tf
 import tensorflow.keras as keras
@@ -43,8 +47,8 @@ class StandardizedConv2DWithOverride(layers.Conv2D):
 
 """
 The other way to use the `Conv.convolution_op()` API is to directly call the
-`convolution_op()` method.  A comparable class can be implemented using this approach is
-shown below.
+`convolution_op()` method from the `call()` method of a convolution layer subclass.
+A comparable class implemented using this approach is shown below.
 """
 
 
@@ -61,8 +65,9 @@ class StandardizedConv2DWithCall(layers.Conv2D):
 
 """
 ## Example Usage
-Both of these layers work as drop in replacements for Conv2D.  The following
-demonstration performs classification on the mnist dataset.
+
+Both of these layers work as drop-in replacements for `Conv2D`. The following
+demonstration performs classification on the MNIST dataset.
 """
 
 # Model / data parameters
@@ -109,14 +114,11 @@ epochs = 5
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
 model.fit(x_train, y_train, batch_size=batch_size, epochs=5, validation_split=0.1)
-"""
-As you can see, the subclass layers using the `Conv.convolution_op()` API can be used as
-drop in replacements for `Conv2D` layers.
-"""
 
 """
 ## Conclusion
+
 The `Conv.convolution_op()` API provides an easy and readable way to implement custom
-convolutional layers.  A StandardizedConvolution implementation using the API is quite
+convolution layers. A `StandardizedConvolution` implementation using the API is quite
 terse, consisting of only four lines of code.
 """
