@@ -1,4 +1,3 @@
-
 # Review Classification using Active Learning
 
 **Author:** [Darshan Deshpande](https://twitter.com/getdarshan)<br>
@@ -89,14 +88,6 @@ print("Total examples:", reviews.shape[0])
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:From /usr/local/lib/python3.7/dist-packages/tensorflow_datasets/core/dataset_builder.py:598: get_single_element (from tensorflow.python.data.experimental.ops.get_single_element) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use `tf.data.Dataset.get_single_element()`.
-
-WARNING:tensorflow:From /usr/local/lib/python3.7/dist-packages/tensorflow_datasets/core/dataset_builder.py:598: get_single_element (from tensorflow.python.data.experimental.ops.get_single_element) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use `tf.data.Dataset.get_single_element()`.
-
 Total examples: 50000
 
 ```
