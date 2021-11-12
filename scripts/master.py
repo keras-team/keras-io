@@ -373,6 +373,19 @@ MASTER = {
                             ],
                         },
                         {
+                            'path': 'efficientnet_v2',
+                            'title': 'EfficientNet B0 to B3 and S,M,L',
+                            'generate': [
+                                'tensorflow.keras.applications.EfficientNetV2B0',
+                                'tensorflow.keras.applications.EfficientNetV2B1',
+                                'tensorflow.keras.applications.EfficientNetV2B2',
+                                'tensorflow.keras.applications.EfficientNetV2B3',
+                                'tensorflow.keras.applications.EfficientNetV2S',
+                                'tensorflow.keras.applications.EfficientNetV2M',
+                                'tensorflow.keras.applications.EfficientNetV2L',
+                            ],
+                        },
+                        {
                             'path': 'vgg',
                             'title': 'VGG16 and VGG19',
                             'generate': [
