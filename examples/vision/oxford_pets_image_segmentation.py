@@ -94,7 +94,7 @@ class OxfordPets(keras.utils.Sequence):
         for j, path in enumerate(batch_input_img_paths):
             img = load_img(path, target_size=self.img_size)
             x[j] = img
-        y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
+        y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="float32")
         for j, path in enumerate(batch_target_img_paths):
             img = load_img(path, target_size=self.img_size, color_mode="grayscale")
             y[j] = np.expand_dims(img, 2)
