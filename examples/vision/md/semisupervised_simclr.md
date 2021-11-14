@@ -79,7 +79,7 @@ from tensorflow.keras import layers
 ```
 
 ---
-## Hyperparameters
+## Hyperparameter setup
 
 
 ```python
@@ -192,7 +192,7 @@ class RandomColorAffine(layers.Layer):
         self.brightness = brightness
         self.jitter = jitter
 
-    def call(self, images, training=True):
+    def call(self, images, training):
         if training:
             batch_size = tf.shape(images)[0]
 
@@ -234,9 +234,9 @@ def visualize_augmentations(num_images):
     # Apply augmentations
     augmented_images = zip(
         images,
-        get_augmenter(**classification_augmentation)(images),
-        get_augmenter(**contrastive_augmentation)(images),
-        get_augmenter(**contrastive_augmentation)(images),
+        get_augmenter(**classification_augmentation)(images, training=True),
+        get_augmenter(**contrastive_augmentation)(images, training=True),
+        get_augmenter(**contrastive_augmentation)(images, training=True),
     )
     row_titles = [
         "Original:",
@@ -498,14 +498,14 @@ class ContrastiveModel(keras.Model):
         # Both labeled and unlabeled images are used, without labels
         images = tf.concat((unlabeled_images, labeled_images), axis=0)
         # Each image is augmented twice, differently
-        augmented_images_1 = self.contrastive_augmenter(images)
-        augmented_images_2 = self.contrastive_augmenter(images)
+        augmented_images_1 = self.contrastive_augmenter(images, training=True)
+        augmented_images_2 = self.contrastive_augmenter(images, training=True)
         with tf.GradientTape() as tape:
-            features_1 = self.encoder(augmented_images_1)
-            features_2 = self.encoder(augmented_images_2)
+            features_1 = self.encoder(augmented_images_1, training=True)
+            features_2 = self.encoder(augmented_images_2, training=True)
             # The representations are passed through a projection mlp
-            projections_1 = self.projection_head(features_1)
-            projections_2 = self.projection_head(features_2)
+            projections_1 = self.projection_head(features_1, training=True)
+            projections_2 = self.projection_head(features_2, training=True)
             contrastive_loss = self.contrastive_loss(projections_1, projections_2)
         gradients = tape.gradient(
             contrastive_loss,
@@ -520,10 +520,14 @@ class ContrastiveModel(keras.Model):
         self.contrastive_loss_tracker.update_state(contrastive_loss)
 
         # Labels are only used in evalutation for an on-the-fly logistic regression
-        preprocessed_images = self.classification_augmenter(labeled_images)
+        preprocessed_images = self.classification_augmenter(
+            labeled_images, training=True
+        )
         with tf.GradientTape() as tape:
-            features = self.encoder(preprocessed_images)
-            class_logits = self.linear_probe(features)
+            # the encoder is used in inference mode here to avoid regularization
+            # and updating the batch normalization paramers if they are used
+            features = self.encoder(preprocessed_images, training=False)
+            class_logits = self.linear_probe(features, training=True)
             probe_loss = self.probe_loss(labels, class_logits)
         gradients = tape.gradient(probe_loss, self.linear_probe.trainable_weights)
         self.probe_optimizer.apply_gradients(
@@ -817,7 +821,7 @@ important hyperparameter than usual. The higher, the better.
 - **Temperature**: the temperature defines the "softness" of the softmax
 distribution that is used in the cross-entropy loss, and is an important
 hyperparameter. Lower values generally lead to a higher contrastive accuracy.
-A recent trick (in [ALIGN](https://arxiv.org/pdf/2102.05918.pdf)) is to learn
+A recent trick (in [ALIGN](https://arxiv.org/abs/2102.05918)) is to learn
 the temperature's value as well (which can be done by defining it as a
 tf.Variable, and applying gradients on it). Even though this provides a good baseline
 value, in my experiments the learned temperature was somewhat lower
@@ -831,7 +835,7 @@ augmentations decrease the performance gains from pretraining. The whole data
 augmentation pipeline can be seen as an important hyperparameter of the
 algorithm, implementations of other custom image augmentation layers in Keras
 can be found in
-[this repository](https://github.com/beresandras/contrastive-classification-keras).
+[this repository](https://github.com/beresandras/image-augmentation-layers-keras).
 - **Learning rate schedule**: a constant schedule is used here, but it is
 quite common in the literature to use a
 [cosine decay schedule](https://www.tensorflow.org/api_docs/python/tf/keras/experimental/CosineDecay),
