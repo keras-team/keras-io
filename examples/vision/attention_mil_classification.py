@@ -2,7 +2,7 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/11/01
+Last modified: 2021/11/13
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
@@ -11,7 +11,7 @@ Description: MIL approach to classify bags of instances and get their individual
 ### What is Multiple Instance Learning (MIL)?
 Usually for supervised learning  algorithms, the learner receives labels for a set of
 instances. In the case of MIL, the learner receives labels for a set of bags in which each
-bags contains a set of instances. The bag is labelled positive if it contains atleast
+bags contains a set of instances. The bag is labelled positive if it contains at least
 one positive instance and negative if it does not contain any.
 
 #### Motivation
@@ -30,8 +30,7 @@ prediction.
 
 #### Implementation
 
-The classifier is modelled using neural networks. This means that the MIL attention
-layer will also be trainable. The end-to-end model is mainly composed of:
+The end-to-end model is composed of:
 
 1. The backbone (feature extractor layers) of the model.
 2. The extracted features fed into the MIL attention layer. The layer is modelled
@@ -49,8 +48,8 @@ probabilities (classification results).
 by TensorFlow.
 
 ## What will you learn in this example?
-The approach to find a target feature (without explicitly labelling them in prior)
-among a bag of features will be taught. You will mainly learn:
+We will demonstrate an approach to find a target feature (without explicitly labelling
+them in prior) among a bag of features. You will learn:
 
 * about attention-based deep MIL, its applications (applied on MNIST dataset in the
 example; can be applied on other image classification datasets) and its results'
@@ -76,7 +75,7 @@ plt.style.use("ggplot")
 At first we will set up the configurations and then prepare the datasets.
 
 We will create a set of bags and assign their labels accordingly. This is performed by choosing
-a positive instance and forming associated bags of instances. If atleast one positive instance
+a positive instance and forming associated bags of instances. If at least one positive instance
 is available in a bag, the bag is considered as a positive bag. If it does not contain any
 positive instance, the bag will be considered as negative.
 
@@ -87,7 +86,7 @@ positive instance, the bag will be considered as negative.
 - `VAL_BAG_COUNT`: The number of validation bags.
 - `BAG_SIZE`: The number of instances in a bag.
 - `PLOT_SIZE`: The number of bags to plot.
-- `ENSEMBLE_AVG_COUNT`: The number of models to create and get their average. (OPTIONAL:
+- `ENSEMBLE_AVG_COUNT`: The number of models to create and average together. (Optional:
 often results in better performance - set to 1 for single model)
 """
 
@@ -96,7 +95,7 @@ BAG_COUNT = 1000
 VAL_BAG_COUNT = 300
 BAG_SIZE = 3
 PLOT_SIZE = 3
-ENSEMBLE_AVG_COUNT = 5
+ENSEMBLE_AVG_COUNT = 1
 
 """
 ### Prepare bags
@@ -128,11 +127,10 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     data_negative_classes = np.delete(input_data, filter_class, 0)
     labels_negative_classes = np.delete(input_labels, filter_class, 0)
 
-    # Merge both inputs and labels to each another.
+    # Combine the data and labels of the both different classes.
     data = np.concatenate([data_positive_class, data_negative_classes], axis=0)
     labels = np.concatenate([labels_positive_class, labels_negative_classes], axis=0)
 
-    # Data are ordered in such a way: [positive_class... negative_classes].
     # Shuffle the data randomly.
     order = np.arange(len(data))
     np.random.shuffle(order)
@@ -154,8 +152,6 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
 
             # Positive bag will be labelled as 1.
             bag_label = 1
-
-            # Increment count by 1.
             count += 1
 
         bags.append(instances_data)
@@ -167,7 +163,7 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     return (list(np.swapaxes(bags, 0, 1)), np.array(bag_labels))
 
 
-# Load desired data.
+# Load the mnist dataset.
 (x_train, y_train), (x_val, y_val) = keras.datasets.mnist.load_data()
 
 # Create training data.
@@ -279,14 +275,14 @@ class MILAttentionLayer(layers.Layer):
     def call(self, inputs):
 
         # Assigning variables from the number of inputs.
-        instances = [self.compute_weights(instance) for instance in inputs]
+        instances = [self.compute_attention_scores(instance) for instance in inputs]
 
         # such that each row summation is equal to 1.
         alpha = tf.math.softmax(instances, axis=0)
 
         return [alpha[i] for i in range(alpha.shape[0])]
 
-    def compute_weights(self, instance):
+    def compute_attention_scores(self, instance):
 
         # in-case "gated mechanism" used.
         original_instance = instance
@@ -314,8 +310,21 @@ Moreover, if activated, the class label prediction with its associated instance 
 for each bag (after the model has been trained) can be seen.
 """
 
-# Function for plotting.
+
 def plot(data, labels, bag_class, predictions=None, attention_weights=None):
+
+    """"Utility for plotting bags and attention weights.
+
+    Args:
+      data: Input data that contains the bags of instances.
+      labels: The associated bag labels of the input data.
+      bag_class: String name of the desired bag class.
+        The options are: "positive" or "negative".
+      predictions: Class labels model predictions.
+      If you don't specify anything, ground truth labels will be used.
+      attention_weights: Attention weights for each instance within the input data.
+      If you don't specify anything, the values won't be displayed.
+    """
 
     labels = np.array(labels).reshape(-1)
 
@@ -337,7 +346,7 @@ def plot(data, labels, bag_class, predictions=None, attention_weights=None):
             bags = np.array(data)[:, labels[0:PLOT_SIZE]]
 
     else:
-        print(f"There is no class as {bag_class}")
+        print(f"There is no class {bag_class}")
         return
 
     for i in range(PLOT_SIZE):
@@ -362,6 +371,9 @@ plot(val_data, val_labels, "negative")
 
 First we will create some embeddings per instance, invoke the attention operator and then
 use the softmax function to output the class probabilities.
+
+Some regularization techniques are considered to avoid overfitting the model which ensures
+minimal generalization error.
 """
 
 
@@ -405,8 +417,8 @@ def create_model(instance_shape):
 Since this kind of problem could simply turn into imbalanced data classification problem,
 class weights should be considered.
 
-Let's say there are 1000 bags. There often could be cases were ~90 % of the bags does not
-contain any positive label and ~10 % does.
+Let's say there are 1000 bags. There often could be cases were ~90 % of the bags dp not
+contain any positive label and ~10 % do.
 Such data can be referred to as **Imbalanced data**.
 
 Using class weights, the model will tend to consider the rare class more as compared to
@@ -432,9 +444,6 @@ def compute_class_weights(labels):
 ## Build and train model
 
 The model is built and trained in this section.
-
-Some regularization techniques are considered to avoid overfitting the model which ensures
-minimal generalization error.
 """
 
 
@@ -503,12 +512,12 @@ trained_models = [
 """
 ## Model evaluation
 
-The models are in their deterministic state now and ready for evaluation.
+The models are now ready for evaluation.
 With each model we also create an associated intermediate model to get the
 weights from the attention layer.
 
-Based on the number of models (`ENSEMBLE_AVG_COUNT`), the models predict the results
-and then averaged out (equal contribution per model).
+We will compute a prediction for each of our `ENSEMBLE_AVG_COUNT` models, and
+average them together for our final prediction.
 """
 
 
@@ -532,7 +541,6 @@ def predict(data, labels, trained_models):
         # Predict MIL attention layer weights.
         intermediate_predictions = intermediate_model.predict(data)
 
-        # Reshape list of arrays.
         attention_weights = np.squeeze(np.swapaxes(intermediate_predictions, 1, 0))
         models_attention_weights.append(attention_weights)
 
@@ -554,7 +562,7 @@ def predict(data, labels, trained_models):
 # Evaluate and predict classes and attention scores on validation data.
 class_predictions, attention_params = predict(val_data, val_labels, trained_models)
 
-# Plot some results of validation data bags per class.
+# Plot some results from our validation data.
 plot(
     val_data,
     val_labels,
@@ -573,10 +581,13 @@ plot(
 """
 ## Conclusion
 
-From the above plot, you can notice that the weights are always summing to 1. If it is a
-negative predicted bag, the weights will somehow be equally distributed. However, in a
-positive predict bag, the instance which resulted to the positve labelling, will have
-substantial higher attention score among that bag.
+From the above plot, you can notice that the weights are always summing to 1. In a
+positively predict bag, the instance which resulted in the positive labelling will have
+a substantially higher attention score than the rest of the bag. However, in a negatively
+predicted bag, there are two cases:
+* All instances will have approximately similar scores.
+* An instance will have relatively higher score (but not as high as of a positive instance).
+This is because the feature space of this instance is close to that of the positive instance.
 
 ## Remarks
 
