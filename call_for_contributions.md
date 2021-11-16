@@ -43,7 +43,7 @@ mixing numerical, categorical, and text features, doing feature engineering with
 ## DETR: End-to-End Object Detection with Transformers
 
 - [Reference implementation](https://github.com/facebookresearch/detr)
-- [TF/Keras implementation](https://github.com/auvisusAI/detr-tensorflow)
+- [TF/Keras implementation](https://github.com/Visual-Behavior/detr-tensorflow)
 
 
 ---
