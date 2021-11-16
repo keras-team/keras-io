@@ -269,27 +269,30 @@ reconstructed_model.fit(test_input, test_target)
 
 ### Format Limitations
 
-SavedModel limitations:
+Keras SavedModel format limitations:
 
-- Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
-- Can not serialize the mask argument in custom layers (`layer.supports_masking=True`)
-- Does not support models that have a custom training loop.
-  (model overrides `train_step`).
+The tracing done by SavedModel to produce the graphs of the layer call functions allows
+SavedModel be more portable than H5, but it comes with drawbacks.
 
-Unsupported objects can still be saved and loaded from SavedModel, except they
-must override `get_config`/`from_config`, and the classes must be passed to the
-`custom_objects` argument when loading.
+- Can be slower and bulkier than H5.
+- Cannot serialize the ops generated from the mask argument (i.e. if a layer is called
+  with `layer(..., mask=mask_value)`, the mask argument is not saved to SavedModel).
+- Does not save the overridden `train_step()` in subclassed models.
+
+Custom objects that use masks or have a custom training loop can still be saved and loaded
+from SavedModel, except they must override `get_config()`/`from_config()`, and the classes
+must be passed to the `custom_objects` argument when loading.
 
 H5 limitations:
 
-- **External losses & metrics** added via `model.add_loss()`
+- External losses & metrics added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
 If you have such losses & metrics on your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
 Note that this does not apply to losses/metrics created *inside* layers via
 `self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
 these losses & metrics are kept, since they are part of the `call` method of the layer.
-- The **computation graph of custom objects** such as custom layers
+- The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
 See [Custom objects](#custom-objects).

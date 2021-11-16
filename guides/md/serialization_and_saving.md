@@ -134,11 +134,11 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 1s 6ms/step - loss: 0.3206
+4/4 [==============================] - 1s 7ms/step - loss: 2.9296
+4/4 [==============================] - 0s 3ms/step - loss: 2.7120
 
-4/4 [==============================] - 0s 1ms/step - loss: 0.2839
+<keras.callbacks.History at 0x7ba64817d390>
 
-<keras.callbacks.History at 0x7894c86e7b00>
 
 ```
 </div>
@@ -237,9 +237,9 @@ print("Model loaded without the custom object class:", loaded_2)
 
 <div class="k-default-codeblock">
 ```
-Original model: <__main__.CustomModel object at 0x7894c8613668>
-Model Loaded with custom objects: <__main__.CustomModel object at 0x7894c85807b8>
-Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x7894c85214e0>
+Original model: <__main__.CustomModel object at 0x7ba6480b96a0>
+Model Loaded with custom objects: <__main__.CustomModel object at 0x7ba648064518>
+Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x7ba648159940>
 
 ```
 </div>
@@ -291,36 +291,39 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 2ms/step - loss: 0.2321
-4/4 [==============================] - 0s 1ms/step - loss: 0.2229
+4/4 [==============================] - 0s 4ms/step - loss: 0.2223
+4/4 [==============================] - 0s 3ms/step - loss: 0.2035
 
-<keras.callbacks.History at 0x7894c828b470>
+<keras.callbacks.History at 0x7ba6404ca588>
 
 ```
 </div>
 ### Format Limitations
 
-SavedModel limitations:
+Keras SavedModel format limitations:
 
-- Can be slower and bulkier than H5, since it saves the traced TF graphs of each layer
-- Can not serialize the mask argument in custom layers (`layer.supports_masking=True`)
-- Does not support models that have a custom training loop.
-  (model overrides `train_step`).
+The tracing done by SavedModel to produce the graphs of the layer call functions allows
+SavedModel be more portable than H5, but it comes with drawbacks.
 
-Unsupported objects can still be saved and loaded from SavedModel, except they
-must override `get_config`/`from_config`, and the classes must be passed to the
-`custom_objects` argument when loading.
+- Can be slower and bulkier than H5.
+- Cannot serialize the ops generated from the mask argument (i.e. if a layer is called
+  with `layer(..., mask=mask_value)`, the mask argument is not saved to SavedModel).
+- Does not save the overridden `train_step()` in subclassed models.
+
+Custom objects that use masks or have a custom training loop can still be saved and loaded
+from SavedModel, except they must override `get_config()`/`from_config()`, and the classes
+must be passed to the `custom_objects` argument when loading.
 
 H5 limitations:
 
-- **External losses & metrics** added via `model.add_loss()`
+- External losses & metrics added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
 If you have such losses & metrics on your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
 Note that this does not apply to losses/metrics created *inside* layers via
 `self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
 these losses & metrics are kept, since they are part of the `call` method of the layer.
-- The **computation graph of custom objects** such as custom layers
+- The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
 See [Custom objects](#custom-objects).
@@ -734,7 +737,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7894c80c0710>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402ffbe0>
 
 ```
 </div>
@@ -897,7 +900,7 @@ Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7894c85f32e8>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402d4e48>
 
 ```
 </div>
@@ -948,7 +951,7 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7894c8087940>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402d4b00>
 
 ```
 </div>
