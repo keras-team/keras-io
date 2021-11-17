@@ -174,7 +174,7 @@ class RandomColorAffine(layers.Layer):
         self.brightness = brightness
         self.jitter = jitter
 
-    def call(self, images, training):
+    def call(self, images, training=True):
         if training:
             batch_size = tf.shape(images)[0]
 
@@ -216,9 +216,9 @@ def visualize_augmentations(num_images):
     # Apply augmentations
     augmented_images = zip(
         images,
-        get_augmenter(**classification_augmentation)(images, training=True),
-        get_augmenter(**contrastive_augmentation)(images, training=True),
-        get_augmenter(**contrastive_augmentation)(images, training=True),
+        get_augmenter(**classification_augmentation)(images),
+        get_augmenter(**contrastive_augmentation)(images),
+        get_augmenter(**contrastive_augmentation)(images),
     )
     row_titles = [
         "Original:",
