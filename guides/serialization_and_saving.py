@@ -267,23 +267,36 @@ reconstructed_model.fit(test_input, test_target)
 
 """
 
-#### Limitations
+### Format Limitations
 
-Compared to the SavedModel format, there are two things that don't
-get included in the H5 file:
+Keras SavedModel format limitations:
 
-- **External losses & metrics** added via `model.add_loss()`
+The tracing done by SavedModel to produce the graphs of the layer call functions allows
+SavedModel be more portable than H5, but it comes with drawbacks.
+
+- Can be slower and bulkier than H5.
+- Cannot serialize the ops generated from the mask argument (i.e. if a layer is called
+  with `layer(..., mask=mask_value)`, the mask argument is not saved to SavedModel).
+- Does not save the overridden `train_step()` in subclassed models.
+
+Custom objects that use masks or have a custom training loop can still be saved and loaded
+from SavedModel, except they must override `get_config()`/`from_config()`, and the classes
+must be passed to the `custom_objects` argument when loading.
+
+H5 limitations:
+
+- External losses & metrics added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
 If you have such losses & metrics on your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
 Note that this does not apply to losses/metrics created *inside* layers via
 `self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
 these losses & metrics are kept, since they are part of the `call` method of the layer.
-- The **computation graph of custom objects** such as custom layers
+- The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
 See [Custom objects](#custom-objects).
-
+- Does not support preprocessing layers.
 
 """
 
