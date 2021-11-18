@@ -181,11 +181,11 @@ class Augmentation(keras.layers.Layer):
         """random_execute function.
 
         Arguments:
-            prob: a float value from 0-1 that determines the
+            prob: A float value from 0-1 that determines the
               probability.
 
         Returns:
-            returns true or false based on the probability.
+            Returns true or false based on the probability.
         """
 
         return tf.random.uniform([], minval=0, maxval=1) < prob
@@ -211,7 +211,7 @@ class RandomToGrayscale(Augmentation):
             x: a tf.Tensor representing the image.
 
         Returns:
-            returns a grayscaled version of the image 20% of the time
+            Returns a grayscaled version of the image 20% of the time
               and the original image 80% of the time.
         """
 
@@ -248,10 +248,10 @@ class RandomColorJitter(Augmentation):
         when doubling them.
 
         Arguments:
-            x: a tf.Tensor representing the image.
+            x: A tf.Tensor representing the image.
 
         Returns:
-            returns a color-jittered version of the image 80% of the time
+            Returns a color-jittered version of the image 80% of the time
               and the original image 20% of the time.
         """
 
@@ -270,7 +270,7 @@ class RandomFlip(Augmentation):
     chance that an image will be randomly flipped.
 
     Methods:
-        __call__: method that flips an image 50% of
+        __call__: Method that flips an image 50% of
           the time.
     """
 
@@ -281,10 +281,10 @@ class RandomFlip(Augmentation):
         Randomly flips the image.
 
         Arguments:
-            x: a tf.Tensor representing the image.
+            x: A tf.Tensor representing the image.
 
         Returns:
-            returns a flipped version of the image 50% of the time
+            Returns a flipped version of the image 50% of the time
               and the original image 50% of the time.
         """
 
@@ -300,7 +300,7 @@ class RandomResizedCrop(Augmentation):
     then resize the image back to the original size.
 
     Methods:
-        __call__: method that does random resize crop to the image.
+        __call__: Method that does random resize crop to the image.
     """
 
     def call(self, x: tf.Tensor, image_size: int) -> tf.Tensor:
@@ -310,10 +310,10 @@ class RandomResizedCrop(Augmentation):
         size 75% - 100% the size of the image. Then resizes it.
 
         Arguments:
-            x: a tf.Tensor representing the image.
+            x: A tf.Tensor representing the image.
 
         Returns:
-            returns a randomly cropped image.
+            Returns a randomly cropped image.
         """
 
         rand_size = tf.random.uniform(
@@ -335,7 +335,7 @@ class RandomSolarize(Augmentation):
     Solarization is when pixels accidentally flip to an inverted state.
 
     Methods:
-        __call__: method that does random solarization 20% of the time.
+        __call__: Method that does random solarization 20% of the time.
     """
 
     @tf.function
@@ -345,10 +345,10 @@ class RandomSolarize(Augmentation):
         Randomly solarizes the image.
 
         Arguments:
-            x: a tf.Tensor representing the image.
+            x: A tf.Tensor representing the image.
 
         Returns:
-            returns a solarized version of the image 20% of the time
+            Returns a solarized version of the image 20% of the time
               and the original image 80% of the time.
         """
 
@@ -364,7 +364,7 @@ class RandomBlur(Augmentation):
     RandomBlur class. Randomly blurs an image.
 
     Methods:
-        __call__: method that does random blur 20% of the time.
+        __call__: Method that does random blur 20% of the time.
     """
 
     @tf.function
@@ -374,10 +374,10 @@ class RandomBlur(Augmentation):
         Randomly solarizes the image.
 
         Arguments:
-            x: a tf.Tensor representing the image.
+            x: A tf.Tensor representing the image.
 
         Returns:
-            returns a blurred version of the image 20% of the time
+            Returns a blurred version of the image 20% of the time
               and the original image 80% of the time.
         """
 
@@ -394,9 +394,9 @@ class RandomAugmentor:
     one pipeline.
 
     Methods:
-        __init__: gets instance variables.
-        __call__: runs augment_fn().
-        augment_fn: responsible for chaining all the
+        __init__: Gets instance variables.
+        __call__: Runs augment_fn().
+        augment_fn: Responsible for chaining all the
           augmentations together.
     """
 
@@ -406,7 +406,7 @@ class RandomAugmentor:
         Gets instance variables.
 
         Arguments:
-            image_size: an integer represing the width and height
+            image_size: An integer represing the width and height
               of the image. Designed to be used for square images.
         """
 
@@ -419,10 +419,10 @@ class RandomAugmentor:
         functional api
 
         Arguments:
-            x: a tf.Tensor representing the image
+            x: A tf.Tensor representing the image
 
         Returns:
-            returns an image with all the augmentations randomly
+            Returns an image with all the augmentations randomly
               applied to it and also clipped to keep pixel values between 0-255.
         """
 
@@ -459,9 +459,9 @@ class BTDatasetCreator:
     barlow twins' dataset.
 
     Methods:
-        __init__: gets instance variables.
-        __call__: creates barlow dataset.
-        create_half: creates 1 half of the dataset.
+        __init__: Gets instance variables.
+        __call__: Creates barlow dataset.
+        create_half: Creates 1 half of the dataset.
     """
 
     def __init__(self, augmentor: RandomAugmentor, seed: int = 1024):
@@ -472,9 +472,9 @@ class BTDatasetCreator:
         Arguments:
             options: tf.data.Options needed to configure a setting
               that may improve performance.
-            seed: random seed for shuffling. Used to synchronize two
+            seed: Random seed for shuffling. Used to synchronize two
               augmented versions.
-            augmentor: augmentor used for augmentation.
+            augmentor: Augmentor used for augmentation.
         """
         self.options = tf.data.Options()
         self.options.threading.max_intra_op_parallelism = 1
@@ -491,7 +491,7 @@ class BTDatasetCreator:
               keras.load_data is a list).
 
         Returns:
-            returns an tf.data.Dataset with 1 version of augmented images.
+            Returns an tf.data.Dataset with 1 version of augmented images.
         """
 
         return (
@@ -515,7 +515,7 @@ class BTDatasetCreator:
               keras.load_data is a list).
 
         Returns:
-            returns a zipped dataset with two versions of augmentations.
+            Returns a zipped dataset with two versions of augmentations.
         """
         a1 = self.augmented_version(ds)
         a2 = self.augmented_version(ds)
@@ -620,15 +620,15 @@ class BarlowLoss(keras.losses.Loss):
     matrix.
 
     Attributes:
-        batch_size: the batch size of the dataset
-        lambda_amt: the value for lambda(used in cross_corr_matrix_loss)
+        batch_size: The batch size of the dataset
+        lambda_amt: The value for lambda(used in cross_corr_matrix_loss)
 
     Methods:
-        __init__: gets instance variables
+        __init__: Gets instance variables
         call: gets the loss based on the cross-correlation matrix
           make_diag_zeros: Used in calculating off-diagonal section
           of loss function; makes diagonals zeros.
-        cross_corr_matrix_loss: creates loss based on cross correlation
+        cross_corr_matrix_loss: Creates loss based on cross correlation
           matrix.
     """
 
@@ -710,7 +710,7 @@ class BarlowLoss(keras.losses.Loss):
         Normalizes the model prediction.
 
         Arguments:
-            output: the model prediction.
+            output: The model prediction.
 
         Returns:
             Returns a normalized version of the model prediction.
@@ -853,7 +853,7 @@ def build_twin() -> keras.Model:
     Builds a barlow twins model consisting of an encoder(resnet-34)
     and a projector, which generates embeddings for the images
     Returns:
-      returns a barlow twins model
+      Returns a barlow twins model
     """
 
     # number of dense neurons in the projector
@@ -894,12 +894,12 @@ class BarlowModel(keras.Model):
     gradient descent with the optimizer.
 
     Attributes:
-        model: the barlow model architecture.
-        loss_tracker: the loss metric.
+        model: The barlow model architecture.
+        loss_tracker: The loss metric.
 
     Methods:
-        __init__: gets instance variables.
-        train_step: one train step; do model predictions, loss, and
+        __init__: Gets instance variables.
+        train_step: One train step; do model predictions, loss, and
           optimizer step.
         metrics: Returns metrics.
     """
@@ -925,7 +925,7 @@ class BarlowModel(keras.Model):
         optimizer, and make optimizer apply gradients.
 
         Arguments:
-          batch: one batch of data to be given to the loss function.
+          batch: One batch of data to be given to the loss function.
 
         Returns:
           Returns a dictionary with the loss metric.
@@ -1043,3 +1043,4 @@ have little labeled data but a lot of unlabeled data.
 * [resnet34 implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
   * Thanks to Yashowardhan Shinde for writing the article.
 """
+
