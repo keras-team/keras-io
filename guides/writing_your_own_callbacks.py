@@ -252,7 +252,7 @@ In addition to receiving log information when one of their methods is called,
 callbacks have access to the model associated with the current round of
 training/evaluation/inference: `self.model`.
 
-Here are of few of the things you can do with `self.model` in a callback:
+Here are a few of the things you can do with `self.model` in a callback:
 
 - Set `self.model.stop_training = True` to immediately interrupt training.
 - Mutate hyperparameters of the optimizer (available as `self.model.optimizer`),
