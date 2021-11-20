@@ -672,7 +672,7 @@ class TrainMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if self.epoch_interval and epoch % self.epoch_interval == 0:
-
+            test_augmeneted_images = self.model.test_augmentation_model(test_images)
             test_patches = self.model.patch_layer(test_augmeneted_images)
             (
                 test_unmasked_embeddings,
