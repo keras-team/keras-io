@@ -352,7 +352,7 @@ def check_similarity(sentence1, sentence2):
         sentence_pairs, labels=None, batch_size=1, shuffle=False, include_targets=False,
     )
 
-    proba = model.predict(test_data)[0]
+    proba = model.predict(test_data[0])[0]
     idx = np.argmax(proba)
     proba = f"{proba[idx]: .2f}%"
     pred = labels[idx]
