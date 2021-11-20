@@ -241,9 +241,12 @@ with strategy.scope():
     # Freeze the BERT model to reuse the pretrained features without modifying them.
     bert_model.trainable = False
 
-    sequence_output, pooled_output = bert_model(
+    bert_output = bert_model(
         input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids
     )
+    sequence_output = bert_output.last_hidden_state
+    pooled_output = bert_output.pooler_output
+
     # Add trainable layers on top of frozen layers to adapt the pretrained features on the new data.
     bi_lstm = tf.keras.layers.Bidirectional(
         tf.keras.layers.LSTM(64, return_sequences=True)
