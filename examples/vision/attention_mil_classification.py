@@ -9,12 +9,14 @@ Description: MIL approach to classify bags of instances and get their individual
 ## Introduction
 
 ### What is Multiple Instance Learning (MIL)?
-Usually for supervised learning  algorithms, the learner receives labels for a set of
-instances. In the case of MIL, the learner receives labels for a set of bags in which each
-bags contains a set of instances. The bag is labelled positive if it contains at least
-one positive instance and negative if it does not contain any.
 
-#### Motivation
+Usually, with supervised learning algorithms, the learner receives labels for a set of
+instances. In the case of MIL, the learner receives labels for a set of bags, each of which
+contains a set of instances. The bag is labeled positive if it contains at least
+one positive instance, and negative if it does not contain any.
+
+### Motivation
+
 It is often assumed in image classification tasks that each image clearly represents a
 class label. In medical imaging (e.g. computational pathology, etc.) an *entire image*
 is represented by a single class label (cancerous/non-cancerous) or a region of interest
@@ -24,38 +26,29 @@ divided and the subimages will form the bag of instances.
 
 Therefore, the goals are to:
 
-1. learn a model to predict class label of a bag of instances.
-2. know the score of the instances within the bag which resulted to the class label
+1. Learn a model to predict a class label for a bag of instances.
+2. Find out which instances within the bag caused a position class label
 prediction.
 
-#### Implementation
+### Implementation
 
 The end-to-end model is composed of:
 
 1. The backbone (feature extractor layers) of the model.
-2. The extracted features fed into the MIL attention layer. The layer is modelled
+2. The extracted features fed into the MIL attention layer. The layer is designed
 as permutation-invariant.
 3. The attention scores of each feature multipled by their respective input features
 (instances).
 4. The multipled features are passed to a softmax function for getting the vector of
 probabilities (classification results).
 
-#### References
+### References
 
 - [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf).
 - Some of attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
 - Imbalanced data [tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
 by TensorFlow.
 
-## What will you learn in this example?
-We will demonstrate an approach to find a target feature (without explicitly labelling
-them in prior) among a bag of features. You will learn:
-
-* about attention-based deep MIL, its applications (applied on MNIST dataset in the
-example; can be applied on other image classification datasets) and its results'
-interpretability.
-* that its a weakly supervised learning algorithm which means it will be of very
-helpful if you suffer from weakly labelled data.
 """
 """
 ## Setup
@@ -72,14 +65,13 @@ plt.style.use("ggplot")
 
 """
 ## Create dataset
-At first we will set up the configurations and then prepare the datasets.
 
-We will create a set of bags and assign their labels accordingly. This is performed by choosing
-a positive instance and forming associated bags of instances. If at least one positive instance
+We will create a set of bags and assign their labels according to their contents.
+If at least one positive instance
 is available in a bag, the bag is considered as a positive bag. If it does not contain any
 positive instance, the bag will be considered as negative.
 
-### Configurations
+### Configuration parameters
 
 - `POSITIVE_CLASS`: The desired class to be kept in the positive bag.
 - `BAG_COUNT`: The number of training bags.
@@ -99,6 +91,7 @@ ENSEMBLE_AVG_COUNT = 1
 
 """
 ### Prepare bags
+
 Since the attention operator is a permutation-invariant operator, an instance with a
 positive class label is randomly placed among the instances in the positive bag.
 """
@@ -116,14 +109,14 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     # Count positive samples.
     count = 0
 
-    # Take out the filter for specific class.
+    # Filter for a specific class.
     filter_class = np.where(input_labels == positive_class)[0]
 
     # Assign new variables consisting of this class.
     data_positive_class = input_data[filter_class]
     labels_positive_class = input_labels[filter_class]
 
-    # From overall data, remove this class.
+    # Remove the class.
     data_negative_classes = np.delete(input_data, filter_class, 0)
     labels_negative_classes = np.delete(input_labels, filter_class, 0)
 
@@ -131,7 +124,7 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     data = np.concatenate([data_positive_class, data_negative_classes], axis=0)
     labels = np.concatenate([labels_positive_class, labels_negative_classes], axis=0)
 
-    # Shuffle the data randomly.
+    # Shuffle the data.
     order = np.arange(len(data))
     np.random.shuffle(order)
     data = data[order]
@@ -144,13 +137,13 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
         instances_data = data[index]
         instances_labels = labels[index]
 
-        # By default, all bags are labelled as 0.
+        # By default, all bags are labeled as 0.
         bag_label = 0
 
         # Check if there is at least a positive class in the bag.
         if positive_class in instances_labels:
 
-            # Positive bag will be labelled as 1.
+            # Positive bag will be labeled as 1.
             bag_label = 1
             count += 1
 
@@ -163,7 +156,7 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     return (list(np.swapaxes(bags, 0, 1)), np.array(bag_labels))
 
 
-# Load the mnist dataset.
+# Load the MNIST dataset.
 (x_train, y_train), (x_val, y_val) = keras.datasets.mnist.load_data()
 
 # Create training data.
@@ -177,11 +170,12 @@ val_data, val_labels = create_bags(
 )
 
 """
-# Create and train neural networks
-We will now build the attention layer, prepare some utilities, build and train the
+## Create and the model
+
+We will now build the attention layer, prepare some utilities, then build and train the
 entire model.
 
-## Attention operator implementation
+### Attention operator implementation
 
 The output size of this layer is decided by the size of a single bag.
 
@@ -191,9 +185,9 @@ of the weights must equal to 1 (invariant of the bag size).
 The weight matrices (parameters) are **w** and **v**. To include positive and negative
 values, hyperbolic tangent element-wise non-linearity is utilized.
 
-**Gated attention mechanism** can be used to deal with complex relations. Another weight
+A **Gated attention mechanism** can be used to deal with complex relations. Another weight
 matrix, **u**, is added to the computation.
-Sigmoid non-linearity is used to overcome approximately linear behavior for *x* ∈ [−1, 1]
+A sigmoid non-linearity is used to overcome approximately linear behavior for *x* ∈ [−1, 1]
 by hyperbolic tangent non-linearity.
 """
 
@@ -371,9 +365,6 @@ plot(val_data, val_labels, "negative")
 
 First we will create some embeddings per instance, invoke the attention operator and then
 use the softmax function to output the class probabilities.
-
-Some regularization techniques are considered to avoid overfitting the model which ensures
-minimal generalization error.
 """
 
 
@@ -415,14 +406,13 @@ def create_model(instance_shape):
 ## Class weights
 
 Since this kind of problem could simply turn into imbalanced data classification problem,
-class weights should be considered.
+class weighting should be considered.
 
-Let's say there are 1000 bags. There often could be cases were ~90 % of the bags dp not
+Let's say there are 1000 bags. There often could be cases were ~90 % of the bags do not
 contain any positive label and ~10 % do.
 Such data can be referred to as **Imbalanced data**.
 
-Using class weights, the model will tend to consider the rare class more as compared to
-that of the abundant one.
+Using class weights, the model will tend to give a higher weight to the rare class.
 """
 
 
@@ -466,7 +456,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
         save_weights_only=True,
     )
 
-    # Initialze early stopping callback.
+    # Initialize early stopping callback.
     # The model performance is monitored across the unseen data and stops training
     # when the generalization error cease to decrease.
     early_stopping = keras.callbacks.EarlyStopping(
@@ -581,20 +571,21 @@ plot(
 """
 ## Conclusion
 
-From the above plot, you can notice that the weights are always summing to 1. In a
-positively predict bag, the instance which resulted in the positive labelling will have
+From the above plot, you can notice that the weights always sum to 1. In a
+positively predict bag, the instance which resulted in the positive labeling will have
 a substantially higher attention score than the rest of the bag. However, in a negatively
 predicted bag, there are two cases:
+
 * All instances will have approximately similar scores.
 * An instance will have relatively higher score (but not as high as of a positive instance).
 This is because the feature space of this instance is close to that of the positive instance.
 
 ## Remarks
 
-- If the model is overfitted, the weights will be equally distributed for all bags. Hence,
+- If the model is overfit, the weights will be equally distributed for all bags. Hence,
 the regularization techniques are necessary.
-- In the paper, the bags' sizes can differ from one bag to another. For simplicity, the
-bags' sizes are fixed here.
+- In the paper, the bag sizes can differ from one bag to another. For simplicity, the
+bag sizes are fixed here.
 - In order not to rely on the random initial weights of a single model, averaging ensemble
-methods are considered.
+methods shoud be considered.
 """
