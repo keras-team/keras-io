@@ -2,7 +2,7 @@
 Title: Masked image modeling with Autoencoders
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/20
-Last modified: 2021/12/20
+Last modified: 2021/12/21
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
 """
 """
@@ -62,9 +62,7 @@ import random
 
 # Setting seeds for reproducibility.
 SEED = 42
-tf.random.set_seed(SEED)
-np.random.seed(SEED)
-random.seed(SEED)
+keras.utils.set_random_seed(SEED)
 
 """
 ## Hyperparameters for pretraining
@@ -127,13 +125,13 @@ print(f"Training samples: {len(x_train)}")
 print(f"Validation samples: {len(x_val)}")
 print(f"Testing samples: {len(x_test)}")
 
-train_ds = tf.data.Dataset.from_tensor_slices((x_train))
+train_ds = tf.data.Dataset.from_tensor_slices(x_train)
 train_ds = train_ds.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(AUTO)
 
-val_ds = tf.data.Dataset.from_tensor_slices((x_val))
+val_ds = tf.data.Dataset.from_tensor_slices(x_val)
 val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
-test_ds = tf.data.Dataset.from_tensor_slices((x_test))
+test_ds = tf.data.Dataset.from_tensor_slices(x_test)
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 """
@@ -174,7 +172,7 @@ def get_test_augmentation_model():
 
 
 """
-## A layer for "patchifying" images
+## A layer for extracting patches from images
 
 This layer takes images as input and divides them into patches. The layer also includes
 two utility method:
@@ -256,17 +254,17 @@ image_batch = next(iter(train_ds))
 
 # Augment the images.
 augmentation_model = get_train_augmentation_model()
-augmeneted_images = augmentation_model(image_batch)
+augmented_images = augmentation_model(image_batch)
 
 # Define the patch layer.
 patch_layer = Patches()
 
 # Get the patches from the batched images.
-patches = patch_layer(images=augmeneted_images)
+patches = patch_layer(images=augmented_images)
 
 # Now pass the images and the corresponding patches
 # to the `show_patched_image` method.
-random_index = patch_layer.show_patched_image(images=augmeneted_images, patches=patches)
+random_index = patch_layer.show_patched_image(images=augmented_images, patches=patches)
 
 # Chose the same chose image and try reconstructing the patches
 # into the original image.
@@ -434,7 +432,7 @@ plt.imshow(keras.utils.array_to_img(img))
 plt.axis("off")
 plt.title("Masked")
 plt.subplot(1, 2, 2)
-img = augmeneted_images[random_index]
+img = augmented_images[random_index]
 plt.imshow(keras.utils.array_to_img(img))
 plt.axis("off")
 plt.title("Original")
@@ -566,12 +564,12 @@ class MaskedAutoencoder(keras.Model):
     def calculate_loss(self, images, test=False):
         # Augment the input images.
         if test:
-            augmeneted_images = self.test_augmentation_model(images)
+            augmented_images = self.test_augmentation_model(images)
         else:
-            augmeneted_images = self.train_augmentation_model(images)
+            augmented_images = self.train_augmentation_model(images)
 
         # Patch the augmented images.
-        patches = self.patch_layer(augmeneted_images)
+        patches = self.patch_layer(augmented_images)
 
         # Encode the patches.
         (
@@ -636,8 +634,6 @@ class MaskedAutoencoder(keras.Model):
 ## Model initialization
 """
 
-keras.backend.clear_session()
-
 train_augmentation_model = get_train_augmentation_model()
 test_augmentation_model = get_test_augmentation_model()
 patch_layer = Patches()
@@ -672,8 +668,8 @@ class TrainMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if self.epoch_interval and epoch % self.epoch_interval == 0:
-            test_augmeneted_images = self.model.test_augmentation_model(test_images)
-            test_patches = self.model.patch_layer(test_augmeneted_images)
+            test_augmented_images = self.model.test_augmentation_model(test_images)
+            test_patches = self.model.patch_layer(test_augmented_images)
             (
                 test_unmasked_embeddings,
                 test_masked_embeddings,
@@ -693,7 +689,7 @@ class TrainMonitor(keras.callbacks.Callback):
                 test_patches, test_unmask_indices
             )
             print(f"\nIdx chosen: {idx}")
-            original_image = test_augmeneted_images[idx]
+            original_image = test_augmented_images[idx]
             masked_image = self.model.patch_layer.reconstruct_from_patch(
                 test_masked_patch
             )
@@ -923,9 +919,9 @@ This idea of using BERT flavored pretraining in computer vision was also explore
 [Selfie](https://arxiv.org/abs/1906.02940), but it could not demonstrate strong results.
 Another concurrent work that explores the idea of masked image modeling is
 [SimMIM](https://arxiv.org/abs/2111.09886). Finally, as a fun fact, we, the authors of
-this example also explored the idea of ["reconstruction as a pretext
-task"](https://i.ibb.co/k5CpwDX/image.png) in 2020 but we could not prevent the network
-from representation collapse, and hence we did not get strong downstream performance. 
+this example also explored the idea of ["reconstruction as a pretext task"](https://i.ibb.co/k5CpwDX/image.png)
+in 2020 but we could not prevent the network from representation collapse, and
+hence we did not get strong downstream performance. 
 
 We would like to thank [Xinlei Chen](http://xinleic.xyz/)
 (one of the authors of MAE) for helpful discussions. We are grateful to
