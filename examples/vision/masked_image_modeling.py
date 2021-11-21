@@ -91,7 +91,7 @@ EPOCHS = 100
 IMAGE_SIZE = 48  # We will resize input images to this size.
 PATCH_SIZE = 6  # Size of the patches to be extracted from the input images.
 NUM_PATCHES = (IMAGE_SIZE // PATCH_SIZE) ** 2
-MASK_PROPORTION = 0.6  # We have found 60% masking to give us the best results.
+MASK_PROPORTION = 0.75  # We have found 75% masking to give us the best results.
 
 # ENCODER and DECODER
 LAYER_NORM_EPS = 1e-6
