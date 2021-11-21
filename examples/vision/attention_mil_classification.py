@@ -2,7 +2,7 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/11/13
+Last modified: 2021/11/21
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
@@ -32,20 +32,20 @@ prediction.
 
 ### Implementation
 
-The end-to-end model is composed of:
+The following steps describes the process of the model's implementation:
 
-1. The backbone (feature extractor layers) of the model.
-2. The extracted features fed into the MIL attention layer. The layer is designed
-as permutation-invariant.
-3. The attention scores of each feature multipled by their respective input features
+1. The feature extractor layers forms the embeddings.
+2. The embeddings or the extracted features are fed into the MIL attention layer to get
+the attention scores. The layer is designed as permutation-invariant.
+3. The attention scores of each feature are multiplied by their respective input features
 (instances).
-4. The multipled features are passed to a softmax function for getting the vector of
+4. The multiplied features are passed to a softmax function for getting the vector of
 probabilities (classification results).
 
 ### References
 
 - [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf).
-- Some of attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
+- Some of the attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
 - Imbalanced data [tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
 by TensorFlow.
 
@@ -109,33 +109,12 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     # Count positive samples.
     count = 0
 
-    # Filter for a specific class.
-    filter_class = np.where(input_labels == positive_class)[0]
-
-    # Assign new variables consisting of this class.
-    data_positive_class = input_data[filter_class]
-    labels_positive_class = input_labels[filter_class]
-
-    # Remove the class.
-    data_negative_classes = np.delete(input_data, filter_class, 0)
-    labels_negative_classes = np.delete(input_labels, filter_class, 0)
-
-    # Combine the data and labels of the both different classes.
-    data = np.concatenate([data_positive_class, data_negative_classes], axis=0)
-    labels = np.concatenate([labels_positive_class, labels_negative_classes], axis=0)
-
-    # Shuffle the data.
-    order = np.arange(len(data))
-    np.random.shuffle(order)
-    data = data[order]
-    labels = labels[order]
-
     for _ in range(bag_count):
 
         # Pick a fixed size random subset of samples.
-        index = np.random.choice(data.shape[0], instance_count, replace=False)
-        instances_data = data[index]
-        instances_labels = labels[index]
+        index = np.random.choice(input_data.shape[0], instance_count, replace=False)
+        instances_data = input_data[index]
+        instances_labels = input_labels[index]
 
         # By default, all bags are labeled as 0.
         bag_label = 0
@@ -170,7 +149,7 @@ val_data, val_labels = create_bags(
 )
 
 """
-## Create and the model
+## Create the model
 
 We will now build the attention layer, prepare some utilities, then build and train the
 entire model.
@@ -233,7 +212,7 @@ class MILAttentionLayer(layers.Layer):
 
     def build(self, input_shape):
 
-        # Input Shape
+        # Input shape.
         # List of 2D tensors with shape: (batch_size, input_dim).
         input_dim = input_shape[0][1]
 
@@ -271,14 +250,14 @@ class MILAttentionLayer(layers.Layer):
         # Assigning variables from the number of inputs.
         instances = [self.compute_attention_scores(instance) for instance in inputs]
 
-        # such that each row summation is equal to 1.
+        # Apply softmax over instances such that the output summation is equal to 1.
         alpha = tf.math.softmax(instances, axis=0)
 
         return [alpha[i] for i in range(alpha.shape[0])]
 
     def compute_attention_scores(self, instance):
 
-        # in-case "gated mechanism" used.
+        # Reserve in-case "gated mechanism" used.
         original_instance = instance
 
         # tanh(v*h_k^T)
@@ -457,7 +436,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
     )
 
     # Initialize early stopping callback.
-    # The model performance is monitored across the unseen data and stops training
+    # The model performance is monitored across the validation data and stops training
     # when the generalization error cease to decrease.
     early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=10, mode="min"
@@ -587,5 +566,5 @@ the regularization techniques are necessary.
 - In the paper, the bag sizes can differ from one bag to another. For simplicity, the
 bag sizes are fixed here.
 - In order not to rely on the random initial weights of a single model, averaging ensemble
-methods shoud be considered.
+methods should be considered.
 """
