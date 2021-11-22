@@ -32,15 +32,13 @@ prediction.
 
 ### Implementation
 
-The following steps describes the process of the model's implementation:
+The following steps describe how the model works:
 
-1. The feature extractor layers forms the embeddings.
-2. The embeddings or the extracted features are fed into the MIL attention layer to get
+1. The feature extractor layers extract feature embeddings.
+2. The embeddings are fed into the MIL attention layer to get
 the attention scores. The layer is designed as permutation-invariant.
-3. The attention scores of each feature are multiplied by their respective input features
-(instances).
-4. The multiplied features are passed to a softmax function for getting the vector of
-probabilities (classification results).
+3. Input features and their corresponding attention scores are multiplied together.
+4. The resulting output is passed to a softmax function for classification.
 
 ### References
 
