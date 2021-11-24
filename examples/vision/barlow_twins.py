@@ -3,7 +3,7 @@ Title: Barlow Twins
 Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
 Last modified: 11/17/21
-Description: A keras implemenation of Barlow Twins(constrastive SSL with redundancy reduction).
+Description: A keras implemenation of Barlow Twins (constrastive SSL with redundancy reduction).
 """
 """
 Paper:
@@ -1085,14 +1085,10 @@ with the labeled data.
 # Helpful links
 * [Paper](https://arxiv.org/abs/2103.03230)
 * [Original Pytorch Implementation](https://github.com/facebookresearch/barlowtwins)
-* [Sayak Paul's
-Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
-Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
+* [Sayak Paul's Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
 * Thanks to Sayak Paul for his implementation. It helped me with debugging and
 comparisons of accuracy, loss.
-* [resnet34
-implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
-implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
+* [resnet34 implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
   * Thanks to Yashowardhan Shinde for writing the article. 
 
 
