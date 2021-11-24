@@ -1,11 +1,16 @@
-"""
-Title: Masked image modeling with Autoencoders
-Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/12/20
-Last modified: 2021/12/21
-Description: Implementing Masked Autoencoders for self-supervised pretraining.
-"""
-"""
+# Masked image modeling with Autoencoders
+
+**Author:** [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/12/20<br>
+**Last modified:** 2021/12/21<br>
+**Description:** Implementing Masked Autoencoders for self-supervised pretraining.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/masked_image_modeling.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/masked_image_modeling.py)
+
+
+
+---
 ## Introduction
 
 In deep learning, models with growing **capacity** and **capability** can easily overfit
@@ -38,9 +43,7 @@ This implementation covers (MAE refers to Masked Autoencoder):
 As a reference, we reuse some of the code presented in
 [this example](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-"""
-
-"""
+---
 ## Imports
 
 This example requires TensorFlow Addons, which can be installed using the following
@@ -49,8 +52,9 @@ command:
 ```shell
 pip install -U tensorflow-addons
 ```
-"""
 
+
+```python
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 from tensorflow import keras
@@ -63,16 +67,18 @@ import random
 # Setting seeds for reproducibility.
 SEED = 42
 keras.utils.set_random_seed(SEED)
+```
 
-"""
+---
 ## Hyperparameters for pretraining
 
 Please feel free to change the hyperparameters and check your results. The best way to
 get an intuition about the architecture is to experiment with it. Our hyperparameters are
 heavily inspired by the design guidelines laid out by the authors in
 [the original paper](https://arxiv.org/abs/2111.06377).
-"""
 
+
+```python
 # DATA
 BUFFER_SIZE = 1024
 BATCH_SIZE = 256
@@ -111,11 +117,13 @@ DEC_TRANSFORMER_UNITS = [
     DEC_PROJECTION_DIM * 2,
     DEC_PROJECTION_DIM,
 ]
+```
 
-"""
+---
 ## Load and prepare the CIFAR-10 dataset
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 (x_train, y_train), (x_val, y_val) = (
     (x_train[:40000], y_train[:40000]),
@@ -133,8 +141,21 @@ val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 test_ds = tf.data.Dataset.from_tensor_slices(x_test)
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Training samples: 40000
+Validation samples: 10000
+Testing samples: 10000
+
+2021-11-24 01:10:52.088318: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-11-24 01:10:54.356762: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38444 MB memory:  -> device: 0, name: A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
+
+```
+</div>
+---
 ## Data augmentation
 
 In previous self-supervised pretraining methodologies
@@ -147,8 +168,9 @@ simple augmentation pipeline of:
 - Resizing
 - Random cropping (fixed-sized or random sized)
 - Random horizontal flipping
-"""
 
+
+```python
 
 def get_train_augmentation_model():
     model = keras.Sequential(
@@ -170,8 +192,9 @@ def get_test_augmentation_model():
     )
     return model
 
+```
 
-"""
+---
 ## A layer for extracting patches from images
 
 This layer takes images as input and divides them into patches. The layer also includes
@@ -181,8 +204,9 @@ two utility method:
 random pair of image and patches.
 - `reconstruct_from_patch` -- Takes a single instance of patches and stitches them
 together into the original image.
-"""
 
+
+```python
 
 class Patches(layers.Layer):
     def __init__(self, patch_size=PATCH_SIZE, **kwargs):
@@ -244,11 +268,12 @@ class Patches(layers.Layer):
         reconstructed = tf.concat(rows, axis=0)
         return reconstructed
 
+```
 
-"""
 Let's visualize the image patches.
-"""
 
+
+```python
 # Get a batch of images.
 image_batch = next(iter(train_ds))
 
@@ -272,8 +297,32 @@ image = patch_layer.reconstruct_from_patch(patches[random_index])
 plt.imshow(image)
 plt.axis("off")
 plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Index selected: 102.
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_13_1.png)
+    
+
+
+
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_13_2.png)
+    
+
+
+
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_13_3.png)
+    
+
+
+---
 ## Patch encoding with masking
 
 Quoting the paper
@@ -291,8 +340,9 @@ The utility methods of the layer are:
 - `generate_masked_image` -- Takes patches and unmask indices, results in a random masked
 image. This is an essential utility method for our training monitor callback (defined
 later).
-"""
 
+
+```python
 
 class PatchEncoder(layers.Layer):
     def __init__(
@@ -404,11 +454,12 @@ class PatchEncoder(layers.Layer):
             new_patch[unmask_index[i]] = patch[unmask_index[i]]
         return new_patch, idx
 
+```
 
-"""
 Let's see the masking process in action on a sample image.
-"""
 
+
+```python
 # Create the patch encoder layer.
 patch_encoder = PatchEncoder()
 
@@ -437,13 +488,26 @@ plt.imshow(keras.utils.array_to_img(img))
 plt.axis("off")
 plt.title("Original")
 plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2021-11-24 01:11:00.182447: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_17_1.png)
+    
+
+
+---
 ## MLP
 
 This serves as the fully connected feed forward network of the transformer architecture.
-"""
 
+
+```python
 
 def mlp(x, dropout_rate, hidden_units):
     for units in hidden_units:
@@ -451,14 +515,16 @@ def mlp(x, dropout_rate, hidden_units):
         x = layers.Dropout(dropout_rate)(x)
     return x
 
+```
 
-"""
+---
 ## MAE encoder
 
 The MAE encoder is ViT. The only point to note here is that the encoder outputs a layer
 normalized output.
-"""
 
+
+```python
 
 def create_encoder(num_heads=ENC_NUM_HEADS, num_layers=ENC_LAYERS):
     inputs = layers.Input((None, ENC_PROJECTION_DIM))
@@ -488,16 +554,18 @@ def create_encoder(num_heads=ENC_NUM_HEADS, num_layers=ENC_LAYERS):
     outputs = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(x)
     return keras.Model(inputs, outputs, name="mae_encoder")
 
+```
 
-"""
+---
 ## MAE decoder
 
 The authors point out that they use an **asymmetric** autoencoder model. They use a
 lightweight decoder that takes "<10% computation per token vs. the encoder". We are not
 specific with the "<10% computation" in our implementation but have used a smaller
 decoder (both in terms of depth and projection dimensions).
-"""
 
+
+```python
 
 def create_decoder(
     num_layers=DEC_LAYERS, num_heads=DEC_NUM_HEADS, image_size=IMAGE_SIZE
@@ -533,14 +601,16 @@ def create_decoder(
 
     return keras.Model(inputs, outputs, name="mae_decoder")
 
+```
 
-"""
+---
 ## MAE trainer
 
 This is the trainer module. We wrap the encoder and decoder inside of a `tf.keras.Model`
 subclass. This allows us to customize what happens in the `model.fit()` loop.
-"""
 
+
+```python
 
 class MaskedAutoencoder(keras.Model):
     def __init__(
@@ -629,11 +699,13 @@ class MaskedAutoencoder(keras.Model):
         self.compiled_metrics.update_state(loss_patch, loss_output)
         return {m.name: m.result() for m in self.metrics}
 
+```
 
-"""
+---
 ## Model initialization
-"""
 
+
+```python
 train_augmentation_model = get_train_augmentation_model()
 test_augmentation_model = get_test_augmentation_model()
 patch_layer = Patches()
@@ -649,15 +721,15 @@ mae_model = MaskedAutoencoder(
     encoder=encoder,
     decoder=decoder,
 )
+```
 
-"""
+---
 ## Training callbacks
-"""
 
-"""
 ### Visualization callback
-"""
 
+
+```python
 # Taking a batch of test inputs to measure model's progress.
 test_images = next(iter(test_ds))
 
@@ -708,11 +780,12 @@ class TrainMonitor(keras.callbacks.Callback):
             plt.show()
             plt.close()
 
+```
 
-"""
 ### Learning rate scheduler
-"""
 
+
+```python
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 
@@ -776,11 +849,19 @@ plt.show()
 
 # Assemble the callbacks.
 train_callbacks = [TrainMonitor(epoch_interval=5)]
+```
 
-"""
+
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_32_0.png)
+    
+
+
+---
 ## Model compilation and training
-"""
 
+
+```python
 optimizer = tfa.optimizers.AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
 
 # Compile and pretrain the model.
@@ -795,15 +876,463 @@ history = mae_model.fit(
 loss, mae = mae_model.evaluate(test_ds)
 print(f"Loss: {loss:.2f}")
 print(f"MAE: {mae:.2f}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/100
+157/157 [==============================] - ETA: 0s - loss: 0.0507 - mae: 0.1811
+Idx chosen: 92
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_1.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 19s 54ms/step - loss: 0.0507 - mae: 0.1811 - val_loss: 0.0417 - val_mae: 0.1630
+Epoch 2/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0385 - mae: 0.1550 - val_loss: 0.0349 - val_mae: 0.1460
+Epoch 3/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0336 - mae: 0.1420 - val_loss: 0.0311 - val_mae: 0.1352
+Epoch 4/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0299 - mae: 0.1325 - val_loss: 0.0302 - val_mae: 0.1321
+Epoch 5/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0269 - mae: 0.1246 - val_loss: 0.0256 - val_mae: 0.1207
+Epoch 6/100
+156/157 [============================>.] - ETA: 0s - loss: 0.0246 - mae: 0.1181
+Idx chosen: 14
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_3.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0246 - mae: 0.1181 - val_loss: 0.0241 - val_mae: 0.1166
+Epoch 7/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0232 - mae: 0.1142 - val_loss: 0.0237 - val_mae: 0.1152
+Epoch 8/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0222 - mae: 0.1113 - val_loss: 0.0216 - val_mae: 0.1088
+Epoch 9/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0214 - mae: 0.1086 - val_loss: 0.0217 - val_mae: 0.1096
+Epoch 10/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0206 - mae: 0.1064 - val_loss: 0.0215 - val_mae: 0.1100
+Epoch 11/100
+157/157 [==============================] - ETA: 0s - loss: 0.0203 - mae: 0.1053
+Idx chosen: 106
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_5.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0203 - mae: 0.1053 - val_loss: 0.0205 - val_mae: 0.1052
+Epoch 12/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0200 - mae: 0.1043 - val_loss: 0.0196 - val_mae: 0.1028
+Epoch 13/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0196 - mae: 0.1030 - val_loss: 0.0198 - val_mae: 0.1043
+Epoch 14/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0193 - mae: 0.1019 - val_loss: 0.0192 - val_mae: 0.1004
+Epoch 15/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0191 - mae: 0.1013 - val_loss: 0.0198 - val_mae: 0.1031
+Epoch 16/100
+157/157 [==============================] - ETA: 0s - loss: 0.0189 - mae: 0.1007
+Idx chosen: 71
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_7.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0189 - mae: 0.1007 - val_loss: 0.0188 - val_mae: 0.1003
+Epoch 17/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0185 - mae: 0.0992 - val_loss: 0.0187 - val_mae: 0.0993
+Epoch 18/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0185 - mae: 0.0992 - val_loss: 0.0192 - val_mae: 0.1021
+Epoch 19/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0182 - mae: 0.0984 - val_loss: 0.0181 - val_mae: 0.0967
+Epoch 20/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0180 - mae: 0.0975 - val_loss: 0.0183 - val_mae: 0.0996
+Epoch 21/100
+156/157 [============================>.] - ETA: 0s - loss: 0.0180 - mae: 0.0975
+Idx chosen: 188
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_9.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 47ms/step - loss: 0.0180 - mae: 0.0975 - val_loss: 0.0185 - val_mae: 0.0992
+Epoch 22/100
+157/157 [==============================] - 7s 45ms/step - loss: 0.0179 - mae: 0.0971 - val_loss: 0.0181 - val_mae: 0.0977
+Epoch 23/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0178 - mae: 0.0966 - val_loss: 0.0179 - val_mae: 0.0962
+Epoch 24/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0178 - mae: 0.0966 - val_loss: 0.0176 - val_mae: 0.0952
+Epoch 25/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0176 - mae: 0.0960 - val_loss: 0.0182 - val_mae: 0.0984
+Epoch 26/100
+157/157 [==============================] - ETA: 0s - loss: 0.0175 - mae: 0.0958
+Idx chosen: 20
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_11.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0175 - mae: 0.0958 - val_loss: 0.0176 - val_mae: 0.0958
+Epoch 27/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0175 - mae: 0.0957 - val_loss: 0.0175 - val_mae: 0.0948
+Epoch 28/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0175 - mae: 0.0956 - val_loss: 0.0173 - val_mae: 0.0947
+Epoch 29/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0172 - mae: 0.0949 - val_loss: 0.0174 - val_mae: 0.0948
+Epoch 30/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0172 - mae: 0.0948 - val_loss: 0.0174 - val_mae: 0.0944
+Epoch 31/100
+157/157 [==============================] - ETA: 0s - loss: 0.0172 - mae: 0.0945
+Idx chosen: 102
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_13.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0172 - mae: 0.0945 - val_loss: 0.0169 - val_mae: 0.0932
+Epoch 32/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0172 - mae: 0.0947 - val_loss: 0.0174 - val_mae: 0.0961
+Epoch 33/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0171 - mae: 0.0945 - val_loss: 0.0171 - val_mae: 0.0937
+Epoch 34/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0170 - mae: 0.0938 - val_loss: 0.0171 - val_mae: 0.0941
+Epoch 35/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0170 - mae: 0.0940 - val_loss: 0.0171 - val_mae: 0.0948
+Epoch 36/100
+157/157 [==============================] - ETA: 0s - loss: 0.0168 - mae: 0.0933
+Idx chosen: 121
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_15.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0168 - mae: 0.0933 - val_loss: 0.0170 - val_mae: 0.0935
+Epoch 37/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0169 - mae: 0.0935 - val_loss: 0.0168 - val_mae: 0.0933
+Epoch 38/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0168 - mae: 0.0933 - val_loss: 0.0170 - val_mae: 0.0935
+Epoch 39/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0167 - mae: 0.0931 - val_loss: 0.0169 - val_mae: 0.0934
+Epoch 40/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0167 - mae: 0.0930 - val_loss: 0.0169 - val_mae: 0.0934
+Epoch 41/100
+157/157 [==============================] - ETA: 0s - loss: 0.0167 - mae: 0.0929
+Idx chosen: 210
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_17.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0167 - mae: 0.0929 - val_loss: 0.0169 - val_mae: 0.0930
+Epoch 42/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0167 - mae: 0.0928 - val_loss: 0.0170 - val_mae: 0.0941
+Epoch 43/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0166 - mae: 0.0925 - val_loss: 0.0169 - val_mae: 0.0931
+Epoch 44/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0165 - mae: 0.0921 - val_loss: 0.0165 - val_mae: 0.0914
+Epoch 45/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0165 - mae: 0.0922 - val_loss: 0.0165 - val_mae: 0.0915
+Epoch 46/100
+157/157 [==============================] - ETA: 0s - loss: 0.0165 - mae: 0.0922
+Idx chosen: 214
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_19.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0165 - mae: 0.0922 - val_loss: 0.0166 - val_mae: 0.0914
+Epoch 47/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0164 - mae: 0.0919 - val_loss: 0.0164 - val_mae: 0.0912
+Epoch 48/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0163 - mae: 0.0914 - val_loss: 0.0166 - val_mae: 0.0923
+Epoch 49/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0163 - mae: 0.0914 - val_loss: 0.0164 - val_mae: 0.0914
+Epoch 50/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0162 - mae: 0.0912 - val_loss: 0.0164 - val_mae: 0.0916
+Epoch 51/100
+157/157 [==============================] - ETA: 0s - loss: 0.0162 - mae: 0.0913
+Idx chosen: 74
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_21.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0162 - mae: 0.0913 - val_loss: 0.0165 - val_mae: 0.0919
+Epoch 52/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0162 - mae: 0.0909 - val_loss: 0.0163 - val_mae: 0.0912
+Epoch 53/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0161 - mae: 0.0908 - val_loss: 0.0161 - val_mae: 0.0903
+Epoch 54/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0161 - mae: 0.0908 - val_loss: 0.0162 - val_mae: 0.0901
+Epoch 55/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0161 - mae: 0.0907 - val_loss: 0.0162 - val_mae: 0.0909
+Epoch 56/100
+156/157 [============================>.] - ETA: 0s - loss: 0.0160 - mae: 0.0904
+Idx chosen: 202
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_23.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0160 - mae: 0.0904 - val_loss: 0.0160 - val_mae: 0.0908
+Epoch 57/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0902 - val_loss: 0.0160 - val_mae: 0.0899
+Epoch 58/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0901 - val_loss: 0.0162 - val_mae: 0.0916
+Epoch 59/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0898 - val_loss: 0.0160 - val_mae: 0.0903
+Epoch 60/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0898 - val_loss: 0.0159 - val_mae: 0.0897
+Epoch 61/100
+157/157 [==============================] - ETA: 0s - loss: 0.0158 - mae: 0.0894
+Idx chosen: 87
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_25.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 48ms/step - loss: 0.0158 - mae: 0.0894 - val_loss: 0.0160 - val_mae: 0.0895
+Epoch 62/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0158 - mae: 0.0895 - val_loss: 0.0161 - val_mae: 0.0905
+Epoch 63/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0157 - mae: 0.0891 - val_loss: 0.0158 - val_mae: 0.0894
+Epoch 64/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0157 - mae: 0.0890 - val_loss: 0.0158 - val_mae: 0.0889
+Epoch 65/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0157 - mae: 0.0890 - val_loss: 0.0159 - val_mae: 0.0893
+Epoch 66/100
+157/157 [==============================] - ETA: 0s - loss: 0.0156 - mae: 0.0888
+Idx chosen: 116
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_27.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 47ms/step - loss: 0.0156 - mae: 0.0888 - val_loss: 0.0160 - val_mae: 0.0903
+Epoch 67/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0156 - mae: 0.0886 - val_loss: 0.0156 - val_mae: 0.0881
+Epoch 68/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0155 - mae: 0.0883 - val_loss: 0.0156 - val_mae: 0.0885
+Epoch 69/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0154 - mae: 0.0881 - val_loss: 0.0155 - val_mae: 0.0878
+Epoch 70/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0154 - mae: 0.0881 - val_loss: 0.0158 - val_mae: 0.0891
+Epoch 71/100
+156/157 [============================>.] - ETA: 0s - loss: 0.0154 - mae: 0.0879
+Idx chosen: 99
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_29.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0154 - mae: 0.0879 - val_loss: 0.0155 - val_mae: 0.0884
+Epoch 72/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0153 - mae: 0.0877 - val_loss: 0.0154 - val_mae: 0.0878
+Epoch 73/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0153 - mae: 0.0876 - val_loss: 0.0155 - val_mae: 0.0879
+Epoch 74/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0152 - mae: 0.0874 - val_loss: 0.0153 - val_mae: 0.0876
+Epoch 75/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0152 - mae: 0.0872 - val_loss: 0.0153 - val_mae: 0.0872
+Epoch 76/100
+157/157 [==============================] - ETA: 0s - loss: 0.0151 - mae: 0.0870
+Idx chosen: 103
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_31.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0151 - mae: 0.0870 - val_loss: 0.0153 - val_mae: 0.0873
+Epoch 77/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0151 - mae: 0.0869 - val_loss: 0.0152 - val_mae: 0.0872
+Epoch 78/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0151 - mae: 0.0867 - val_loss: 0.0152 - val_mae: 0.0869
+Epoch 79/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0151 - mae: 0.0867 - val_loss: 0.0151 - val_mae: 0.0863
+Epoch 80/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0150 - mae: 0.0865 - val_loss: 0.0150 - val_mae: 0.0860
+Epoch 81/100
+157/157 [==============================] - ETA: 0s - loss: 0.0150 - mae: 0.0865
+Idx chosen: 151
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_33.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0150 - mae: 0.0865 - val_loss: 0.0151 - val_mae: 0.0862
+Epoch 82/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0861 - val_loss: 0.0151 - val_mae: 0.0859
+Epoch 83/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0861 - val_loss: 0.0149 - val_mae: 0.0857
+Epoch 84/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0860 - val_loss: 0.0151 - val_mae: 0.0865
+Epoch 85/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0148 - mae: 0.0858 - val_loss: 0.0150 - val_mae: 0.0856
+Epoch 86/100
+157/157 [==============================] - ETA: 0s - loss: 0.0148 - mae: 0.0856
+Idx chosen: 130
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_35.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0148 - mae: 0.0856 - val_loss: 0.0149 - val_mae: 0.0855
+Epoch 87/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0148 - mae: 0.0855 - val_loss: 0.0148 - val_mae: 0.0851
+Epoch 88/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0148 - mae: 0.0856 - val_loss: 0.0149 - val_mae: 0.0855
+Epoch 89/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0148 - val_mae: 0.0852
+Epoch 90/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0148 - val_mae: 0.0850
+Epoch 91/100
+157/157 [==============================] - ETA: 0s - loss: 0.0147 - mae: 0.0852
+Idx chosen: 149
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_37.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0147 - mae: 0.0852 - val_loss: 0.0148 - val_mae: 0.0851
+Epoch 92/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0146 - mae: 0.0851 - val_loss: 0.0147 - val_mae: 0.0849
+Epoch 93/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0147 - val_mae: 0.0849
+Epoch 94/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0147 - mae: 0.0852 - val_loss: 0.0148 - val_mae: 0.0850
+Epoch 95/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0147 - mae: 0.0852 - val_loss: 0.0148 - val_mae: 0.0853
+Epoch 96/100
+157/157 [==============================] - ETA: 0s - loss: 0.0147 - mae: 0.0853
+Idx chosen: 52
+
+```
+</div>
+    
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_39.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+157/157 [==============================] - 7s 46ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0148 - val_mae: 0.0853
+Epoch 97/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0148 - mae: 0.0856 - val_loss: 0.0149 - val_mae: 0.0855
+Epoch 98/100
+157/157 [==============================] - 7s 43ms/step - loss: 0.0148 - mae: 0.0857 - val_loss: 0.0149 - val_mae: 0.0858
+Epoch 99/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0863 - val_loss: 0.0150 - val_mae: 0.0865
+Epoch 100/100
+157/157 [==============================] - 7s 44ms/step - loss: 0.0150 - mae: 0.0873 - val_loss: 0.0153 - val_mae: 0.0881
+40/40 [==============================] - 1s 15ms/step - loss: 0.0154 - mae: 0.0882
+Loss: 0.02
+MAE: 0.09
+
+```
+</div>
+---
 ## Evaluation with linear probing
-"""
 
-"""
 ### Extract the encoder model along with other layers
-"""
 
+
+```python
 # Extract the augmentation layers.
 train_augmentation_model = mae_model.train_augmentation_model
 test_augmentation_model = mae_model.test_augmentation_model
@@ -835,18 +1364,46 @@ for layer in downstream_model.layers[:-1]:
     layer.trainable = False
 
 downstream_model.summary()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model: "linear_probe_model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ patches_1 (Patches)         (None, 64, 108)           0         
+                                                                 
+ patch_encoder_1 (PatchEncod  (None, 64, 128)          22252     
+ er)                                                             
+                                                                 
+ mae_encoder (Functional)    (None, None, 128)         1981696   
+                                                                 
+ batch_normalization (BatchN  (None, 64, 128)          512       
+ ormalization)                                                   
+                                                                 
+ global_average_pooling1d (G  (None, 128)              0         
+ lobalAveragePooling1D)                                          
+                                                                 
+ dense_19 (Dense)            (None, 10)                1290      
+                                                                 
+=================================================================
+Total params: 2,005,750
+Trainable params: 1,290
+Non-trainable params: 2,004,460
+_________________________________________________________________
+
+```
+</div>
 We are using average pooling to extract learned representations from the MAE encoder.
 Another approach would be to use a learnable dummy token inside the encoder during
 pretraining (resembling the [CLS] token). Then we can extract representations from that
 token during the downstream tasks.
-"""
 
-"""
 ### Prepare datasets for linear probing
-"""
 
+
+```python
 
 def prepare_data(images, labels, is_train=True):
     if is_train:
@@ -867,11 +1424,12 @@ def prepare_data(images, labels, is_train=True):
 train_ds = prepare_data(x_train, y_train)
 val_ds = prepare_data(x_train, y_train, is_train=False)
 test_ds = prepare_data(x_test, y_test, is_train=False)
+```
 
-"""
 ### Perform linear probing
-"""
 
+
+```python
 linear_probe_epochs = 50
 linear_prob_lr = 0.1
 warm_epoch_percentage = 0.1
@@ -894,8 +1452,115 @@ downstream_model.fit(train_ds, validation_data=val_ds, epochs=linear_probe_epoch
 loss, accuracy = downstream_model.evaluate(test_ds)
 accuracy = round(accuracy * 100, 2)
 print(f"Accuracy on the test set: {accuracy}%.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/50
+157/157 [==============================] - 11s 43ms/step - loss: 2.2131 - accuracy: 0.1838 - val_loss: 2.0249 - val_accuracy: 0.2986
+Epoch 2/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.9065 - accuracy: 0.3498 - val_loss: 1.7813 - val_accuracy: 0.3913
+Epoch 3/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.7443 - accuracy: 0.3995 - val_loss: 1.6705 - val_accuracy: 0.4195
+Epoch 4/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.6645 - accuracy: 0.4201 - val_loss: 1.6107 - val_accuracy: 0.4344
+Epoch 5/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.6169 - accuracy: 0.4320 - val_loss: 1.5747 - val_accuracy: 0.4435
+Epoch 6/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5843 - accuracy: 0.4364 - val_loss: 1.5476 - val_accuracy: 0.4496
+Epoch 7/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5634 - accuracy: 0.4418 - val_loss: 1.5294 - val_accuracy: 0.4540
+Epoch 8/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5462 - accuracy: 0.4452 - val_loss: 1.5158 - val_accuracy: 0.4575
+Epoch 9/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5365 - accuracy: 0.4468 - val_loss: 1.5068 - val_accuracy: 0.4602
+Epoch 10/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5237 - accuracy: 0.4541 - val_loss: 1.4971 - val_accuracy: 0.4616
+Epoch 11/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5171 - accuracy: 0.4539 - val_loss: 1.4902 - val_accuracy: 0.4620
+Epoch 12/50
+157/157 [==============================] - 6s 37ms/step - loss: 1.5127 - accuracy: 0.4552 - val_loss: 1.4850 - val_accuracy: 0.4640
+Epoch 13/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.5027 - accuracy: 0.4590 - val_loss: 1.4796 - val_accuracy: 0.4669
+Epoch 14/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4985 - accuracy: 0.4587 - val_loss: 1.4747 - val_accuracy: 0.4673
+Epoch 15/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4975 - accuracy: 0.4588 - val_loss: 1.4694 - val_accuracy: 0.4694
+Epoch 16/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4933 - accuracy: 0.4596 - val_loss: 1.4661 - val_accuracy: 0.4698
+Epoch 17/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4889 - accuracy: 0.4608 - val_loss: 1.4628 - val_accuracy: 0.4721
+Epoch 18/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4869 - accuracy: 0.4659 - val_loss: 1.4623 - val_accuracy: 0.4721
+Epoch 19/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4826 - accuracy: 0.4639 - val_loss: 1.4585 - val_accuracy: 0.4716
+Epoch 20/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4813 - accuracy: 0.4653 - val_loss: 1.4559 - val_accuracy: 0.4743
+Epoch 21/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4824 - accuracy: 0.4644 - val_loss: 1.4542 - val_accuracy: 0.4746
+Epoch 22/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4768 - accuracy: 0.4667 - val_loss: 1.4526 - val_accuracy: 0.4757
+Epoch 23/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4775 - accuracy: 0.4644 - val_loss: 1.4507 - val_accuracy: 0.4751
+Epoch 24/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4750 - accuracy: 0.4670 - val_loss: 1.4481 - val_accuracy: 0.4756
+Epoch 25/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4726 - accuracy: 0.4663 - val_loss: 1.4467 - val_accuracy: 0.4767
+Epoch 26/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4706 - accuracy: 0.4681 - val_loss: 1.4450 - val_accuracy: 0.4781
+Epoch 27/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4660 - accuracy: 0.4706 - val_loss: 1.4456 - val_accuracy: 0.4766
+Epoch 28/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4664 - accuracy: 0.4707 - val_loss: 1.4443 - val_accuracy: 0.4776
+Epoch 29/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4678 - accuracy: 0.4674 - val_loss: 1.4411 - val_accuracy: 0.4802
+Epoch 30/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4654 - accuracy: 0.4704 - val_loss: 1.4411 - val_accuracy: 0.4801
+Epoch 31/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4655 - accuracy: 0.4702 - val_loss: 1.4402 - val_accuracy: 0.4787
+Epoch 32/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4620 - accuracy: 0.4735 - val_loss: 1.4402 - val_accuracy: 0.4781
+Epoch 33/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4668 - accuracy: 0.4699 - val_loss: 1.4397 - val_accuracy: 0.4783
+Epoch 34/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4619 - accuracy: 0.4724 - val_loss: 1.4382 - val_accuracy: 0.4793
+Epoch 35/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4652 - accuracy: 0.4697 - val_loss: 1.4374 - val_accuracy: 0.4800
+Epoch 36/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4618 - accuracy: 0.4707 - val_loss: 1.4372 - val_accuracy: 0.4794
+Epoch 37/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4606 - accuracy: 0.4710 - val_loss: 1.4369 - val_accuracy: 0.4793
+Epoch 38/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4613 - accuracy: 0.4706 - val_loss: 1.4363 - val_accuracy: 0.4806
+Epoch 39/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4631 - accuracy: 0.4713 - val_loss: 1.4361 - val_accuracy: 0.4804
+Epoch 40/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4620 - accuracy: 0.4695 - val_loss: 1.4357 - val_accuracy: 0.4802
+Epoch 41/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4639 - accuracy: 0.4706 - val_loss: 1.4355 - val_accuracy: 0.4801
+Epoch 42/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4588 - accuracy: 0.4735 - val_loss: 1.4352 - val_accuracy: 0.4802
+Epoch 43/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4573 - accuracy: 0.4734 - val_loss: 1.4352 - val_accuracy: 0.4794
+Epoch 44/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4597 - accuracy: 0.4723 - val_loss: 1.4350 - val_accuracy: 0.4796
+Epoch 45/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4572 - accuracy: 0.4741 - val_loss: 1.4349 - val_accuracy: 0.4799
+Epoch 46/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4561 - accuracy: 0.4756 - val_loss: 1.4348 - val_accuracy: 0.4801
+Epoch 47/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4593 - accuracy: 0.4730 - val_loss: 1.4348 - val_accuracy: 0.4801
+Epoch 48/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4613 - accuracy: 0.4733 - val_loss: 1.4348 - val_accuracy: 0.4802
+Epoch 49/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4591 - accuracy: 0.4710 - val_loss: 1.4348 - val_accuracy: 0.4803
+Epoch 50/50
+157/157 [==============================] - 6s 36ms/step - loss: 1.4566 - accuracy: 0.4766 - val_loss: 1.4348 - val_accuracy: 0.4803
+40/40 [==============================] - 1s 17ms/step - loss: 1.4375 - accuracy: 0.4790
+Accuracy on the test set: 47.9%.
+
+```
+</div>
 We believe that with a more sophisticated hyperparameter tuning process and a longer
 pretraining it is possible to improve this performance further. For comparison, we took
 the encoder architecture and
@@ -903,9 +1568,8 @@ the encoder architecture and
 in a fully supervised manner. This gave us ~76% test top-1 accuracy. The authors of
 MAE demonstrates strong performance on the ImageNet-1k dataset as well as
 other downstream tasks like object detection and semantic segmentation.
-"""
 
-"""
+---
 ## Final notes
 
 We refer the interested readers to other examples on self-supervised learning present on
@@ -928,4 +1592,3 @@ We would like to thank [Xinlei Chen](http://xinleic.xyz/)
 [JarvisLabs](https://jarvislabs.ai/) and
 [Google Developers Experts](https://developers.google.com/programs/experts/)
 program for helping with GPU credits.
-"""
