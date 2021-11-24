@@ -7,8 +7,7 @@ Description: A keras implemenation of Barlow Twins (constrastive SSL with redund
 """
 """
 Paper:
-[Barlow Twins: Self-Supervised Learning via Redundancy
-Reduction](https://arxiv.org/abs/2103.03230)
+[Barlow Twins: Self-Supervised Learning via Redundancy Reduction](https://arxiv.org/abs/2103.03230)
 
 Original Implementation:
  [facebookresearch/barlowtwins](https://github.com/facebookresearch/barlowtwins)
@@ -820,9 +819,8 @@ class ResNet34:
     """Resnet34 class.
 
     Responsible for the Resnet 34 architecture.
-Modified from
-https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+    Modified from
+    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
     View their website for more information.
     """
 
