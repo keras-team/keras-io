@@ -2,7 +2,7 @@
 Title: Classification using Attention-based Deep Multiple Instance Learning (MIL).
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
-Last modified: 2021/11/21
+Last modified: 2021/11/25
 Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
@@ -42,7 +42,7 @@ the attention scores. The layer is designed as permutation-invariant.
 
 ### References
 
-- [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf).
+- [Attention-based Deep Multiple Instance Learning](https://arxiv.org/abs/1802.04712).
 - Some of the attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
 - Imbalanced data [tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
 by TensorFlow.
@@ -349,11 +349,13 @@ def create_model(instance_shape):
 
     # Extract features from inputs.
     inputs, embeddings = [], []
+    shared_dense_layer_1 = layers.Dense(128, activation="relu")
+    shared_dense_layer_2 = layers.Dense(64, activation="relu")
     for _ in range(BAG_SIZE):
         inp = layers.Input(instance_shape)
         flatten = layers.Flatten()(inp)
-        dense_1 = layers.Dense(128, activation="relu")(flatten)
-        dense_2 = layers.Dense(64, activation="relu")(dense_1)
+        dense_1 = shared_dense_layer_1(flatten)
+        dense_2 = shared_dense_layer_2(dense_1)
         inputs.append(inp)
         embeddings.append(dense_2)
 
