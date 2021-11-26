@@ -88,5 +88,14 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ---
 
+## Standalone Mixute-of-Experts (MoE) layer
 
+MoE layers provide a flexible way to scale deep models to train on larger datasets. The aim of this example should be to show 
+how replace the regular layers (such as `Dense`, `Conv2D`) with compatible MoE layers. 
+
+References:
+
+* A relevant paper on MoE: https://arxiv.org/abs/1701.06538
+* [Switch Transformers on keras.io](https://keras.io/examples/nlp/text_classification_with_switch_transformer/)
+* [Keras implementation of Dense and Conv2D MoE layers](https://github.com/eminorhan/mixture-of-experts)
 
