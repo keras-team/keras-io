@@ -3,7 +3,7 @@ Title: Classification using Attention-based Deep Multiple Instance Learning (MIL
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
 Last modified: 2021/11/25
-Description: MIL approach to classify bags of instances and get their individual instance score.
+Description: MIL approach to classify bags of instances and get their individual instance score
 """
 """
 ## Introduction
@@ -320,6 +320,7 @@ def plot(data, labels, bag_class, predictions=None, attention_weights=None):
         print(f"There is no class {bag_class}")
         return
 
+    print(f"The bag class label is {bag_class}")
     for i in range(PLOT_SIZE):
         figure = plt.figure(figsize=(8, 8))
         print(f"Bag number: {labels[i]}")
