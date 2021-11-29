@@ -76,7 +76,7 @@ Reduction](https://arxiv.org/abs/2103.03230)
 """
 
 """
-The model takes two versions of the same image(with different augmentations) as
+The model takes two versions of the same image (with different augmentations) as
 input. Then it takes a prediction of each of them, creating representations.
 They are then used to make a cross-correlation matrix.
 
@@ -100,7 +100,7 @@ shouldn't really be a diagonal.
 non-diagonal neuron, it means that it is not correctly identifying similarities
 between the two augmented images. This means that it is redundant.
 
-Here is a good way of understanding in pseudocode(information from the original
+Here is a good way of understanding in pseudocode (information from the original
 paper):
 
 ```
@@ -135,7 +135,7 @@ import numpy as np  # np.random.random
 import matplotlib.pyplot as plt  # graphs
 import datetime  # tensorboard logs naming
 
-# XLA optimization for faster performance(up to 10-15 minutes total time saved)
+# XLA optimization for faster performance (up to 10-15 minutes total time saved)
 tf.config.optimizer.set_jit(True)
 
 """
@@ -555,7 +555,7 @@ class BTDatasetCreator:
         are augmented differently.
 
         Arguments:
-            ds: A list of images(CIFAR-10 brought from
+            ds: A list of images (CIFAR-10 brought from
               keras.load_data is a list).
 
         Returns:
@@ -610,7 +610,7 @@ plot_values(next(sample_augment_versions))
 """
 # Pseudocode of loss and model
 The following sections follow the original author's pseudocode containing both model and
-loss functions(see diagram below). Also contains a reference of variables used. 
+loss functions (see diagram below). Also contains a reference of variables used. 
 """
 
 """
@@ -623,13 +623,13 @@ Reference:
 ```
 y_a: first augmented version of original image.
 y_b: second augmented version of original image.
-z_a: model representation(embeddings) of y_a.
-z_b: model representation(embeddings) of y_b.
+z_a: model representation (embeddings) of y_a.
+z_b: model representation (embeddings) of y_b.
 z_a_norm: normalized z_a.
 z_b_norm: normalized z_b.
 c: cross correlation matrix.
-c_diff: diagonal portion of loss(invariance term).
-off_diag: off-diagonal portion of loss(redundancy reduction term).
+c_diff: diagonal portion of loss (invariance term).
+off_diag: off-diagonal portion of loss (redundancy reduction term).
 ```
 """
 
@@ -639,11 +639,11 @@ off_diag: off-diagonal portion of loss(redundancy reduction term).
 Barlow Twins uses the cross correlation matrix for its loss. There are two parts to the
 loss function:
 
-*   ***The invariance term***(diagonal). This part is used to make the diagonals of the
+*   ***The invariance term*** (diagonal). This part is used to make the diagonals of the
 matrix into 1s. When this is the case, the matrix shows that the images are
-correlated(same). 
+correlated (same). 
   * The loss function subtracts 1 from the diagonal and squares the values.
-*   ***The redundancy reduction term***(off-diagonal). Here, the barlow twins loss
+*   ***The redundancy reduction term*** (off-diagonal). Here, the barlow twins loss
 function aims to make these values zero. As mentioned before, it is redundant if the
 representation neurons are correlated with values that are not on the diagonal.
   * Off diagonals are squared.
@@ -664,7 +664,7 @@ class BarlowLoss(keras.losses.Loss):
 
     Attributes:
         batch_size: the batch size of the dataset
-        lambda_amt: the value for lambda(used in cross_corr_matrix_loss)
+        lambda_amt: the value for lambda (used in cross_corr_matrix_loss)
 
     Methods:
         __init__: gets instance variables
@@ -719,10 +719,10 @@ class BarlowLoss(keras.losses.Loss):
         take the diagonal of the cross-correlation matrix, subtract by 1,
         and square that value so no negatives.
 
-        Take the off-diagonal of the cc-matrix(see get_off_diag()),
+        Take the off-diagonal of the cc-matrix (see get_off_diag()),
         square those values to get rid of negatives and increase the value,
         and multiply it by a lambda to weight it such that it is of equal
-        value to the optimizer as the diagonal(there are more values off-diag
+        value to the optimizer as the diagonal (there are more values off-diag
         then on-diag)
 
         Take the sum of the first and second parts and then sum them together.
@@ -736,10 +736,10 @@ class BarlowLoss(keras.losses.Loss):
             matrix with its diagonals as zeros.
         """
 
-        # subtracts diagonals by one and squares them(first part)
+        # subtracts diagonals by one and squares them (first part)
         c_diff = tf.pow(tf.linalg.diag_part(c) - 1, 2)
 
-        # takes off diagonal, squares it, multiplies with lambda(second part)
+        # takes off diagonal, squares it, multiplies with lambda (second part)
         off_diag = tf.pow(self.get_off_diag(c), 2) * self.lambda_amt
 
         # sum first and second parts together
@@ -786,7 +786,7 @@ class BarlowLoss(keras.losses.Loss):
 
         Makes the cross-correlation loss. Uses the CreateCrossCorr
         class to make the cross corr matrix, then finds the loss and
-        returns it(see cross_corr_matrix_loss()).
+        returns it (see cross_corr_matrix_loss()).
 
         Arguments:
             z_a: The prediction of the first set of augmented data.
@@ -896,7 +896,7 @@ Projector network:
 def build_twin() -> keras.Model:
     """build_twin method.
 
-    Builds a barlow twins model consisting of an encoder(resnet-34)
+    Builds a barlow twins model consisting of an encoder (resnet-34)
     and a projector, which generates embeddings for the images
 
     Returns:
@@ -1073,7 +1073,7 @@ learning.
 *   With this resnet-34 model architecture, we were able to reach 62-64% validation
 accuracy.
 
-# Use-Cases of Barlow-Twins(and contrastive learning in General)
+# Use-Cases of Barlow-Twins (and contrastive learning in General)
 *   Semi-supervised learning: You can see that this model gave a 62-64% boost in accuracy
 when it wasn't even trained with the labels. It can be used when you have little labeled
 data but a lot of unlabeled data.
