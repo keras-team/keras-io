@@ -265,6 +265,11 @@ mask = layer.compute_mask(x)
 print(mask)
 
 """
+Note: For more details about format limitations related to masking, see the 
+[serialization guide](/guides/serialization_and_saving).
+"""
+
+"""
 ## Opting-in to mask propagation on compatible layers
 
 Most layers don't modify the time dimension, so don't need to modify the current mask.

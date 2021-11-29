@@ -584,7 +584,7 @@ class GNNNodeClassifier(tf.keras.Model):
         # Postprocess node embedding.
         x = self.postprocess(x)
         # Fetch node embeddings for the input node_indices.
-        node_embeddings = tf.squeeze(tf.gather(x, input_node_indices))
+        node_embeddings = tf.gather(x, input_node_indices)
         # Compute logits
         return self.compute_logits(node_embeddings)
 
