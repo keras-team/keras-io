@@ -3,7 +3,7 @@ Title: Classification using Attention-based Deep Multiple Instance Learning (MIL
 Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
 Last modified: 2021/11/25
-Description: MIL approach to classify bags of instances and get their individual instance score
+Description: MIL approach to classify bags of instances and get their individual instance score.
 """
 """
 ## Introduction
