@@ -897,10 +897,10 @@ def build_twin() -> keras.Model:
     """build_twin method.
 
     Builds a barlow twins model consisting of an encoder (resnet-34)
-    and a projector, which generates embeddings for the images
+    and a projector, which generates embeddings for the images.
 
     Returns:
-        returns a barlow twins model
+        returns a barlow twins model.
     """
 
     # number of dense neurons in the projector
