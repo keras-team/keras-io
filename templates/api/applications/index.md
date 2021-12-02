@@ -46,7 +46,7 @@ The top-1 and top-5 accuracy refers to the model's performance on the ImageNet v
 
 Depth refers to the topological depth of the network. This includes activation layers, batch normalization layers etc.
 
-Time per inference step is the average of 30 batchs and 10 repetitions.
+Time per inference step is the average of 30 batches and 10 repetitions.
    - CPU: AMD EPYC Processor (with IBPB) (92 core)
    - Ram: 1.7T
    - GPU: Tesla A100
