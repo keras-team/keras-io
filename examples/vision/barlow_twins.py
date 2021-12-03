@@ -1033,14 +1033,14 @@ from random guessing.
 # Approx: 64% accuracy with this barlow twins model.
 
 xy_ds = (
-    tf.data.Dataset.from_tensor_slices((train_n_features, train_labels))
+    tf.data.Dataset.from_tensor_slices((train_features, train_labels))
     .shuffle(1000)
     .batch(BATCH_SIZE, drop_remainder=True)
     .prefetch(tf.data.AUTOTUNE)
 )
 
 test_ds = (
-    tf.data.Dataset.from_tensor_slices((test_n_features, test_labels))
+    tf.data.Dataset.from_tensor_slices((test_features, test_labels))
     .shuffle(1000)
     .batch(BATCH_SIZE, drop_remainder=True)
     .prefetch(tf.data.AUTOTUNE)
