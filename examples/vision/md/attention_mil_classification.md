@@ -2,7 +2,7 @@
 
 **Author:** [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)<br>
 **Date created:** 2021/08/16<br>
-**Last modified:** 2021/11/21<br>
+**Last modified:** 2021/11/25<br>
 **Description:** MIL approach to classify bags of instances and get their individual instance score.
 
 
@@ -47,7 +47,7 @@ the attention scores. The layer is designed as permutation-invariant.
 
 ### References
 
-- [Attention-based Deep Multiple Instance Learning](https://arxiv.org/pdf/1802.04712.pdf).
+- [Attention-based Deep Multiple Instance Learning](https://arxiv.org/abs/1802.04712).
 - Some of the attention operator code implementation was inspired from https://github.com/utayao/Atten_Deep_MIL.
 - Imbalanced data [tutorial](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)
 by TensorFlow.
@@ -157,10 +157,10 @@ val_data, val_labels = create_bags(
 
 <div class="k-default-codeblock">
 ```
-Positive bags: 307
-Negative bags: 693
-Positive bags: 87
-Negative bags: 213
+Positive bags: 301
+Negative bags: 699
+Positive bags: 89
+Negative bags: 211
 
 ```
 </div>
@@ -341,6 +341,7 @@ def plot(data, labels, bag_class, predictions=None, attention_weights=None):
         print(f"There is no class {bag_class}")
         return
 
+    print(f"The bag class label is {bag_class}")
     for i in range(PLOT_SIZE):
         figure = plt.figure(figsize=(8, 8))
         print(f"Bag number: {labels[i]}")
@@ -361,7 +362,8 @@ plot(val_data, val_labels, "negative")
 
 <div class="k-default-codeblock">
 ```
-Bag number: 1
+The bag class label is positive
+Bag number: 0
 
 ```
 </div>
@@ -372,7 +374,7 @@ Bag number: 1
 
 <div class="k-default-codeblock">
 ```
-Bag number: 2
+Bag number: 4
 
 ```
 </div>
@@ -383,7 +385,7 @@ Bag number: 2
 
 <div class="k-default-codeblock">
 ```
-Bag number: 3
+Bag number: 6
 
 ```
 </div>
@@ -394,7 +396,8 @@ Bag number: 3
 
 <div class="k-default-codeblock">
 ```
-Bag number: 0
+The bag class label is negative
+Bag number: 1
 
 ```
 </div>
@@ -405,7 +408,7 @@ Bag number: 0
 
 <div class="k-default-codeblock">
 ```
-Bag number: 8
+Bag number: 2
 
 ```
 </div>
@@ -416,7 +419,7 @@ Bag number: 8
 
 <div class="k-default-codeblock">
 ```
-Bag number: 9
+Bag number: 3
 
 ```
 </div>
@@ -438,11 +441,13 @@ def create_model(instance_shape):
 
     # Extract features from inputs.
     inputs, embeddings = [], []
+    shared_dense_layer_1 = layers.Dense(128, activation="relu")
+    shared_dense_layer_2 = layers.Dense(64, activation="relu")
     for _ in range(BAG_SIZE):
         inp = layers.Input(instance_shape)
         flatten = layers.Flatten()(inp)
-        dense_1 = layers.Dense(128, activation="relu")(flatten)
-        dense_2 = layers.Dense(64, activation="relu")(dense_1)
+        dense_1 = shared_dense_layer_1(flatten)
+        dense_2 = shared_dense_layer_2(dense_1)
         inputs.append(inp)
         embeddings.append(dense_2)
 
@@ -572,66 +577,60 @@ trained_models = [
 
 <div class="k-default-codeblock">
 ```
+2021-11-29 11:03:40.528531: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
 Model: "model"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+ Layer (type)                   Output Shape         Param #     Connected to                     
 ==================================================================================================
-input_1 (InputLayer)            [(None, 28, 28)]     0                                            
-__________________________________________________________________________________________________
-input_2 (InputLayer)            [(None, 28, 28)]     0                                            
-__________________________________________________________________________________________________
-input_3 (InputLayer)            [(None, 28, 28)]     0                                            
-__________________________________________________________________________________________________
-flatten (Flatten)               (None, 784)          0           input_1[0][0]                    
-__________________________________________________________________________________________________
-flatten_1 (Flatten)             (None, 784)          0           input_2[0][0]                    
-__________________________________________________________________________________________________
-flatten_2 (Flatten)             (None, 784)          0           input_3[0][0]                    
-__________________________________________________________________________________________________
-dense (Dense)                   (None, 128)          100480      flatten[0][0]                    
-__________________________________________________________________________________________________
-dense_2 (Dense)                 (None, 128)          100480      flatten_1[0][0]                  
-__________________________________________________________________________________________________
-dense_4 (Dense)                 (None, 128)          100480      flatten_2[0][0]                  
-__________________________________________________________________________________________________
-dense_1 (Dense)                 (None, 64)           8256        dense[0][0]                      
-__________________________________________________________________________________________________
-dense_3 (Dense)                 (None, 64)           8256        dense_2[0][0]                    
-__________________________________________________________________________________________________
-dense_5 (Dense)                 (None, 64)           8256        dense_4[0][0]                    
-__________________________________________________________________________________________________
-alpha (MILAttentionLayer)       [(None, 1), (None, 1 33024       dense_1[0][0]                    
-                                                                 dense_3[0][0]                    
-                                                                 dense_5[0][0]                    
-__________________________________________________________________________________________________
-multiply (Multiply)             (None, 64)           0           alpha[0][0]                      
-                                                                 dense_1[0][0]                    
-__________________________________________________________________________________________________
-multiply_1 (Multiply)           (None, 64)           0           alpha[0][1]                      
-                                                                 dense_3[0][0]                    
-__________________________________________________________________________________________________
-multiply_2 (Multiply)           (None, 64)           0           alpha[0][2]                      
-                                                                 dense_5[0][0]                    
-__________________________________________________________________________________________________
-concatenate (Concatenate)       (None, 192)          0           multiply[0][0]                   
-                                                                 multiply_1[0][0]                 
-                                                                 multiply_2[0][0]                 
-__________________________________________________________________________________________________
-dense_6 (Dense)                 (None, 2)            386         concatenate[0][0]                
+ input_1 (InputLayer)           [(None, 28, 28)]     0           []                               
+                                                                                                  
+ input_2 (InputLayer)           [(None, 28, 28)]     0           []                               
+                                                                                                  
+ input_3 (InputLayer)           [(None, 28, 28)]     0           []                               
+                                                                                                  
+ flatten (Flatten)              (None, 784)          0           ['input_1[0][0]']                
+                                                                                                  
+ flatten_1 (Flatten)            (None, 784)          0           ['input_2[0][0]']                
+                                                                                                  
+ flatten_2 (Flatten)            (None, 784)          0           ['input_3[0][0]']                
+                                                                                                  
+ dense (Dense)                  (None, 128)          100480      ['flatten[0][0]',                
+                                                                  'flatten_1[0][0]',              
+                                                                  'flatten_2[0][0]']              
+                                                                                                  
+ dense_1 (Dense)                (None, 64)           8256        ['dense[0][0]',                  
+                                                                  'dense[1][0]',                  
+                                                                  'dense[2][0]']                  
+                                                                                                  
+ alpha (MILAttentionLayer)      [(None, 1),          33024       ['dense_1[0][0]',                
+                                 (None, 1),                       'dense_1[1][0]',                
+                                 (None, 1)]                       'dense_1[2][0]']                
+                                                                                                  
+ multiply (Multiply)            (None, 64)           0           ['alpha[0][0]',                  
+                                                                  'dense_1[0][0]']                
+                                                                                                  
+ multiply_1 (Multiply)          (None, 64)           0           ['alpha[0][1]',                  
+                                                                  'dense_1[1][0]']                
+                                                                                                  
+ multiply_2 (Multiply)          (None, 64)           0           ['alpha[0][2]',                  
+                                                                  'dense_1[2][0]']                
+                                                                                                  
+ concatenate (Concatenate)      (None, 192)          0           ['multiply[0][0]',               
+                                                                  'multiply_1[0][0]',             
+                                                                  'multiply_2[0][0]']             
+                                                                                                  
+ dense_2 (Dense)                (None, 2)            386         ['concatenate[0][0]']            
+                                                                                                  
 ==================================================================================================
-Total params: 359,618
-Trainable params: 359,618
+Total params: 142,146
+Trainable params: 142,146
 Non-trainable params: 0
 __________________________________________________________________________________________________
 None
 
-  0%|          | 0/1 [00:00<?, ?it/s]
-
-WARNING:tensorflow:From /home/mohamad/.local/lib/python3.8/site-packages/tensorflow/python/ops/array_ops.py:5043: calling gather (from tensorflow.python.ops.array_ops) with validate_indices is deprecated and will be removed in a future version.
-Instructions for updating:
-The `validate_indices` argument has no effect. Indices are always validated on CPU and never validated on GPU.
-
-100%|██████████| 1/1 [00:35<00:00, 35.90s/it]
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:23<00:00, 23.71s/it]
 
 ```
 </div>
@@ -708,8 +707,9 @@ plot(
 
 <div class="k-default-codeblock">
 ```
-The average loss and accuracy are 0.11 and 97.33 % resp.
-Bag number: 1
+The average loss and accuracy are 0.00 and 100.00 % resp.
+The bag class label is positive
+Bag number: 0
 
 ```
 </div>
@@ -720,7 +720,7 @@ Bag number: 1
 
 <div class="k-default-codeblock">
 ```
-Bag number: 2
+Bag number: 4
 
 ```
 </div>
@@ -731,7 +731,7 @@ Bag number: 2
 
 <div class="k-default-codeblock">
 ```
-Bag number: 3
+Bag number: 6
 
 ```
 </div>
@@ -742,7 +742,8 @@ Bag number: 3
 
 <div class="k-default-codeblock">
 ```
-Bag number: 0
+The bag class label is negative
+Bag number: 1
 
 ```
 </div>
@@ -753,7 +754,7 @@ Bag number: 0
 
 <div class="k-default-codeblock">
 ```
-Bag number: 8
+Bag number: 2
 
 ```
 </div>
@@ -764,7 +765,7 @@ Bag number: 8
 
 <div class="k-default-codeblock">
 ```
-Bag number: 9
+Bag number: 3
 
 ```
 </div>
