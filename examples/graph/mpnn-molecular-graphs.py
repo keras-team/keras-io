@@ -386,7 +386,9 @@ def MPNNDataset(X, y, batch_size=32, shuffle=False):
     dataset = tf.data.Dataset.from_tensor_slices((X, (y)))
     if shuffle:
         dataset = dataset.shuffle(1024)
-    return dataset.batch(batch_size).map(prepare_batch, -1)
+    return dataset.batch(batch_size).map(
+        prepare_batch, num_parallel_calls=tf.data.AUTOTUNE
+    )
 
 
 """

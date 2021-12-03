@@ -577,9 +577,6 @@ trained_models = [
 
 <div class="k-default-codeblock">
 ```
-2021-11-29 11:03:40.528531: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
 Model: "model"
 __________________________________________________________________________________________________
  Layer (type)                   Output Shape         Param #     Connected to                     
@@ -628,10 +625,6 @@ Total params: 142,146
 Trainable params: 142,146
 Non-trainable params: 0
 __________________________________________________________________________________________________
-None
-
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:23<00:00, 23.71s/it]
-
 ```
 </div>
 ---
