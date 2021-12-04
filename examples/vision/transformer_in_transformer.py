@@ -9,10 +9,10 @@ Description: Implementing the Transformer in Transformer (TNT) model for image c
 
 """
 ## Introduction
-This example implements the [TNT](https://arxiv.org/pdf/2103.00112v2.pdf)
+This example implements the [TNT](https://arxiv.org/abs/2103.00112)
 model for image classification, and demonstrates it's performance on the CIFAR-100
 dataset.
-To keep training time reasonable, We will train and test a smaller model than is in the
+To keep training time reasonable, we will train and test a smaller model than is in the
 paper(0.66M params vs 23.8M params).
 TNT is a novel model for modeling both patch-level and pixel-level
 representation. In each TNT block, an ***outer*** transformer block is utilized to process
@@ -21,9 +21,9 @@ transformer block extracts local features from pixel embeddings. The pixel-level
 feature is projected to the space of patch embedding by a linear transformation layer
 and then added into the patch.
 This example requires TensorFlow 2.5 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview) package, it is for the
-AdamW optimizer,
-which can be installed using the following command:
+[TensorFlow Addons](https://www.tensorflow.org/addons/overview) package for the
+AdamW optimizer.
+Tensorflow Addons can be installed using the following command:
 ```python
 pip install -U tensorflow-addons
 ```
@@ -350,7 +350,7 @@ obtain better performance, like [RandAugment](https://arxiv.org/abs/1909.13719),
 [MixUp](https://arxiv.org/abs/1710.09412)
 etc. We also can adjust the depth of model, learning rate or increase the size of
 embedding. Compared to the conventional
-vision transformers [(ViT)](https://arxiv.org/abs/2010.11929) which corrupts the local
+vision transformers [ViT](https://arxiv.org/abs/2010.11929) which corrupts the local
 structure
 of the patch, the TNT can better preserve and model the local information
 for visual recognition.
