@@ -22,6 +22,12 @@ faster training time via compilation and distribution.
 ## Setup
 """
 
+"""
+### Install latest TFA and TFDS
+"""
+!pip install tensorflow_addons
+!pip install tfds_nightly
+
 import os
 import random
 import math
@@ -45,6 +51,11 @@ import tensorflow_datasets as tfds
 
 In this example, we will train using the CelebA from TensorFlow Datasets.
 """
+"""
+### Backup Celeb A dataset
+"""
+!pip install git+https://github.com/yarri-oss/celeba_backup.git
+import celeba_backup
 
 
 def log2(x):
@@ -58,7 +69,11 @@ batch_sizes = {2: 16, 3: 16, 4: 16, 5: 16, 6: 16, 7: 8, 8: 4, 9: 2, 10: 1}
 train_step_ratio = {k: batch_sizes[2] / v for k, v in batch_sizes.items()}
 
 
-ds_train = tfds.load("celeb_a", split="train")
+# ds_train = tfds.load("celeb_a", split="train")
+# As of Dec-3 2021, the [TFDS Celeb A](https://www.tensorflow.org/datasets/catalog/celeb_a) 
+# dataset gives an `wrong checksum` error, use this library as a work around
+ds_train = tfds.load('celeba_backup', split='train')
+
 
 
 def resize_image(res, sample):
