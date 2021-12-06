@@ -48,7 +48,7 @@ After the files are downloaded, we can extract the archives.
 """
 
 """shell
-tar xf images.tar
+tar -xvf images.tar
 unzip -qq ~/stanfordextra_v12.zip
 """
 
