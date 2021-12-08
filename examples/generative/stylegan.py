@@ -23,10 +23,11 @@ faster training time via compilation and distribution.
 """
 
 """
-### Install latest TFA and TFDS
+### Install latest TFA
 """
-!pip install tensorflow_addons
-!pip install tfds_nightly
+"""shell
+pip install tensorflow_addons
+"""
 
 import os
 import random
@@ -44,19 +45,14 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow_addons.layers import InstanceNormalization
 
-import tensorflow_datasets as tfds
+import gdown
+from zipfile import ZipFile
 
 """
 ## Prepare the dataset
 
-In this example, we will train using the CelebA from TensorFlow Datasets.
+In this example, we will train using the CelebA from the project GDrive.
 """
-"""
-### Backup Celeb A dataset
-"""
-!pip install git+https://github.com/yarri-oss/celeba_backup.git
-import celeba_backup
-
 
 def log2(x):
     return int(np.log2(x))
@@ -69,15 +65,28 @@ batch_sizes = {2: 16, 3: 16, 4: 16, 5: 16, 6: 16, 7: 8, 8: 4, 9: 2, 10: 1}
 train_step_ratio = {k: batch_sizes[2] / v for k, v in batch_sizes.items()}
 
 
-# ds_train = tfds.load("celeb_a", split="train")
 # As of Dec-3 2021, the [TFDS Celeb A](https://www.tensorflow.org/datasets/catalog/celeb_a) 
 # dataset gives an `wrong checksum` error, use this library as a work around
-ds_train = tfds.load('celeba_backup', split='train')
+os.makedirs("celeba_gan")
+
+url = "https://drive.google.com/uc?id=1O7m1010EJjLE5QxLZiM9Fpjs7Oj6e684"
+output = "celeba_gan/data.zip"
+gdown.download(url, output, quiet=True)
+
+with ZipFile("celeba_gan/data.zip", "r") as zipobj:
+    zipobj.extractall("celeba_gan")
+
+#Create a dataset from our folder, and rescale the images to the [0-1] range:
+
+dataset = keras.preprocessing.image_dataset_from_directory(
+    "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
+)
+ds_train = dataset
 
 
 
 def resize_image(res, sample):
-    image = sample["image"]
+    image = sample
     # only donwsampling, so use nearest neighbor that is faster to run
     image = tf.image.resize(
         image, (res, res), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR
@@ -89,7 +98,7 @@ def resize_image(res, sample):
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
     dl = ds_train.map(partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE)
-    dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
+    #dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
 
 
