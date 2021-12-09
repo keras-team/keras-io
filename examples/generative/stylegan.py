@@ -76,7 +76,7 @@ gdown.download(url, output, quiet=True)
 with ZipFile("celeba_gan/data.zip", "r") as zipobj:
     zipobj.extractall("celeba_gan")
 
-#Create a dataset from our folder, and rescale the images to the [0-1] range:
+# Create a dataset from our folder, and rescale the images to the [0-1] range:
 
 dataset = keras.preprocessing.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
@@ -97,8 +97,9 @@ def resize_image(res, sample):
 
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
-    dl = ds_train.map(partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE)
-    #dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
+    # NOTE: we added the `unbatch` call in order to support dynamic batch sizes from KPL dataset
+    dl = ds_train.map(partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE).unbatch()
+    dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
 
 
