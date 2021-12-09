@@ -65,8 +65,6 @@ batch_sizes = {2: 16, 3: 16, 4: 16, 5: 16, 6: 16, 7: 8, 8: 4, 9: 2, 10: 1}
 train_step_ratio = {k: batch_sizes[2] / v for k, v in batch_sizes.items()}
 
 
-# As of Dec-3 2021, the [TFDS Celeb A](https://www.tensorflow.org/datasets/catalog/celeb_a) 
-# dataset gives an `wrong checksum` error, use this library as a work around
 os.makedirs("celeba_gan")
 
 url = "https://drive.google.com/uc?id=1O7m1010EJjLE5QxLZiM9Fpjs7Oj6e684"
