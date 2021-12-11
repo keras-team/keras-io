@@ -325,21 +325,17 @@ latent_dim = 2048
 num_heads = 8
 
 #encoder layer
-encoder_inputs = keras.Input(
-    shape=(None,), dtype="int64", name="encoder_inputs")
+encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(encoder_inputs)
 encoder_outputs = TransformerEncoder(embed_dim, latent_dim, num_heads)(x)
 #decoder layer
-decoder_inputs = keras.Input(
-    shape=(None,), dtype="int64", name="decoder_inputs")
+decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(decoder_inputs)
 x = TransformerDecoder(embed_dim, latent_dim, num_heads)(x, encoder_outputs)
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
 #transformer model
-transformer = keras.Model(
-    [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer"
-)
+transformer = keras.Model([encoder_inputs, decoder_inputs], decoder_outputs, name="transformer")
 
 """
 ## Training our model
