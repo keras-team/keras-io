@@ -463,9 +463,11 @@ attribute this to the adaptiveness of TokenLearner.
 ## Number of parameters
 
 You may have noticed that adding the TokenLearner module increases the number of
-parameters of the base network. But that does not mean it is less efficient 
-([Dehghani et al.](https://arxiv.org/abs/2110.12894)). The TokenLearner module helps
-reducing the FLOPS in the overall network thereby helping to reduce the memory footprint. 
+parameters of the base network. But that does not mean it is less efficient as shown by
+[Dehghani et al.](https://arxiv.org/abs/2110.12894). Similar findings were reported
+by [Bello et al.](https://arxiv.org/abs/2103.07579) as well. The TokenLearner module
+helps reducing the FLOPS in the overall network thereby helping to reduce the memory
+footprint. 
 """
 
 """
