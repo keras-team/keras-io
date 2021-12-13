@@ -438,8 +438,8 @@ run_experiment(vit_token_learner)
 """
 ## Results
 
-We experimented with and without the TokenLearner inside the mini ViT we implemented.
-Here are our results:
+We experimented with and without the TokenLearner inside the mini ViT we implemented
+(with the same hyperparameters presented in this example). Here are our results:
 
 | **TokenLearner** | **# tokens in<br> TokenLearner** | **Top-1 Acc<br>(Averaged across 5
 runs)** | **TensorBoard** |
@@ -453,10 +453,32 @@ runs)** | **TensorBoard** |
 | N | - (# Transformer layers: 8) | 55.36% |
 [Link](https://tensorboard.dev/experiment/sepBK5zNSaOtdCeEG6SV9w/) |
 
-TokenLearner is able to consistently outperform our mini ViT without it. It is also
-interesting to notice that it was also able to outperform a deeper version of our mini
-ViT (with 8 layers). The authors also report similar observations in the paper and they
-attribute this to the adaptiveness of TokenLearner. 
+TokenLearner is able to consistently outperform our mini ViT without the module. It is
+also interesting to notice that it was also able to outperform a deeper version of our
+mini ViT (with 8 layers). The authors also report similar observations in the paper and
+they attribute this to the adaptiveness of TokenLearner.
+
+Additionally, the authors [introduced](https://github.com/google-research/scenic/blob/main/scenic/projects/token_learner/model.py#L104)
+a newer version of the TokenLearner for smaller training data regimes. Quoting the authors:
+
+> Instead of using 4 conv. layers with small channels to implement spatial attention,
+  this version uses 2 grouped conv. layers with more channels. It also uses softmax
+  instead of sigmoid. We confirmed that this version works better when having limited
+  training data, such as training with ImageNet1K from scratch.
+
+We experimented with this module and in the following table we summarize the results:
+
+| **# Groups** | **# Tokens** | **Top-1 Acc** | **TensorBoard** |
+|:---:|:---:|:---:|:---:|
+| 4 | 4 | 54.638% | [Link](https://tensorboard.dev/experiment/KmfkGqAGQjikEw85phySmw/) |
+| 8 | 8 | 54.898% | [Link](https://tensorboard.dev/experiment/0PpgYOq9RFWV9njX6NJQ2w/) |
+| 4 | 8 | 55.196% | [Link](https://tensorboard.dev/experiment/WUkrHbZASdu3zrfmY4ETZg/) |  
+
+Please note that we used the same hyperparameters presented in this example. Our
+implementation is available
+[in this notebook](https://github.com/ariG23498/TokenLearner/blob/master/TokenLearner-V1.1.ipynb).
+We acknowledge that the results with this new TokenLearner module is slightly off
+than expected and this might mitigate with hyperparameter tuning.
 """
 
 """
@@ -486,5 +508,6 @@ well with Vision Transformers for Videos ([Arnab et al.](https://arxiv.org/abs/2
 
 We are grateful to [JarvisLabs](https://jarvislabs.ai/) and 
 [Google Developers Experts](https://developers.google.com/programs/experts/)
-program for helping with GPU credits.
+program for helping with GPU credits. Also, we are thankful to Michael Ryoo (first
+author of TokenLearner) for fruitful discussions.
 """
