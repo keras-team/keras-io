@@ -441,22 +441,22 @@ run_experiment(vit_token_learner)
 We experimented with and without the TokenLearner inside the mini ViT we implemented
 (with the same hyperparameters presented in this example). Here are our results:
 
-| **TokenLearner** | **# tokens in<br> TokenLearner** | **Top-1 Acc<br>(Averaged across 5
-runs)** | **TensorBoard** |
-|:---:|:---:|:---:|:---:|
-| N | - | 56.112% | [Link](https://tensorboard.dev/experiment/vkCwM49dQZ2RiK0ZT4mj7w/) |
-| Y | 8 | **56.55%** | [Link](https://tensorboard.dev/experiment/vkCwM49dQZ2RiK0ZT4mj7w/)
-|
-| N | - | 56.37% | [Link](https://tensorboard.dev/experiment/hdyJ4wznQROwqZTgbtmztQ/) |
-| Y | 4 | **56.4980%** |
-[Link](<br>https://tensorboard.dev/experiment/hdyJ4wznQROwqZTgbtmztQ/) |
-| N | - (# Transformer layers: 8) | 55.36% |
-[Link](https://tensorboard.dev/experiment/sepBK5zNSaOtdCeEG6SV9w/) |
+| **TokenLearner** | **# tokens in<br> TokenLearner** | **Top-1 Acc<br>(Averaged across 5 runs)** | **GFLOPs** | **TensorBoard** |
+|:---:|:---:|:---:|:---:|:---:|
+| N | - | 56.112% | 0.0184 | [Link](https://tensorboard.dev/experiment/vkCwM49dQZ2RiK0ZT4mj7w/) |
+| Y | 8 | **56.55%** | **0.0153** | [Link](https://tensorboard.dev/experiment/vkCwM49dQZ2RiK0ZT4mj7w/) |
+| N | - | 56.37% | 0.0184 | [Link](https://tensorboard.dev/experiment/hdyJ4wznQROwqZTgbtmztQ/) |
+| Y | 4 | **56.4980%** | **0.0147** | [Link](https://tensorboard.dev/experiment/hdyJ4wznQROwqZTgbtmztQ/) |
+| N | - (# Transformer layers: 8) | 55.36% | 0.0359 | [Link](https://tensorboard.dev/experiment/sepBK5zNSaOtdCeEG6SV9w/) |
 
 TokenLearner is able to consistently outperform our mini ViT without the module. It is
 also interesting to notice that it was also able to outperform a deeper version of our
 mini ViT (with 8 layers). The authors also report similar observations in the paper and
-they attribute this to the adaptiveness of TokenLearner.
+they attribute this to the adaptiveness of TokenLearner. 
+
+One should also note that the FLOPs count **decrease** considerably with addition of
+the TokenLearner module. With less FLOPs count the TokenLearner module is able to 
+provide better results. This aligns very well with the authors' findings.
 
 Additionally, the authors [introduced](https://github.com/google-research/scenic/blob/main/scenic/projects/token_learner/model.py#L104)
 a newer version of the TokenLearner for smaller training data regimes. Quoting the authors:
@@ -468,17 +468,21 @@ a newer version of the TokenLearner for smaller training data regimes. Quoting t
 
 We experimented with this module and in the following table we summarize the results:
 
-| **# Groups** | **# Tokens** | **Top-1 Acc** | **TensorBoard** |
-|:---:|:---:|:---:|:---:|
-| 4 | 4 | 54.638% | [Link](https://tensorboard.dev/experiment/KmfkGqAGQjikEw85phySmw/) |
-| 8 | 8 | 54.898% | [Link](https://tensorboard.dev/experiment/0PpgYOq9RFWV9njX6NJQ2w/) |
-| 4 | 8 | 55.196% | [Link](https://tensorboard.dev/experiment/WUkrHbZASdu3zrfmY4ETZg/) |  
+| **# Groups** | **# Tokens** | **Top-1 Acc** | **GFLOPs** | **TensorBoard** |
+|:---:|:---:|:---:|:---:|:---:|
+| 4 | 4 | 54.638% | 0.0149 | [Link](https://tensorboard.dev/experiment/KmfkGqAGQjikEw85phySmw/) |
+| 8 | 8 | 54.898% | 0.0146 | [Link](https://tensorboard.dev/experiment/0PpgYOq9RFWV9njX6NJQ2w/) |
+| 4 | 8 | 55.196% | 0.0149 | [Link](https://tensorboard.dev/experiment/WUkrHbZASdu3zrfmY4ETZg/) |
 
 Please note that we used the same hyperparameters presented in this example. Our
 implementation is available
 [in this notebook](https://github.com/ariG23498/TokenLearner/blob/master/TokenLearner-V1.1.ipynb).
 We acknowledge that the results with this new TokenLearner module are slightly off
 than expected and this might mitigate with hyperparameter tuning.
+
+*Note*: To compute the FLOPs of our models we use
+[this utility](https://github.com/AdityaKane2001/regnety/blob/main/regnety/utils/model_utils.py#L27)
+from [this repository](https://github.com/AdityaKane2001/regnety).
 """
 
 """
