@@ -477,7 +477,7 @@ We experimented with this module and in the following table we summarize the res
 Please note that we used the same hyperparameters presented in this example. Our
 implementation is available
 [in this notebook](https://github.com/ariG23498/TokenLearner/blob/master/TokenLearner-V1.1.ipynb).
-We acknowledge that the results with this new TokenLearner module is slightly off
+We acknowledge that the results with this new TokenLearner module are slightly off
 than expected and this might mitigate with hyperparameter tuning.
 """
 
