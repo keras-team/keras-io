@@ -1,6 +1,6 @@
 """
 Title: Learning to tokenize in Vision Transformers
-Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
+Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
 Date created: 2021/12/10
 Last modified: 2021/12/10
 Description: Adaptively generating a smaller number of tokens for Vision Transformers.
