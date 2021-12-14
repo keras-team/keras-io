@@ -1,18 +1,16 @@
 """
 Title: Learning to tokenize in Vision Transformers
-Author: [Aritra Roy Gosthipaty^](https://twitter.com/ariG23498), [Sayak Paul^](https://twitter.com/risingSayak)
+Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
 Date created: 2021/12/10
 Last modified: 2021/12/10
 Description: Adaptively generating a smaller number of tokens for Vision Transformers.
-
-^ Equal Contribution.
 """
 """
 ## Introduction
 
 Vision Transformers ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)) and many
 other Transformer-based architectures ([Liu et al.](https://arxiv.org/abs/2103.14030),
-[Yuan et al.](https://arxiv.org/abs/2101.11986), etc.) have shown tremendous results in
+[Yuan et al.](https://arxiv.org/abs/2101.11986), etc.) have shown strong results in
 image recognition. Following provides a brief overview of the components involved in the
 Vision Transformer for image classification:
 
@@ -35,7 +33,7 @@ of patches within a Vision Transformer (ViT) in an adaptible manner. With TokenL
 incorporated in the standard ViT architecture, they are able to reduce the amount of
 compute (measured in FLOPS).
 
-In this example, we will implement the TokenLearner module and demonstrate its
+In this example, we implement the TokenLearner module and demonstrate its
 performance with a mini ViT and the CIFAR-10 dataset. We make use of the following
 references:
 
@@ -47,7 +45,7 @@ references:
 """
 ## Setup
 
-We will need to install TensorFlow Addons to run this example. To install it, execute the
+We need to install TensorFlow Addons to run this example. To install it, execute the
 following:
 
 ```shell
@@ -155,7 +153,8 @@ data_augmentation = keras.Sequential(
 )
 
 """
-Note that these layers have their inference behaviour pre-defined. Refer
+Note that these layers have their inference behaviour pre-defined. This means when
+these layers are called with `training=False` they behave differently. Refer
 [here](https://keras.io/api/layers/preprocessing_layers/image_augmentation/) for more
 details.
 """
@@ -480,7 +479,7 @@ implementation is available
 We acknowledge that the results with this new TokenLearner module are slightly off
 than expected and this might mitigate with hyperparameter tuning.
 
-*Note*: To compute the FLOPs of our models we use
+*Note*: To compute the FLOPs of our models we used
 [this utility](https://github.com/AdityaKane2001/regnety/blob/main/regnety/utils/model_utils.py#L27)
 from [this repository](https://github.com/AdityaKane2001/regnety).
 """
