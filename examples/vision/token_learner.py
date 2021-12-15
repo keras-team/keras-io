@@ -11,27 +11,27 @@ Description: Adaptively generating a smaller number of tokens for Vision Transfo
 Vision Transformers ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)) and many
 other Transformer-based architectures ([Liu et al.](https://arxiv.org/abs/2103.14030),
 [Yuan et al.](https://arxiv.org/abs/2101.11986), etc.) have shown strong results in
-image recognition. Following provides a brief overview of the components involved in the
-Vision Transformer for image classification:
+image recognition. The following provides a brief overview of the components involved in the
+Vision Transformer architecture for image classification:
 
 * Extract small patches from input images.
 * Linearly project those patches.
 * Add positional embeddings to these linear projections.
-* These projections then go through a series of Transformer ([Vaswani et al.](https://arxiv.org/abs/1706.03762))
+* Run these projections through a series of Transformer ([Vaswani et al.](https://arxiv.org/abs/1706.03762))
 blocks.
 * Finally, take the representation from the final Transformer block and add a
 classification head.
 
-If we take 224x224 images and extract 16x16 patches we get a total of 196 patches (also
+If we take 224x224 images and extract 16x16 patches, we get a total of 196 patches (also
 called tokens) for each image. The number of patches increases as we increase the
-resolution introducing an overhead on the memory footprint. But, can we use a reduced
-number of patches without having to compromise performance? Ryoo et al. investigate this
-question in
+resolution, leading to higher memory footprint. Could we use a reduced
+number of patches without having to compromise performance?
+Ryoo et al. investigate this question in
 [TokenLearner: Adaptive Space-Time Tokenization for Videos](https://openreview.net/forum?id=z-l1kpDXs88).
 They introduce a novel module called **TokenLearner** that can help reduce the number
-of patches within a Vision Transformer (ViT) in an adaptible manner. With TokenLearner
+of patches used by a Vision Transformer (ViT) in an adaptive manner. With TokenLearner
 incorporated in the standard ViT architecture, they are able to reduce the amount of
-compute (measured in FLOPS).
+compute (measured in FLOPS) used by the model.
 
 In this example, we implement the TokenLearner module and demonstrate its
 performance with a mini ViT and the CIFAR-10 dataset. We make use of the following
@@ -73,7 +73,7 @@ import math
 ## Hyperparameters
 
 Please feel free to change the hyperparameters and check your results. The best way to
-get an intuition about the architecture is to experiment with it.
+develop intuition about the architecture is to experiment with it.
 """
 
 # DATA
@@ -153,9 +153,9 @@ data_augmentation = keras.Sequential(
 )
 
 """
-Note that these layers have their inference behaviour pre-defined. This means when
-these layers are called with `training=False` they behave differently. Refer
-[here](https://keras.io/api/layers/preprocessing_layers/image_augmentation/) for more
+Note that image data augmentation layers do not apply data transformations at inference time.
+This means that when these layers are called with `training=False` they behave differently. Refer
+[to the documentation](https://keras.io/api/layers/preprocessing_layers/image_augmentation/) for more
 details.
 """
 
@@ -164,7 +164,8 @@ details.
 
 A [Transformer](https://arxiv.org/abs/1706.03762) architecture consists of **multi-head
 self attention** layers and **fully-connected feed forward** networks (MLP) as the main
-components. Both these components are _permutation invariant_.
+components. Both these components are _permutation invariant_: they're not aware of
+feature order.
 
 To overcome this problem we inject tokens with positional information. The
 `position_embedding` function adds this positional information to the linearly projected
@@ -220,8 +221,7 @@ than the original one (196, for example).
 
 Using multiple convolution layers helps with expressivity. Imposing a form of spatial
 attention helps retain relevant information from the inputs. Both of these components are
-crucial to make TokenLearner work especially when we are reducing the number of patches
-significantly. 
+crucial to make TokenLearner work, especially when we are significantly reducing the number of patches.
 """
 
 
@@ -289,7 +289,6 @@ def token_learner(inputs, number_of_tokens=NUM_TOKENS):
 
 """
 ## Transformer block
-
 """
 
 
@@ -378,8 +377,8 @@ def create_vit_classifier(use_token_learner=True, token_learner_units=NUM_TOKENS
 
 """
 As shown in the [TokenLearner paper](https://openreview.net/forum?id=z-l1kpDXs88), it is
-almost always more advantageous to include the TokenLearner module from the middle of the
-network. 
+almost always advantageous to include the TokenLearner module in the middle of the
+network.
 """
 
 """
@@ -453,9 +452,9 @@ also interesting to notice that it was also able to outperform a deeper version 
 mini ViT (with 8 layers). The authors also report similar observations in the paper and
 they attribute this to the adaptiveness of TokenLearner. 
 
-One should also note that the FLOPs count **decrease** considerably with addition of
-the TokenLearner module. With less FLOPs count the TokenLearner module is able to 
-provide better results. This aligns very well with the authors' findings.
+One should also note that the FLOPs count **decreases** considerably with the addition of
+the TokenLearner module. With less FLOPs count the TokenLearner module is able to
+deliver better results. This aligns very well with the authors' findings.
 
 Additionally, the authors [introduced](https://github.com/google-research/scenic/blob/main/scenic/projects/token_learner/model.py#L104)
 a newer version of the TokenLearner for smaller training data regimes. Quoting the authors:
