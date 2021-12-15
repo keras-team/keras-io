@@ -1,11 +1,16 @@
-"""
-Title: Learning to tokenize in Vision Transformers
-Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
-Date created: 2021/12/10
-Last modified: 2021/12/15
-Description: Adaptively generating a smaller number of tokens for Vision Transformers.
-"""
-"""
+# Learning to tokenize in Vision Transformers
+
+**Authors:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)<br>
+**Date created:** 2021/12/10<br>
+**Last modified:** 2021/12/15<br>
+**Description:** Adaptively generating a smaller number of tokens for Vision Transformers.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/token_learner.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/token_learner.py)
+
+
+
+---
 ## Introduction
 
 Vision Transformers ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)) and many
@@ -40,9 +45,8 @@ references:
 * [Official TokenLearner code](https://github.com/google-research/scenic/blob/main/scenic/projects/token_learner/model.py)
 * [Image Classification with ViTs on keras.io](https://keras.io/examples/vision/image_classification_with_vision_transformer/)
 * [TokenLearner slides from NeurIPS 2021](https://nips.cc/media/neurips-2021/Slides/26578.pdf)
-"""
 
-"""
+---
 ## Setup
 
 We need to install TensorFlow Addons to run this example. To install it, execute the
@@ -51,12 +55,12 @@ following:
 ```shell
 pip install tensorflow-addons
 ```
-"""
 
-"""
+---
 ## Imports
-"""
 
+
+```python
 import tensorflow as tf
 
 from tensorflow import keras
@@ -68,14 +72,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import math
+```
 
-"""
+---
 ## Hyperparameters
 
 Please feel free to change the hyperparameters and check your results. The best way to
 develop intuition about the architecture is to experiment with it.
-"""
 
+
+```python
 # DATA
 BATCH_SIZE = 256
 AUTO = tf.data.AUTOTUNE
@@ -106,11 +112,13 @@ MLP_UNITS = [
 
 # TOKENLEARNER
 NUM_TOKENS = 4
+```
 
-"""
+---
 ## Load and prepare the CIFAR-10 dataset
-"""
 
+
+```python
 # Load the CIFAR-10 dataset.
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 (x_train, y_train), (x_val, y_val) = (
@@ -130,8 +138,21 @@ val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Training samples: 40000
+Validation samples: 10000
+Testing samples: 10000
+
+2021-12-15 13:59:48.329729: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-12-15 13:59:50.627454: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38444 MB memory:  -> device: 0, name: A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
+
+```
+</div>
+---
 ## Data augmentation
 
 The augmentation pipeline consists of:
@@ -140,8 +161,9 @@ The augmentation pipeline consists of:
 - Resizing
 - Random cropping (fixed-sized or random sized)
 - Random horizontal flipping
-"""
 
+
+```python
 data_augmentation = keras.Sequential(
     [
         layers.Rescaling(1 / 255.0),
@@ -151,15 +173,14 @@ data_augmentation = keras.Sequential(
     ],
     name="data_augmentation",
 )
+```
 
-"""
 Note that image data augmentation layers do not apply data transformations at inference time.
 This means that when these layers are called with `training=False` they behave differently. Refer
 [to the documentation](https://keras.io/api/layers/preprocessing_layers/image_augmentation/) for more
 details.
-"""
 
-"""
+---
 ## Positional embedding module
 
 A [Transformer](https://arxiv.org/abs/1706.03762) architecture consists of **multi-head
@@ -170,8 +191,9 @@ feature order.
 To overcome this problem we inject tokens with positional information. The
 `position_embedding` function adds this positional information to the linearly projected
 tokens.
-"""
 
+
+```python
 
 def position_embedding(
     projected_patches, num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM
@@ -187,13 +209,15 @@ def position_embedding(
     # Add encoded positions to the projected patches.
     return projected_patches + encoded_positions
 
+```
 
-"""
+---
 ## MLP block for Transformer
 
 This serves as the Fully Connected Feed Forward block for our Transformer.
-"""
 
+
+```python
 
 def mlp(x, dropout_rate, hidden_units):
     # Iterate over the hidden units and
@@ -203,8 +227,9 @@ def mlp(x, dropout_rate, hidden_units):
         x = layers.Dropout(dropout_rate)(x)
     return x
 
+```
 
-"""
+---
 ## TokenLearner module
 
 The following figure presents a pictorial overview of the module
@@ -222,8 +247,9 @@ than the original one (196, for example).
 Using multiple convolution layers helps with expressivity. Imposing a form of spatial
 attention helps retain relevant information from the inputs. Both of these components are
 crucial to make TokenLearner work, especially when we are significantly reducing the number of patches.
-"""
 
+
+```python
 
 def token_learner(inputs, number_of_tokens=NUM_TOKENS):
     # Layer normalize the inputs.
@@ -286,11 +312,13 @@ def token_learner(inputs, number_of_tokens=NUM_TOKENS):
     outputs = tf.reduce_mean(attended_inputs, axis=2)  # (B, num_tokens, C)
     return outputs
 
+```
 
-"""
+---
 ## Transformer block
-"""
 
+
+```python
 
 def transformer(encoded_patches):
     # Layer normalization 1.
@@ -314,11 +342,13 @@ def transformer(encoded_patches):
     encoded_patches = layers.Add()([x4, x2])
     return encoded_patches
 
+```
 
-"""
+---
 ## ViT model with the TokenLearner module
-"""
 
+
+```python
 
 def create_vit_classifier(use_token_learner=True, token_learner_units=NUM_TOKENS):
     inputs = layers.Input(shape=INPUT_SHAPE)  # (B, H, W, C)
@@ -374,17 +404,17 @@ def create_vit_classifier(use_token_learner=True, token_learner_units=NUM_TOKENS
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
 
+```
 
-"""
 As shown in the [TokenLearner paper](https://openreview.net/forum?id=z-l1kpDXs88), it is
 almost always advantageous to include the TokenLearner module in the middle of the
 network.
-"""
 
-"""
+---
 ## Training utility
-"""
 
+
+```python
 
 def run_experiment(model):
     # Initialize the AdamW optimizer.
@@ -425,15 +455,70 @@ def run_experiment(model):
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
     print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 
+```
 
-"""
+---
 ## Train and evaluate a ViT with TokenLearner
-"""
 
+
+```python
 vit_token_learner = create_vit_classifier()
 run_experiment(vit_token_learner)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/20
+
+2021-12-15 13:59:59.531011: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8200
+2021-12-15 14:00:04.728435: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+157/157 [==============================] - 20s 39ms/step - loss: 2.2716 - accuracy: 0.1396 - top-5-accuracy: 0.5908 - val_loss: 2.0672 - val_accuracy: 0.2004 - val_top-5-accuracy: 0.7632
+Epoch 2/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.9780 - accuracy: 0.2488 - top-5-accuracy: 0.7917 - val_loss: 1.8621 - val_accuracy: 0.2986 - val_top-5-accuracy: 0.8391
+Epoch 3/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.8168 - accuracy: 0.3138 - top-5-accuracy: 0.8437 - val_loss: 1.7044 - val_accuracy: 0.3680 - val_top-5-accuracy: 0.8793
+Epoch 4/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.6765 - accuracy: 0.3701 - top-5-accuracy: 0.8820 - val_loss: 1.6490 - val_accuracy: 0.3857 - val_top-5-accuracy: 0.8809
+Epoch 5/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.6091 - accuracy: 0.4058 - top-5-accuracy: 0.8978 - val_loss: 1.5899 - val_accuracy: 0.4221 - val_top-5-accuracy: 0.8989
+Epoch 6/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.5386 - accuracy: 0.4340 - top-5-accuracy: 0.9097 - val_loss: 1.5434 - val_accuracy: 0.4321 - val_top-5-accuracy: 0.9098
+Epoch 7/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.4944 - accuracy: 0.4481 - top-5-accuracy: 0.9171 - val_loss: 1.4914 - val_accuracy: 0.4674 - val_top-5-accuracy: 0.9146
+Epoch 8/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.4767 - accuracy: 0.4586 - top-5-accuracy: 0.9179 - val_loss: 1.5280 - val_accuracy: 0.4528 - val_top-5-accuracy: 0.9090
+Epoch 9/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.4331 - accuracy: 0.4751 - top-5-accuracy: 0.9248 - val_loss: 1.3996 - val_accuracy: 0.4857 - val_top-5-accuracy: 0.9298
+Epoch 10/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.3990 - accuracy: 0.4925 - top-5-accuracy: 0.9291 - val_loss: 1.3888 - val_accuracy: 0.4872 - val_top-5-accuracy: 0.9308
+Epoch 11/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.3646 - accuracy: 0.5019 - top-5-accuracy: 0.9355 - val_loss: 1.4330 - val_accuracy: 0.4811 - val_top-5-accuracy: 0.9208
+Epoch 12/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.3607 - accuracy: 0.5037 - top-5-accuracy: 0.9354 - val_loss: 1.3242 - val_accuracy: 0.5149 - val_top-5-accuracy: 0.9415
+Epoch 13/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.3303 - accuracy: 0.5170 - top-5-accuracy: 0.9384 - val_loss: 1.2934 - val_accuracy: 0.5295 - val_top-5-accuracy: 0.9437
+Epoch 14/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.3038 - accuracy: 0.5259 - top-5-accuracy: 0.9426 - val_loss: 1.3102 - val_accuracy: 0.5187 - val_top-5-accuracy: 0.9422
+Epoch 15/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.2926 - accuracy: 0.5304 - top-5-accuracy: 0.9441 - val_loss: 1.3220 - val_accuracy: 0.5234 - val_top-5-accuracy: 0.9428
+Epoch 16/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.2724 - accuracy: 0.5346 - top-5-accuracy: 0.9458 - val_loss: 1.2670 - val_accuracy: 0.5370 - val_top-5-accuracy: 0.9491
+Epoch 17/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.2515 - accuracy: 0.5450 - top-5-accuracy: 0.9462 - val_loss: 1.2837 - val_accuracy: 0.5349 - val_top-5-accuracy: 0.9474
+Epoch 18/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.2427 - accuracy: 0.5505 - top-5-accuracy: 0.9492 - val_loss: 1.3425 - val_accuracy: 0.5180 - val_top-5-accuracy: 0.9371
+Epoch 19/20
+157/157 [==============================] - 5s 34ms/step - loss: 1.2129 - accuracy: 0.5605 - top-5-accuracy: 0.9514 - val_loss: 1.2297 - val_accuracy: 0.5590 - val_top-5-accuracy: 0.9536
+Epoch 20/20
+157/157 [==============================] - 5s 33ms/step - loss: 1.1994 - accuracy: 0.5667 - top-5-accuracy: 0.9523 - val_loss: 1.2390 - val_accuracy: 0.5577 - val_top-5-accuracy: 0.9528
+40/40 [==============================] - 0s 11ms/step - loss: 1.2293 - accuracy: 0.5564 - top-5-accuracy: 0.9549
+Test accuracy: 55.64%
+Test top 5 accuracy: 95.49%
+
+```
+</div>
+---
 ## Results
 
 We experimented with and without the TokenLearner inside the mini ViT we implemented
@@ -481,9 +566,8 @@ than expected and this might mitigate with hyperparameter tuning.
 *Note*: To compute the FLOPs of our models we used
 [this utility](https://github.com/AdityaKane2001/regnety/blob/main/regnety/utils/model_utils.py#L27)
 from [this repository](https://github.com/AdityaKane2001/regnety).
-"""
 
-"""
+---
 ## Number of parameters
 
 You may have noticed that adding the TokenLearner module increases the number of
@@ -492,9 +576,8 @@ parameters of the base network. But that does not mean it is less efficient as s
 by [Bello et al.](https://arxiv.org/abs/2103.07579) as well. The TokenLearner module
 helps reducing the FLOPS in the overall network thereby helping to reduce the memory
 footprint.
-"""
 
-"""
+---
 ## Final notes
 
 * TokenFuser: The authors of the paper also propose another module named TokenFuser. This
@@ -512,4 +595,3 @@ We are grateful to [JarvisLabs](https://jarvislabs.ai/) and
 [Google Developers Experts](https://developers.google.com/programs/experts/)
 program for helping with GPU credits. Also, we are thankful to Michael Ryoo (first
 author of TokenLearner) for fruitful discussions.
-"""
