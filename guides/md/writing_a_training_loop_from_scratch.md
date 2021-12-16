@@ -73,8 +73,20 @@ batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
 x_test = np.reshape(x_test, (-1, 784))
+
+# Reserve 10,000 samples for validation.
+x_val = x_train[-10000:]
+y_val = y_train[-10000:]
+x_train = x_train[:-10000]
+y_train = y_train[:-10000]
+
+# Prepare the training dataset.
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
+
+# Prepare the validation dataset.
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(batch_size)
 ```
 
 Here's our training loop:
@@ -124,39 +136,35 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %s samples" % ((step + 1) * 64))
+            print("Seen so far: %s samples" % ((step + 1) * batch_size))
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 76.3562
+Training loss (for one batch) at step 0: 119.2370
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.3921
+Training loss (for one batch) at step 200: 2.1698
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.0018
+Training loss (for one batch) at step 400: 1.1696
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.8904
+Training loss (for one batch) at step 600: 0.8985
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.8393
-Seen so far: 51264 samples
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.8572
+Training loss (for one batch) at step 0: 0.9260
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.7616
+Training loss (for one batch) at step 200: 1.3808
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.8453
+Training loss (for one batch) at step 400: 0.5850
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.4959
+Training loss (for one batch) at step 600: 0.6255
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.9363
-Seen so far: 51264 samples
 
 ```
 </div>
@@ -194,20 +202,6 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 # Prepare the metrics.
 train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
 val_acc_metric = keras.metrics.SparseCategoricalAccuracy()
-
-# Prepare the training dataset.
-batch_size = 64
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
-
-# Prepare the validation dataset.
-# Reserve 10,000 samples for validation.
-x_val = x_train[-10000:]
-y_val = y_train[-10000:]
-x_train = x_train[:-10000]
-y_train = y_train[:-10000]
-val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_dataset = val_dataset.batch(64)
 ```
 
 Here's our training & evaluation loop:
@@ -238,7 +232,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -262,38 +256,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 134.3001
+Training loss (for one batch) at step 0: 99.8348
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.3430
+Training loss (for one batch) at step 200: 1.7872
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.3557
+Training loss (for one batch) at step 400: 1.2578
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.8682
+Training loss (for one batch) at step 600: 1.2309
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.5862
-Seen so far: 51264 samples
-Training acc over epoch: 0.7176
-Validation acc: 0.8403
-Time taken: 4.65s
+Training acc over epoch: 0.6845
+Validation acc: 0.7683
+Time taken: 4.16s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.4264
+Training loss (for one batch) at step 0: 0.7814
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4168
+Training loss (for one batch) at step 200: 0.4360
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6106
+Training loss (for one batch) at step 400: 0.8505
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.4762
+Training loss (for one batch) at step 600: 0.7776
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.4031
-Seen so far: 51264 samples
-Training acc over epoch: 0.8429
-Validation acc: 0.8774
-Time taken: 5.07s
+Training acc over epoch: 0.8263
+Validation acc: 0.8106
+Time taken: 4.17s
 
 ```
 </div>
@@ -361,7 +351,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -384,38 +374,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.6483
+Training loss (for one batch) at step 0: 0.5857
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5966
+Training loss (for one batch) at step 200: 0.4440
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.5951
+Training loss (for one batch) at step 400: 0.4354
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.3830
+Training loss (for one batch) at step 600: 0.7005
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.2758
-Seen so far: 51264 samples
-Training acc over epoch: 0.8756
-Validation acc: 0.8955
-Time taken: 1.18s
+Training acc over epoch: 0.8685
+Validation acc: 0.8848
+Time taken: 1.25s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.4447
+Training loss (for one batch) at step 0: 0.3965
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3794
+Training loss (for one batch) at step 200: 0.3314
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.4636
+Training loss (for one batch) at step 400: 0.2886
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.3694
+Training loss (for one batch) at step 600: 0.2908
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.2763
-Seen so far: 51264 samples
-Training acc over epoch: 0.8926
-Validation acc: 0.9078
-Time taken: 0.71s
+Training acc over epoch: 0.8881
+Validation acc: 0.8955
+Time taken: 0.90s
 
 ```
 </div>
@@ -540,19 +526,21 @@ discriminator.summary()
 ```
 Model: "discriminator"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-conv2d (Conv2D)              (None, 14, 14, 64)        640       
-_________________________________________________________________
-leaky_re_lu (LeakyReLU)      (None, 14, 14, 64)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 7, 7, 128)         73856     
-_________________________________________________________________
-leaky_re_lu_1 (LeakyReLU)    (None, 7, 7, 128)         0         
-_________________________________________________________________
-global_max_pooling2d (Global (None, 128)               0         
-_________________________________________________________________
-dense_4 (Dense)              (None, 1)                 129       
+ conv2d (Conv2D)             (None, 14, 14, 64)        640       
+                                                                 
+ leaky_re_lu (LeakyReLU)     (None, 14, 14, 64)        0         
+                                                                 
+ conv2d_1 (Conv2D)           (None, 7, 7, 128)         73856     
+                                                                 
+ leaky_re_lu_1 (LeakyReLU)   (None, 7, 7, 128)         0         
+                                                                 
+ global_max_pooling2d (Globa  (None, 128)              0         
+ lMaxPooling2D)                                                  
+                                                                 
+ dense_4 (Dense)             (None, 1)                 129       
+                                                                 
 =================================================================
 Total params: 74,625
 Trainable params: 74,625
@@ -673,9 +661,7 @@ for epoch in range(epochs):
             print("adversarial loss at step %d: %.2f" % (step, g_loss))
 
             # Save one generated image
-            img = tf.keras.preprocessing.image.array_to_img(
-                generated_images[0] * 255.0, scale=False
-            )
+            img = keras.utils.array_to_img(generated_images[0] * 255.0, scale=False)
             img.save(os.path.join(save_dir, "generated_img" + str(step) + ".png"))
 
         # To limit execution time we stop after 10 steps.
@@ -688,8 +674,8 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.70
-adversarial loss at step 0: 0.68
+discriminator loss at step 0: 0.68
+adversarial loss at step 0: 0.62
 
 ```
 </div>
