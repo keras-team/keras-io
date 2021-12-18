@@ -749,6 +749,15 @@ have also provided the outputs of the model trained for more epochs.
 | **100** | ![100-epoch-training](https://i.imgur.com/2k9p8ez.gif) |
 | **200** | ![200-epoch-training](https://i.imgur.com/l3rG4HQ.gif) |
 
+## Way forward
+
+If anyone is interested to go deeper into NeRF, we have built a 3-part blog 
+series at [PyImageSearch](www.pyimagesearch.com).
+
+- [Prerequisites of NeRF](https://www.pyimagesearch.com/2021/11/10/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-1/)
+- [Concepts of NeRF](https://www.pyimagesearch.com/2021/11/17/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-2/)
+- [Implementing NeRF](https://www.pyimagesearch.com/2021/11/24/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-3/)
+
 ## Reference
 
 - [NeRF repository](https://github.com/bmild/nerf): The official
