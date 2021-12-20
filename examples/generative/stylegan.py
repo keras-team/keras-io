@@ -83,8 +83,7 @@ ds_train = dataset
 
 
 
-def resize_image(res, sample):
-    image = sample
+def resize_image(res, image):
     # only donwsampling, so use nearest neighbor that is faster to run
     image = tf.image.resize(
         image, (res, res), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR
