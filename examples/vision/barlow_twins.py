@@ -1,17 +1,15 @@
 """
-Title: Barlow Twins
+Title: Barlow Twins for Contrastive SSL
 Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
-Last modified: 11/17/21
-Description: A keras implemenation of Barlow Twins (constrastive SSL with redundancy reduction).
+Last modified: 12/20/21
+Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
 """
 """
-Paper:
-[Barlow Twins: Self-Supervised Learning via Redundancy Reduction](https://arxiv.org/abs/2103.03230)
+## Introduction
+"""
 
-Original Implementation:
- [facebookresearch/barlowtwins](https://github.com/facebookresearch/barlowtwins)
-
+"""
 Self-supervised learning (SSL) is a relatively novel technique in which a model
 learns from unlabeled data, and is often used when the data is corrupted or
 if there is very little of it. A practical use for SSL is to create
@@ -23,7 +21,7 @@ These embeddings, ideally, should contain as much information and insight about
 the data as possible, so that the model can make better predictions. However,
 a common problem that arises is that the model creates embeddings that are
 redundant. For example, if two images are similar, the model will create
-embeddings that are just a string of 1’s, or some other value that
+embeddings that are just a string of 1's, or some other value that
 contains repeating bits of information. This is no better than a one-hot
 encoding or just having one bit as the model’s representations; it defeats the
 purpose of the embeddings, as they do not learn as much about the dataset as
@@ -31,26 +29,27 @@ possible. For other approaches, the solution to the problem was to carefully
 configure the model such that it tries not to be redundant.
 
 
-Barlow twins is a new approach to this problem; While other solutions mainly
+Barlow Twins is a new approach to this problem; while other solutions mainly
 tackle the first goal of invariance (similar images have similar embeddings),
-the barlow twins method also prioritizes the goal of reducing redundancy.
+the Barlow Twins method also prioritizes the goal of reducing redundancy.
 
 It also has the advantage of being much simpler than other methods, and its
 model architecture is symmetric, meaning that both twins in the model do the
 same thing. It is also near state-of-the-art on imagenet, even exceeding methods
-like SIM-clr.
+like SimCLR.
 
 
 One disadvantage of Barlow Twins is that it is heavily dependent on
 augmentation, suffering major performance decreases in accuracy without them.
 
 TL, DR: Barlow twins creates representations that are:
+
 *   Invariant.
 *   Not redundant, and carry as much info about the dataset.
 
 Also, it is simpler than other methods.
 
-This notebook was able to train a barlow twins model and reach up to
+This notebook can train a Barlow Twins model and reach up to
 64% validation accuracy on the CIFAR-10 dataset.
 """
 
@@ -65,22 +64,17 @@ This notebook was able to train a barlow twins model and reach up to
 """
 
 """
-Taken from the original paper: [Barlow Twins: Self-Supervised Learning via Redundancy
-Reduction](https://arxiv.org/abs/2103.03230)
-"""
-
-"""
-# High-Level Theory
+### High-Level Theory
 
 
 """
 
 """
-The model takes two versions of the same image (with different augmentations) as
+The model takes two versions of the same image(with different augmentations) as
 input. Then it takes a prediction of each of them, creating representations.
 They are then used to make a cross-correlation matrix.
 
-Cross correlation matrix:
+Cross-correlation matrix:
 ```
 (pred_1.T @ pred_2) / batch_size
 ```
@@ -91,16 +85,17 @@ augmented versions of data. Ideally, a cross-correlation matrix should look
 like an identity matrix if the two images are the same.
 
 When this happens, it means that the representations:
+
 1.   Are invariant. The diagonal shows the correlation between each
 representation's neurons and its corresponding augmented one. Because the two
 versions come from the same image, the diagonal of the matrix should show that
 there is a strong correlation between them. If the images are different, there
-shouldn't really be a diagonal.
+shouldn't be a diagonal.
 2.   Do not show signs of redundancy. If the neurons show correlation with a
 non-diagonal neuron, it means that it is not correctly identifying similarities
 between the two augmented images. This means that it is redundant.
 
-Here is a good way of understanding in pseudocode (information from the original
+Here is a good way of understanding in pseudocode(information from the original
 paper):
 
 ```
@@ -115,7 +110,27 @@ where:
 """
 
 """
-# Setup
+Taken from the original paper: [Barlow Twins: Self-Supervised Learning via Redundancy
+Reduction](https://arxiv.org/abs/2103.03230)
+"""
+
+"""
+### References
+"""
+
+"""
+Paper:
+[Barlow Twins: Self-Supervised Learning via Redundancy
+Reduction](https://arxiv.org/abs/2103.03230)
+
+Original Implementation:
+ [facebookresearch/barlowtwins](https://github.com/facebookresearch/barlowtwins)
+
+
+"""
+
+"""
+## Setup
 """
 
 """shell
@@ -126,6 +141,9 @@ import os
 
 # slightly faster improvements, on the first epoch 30 second decrease and a 1-2 second
 # decrease in epoch time. Overall saves approx. 5 min of training time
+
+# Allocates two threads for a gpu private which allows more operations to be
+# done faster
 os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
 
 import tensorflow as tf  # framework
@@ -135,11 +153,11 @@ import numpy as np  # np.random.random
 import matplotlib.pyplot as plt  # graphs
 import datetime  # tensorboard logs naming
 
-# XLA optimization for faster performance (up to 10-15 minutes total time saved)
+# XLA optimization for faster performance(up to 10-15 minutes total time saved)
 tf.config.optimizer.set_jit(True)
 
 """
-# Load the CIFAR-10 dataset
+## Load the CIFAR-10 dataset
 """
 
 [
@@ -151,7 +169,7 @@ train_features = train_features / 255.0
 test_features = test_features / 255.0
 
 """
-# Necessary Hyperparameters
+## Necessary Hyperparameters
 """
 
 # Batch size of dataset
@@ -160,16 +178,17 @@ BATCH_SIZE = 512
 IMAGE_SIZE = 32
 
 """
-# Augmentation Utilities
+## Augmentation Utilities
 The Barlow twins algorithm is heavily reliant on
 Augmentation. One unique feature of the method is that sometimes, augmentations
 probabilistically occur.
- 
+
 **Augmentations**
+
 *   *RandomToGrayscale*: randomly applies grayscale to image 20% of the time
 *   *RandomColorJitter*: randomly applies color jitter 80% of the time
 *   *RandomFlip*: randomly flips image horizontally 50% of the time
-*   *RandomResizedCrop*: randomly crops an image to a random size then resizes.This
+*   *RandomResizedCrop*: randomly crops an image to a random size then resizes. This
 happens 100% of the time
 *   *RandomSolarize*: randomly applies solarization to an image 20% of the time
 *   *RandomBlur*: randomly blurs an image 20% of the time
@@ -313,20 +332,14 @@ class RandomResizedCrop(Augmentation):
     RandomResizedCrop class. Randomly crop an image to a random size,
     then resize the image back to the original size.
 
+    Attributes:
+        image_size: The dimension of the image
+
     Methods:
         __call__: method that does random resize crop to the image.
     """
 
     def __init__(self, image_size):
-        """__init__ function.
-
-        Instantiates instance variables
-
-        Arguments:
-            image_size: The dimension of the image.
-            resize: The tf.keras Resize preprocessing layer.
-        """
-
         super(Augmentation, self).__init__()
         self.image_size = image_size
 
@@ -420,35 +433,27 @@ class RandomAugmentor(keras.Model):
     RandomAugmentor class. Chains all the augmentations into
     one pipeline.
 
+    Attributes:
+        image_size: An integer represing the width and height
+          of the image. Designed to be used for square images.
+        random_resized_crop: Instance variable representing the
+          RandomResizedCrop layer.
+        random_flip: Instance variable representing the
+          RandomFlip layer.
+        random_color_jitter: Instance variable representing the
+          RandomColorJitter layer.
+        random_blur: Instance variable representing the
+          RandomBlur layer
+        random_to_grayscale: Instance variable representing the
+          RandomToGrayscale layer
+        random_solarize: Instance variable representing the
+          RandomSolarize layer
+
     Methods:
-        __init__: Gets instance variables.
-        __call__: Runs augment_fn().
-        augment_fn: Responsible for chaining all the
-          augmentations together.
+        call: chains layers in pipeline together
     """
 
     def __init__(self, image_size: int):
-        """__init__ function.
-
-        Gets instance variables.
-
-        Arguments:
-            image_size: An integer represing the width and height
-              of the image. Designed to be used for square images.
-            random_resized_crop: Instance variable representing the
-              RandomResizedCrop layer.
-            random_flip: Instance variable representing the
-              RandomFlip layer.
-            random_color_jitter: Instance variable representing the
-              RandomColorJitter layer.
-            random_blur: Instance variable representing the
-              RandomBlur layer
-            random_to_grayscale: Instance variable representing the
-              RandomToGrayscale layer
-            random_solarize: Instance variable representing the
-              RandomSolarize layer
-        """
-
         super(RandomAugmentor, self).__init__()
 
         self.image_size = image_size
@@ -460,19 +465,6 @@ class RandomAugmentor(keras.Model):
         self.random_solarize = RandomSolarize()
 
     def call(self, x: tf.Tensor) -> tf.Tensor:
-        """call function.
-
-        Chains augmentations together into one_pipeline using keras.layers
-        subclassing api
-
-        Arguments:
-            x: a tf.Tensor representing the image
-
-        Returns:
-            returns an image with all the augmentations randomly
-              applied to it and also clipped to keep pixel values between 0-255.
-        """
-
         x = self.random_resized_crop(x)
         x = self.random_flip(x)
         x = self.random_color_jitter(x)
@@ -487,7 +479,7 @@ class RandomAugmentor(keras.Model):
 bt_augmentor = RandomAugmentor(IMAGE_SIZE)
 
 """
-# Dataset Creation Utility
+## Data Loading
 
 A class that creates the barlow twins' dataset.
 
@@ -502,42 +494,25 @@ class BTDatasetCreator:
     BTDatasetCreator class. Responsible for creating the
     barlow twins' dataset.
 
+    Attributes:
+        options: tf.data.Options needed to configure a setting
+          that may improve performance.
+        seed: random seed for shuffling. Used to synchronize two
+          augmented versions.
+        augmentor: augmentor used for augmentation.
+
     Methods:
-        __init__: gets instance variables.
         __call__: creates barlow dataset.
-        create_half: creates 1 half of the dataset.
+        augmented_version: creates 1 half of the dataset.
     """
 
     def __init__(self, augmentor: RandomAugmentor, seed: int = 1024):
-        """__init__ function.
-
-        Gets instance variables
-
-        Arguments:
-            options: tf.data.Options needed to configure a setting
-              that may improve performance.
-            seed: random seed for shuffling. Used to synchronize two
-              augmented versions.
-            augmentor: augmentor used for augmentation.
-        """
         self.options = tf.data.Options()
         self.options.threading.max_intra_op_parallelism = 1
         self.seed = seed
         self.augmentor = augmentor
 
     def augmented_version(self, ds: list) -> tf.data.Dataset:
-        """augmented_version function.
-
-        Creates an augmented version of the dataset.
-
-        Arguments:
-            ds: A list of images(CIFAR-10 brought from
-              keras.load_data is a list).
-
-        Returns:
-            returns an tf.data.Dataset with 1 version of augmented images.
-        """
-
         return (
             tf.data.Dataset.from_tensor_slices(ds)
             .shuffle(1000, seed=self.seed)
@@ -548,19 +523,6 @@ class BTDatasetCreator:
         )
 
     def __call__(self, ds: list) -> tf.data.Dataset:
-        """__call__ function.
-
-        Creates the barlow twins dataset. This dataset
-        contains two copies of the same images, except they
-        are augmented differently.
-
-        Arguments:
-            ds: A list of images (CIFAR-10 brought from
-              keras.load_data is a list).
-
-        Returns:
-            returns a zipped dataset with two versions of augmentations.
-        """
         a1 = self.augmented_version(ds)
         a2 = self.augmented_version(ds)
 
@@ -577,14 +539,6 @@ sample_augment_versions = iter(augment_versions)
 
 
 def plot_values(batch: tuple):
-    """plot_values function.
-
-    Plots some of the images and is used to verify augmentations.
-
-    Arguments:
-        batch: A tuple with one batch of image pairs.
-    """
-
     fig, axs = plt.subplots(3, 3)
     fig1, axs1 = plt.subplots(3, 3)
 
@@ -608,9 +562,9 @@ def plot_values(batch: tuple):
 plot_values(next(sample_augment_versions))
 
 """
-# Pseudocode of loss and model
+## Pseudocode of loss and model
 The following sections follow the original author's pseudocode containing both model and
-loss functions (see diagram below). Also contains a reference of variables used. 
+loss functions(see diagram below). Also contains a reference of variables used.
 """
 
 """
@@ -623,32 +577,32 @@ Reference:
 ```
 y_a: first augmented version of original image.
 y_b: second augmented version of original image.
-z_a: model representation (embeddings) of y_a.
-z_b: model representation (embeddings) of y_b.
+z_a: model representation(embeddings) of y_a.
+z_b: model representation(embeddings) of y_b.
 z_a_norm: normalized z_a.
 z_b_norm: normalized z_b.
 c: cross correlation matrix.
-c_diff: diagonal portion of loss (invariance term).
-off_diag: off-diagonal portion of loss (redundancy reduction term).
+c_diff: diagonal portion of loss(invariance term).
+off_diag: off-diagonal portion of loss(redundancy reduction term).
 ```
 """
 
 """
-# BarlowLoss: barlow twins model's loss function
+## BarlowLoss: barlow twins model's loss function
 
 Barlow Twins uses the cross correlation matrix for its loss. There are two parts to the
 loss function:
 
-*   ***The invariance term*** (diagonal). This part is used to make the diagonals of the
+*   ***The invariance term***(diagonal). This part is used to make the diagonals of the
 matrix into 1s. When this is the case, the matrix shows that the images are
-correlated (same). 
+correlated(same).
   * The loss function subtracts 1 from the diagonal and squares the values.
-*   ***The redundancy reduction term*** (off-diagonal). Here, the barlow twins loss
+*   ***The redundancy reduction term***(off-diagonal). Here, the barlow twins loss
 function aims to make these values zero. As mentioned before, it is redundant if the
 representation neurons are correlated with values that are not on the diagonal.
   * Off diagonals are squared.
 
-After this the two parts are summed together. 
+After this the two parts are summed together.
 
 
 
@@ -664,7 +618,7 @@ class BarlowLoss(keras.losses.Loss):
 
     Attributes:
         batch_size: the batch size of the dataset
-        lambda_amt: the value for lambda (used in cross_corr_matrix_loss)
+        lambda_amt: the value for lambda(used in cross_corr_matrix_loss)
 
     Methods:
         __init__: gets instance variables
@@ -719,10 +673,10 @@ class BarlowLoss(keras.losses.Loss):
         take the diagonal of the cross-correlation matrix, subtract by 1,
         and square that value so no negatives.
 
-        Take the off-diagonal of the cc-matrix (see get_off_diag()),
+        Take the off-diagonal of the cc-matrix(see get_off_diag()),
         square those values to get rid of negatives and increase the value,
         and multiply it by a lambda to weight it such that it is of equal
-        value to the optimizer as the diagonal (there are more values off-diag
+        value to the optimizer as the diagonal(there are more values off-diag
         then on-diag)
 
         Take the sum of the first and second parts and then sum them together.
@@ -736,10 +690,10 @@ class BarlowLoss(keras.losses.Loss):
             matrix with its diagonals as zeros.
         """
 
-        # subtracts diagonals by one and squares them (first part)
+        # subtracts diagonals by one and squares them(first part)
         c_diff = tf.pow(tf.linalg.diag_part(c) - 1, 2)
 
-        # takes off diagonal, squares it, multiplies with lambda (second part)
+        # takes off diagonal, squares it, multiplies with lambda(second part)
         off_diag = tf.pow(self.get_off_diag(c), 2) * self.lambda_amt
 
         # sum first and second parts together
@@ -786,7 +740,7 @@ class BarlowLoss(keras.losses.Loss):
 
         Makes the cross-correlation loss. Uses the CreateCrossCorr
         class to make the cross corr matrix, then finds the loss and
-        returns it (see cross_corr_matrix_loss()).
+        returns it(see cross_corr_matrix_loss()).
 
         Arguments:
             z_a: The prediction of the first set of augmented data.
@@ -803,8 +757,9 @@ class BarlowLoss(keras.losses.Loss):
 
 
 """
-# Barlow Twins' Model Architecture
+## Barlow Twins' Model Architecture
 The model has two parts:
+
 *   The encoder network, which is a resnet-34.
 *   The projector network, which creates the model embeddings.
    * This consists of an MLP with 3 dense-batchnorm-relu layers.
@@ -818,10 +773,11 @@ Resnet encoder network implementation:
 class ResNet34:
     """Resnet34 class.
 
-    Responsible for the Resnet 34 architecture.
+        Responsible for the Resnet 34 architecture.
     Modified from
     https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-    View their website for more information.
+    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+        View their website for more information.
     """
 
     def identity_block(self, x, filter):
@@ -896,11 +852,11 @@ Projector network:
 def build_twin() -> keras.Model:
     """build_twin method.
 
-    Builds a barlow twins model consisting of an encoder (resnet-34)
-    and a projector, which generates embeddings for the images.
+    Builds a barlow twins model consisting of an encoder(resnet-34)
+    and a projector, which generates embeddings for the images
 
     Returns:
-        returns a barlow twins model.
+        returns a barlow twins model
     """
 
     # number of dense neurons in the projector
@@ -928,7 +884,7 @@ def build_twin() -> keras.Model:
 
 
 """
-# Training Loop Model
+## Training Loop Model
 
 See pseudocode for reference.
 """
@@ -945,18 +901,12 @@ class BarlowModel(keras.Model):
         loss_tracker: the loss metric.
 
     Methods:
-        __init__: gets instance variables.
         train_step: one train step; do model predictions, loss, and
             optimizer step.
         metrics: Returns metrics.
     """
 
     def __init__(self):
-        """__init__ method.
-
-        Gets the instance variables.
-        """
-
         super(BarlowModel, self).__init__()
         self.model = build_twin()
         self.loss_tracker = keras.metrics.Mean(name="loss")
@@ -995,11 +945,12 @@ class BarlowModel(keras.Model):
 
 
 """
-# Model Training
+## Model Training
+
 * Used the LAMB optimizer, instead of ADAM or SGD.
 * Similar to the LARS optimizer used in the paper, and lets the model converge much
 faster than other methods.
-* Expected training time: 1 hour 30 min. Go and eat a snack or take a nap or something. 
+* Expected training time: 1 hour 30 min. Go and eat a snack or take a nap or something.
 """
 
 # sets up model, optimizer, loss
@@ -1019,28 +970,28 @@ plt.plot(history.history["loss"])
 plt.show()
 
 """
-# Evaluation
+## Evaluation
 
-**Linear evaluation:** to evaluate the model's performance, we add 
+**Linear evaluation:** to evaluate the model's performance, we add
 a linear dense layer at the end and freeze the main model's weights, only letting the
 dense layer to be tuned. If the model actually learned something, then the accuracy would
 be significantly higher than random chance.
 
 **Accuracy on CIFAR-10** : 64% for this notebook. This is much better than the 10% we get
-from random guessing. 
+from random guessing.
 """
 
 # Approx: 64% accuracy with this barlow twins model.
 
 xy_ds = (
-    tf.data.Dataset.from_tensor_slices((train_features, train_labels))
+    tf.data.Dataset.from_tensor_slices((train_n_features, train_labels))
     .shuffle(1000)
     .batch(BATCH_SIZE, drop_remainder=True)
     .prefetch(tf.data.AUTOTUNE)
 )
 
 test_ds = (
-    tf.data.Dataset.from_tensor_slices((test_features, test_labels))
+    tf.data.Dataset.from_tensor_slices((test_n_features, test_labels))
     .shuffle(1000)
     .batch(BATCH_SIZE, drop_remainder=True)
     .prefetch(tf.data.AUTOTUNE)
@@ -1067,28 +1018,32 @@ model.compile(
 model.fit(xy_ds, epochs=35, validation_data=test_ds)
 
 """
-# Conclusion
+## Conclusion
+
 *   Barlow Twins is a simple and concise method for contrastive and self-supervised
 learning.
 *   With this resnet-34 model architecture, we were able to reach 62-64% validation
 accuracy.
 
-# Use-Cases of Barlow-Twins (and contrastive learning in General)
+## Use-Cases of Barlow-Twins(and contrastive learning in General)
+
 *   Semi-supervised learning: You can see that this model gave a 62-64% boost in accuracy
 when it wasn't even trained with the labels. It can be used when you have little labeled
 data but a lot of unlabeled data.
 * You do barlow twins training on the unlabeled data, and then you do secondary training
 with the labeled data.
 
-# Helpful links
+## Helpful links
+
 * [Paper](https://arxiv.org/abs/2103.03230)
 * [Original Pytorch Implementation](https://github.com/facebookresearch/barlowtwins)
-* [Sayak Paul's Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
+* [Sayak Paul's
+Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
+Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
 * Thanks to Sayak Paul for his implementation. It helped me with debugging and
 comparisons of accuracy, loss.
-* [resnet34 implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
-  * Thanks to Yashowardhan Shinde for writing the article. 
-
-
-
+* [resnet34
+implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
+implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
+  * Thanks to Yashowardhan Shinde for writing the article.
 """
