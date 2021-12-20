@@ -79,6 +79,7 @@ with ZipFile("celeba_gan/data.zip", "r") as zipobj:
 ds_train = keras.preprocessing.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
 )
+ds_train = ds_train.map(lambda x: x / 255.0)
 
 
 def resize_image(res, image):
