@@ -95,7 +95,8 @@ def resize_image(res, sample):
 
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
-    # NOTE: we added the `unbatch` call in order to support dynamic batch sizes from KPL dataset
+    # NOTE: we unbatch the dataset so we can `batch()` it again with the `drop_remainder=True` option
+    # since the model only supports a single batch size
     dl = ds_train.map(partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE).unbatch()
     dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
