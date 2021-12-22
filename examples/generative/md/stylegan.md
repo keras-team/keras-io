@@ -758,7 +758,7 @@ TRANSITION
 1/1 [==============================] - 5s 5s/step - d_loss: 6.6954 - g_loss: 0.3432
 STABLE
 1/1 [==============================] - 4s 4s/step - d_loss: 3.3558 - g_loss: 3.7813
-``
+
 Model resolution:16x16
 TRANSITION
 1/1 [==============================] - 10s 10s/step - d_loss: 3.3166 - g_loss: 6.6047
