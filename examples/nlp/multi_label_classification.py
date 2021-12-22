@@ -2,7 +2,7 @@
 Title: Large-scale multi-label text classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2020/09/25
-Last modified: 2020/09/26
+Last modified: 2020/12/22
 Description: Implementing a large-scale multi-label text classification model.
 """
 """
@@ -252,21 +252,14 @@ For that purpose, we will use the
 [`TextVectorization` layer](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 It can operate as a part of your main model so that the model is excluded from the core
 preprocessing logic. This greatly reduces the chances of training / serving skew during inference.
-
-We first calculate the number of unique words present in the abstracts.
 """
-train_df["total_words"] = train_df["summaries"].str.split().str.len()
-vocabulary_size = train_df["total_words"].max()
-print(f"Vocabulary size: {vocabulary_size}")
 
 """
 We now create our vectorization layer and `map()` to the `tf.data.Dataset`s created
 earlier.
 """
 
-text_vectorizer = layers.TextVectorization(
-    max_tokens=vocabulary_size, ngrams=2, output_mode="tf_idf"
-)
+text_vectorizer = layers.TextVectorization(ngrams=2, output_mode="tf_idf")
 
 # `TextVectorization` layer needs to be adapted as per the vocabulary from our
 # training set.
@@ -369,10 +362,6 @@ While training, we notice an initial sharp fall in the loss followed by a gradua
 
 _, categorical_acc = shallow_mlp_model.evaluate(test_dataset)
 print(f"Categorical accuracy on the test set: {round(categorical_acc * 100, 2)}%.")
-
-"""
-The trained model gives us an evaluation accuracy of ~87%.
-"""
 
 """
 ## Inference
