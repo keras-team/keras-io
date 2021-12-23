@@ -2,7 +2,7 @@
 Title: Large-scale multi-label text classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2020/09/25
-Last modified: 2020/12/22
+Last modified: 2020/12/23
 Description: Implementing a large-scale multi-label text classification model.
 """
 """
@@ -184,33 +184,13 @@ Notice that 50% of the abstracts have a length of 154 (you may get a different n
 based on the split). So, any number close to that value is a good enough approximate for the
 maximum sequence length.
 
-Now, we implement utilities to prepare our datasets that would go straight to the text
-classifier model.
+Now, we implement utilities to prepare our datasets.
 """
 
 max_seqlen = 150
 batch_size = 128
 padding_token = "<pad>"
 auto = tf.data.AUTOTUNE
-
-
-def unify_text_length(text, label):
-    # Split the given abstract and calculate its length.
-    word_splits = tf.strings.split(text, sep=" ")
-    sequence_length = tf.shape(word_splits)[0]
-
-    # Calculate the padding amount.
-    padding_amount = max_seqlen - sequence_length
-
-    # Check if we need to pad or truncate.
-    if padding_amount > 0:
-        unified_text = tf.pad([text], [[0, padding_amount]], constant_values="<pad>")
-        unified_text = tf.strings.reduce_join(unified_text, separator="")
-    else:
-        unified_text = tf.strings.reduce_join(word_splits[:max_seqlen], separator=" ")
-
-    # The expansion is needed for subsequent vectorization.
-    return tf.expand_dims(unified_text, -1), label
 
 
 def make_dataset(dataframe, is_train=True):
@@ -220,8 +200,8 @@ def make_dataset(dataframe, is_train=True):
         (dataframe["summaries"].values, label_binarized)
     )
     dataset = dataset.shuffle(batch_size * 10) if is_train else dataset
-    dataset = dataset.map(unify_text_length, num_parallel_calls=auto).cache()
     return dataset.batch(batch_size)
+
 
 
 """
@@ -240,7 +220,7 @@ text_batch, label_batch = next(iter(train_dataset))
 
 for i, text in enumerate(text_batch[:5]):
     label = label_batch[i].numpy()[None, ...]
-    print(f"Abstract: {text[0]}")
+    print(f"Abstract: {text}")
     print(f"Label(s): {invert_multi_hot(label[0])}")
     print(" ")
 
@@ -252,14 +232,23 @@ For that purpose, we will use the
 [`TextVectorization` layer](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization).
 It can operate as a part of your main model so that the model is excluded from the core
 preprocessing logic. This greatly reduces the chances of training / serving skew during inference.
+
+We first calculate the number of unique words present in the abstracts.
 """
+
+# Source: https://stackoverflow.com/a/18937309/7636462
+vocabulary = set()
+train_df["summaries"].str.lower().str.split().apply(vocabulary.update)
+vocabulary_size = len(vocabulary)
+print(vocabulary_size)
+
 
 """
 We now create our vectorization layer and `map()` to the `tf.data.Dataset`s created
 earlier.
 """
 
-text_vectorizer = layers.TextVectorization(ngrams=2, output_mode="tf_idf")
+text_vectorizer = layers.TextVectorization(max_tokens=vocabulary_size, ngrams=2, output_mode="tf_idf")
 
 # `TextVectorization` layer needs to be adapted as per the vocabulary from our
 # training set.
@@ -364,6 +353,10 @@ _, categorical_acc = shallow_mlp_model.evaluate(test_dataset)
 print(f"Categorical accuracy on the test set: {round(categorical_acc * 100, 2)}%.")
 
 """
+The trained model gives us an evaluation accuracy of ~87%.
+"""
+
+"""
 ## Inference
 
 An important feature of the
@@ -389,7 +382,7 @@ predicted_probabilities = model_for_inference.predict(text_batch)
 # Perform inference.
 for i, text in enumerate(text_batch[:5]):
     label = label_batch[i].numpy()[None, ...]
-    print(f"Abstract: {text[0]}")
+    print(f"Abstract: {text}")
     print(f"Label(s): {invert_multi_hot(label[0])}")
     predicted_proba = [proba for proba in predicted_probabilities[i]]
     top_3_labels = [
