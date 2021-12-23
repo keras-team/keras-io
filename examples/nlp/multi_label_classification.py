@@ -203,7 +203,6 @@ def make_dataset(dataframe, is_train=True):
     return dataset.batch(batch_size)
 
 
-
 """
 Now we can prepare the `tf.data.Dataset` objects.
 """
@@ -248,7 +247,9 @@ We now create our vectorization layer and `map()` to the `tf.data.Dataset`s crea
 earlier.
 """
 
-text_vectorizer = layers.TextVectorization(max_tokens=vocabulary_size, ngrams=2, output_mode="tf_idf")
+text_vectorizer = layers.TextVectorization(
+    max_tokens=vocabulary_size, ngrams=2, output_mode="tf_idf"
+)
 
 # `TextVectorization` layer needs to be adapted as per the vocabulary from our
 # training set.
