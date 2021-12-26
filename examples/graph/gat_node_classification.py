@@ -2,7 +2,7 @@
 Title: Graph attention network (GAT) for node classification
 Author: [akensert](https://github.com/akensert)
 Date created: 2021/09/13
-Last modified: 2022/12/26
+Last modified: 2021/12/26
 Description: An implementation of a Graph Attention Network (GAT) for node classification.
 """
 """
@@ -389,7 +389,7 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
 ## Conclusions
 
 The results look OK! The GAT model seems to correctly predict the subjects of the papers,
-based on what they cite, about 80-85% of the time. Further improvements could be
+based on what they cite, about 80% of the time. Further improvements could be
 made by fine-tuning the hyper-parameters of the GAT. For instance, try changing the number of layers,
 the number of hidden units, or the optimizer/learning rate; add regularization (e.g., dropout);
 or modify the preprocessing step. We could also try to implement *self-loops*
