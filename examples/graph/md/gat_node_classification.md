@@ -1,9 +1,9 @@
-# Graph attention networks for node classification
+# Graph attention network (GAT) for node classification
 
 **Author:** [akensert](https://github.com/akensert)<br>
 **Date created:** 2021/09/13<br>
-**Last modified:** 2021/09/13<br>
-**Description:** An implementation of Graph Attention Networks (GATs) for node classification.
+**Last modified:** 2021/12/26<br>
+**Description:** An implementation of a Graph Attention Network (GAT) for node classification.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/graph/ipynb/gat_node_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/graph/gat_node_classification.py)
@@ -199,13 +199,11 @@ resulting in `e_{ij}` (for all `j`).
 `||` denotes a concatenation, `_{i}` corresponds to the source node, and `_{j}`
 corresponds to a given 1-hop neighbor node.
 2. Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores
-to the source node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1.
-(Notice, in this tutorial, *incoming edges* are defined as edges
-pointing from the *source paper* (the paper *citing*) to the *target paper* (the paper *cited*),
-which is counter inuitive. However, this seems to work better in practice.
-In other words, we want to learn the label of the source paper based on what it cites (target papers).)
+to the target node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1.
 3. Applies attention scores `e_{norm}_{ij}` to `z_{j}`
 and adds it to the new source node state `h^{l+1}_{i}`, for all `j`.
+
+In other words, we want to learn the label of the target paper based on what cites it (source papers).
 
 
 ```python
@@ -427,37 +425,33 @@ print("--" * 38 + f"\nTest Accuracy {test_accuracy*100:.1f}%")
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-5/5 - 9s - loss: 2.2267 - acc: 0.2833 - val_loss: 1.5847 - val_acc: 0.3309
+5/5 - 23s - loss: 1.8716 - acc: 0.3128 - val_loss: 1.6772 - val_acc: 0.5074 - 23s/epoch - 5s/step
 Epoch 2/100
-5/5 - 1s - loss: 1.4020 - acc: 0.4565 - val_loss: 1.1424 - val_acc: 0.6029
+5/5 - 4s - loss: 1.2072 - acc: 0.5911 - val_loss: 0.9890 - val_acc: 0.6471 - 4s/epoch - 798ms/step
 Epoch 3/100
-5/5 - 1s - loss: 0.8604 - acc: 0.7184 - val_loss: 0.8028 - val_acc: 0.7647
+5/5 - 4s - loss: 0.7453 - acc: 0.7841 - val_loss: 0.7037 - val_acc: 0.8015 - 4s/epoch - 835ms/step
 Epoch 4/100
-5/5 - 1s - loss: 0.5779 - acc: 0.8448 - val_loss: 0.7113 - val_acc: 0.8162
+5/5 - 4s - loss: 0.4258 - acc: 0.8900 - val_loss: 0.5779 - val_acc: 0.8456 - 4s/epoch - 855ms/step
 Epoch 5/100
-5/5 - 1s - loss: 0.3292 - acc: 0.9064 - val_loss: 0.6348 - val_acc: 0.8162
+5/5 - 4s - loss: 0.2543 - acc: 0.9327 - val_loss: 0.4693 - val_acc: 0.8382 - 4s/epoch - 864ms/step
 Epoch 6/100
-5/5 - 1s - loss: 0.2339 - acc: 0.9401 - val_loss: 0.4791 - val_acc: 0.8309
+5/5 - 4s - loss: 0.1695 - acc: 0.9516 - val_loss: 0.5757 - val_acc: 0.8456 - 4s/epoch - 868ms/step
 Epoch 7/100
-5/5 - 1s - loss: 0.1407 - acc: 0.9655 - val_loss: 0.5073 - val_acc: 0.8456
+5/5 - 5s - loss: 0.0845 - acc: 0.9803 - val_loss: 0.5505 - val_acc: 0.8456 - 5s/epoch - 960ms/step
 Epoch 8/100
-5/5 - 1s - loss: 0.0779 - acc: 0.9893 - val_loss: 0.5812 - val_acc: 0.8235
+5/5 - 9s - loss: 0.0714 - acc: 0.9836 - val_loss: 0.5345 - val_acc: 0.8750 - 9s/epoch - 2s/step
 Epoch 9/100
-5/5 - 1s - loss: 0.0519 - acc: 0.9885 - val_loss: 0.4581 - val_acc: 0.8529
+5/5 - 9s - loss: 0.0544 - acc: 0.9885 - val_loss: 0.6439 - val_acc: 0.8750 - 9s/epoch - 2s/step
 Epoch 10/100
-5/5 - 1s - loss: 0.0328 - acc: 0.9943 - val_loss: 0.4530 - val_acc: 0.8603
+5/5 - 10s - loss: 0.0379 - acc: 0.9918 - val_loss: 0.5563 - val_acc: 0.8603 - 10s/epoch - 2s/step
 Epoch 11/100
-5/5 - 1s - loss: 0.0241 - acc: 0.9959 - val_loss: 0.4564 - val_acc: 0.8603
+5/5 - 10s - loss: 0.0192 - acc: 0.9975 - val_loss: 0.5827 - val_acc: 0.8603 - 10s/epoch - 2s/step
 Epoch 12/100
-5/5 - 1s - loss: 0.0169 - acc: 0.9975 - val_loss: 0.4877 - val_acc: 0.8529
+5/5 - 8s - loss: 0.0187 - acc: 0.9967 - val_loss: 0.5792 - val_acc: 0.8603 - 8s/epoch - 2s/step
 Epoch 13/100
-5/5 - 1s - loss: 0.0130 - acc: 0.9984 - val_loss: 0.5321 - val_acc: 0.8456
-Epoch 14/100
-5/5 - 1s - loss: 0.0104 - acc: 0.9984 - val_loss: 0.5419 - val_acc: 0.8529
-Epoch 15/100
-5/5 - 1s - loss: 0.0086 - acc: 0.9992 - val_loss: 0.5257 - val_acc: 0.8456
+5/5 - 7s - loss: 0.0131 - acc: 0.9975 - val_loss: 0.5494 - val_acc: 0.8529 - 7s/epoch - 1s/step
 ----------------------------------------------------------------------------
-Test Accuracy 84.5%
+Test Accuracy 83.2%
 
 ```
 </div>
@@ -481,49 +475,67 @@ for i, (probs, label) in enumerate(zip(test_probs[:10], test_labels[:10])):
 Example 1: Probabilistic_Methods
 	Probability of Case_Based               =   0.000%
 	Probability of Genetic_Algorithms       =   0.000%
-	Probability of Neural_Networks          =   0.003%
-	Probability of Probabilistic_Methods    =  99.996%
+	Probability of Neural_Networks          =   0.029%
+	Probability of Probabilistic_Methods    =  99.970%
 	Probability of Reinforcement_Learning   =   0.000%
 	Probability of Rule_Learning            =   0.000%
-	Probability of Theory                   =   0.000%
+	Probability of Theory                   =   0.001%
 ------------------------------------------------------------
 Example 2: Genetic_Algorithms
 	Probability of Case_Based               =   0.000%
-	Probability of Genetic_Algorithms       =  99.996%
+	Probability of Genetic_Algorithms       = 100.000%
 	Probability of Neural_Networks          =   0.000%
 	Probability of Probabilistic_Methods    =   0.000%
-	Probability of Reinforcement_Learning   =   0.004%
+	Probability of Reinforcement_Learning   =   0.000%
 	Probability of Rule_Learning            =   0.000%
 	Probability of Theory                   =   0.000%
 ------------------------------------------------------------
 Example 3: Theory
-	Probability of Case_Based               =   1.351%
-	Probability of Genetic_Algorithms       =   0.077%
-	Probability of Neural_Networks          =   0.032%
-	Probability of Probabilistic_Methods    =   2.875%
-	Probability of Reinforcement_Learning   =   0.258%
-	Probability of Rule_Learning            =   8.995%
-	Probability of Theory                   =  86.413%
+	Probability of Case_Based               =   2.270%
+	Probability of Genetic_Algorithms       =   0.243%
+	Probability of Neural_Networks          =   0.222%
+	Probability of Probabilistic_Methods    =  12.699%
+	Probability of Reinforcement_Learning   =   0.374%
+	Probability of Rule_Learning            =  10.696%
+	Probability of Theory                   =  73.496%
 ------------------------------------------------------------
 Example 4: Neural_Networks
-	Probability of Case_Based               =   0.000%
+	Probability of Case_Based               =   0.001%
 	Probability of Genetic_Algorithms       =   0.001%
-	Probability of Neural_Networks          =  99.999%
+	Probability of Neural_Networks          =  99.996%
+	Probability of Probabilistic_Methods    =   0.000%
+	Probability of Reinforcement_Learning   =   0.001%
+	Probability of Rule_Learning            =   0.000%
+	Probability of Theory                   =   0.001%
+------------------------------------------------------------
+Example 5: Theory
+	Probability of Case_Based               =  71.277%
+	Probability of Genetic_Algorithms       =   0.039%
+	Probability of Neural_Networks          =   3.736%
+	Probability of Probabilistic_Methods    =   1.131%
+	Probability of Reinforcement_Learning   =   0.042%
+	Probability of Rule_Learning            =   4.115%
+	Probability of Theory                   =  19.661%
+------------------------------------------------------------
+Example 6: Genetic_Algorithms
+	Probability of Case_Based               =   0.000%
+	Probability of Genetic_Algorithms       = 100.000%
+	Probability of Neural_Networks          =   0.000%
 	Probability of Probabilistic_Methods    =   0.000%
 	Probability of Reinforcement_Learning   =   0.000%
 	Probability of Rule_Learning            =   0.000%
 	Probability of Theory                   =   0.000%
 ------------------------------------------------------------
-Example 5: Theory
-	Probability of Case_Based               =   7.421%
-	Probability of Genetic_Algorithms       =   0.024%
-	Probability of Neural_Networks          =   9.141%
-	Probability of Probabilistic_Methods    =   3.939%
-	Probability of Reinforcement_Learning   =   0.074%
-	Probability of Rule_Learning            =  10.938%
-	Probability of Theory                   =  68.463%
+Example 7: Neural_Networks
+	Probability of Case_Based               =   0.925%
+	Probability of Genetic_Algorithms       =   1.133%
+	Probability of Neural_Networks          =  96.297%
+	Probability of Probabilistic_Methods    =   0.499%
+	Probability of Reinforcement_Learning   =   0.612%
+	Probability of Rule_Learning            =   0.107%
+	Probability of Theory                   =   0.427%
 ------------------------------------------------------------
-Example 6: Genetic_Algorithms
+Example 8: Genetic_Algorithms
 	Probability of Case_Based               =   0.000%
 	Probability of Genetic_Algorithms       =  99.999%
 	Probability of Neural_Networks          =   0.000%
@@ -532,32 +544,14 @@ Example 6: Genetic_Algorithms
 	Probability of Rule_Learning            =   0.000%
 	Probability of Theory                   =   0.000%
 ------------------------------------------------------------
-Example 7: Neural_Networks
-	Probability of Case_Based               =   0.120%
-	Probability of Genetic_Algorithms       =   0.511%
-	Probability of Neural_Networks          =  99.127%
-	Probability of Probabilistic_Methods    =   0.081%
-	Probability of Reinforcement_Learning   =   0.097%
-	Probability of Rule_Learning            =   0.035%
-	Probability of Theory                   =   0.029%
-------------------------------------------------------------
-Example 8: Genetic_Algorithms
-	Probability of Case_Based               =   0.000%
-	Probability of Genetic_Algorithms       =  99.957%
-	Probability of Neural_Networks          =   0.000%
-	Probability of Probabilistic_Methods    =   0.000%
-	Probability of Reinforcement_Learning   =   0.043%
-	Probability of Rule_Learning            =   0.000%
-	Probability of Theory                   =   0.000%
-------------------------------------------------------------
 Example 9: Theory
-	Probability of Case_Based               =   0.024%
-	Probability of Genetic_Algorithms       =   0.001%
-	Probability of Neural_Networks          =   0.272%
-	Probability of Probabilistic_Methods    =  74.309%
-	Probability of Reinforcement_Learning   =   0.002%
-	Probability of Rule_Learning            =   0.067%
-	Probability of Theory                   =  25.326%
+	Probability of Case_Based               =   0.037%
+	Probability of Genetic_Algorithms       =   0.011%
+	Probability of Neural_Networks          =   0.035%
+	Probability of Probabilistic_Methods    =  92.343%
+	Probability of Reinforcement_Learning   =   0.020%
+	Probability of Rule_Learning            =   0.054%
+	Probability of Theory                   =   7.501%
 ------------------------------------------------------------
 Example 10: Case_Based
 	Probability of Case_Based               = 100.000%

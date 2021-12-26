@@ -1,9 +1,9 @@
 """
-Title: Graph attention networks for node classification
+Title: Graph attention network (GAT) for node classification
 Author: [akensert](https://github.com/akensert)
 Date created: 2021/09/13
-Last modified: 2021/09/13
-Description: An implementation of Graph Attention Networks (GATs) for node classification.
+Last modified: 2021/12/26
+Description: An implementation of a Graph Attention Network (GAT) for node classification.
 """
 """
 ## Introduction
@@ -152,13 +152,11 @@ resulting in `e_{ij}` (for all `j`).
 `||` denotes a concatenation, `_{i}` corresponds to the source node, and `_{j}`
 corresponds to a given 1-hop neighbor node.
 2. Normalizes `e_{ij}` via softmax, so as the sum of incoming edges' attention scores
-to the source node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1.
-(Notice, in this tutorial, *incoming edges* are defined as edges
-pointing from the *source paper* (the paper *citing*) to the *target paper* (the paper *cited*),
-which is counter inuitive. However, this seems to work better in practice.
-In other words, we want to learn the label of the source paper based on what it cites (target papers).)
+to the target node (`sum_{k}{e_{norm}_{ik}}`) will add up to 1.
 3. Applies attention scores `e_{norm}_{ij}` to `z_{j}`
 and adds it to the new source node state `h^{l+1}_{i}`, for all `j`.
+
+In other words, we want to learn the label of the target paper based on what cites it (source papers).
 """
 
 
