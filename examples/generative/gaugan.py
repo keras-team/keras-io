@@ -344,7 +344,7 @@ a distribution.
 
 
 def build_encoder(image_shape, encoder_downsample_factor=64, latent_dim=256):
-    input_image = layers.Input(shape=image_shape)
+    input_image = keras.Input(shape=image_shape)
     x = downsample(encoder_downsample_factor, 3, apply_norm=False)(input_image)
     x = downsample(2 * encoder_downsample_factor, 3)(x)
     x = downsample(4 * encoder_downsample_factor, 3)(x)
@@ -373,8 +373,8 @@ natural way for multi-modal synthesis.
 
 
 def build_generator(mask_shape, latent_dim=256):
-    latent = Input(shape=(latent_dim))
-    mask = Input(shape=mask_shape)
+    latent = keras.Input(shape=(latent_dim))
+    mask = keras.Input(shape=mask_shape)
     x = layers.Dense(16384)(latent)
     x = layers.Reshape((4, 4, 1024))(x)
     x = ResBlock(filters=1024)(x, mask)
@@ -391,7 +391,7 @@ def build_generator(mask_shape, latent_dim=256):
     x = layers.UpSampling2D((2, 2))(x)
     x = tf.nn.leaky_relu(x, 0.2)
     output_image = tf.nn.tanh(layers.Conv2D(3, 4, padding="same")(x))
-    return Model([latent, mask], output_image, name="generator")
+    return keras.Model([latent, mask], output_image, name="generator")
 
 
 """
