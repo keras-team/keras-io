@@ -1,8 +1,8 @@
 """
-Title: Message-passing neural network for molecular property prediction
+Title: Message-passing neural network (MPNN) for molecular property prediction
 Author: [akensert](http://github.com/akensert)
 Date created: 2021/08/16
-Last modified: 2021/08/16
+Last modified: 2021/12/27
 Description: Implementation of an MPNN to predict blood-brain barrier permeability.
 """
 """
@@ -83,6 +83,11 @@ sudo apt-get -qq install graphviz
 ### Import packages
 """
 
+import os
+
+# Temporary suppress tf logs
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -94,9 +99,8 @@ from rdkit import Chem
 from rdkit import RDLogger
 from rdkit.Chem.Draw import IPythonConsole
 from rdkit.Chem.Draw import MolsToGridImage
-import logging
 
-tf.get_logger().setLevel(logging.ERROR)
+# Temporary suppress warnings and RDKit logs
 warnings.filterwarnings("ignore")
 RDLogger.DisableLog("rdApp.*")
 
@@ -109,7 +113,7 @@ tf.random.set_seed(42)
 Information about the dataset can be found in
 [A Bayesian Approach to in Silico Blood-Brain Barrier Penetration Modeling](https://pubs.acs.org/doi/10.1021/ci300124c)
 and [MoleculeNet: A Benchmark for Molecular Machine Learning](https://arxiv.org/abs/1703.00564).
-The dataset will be downloaded from [MoleculeNet.ai](http://moleculenet.ai/datasets-1).
+The dataset will be downloaded from [MoleculeNet.org](https://moleculenet.org/datasets-1).
 
 ### About
 
@@ -134,7 +138,7 @@ df.iloc[96:104]
 ### Define features
 
 To encode features for atoms and bonds (which we will need later),
-we'll define two classes: `AtomFeaturizer` and `BondFeatuzier` respectively.
+we'll define two classes: `AtomFeaturizer` and `BondFeaturizer` respectively.
 
 To reduce the lines of code, i.e., to keep this tutorial short and concise,
 only about a handful of (atom and bond) features will be considered: \[atom features\]
@@ -266,15 +270,11 @@ def graph_from_molecule(molecule):
     for atom in molecule.GetAtoms():
         atom_features.append(atom_featurizer.encode(atom))
 
-        # Add self-loop. Notice, this also helps against some edge cases where the
-        # last node has no edges. Alternatively, if no self-loops are used, for these
-        # edge cases, zero-padding on the output of the edge network is needed.
+        # Add self-loops
         pair_indices.append([atom.GetIdx(), atom.GetIdx()])
         bond_features.append(bond_featurizer.encode(None))
 
-        atom_neighbors = atom.GetNeighbors()
-
-        for neighbor in atom_neighbors:
+        for neighbor in atom.GetNeighbors():
             bond = molecule.GetBondBetweenAtoms(atom.GetIdx(), neighbor.GetIdx())
             pair_indices.append([atom.GetIdx(), neighbor.GetIdx()])
             bond_features.append(bond_featurizer.encode(bond))
@@ -362,33 +362,29 @@ def prepare_batch(x_batch, y_batch):
     num_atoms = atom_features.row_lengths()
     num_bonds = bond_features.row_lengths()
 
-    # Obtain partition indices. atom_partition_indices will be used to
+    # Obtain partition indices (molecule_indicator), which will be used to
     # gather (sub)graphs from global graph in model later on
     molecule_indices = tf.range(len(num_atoms))
-    atom_partition_indices = tf.repeat(molecule_indices, num_atoms)
-    bond_partition_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
+    molecule_indicator = tf.repeat(molecule_indices, num_atoms)
 
     # Merge (sub)graphs into a global (disconnected) graph. Adding 'increment' to
     # 'pair_indices' (and merging ragged tensors) actualizes the global graph
+    gather_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
     increment = tf.cumsum(num_atoms[:-1])
-    increment = tf.pad(
-        tf.gather(increment, bond_partition_indices), [(num_bonds[0], 0)]
-    )
+    increment = tf.pad(tf.gather(increment, gather_indices), [(num_bonds[0], 0)])
     pair_indices = pair_indices.merge_dims(outer_axis=0, inner_axis=1).to_tensor()
     pair_indices = pair_indices + increment[:, tf.newaxis]
     atom_features = atom_features.merge_dims(outer_axis=0, inner_axis=1).to_tensor()
     bond_features = bond_features.merge_dims(outer_axis=0, inner_axis=1).to_tensor()
 
-    return (atom_features, bond_features, pair_indices, atom_partition_indices), y_batch
+    return (atom_features, bond_features, pair_indices, molecule_indicator), y_batch
 
 
 def MPNNDataset(X, y, batch_size=32, shuffle=False):
     dataset = tf.data.Dataset.from_tensor_slices((X, (y)))
     if shuffle:
         dataset = dataset.shuffle(1024)
-    return dataset.batch(batch_size).map(
-        prepare_batch, num_parallel_calls=tf.data.AUTOTUNE
-    )
+    return dataset.batch(batch_size).map(prepare_batch, -1).prefetch(-1)
 
 
 """
@@ -406,39 +402,33 @@ classification.
 
 The message passing step itself consists of two parts:
 
-1. The *edge network*, which passes messages from 1-hop neighbors `w^{t}_{i}` of `v^{t}`
-to `v^{t}`, based on the edge features between them (`e_{v^{t}w^{t}_{i}}`, where `t =
-0`), resulting in an updated node state `v^{t+1}`. `_{i}` denotes the `i:th` neighbor of
-`v^{t}` and `^{t}` the `t:th` state of `v` or `w`. An important feature of the edge
-network (in contrast to e.g. the relational graph convolutional network) is that it
-allows for non-discrete edge features. However, in this tutorial, only discrete edge
-features will be used.
-
+1. The *edge network*, which passes messages from 1-hop neighbors `w_{i}` of `v`
+to `v`, based on the edge features between them (`e_{vw_{i}}`),
+resulting in an updated node (state) `v'`. `w_{i}` denotes the `i:th` neighbor of
+`v`.
 
 2. The *gated recurrent unit* (GRU), which takes as input the most recent node state
-(e.g., `v^{t+1}`) and updates it based on previous node state(s) (e.g., `v^{t}`). In
-other words, the most recent node states serves as the input to the GRU, while the previous
-node state(s) are incorporated within the memory state of the GRU.
+and updates it based on previous node states. In
+other words, the most recent node state serves as the input to the GRU, while the previous
+node states are incorporated within the memory state of the GRU. This allows information
+to travel from one node state (e.g., `v`) to another (e.g., `v''`).
 
 Importantly, step (1) and (2) are repeated for `k steps`, and where at each step `1...k`,
-the radius (or # hops) of aggregated information from the source node `v` increases by 1.
+the radius (or number of hops) of aggregated information from `v` increases by 1.
 """
 
 
 class EdgeNetwork(layers.Layer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def build(self, input_shape):
         self.atom_dim = input_shape[0][-1]
         self.bond_dim = input_shape[1][-1]
         self.kernel = self.add_weight(
             shape=(self.bond_dim, self.atom_dim * self.atom_dim),
-            trainable=True,
             initializer="glorot_uniform",
+            name="kernel",
         )
         self.bias = self.add_weight(
-            shape=(self.atom_dim * self.atom_dim), trainable=True, initializer="zeros",
+            shape=(self.atom_dim * self.atom_dim), initializer="zeros", name="bias",
         )
         self.built = True
 
@@ -458,8 +448,10 @@ class EdgeNetwork(layers.Layer):
         # Apply neighborhood aggregation
         transformed_features = tf.matmul(bond_features, atom_features_neighbors)
         transformed_features = tf.squeeze(transformed_features, axis=-1)
-        aggregated_features = tf.math.segment_sum(
-            transformed_features, pair_indices[:, 0]
+        aggregated_features = tf.math.unsorted_segment_sum(
+            transformed_features,
+            pair_indices[:, 0],
+            num_segments=tf.shape(atom_features)[0],
         )
         return aggregated_features
 
@@ -480,17 +472,18 @@ class MessagePassing(layers.Layer):
     def call(self, inputs):
         atom_features, bond_features, pair_indices = inputs
 
-        # Pad atom features if number of desired units exceeds atom_features dim
+        # Pad atom features if number of desired units exceeds atom_features dim.
+        # Alternatively, a dense layer could be used here.
         atom_features_updated = tf.pad(atom_features, [(0, 0), (0, self.pad_length)])
 
         # Perform a number of steps of message passing
         for i in range(self.steps):
-            # Aggregate atom_features from neighbors
+            # Aggregate information from neighbors
             atom_features_aggregated = self.message_step(
                 [atom_features_updated, bond_features, pair_indices]
             )
 
-            # Update aggregated atom_features via a step of GRU
+            # Update node state via a step of GRU
             atom_features_updated, _ = self.update_step(
                 atom_features_aggregated, atom_features_updated
             )
@@ -505,15 +498,15 @@ into subgraphs (correspoding to each molecule in the batch) and subsequently
 reduced to graph-level embeddings. In the
 [original paper](https://arxiv.org/abs/1704.01212), a
 [set-to-set layer](https://arxiv.org/abs/1511.06391) was used for this purpose.
-In this tutorial however, a transformer encoder will be used. Specifically:
+In this tutorial however, a transformer encoder + average pooling will be used. Specifically:
 
 * the k-step-aggregated node states will be partitioned into the subgraphs
 (corresponding to each molecule in the batch);
 * each subgraph will then be padded to match the subgraph with the greatest number of nodes, followed
 by a `tf.stack(...)`;
-* the (stacked) padded tensor, encoding subgraphs (each subgraph containing sets of node states), are
+* the (stacked padded) tensor, encoding subgraphs (each subgraph containing a set of node states), are
 masked to make sure the paddings don't interfere with training;
-* finally, the padded tensor is passed to the transformer followed by an average pooling.
+* finally, the tensor is passed to the transformer followed by average pooling.
 """
 
 
@@ -523,48 +516,54 @@ class PartitionPadding(layers.Layer):
         self.batch_size = batch_size
 
     def call(self, inputs):
-        atom_features, atom_partition_indices = inputs
+
+        atom_features, molecule_indicator = inputs
 
         # Obtain subgraphs
-        atom_features = tf.dynamic_partition(
-            atom_features, atom_partition_indices, self.batch_size
+        atom_features_partitioned = tf.dynamic_partition(
+            atom_features, molecule_indicator, self.batch_size
         )
 
         # Pad and stack subgraphs
-        num_atoms = [tf.shape(f)[0] for f in atom_features]
+        num_atoms = [tf.shape(f)[0] for f in atom_features_partitioned]
         max_num_atoms = tf.reduce_max(num_atoms)
-        atom_features_padded = tf.stack(
+        atom_features_stacked = tf.stack(
             [
                 tf.pad(f, [(0, max_num_atoms - n), (0, 0)])
-                for f, n in zip(atom_features, num_atoms)
+                for f, n in zip(atom_features_partitioned, num_atoms)
             ],
             axis=0,
         )
 
-        # Remove empty subgraphs (usually for last batch)
-        nonempty_examples = tf.where(tf.reduce_sum(atom_features_padded, (1, 2)) != 0)
-        nonempty_examples = tf.squeeze(nonempty_examples, axis=-1)
+        # Remove empty subgraphs (usually for last batch in dataset)
+        gather_indices = tf.where(tf.reduce_sum(atom_features_stacked, (1, 2)) != 0)
+        gather_indices = tf.squeeze(gather_indices, axis=-1)
+        return tf.gather(atom_features_stacked, gather_indices, axis=0)
 
-        return tf.gather(atom_features_padded, nonempty_examples, axis=0)
 
-
-class TransformerEncoder(layers.Layer):
-    def __init__(self, num_heads=8, embed_dim=64, dense_dim=512, **kwargs):
+class TransformerEncoderReadout(layers.Layer):
+    def __init__(
+        self, num_heads=8, embed_dim=64, dense_dim=512, batch_size=32, **kwargs
+    ):
         super().__init__(**kwargs)
 
+        self.partition_padding = PartitionPadding(batch_size)
         self.attention = layers.MultiHeadAttention(num_heads, embed_dim)
         self.dense_proj = keras.Sequential(
             [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
-        self.supports_masking = True
+        self.average_pooling = layers.GlobalAveragePooling1D()
 
-    def call(self, inputs, mask=None):
-        attention_mask = mask[:, tf.newaxis, :] if mask is not None else None
-        attention_output = self.attention(inputs, inputs, attention_mask=attention_mask)
-        proj_input = self.layernorm_1(inputs + attention_output)
-        return self.layernorm_2(proj_input + self.dense_proj(proj_input))
+    def call(self, inputs):
+        x = self.partition_padding(inputs)
+        padding_mask = tf.reduce_any(tf.not_equal(x, 0.0), axis=-1)
+        padding_mask = padding_mask[:, tf.newaxis, tf.newaxis, :]
+        attention_output = self.attention(x, x, attention_mask=padding_mask)
+        proj_input = self.layernorm_1(x + attention_output)
+        proj_output = self.layernorm_2(proj_input + self.dense_proj(proj_input))
+        return self.average_pooling(proj_output)
 
 
 """
@@ -585,29 +584,25 @@ def MPNNModel(
     num_attention_heads=8,
     dense_units=512,
 ):
+
     atom_features = layers.Input((atom_dim), dtype="float32", name="atom_features")
     bond_features = layers.Input((bond_dim), dtype="float32", name="bond_features")
     pair_indices = layers.Input((2), dtype="int32", name="pair_indices")
-    atom_partition_indices = layers.Input(
-        (), dtype="int32", name="atom_partition_indices"
-    )
+    molecule_indicator = layers.Input((), dtype="int32", name="molecule_indicator")
 
     x = MessagePassing(message_units, message_steps)(
         [atom_features, bond_features, pair_indices]
     )
 
-    x = PartitionPadding(batch_size)([x, atom_partition_indices])
+    x = TransformerEncoderReadout(
+        num_attention_heads, message_units, dense_units, batch_size
+    )([x, molecule_indicator])
 
-    x = layers.Masking()(x)
-
-    x = TransformerEncoder(num_attention_heads, message_units, dense_units)(x)
-
-    x = layers.GlobalAveragePooling1D()(x)
     x = layers.Dense(dense_units, activation="relu")(x)
     x = layers.Dense(1, activation="sigmoid")(x)
 
     model = keras.Model(
-        inputs=[atom_features, bond_features, pair_indices, atom_partition_indices],
+        inputs=[atom_features, bond_features, pair_indices, molecule_indicator],
         outputs=[x],
     )
     return model
@@ -664,6 +659,6 @@ MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 
 In this tutorial, we demonstarted a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
-first had to construct graphs from SMILES, and then build a Keras model that could
-operate on these graphs.
+first had to construct graphs from SMILES, then build a Keras model that could
+operate on these graphs, and finally train the model to make the predictions.
 """
