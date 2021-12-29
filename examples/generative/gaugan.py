@@ -314,7 +314,7 @@ def downsample(
     apply_activation=True,
     apply_dropout=False,
 ):
-    block = tf.keras.Sequential()
+    block = keras.Sequential()
     block.add(
         layers.Conv2D(
             channels,
@@ -468,7 +468,7 @@ class VGGFeatureMatchingLoss(keras.losses.Loss):
         vgg = keras.applications.VGG19(include_top=False, weights="imagenet")
         layer_outputs = [vgg.get_layer(x).output for x in self.encoder_layers]
         self.vgg_model = keras.Model(vgg.input, layer_outputs, name="VGG")
-        self.mae = tf.keras.losses.MeanAbsoluteError()
+        self.mae = keras.losses.MeanAbsoluteError()
 
     def call(self, y_true, y_pred):
         y_true = keras.applications.vgg19.preprocess_input(127.5 * (y_true + 1))
