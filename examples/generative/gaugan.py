@@ -422,12 +422,12 @@ GauGAN uses the following loss functions:
 
 * Generator:
     * Expectation over the discriminator predictions.
-* [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) for
-learning the mean and variance predicted by the encoder. 
-* Minimization between the discriminator predictions on original and generated images to
-align the feature space of the generator. 
-* [Perceptual loss](https://arxiv.org/abs/1603.08155) for encouraging the generated
-images to have perceptual quality.
+    * [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
+    for learning the mean and variance predicted by the encoder. 
+    * Minimization between the discriminator predictions on original and generated
+    images to align the feature space of the generator. 
+    * [Perceptual loss](https://arxiv.org/abs/1603.08155) for encouraging the generated
+    images to have perceptual quality.
 
 * Discriminator:
     * [Hinge loss](https://en.wikipedia.org/wiki/Hinge_loss). 
