@@ -515,7 +515,7 @@ for epoch in range(epochs):
             print("adversarial loss at step %d: %.2f" % (step, g_loss))
 
             # Save one generated image
-            img = keras.utils.array_to_img(generated_images[0] * 255.0, scale=False)
+            img = tf.keras.utils.array_to_img(generated_images[0] * 255.0, scale=False)
             img.save(os.path.join(save_dir, "generated_img" + str(step) + ".png"))
 
         # To limit execution time we stop after 10 steps.
