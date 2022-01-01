@@ -124,9 +124,9 @@ def load(image_files, batch_size, is_train=True):
         image,
         segmentation_map,
         labels,
-        crop_size=tf.convert_to_tensor((IMG_HEIGHT, IMG_WIDTH)),
+        crop_size=(IMG_HEIGHT, IMG_WIDTH),
     ):
-        crop_size = tf.convert_to_tensor((IMG_HEIGHT, IMG_WIDTH))
+        crop_size = tf.convert_to_tensor(crop_size)
         image_shape = tf.shape(image)[:2]
         margins = image_shape - crop_size
         y1 = tf.random.uniform(shape=(), maxval=margins[0], dtype=tf.int32)
