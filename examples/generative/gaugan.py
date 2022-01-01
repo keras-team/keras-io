@@ -115,7 +115,7 @@ print(f"Total validation samples: {len(val_files)}.")
 
 BATCH_SIZE = 4
 IMG_HEIGHT = IMG_WIDTH = 256
-N_CLASS = 12
+NUM_CLASSES = 12
 AUTOTUNE = tf.data.AUTOTUNE
 
 
@@ -126,6 +126,7 @@ def load(image_files, batch_size, is_train=True):
         labels,
         crop_size=tf.convert_to_tensor((IMG_HEIGHT, IMG_WIDTH)),
     ):
+        crop_size = tf.convert_to_tensor((IMG_HEIGHT, IMG_WIDTH))
         image_shape = tf.shape(image)[:2]
         margins = image_shape - crop_size
         y1 = tf.random.uniform(shape=(), maxval=margins[0], dtype=tf.int32)
@@ -167,7 +168,7 @@ def load(image_files, batch_size, is_train=True):
     dataset = dataset.map(_load_data_tf, num_parallel_calls=AUTOTUNE)
     dataset = dataset.map(_random_crop, num_parallel_calls=AUTOTUNE)
     dataset = dataset.map(
-        lambda x, y, z: (x, y, tf.one_hot(z, N_CLASS)), num_parallel_calls=AUTOTUNE
+        lambda x, y, z: (x, y, tf.one_hot(z, NUM_CLASSES)), num_parallel_calls=AUTOTUNE
     )
     return dataset.batch(batch_size, drop_remainder=True)
 
@@ -199,7 +200,7 @@ Note that in the rest of this example, we have used a couple of figures from the
 """
 
 """
-# Custom layers
+## Custom layers
 
 In the following block we implement the following layers:
 
@@ -232,8 +233,8 @@ the proposed SPADE is better suited for semantic image synthesis.
 
 
 class SPADE(layers.Layer):
-    def __init__(self, filters, epsilon=1e-5):
-        super(SPADE, self).__init__()
+    def __init__(self, filters, epsilon=1e-5, **kwargs):
+        super().__init__(**kwargs)
         self.epsilon = epsilon
         self.conv = layers.Conv2D(128, 3, padding="same", activation="relu")
         self.conv_gamma = layers.Conv2D(filters, 3, padding="same")
@@ -255,8 +256,8 @@ class SPADE(layers.Layer):
 
 
 class ResBlock(layers.Layer):
-    def __init__(self, filters):
-        super(ResBlock, self).__init__()
+    def __init__(self, filters, **kwargs):
+        super().__init__(**kwargs)
         self.filters = filters
 
     def build(self, input_shape):
@@ -287,8 +288,8 @@ class ResBlock(layers.Layer):
 
 
 class GaussianSampler(layers.Layer):
-    def __init__(self, batch_size, latent_dim):
-        super(GaussianSampler, self).__init__()
+    def __init__(self, batch_size, latent_dim, **kwargs):
+        super().__init__(**kwargs)
         self.batch_size = batch_size
         self.latent_dim = latent_dim
 
@@ -443,8 +444,8 @@ def kl_divergence_loss(mean, variance):
 
 
 class FeatureMatchingLoss(keras.losses.Loss):
-    def __init__(self, *args, **kwargs):
-        super(FeatureMatchingLoss, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mae = keras.losses.MeanAbsoluteError()
 
     def call(self, y_true, y_pred):
@@ -455,8 +456,8 @@ class FeatureMatchingLoss(keras.losses.Loss):
 
 
 class VGGFeatureMatchingLoss(keras.losses.Loss):
-    def __init__(self, *args, **kwargs):
-        super(VGGFeatureMatchingLoss, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.encoder_layers = [
             "block1_conv1",
             "block2_conv1",
@@ -482,8 +483,8 @@ class VGGFeatureMatchingLoss(keras.losses.Loss):
 
 
 class DiscriminatorLoss(keras.losses.Loss):
-    def __init__(self, *args, **kwargs):
-        super(DiscriminatorLoss, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.hinge_loss = keras.losses.Hinge()
 
     def call(self, y, is_real):
@@ -542,23 +543,22 @@ class GauGAN(keras.Model):
     def __init__(
         self,
         image_size,
-        n_classes,
+        num_classes,
         batch_size,
         latent_dim,
         feature_loss_coeff=10,
         vgg_feature_loss_coeff=0.1,
         kl_divergence_loss_coeff=0.1,
-        *args,
         **kwargs,
     ):
-        super(GauGAN, self).__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         self.image_size = image_size
         self.latent_dim = latent_dim
         self.batch_size = batch_size
-        self.n_classes = n_classes
+        self.num_classes = num_classes
         self.image_shape = (image_size, image_size, 3)
-        self.mask_shape = (image_size, image_size, n_classes)
+        self.mask_shape = (image_size, image_size, num_classes)
         self.feature_loss_coeff = feature_loss_coeff
         self.vgg_feature_loss_coeff = vgg_feature_loss_coeff
         self.kl_divergence_loss_coeff = kl_divergence_loss_coeff
@@ -568,6 +568,22 @@ class GauGAN(keras.Model):
         self.encoder = build_encoder(self.image_shape)
         self.sampler = GaussianSampler(batch_size, latent_dim)
         self.patch_size, self.combined_model = self.build_combined_generator()
+
+        self.disc_loss_tracker = tf.keras.metrics.Mean(name="disc_loss")
+        self.gen_loss_tracker = tf.keras.metrics.Mean(name="gen_loss")
+        self.feat_loss_tracker = tf.keras.metrics.Mean(name="feat_loss")
+        self.vgg_loss_tracker = tf.keras.metrics.Mean(name="vgg_loss")
+        self.kl_loss_tracker = tf.keras.metrics.Mean(name="kl_loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.disc_loss_tracker,
+            self.gen_loss_tracker,
+            self.feat_loss_tracker,
+            self.vgg_loss_tracker,
+            self.kl_loss_tracker,
+        ]
 
     def build_combined_generator(self):
         # This method builds a model that takes as inputs the following:
@@ -590,8 +606,8 @@ class GauGAN(keras.Model):
         )
         return patch_size, combined_model
 
-    def compile(self, gen_lr=1e-4, disc_lr=4e-4, *args, **kwargs):
-        super(GauGAN, self).compile(*args, **kwargs)
+    def compile(self, gen_lr=1e-4, disc_lr=4e-4, **kwargs):
+        super().compile(**kwargs)
         self.generator_optimizer = keras.optimizers.Adam(
             gen_lr, beta_1=0.0, beta_2=0.999
         )
@@ -658,13 +674,15 @@ class GauGAN(keras.Model):
         (generator_loss, feature_loss, vgg_loss, kl_loss) = self.train_generator(
             latent_vector, segmentation_map, labels, image, mean, variance
         )
-        return {
-            "discriminator_loss": discriminator_loss,
-            "generator_loss": generator_loss,
-            "feature_loss": feature_loss,
-            "vgg_loss": vgg_loss,
-            "kl_loss": kl_loss,
-        }
+
+        # Report progress.
+        self.disc_loss_tracker.update_state(discriminator_loss)
+        self.gen_loss_tracker.update_state(generator_loss)
+        self.feat_loss_tracker.update_state(feature_loss)
+        self.vgg_loss_tracker.update_state(vgg_loss)
+        self.kl_loss_tracker.update_state(kl_loss)
+        results = {m.name: m.result() for m in self.metrics}
+        return results
 
     def test_step(self, data):
         segmentation_map, image, labels = data
@@ -696,13 +714,14 @@ class GauGAN(keras.Model):
         )
         total_generator_loss = g_loss + kl_loss + vgg_loss + feature_loss
 
-        return {
-            "discriminator_loss": total_discriminator_loss,
-            "generator_loss": total_generator_loss,
-            "feature_loss": feature_loss,
-            "vgg_loss": vgg_loss,
-            "kl_loss": kl_loss,
-        }
+        # Report progress.
+        self.disc_loss_tracker.update_state(total_discriminator_loss)
+        self.gen_loss_tracker.update_state(total_generator_loss)
+        self.feat_loss_tracker.update_state(feature_loss)
+        self.vgg_loss_tracker.update_state(vgg_loss)
+        self.kl_loss_tracker.update_state(kl_loss)
+        results = {m.name: m.result() for m in self.metrics}
+        return results
 
     def call(self, inputs):
         latent_vectors, labels = inputs
@@ -713,7 +732,7 @@ class GauGAN(keras.Model):
 ## GauGAN training
 """
 
-gaugan = GauGAN(IMG_HEIGHT, N_CLASS, BATCH_SIZE, latent_dim=256)
+gaugan = GauGAN(IMG_HEIGHT, NUM_CLASSES, BATCH_SIZE, latent_dim=256)
 gaugan.compile()
 history = gaugan.fit(
     train_dataset,
