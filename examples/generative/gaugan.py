@@ -8,46 +8,46 @@ Description: Implementing a GauGAN for conditional image generation.
 """
 ## Introduction
 
-In this example, we present an implementation of GauGAN proposed in
+In this example, we present an implementation of the GauGAN architecture proposed in
 [Semantic Image Synthesis with Spatially-Adaptive Normalization](https://arxiv.org/abs/1903.07291).
 Briefly, GauGAN uses a Generative Adversarial Network (GAN) to generate realistic images
-that are conditioned on cue images and segmentation maps as shown below
-([image source](https://nvlabs.github.io/SPADE/)).
+that are conditioned on cue images and segmentation maps, as shown below
+([image source](https://nvlabs.github.io/SPADE/)):
 
 ![](https://i.ibb.co/p305dzv/image.png)
 
-The main components of a GauGAN can be listed as follows:
+The main components of a GauGAN are:
 
-- **SPADE aka spatially-adaptive normalization** : The authors of GauGAN argue that the
+- **SPADE (aka spatially-adaptive normalization)** : The authors of GauGAN argue that the
 more conventional normalization layers (such as
 [Batch Normalization](https://arxiv.org/abs/1502.03167))
-vanish the semantic information typically obtained from segmentation maps when they
-are provided as inputs. To remedy this problem, the authors introduce SPADE, a
-normalization particularly suitable for learning affine parameters (scale and bias)
+destroy the semantic information obtained from segmentation maps that
+are provided as inputs. To address this problem, the authors introduce SPADE, a
+normalization layer particularly suitable for learning affine parameters (scale and bias)
 that are spatially adaptive. This is done by learning different sets of scaling and
 bias parameters for each semantic label.
-- **Variational formulation** : Inspired by the 
+- **Variational encoder**: Inspired by 
 [Variational Autoencoders](https://arxiv.org/abs/1312.6114), GauGAN uses a
 variational formulation wherein an encoder learns the mean and variance of a
 normal (Gaussian) distribution from the cue images. This is where GauGAN gets its name
 from. The generator of GauGAN takes as inputs the latents sampled from the Gaussian
 distribution as well as the one-hot encoded semantic segmentation label maps. The cue
 images act as style images that guide the generator to stylistic generation. This
-variational formulation helps GauGAN achieve diversity as well as fidelity.
+variational formulation helps GauGAN achieve image diversity as well as fidelity.
 - **Multi-scale patch discriminator** : Inspired by the
 [PatchGAN](https://paperswithcode.com/method/patchgan) model,
 GauGAN uses a discriminator that assesses a given image on a patch basis
 and produces an averaged score.
 
-As we proceed with the example, we will discuss further details of the different
-components involved in our implementation.
+As we proceed with the example, we will discuss each of the different
+components in further detail.
 
 For a thorough review of GauGAN, please refer to
 [this article](https://blog.paperspace.com/nvidia-gaugan-introduction/).
-You are also encouraged to check
-[the official GauGAN website](https://nvlabs.github.io/SPADE/) that
+We also encourage you to check out
+[the official GauGAN website](https://nvlabs.github.io/SPADE/), which
 has many creative applications of GauGAN. This example assumes that the reader is already
-familiar with the fundamental concepts of GANs. If you need a refresher the following
+familiar with the fundamental concepts of GANs. If you need a refresher, the following
 resources might be useful:
 
 * [Chapter on GANs](https://livebook.manning.com/book/deep-learning-with-python/chapter-8)
@@ -63,7 +63,7 @@ from the Deep Learning with Python book by François Chollet.
 
 We will be using the
 [Facades dataset](https://cmp.felk.cvut.cz/~tylecr1/facade/)
-for training our GauGAN model. Let's first download it and also install
+for training our GauGAN model. Let's first download it. We also install
 TensorFlow Addons.
 """
 
@@ -174,7 +174,7 @@ train_dataset = load(train_files, batch_size=BATCH_SIZE, is_train=True)
 val_dataset = load(val_files, batch_size=BATCH_SIZE, is_train=False)
 
 """
-Let's now visualize a few samples from the training set. 
+Now, let's visualize a few samples from the training set. 
 """
 
 sample_train_batch = next(iter(train_dataset))
@@ -192,14 +192,14 @@ for segmentation_map, real_image in zip(sample_train_batch[0], sample_train_batc
     plt.show()
 
 """
-Note that in the rest of this example, we have used a couple of figures from the
+Note that in the rest of this example, we use a couple of figures from the
 [original GauGAN paper](https://arxiv.org/abs/1903.07291) for convenience. 
 """
 
 """
 ## Custom layers
 
-In the following block we implement the following layers:
+In the following section, we implement the following layers:
 
 * SPADE
 * Residual block including SPADE
@@ -216,16 +216,16 @@ for synthesizing photorealistic images given an input semantic layout. Previous 
 for conditional image generation from semantic input such as
 Pix2Pix ([Isola et al.](https://arxiv.org/abs/1611.07004))
 or Pix2PixHD ([Wang et al.](https://arxiv.org/abs/1711.11585))
-directly feeds the semantic layout as input to the deep network, which is then processed
-through stacks of convolution, normalization, and nonlinearity layer. This is often
+directly feed the semantic layout as input to the deep network, which is then processed
+through stacks of convolution, normalization, and nonlinearity layers. This is often
 suboptimal as the normalization layers have a tendency to wash away semantic information.
 
-In SPADE, the segmentation mask is first projected onto an embedding space and then
+In SPADE, the segmentation mask is first projected onto an embedding space, and then
 convolved to produce the modulation parameters `γ` and `β`. Unlike prior conditional
 normalization methods, `γ` and `β` are not vectors, but tensors with spatial dimensions.
 The produced `γ` and `β` are multiplied and added to the normalized activation
 element-wise. As the modulation parameters are adaptive to the input segmentation mask,
-the proposed SPADE is better suited for semantic image synthesis.
+SPADE is better suited for semantic image synthesis.
 """
 
 
@@ -333,8 +333,8 @@ def downsample(
 
 
 """
-The GauGAN encoder consists of a few downsampling blocks and outputs mean and variance of
-a distribution. 
+The GauGAN encoder consists of a few downsampling blocks.
+It outputs the mean and variance of a distribution. 
 
 ![](https://i.imgur.com/JgAv1EW.png)
 
@@ -355,18 +355,18 @@ def build_encoder(image_shape, encoder_downsample_factor=64, latent_dim=256):
 
 
 """
-Next, we implement the generator consisting of the modified residual blocks and
-upsampling blocks. It takes latent vectors and one-hot encoded segmentation labels and
-produces images. 
+Next, we implement the generator, which consists of the modified residual blocks and
+upsampling blocks. It takes latent vectors and one-hot encoded segmentation labels, and
+produces new images.
 
 ![](https://i.imgur.com/9iP1TsB.png)
 
 With SPADE, there is no need to feed the segmentation map to the first layer of the
 generator, since the latent inputs have enough structural information about the style we
-want the generator to emulate. We also discard encoder part of the generator, which is
-commonly used in prior architectures. This not only results in a more light-weight
-generator network, but also it can take a random vector as input, enabling a simple and
-natural way for multi-modal synthesis.
+want the generator to emulate. We also discard the encoder part of the generator, which is
+commonly used in prior architectures. This results in a more lightweight
+generator network, which can also take a random vector as input, enabling a simple and
+natural path to multi-modal synthesis.
 """
 
 
@@ -393,8 +393,8 @@ def build_generator(mask_shape, latent_dim=256):
 
 
 """
-The discriminator takes a segmentation map and an image and then concatenates them. It
-then predicts if patches of the concatenated image is real or fake. 
+The discriminator takes a segmentation map and an image and concatenates them. It
+then predicts if patches of the concatenated image are real or fake. 
 
 ![](https://i.imgur.com/rn71PlM.png)
 """
@@ -792,16 +792,16 @@ for _ in range(5):
 ## Final words
 
 * The dataset we used in this example is a small one. For obtaining even better results
-it is recommended to use a bigger dataset. GauGAN results were demonstrated with the
+we recommend to use a bigger dataset. GauGAN results were demonstrated with the
 [COCO-Stuff](https://github.com/nightrome/cocostuff) and
 [CityScapes](https://www.cityscapes-dataset.com/) datasets. 
-* If you found this example interesting and exciting you might want to check out
+* If you found this example interesting and exciting, you might want to check out
 [our repository](https://github.com/soumik12345/tf2_gans) which we are
-building currently. This will include reimplementations of popular GANs and pre-trained
+currently building. It will include reimplementations of popular GANs and pretrained
 models. Our focus will be on readibility and making the code as accessible as possible.
 Our plain is to first train our implementation of GauGAN (following the code of
 this example) on a bigger dataset and then make the repository public. We welcome
-contributions. 
+contributions!
 * Recently GauGAN2 was also released. You can check it out
 [here](https://blogs.nvidia.com/blog/2021/11/22/gaugan2-ai-art-demo/). 
 
