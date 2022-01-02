@@ -1,6 +1,6 @@
 """
 Title: GauGAN for conditional image generation
-Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak) 
+Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/26
 Last modified: 2020/12/26
 Description: Implementing a GauGAN for conditional image generation.
