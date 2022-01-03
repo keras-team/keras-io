@@ -2,7 +2,7 @@
 Title: GauGAN for conditional image generation
 Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/26
-Last modified: 2020/12/26
+Last modified: 2022/01/03
 Description: Implementing a GauGAN for conditional image generation.
 """
 """
@@ -53,6 +53,7 @@ resources might be useful:
 * [Chapter on GANs](https://livebook.manning.com/book/deep-learning-with-python/chapter-8)
 from the Deep Learning with Python book by François Chollet.
 * GAN implementations on keras.io:
+
     * [Data efficient GANs](https://keras.io/examples/generative/gan_ada)
     * [CycleGAN](https://keras.io/examples/generative/cyclegan)
     * [Conditional GAN](https://keras.io/examples/generative/conditional_gan)
@@ -68,9 +69,9 @@ TensorFlow Addons.
 """
 
 """shell
-!gdown https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
-!unzip -q facades_data.zip
-!pip install -qqq tensorflow_addons
+gdown https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+unzip -q facades_data.zip
+pip install -qqq tensorflow_addons
 """
 
 """
@@ -419,6 +420,7 @@ def build_discriminator(image_shape, downsample_factor=64):
 GauGAN uses the following loss functions:
 
 * Generator:
+
     * Expectation over the discriminator predictions.
     * [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
     for learning the mean and variance predicted by the encoder.
@@ -428,6 +430,7 @@ GauGAN uses the following loss functions:
     images to have perceptual quality.
 
 * Discriminator:
+
     * [Hinge loss](https://en.wikipedia.org/wiki/Hinge_loss).
 """
 
