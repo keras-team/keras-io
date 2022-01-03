@@ -1,11 +1,17 @@
-"""
-Title: GauGAN for conditional image generation
-Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/12/26
-Last modified: 2020/12/26
-Description: Implementing a GauGAN for conditional image generation.
-"""
-"""
+
+# GauGAN for conditional image generation
+
+**Author:** [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2021/12/26<br>
+**Last modified:** 2020/12/26<br>
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/gaugan.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/gaugan.py)
+
+
+**Description:** Implementing a GauGAN for conditional image generation.
+
+---
 ## Introduction
 
 In this example, we present an implementation of the GauGAN architecture proposed in
@@ -56,27 +62,36 @@ from the Deep Learning with Python book by François Chollet.
     * [Data efficient GANs](https://keras.io/examples/generative/gan_ada)
     * [CycleGAN](https://keras.io/examples/generative/cyclegan)
     * [Conditional GAN](https://keras.io/examples/generative/conditional_gan)
-"""
 
-"""
+---
 ## Data collection
 
 We will be using the
 [Facades dataset](https://cmp.felk.cvut.cz/~tylecr1/facade/)
 for training our GauGAN model. Let's first download it. We also install
 TensorFlow Addons.
-"""
 
-"""shell
-!gdown https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
-!unzip -q facades_data.zip
-!pip install -qqq tensorflow_addons
-"""
 
-"""
+```python
+!!gdown https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+!!unzip -q facades_data.zip
+!!pip install -qqq tensorflow_addons
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+[]
+
+```
+</div>
+---
 ## Imports
-"""
 
+
+```python
 import os
 import random
 import numpy as np
@@ -90,11 +105,13 @@ from tensorflow.keras import layers
 
 from glob import glob
 from PIL import Image
+```
 
-"""
+---
 ## Data splitting
-"""
 
+
+```python
 PATH = "./facades_data/"
 SPLIT = 0.2
 
@@ -108,11 +125,21 @@ val_files = files[split_index:]
 print(f"Total samples: {len(files)}.")
 print(f"Total training samples: {len(train_files)}.")
 print(f"Total validation samples: {len(val_files)}.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total samples: 378.
+Total training samples: 302.
+Total validation samples: 76.
+
+```
+</div>
+---
 ## Data loader
-"""
 
+
+```python
 BATCH_SIZE = 4
 IMG_HEIGHT = IMG_WIDTH = 256
 NUM_CLASSES = 12
@@ -172,11 +199,12 @@ def load(image_files, batch_size, is_train=True):
 
 train_dataset = load(train_files, batch_size=BATCH_SIZE, is_train=True)
 val_dataset = load(val_files, batch_size=BATCH_SIZE, is_train=False)
+```
 
-"""
 Now, let's visualize a few samples from the training set.
-"""
 
+
+```python
 sample_train_batch = next(iter(train_dataset))
 print(f"Segmentation map batch shape: {sample_train_batch[0].shape}.")
 print(f"Image batch shape: {sample_train_batch[1].shape}.")
@@ -190,13 +218,35 @@ for segmentation_map, real_image in zip(sample_train_batch[0], sample_train_batc
     fig.add_subplot(1, 2, 2).set_title("Real Image")
     plt.imshow((real_image + 1) / 2)
     plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Segmentation map batch shape: (4, 256, 256, 3).
+Image batch shape: (4, 256, 256, 3).
+One-hot encoded label map shape: (4, 256, 256, 12).
+
+```
+</div>
+![png](/img/examples/generative/gaugan/gaugan_11_1.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_11_2.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_11_3.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_11_4.png)
+
+
 Note that in the rest of this example, we use a couple of figures from the
 [original GauGAN paper](https://arxiv.org/abs/1903.07291) for convenience.
-"""
 
-"""
+---
 ## Custom layers
 
 In the following section, we implement the following layers:
@@ -204,9 +254,7 @@ In the following section, we implement the following layers:
 * SPADE
 * Residual block including SPADE
 * Gaussian sampler
-"""
 
-"""
 ### Some more notes on SPADE
 
 ![](https://i.imgur.com/DgMWrrs.png)
@@ -226,8 +274,9 @@ normalization methods, `γ` and `β` are not vectors, but tensors with spatial d
 The produced `γ` and `β` are multiplied and added to the normalized activation
 element-wise. As the modulation parameters are adaptive to the input segmentation mask,
 SPADE is better suited for semantic image synthesis.
-"""
 
+
+```python
 
 class SPADE(layers.Layer):
     def __init__(self, filters, epsilon=1e-5, **kwargs):
@@ -298,11 +347,12 @@ class GaussianSampler(layers.Layer):
         samples = means + tf.exp(0.5 * variance) * epsilon
         return samples
 
+```
 
-"""
 Next, we implement the downsampling block for the encoder.
-"""
 
+
+```python
 
 def downsample(
     channels,
@@ -331,15 +381,15 @@ def downsample(
         block.add(layers.Dropout(0.5))
     return block
 
+```
 
-"""
 The GauGAN encoder consists of a few downsampling blocks. It outputs the mean and
 variance of a distribution.
 
 ![](https://i.imgur.com/JgAv1EW.png)
 
-"""
 
+```python
 
 def build_encoder(image_shape, encoder_downsample_factor=64, latent_dim=256):
     input_image = keras.Input(shape=image_shape)
@@ -353,8 +403,8 @@ def build_encoder(image_shape, encoder_downsample_factor=64, latent_dim=256):
     variance = layers.Dense(latent_dim, name="variance")(x)
     return keras.Model(input_image, [mean, variance], name="encoder")
 
+```
 
-"""
 Next, we implement the generator, which consists of the modified residual blocks and
 upsampling blocks. It takes latent vectors and one-hot encoded segmentation labels, and
 produces new images.
@@ -367,8 +417,9 @@ want the generator to emulate. We also discard the encoder part of the generator
 commonly used in prior architectures. This results in a more lightweight
 generator network, which can also take a random vector as input, enabling a simple and
 natural path to multi-modal synthesis.
-"""
 
+
+```python
 
 def build_generator(mask_shape, latent_dim=256):
     latent = keras.Input(shape=(latent_dim))
@@ -391,14 +442,15 @@ def build_generator(mask_shape, latent_dim=256):
     output_image = tf.nn.tanh(layers.Conv2D(3, 4, padding="same")(x))
     return keras.Model([latent, mask], output_image, name="generator")
 
+```
 
-"""
 The discriminator takes a segmentation map and an image and concatenates them. It
 then predicts if patches of the concatenated image are real or fake.
 
 ![](https://i.imgur.com/rn71PlM.png)
-"""
 
+
+```python
 
 def build_discriminator(image_shape, downsample_factor=64):
     input_image_A = keras.Input(shape=image_shape, name="discriminator_image_A")
@@ -412,8 +464,9 @@ def build_discriminator(image_shape, downsample_factor=64):
     outputs = [x1, x2, x3, x4, x5]
     return keras.Model([input_image_A, input_image_B], outputs)
 
+```
 
-"""
+---
 ## Loss functions
 
 GauGAN uses the following loss functions:
@@ -429,8 +482,9 @@ GauGAN uses the following loss functions:
 
 * Discriminator:
     * [Hinge loss](https://en.wikipedia.org/wiki/Hinge_loss).
-"""
 
+
+```python
 
 def generator_loss(y):
     return -tf.reduce_mean(y)
@@ -488,13 +542,15 @@ class DiscriminatorLoss(keras.losses.Loss):
         label = 1.0 if is_real else -1.0
         return self.hinge_loss(label, y)
 
+```
 
-"""
+---
 ## GAN monitor callback
 
 Next, we implement a callback to monitor the GauGAN results while it is training.
-"""
 
+
+```python
 
 class GanMonitor(keras.callbacks.Callback):
     def __init__(self, val_dataset, n_samples, epoch_interval=5):
@@ -527,14 +583,16 @@ class GanMonitor(keras.callbacks.Callback):
                     ax[2].set_title("Generated", fontsize=20)
                 plt.show()
 
+```
 
-"""
+---
 ## Subclassed GauGAN model
 
 Finally, we put everything together inside a subclassed model (from `tf.keras.Model`)
 overriding its `train_step()` method.
-"""
 
+
+```python
 
 class GauGAN(keras.Model):
     def __init__(
@@ -724,11 +782,13 @@ class GauGAN(keras.Model):
         latent_vectors, labels = inputs
         return self.generator([latent_vectors, labels])
 
+```
 
-"""
+---
 ## GauGAN training
-"""
 
+
+```python
 gaugan = GauGAN(IMG_HEIGHT, NUM_CLASSES, BATCH_SIZE, latent_dim=256)
 gaugan.compile()
 history = gaugan.fit(
@@ -755,11 +815,130 @@ plot_history("gen_loss")
 plot_history("feat_loss")
 plot_history("vgg_loss")
 plot_history("kl_loss")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/15
+75/75 [==============================] - ETA: 0s - disc_loss: 1.1181 - gen_loss: 116.4687 - feat_loss: 10.2326 - vgg_loss: 17.5172 - kl_loss: 88.5735
+
+```
+</div>
+![png](/img/examples/generative/gaugan/gaugan_31_1.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_2.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_3.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_4.png)
+
+
+<div class="k-default-codeblock">
+```
+75/75 [==============================] - 67s 632ms/step - disc_loss: 1.1181 - gen_loss: 116.4687 - feat_loss: 10.2326 - vgg_loss: 17.5172 - kl_loss: 88.5735 - val_disc_loss: 0.9244 - val_gen_loss: 118.6727 - val_feat_loss: 11.3227 - val_vgg_loss: 17.4406 - val_kl_loss: 88.9041
+Epoch 2/15
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.8788 - gen_loss: 117.5533 - feat_loss: 11.5689 - vgg_loss: 16.7224 - kl_loss: 88.7425 - val_disc_loss: 0.8183 - val_gen_loss: 118.7890 - val_feat_loss: 11.3244 - val_vgg_loss: 17.0826 - val_kl_loss: 88.6247
+Epoch 3/15
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.7135 - gen_loss: 117.9656 - feat_loss: 11.5102 - vgg_loss: 16.6106 - kl_loss: 89.0677 - val_disc_loss: 0.6852 - val_gen_loss: 118.3834 - val_feat_loss: 12.0710 - val_vgg_loss: 17.0293 - val_kl_loss: 89.4623
+Epoch 4/15
+75/75 [==============================] - 39s 523ms/step - disc_loss: 0.6472 - gen_loss: 117.5010 - feat_loss: 11.2637 - vgg_loss: 16.4862 - kl_loss: 88.7997 - val_disc_loss: 0.5347 - val_gen_loss: 119.2691 - val_feat_loss: 11.2768 - val_vgg_loss: 17.0200 - val_kl_loss: 89.4933
+Epoch 5/15
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5898 - gen_loss: 117.6632 - feat_loss: 11.2569 - vgg_loss: 16.3579 - kl_loss: 89.0054 - val_disc_loss: 0.7848 - val_gen_loss: 116.1364 - val_feat_loss: 12.0936 - val_vgg_loss: 16.9934 - val_kl_loss: 87.4706
+Epoch 6/15
+75/75 [==============================] - ETA: 0s - disc_loss: 0.6196 - gen_loss: 118.1310 - feat_loss: 11.0321 - vgg_loss: 16.3992 - kl_loss: 89.6433
+
+```
+</div>
+![png](/img/examples/generative/gaugan/gaugan_31_6.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_7.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_8.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_9.png)
+
+
+<div class="k-default-codeblock">
+```
+75/75 [==============================] - 43s 580ms/step - disc_loss: 0.6196 - gen_loss: 118.1310 - feat_loss: 11.0321 - vgg_loss: 16.3992 - kl_loss: 89.6433 - val_disc_loss: 0.4478 - val_gen_loss: 118.1380 - val_feat_loss: 11.8388 - val_vgg_loss: 16.8106 - val_kl_loss: 88.9268
+Epoch 7/15
+75/75 [==============================] - 39s 523ms/step - disc_loss: 0.6089 - gen_loss: 116.0047 - feat_loss: 10.9082 - vgg_loss: 16.2322 - kl_loss: 87.7755 - val_disc_loss: 0.3983 - val_gen_loss: 117.7625 - val_feat_loss: 11.1574 - val_vgg_loss: 16.8833 - val_kl_loss: 88.5721
+Epoch 8/15
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.6169 - gen_loss: 117.2285 - feat_loss: 10.6953 - vgg_loss: 16.1933 - kl_loss: 89.3416 - val_disc_loss: 0.5920 - val_gen_loss: 116.9222 - val_feat_loss: 11.5450 - val_vgg_loss: 16.8874 - val_kl_loss: 88.4492
+Epoch 9/15
+75/75 [==============================] - 39s 523ms/step - disc_loss: 0.6038 - gen_loss: 116.6511 - feat_loss: 10.6373 - vgg_loss: 16.1377 - kl_loss: 88.9065 - val_disc_loss: 0.8217 - val_gen_loss: 117.2666 - val_feat_loss: 11.9938 - val_vgg_loss: 16.8635 - val_kl_loss: 88.8479
+Epoch 10/15
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5866 - gen_loss: 117.3502 - feat_loss: 10.8059 - vgg_loss: 16.1440 - kl_loss: 89.3655 - val_disc_loss: 0.6708 - val_gen_loss: 117.3574 - val_feat_loss: 10.4353 - val_vgg_loss: 16.9681 - val_kl_loss: 88.1559
+Epoch 11/15
+75/75 [==============================] - ETA: 0s - disc_loss: 0.5711 - gen_loss: 115.8771 - feat_loss: 10.6223 - vgg_loss: 16.1678 - kl_loss: 88.0109
+
+```
+</div>
+![png](/img/examples/generative/gaugan/gaugan_31_11.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_12.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_13.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_14.png)
+
+
+<div class="k-default-codeblock">
+```
+75/75 [==============================] - 44s 584ms/step - disc_loss: 0.5711 - gen_loss: 115.8771 - feat_loss: 10.6223 - vgg_loss: 16.1678 - kl_loss: 88.0109 - val_disc_loss: 0.4610 - val_gen_loss: 117.9438 - val_feat_loss: 10.7494 - val_vgg_loss: 16.9461 - val_kl_loss: 88.7872
+Epoch 12/15
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5561 - gen_loss: 116.4807 - feat_loss: 10.6477 - vgg_loss: 16.1403 - kl_loss: 88.5699 - val_disc_loss: 0.4646 - val_gen_loss: 116.6616 - val_feat_loss: 10.2184 - val_vgg_loss: 16.6986 - val_kl_loss: 87.9115
+Epoch 13/15
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5371 - gen_loss: 116.1927 - feat_loss: 10.5540 - vgg_loss: 15.9813 - kl_loss: 88.5575 - val_disc_loss: 0.4451 - val_gen_loss: 116.4260 - val_feat_loss: 10.9527 - val_vgg_loss: 16.7932 - val_kl_loss: 87.7804
+Epoch 14/15
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5387 - gen_loss: 116.5662 - feat_loss: 10.5298 - vgg_loss: 16.0785 - kl_loss: 88.8107 - val_disc_loss: 0.6074 - val_gen_loss: 117.7027 - val_feat_loss: 10.8974 - val_vgg_loss: 16.9699 - val_kl_loss: 89.5690
+Epoch 15/15
+75/75 [==============================] - 39s 523ms/step - disc_loss: 0.5713 - gen_loss: 116.2433 - feat_loss: 10.4626 - vgg_loss: 15.9596 - kl_loss: 88.7499 - val_disc_loss: 0.7750 - val_gen_loss: 116.7392 - val_feat_loss: 10.0690 - val_vgg_loss: 16.5842 - val_kl_loss: 87.9633
+
+```
+</div>
+![png](/img/examples/generative/gaugan/gaugan_31_16.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_17.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_18.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_19.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_31_20.png)
+
+
+---
 ## Inference
-"""
 
+
+```python
 val_iterator = iter(val_dataset)
 
 for _ in range(5):
@@ -787,8 +966,29 @@ for _ in range(5):
         ax[2].axis("off")
         ax[2].set_title("Generated", fontsize=20)
     plt.show()
+```
 
-"""
+
+![png](/img/examples/generative/gaugan/gaugan_33_0.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_33_1.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_33_2.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_33_3.png)
+
+
+
+![png](/img/examples/generative/gaugan/gaugan_33_4.png)
+
+
+---
 ## Final words
 
 * The dataset we used in this example is a small one. For obtaining even better results
@@ -804,5 +1004,3 @@ this example) on a bigger dataset and then make the repository public. We welcom
 contributions!
 * Recently GauGAN2 was also released. You can check it out
 [here](https://blogs.nvidia.com/blog/2021/11/22/gaugan2-ai-art-demo/).
-
-"""
