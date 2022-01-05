@@ -3,7 +3,7 @@ Title: Traffic forecasting using graph neural networks and LSTM
 Author: [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)
 Date created: 2021/12/28
 Last modified: 2021/12/28
-Description: This examples demonstrates how to do timeseries forecasting over graphs.
+Description: This example demonstrates how to do timeseries forecasting over graphs.
 """
 """
 ## Introduction
@@ -172,22 +172,24 @@ def preprocess(data_array: np.ndarray, train_size: float, val_size: float):
     """Splits data into train/val/test sets and normalizes the data.
 
     Args:
-        data_array: ndarray of shape [num_time_steps, n_routes]
-        train_size:
-        val_size:
+        data_array: ndarray of shape (num_time_steps, num_routes)
+        train_size: A float value between 0.0 and 1.0 that represent the proportion of the dataset
+            to include in the train split.
+        val_size: A float value between 0.0 and 1.0 that represent the proportion of the dataset
+            to include in the validation split.
 
     Returns:
         train_array, val_array, test_array
     """
 
     num_time_steps = data_array.shape[0]
-    n_train, n_val = int(num_time_steps * train_size), int(num_time_steps * val_size)
-    train_array = data_array[:n_train]
+    num_train, num_val = int(num_time_steps * train_size), int(num_time_steps * val_size)
+    train_array = data_array[:num_train]
     mean, std = train_array.mean(axis=0), train_array.std(axis=0)
 
     train_array = (train_array - mean) / std
-    val_array = (data_array[n_train : (n_train + n_val)] - mean) / std
-    test_array = (data_array[(n_train + n_val) :] - mean) / std
+    val_array = (data_array[num_train : (num_train + num_val)] - mean) / std
+    test_array = (data_array[(num_train + num_val) :] - mean) / std
 
     return train_array, val_array, test_array
 
@@ -222,7 +224,7 @@ If `multi_horizon=True` then the model will make a forecast for time steps
 so the target will have shape `(T, 1)`.
 
 You may notice that the input tensor in each batch has shape
-`[batch_size, input_sequence_length, n_routes, 1]`. The last dimension is added to
+`(batch_size, input_sequence_length, num_routes, 1)`. The last dimension is added to
 make the model more general: at each time step, the input features for each raod may
 contain multiple timeseries. For instance, one might want to use temperature timeseries
 in addition to historical values of the speed as input features. In this example,
@@ -252,19 +254,21 @@ def create_tf_dataset(
 
     This function creates a dataset where each element is a tuple (inputs, targets).
     `inputs` is a Tensor
-    of shape `[batch_size, input_sequence_length, n_routes, 1]` containing
+    of shape `(batch_size, input_sequence_length, num_routes, 1)` containing
     the `input_sequence_length` past values of the timeseries for each node.
-    `targets` is a Tensor of shape `[batch_size, forecast_horizon, n_routes]`
+    `targets` is a Tensor of shape `(batch_size, forecast_horizon, num_routes)`
     containing the `forecast_horizon`
     future values of the timeseries for each node.
 
     Args:
-        data_array: np.ndarray with shape `[num_time_steps, n_routes]`
-        input_sequence_length:
-        forecast_horizon:
-        batch_size:
-        shuffle:
-        multi_horizon:
+        data_array: np.ndarray with shape `(num_time_steps, num_routes)`
+        input_sequence_length: Length of the input sequence (in number of timesteps).
+        forecast_horizon: If multi_horizon=True, the target will be the values of the timeseries for 1 to
+            `forecast_horizon` timesteps ahead. If multi_horizon=False, the target will be the value of the
+            timeseries `forecast_horizon` steps ahead (only one value).
+        batch_size: Number of timeseries samples in each batch.
+        shuffle: Whether to shuffle output samples, or instead draw them in chronological order.
+        multi_horizon: See `forecast_horizon`.
 
     Returns:
         A tf.data.Dataset instance.
@@ -336,18 +340,21 @@ def compute_adjacency_matrix(
     The implementation follows that paper.
 
     Args:
-        route_distances:
-        sigma2:
-        epsilon:
+        route_distances: np.ndarray of shape (num_routes, num_routes). Entry i,j of this array is the
+            distance between roads i,j.
+        sigma2: Determines the width of the Gaussian kernel applied to the square distances matrix.
+        epsilon: A threshold specifying if there is an edge between two nodes. Specifically, A[i,j]=1
+            if np.exp(-w2[i,j] / sigma2) >= epsilon and A[i,j]=0 otherwise, where A is the adjacency
+            matrix and w2=route_distances * route_distances
 
     Returns:
         A boolean graph adjacency matrix.
     """
-    n_routes = route_distances.shape[0]
+    num_routes = route_distances.shape[0]
     route_distances = route_distances / 10000.0
     w2, w_mask = (
         route_distances * route_distances,
-        np.ones([n_routes, n_routes]) - np.identity(n_routes),
+        np.ones([num_routes, num_routes]) - np.identity(num_routes),
     )
     return (np.exp(-w2 / sigma2) >= epsilon) * w_mask
 
@@ -387,9 +394,9 @@ layer and a LSTM layer.
 
 Our implementation of the graph convolution layer resembles the implementation
 in [this Keras example](https://keras.io/examples/graph/gnn_citations/). Note that
-in that example input to the layer is a 2D tensor of shape `[num_nodes,in_feat]`
+in that example input to the layer is a 2D tensor of shape `(num_nodes,in_feat)`
 but in our example the input to the layer is a 4D tensor of shape
-`[num_nodes, batch_size, input_seq_length, in_feat]`. The graph convolution layer
+`(num_nodes, batch_size, input_seq_length, in_feat)`. The graph convolution layer
 performs the following steps:
 
 - The nodes' representations are computed in `self.compute_nodes_representation()`
@@ -473,8 +480,8 @@ class GraphConv(layers.Layer):
 
         return self.activation(h)
 
-    def call(self, features: tf.Tensor, *args, **kwargs):
-        """
+    def call(self, features: tf.Tensor):
+        """Forward pass.
 
         Args:
             features: tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
@@ -532,14 +539,14 @@ class LSTMGC(layers.Layer):
 
         self.input_seq_len, self.output_seq_len = input_seq_len, output_seq_len
 
-    def call(self, inputs, *args, **kwargs):
-        """
+    def call(self, inputs):
+        """Forward pass.
 
         Args:
             inputs: tf.Tensor of shape (batch_size, input_seq_len, num_nodes, in_feat)
 
         Returns:
-            A tensor of shape (batch_size, output_seq_len, n_nodes).
+            A tensor of shape (batch_size, output_seq_len, num_nodes).
         """
 
         # convert shape to  (num_nodes, batch_size, input_seq_len, in_feat)
@@ -564,11 +571,11 @@ class LSTMGC(layers.Layer):
 
         dense_output = self.dense(
             lstm_out
-        )  # dense_output has shape: ((batch_size * num_nodes, output_seq_len))
+        )  # dense_output has shape: (batch_size * num_nodes, output_seq_len)
         output = tf.reshape(dense_output, (num_nodes, batch_size, self.output_seq_len))
         return tf.transpose(
             output, [1, 2, 0]
-        )  # returns Tensor of shape [batch_size, output_seq_len, n_nodes]
+        )  # returns Tensor of shape (batch_size, output_seq_len, num_nodes)
 
 
 """
