@@ -43,12 +43,12 @@ Conference on Artificial Intelligence. 2018.
 import pandas as pd
 import numpy as np
 import os
-from typing import Tuple, Optional
+import typing
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers, models, optimizers, losses, callbacks, initializers
+from tensorflow.keras import layers
 
 """
 ## Data preparation
@@ -94,7 +94,9 @@ print(f"speeds_array shape={speeds_array.shape}")
 To reduce the problem size and make the training faster, we will only
 work with a sample of 26 roads out of the 228 roads in the dataset.
 We have chosen the roads by starting from road 0, choosing the 5 closest
-roads to it, and continuing this process until we get 25 roads.
+roads to it, and continuing this process until we get 25 roads. You can choose
+any other subset of the roads. We chose the roads in this way to increase the likelihood
+of having roads with correlated speed timeseries.
 `sample_routes` contains the IDs of the selected roads.
 """
 
@@ -171,17 +173,19 @@ train_size, val_size = 0.5, 0.2
 
 
 def preprocess(data_array: np.ndarray, train_size: float, val_size: float):
-    """Preprocesses data.
-    This function splits data into train/val/test sets and normalizes the data.
+    """Splits data into train/val/test sets and normalizes the data.
 
-    :param data_array: ndarray of shape [n_time_steps, n_routes]
-    :param train_size:
-    :param val_size:
-    :return:
+    Args:
+        data_array: ndarray of shape [num_time_steps, n_routes]
+        train_size:
+        val_size:
+
+    Returns:
+        train_array, val_array, test_array
     """
 
-    n_time_steps = data_array.shape[0]
-    n_train, n_val = int(n_time_steps * train_size), int(n_time_steps * val_size)
+    num_time_steps = data_array.shape[0]
+    n_train, n_val = int(num_time_steps * train_size), int(num_time_steps * val_size)
     train_array = data_array[:n_train]
     mean, std = train_array.mean(axis=0), train_array.std(axis=0)
 
@@ -199,26 +203,20 @@ print(f"validation set size: {val_array.shape}")
 print(f"test set size: {test_array.shape}")
 
 """
-### Creating Tensorflow datasets
+### Creating TensorFlow Datasets
 """
 
 """
-Next, we create the datasets for our forecasting problem. Let $v^i_t$
-be the speed on road $i$ at time $t$. Then the vector $V_t=[v^1_t,...,v^N_t]$
-will contain the speed for all $N$ roads at time $t$. The forecasting problem
-can be stated as follows: given a sequence $V_{t+1},...,V_{t+T}$ of the
-roads' speed, we want to predict the future values of the roads speeds,
-$V_{t+T+1}, ..., V_{t+T+h}$.
-
-Each sample in our dataset should contain the input to the model
-$V_{t+1},...,V_{t+T}$ and the target $V_{t+T+1}, ..., V_{t+T+h}$.
-Since each vector $V_t$ has size $N$, for one sample, the input has
-shape $(T,N)$ and the target has shape $(h,N)$.
+Next, we create the datasets for our forecasting problem. The forecasting problem
+can be stated as follows: given a sequence of the
+roads' speed at times `t+1, t+2, ..., t+T`, we want to predict the future values of
+the roads speeds for times `t+T+1, ..., t+T+h`. So for each time `t` the inputs to our
+model are `T` vectors each of size `N` and the targets are `h` vectors each of size `N`,
+where `N` is the number of roads.
 """
 
 """
 We use the Keras builtin function
-[`timeseries_dataset_from_array`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
 [`timeseries_dataset_from_array`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
 The function `create_tf_dataset` below takes as input a `numpy.ndarray` and returns a
 `tf.data.Dataset`. In this function `input_sequence_length=T` and `forecast_horizon=h`.
@@ -266,13 +264,16 @@ is a Tensor
 `forecast_horizon`
     future values of the timeseries for each node.
 
-    :param data_array: np.ndarray with shape [n_time_steps, n_routes]
-    :param input_sequence_length:
-    :param forecast_horizon:
-    :param batch_size:
-    :param shuffle:
-    :param multi_horizon:
-    :return:
+    Args:
+        data_array: np.ndarray with shape [num_time_steps, n_routes]
+        input_sequence_length:
+        forecast_horizon:
+        batch_size:
+        shuffle:
+        multi_horizon:
+
+    Returns:
+        A tf.data.Dataset instance.
     """
 
     inputs = timeseries_dataset_from_array(
@@ -299,7 +300,7 @@ is a Tensor
 
     dataset = tf.data.Dataset.zip((inputs, targets))
     if shuffle:
-        dataset = dataset.shuffle(2048)
+        dataset = dataset.shuffle(100)
 
     return dataset.prefetch(16).cache()
 
@@ -327,19 +328,9 @@ test_dataset = create_tf_dataset(
 As mentioned before, we assume that the road segments form a graph.
 The `PeMSD7` dataset has the road segments distance. The next step
 is to create the graph adjacency matrix from these distances. Following
-[Yu et al., 2018](https://arxiv.org/abs/1709.04875), the adjacency matrix
-`A` is computed using the following formula:
-"""
-
-"""
-$$A_{ij}=\left\{\begin{matrix}
- \exp(-d^2_{ij}/\sigma^2) & i \neq j , \exp(-d^2_{ij}/\sigma^2)>\epsilon   \\
- 0 &  otherwise\\
-\end{matrix}\right.$$
-"""
-
-"""
-where $d_{ij}$ is the distance between road segments $i,j$.
+[Yu et al., 2018](https://arxiv.org/abs/1709.04875) (equation 10) we assume there
+is an edge between two nodes in the graph if the distance between the corresponding roads
+is less than a threshold.
 """
 
 
@@ -352,10 +343,13 @@ It uses the formula in https://github.com/VeritasYin/STGCN_IJCAI-18#data-preproc
 compute an
     adjacency matrix from the distance matrix. The implementation follows that paper.
 
-    :param route_distances:
-    :param sigma2:
-    :param epsilon:
-    :return:
+    Args:
+        route_distances:
+        sigma2:
+        epsilon:
+
+    Returns:
+        A boolean graph adjacency matrix.
     """
     n_routes = route_distances.shape[0]
     route_distances = route_distances / 10000.0
@@ -374,7 +368,7 @@ to store the information about the graph.
 
 
 class GraphInfo:
-    def __init__(self, edges: Tuple[list, list], num_nodes: int):
+    def __init__(self, edges: typing.Tuple[list, list], num_nodes: int):
         self.edges = edges
         self.num_nodes = num_nodes
 
@@ -427,7 +421,7 @@ class GraphConv(layers.Layer):
         graph_info: GraphInfo,
         aggregation_type="mean",
         combination_type="concat",
-        activation: Optional[str] = None,
+        activation: typing.Optional[str] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -437,7 +431,7 @@ class GraphConv(layers.Layer):
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
         self.weight = tf.Variable(
-            initial_value=initializers.glorot_uniform()(
+            initial_value=keras.initializers.glorot_uniform()(
                 shape=(in_feat, out_feat), dtype="float32"
             ),
             trainable=True,
@@ -462,12 +456,16 @@ class GraphConv(layers.Layer):
 
     def compute_nodes_representation(self, features: tf.Tensor):
         """Computes each node's representation.
+
 The nodes' representations are obtained by multiplying the features tensor with
 self.weight. Note that
         self.weight has shape (in_feat, out_feat).
 
-        :param features: Tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
-        :return: a tensor of shape (num_nodes, batch_size, input_seq_len, out_feat)
+        Args:
+            features: Tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
+
+        Returns:
+            A tensor of shape (num_nodes, batch_size, input_seq_len, out_feat)
         """
         return tf.matmul(features, self.weight)
 
@@ -489,10 +487,11 @@ self.weight. Note that
     def call(self, features: tf.Tensor, *args, **kwargs):
         """
 
-        :param features: tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
-        :param args:
-        :param kwargs:
-        :return: tensor of shape (num_nodes, batch_size, input_seq_len, out_feat)
+        Args:
+            features: tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
+
+        Returns:
+            A tensor of shape (num_nodes, batch_size, input_seq_len, out_feat)
         """
         nodes_representation = self.compute_nodes_representation(features)
         aggregated_messages = self.compute_aggregated_messages(features)
@@ -526,7 +525,7 @@ class LSTMGC(layers.Layer):
         input_seq_len: int,
         output_seq_len: int,
         graph_info: GraphInfo,
-        graph_conv_params: Optional[dict] = None,
+        graph_conv_params: typing.Optional[dict] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -548,10 +547,11 @@ class LSTMGC(layers.Layer):
     def call(self, inputs, *args, **kwargs):
         """
 
-        :param inputs: tf.Tensor of shape (batch_size, input_seq_len, num_nodes, in_feat)
-        :param args:
-        :param kwargs:
-        :return:
+        Args:
+            inputs: tf.Tensor of shape (batch_size, input_seq_len, num_nodes, in_feat)
+
+        Returns:
+            A tensor of shape (batch_size, output_seq_len, n_nodes).
         """
 
         # convert shape to  (num_nodes, batch_size, input_seq_len, in_feat)
@@ -613,15 +613,16 @@ st_gcn = LSTMGC(
 inputs = layers.Input((input_sequence_length, graph.num_nodes, in_feat))
 outputs = st_gcn(inputs)
 
-model = models.Model(inputs, outputs)
+model = keras.models.Model(inputs, outputs)
 model.compile(
-    optimizer=optimizers.RMSprop(learning_rate=0.0002), loss=losses.MeanSquaredError()
+    optimizer=keras.optimizers.RMSprop(learning_rate=0.0002),
+    loss=keras.losses.MeanSquaredError(),
 )
 model.fit(
     train_dataset,
     validation_data=val_dataset,
     epochs=epochs,
-    callbacks=[callbacks.EarlyStopping(patience=10)],
+    callbacks=[keras.callbacks.EarlyStopping(patience=10)],
 )
 
 """
