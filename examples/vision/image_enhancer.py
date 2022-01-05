@@ -12,9 +12,9 @@ This example explains a simple "Image Enhancer/Denoiser" using UNet architecture
 problem we focus here is enhancing the document images which are deteriorated through
 external degradations like blur, corrupt text blocks etc... ,we have followed up on few
 seminal papers as reference and used simple pretrained UNet as encoder and Efficient
-Sub-Pixel CNN as decoder. we also not attempt super-resolution as primary task hence we
+Sub-Pixel CNN as decoder. we also do not attempt super-resolution as our primary task hence we
 return output image in the same dimension as input. This models can be also considered as
-an proprocessing module before passing image to OCR engines.
+an pre-processing module before passing image to OCR engines.
 
 **References:**
 - [Enhancing OCR Accuracy with Super
