@@ -3,20 +3,20 @@ Title: Traffic forecasting using graph neural networks and LSTM
 Author: [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)
 Date created: 2021/12/28
 Last modified: 2021/12/28
-Description: This notebook demonstrates how to do timeseries forecasting over graphs.
+Description: This examples demonstrates how to do timeseries forecasting over graphs.
 """
 """
 ## Introduction
-"""
 
-"""
 This example shows how to forecast traffic condition using graph neural networks and LSTM.
 Specifically, we are interested in predicting the future values of the traffic speed given
-a history of the traffic speed for a collection of road segments. One popular method to
+a history of the traffic speed for a collection of road segments.
+
+One popular method to
 solve this problem is to consider each road segment's traffic speed as a separate
-timeseries
-and predict the future values of each timeseries using the past values of the same
-timeseries.
+timeseries and predict the future values of each timeseries
+using the past values of the same timeseries.
+
 This method, however, ignores the dependency of the traffic speed of one road segment on
 the neighboring segments. To be able to take into account the complex interactions between
 the traffic speed on a collection of neighboring roads, we can define the traffic network
@@ -31,8 +31,7 @@ The data processing and the model architecture are inspired by this paper:
 
 Yu, Bing, Haoteng Yin, and Zhanxing Zhu. "Spatio-temporal graph convolutional networks:
 a deep learning framework for traffic forecasting." Proceedings of the 27th International
-Joint
-Conference on Artificial Intelligence. 2018.
+Joint Conference on Artificial Intelligence, 2018.
 ([github](https://github.com/VeritasYin/STGCN_IJCAI-18))
 """
 
@@ -56,18 +55,21 @@ from tensorflow.keras import layers
 
 """
 ### Data description
-"""
 
-"""
-We use a real world traffic speed dataset named `PeMSD7`. We use the version
+We use a real-world traffic speed dataset named `PeMSD7`. We use the version
 collected and prepared by [Yu et al., 2018](https://arxiv.org/abs/1709.04875)
 and available
 [here](https://github.com/VeritasYin/STGCN_IJCAI-18/tree/master/data_loader).
-The data consists of two files: `W_228.csv` contains the distances between 228
-stations across the District 7 of California, and `V_228.csv` contains traffic
+
+The data consists of two files:
+
+- `W_228.csv` contains the distances between 228
+stations across the District 7 of California.
+- `V_228.csv` contains traffic
 speed collected for those stations in the weekdays of May and June of 2012.
-The full description of the dataset can be found in [Yu et al.,
-2018](https://arxiv.org/abs/1709.04875).
+
+The full description of the dataset can be found in
+[Yu et al., 2018](https://arxiv.org/abs/1709.04875).
 """
 
 """
@@ -88,9 +90,7 @@ print(f"speeds_array shape={speeds_array.shape}")
 
 """
 ### sub-sampling roads
-"""
 
-"""
 To reduce the problem size and make the training faster, we will only
 work with a sample of 26 roads out of the 228 roads in the dataset.
 We have chosen the roads by starting from road 0, choosing the 5 closest
@@ -136,9 +136,7 @@ print(f"speeds_array shape={speeds_array.shape}")
 
 """
 ### Data visualization
-"""
 
-"""
 Here are the timeseries of the traffic speed for two of the routes:
 """
 
@@ -162,10 +160,8 @@ routes 4, 5, 6 are highly correlated.
 
 """
 ### Splitting and normalizing data
-"""
 
-"""
-Next, we split the speed values array into train/validation/test sets
+Next, we split the speed values array into train/validation/test sets,
 and normalize the resulting arrays:
 """
 
@@ -204,22 +200,21 @@ print(f"test set size: {test_array.shape}")
 
 """
 ### Creating TensorFlow Datasets
-"""
 
-"""
 Next, we create the datasets for our forecasting problem. The forecasting problem
 can be stated as follows: given a sequence of the
-roads' speed at times `t+1, t+2, ..., t+T`, we want to predict the future values of
-the roads speeds for times `t+T+1, ..., t+T+h`. So for each time `t` the inputs to our
+road speed values at times `t+1, t+2, ..., t+T`, we want to predict the future values of
+the roads speed for times `t+T+1, ..., t+T+h`. So for each time `t` the inputs to our
 model are `T` vectors each of size `N` and the targets are `h` vectors each of size `N`,
 where `N` is the number of roads.
 """
 
 """
-We use the Keras builtin function
-[`timeseries_dataset_from_array`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
-The function `create_tf_dataset` below takes as input a `numpy.ndarray` and returns a
+We use the Keras built-in function
+[`timeseries_dataset_from_array()`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
+The function `create_tf_dataset()` below takes as input a `numpy.ndarray` and returns a
 `tf.data.Dataset`. In this function `input_sequence_length=T` and `forecast_horizon=h`.
+
 The argument `multi_horizon` needs more explanation. Assume `forecast_horizon=3`.
 If `multi_horizon=True` then the model will make a forecast for time steps
 `t+T+1, t+T+2, t+T+3`. So the target will have shape `(T,3)`. But if
@@ -229,10 +224,9 @@ so the target will have shape `(T, 1)`.
 You may notice that the input tensor in each batch has shape
 `[batch_size, input_sequence_length, n_routes, 1]`. The last dimension is added to
 make the model more general: at each time step, the input features for each raod may
-contain multiple timeseries. For example, one might want to use temperature timeseries
-in addition to historical values of the speed as input features. In this notebook,
-however,
-the last dimension of the input is always 1.
+contain multiple timeseries. For instance, one might want to use temperature timeseries
+in addition to historical values of the speed as input features. In this example,
+however, the last dimension of the input is always 1.
 
 We use the last 12 values of the speed in each road to forecast the speed for 3 time
 steps ahead:
@@ -256,16 +250,16 @@ def create_tf_dataset(
 ):
     """Creates tensorflow dataset from numpy array.
 
-This function creates a dataset where each element is a tuple (inputs, targets). `inputs`
-is a Tensor
-    of shape [batch_size, input_sequence_length, n_routes, 1] containing
+    This function creates a dataset where each element is a tuple (inputs, targets).
+    `inputs` is a Tensor
+    of shape `[batch_size, input_sequence_length, n_routes, 1]` containing
     the `input_sequence_length` past values of the timeseries for each node.
-`targets` is a Tensor of shape  [batch_size, forecast_horizon, n_routes] containing the
-`forecast_horizon`
+    `targets` is a Tensor of shape `[batch_size, forecast_horizon, n_routes]`
+    containing the `forecast_horizon`
     future values of the timeseries for each node.
 
     Args:
-        data_array: np.ndarray with shape [num_time_steps, n_routes]
+        data_array: np.ndarray with shape `[num_time_steps, n_routes]`
         input_sequence_length:
         forecast_horizon:
         batch_size:
@@ -322,9 +316,7 @@ test_dataset = create_tf_dataset(
 
 """
 ### Roads Graph
-"""
 
-"""
 As mentioned before, we assume that the road segments form a graph.
 The `PeMSD7` dataset has the road segments distance. The next step
 is to create the graph adjacency matrix from these distances. Following
@@ -339,9 +331,9 @@ def compute_adjacency_matrix(
 ):
     """Computes the adjacency matrix from distances matrix.
 
-It uses the formula in https://github.com/VeritasYin/STGCN_IJCAI-18#data-preprocessing to
-compute an
-    adjacency matrix from the distance matrix. The implementation follows that paper.
+    It uses the formula in https://github.com/VeritasYin/STGCN_IJCAI-18#data-preprocessing to
+    compute an adjacency matrix from the distance matrix.
+    The implementation follows that paper.
 
     Args:
         route_distances:
@@ -361,7 +353,7 @@ compute an
 
 
 """
-The function `compute_adjacency_matrix` returns a boolean adjacency matrix
+The function `compute_adjacency_matrix()` returns a boolean adjacency matrix
 where 1 means there is an edge between two nodes. We use the following class
 to store the information about the graph.
 """
@@ -385,30 +377,27 @@ print(f"number of nodes: {graph.num_nodes}, number of edges: {len(graph.edges[0]
 
 """
 ## Network architecture
-"""
 
-"""
 Our model for forecasting over the graph consists of a graph convolution
 layer and a LSTM layer.
 """
 
 """
 ### Graph convolution layer
-"""
 
-"""
 Our implementation of the graph convolution layer resembles the implementation
 in [this Keras example](https://keras.io/examples/graph/gnn_citations/). Note that
 in that example input to the layer is a 2D tensor of shape `[num_nodes,in_feat]`
 but in our example the input to the layer is a 4D tensor of shape
 `[num_nodes, batch_size, input_seq_length, in_feat]`. The graph convolution layer
 performs the following steps:
-+ the nodes' representations are computed in `self.compute_nodes_representation`
+
+- The nodes' representations are computed in `self.compute_nodes_representation()`
 by multiplying the input features by `self.weight`
-+ the aggregated neighbors' messages are computed in `self.compute_aggregated_messages`
+- The aggregated neighbors' messages are computed in `self.compute_aggregated_messages()`
 by first aggregating the neighbors' representations and then multiplying the results by
 `self.weight`
-+ the final output of the layer is computed in `self.update` by combining the nodes
+- The final output of the layer is computed in `self.update()` by combining the nodes
 representations and the neighbors' aggregated messages
 """
 
@@ -457,8 +446,8 @@ class GraphConv(layers.Layer):
     def compute_nodes_representation(self, features: tf.Tensor):
         """Computes each node's representation.
 
-The nodes' representations are obtained by multiplying the features tensor with
-self.weight. Note that
+        The nodes' representations are obtained by multiplying the features tensor with
+        self.weight. Note that
         self.weight has shape (in_feat, out_feat).
 
         Args:
@@ -500,12 +489,11 @@ self.weight. Note that
 
 """
 ### LSTM plus graph convolution
-"""
 
-"""
-Bu applying the graph convolution layer to the input tensor, we get another tensor
+By applying the graph convolution layer to the input tensor, we get another tensor
 containing the nodes' representations over time (another 4D tensor). For each time
 step, a node's representation is informed by the information from its neighbors.
+
 To make good forecasts, however, we need not only information from the neighbors
 but also we need to process the information over time. To this end, we can pass each
 node's tensor through a recurrent layer. The `LSTMGC` layer below, first applies
@@ -627,10 +615,8 @@ model.fit(
 
 """
 ## Making forecasts on test set
-"""
 
-"""
-Now we can use the trained model to make forecasts for the test set. Below we
+Now we can use the trained model to make forecasts for the test set. Below, we
 compute the MAE of the model and compare it to the MAE of naive forecasts.
 The naive forecasts are the last value of the speed for each node.
 """
@@ -649,8 +635,9 @@ naive_mse, model_mse = (
 print(f"naive MAE: {naive_mse}, model MAE: {model_mse}")
 
 """
-Of course, the goal here is not to achieve the best performance. To improve the
-model accuracy, all model hyperparameters should be tuned carefully. In addition,
+Of course, the goal here is to demonstrate the method,
+not to achieve the best performance. To improve the
+model's accuracy, all model hyperparameters should be tuned carefully. In addition,
 several of the `LSTMGC` blocks can be stacked to increase the representation power
 of the model.
 """
