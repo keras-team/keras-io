@@ -172,14 +172,14 @@ def preprocess(data_array: np.ndarray, train_size: float, val_size: float):
     """Splits data into train/val/test sets and normalizes the data.
 
     Args:
-        data_array: ndarray of shape (num_time_steps, num_routes)
+        data_array: ndarray of shape `(num_time_steps, num_routes)`
         train_size: A float value between 0.0 and 1.0 that represent the proportion of the dataset
             to include in the train split.
         val_size: A float value between 0.0 and 1.0 that represent the proportion of the dataset
             to include in the validation split.
 
     Returns:
-        train_array, val_array, test_array
+        `train_array`, `val_array`, `test_array`
     """
 
     num_time_steps = data_array.shape[0]
@@ -252,7 +252,7 @@ def create_tf_dataset(
 ):
     """Creates tensorflow dataset from numpy array.
 
-    This function creates a dataset where each element is a tuple (inputs, targets).
+    This function creates a dataset where each element is a tuple `(inputs, targets)`.
     `inputs` is a Tensor
     of shape `(batch_size, input_sequence_length, num_routes, 1)` containing
     the `input_sequence_length` past values of the timeseries for each node.
@@ -263,8 +263,8 @@ def create_tf_dataset(
     Args:
         data_array: np.ndarray with shape `(num_time_steps, num_routes)`
         input_sequence_length: Length of the input sequence (in number of timesteps).
-        forecast_horizon: If multi_horizon=True, the target will be the values of the timeseries for 1 to
-            `forecast_horizon` timesteps ahead. If multi_horizon=False, the target will be the value of the
+        forecast_horizon: If `multi_horizon=True`, the target will be the values of the timeseries for 1 to
+            `forecast_horizon` timesteps ahead. If `multi_horizon=False`, the target will be the value of the
             timeseries `forecast_horizon` steps ahead (only one value).
         batch_size: Number of timeseries samples in each batch.
         shuffle: Whether to shuffle output samples, or instead draw them in chronological order.
@@ -340,12 +340,12 @@ def compute_adjacency_matrix(
     The implementation follows that paper.
 
     Args:
-        route_distances: np.ndarray of shape (num_routes, num_routes). Entry i,j of this array is the
-            distance between roads i,j.
+        route_distances: np.ndarray of shape `(num_routes, num_routes)`. Entry `i,j` of this array is the
+            distance between roads `i,j`.
         sigma2: Determines the width of the Gaussian kernel applied to the square distances matrix.
-        epsilon: A threshold specifying if there is an edge between two nodes. Specifically, A[i,j]=1
-            if np.exp(-w2[i,j] / sigma2) >= epsilon and A[i,j]=0 otherwise, where A is the adjacency
-            matrix and w2=route_distances * route_distances
+        epsilon: A threshold specifying if there is an edge between two nodes. Specifically, `A[i,j]=1`
+            if `np.exp(-w2[i,j] / sigma2) >= epsilon` and `A[i,j]=0` otherwise, where `A` is the adjacency
+            matrix and `w2=route_distances * route_distances`
 
     Returns:
         A boolean graph adjacency matrix.
@@ -454,14 +454,14 @@ class GraphConv(layers.Layer):
         """Computes each node's representation.
 
         The nodes' representations are obtained by multiplying the features tensor with
-        self.weight. Note that
-        self.weight has shape (in_feat, out_feat).
+        `self.weight`. Note that
+        `self.weight` has shape `(in_feat, out_feat)`.
 
         Args:
-            features: Tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
+            features: Tensor of shape `(num_nodes, batch_size, input_seq_len, in_feat)`
 
         Returns:
-            A tensor of shape (num_nodes, batch_size, input_seq_len, out_feat)
+            A tensor of shape `(num_nodes, batch_size, input_seq_len, out_feat)`
         """
         return tf.matmul(features, self.weight)
 
@@ -484,10 +484,10 @@ class GraphConv(layers.Layer):
         """Forward pass.
 
         Args:
-            features: tensor of shape (num_nodes, batch_size, input_seq_len, in_feat)
+            features: tensor of shape `(num_nodes, batch_size, input_seq_len, in_feat)`
 
         Returns:
-            A tensor of shape (num_nodes, batch_size, input_seq_len, out_feat)
+            A tensor of shape `(num_nodes, batch_size, input_seq_len, out_feat)`
         """
         nodes_representation = self.compute_nodes_representation(features)
         aggregated_messages = self.compute_aggregated_messages(features)
@@ -543,10 +543,10 @@ class LSTMGC(layers.Layer):
         """Forward pass.
 
         Args:
-            inputs: tf.Tensor of shape (batch_size, input_seq_len, num_nodes, in_feat)
+            inputs: tf.Tensor of shape `(batch_size, input_seq_len, num_nodes, in_feat)`
 
         Returns:
-            A tensor of shape (batch_size, output_seq_len, num_nodes).
+            A tensor of shape `(batch_size, output_seq_len, num_nodes)`.
         """
 
         # convert shape to  (num_nodes, batch_size, input_seq_len, in_feat)
