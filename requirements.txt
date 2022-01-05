@@ -6,6 +6,7 @@ mdx_truly_sane_lists
 sphinx~=3.0.3
 black==19.10b0
 pathlib
+tensorflow
 PyYAML
 jupyter
 keras-tuner
