@@ -1,4 +1,3 @@
-
 # GauGAN for conditional image generation
 
 **Author:** [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak)<br>
