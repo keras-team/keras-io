@@ -196,7 +196,7 @@ very easy to implement custom RNN architectures for your research.
 When processing very long sequences (possibly infinite), you may want to use the
 pattern of **cross-batch statefulness**.
 
-Normally, the internal state of a RNN layer is reset every time it sees a new batch
+Normally, the internal state of a RNN layer resets every time it sees a new batch
 (i.e. every sample seen by the layer is assumed to be independent of the past). The
 layer will only maintain a state while processing a given sample.
 
