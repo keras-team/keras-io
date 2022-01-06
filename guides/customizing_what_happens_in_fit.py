@@ -22,7 +22,7 @@ or step fusing?
 A core principle of Keras is **progressive disclosure of complexity**. You should
 always be able to get into lower-level workflows in a gradual way. You shouldn't fall
 off a cliff if the high-level functionality doesn't exactly match your use case. You
-should be able to gain more control over the small details while retaing a
+should be able to gain more control over the small details while retaining a
 commensurate amount of high-level convenience.
 
 When you need to customize what `fit()` does, you should **override the training step
@@ -117,12 +117,25 @@ model.fit(x, y, epochs=3)
 ## Going lower-level
 
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
-everything *manually* in `train_step`. Likewise for metrics. Here's a lower-level
+everything *manually* in `train_step`. Likewise for metrics.
+
+Here's a lower-level
 example, that only uses `compile()` to configure the optimizer:
+
+- We start by creating `Metric` instances to track our loss and a MAE score.
+- We implement a custom `train_step()` that updates the state of these metrics
+(by calling `update_state()` on them), then query them (via `result()`) to return their current average value,
+to be displayed by the progress bar and to be pass to any callback.
+- Note that we would need to call `reset_states()` on our metrics between each epoch! Otherwise
+calling `result()` would return an average since the start of training, whereas we usually work
+with per-epoch averages. Thankfully, the framework can do that for us: just list any metric
+you want to reset in the `metrics` property of the model. The model will call `reset_states()`
+on any object listed here at the beginning of each `fit()` epoch or at the beginning of a call to
+`evaluate()`.
 """
 
-mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
 loss_tracker = keras.metrics.Mean(name="loss")
+mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
 
 
 class CustomModel(keras.Model):
@@ -146,6 +159,15 @@ class CustomModel(keras.Model):
         mae_metric.update_state(y, y_pred)
         return {"loss": loss_tracker.result(), "mae": mae_metric.result()}
 
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch
+        # or at the start of `evaluate()`.
+        # If you don't implement this property, you have to call
+        # `reset_states()` yourself at the time of your choosing.
+        return [loss_tracker, mae_metric]
+
 
 # Construct an instance of CustomModel
 inputs = keras.Input(shape=(32,))
@@ -158,7 +180,8 @@ model.compile(optimizer="adam")
 # Just use `fit` as usual -- you can use callbacks, etc.
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.fit(x, y, epochs=3)
+model.fit(x, y, epochs=5)
+
 
 """
 ## Supporting `sample_weight` & `class_weight`
@@ -181,6 +204,7 @@ class CustomModel(keras.Model):
         if len(data) == 3:
             x, y, sample_weight = data
         else:
+            sample_weight = None
             x, y = data
 
         with tf.GradientTape() as tape:
@@ -390,10 +414,10 @@ gan.compile(
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-# To limit execution time, we only train on 100 batches. You can train on
+# To limit the execution time, we only train on 100 batches. You can train on
 # the entire dataset. You will need about 20 epochs to get nice results.
 gan.fit(dataset.take(100), epochs=1)
 
 """
-The idea behind deep learning are simple, so why should their implementation be painful?
+The ideas behind deep learning are simple, so why should their implementation be painful?
 """

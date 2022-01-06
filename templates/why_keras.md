@@ -31,16 +31,14 @@ Keras ranked as #1 for deep learning both among primary frameworks and among all
 ## Keras has broad adoption in the industry and the research community
 
 
-With over 375,000 individual users as of early 2020, Keras has strong adoption across both the industry and the research community. Together with TensorFlow 2.0, Keras has more adoption than any other deep learning solution -- in every vertical.
+With over one million individual users as of late 2021, Keras has strong adoption across both the industry and the research community. Together with TensorFlow 2, Keras has more adoption than any other deep learning solution -- in every vertical.
 
 You are already constantly interacting with features built with Keras -- it is in use at Netflix, Uber, Yelp, Instacart, Zocdoc, Square, and many others. It is especially popular among startups that place deep learning at the core of their products.
 
-Keras & TensorFlow 2.0 are also a favorite among researchers, coming in #1 in terms of mentions in scientific papers indexed by Google Scholar. Keras has also been adopted by researchers at large scientific organizations, such as CERN and NASA.
+Keras & TensorFlow 2 are also a favorite among researchers, coming in #1 in terms of mentions in scientific papers indexed by Google Scholar. Keras has also been adopted by researchers at large scientific organizations, such as CERN and NASA.
 
 
-![Daily PyPI downloads](/img/graph-downloads.jpg)
-
-![Weekly Google Scholar articles](/img/graph-scholar.jpeg)
+![2020 deep learning frameworks adoption metrics](/img/deep_learning_frameworks_adoption_2020.png)
 
 
 ---
@@ -81,14 +79,10 @@ Keras is at the center of a wide ecosystem of tightly-connected projects that to
 
 - Rapid model prototyping with [AutoKeras](https://autokeras.com/)
 - Scalable model training in on GCP via [TF Cloud](https://github.com/tensorflow/cloud)
-- Hyperparameter tuning with [Keras Tuner](https://keras-team.github.io/keras-tuner/)
+- Hyperparameter tuning with [KerasTuner](https://keras.io/keras_tuner/)
 - Extra layers, losses, metrics, callbacks... via [TensorFlow Addons](https://www.tensorflow.org/addons/api_docs/python/tfa)
 - Inference model quantization & pruning with the [TF Model Optimization Toolkit](https://www.tensorflow.org/model_optimization)
 - Model deployment on mobile or on an embedded with [TF Lite](https://www.tensorflow.org/lite)
 - Model deployment in the browser via [TF.js](https://www.tensorflow.org/js)
 - ...and many more.
-
-
-
-
 

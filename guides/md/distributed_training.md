@@ -17,11 +17,11 @@ There are generally two ways to distribute computation across multiple devices:
 
 **Data parallelism**, where a single model gets replicated on multiple devices or
 multiple machines. Each of them processes different batches of data, then they merge
-their results. There exist many variant of this setup, that differ in how the different
+their results. There exist many variants of this setup, that differ in how the different
 model replicas merge results, in whether they stay in sync at every batch or whether they
 are more loosely coupled, etc.
 
-**Model parallelism**, where different parts of a single model run on difference devices,
+**Model parallelism**, where different parts of a single model run on different devices,
 processing a single batch of data together. This works best with models that have a
 naturally-parallel architecture, such as models that feature multiple branches.
 
@@ -42,7 +42,6 @@ training high-resolution image classification models on tens of millions of imag
 20-100 GPUs.
 
 
-
 ---
 ## Setup
 
@@ -50,7 +49,6 @@ training high-resolution image classification models on tens of millions of imag
 ```python
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -58,7 +56,7 @@ from tensorflow import keras
 
 In this setup, you have one machine with several GPUs on it (typically 2 to 8). Each
 device will run a copy of your model (called a **replica**). For simplicity, in what
-follows, we'll asume we're dealing with 8 GPUs, at no loss of generality.
+follows, we'll assume we're dealing with 8 GPUs, at no loss of generality.
 
 **How it works**
 
@@ -75,7 +73,7 @@ replicas. Because this is done at the end of every step, the replicas always sta
 sync.
 
 In practice, the process of synchronously updating the weights of the model replicas is
-handled at level of each individual weight variable. This is done through a **mirrored
+handled at the level of each individual weight variable. This is done through a **mirrored
 variable** object.
 
 **How to use it**
@@ -117,7 +115,6 @@ model.evaluate(test_dataset)
 ```
 
 Here's a simple end-to-end runnable example:
-
 
 
 
@@ -179,22 +176,21 @@ model.fit(train_dataset, epochs=2, validation_data=val_dataset)
 
 # Test the model on all available devices.
 model.evaluate(test_dataset)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 WARNING: Logging before flag parsing goes to stderr.
-W0429 16:03:15.463364 4449478080 cross_device_ops.py:1173] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+W0829 16:54:57.025418 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
 
 Number of devices: 1
 Epoch 1/2
-1563/1563 [==============================] - 2s 1ms/step - loss: 0.2237 - sparse_categorical_accuracy: 0.9332 - val_loss: 0.1197 - val_sparse_categorical_accuracy: 0.9650
+1563/1563 [==============================] - 3s 2ms/step - loss: 0.3767 - sparse_categorical_accuracy: 0.8889 - val_loss: 0.1257 - val_sparse_categorical_accuracy: 0.9623
 Epoch 2/2
-1563/1563 [==============================] - 2s 1ms/step - loss: 0.0932 - sparse_categorical_accuracy: 0.9715 - val_loss: 0.0992 - val_sparse_categorical_accuracy: 0.9691
-313/313 [==============================] - 0s 767us/step - loss: 0.1020 - sparse_categorical_accuracy: 0.9684
+1563/1563 [==============================] - 2s 2ms/step - loss: 0.1053 - sparse_categorical_accuracy: 0.9678 - val_loss: 0.0944 - val_sparse_categorical_accuracy: 0.9710
+313/313 [==============================] - 0s 779us/step - loss: 0.0900 - sparse_categorical_accuracy: 0.9723
 
-[0.10198500752449036, 0.9684000015258789]
+[0.08995261788368225, 0.9722999930381775]
 
 ```
 </div>
@@ -261,20 +257,25 @@ run_training(epochs=1)
 
 # Calling the same function again will resume from where we left off
 run_training(epochs=1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-W0429 16:03:20.767461 4449478080 cross_device_ops.py:1173] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+W0829 16:55:03.609519 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
 
 Creating a new model
-1563/1563 - 2s - loss: 0.2281 - sparse_categorical_accuracy: 0.9320 - val_loss: 0.1177 - val_sparse_categorical_accuracy: 0.9657
 
-W0429 16:03:23.449774 4449478080 cross_device_ops.py:1173] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+W0829 16:55:03.708506 4592479680 callbacks.py:1270] Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
+
+1563/1563 - 4s - loss: 0.2242 - sparse_categorical_accuracy: 0.9321 - val_loss: 0.1243 - val_sparse_categorical_accuracy: 0.9647
+
+W0829 16:55:07.981292 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
 
 Restoring from ./ckpt/ckpt-1
-1563/1563 - 2s - loss: 0.0992 - sparse_categorical_accuracy: 0.9701 - val_loss: 0.0950 - val_sparse_categorical_accuracy: 0.9699
+
+W0829 16:55:08.245935 4592479680 callbacks.py:1270] Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
+
+1563/1563 - 4s - loss: 0.0948 - sparse_categorical_accuracy: 0.9709 - val_loss: 0.1006 - val_sparse_categorical_accuracy: 0.9699
 
 ```
 </div>
@@ -294,7 +295,7 @@ call use a global batch size of 512.
 **Calling `dataset.cache()`**
 
 If you call `.cache()` on a dataset, its data will be cached after running through the
-first iteration over the data. Every subsequent iteration will used the cached data. The
+first iteration over the data. Every subsequent iteration will use the cached data. The
 cache can be in memory (default) or to a local file you specify.
 
 This can improve performance when:
@@ -309,7 +310,7 @@ workflow is significantly IO-bound (e.g. reading & decoding image files).
 You should almost always call `.prefetch(buffer_size)` after creating a dataset. It means
 your data pipeline will run asynchronously from your model,
 with new samples being preprocessed and stored in a buffer while the current batch
-samples is used to train the model. The next batch will be prefetched in GPU memory by
+samples are used to train the model. The next batch will be prefetched in GPU memory by
 the time the current batch is over.
 
 ---
@@ -386,7 +387,7 @@ is responsible for saving logs and checkpoints for later reuse (typically to a C
 storage location).
 - The evaluator runs a continuous loop that loads the latest checkpoint saved by the
 chief worker, runs evaluation on it (asynchronously from the other workers) and writes
-evalution logs (e.g. TensorBoard logs).
+evaluation logs (e.g. TensorBoard logs).
 
 
 **Running code on each worker**
@@ -394,7 +395,7 @@ evalution logs (e.g. TensorBoard logs).
 You would run training code on each worker (including the chief) and evaluation code on
 the evaluator.
 
-The training code is basically the same as what you woud use in the single-host setup,
+The training code is basically the same as what you would use in the single-host setup,
 except using `MultiWorkerMirroredStrategy` instead of `MirroredStrategy`.
 
 Each worker would run the same code (minus the difference explained in the note below),
@@ -409,7 +410,6 @@ The evaluator would simply use `MirroredStrategy` (since it runs on a single mac
 does not need to communicate with other machines) and call `model.evaluate()`. It would be
 loading the latest checkpoint saved by the chief worker to a Cloud storage location, and
 would save evaluation logs to the same location as the chief logs.
-
 
 
 ### Example: code running in a multi-worker setup
@@ -482,7 +482,6 @@ results = model.evaluate(val_dataset)
 ```
 
 
-
 ### Further reading
 
 
@@ -494,3 +493,5 @@ results = model.evaluate(val_dataset)
     https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy)
 4. [MultiWorkerMirroredStrategy docs](
     https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy)
+5. [Distributed training in tf.keras with Weights & Biases](
+    https://towardsdatascience.com/distributed-training-in-tf-keras-with-w-b-ccf021f9322e)

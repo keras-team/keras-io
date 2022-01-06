@@ -21,20 +21,20 @@ Are you a machine learning engineer looking to use Keras
 to ship deep-learning powered features in real products? This guide will serve
 as your first introduction to core Keras API concepts.
 
-In this guide, you will learn about:
+In this guide, you will learn how to:
 
-- How to prepare your data before training a model (by turning it into either NumPy
+- Prepare your data before training a model (by turning it into either NumPy
  arrays or `tf.data.Dataset` objects).
-- How to do data preprocessing, for instance feature normalization or vocabulary
+- Do data preprocessing, for instance feature normalization or vocabulary
  indexing.
-- How to build a model that turns your data into useful predictions,
+- Build a model that turns your data into useful predictions,
 using the Keras Functional API.
-- How to train your model with the built-in Keras `fit()` method, while being
+- Train your model with the built-in Keras `fit()` method, while being
 mindful of checkpointing, metrics monitoring, and fault tolerance.
-- How to evaluate your model on a test data and how to use it for inference on new data.
-- How to customize what `fit()` does, for instance to build a GAN.
-- How to speed up training by leveraging multiple GPUs.
-- How to refine your model through hyperparameter tuning.
+- Evaluate your model on a test data and how to use it for inference on new data.
+- Customize what `fit()` does, for instance to build a GAN.
+- Speed up training by leveraging multiple GPUs.
+- Refine your model through hyperparameter tuning.
 
 At the end of this guide, you will get pointers to end-to-end examples to solidify
  these concepts:
@@ -80,7 +80,7 @@ these formats. If you have a large dataset and you are training on GPU(s), consi
 using `Dataset` objects, since they will take care of performance-critical details,
  such as:
 
-- Asynchronously preprocessing your data on CPU while your GPU is busy, and bufferring
+- Asynchronously preprocessing your data on CPU while your GPU is busy, and buffering
  it into a queue.
 - Prefetching data on GPU memory so it's immediately available when the GPU has
  finished processing the previous batch, so you can reach full GPU utilization.
@@ -152,7 +152,7 @@ for data, labels in dataset:
 """
 ## Data preprocessing with Keras
 
-Once your data is in the form of string/int/float NumpPy arrays, or a `Dataset` object
+Once your data is in the form of string/int/float NumPy arrays, or a `Dataset` object
  (or Python generator) that yields batches of string/int/float tensors,
 it is time to **preprocess** the data. This can mean:
 
@@ -208,7 +208,7 @@ The state of a preprocessing layer is obtained by calling `layer.adapt(data)` on
 
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 
 # Example training data, of dtype `string`.
 training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
@@ -233,7 +233,7 @@ print(integer_data)
 **Example: turning strings into sequences of one-hot encoded bigrams**
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 
 # Example training data, of dtype `string`.
 training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
@@ -259,7 +259,7 @@ print(integer_data)
 
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import Normalization
+from tensorflow.keras.layers import Normalization
 
 # Example image data, with values in the [0, 255] range
 training_data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
@@ -278,8 +278,8 @@ Both the `Rescaling` layer and the `CenterCrop` layer are stateless, so it isn't
  necessary to call `adapt()` in this case.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import CenterCrop
-from tensorflow.keras.layers.experimental.preprocessing import Rescaling
+from tensorflow.keras.layers import CenterCrop
+from tensorflow.keras.layers import Rescaling
 
 # Example image data, with values in the [0, 255] range
 training_data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
@@ -319,7 +319,7 @@ specify it as `None`. For instance, an input for 200x200 RGB image would have sh
 inputs = keras.Input(shape=(None, None, 3))
 
 """
-After defining your input(s), you chain layer transformations on top of your inputs,
+After defining your input(s), you can chain layer transformations on top of your inputs,
  until your final output:
 """
 
@@ -424,7 +424,7 @@ Here's what fitting a model looks like with a dataset:
 model.fit(dataset_of_samples_and_labels, epochs=10)
 ```
 
-Since the data yielded by a dataset is expect to be already batched, you don't need to
+Since the data yielded by a dataset is expected to be already batched, you don't need to
  specify the batch size here.
 
 Let's look at it in practice with a toy example model that learns to classify MNIST
@@ -436,7 +436,7 @@ Let's look at it in practice with a toy example model that learns to classify MN
 
 # Build a simple model
 inputs = keras.Input(shape=(28, 28))
-x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(inputs)
+x = layers.Rescaling(1.0 / 255)(inputs)
 x = layers.Flatten()(x)
 x = layers.Dense(128, activation="relu")(x)
 x = layers.Dense(128, activation="relu")(x)
@@ -803,7 +803,7 @@ architecture choices, layer sizes, etc. Human intuition can only go so far, so y
  want to leverage a systematic approach: hyperparameter search.
 
 You can use
-[Keras Tuner](https://keras-team.github.io/keras-tuner/documentation/tuners/) to find
+[KerasTuner](https://keras.io/api/keras_tuner/tuners/) to find
  the best hyperparameter for your Keras models. It's as easy as calling `fit()`.
 
 Here how it works.
@@ -831,14 +831,14 @@ def build_model(hp):
 
 The function should return a compiled model.
 
-Next, instantiate a tuner object specifying your optimiation objective and other search
+Next, instantiate a tuner object specifying your optimization objective and other search
  parameters:
 
 
 ```python
-import kerastuner
+import keras_tuner
 
-tuner = kerastuner.tuners.Hyperband(
+tuner = keras_tuner.tuners.Hyperband(
   build_model,
   objective='val_loss',
   max_epochs=100,

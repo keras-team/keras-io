@@ -21,9 +21,7 @@ import numpy as np
 import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
-from datetime import datetime
 from matplotlib import pyplot as plt
-from matplotlib import dates as md
 
 """
 ## Load the data
@@ -42,11 +40,15 @@ master_url_root = "https://raw.githubusercontent.com/numenta/NAB/master/data/"
 
 df_small_noise_url_suffix = "artificialNoAnomaly/art_daily_small_noise.csv"
 df_small_noise_url = master_url_root + df_small_noise_url_suffix
-df_small_noise = pd.read_csv(df_small_noise_url)
+df_small_noise = pd.read_csv(
+    df_small_noise_url, parse_dates=True, index_col="timestamp"
+)
 
 df_daily_jumpsup_url_suffix = "artificialWithAnomaly/art_daily_jumpsup.csv"
 df_daily_jumpsup_url = master_url_root + df_daily_jumpsup_url_suffix
-df_daily_jumpsup = pd.read_csv(df_daily_jumpsup_url)
+df_daily_jumpsup = pd.read_csv(
+    df_daily_jumpsup_url, parse_dates=True, index_col="timestamp"
+)
 
 """
 ## Quick look at the data
@@ -58,29 +60,13 @@ print(df_daily_jumpsup.head())
 
 """
 ## Visualize the data
-"""
-
-
-def plot_dates_values(data):
-    dates = data["timestamp"].to_list()
-    values = data["value"].to_list()
-    dates = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in dates]
-    plt.subplots_adjust(bottom=0.2)
-    plt.xticks(rotation=25)
-    ax = plt.gca()
-    xfmt = md.DateFormatter("%Y-%m-%d %H:%M:%S")
-    ax.xaxis.set_major_formatter(xfmt)
-    plt.plot(dates, values)
-    plt.show()
-
-
-"""
 ### Timeseries data without anomalies
 
 We will use the following data for training.
 """
-
-plot_dates_values(df_small_noise)
+fig, ax = plt.subplots()
+df_small_noise.plot(legend=False, ax=ax)
+plt.show()
 
 """
 ### Timeseries data with anomalies
@@ -88,8 +74,9 @@ plot_dates_values(df_small_noise)
 We will use the following data for testing and see if the sudden jump up in the
 data is detected as an anomaly.
 """
-
-plot_dates_values(df_daily_jumpsup)
+fig, ax = plt.subplots()
+df_daily_jumpsup.plot(legend=False, ax=ax)
+plt.show()
 
 """
 ## Prepare training data
@@ -102,25 +89,12 @@ Get data values from the training timeseries data file and normalize the
 """
 
 
-def get_value_from_df(df):
-    return df.value.to_list()
-
-
-def normalize(values):
-    mean = np.mean(values)
-    values -= mean
-    std = np.std(values)
-    values /= std
-    return values, mean, std
-
-
-# Get the `value` column from the training dataframe.
-training_value = get_value_from_df(df_small_noise)
-
-# Normalize `value` and save the mean and std we get,
+# Normalize and save the mean and std we get,
 # for normalizing test data.
-training_value, training_mean, training_std = normalize(training_value)
-len(training_value)
+training_mean = df_small_noise.mean()
+training_std = df_small_noise.std()
+df_training_value = (df_small_noise - training_mean) / training_std
+print("Number of training samples:", len(df_training_value))
 
 """
 ### Create sequences
@@ -130,17 +104,15 @@ training data.
 
 TIME_STEPS = 288
 
-
+# Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []
-    for i in range(len(values) - time_steps):
+    for i in range(len(values) - time_steps + 1):
         output.append(values[i : (i + time_steps)])
-    # Convert 2D sequences into 3D as we will be feeding this into
-    # a convolutional layer.
-    return np.expand_dims(output, axis=2)
+    return np.stack(output)
 
 
-x_train = create_sequences(training_value)
+x_train = create_sequences(df_training_value.values)
 print("Training input shape: ", x_train.shape)
 
 """
@@ -200,6 +172,7 @@ Let's plot training and validation loss to see how the training went.
 plt.plot(history.history["loss"], label="Training Loss")
 plt.plot(history.history["val_loss"], label="Validation Loss")
 plt.legend()
+plt.show()
 
 """
 ## Detecting anomalies
@@ -241,7 +214,6 @@ This is the 288 timesteps from day 1 of our training dataset.
 
 # Checking how the first sequence is learnt
 plt.plot(x_train[0])
-plt.show()
 plt.plot(x_train_pred[0])
 plt.show()
 
@@ -250,19 +222,13 @@ plt.show()
 """
 
 
-def normalize_test(values, mean, std):
-    values -= mean
-    values /= std
-    return values
-
-
-test_value = get_value_from_df(df_daily_jumpsup)
-test_value = normalize_test(test_value, training_mean, training_std)
-plt.plot(test_value.tolist())
+df_test_value = (df_daily_jumpsup - training_mean) / training_std
+fig, ax = plt.subplots()
+df_test_value.plot(legend=False, ax=ax)
 plt.show()
 
 # Create sequences from test values.
-x_test = create_sequences(test_value)
+x_test = create_sequences(df_test_value.values)
 print("Test input shape: ", x_test.shape)
 
 # Get test MAE loss.
@@ -276,7 +242,7 @@ plt.ylabel("No of samples")
 plt.show()
 
 # Detect all the samples which are anomalies.
-anomalies = (test_mae_loss > threshold).tolist()
+anomalies = test_mae_loss > threshold
 print("Number of anomaly samples: ", np.sum(anomalies))
 print("Indices of anomaly samples: ", np.where(anomalies))
 
@@ -307,31 +273,16 @@ All except the initial and the final time_steps-1 data values, will appear in
 
 # data i is an anomaly if samples [(i - timesteps + 1) to (i)] are anomalies
 anomalous_data_indices = []
-for data_idx in range(TIME_STEPS - 1, len(test_value) - TIME_STEPS + 1):
-    time_series = range(data_idx - TIME_STEPS + 1, data_idx)
-    if all([anomalies[j] for j in time_series]):
+for data_idx in range(TIME_STEPS - 1, len(df_test_value) - TIME_STEPS + 1):
+    if np.all(anomalies[data_idx - TIME_STEPS + 1 : data_idx]):
         anomalous_data_indices.append(data_idx)
 
 """
 Let's overlay the anomalies on the original test data plot.
 """
 
-df_subset = df_daily_jumpsup.iloc[anomalous_data_indices, :]
-plt.subplots_adjust(bottom=0.2)
-plt.xticks(rotation=25)
-ax = plt.gca()
-xfmt = md.DateFormatter("%Y-%m-%d %H:%M:%S")
-ax.xaxis.set_major_formatter(xfmt)
-
-dates = df_daily_jumpsup["timestamp"].to_list()
-dates = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in dates]
-values = df_daily_jumpsup["value"].to_list()
-plt.plot(dates, values, label="test data")
-
-dates = df_subset["timestamp"].to_list()
-dates = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in dates]
-values = df_subset["value"].to_list()
-plt.plot(dates, values, label="anomalies", color="r")
-
-plt.legend()
+df_subset = df_daily_jumpsup.iloc[anomalous_data_indices]
+fig, ax = plt.subplots()
+df_daily_jumpsup.plot(legend=False, ax=ax)
+df_subset.plot(legend=False, ax=ax, color="r")
 plt.show()

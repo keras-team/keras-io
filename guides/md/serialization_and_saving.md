@@ -15,14 +15,14 @@
 
 A Keras model consists of multiple components:
 
-- An architecture, or configuration, which specifyies what layers the model
+- The architecture, or configuration, which specifies what layers the model
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
 - A set of losses and metrics (defined by compiling the model or calling
 `add_loss()` or `add_metric()`).
 
-The Keras API makes it possible to save of these pieces to disk at once,
+The Keras API makes it possible to save all of these pieces to disk at once,
 or to only selectively save some of them:
 
 - Saving everything into a single archive in the TensorFlow SavedModel format
@@ -30,11 +30,11 @@ or to only selectively save some of them:
 - Saving the architecture / configuration only, typically as a JSON file.
 - Saving the weights values only. This is generally used when training the model.
 
-Let's take a look at each of these options: when would you use one or the other?
-How do they work?
+Let's take a look at each of these options. When would you use one or the other,
+and how do they work?
 
 ---
-## The short answer to saving & loading
+## How to save and load a model
 
 If you only have 10 seconds to read this guide, here's what you need to know.
 
@@ -71,7 +71,7 @@ You can save an entire model to a single artifact. It will include:
 
 - The model's architecture/config
 - The model's weight values (which were learned during training)
-- The model's compilation information (if `compile()`) was called
+- The model's compilation information (if `compile()` was called)
 - The optimizer and its state, if any (this enables you to restart training
 where you left)
 
@@ -81,15 +81,19 @@ where you left)
 - `tf.keras.models.load_model()`
 
 There are two formats you can use to save an entire model to disk:
-**the TensorFlow SavedModel format**, and **the older Keras H5 format**.
+**the TensorFlow SavedModel format**, and the older Keras **H5 format**.
 The recommended format is SavedModel. It is the default when you use `model.save()`.
 
 You can switch to the H5 format by:
 
-- Passing `format='h5'` to `save()`.
+- Passing `save_format='h5'` to `save()`.
 - Passing a filename that ends in `.h5` or `.keras` to `save()`.
 
 ### SavedModel format
+
+SavedModel is the more comprehensive save format that saves the model architecture,
+weights, and the traced Tensorflow subgraphs of the call functions. This enables
+Keras to restore both built-in layers as well as custom objects.
 
 **Example:**
 
@@ -130,22 +134,11 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 670us/step - loss: 1.3573
+4/4 [==============================] - 1s 7ms/step - loss: 2.9296
+4/4 [==============================] - 0s 3ms/step - loss: 2.7120
 
-WARNING: Logging before flag parsing goes to stderr.
-W0611 15:19:08.423139 4624426432 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/keras/backend.py:467: set_learning_phase (from tensorflow.python.keras.backend) is deprecated and will be removed after 2020-10-11.
-Instructions for updating:
-Simply pass a True/False value to the `training` argument of the `__call__` method of your layer or model.
-W0611 15:19:08.460778 4624426432 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Model.state_updates (from tensorflow.python.keras.engine.training) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
-W0611 15:19:08.463594 4624426432 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Layer.updates (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
+<keras.callbacks.History at 0x7ba64817d390>
 
-4/4 [==============================] - 0s 705us/step - loss: 1.2203
-
-<tensorflow.python.keras.callbacks.History at 0x14b57e050>
 
 ```
 </div>
@@ -161,7 +154,7 @@ containing the following:
 
 <div class="k-default-codeblock">
 ```
-[34massets[m[m         saved_model.pb [34mvariables[m[m
+assets	keras_metadata.pb  saved_model.pb  variables
 
 ```
 </div>
@@ -187,11 +180,10 @@ and used for inference.
 Nevertheless, it is always a good practice to define the `get_config`
 and `from_config` methods when writing a custom model or layer class.
 This allows you to easily update the computation later if needed.
-See the section about [Custom objects](save_and_serialize.ipynb#custom-objects)
+See the section about [Custom objects](#custom-objects)
 for more information.
 
-Below is an example of what happens when loading custom layers from
-he SavedModel format **without** overwriting the config methods.
+Example:
 
 
 ```python
@@ -199,6 +191,7 @@ he SavedModel format **without** overwriting the config methods.
 class CustomModel(keras.Model):
     def __init__(self, hidden_units):
         super(CustomModel, self).__init__()
+        self.hidden_units = hidden_units
         self.dense_layers = [keras.layers.Dense(u) for u in hidden_units]
 
     def call(self, inputs):
@@ -207,6 +200,13 @@ class CustomModel(keras.Model):
             x = layer(x)
         return x
 
+    def get_config(self):
+        return {"hidden_units": self.hidden_units}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 
 model = CustomModel([16, 16, 10])
 # Build the model by calling it
@@ -214,28 +214,47 @@ input_arr = tf.random.uniform((1, 5))
 outputs = model(input_arr)
 model.save("my_model")
 
+# Option 1: Load with the custom_object argument.
+loaded_1 = keras.models.load_model(
+    "my_model", custom_objects={"CustomModel": CustomModel}
+)
+
+# Option 2: Load without the CustomModel class.
+
 # Delete the custom-defined model class to ensure that the loader does not have
 # access to it.
 del CustomModel
 
-loaded = keras.models.load_model("my_model")
-np.testing.assert_allclose(loaded(input_arr), outputs)
+loaded_2 = keras.models.load_model("my_model")
+np.testing.assert_allclose(loaded_1(input_arr), outputs)
+np.testing.assert_allclose(loaded_2(input_arr), outputs)
 
 print("Original model:", model)
-print("Loaded model:", loaded)
+print("Model Loaded with custom objects:", loaded_1)
+print("Model loaded without the custom object class:", loaded_2)
+
 ```
 
 <div class="k-default-codeblock">
 ```
-W0611 15:19:09.533702 4624426432 load.py:128] No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-
-Original model: <__main__.CustomModel object at 0x14b574b90>
-Loaded model: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x14b712490>
+Original model: <__main__.CustomModel object at 0x7ba6480b96a0>
+Model Loaded with custom objects: <__main__.CustomModel object at 0x7ba648064518>
+Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x7ba648159940>
 
 ```
 </div>
-As seen in the example above, the loader dynamically creates a new model class
-that acts like the original model.
+The first loaded model is loaded using the config and `CustomModel` class. The second
+model is loaded by dynamically creating the model class that acts like the original model.
+
+#### Configuring the SavedModel
+
+*New in TensoFlow 2.4*
+The argument `save_traces` has been added to `model.save`, which allows you to toggle
+SavedModel function tracing. Functions are saved to allow the Keras to re-load custom
+objects without the original class definitons, so when `save_traces=False`, all custom
+objects must have defined `get_config`/`from_config` methods. When loading, the custom
+objects must be passed to the `custom_objects` argument. `save_traces=False` reduces the
+disk space used by the SavedModel and saving time.
 
 ### Keras H5 format
 
@@ -272,30 +291,43 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 650us/step - loss: 0.3729
-4/4 [==============================] - 0s 599us/step - loss: 0.3210
+4/4 [==============================] - 0s 4ms/step - loss: 0.2223
+4/4 [==============================] - 0s 3ms/step - loss: 0.2035
 
-<tensorflow.python.keras.callbacks.History at 0x14b8b01d0>
+<keras.callbacks.History at 0x7ba6404ca588>
 
 ```
 </div>
-#### Limitations
+### Format Limitations
 
-Compared to the SavedModel format, there are two things that don't
-get included in the H5 file:
+Keras SavedModel format limitations:
 
-- **External losses & metrics** added via `model.add_loss()`
+The tracing done by SavedModel to produce the graphs of the layer call functions allows
+SavedModel be more portable than H5, but it comes with drawbacks.
+
+- Can be slower and bulkier than H5.
+- Cannot serialize the ops generated from the mask argument (i.e. if a layer is called
+  with `layer(..., mask=mask_value)`, the mask argument is not saved to SavedModel).
+- Does not save the overridden `train_step()` in subclassed models.
+
+Custom objects that use masks or have a custom training loop can still be saved and loaded
+from SavedModel, except they must override `get_config()`/`from_config()`, and the classes
+must be passed to the `custom_objects` argument when loading.
+
+H5 limitations:
+
+- External losses & metrics added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
 If you have such losses & metrics on your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
 Note that this does not apply to losses/metrics created *inside* layers via
 `self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
 these losses & metrics are kept, since they are part of the `call` method of the layer.
-- The **computation graph of custom objects** such as custom layers
+- The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
-See [Custom objects](save_and_serialize.ipynb#custom-objects).
-
+See [Custom objects](#custom-objects).
+- Does not support preprocessing layers.
 
 ---
 ## Saving the architecture
@@ -475,7 +507,7 @@ generates a serialized form of the custom layer:
 
 Keras keeps a master list of all built-in layer, model, optimizer,
 and metric classes, which is used to find the correct class to call `from_config`.
-If the  class can't be found, than an error is raised (`Value Error: Unknown layer`).
+If the  class can't be found, then an error is raised (`Value Error: Unknown layer`).
 There are a few ways to register custom classes to this list:
 
 1. Setting `custom_objects` argument in the loading function. (see the example
@@ -582,7 +614,7 @@ def create_layer():
 layer_1 = create_layer()
 layer_2 = create_layer()
 
-# Copy weights from layer 2 to layer 1
+# Copy weights from layer 1 to layer 2
 layer_2.set_weights(layer_1.get_weights())
 ```
 
@@ -674,7 +706,7 @@ then the HDF5 format is used. Other suffixes will result in a TensorFlow
 checkpoint unless `save_format` is set.
 
 There is also an option of retrieving weights as in-memory numpy arrays.
-Each API has their pros and cons which are detailed below .
+Each API has its pros and cons which are detailed below.
 
 ### TF Checkpoint format
 
@@ -705,7 +737,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14bad4390>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402ffbe0>
 
 ```
 </div>
@@ -745,8 +777,8 @@ ckpt_reader.get_variable_to_dtype_map()
 <div class="k-default-codeblock">
 ```
 {'save_counter/.ATTRIBUTES/VARIABLE_VALUE': tf.int64,
- 'layer/var/.ATTRIBUTES/VARIABLE_VALUE': tf.int32,
- '_CHECKPOINTABLE_OBJECT_GRAPH': tf.string}
+ '_CHECKPOINTABLE_OBJECT_GRAPH': tf.string,
+ 'layer/var/.ATTRIBUTES/VARIABLE_VALUE': tf.int32}
 
 ```
 </div>
@@ -818,13 +850,14 @@ pretrained_model.load_weights("pretrained_ckpt")
 ```
 Model: "pretrained_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-digits (InputLayer)          [(None, 784)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
+ digits (InputLayer)         [(None, 784)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
 =================================================================
 Total params: 54,400
 Trainable params: 54,400
@@ -838,15 +871,16 @@ _________________________________________________________________
  --------------------------------------------------
 Model: "new_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-digits (InputLayer)          [(None, 784)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-predictions (Dense)          (None, 5)                 325       
+ digits (InputLayer)         [(None, 784)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
+ predictions (Dense)         (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
@@ -854,18 +888,19 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "sequential_3"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-pretrained (Functional)      (None, 64)                54400     
-_________________________________________________________________
-predictions (Dense)          (None, 5)                 325       
+ pretrained (Functional)     (None, 64)                54400     
+                                                                 
+ predictions (Dense)         (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14ba1f910>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402d4e48>
 
 ```
 </div>
@@ -916,11 +951,7 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-W0611 15:19:10.748379 4624426432 deprecation.py:323] From <ipython-input-20-eec1d28bc826>:15: Layer.add_variable (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
-Instructions for updating:
-Please use `layer.add_weight` method instead.
-
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x14bb3e190>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402d4b00>
 
 ```
 </div>
@@ -1033,13 +1064,14 @@ model.summary()
 ```
 Model: "sequential_6"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-dense_3 (Dense)              (None, 5)                 325       
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
+ dense_3 (Dense)             (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725

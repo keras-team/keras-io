@@ -4,6 +4,7 @@ from models_master import MODELS_MASTER
 from layers_master import LAYERS_MASTER
 from callbacks_master import CALLBACKS_MASTER
 from utils_master import UTILS_MASTER
+from kt_api_master import KT_API_MASTER
 from examples_master import EXAMPLES_MASTER
 
 
@@ -51,43 +52,6 @@ MASTER = {
                 MODELS_MASTER,
                 LAYERS_MASTER,
                 CALLBACKS_MASTER,
-                {
-                    'path': 'preprocessing/',
-                    'title': 'Data preprocessing',
-                    'toc': True,
-                    'children': [
-                        {
-                            'path': 'image',
-                            'title': 'Image data preprocessing',
-                            'generate': [
-                                'tensorflow.keras.preprocessing.image_dataset_from_directory',
-                                'tensorflow.keras.preprocessing.image.load_img',
-                                'tensorflow.keras.preprocessing.image.img_to_array',
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
-                                'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory',  # LEGACY
-                            ],
-                        },
-                        {
-                            'path': 'timeseries',
-                            'title': 'Timeseries data preprocessing',
-                            'generate': [
-                                'tensorflow.keras.preprocessing.timeseries_dataset_from_array',
-                                'tensorflow.keras.preprocessing.sequence.pad_sequences',
-                                'tensorflow.keras.preprocessing.sequence.TimeseriesGenerator',  # LEGACY
-                            ]
-                        },
-                        {
-                            'path': 'text',
-                            'title': 'Text data preprocessing',
-                            'generate': [
-                                'tensorflow.keras.preprocessing.text_dataset_from_directory',
-                                'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
-                            ]
-                        },
-                    ]
-                },
                 {
                     'path': 'optimizers/',
                     'title': 'Optimizers',
@@ -141,7 +105,7 @@ MASTER = {
                         },
                         {
                             'path': 'learning_rate_schedules/',
-                            'title': 'Learning rate schedules API',  # TODO
+                            'title': 'Learning rate schedules API',
                             'toc': True,
                             'skip_from_toc': True,
                             'children': [
@@ -181,6 +145,7 @@ MASTER = {
                                 'tensorflow.keras.metrics.Accuracy',
                                 'tensorflow.keras.metrics.BinaryAccuracy',
                                 'tensorflow.keras.metrics.CategoricalAccuracy',
+                                'tensorflow.keras.metrics.SparseCategoricalAccuracy',
                                 'tensorflow.keras.metrics.TopKCategoricalAccuracy',
                                 'tensorflow.keras.metrics.SparseTopKCategoricalAccuracy',
                             ],
@@ -226,7 +191,7 @@ MASTER = {
                             ]
                         },
                         {
-                            'path': 'segmentation_metrics',  # MeanIoU
+                            'path': 'segmentation_metrics',
                             'title': 'Image segmentation metrics',
                             'generate': ['tensorflow.keras.metrics.MeanIoU']
                         },
@@ -298,6 +263,43 @@ MASTER = {
                             ]
                         },
                     ],
+                },
+                {
+                    'path': 'data_loading/',
+                    'title': 'Data loading',
+                    'toc': True,
+                    'children': [
+                        {
+                            'path': 'image',
+                            'title': 'Image data loading',
+                            'generate': [
+                                'tensorflow.keras.utils.image_dataset_from_directory',
+                                'tensorflow.keras.utils.load_img',
+                                'tensorflow.keras.utils.img_to_array',
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory',  # LEGACY
+                            ],
+                        },
+                        {
+                            'path': 'timeseries',
+                            'title': 'Timeseries data loading',
+                            'generate': [
+                                'tensorflow.keras.utils.timeseries_dataset_from_array',
+                                # 'tensorflow.keras.preprocessing.sequence.pad_sequences',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.sequence.TimeseriesGenerator',  # LEGACY
+                            ]
+                        },
+                        {
+                            'path': 'text',
+                            'title': 'Text data loading',
+                            'generate': [
+                                'tensorflow.keras.utils.text_dataset_from_directory',
+                                # 'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
+                            ]
+                        },
+                    ]
                 },
                 {
                     'path': 'datasets/',
@@ -431,7 +433,31 @@ MASTER = {
                         },
                     ]
                 },
+                {
+                    'path': 'mixed_precision/',
+                    'title': 'Mixed precision',
+                    'toc': True,
+                    'children': [
+                        {
+                            'path': 'policy',
+                            'title': 'Mixed precision policy API',
+                            'generate': [
+                                'tensorflow.keras.mixed_precision.Policy',
+                                'tensorflow.keras.mixed_precision.global_policy',
+                                'tensorflow.keras.mixed_precision.set_global_policy',
+                            ]
+                        },
+                        {
+                            'path': 'loss_scale_optimizer',
+                            'title': 'LossScaleOptimizer',
+                            'generate': [
+                                'tensorflow.keras.mixed_precision.LossScaleOptimizer',
+                            ]
+                        },
+                    ]
+                },
                 UTILS_MASTER,
+                KT_API_MASTER,
             ]
         },
         EXAMPLES_MASTER,  # The examples section master will be mostly autogenerated.
@@ -446,6 +472,10 @@ MASTER = {
         {
             'path': 'contributing',
             'title': 'Contributing to Keras',
+        },
+        {
+            'path': 'keras_tuner/',
+            'title': 'KerasTuner',
         },
     ]
 }

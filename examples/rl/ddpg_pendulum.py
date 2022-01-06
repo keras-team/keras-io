@@ -2,7 +2,7 @@
 Title: Deep Deterministic Policy Gradient (DDPG)
 Author: [amifunny](https://github.com/amifunny)
 Date created: 2020/06/04
-Last modified: 2020/06/06
+Last modified: 2020/09/21
 Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 """
 """
@@ -12,7 +12,8 @@ Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
 learning continous actions.
 
 It combines ideas from DPG (Deterministic Policy Gradient) and DQN (Deep Q-Network).
-It uses Experience Replay and slow-learning target networks from DQN, and it is based on DPG,
+It uses Experience Replay and slow-learning target networks from DQN, and it is based on
+DPG,
 which can operate over continuous action spaces.
 
 This tutorial closely follow this paper -
@@ -46,7 +47,8 @@ stable.
 
 Conceptually, this is like saying, "I have an idea of how to play this well,
 I'm going to try it out for a bit until I find something better",
-as opposed to saying "I'm going to re-learn how to play this entire game after every move".
+as opposed to saying "I'm going to re-learn how to play this entire game after every
+move".
 See this [StackOverflow answer](https://stackoverflow.com/a/54238556/13475679).
 
 **Second, it uses Experience Replay.**
@@ -83,7 +85,8 @@ print("Max Value of Action ->  {}".format(upper_bound))
 print("Min Value of Action ->  {}".format(lower_bound))
 
 """
-To implement better exploration by the Actor network, we use noisy perturbations, specifically
+To implement better exploration by the Actor network, we use noisy perturbations,
+specifically
 an **Ornstein-Uhlenbeck process** for generating noise, as described in the paper.
 It samples noise from a correlated normal distribution.
 """
@@ -141,7 +144,6 @@ the maximum predicted value as seen by the Critic, for a given state.
 
 class Buffer:
     def __init__(self, buffer_capacity=100000, batch_size=64):
-
         # Number of "experiences" to store at max
         self.buffer_capacity = buffer_capacity
         # Num of tuples to train on.
@@ -170,6 +172,40 @@ class Buffer:
 
         self.buffer_counter += 1
 
+    # Eager execution is turned on by default in TensorFlow 2. Decorating with tf.function allows
+    # TensorFlow to build a static graph out of the logic and computations in our function.
+    # This provides a large speed up for blocks of code that contain many small TensorFlow operations such as this one.
+    @tf.function
+    def update(
+        self, state_batch, action_batch, reward_batch, next_state_batch,
+    ):
+        # Training and updating Actor & Critic networks.
+        # See Pseudo Code.
+        with tf.GradientTape() as tape:
+            target_actions = target_actor(next_state_batch, training=True)
+            y = reward_batch + gamma * target_critic(
+                [next_state_batch, target_actions], training=True
+            )
+            critic_value = critic_model([state_batch, action_batch], training=True)
+            critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
+
+        critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
+        critic_optimizer.apply_gradients(
+            zip(critic_grad, critic_model.trainable_variables)
+        )
+
+        with tf.GradientTape() as tape:
+            actions = actor_model(state_batch, training=True)
+            critic_value = critic_model([state_batch, actions], training=True)
+            # Used `-value` as we want to maximize the value given
+            # by the critic for our actions
+            actor_loss = -tf.math.reduce_mean(critic_value)
+
+        actor_grad = tape.gradient(actor_loss, actor_model.trainable_variables)
+        actor_optimizer.apply_gradients(
+            zip(actor_grad, actor_model.trainable_variables)
+        )
+
     # We compute the loss and update parameters
     def learn(self):
         # Get sampling range
@@ -184,55 +220,20 @@ class Buffer:
         reward_batch = tf.cast(reward_batch, dtype=tf.float32)
         next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
 
-        # Training and updating Actor & Critic networks.
-        # See Pseudo Code.
-        with tf.GradientTape() as tape:
-            target_actions = target_actor(next_state_batch)
-            y = reward_batch + gamma * target_critic([next_state_batch, target_actions])
-            critic_value = critic_model([state_batch, action_batch])
-            critic_loss = tf.math.reduce_mean(tf.math.square(y - critic_value))
-
-        critic_grad = tape.gradient(critic_loss, critic_model.trainable_variables)
-        critic_optimizer.apply_gradients(
-            zip(critic_grad, critic_model.trainable_variables)
-        )
-
-        with tf.GradientTape() as tape:
-            actions = actor_model(state_batch)
-            critic_value = critic_model([state_batch, actions])
-            # Used `-value` as we want to maximize the value given
-            # by the critic for our actions
-            actor_loss = -tf.math.reduce_mean(critic_value)
-
-        actor_grad = tape.gradient(actor_loss, actor_model.trainable_variables)
-        actor_optimizer.apply_gradients(
-            zip(actor_grad, actor_model.trainable_variables)
-        )
+        self.update(state_batch, action_batch, reward_batch, next_state_batch)
 
 
 # This update target parameters slowly
 # Based on rate `tau`, which is much less than one.
-def update_target(tau):
-    new_weights = []
-    target_variables = target_critic.weights
-    for i, variable in enumerate(critic_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_critic.set_weights(new_weights)
-
-    new_weights = []
-    target_variables = target_actor.weights
-    for i, variable in enumerate(actor_model.weights):
-        new_weights.append(variable * tau + target_variables[i] * (1 - tau))
-
-    target_actor.set_weights(new_weights)
+@tf.function
+def update_target(target_weights, weights, tau):
+    for (a, b) in zip(target_weights, weights):
+        a.assign(b * tau + a * (1 - tau))
 
 
 """
 Here we define the Actor and Critic networks. These are basic Dense models
-with `ReLU` activation. `BatchNormalization` is used to normalize dimensions across
-samples in a mini-batch, as activations can vary a lot due to fluctuating values of input
-state and action.
+with `ReLU` activation.
 
 Note: We need the initialization for last layer of the Actor to be between
 `-0.003` and `0.003` as this prevents us from getting `1` or `-1` output values in
@@ -246,10 +247,8 @@ def get_actor():
     last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
 
     inputs = layers.Input(shape=(num_states,))
-    out = layers.Dense(512, activation="relu")(inputs)
-    out = layers.BatchNormalization()(out)
-    out = layers.Dense(512, activation="relu")(out)
-    out = layers.BatchNormalization()(out)
+    out = layers.Dense(256, activation="relu")(inputs)
+    out = layers.Dense(256, activation="relu")(out)
     outputs = layers.Dense(1, activation="tanh", kernel_initializer=last_init)(out)
 
     # Our upper bound is 2.0 for Pendulum.
@@ -262,22 +261,17 @@ def get_critic():
     # State as input
     state_input = layers.Input(shape=(num_states))
     state_out = layers.Dense(16, activation="relu")(state_input)
-    state_out = layers.BatchNormalization()(state_out)
     state_out = layers.Dense(32, activation="relu")(state_out)
-    state_out = layers.BatchNormalization()(state_out)
 
     # Action as input
     action_input = layers.Input(shape=(num_actions))
     action_out = layers.Dense(32, activation="relu")(action_input)
-    action_out = layers.BatchNormalization()(action_out)
 
     # Both are passed through seperate layer before concatenating
     concat = layers.Concatenate()([state_out, action_out])
 
-    out = layers.Dense(512, activation="relu")(concat)
-    out = layers.BatchNormalization()(out)
-    out = layers.Dense(512, activation="relu")(out)
-    out = layers.BatchNormalization()(out)
+    out = layers.Dense(256, activation="relu")(concat)
+    out = layers.Dense(256, activation="relu")(out)
     outputs = layers.Dense(1)(out)
 
     # Outputs single value for give state-action
@@ -347,7 +341,7 @@ ep_reward_list = []
 # To store average reward history of last few episodes
 avg_reward_list = []
 
-# Takes about 20 min to train
+# Takes about 4 min to train
 for ep in range(total_episodes):
 
     prev_state = env.reset()
@@ -368,7 +362,8 @@ for ep in range(total_episodes):
         episodic_reward += reward
 
         buffer.learn()
-        update_target(tau)
+        update_target(target_actor.variables, actor_model.variables, tau)
+        update_target(target_critic.variables, critic_model.variables, tau)
 
         # End this episode when `done` is True
         if done:
@@ -389,10 +384,6 @@ plt.plot(avg_reward_list)
 plt.xlabel("Episode")
 plt.ylabel("Avg. Epsiodic Reward")
 plt.show()
-
-"""
-![Graph](https://i.imgur.com/sqEtM6M.png)
-"""
 
 """
 If training proceeds correctly, the average episodic reward will increase with time.

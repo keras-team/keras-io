@@ -12,11 +12,11 @@ There are generally two ways to distribute computation across multiple devices:
 
 **Data parallelism**, where a single model gets replicated on multiple devices or
 multiple machines. Each of them processes different batches of data, then they merge
-their results. There exist many variant of this setup, that differ in how the different
+their results. There exist many variants of this setup, that differ in how the different
 model replicas merge results, in whether they stay in sync at every batch or whether they
 are more loosely coupled, etc.
 
-**Model parallelism**, where different parts of a single model run on difference devices,
+**Model parallelism**, where different parts of a single model run on different devices,
 processing a single batch of data together. This works best with models that have a
 naturally-parallel architecture, such as models that feature multiple branches.
 
@@ -51,7 +51,7 @@ from tensorflow import keras
 
 In this setup, you have one machine with several GPUs on it (typically 2 to 8). Each
 device will run a copy of your model (called a **replica**). For simplicity, in what
-follows, we'll asume we're dealing with 8 GPUs, at no loss of generality.
+follows, we'll assume we're dealing with 8 GPUs, at no loss of generality.
 
 **How it works**
 
@@ -68,7 +68,7 @@ replicas. Because this is done at the end of every step, the replicas always sta
 sync.
 
 In practice, the process of synchronously updating the weights of the model replicas is
-handled at level of each individual weight variable. This is done through a **mirrored
+handled at the level of each individual weight variable. This is done through a **mirrored
 variable** object.
 
 **How to use it**
@@ -251,7 +251,7 @@ call use a global batch size of 512.
 **Calling `dataset.cache()`**
 
 If you call `.cache()` on a dataset, its data will be cached after running through the
-first iteration over the data. Every subsequent iteration will used the cached data. The
+first iteration over the data. Every subsequent iteration will use the cached data. The
 cache can be in memory (default) or to a local file you specify.
 
 This can improve performance when:
@@ -266,7 +266,7 @@ workflow is significantly IO-bound (e.g. reading & decoding image files).
 You should almost always call `.prefetch(buffer_size)` after creating a dataset. It means
 your data pipeline will run asynchronously from your model,
 with new samples being preprocessed and stored in a buffer while the current batch
-samples is used to train the model. The next batch will be prefetched in GPU memory by
+samples are used to train the model. The next batch will be prefetched in GPU memory by
 the time the current batch is over.
 """
 
@@ -344,7 +344,7 @@ is responsible for saving logs and checkpoints for later reuse (typically to a C
 storage location).
 - The evaluator runs a continuous loop that loads the latest checkpoint saved by the
 chief worker, runs evaluation on it (asynchronously from the other workers) and writes
-evalution logs (e.g. TensorBoard logs).
+evaluation logs (e.g. TensorBoard logs).
 
 
 **Running code on each worker**
@@ -352,7 +352,7 @@ evalution logs (e.g. TensorBoard logs).
 You would run training code on each worker (including the chief) and evaluation code on
 the evaluator.
 
-The training code is basically the same as what you woud use in the single-host setup,
+The training code is basically the same as what you would use in the single-host setup,
 except using `MultiWorkerMirroredStrategy` instead of `MirroredStrategy`.
 
 Each worker would run the same code (minus the difference explained in the note below),

@@ -26,10 +26,12 @@ class TFKerasDocumentationGenerator:
         docstring = docstring.replace("Input shape:", "# Input shape")
         docstring = docstring.replace("Output shape:", "# Output shape")
         docstring = docstring.replace("Call arguments:", "# Call arguments")
+        docstring = docstring.replace("Returns:", "# Returns")
         docstring = docstring.replace("Example:", "# Example\n")
         docstring = docstring.replace("Examples:", "# Examples\n")
 
-        docstring = re.sub(r"\nReference:\n\s*-", "\n**Reference**\n\n-", docstring)
+        docstring = re.sub(r"\nReference:\n\s*", "\n**Reference**\n\n", docstring)
+        docstring = re.sub(r"\nReferences:\n\s*", "\n**References**\n\n", docstring)
 
         # Fix typo
         docstring = docstring.replace("\n >>> ", "\n>>> ")
@@ -39,9 +41,9 @@ class TFKerasDocumentationGenerator:
         usable_lines = []
 
         def flush_docstest(usable_lines, doctest_lines):
-            usable_lines.append("```shell")
+            usable_lines.append("```python")
             usable_lines += doctest_lines
-            usable_lines.append("```endshell")
+            usable_lines.append("```")
             usable_lines.append("")
 
         for line in lines:
@@ -287,7 +289,13 @@ def to_markdown(google_style_section: str) -> str:
     section_title = google_style_section[2:end_first_line]
     section_body = google_style_section[end_first_line:]
     section_body = remove_indentation(section_body)
-    if section_title in ("Arguments", "Attributes", "Raises", "Call arguments"):
+    if section_title in (
+        "Arguments",
+        "Attributes",
+        "Raises",
+        "Call arguments",
+        "Returns",
+    ):
         section_body = format_as_markdown_list(section_body)
     if section_body:
         return f"__{section_title}__\n\n{section_body}\n"

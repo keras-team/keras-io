@@ -24,12 +24,11 @@ from tensorflow.keras import layers
 ---
 ## Introduction
 
-The Keras *functional API* is a way to create models that is more flexible
+The Keras *functional API* is a way to create models that are more flexible
 than the `tf.keras.Sequential` API. The functional API can handle models
-with non-linear topology, models with shared layers, and models
-with multiple inputs or outputs.
+with non-linear topology, shared layers, and even multiple inputs or outputs.
 
-The main idea that a deep learning model is usually
+The main idea is that a deep learning model is usually
 a directed acyclic graph (DAG) of layers.
 So the functional API is a way to build *graphs of layers*.
 
@@ -114,7 +113,7 @@ x = dense(inputs)
 
 The "layer call" action is like drawing an arrow from "inputs" to this layer
 you created.
-You're "passing" the inputs to the `dense` layer, and out you get `x`.
+You're "passing" the inputs to the `dense` layer, and you get `x` as the output.
 
 Let's add a few more layers to the graph of layers:
 
@@ -193,13 +192,19 @@ This figure and the code are almost identical. In the code version,
 the connection arrows are replaced by the call operation.
 
 A "graph of layers" is an intuitive mental image for a deep learning model,
-and the functional API is a way to create models that closely mirror this.
+and the functional API is a way to create models that closely mirrors this.
 
 ---
 ## Training, evaluation, and inference
 
 Training, evaluation, and inference work exactly in the same way for models
 built using the functional API as for `Sequential` models.
+
+The `Model` class offers a built-in training loop (the `fit()` method)
+and a built-in evaluation loop (the `evaluate()` method). Note
+that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
+to implement training routines beyond supervised learning
+(e.g. [GANs](/examples/generative/dcgan_overriding_train_step/)).
 
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
@@ -228,12 +233,12 @@ print("Test accuracy:", test_scores[1])
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.3528 - accuracy: 0.9005 - val_loss: 0.1883 - val_accuracy: 0.9457
+750/750 [==============================] - 2s 2ms/step - loss: 0.5648 - accuracy: 0.8473 - val_loss: 0.1793 - val_accuracy: 0.9474
 Epoch 2/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.1684 - accuracy: 0.9505 - val_loss: 0.1385 - val_accuracy: 0.9597
-313/313 - 0s - loss: 0.1361 - accuracy: 0.9605
-Test loss: 0.13611680269241333
-Test accuracy: 0.9605000019073486
+750/750 [==============================] - 1s 1ms/step - loss: 0.1686 - accuracy: 0.9506 - val_loss: 0.1398 - val_accuracy: 0.9576
+313/313 - 0s - loss: 0.1401 - accuracy: 0.9580
+Test loss: 0.14005452394485474
+Test accuracy: 0.9580000042915344
 
 ```
 </div>
@@ -243,7 +248,7 @@ For further reading, see the [training and evaluation](/guides/training_with_bui
 ## Save and serialize
 
 Saving the model and serialization work the same way for models built using
-the functional API as they do for `Sequential` models. To standard way
+the functional API as they do for `Sequential` models. The standard way
 to save a functional model is to call `model.save()`
 to save the entire model as a single file. You can later recreate the same model
 from this file, even if the code that built the model is no longer available.
@@ -262,6 +267,12 @@ del model
 model = keras.models.load_model("path_to_my_model")
 ```
 
+<div class="k-default-codeblock">
+```
+INFO:tensorflow:Assets written to: path_to_my_model/assets
+
+```
+</div>
 For details, read the model [serialization & saving](
     /guides/serialization_and_saving/) guide.
 
@@ -376,7 +387,7 @@ on the output of another layer. By calling a model you aren't just reusing
 the architecture of the model, you're also reusing its weights.
 
 To see this in action, here's a different take on the autoencoder example that
-creates an encoder model, a decoder model, and chain them in two calls
+creates an encoder model, a decoder model, and chains them in two calls
 to obtain the autoencoder model:
 
 
@@ -508,7 +519,7 @@ ensemble_model = keras.Model(inputs=inputs, outputs=outputs)
 The functional API makes it easy to manipulate multiple inputs and outputs.
 This cannot be handled with the `Sequential` API.
 
-For example, if you're building a system for ranking custom issue tickets by
+For example, if you're building a system for ranking customer issue tickets by
 priority and routing them to the correct department,
 then the model will have three inputs:
 
@@ -594,7 +605,7 @@ model.compile(
 ```
 
 Since the output layers have different names, you could also specify
-the loss like this:
+the losses and loss weights with the corresponding layer names:
 
 
 ```python
@@ -604,7 +615,7 @@ model.compile(
         "priority": keras.losses.BinaryCrossentropy(from_logits=True),
         "department": keras.losses.CategoricalCrossentropy(from_logits=True),
     },
-    loss_weights=[1.0, 0.2],
+    loss_weights={"priority": 1.0, "department": 0.2},
 )
 ```
 
@@ -632,11 +643,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 1s 27ms/step - loss: 1.3097 - priority_loss: 0.6958 - department_loss: 3.0697
+40/40 [==============================] - 3s 21ms/step - loss: 1.2713 - priority_loss: 0.7000 - department_loss: 2.8567
 Epoch 2/2
-40/40 [==============================] - 1s 27ms/step - loss: 1.2982 - priority_loss: 0.6946 - department_loss: 3.0178
+40/40 [==============================] - 1s 22ms/step - loss: 1.2947 - priority_loss: 0.6990 - department_loss: 2.9786
 
-<tensorflow.python.keras.callbacks.History at 0x154d75c50>
+<tensorflow.python.keras.callbacks.History at 0x156dbce10>
 
 ```
 </div>
@@ -651,8 +662,8 @@ For more detailed explanation, refer to the [training and evaluation](/guides/tr
 
 In addition to models with multiple inputs and outputs,
 the functional API makes it easy to manipulate non-linear connectivity
-topologies -- these are models with layers that are not connected sequentially.
-Something the `Sequential` API can not handle.
+topologies -- these are models with layers that are not connected sequentially,
+which the `Sequential` API cannot handle.
 
 A common use case for this is residual connections.
 Let's build a toy ResNet model for CIFAR10 to demonstrate this:
@@ -764,17 +775,17 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 1s 96ms/step - loss: 2.3007 - acc: 0.0950 - val_loss: 2.2903 - val_acc: 0.1150
+13/13 [==============================] - 2s 103ms/step - loss: 2.3218 - acc: 0.1291 - val_loss: 2.3014 - val_acc: 0.1150
 
-<tensorflow.python.keras.callbacks.History at 0x1559a2050>
+<tensorflow.python.keras.callbacks.History at 0x157848990>
 
 ```
 </div>
 ---
 ## Shared layers
 
-Another good use for the functional API are for models that use *shared layers*.
-Shared layers are layer instances that are reused multiple times in a same model --
+Another good use for the functional API are models that use *shared layers*.
+Shared layers are layer instances that are reused multiple times in the same model --
 they learn features that correspond to multiple paths in the graph-of-layers.
 
 Shared layers are often used to encode inputs from similar spaces
@@ -841,7 +852,7 @@ extracted_features = feat_extraction_model(img)
 ```
 
 This comes in handy for tasks like
-[neural style transfer](https://www.tensorflow.org/tutorials/generative/style_transfer),
+[neural style transfer](https://keras.io/examples/generative/neural_style_transfer/),
 among other things.
 
 ---
@@ -931,7 +942,7 @@ config = model.get_config()
 new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
 ```
 
-Optionally, implement the classmethod `from_config(cls, config)` which is used
+Optionally, implement the class method `from_config(cls, config)` which is used
 when recreating a layer instance given its config dictionary.
 The default implementation of `from_config` is:
 
@@ -943,7 +954,7 @@ def from_config(cls, config):
 ---
 ## When to use the functional API
 
-When should you use the Keras functional API to create a new model,
+Should you use the Keras functional API to create a new model,
 or just subclass the `Model` class directly? In general, the functional API
 is higher-level, easier and safer, and has a number of
 features that subclassed models do not support.
@@ -953,7 +964,7 @@ that are not easily expressible as directed acyclic graphs of layers.
 For example, you could not implement a Tree-RNN with the functional API
 and would have to subclass `Model` directly.
 
-For in-depth look at the differences between the functional API and
+For an in-depth look at the differences between the functional API and
 model subclassing, read
 [What are Symbolic and Imperative APIs in TensorFlow 2.0?](https://blog.tensorflow.org/2019/01/what-are-symbolic-and-imperative-apis.html).
 

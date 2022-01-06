@@ -29,14 +29,15 @@ import docstrings
 import jinja2
 import markdown
 import requests
+import multiprocessing
 
 from master import MASTER
 import tutobooks
 import generate_tf_guides
 
 
-EXAMPLES_GH_LOCATION = "keras-team/keras-io/blob/master/examples/"
-GUIDES_GH_LOCATION = "keras-team/keras-io/blob/master/guides/"
+EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
+GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 
 
 class KerasIO:
@@ -80,21 +81,19 @@ class KerasIO:
             for fname in sorted(os.listdir(path)):
                 if fname.endswith(".py"):  # e.g. examples/nlp/test.py
                     name = fname[:-3]
-                    example_path = name.split('/')[-1]
+                    example_path = name.split("/")[-1]
                     if example_path not in preexisting:
-                        f = open(path / fname)
+                        f = open(path / fname, encoding="utf-8")
                         f.readline()
                         title_line = f.readline()
                         f.close()
                         assert title_line.startswith("Title: ")
                         title = title_line[len("Title: ") :]
-                        children.append(
-                            {"path": example_path, "title": title.strip()}
-                        )
+                        children.append({"path": example_path, "title": title.strip()})
             entry["children"] = children
 
     def make_md_sources(self):
-        print('Generating md sources')
+        print("Generating md sources")
         if os.path.exists(self.md_sources_dir):
             print("Clearing", self.md_sources_dir)
             shutil.rmtree(self.md_sources_dir)
@@ -136,12 +135,17 @@ class KerasIO:
             '<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> '
             "[**View in Colab**](https://colab.research.google.com/github/"
             + github_repo_dir
-            + "ipynb/"
-            + name + ".ipynb"
+            + "/ipynb/"
+            + name
+            + ".ipynb"
             + ")  "
             '<span class="k-dot">•</span>'
             '<img class="k-inline-icon" src="https://github.com/favicon.ico"/> '
-            "[**GitHub source**](https://github.com/" + github_repo_dir + fname + ")",
+            "[**GitHub source**](https://github.com/"
+            + github_repo_dir
+            + "/"
+            + fname
+            + ")",
             "\n",
         ]
         md_content_lines = md_content_lines[:6] + button_lines + md_content_lines[6:]
@@ -210,8 +214,8 @@ class KerasIO:
 
     def add_example(self, path, working_dir=None):
         """e.g. add_example('vision/cats_and_dogs')"""
-        assert path.count("/") == 1
-        folder, name = path.split("/")
+        assert path.count(os.path.sep) == 1
+        folder, name = path.split(os.path.sep)
         if name.endswith(".py"):
             name = name[:-3]
 
@@ -233,8 +237,8 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = EXAMPLES_GH_LOCATION + folder + "/"
-        site_img_dir = "img/examples/" + folder + "/" + name
+        github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
+        site_img_dir = os.path.join("img", "examples", folder, name)
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
@@ -244,7 +248,6 @@ class KerasIO:
         """e.g. add_guide('functional_api')"""
         if name.endswith(".py"):
             name = name[:-3]
-
         ipynb_dir = Path(self.guides_dir) / "ipynb"
         if not os.path.exists(ipynb_dir):
             os.makedirs(ipynb_dir)
@@ -264,7 +267,7 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
-        github_repo_dir = GUIDES_GH_LOCATION
+        github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
@@ -297,7 +300,7 @@ class KerasIO:
                 target_dir=target_dir,
                 img_dir=img_dir,
                 site_img_dir="img/guides/",
-                github_repo_dir=GUIDES_GH_LOCATION,
+                github_repo_dir=str(GUIDES_GH_LOCATION),
             )
 
         # Examples
@@ -318,7 +321,7 @@ class KerasIO:
                         target_dir=target_dir,  # e.g. examples/nlp/md
                         img_dir=img_dir,  # e.g. examples/nlp/img
                         site_img_dir="img/examples/" + name,  # e.g. img/examples/nlp
-                        github_repo_dir=EXAMPLES_GH_LOCATION + name + "/",
+                        github_repo_dir=str(EXAMPLES_GH_LOCATION / name),
                     )
 
     def sync_tutobook_templates(self):
@@ -437,7 +440,8 @@ class KerasIO:
             template_path = template_path.with_suffix(".md")
 
         if os.path.exists(template_path):
-            template_file = open(template_path)
+            template_file = open(template_path, encoding="utf8")
+            print(template_path)
             template = template_file.read()
             template_file.close()
         else:
@@ -509,8 +513,35 @@ class KerasIO:
             for entry in children:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
+    def make_map_of_symbol_names_to_api_urls(self):
+        def recursive_make_map(entry, current_url):
+            current_url /= entry["path"]
+            entry_map = {}
+            if "generate" in entry:
+                for symbol in entry["generate"]:
+                    object_ = docstrings.import_object(symbol)
+                    object_type = docstrings.get_type(object_)
+                    object_name = symbol.split(".")[-1]
+
+                    if symbol.startswith("tensorflow.keras."):
+                        symbol = symbol.replace("tensorflow.keras.", "keras.")
+                    object_name = object_name.lower().replace("_", "")
+                    entry_map[symbol] = (
+                        str(current_url) + "#" + object_name + "-" + object_type
+                    )
+
+            if "children" in entry:
+                for child in entry["children"]:
+                    entry_map.update(recursive_make_map(child, current_url))
+            return entry_map
+
+        self._map_of_symbol_names_to_api_urls = recursive_make_map(
+            self.master, Path("")
+        )
+
     def render_md_sources_to_html(self):
-        print('Rendering md sources to HTML')
+        self.make_map_of_symbol_names_to_api_urls()
+        print("Rendering md sources to HTML")
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
@@ -523,78 +554,21 @@ class KerasIO:
         nav = self.make_nav_index()
 
         for src_location, _, fnames in os.walk(self.md_sources_dir):
-            src_dir = Path(src_location)
-            target_dir = src_location.replace(self.md_sources_dir, self.site_dir)
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
 
-            for fname in fnames:
-                if not fname.endswith(".md"):
-                    continue
-
-                print("...Rendering", Path(target_dir) / fname)
-
-                # Load metadata for page
-                metadata_file = open(
-                    str(Path(src_location) / fname[:-3]) + "_metadata.json"
+            pool = multiprocessing.Pool(processes=8)
+            workers = [
+                pool.apply_async(
+                    self.render_single_file, args=(src_location, fname, nav)
                 )
-                metadata = json.loads(metadata_file.read())
-                metadata_file.close()
-                if fname == "index.md":
-                    # Render as index.html
-                    target_path = Path(target_dir) / "index.html"
-                    relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
-                    relative_url = relative_url.replace('//', '/')
-                else:
-                    # Render as fname_no_ext/index.tml
-                    fname_no_ext = ".".join(fname.split(".")[:-1])
-                    full_target_dir = Path(target_dir) / fname_no_ext
-                    os.makedirs(full_target_dir)
-                    target_path = full_target_dir / "index.html"
-                    relative_url = (str(full_target_dir) + "/").replace(
-                        self.site_dir, "/"
-                    )
+                for fname in fnames
+            ]
 
-                md_file = open(src_dir / fname)
-                md_content = md_file.read()
-                md_file.close()
-                md_content = replace_links(md_content)
-                md_content = preprocess_code_blocks(md_content)
-                html_content = markdown.markdown(
-                    md_content,
-                    extensions=[
-                        "fenced_code",
-                        "tables",
-                        "codehilite",
-                        "mdx_truly_sane_lists",
-                    ],
-                )
-                html_content = insert_title_ids_in_html(html_content)
-                html_content = post_process_code_blocks(html_content)
-                local_nav = [
-                    set_active_flag_in_nav_entry(entry, relative_url) for entry in nav
-                ]
-
-                title = md_content[2 : md_content.find("\n")]
-                html_docs = docs_template.render(
-                    {
-                        "title": title,
-                        "content": html_content,
-                        "location_history": metadata["location_history"],
-                        "base_url": self.url,
-                        "outline": metadata["outline"],
-                    }
-                )
-                html_page = base_template.render(
-                    {
-                        "title": title,
-                        "nav": local_nav,
-                        "base_url": self.url,
-                        "main": html_docs,
-                    }
-                )
-                save_file(target_path, html_page)
-                all_urls_list.append('https://keras.io' + relative_url)
+            for worker in workers:
+                url = worker.get()
+                if url is not None:
+                    all_urls_list.append(url)
+            pool.close()
+            pool.join()
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -631,15 +605,114 @@ class KerasIO:
                         "content": "<h1>404: Page not found</h1>",
                         "base_url": self.url,
                     }
-                )
+                ),
             }
         )
         save_file(Path(self.site_dir) / "404.html", page404)
 
         # Tutobooks
         self.sync_tutobook_media()
-        sitemap = '\n'.join(all_urls_list) + '\n'
+        sitemap = "\n".join(all_urls_list) + "\n"
         save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
+
+    def render_single_file(self, src_location, fname, nav):
+        if not fname.endswith(".md"):
+            return
+
+        base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
+        docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
+
+        src_dir = Path(src_location)
+        target_dir = src_location.replace(self.md_sources_dir, self.site_dir)
+        if not os.path.exists(target_dir):
+            try:
+                os.makedirs(target_dir)
+            except FileExistsError:
+                # Might be created by a concurrent process.
+                pass
+
+        # Load metadata for page
+        metadata_file = open(str(Path(src_location) / fname[:-3]) + "_metadata.json")
+        metadata = json.loads(metadata_file.read())
+        metadata_file.close()
+        if fname == "index.md":
+            # Render as index.html
+            target_path = Path(target_dir) / "index.html"
+            relative_url = (str(target_dir) + "/").replace(self.site_dir, "/")
+            relative_url = relative_url.replace("//", "/")
+        else:
+            # Render as fname_no_ext/index.tml
+            fname_no_ext = ".".join(fname.split(".")[:-1])
+            full_target_dir = Path(target_dir) / fname_no_ext
+            os.makedirs(full_target_dir)
+            target_path = full_target_dir / "index.html"
+            relative_url = (str(full_target_dir) + "/").replace(self.site_dir, "/")
+            relative_url = relative_url.replace("//", "/")
+
+        md_file = open(src_dir / fname, encoding="utf-8")
+        md_content = md_file.read()
+        md_file.close()
+        md_content = replace_links(md_content)
+
+        # Convert Keras symbols to links to the Keras docs
+        for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
+            md_content = re.sub(
+                r"`((tf\.|)" + symbol + ")`", r"[`\1`](" + symbol_url + ")", md_content
+            )
+
+        # Convert TF symbols to links to tensorflow.org
+        tmp_content = copy.copy(md_content)
+        replacements = {}
+        while "`tf." in tmp_content:
+            index = tmp_content.find("`tf.")
+            if tmp_content[index - 1] == "[":
+                tmp_content = tmp_content[tmp_content.find("`tf.") + 1 :]
+                tmp_content = tmp_content[tmp_content.find("`") + 1 :]
+            else:
+                tmp_content = tmp_content[tmp_content.find("`tf.") + 1 :]
+                symbol = tmp_content[: tmp_content.find("`")]
+                tmp_content = tmp_content[tmp_content.find("`") + 1 :]
+                if "/" not in symbol and "(" not in symbol:
+                    path = symbol.replace(".", "/")
+                    path = path.replace("(", "")
+                    path = path.replace(")", "")
+                    replacements["`" + symbol + "`"] = (
+                        "[`"
+                        + symbol
+                        + "`](https://www.tensorflow.org/api_docs/python/"
+                        + path
+                        + ")"
+                    )
+        for key, value in replacements.items():
+            md_content = md_content.replace(key, value)
+
+        # Convert ```lang notation to the hilite syntax
+        md_content = md_content.replace("```python\n", "```\n:::python\n")
+        md_content = md_content.replace("```shell\n", "```\n:::none\n")
+
+        html_content = markdown.markdown(
+            md_content,
+            extensions=["fenced_code", "tables", "codehilite", "mdx_truly_sane_lists",],
+            extension_configs={"codehilite": {"guess_lang": False,},},
+        )
+        html_content = insert_title_ids_in_html(html_content)
+        local_nav = [set_active_flag_in_nav_entry(entry, relative_url) for entry in nav]
+
+        title = md_content[2 : md_content.find("\n")]
+        html_docs = docs_template.render(
+            {
+                "title": title,
+                "content": html_content,
+                "location_history": metadata["location_history"],
+                "base_url": self.url,
+                "outline": metadata["outline"],
+            }
+        )
+        html_page = base_template.render(
+            {"title": title, "nav": local_nav, "base_url": self.url, "main": html_docs,}
+        )
+        save_file(target_path, html_page)
+        return relative_url
 
     def make(self):
         self.make_md_sources()
@@ -672,7 +745,7 @@ class KerasIO:
 
 
 def save_file(path, content):
-    f = open(path, "w")
+    f = open(path, "w", encoding="utf8")
     f.write(content)
     f.close()
 
@@ -691,44 +764,15 @@ def set_active_flag_in_nav_entry(entry, relative_url):
     return entry
 
 
-def preprocess_code_blocks(md):
-    md = md.replace("```shell\n", '<code class="k-shell">\n```\n')
-    md = md.replace("```endshell", "```\n</code>")
-    md = re.sub(r">>> # (.*?)\n", r">>>KCOMMENT_START # \1 KCOMMENT_END \n", md)
-    return md
-
-
-def post_process_code_blocks(html):
-    html = re.sub(
-        r'<span class="n">KCOMMENT_START</span>', r'<span class="k-code-comment">', html
-    )
-    html = re.sub(
-        r'<span class="nv">KCOMMENT_START</span>',
-        r'<span class="k-code-comment">',
-        html,
-    )
-    html = re.sub(r'<span class="n">KCOMMENT_END</span>', r"</span>", html)
-    html = re.sub(r'<span class="nv">KCOMMENT_END</span>', r"</span>", html)
-    html = re.sub(r"KCOMMENT_END", r"</span>", html)
-    if "KCOMMENT_" in html:
-        print(html)
-        raise ValueError("Comment tags left over in HTML")
-    return html
-
-
 def replace_links(content):
-    content = content.replace(
-        "https://www.tensorflow.org/guide/keras/custom_layers_and_models",
-        "https://keras.io/guides/making_new_layers_and_models_via_subclassing/",
-    )
-    content = content.replace(
-        "https://www.tensorflow.org/guide/keras/masking_and_padding",
-        "https://keras.io/guides/understanding_masking_and_padding/",
-    )
-    content = content.replace(
-        "https://www.tensorflow.org/guide/keras/rnn",
-        "https://keras.io/guides/working_with_rnns/",
-    )
+    # Make sure all Keras guides point to keras.io.
+    for entry in generate_tf_guides.CONFIG:
+        keras_name = entry["source_name"]
+        tf_name = entry["target_name"]
+        content = content.replace(
+          "https://www.tensorflow.org/guide/keras/" + tf_name,
+          "https://keras.io/guides/" + keras_name,
+        )
     return content
 
 
@@ -750,6 +794,8 @@ def copy_inner_contents(src, dst, ext=".md"):
         fdst = Path(dst) / fname
         if fname.endswith(ext):
             shutil.copyfile(fpath, fdst)
+        if os.path.isdir(fpath):
+            copy_inner_contents(fpath, fdst, ext)
 
 
 def make_outline(md_source):
@@ -788,15 +834,15 @@ def insert_title_ids_in_html(html):
     for i in range(1, 5):
         match = "<h" + str(i) + ">(.*?)</h" + str(i) + ">"
         replace = (
-            "<h" +
-            str(i) +
-            r' id="' +
-            marker +
-            r"\1" +
-            marker_end +
-            r'">\1</h' +
-            str(i) +
-            ">"
+            "<h"
+            + str(i)
+            + r' id="'
+            + marker
+            + r"\1"
+            + marker_end
+            + r'">\1</h'
+            + str(i)
+            + ">"
         )
         html = re.sub(match, replace, html)
 
@@ -847,7 +893,8 @@ def generate_md_toc(entries, url, depth=2):
         else:
             title_prefix = "- "
         generated += title_prefix + "[{title}]({full_url})\n".format(
-            title=title, full_url=full_url)
+            title=title, full_url=full_url
+        )
         if children:
             assert path.endswith("/")
             for child in children:
@@ -857,7 +904,8 @@ def generate_md_toc(entries, url, depth=2):
                 child_path = child["path"]
                 child_url = full_url + child_path
                 generated += "- [{child_title}]({child_url})\n".format(
-                    child_title=child_title, child_url=child_url)
+                    child_title=child_title, child_url=child_url
+                )
             generated += "\n"
         elif generate and print_generate:
             for gen in generate:
@@ -865,10 +913,12 @@ def generate_md_toc(entries, url, depth=2):
                 obj_name = docstrings.get_name(obj)
                 obj_type = docstrings.get_type(obj)
                 link = "{full_url}/#{obj_name}-{obj_type}".format(
-                    full_url=full_url, obj_name=obj_name, obj_type=obj_type).lower()
+                    full_url=full_url, obj_name=obj_name, obj_type=obj_type
+                ).lower()
                 name = gen.split(".")[-1]
                 generated += "- [{name} {obj_type}]({link})\n".format(
-                    name=name, obj_type=obj_type, link=link)
+                    name=name, obj_type=obj_type, link=link
+                )
             generated += "\n"
     return generated
 
@@ -882,20 +932,22 @@ def get_working_dir(arg):
 if __name__ == "__main__":
     keras_io = KerasIO(
         master=MASTER,
-        url="/",
-        templates_dir="../templates/",
-        md_sources_dir="../sources/",
-        site_dir="../site/",
-        theme_dir="../theme/",
-        guides_dir="../guides/",
-        examples_dir="../examples/",
+        url=os.path.sep,
+        templates_dir=os.path.join("..", "templates"),
+        md_sources_dir=os.path.join("..", "sources"),
+        site_dir=os.path.join("..", "site"),
+        theme_dir=os.path.join("..", "theme"),
+        guides_dir=os.path.join("..", "guides"),
+        examples_dir=os.path.join("..", "examples"),
         refresh_guides=False,
         refresh_examples=False,
     )
 
     cmd = sys.argv[1]
     if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
-        raise ValueError("Must specify command `make`, `serve`, or `add_example`.")
+        raise ValueError(
+            "Must specify command `make`, `serve`, `add_example`, `add_guide` or `generate_tf_guides`."
+        )
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
             raise ValueError(

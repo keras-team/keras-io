@@ -25,7 +25,7 @@ import numpy as np
 ## Introduction
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
-Their usage is coverered in the guide
+Their usage is covered in the guide
 [Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
@@ -72,9 +72,21 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
-x_test = np.reshape(x_train, (-1, 784))
+x_test = np.reshape(x_test, (-1, 784))
+
+# Reserve 10,000 samples for validation.
+x_val = x_train[-10000:]
+y_val = y_train[-10000:]
+x_train = x_train[:-10000]
+y_train = y_train[:-10000]
+
+# Prepare the training dataset.
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
+
+# Prepare the validation dataset.
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(batch_size)
 ```
 
 Here's our training loop:
@@ -98,7 +110,7 @@ for epoch in range(epochs):
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
 
         # Open a GradientTape to record the operations run
-        # during the forward pass, which enables autodifferentiation.
+        # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
 
             # Run the forward pass of the layer.
@@ -124,39 +136,35 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %s samples" % ((step + 1) * 64))
+            print("Seen so far: %s samples" % ((step + 1) * batch_size))
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 138.9553
+Training loss (for one batch) at step 0: 119.2370
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 2.0124
+Training loss (for one batch) at step 200: 2.1698
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6247
+Training loss (for one batch) at step 400: 1.1696
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.9244
+Training loss (for one batch) at step 600: 0.8985
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.4198
-Seen so far: 51264 samples
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.6736
+Training loss (for one batch) at step 0: 0.9260
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.6869
+Training loss (for one batch) at step 200: 1.3808
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.5578
+Training loss (for one batch) at step 400: 0.5850
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.3697
+Training loss (for one batch) at step 600: 0.6255
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.0953
-Seen so far: 51264 samples
 
 ```
 </div>
@@ -194,20 +202,6 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 # Prepare the metrics.
 train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
 val_acc_metric = keras.metrics.SparseCategoricalAccuracy()
-
-# Prepare the training dataset.
-batch_size = 64
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
-
-# Prepare the validation dataset.
-# Reserve 10,000 samples for validation.
-x_val = x_train[-10000:]
-y_val = y_train[-10000:]
-x_train = x_train[:-10000]
-y_train = y_train[:-10000]
-val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_dataset = val_dataset.batch(64)
 ```
 
 Here's our training & evaluation loop:
@@ -238,7 +232,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -262,55 +256,51 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 103.4554
+Training loss (for one batch) at step 0: 99.8348
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.5734
+Training loss (for one batch) at step 200: 1.7872
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.7797
+Training loss (for one batch) at step 400: 1.2578
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.2821
+Training loss (for one batch) at step 600: 1.2309
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3632
-Seen so far: 51264 samples
-Training acc over epoch: 0.7958
-Validation acc: 0.8843
-Time taken: 3.78s
+Training acc over epoch: 0.6845
+Validation acc: 0.7683
+Time taken: 4.16s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.7340
+Training loss (for one batch) at step 0: 0.7814
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5991
+Training loss (for one batch) at step 200: 0.4360
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.8521
+Training loss (for one batch) at step 400: 0.8505
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.6446
+Training loss (for one batch) at step 600: 0.7776
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.5393
-Seen so far: 51264 samples
-Training acc over epoch: 0.8817
-Validation acc: 0.9163
-Time taken: 4.31s
+Training acc over epoch: 0.8263
+Validation acc: 0.8106
+Time taken: 4.17s
 
 ```
 </div>
 ---
 ## Speeding-up your training step with `tf.function`
 
-The default runtime in TensorFlow 2.0 is
-[eager execution](https://www.tensorflow.org/guide/eager). As such, our training loop
-above executes eagerly.
+The default runtime in TensorFlow 2 is
+[eager execution](https://www.tensorflow.org/guide/eager).
+As such, our training loop above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
-advantage. Decribing your computation as a static graph enables the framework
+advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
 the framework is constrained to greedly execute one operation after another,
 with no knowledge of what comes next.
 
-You can compile into a static graph any function that take tensors as input.
+You can compile into a static graph any function that takes tensors as input.
 Just add a `@tf.function` decorator on it, like this:
 
 
@@ -361,7 +351,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -384,38 +374,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.2797
+Training loss (for one batch) at step 0: 0.5857
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5493
+Training loss (for one batch) at step 200: 0.4440
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.3036
+Training loss (for one batch) at step 400: 0.4354
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.4908
+Training loss (for one batch) at step 600: 0.7005
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3206
-Seen so far: 51264 samples
-Training acc over epoch: 0.9060
-Validation acc: 0.9191
-Time taken: 1.00s
+Training acc over epoch: 0.8685
+Validation acc: 0.8848
+Time taken: 1.25s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.3756
+Training loss (for one batch) at step 0: 0.3965
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.2454
+Training loss (for one batch) at step 200: 0.3314
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.4296
+Training loss (for one batch) at step 400: 0.2886
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.2993
+Training loss (for one batch) at step 600: 0.2908
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.6099
-Seen so far: 51264 samples
-Training acc over epoch: 0.9174
-Validation acc: 0.9326
-Time taken: 0.67s
+Training acc over epoch: 0.8881
+Validation acc: 0.8955
+Time taken: 0.90s
 
 ```
 </div>
@@ -494,8 +480,8 @@ images that look almost real, by learning the latent distribution of a training
 dataset of images (the "latent space" of the images).
 
 A GAN is made of two parts: a "generator" model that maps points in the latent
-space to points in image space, an a "discriminator" model, a classifier
-that can tell the difference between real imagees (from the training dataset)
+space to points in image space, a "discriminator" model, a classifier
+that can tell the difference between real images (from the training dataset)
 and fake images (the output of the generator network).
 
 A GAN training loop looks like this:
@@ -540,19 +526,21 @@ discriminator.summary()
 ```
 Model: "discriminator"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-conv2d (Conv2D)              (None, 14, 14, 64)        640       
-_________________________________________________________________
-leaky_re_lu (LeakyReLU)      (None, 14, 14, 64)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 7, 7, 128)         73856     
-_________________________________________________________________
-leaky_re_lu_1 (LeakyReLU)    (None, 7, 7, 128)         0         
-_________________________________________________________________
-global_max_pooling2d (Global (None, 128)               0         
-_________________________________________________________________
-dense_4 (Dense)              (None, 1)                 129       
+ conv2d (Conv2D)             (None, 14, 14, 64)        640       
+                                                                 
+ leaky_re_lu (LeakyReLU)     (None, 14, 14, 64)        0         
+                                                                 
+ conv2d_1 (Conv2D)           (None, 7, 7, 128)         73856     
+                                                                 
+ leaky_re_lu_1 (LeakyReLU)   (None, 7, 7, 128)         0         
+                                                                 
+ global_max_pooling2d (Globa  (None, 128)              0         
+ lMaxPooling2D)                                                  
+                                                                 
+ dense_4 (Dense)             (None, 1)                 129       
+                                                                 
 =================================================================
 Total params: 74,625
 Trainable params: 74,625
@@ -673,9 +661,7 @@ for epoch in range(epochs):
             print("adversarial loss at step %d: %.2f" % (step, g_loss))
 
             # Save one generated image
-            img = tf.keras.preprocessing.image.array_to_img(
-                generated_images[0] * 255.0, scale=False
-            )
+            img = keras.utils.array_to_img(generated_images[0] * 255.0, scale=False)
             img.save(os.path.join(save_dir, "generated_img" + str(step) + ".png"))
 
         # To limit execution time we stop after 10 steps.
@@ -688,8 +674,8 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.71
-adversarial loss at step 0: 0.73
+discriminator loss at step 0: 0.68
+adversarial loss at step 0: 0.62
 
 ```
 </div>
