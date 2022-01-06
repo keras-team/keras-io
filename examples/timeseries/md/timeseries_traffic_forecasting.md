@@ -376,13 +376,6 @@ test_dataset = create_tf_dataset(
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-01-05 16:54:39.817814: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-```
-</div>
 ### Roads Graph
 
 As mentioned before, we assume that the road segments form a graph.
