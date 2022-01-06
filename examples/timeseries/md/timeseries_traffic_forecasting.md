@@ -1,11 +1,16 @@
-"""
-Title: Traffic forecasting using graph neural networks and LSTM
-Author: [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)
-Date created: 2021/12/28
-Last modified: 2021/12/28
-Description: This example demonstrates how to do timeseries forecasting over graphs.
-"""
-"""
+# Traffic forecasting using graph neural networks and LSTM
+
+**Author:** [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)<br>
+**Date created:** 2021/12/28<br>
+**Last modified:** 2021/12/28<br>
+**Description:** This example demonstrates how to do timeseries forecasting over graphs.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/timeseries/ipynb/timeseries_traffic_forecasting.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/timeseries/timeseries_traffic_forecasting.py)
+
+
+
+---
 ## Introduction
 
 This example shows how to forecast traffic condition using graph neural networks and LSTM.
@@ -33,12 +38,12 @@ Yu, Bing, Haoteng Yin, and Zhanxing Zhu. "Spatio-temporal graph convolutional ne
 a deep learning framework for traffic forecasting." Proceedings of the 27th International
 Joint Conference on Artificial Intelligence, 2018.
 ([github](https://github.com/VeritasYin/STGCN_IJCAI-18))
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import pandas as pd
 import numpy as np
 import os
@@ -48,12 +53,11 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+```
 
-"""
+---
 ## Data preparation
-"""
 
-"""
 ### Data description
 
 We use a real-world traffic speed dataset named `PeMSD7`. We use the version
@@ -70,12 +74,11 @@ speed collected for those stations in the weekdays of May and June of 2012.
 
 The full description of the dataset can be found in
 [Yu et al., 2018](https://arxiv.org/abs/1709.04875).
-"""
 
-"""
 ### Loading data
-"""
 
+
+```python
 url = "https://github.com/VeritasYin/STGCN_IJCAI-18/raw/master/data_loader/PeMS-M.zip"
 data_dir = keras.utils.get_file(origin=url, extract=True, archive_format="zip")
 data_dir = data_dir.rstrip(".zip")
@@ -87,8 +90,15 @@ speeds_array = pd.read_csv(os.path.join(data_dir, "V_228.csv"), header=None).to_
 
 print(f"route_distances shape={route_distances.shape}")
 print(f"speeds_array shape={speeds_array.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+route_distances shape=(228, 228)
+speeds_array shape=(12672, 228)
+
+```
+</div>
 ### sub-sampling roads
 
 To reduce the problem size and make the training faster, we will only
@@ -98,8 +108,9 @@ roads to it, and continuing this process until we get 25 roads. You can choose
 any other subset of the roads. We chose the roads in this way to increase the likelihood
 of having roads with correlated speed timeseries.
 `sample_routes` contains the IDs of the selected roads.
-"""
 
+
+```python
 sample_routes = [
     0,
     1,
@@ -133,38 +144,74 @@ speeds_array = speeds_array[:, sample_routes]
 
 print(f"route_distances shape={route_distances.shape}")
 print(f"speeds_array shape={speeds_array.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+route_distances shape=(26, 26)
+speeds_array shape=(12672, 26)
+
+```
+</div>
 ### Data visualization
 
 Here are the timeseries of the traffic speed for two of the routes:
-"""
 
+
+```python
 plt.figure(figsize=(18, 6))
 plt.plot(speeds_array[:, [0, -1]])
 plt.legend(["route_0", "route_25"])
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.legend.Legend at 0x7fea19dc90d0>
+
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_traffic_forecasting/timeseries_traffic_forecasting_11_1.png)
+    
+
+
 We can also visualize the correlation between the timeseries in different routes.
-"""
 
+
+```python
 plt.figure(figsize=(8, 8))
 plt.matshow(np.corrcoef(speeds_array.T), 0)
 plt.xlabel("road number")
 plt.ylabel("road number")
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+Text(0, 0.5, 'road number')
+
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_traffic_forecasting/timeseries_traffic_forecasting_13_1.png)
+    
+
+
 Using this correlation heatmap, we can see that for example the speed in
 routes 4, 5, 6 are highly correlated.
-"""
 
-"""
 ### Splitting and normalizing data
 
 Next, we split the speed values array into train/validation/test sets,
 and normalize the resulting arrays:
-"""
 
+
+```python
 train_size, val_size = 0.5, 0.2
 
 
@@ -202,8 +249,16 @@ train_array, val_array, test_array = preprocess(speeds_array, train_size, val_si
 print(f"train set size: {train_array.shape}")
 print(f"validation set size: {val_array.shape}")
 print(f"test set size: {test_array.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+train set size: (6336, 26)
+validation set size: (2534, 26)
+test set size: (3802, 26)
+
+```
+</div>
 ### Creating TensorFlow Datasets
 
 Next, we create the datasets for our forecasting problem. The forecasting problem
@@ -212,9 +267,7 @@ road speed values at times `t+1, t+2, ..., t+T`, we want to predict the future v
 the roads speed for times `t+T+1, ..., t+T+h`. So for each time `t` the inputs to our
 model are `T` vectors each of size `N` and the targets are `h` vectors each of size `N`,
 where `N` is the number of roads.
-"""
 
-"""
 We use the Keras built-in function
 [`timeseries_dataset_from_array()`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
 The function `create_tf_dataset()` below takes as input a `numpy.ndarray` and returns a
@@ -235,8 +288,9 @@ however, the last dimension of the input is always 1.
 
 We use the last 12 values of the speed in each road to forecast the speed for 3 time
 steps ahead:
-"""
 
+
+```python
 from tensorflow.keras.preprocessing import timeseries_dataset_from_array
 
 batch_size = 64
@@ -320,8 +374,15 @@ test_dataset = create_tf_dataset(
     multi_horizon=multi_horizon,
 )
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-01-05 16:54:39.817814: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
+```
+</div>
 ### Roads Graph
 
 As mentioned before, we assume that the road segments form a graph.
@@ -330,8 +391,9 @@ is to create the graph adjacency matrix from these distances. Following
 [Yu et al., 2018](https://arxiv.org/abs/1709.04875) (equation 10) we assume there
 is an edge between two nodes in the graph if the distance between the corresponding roads
 is less than a threshold.
-"""
 
+
+```python
 
 def compute_adjacency_matrix(
     route_distances: np.ndarray, sigma2: float, epsilon: float
@@ -361,13 +423,14 @@ def compute_adjacency_matrix(
     )
     return (np.exp(-w2 / sigma2) >= epsilon) * w_mask
 
+```
 
-"""
 The function `compute_adjacency_matrix()` returns a boolean adjacency matrix
 where 1 means there is an edge between two nodes. We use the following class
 to store the information about the graph.
-"""
 
+
+```python
 
 class GraphInfo:
     def __init__(self, edges: typing.Tuple[list, list], num_nodes: int):
@@ -384,15 +447,20 @@ graph = GraphInfo(
     num_nodes=adjacency_matrix.shape[0],
 )
 print(f"number of nodes: {graph.num_nodes}, number of edges: {len(graph.edges[0])}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+number of nodes: 26, number of edges: 150
+
+```
+</div>
+---
 ## Network architecture
 
 Our model for forecasting over the graph consists of a graph convolution
 layer and a LSTM layer.
-"""
 
-"""
 ### Graph convolution layer
 
 Our implementation of the graph convolution layer resembles the implementation
@@ -409,8 +477,9 @@ by first aggregating the neighbors' representations and then multiplying the res
 `self.weight`
 - The final output of the layer is computed in `self.update()` by combining the nodes
 representations and the neighbors' aggregated messages
-"""
 
+
+```python
 
 class GraphConv(layers.Layer):
     def __init__(
@@ -496,8 +565,8 @@ class GraphConv(layers.Layer):
         aggregated_messages = self.compute_aggregated_messages(features)
         return self.update(nodes_representation, aggregated_messages)
 
+```
 
-"""
 ### LSTM plus graph convolution
 
 By applying the graph convolution layer to the input tensor, we get another tensor
@@ -509,8 +578,9 @@ but also we need to process the information over time. To this end, we can pass 
 node's tensor through a recurrent layer. The `LSTMGC` layer below, first applies
 a graph convolution layer to the inputs and then passes the results through a
 `LSTM` layer.
-"""
 
+
+```python
 
 class LSTMGC(layers.Layer):
     """Layer comprising a convolution layer followed by LSTM and dense layers."""
@@ -580,11 +650,13 @@ class LSTMGC(layers.Layer):
             output, [1, 2, 0]
         )  # returns Tensor of shape (batch_size, output_seq_len, num_nodes)
 
+```
 
-"""
+---
 ## Model training
-"""
 
+
+```python
 in_feat = 1
 batch_size = 64
 epochs = 20
@@ -622,15 +694,64 @@ model.fit(
     epochs=epochs,
     callbacks=[keras.callbacks.EarlyStopping(patience=10)],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/20
+99/99 [==============================] - 8s 69ms/step - loss: 0.5542 - val_loss: 0.2459
+Epoch 2/20
+99/99 [==============================] - 8s 84ms/step - loss: 0.1923 - val_loss: 0.1346
+Epoch 3/20
+99/99 [==============================] - 9s 92ms/step - loss: 0.1312 - val_loss: 0.1068
+Epoch 4/20
+99/99 [==============================] - 10s 100ms/step - loss: 0.1083 - val_loss: 0.0914
+Epoch 5/20
+99/99 [==============================] - 12s 120ms/step - loss: 0.0962 - val_loss: 0.0839
+Epoch 6/20
+99/99 [==============================] - 9s 94ms/step - loss: 0.0899 - val_loss: 0.0796
+Epoch 7/20
+99/99 [==============================] - 10s 102ms/step - loss: 0.0864 - val_loss: 0.0771
+Epoch 8/20
+99/99 [==============================] - 10s 103ms/step - loss: 0.0842 - val_loss: 0.0760
+Epoch 9/20
+99/99 [==============================] - 9s 91ms/step - loss: 0.0826 - val_loss: 0.0744
+Epoch 10/20
+99/99 [==============================] - 9s 95ms/step - loss: 0.0815 - val_loss: 0.0735
+Epoch 11/20
+99/99 [==============================] - 12s 118ms/step - loss: 0.0807 - val_loss: 0.0729
+Epoch 12/20
+99/99 [==============================] - 11s 106ms/step - loss: 0.0799 - val_loss: 0.0734
+Epoch 13/20
+99/99 [==============================] - 11s 114ms/step - loss: 0.0795 - val_loss: 0.0721
+Epoch 14/20
+99/99 [==============================] - 13s 133ms/step - loss: 0.0791 - val_loss: 0.0719
+Epoch 15/20
+99/99 [==============================] - 11s 114ms/step - loss: 0.0787 - val_loss: 0.0716
+Epoch 16/20
+99/99 [==============================] - 12s 118ms/step - loss: 0.0784 - val_loss: 0.0715
+Epoch 17/20
+99/99 [==============================] - 13s 131ms/step - loss: 0.0781 - val_loss: 0.0713
+Epoch 18/20
+99/99 [==============================] - 11s 111ms/step - loss: 0.0778 - val_loss: 0.0712
+Epoch 19/20
+99/99 [==============================] - 12s 121ms/step - loss: 0.0776 - val_loss: 0.0711
+Epoch 20/20
+99/99 [==============================] - 11s 116ms/step - loss: 0.0774 - val_loss: 0.0710
+
+<keras.callbacks.History at 0x7fea223a10d0>
+
+```
+</div>
+---
 ## Making forecasts on test set
 
 Now we can use the trained model to make forecasts for the test set. Below, we
 compute the MAE of the model and compare it to the MAE of naive forecasts.
 The naive forecasts are the last value of the speed for each node.
-"""
 
+
+```python
 x_test, y = next(test_dataset.as_numpy_iterator())
 y_pred = model.predict(x_test)
 plt.figure(figsize=(18, 6))
@@ -643,11 +764,21 @@ naive_mse, model_mse = (
     np.square(y_pred[:, 0, :] - y[:, 0, :]).mean(),
 )
 print(f"naive MAE: {naive_mse}, model MAE: {model_mse}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+naive MAE: 0.13472308593195767, model MAE: 0.12683941463664059
+
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_traffic_forecasting/timeseries_traffic_forecasting_32_1.png)
+    
+
+
 Of course, the goal here is to demonstrate the method,
 not to achieve the best performance. To improve the
 model's accuracy, all model hyperparameters should be tuned carefully. In addition,
 several of the `LSTMGC` blocks can be stacked to increase the representation power
 of the model.
-"""
