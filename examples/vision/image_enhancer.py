@@ -3,7 +3,7 @@ Title: Image Enhancer/Denoiser
 Author: [Anish B](https://twitter.com/anishhacko)
 Date created: 2021/12/31
 Last modified: 2022/01/05
-Description: Implementation of Simple Image Enhancer/Denoiser for Document Image Enhancements.
+Description: Implementation of Image Enhancer/Denoiser Using U-Net.
 """
 """
 ## Introduction
