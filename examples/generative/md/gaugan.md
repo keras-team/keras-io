@@ -1,3 +1,4 @@
+
 # GauGAN for conditional image generation
 
 **Author:** [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://twitter.com/RisingSayak)<br>
@@ -86,9 +87,9 @@ TensorFlow Addons.
 ```
 Downloading...
 From: https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
-To: /content/keras-io/scripts/tmp_7418547/facades_data.zip
-100% 26.0M/26.0M [00:00<00:00, 122MB/s] 
-[K     |████████████████████████████████| 1.1 MB 5.0 MB/s 
+To: /content/keras-io/scripts/tmp_4139658/facades_data.zip
+100% 26.0M/26.0M [00:00<00:00, 230MB/s]
+[K     |████████████████████████████████| 1.1 MB 4.1 MB/s 
 [?25h
 
 ```
@@ -154,7 +155,7 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 def load(image_files, batch_size, is_train=True):
     def _random_crop(
-        image, segmentation_map, labels, crop_size=(IMG_HEIGHT, IMG_WIDTH),
+        segmentation_map, image, labels, crop_size=(IMG_HEIGHT, IMG_WIDTH),
     ):
         crop_size = tf.convert_to_tensor(crop_size)
         image_shape = tf.shape(image)[:2]
@@ -165,7 +166,7 @@ def load(image_files, batch_size, is_train=True):
         x2 = x1 + crop_size[1]
 
         cropped_images = []
-        images = [image, segmentation_map, labels]
+        images = [segmentation_map, image, labels]
         for img in images:
             cropped_images.append(img[y1:y2, x1:x2])
         return cropped_images
@@ -837,7 +838,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/keras-applicatio
 80142336/80134624 [==============================] - 0s 0us/step
 80150528/80134624 [==============================] - 0s 0us/step
 Epoch 1/15
-75/75 [==============================] - ETA: 0s - disc_loss: 1.1170 - gen_loss: 117.8989 - feat_loss: 10.7072 - vgg_loss: 17.6127 - kl_loss: 89.4156
+75/75 [==============================] - ETA: 0s - disc_loss: 1.1176 - gen_loss: 113.1885 - feat_loss: 10.4608 - vgg_loss: 17.4899 - kl_loss: 85.0130
 
 ```
 </div>
@@ -858,17 +859,17 @@ Epoch 1/15
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 70s 624ms/step - disc_loss: 1.1170 - gen_loss: 117.8989 - feat_loss: 10.7072 - vgg_loss: 17.6127 - kl_loss: 89.4156 - val_disc_loss: 1.0527 - val_gen_loss: 115.6965 - val_feat_loss: 11.6167 - val_vgg_loss: 16.8936 - val_kl_loss: 88.1338
+75/75 [==============================] - 65s 610ms/step - disc_loss: 1.1176 - gen_loss: 113.1885 - feat_loss: 10.4608 - vgg_loss: 17.4899 - kl_loss: 85.0130 - val_disc_loss: 0.9392 - val_gen_loss: 113.2765 - val_feat_loss: 11.3828 - val_vgg_loss: 17.1672 - val_kl_loss: 84.5438
 Epoch 2/15
-75/75 [==============================] - 40s 531ms/step - disc_loss: 0.8467 - gen_loss: 118.7658 - feat_loss: 11.5313 - vgg_loss: 16.8557 - kl_loss: 89.7774 - val_disc_loss: 1.1950 - val_gen_loss: 118.3520 - val_feat_loss: 12.4168 - val_vgg_loss: 16.5665 - val_kl_loss: 90.6636
+75/75 [==============================] - 39s 519ms/step - disc_loss: 0.8311 - gen_loss: 112.5818 - feat_loss: 11.2419 - vgg_loss: 16.7644 - kl_loss: 83.9872 - val_disc_loss: 0.8797 - val_gen_loss: 113.7591 - val_feat_loss: 10.4079 - val_vgg_loss: 17.0835 - val_kl_loss: 84.3602
 Epoch 3/15
-75/75 [==============================] - 39s 522ms/step - disc_loss: 0.6846 - gen_loss: 118.1381 - feat_loss: 11.5606 - vgg_loss: 16.6948 - kl_loss: 88.9890 - val_disc_loss: 0.6543 - val_gen_loss: 116.5081 - val_feat_loss: 10.3030 - val_vgg_loss: 16.4701 - val_kl_loss: 88.0004
+75/75 [==============================] - 40s 529ms/step - disc_loss: 0.7096 - gen_loss: 112.8148 - feat_loss: 11.0823 - vgg_loss: 16.5154 - kl_loss: 84.3543 - val_disc_loss: 0.8018 - val_gen_loss: 113.0965 - val_feat_loss: 12.2914 - val_vgg_loss: 16.8452 - val_kl_loss: 84.5164
 Epoch 4/15
-75/75 [==============================] - 40s 531ms/step - disc_loss: 0.6344 - gen_loss: 118.2290 - feat_loss: 11.0074 - vgg_loss: 16.5898 - kl_loss: 89.6977 - val_disc_loss: 0.4781 - val_gen_loss: 117.2829 - val_feat_loss: 10.5339 - val_vgg_loss: 16.3467 - val_kl_loss: 89.2452
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.6491 - gen_loss: 113.7675 - feat_loss: 11.0218 - vgg_loss: 16.4683 - kl_loss: 85.2787 - val_disc_loss: 0.6841 - val_gen_loss: 111.6989 - val_feat_loss: 10.0628 - val_vgg_loss: 16.8355 - val_kl_loss: 83.0398
 Epoch 5/15
-75/75 [==============================] - 40s 531ms/step - disc_loss: 0.6481 - gen_loss: 117.6421 - feat_loss: 10.8399 - vgg_loss: 16.4774 - kl_loss: 89.4484 - val_disc_loss: 0.7140 - val_gen_loss: 117.9017 - val_feat_loss: 11.0604 - val_vgg_loss: 16.4581 - val_kl_loss: 90.5048
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.6502 - gen_loss: 112.7470 - feat_loss: 10.8597 - vgg_loss: 16.4198 - kl_loss: 84.5055 - val_disc_loss: 0.5549 - val_gen_loss: 111.5907 - val_feat_loss: 11.1850 - val_vgg_loss: 16.8333 - val_kl_loss: 83.2720
 Epoch 6/15
-75/75 [==============================] - ETA: 0s - disc_loss: 0.6193 - gen_loss: 118.0755 - feat_loss: 10.8880 - vgg_loss: 16.4217 - kl_loss: 89.7763
+75/75 [==============================] - ETA: 0s - disc_loss: 0.6576 - gen_loss: 112.8643 - feat_loss: 10.5360 - vgg_loss: 16.3247 - kl_loss: 85.0674
 
 ```
 </div>
@@ -889,17 +890,17 @@ Epoch 6/15
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 43s 575ms/step - disc_loss: 0.6193 - gen_loss: 118.0755 - feat_loss: 10.8880 - vgg_loss: 16.4217 - kl_loss: 89.7763 - val_disc_loss: 0.8582 - val_gen_loss: 116.3396 - val_feat_loss: 11.6913 - val_vgg_loss: 16.4120 - val_kl_loss: 88.8843
+75/75 [==============================] - 42s 566ms/step - disc_loss: 0.6576 - gen_loss: 112.8643 - feat_loss: 10.5360 - vgg_loss: 16.3247 - kl_loss: 85.0674 - val_disc_loss: 0.4916 - val_gen_loss: 113.3400 - val_feat_loss: 10.3066 - val_vgg_loss: 16.8186 - val_kl_loss: 84.6927
 Epoch 7/15
-75/75 [==============================] - 40s 531ms/step - disc_loss: 0.6150 - gen_loss: 118.1141 - feat_loss: 10.7589 - vgg_loss: 16.4925 - kl_loss: 89.8504 - val_disc_loss: 0.5642 - val_gen_loss: 117.2838 - val_feat_loss: 10.0853 - val_vgg_loss: 16.1698 - val_kl_loss: 89.4835
+75/75 [==============================] - 40s 529ms/step - disc_loss: 0.6044 - gen_loss: 112.4453 - feat_loss: 10.6598 - vgg_loss: 16.2306 - kl_loss: 84.5950 - val_disc_loss: 0.4696 - val_gen_loss: 112.4941 - val_feat_loss: 10.6521 - val_vgg_loss: 16.6972 - val_kl_loss: 83.9683
 Epoch 8/15
-75/75 [==============================] - 40s 531ms/step - disc_loss: 0.5887 - gen_loss: 117.0450 - feat_loss: 10.6751 - vgg_loss: 16.3696 - kl_loss: 89.0114 - val_disc_loss: 0.8020 - val_gen_loss: 115.6915 - val_feat_loss: 10.4028 - val_vgg_loss: 16.3599 - val_kl_loss: 89.2355
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.6134 - gen_loss: 112.1166 - feat_loss: 10.5191 - vgg_loss: 16.2368 - kl_loss: 84.3498 - val_disc_loss: 0.5675 - val_gen_loss: 114.6040 - val_feat_loss: 10.3939 - val_vgg_loss: 17.0217 - val_kl_loss: 85.8596
 Epoch 9/15
-75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5810 - gen_loss: 117.2559 - feat_loss: 10.4926 - vgg_loss: 16.2481 - kl_loss: 89.4540 - val_disc_loss: 0.6814 - val_gen_loss: 115.8680 - val_feat_loss: 9.5750 - val_vgg_loss: 16.1623 - val_kl_loss: 88.1187
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5831 - gen_loss: 111.4992 - feat_loss: 10.3740 - vgg_loss: 16.2139 - kl_loss: 83.8992 - val_disc_loss: 0.4876 - val_gen_loss: 113.4408 - val_feat_loss: 10.3979 - val_vgg_loss: 16.7390 - val_kl_loss: 84.7375
 Epoch 10/15
-75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5840 - gen_loss: 116.3846 - feat_loss: 10.5148 - vgg_loss: 16.3187 - kl_loss: 88.5184 - val_disc_loss: 0.5153 - val_gen_loss: 116.6404 - val_feat_loss: 10.8670 - val_vgg_loss: 16.3119 - val_kl_loss: 89.2152
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5850 - gen_loss: 112.9203 - feat_loss: 10.4089 - vgg_loss: 16.2413 - kl_loss: 85.2130 - val_disc_loss: 0.5125 - val_gen_loss: 113.0875 - val_feat_loss: 10.3225 - val_vgg_loss: 17.0858 - val_kl_loss: 84.7437
 Epoch 11/15
-75/75 [==============================] - ETA: 0s - disc_loss: 0.5682 - gen_loss: 117.0674 - feat_loss: 10.4106 - vgg_loss: 16.3127 - kl_loss: 89.2694
+75/75 [==============================] - ETA: 0s - disc_loss: 0.5773 - gen_loss: 112.9393 - feat_loss: 10.4382 - vgg_loss: 16.1624 - kl_loss: 85.3048
 
 ```
 </div>
@@ -920,15 +921,15 @@ Epoch 11/15
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 43s 574ms/step - disc_loss: 0.5682 - gen_loss: 117.0674 - feat_loss: 10.4106 - vgg_loss: 16.3127 - kl_loss: 89.2694 - val_disc_loss: 0.6825 - val_gen_loss: 116.8139 - val_feat_loss: 10.5586 - val_vgg_loss: 16.2616 - val_kl_loss: 90.1485
+75/75 [==============================] - 42s 564ms/step - disc_loss: 0.5773 - gen_loss: 112.9393 - feat_loss: 10.4382 - vgg_loss: 16.1624 - kl_loss: 85.3048 - val_disc_loss: 0.4232 - val_gen_loss: 115.3184 - val_feat_loss: 10.7941 - val_vgg_loss: 16.8483 - val_kl_loss: 86.9163
 Epoch 12/15
-75/75 [==============================] - 39s 523ms/step - disc_loss: 0.5487 - gen_loss: 116.8801 - feat_loss: 10.4406 - vgg_loss: 16.2137 - kl_loss: 89.1041 - val_disc_loss: 0.4423 - val_gen_loss: 116.3591 - val_feat_loss: 9.9422 - val_vgg_loss: 16.1783 - val_kl_loss: 88.5547
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5878 - gen_loss: 112.0136 - feat_loss: 10.4251 - vgg_loss: 16.2048 - kl_loss: 84.3484 - val_disc_loss: 0.4578 - val_gen_loss: 113.8054 - val_feat_loss: 10.9661 - val_vgg_loss: 17.1023 - val_kl_loss: 84.8105
 Epoch 13/15
-75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5343 - gen_loss: 117.3745 - feat_loss: 10.5618 - vgg_loss: 16.2267 - kl_loss: 89.4563 - val_disc_loss: 0.6386 - val_gen_loss: 116.8181 - val_feat_loss: 10.8189 - val_vgg_loss: 16.5218 - val_kl_loss: 89.1889
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5705 - gen_loss: 111.8788 - feat_loss: 10.2409 - vgg_loss: 16.1567 - kl_loss: 84.4316 - val_disc_loss: 0.5505 - val_gen_loss: 113.5417 - val_feat_loss: 10.3393 - val_vgg_loss: 16.8620 - val_kl_loss: 84.6040
 Epoch 14/15
-75/75 [==============================] - 39s 523ms/step - disc_loss: 0.5337 - gen_loss: 117.4959 - feat_loss: 10.4510 - vgg_loss: 16.2412 - kl_loss: 89.7222 - val_disc_loss: 0.4890 - val_gen_loss: 116.5320 - val_feat_loss: 10.0627 - val_vgg_loss: 16.3561 - val_kl_loss: 88.7365
+75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5684 - gen_loss: 111.5959 - feat_loss: 10.2455 - vgg_loss: 16.0428 - kl_loss: 84.2599 - val_disc_loss: 0.7734 - val_gen_loss: 114.0701 - val_feat_loss: 11.1744 - val_vgg_loss: 16.9965 - val_kl_loss: 86.2753
 Epoch 15/15
-75/75 [==============================] - 39s 523ms/step - disc_loss: 0.5180 - gen_loss: 116.7743 - feat_loss: 10.5379 - vgg_loss: 16.2569 - kl_loss: 88.8503 - val_disc_loss: 0.4480 - val_gen_loss: 116.7319 - val_feat_loss: 10.8381 - val_vgg_loss: 16.3170 - val_kl_loss: 89.0453
+75/75 [==============================] - 40s 529ms/step - disc_loss: 0.5478 - gen_loss: 112.6102 - feat_loss: 10.3267 - vgg_loss: 16.0363 - kl_loss: 85.1910 - val_disc_loss: 0.5994 - val_gen_loss: 115.2190 - val_feat_loss: 10.3937 - val_vgg_loss: 16.8771 - val_kl_loss: 86.2453
 
 ```
 </div>
