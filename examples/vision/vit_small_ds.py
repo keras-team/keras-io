@@ -1,47 +1,45 @@
 """
-Title: Train a Vision Transformer on Smaller Datasets
+Title: Train a Vision Transformer on Small Datasets
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/07
-Last modified: 2022/01/07
+Last modified: 2022/01/10
 Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self attention.
 """
 """
 ## Introduction
 
-In the academic paper [An Image is Worth 16x16 Words: Transformers for Image Recognition
-at Scale](https://arxiv.org/abs/2010.11929), the authors mention that Vision Transformers
-are data-hungry. Therefore, pre-training a ViT on a sizeable sized dataset like JFT300M
-and fine-tuning it on medium-sized datasets (ImageNet) is the only way to beat the
+In the academic paper
+[An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929),
+the authors mention that Vision Transformers are data-hungry. Therefore,
+pre-training a ViT on a large-sized dataset like JFT300M and fine-tuning
+it on medium-sized datasets (ImageNet) is the only way to beat the
 state-of-the-art Convolutional Neural Network models.
 
-The self-attention layer of ViT lack **locality inductive bias**. This is the reason why
-ViTs need more data. On the other hand, CNNs are good here, which helps them get better
-results with smaller datasets.
+The self-attention layer of ViT lack **locality inductive bias**. This
+is the reason why ViTs need more data. On the other hand, CNNs are
+good here, which helps them get better results with smaller datasets.
 
-In the academic paper [Vision Transformer for Small-Size
-Datasets](https://arxiv.org/abs/2112.13492v1), the authors set out to tackle the problem
-of locality inductive bias in ViTs. 
+In the academic paper
+[Vision Transformer for Small-Size Datasets](https://arxiv.org/abs/2112.13492v1),
+the authors set out to tackle the problem of locality inductive bias in ViTs. 
 
 The main ideas are:
 
 - **Shifted Patch Tokenization**
 - **Locality Self Attention**
 
-This example implements the ideas of the paper. A large part of this example is inspired
-from [Image classification with Vision
-Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
-Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
+This example implements the ideas of the paper. A large part of this
+example is inspired from
+[Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as [TensorFlow
-Addons](https://www.tensorflow.org/addons), which can be installed using the following
-command:
+_Note_: This example requires TensorFlow 2.6 or higher, as well as
+[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
+installed using the following command:
+
 ```python
 pip install -qq -U tensorflow-addons
 ```
 """
-
-# !pip install -qq -U tensorflow-addons
-
 """
 ## Setup
 """
@@ -73,8 +71,8 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 """
 ## Configure the hyperparameters
 
-The hyperparameters are different from the paper. Feel free to tune the hyperparameters
-yourself.
+The hyperparameters are different from the paper. Feel free to tune
+the hyperparameters yourself.
 """
 
 # DATA
@@ -110,15 +108,15 @@ MLP_HEAD_UNITS = [2048, 1024]
 A snippet from the paper:
 
 "
-According to DeiT, various techniques are required to effectively train ViTs. Thus, we
-applied data augmentations such as CutMix, Mixup, Auto Augment, Repeated Augment to all
-models.
+According to DeiT, various techniques are required to effectively
+train ViTs. Thus, we applied data augmentations such as CutMix, Mixup,
+Auto Augment, Repeated Augment to all models.
 "
 
-In this example, we will focus solely on the novelty of the approach and not on
-reproducing the paper results. This is the reason why I have not used the mentioned data
-augmentation schemes. Please feel free to add to or remove from the augmentation
-pipeline.
+In this example, we will focus solely on the novelty of the approach
+and not on reproducing the paper results. This is the reason why we
+have not used the mentioned data augmentation schemes. Please feel
+free to add to or remove from the augmentation pipeline.
 """
 
 data_augmentation = keras.Sequential(
@@ -137,12 +135,12 @@ data_augmentation.layers[0].adapt(x_train)
 """
 ## Implement Shifted Patch Tokenization
 
-In a ViT pipeline the input images are divided into patches that are then linearly
-projected into tokens. Shifted patch tokenization (STP) is introduced to combat the low
-receptive field of ViTs. The follwoing is the chronological steps for SPT:
+In a ViT pipeline the input images are divided into patches that are
+then linearly projected into tokens. Shifted patch tokenization (STP)
+is introduced to combat the low receptive field of ViTs. The follwoing
+is the chronological steps for Shifted Patch Tokenization:
 
-- Start with an image of dimension `HxWxC`. Here H, W and C stand for Height, Width and
-Channel respectively.
+- Start with an image.
 - Shift the image in diagonal directions.
 - Concat the diagonally shifted images with the original image.
 - Extract patches of the concatenated images.
@@ -151,7 +149,7 @@ Channel respectively.
 
 | ![Shifted Patch Toekenization](https://i.imgur.com/bUnHxd0.png) |
 | :--: |
-| [Source](https://arxiv.org/abs/2112.13492v1) |
+| Shifted Patch Tokenization [Source](https://arxiv.org/abs/2112.13492v1) |
 """
 
 
@@ -163,8 +161,9 @@ class ShiftedPatchTokenization(layers.Layer):
         num_patches=NUM_PATCHES,
         projection_dim=PROJECTION_DIM,
         vanilla=False,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.vanilla = vanilla  # Flag to swtich to vanilla patch extractor
         self.image_size = image_size
         self.patch_size = patch_size
@@ -272,8 +271,8 @@ for row in range(n):
         plt.axis("off")
 plt.show()
 
-# SPT: This layer takes the image, shifts it diagonally and then
-# extracts patches from the concatinated images
+# Shifted Patch Tokenization: This layer takes the image, shifts it
+# diagonally and then extracts patches from the concatinated images
 (token, patch) = ShiftedPatchTokenization(vanilla=False)(resized_image / 255.0)
 (token, patch) = (token[0], patch[0])
 n = patch.shape[0]
@@ -294,13 +293,14 @@ for index, name in enumerate(shifted_images):
 """
 ## Implement the patch encoding layer
 
-This layer accepts projected patches and then adds positioanl information to them.
+This layer accepts projected patches and then adds positioanl
+information to them.
 """
 
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM):
-        super().__init__()
+    def __init__(self, num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM, **kwargs):
+        super().__init__(**kwargs)
         self.num_patches = num_patches
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
@@ -320,34 +320,34 @@ The regular attention equation is stated below.
 
 | ![Equation of attention](https://miro.medium.com/max/396/1*P9sV1xXM10t943bXy_G9yg.png) |
 | :--: |
-|
-[Source](https://towardsdatascience.com/attention-is-all-you-need-discovering-the-transfor
-mer-paper-73e5ff5e0634) |
+| [Source](https://towardsdatascience.com/attention-is-all-you-need-discovering-the-transformer-paper-73e5ff5e0634) |
 
-The attention module takes a query, key, and value. First, we find the similarity between
-the query and key by dot product. Then, the result is scaled by the square root of the
-key dimension. The scaling helps the softmax function from having a small gradient.
-Softmax is then applied to the scaled dot product that gives the attention weights. The
-value is then modified with the attention weights.
+The attention module takes a query, key, and value. First, we find the
+similarity between the query and key by dot product. Then, the result
+is scaled by the square root of the key dimension. The scaling helps
+the softmax function from having a small gradient. Softmax is then
+applied to the scaled dot product that gives the attention weights.
+The value is then modified with the attention weights.
 
-In self-attention, query, key and value come from the same input. The dot product would
-result in large self-token relations rather than inter-token relations. This also means
-that the softmax gives higher probabilities to self-token relations than the inter-token
-relations. To combat this, the authors propose masking the diagonal of the dot product.
-This way, we force the attention module to pay more attention to the inter-token
-relations.
+In self-attention, query, key and value come from the same input.
+The dot product would result in large self-token relations rather than
+inter-token relations. This also means that the softmax gives higher
+probabilities to self-token relations than the inter-token relations.
+To combat this, the authors propose masking the diagonal of the dot product.
+This way, we force the attention module to pay more attention to the
+inter-token relations.
 
-The scaling factor is a constant in the regular attention module. This acts like a
-temperature term that can modulate the softmax function. The authors suggest a learnable
-temperature term instead of a constant.
+The scaling factor is a constant in the regular attention module.
+This acts like a temperature term that can modulate the softmax function.
+The authors suggest a learnable temperature term instead of a constant.
 
 | ![Implementation of LSA](https://i.imgur.com/GTV99pk.png) |
 | :--: |
-| [Source](https://arxiv.org/abs/2112.13492v1) |
+| Locality Self Attention [Source](https://arxiv.org/abs/2112.13492v1) |
 
-The above two pointers make the Locality Self Attention. I have subclassed the
-[`layers.MultiHeadAttention`](https://www.tensorflow.org/api_docs/python/tf/keras/layers/M
-ultiHeadAttention) and implemented the trainable temperature. The attention mask is built
+The above two pointers make the Locality Self Attention. We have subclassed the
+[`layers.MultiHeadAttention`](https://www.tensorflow.org/api_docs/python/tf/keras/layers/MultiHeadAttention)
+and implemented the trainable temperature. The attention mask is built
 at a later stage.
 """
 
@@ -373,7 +373,7 @@ class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
 
 
 """
-## Implement the mlp
+## Implement the MLP
 """
 
 
@@ -526,19 +526,22 @@ def run_experiment(model):
 vit = create_vit_classifier(vanilla=True)
 history = run_experiment(vit)
 
-# Run experiments with the SPT and LSA modified ViT
+# Run experiments with the Shifted Patch Tokenization and
+# Locality Self Attention modified ViT
 vit_sl = create_vit_classifier(vanilla=False)
 history = run_experiment(vit_sl)
 
 """
 # Final Notes
 
-With the help of SPT and LSA we were able to get ~**3-4%** top-1 accuracy gains on
-CIFAR100.
+With the help of Shifted Patch Tokenization and Locality Self Attention
+we were able to get ~**3-4%** top-1 accuracy gains on CIFAR100.
 
-The ideas on SPT and LSA are very intuitive and easy to implement. The authors also
-ablates of different shifting strategies for SPT in the supplementary of the paper.
+The ideas on Shifted Patch Tokenization and Locality Self Attention
+are very intuitive and easy to implement. The authors also ablates of
+different shifting strategies for Shifted Patch Tokenization in the
+supplementary of the paper.
 
-I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for generously helping with
-GPU credits.
+I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for
+generously helping with GPU credits.
 """
