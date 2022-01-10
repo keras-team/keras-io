@@ -299,7 +299,9 @@ information to them.
 
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM, **kwargs):
+    def __init__(
+        self, num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM, **kwargs
+    ):
         super().__init__(**kwargs)
         self.num_patches = num_patches
         self.position_embedding = layers.Embedding(
