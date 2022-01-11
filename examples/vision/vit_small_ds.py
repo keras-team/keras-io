@@ -1,23 +1,24 @@
 """
-Title: Train a Vision Transformer on Small Datasets
+Title: Train a Vision Transformer on small datasets
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/07
 Last modified: 2022/01/10
-Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self attention.
+Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
 """
 """
 ## Introduction
 
 In the academic paper
 [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929),
-the authors mention that Vision Transformers are data-hungry. Therefore,
-pre-training a ViT on a large-sized dataset like JFT300M and fine-tuning
-it on medium-sized datasets (ImageNet) is the only way to beat the
+the authors mention that Vision Transformers (ViT) are data-hungry. Therefore,
+pretraining a ViT on a large-sized dataset like JFT300M and fine-tuning
+it on medium-sized datasets (like ImageNet) is the only way to beat
 state-of-the-art Convolutional Neural Network models.
 
-The self-attention layer of ViT lack **locality inductive bias**. This
-is the reason why ViTs need more data. On the other hand, CNNs are
-good here, which helps them get better results with smaller datasets.
+The self-attention layer of ViT lacks **locality inductive bias** (the notion that
+image pixels are locally correlated and that their correlation maps are translation-invariant).
+This is the reason why ViTs need more data. On the other hand, CNNs look at images through
+spatial sliding windows, which helps them get better results with smaller datasets.
 
 In the academic paper
 [Vision Transformer for Small-Size Datasets](https://arxiv.org/abs/2112.13492v1),
@@ -107,15 +108,13 @@ MLP_HEAD_UNITS = [2048, 1024]
 
 A snippet from the paper:
 
-"
-According to DeiT, various techniques are required to effectively
+*"According to DeiT, various techniques are required to effectively
 train ViTs. Thus, we applied data augmentations such as CutMix, Mixup,
-Auto Augment, Repeated Augment to all models.
-"
+Auto Augment, Repeated Augment to all models."*
 
 In this example, we will focus solely on the novelty of the approach
-and not on reproducing the paper results. This is the reason why we
-have not used the mentioned data augmentation schemes. Please feel
+and not on reproducing the paper results. For this reason, we
+don't use the mentioned data augmentation schemes. Please feel
 free to add to or remove from the augmentation pipeline.
 """
 
@@ -135,10 +134,10 @@ data_augmentation.layers[0].adapt(x_train)
 """
 ## Implement Shifted Patch Tokenization
 
-In a ViT pipeline the input images are divided into patches that are
+In a ViT pipeline, the input images are divided into patches that are
 then linearly projected into tokens. Shifted patch tokenization (STP)
-is introduced to combat the low receptive field of ViTs. The follwoing
-is the chronological steps for Shifted Patch Tokenization:
+is introduced to combat the low receptive field of ViTs. The steps
+for Shifted Patch Tokenization are as follows:
 
 - Start with an image.
 - Shift the image in diagonal directions.
@@ -293,7 +292,7 @@ for index, name in enumerate(shifted_images):
 """
 ## Implement the patch encoding layer
 
-This layer accepts projected patches and then adds positioanl
+This layer accepts projected patches and then adds positional
 information to them.
 """
 
@@ -324,12 +323,12 @@ The regular attention equation is stated below.
 | :--: |
 | [Source](https://towardsdatascience.com/attention-is-all-you-need-discovering-the-transformer-paper-73e5ff5e0634) |
 
-The attention module takes a query, key, and value. First, we find the
-similarity between the query and key by dot product. Then, the result
-is scaled by the square root of the key dimension. The scaling helps
-the softmax function from having a small gradient. Softmax is then
-applied to the scaled dot product that gives the attention weights.
-The value is then modified with the attention weights.
+The attention module takes a query, key, and value. First, we compute the
+similarity between the query and key via a dot product. Then, the result
+is scaled by the square root of the key dimension. The scaling prevents
+the softmax function from having an overly small gradient. Softmax is then
+applied to the scaled dot product to produce the attention weights.
+The value is then modulated via the attention weights.
 
 In self-attention, query, key and value come from the same input.
 The dot product would result in large self-token relations rather than
@@ -536,7 +535,7 @@ history = run_experiment(vit_sl)
 """
 # Final Notes
 
-With the help of Shifted Patch Tokenization and Locality Self Attention
+With the help of Shifted Patch Tokenization and Locality Self Attention,
 we were able to get ~**3-4%** top-1 accuracy gains on CIFAR100.
 
 The ideas on Shifted Patch Tokenization and Locality Self Attention
