@@ -22,7 +22,7 @@ spatial sliding windows, which helps them get better results with smaller datase
 
 In the academic paper
 [Vision Transformer for Small-Size Datasets](https://arxiv.org/abs/2112.13492v1),
-the authors set out to tackle the problem of locality inductive bias in ViTs. 
+the authors set out to tackle the problem of locality inductive bias in ViTs.
 
 The main ideas are:
 
