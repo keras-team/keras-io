@@ -438,7 +438,6 @@ search using [W&B Sweeps](https://docs.wandb.ai/guides/sweeps). You can find out
 sweeps result [here](https://wandb.ai/minimal-implementations/vivit/sweeps/66fp0lhz) and
 our quick analysis of the results
 [here](https://wandb.ai/minimal-implementations/vivit/reports/Hyperparameter-Tuning-Analysis--VmlldzoxNDEwNzcx).
-[here](https://wandb.ai/minimal-implementations/vivit/reports/Hyperparameter-Tuning-Analysis--VmlldzoxNDEwNzcx).
 
 We are grateful to [Weights and Biases](https://wandb.ai/site) program for helping with
 GPU credits.
