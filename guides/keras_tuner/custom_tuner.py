@@ -16,8 +16,8 @@ pip install keras-tuner -q
 
 The `HyperModel` class in KerasTuner is to provide a more encapsulated way to
 define your search space. You can override `HyperModel.build()` to define your
-model with hyperparameters. To tune the training process, you need you
-override `HyperModel.fit()`, where you can access the `hp` object, which is an
+model with hyperparameters. To tune the training process, you need 
+to override `HyperModel.fit()`, where you can access the `hp` object, which is an
 instance of `kt.HyperParameters` and the model built by `HyperModel.build()`.
 A basic example is shown in the tune model training section of
 [Getting Started with KerasTuner](https://keras.io/guides/keras_tuner/getting_started/#tune-model-training).
@@ -45,7 +45,7 @@ x_val = np.random.rand(1000, 28, 28, 1)
 y_val = np.random.randint(0, 10, (1000, 1))
 
 """
-Then, we sublcass `HyperModel` to create `MyHyperModel`. In
+Then, we subclass `HyperModel` to create `MyHyperModel`. In
 `MyHyperModel.build()`, we built a simple Keras model to do image
 classification for 10 different classes. `MyHyperModel.fit()` accepts several
 arguments. The signature of the function is shown as follows.
@@ -54,9 +54,9 @@ arguments. The signature of the function is shown as follows.
 def fit(self, hp, model, x, y, validation_data, callbacks=None, **kwargs):
 ```
 
-* The `hp` arugment is for defining the hyperparameters.
+* The `hp` argument is for defining the hyperparameters.
 * The `model` argument is the model returned by `MyHyperModel.build()`.
-* `x`, `y`, and `validation_data` are all custom defined arguments. We will
+* `x`, `y`, and `validation_data` are all custom-defined arguments. We will
 pass our data to them by calling `tuner.search(x=x, y=y,
 validation_data=(x_val, y_val))` later. You can define any number of them and
 give custom names.
@@ -64,7 +64,7 @@ give custom names.
 KerasTuner put some helpful Keras callbacks in it, for example, the callback
 for checkpointing the model at its best epoch.
 
-we will mannually call the callbacks in the custom training loop. Before we
+we will manually call the callbacks in the custom training loop. Before we
 can call them, we need to assign our model to them with the following code so
 that they have access to the model for checkpointing.
 
@@ -74,7 +74,7 @@ for callback in callbacks:
 ```
 
 In this example, we only called the `.on_epoch_end()` method of the callbacks
-to help us checkpointing the model. If you may also call other callback methods
+to help us checkpoint the model. If you may also call other callback methods
 if needed. If you don't need to save the model, you don't need to use the
 callbacks.
 
@@ -151,7 +151,7 @@ class MyHyperModel(kt.HyperModel):
         for epoch in range(2):
             print(f"Epoch: {epoch}")
 
-            # Iterate the training data to run the train step.
+            # Iterate the training data to run the training step.
             for images, labels in train_ds:
                 run_train_step(images, labels)
 
