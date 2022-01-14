@@ -59,7 +59,7 @@ mixing numerical, categorical, and text features, doing feature engineering with
 ## Instance segmentation
 
 - [Tensorflow-YOLACT](https://github.com/leohsuofnthu/Tensorflow-YOLACT)
-- [Other References.](https://www.kaggle.com/c/sartorius-cell-instance-segmentation/discussion/278883#1546104)
+- [Additional references](https://www.kaggle.com/c/sartorius-cell-instance-segmentation/discussion/278883#1546104)
 
 ---
 
