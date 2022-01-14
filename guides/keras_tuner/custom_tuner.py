@@ -3,7 +3,7 @@ Title: Tune hyperparameters in your custom training loop
 Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/28
 Last modified: 2022/01/12
-Description: Use `HyperModel.fit()` to tune the hyperparameters in training.
+Description: Use `HyperModel.fit()` to tune training hyperparameters (such as batch size).
 """
 
 """
@@ -14,23 +14,28 @@ pip install keras-tuner -q
 """
 ## Introduction
 
-The `HyperModel` class in KerasTuner is to provide a more encapsulated way to
-define your search space. You can override `HyperModel.build()` to define your
-model with hyperparameters. To tune the training process, you need 
-to override `HyperModel.fit()`, where you can access the `hp` object, which is an
-instance of `kt.HyperParameters` and the model built by `HyperModel.build()`.
-A basic example is shown in the tune model training section of
+The `HyperModel` class in KerasTuner provides a convenient way to
+define your search space in a reusable object.
+You can override `HyperModel.build()` to define and hypertune the
+model itself. To hypertune the training process
+(e.g. by selecting the proper batch size, number of training epochs, or data augmentation setup),
+you can override `HyperModel.fit()`, where you can access:
+
+- The `hp` object, which is an instance of `kt.HyperParameters`
+- The model built by `HyperModel.build()`
+
+A basic example is shown in the "tune model training" section of
 [Getting Started with KerasTuner](https://keras.io/guides/keras_tuner/getting_started/#tune-model-training).
 
 ## Tuning the custom training loop
 
 In this guide, we will subclass the `HyperModel` class and write a custom
 training loop by overriding `HyperModel.fit()`. For how to write a custom
-training loop with Keras, you can refer to
+training loop with Keras, you can refer to the guide
 [Writing a training loop from scratch](https://keras.io/guides/writing_a_training_loop_from_scratch/).
 
-First, we import the needed libraries and create the dataset for training and
-validation. Here we just use some random data for a quick demo.
+First, we import the libraries we need, and we create datasets for training and
+validation. Here, we just use some random data for demonstration purposes.
 """
 
 import keras_tuner as kt
@@ -45,12 +50,12 @@ x_val = np.random.rand(1000, 28, 28, 1)
 y_val = np.random.randint(0, 10, (1000, 1))
 
 """
-Then, we subclass `HyperModel` to create `MyHyperModel`. In
-`MyHyperModel.build()`, we built a simple Keras model to do image
+Then, we subclass the `HyperModel` class as `MyHyperModel`. In
+`MyHyperModel.build()`, we build a simple Keras model to do image
 classification for 10 different classes. `MyHyperModel.fit()` accepts several
-arguments. The signature of the function is shown as follows.
+arguments. Its signature is shown below:
 
-```py
+```python
 def fit(self, hp, model, x, y, validation_data, callbacks=None, **kwargs):
 ```
 
@@ -64,7 +69,7 @@ give custom names.
 KerasTuner put some helpful Keras callbacks in it, for example, the callback
 for checkpointing the model at its best epoch.
 
-we will manually call the callbacks in the custom training loop. Before we
+We will manually call the callbacks in the custom training loop. Before we
 can call them, we need to assign our model to them with the following code so
 that they have access to the model for checkpointing.
 
@@ -73,13 +78,13 @@ for callback in callbacks:
     callback.model = model
 ```
 
-In this example, we only called the `.on_epoch_end()` method of the callbacks
+In this example, we only called the `on_epoch_end()` method of the callbacks
 to help us checkpoint the model. If you may also call other callback methods
 if needed. If you don't need to save the model, you don't need to use the
 callbacks.
 
 In the custom training loop, we tune the batch size of the dataset as we wrap
-the numpy data into a `tf.data.Dataset`. Note that you can tune any
+the NumPy data into a `tf.data.Dataset`. Note that you can tune any
 preprocessing steps here as well. We also tune the learning rate of the
 optimizer.
 
@@ -174,10 +179,11 @@ class MyHyperModel(kt.HyperModel):
 
 
 """
-Now, we can initialize the tuner. Here we use `Objective("my_metric", "min")`
-as our metric to be minimized. It doesn't matter what name you use for the
-objective as long as it is consistent with the one you use as the key in the
-`logs` passed to 'on_epoch_end()' of the callbacks. The callbacks need to use
+Now, we can initialize the tuner. Here, we use `Objective("my_metric", "min")`
+as our metric to be minimized. The objective name should be consistent
+with the one you use as the key in the
+`logs` passed to the 'on_epoch_end()' method of the callbacks.
+The callbacks need to use
 this value in the `logs` to find the best epoch to checkpoint the model.
 
 """
@@ -194,14 +200,12 @@ tuner = kt.RandomSearch(
 """
 We start the search by passing the arguments we defined in the signature of
 `MyHyperModel.fit()` to `tuner.search()`.
-
 """
 
 tuner.search(x=x_train, y=y_train, validation_data=(x_val, y_val))
 
 """
 Finally, we can retrieve the results.
-
 """
 
 best_hps = tuner.get_best_hyperparameters()[0]
