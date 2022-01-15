@@ -6,12 +6,6 @@ Last modified:  2022/01/12
 Description: A pure transformer based architecture for video classification
 """
 """
-<a href="https://colab.research.google.com/github/ariG23498/ViViT/blob/ayut/ViViT.ipynb"
-target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg"
-alt="Open In Colab"/></a>
-"""
-
-"""
 ## Introduction
 
 Videos are a sequence of images. Let's assume you have an image
@@ -49,16 +43,14 @@ python package can be installed by running the code cell below.
 import os
 import io
 import imageio
+import medmnist
+import ipywidgets
 import numpy as np
-import matplotlib.pyplot as plt
-from medmnist import INFO
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from IPython.display import Image, display
-from ipywidgets import widgets, HTML
 
-# setting seed for reproducibility
+# Setting seed for reproducibility
 SEED = 42
 os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
 keras.utils.set_random_seed(SEED)
@@ -132,7 +124,7 @@ def download_and_prepare_dataset(data_info: dict):
 
 
 # Get the metadata of the dataset
-info = INFO[DATASET_NAME]
+info = medmnist.INFO[DATASET_NAME]
 
 # Get the dataset
 prepared_dataset = download_and_prepare_dataset(info)
@@ -147,14 +139,12 @@ prepared_dataset = download_and_prepare_dataset(info)
 
 @tf.function
 def preprocess(frames: tf.Tensor, label: tf.Tensor):
-    """
-    Preprocess the frames tensors and parse the labels
-    """
+    """Preprocess the frames tensors and parse the labels"""
     # Preprocess images
     frames = tf.image.convert_image_dtype(
         frames[
             ..., tf.newaxis
-        ],  # the new axis is to help for further processing with Conv3D layers
+        ],  # The new axis is to help for further processing with Conv3D layers
         tf.float32,
     )
 
@@ -169,13 +159,11 @@ def prepare_dataloader(
     loader_type: str = "train",
     batch_size: int = BATCH_SIZE,
 ):
-    """
-    Utility function to prepare dataloader.
-    """
+    """Utility function to prepare dataloader"""
     dataset = tf.data.Dataset.from_tensor_slices((videos, labels))
 
     if loader_type == "train":
-        dataset = dataset.shuffle(1024)
+        dataset = dataset.shuffle(BATCH_SIZE*2)
 
     dataloader = (
         dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)
@@ -215,8 +203,8 @@ are then flattened and projected to build video tokens.
 
 
 class TubeletEmbedding(layers.Layer):
-    def __init__(self, embed_dim=PROJECTION_DIM, patch_size=PATCH_SIZE):
-        super().__init__()
+    def __init__(self, embed_dim, patch_size, **kwargs):
+        super().__init__(**kwargs)
         self.projection = layers.Conv3D(
             filters=embed_dim,
             kernel_size=patch_size,
@@ -239,8 +227,8 @@ This layer adds positional information to encoded video tokens.
 
 
 class PositionalEncoder(layers.Layer):
-    def __init__(self, embed_dim=PROJECTION_DIM):
-        super().__init__()
+    def __init__(self, embed_dim, **kwargs):
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
 
     def build(self, input_shape):
@@ -251,7 +239,7 @@ class PositionalEncoder(layers.Layer):
         self.positions = tf.range(start=0, limit=num_tokens, delta=1)
 
     def call(self, encoded_tokens):
-        # encode the positions and add it to the encoded tokens
+        # Encode the positions and add it to the encoded tokens
         encoded_positions = self.position_embedding(self.positions)
         encoded_tokens = encoded_tokens + encoded_positions
         return encoded_tokens
@@ -276,13 +264,16 @@ model for simplicity. The following code snippet is heavily inspired from
 def create_vivit_classifier(
     tubelet_embedder,
     positional_encoder,
+    input_shape=INPUT_SHAPE,
     transformer_layers=NUM_LAYERS,
     num_heads=NUM_HEADS,
     embed_dim=PROJECTION_DIM,
+    layer_norm_eps=LAYER_NORM_EPS,
+    num_classes=NUM_CLASSES,
 ):
 
     # Get the input layer
-    inputs = layers.Input(shape=INPUT_SHAPE)
+    inputs = layers.Input(shape=input_shape)
     # Create patches.
     patches = tubelet_embedder(inputs)
     # Encode patches.
@@ -312,11 +303,11 @@ def create_vivit_classifier(
         encoded_patches = layers.Add()([x3, x2])
 
     # Layer normalization and Global average pooling.
-    representation = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(encoded_patches)
+    representation = layers.LayerNormalization(epsilon=layer_norm_eps)(encoded_patches)
     representation = layers.GlobalAvgPool1D()(representation)
 
     # Classify outputs.
-    outputs = layers.Dense(NUM_CLASSES, activation="softmax")(representation)
+    outputs = layers.Dense(units=num_classes, activation="softmax")(representation)
 
     # Create the Keras model.
     model = keras.Model(inputs=inputs, outputs=outputs)
@@ -331,8 +322,8 @@ def create_vivit_classifier(
 def run_experiment():
     # Initialize model
     model = create_vivit_classifier(
-        tubelet_embedder=TubeletEmbedding(),
-        positional_encoder=PositionalEncoder(),
+        tubelet_embedder=TubeletEmbedding(embed_dim=PROJECTION_DIM, patch_size=PATCH_SIZE),
+        positional_encoder=PositionalEncoder(embed_dim=PROJECTION_DIM),
     )
 
     # Compile the model with the optimizer, loss function
@@ -398,14 +389,14 @@ def make_box_for_grid(image_widget, fit):
     else:
         fit_str = str(fit)
 
-    h = HTML(value="" + str(fit_str) + "")
+    h = ipywidgets.HTML(value="" + str(fit_str) + "")
 
     # Make the green box with the image widget inside it
-    boxb = widgets.Box()
+    boxb = ipywidgets.widgets.Box()
     boxb.children = [image_widget]
 
     # Compose into a vertical box
-    vb = widgets.VBox()
+    vb = ipywidgets.widgets.VBox()
     vb.layout.align_items = "center"
     vb.children = [h, boxb]
     return vb
@@ -413,25 +404,25 @@ def make_box_for_grid(image_widget, fit):
 
 boxes = []
 for i in range(NUM_SAMPLES_VIZ):
-    ib = widgets.Image(value=videos[i], width=100, height=100)
+    ib = ipywidgets.widgets.Image(value=videos[i], width=100, height=100)
     true_class = info["label"][str(ground_truths[i])]
     pred_class = info["label"][str(preds[i])]
     caption = f"T: {true_class} | P: {pred_class}"
 
     boxes.append(make_box_for_grid(ib, caption))
 
-widgets.GridBox(boxes, layout=widgets.Layout(grid_template_columns="repeat(5, 200px)"))
+ipywidgets.widgets.GridBox(boxes, layout=ipywidgets.widgets.Layout(grid_template_columns="repeat(5, 200px)"))
 
 """
 ## Final Thoughts
 
 With a vanilla implementation we achieve ~75-77% Top-1 accuracy on the test dataset. 
 
-Places to improve:
+The following are the places of improve:
 
-- Using data augmentation.
+- Using data augmentation for videos.
 - Using a better regularization scheme for training.
-- Apply different variants of the transformer model.
+- Apply different variants of the transformer model as in the paper.
 
 The hyperparameters used in this tutorial were finalized by running a hyperparameter
 search using [W&B Sweeps](https://docs.wandb.ai/guides/sweeps). You can find out our
