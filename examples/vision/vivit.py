@@ -29,7 +29,7 @@ the embedding scheme and one of the variants of the transformer
 architecture for simplicity.
 
 This example requires TensorFlow 2.6 or higher, and the medmnist
-python package can be installed by running the code cell below. 
+python package can be installed by running the code cell below.
 """
 
 """shell
@@ -59,7 +59,7 @@ keras.utils.set_random_seed(SEED)
 ## Hyperparameters
 
 The hyperparameters are chosen specifically based on a hyperparameter
-search. You can find more on this in the Conclusion section. 
+search. You can find more on this in the Conclusion section.
 """
 
 # DATA
@@ -257,7 +257,10 @@ The authors suggest 4 variants of Vision Transformer:
 
 In this example, we will implement the **Spatio-temporal attention**
 model for simplicity. The following code snippet is heavily inspired from
-[Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/). 
+[Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
+One can also refer to the
+[official repository of ViViT](https://github.com/google-research/scenic/tree/main/scenic/projects/vivit)
+to look at all the variants of transformers in jax.
 """
 
 
@@ -294,7 +297,7 @@ def create_vivit_classifier(
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         x3 = keras.Sequential(
             [
-                layers.Dense(units=embed_dim, activation=tf.nn.gelu),
+                layers.Dense(units=embed_dim * 4, activation=tf.nn.gelu),
                 layers.Dense(units=embed_dim, activation=tf.nn.gelu),
             ]
         )(x3)
@@ -420,20 +423,25 @@ ipywidgets.widgets.GridBox(
 """
 ## Final Thoughts
 
-With a vanilla implementation we achieve ~75-77% Top-1 accuracy on the test dataset. 
+With a vanilla implementation we achieve ~79-80% Top-1 accuracy on the
+test dataset.
 
-The following are the places of improve:
+The hyperparameters used in this tutorial were finalized by running a
+hyperparameter search using
+[W&B Sweeps](https://docs.wandb.ai/guides/sweeps).
+You can find out our sweeps result
+[here](https://wandb.ai/minimal-implementations/vivit/sweeps/66fp0lhz)
+and our quick analysis of the results
+[here](https://wandb.ai/minimal-implementations/vivit/reports/Hyperparameter-Tuning-Analysis--VmlldzoxNDEwNzcx).
+
+The following are the places of improvement:
 
 - Using data augmentation for videos.
 - Using a better regularization scheme for training.
 - Apply different variants of the transformer model as in the paper.
 
-The hyperparameters used in this tutorial were finalized by running a hyperparameter
-search using [W&B Sweeps](https://docs.wandb.ai/guides/sweeps). You can find out our
-sweeps result [here](https://wandb.ai/minimal-implementations/vivit/sweeps/66fp0lhz) and
-our quick analysis of the results
-[here](https://wandb.ai/minimal-implementations/vivit/reports/Hyperparameter-Tuning-Analysis--VmlldzoxNDEwNzcx).
-
-We are grateful to [Weights and Biases](https://wandb.ai/site) program for helping with
+We would like to thank [Anurag Arnab](https://anuragarnab.github.io/)
+(first author of ViViT) for helpful discussion. We are grateful to
+[Weights and Biases](https://wandb.ai/site) program for helping with
 GPU credits.
 """
