@@ -42,7 +42,7 @@ Let's download the data and inspect its structure.
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  45.3M      0  0:00:01  0:00:01 --:--:-- 45.3M
+100 80.2M  100 80.2M    0     0  16.1M      0  0:00:04  0:00:04 --:--:-- 16.4M
 
 ```
 </div>
@@ -71,7 +71,7 @@ labeledBow.feat [34mpos[m[m             unsupBow.feat   urls_pos.txt
 ```
 </div>
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
- which represents on review (either positive or negative):
+ which represents one review (either positive or negative):
 
 
 ```python
@@ -131,17 +131,9 @@ raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
-print(
-    "Number of batches in raw_train_ds: %d"
-    % tf.data.experimental.cardinality(raw_train_ds)
-)
-print(
-    "Number of batches in raw_val_ds: %d" % tf.data.experimental.cardinality(raw_val_ds)
-)
-print(
-    "Number of batches in raw_test_ds: %d"
-    % tf.data.experimental.cardinality(raw_test_ds)
-)
+print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
+print(f"Number of batches in raw_val_ds: {raw_val_ds.cardinality()}")
+print(f"Number of batches in raw_test_ds: {raw_test_ds.cardinality()}")
 ```
 
 <div class="k-default-codeblock">
@@ -195,7 +187,7 @@ In particular, we remove `<br />` tags.
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import string
 import re
 
@@ -207,7 +199,7 @@ def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
     stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
     return tf.strings.regex_replace(
-        stripped_html, "[%s]" % re.escape(string.punctuation), ""
+        stripped_html, f"[{re.escape(string.punctuation)}]", ""
     )
 
 
@@ -336,13 +328,13 @@ model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-625/625 [==============================] - 32s 51ms/step - loss: 0.6288 - accuracy: 0.5835 - val_loss: 0.3283 - val_accuracy: 0.8610
+625/625 [==============================] - 46s 73ms/step - loss: 0.5005 - accuracy: 0.7156 - val_loss: 0.3103 - val_accuracy: 0.8696
 Epoch 2/3
-625/625 [==============================] - 31s 50ms/step - loss: 0.2808 - accuracy: 0.8859 - val_loss: 0.3005 - val_accuracy: 0.8796
+625/625 [==============================] - 51s 81ms/step - loss: 0.2262 - accuracy: 0.9115 - val_loss: 0.3255 - val_accuracy: 0.8754
 Epoch 3/3
-625/625 [==============================] - 31s 50ms/step - loss: 0.1450 - accuracy: 0.9467 - val_loss: 0.3795 - val_accuracy: 0.8726
+625/625 [==============================] - 50s 81ms/step - loss: 0.1142 - accuracy: 0.9574 - val_loss: 0.4157 - val_accuracy: 0.8698
 
-<tensorflow.python.keras.callbacks.History at 0x137444c90>
+<keras.callbacks.History at 0x154613190>
 
 ```
 </div>
@@ -356,9 +348,9 @@ model.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 7s 9ms/step - loss: 0.3999 - accuracy: 0.8650
+782/782 [==============================] - 14s 18ms/step - loss: 0.4539 - accuracy: 0.8570
 
-[0.39986345171928406, 0.8649600148200989]
+[0.45387956500053406, 0.8569999933242798]
 
 ```
 </div>
@@ -389,9 +381,9 @@ end_to_end_model.evaluate(raw_test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 11s 13ms/step - loss: 0.4062 - accuracy: 0.8630
+782/782 [==============================] - 20s 25ms/step - loss: 0.4539 - accuracy: 0.8570
 
-[0.3998638987541199, 0.8649600148200989]
+[0.45387890934944153, 0.8569999933242798]
 
 ```
 </div>

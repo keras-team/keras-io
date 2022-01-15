@@ -147,11 +147,9 @@ c.configure_tpu_version(tf.__version__, restart_type="always")
 import tensorflow as tf
 
 try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
-    print("Running on TPU ", tpu.cluster_spec().as_dict()["worker"])
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
-    strategy = tf.distribute.experimental.TPUStrategy(tpu)
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
+    print("Device:", tpu.master())
+    strategy = tf.distribute.TPUStrategy(tpu)
 except ValueError:
     print("Not connected to a TPU runtime. Using CPU/GPU strategy")
     strategy = tf.distribute.MirroredStrategy()
@@ -251,20 +249,19 @@ for i, (image, label) in enumerate(ds_train.take(9)):
 
 ### Data augmentation
 
-We can use preprocessing layers APIs for image augmentation.
+We can use the preprocessing layers APIs for image augmentation.
 
 
 ```python
-from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 
 img_augmentation = Sequential(
     [
-        preprocessing.RandomRotation(factor=0.15),
-        preprocessing.RandomTranslation(height_factor=0.1, width_factor=0.1),
-        preprocessing.RandomFlip(),
-        preprocessing.RandomContrast(factor=0.1),
+        layers.RandomRotation(factor=0.15),
+        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
+        layers.RandomFlip(),
+        layers.RandomContrast(factor=0.1),
     ],
     name="img_augmentation",
 )
@@ -313,10 +310,10 @@ def input_preprocess(image, label):
 
 
 ds_train = ds_train.map(
-    input_preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
+    input_preprocess, num_parallel_calls=tf.data.AUTOTUNE
 )
 ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
-ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
+ds_train = ds_train.prefetch(tf.data.AUTOTUNE)
 
 ds_test = ds_test.map(input_preprocess)
 ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
@@ -491,8 +488,6 @@ and we fine-tune it on our own dataset.
 
 
 ```python
-from tensorflow.keras.layers.experimental import preprocessing
-
 
 def build_model(num_classes):
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))

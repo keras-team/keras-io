@@ -1,9 +1,9 @@
 # Training Keras models with TensorFlow Cloud
 
-**Author:** [Jonah Kohn](https://jonahkohn.com)<br>
+**Authors:** [Jonah Kohn](https://jonahkohn.com), [Sina Chavoshi](https://www.linkedin.com/in/sinachavoshi/)<br>
 **Date created:** 2020/08/11<br>
-**Last modified:** 2020/08/11<br>
-**Description:** In-depth usage guide for TensorFlow Cloud.
+**Last modified:** 2021/07/23<br>
+**Description:** Usage guide for TensorFlow Cloud.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/training_keras_models_on_cloud.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/training_keras_models_on_cloud.py)
@@ -13,431 +13,313 @@
 ---
 ## Introduction
 
-[TensorFlow Cloud](https://github.com/tensorflow/cloud) is a Python package that
-provides APIs for a seamless transition from local debugging to distributed training
-in Google Cloud. It simplifies the process of training TensorFlow models on the
-cloud into a single, simple function call, requiring minimal setup and no changes
-to your model. TensorFlow Cloud handles cloud-specific tasks such as creating VM
-instances and distribution strategies for your models automatically. This guide
-will demonstrate how to interface with Google Cloud through TensorFlow Cloud,
-and the wide range of functionality provided within TensorFlow Cloud. We'll start
-with the simplest use-case.
+TensorFlow Cloud is a library that makes it easier to do training and
+hyperparameter tuning of Keras models on Google Cloud.
+
+Using TensorFlow Cloud's `run` API, you can send your model code directly to
+your Google Cloud account, and use Google Cloud compute resources without
+needing to login and interact with the Cloud UI (once you have set up your
+project in the console).
+
+This means that you can use your Google Cloud compute resources from inside
+directly a Python notebook: a notebook just like this one! You can also send
+models to Google Cloud from a plain `.py` Python script.
 
 ---
-## Setup
+## Simple example
 
-We'll get started by installing TensorFlow Cloud, and importing the packages we
-will need in this guide.
+This is a simple introductory example to demonstrate how to train a model
+remotely using [TensorFlow Cloud](https://tensorflow.org/cloud) and Google
+Cloud.
+
+You can just read through it to get an idea of how this works, or you can run
+the notebook in Google Colab. Running the notebook requires connecting to a
+Google Cloud account and entering your credentials and project ID. See
+[Setting Up and Connecting To Your Google Cloud Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb)
+if you don't have an account yet or are not sure how to set up a project in the
+console.
+
+---
+## Import required modules
+
+This guide requires TensorFlow Cloud, which you can install via:
+
+`pip install tensorflow-cloud`
 
 
 ```python
-!pip install -q tensorflow_cloud
-```
-
-
-```python
+import os
+import sys
 import tensorflow as tf
 import tensorflow_cloud as tfc
-
-from tensorflow import keras
-from tensorflow.keras import layers
 ```
 
 ---
-## API overview: a first end-to-end example
+## Project Configurations
 
-Let's begin with a Keras model training script, such as the following CNN:
+Set project parameters. If you don't know what your `GCP_PROJECT_ID` or
+`GCS_BUCKET` should be, see
+[Setting Up and Connecting To Your Google Cloud Account](https://github.com/tensorflow/cloud/blob/master/g3doc/tutorials/google_cloud_project_setup_instructions.ipynb).
+
+The `JOB_NAME` is optional, and you can set it to any string. If you are doing
+multiple training experiemnts (for example) as part of a larger project, you may
+want to give each of them a unique `JOB_NAME`.
+
 
 ```python
-(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+# Set Google Cloud Specific parameters
 
-model = keras.Sequential(
+# TODO: Please set GCP_PROJECT_ID to your own Google Cloud project ID.
+GCP_PROJECT_ID = "YOUR_PROJECT_ID"  # @param {type:"string"}
+
+# TODO: set GCS_BUCKET to your own Google Cloud Storage (GCS) bucket.
+GCS_BUCKET = "YOUR_GCS_BUCKET_NAME"  # @param {type:"string"}
+
+# DO NOT CHANGE: Currently only the 'us-central1' region is supported.
+REGION = "us-central1"
+
+# OPTIONAL: You can change the job name to any string.
+JOB_NAME = "mnist"  # @param {type:"string"}
+
+# Setting location were training logs and checkpoints will be stored
+GCS_BASE_PATH = f"gs://{GCS_BUCKET}/{JOB_NAME}"
+TENSORBOARD_LOGS_DIR = os.path.join(GCS_BASE_PATH, "logs")
+MODEL_CHECKPOINT_DIR = os.path.join(GCS_BASE_PATH, "checkpoints")
+SAVED_MODEL_DIR = os.path.join(GCS_BASE_PATH, "saved_model")
+```
+
+---
+## Authenticating the notebook to use your Google Cloud Project
+
+This code authenticates the notebook, checking your valid Google Cloud
+credentials and identity. It is inside the `if not tfc.remote()` block to ensure
+that it is only run in the notebook, and will not be run when the notebook code
+is sent to Google Cloud.
+
+Note: For Kaggle Notebooks click on "Add-ons"->"Google Cloud SDK" before running
+the cell below.
+
+
+```python
+# Using tfc.remote() to ensure this code only runs in notebook
+if not tfc.remote():
+
+    # Authentication for Kaggle Notebooks
+    if "kaggle_secrets" in sys.modules:
+        from kaggle_secrets import UserSecretsClient
+
+        UserSecretsClient().set_gcloud_credentials(project=GCP_PROJECT_ID)
+
+    # Authentication for Colab Notebooks
+    if "google.colab" in sys.modules:
+        from google.colab import auth
+
+        auth.authenticate_user()
+        os.environ["GOOGLE_CLOUD_PROJECT"] = GCP_PROJECT_ID
+```
+
+---
+## Model and data setup
+
+From here we are following the basic procedure for setting up a simple Keras
+model to run classification on the MNIST dataset.
+
+### Load and split data
+
+Read raw data and split to train and test data sets.
+
+
+```python
+(x_train, y_train), (_, _) = tf.keras.datasets.mnist.load_data()
+
+x_train = x_train.reshape((60000, 28 * 28))
+x_train = x_train.astype("float32") / 255
+```
+
+### Create a model and prepare for training
+
+Create a simple model and set up a few callbacks for it.
+
+
+```python
+from tensorflow.keras import layers
+
+model = tf.keras.Sequential(
     [
-        keras.Input(shape=(28, 28)),
-        # Use a Rescaling layer to make sure input values are in the [0, 1] range.
-        layers.experimental.preprocessing.Rescaling(1.0 / 255),
-        # The original images have shape (28, 28), so we reshape them to (28, 28, 1)
-        layers.Reshape(target_shape=(28, 28, 1)),
-        # Follow-up with a classic small convnet
-        layers.Conv2D(32, 3, activation="relu"),
-        layers.MaxPooling2D(2),
-        layers.Conv2D(32, 3, activation="relu"),
-        layers.MaxPooling2D(2),
-        layers.Conv2D(32, 3, activation="relu"),
-        layers.Flatten(),
-        layers.Dense(128, activation="relu"),
-        layers.Dense(10),
+        tf.keras.layers.Dense(512, activation="relu", input_shape=(28 * 28,)),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(10, activation="softmax"),
     ]
 )
 
 model.compile(
-    optimizer=keras.optimizers.Adam(),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
+    loss="sparse_categorical_crossentropy",
+    optimizer=tf.keras.optimizers.Adam(),
+    metrics=["accuracy"],
 )
-
-model.fit(x_train, y_train, epochs=20, batch_size=128, validation_split=0.1)
-```
-
-To train this model on Google Cloud we just need to add a call to `run()` at
-the beginning of the script, before the imports:
-```python
-tfc.run()
-```
-
-You don’t need to worry about cloud-specific tasks such as creating VM instances
-and distribution strategies when using TensorFlow Cloud.
-The API includes intelligent defaults for all the parameters -- everything is
-configurable, but many models can rely on these defaults.
-
-Upon calling `run()`, TensorFlow Cloud will:
-
-- Make your Python script or notebook distribution-ready.
-- Convert it into a Docker image with required dependencies.
-- Run the training job on a GCP GPU-powered VM.
-- Stream relevant logs and job information.
-
-The default VM configuration is 1 chief and 0 workers with 8 CPU cores and
-1 Tesla T4 GPU.
-
----
-## Google Cloud configuration
-
-In order to facilitate the proper pathways for Cloud training, you will need to
-do some first-time setup. If you're a new Google Cloud user, there are a few
-preliminary steps you will need to take:
-
-1. Create a GCP Project;
-2. Enable AI Platform Services;
-3. Create a Service Account;
-4. Download an authorization key;
-5. Create a Cloud Storage bucket.
-
-Detailed first-time setup instructions can be found in the
-[TensorFlow Cloud README](https://github.com/tensorflow/cloud#setup-instructions),
-and an additional setup example is shown on the
-[TensorFlow Blog](https://blog.tensorflow.org/2020/08/train-your-tensorflow-model-on-google.html).
-
----
-## Common workflows and Cloud storage
-
-In most cases, you'll want to retrieve your model after training on Google Cloud.
-For this, it's crucial to redirect saving and loading to Cloud Storage while
-training remotely. We can direct TensorFlow Cloud to our Cloud Storage bucket for
-a variety of tasks. The storage bucket can be used to save and load large training
-datasets, store callback logs or model weights, and save trained model files.
-To begin, let's configure `fit()` to save the model to a Cloud Storage, and set
-up TensorBoard monitoring to track training progress.
-
-
-```python
-
-def create_model():
-    model = keras.Sequential(
-        [
-            keras.Input(shape=(28, 28)),
-            layers.experimental.preprocessing.Rescaling(1.0 / 255),
-            layers.Reshape(target_shape=(28, 28, 1)),
-            layers.Conv2D(32, 3, activation="relu"),
-            layers.MaxPooling2D(2),
-            layers.Conv2D(32, 3, activation="relu"),
-            layers.MaxPooling2D(2),
-            layers.Conv2D(32, 3, activation="relu"),
-            layers.Flatten(),
-            layers.Dense(128, activation="relu"),
-            layers.Dense(10),
-        ]
-    )
-
-    model.compile(
-        optimizer=keras.optimizers.Adam(),
-        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=keras.metrics.SparseCategoricalAccuracy(),
-    )
-    return model
-
-```
-
-Let's save the TensorBoard logs and model checkpoints generated during training
-in our cloud storage bucket.
-
-
-```python
-import datetime
-import os
-
-# Note: Please change the gcp_bucket to your bucket name.
-gcp_bucket = "keras-examples"
-
-checkpoint_path = os.path.join("gs://", gcp_bucket, "mnist_example", "save_at_{epoch}")
-
-tensorboard_path = os.path.join(  # Timestamp included to enable timeseries graphs
-    "gs://", gcp_bucket, "logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-)
-
-callbacks = [
-    # TensorBoard will store logs for each epoch and graph performance for us.
-    keras.callbacks.TensorBoard(log_dir=tensorboard_path, histogram_freq=1),
-    # ModelCheckpoint will save models after each epoch for retrieval later.
-    keras.callbacks.ModelCheckpoint(checkpoint_path),
-    # EarlyStopping will terminate training when val_loss ceases to improve.
-    keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
-]
-
-model = create_model()
-```
-
-Here, we will load our data from Keras directly. In general, it's best practice
-to store your dataset in your Cloud Storage bucket, however TensorFlow Cloud can
-also accomodate datasets stored locally. That's covered in the Multi-file section
-of this guide.
-
-
-```python
-(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-```
-
-The [TensorFlow Cloud](https://github.com/tensorflow/cloud) API provides the
-`remote()` function to determine whether code is being executed locally or on
-the cloud. This allows for the separate designation of `fit()` parameters for
-local and remote execution, and provides means for easy debugging without overloading
-your local machine.
-
-
-```python
-if tfc.remote():
-    epochs = 100
-    callbacks = callbacks
-    batch_size = 128
-else:
-    epochs = 5
-    batch_size = 64
-    callbacks = None
-
-model.fit(x_train, y_train, epochs=epochs, callbacks=callbacks, batch_size=batch_size)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
-938/938 [==============================] - 6s 7ms/step - loss: 0.2021 - sparse_categorical_accuracy: 0.9383
-Epoch 2/5
-938/938 [==============================] - 6s 7ms/step - loss: 0.0533 - sparse_categorical_accuracy: 0.9836
-Epoch 3/5
-938/938 [==============================] - 6s 7ms/step - loss: 0.0385 - sparse_categorical_accuracy: 0.9883
-Epoch 4/5
-938/938 [==============================] - 6s 7ms/step - loss: 0.0330 - sparse_categorical_accuracy: 0.9895
-Epoch 5/5
-938/938 [==============================] - 6s 7ms/step - loss: 0.0255 - sparse_categorical_accuracy: 0.9916
-
-<tensorflow.python.keras.callbacks.History at 0x7f9fb82bbf40>
 
 ```
 </div>
-Let's save the model in GCS after the training is complete.
+### Quick validation training
+
+We'll train the model for one (1) epoch just to make sure everything is set up
+correctly, and we'll wrap that training command in `if not` `tfc.remote`, so
+that it only happens here in the runtime environment in which you are reading
+this, not when it is sent  to Google Cloud.
 
 
 ```python
-save_path = os.path.join("gs://", gcp_bucket, "mnist_example")
+if not tfc.remote():
+    # Run the training for 1 epoch and a small subset of the data to validate setup
+    model.fit(x=x_train[:100], y=y_train[:100], validation_split=0.2, epochs=1)
+```
 
+<div class="k-default-codeblock">
+```
+
+3/3 [==============================] - 1s 78ms/step - loss: 2.3081 - accuracy: 0.1375 - val_loss: 1.7350 - val_accuracy: 0.5000
+
+```
+</div>
+---
+## Prepare for remote training
+
+The code below will only run when the notebook code is sent to Google Cloud, not
+inside the runtime in which you are reading this.
+
+First, we set up callbacks which will:
+
+* Create logs for [TensorBoard](https://www.tensorflow.org/tensorboard).
+* Create [checkpoints](https://keras.io/api/callbacks/model_checkpoint/) and save them to the checkpoints
+directory specified above.
+* Stop model training if loss is not improving sufficiently.
+
+Then we call `model.fit` and `model.save`, which (when this code is running on
+Google Cloud) which actually run the full training (100 epochs) and then save
+the trained model in the GCS Bucket and directory defined above.
+
+
+```python
 if tfc.remote():
-    model.save(save_path)
-```
+    # Configure Tensorboard logs
+    callbacks = [
+        tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_LOGS_DIR),
+        tf.keras.callbacks.ModelCheckpoint(MODEL_CHECKPOINT_DIR, save_best_only=True),
+        tf.keras.callbacks.EarlyStopping(monitor="loss", min_delta=0.001, patience=3),
+    ]
 
-We can also use this storage bucket for Docker image building, instead of your local
-Docker instance. For this, just add your bucket to the `docker_image_bucket_name` parameter.
+    model.fit(
+        x=x_train, y=y_train, epochs=100, validation_split=0.2, callbacks=callbacks,
+    )
 
-
-```python
-# docs_infra: no_execute
-tfc.run(docker_image_bucket_name=gcp_bucket)
-```
-
-After training the model, we can load the saved model and view our TensorBoard logs
-to monitor performance.
-
-
-```python
-# docs_infra: no_execute
-model = keras.models.load_model(save_path)
-```
-
-
-```python
-!#docs_infra: no_execute
-!tensorboard dev upload --logdir "gs://keras-examples-jonah/logs/fit" --name "Guide MNIST"
+    model.save(SAVED_MODEL_DIR)
 ```
 
 ---
-## Large-scale projects
+## Start the remote training
 
-In many cases, your project containing a Keras model may encompass more than one
-Python script, or may involve external data or specific dependencies. TensorFlow
-Cloud is entirely flexible for large-scale deployment, and provides a number of
-intelligent functionalities to aid your projects.
+TensorFlow Cloud takes all the code from its local execution environment (this
+notebook), wraps it up, and sends it to Google Cloud for execution. (That's why
+the `if` and `if not` `tfc.remote` wrappers are important.)
 
-### Entry points: support for Python scripts and Jupyter notebooks
+This step will prepare your code from this notebook for remote execution and
+then start a remote training job on Google Cloud Platform to train the model.
 
-Your call to the `run()` API won't always be contained inside the same Python script
-as your model training code. For this purpose, we provide an `entry_point` parameter.
-The `entry_point` parameter can be used to specify the Python script or notebook in
-which your model training code lives. When calling `run()` from the same script as
-your model, use the `entry_point` default of `None`.
+First we add the `tensorflow-cloud` Python package to a `requirements.txt` file,
+which will be sent along with the code in this notebook. You can add other
+packages here as needed.
 
-### `pip` dependencies
+Then a GPU and a CPU image are specified. You only need to specify one or the
+other; the GPU is used in the code that follows.
 
-If your project calls on additional `pip` dependencies, it's possible to specify
-the additional required libraries by including a `requirements.txt` file. In this
-file, simply put a list of all the required dependencies and TensorFlow Cloud will
-handle integrating these into your cloud build.
+Finally, the heart of TensorFlow cloud: the call to `tfc.run`. When this is
+executed inside this notebook, all the code from this notebook, and the rest of
+the files in this directory, will be packaged and sent to Google Cloud for
+execution. The parameters on the `run` method specify the details of the  GPU
+CPU images are specified. You only need to specify one or the other; the GPU is
+used in the code that follows.
 
-### Python notebooks
+Finally, the heart of TensorFlow cloud: the call to `tfc.run`. When this is
+executed inside this notebook, all the code from this notebook, and the rest of
+the files in this directory, will be packaged and sent to Google Cloud for
+execution. The parameters on the `run` method specify the details of the  GPU
+and CPU images are specified. You only need to specify one or the other; the GPU
+is used in the code that follows.
 
-TensorFlow Cloud is also runnable from Python notebooks. Additionally, your specified
-`entry_point` can be a notebook if needed. There are two key differences to keep
-in mind between TensorFlow Cloud on notebooks compared to scripts:
+Finally, the heart of TensorFlow cloud: the call to `tfc.run`. When this is
+executed inside this notebook, all the code from this notebook, and the rest of
+the files in this directory, will be packaged and sent to Google Cloud for
+execution. The parameters on the `run` method specify the details of the
+execution environment and the distribution strategy (if any) to be used.
 
-- When calling `run()` from within a notebook, a Cloud Storage bucket must be specified
-for building and storing your Docker image.
-- GCloud authentication happens entirely through your authentication key, without
-project specification. An example workflow using TensorFlow Cloud from a notebook
-is provided in the "Putting it all together" section of this guide.
+Once the job is submitted you can go to the next step to monitor the jobs
+progress via Tensorboard.
 
-### Multi-file projects
-
-If your model depends on additional files, you only need to ensure that these files
-live in the same directory (or subdirectory) of the specified entry point. Every file
-that is stored in the same directory as the specified `entry_point` will be included
-in the Docker image, as well as any files stored in subdirectories adjacent to the
-`entry_point`. This is also true for dependencies you may need which can't be acquired
-through `pip`
-
-For an example of a custom entry-point and multi-file project with additional pip
-dependencies, take a look at this multi-file example on the
-[TensorFlow Cloud Repository](https://github.com/tensorflow/cloud/tree/master/src/python/tensorflow_cloud/core/tests/examples/multi_file_example).
-For brevity, we'll just include the example's `run()` call:
 
 ```python
+# If you are using a custom image you can install modules via requirements
+# txt file.
+with open("requirements.txt", "w") as f:
+    f.write("tensorflow-cloud\n")
+
+# Optional: Some recommended base images. If you provide none the system
+# will choose one for you.
+TF_GPU_IMAGE = "gcr.io/deeplearning-platform-release/tf2-cpu.2-5"
+TF_CPU_IMAGE = "gcr.io/deeplearning-platform-release/tf2-gpu.2-5"
+
+# Submit a single node training job using GPU.
 tfc.run(
-    docker_image_bucket_name=gcp_bucket,
-    entry_point="train_model.py",
-    requirements="requirements.txt"
+    distribution_strategy="auto",
+    requirements_txt="requirements.txt",
+    docker_config=tfc.DockerConfig(
+        parent_image=TF_GPU_IMAGE, image_build_bucket=GCS_BUCKET
+    ),
+    chief_config=tfc.COMMON_MACHINE_CONFIGS["K80_1X"],
+    job_labels={"job": JOB_NAME},
 )
 ```
 
 ---
-## Machine configuration and distributed training
+## Training Results
 
-Model training may require a wide range of different resources, depending on the
-size of the model or the dataset. When accounting for configurations with multiple
-GPUs, it becomes critical to choose a fitting
-[distribution strategy](https://www.tensorflow.org/guide/distributed_training).
-Here, we outline a few possible configurations:
+### Reconnect your Colab instance
 
-### Multi-worker distribution
-Here, we can use `COMMON_MACHINE_CONFIGS` to designate 1 chief CPU and 4 worker GPUs.
+Most remote training jobs are long running. If you are using Colab, it may time
+out before the training results are available.
 
-```python
-tfc.run(
-    docker_image_bucket_name=gcp_bucket,
-    chief_config=tfc.COMMON_MACHINE_CONFIGS['CPU'],
-    worker_count=2,
-    worker_config=tfc.COMMON_MACHINE_CONFIGS['T4_4X']
-)
+In that case, **rerun the following sections in order** to reconnect and
+configure your Colab instance to access the training results.
+
+1.   Import required modules
+2.   Project Configurations
+3.   Authenticating the notebook to use your Google Cloud Project
+
+**DO NOT** rerun the rest of the code.
+
+### Load Tensorboard
+
+While the training is in progress you can use Tensorboard to view the results.
+Note the results will show only after your training has started. This may take a
+few minutes.
+
+
 ```
-By default, TensorFlow Cloud chooses the best distribution strategy for your machine
-configuration with a simple formula using the `chief_config`, `worker_config` and
-`worker_count` parameters provided.
-
-- If the number of GPUs specified is greater than zero, `tf.distribute.MirroredStrategy` will be chosen.
-- If the number of workers is greater than zero, `tf.distribute.experimental.MultiWorkerMirroredStrategy` or `tf.distribute.experimental.TPUStrategy` will be chosen based on the accelerator type.
-- Otherwise, `tf.distribute.OneDeviceStrategy` will be chosen.
-
-### TPU distribution
-Let's train the same model on TPU, as shown:
-```python
-tfc.run(
-    docker_image_bucket_name=gcp_bucket,
-    chief_config=tfc.COMMON_MACHINE_CONFIGS["CPU"],
-    worker_count=1,
-    worker_config=tfc.COMMON_MACHINE_CONFIGS["TPU"]
-)
-```
-
-### Custom distribution strategy
-To specify a custom distribution strategy, format your code normally as you would
-according to the
-[distributed training guide](https://www.tensorflow.org/guide/distributed_training)
-and set `distribution_strategy` to `None`. Below, we'll specify our own distribution
-strategy for the same MNIST model.
-```python
-(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-
-mirrored_strategy = tf.distribute.MirroredStrategy()
-with mirrored_strategy.scope():
-  model = create_model()
-
-if tfc.remote():
-    epochs = 100
-    batch_size = 128
-else:
-    epochs = 10
-    batch_size = 64
-    callbacks = None
-
-model.fit(
-    x_train, y_train, epochs=epochs, callbacks=callbacks, batch_size=batch_size
-)
-
-tfc.run(
-    docker_image_bucket_name=gcp_bucket,
-    chief_config=tfc.COMMON_MACHINE_CONFIGS['CPU'],
-    worker_count=2,
-    worker_config=tfc.COMMON_MACHINE_CONFIGS['T4_4X'],
-    distribution_strategy=None
-)
+%load_ext tensorboard
+%tensorboard --logdir $TENSORBOARD_LOGS_DIR
 ```
 
 ---
-## Custom Docker images
+## Load your trained model
 
-By default, TensorFlow Cloud uses a
-[Docker base image](https://hub.docker.com/r/tensorflow/tensorflow/)
-supplied by Google and corresponding to your current TensorFlow version. However,
-you can also specify a custom Docker image to fit your build requirements, if necessary.
-For this example, we will specify the Docker image from an older version of TensorFlow:
+Once training is complete, you can retrieve your model from the GCS Bucket you
+specified above.
+
+
 ```python
-tfc.run(
-    docker_image_bucket_name=gcp_bucket,
-    base_docker_image="tensorflow/tensorflow:2.1.0-gpu"
-)
+trained_model = tf.keras.models.load_model(SAVED_MODEL_DIR)
+trained_model.summary()
 ```
-
----
-## Additional metrics
-
-You may find it useful to tag your Cloud jobs with specific labels, or to stream
-your model's logs during Cloud training.
-It's good practice to maintain proper labeling on all Cloud jobs, for record-keeping.
-For this purpose, `run()` accepts a dictionary of labels up to 64 key-value pairs,
-which are visible from the Cloud build logs. Logs such as epoch performance and model
-saving internals can be accessed using the link provided by executing `tfc.run` or
-printed to your local terminal using the `stream_logs` flag.
-```python
-job_labels = {"job": "mnist-example", "team": "keras-io", "user": "jonah"}
-
-tfc.run(
-    docker_image_bucket_name=gcp_bucket,
-    job_labels=job_labels,
-    stream_logs=True
-)
-```
-
----
-## Putting it all together
-
-For an in-depth Colab which uses many of the features described in this guide,
-follow along
-[this example](https://github.com/tensorflow/cloud/blob/master/src/python/tensorflow_cloud/core/tests/examples/dogs_classification.ipynb)
-to train a state-of-the-art model to recognize dog breeds from photos using feature
-extraction.

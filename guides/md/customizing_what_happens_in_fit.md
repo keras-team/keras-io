@@ -124,13 +124,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 585us/step - loss: 0.5414 - mae: 0.6029
+32/32 [==============================] - 0s 721us/step - loss: 0.5791 - mae: 0.6232
 Epoch 2/3
-32/32 [==============================] - 0s 492us/step - loss: 0.2820 - mae: 0.4143
+32/32 [==============================] - 0s 601us/step - loss: 0.2739 - mae: 0.4296
 Epoch 3/3
-32/32 [==============================] - 0s 428us/step - loss: 0.2447 - mae: 0.3839
+32/32 [==============================] - 0s 576us/step - loss: 0.2547 - mae: 0.4078
 
-<tensorflow.python.keras.callbacks.History at 0x151d28110>
+<tensorflow.python.keras.callbacks.History at 0x1423856d0>
 
 ```
 </div>
@@ -151,7 +151,7 @@ to be displayed by the progress bar and to be pass to any callback.
 calling `result()` would return an average since the start of training, whereas we usually work
 with per-epoch averages. Thankfully, the framework can do that for us: just list any metric
 you want to reset in the `metrics` property of the model. The model will call `reset_states()`
-on any object listed here at the begining of each `fit()` epoch or at the begining of a call to
+on any object listed here at the beginning of each `fit()` epoch or at the beginning of a call to
 `evaluate()`.
 
 
@@ -209,17 +209,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-32/32 [==============================] - 0s 603us/step - loss: 0.3112 - mae: 0.4482
+32/32 [==============================] - 0s 645us/step - loss: 0.2661 - mae: 0.4126
 Epoch 2/5
-32/32 [==============================] - 0s 616us/step - loss: 0.2566 - mae: 0.4055
+32/32 [==============================] - 0s 515us/step - loss: 0.2401 - mae: 0.3932
 Epoch 3/5
-32/32 [==============================] - 0s 506us/step - loss: 0.2459 - mae: 0.3975
+32/32 [==============================] - 0s 605us/step - loss: 0.2283 - mae: 0.3833
 Epoch 4/5
-32/32 [==============================] - 0s 436us/step - loss: 0.2357 - mae: 0.3895
+32/32 [==============================] - 0s 508us/step - loss: 0.2176 - mae: 0.3742
 Epoch 5/5
-32/32 [==============================] - 0s 466us/step - loss: 0.2245 - mae: 0.3799
+32/32 [==============================] - 0s 448us/step - loss: 0.2070 - mae: 0.3654
 
-<tensorflow.python.keras.callbacks.History at 0x152426810>
+<tensorflow.python.keras.callbacks.History at 0x151c8ee50>
 
 ```
 </div>
@@ -245,6 +245,7 @@ class CustomModel(keras.Model):
         if len(data) == 3:
             x, y, sample_weight = data
         else:
+            sample_weight = None
             x, y = data
 
         with tf.GradientTape() as tape:
@@ -290,13 +291,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 686us/step - loss: 0.2306 - mae: 0.5587
+32/32 [==============================] - 0s 709us/step - loss: 0.6128 - mae: 1.0027
 Epoch 2/3
-32/32 [==============================] - 0s 493us/step - loss: 0.1379 - mae: 0.4047
+32/32 [==============================] - 0s 681us/step - loss: 0.2476 - mae: 0.6092
 Epoch 3/3
-32/32 [==============================] - 0s 445us/step - loss: 0.1382 - mae: 0.4210
+32/32 [==============================] - 0s 669us/step - loss: 0.1248 - mae: 0.4186
 
-<tensorflow.python.keras.callbacks.History at 0x1524e5f50>
+<tensorflow.python.keras.callbacks.History at 0x151d5a590>
 
 ```
 </div>
@@ -338,9 +339,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 558us/step - loss: 0.2916 - mae: 0.4347
+32/32 [==============================] - 0s 578us/step - loss: 0.7436 - mae: 0.7455
 
-[0.28433525562286377, 0.42363572120666504]
+[0.744135320186615, 0.7466798424720764]
 
 ```
 </div>
@@ -487,9 +488,9 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 56s 556ms/step - d_loss: 0.3829 - g_loss: 1.0662
+100/100 [==============================] - 60s 591ms/step - d_loss: 0.4534 - g_loss: 0.9839
 
-<tensorflow.python.keras.callbacks.History at 0x152683050>
+<tensorflow.python.keras.callbacks.History at 0x151e64290>
 
 ```
 </div>

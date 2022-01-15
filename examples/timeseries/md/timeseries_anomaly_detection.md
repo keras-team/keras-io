@@ -156,7 +156,7 @@ TIME_STEPS = 288
 # Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []
-    for i in range(len(values) - time_steps):
+    for i in range(len(values) - time_steps + 1):
         output.append(values[i : (i + time_steps)])
     return np.stack(output)
 
@@ -167,7 +167,7 @@ print("Training input shape: ", x_train.shape)
 
 <div class="k-default-codeblock">
 ```
-Training input shape:  (3744, 288, 1)
+Training input shape:  (3745, 288, 1)
 
 ```
 </div>
@@ -207,6 +207,7 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
+WARNING:tensorflow:Please add `keras.layers.InputLayer` instead of `keras.Input` to Sequential model. `keras.Input` is intended to be used by Functional model.
 Model: "sequential"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
@@ -255,105 +256,35 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-27/27 [==============================] - 2s 35ms/step - loss: 0.6599 - val_loss: 0.0711
+27/27 [==============================] - 2s 35ms/step - loss: 0.5868 - val_loss: 0.1225
 Epoch 2/50
-27/27 [==============================] - 1s 27ms/step - loss: 0.0772 - val_loss: 0.0397
+27/27 [==============================] - 1s 29ms/step - loss: 0.0882 - val_loss: 0.0404
 Epoch 3/50
-27/27 [==============================] - 1s 28ms/step - loss: 0.0591 - val_loss: 0.0376
+27/27 [==============================] - 1s 30ms/step - loss: 0.0594 - val_loss: 0.0359
 Epoch 4/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.0518 - val_loss: 0.0332
+27/27 [==============================] - 1s 29ms/step - loss: 0.0486 - val_loss: 0.0287
 Epoch 5/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.0461 - val_loss: 0.0299
+27/27 [==============================] - 1s 30ms/step - loss: 0.0398 - val_loss: 0.0231
 Epoch 6/50
-27/27 [==============================] - 1s 28ms/step - loss: 0.0411 - val_loss: 0.0268
+27/27 [==============================] - 1s 31ms/step - loss: 0.0337 - val_loss: 0.0208
 Epoch 7/50
-27/27 [==============================] - 1s 28ms/step - loss: 0.0370 - val_loss: 0.0249
+27/27 [==============================] - 1s 31ms/step - loss: 0.0299 - val_loss: 0.0182
 Epoch 8/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.0338 - val_loss: 0.0234
+27/27 [==============================] - 1s 31ms/step - loss: 0.0271 - val_loss: 0.0187
 Epoch 9/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.0314 - val_loss: 0.0225
+27/27 [==============================] - 1s 32ms/step - loss: 0.0251 - val_loss: 0.0190
 Epoch 10/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.0293 - val_loss: 0.0220
+27/27 [==============================] - 1s 31ms/step - loss: 0.0235 - val_loss: 0.0179
 Epoch 11/50
-27/27 [==============================] - 1s 28ms/step - loss: 0.0275 - val_loss: 0.0209
+27/27 [==============================] - 1s 32ms/step - loss: 0.0224 - val_loss: 0.0189
 Epoch 12/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.0258 - val_loss: 0.0204
+27/27 [==============================] - 1s 33ms/step - loss: 0.0214 - val_loss: 0.0199
 Epoch 13/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0243 - val_loss: 0.0203
+27/27 [==============================] - 1s 33ms/step - loss: 0.0206 - val_loss: 0.0194
 Epoch 14/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.0229 - val_loss: 0.0198
+27/27 [==============================] - 1s 32ms/step - loss: 0.0199 - val_loss: 0.0208
 Epoch 15/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0218 - val_loss: 0.0192
-Epoch 16/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0208 - val_loss: 0.0175
-Epoch 17/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.0197 - val_loss: 0.0174
-Epoch 18/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0189 - val_loss: 0.0158
-Epoch 19/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.0181 - val_loss: 0.0148
-Epoch 20/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0174 - val_loss: 0.0144
-Epoch 21/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.0167 - val_loss: 0.0148
-Epoch 22/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.0161 - val_loss: 0.0137
-Epoch 23/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.0155 - val_loss: 0.0135
-Epoch 24/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.0150 - val_loss: 0.0128
-Epoch 25/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0146 - val_loss: 0.0130
-Epoch 26/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.0141 - val_loss: 0.0118
-Epoch 27/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0137 - val_loss: 0.0113
-Epoch 28/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0133 - val_loss: 0.0111
-Epoch 29/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.0128 - val_loss: 0.0113
-Epoch 30/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0124 - val_loss: 0.0104
-Epoch 31/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0121 - val_loss: 0.0091
-Epoch 32/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0117 - val_loss: 0.0092
-Epoch 33/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.0112 - val_loss: 0.0091
-Epoch 34/50
-27/27 [==============================] - 1s 37ms/step - loss: 0.0109 - val_loss: 0.0085
-Epoch 35/50
-27/27 [==============================] - 1s 37ms/step - loss: 0.0105 - val_loss: 0.0081
-Epoch 36/50
-27/27 [==============================] - 1s 37ms/step - loss: 0.0101 - val_loss: 0.0074
-Epoch 37/50
-27/27 [==============================] - 1s 36ms/step - loss: 0.0098 - val_loss: 0.0076
-Epoch 38/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.0095 - val_loss: 0.0074
-Epoch 39/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.0092 - val_loss: 0.0070
-Epoch 40/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.0089 - val_loss: 0.0069
-Epoch 41/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.0086 - val_loss: 0.0068
-Epoch 42/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.0084 - val_loss: 0.0063
-Epoch 43/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.0082 - val_loss: 0.0061
-Epoch 44/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.0079 - val_loss: 0.0057
-Epoch 45/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.0077 - val_loss: 0.0055
-Epoch 46/50
-27/27 [==============================] - 1s 42ms/step - loss: 0.0075 - val_loss: 0.0055
-Epoch 47/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.0074 - val_loss: 0.0051
-Epoch 48/50
-27/27 [==============================] - 1s 36ms/step - loss: 0.0072 - val_loss: 0.0054
-Epoch 49/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.0071 - val_loss: 0.0053
-Epoch 50/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.0070 - val_loss: 0.0052
+27/27 [==============================] - 1s 35ms/step - loss: 0.0192 - val_loss: 0.0204
 
 ```
 </div>
@@ -409,7 +340,7 @@ print("Reconstruction error threshold: ", threshold)
 
 <div class="k-default-codeblock">
 ```
-Reconstruction error threshold:  0.06655808810755175
+Reconstruction error threshold:  0.1195600905852785
 
 ```
 </div>
@@ -434,12 +365,6 @@ plt.show()
 
 
 ```python
-
-def normalize_test(values, mean, std):
-    values -= mean
-    values /= std
-    return values
-
 
 df_test_value = (df_daily_jumpsup - training_mean) / training_std
 fig, ax = plt.subplots()
@@ -472,7 +397,7 @@ print("Indices of anomaly samples: ", np.where(anomalies))
 
 <div class="k-default-codeblock">
 ```
-Test input shape:  (3744, 288, 1)
+Test input shape:  (3745, 288, 1)
 
 ```
 </div>
@@ -481,9 +406,8 @@ Test input shape:  (3744, 288, 1)
 
 <div class="k-default-codeblock">
 ```
-Number of anomaly samples:  411
-Indices of anomaly samples:  (array([ 217,  774,  790,  793,  794, 1654, 1942, 1943, 1944, 1945, 1948,
-       2140, 2519, 2521, 2699, 2701, 2702, 2703, 2704, 2705, 2706, 2707,
+Number of anomaly samples:  399
+Indices of anomaly samples:  (array([ 789, 1653, 1654, 1941, 2697, 2702, 2703, 2704, 2705, 2706, 2707,
        2708, 2709, 2710, 2711, 2712, 2713, 2714, 2715, 2716, 2717, 2718,
        2719, 2720, 2721, 2722, 2723, 2724, 2725, 2726, 2727, 2728, 2729,
        2730, 2731, 2732, 2733, 2734, 2735, 2736, 2737, 2738, 2739, 2740,
@@ -519,7 +443,7 @@ Indices of anomaly samples:  (array([ 217,  774,  790,  793,  794, 1654, 1942, 1
        3060, 3061, 3062, 3063, 3064, 3065, 3066, 3067, 3068, 3069, 3070,
        3071, 3072, 3073, 3074, 3075, 3076, 3077, 3078, 3079, 3080, 3081,
        3082, 3083, 3084, 3085, 3086, 3087, 3088, 3089, 3090, 3091, 3092,
-       3093, 3094, 3095, 3097]),)
+       3093, 3094, 3095]),)
 
 ```
 </div>

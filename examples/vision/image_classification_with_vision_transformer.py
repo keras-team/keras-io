@@ -1,5 +1,5 @@
 """
-Title: Image Classification with Vision Transformer
+Title: Image classification with Vision Transformer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/18
 Last modified: 2021/01/18
@@ -74,13 +74,11 @@ mlp_head_units = [2048, 1024]  # Size of the dense layers of the final classifie
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.Normalization(),
-        layers.experimental.preprocessing.Resizing(image_size, image_size),
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(factor=0.02),
-        layers.experimental.preprocessing.RandomZoom(
-            height_factor=0.2, width_factor=0.2
-        ),
+        layers.Normalization(),
+        layers.Resizing(image_size, image_size),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(factor=0.02),
+        layers.RandomZoom(height_factor=0.2, width_factor=0.2),
     ],
     name="data_augmentation",
 )

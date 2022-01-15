@@ -13,7 +13,7 @@ CSV file. Our data includes both numerical and categorical features. We will use
 preprocessing layers to normalize the numerical features and vectorize the categorical
 ones.
 
-Note that this example should be run with TensorFlow 2.3 or higher, or `tf-nightly`.
+Note that this example should be run with TensorFlow 2.5 or higher.
 
 ### The dataset
 
@@ -136,12 +136,19 @@ The following features are categorical features encoded as integers:
 - `exang`
 - `ca`
 
-We will encode these features using **one-hot encoding** using the `CategoryEncoding()`
-layer.
+We will encode these features using **one-hot encoding**. We have two options
+here:
 
-We also have a categorical feature encoded as a string: `thal`. We will first create an
-index of all possible features using the `StringLookup()` layer, then we will one-hot
-encode the output indices using a `CategoryEncoding()` layer.
+ - Use `CategoryEncoding()`, which requires knowing the range of input values
+ and will error on input outside the range.
+ - Use `IntegerLookup()` which will build a lookup table for inputs and reserve
+ an output index for unkown input values.
+
+For this example, we want a simple solution that will handle out of range inputs
+at inference, so we will use `IntegerLookup()`.
+
+We also have a categorical feature encoded as a string: `thal`. We will create an
+index of all possible features and encode output using the `StringLookup()` layer.
 
 Finally, the following feature are continuous numerical features:
 
@@ -163,9 +170,9 @@ then one-hot encode these integer indices.
 - `encode_integer_categorical_feature` to one-hot encode integer categorical features.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import Normalization
-from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import IntegerLookup
+from tensorflow.keras.layers import Normalization
+from tensorflow.keras.layers import StringLookup
 
 
 def encode_numerical_feature(feature, name, dataset):
@@ -184,47 +191,20 @@ def encode_numerical_feature(feature, name, dataset):
     return encoded_feature
 
 
-def encode_string_categorical_feature(feature, name, dataset):
-    # Create a StringLookup layer which will turn strings into integer indices
-    index = StringLookup()
+def encode_categorical_feature(feature, name, dataset, is_string):
+    lookup_class = StringLookup if is_string else IntegerLookup
+    # Create a lookup layer which will turn strings into integer indices
+    lookup = lookup_class(output_mode="binary")
 
     # Prepare a Dataset that only yields our feature
     feature_ds = dataset.map(lambda x, y: x[name])
     feature_ds = feature_ds.map(lambda x: tf.expand_dims(x, -1))
 
     # Learn the set of possible string values and assign them a fixed integer index
-    index.adapt(feature_ds)
+    lookup.adapt(feature_ds)
 
     # Turn the string input into integer indices
-    encoded_feature = index(feature)
-
-    # Create a CategoryEncoding for our integer indices
-    encoder = CategoryEncoding(output_mode="binary")
-
-    # Prepare a dataset of indices
-    feature_ds = feature_ds.map(index)
-
-    # Learn the space of possible indices
-    encoder.adapt(feature_ds)
-
-    # Apply one-hot encoding to our indices
-    encoded_feature = encoder(encoded_feature)
-    return encoded_feature
-
-
-def encode_integer_categorical_feature(feature, name, dataset):
-    # Create a CategoryEncoding for our integer indices
-    encoder = CategoryEncoding(output_mode="binary")
-
-    # Prepare a Dataset that only yields our feature
-    feature_ds = dataset.map(lambda x, y: x[name])
-    feature_ds = feature_ds.map(lambda x: tf.expand_dims(x, -1))
-
-    # Learn the space of possible indices
-    encoder.adapt(feature_ds)
-
-    # Apply one-hot encoding to our indices
-    encoded_feature = encoder(feature)
+    encoded_feature = lookup(feature)
     return encoded_feature
 
 
@@ -270,15 +250,15 @@ all_inputs = [
 ]
 
 # Integer categorical features
-sex_encoded = encode_integer_categorical_feature(sex, "sex", train_ds)
-cp_encoded = encode_integer_categorical_feature(cp, "cp", train_ds)
-fbs_encoded = encode_integer_categorical_feature(fbs, "fbs", train_ds)
-restecg_encoded = encode_integer_categorical_feature(restecg, "restecg", train_ds)
-exang_encoded = encode_integer_categorical_feature(exang, "exang", train_ds)
-ca_encoded = encode_integer_categorical_feature(ca, "ca", train_ds)
+sex_encoded = encode_categorical_feature(sex, "sex", train_ds, False)
+cp_encoded = encode_categorical_feature(cp, "cp", train_ds, False)
+fbs_encoded = encode_categorical_feature(fbs, "fbs", train_ds, False)
+restecg_encoded = encode_categorical_feature(restecg, "restecg", train_ds, False)
+exang_encoded = encode_categorical_feature(exang, "exang", train_ds, False)
+ca_encoded = encode_categorical_feature(ca, "ca", train_ds, False)
 
 # String categorical features
-thal_encoded = encode_string_categorical_feature(thal, "thal", train_ds)
+thal_encoded = encode_categorical_feature(thal, "thal", train_ds, True)
 
 # Numerical features
 age_encoded = encode_numerical_feature(age, "age", train_ds)

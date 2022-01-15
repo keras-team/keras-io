@@ -885,7 +885,7 @@ rectangular tensors
 - Create targets for each sample in the batch using `LabelEncoder`
 """
 
-autotune = tf.data.experimental.AUTOTUNE
+autotune = tf.data.AUTOTUNE
 train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
 train_dataset = train_dataset.shuffle(8 * batch_size)
 train_dataset = train_dataset.padded_batch(

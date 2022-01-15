@@ -94,9 +94,9 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x148873e90>,
- <tensorflow.python.keras.layers.core.Dense at 0x14887ee10>,
- <tensorflow.python.keras.layers.core.Dense at 0x148886490>]
+[<tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285a00>,
+ <tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285c70>,
+ <tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285ee0>]
 
 ```
 </div>
@@ -176,10 +176,10 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 <div class="k-default-codeblock">
 ```
 [<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[ 0.47175038,  0.0916599 , -0.7113838 ],
-        [ 0.4508165 ,  0.80212307,  0.54930305],
-        [ 0.47127366,  0.77359426,  0.6605067 ],
-        [ 0.28070033,  0.01403308, -0.62135905]], dtype=float32)>,
+ array([[-0.5312456 , -0.02559239, -0.77284306],
+        [-0.18156391,  0.7774476 , -0.05044252],
+        [-0.3559971 ,  0.43751895,  0.3434813 ],
+        [-0.25133908,  0.8889308 , -0.6510118 ]], dtype=float32)>,
  <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
 
 ```
@@ -287,7 +287,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x14886eb10>]
+[<tensorflow.python.keras.layers.core.Dense at 0x7fbd5f1776d0>]
 
 ```
 </div>
@@ -421,7 +421,7 @@ Once your model architecture is ready, you will want to:
 - Save your model to disk and restore it. See our
 [guide to serialization & saving](/guides/serialization_and_saving/).
 - Speed up model training by leveraging multiple GPUs. See our
-[guide to multi-GPU and distributed training](/guides/distributed_training).
+[guide to multi-GPU and distributed training](https://keras.io/guides/distributed_training/).
 
 ---
 ## Feature extraction with a Sequential model
@@ -490,7 +490,7 @@ last one. Like this:
 
 ```python
 model = keras.Sequential([
-    keras.Input(shape=(784))
+    keras.Input(shape=(784)),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),

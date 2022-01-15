@@ -63,8 +63,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.01013444 -0.01070027 -0.01888977  0.05208318]
- [ 0.01013444 -0.01070027 -0.01888977  0.05208318]], shape=(2, 4), dtype=float32)
+[[ 0.01103698  0.03099662 -0.1009444   0.10721317]
+ [ 0.01103698  0.03099662 -0.1009444   0.10721317]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -103,8 +103,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.01331179 -0.00605625 -0.01042787  0.17160884]
- [-0.01331179 -0.00605625 -0.01042787  0.17160884]], shape=(2, 4), dtype=float32)
+[[-0.09724902  0.04435382  0.06548684  0.1264643 ]
+ [-0.09724902  0.04435382  0.06548684  0.1264643 ]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -226,23 +226,28 @@ linear_layer = Linear(32)
 
 # The layer's weights are created dynamically the first time the layer is called
 y = linear_layer(x)
+
 ```
+
+Implementing `build()` separately as shown above nicely separates creating weights
+only once from using weights in every call. However, for some advanced custom
+layers, it can become impractical to separate the state creation and computation.
+Layer implementers are allowed to defer weight creation to the first `__call__()`,
+but need to take care that later calls use the same weights. In addition, since
+`__call__()` is likely to be executed for the first time inside a `tf.function`,
+any variable creation that takes place in `__call__()` should be wrapped in a`tf.init_scope`.
 
 ---
 ## Layers are recursively composable
 
-If you assign a Layer instance as attribute of another Layer, the outer layer
-will start tracking the weights of the inner layer.
+If you assign a Layer instance as an attribute of another Layer, the outer layer
+will start tracking the weights created by the inner layer.
 
-We recommend creating such sublayers in the `__init__()` method (since the
-sublayers will typically have a build method, they will be built when the
-outer layer gets built).
+We recommend creating such sublayers in the `__init__()` method and leave it to
+the first `__call__()` to trigger building their weights.
 
 
 ```python
-# Let's assume we are reusing the Linear class
-# with a `build` method that we defined above.
-
 
 class MLPBlock(keras.layers.Layer):
     def __init__(self):
@@ -348,7 +353,7 @@ print(layer.losses)
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.0018842274>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.0023243506>]
 
 ```
 </div>
@@ -401,10 +406,10 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 1ms/step - loss: 0.1555
-1/1 [==============================] - 0s 927us/step - loss: 0.0336
+1/1 [==============================] - 0s 131ms/step - loss: 0.1269
+1/1 [==============================] - 0s 45ms/step - loss: 0.0274
 
-<tensorflow.python.keras.callbacks.History at 0x145bca6d0>
+<keras.callbacks.History at 0x1643af310>
 
 ```
 </div>
@@ -460,7 +465,7 @@ print("current accuracy value:", float(layer.metrics[0].result()))
 
 <div class="k-default-codeblock">
 ```
-layer.metrics: [<tensorflow.python.keras.metrics.BinaryAccuracy object at 0x145bccdd0>]
+layer.metrics: [<keras.metrics.BinaryAccuracy object at 0x161505450>]
 current accuracy value: 1.0
 
 ```
@@ -486,9 +491,9 @@ model.fit(data)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 999us/step - loss: 1.0366 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 240ms/step - loss: 0.9455 - binary_accuracy: 0.0000e+00
 
-<tensorflow.python.keras.callbacks.History at 0x1452c7650>
+<keras.callbacks.History at 0x1644acd50>
 
 ```
 </div>
@@ -835,27 +840,27 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-step 0: mean loss = 0.3577
-step 100: mean loss = 0.1258
-step 200: mean loss = 0.0994
-step 300: mean loss = 0.0893
-step 400: mean loss = 0.0843
-step 500: mean loss = 0.0809
-step 600: mean loss = 0.0788
-step 700: mean loss = 0.0772
-step 800: mean loss = 0.0760
-step 900: mean loss = 0.0750
+step 0: mean loss = 0.3431
+step 100: mean loss = 0.1273
+step 200: mean loss = 0.1001
+step 300: mean loss = 0.0897
+step 400: mean loss = 0.0847
+step 500: mean loss = 0.0812
+step 600: mean loss = 0.0790
+step 700: mean loss = 0.0774
+step 800: mean loss = 0.0762
+step 900: mean loss = 0.0751
 Start of epoch 1
-step 0: mean loss = 0.0747
-step 100: mean loss = 0.0740
-step 200: mean loss = 0.0735
-step 300: mean loss = 0.0730
-step 400: mean loss = 0.0727
-step 500: mean loss = 0.0723
-step 600: mean loss = 0.0720
-step 700: mean loss = 0.0717
-step 800: mean loss = 0.0715
-step 900: mean loss = 0.0712
+step 0: mean loss = 0.0748
+step 100: mean loss = 0.0742
+step 200: mean loss = 0.0737
+step 300: mean loss = 0.0732
+step 400: mean loss = 0.0728
+step 500: mean loss = 0.0724
+step 600: mean loss = 0.0721
+step 700: mean loss = 0.0718
+step 800: mean loss = 0.0716
+step 900: mean loss = 0.0713
 
 ```
 </div>
@@ -875,11 +880,11 @@ vae.fit(x_train, x_train, epochs=2, batch_size=64)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.0745
+938/938 [==============================] - 2s 2ms/step - loss: 0.0747
 Epoch 2/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.0676
+938/938 [==============================] - 2s 2ms/step - loss: 0.0676
 
-<tensorflow.python.keras.callbacks.History at 0x15f10e150>
+<keras.callbacks.History at 0x164668d90>
 
 ```
 </div>
@@ -931,13 +936,13 @@ vae.fit(x_train, x_train, epochs=3, batch_size=64)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-938/938 [==============================] - 1s 1ms/step - loss: 0.0747
+938/938 [==============================] - 2s 1ms/step - loss: 0.0746
 Epoch 2/3
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 Epoch 3/3
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<tensorflow.python.keras.callbacks.History at 0x15f3240d0>
+<keras.callbacks.History at 0x16469fc50>
 
 ```
 </div>

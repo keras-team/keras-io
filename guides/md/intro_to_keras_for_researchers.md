@@ -150,8 +150,8 @@ print(a)
 <div class="k-default-codeblock">
 ```
 <tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
-array([[ 0.6405563 ,  0.03973103],
-       [-0.6126285 , -0.71384406]], dtype=float32)>
+array([[-1.7639292,  0.4263797],
+       [-0.3954156, -0.6072024]], dtype=float32)>
 
 ```
 </div>
@@ -213,8 +213,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.3224076   0.69120544]
- [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+[[ 0.99851996 -0.56305575]
+ [-0.99985445 -0.773933  ]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -233,8 +233,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.3224076   0.69120544]
- [-0.7068095  -0.53885883]], shape=(2, 2), dtype=float32)
+[[ 0.99851996 -0.56305575]
+ [-0.99985445 -0.773933  ]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -254,8 +254,8 @@ with tf.GradientTape() as outer_tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[1.6652625  0.6523223 ]
- [0.20117798 0.41852283]], shape=(2, 2), dtype=float32)
+[[1.2510717e-03 4.4079739e-01]
+ [2.1326542e-04 3.7843192e-01]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -398,7 +398,7 @@ for step, (x, y) in enumerate(dataset):
         # Loss value for this batch.
         loss = loss_fn(y, logits)
 
-    # Get gradients of weights wrt the loss.
+    # Get gradients of the loss wrt the weights.
     gradients = tape.gradient(loss, linear_layer.trainable_weights)
 
     # Update the weights of our linear layer.
@@ -411,16 +411,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.386174201965332
-Step: 100 Loss: 2.22518253326416
-Step: 200 Loss: 2.1162631511688232
-Step: 300 Loss: 2.047822952270508
-Step: 400 Loss: 2.025263547897339
-Step: 500 Loss: 1.9544496536254883
-Step: 600 Loss: 1.8216196298599243
-Step: 700 Loss: 1.7630621194839478
-Step: 800 Loss: 1.756800651550293
-Step: 900 Loss: 1.6689152717590332
+Step: 0 Loss: 2.4605865478515625
+Step: 100 Loss: 2.3112568855285645
+Step: 200 Loss: 2.1920084953308105
+Step: 300 Loss: 2.1255125999450684
+Step: 400 Loss: 2.020744562149048
+Step: 500 Loss: 2.060229539871216
+Step: 600 Loss: 1.9214580059051514
+Step: 700 Loss: 1.7613574266433716
+Step: 800 Loss: 1.6828575134277344
+Step: 900 Loss: 1.6320191621780396
 
 ```
 </div>
@@ -579,7 +579,7 @@ print(mlp.losses)  # List containing one float32 scalar
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.16569461>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.21796302>]
 
 ```
 </div>
@@ -625,7 +625,7 @@ for step, (x, y) in enumerate(dataset):
         # Add the losses created during the forward pass.
         loss += sum(mlp.losses)
 
-        # Get gradients of weights wrt the loss.
+        # Get gradients of the loss wrt the weights.
         gradients = tape.gradient(loss, mlp.trainable_weights)
 
     # Update the weights of our linear layer.
@@ -638,16 +638,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 6.238003730773926
-Step: 100 Loss: 2.5299227237701416
-Step: 200 Loss: 2.435337543487549
-Step: 300 Loss: 2.3858678340911865
-Step: 400 Loss: 2.3544323444366455
-Step: 500 Loss: 2.3284459114074707
-Step: 600 Loss: 2.3211910724639893
-Step: 700 Loss: 2.3177292346954346
-Step: 800 Loss: 2.322242259979248
-Step: 900 Loss: 2.310494899749756
+Step: 0 Loss: 6.307978630065918
+Step: 100 Loss: 2.5283541679382324
+Step: 200 Loss: 2.4068050384521484
+Step: 300 Loss: 2.3749840259552
+Step: 400 Loss: 2.34563946723938
+Step: 500 Loss: 2.3380157947540283
+Step: 600 Loss: 2.3201656341552734
+Step: 700 Loss: 2.3250539302825928
+Step: 800 Loss: 2.344613790512085
+Step: 900 Loss: 2.3183579444885254
 
 ```
 </div>
@@ -664,7 +664,7 @@ To use a metric in a custom training loop, you would:
 - Call its `metric.udpate_state(targets, predictions)` method for each batch of data
 - Query its result via `metric.result()`
 - Reset the metric's state at the end of an epoch or at the start of an evaluation via
-`metric.reset_states()`
+`metric.reset_state()`
 
 Here's a simple example:
 
@@ -705,31 +705,31 @@ for epoch in range(2):
             print("Total running accuracy so far: %.3f" % accuracy.result())
 
     # Reset the metric's state at the end of an epoch
-    accuracy.reset_states()
+    accuracy.reset_state()
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.047
+Total running accuracy so far: 0.141
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.755
+Total running accuracy so far: 0.751
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.826
+Total running accuracy so far: 0.827
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.855
+Total running accuracy so far: 0.859
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.872
+Total running accuracy so far: 0.876
 Epoch: 1 Step: 0
 Total running accuracy so far: 0.938
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.941
-Epoch: 1 Step: 400
-Total running accuracy so far: 0.943
-Epoch: 1 Step: 600
 Total running accuracy so far: 0.944
+Epoch: 1 Step: 400
+Total running accuracy so far: 0.944
+Epoch: 1 Step: 600
+Total running accuracy so far: 0.945
 Epoch: 1 Step: 800
-Total running accuracy so far: 0.943
+Total running accuracy so far: 0.945
 
 ```
 </div>
@@ -738,6 +738,84 @@ to an `self.add_metric()` method on layers. It tracks the average of
 whatever quantity you pass to it. You can reset the value of these metrics
 by calling `layer.reset_metrics()` on any layer or model.
 
+You can also define your own metrics by subclassing `keras.metrics.Metric`.
+You need to override the three functions called above:
+
+- Override `update_state()` to update the statistic values.
+- Override `result()` to return the metric value.
+- Override `reset_state()` to reset the metric to its initial state.
+
+Here is an example where we implement the F1-score metric
+(with support for sample weighting).
+
+
+```python
+
+class F1Score(keras.metrics.Metric):
+    def __init__(self, name="f1_score", dtype="float32", threshold=0.5, **kwargs):
+        super().__init__(name=name, dtype=dtype, **kwargs)
+        self.threshold = 0.5
+        self.true_positives = self.add_weight(
+            name="tp", dtype=dtype, initializer="zeros"
+        )
+        self.false_positives = self.add_weight(
+            name="fp", dtype=dtype, initializer="zeros"
+        )
+        self.false_negatives = self.add_weight(
+            name="fn", dtype=dtype, initializer="zeros"
+        )
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.math.greater_equal(y_pred, self.threshold)
+        y_true = tf.cast(y_true, tf.bool)
+        y_pred = tf.cast(y_pred, tf.bool)
+
+        true_positives = tf.cast(y_true & y_pred, self.dtype)
+        false_positives = tf.cast(~y_true & y_pred, self.dtype)
+        false_negatives = tf.cast(y_true & ~y_pred, self.dtype)
+
+        if sample_weight is not None:
+            sample_weight = tf.cast(sample_weight, self.dtype)
+            true_positives *= sample_weight
+            false_positives *= sample_weight
+            false_negatives *= sample_weight
+
+        self.true_positives.assign_add(tf.reduce_sum(true_positives))
+        self.false_positives.assign_add(tf.reduce_sum(false_positives))
+        self.false_negatives.assign_add(tf.reduce_sum(false_negatives))
+
+    def result(self):
+        precision = self.true_positives / (self.true_positives + self.false_positives)
+        recall = self.true_positives / (self.true_positives + self.false_negatives)
+        return precision * recall * 2.0 / (precision + recall)
+
+    def reset_state(self):
+        self.true_positives.assign(0)
+        self.false_positives.assign(0)
+        self.false_negatives.assign(0)
+
+```
+
+Let's test-drive it:
+
+
+```python
+m = F1Score()
+m.update_state([0, 1, 0, 0], [0.3, 0.5, 0.8, 0.9])
+print("Intermediate result:", float(m.result()))
+
+m.update_state([1, 1, 1, 1], [0.1, 0.7, 0.6, 0.0])
+print("Final result:", float(m.result()))
+
+```
+
+<div class="k-default-codeblock">
+```
+Intermediate result: 0.5
+Final result: 0.6000000238418579
+
+```
+</div>
 ---
 ## Compiled functions
 
@@ -787,16 +865,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.307070016860962
-Step: 100 Loss: 0.7121144533157349
-Step: 200 Loss: 0.45566993951797485
-Step: 300 Loss: 0.47507303953170776
-Step: 400 Loss: 0.23864206671714783
-Step: 500 Loss: 0.2954753041267395
-Step: 600 Loss: 0.31291744112968445
-Step: 700 Loss: 0.15316027402877808
-Step: 800 Loss: 0.32832837104797363
-Step: 900 Loss: 0.10866784304380417
+Step: 0 Loss: 2.291861057281494
+Step: 100 Loss: 0.5378965735435486
+Step: 200 Loss: 0.48008084297180176
+Step: 300 Loss: 0.3359006941318512
+Step: 400 Loss: 0.28147661685943604
+Step: 500 Loss: 0.31419697403907776
+Step: 600 Loss: 0.2735794484615326
+Step: 700 Loss: 0.3001103401184082
+Step: 800 Loss: 0.18827161192893982
+Step: 900 Loss: 0.15798673033714294
 
 ```
 </div>
@@ -895,11 +973,124 @@ Learn more about the Functional API [here](/guides/functional_api/).
 In your research workflows, you may often find yourself mix-and-matching OO models and
 Functional models.
 
-Note that the `Model` class also features built-in training & evaluation loops
-(`fit()` and `evaluate()`). You can always subclass the `Model` class
-(it works exactly like subclassing `Layer`) if you want to leverage these loops
-for your OO models.
+Note that the `Model` class also features built-in training & evaluation loops:
+`fit()`, `predict()` and `evaluate()` (configured via the `compile()` method).
+These built-in functions give you access to the
+following built-in training infrastructure features:
 
+* [Callbacks](/api/callbacks/). You can leverage built-in
+callbacks for early-stopping, model checkpointing,
+and monitoring training with TensorBoard. You can also
+[implement custom callbacks](/guides/writing_your_own_callbacks/) if needed.
+* [Distributed training](https://keras.io/guides/distributed_training/). You
+can easily scale up your training to multiple GPUs, TPU, or even multiple machines
+with the `tf.distribute` API -- with no changes to your code.
+* [Step fusing](https://keras.io/api/models/model_training_apis/#compile-method).
+With the `steps_per_execution` argument in `Model.compile()`, you can process
+multiple batches in a single `tf.function` call, which greatly improves
+device utilization on TPUs.
+
+We won't go into the details, but we provide a simple code example
+below. It leverages the built-in training infrastructure to implement the MNIST
+example above.
+
+
+```python
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = tf.keras.Model(inputs, outputs)
+
+# Specify the loss, optimizer, and metrics with `compile()`.
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+)
+
+# Train the model with the dataset for 2 epochs.
+model.fit(dataset, epochs=2)
+model.predict(dataset)
+model.evaluate(dataset)
+```
+
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+938/938 [==============================] - 1s 1ms/step - loss: 0.3958 - sparse_categorical_accuracy: 0.8872
+Epoch 2/2
+938/938 [==============================] - 1s 1ms/step - loss: 0.1916 - sparse_categorical_accuracy: 0.9447
+938/938 [==============================] - 1s 798us/step - loss: 0.1729 - sparse_categorical_accuracy: 0.9485
+
+[0.1728748232126236, 0.9484500288963318]
+
+```
+</div>
+You can always subclass the `Model` class (it works exactly like subclassing
+`Layer`) if you want to leverage built-in training loops for your OO models.
+Just override the `Model.train_step()` to
+customize what happens in `fit()` while retaining support
+for the built-in infrastructure features outlined above -- callbacks,
+zero-code distribution support, and step fusing support.
+You may also override `test_step()` to customize what happens in `evaluate()`,
+and override `predict_step()` to customize what happens in `predict()`. For more
+information, please refer to
+[this guide](https://keras.io/guides/customizing_what_happens_in_fit/).
+
+
+```python
+
+class CustomModel(keras.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.accuracy = keras.metrics.SparseCategoricalAccuracy()
+        self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            loss = self.loss_fn(y, y_pred)
+        gradients = tape.gradient(loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_weights))
+        # Update metrics (includes the metric that tracks the loss)
+        self.loss_tracker.update_state(loss)
+        self.accuracy.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {"loss": self.loss_tracker.result(), "accuracy": self.accuracy.result()}
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch.
+        return [self.loss_tracker, self.accuracy]
+
+
+inputs = tf.keras.Input(shape=(784,), dtype="float32")
+x = keras.layers.Dense(32, activation="relu")(inputs)
+x = keras.layers.Dense(32, activation="relu")(x)
+outputs = keras.layers.Dense(10)(x)
+model = CustomModel(inputs, outputs)
+model.compile()
+model.fit(dataset, epochs=2)
+```
+
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+938/938 [==============================] - 1s 1ms/step - loss: 0.3737 - accuracy: 0.8340
+Epoch 2/2
+938/938 [==============================] - 1s 946us/step - loss: 0.1934 - accuracy: 0.9405
+
+<keras.callbacks.History at 0x15dfae110>
+
+```
+</div>
 ---
 ## End-to-end experiment example 1: variational autoencoders.
 
@@ -1058,17 +1249,17 @@ for step, x in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.3283705711364746
-Step: 100 Loss: 0.12607811022512982
-Step: 200 Loss: 0.09977191104669476
-Step: 300 Loss: 0.0897256354383654
-Step: 400 Loss: 0.08479013259608549
-Step: 500 Loss: 0.08158575140400799
-Step: 600 Loss: 0.07913740716886997
-Step: 700 Loss: 0.07780108796950753
-Step: 800 Loss: 0.07658983394503593
-Step: 900 Loss: 0.07564939806583057
-Step: 1000 Loss: 0.0746984266928145
+Step: 0 Loss: 0.3246927559375763
+Step: 100 Loss: 0.12636583357459247
+Step: 200 Loss: 0.099717023916802
+Step: 300 Loss: 0.0896754782535507
+Step: 400 Loss: 0.08474012454065896
+Step: 500 Loss: 0.08153954131933981
+Step: 600 Loss: 0.07914437327577349
+Step: 700 Loss: 0.07779341802723738
+Step: 800 Loss: 0.07658644887466406
+Step: 900 Loss: 0.07564477964855325
+Step: 1000 Loss: 0.07468595038671474
 
 ```
 </div>
@@ -1138,9 +1329,9 @@ vae.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 2s 999us/step - loss: 0.0838
+1875/1875 [==============================] - 3s 1ms/step - loss: 0.0713
 
-<tensorflow.python.keras.callbacks.History at 0x1456bf250>
+<keras.callbacks.History at 0x15e150f10>
 
 ```
 </div>
@@ -1156,12 +1347,11 @@ paragraphs earlier.
 
 Let's take a look at another kind of research experiment: hypernetworks.
 
-A hypernetwork is a deep neural network whose weights are generated by another network
-(usually smaller).
+The idea is to use a small deep neural network (the hypernetwork) to generate
+the weights for a larger network (the main network).
 
 Let's implement a really trivial hypernetwork: we'll use a small 2-layer network  to
 generate the weights of a larger 3-layer network.
-
 
 
 ```python
@@ -1170,22 +1360,22 @@ import numpy as np
 input_dim = 784
 classes = 10
 
-# This is the model we'll actually use to predict labels (the hypernetwork).
-outer_model = keras.Sequential(
+# This is the main network we'll actually use to predict labels.
+main_network = keras.Sequential(
     [keras.layers.Dense(64, activation=tf.nn.relu), keras.layers.Dense(classes),]
 )
 
 # It doesn't need to create its own weights, so let's mark its layers
-# as already built. That way, calling `outer_model` won't create new variables.
-for layer in outer_model.layers:
+# as already built. That way, calling `main_network` won't create new variables.
+for layer in main_network.layers:
     layer.built = True
 
 # This is the number of weight coefficients to generate. Each layer in the
-# hypernetwork requires output_dim * input_dim + output_dim coefficients.
+# main network requires output_dim * input_dim + output_dim coefficients.
 num_weights_to_generate = (classes * 64 + classes) + (64 * input_dim + 64)
 
-# This is the model that generates the weights of the `outer_model` above.
-inner_model = keras.Sequential(
+# This is the hypernetwork that generates the weights of the `main_network` above.
+hypernetwork = keras.Sequential(
     [
         keras.layers.Dense(16, activation=tf.nn.relu),
         keras.layers.Dense(num_weights_to_generate, activation=tf.nn.sigmoid),
@@ -1195,10 +1385,10 @@ inner_model = keras.Sequential(
 
 This is our training loop. For each batch of data:
 
-- We use `inner_model` to generate an array of weight coefficients, `weights_pred`
-- We reshape these coefficients into kernel & bias tensors for the `outer_model`
-- We run the forward pass of the `outer_model` to compute the actual MNIST predictions
-- We run backprop through the weights of the `inner_model` to minimize the
+- We use `hypernetwork` to generate an array of weight coefficients, `weights_pred`
+- We reshape these coefficients into kernel & bias tensors for the `main_network`
+- We run the forward pass of the `main_network` to compute the actual MNIST predictions
+- We run backprop through the weights of the `hypernetwork` to minimize the
 final classification loss
 
 
@@ -1221,7 +1411,7 @@ dataset = dataset.shuffle(buffer_size=1024).batch(1)
 def train_step(x, y):
     with tf.GradientTape() as tape:
         # Predict weights for the outer model.
-        weights_pred = inner_model(x)
+        weights_pred = hypernetwork(x)
 
         # Reshape them to the expected shapes for w and b for the outer model.
         # Layer 0 kernel.
@@ -1247,18 +1437,18 @@ def train_step(x, y):
         start_index += np.prod(b1_shape)
 
         # Set the weight predictions as the weight variables on the outer model.
-        outer_model.layers[0].kernel = w0
-        outer_model.layers[0].bias = b0
-        outer_model.layers[1].kernel = w1
-        outer_model.layers[1].bias = b1
+        main_network.layers[0].kernel = w0
+        main_network.layers[0].bias = b0
+        main_network.layers[1].kernel = w1
+        main_network.layers[1].bias = b1
 
         # Inference on the outer model.
-        preds = outer_model(x)
+        preds = main_network(x)
         loss = loss_fn(y, preds)
 
     # Train only inner model.
-    grads = tape.gradient(loss, inner_model.trainable_weights)
-    optimizer.apply_gradients(zip(grads, inner_model.trainable_weights))
+    grads = tape.gradient(loss, hypernetwork.trainable_weights)
+    optimizer.apply_gradients(zip(grads, hypernetwork.trainable_weights))
     return loss
 
 
@@ -1280,17 +1470,17 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 3.346794843673706
-Step: 100 Loss: 2.5347713479901306
-Step: 200 Loss: 2.3532673210943518
-Step: 300 Loss: 2.105134464552208
-Step: 400 Loss: 1.9224171297462687
-Step: 500 Loss: 1.8143611295096513
-Step: 600 Loss: 1.7148052298323655
-Step: 700 Loss: 1.6695872197209294
-Step: 800 Loss: 1.616796940164684
-Step: 900 Loss: 1.5303113453757042
-Step: 1000 Loss: 1.4919751342148413
+Step: 0 Loss: 1.3274627923965454
+Step: 100 Loss: 2.5709669510326765
+Step: 200 Loss: 2.2051062234700542
+Step: 300 Loss: 2.0191424489686534
+Step: 400 Loss: 1.8865989956417193
+Step: 500 Loss: 1.7706833476604333
+Step: 600 Loss: 1.6479115988951523
+Step: 700 Loss: 1.603230944064981
+Step: 800 Loss: 1.533307248778922
+Step: 900 Loss: 1.513232192888781
+Step: 1000 Loss: 1.4671869220568465
 
 ```
 </div>

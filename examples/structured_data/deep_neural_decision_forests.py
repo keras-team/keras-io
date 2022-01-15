@@ -145,7 +145,7 @@ for training and validation. We also preprocess the input by mapping the target 
 to an index.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 
 target_label_lookup = StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0
@@ -190,11 +190,8 @@ def create_model_inputs():
 ## Encode input features
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
-
-def encode_inputs(inputs, use_embedding=False):
+def encode_inputs(inputs):
     encoded_features = []
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURE_NAMES:
@@ -202,25 +199,18 @@ def encode_inputs(inputs, use_embedding=False):
             # Create a lookup to convert a string values to an integer indices.
             # Since we are not using a mask token, nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and num_oov_indices to 0.
-            index = StringLookup(
+            lookup = StringLookup(
                 vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
             # Convert the string input values into integer indices.
-            value_index = index(inputs[feature_name])
-            if use_embedding:
-                embedding_dims = int(math.sqrt(len(vocabulary)))
-                # Create an embedding layer with the specified dimensions.
-                embedding_ecoder = layers.Embedding(
-                    input_dim=len(vocabulary), output_dim=embedding_dims
-                )
-                # Convert the index values to embedding representations.
-                encoded_feature = embedding_ecoder(value_index)
-            else:
-                # Create a one-hot encoder.
-                onehot_encoder = CategoryEncoding(output_mode="binary")
-                onehot_encoder.adapt(index(vocabulary))
-                # Convert the index values to a one-hot representation.
-                encoded_feature = onehot_encoder(value_index)
+            value_index = lookup(inputs[feature_name])
+            embedding_dims = int(math.sqrt(lookup.vocabulary_size()))
+            # Create an embedding layer with the specified dimensions.
+            embedding = layers.Embedding(
+                input_dim=lookup.vocabulary_size(), output_dim=embedding_dims
+            )
+            # Convert the index values to embedding representations.
+            encoded_feature = embedding(value_index)
         else:
             # Use the numerical features as-is.
             encoded_feature = inputs[feature_name]
@@ -398,7 +388,7 @@ num_classes = len(TARGET_LABELS)
 
 def create_tree_model():
     inputs = create_model_inputs()
-    features = encode_inputs(inputs, use_embedding=True)
+    features = encode_inputs(inputs)
     features = layers.BatchNormalization()(features)
     num_features = features.shape[1]
 
@@ -429,7 +419,7 @@ used_features_rate = 0.5
 
 def create_forest_model():
     inputs = create_model_inputs()
-    features = encode_inputs(inputs, use_embedding=True)
+    features = encode_inputs(inputs)
     features = layers.BatchNormalization()(features)
     num_features = features.shape[1]
 

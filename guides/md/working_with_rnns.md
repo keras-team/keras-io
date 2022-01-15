@@ -404,7 +404,7 @@ Under the hood, `Bidirectional` will copy the RNN layer passed in, and flip the
 `go_backwards` field of the newly copied layer, so that it will process the inputs in
 reverse order.
 
-The output of the `Bidirectional` RNN will be, by default, the sum of the forward layer
+The output of the `Bidirectional` RNN will be, by default, the concatenation of the forward layer
 output and the backward layer output. If you need a different merging behavior, e.g.
 concatenation, change the `merge_mode` parameter in the `Bidirectional` wrapper
 constructor. For more details about `Bidirectional`, please check
@@ -512,9 +512,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 14s 13ms/step - loss: 1.3533 - accuracy: 0.5564 - val_loss: 0.5511 - val_accuracy: 0.8226
+938/938 [==============================] - 12s 11ms/step - loss: 1.3152 - accuracy: 0.5698 - val_loss: 0.5888 - val_accuracy: 0.8086
 
-<tensorflow.python.keras.callbacks.History at 0x149134bd0>
+<tensorflow.python.keras.callbacks.History at 0x154f3e950>
 
 ```
 </div>
@@ -536,9 +536,9 @@ noncudnn_model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 12s 12ms/step - loss: 0.4240 - accuracy: 0.8740 - val_loss: 0.2870 - val_accuracy: 0.9101
+938/938 [==============================] - 14s 14ms/step - loss: 0.4382 - accuracy: 0.8669 - val_loss: 0.3223 - val_accuracy: 0.8955
 
-<tensorflow.python.keras.callbacks.History at 0x148fc0a50>
+<tensorflow.python.keras.callbacks.History at 0x154ce1a10>
 
 ```
 </div>
@@ -697,9 +697,9 @@ model.fit(input_data, target_data, batch_size=batch_size)
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 3s 243ms/step - loss: 0.8848 - rnn_1_loss: 0.2835 - rnn_1_1_loss: 0.6013 - rnn_1_accuracy: 0.1175 - rnn_1_1_accuracy: 0.0328
+10/10 [==============================] - 4s 263ms/step - loss: 0.9004 - rnn_1_loss: 0.3103 - rnn_1_1_loss: 0.5902 - rnn_1_accuracy: 0.1403 - rnn_1_1_accuracy: 0.0335
 
-<tensorflow.python.keras.callbacks.History at 0x14c077a50>
+<tensorflow.python.keras.callbacks.History at 0x154ce1990>
 
 ```
 </div>

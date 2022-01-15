@@ -17,7 +17,7 @@ outputs = layer(inputs)
 Unlike a function, though, layers maintain a state, updated when the layer receives data
 during training, and stored in `layer.weights`:
 
-```
+```python
 >>> layer.weights
 [<tf.Variable 'dense/kernel:0' shape=(20, 32) dtype=float32>,
  <tf.Variable 'dense/bias:0' shape=(32,) dtype=float32>]

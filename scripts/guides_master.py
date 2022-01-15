@@ -1,3 +1,30 @@
+KT_GUIDES_MASTER = {
+    'path': 'keras_tuner/',
+    'title': 'Hyperparameter Tuning',
+    'toc': True,
+    'children': [
+        {
+            'path': 'getting_started',
+            'title': 'Getting started with KerasTuner',
+        },
+        {
+            'path': 'distributed_tuning',
+            'title': 'Distributed hyperparameter tuning with KerasTuner',
+        },
+        {
+            'path': 'custom_tuner',
+            'title': 'Writing your own Tuner to support a custom training loop',
+        },
+        {
+            'path': 'visualize_tuning',
+            'title': 'Visualize the hyperparameter tuning process',
+        },
+        {
+            'path': 'tailor_the_search_space',
+            'title': 'Tailor the search space',
+        },
+    ]
+}
 
 GUIDES_MASTER = {
     'path': 'guides/',
@@ -76,6 +103,7 @@ GUIDES_MASTER = {
             'path': 'training_keras_models_on_cloud',
             'title': 'Training Keras models with TensorFlow Cloud',
         },
+        KT_GUIDES_MASTER,
 
         # TODO: mixed precision
     ]

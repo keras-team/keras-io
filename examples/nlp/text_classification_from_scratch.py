@@ -50,7 +50,7 @@ ls aclImdb/train
 
 """
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
- which represents on review (either positive or negative):
+ which represents one review (either positive or negative):
 """
 
 """shell
@@ -106,17 +106,9 @@ raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
-print(
-    "Number of batches in raw_train_ds: %d"
-    % tf.data.experimental.cardinality(raw_train_ds)
-)
-print(
-    "Number of batches in raw_val_ds: %d" % tf.data.experimental.cardinality(raw_val_ds)
-)
-print(
-    "Number of batches in raw_test_ds: %d"
-    % tf.data.experimental.cardinality(raw_test_ds)
-)
+print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
+print(f"Number of batches in raw_val_ds: {raw_val_ds.cardinality()}")
+print(f"Number of batches in raw_test_ds: {raw_test_ds.cardinality()}")
 
 """
 Let's preview a few samples:
@@ -139,7 +131,7 @@ for text_batch, label_batch in raw_train_ds.take(1):
 In particular, we remove `<br />` tags.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import string
 import re
 
@@ -151,7 +143,7 @@ def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
     stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
     return tf.strings.regex_replace(
-        stripped_html, "[%s]" % re.escape(string.punctuation), ""
+        stripped_html, f"[{re.escape(string.punctuation)}]", ""
     )
 
 

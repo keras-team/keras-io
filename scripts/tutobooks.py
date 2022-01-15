@@ -334,9 +334,30 @@ def validate(py):
     os.remove(fpath)
     if formatted != pre_formatting:
         raise ValueError(
-            "You python file did not follow `black` conventions. "
+            "Your python file did not follow `black` conventions. "
             "Run `black your_file.py` to autoformat it."
         )
+
+    # Extra checks.
+    if '//arxiv.org/pdf/' in py:
+        raise ValueError(
+            "Do not link to arXiv PDFs directly. "
+            "Instead, link to the abstract page.")
+
+
+def count_locs_in_file(py_path):
+    f = open(py_path)
+    py = f.read()
+    f.close()
+    validate(py)
+    _get_next_script_element(py)  # Header
+    loc = 0
+    while py:
+        e, cell_type, py, _ = _get_next_script_element(py)
+        lines = e.split("\n")
+        if cell_type == "code":
+            loc += _count_locs(lines)
+    return loc
 
 
 def _count_locs(lines):
@@ -528,34 +549,40 @@ NB_BASE = {
 
 if __name__ == "__main__":
     cmd = sys.argv[1]
-    if cmd not in {"nb2py", "py2nb"}:
+    if cmd not in {"nb2py", "py2nb", "count_loc"}:
         raise ValueError(
             "Specify a command: either "
             "`nb2py source_filename.ipynb target_filename.py` or "
-            "`py2nb source_filename.py target_file name.ipynb"
+            "`py2nb source_filename.py target_file name.ipynb` or "
+            "`count_loc source_filename.py`."
         )
-    if len(sys.argv) < 4:
-        raise ValueError("Specify a source filename and a target filename")
-    source = sys.argv[2]
-    target = sys.argv[3]
+    if cmd == "count_loc":
+        source = sys.argv[2]
+        loc = count_locs_in_file(source)
+        print(f"Counted {loc} lines of code in {source}.")
+    else:
+        if len(sys.argv) < 4:
+            raise ValueError("Specify a source filename and a target filename")
+        source = sys.argv[2]
+        target = sys.argv[3]
 
-    if cmd == "py2nb":
-        if not source.endswith(".py"):
-            raise ValueError(
-                "The source filename should be a Python file. Got:", source
-            )
-        if not target.endswith(".ipynb"):
-            raise ValueError(
-                "The target filename should be a notebook file. Got:", target
-            )
-        py_to_nb(source, target)
-    if cmd == "nb2py":
-        if not source.endswith(".ipynb"):
-            raise ValueError(
-                "The source filename should be a notebook file. Got:", source
-            )
-        if not target.endswith(".py"):
-            raise ValueError(
-                "The target filename should be a Python file. Got:", target
-            )
-        nb_to_py(source, target)
+        if cmd == "py2nb":
+            if not source.endswith(".py"):
+                raise ValueError(
+                    f"The source filename should be a Python file. Got: {source}"
+                )
+            if not target.endswith(".ipynb"):
+                raise ValueError(
+                    f"The target filename should be a notebook file. Got: {target}"
+                )
+            py_to_nb(source, target)
+        if cmd == "nb2py":
+            if not source.endswith(".ipynb"):
+                raise ValueError(
+                    f"The source filename should be a notebook file. Got: {source}"
+                )
+            if not target.endswith(".py"):
+                raise ValueError(
+                    f"The target filename should be a Python file. Got: {target}"
+                )
+            nb_to_py(source, target)

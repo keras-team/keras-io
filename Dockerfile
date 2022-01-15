@@ -1,9 +1,8 @@
 FROM python:3.7
 
-ARG TF_VERSION=2.3.0
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
-RUN pip install tensorflow==${TF_VERSION}
+RUN pip install tensorflow --upgrade
 
 COPY ./ ./
 WORKDIR scripts

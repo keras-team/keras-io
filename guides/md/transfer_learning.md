@@ -14,12 +14,10 @@
 ## Setup
 
 
-
 ```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-
 ```
 
 ---
@@ -34,7 +32,7 @@ Transfer learning is usually done for tasks where your dataset has too little da
  train a full-scale model from scratch.
 
 The most common incarnation of transfer learning in the context of deep learning is the
- following worfklow:
+ following workflow:
 
 1. Take layers from a previously trained model.
 2. Freeze them, so as to avoid destroying any of the information they contain during
@@ -61,7 +59,6 @@ This is adapted from
 ["building powerful image classification models using very little
  data"](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html).
 
-
 ---
 ## Freezing layers: understanding the `trainable` attribute
 
@@ -76,7 +73,6 @@ Layers & models have three weight attributes:
 **Example: the `Dense` layer has 2 trainable weights (kernel & bias)**
 
 
-
 ```python
 layer = keras.layers.Dense(3)
 layer.build((None, 4))  # Create the weights
@@ -84,7 +80,6 @@ layer.build((None, 4))  # Create the weights
 print("weights:", len(layer.weights))
 print("trainable_weights:", len(layer.trainable_weights))
 print("non_trainable_weights:", len(layer.non_trainable_weights))
-
 ```
 
 <div class="k-default-codeblock">
@@ -99,11 +94,10 @@ In general, all weights are trainable weights. The only built-in layer that has
 non-trainable weights is the `BatchNormalization` layer. It uses non-trainable weights
  to keep track of the mean and variance of its inputs during training.
 To learn how to use non-trainable weights in your own custom layers, see the
-[guide to writing new layers from scratch](making_new_layers_and_models_via_subclassing).
+[guide to writing new layers from scratch](https://keras.io/guides/making_new_layers_and_models_via_subclassing/).
 
 **Example: the `BatchNormalization` layer has 2 trainable weights and 2 non-trainable
  weights**
-
 
 
 ```python
@@ -113,7 +107,6 @@ layer.build((None, 4))  # Create the weights
 print("weights:", len(layer.weights))
 print("trainable_weights:", len(layer.trainable_weights))
 print("non_trainable_weights:", len(layer.non_trainable_weights))
-
 ```
 
 <div class="k-default-codeblock">
@@ -133,7 +126,6 @@ be updated during training (either when training with `fit()` or when training w
 **Example: setting `trainable` to `False`**
 
 
-
 ```python
 layer = keras.layers.Dense(3)
 layer.build((None, 4))  # Create the weights
@@ -142,7 +134,6 @@ layer.trainable = False  # Freeze the layer
 print("weights:", len(layer.weights))
 print("trainable_weights:", len(layer.trainable_weights))
 print("non_trainable_weights:", len(layer.non_trainable_weights))
-
 ```
 
 <div class="k-default-codeblock">
@@ -155,7 +146,6 @@ non_trainable_weights: 2
 </div>
 When a trainable weight becomes non-trainable, its value is no longer updated during
  training.
-
 
 
 ```python
@@ -182,12 +172,11 @@ np.testing.assert_allclose(
 np.testing.assert_allclose(
     initial_layer1_weights_values[1], final_layer1_weights_values[1]
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 1ms/step - loss: 0.0846
+1/1 [==============================] - 0s 333ms/step - loss: 0.1007
 
 ```
 </div>
@@ -197,7 +186,6 @@ Do not confuse the `layer.trainable` attribute with the argument `training` in
 [Keras FAQ](
   https://keras.io/getting_started/faq/#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute).
 
-
 ---
 ## Recursive setting of the `trainable` attribute
 
@@ -205,7 +193,6 @@ If you set `trainable = False` on a model or on any layer that has sublayers,
 all children layers become non-trainable as well.
 
 **Example:**
-
 
 
 ```python
@@ -225,7 +212,6 @@ model.trainable = False  # Freeze the outer model
 
 assert inner_model.trainable == False  # All layers in `model` are now frozen
 assert inner_model.layers[0].trainable == False  # `trainable` is propagated recursively
-
 ```
 
 ---
@@ -297,7 +283,6 @@ model.compile(optimizer=keras.optimizers.Adam(),
 model.fit(new_dataset, epochs=20, callbacks=..., validation_data=...)
 ```
 
-
 ---
 ## Fine-tuning
 
@@ -368,7 +353,6 @@ what the model has learned.
 You'll see this pattern in action in the end-to-end example at the end of this guide.
 
 
-
 ---
 ## Transfer learning & fine-tuning with a custom training loop
 
@@ -410,9 +394,7 @@ for inputs, targets in new_dataset:
     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 ```
 
-
 Likewise for fine-tuning.
-
 
 ---
 ## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs dataset
@@ -421,7 +403,6 @@ To solidify these concepts, let's walk you through a concrete end-to-end transfe
 learning & fine-tuning example. We will load the Xception model, pre-trained on
  ImageNet, and use it on the Kaggle "cats vs. dogs" classification dataset.
 
-
 ### Getting the data
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
@@ -429,10 +410,9 @@ you'll probably want to use the utility
 `tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
-Tansfer learning is most useful when working with very small datases. To keep our
+Transfer learning is most useful when working with very small datasets. To keep our
 dataset small, we will use 40% of the original training data (25,000 images) for
  training, 10% for validation, and 10% for testing.
-
 
 
 ```python
@@ -452,7 +432,6 @@ print(
     "Number of validation samples: %d" % tf.data.experimental.cardinality(validation_ds)
 )
 print("Number of test samples: %d" % tf.data.experimental.cardinality(test_ds))
-
 ```
 
 <div class="k-default-codeblock">
@@ -467,7 +446,6 @@ These are the first 9 images in the training dataset -- as you can see, they're 
  different sizes.
 
 
-
 ```python
 import matplotlib.pyplot as plt
 
@@ -477,15 +455,15 @@ for i, (image, label) in enumerate(train_ds.take(9)):
     plt.imshow(image)
     plt.title(int(label))
     plt.axis("off")
-
 ```
 
 
+    
 ![png](/img/guides/transfer_learning/transfer_learning_23_0.png)
+    
 
 
 We can also see that label 1 is "dog" and label 0 is "cat".
-
 
 ### Standardizing the data
 
@@ -511,18 +489,15 @@ only process contiguous batches of data), and we'll do the input value scaling a
 Let's resize images to 150x150:
 
 
-
 ```python
 size = (150, 150)
 
 train_ds = train_ds.map(lambda x, y: (tf.image.resize(x, size), y))
 validation_ds = validation_ds.map(lambda x, y: (tf.image.resize(x, size), y))
 test_ds = test_ds.map(lambda x, y: (tf.image.resize(x, size), y))
-
 ```
 
 Besides, let's batch the data and use caching & prefetching to optimize loading speed.
-
 
 
 ```python
@@ -531,7 +506,6 @@ batch_size = 32
 train_ds = train_ds.cache().batch(batch_size).prefetch(buffer_size=10)
 validation_ds = validation_ds.cache().batch(batch_size).prefetch(buffer_size=10)
 test_ds = test_ds.cache().batch(batch_size).prefetch(buffer_size=10)
-
 ```
 
 ### Using random data augmentation
@@ -543,23 +517,17 @@ helps expose the model to different aspects of the training data while slowing d
  overfitting.
 
 
-
 ```python
 from tensorflow import keras
 from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
-    [
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(0.1),
-    ]
+    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
 )
-
 ```
 
 Let's visualize what the first image of the first batch looks like after various random
  transformations:
-
 
 
 ```python
@@ -574,13 +542,14 @@ for images, labels in train_ds.take(1):
             tf.expand_dims(first_image, 0), training=True
         )
         plt.imshow(augmented_image[0].numpy().astype("int32"))
-        plt.title(int(labels[i]))
+        plt.title(int(labels[0]))
         plt.axis("off")
-
 ```
 
 
+    
 ![png](/img/guides/transfer_learning/transfer_learning_32_0.png)
+    
 
 
 ---
@@ -590,13 +559,12 @@ Now let's built a model that follows the blueprint we've explained earlier.
 
 Note that:
 
-- We add a `Normalization` layer to scale input values (initially in the `[0, 255]`
+- We add a `Rescaling` layer to scale input values (initially in the `[0, 255]`
  range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
 it runs in inference mode, so that batchnorm statistics don't get updated
 even after we unfreeze the base model for fine-tuning.
-
 
 
 ```python
@@ -613,15 +581,11 @@ base_model.trainable = False
 inputs = keras.Input(shape=(150, 150, 3))
 x = data_augmentation(inputs)  # Apply random data augmentation
 
-# Pre-trained Xception weights requires that input be normalized
-# from (0, 255) to a range (-1., +1.), the normalization layer
-# does the following, outputs = (inputs - mean) / sqrt(var)
-norm_layer = keras.layers.experimental.preprocessing.Normalization()
-mean = np.array([127.5] * 3)
-var = mean ** 2
-# Scale inputs to [-1, +1]
-x = norm_layer(x)
-norm_layer.set_weights([mean, var])
+# Pre-trained Xception weights requires that input be scaled
+# from (0, 255) to a range of (-1., +1.), the rescaling layer
+# outputs: `(inputs * scale) + offset`
+scale_layer = keras.layers.Rescaling(scale=1 / 127.5, offset=-1)
+x = scale_layer(x)
 
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the
@@ -633,7 +597,6 @@ outputs = keras.layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
 model.summary()
-
 ```
 
 <div class="k-default-codeblock">
@@ -646,9 +609,9 @@ input_5 (InputLayer)         [(None, 150, 150, 3)]     0
 _________________________________________________________________
 sequential_3 (Sequential)    (None, 150, 150, 3)       0         
 _________________________________________________________________
-normalization (Normalization (None, 150, 150, 3)       7         
+rescaling (Rescaling)        (None, 150, 150, 3)       0         
 _________________________________________________________________
-xception (Model)             (None, 5, 5, 2048)        20861480  
+xception (Functional)        (None, 5, 5, 2048)        20861480  
 _________________________________________________________________
 global_average_pooling2d (Gl (None, 2048)              0         
 _________________________________________________________________
@@ -656,16 +619,15 @@ dropout (Dropout)            (None, 2048)              0
 _________________________________________________________________
 dense_7 (Dense)              (None, 1)                 2049      
 =================================================================
-Total params: 20,863,536
+Total params: 20,863,529
 Trainable params: 2,049
-Non-trainable params: 20,861,487
+Non-trainable params: 20,861,480
 _________________________________________________________________
 
 ```
 </div>
 ---
 ## Train the top layer
-
 
 
 ```python
@@ -677,53 +639,52 @@ model.compile(
 
 epochs = 20
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-291/291 [==============================] - 24s 83ms/step - loss: 0.1639 - binary_accuracy: 0.9276 - val_loss: 0.0883 - val_binary_accuracy: 0.9652
+291/291 [==============================] - 133s 451ms/step - loss: 0.1670 - binary_accuracy: 0.9267 - val_loss: 0.0830 - val_binary_accuracy: 0.9716
 Epoch 2/20
-291/291 [==============================] - 22s 76ms/step - loss: 0.1202 - binary_accuracy: 0.9491 - val_loss: 0.0855 - val_binary_accuracy: 0.9686
+291/291 [==============================] - 135s 465ms/step - loss: 0.1208 - binary_accuracy: 0.9502 - val_loss: 0.0768 - val_binary_accuracy: 0.9716
 Epoch 3/20
-291/291 [==============================] - 23s 80ms/step - loss: 0.1076 - binary_accuracy: 0.9546 - val_loss: 0.0802 - val_binary_accuracy: 0.9682
+291/291 [==============================] - 135s 463ms/step - loss: 0.1062 - binary_accuracy: 0.9572 - val_loss: 0.0757 - val_binary_accuracy: 0.9716
 Epoch 4/20
-291/291 [==============================] - 23s 80ms/step - loss: 0.1127 - binary_accuracy: 0.9539 - val_loss: 0.0798 - val_binary_accuracy: 0.9682
+291/291 [==============================] - 137s 469ms/step - loss: 0.1024 - binary_accuracy: 0.9554 - val_loss: 0.0733 - val_binary_accuracy: 0.9725
 Epoch 5/20
-291/291 [==============================] - 23s 78ms/step - loss: 0.1072 - binary_accuracy: 0.9558 - val_loss: 0.0807 - val_binary_accuracy: 0.9695
+291/291 [==============================] - 137s 470ms/step - loss: 0.1004 - binary_accuracy: 0.9587 - val_loss: 0.0735 - val_binary_accuracy: 0.9729
 Epoch 6/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.1073 - binary_accuracy: 0.9565 - val_loss: 0.0746 - val_binary_accuracy: 0.9733
+291/291 [==============================] - 136s 467ms/step - loss: 0.0979 - binary_accuracy: 0.9577 - val_loss: 0.0747 - val_binary_accuracy: 0.9708
 Epoch 7/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.1037 - binary_accuracy: 0.9562 - val_loss: 0.0738 - val_binary_accuracy: 0.9712
+291/291 [==============================] - 134s 462ms/step - loss: 0.0998 - binary_accuracy: 0.9596 - val_loss: 0.0706 - val_binary_accuracy: 0.9725
 Epoch 8/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.1061 - binary_accuracy: 0.9580 - val_loss: 0.0764 - val_binary_accuracy: 0.9738
+291/291 [==============================] - 133s 457ms/step - loss: 0.1029 - binary_accuracy: 0.9592 - val_loss: 0.0720 - val_binary_accuracy: 0.9733
 Epoch 9/20
-291/291 [==============================] - 23s 78ms/step - loss: 0.0959 - binary_accuracy: 0.9612 - val_loss: 0.0823 - val_binary_accuracy: 0.9673
+291/291 [==============================] - 135s 466ms/step - loss: 0.0937 - binary_accuracy: 0.9625 - val_loss: 0.0707 - val_binary_accuracy: 0.9721
 Epoch 10/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0956 - binary_accuracy: 0.9600 - val_loss: 0.0736 - val_binary_accuracy: 0.9725
+291/291 [==============================] - 137s 472ms/step - loss: 0.0967 - binary_accuracy: 0.9580 - val_loss: 0.0720 - val_binary_accuracy: 0.9712
 Epoch 11/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0944 - binary_accuracy: 0.9603 - val_loss: 0.0781 - val_binary_accuracy: 0.9716
+291/291 [==============================] - 135s 463ms/step - loss: 0.0961 - binary_accuracy: 0.9612 - val_loss: 0.0802 - val_binary_accuracy: 0.9699
 Epoch 12/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0960 - binary_accuracy: 0.9615 - val_loss: 0.0720 - val_binary_accuracy: 0.9725
+291/291 [==============================] - 134s 460ms/step - loss: 0.0963 - binary_accuracy: 0.9638 - val_loss: 0.0721 - val_binary_accuracy: 0.9716
 Epoch 13/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0987 - binary_accuracy: 0.9614 - val_loss: 0.0791 - val_binary_accuracy: 0.9708
+291/291 [==============================] - 136s 468ms/step - loss: 0.0925 - binary_accuracy: 0.9635 - val_loss: 0.0736 - val_binary_accuracy: 0.9686
 Epoch 14/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0930 - binary_accuracy: 0.9636 - val_loss: 0.0780 - val_binary_accuracy: 0.9690
+291/291 [==============================] - 138s 476ms/step - loss: 0.0909 - binary_accuracy: 0.9624 - val_loss: 0.0766 - val_binary_accuracy: 0.9703
 Epoch 15/20
-291/291 [==============================] - 23s 78ms/step - loss: 0.0954 - binary_accuracy: 0.9624 - val_loss: 0.0772 - val_binary_accuracy: 0.9678
+291/291 [==============================] - 136s 467ms/step - loss: 0.0949 - binary_accuracy: 0.9598 - val_loss: 0.0704 - val_binary_accuracy: 0.9725
 Epoch 16/20
-291/291 [==============================] - 23s 78ms/step - loss: 0.0963 - binary_accuracy: 0.9598 - val_loss: 0.0781 - val_binary_accuracy: 0.9695
+291/291 [==============================] - 133s 456ms/step - loss: 0.0969 - binary_accuracy: 0.9586 - val_loss: 0.0722 - val_binary_accuracy: 0.9708
 Epoch 17/20
-291/291 [==============================] - 23s 78ms/step - loss: 0.1006 - binary_accuracy: 0.9585 - val_loss: 0.0832 - val_binary_accuracy: 0.9699
+291/291 [==============================] - 135s 464ms/step - loss: 0.0913 - binary_accuracy: 0.9635 - val_loss: 0.0718 - val_binary_accuracy: 0.9716
 Epoch 18/20
-291/291 [==============================] - 23s 78ms/step - loss: 0.0942 - binary_accuracy: 0.9615 - val_loss: 0.0761 - val_binary_accuracy: 0.9703
+291/291 [==============================] - 137s 472ms/step - loss: 0.0915 - binary_accuracy: 0.9639 - val_loss: 0.0727 - val_binary_accuracy: 0.9725
 Epoch 19/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0950 - binary_accuracy: 0.9613 - val_loss: 0.0817 - val_binary_accuracy: 0.9690
+291/291 [==============================] - 134s 460ms/step - loss: 0.0938 - binary_accuracy: 0.9631 - val_loss: 0.0707 - val_binary_accuracy: 0.9733
 Epoch 20/20
-291/291 [==============================] - 23s 79ms/step - loss: 0.0906 - binary_accuracy: 0.9624 - val_loss: 0.0755 - val_binary_accuracy: 0.9712
+291/291 [==============================] - 134s 460ms/step - loss: 0.0971 - binary_accuracy: 0.9609 - val_loss: 0.0714 - val_binary_accuracy: 0.9716
 
-<tensorflow.python.keras.callbacks.History at 0x7f3fa4cdab00>
+<keras.callbacks.History at 0x7f4494e38f70>
 
 ```
 </div>
@@ -738,7 +699,6 @@ inference mode since we passed `training=False` when calling it when we built th
 model. This means that the batch normalization layers inside won't update their batch
 statistics. If they did, they would wreck havoc on the representations learned by the
  model so far.
-
 
 
 ```python
@@ -758,7 +718,6 @@ model.compile(
 
 epochs = 10
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
-
 ```
 
 <div class="k-default-codeblock">
@@ -771,9 +730,9 @@ input_5 (InputLayer)         [(None, 150, 150, 3)]     0
 _________________________________________________________________
 sequential_3 (Sequential)    (None, 150, 150, 3)       0         
 _________________________________________________________________
-normalization (Normalization (None, 150, 150, 3)       7         
+rescaling (Rescaling)        (None, 150, 150, 3)       0         
 _________________________________________________________________
-xception (Model)             (None, 5, 5, 2048)        20861480  
+xception (Functional)        (None, 5, 5, 2048)        20861480  
 _________________________________________________________________
 global_average_pooling2d (Gl (None, 2048)              0         
 _________________________________________________________________
@@ -781,34 +740,33 @@ dropout (Dropout)            (None, 2048)              0
 _________________________________________________________________
 dense_7 (Dense)              (None, 1)                 2049      
 =================================================================
-Total params: 20,863,536
+Total params: 20,863,529
 Trainable params: 20,809,001
-Non-trainable params: 54,535
+Non-trainable params: 54,528
 _________________________________________________________________
 Epoch 1/10
-291/291 [==============================] - 92s 318ms/step - loss: 0.0766 - binary_accuracy: 0.9710 - val_loss: 0.0571 - val_binary_accuracy: 0.9772
+291/291 [==============================] - 567s 2s/step - loss: 0.0749 - binary_accuracy: 0.9689 - val_loss: 0.0605 - val_binary_accuracy: 0.9776
 Epoch 2/10
-291/291 [==============================] - 90s 308ms/step - loss: 0.0534 - binary_accuracy: 0.9800 - val_loss: 0.0471 - val_binary_accuracy: 0.9807
+291/291 [==============================] - 551s 2s/step - loss: 0.0559 - binary_accuracy: 0.9770 - val_loss: 0.0507 - val_binary_accuracy: 0.9798
 Epoch 3/10
-291/291 [==============================] - 90s 308ms/step - loss: 0.0491 - binary_accuracy: 0.9799 - val_loss: 0.0411 - val_binary_accuracy: 0.9815
+291/291 [==============================] - 545s 2s/step - loss: 0.0444 - binary_accuracy: 0.9832 - val_loss: 0.0502 - val_binary_accuracy: 0.9807
 Epoch 4/10
-291/291 [==============================] - 90s 308ms/step - loss: 0.0349 - binary_accuracy: 0.9868 - val_loss: 0.0438 - val_binary_accuracy: 0.9832
+291/291 [==============================] - 558s 2s/step - loss: 0.0365 - binary_accuracy: 0.9874 - val_loss: 0.0506 - val_binary_accuracy: 0.9807
 Epoch 5/10
-291/291 [==============================] - 89s 307ms/step - loss: 0.0302 - binary_accuracy: 0.9881 - val_loss: 0.0440 - val_binary_accuracy: 0.9837
+291/291 [==============================] - 550s 2s/step - loss: 0.0276 - binary_accuracy: 0.9890 - val_loss: 0.0477 - val_binary_accuracy: 0.9802
 Epoch 6/10
-291/291 [==============================] - 90s 308ms/step - loss: 0.0290 - binary_accuracy: 0.9890 - val_loss: 0.0445 - val_binary_accuracy: 0.9832
+291/291 [==============================] - 588s 2s/step - loss: 0.0206 - binary_accuracy: 0.9916 - val_loss: 0.0444 - val_binary_accuracy: 0.9832
 Epoch 7/10
-291/291 [==============================] - 90s 310ms/step - loss: 0.0209 - binary_accuracy: 0.9920 - val_loss: 0.0527 - val_binary_accuracy: 0.9811
+291/291 [==============================] - 542s 2s/step - loss: 0.0206 - binary_accuracy: 0.9923 - val_loss: 0.0502 - val_binary_accuracy: 0.9828
 Epoch 8/10
-291/291 [==============================] - 91s 311ms/step - loss: 0.0162 - binary_accuracy: 0.9940 - val_loss: 0.0510 - val_binary_accuracy: 0.9828
+291/291 [==============================] - 544s 2s/step - loss: 0.0153 - binary_accuracy: 0.9939 - val_loss: 0.0509 - val_binary_accuracy: 0.9819
 Epoch 9/10
-291/291 [==============================] - 91s 311ms/step - loss: 0.0199 - binary_accuracy: 0.9933 - val_loss: 0.0470 - val_binary_accuracy: 0.9867
+291/291 [==============================] - 548s 2s/step - loss: 0.0156 - binary_accuracy: 0.9934 - val_loss: 0.0610 - val_binary_accuracy: 0.9807
 Epoch 10/10
-291/291 [==============================] - 90s 308ms/step - loss: 0.0128 - binary_accuracy: 0.9953 - val_loss: 0.0471 - val_binary_accuracy: 0.9845
+291/291 [==============================] - 546s 2s/step - loss: 0.0176 - binary_accuracy: 0.9936 - val_loss: 0.0561 - val_binary_accuracy: 0.9789
 
-<tensorflow.python.keras.callbacks.History at 0x7f3c0ca6d0f0>
+<keras.callbacks.History at 0x7f4495056040>
 
 ```
 </div>
 After 10 epochs, fine-tuning gains us a nice improvement here.
-

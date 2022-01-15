@@ -474,10 +474,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
-    [
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(0.1),
-    ]
+    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
 )
 
 """
@@ -506,7 +503,7 @@ Now let's built a model that follows the blueprint we've explained earlier.
 
 Note that:
 
-- We add a `Normalization` layer to scale input values (initially in the `[0, 255]`
+- We add a `Rescaling` layer to scale input values (initially in the `[0, 255]`
  range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
@@ -527,15 +524,11 @@ base_model.trainable = False
 inputs = keras.Input(shape=(150, 150, 3))
 x = data_augmentation(inputs)  # Apply random data augmentation
 
-# Pre-trained Xception weights requires that input be normalized
-# from (0, 255) to a range (-1., +1.), the normalization layer
-# does the following, outputs = (inputs - mean) / sqrt(var)
-norm_layer = keras.layers.experimental.preprocessing.Normalization()
-mean = np.array([127.5] * 3)
-var = mean ** 2
-# Scale inputs to [-1, +1]
-x = norm_layer(x)
-norm_layer.set_weights([mean, var])
+# Pre-trained Xception weights requires that input be scaled
+# from (0, 255) to a range of (-1., +1.), the rescaling layer
+# outputs: `(inputs * scale) + offset`
+scale_layer = keras.layers.Rescaling(scale=1 / 127.5, offset=-1)
+x = scale_layer(x)
 
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the

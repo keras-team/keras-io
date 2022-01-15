@@ -122,7 +122,7 @@ Our layer will only consider the top 20,000 words, and will truncate or pad sequ
 be actually 200 tokens long.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 
 vectorizer = TextVectorization(max_tokens=20000, output_sequence_length=200)
 text_ds = tf.data.Dataset.from_tensor_slices(train_samples).batch(128)

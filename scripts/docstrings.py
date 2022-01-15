@@ -30,7 +30,8 @@ class TFKerasDocumentationGenerator:
         docstring = docstring.replace("Example:", "# Example\n")
         docstring = docstring.replace("Examples:", "# Examples\n")
 
-        docstring = re.sub(r"\nReference:\n\s*-", "\n**Reference**\n\n-", docstring)
+        docstring = re.sub(r"\nReference:\n\s*", "\n**Reference**\n\n", docstring)
+        docstring = re.sub(r"\nReferences:\n\s*", "\n**References**\n\n", docstring)
 
         # Fix typo
         docstring = docstring.replace("\n >>> ", "\n>>> ")
@@ -40,9 +41,9 @@ class TFKerasDocumentationGenerator:
         usable_lines = []
 
         def flush_docstest(usable_lines, doctest_lines):
-            usable_lines.append("```shell")
+            usable_lines.append("```python")
             usable_lines += doctest_lines
-            usable_lines.append("```endshell")
+            usable_lines.append("```")
             usable_lines.append("")
 
         for line in lines:

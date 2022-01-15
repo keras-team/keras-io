@@ -20,11 +20,9 @@ from functools import partial
 import matplotlib.pyplot as plt
 
 try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
     print("Device:", tpu.master())
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
-    strategy = tf.distribute.experimental.TPUStrategy(tpu)
+    strategy = tf.distribute.TPUStrategy(tpu)
 except:
     strategy = tf.distribute.get_strategy()
 print("Number of replicas:", strategy.num_replicas_in_sync)
@@ -34,7 +32,7 @@ We want a bigger batch size as our data is not balanced.
 
 """
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 GCS_PATH = "gs://kds-b38ce1b823c3ae623f5691483dbaa0f0363f04b0d6a90b63cf69946e"
 BATCH_SIZE = 64
 IMAGE_SIZE = [1024, 1024]

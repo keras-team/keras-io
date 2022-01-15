@@ -27,11 +27,9 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
     print("Device:", tpu.master())
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
-    strategy = tf.distribute.experimental.TPUStrategy(tpu)
+    strategy = tf.distribute.TPUStrategy(tpu)
 except:
     strategy = tf.distribute.get_strategy()
 print("Number of replicas:", strategy.num_replicas_in_sync)
@@ -51,7 +49,7 @@ INFO:tensorflow:Clearing out eager caches
 INFO:tensorflow:Finished initializing TPU system.
 
 INFO:tensorflow:Finished initializing TPU system.
-WARNING:absl:`tf.distribute.experimental.TPUStrategy` is deprecated, please use  the non experimental symbol `tf.distribute.TPUStrategy` instead.
+WARNING:absl:`tf.distribute.TPUStrategy` is deprecated, please use  the non experimental symbol `tf.distribute.TPUStrategy` instead.
 
 INFO:tensorflow:Found TPU system:
 
@@ -131,7 +129,7 @@ To run on TPU, this example must be on Colab with the TPU runtime selected.
 
 
 ```python
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 BATCH_SIZE = 25 * strategy.num_replicas_in_sync
 IMAGE_SIZE = [180, 180]
 CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
@@ -351,7 +349,6 @@ The architecture for this CNN has been inspired by this
 ```python
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental import preprocessing
 
 
 def conv_block(filters, inputs):
@@ -387,7 +384,7 @@ presence of pneumonia.
 
 def build_model():
     inputs = keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
-    x = preprocessing.Rescaling(1.0 / 255)(inputs)
+    x = layers.Rescaling(1.0 / 255)(inputs)
     x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
     x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
     x = layers.MaxPool2D()(x)

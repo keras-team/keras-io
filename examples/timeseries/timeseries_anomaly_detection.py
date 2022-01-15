@@ -107,7 +107,7 @@ TIME_STEPS = 288
 # Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []
-    for i in range(len(values) - time_steps):
+    for i in range(len(values) - time_steps + 1):
         output.append(values[i : (i + time_steps)])
     return np.stack(output)
 
@@ -220,12 +220,6 @@ plt.show()
 """
 ### Prepare test data
 """
-
-
-def normalize_test(values, mean, std):
-    values -= mean
-    values /= std
-    return values
 
 
 df_test_value = (df_daily_jumpsup - training_mean) / training_std

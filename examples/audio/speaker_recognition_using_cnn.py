@@ -236,7 +236,9 @@ print(
 def paths_and_labels_to_dataset(audio_paths, labels):
     """Constructs a dataset of audios and labels."""
     path_ds = tf.data.Dataset.from_tensor_slices(audio_paths)
-    audio_ds = path_ds.map(lambda x: path_to_audio(x))
+    audio_ds = path_ds.map(
+        lambda x: path_to_audio(x), num_parallel_calls=tf.data.AUTOTUNE
+    )
     label_ds = tf.data.Dataset.from_tensor_slices(labels)
     return tf.data.Dataset.zip((audio_ds, label_ds))
 
@@ -333,19 +335,19 @@ valid_ds = valid_ds.shuffle(buffer_size=32 * 8, seed=SHUFFLE_SEED).batch(32)
 # Add noise to the training set
 train_ds = train_ds.map(
     lambda x, y: (add_noise(x, noises, scale=SCALE), y),
-    num_parallel_calls=tf.data.experimental.AUTOTUNE,
+    num_parallel_calls=tf.data.AUTOTUNE,
 )
 
 # Transform audio wave to the frequency domain using `audio_to_fft`
 train_ds = train_ds.map(
-    lambda x, y: (audio_to_fft(x), y), num_parallel_calls=tf.data.experimental.AUTOTUNE
+    lambda x, y: (audio_to_fft(x), y), num_parallel_calls=tf.data.AUTOTUNE
 )
-train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
+train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 
 valid_ds = valid_ds.map(
-    lambda x, y: (audio_to_fft(x), y), num_parallel_calls=tf.data.experimental.AUTOTUNE
+    lambda x, y: (audio_to_fft(x), y), num_parallel_calls=tf.data.AUTOTUNE
 )
-valid_ds = valid_ds.prefetch(tf.data.experimental.AUTOTUNE)
+valid_ds = valid_ds.prefetch(tf.data.AUTOTUNE)
 
 """
 ## Model Definition
@@ -441,7 +443,10 @@ test_ds = test_ds.shuffle(buffer_size=BATCH_SIZE * 8, seed=SHUFFLE_SEED).batch(
     BATCH_SIZE
 )
 
-test_ds = test_ds.map(lambda x, y: (add_noise(x, noises, scale=SCALE), y))
+test_ds = test_ds.map(
+    lambda x, y: (add_noise(x, noises, scale=SCALE), y),
+    num_parallel_calls=tf.data.AUTOTUNE,
+)
 
 for audios, labels in test_ds.take(1):
     # Get the signal FFT

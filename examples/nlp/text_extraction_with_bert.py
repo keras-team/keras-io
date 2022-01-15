@@ -256,10 +256,8 @@ With Colab TPUs, each epoch will take 5-6 minutes.
 use_tpu = True
 if use_tpu:
     # Create distribution strategy
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
-    strategy = tf.distribute.experimental.TPUStrategy(tpu)
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
+    strategy = tf.distribute.TPUStrategy(tpu)
 
     # Create model
     with strategy.scope():

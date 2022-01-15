@@ -128,7 +128,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %s samples" % ((step + 1) * 64))
+            print("Seen so far: %s samples" % ((step + 1) * batch_size))
 
 """
 ## Low-level handling of metrics
@@ -192,7 +192,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -214,9 +214,9 @@ for epoch in range(epochs):
 """
 ## Speeding-up your training step with `tf.function`
 
-The default runtime in TensorFlow 2.0 is
-[eager execution](https://www.tensorflow.org/guide/eager). As such, our training loop
-above executes eagerly.
+The default runtime in TensorFlow 2 is
+[eager execution](https://www.tensorflow.org/guide/eager).
+As such, our training loop above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
 advantage. Describing your computation as a static graph enables the framework
@@ -272,7 +272,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -515,9 +515,7 @@ for epoch in range(epochs):
             print("adversarial loss at step %d: %.2f" % (step, g_loss))
 
             # Save one generated image
-            img = tf.keras.preprocessing.image.array_to_img(
-                generated_images[0] * 255.0, scale=False
-            )
+            img = keras.utils.array_to_img(generated_images[0] * 255.0, scale=False)
             img.save(os.path.join(save_dir, "generated_img" + str(step) + ".png"))
 
         # To limit execution time we stop after 10 steps.

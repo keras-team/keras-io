@@ -165,7 +165,7 @@ to an index.
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 
 target_label_lookup = StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0
@@ -214,11 +214,8 @@ def create_model_inputs():
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import CategoryEncoding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
-
-def encode_inputs(inputs, use_embedding=False):
+def encode_inputs(inputs):
     encoded_features = []
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURE_NAMES:
@@ -226,25 +223,18 @@ def encode_inputs(inputs, use_embedding=False):
             # Create a lookup to convert a string values to an integer indices.
             # Since we are not using a mask token, nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and num_oov_indices to 0.
-            index = StringLookup(
+            lookup = StringLookup(
                 vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
             # Convert the string input values into integer indices.
-            value_index = index(inputs[feature_name])
-            if use_embedding:
-                embedding_dims = int(math.sqrt(len(vocabulary)))
-                # Create an embedding layer with the specified dimensions.
-                embedding_ecoder = layers.Embedding(
-                    input_dim=len(vocabulary), output_dim=embedding_dims
-                )
-                # Convert the index values to embedding representations.
-                encoded_feature = embedding_ecoder(value_index)
-            else:
-                # Create a one-hot encoder.
-                onehot_encoder = CategoryEncoding(output_mode="binary")
-                onehot_encoder.adapt(index(vocabulary))
-                # Convert the index values to a one-hot representation.
-                encoded_feature = onehot_encoder(value_index)
+            value_index = lookup(inputs[feature_name])
+            embedding_dims = int(math.sqrt(lookup.vocabulary_size()))
+            # Create an embedding layer with the specified dimensions.
+            embedding = layers.Embedding(
+                input_dim=lookup.vocabulary_size(), output_dim=embedding_dims
+            )
+            # Convert the index values to embedding representations.
+            encoded_feature = embedding(value_index)
         else:
             # Use the numerical features as-is.
             encoded_feature = inputs[feature_name]
@@ -429,7 +419,7 @@ num_classes = len(TARGET_LABELS)
 
 def create_tree_model():
     inputs = create_model_inputs()
-    features = encode_inputs(inputs, use_embedding=True)
+    features = encode_inputs(inputs)
     features = layers.BatchNormalization()(features)
     num_features = features.shape[1]
 
@@ -447,35 +437,30 @@ run_experiment(tree_model)
 
 <div class="k-default-codeblock">
 ```
-Start training the model...
-Epoch 1/10
 
-/Users/khalidsalama/Technology/python-venvs/keras-env/lib/python3.7/site-packages/tensorflow/python/keras/engine/functional.py:595: UserWarning: Input dict contained keys ['fnlwgt'] which did not match any model input. They will be ignored by the model.
-  [n for n in tensors.keys() if n not in ref_input_names])
-
-123/123 [==============================] - 3s 15ms/step - loss: 0.5351 - sparse_categorical_accuracy: 0.7858
+123/123 [==============================] - 3s 9ms/step - loss: 0.5326 - sparse_categorical_accuracy: 0.7838
 Epoch 2/10
-123/123 [==============================] - 2s 17ms/step - loss: 0.3359 - sparse_categorical_accuracy: 0.8499
+123/123 [==============================] - 1s 9ms/step - loss: 0.3406 - sparse_categorical_accuracy: 0.8469
 Epoch 3/10
-123/123 [==============================] - 2s 19ms/step - loss: 0.3200 - sparse_categorical_accuracy: 0.8547
+123/123 [==============================] - 1s 9ms/step - loss: 0.3254 - sparse_categorical_accuracy: 0.8499
 Epoch 4/10
-123/123 [==============================] - 2s 19ms/step - loss: 0.3138 - sparse_categorical_accuracy: 0.8570
+123/123 [==============================] - 1s 9ms/step - loss: 0.3188 - sparse_categorical_accuracy: 0.8539
 Epoch 5/10
-123/123 [==============================] - 2s 20ms/step - loss: 0.3096 - sparse_categorical_accuracy: 0.8594
+123/123 [==============================] - 1s 9ms/step - loss: 0.3137 - sparse_categorical_accuracy: 0.8573
 Epoch 6/10
-123/123 [==============================] - 2s 18ms/step - loss: 0.3059 - sparse_categorical_accuracy: 0.8601
+123/123 [==============================] - 1s 9ms/step - loss: 0.3091 - sparse_categorical_accuracy: 0.8581
 Epoch 7/10
-123/123 [==============================] - 2s 20ms/step - loss: 0.3023 - sparse_categorical_accuracy: 0.8625
+123/123 [==============================] - 1s 9ms/step - loss: 0.3039 - sparse_categorical_accuracy: 0.8596
 Epoch 8/10
-123/123 [==============================] - 3s 21ms/step - loss: 0.2982 - sparse_categorical_accuracy: 0.8659
+123/123 [==============================] - 1s 9ms/step - loss: 0.2991 - sparse_categorical_accuracy: 0.8633
 Epoch 9/10
-123/123 [==============================] - 3s 22ms/step - loss: 0.2934 - sparse_categorical_accuracy: 0.8698
+123/123 [==============================] - 1s 9ms/step - loss: 0.2935 - sparse_categorical_accuracy: 0.8667
 Epoch 10/10
-123/123 [==============================] - 3s 27ms/step - loss: 0.2887 - sparse_categorical_accuracy: 0.8720
+123/123 [==============================] - 1s 9ms/step - loss: 0.2877 - sparse_categorical_accuracy: 0.8708
 Model training finished
 Evaluating the model on the test data...
-62/62 [==============================] - 1s 6ms/step - loss: 0.3213 - sparse_categorical_accuracy: 0.8490
-Test accuracy: 84.9%
+62/62 [==============================] - 1s 5ms/step - loss: 0.3314 - sparse_categorical_accuracy: 0.8471
+Test accuracy: 84.71%
 
 ```
 </div>
@@ -496,7 +481,7 @@ used_features_rate = 0.5
 
 def create_forest_model():
     inputs = create_model_inputs()
-    features = encode_inputs(inputs, use_embedding=True)
+    features = encode_inputs(inputs)
     features = layers.BatchNormalization()(features)
     num_features = features.shape[1]
 
@@ -518,29 +503,29 @@ run_experiment(forest_model)
 ```
 Start training the model...
 Epoch 1/10
-123/123 [==============================] - 10s 6ms/step - loss: 0.5519 - sparse_categorical_accuracy: 0.7654
+123/123 [==============================] - 9s 7ms/step - loss: 0.5523 - sparse_categorical_accuracy: 0.7872
 Epoch 2/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3468 - sparse_categorical_accuracy: 0.8432
+123/123 [==============================] - 1s 6ms/step - loss: 0.3435 - sparse_categorical_accuracy: 0.8465
 Epoch 3/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3301 - sparse_categorical_accuracy: 0.8469
+123/123 [==============================] - 1s 6ms/step - loss: 0.3260 - sparse_categorical_accuracy: 0.8514
 Epoch 4/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3240 - sparse_categorical_accuracy: 0.8497
+123/123 [==============================] - 1s 6ms/step - loss: 0.3197 - sparse_categorical_accuracy: 0.8533
 Epoch 5/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3204 - sparse_categorical_accuracy: 0.8505
+123/123 [==============================] - 1s 6ms/step - loss: 0.3160 - sparse_categorical_accuracy: 0.8535
 Epoch 6/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3177 - sparse_categorical_accuracy: 0.8521
+123/123 [==============================] - 1s 6ms/step - loss: 0.3133 - sparse_categorical_accuracy: 0.8545
 Epoch 7/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3154 - sparse_categorical_accuracy: 0.8529
+123/123 [==============================] - 1s 6ms/step - loss: 0.3110 - sparse_categorical_accuracy: 0.8556
 Epoch 8/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3133 - sparse_categorical_accuracy: 0.8531
+123/123 [==============================] - 1s 6ms/step - loss: 0.3088 - sparse_categorical_accuracy: 0.8559
 Epoch 9/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3114 - sparse_categorical_accuracy: 0.8542
+123/123 [==============================] - 1s 6ms/step - loss: 0.3066 - sparse_categorical_accuracy: 0.8573
 Epoch 10/10
-123/123 [==============================] - 1s 5ms/step - loss: 0.3097 - sparse_categorical_accuracy: 0.8546
+123/123 [==============================] - 1s 6ms/step - loss: 0.3048 - sparse_categorical_accuracy: 0.8573
 Model training finished
 Evaluating the model on the test data...
-62/62 [==============================] - 2s 4ms/step - loss: 0.3092 - sparse_categorical_accuracy: 0.8582
-Test accuracy: 85.82%
+62/62 [==============================] - 2s 5ms/step - loss: 0.3140 - sparse_categorical_accuracy: 0.8533
+Test accuracy: 85.33%
 
 ```
 </div>
