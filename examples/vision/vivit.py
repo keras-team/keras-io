@@ -163,7 +163,7 @@ def prepare_dataloader(
     dataset = tf.data.Dataset.from_tensor_slices((videos, labels))
 
     if loader_type == "train":
-        dataset = dataset.shuffle(BATCH_SIZE*2)
+        dataset = dataset.shuffle(BATCH_SIZE * 2)
 
     dataloader = (
         dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)
@@ -322,7 +322,9 @@ def create_vivit_classifier(
 def run_experiment():
     # Initialize model
     model = create_vivit_classifier(
-        tubelet_embedder=TubeletEmbedding(embed_dim=PROJECTION_DIM, patch_size=PATCH_SIZE),
+        tubelet_embedder=TubeletEmbedding(
+            embed_dim=PROJECTION_DIM, patch_size=PATCH_SIZE
+        ),
         positional_encoder=PositionalEncoder(embed_dim=PROJECTION_DIM),
     )
 
@@ -411,7 +413,9 @@ for i in range(NUM_SAMPLES_VIZ):
 
     boxes.append(make_box_for_grid(ib, caption))
 
-ipywidgets.widgets.GridBox(boxes, layout=ipywidgets.widgets.Layout(grid_template_columns="repeat(5, 200px)"))
+ipywidgets.widgets.GridBox(
+    boxes, layout=ipywidgets.widgets.Layout(grid_template_columns="repeat(5, 200px)")
+)
 
 """
 ## Final Thoughts
