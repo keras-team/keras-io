@@ -9,13 +9,15 @@ Description: Using contextual embeddings for structured data classification.
 """
 ## Introduction
 
-This example demonstrates how to do structured data classification using [TabTransformer](https://arxiv.org/abs/2012.06678),
-a deep tabular data modeling architecture for supervised and semi-supervised learning.
+This example demonstrates how to do structured data classification using
+[TabTransformer](https://arxiv.org/abs/2012.06678), a deep tabular data modeling
+architecture for supervised and semi-supervised learning.
 The TabTransformer is built upon self-attention based Transformers.
-The Transformer layers transform the embeddings of categorical features into robust contextual embeddings
-to achieve higher predictive accuracy.
+The Transformer layers transform the embeddings of categorical features
+into robust contextual embeddings to achieve higher predictive accuracy.
 
-This example should be run with TensorFlow 2.7 or higher, as well as [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
+This example should be run with TensorFlow 2.7 or higher,
+as well as [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
 which can be installed using the following command:
 
 ```python
@@ -148,20 +150,20 @@ TARGET_LABELS = [" <=50K", " >50K"]
 The hyperparameters includes model architecture and training configurations.
 """
 
-learning_rate = 0.001
-weight_decay = 0.0001
-dropout_rate = 0.2
-batch_size = 265
-num_epochs = 15
+LEARNING_RATE = 0.001
+WEIGHT_DECAY = 0.0001
+DROPOUT_RATE = 0.2
+BATCH_SIZE = 265
+NUM_EPOCHS = 15
 
-num_transformer_blocks = 3  # Number of transformer blocks.
-num_heads = 4  # Number of attention heads.
-embedding_dims = 16  # Embedding dimensions of the categorical features.
-mlp_hidden_units_factors = [
+NUM_TRANSFORMER_BLOCKS = 3  # Number of transformer blocks.
+NUM_HEADS = 4  # Number of attention heads.
+EMBEDDING_DIMS = 16  # Embedding dimensions of the categorical features.
+MLP_HIDDEN_UNITS_FACTORS = [
     2,
     1,
 ]  # MLP hidden layer units, as factors of the number of inputs.
-num_mlp_blocks = 2  # Number of MLP blocks in the baseline model.
+NUM_MLP_BLOCKS = 2  # Number of MLP blocks in the baseline model.
 
 """
 ## Implement data reading pipeline
@@ -171,9 +173,7 @@ and labels into a[`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
 for training or evaluation.
 """
 
-from tensorflow.keras.layers import StringLookup
-
-target_label_lookup = StringLookup(
+target_label_lookup = layers.StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0
 )
 
@@ -195,6 +195,7 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
         header=False,
         na_value="?",
         shuffle=shuffle,
+        num_parallel_reads=4,
     ).map(prepare_example)
     return dataset.cache()
 
@@ -204,7 +205,15 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
 """
 
 
-def run_experiment(model):
+def run_experiment(
+    model,
+    train_data_file,
+    test_data_file,
+    num_epochs,
+    learning_rate,
+    weight_decay,
+    batch_size,
+):
 
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
@@ -278,7 +287,7 @@ def encode_inputs(inputs, embedding_dims):
             # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
-            lookup = StringLookup(
+            lookup = layers.StringLookup(
                 vocabulary=vocabulary,
                 mask_token=None,
                 num_oov_indices=0,
@@ -344,16 +353,16 @@ def create_baseline_model(
         encoded_categorical_feature_list + numerical_feature_list
     )
     # Compute Feedforward layer units.
-    ff_units = [features.shape[-1]]
+    feedforward_units = [features.shape[-1]]
 
     # Create several feedforwad layers with skip connections.
-    for layer in range(num_mlp_blocks):
+    for layer_idx in range(num_mlp_blocks):
         features = create_mlp(
-            hidden_units=ff_units,
+            hidden_units=feedforward_units,
             dropout_rate=dropout_rate,
             activation=keras.activations.gelu,
             normalization_layer=layers.LayerNormalization(epsilon=1e-6),
-            name=f"feedforward_{layer}",
+            name=f"feedforward_{layer_idx}",
         )(features)
 
     # Compute MLP hidden_units.
@@ -376,7 +385,10 @@ def create_baseline_model(
 
 
 baseline_model = create_baseline_model(
-    embedding_dims, num_mlp_blocks, mlp_hidden_units_factors, dropout_rate
+    embedding_dims=EMBEDDING_DIMS,
+    num_mlp_blocks=NUM_MLP_BLOCKS,
+    mlp_hidden_units_factors=MLP_HIDDEN_UNITS_FACTORS,
+    dropout_rate=DROPOUT_RATE,
 )
 
 print("Total model weights:", baseline_model.count_params())
@@ -386,7 +398,15 @@ keras.utils.plot_model(baseline_model, show_shapes=True, rankdir="LR")
 Let's train and evaluate the baseline model:
 """
 
-history = run_experiment(baseline_model)
+history = run_experiment(
+    model=baseline_model,
+    train_data_file=train_data_file,
+    test_data_file=test_data_file,
+    num_epochs=NUM_EPOCHS,
+    learning_rate=LEARNING_RATE,
+    weight_decay=WEIGHT_DECAY,
+    batch_size=BATCH_SIZE,
+)
 
 """
 The baseline linear model achieves ~81% validation accuracy.
@@ -410,7 +430,7 @@ The [paper](https://arxiv.org/abs/2012.06678) discusses both addition and concat
 *Appendix: Experiment and Model Details* section.
 The architecture of TabTransformer is shown below, as presented in the paper.
 
-![tabtransformer](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/img/tabtransfoermer/tabtransfoermer.png)
+![tabtransformer](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/img/tabtransformer/tabtransfoermer.png)
 """
 
 
@@ -446,33 +466,33 @@ def create_tabtransformer_classifier(
         )
 
     # Create multiple layers of the Transformer block.
-    for block in range(num_transformer_blocks):
+    for block_idx in range(num_transformer_blocks):
         # Create a multi-head attention layer.
         attention_output = layers.MultiHeadAttention(
             num_heads=num_heads,
             key_dim=embedding_dims,
             dropout=dropout_rate,
-            name=f"multihead_attention_{block}",
+            name=f"multihead_attention_{block_idx}",
         )(encoded_categorical_features, encoded_categorical_features)
         # Skip connection 1.
-        x = layers.Add(name=f"skip_connection1_{block}")(
+        x = layers.Add(name=f"skip_connection1_{block_idx}")(
             [attention_output, encoded_categorical_features]
         )
         # Layer normalization 1.
-        x = layers.LayerNormalization(name=f"layer_norm1_{block}", epsilon=1e-6)(x)
+        x = layers.LayerNormalization(name=f"layer_norm1_{block_idx}", epsilon=1e-6)(x)
         # Feedforward.
         feedforward_output = create_mlp(
             hidden_units=[embedding_dims],
             dropout_rate=dropout_rate,
             activation=keras.activations.gelu,
             normalization_layer=layers.LayerNormalization(epsilon=1e-6),
-            name=f"feedforward_{block}",
+            name=f"feedforward_{block_idx}",
         )(x)
         # Skip connection 2.
-        x = layers.Add(name=f"skip_connection2_{block}")([feedforward_output, x])
+        x = layers.Add(name=f"skip_connection2_{block_idx}")([feedforward_output, x])
         # Layer normalization 2.
         encoded_categorical_features = layers.LayerNormalization(
-            name=f"layer_norm2_{block}", epsilon=1e-6
+            name=f"layer_norm2_{block_idx}", epsilon=1e-6
         )(x)
 
     # Flatten the "contextualized" embeddings of the categorical features.
@@ -502,11 +522,11 @@ def create_tabtransformer_classifier(
 
 
 tabtransformer_model = create_tabtransformer_classifier(
-    num_transformer_blocks,
-    num_heads,
-    embedding_dims,
-    mlp_hidden_units_factors,
-    dropout_rate,
+    num_transformer_blocks=NUM_TRANSFORMER_BLOCKS,
+    num_heads=NUM_HEADS,
+    embedding_dims=EMBEDDING_DIMS,
+    mlp_hidden_units_factors=MLP_HIDDEN_UNITS_FACTORS,
+    dropout_rate=DROPOUT_RATE,
 )
 
 print("Total model weights:", tabtransformer_model.count_params())
@@ -516,7 +536,15 @@ keras.utils.plot_model(tabtransformer_model, show_shapes=True, rankdir="LR")
 Let's train and evaluate the TabTransformer model:
 """
 
-history = run_experiment(tabtransformer_model)
+history = run_experiment(
+    model=tabtransformer_model,
+    train_data_file=train_data_file,
+    test_data_file=test_data_file,
+    num_epochs=NUM_EPOCHS,
+    learning_rate=LEARNING_RATE,
+    weight_decay=WEIGHT_DECAY,
+    batch_size=BATCH_SIZE,
+)
 
 """
 The TabTransformer model achieves ~85% validation accuracy.
