@@ -79,7 +79,7 @@ for callback in callbacks:
 ```
 
 In this example, we only called the `on_epoch_end()` method of the callbacks
-to help us checkpoint the model. If you may also call other callback methods
+to help us checkpoint the model. You may also call other callback methods
 if needed. If you don't need to save the model, you don't need to use the
 callbacks.
 
@@ -213,3 +213,13 @@ print(best_hps.values)
 
 best_model = tuner.get_best_models()[0]
 best_model.summary()
+
+"""
+In summary, to tune the hyperparameters in your custom training loop, you just
+override `HyperModel.fit()` to train the model and return the evaluation
+results. With the provided callbacks, you can easily save the trained models at
+their best epochs and load the best models later.
+
+To find out more about the basics of KerasTuner, please see
+[Getting Started with KerasTuner](https://keras.io/guides/keras_tuner/getting_started/).
+"""
