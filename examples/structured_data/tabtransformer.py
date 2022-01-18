@@ -195,8 +195,7 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
         header=False,
         na_value="?",
         shuffle=shuffle,
-        num_parallel_reads=4,
-    ).map(prepare_example)
+    ).map(prepare_example, num_parallel_calls=tf.data.AUTOTUNE, deterministic=False)
     return dataset.cache()
 
 
