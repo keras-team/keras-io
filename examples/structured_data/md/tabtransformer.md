@@ -1,12 +1,16 @@
-"""
-Title: Structured data learning with TabTransformer
-Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
-Date created: 2022/01/18
-Last modified: 2022/01/18
-Description: Using contextual embeddings for structured data classification.
-"""
+# Structured data learning with TabTransformer
 
-"""
+**Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
+**Date created:** 2022/01/18<br>
+**Last modified:** 2022/01/18<br>
+**Description:** Using contextual embeddings for structured data classification.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/structured_data/ipynb/tabtransformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/tabtransformer.py)
+
+
+
+---
 ## Introduction
 
 This example demonstrates how to do structured data classification using
@@ -24,9 +28,11 @@ which can be installed using the following command:
 pip install -U tensorflow-addons
 ```
 
+---
 ## Setup
-"""
 
+
+```python
 import math
 import numpy as np
 import pandas as pd
@@ -35,8 +41,16 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-01-18 18:54:01.877364: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-01-18 18:54:01.877410: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+
+```
+</div>
+---
 ## Prepare the data
 
 This example uses the
@@ -50,8 +64,9 @@ The dataset includes 48,842 instances with 14 input features: 5 numerical featur
 
 First, let's load the dataset from the UCI Machine Learning Repository into a Pandas
 DataFrame:
-"""
 
+
+```python
 CSV_HEADER = [
     "age",
     "workclass",
@@ -82,33 +97,44 @@ test_data = pd.read_csv(test_data_url, header=None, names=CSV_HEADER)
 
 print(f"Train dataset shape: {train_data.shape}")
 print(f"Test dataset shape: {test_data.shape}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Train dataset shape: (32561, 15)
+Test dataset shape: (16282, 15)
+
+```
+</div>
 Remove the first record (because it is not a valid data example) and a trailing 'dot' in the class labels.
-"""
 
+
+```python
 test_data = test_data[1:]
 test_data.income_bracket = test_data.income_bracket.apply(
     lambda value: value.replace(".", "")
 )
+```
 
-"""
 Now we store the training and test data in separate CSV files.
-"""
 
+
+```python
 train_data_file = "train_data.csv"
 test_data_file = "test_data.csv"
 
 train_data.to_csv(train_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
+```
 
-"""
+---
 ## Define dataset metadata
 
 Here, we define the metadata of the dataset that will be useful for reading and parsing
 the data into input features, and encoding the input features with respect to their types.
-"""
 
+
+```python
 # A list of the numerical feature names.
 NUMERIC_FEATURE_NAMES = [
     "age",
@@ -143,13 +169,15 @@ COLUMN_DEFAULTS = [
 TARGET_FEATURE_NAME = "income_bracket"
 # A list of the labels of the target features.
 TARGET_LABELS = [" <=50K", " >50K"]
+```
 
-"""
+---
 ## Configure the hyperparameters
 
 The hyperparameters includes model architecture and training configurations.
-"""
 
+
+```python
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 0.0001
 DROPOUT_RATE = 0.2
@@ -164,15 +192,17 @@ MLP_HIDDEN_UNITS_FACTORS = [
     1,
 ]  # MLP hidden layer units, as factors of the number of inputs.
 NUM_MLP_BLOCKS = 2  # Number of MLP blocks in the baseline model.
+```
 
-"""
+---
 ## Implement data reading pipeline
 
 We define an input function that reads and parses the file, then converts features
 and labels into a[`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
 for training or evaluation.
-"""
 
+
+```python
 target_label_lookup = layers.StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0
 )
@@ -198,11 +228,23 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
     ).map(prepare_example, num_parallel_calls=tf.data.AUTOTUNE, deterministic=False)
     return dataset.cache()
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-01-18 18:54:12.579096: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-01-18 18:54:12.579159: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-01-18 18:54:12.579200: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (keras-notebooks): /proc/driver/nvidia/version does not exist
+2022-01-18 18:54:12.580891: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
+```
+</div>
+---
 ## Implement a training and evaluation procedure
-"""
 
+
+```python
 
 def run_experiment(
     model,
@@ -239,15 +281,17 @@ def run_experiment(
 
     return history
 
+```
 
-"""
+---
 ## Create model inputs
 
 Now, define the inputs for the models as a dictionary, where the key is the feature name,
 and the value is a `keras.layers.Input` tensor with the corresponding feature shape
 and data type.
-"""
 
+
+```python
 
 def create_model_inputs():
     inputs = {}
@@ -262,15 +306,17 @@ def create_model_inputs():
             )
     return inputs
 
+```
 
-"""
+---
 ## Encode features
 
 The `encode_inputs` method returns `encoded_categorical_feature_list` and `numerical_feature_list`.
 We encode the categorical features as embeddings, using a fixed `embedding_dims` for all the features,
 regardless their vocabulary sizes. This is required for the Transformer model.
-"""
 
+
+```python
 
 def encode_inputs(inputs, embedding_dims):
 
@@ -313,11 +359,13 @@ def encode_inputs(inputs, embedding_dims):
 
     return encoded_categorical_feature_list, numerical_feature_list
 
+```
 
-"""
+---
 ## Implement an MLP block
-"""
 
+
+```python
 
 def create_mlp(hidden_units, dropout_rate, activation, normalization_layer, name=None):
 
@@ -329,13 +377,15 @@ def create_mlp(hidden_units, dropout_rate, activation, normalization_layer, name
 
     return keras.Sequential(mlp_layers, name=name)
 
+```
 
-"""
+---
 ## Experiment 1: a baseline model
 
 In the first experiment, we create a simple multi-layer feed-forward network.
-"""
 
+
+```python
 
 def create_baseline_model(
     embedding_dims, num_mlp_blocks, mlp_hidden_units_factors, dropout_rate
@@ -392,11 +442,19 @@ baseline_model = create_baseline_model(
 
 print("Total model weights:", baseline_model.count_params())
 keras.utils.plot_model(baseline_model, show_shapes=True, rankdir="LR")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total model weights: 109629
+('You must install pydot (`pip install pydot`) and install graphviz (see instructions at https://graphviz.gitlab.io/download/) ', 'for plot_model/model_to_dot to work.')
+
+```
+</div>
 Let's train and evaluate the baseline model:
-"""
 
+
+```python
 history = run_experiment(
     model=baseline_model,
     train_data_file=train_data_file,
@@ -406,12 +464,49 @@ history = run_experiment(
     weight_decay=WEIGHT_DECAY,
     batch_size=BATCH_SIZE,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Start training the model...
+Epoch 1/15
+123/123 [==============================] - 7s 27ms/step - loss: 110574.9141 - accuracy: 0.7469 - val_loss: 95106.3047 - val_accuracy: 0.7812
+Epoch 2/15
+123/123 [==============================] - 2s 15ms/step - loss: 90679.1172 - accuracy: 0.7677 - val_loss: 85083.6250 - val_accuracy: 0.7831
+Epoch 3/15
+123/123 [==============================] - 2s 15ms/step - loss: 75590.9531 - accuracy: 0.7925 - val_loss: 68293.9844 - val_accuracy: 0.8179
+Epoch 4/15
+123/123 [==============================] - 2s 15ms/step - loss: 72426.5391 - accuracy: 0.8017 - val_loss: 69626.7812 - val_accuracy: 0.8183
+Epoch 5/15
+123/123 [==============================] - 2s 15ms/step - loss: 70548.9766 - accuracy: 0.8044 - val_loss: 78782.6875 - val_accuracy: 0.8059
+Epoch 6/15
+123/123 [==============================] - 2s 15ms/step - loss: 69423.2812 - accuracy: 0.8056 - val_loss: 68385.0859 - val_accuracy: 0.8188
+Epoch 7/15
+123/123 [==============================] - 2s 15ms/step - loss: 68915.7656 - accuracy: 0.8113 - val_loss: 67443.1797 - val_accuracy: 0.8216
+Epoch 8/15
+123/123 [==============================] - 2s 15ms/step - loss: 68597.8906 - accuracy: 0.8120 - val_loss: 68740.5938 - val_accuracy: 0.8187
+Epoch 9/15
+123/123 [==============================] - 2s 15ms/step - loss: 68021.6328 - accuracy: 0.8118 - val_loss: 66513.7031 - val_accuracy: 0.8205
+Epoch 10/15
+123/123 [==============================] - 2s 15ms/step - loss: 67422.9531 - accuracy: 0.8150 - val_loss: 67441.1094 - val_accuracy: 0.8212
+Epoch 11/15
+123/123 [==============================] - 2s 15ms/step - loss: 67292.8047 - accuracy: 0.8149 - val_loss: 67310.7031 - val_accuracy: 0.8206
+Epoch 12/15
+123/123 [==============================] - 2s 15ms/step - loss: 67039.5391 - accuracy: 0.8152 - val_loss: 66347.3359 - val_accuracy: 0.8211
+Epoch 13/15
+123/123 [==============================] - 2s 14ms/step - loss: 66747.0234 - accuracy: 0.8167 - val_loss: 66547.9453 - val_accuracy: 0.8205
+Epoch 14/15
+123/123 [==============================] - 2s 15ms/step - loss: 66576.5938 - accuracy: 0.8193 - val_loss: 64635.7031 - val_accuracy: 0.8237
+Epoch 15/15
+123/123 [==============================] - 2s 15ms/step - loss: 65734.0938 - accuracy: 0.8219 - val_loss: 65115.3750 - val_accuracy: 0.8312
+Model training finished
+Validation accuracy: 83.12%
+
+```
+</div>
 The baseline linear model achieves ~81% validation accuracy.
-"""
 
-"""
+---
 ## Experiment 2: TabTransformer
 
 The TabTransformer architecture works as follows:
@@ -430,8 +525,9 @@ The [paper](https://arxiv.org/abs/2012.06678) discusses both addition and concat
 The architecture of TabTransformer is shown below, as presented in the paper.
 
 ![tabtransformer](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/img/tabtransformer/tabtransfoermer.png)
-"""
 
+
+```python
 
 def create_tabtransformer_classifier(
     num_transformer_blocks,
@@ -530,11 +626,19 @@ tabtransformer_model = create_tabtransformer_classifier(
 
 print("Total model weights:", tabtransformer_model.count_params())
 keras.utils.plot_model(tabtransformer_model, show_shapes=True, rankdir="LR")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Total model weights: 87479
+('You must install pydot (`pip install pydot`) and install graphviz (see instructions at https://graphviz.gitlab.io/download/) ', 'for plot_model/model_to_dot to work.')
+
+```
+</div>
 Let's train and evaluate the TabTransformer model:
-"""
 
+
+```python
 history = run_experiment(
     model=tabtransformer_model,
     train_data_file=train_data_file,
@@ -544,14 +648,51 @@ history = run_experiment(
     weight_decay=WEIGHT_DECAY,
     batch_size=BATCH_SIZE,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Start training the model...
+Epoch 1/15
+123/123 [==============================] - 14s 63ms/step - loss: 79315.3516 - accuracy: 0.7970 - val_loss: 66115.7969 - val_accuracy: 0.8406
+Epoch 2/15
+123/123 [==============================] - 7s 53ms/step - loss: 68751.2109 - accuracy: 0.8253 - val_loss: 65475.8320 - val_accuracy: 0.8397
+Epoch 3/15
+123/123 [==============================] - 7s 54ms/step - loss: 66452.5312 - accuracy: 0.8297 - val_loss: 62136.4180 - val_accuracy: 0.8463
+Epoch 4/15
+123/123 [==============================] - 7s 53ms/step - loss: 64246.3477 - accuracy: 0.8366 - val_loss: 62125.8516 - val_accuracy: 0.8452
+Epoch 5/15
+123/123 [==============================] - 6s 53ms/step - loss: 63572.6055 - accuracy: 0.8387 - val_loss: 61939.7930 - val_accuracy: 0.8447
+Epoch 6/15
+123/123 [==============================] - 6s 52ms/step - loss: 63012.8477 - accuracy: 0.8415 - val_loss: 62016.4570 - val_accuracy: 0.8454
+Epoch 7/15
+123/123 [==============================] - 6s 52ms/step - loss: 62265.0547 - accuracy: 0.8424 - val_loss: 61894.2852 - val_accuracy: 0.8471
+Epoch 8/15
+123/123 [==============================] - 6s 52ms/step - loss: 62148.0352 - accuracy: 0.8424 - val_loss: 61682.7070 - val_accuracy: 0.8422
+Epoch 9/15
+123/123 [==============================] - 7s 53ms/step - loss: 61794.2773 - accuracy: 0.8441 - val_loss: 62334.7891 - val_accuracy: 0.8421
+Epoch 10/15
+123/123 [==============================] - 7s 54ms/step - loss: 61479.3867 - accuracy: 0.8439 - val_loss: 62580.0625 - val_accuracy: 0.8418
+Epoch 11/15
+123/123 [==============================] - 7s 54ms/step - loss: 61184.4883 - accuracy: 0.8462 - val_loss: 61866.2031 - val_accuracy: 0.8456
+Epoch 12/15
+123/123 [==============================] - 7s 54ms/step - loss: 61241.9336 - accuracy: 0.8448 - val_loss: 61736.5547 - val_accuracy: 0.8431
+Epoch 13/15
+123/123 [==============================] - 7s 53ms/step - loss: 61207.5625 - accuracy: 0.8453 - val_loss: 61739.3633 - val_accuracy: 0.8433
+Epoch 14/15
+123/123 [==============================] - 6s 53ms/step - loss: 61024.6758 - accuracy: 0.8450 - val_loss: 61468.6406 - val_accuracy: 0.8450
+Epoch 15/15
+123/123 [==============================] - 6s 53ms/step - loss: 60983.3984 - accuracy: 0.8455 - val_loss: 62017.6562 - val_accuracy: 0.8422
+Model training finished
+Validation accuracy: 84.22%
+
+```
+</div>
 The TabTransformer model achieves ~85% validation accuracy.
 Note that, with the default parameter configurations, both the baseline and the TabTransformer
 have similar number of trainable weights: 109,629 and 92,151 respectively, and both use the same training hyperparameters.
-"""
 
-"""
+---
 ## Conclusion
 
 TabTransformer significantly outperforms MLP and recent
@@ -561,4 +702,3 @@ For a scenario where there are a few labeled examples and a large number of unla
 examples, a pre-training procedure can be employed to train the Transformer layers using unlabeled data.
 This is followed by fine-tuning of the pre-trained Transformer layers along with
 the top MLP layer using the labeled data.
-"""
