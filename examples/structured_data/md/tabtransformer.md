@@ -524,8 +524,7 @@ The [paper](https://arxiv.org/abs/2012.06678) discusses both addition and concat
 *Appendix: Experiment and Model Details* section.
 The architecture of TabTransformer is shown below, as presented in the paper.
 
-![tabtransformer](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/img/tabtransformer/tabtransfoermer.png)
-
+<img src="https://raw.githubusercontent.com/keras-team/keras-io/master/examples/structured_data/img/tabtransformer/tabtransformer.png" width="500"/>
 
 ```python
 
