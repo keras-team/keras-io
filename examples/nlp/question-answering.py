@@ -1,18 +1,18 @@
 """
-Title: Question Answering with Transformers
+Title: Question Answering with Hugging Face Transformers
 Author: Matthew Carrigan and Merve Noyan
 Date created: 13/01/2022
 Last modified: 13/01/2022
-Description: Question answering implementation using Keras and 🤗Transformers.
+Description: Question answering implementation using Keras and Hugging Face Transformers.
 """
 """shell
-!pip install git+https://github.com/huggingface/transformers.git
-!pip install datasets
-!pip install huggingface-hub
+pip install git+https://github.com/huggingface/transformers.git
+pip install datasets
+pip install huggingface-hub
 """
 
 """
-# Fine-tuning a model on a question answering task
+## Fine-tuning a model on a question answering task
 """
 
 """
@@ -40,14 +40,14 @@ from? How do you ensure that your input data is preprocessed and tokenized the s
 as the original model? How do you modify the model to add an output head that matches
 your task of interest?
 
-In this example, we'll show you how to load a model from the Hugging Face [🤗
-Transformers](https://github.com/huggingface/transformers) library to tackle this
-challenge. We'll also load a benchmark question answering dataset from the [🤗
-Datasets](https://github.com/huggingface/datasets) library - this is another open-source
+In this example, we'll show you how to load a model from the Hugging Face
+[🤗Transformers](https://github.com/huggingface/transformers) library to tackle this
+challenge. We'll also load a benchmark question answering dataset from the
+[🤗Datasets](https://github.com/huggingface/datasets) library - this is another open-source
 repository containing a wide range of datasets across many modalities, from NLP to vision
 and beyond. Note, though, that there is no requirement that these libraries must be used
-with each other. If you want to train a model from [🤗
-Transformers](https://github.com/huggingface/transformers) on your own data, or you want
+with each other. If you want to train a model from
+[🤗Transformers](https://github.com/huggingface/transformers) on your own data, or you want
 to load data from [🤗 Datasets](https://github.com/huggingface/datasets) and train your
 own entirely unrelated models with it, that is of course possible (and highly
 encouraged!)
@@ -77,7 +77,7 @@ position in the text and their full text, which is a substring of the context as
 mentioned above. Let's take a look at what a single training example looks like.
 """
 
-datasets["train"][0]
+print(datasets["train"][0])
 
 """
 ## Preprocessing the training data
@@ -258,7 +258,10 @@ only features remaining are the ones we actually want to pass to our model.
 """
 
 tokenized_datasets = datasets.map(
-    prepare_train_features, batched=True, remove_columns=datasets["train"].column_names
+    prepare_train_features,
+    batched=True,
+    remove_columns=datasets["train"].column_names,
+    num_proc=3,
 )
 
 """
@@ -280,10 +283,10 @@ designed to assist you when the data cannot be easily converted to arrays, such 
 it has variable sequence lengths, or is too large to fit in memory. This method wraps a
 `tf.data.Dataset` around the underlying 🤗 Dataset, streaming samples from the underlying
 dataset and batching them on the fly, thus minimizing wasted memory and computation from
-unnecessary padding. If your use-case requires it, please see [the documentation on
-to_tf_dataset and data collator
-functions](https://huggingface.co/docs/transformers/custom_datasets#finetune-with-tensorfl
-ow) for an example. If not, feel free to follow this example and simply convert to dicts!
+unnecessary padding. If your use-case requires it, please see the
+[docs](https://huggingface.co/docs/transformers/custom_datasets#finetune-with-tensorflow)
+on to_tf_dataset and data collator for an example. If not, feel free to follow this example
+and simply convert to dicts!
 """
 
 train_set = tokenized_datasets["train"].with_format("numpy")[
@@ -328,8 +331,9 @@ use a low learning rate! We find the best results are obtained with values in th
 """
 
 import tensorflow as tf
+from tensorflow import keras
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=5e-5)
+optimizer = keras.optimizers.Adam(learning_rate=5e-5)
 
 """
 And now we just compile and fit the model. As a convenience, all 🤗 Transformers models
@@ -344,7 +348,7 @@ loss, simply leave out the `loss` argument to `compile`.
 """
 
 # Optionally uncomment the next line for float16 training
-tf.keras.mixed_precision.set_global_policy("mixed_float16")
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 model.compile(optimizer=optimizer)
 
@@ -354,7 +358,7 @@ are keys in the input dict, to make them visible to the model during the forward
 it can compute the built-in loss.
 """
 
-model.fit(train_set, validation_data=validation_set, epochs=2)
+model.fit(train_set, validation_data=validation_set, epochs=1)
 
 """
 And we're done! Let's give it a try, using some text from the keras.io frontpage:
@@ -404,19 +408,21 @@ training,
 This model is currently hosted [here](https://huggingface.co/keras-io/transformers-qa)
 and we have prepared a separate neat UI for you
 [here](https://huggingface.co/spaces/keras-io/keras-qa).
-"""
 
+```python
 model.push_to_hub("transformers-qa", organization="keras-io")
 tokenizer.push_to_hub("transformers-qa", organization="keras-io")
+```
 
-"""
 If you have non-Transformers based Keras models, you can also push them with
 `push_to_hub_keras`. You can use `from_pretrained_keras` to load easily.
-"""
 
+```python
 from huggingface_hub.keras_mixin import push_to_hub_keras
 
 push_to_hub_keras(
     model=model, repo_url="https://huggingface.co/your-username/your-awesome-model"
 )
-from_pretrained_keras("your-username/your-awesome-model")
+from_pretrained_keras("your-username/your-awesome-model") # load your model
+```
+"""
