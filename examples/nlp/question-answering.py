@@ -68,8 +68,7 @@ datasets = load_dataset("squad")
 
 """
 The `datasets` object itself is a
-[`DatasetDict`](https://huggingface.co/docs/datasets/package_reference/main_classes.html#d
-atasetdict), which contains one key for the training, validation and test set. We can see
+DatasetDict, which contains one key for the training, validation and test set. We can see
 the training, validation and test sets all have a column for the context, the question
 and the answers to those questions. To access an actual element, you need to select a
 split first, then give an index. We can see the answers are indicated by their start
