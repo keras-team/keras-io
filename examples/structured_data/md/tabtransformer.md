@@ -43,13 +43,6 @@ import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 ```
 
-<div class="k-default-codeblock">
-```
-2022-01-19 11:27:19.123149: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-01-19 11:27:19.123192: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 ---
 ## Prepare the data
 
@@ -230,16 +223,7 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-01-19 11:27:21.916040: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-01-19 11:27:21.916086: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-01-19 11:27:21.916110: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (keras-notebooks): /proc/driver/nvidia/version does not exist
-2022-01-19 11:27:21.916390: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
-```
-</div>
 ---
 ## Implement a training and evaluation procedure
 
