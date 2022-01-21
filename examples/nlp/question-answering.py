@@ -13,9 +13,7 @@ pip install huggingface-hub
 
 """
 ## Fine-tuning a model on a question answering task
-"""
 
-"""
 Question answering is a common NLP task with several variants. In some variants, the task
 is multiple-choice:
 A list of possible answers are supplied with each question, and the model simply needs to
@@ -30,12 +28,12 @@ and end of the span containing the answer.
 Question answering of this kind is a very challenging NLP task, and the dataset size
 required to train such a model from scratch when the questions and answers are natural
 language is prohibitively huge. As a result, question answering (like almost all NLP
-tasks) benefits enormously from starting from a strong pre-trained foundation model -
-starting from a strong pre-trained language model can reduce the dataset size required to
+tasks) benefits enormously from starting from a strong pretrained foundation model -
+starting from a strong pretrained language model can reduce the dataset size required to
 reach a given accuracy by multiple orders of magnitude, enabling you to reach very strong
 performance with surprisingly reasonable datasets.
 
-Starting with a pre-trained model adds difficulties, though - where do you get the model
+Starting with a pretrained model adds difficulties, though - where do you get the model
 from? How do you ensure that your input data is preprocessed and tokenized the same way
 as the original model? How do you modify the model to add an output head that matches
 your task of interest?
@@ -59,7 +57,7 @@ encouraged!)
 
 """
 We will use the [🤗 Datasets](https://github.com/huggingface/datasets) library to download
-the SQUAD question answering dataset using `load_dataset`.
+the SQUAD question answering dataset using `load_dataset()`.
 """
 
 from datasets import load_dataset
@@ -68,7 +66,7 @@ datasets = load_dataset("squad")
 
 """
 The `datasets` object itself is a
-DatasetDict, which contains one key for the training, validation and test set. We can see
+`DatasetDict`, which contains one key for the training, validation and test set. We can see
 the training, validation and test sets all have a column for the context, the question
 and the answers to those questions. To access an actual element, you need to select a
 split first, then give an index. We can see the answers are indicated by their start
@@ -92,21 +90,21 @@ requires.
 To do all of this, we instantiate our tokenizer with the `AutoTokenizer.from_pretrained`
 method, which will ensure:
 
-- we get a tokenizer that corresponds to the model architecture we want to use,
-- we download the vocabulary used when pretraining this specific checkpoint.
+- We get a tokenizer that corresponds to the model architecture we want to use.
+- We download the vocabulary used when pretraining this specific checkpoint.
 
 That vocabulary will be cached, so it's not downloaded again the next time we run the
 cell.
 
-The `from_pretrained` method expects the name of a model. If you're unsure which model to
+The `from_pretrained()` method expects the name of a model. If you're unsure which model to
 pick, don't panic! The list of models to choose from can be bewildering, but in general
 there is a simple tradeoff: Larger models are slower and consume more memory, but usually
 yield slightly better final accuracies after fine-tuning. For this example, we have
-chosen the (relatively) lightweight `distilbert`, a smaller, distilled version of the
+chosen the (relatively) lightweight `"distilbert"`, a smaller, distilled version of the
 famous BERT language model. If you absolutely must have the highest possible accuracy for
 an important task, though, and you have the GPU memory (and free time) to handle it, you
-may prefer to use a larger model, such as `roberta-large`. Newer and even larger models
-than `roberta` exist in [🤗 Transformers](https://github.com/huggingface/transformers),
+may prefer to use a larger model, such as `"roberta-large"`. Newer and even larger models
+than `"roberta"` exist in [🤗 Transformers](https://github.com/huggingface/transformers),
 but we leave the task of finding and training them as an exercise to readers who are
 either particularly masochistic or have 40GB of VRAM to throw around.
 """
@@ -133,13 +131,13 @@ length of the model (or the one we set as a hyper-parameter). Also, just in case
 answer lies at the point we split a long context, we allow some overlap between the
 features we generate controlled by the hyper-parameter `doc_stride`.
 
-If we simply truncate with a fixed size (max_length) we will lose information. We want to
+If we simply truncate with a fixed size (`max_length`), we will lose information. We want to
 avoid truncating the question, and instead only truncate the context to ensure the task
-remains solvable. To do that, we'll set "truncation" to "only_second", so that only the
+remains solvable. To do that, we'll set `truncation` to `"only_second"`, so that only the
 second sequence (the context) in each pair is truncated. To get the list of features
-capped by the maximum length, we need to set "return_overflowing_tokens" to True and pass
-the doc_stride to stride. To see which feature of the original context contain the
-answer, we can return "offset_mapping".
+capped by the maximum length, we need to set `return_overflowing_tokens` to True and pass
+the `doc_stride` to `stride`. To see which feature of the original context contain the
+answer, we can return `"offset_mapping"`.
 """
 
 max_length = 384  # The maximum length of a feature (question and context)
@@ -246,7 +244,7 @@ def prepare_train_features(examples):
 
 """
 To apply this function on all the sentences (or pairs of sentences) in our dataset, we
-just use the `map` method of our `dataset` object, which will apply the function on all
+just use the `map()` method of our `Dataset` object, which will apply the function on all
 the elements of.
 
 We'll use `batched=True` to encode the texts in batches together. This is to leverage the
@@ -269,15 +267,13 @@ spending time on this step the next time you run your notebook. The 🤗 Dataset
 normally smart enough to detect when the function you pass to map has changed (and thus
 requires to not use the cache data). For instance, it will properly detect if you change
 the task in the first cell and rerun the notebook. 🤗 Datasets warns you when it uses
-cached files, you can pass `load_from_cache_file=False` in the call to `map` to not use
+cached files, you can pass `load_from_cache_file=False` in the call to `map()` to not use
 the cached files and force the preprocessing to be applied again.
-"""
 
-"""
 Because all our data has been padded or truncated to the same length, and it is not too
 large, we can now simply convert it to a dict of numpy arrays, ready for training.
 
-Although we will not use it here, 🤗 Datasets have a `to_tf_dataset` helper method
+Although we will not use it here, 🤗 Datasets have a `to_tf_dataset()` helper method
 designed to assist you when the data cannot be easily converted to arrays, such as when
 it has variable sequence lengths, or is too large to fit in memory. This method wraps a
 `tf.data.Dataset` around the underlying 🤗 Dataset, streaming samples from the underlying
@@ -301,7 +297,7 @@ validation_set = tokenized_datasets["validation"].with_format("numpy")[:]
 That was a lot of work! But now that our data is ready, everything is going to run very
 smoothly. First, we download the pretrained model and fine-tune it. Since our task is
 question answering, we use the `TFAutoModelForQuestionAnswering` class. Like with the
-tokenizer, the `from_pretrained` method will download and cache the model for us:
+tokenizer, the `from_pretrained()` method will download and cache the model for us:
 """
 
 from transformers import TFAutoModelForQuestionAnswering
@@ -310,23 +306,21 @@ model = TFAutoModelForQuestionAnswering.from_pretrained(model_checkpoint)
 
 """
 The warning is telling us we are throwing away some weights and newly initializing some
-others. Don't panic! This is absolutely normal. Recall that models like `BERT` and
-`distilbert` are trained on a **language modeling** task, but we're loading the model as
+others. Don't panic! This is absolutely normal. Recall that models like BERT and
+Distilbert are trained on a **language modeling** task, but we're loading the model as
 a `TFAutoModelForQuestionAnswering`, which means we want the model to perform a
 **question answering** task. This change requires the final output layer or "head" to be
 removed and replaced with a new head suited for the new task. The `from_pretrained`
 method will handle all of this for us, and the warning is there simply to remind us that
 some model surgery has been performed, and that the model will not generate useful
 predictions until the newly-initialized layers have been fine-tuned on some data.
-"""
 
-"""
 Next, we can create an optimizer and specify a loss function. You can usually get
 slightly better performance by using learning rate decay and decoupled weight decay, but
 for the purposes of this example the standard `Adam` optimizer will work fine. Note,
-however, that when fine-tuning a pre-trained transformer model you will generally want to
+however, that when fine-tuning a pretrained transformer model you will generally want to
 use a low learning rate! We find the best results are obtained with values in the range
-1e-5 to 1e-4, and training may completely diverge at the default Adam LR of 1e-3.
+1e-5 to 1e-4, and training may completely diverge at the default Adam learning rate of 1e-3.
 """
 
 import tensorflow as tf
@@ -384,7 +378,7 @@ answer = inputs["input_ids"][0, int(start_position) : int(end_position) + 1]
 print(answer)
 
 """
-And now we can use the `tokenizer.decode` method to turn those token IDs back into text:
+And now we can use the `tokenizer.decode()` method to turn those token IDs back into text:
 """
 
 print(tokenizer.decode(answer))
@@ -395,11 +389,10 @@ state-of-the-art, and the model trained here will certainly make mistakes. If yo
 larger model to base your training on, and you take time to tune the hyperparameters
 appropriately, you'll find that you can achieve much better losses (and correspondingly
 more accurate answers).
-"""
 
-"""
 Finally, you can push the model to the HuggingFace Hub. By pushing this model you will
-have,
+have:
+
 - A nice model card generated for you containing hyperparameters and metrics of the model
 training,
 - A web API for inference calls,
