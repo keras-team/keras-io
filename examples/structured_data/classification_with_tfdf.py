@@ -63,74 +63,26 @@ and 34 categorical features.
 First we load the data from the UCI Machine Learning Repository into a Pandas DataFrame.
 """
 
-# Column names.
+BASE_PATH = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income"
 CSV_HEADER = [
-    "age",
-    "class_of_worker",
-    "detailed_industry_recode",
-    "detailed_occupation_recode",
-    "education",
-    "wage_per_hour",
-    "enroll_in_edu_inst_last_wk",
-    "marital_stat",
-    "major_industry_code",
-    "major_occupation_code",
-    "race",
-    "hispanic_origin",
-    "sex",
-    "member_of_a_labor_union",
-    "reason_for_unemployment",
-    "full_or_part_time_employment_stat",
-    "capital_gains",
-    "capital_losses",
-    "dividends_from_stocks",
-    "tax_filer_stat",
-    "region_of_previous_residence",
-    "state_of_previous_residence",
-    "detailed_household_and_family_stat",
-    "detailed_household_summary_in_household",
-    "instance_weight",
-    "migration_code-change_in_msa",
-    "migration_code-change_in_reg",
-    "migration_code-move_within_reg",
-    "live_in_this_house_1_year_ago",
-    "migration_prev_res_in_sunbelt",
-    "num_persons_worked_for_employer",
-    "family_members_under_18",
-    "country_of_birth_father",
-    "country_of_birth_mother",
-    "country_of_birth_self",
-    "citizenship",
-    "own_business_or_self_employed",
-    "fill_inc_questionnaire_for_veteran's_admin",
-    "veterans_benefits",
-    "weeks_worked_in_year",
-    "year",
-    "income_level",
-]
+    l.decode("utf-8").split(":")[0].replace(" ", "_")
+    for l in urllib.request.urlopen(f"{BASE_PATH}.names")
+    if not l.startswith(b"|")
+][2:]
+CSV_HEADER.append("income_level")
 
-train_data = pd.read_csv(
-    "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.data.gz",
-    header=None,
-    names=CSV_HEADER,
-)
+print(CSV_HEADER)
 
-test_data = pd.read_csv(
-    "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.test.gz",
-    header=None,
-    names=CSV_HEADER,
-)
+train_data = pd.read_csv(f"{BASE_PATH}.data.gz", header=None, names=CSV_HEADER,)
+
+test_data = pd.read_csv(f"{BASE_PATH}.test.gz", header=None, names=CSV_HEADER,)
 
 """
 We convert the target column from string to integer.
 """
 
-train_data["income_level"] = train_data["income_level"].apply(
-    lambda x: 0 if x == " - 50000." else 1
-)
-test_data["income_level"] = test_data["income_level"].apply(
-    lambda x: 0 if x == " - 50000." else 1
-)
+train_data["income_level"] = train_data["income_level"].map(label_values.index)
+test_data["income_level"] = test_data["income_level"].map(label_values.index)
 
 """
 Now let's show the shapes of the training and test dataframes, and display some instances.
@@ -147,8 +99,8 @@ Here, we define the metadata of the dataset that will be useful for encoding
 the input features with respect to their types.
 """
 
-# Target feature name.
-TARGET_FEATURE_NAME = "income_level"
+# Target column name.
+TARGET_COLUMN_NAME = "income_level"
 # Weight column name.
 WEIGHT_COLUMN_NAME = "instance_weight"
 # Numeric feature names.
@@ -168,7 +120,7 @@ CATEGORICAL_FEATURES_WITH_VOCABULARY = {
     )
     for feature_name in CSV_HEADER
     if feature_name
-    not in list(NUMERIC_FEATURE_NAMES + [WEIGHT_COLUMN_NAME, TARGET_FEATURE_NAME])
+    not in list(NUMERIC_FEATURE_NAMES + [WEIGHT_COLUMN_NAME, TARGET_COLUMN_NAME])
 }
 # All features names.
 FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
@@ -177,7 +129,7 @@ FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
 # Feature default values.
 COLUMN_DEFAULTS = [
     [0.0]
-    if feature_name in NUMERIC_FEATURE_NAMES + [TARGET_FEATURE_NAME, WEIGHT_COLUMN_NAME]
+    if feature_name in NUMERIC_FEATURE_NAMES + [TARGET_COLUMN_NAME, WEIGHT_COLUMN_NAME]
     else ["NA"]
     for feature_name in CSV_HEADER
 ]
@@ -214,10 +166,10 @@ def fix_datatypes(features):
 def run_experiment(model, train_data, test_data, num_epochs=1, batch_size=None):
 
     train_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
-        train_data, label=TARGET_FEATURE_NAME, weight=WEIGHT_COLUMN_NAME
+        train_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
     ).map(lambda features, target, weight: (fix_datatypes(features), target, weight))
     test_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
-        test_data, label=TARGET_FEATURE_NAME, weight=WEIGHT_COLUMN_NAME
+        test_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
     ).map(lambda features, target, weight: (fix_datatypes(features), target, weight))
 
     history = model.fit(train_dataset, epochs=num_epochs, batch_size=batch_size)
@@ -313,6 +265,10 @@ def create_gbt_model():
 
 """
 ### Train and evaluate the model
+
+Note that when training a Decision Forests model, only one epoch is needed to
+read the full dataset. Any extra steps will result in unnecessary slower training.
+Therefore, the default `num_epochs=1` is used in the `run_experiment` method.
 """
 
 gbt_model = create_gbt_model()
@@ -553,7 +509,7 @@ print(binary_target_encoder([0, 1, 2]))
 
 def create_target_encoder():
     inputs = create_model_inputs()
-    target_values = train_data[[TARGET_FEATURE_NAME]].to_numpy()
+    target_values = train_data[[TARGET_COLUMN_NAME]].to_numpy()
     encoded_features = []
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
