@@ -24,7 +24,7 @@ structured data, and covers the following scenarios:
 2. Implement a custom *Binary Target encoder* as a [Keras Preprocessing layer](https://keras.io/api/layers/preprocessing_layers/)
 to encode the categorical features with respect to their target value co-occurrences,
 and then use the encoded features to build a decision forests model.
-3. Encode the categorical features as [embddings](https://keras.io/api/layers/core_layers/embedding),
+3. Encode the categorical features as [embeddings](https://keras.io/api/layers/core_layers/embedding),
 train these embeddings in a simple linear model, and then use the
 trained embeddings as inputs to build decision forests model.
 
@@ -32,7 +32,7 @@ This example uses TensorFlow 2.7 or higher,
 as well as [TensorFlow Decision Forests](https://www.tensorflow.org/decision_forests),
 which you can install using the following command:
 
-``` python
+```python
 pip install -U tensorflow_decision_forests
 ```
 """
@@ -90,7 +90,7 @@ Now let's show the shapes of the training and test dataframes, and display some 
 
 print(f"Train data shape: {train_data.shape}")
 print(f"Test data shape: {test_data.shape}")
-train_data.head().T
+print(train_data.head().T)
 
 """
 ## Define dataset metadata
@@ -154,29 +154,27 @@ VALIDATION_RATIO = 0.1
 """
 
 
-def fix_datatypes(features):
+def prepare_sample(features, target, weight):
     for feature_name in features:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
             if features[feature_name].dtype != tf.dtypes.string:
                 # Convert categorical feature values to string.
                 features[feature_name] = tf.strings.as_string(features[feature_name])
-    return features
+    return features, target, weight
 
 
 def run_experiment(model, train_data, test_data, num_epochs=1, batch_size=None):
 
     train_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         train_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
-    ).map(lambda features, target, weight: (fix_datatypes(features), target, weight))
+    ).map(prepare_sample, num_parallel_calls=tf.data.AUTOTUNE)
     test_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         test_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
-    ).map(lambda features, target, weight: (fix_datatypes(features), target, weight))
+    ).map(prepare_sample, num_parallel_calls=tf.data.AUTOTUNE)
 
     history = model.fit(train_dataset, epochs=num_epochs, batch_size=batch_size)
     _, accuracy = model.evaluate(test_dataset, verbose=0)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
-
-    return history
 
 
 """
@@ -205,8 +203,8 @@ def create_model_inputs():
 """
 ### Specify model input feature usages
 
-You can attache semantics to each feature to control how it is used by the model.
-If not specified, the semantics is inferred from the representation type.
+You can attach semantics to each feature to control how it is used by the model.
+If not specified, the semantics are inferred from the representation type.
 It is recommended to specify the [feature usages](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/FeatureUsage)
 explicitly to avoid incorrect inferred semantics is incorrect.
 For example, a categorical value identifier (integer) will be be inferred as numerical,
@@ -272,7 +270,7 @@ Therefore, the default `num_epochs=1` is used in the `run_experiment` method.
 """
 
 gbt_model = create_gbt_model()
-history = run_experiment(gbt_model, train_data, test_data)
+run_experiment(gbt_model, train_data, test_data)
 
 """
 ### Inspect the model
@@ -290,20 +288,20 @@ print(gbt_model.summary())
 technique for categorical features that convert them into numerical features.
 Using categorical features with high cardinality as-is may lead to overfitting.
 Target encoding aims to replace each categorical feature value with one or more
-numerical values that repesent its co-occerence with the target labels.
+numerical values that represent its co-occurrence with the target labels.
 
-More preciely, given a categorical feature, the binary target encoder in this example
+More precisely, given a categorical feature, the binary target encoder in this example
 will produce three new numerical features:
 
-1. `positive_frequency`: How many times each feature value occured with a positive target label.
-2. `negative_frequency`: How many times each feature value occured with a negative target label.
-3. `positive_probability`: The probability that the target label is possitive,
+1. `positive_frequency`: How many times each feature value occurred with a positive target label.
+2. `negative_frequency`: How many times each feature value occurred with a negative target label.
+3. `positive_probability`: The probability that the target label is positive,
 given the feature value, which is computed as
 `positive_frequency / (positive_frequency + negative_frequency)`.
 
 
 Note that target encoding is effective with models that cannot automatically
-learn dense repesentations to categorical features, such as decision forests
+learn dense representations to categorical features, such as decision forests
 or kernel methods. If neural network models are used, its recommended to
 encode categorical features as embeddings.
 """
@@ -315,16 +313,13 @@ encode categorical features as embeddings.
 from keras.engine import base_preprocessing_layer
 
 
-class BinaryTargetEncoding(base_preprocessing_layer.PreprocessingLayer):
+class BinaryTargetEncoding(layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        base_preprocessing_layer.keras_kpl_gauge.get_cell("BinaryTargetEncoding").set(
-            True
-        )
 
     def adapt(self, data):
-        # data is expected to be a integer numpy array ot a Tensor shape [num_exmples, 2].
-        # This contain feature values for a given feature in the dataset, and target values.
+        # data is expected to be an integer numpy array to a Tensor shape [num_exmples, 2].
+        # This contains feature values for a given feature in the dataset, and target values.
 
         self.compile()
         self.reset_state()
@@ -365,14 +360,14 @@ class BinaryTargetEncoding(base_preprocessing_layer.PreprocessingLayer):
         unique_feature_values = tf.sort(tf.unique(feature_values).y)
 
         print(
-            "Target encoding: Computing frequencies for feature values with positive tatgets..."
+            "Target encoding: Computing frequencies for feature values with positive targets..."
         )
-        # Filter the data where target label is positive.
+        # Filter the data where the target label is positive.
         positive_indices = tf.where(condition=target_values)
         postive_feature_values = tf.gather_nd(
             params=feature_values, indices=positive_indices
         )
-        # Compute how many time each feature value occured with a positive target label.
+        # Compute how many times each feature value occurred with a positive target label.
         positive_frequency = tf.math.unsorted_segment_sum(
             data=tf.ones(
                 shape=(postive_feature_values.shape[0], 1), dtype=tf.dtypes.int32
@@ -382,14 +377,14 @@ class BinaryTargetEncoding(base_preprocessing_layer.PreprocessingLayer):
         )
 
         print(
-            "Target encoding: Computing frequencies for feature values with negative tatgets..."
+            "Target encoding: Computing frequencies for feature values with negative targets..."
         )
-        # Filter the data where target label is negative.
+        # Filter the data where the target label is negative.
         negative_indices = tf.where(condition=tf.math.logical_not(target_values))
         negative_feature_values = tf.gather_nd(
             params=feature_values, indices=negative_indices
         )
-        # Compute how many time each feature value occured with a negative target label.
+        # Compute how many times each feature value occurred with a negative target label.
         negative_frequency = tf.math.unsorted_segment_sum(
             data=tf.ones(
                 shape=(negative_feature_values.shape[0], 1), dtype=tf.dtypes.int32
@@ -410,10 +405,10 @@ class BinaryTargetEncoding(base_preprocessing_layer.PreprocessingLayer):
             self.negative_frequency_lookup = None
 
     def call(self, inputs):
-        # data is expected to be a integer numpy array ot a Tensor shape [num_exmples, 1].
-        # This include the feature values for a given feature in the dataset.
+        # data is expected to be an integer numpy array to a Tensor shape [num_exmples, 1].
+        # This includes the feature values for a given feature in the dataset.
 
-        # Raise an error of the target encoding statistics are not computed.
+        # Raise an error if the target encoding statistics are not computed.
         if (
             self.positive_frequency_lookup == None
             or self.negative_frequency_lookup == None
@@ -454,14 +449,6 @@ class BinaryTargetEncoding(base_preprocessing_layer.PreprocessingLayer):
         return layers.concatenate(
             [positive_fequency, negative_fequency, positive_probability], axis=1
         )
-
-    def compute_output_shape(self, input_shape):
-        # The output shape is expected to be [num_examplesm 3].
-        return tf.TensorShape([input_shape[0], 3])
-
-    def compute_output_signature(self, input_spec):
-        output_shape = self.compute_output_shape(input_spec.shape.as_list())
-        return tf.TensorSpec(shape=output_shape, dtype=tf.int64)
 
     def _standardize_inputs(self, inputs):
         inputs = tf.convert_to_tensor(inputs)
@@ -514,7 +501,7 @@ def create_target_encoder():
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-            # Create a lookup to convert a string values to an integer indices.
+            # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
             lookup = layers.StringLookup(
@@ -534,7 +521,7 @@ def create_target_encoder():
         else:
             # Expand the dimensions of the numerical input feature and use it as-is.
             encoded_feature = tf.expand_dims(inputs[feature_name], -1)
-        # Add the encodded feature to the list.
+        # Add the encoded feature to the list.
         encoded_features.append(encoded_feature)
     # Concatenate all the encoded features.
     encoded_features = layers.concatenate(encoded_features, axis=1)
@@ -545,7 +532,7 @@ def create_target_encoder():
 """
 ### Create a Gradient Boosted Trees model with a preprocessor
 
-In this scenario, we use the target encoding as a preprocessor for the Gradiente Boosted Tree model,
+In this scenario, we use the target encoding as a preprocessor for the Gradient Boosted Tree model,
 and let the model infer semantics of the input features.
 """
 
@@ -573,7 +560,7 @@ def create_gbt_with_preprocessor(preprocessor):
 """
 
 gbt_model = create_gbt_with_preprocessor(create_target_encoder())
-history = run_experiment(gbt_model, train_data, test_data)
+run_experiment(gbt_model, train_data, test_data)
 
 """
 ## Experiment 3: Decision Forests with trained embeddings
@@ -582,7 +569,7 @@ In this scenario, we build an encoder model that codes the categorical
 features to embeddings, where the size of the embedding for a given categorical
 feature is the square root to the size of its vocabulary.
 
-We train these embeddings in a simple linear model through backprobagation.
+We train these embeddings in a simple linear model through backpropagation.
 After the embedding encoder is trained, we used it as a preprocessor to the
 input features of a Gradient Boosted Tree model.
 
@@ -603,7 +590,7 @@ def create_embedding_encoder():
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-            # Create a lookup to convert a string values to an integer indices.
+            # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
             lookup = layers.StringLookup(
@@ -622,7 +609,7 @@ def create_embedding_encoder():
         else:
             # Expand the dimensions of the numerical input feature and use it as-is.
             encoded_feature = tf.expand_dims(inputs[feature_name], -1)
-        # Add the encodded feature to the list.
+        # Add the encoded feature to the list.
         encoded_features.append(encoded_feature)
     # Concatenate all the encoded features.
     encoded_features = layers.concatenate(encoded_features, axis=1)
@@ -649,7 +636,7 @@ def create_linear_model(encoder):
 
 
 embedding_encoder = create_embedding_encoder()
-history = run_experiment(
+run_experiment(
     create_linear_model(embedding_encoder),
     train_data,
     test_data,
@@ -662,14 +649,14 @@ history = run_experiment(
 """
 
 gbt_model = create_gbt_with_preprocessor(embedding_encoder)
-history = run_experiment(gbt_model, train_data, test_data)
+run_experiment(gbt_model, train_data, test_data)
 
 """
 ## Concluding remarks
 
 TensorFlow Decision Forests provide powerful models, especially with structured data.
 Decision Forests can be used with Neural Networks, either by
-1) using Neural Networks to learn useful repesentation of the input data,
+1) using Neural Networks to learn useful representation of the input data,
 and then using Decision Forests for the supervised learning task, or by
 2) creating an ensemble of both Decision Forests and Neural Network models.
 
