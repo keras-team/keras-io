@@ -47,9 +47,7 @@ pip install -U tensorflow-addons
 """
 
 import math
-import requests
 import numpy as np
-from PIL import Image
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
@@ -113,6 +111,14 @@ test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 """
 
 
+def get_preprocessing():
+    model = keras.Sequential(
+        [layers.Rescaling(1 / 255.0), layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
+        name="preprocessing",
+    )
+    return model
+
+
 def get_train_augmentation_model():
     model = keras.Sequential(
         [
@@ -122,14 +128,6 @@ def get_train_augmentation_model():
             layers.RandomFlip("horizontal"),
         ],
         name="train_data_augmentation",
-    )
-    return model
-
-
-def get_test_augmentation_model():
-    model = keras.Sequential(
-        [layers.Rescaling(1 / 255.0), layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
-        name="test_data_augmentation",
     )
     return model
 
@@ -144,8 +142,10 @@ maps images pixels to a set of vectors (patches).
 
 def build_convolutional_stem(dimensions):
     """Build the convolutional stem.
+
     Args:
         dimensions: The embedding dimension of the patches (d in paper).
+
     Returs:
         The convolutional stem as a keras seqeuntial
         model.
@@ -172,18 +172,21 @@ def build_convolutional_stem(dimensions):
 ## Convolutional Trunk
 
 The trunk of the model is the most compute intesive part. It consists
-of `N` stacjed residual convolutional blocks.
+of `N` stacked residual convolutional blocks.
 """
 
 
 class SqueezeExcite(layers.Layer):
     """Applies squeeze and excitation to input feature maps as seen in
     https://arxiv.org/abs/1709.01507.
+
     Args:
         ratio: The ratio with which the feature map needs to be reduced in
-        the reduciton phase.
+        the reduction phase.
+
     Inputs:
         Convolutional features.
+
     Outputs:
         Attention modified feature maps.
     """
@@ -215,14 +218,17 @@ class SqueezeExcite(layers.Layer):
         return x
 
 
-class Trunk(keras.Model):
+class Trunk(layers.Layer):
     """Convolutional residual trunk as in the https://arxiv.org/abs/2112.13692
+
     Args:
         depth: Number of trunk residual blocks
         dimensions: Dimnesion of the model (denoted by d in the paper)
         ratio: The Squeeze-Excitation ratio
+
     Inputs:
         Convolutional features extracted from the conv stem.
+
     Outputs:
         Flattened patches.
     """
@@ -280,14 +286,17 @@ every patch of the image for a classification decision.
 """
 
 
-class AttentionPooling(keras.Model):
+class AttentionPooling(layers.Layer):
     """Applies attention to the patches extracted form the
     trunk with the CLS token.
+
     Args:
         dimensions: The dimension of the whole architecture.
         num_classes: The number of classes in the dataset.
+
     Inputs:
         Flattened patches from the trunk.
+
     Outputs:
         The modifies CLS token.
     """
@@ -367,8 +376,8 @@ class PatchConvNet(keras.Model):
         stem,
         trunk,
         attention_pooling,
+        preprocessing_model,
         train_augmentation_model,
-        test_augmentation_model,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -376,7 +385,7 @@ class PatchConvNet(keras.Model):
         self.trunk = trunk
         self.attention_pooling = attention_pooling
         self.train_augmentation_model = train_augmentation_model
-        self.test_augmentation_model = test_augmentation_model
+        self.preprocessing_model = preprocessing_model
 
     def get_config(self):
         config = super().get_config()
@@ -386,16 +395,16 @@ class PatchConvNet(keras.Model):
                 "trunk": self.trunk,
                 "attention_pooling": self.attention_pooling,
                 "train_augmentation_model": self.train_augmentation_model,
-                "test_augmentation_model": self.test_augmentation_model,
+                "preprocessing_model": self.preprocessing_model,
             }
         )
         return config
 
-    def calculate_loss(self, inputs, test=False):
+    def _calculate_loss(self, inputs, test=False):
         images, labels = inputs
         # Augment the input images.
         if test:
-            augmented_images = self.test_augmentation_model(images)
+            augmented_images = self.preprocessing_model(images)
         else:
             augmented_images = self.train_augmentation_model(images)
         # Pass through the stem.
@@ -410,7 +419,7 @@ class PatchConvNet(keras.Model):
 
     def train_step(self, inputs):
         with tf.GradientTape() as tape:
-            total_loss, logits = self.calculate_loss(inputs)
+            total_loss, logits = self._calculate_loss(inputs)
         # Apply gradients.
         train_vars = [
             self.stem.trainable_variables,
@@ -418,29 +427,26 @@ class PatchConvNet(keras.Model):
             self.attention_pooling.trainable_variables,
         ]
         grads = tape.gradient(total_loss, train_vars)
-        tv_list = []
+        trainable_variable_list = []
         for (grad, var) in zip(grads, train_vars):
             for g, v in zip(grad, var):
-                tv_list.append((g, v))
-        self.optimizer.apply_gradients(tv_list)
+                trainable_variable_list.append((g, v))
+        self.optimizer.apply_gradients(trainable_variable_list)
         # Report progress.
         _, labels = inputs
         self.compiled_metrics.update_state(labels, logits)
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, inputs):
-        total_loss, logits = self.calculate_loss(inputs, test=True)
+        total_loss, logits = self._calculate_loss(inputs, test=True)
         # Report progress.
         _, labels = inputs
         self.compiled_metrics.update_state(labels, logits)
         return {m.name: m.result() for m in self.metrics}
 
-    @tf.function(
-        input_signature=[tf.TensorSpec(shape=[None, None, None, 3], dtype=tf.uint8)]
-    )
     def call(self, images):
         # Augment the input images.
-        augmented_images = self.test_augmentation_model(images)
+        augmented_images = self.preprocessing_model(images)
         # Pass through the stem.
         x = self.stem(augmented_images)
         # Pass through the trunk.
@@ -467,7 +473,7 @@ class TrainMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if self.epoch_interval and epoch % self.epoch_interval == 4:
-            test_augmented_images = self.model.test_augmentation_model(test_images)
+            test_augmented_images = self.model.preprocessing_model(test_images)
             # Pass through the stem.
             test_x = self.model.stem(test_augmented_images)
             # Pass through the trunk.
@@ -558,7 +564,7 @@ Initialize the models, compile it and train the model.
 """
 
 train_augmentation_model = get_train_augmentation_model()
-test_augmentation_model = get_test_augmentation_model()
+preprocessing_model = get_preprocessing()
 conv_stem = build_convolutional_stem(dimensions=DIMENSIONS)
 conv_trunk = Trunk(depth=TRUNK_DEPTH, dimensions=DIMENSIONS, ratio=SE_RATIO)
 attention_pooling = AttentionPooling(dimensions=DIMENSIONS, num_classes=NUM_CLASSES)
@@ -568,7 +574,7 @@ patch_conv_net = PatchConvNet(
     trunk=conv_trunk,
     attention_pooling=attention_pooling,
     train_augmentation_model=train_augmentation_model,
-    test_augmentation_model=test_augmentation_model,
+    preprocessing_model=preprocessing_model,
 )
 
 # Assemble the callbacks.
@@ -603,13 +609,14 @@ In this section, we use the trained model to plot the attention map.
 
 def plot_attention(image):
     """Plots the attention map on top of the image.
+    
     Args:
         image: A numpy image of arbitrary size.
     """
     # Resize the image to a (32, 32) dim.
     image = tf.image.resize(image, (32, 32))
     image = image[tf.newaxis, ...]
-    test_augmented_images = patch_conv_net.test_augmentation_model(image)
+    test_augmented_images = patch_conv_net.preprocessing_model(image)
     # Pass through the stem.
     test_x = patch_conv_net.stem(test_augmented_images)
     # Pass through the trunk.
@@ -638,12 +645,13 @@ def plot_attention(image):
 
 
 url = "http://farm9.staticflickr.com/8017/7140384795_385b1f48df_z.jpg"
-image = np.asarray(Image.open(requests.get(url, stream=True).raw))
-
+image_name = keras.utils.get_file(fname="image.jpg", origin=url)
+image = tf.io.read_file(image_name)
+image = tf.io.decode_image(image)
 plot_attention(image)
 
 """
-## Thoughts and Conclusion
+## Thoughts and Conclusions
 
 The motivation of this example is to minimally implement the ideas of
 the authors. The attention map corresponding to the trainable `CLASS`
