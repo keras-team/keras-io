@@ -44,7 +44,7 @@ import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
 from tensorflow.keras import callbacks
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input
+from tensorflow.keras.applications import resnet_v2
 
 """
 ## Dataset
@@ -82,8 +82,8 @@ def data_preprocess(source, target):
     target_image = tf.io.decode_png(tf.io.read_file(target), channels=3)
     source_image = resize_with_pad(source_image, height=height, width=width)
     target_image = resize_with_pad(target_image, height=height, width=width)
-    source_image = preprocess_input(source_image)
-    target_image = preprocess_input(target_image)
+    source_image = resnet_v2.preprocess_input(source_image)
+    target_image = resnet_v2.preprocess_input(target_image)
     return source_image, target_image
 
 
@@ -148,7 +148,7 @@ def upscale_unit(previous_input, current_input, target_channels=3, upscale_ratio
 
 
 def denoiser():
-    base_model = ResNet50V2(
+    base_model = resnet_v2.ResNet50V2(
         include_top=False, weights="imagenet", input_shape=(352, 608, 3)
     )
     d0 = base_model.get_layer("input_1").output
@@ -223,7 +223,7 @@ def generate_results(file):
 
     source_image = tf.io.decode_png(tf.io.read_file(file), channels=3)
     source_image = resize_with_pad(source_image, height=height, width=width)
-    source_image = preprocess_input(source_image)
+    source_image = resnet_v2.preprocess_input(source_image)
     noise_ground_truth = source_image + 1.0
     noise_ground_truth *= 127.5
     noise_ground_truth = tf.keras.preprocessing.image.array_to_img(noise_ground_truth)
@@ -270,7 +270,7 @@ for f in test_images:
 ## Conclusion
 
 We are able to observe, using the model as a pre-processor enables significant amount of
-improvement in Word Error Rate and perceptual quality of the image, the experiment can be
+improvements in Word Error Rate and perceptual quality of the image, the experiment can be
 extended to different image-to-image applications with minor changes, also training with
 huge dataset and longer epochs can elevate the performance of the model further.
 """
