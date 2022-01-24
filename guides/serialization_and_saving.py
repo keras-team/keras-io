@@ -12,7 +12,7 @@ Description: Complete guide to saving & serializing models.
 A Keras model consists of multiple components:
 
 - The architecture, or configuration, which specifies what layers the model
-contain, and how they're connected.
+contains, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
 - A set of losses and metrics (defined by compiling the model or calling
@@ -69,7 +69,7 @@ You can save an entire model to a single artifact. It will include:
 - The model's weight values (which were learned during training)
 - The model's compilation information (if `compile()` was called)
 - The optimizer and its state, if any (this enables you to restart training
-where you left)
+where you left off)
 
 #### APIs
 
@@ -159,7 +159,7 @@ In the absence of the model/layer config, the call function is used to create
 a model that exists like the original model which can be trained, evaluated,
 and used for inference.
 
-Nevertheless, it is always a good practice to define the `get_config`
+Nevertheless, it is always good practice to define the `get_config`
 and `from_config` methods when writing a custom model or layer class.
 This allows you to easily update the computation later if needed.
 See the section about [Custom objects](#custom-objects)
@@ -226,8 +226,8 @@ model is loaded by dynamically creating the model class that acts like the origi
 
 *New in TensoFlow 2.4*
 The argument `save_traces` has been added to `model.save`, which allows you to toggle
-SavedModel function tracing. Functions are saved to allow the Keras to re-load custom
-objects without the original class definitons, so when `save_traces=False`, all custom
+SavedModel function tracing. Functions are saved to allow Keras to re-load custom
+objects without the original class definitions, so when `save_traces=False`, all custom
 objects must have defined `get_config`/`from_config` methods. When loading, the custom
 objects must be passed to the `custom_objects` argument. `save_traces=False` reduces the
 disk space used by the SavedModel and saving time.
@@ -250,7 +250,7 @@ test_input = np.random.random((128, 32))
 test_target = np.random.random((128, 1))
 model.fit(test_input, test_target)
 
-# Calling `save('my_model.h5')` creates a h5 file `my_model.h5`.
+# Calling `save('my_model.h5')` creates an h5 file `my_model.h5`.
 model.save("my_h5_model.h5")
 
 # It can be used to reconstruct the model identically.
@@ -287,7 +287,7 @@ H5 limitations:
 
 - External losses & metrics added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
-If you have such losses & metrics on your model and you want to resume training,
+If you have such losses & metrics in your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
 Note that this does not apply to losses/metrics created *inside* layers via
 `self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
@@ -716,7 +716,7 @@ When the layer is saved to the `tf` format, the resulting checkpoint contains th
 For more information see
 ["Loading mechanics" in the TF Checkpoint guide](https://www.tensorflow.org/guide/checkpoint#loading_mechanics).
 
-Note that attribute/graph edge is named after **the name used in parent object,
+Note that attribute/graph edge is named after **the name used in the parent object,
 not the name of the variable**. Consider the `CustomLayer` in the example below.
 The variable `CustomLayer.var` is saved with `"var"` as part of key, not `"var_a"`.
 
@@ -850,7 +850,7 @@ tf.train.Checkpoint(
 The HDF5 format contains weights grouped by layer names.
 The weights are lists ordered by concatenating the list of trainable weights
 to the list of non-trainable weights (same as `layer.weights`).
-Thus, a model can use a hdf5 checkpoint if it has the same layers and trainable
+Thus, a model can use an hdf5 checkpoint if it has the same layers and trainable
 statuses as saved in the checkpoint.
 
 **Example:**
