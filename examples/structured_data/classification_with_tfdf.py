@@ -443,7 +443,7 @@ class BinaryTargetEncoding(layers.Layer):
             positive_fequency + negative_fequency
         )
         # Concatenate and return the looked-up statistics.
-        return layers.concatenate(
+        return tf.concat(
             [positive_fequency, negative_fequency, positive_probability], axis=1
         )
 
