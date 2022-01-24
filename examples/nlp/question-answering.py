@@ -6,21 +6,20 @@ Last modified: 13/01/2022
 Description: Question answering implementation using Keras and Hugging Face Transformers.
 """
 """
-# Introduction to Question Answering
+## Introduction to Question Answering
 
 Question answering is a common NLP task with several variants. In some variants, the task
 is multiple-choice:
 A list of possible answers are supplied with each question, and the model simply needs to
 return a probability distribution over the options. A more challenging variant of
 question answering, which is more applicable to real-life tasks, is when the options are
-not provided. Instead, the model is given an input document -called context- and a 
+not provided. Instead, the model is given an input document -- called context -- and a 
 question about the document, and it must extract the span of text in the document that 
 contains the answer. In this case, the model is not computing a probability distribution 
 over answers, but two probability distributions over the tokens in the document text, 
 representing the start and end of the span containing the answer. This variant is called
 "extractive question answering".
 
-## Fine-tuning a model on a question answering task
 
 Extractive question answering is a very challenging NLP task, and the dataset size
 required to train such a model from scratch when the questions and answers are natural
