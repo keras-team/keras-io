@@ -1,22 +1,21 @@
 """
-Title: Image Enhancer/Denoiser
+Title: Document Images Restoration/Enhancer.
 Author: [Anish B](https://twitter.com/anishhacko)
-Date created: 2021/12/31
-Last modified: 2022/01/05
-Description: Implementation of Image Enhancer/Denoiser Using U-Net.
+Date created: 2021/01/18
+Last modified: 2022/01/21
+Description: Example of Document Image Restoration coupled with Tesseract OCR engine to improve text readability.
 """
 """
 ## Introduction
 
-This example signifies a "Image Enhancer/Denoiser" using UNet architecture with 
-pretrained ResNet50 as encoder and Sub-Pixel CNN as a decoder, we have followed up on 
-seminal papers as reference and used U-Net architecture with pretrained network(ResNet) 
-as encoder and Efficient Sub-Pixel CNN as decoder. 
-The main difference between Image Denoiser and Super-Resolution is Super-Resolution tries to 
-upscale the image than the size of its input dimension enhancing feature representation 
-but Image Denoiser tries to restore useful information with reasonable perceptual quality 
-eliminating the observed noises. The problem we focus here is denoising the document images 
-which are deteriorated through external degradations like blur,corrupt text blocks etc...
+This example explains a "Image Enhancer/Denoiser" using UNet architecture. The problem we
+focus here is enhancing the document images which are deteriorated through external
+degradations like blur, corrupt text blocks etc... ,we have followed up on few seminal
+papers as reference and used simple pretrained UNet as encoder and Efficient Sub-Pixel
+CNN as decoder. we do not attempt super-resolution as primary task hence we return output
+image in the same dimension as input. we compute WER (Word Error Rate) metric to evaluate
+model performance helping us to assess the text information gain in real world scenarios
+when coupled with tesseract OCR engine.
 
 **References:**
 - [Enhancing OCR Accuracy with Super
@@ -28,6 +27,17 @@ Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_1
 Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 """
 
+"""
+## Additional Set-up
+"""
+
+# !pip install pybind11
+# !pip install fastwer
+# !pip install pytesseract
+# !sudo apt install tesseract-ocr
+
+import fastwer
+import pytesseract
 import numpy as np
 from glob import glob
 import tensorflow as tf
@@ -39,12 +49,11 @@ from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input
 """
 ## Dataset
 we have created a synthetic document dataset that depicts several real world document
-noises, we have used blurs and morphological filters to create real world noise
-mainly.callbacks
+noises, we have used blurs and morphological filters to reconstruct real world noises.
 """
 
 """shell
-!gdown https://drive.google.com/uc?id=18u1IlpaMuBtMgKMEYHLTZWxVYMA5RQE7
+!gdown https://drive.google.com/uc?id=1jQfHJUUQcpktQcjIzitvb4SldKwqcAMr
 !unzip -q data.zip
 """
 
@@ -52,10 +61,11 @@ mainly.callbacks
 ## Dataset Preprocessing
 """
 
-train_source = sorted(glob("data/source/*.jpg"))[:-60]
-train_targets = sorted(glob("data/target/*.jpg"))[:-60]
-val_source = sorted(glob("data/source/*.jpg"))[-60:]
-val_targets = sorted(glob("data/target/*.jpg"))[-60:]
+train_source = sorted(glob("data/source/*.jpg"))[:-80]
+train_targets = sorted(glob("data/target/*.jpg"))[:-80]
+
+val_source = sorted(glob("data/source/*.jpg"))[-80:]
+val_targets = sorted(glob("data/target/*.jpg"))[-80:]
 
 height, width = 352, 608
 batch_size = 4
@@ -82,9 +92,10 @@ train_pipe = tf.data.Dataset.from_tensor_slices((train_source, train_targets))
 train_pipe = train_pipe.map(data_preprocess, tf.data.AUTOTUNE).cache()
 train_pipe = train_pipe.shuffle(buffer_size).batch(batch_size).repeat()
 
+
 val_pipe = tf.data.Dataset.from_tensor_slices((val_source, val_targets))
 val_pipe = val_pipe.map(data_preprocess, tf.data.AUTOTUNE).cache()
-val_pipe = val_pipe.shuffle(buffer_size).batch(batch_size).repeat()
+val_pipe = val_pipe.batch(batch_size).repeat()
 
 
 train_step = len(train_source) // batch_size
@@ -154,25 +165,6 @@ def denoiser():
     return denoiser_model
 
 
-def infer_results(file):
-    source_image = tf.io.decode_png(tf.io.read_file(file), channels=3)
-    source_image = resize_with_pad(source_image, height=height, width=width)
-    source_image = preprocess_input(source_image)
-    ground_truth = source_image + 1.0
-    ground_truth *= 127.5
-    ground_truth = tf.keras.preprocessing.image.array_to_img(ground_truth)
-    source_image = tf.expand_dims(source_image, axis=0)
-    prediction = denoiser_net.predict(source_image)
-    prediction = prediction[0] + 1.0
-    prediction *= 127.5
-    prediction = tf.keras.preprocessing.image.array_to_img(prediction)
-    fig, axes = plt.subplots(1, 2, figsize=(16, 4))
-    axes[0].imshow(ground_truth)
-    axes[0].set_xlabel("input")
-    axes[1].imshow(prediction)
-    axes[1].set_xlabel("prediction")
-
-
 """
 ## Training
 """
@@ -181,16 +173,16 @@ denoiser_net = denoiser()
 optimizer = tf.keras.optimizers.Nadam(1e-4)
 denoiser_net.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
 
-early_stop = callbacks.EarlyStopping(patience=7)
+early_stop = callbacks.EarlyStopping(patience=1)
 ckpt = callbacks.ModelCheckpoint(
-    "weight_epoch{epoch}.h5", save_best_only=True, save_weights_only=True, verbose=1
+    "best_ckpt.h5", save_best_only=True, save_weights_only=True, verbose=1
 )
 
 denoiser_net.fit(
     train_pipe,
     validation_data=val_pipe,
     batch_size=batch_size,
-    epochs=20,
+    epochs=1,
     steps_per_epoch=train_step,
     validation_steps=val_step,
     workers=-1,
@@ -198,9 +190,87 @@ denoiser_net.fit(
 )
 
 """
+## Evaluation Utilities
+
+Though Image Super-Resolution or Denoiser models can be evaluated with PSNR, SSIM metrics
+for perceptual quality assessments our task of text restoration requires a bit more, our
+objective is to enhance simple OCR accuracy engine where our model can act as a
+pre-processor, to serve the purpose we will use <a
+href="https://towardsdatascience.com/evaluating-ocr-output-quality-with-character-error-ra
+te-cer-and-word-error-rate-wer-853175297510">WER(Word Error Rate) </a> as a metric to
+evaluate the real-world performance. The following codes will help plot the visual
+comparisons of outputs given the raw noisy input and model restored input to tesseract
+OCR engine.
+"""
+
+
+def word_error_rate(noise_image, reference_image, prediction_image):
+    reference = pytesseract.image_to_string(reference_image)
+    noiseimage_ocr_out = pytesseract.image_to_string(noise_image)
+    predimage_ocr_out = pytesseract.image_to_string(prediction_image)
+    noise_WER_score = fastwer.score_sent(noiseimage_ocr_out, reference)
+    pred_WER_score = fastwer.score_sent(predimage_ocr_out, reference)
+    return noise_WER_score, pred_WER_score
+
+
+def generate_results(file):
+    """
+    The following function generates visual and WER (Word Error Rates) comparison
+    plots between raw input image when passed through OCR engine and model reconstructed
+    image when passed through OCR, signifying the major improvement the model can offer
+    in a workflow.
+    """
+
+    source_image = tf.io.decode_png(tf.io.read_file(file), channels=3)
+    source_image = resize_with_pad(source_image, height=height, width=width)
+    source_image = preprocess_input(source_image)
+    noise_ground_truth = source_image + 1.0
+    noise_ground_truth *= 127.5
+    noise_ground_truth = tf.keras.preprocessing.image.array_to_img(noise_ground_truth)
+    clean_ground_truth = tf.io.decode_png(
+        tf.io.read_file(file.replace("source", "target")), channels=3
+    )
+    clean_ground_truth = resize_with_pad(clean_ground_truth, height=height, width=width)
+    clean_ground_truth = tf.keras.preprocessing.image.array_to_img(clean_ground_truth)
+    source_image = tf.expand_dims(source_image, axis=0)
+    prediction = denoiser_net.predict(source_image)
+    prediction = prediction[0] + 1.0
+    prediction *= 127.5
+    prediction = tf.keras.preprocessing.image.array_to_img(prediction)
+
+    noise_error_rate, reconstructed_error_rate = word_error_rate(
+        noise_image=noise_ground_truth,
+        reference_image=clean_ground_truth,
+        prediction_image=prediction,
+    )
+
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6))
+    axes[0].imshow(noise_ground_truth)
+    axes[0].set_xlabel(f"Input-WER score : {round(noise_error_rate,2)}")
+    axes[1].imshow(prediction)
+    axes[1].set_xlabel(f"Reconstructed-WER score : {round(reconstructed_error_rate,2)}")
+    #     axes[2].imshow(clean_ground_truth); axes[2].set_xlabel("clean_ground-truth")
+    fig.suptitle(
+        "Visual comparison and WER(Word Error Rate) Evaluation charts",
+        weight="bold",
+        fontsize=12,
+    )
+    return noise_ground_truth, prediction, clean_ground_truth
+
+
+"""
 ## Testing
 """
 
-test_images = [np.random.choice(val_source) for i in range(4)]
+test_images = [np.random.choice(val_source) for i in range(6)]
 for f in test_images:
-    infer_results(f)
+    generate_results(f)
+
+"""
+## Conclusion
+
+We are able to observe using the model as a pre-processor enables significant amount of
+improvement in Word Error Rate and perceptual quality of the image, the experiment can be
+extended to different image-to-image applications with minor changes, also training with
+huge dataset and longer epochs can elevate the performance of the model further.
+"""
