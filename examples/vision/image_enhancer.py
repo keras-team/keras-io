@@ -269,7 +269,7 @@ for f in test_images:
 """
 ## Conclusion
 
-We are able to observe using the model as a pre-processor enables significant amount of
+We are able to observe, using the model as a pre-processor enables significant amount of
 improvement in Word Error Rate and perceptual quality of the image, the experiment can be
 extended to different image-to-image applications with minor changes, also training with
 huge dataset and longer epochs can elevate the performance of the model further.
