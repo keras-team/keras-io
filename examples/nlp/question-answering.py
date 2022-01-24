@@ -20,7 +20,6 @@ over answers, but two probability distributions over the tokens in the document 
 representing the start and end of the span containing the answer. This variant is called
 "extractive question answering".
 
-
 Extractive question answering is a very challenging NLP task, and the dataset size
 required to train such a model from scratch when the questions and answers are natural
 language is prohibitively huge. As a result, question answering (like almost all NLP
