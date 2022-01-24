@@ -321,9 +321,8 @@ class BinaryTargetEncoding(layers.Layer):
         # data is expected to be an integer numpy array to a Tensor shape [num_exmples, 2].
         # This contains feature values for a given feature in the dataset, and target values.
 
-        self.compile()
-        self.reset_state()
-
+        # Convert the data to a tensor.
+        data = tf.convert_to_tensor(inputs)
         # Validate that the data has the expected rank.
         if data.shape.rank != 2:
             raise ValueError(f"Data is expected to be of rank 2, got {data.shape.rank}")
@@ -337,8 +336,9 @@ class BinaryTargetEncoding(layers.Layer):
             raise ValueError(
                 f"Data is expected to be a Tensor of type integer, got {data.dtype}"
             )
+        # Cast data to int64.
+        data = tf.cast(inputs, tf.dtypes.int64)
         # Separate the feature values and target values
-        data = self._standardize_inputs(data)
         feature_values = data[:, 0]
         target_values = data[:, 1]
         # Validate that the target has only 0 and 1 values.
@@ -397,12 +397,9 @@ class BinaryTargetEncoding(layers.Layer):
         self.positive_frequency_lookup = tf.constant(positive_frequency)
         self.negative_frequency_lookup = tf.constant(negative_frequency)
 
-        self._is_adapted = True
-
     def reset_state(self):
-        if self.built:
-            self.positive_frequency_lookup = None
-            self.negative_frequency_lookup = None
+        self.positive_frequency_lookup = None
+        self.negative_frequency_lookup = None
 
     def call(self, inputs):
         # data is expected to be an integer numpy array to a Tensor shape [num_exmples, 1].
@@ -417,12 +414,12 @@ class BinaryTargetEncoding(layers.Layer):
                 f"You need to call the adapt method to compute target encoding statistics."
             )
 
-        inputs = self._standardize_inputs(inputs)
-
-        # Fix and validate inputs shape.
-        if inputs.shape.rank == 1:
-            inputs = tf.expand_dims(inputs, axis=-1)
-        elif inputs.shape.rank > 2:
+        # Convert the inputs to a tensor.
+        inputs = tf.convert_to_tensor(inputs)
+        # Cast the inputs int64 a tensor.
+        inputs = tf.cast(inputs, tf.dtypes.int64)
+        # Validate inputs shape.
+        if inputs.shape.rank != 2:
             raise ValueError(
                 f"inputs is expected to be of rank 2, got {data.shape.rank}"
             )
@@ -449,12 +446,6 @@ class BinaryTargetEncoding(layers.Layer):
         return layers.concatenate(
             [positive_fequency, negative_fequency, positive_probability], axis=1
         )
-
-    def _standardize_inputs(self, inputs):
-        inputs = tf.convert_to_tensor(inputs)
-        if inputs.dtype != tf.dtypes.int64:
-            inputs = tf.cast(inputs, tf.dtypes.int64)
-        return inputs
 
 
 """
