@@ -3,29 +3,29 @@ Title: Augmenting convnets with aggregated attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/22
 Last modified: 2022/01/22
-Description: Building the patch-conv-net architecture and visualing its attention maps.
+Description: Building a patch-convnet architecture and visualizing its attention maps.
 """
 """
 ## Introduction
 
 Vision transformers ([Dosovitskiy et. al](https://arxiv.org/abs/2010.11929))
 have emerged as a powerful alternative to Convolutional Neural Networks.
-ViTs process the images in a patch based method. The image information
+ViTs process the images in a patch-based manner. The image information
 is then aggregated into a `CLASS` token. This token correlates to the
 most important patches of the image for a particular classification decision. 
 
-The interaction between the `CLASS` token and the patches are visualized for
-explanability of the classification decision. In the academic paper
-[Augmenting Convolutional networks with attention-based aggregation](https://arxiv.org/abs/2112.13692)
-by Touvron et. al, the authors propose to build this visualization for
+The interaction between the `CLASS` token and the patches can be visualized
+to help explain a classification decision. In the academic paper
+[Augmenting convolutional networks with attention-based aggregation](https://arxiv.org/abs/2112.13692)
+by Touvron et. al, the authors propose to set up an equivalent visualization for
 convnets. They propose to substitute the global average pooling layer
-of a convnet with a transformer layer. The self-attention layer of the
-transformer would produces the attention maps that corresponds to the
+of a convnet with a Transformer layer. The self-attention layer of the
+Transformer would produces attention maps that correspond to the
 most attended patches of the image for the classification decision.
 
-In this example, we are going to minimally implement the ideas of
+In this example, we minimally implement the ideas of
 [Augmenting Convolutional networks with attention-based aggregation](https://arxiv.org/abs/2112.13692).
-The main motive of this example is to cover the following ideas with
+The main goal of this example is to cover the following ideas, with
 minor modifications (to adjust the implementation with CIFAR10):
 
 - The simple design for the attention-based pooling layer, such that
@@ -107,7 +107,7 @@ test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 """
-## Augmentation Layers
+## Augmentation layers
 """
 
 
@@ -133,9 +133,9 @@ def get_train_augmentation_model():
 
 
 """
-## Convolutional Stem
+## Convolutional stem
 
-The stem of the model is a light-weight pre-processing module that
+The stem of the model is a lightweight preprocessing module that
 maps images pixels to a set of vectors (patches).
 """
 
@@ -169,9 +169,9 @@ def build_convolutional_stem(dimensions):
 
 
 """
-## Convolutional Trunk
+## Convolutional trunk
 
-The trunk of the model is the most compute intesive part. It consists
+The trunk of the model is the most compute-intesive part. It consists
 of `N` stacked residual convolutional blocks.
 """
 
@@ -357,16 +357,16 @@ class AttentionPooling(layers.Layer):
 
 
 """
-## Patch Conv Net
+## Patch convnet
 
-The patch-conv-net is shown in the figure below.
+The patch-convnet is shown in the figure below.
 
 | ![image model](https://i.imgur.com/NHiQeac.png) |
 | :--: |
 | [Source](https://arxiv.org/abs/2112.13692) |
 
 All the modules in the architecture are built in the earlier seciton.
-In this section, we will stack all of the different modules together.
+In this section, we stack all of the different modules together.
 """
 
 
@@ -505,7 +505,7 @@ class TrainMonitor(keras.callbacks.Callback):
 
 
 """
-## Learning Rate Schedule
+## Learning rate schedule
 """
 
 
@@ -560,7 +560,7 @@ scheduled_lrs = WarmUpCosine(
 """
 ## Training
 
-Initialize the models, compile it and train the model.
+We build the model, compile it, and train it.
 """
 
 train_augmentation_model = get_train_augmentation_model()
@@ -603,7 +603,7 @@ print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
 """
 ## Inference
 
-In this section, we use the trained model to plot the attention map.
+Here, we use the trained model to plot the attention map.
 """
 
 
@@ -651,11 +651,10 @@ image = tf.io.decode_image(image)
 plot_attention(image)
 
 """
-## Thoughts and Conclusions
+## Conclusions
 
-The motivation of this example is to minimally implement the ideas of
-the authors. The attention map corresponding to the trainable `CLASS`
-token and the pathces of the image, explains about the classificaiton
+The attention map corresponding to the trainable `CLASS`
+token and the patches of the image helps explain the classificaiton
 decision. One should also note that the attention maps gradually get
 better. In the initial training regime, the attention is scattered all
 around while at a later stage, it focuses more on the objects of the
