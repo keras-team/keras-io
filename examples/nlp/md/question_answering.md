@@ -1,5 +1,5 @@
 
-# Question Answering with Hugging Face Transformers
+
 
 **Author:** Matthew Carrigan and Merve Noyan<br>
 **Date created:** 13/01/2022<br>
@@ -60,124 +60,6 @@ encouraged!)
 !pip install huggingface-hub
 ```
 
-<div class="k-default-codeblock">
-```
-Collecting git+https://github.com/huggingface/transformers.git
-  Cloning https://github.com/huggingface/transformers.git to /tmp/pip-req-build-iqf_och1
-  Running command git clone -q https://github.com/huggingface/transformers.git /tmp/pip-req-build-iqf_och1
-  Installing build dependencies ... [?25l[?25hdone
-  Getting requirements to build wheel ... [?25l[?25hdone
-    Preparing wheel metadata ... [?25l[?25hdone
-Collecting pyyaml>=5.1
-  Downloading PyYAML-6.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl (596 kB)
-[K     |████████████████████████████████| 596 kB 15.1 MB/s 
-[?25hRequirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (2019.12.20)
-Requirement already satisfied: tqdm>=4.27 in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (4.62.3)
-Requirement already satisfied: importlib-metadata in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (4.10.0)
-Collecting huggingface-hub<1.0,>=0.1.0
-  Downloading huggingface_hub-0.4.0-py3-none-any.whl (67 kB)
-[K     |████████████████████████████████| 67 kB 6.0 MB/s 
-[?25hRequirement already satisfied: requests in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (2.23.0)
-Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (1.19.5)
-Collecting tokenizers!=0.11.3,>=0.10.1
-  Downloading tokenizers-0.11.4-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (6.8 MB)
-[K     |████████████████████████████████| 6.8 MB 86.0 MB/s 
-[?25hRequirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (21.3)
-Collecting sacremoses
-  Downloading sacremoses-0.0.47-py2.py3-none-any.whl (895 kB)
-[K     |████████████████████████████████| 895 kB 76.9 MB/s 
-[?25hRequirement already satisfied: filelock in /usr/local/lib/python3.7/dist-packages (from transformers==4.16.0.dev0) (3.4.2)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.7/dist-packages (from huggingface-hub<1.0,>=0.1.0->transformers==4.16.0.dev0) (3.10.0.2)
-Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /usr/local/lib/python3.7/dist-packages (from packaging>=20.0->transformers==4.16.0.dev0) (3.0.6)
-Requirement already satisfied: zipp>=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata->transformers==4.16.0.dev0) (3.7.0)
-Requirement already satisfied: idna<3,>=2.5 in /usr/local/lib/python3.7/dist-packages (from requests->transformers==4.16.0.dev0) (2.10)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from requests->transformers==4.16.0.dev0) (2021.10.8)
-Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests->transformers==4.16.0.dev0) (1.24.3)
-Requirement already satisfied: chardet<4,>=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests->transformers==4.16.0.dev0) (3.0.4)
-Requirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from sacremoses->transformers==4.16.0.dev0) (1.15.0)
-Requirement already satisfied: joblib in /usr/local/lib/python3.7/dist-packages (from sacremoses->transformers==4.16.0.dev0) (1.1.0)
-Requirement already satisfied: click in /usr/local/lib/python3.7/dist-packages (from sacremoses->transformers==4.16.0.dev0) (7.1.2)
-Building wheels for collected packages: transformers
-  Building wheel for transformers (PEP 517) ... [?25l[?25hdone
-  Created wheel for transformers: filename=transformers-4.16.0.dev0-py3-none-any.whl size=3524819 sha256=07e8305bdb8d6ddb00a597848c404f8775c2f0e7ff59d6705135cddac07539d4
-  Stored in directory: /tmp/pip-ephem-wheel-cache-wwd7ynd3/wheels/90/a5/44/6bcd83827c8a60628c5ad602f429cd5076bcce5f2a90054947
-Successfully built transformers
-Installing collected packages: pyyaml, tokenizers, sacremoses, huggingface-hub, transformers
-  Attempting uninstall: pyyaml
-    Found existing installation: PyYAML 3.13
-    Uninstalling PyYAML-3.13:
-      Successfully uninstalled PyYAML-3.13
-Successfully installed huggingface-hub-0.4.0 pyyaml-6.0 sacremoses-0.0.47 tokenizers-0.11.4 transformers-4.16.0.dev0
-Collecting datasets
-  Downloading datasets-1.18.0-py3-none-any.whl (311 kB)
-[K     |████████████████████████████████| 311 kB 12.8 MB/s 
-[?25hRequirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from datasets) (1.1.5)
-Requirement already satisfied: multiprocess in /usr/local/lib/python3.7/dist-packages (from datasets) (0.70.12.2)
-Requirement already satisfied: tqdm>=4.62.1 in /usr/local/lib/python3.7/dist-packages (from datasets) (4.62.3)
-Requirement already satisfied: dill in /usr/local/lib/python3.7/dist-packages (from datasets) (0.3.4)
-Requirement already satisfied: huggingface-hub<1.0.0,>=0.1.0 in /usr/local/lib/python3.7/dist-packages (from datasets) (0.4.0)
-Requirement already satisfied: pyarrow!=4.0.0,>=3.0.0 in /usr/local/lib/python3.7/dist-packages (from datasets) (3.0.0)
-Requirement already satisfied: packaging in /usr/local/lib/python3.7/dist-packages (from datasets) (21.3)
-Requirement already satisfied: importlib-metadata in /usr/local/lib/python3.7/dist-packages (from datasets) (4.10.0)
-Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.7/dist-packages (from datasets) (1.19.5)
-Collecting fsspec[http]>=2021.05.0
-  Downloading fsspec-2022.1.0-py3-none-any.whl (133 kB)
-[K     |████████████████████████████████| 133 kB 72.4 MB/s 
-[?25hCollecting aiohttp
-  Downloading aiohttp-3.8.1-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl (1.1 MB)
-[K     |████████████████████████████████| 1.1 MB 83.6 MB/s 
-[?25hRequirement already satisfied: requests>=2.19.0 in /usr/local/lib/python3.7/dist-packages (from datasets) (2.23.0)
-Collecting xxhash
-  Downloading xxhash-2.0.2-cp37-cp37m-manylinux2010_x86_64.whl (243 kB)
-[K     |████████████████████████████████| 243 kB 89.9 MB/s 
-[?25hRequirement already satisfied: filelock in /usr/local/lib/python3.7/dist-packages (from huggingface-hub<1.0.0,>=0.1.0->datasets) (3.4.2)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.7/dist-packages (from huggingface-hub<1.0.0,>=0.1.0->datasets) (3.10.0.2)
-Requirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from huggingface-hub<1.0.0,>=0.1.0->datasets) (6.0)
-Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /usr/local/lib/python3.7/dist-packages (from packaging->datasets) (3.0.6)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from requests>=2.19.0->datasets) (2021.10.8)
-Requirement already satisfied: idna<3,>=2.5 in /usr/local/lib/python3.7/dist-packages (from requests>=2.19.0->datasets) (2.10)
-Requirement already satisfied: chardet<4,>=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests>=2.19.0->datasets) (3.0.4)
-Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests>=2.19.0->datasets) (1.24.3)
-Collecting multidict<7.0,>=4.5
-  Downloading multidict-6.0.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (94 kB)
-[K     |████████████████████████████████| 94 kB 4.3 MB/s 
-[?25hRequirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.7/dist-packages (from aiohttp->datasets) (21.4.0)
-Collecting yarl<2.0,>=1.0
-  Downloading yarl-1.7.2-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl (271 kB)
-[K     |████████████████████████████████| 271 kB 56.2 MB/s 
-[?25hCollecting aiosignal>=1.1.2
-  Downloading aiosignal-1.2.0-py3-none-any.whl (8.2 kB)
-Collecting asynctest==0.13.0
-  Downloading asynctest-0.13.0-py3-none-any.whl (26 kB)
-Requirement already satisfied: charset-normalizer<3.0,>=2.0 in /usr/local/lib/python3.7/dist-packages (from aiohttp->datasets) (2.0.10)
-Collecting frozenlist>=1.1.1
-  Downloading frozenlist-1.3.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (144 kB)
-[K     |████████████████████████████████| 144 kB 87.4 MB/s 
-[?25hCollecting async-timeout<5.0,>=4.0.0a3
-  Downloading async_timeout-4.0.2-py3-none-any.whl (5.8 kB)
-Requirement already satisfied: zipp>=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata->datasets) (3.7.0)
-Requirement already satisfied: python-dateutil>=2.7.3 in /usr/local/lib/python3.7/dist-packages (from pandas->datasets) (2.8.2)
-Requirement already satisfied: pytz>=2017.2 in /usr/local/lib/python3.7/dist-packages (from pandas->datasets) (2018.9)
-Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.7/dist-packages (from python-dateutil>=2.7.3->pandas->datasets) (1.15.0)
-Installing collected packages: multidict, frozenlist, yarl, asynctest, async-timeout, aiosignal, fsspec, aiohttp, xxhash, datasets
-Successfully installed aiohttp-3.8.1 aiosignal-1.2.0 async-timeout-4.0.2 asynctest-0.13.0 datasets-1.18.0 frozenlist-1.3.0 fsspec-2022.1.0 multidict-6.0.2 xxhash-2.0.2 yarl-1.7.2
-Requirement already satisfied: huggingface-hub in /usr/local/lib/python3.7/dist-packages (0.4.0)
-Requirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (6.0)
-Requirement already satisfied: packaging>=20.9 in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (21.3)
-Requirement already satisfied: requests in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (2.23.0)
-Requirement already satisfied: filelock in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (3.4.2)
-Requirement already satisfied: tqdm in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (4.62.3)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (3.10.0.2)
-Requirement already satisfied: importlib-metadata in /usr/local/lib/python3.7/dist-packages (from huggingface-hub) (4.10.0)
-Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /usr/local/lib/python3.7/dist-packages (from packaging>=20.9->huggingface-hub) (3.0.6)
-Requirement already satisfied: zipp>=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata->huggingface-hub) (3.7.0)
-Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests->huggingface-hub) (1.24.3)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from requests->huggingface-hub) (2021.10.8)
-Requirement already satisfied: idna<3,>=2.5 in /usr/local/lib/python3.7/dist-packages (from requests->huggingface-hub) (2.10)
-Requirement already satisfied: chardet<4,>=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests->huggingface-hub) (3.0.4)
-
-```
-</div>
 ---
 ## Loading the dataset
 
@@ -191,33 +73,6 @@ from datasets import load_dataset
 datasets = load_dataset("squad")
 ```
 
-
-<div class="k-default-codeblock">
-```
-Downloading:   0%|          | 0.00/1.97k [00:00<?, ?B/s]
-
-Downloading:   0%|          | 0.00/1.02k [00:00<?, ?B/s]
-
-Downloading and preparing dataset squad/plain_text (download: 33.51 MiB, generated: 85.63 MiB, post-processed: Unknown size, total: 119.14 MiB) to /root/.cache/huggingface/datasets/squad/plain_text/1.0.0/d6ec3ceb99ca480ce37cdd35555d6cb2511d223b9150cce08a837ef62ffea453...
-
-  0%|          | 0/2 [00:00<?, ?it/s]
-
-Downloading:   0%|          | 0.00/8.12M [00:00<?, ?B/s]
-
-Downloading:   0%|          | 0.00/1.05M [00:00<?, ?B/s]
-
-  0%|          | 0/2 [00:00<?, ?it/s]
-
-0 examples [00:00, ? examples/s]
-
-0 examples [00:00, ? examples/s]
-
-Dataset squad downloaded and prepared to /root/.cache/huggingface/datasets/squad/plain_text/1.0.0/d6ec3ceb99ca480ce37cdd35555d6cb2511d223b9150cce08a837ef62ffea453. Subsequent calls will reuse this data.
-
-  0%|          | 0/2 [00:00<?, ?it/s]
-
-```
-</div>
 The `datasets` object itself is a
 `DatasetDict`, which contains one key for the training, validation and test set. We can see
 the training, validation and test sets all have a column for the context, the question
