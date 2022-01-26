@@ -27,6 +27,7 @@ UTILS_MASTER = {
             'path': 'python_utils',
             'title': 'Python & NumPy utilities',
             'generate': [
+                'tensorflow.keras.utils.set_random_seed',
                 'tensorflow.keras.utils.to_categorical',
                 'tensorflow.keras.utils.normalize',
                 'tensorflow.keras.utils.get_file',

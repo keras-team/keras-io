@@ -64,19 +64,6 @@ SEED = 42
 keras.utils.set_random_seed(SEED)
 ```
 
-<div class="k-default-codeblock">
-```
-/usr/local/lib/python3.8/dist-packages/tensorflow_addons/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.3.0 and strictly below 2.6.0 (nightly versions are not supported). 
- The versions of TensorFlow you are currently using is 2.7.0 and is not supported. 
-Some things might work, some things might not.
-If you were to encounter a bug, do not file an issue.
-If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the TensorFlow Addons's version. 
-You can find the compatibility matrix in TensorFlow Addon's readme:
-https://github.com/tensorflow/addons
-  warnings.warn(
-
-```
-</div>
 ---
 ## Hyperparameters
 
@@ -137,11 +124,6 @@ Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
 Training samples: 40000
 Validation samples: 10000
 Testing samples: 10000
-
-2022-01-25 19:15:15.142230: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-01-25 19:15:15.645951: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38416 MB memory:  -> device: 0, name: NVIDIA A100-PCIE-40GB, pci bus id: 0000:41:00.0, compute capability: 8.0
-
 ```
 </div>
 ---
@@ -657,10 +639,6 @@ print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-
-2022-01-25 19:15:20.337420: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8202
-2022-01-25 19:15:21.849223: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
-
 313/313 [==============================] - 14s 27ms/step - loss: 1.9639 - accuracy: 0.2635 - top-5-accuracy: 0.7792 - val_loss: 1.7219 - val_accuracy: 0.3778 - val_top-5-accuracy: 0.8514
 Epoch 2/50
 313/313 [==============================] - 8s 26ms/step - loss: 1.5475 - accuracy: 0.4214 - top-5-accuracy: 0.9099 - val_loss: 1.4351 - val_accuracy: 0.4592 - val_top-5-accuracy: 0.9298

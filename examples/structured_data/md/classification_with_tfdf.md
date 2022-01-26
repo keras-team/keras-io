@@ -55,14 +55,6 @@ from tensorflow.keras import layers
 import tensorflow_decision_forests as tfdf
 ```
 
-<div class="k-default-codeblock">
-```
-2022-01-25 11:16:12.599065: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-01-25 11:16:12.599111: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-WARNING:root:TF Parameter Server distributed training not available (this is expected for the pre-build release).
-
-```
-</div>
 ---
 ## Prepare the data
 
@@ -534,19 +526,6 @@ run_experiment(gbt_model, train_data, test_data)
 
 <div class="k-default-codeblock">
 ```
-2022-01-25 11:16:17.780151: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-01-25 11:16:17.780205: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-01-25 11:16:17.780239: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (keras-workbench): /proc/driver/nvidia/version does not exist
-2022-01-25 11:16:17.780504: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-Use /tmp/tmpw6c213_t as temporary training directory
-
-/opt/conda/lib/python3.7/site-packages/tensorflow_decision_forests/keras/core.py:2038: FutureWarning: In a future version of pandas all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only
-  features_dataframe = dataframe.drop(label, 1)
-/opt/conda/lib/python3.7/site-packages/tensorflow_decision_forests/keras/core.py:2041: FutureWarning: In a future version of pandas all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only
-  features_dataframe = features_dataframe.drop(weight, 1)
-
 Starting reading the dataset
 198/200 [============================>.] - ETA: 0s
 Dataset read in 0:00:10.359662
