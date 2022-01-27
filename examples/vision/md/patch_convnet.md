@@ -6,7 +6,7 @@
 **Description:** Building a patch-convnet architecture and visualizing its attention maps.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/patch_conv_net.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/patch_conv_net.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/patch_convnet.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/patch_convnet.py)
 
 
 
@@ -604,7 +604,7 @@ conv_stem = build_convolutional_stem(dimensions=DIMENSIONS)
 conv_trunk = Trunk(depth=TRUNK_DEPTH, dimensions=DIMENSIONS, ratio=SE_RATIO)
 attention_pooling = AttentionPooling(dimensions=DIMENSIONS, num_classes=NUM_CLASSES)
 
-patch_conv_net = PatchConvNet(
+patch_convnet = PatchConvNet(
     stem=conv_stem,
     trunk=conv_trunk,
     attention_pooling=attention_pooling,
@@ -617,7 +617,7 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 # Get the optimizer.
 optimizer = tfa.optimizers.AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
 # Compile and pretrain the model.
-patch_conv_net.compile(
+patch_convnet.compile(
     optimizer=optimizer,
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=[
@@ -625,12 +625,12 @@ patch_conv_net.compile(
         keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
     ],
 )
-history = patch_conv_net.fit(
+history = patch_convnet.fit(
     train_ds, epochs=EPOCHS, validation_data=val_ds, callbacks=train_callbacks,
 )
 
 # Evaluate the model with the test dataset.
-loss, acc_top1, acc_top5 = patch_conv_net.evaluate(test_ds)
+loss, acc_top1, acc_top5 = patch_convnet.evaluate(test_ds)
 print(f"Loss: {loss:0.2f}")
 print(f"Top 1 test accuracy: {acc_top1*100:0.2f}%")
 print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
@@ -652,7 +652,7 @@ Epoch 5/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_3.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_3.png)
     
 
 
@@ -673,7 +673,7 @@ Epoch 10/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_5.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_5.png)
     
 
 
@@ -694,7 +694,7 @@ Epoch 15/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_7.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_7.png)
     
 
 
@@ -715,7 +715,7 @@ Epoch 20/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_9.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_9.png)
     
 
 
@@ -736,7 +736,7 @@ Epoch 25/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_11.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_11.png)
     
 
 
@@ -757,7 +757,7 @@ Epoch 30/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_13.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_13.png)
     
 
 
@@ -778,7 +778,7 @@ Epoch 35/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_15.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_15.png)
     
 
 
@@ -799,7 +799,7 @@ Epoch 40/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_17.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_17.png)
     
 
 
@@ -820,7 +820,7 @@ Epoch 45/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_19.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_19.png)
     
 
 
@@ -841,7 +841,7 @@ Epoch 50/50
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_23_21.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_23_21.png)
     
 
 
@@ -872,13 +872,13 @@ def plot_attention(image):
     # Resize the image to a (32, 32) dim.
     image = tf.image.resize(image, (32, 32))
     image = image[tf.newaxis, ...]
-    test_augmented_images = patch_conv_net.preprocessing_model(image)
+    test_augmented_images = patch_convnet.preprocessing_model(image)
     # Pass through the stem.
-    test_x = patch_conv_net.stem(test_augmented_images)
+    test_x = patch_convnet.stem(test_augmented_images)
     # Pass through the trunk.
-    test_x = patch_conv_net.trunk(test_x)
+    test_x = patch_convnet.trunk(test_x)
     # Pass through the attention pooling block.
-    _, test_viz_weights = patch_conv_net.attention_pooling(test_x)
+    _, test_viz_weights = patch_convnet.attention_pooling(test_x)
     test_viz_weights = test_viz_weights[tf.newaxis, ...]
     # Reshape the vizualization weights.
     num_patches = tf.shape(test_viz_weights)[-1]
@@ -915,7 +915,7 @@ Downloading data from http://farm9.staticflickr.com/8017/7140384795_385b1f48df_z
 ```
 </div>
     
-![png](/img/examples/vision/patch_conv_net/patch_conv_net_25_1.png)
+![png](/img/examples/vision/patch_convnet/patch_conv_net_25_1.png)
     
 
 
