@@ -13,7 +13,7 @@ KT_GUIDES_MASTER = {
         },
         {
             'path': 'custom_tuner',
-            'title': 'Writing your own Tuner to support a custom training loop',
+            'title': 'Tune hyperparameters in your custom training loop',
         },
         {
             'path': 'visualize_tuning',

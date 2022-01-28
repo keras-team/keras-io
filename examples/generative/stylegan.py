@@ -22,6 +22,13 @@ faster training time via compilation and distribution.
 ## Setup
 """
 
+"""
+### Install latest TFA
+"""
+"""shell
+pip install tensorflow_addons
+"""
+
 import os
 import random
 import math
@@ -38,12 +45,13 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow_addons.layers import InstanceNormalization
 
-import tensorflow_datasets as tfds
+import gdown
+from zipfile import ZipFile
 
 """
 ## Prepare the dataset
 
-In this example, we will train using the CelebA from TensorFlow Datasets.
+In this example, we will train using the CelebA from the project GDrive.
 """
 
 
@@ -58,11 +66,24 @@ batch_sizes = {2: 16, 3: 16, 4: 16, 5: 16, 6: 16, 7: 8, 8: 4, 9: 2, 10: 1}
 train_step_ratio = {k: batch_sizes[2] / v for k, v in batch_sizes.items()}
 
 
-ds_train = tfds.load("celeb_a", split="train")
+os.makedirs("celeba_gan")
+
+url = "https://drive.google.com/uc?id=1O7m1010EJjLE5QxLZiM9Fpjs7Oj6e684"
+output = "celeba_gan/data.zip"
+gdown.download(url, output, quiet=True)
+
+with ZipFile("celeba_gan/data.zip", "r") as zipobj:
+    zipobj.extractall("celeba_gan")
+
+# Create a dataset from our folder, and rescale the images to the [0-1] range:
+
+ds_train = keras.preprocessing.image_dataset_from_directory(
+    "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
+)
+ds_train = ds_train.map(lambda x: x / 255.0)
 
 
-def resize_image(res, sample):
-    image = sample["image"]
+def resize_image(res, image):
     # only donwsampling, so use nearest neighbor that is faster to run
     image = tf.image.resize(
         image, (res, res), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR
@@ -73,7 +94,11 @@ def resize_image(res, sample):
 
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
-    dl = ds_train.map(partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE)
+    # NOTE: we unbatch the dataset so we can `batch()` it again with the `drop_remainder=True` option
+    # since the model only supports a single batch size
+    dl = ds_train.map(
+        partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE
+    ).unbatch()
     dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
 
