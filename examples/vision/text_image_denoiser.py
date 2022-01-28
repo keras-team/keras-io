@@ -44,7 +44,7 @@ import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
 from tensorflow.keras import callbacks
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input
+from tensorflow.keras.applications import resnet_v2
 
 """
 ## Dataset
@@ -72,16 +72,12 @@ BATCH_SIZE = 4
 BUFFER_SIZE = int(len(train_source) * 0.2)
 
 
-def resize_with_pad(image, height, width):
-    return tf.image.resize_with_pad(
-        image=image, target_height=height, target_width=width
-    )
-
-
 def preprocess(image):
     image = tf.io.decode_png(tf.io.read_file(image), channels=3)
-    image = resize_with_pad(image, height=HEIGHT, width=WIDTH)
-    image = preprocess_input(image)
+    image = tf.image.resize_with_pad(
+        image=image, target_height=HEIGHT, target_width=WIDTH
+    )
+    image = resnet_v2.preprocess_input(image)
     return image
 
 
@@ -97,12 +93,12 @@ def denormalize(array):
     return array
 
 
-train_pipe = tf.data.Dataset.from_tensor_slices((train_source, train_targets))
-train_pipe = train_pipe.map(data_preprocess, tf.data.AUTOTUNE).shuffle(BUFFER_SIZE)
-train_set = train_pipe.batch(BATCH_SIZE).repeat()
+train_set = tf.data.Dataset.from_tensor_slices((train_source, train_targets))
+train_set = train_set.map(data_preprocess, tf.data.AUTOTUNE).shuffle(BUFFER_SIZE)
+train_set = train_set.batch(BATCH_SIZE).repeat()
 
-val_pipe = tf.data.Dataset.from_tensor_slices((val_source, val_targets))
-valid_set = val_pipe.map(data_preprocess, tf.data.AUTOTUNE).batch(BATCH_SIZE)
+valid_set = tf.data.Dataset.from_tensor_slices((val_source, val_targets))
+valid_set = valid_set.map(data_preprocess, tf.data.AUTOTUNE).batch(BATCH_SIZE)
 
 """
 ## Dataset Visualiztion
@@ -156,9 +152,9 @@ def upscale_unit(previous_input, current_input, target_channels=3, upscale_ratio
     return feature_manifold
 
 
-def denoiser():
-    base_model = ResNet50V2(
-        include_top=False, weights="imagenet", input_shape=(352, 608, 3)
+def denoiser(height, width):
+    base_model = resnet_v2.ResNet50V2(
+        include_top=False, weights="imagenet", input_shape=(height, width, 3)
     )
     encode0 = base_model.get_layer("input_1").output  # (None,352,608,3)
     encode1 = base_model.get_layer("conv1_conv").output  # (None,176,304,64)
@@ -190,7 +186,7 @@ The Model is Trained with an Objective of minimizing ```Mean Squared Error```.
 EPOCHS = 40
 LEARNING_RATE = 1e-4
 
-denoiser_net = denoiser()
+denoiser_net = denoiser(height=HEIGHT, width=WIDTH)
 
 early_stop = callbacks.EarlyStopping(patience=8)
 ckpt = callbacks.ModelCheckpoint(
@@ -219,9 +215,9 @@ our objective is to Enhance simple OCR accuracy engine where our model can act a
 **Pre-Processor**, to serve the purpose we will use <a
 href="https://towardsdatascience.com/evaluating-ocr-output-quality-with-character-error-ra
 te-cer-and-word-error-rate-wer-853175297510">WER(Word Error Rate) </a> as a metric to
-evaluate the real-world performance. The following codes will help plot the visual
-comparisons of outputs given the **Raw Noisy Input** and **Model Restored Input** to
-tesseract OCR engine.
+evaluate the real-world performance. The following function ```generate_results```  will
+help plot the visual comparisons of outputs given the **Raw Noisy Input** and **Model
+Restored Input** to tesseract OCR engine.
 """
 
 
@@ -235,28 +231,16 @@ def word_error_rate(noise_image, reference_image, prediction_image):
 
 
 def generate_results(file):
-    """
-    The following function generates visual and WER (Word Error Rates) comparison
-    plots between raw input image when passed through OCR engine and model reconstructed
-    image when passed through OCR, signifying the major improvement the model can offer
-    in a workflow.
-    """
-
-    source_image = tf.io.decode_png(tf.io.read_file(file), channels=3)
-    source_image = resize_with_pad(source_image, height=HEIGHT, width=WIDTH)
-    source_image = preprocess_input(source_image)
-    noise_ground_truth = denormalize(source_image)
-    noise_ground_truth = keras.utils.array_to_img(noise_ground_truth)
-    clean_ground_truth = tf.io.decode_png(
-        tf.io.read_file(file.replace("source", "target")), channels=3
+    clean_gt_file = file.replace("source", "target")
+    source_image = preprocess(file)
+    noise_ground_truth = keras.utils.array_to_img(denormalize(source_image))
+    clean_ground_truth = keras.utils.array_to_img(
+        denormalize(preprocess(clean_gt_file))
     )
-    clean_ground_truth = resize_with_pad(clean_ground_truth, height=HEIGHT, width=WIDTH)
-    clean_ground_truth = keras.utils.array_to_img(clean_ground_truth)
 
     source_image = tf.expand_dims(source_image, axis=0)
     prediction = denoiser_net.predict(source_image)
-    prediction = denormalize(prediction[0])
-    prediction = keras.utils.array_to_img(prediction)
+    prediction = keras.utils.array_to_img(denormalize(prediction[0]))
 
     noise_error_rate, reconstructed_error_rate = word_error_rate(
         noise_image=noise_ground_truth,
