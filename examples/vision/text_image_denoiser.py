@@ -16,8 +16,8 @@ popularity for several Image-to-Image tasks. We aim to solve the problem with si
 we focus here is enhancing the Document Images which are deteriorated through external
 degradations like blur, corrupt text blocks etc. We have followed up on few seminal
 papers which are presented below for reference. At the end of this tutorial user will
-gain clear understanding of building Custom Image Pre-Processors using Deep-Learning that
-helps us to mitigate real world OCR issues.
+gain clear understanding of building custom Image Pre-Processors using Deep-Learning that
+helps us to mitigate real-world OCR issues.
 
 **References:**
 - [Enhancing OCR Accuracy with Super
@@ -28,7 +28,7 @@ Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_1
 """
 
 """
-## Additional Set-up
+## Setup
 """
 
 # !pip install pybind11
