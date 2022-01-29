@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: Text Image Denoiser.
+Author: [Anish B](https://twitter.com/anishhacko)
+Date created: 2021/01/18
+Last modified: 2022/01/27
+Description: Example of Text Image Denoiser coupled with Tesseract OCR engine to improve text readability.
 """
 """
 ## Introduction
@@ -27,12 +27,9 @@ Executing **Additional Setup** codeblock should do the job.
 
 
 **References:**
-- [Enhancing OCR Accuracy with Super
-Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
-Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
-- [Improving the Perceptual Quality of Document Images Using Deep Neural
-Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
-Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
+- [Enhancing OCR Accuracy with Super-Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
+
+- [Improving the Perceptual Quality of Document Images Using Deep Neural Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 """
 
 """
