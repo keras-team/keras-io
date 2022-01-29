@@ -1,10 +1,13 @@
 """
-Title: Barlow Twins for Contrastive SSL
-Author: [Abhiraam Eranti](https://github.com/dewball345)
-Date created: 11/4/21
-Last modified: 12/20/21
-Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
+# Barlow Twins for Contrastive SSL
+
+**Author:** [Abhiraam Eranti](https://github.com/dewball345)<br>
+**Date created:** 11/4/21<br>
+**Last modified:** 1/29/22<br>
+**Description:** A keras implementation of Barlow Twins (constrastive SSL with redundancy
+reduction).
 """
+
 """
 ## Introduction
 """
@@ -50,7 +53,7 @@ TL, DR: Barlow twins creates representations that are:
 Also, it is simpler than other methods.
 
 This notebook can train a Barlow Twins model and reach up to
-64% validation accuracy on the CIFAR-10 dataset.
+67% validation accuracy on the CIFAR-10 dataset.
 """
 
 """
@@ -60,12 +63,10 @@ This notebook can train a Barlow Twins model and reach up to
 
 
 
-
 """
 
 """
 ### High-Level Theory
-
 
 """
 
@@ -126,7 +127,6 @@ Reduction](https://arxiv.org/abs/2103.03230)
 Original Implementation:
  [facebookresearch/barlowtwins](https://github.com/facebookresearch/barlowtwins)
 
-
 """
 
 """
@@ -134,7 +134,8 @@ Original Implementation:
 """
 
 """shell
-pip install tensorflow-addons
+!pip install tensorflow-addons
+!pip install --upgrade-strategy=only-if-needed tensorflow_similarity
 """
 
 import os
@@ -152,6 +153,7 @@ import tensorflow_addons as tfa  # LAMB optimizer and gaussian_blur_2d function
 import numpy as np  # np.random.random
 import matplotlib.pyplot as plt  # graphs
 import datetime  # tensorboard logs naming
+import tensorflow_similarity  # loss function module
 
 # XLA optimization for faster performance(up to 10-15 minutes total time saved)
 tf.config.optimizer.set_jit(True)
@@ -604,9 +606,16 @@ representation neurons are correlated with values that are not on the diagonal.
 
 After this the two parts are summed together.
 
+We will be using the 
+[BarlowLoss](https://github.com/tensorflow/similarity/blob/master/tensorflow_similarity/lo
+sses/barlow.py) 
+module from Tensorflow Similarity
 
+A from-scratch implementation is also included below.
+"""
 
-
+"""
+### From-Scratch implementation(for understanding purposes)
 """
 
 
@@ -766,7 +775,7 @@ The model has two parts:
 """
 
 """
-Resnet encoder network implementation:
+### Resnet encoder network implementation:
 """
 
 
@@ -775,8 +784,10 @@ class ResNet34:
 
         Responsible for the Resnet 34 architecture.
     Modified from
-    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
         View their website for more information.
     """
 
@@ -845,7 +856,7 @@ class ResNet34:
 
 
 """
-Projector network:
+### Projector network:
 """
 
 
@@ -959,7 +970,9 @@ bm = BarlowModel()
 # chose the LAMB optimizer due to high batch sizes. Converged MUCH faster
 # than ADAM or SGD
 optimizer = tfa.optimizers.LAMB()
-loss = BarlowLoss(BATCH_SIZE)
+
+# We can just drop in either one of the two(results will be similar for both)
+loss = tensorflow_similarity.losses.Barlow()  # BarlowLoss(BATCH_SIZE)
 
 bm.compile(optimizer=optimizer, loss=loss)
 
@@ -1022,12 +1035,12 @@ model.fit(xy_ds, epochs=35, validation_data=test_ds)
 
 *   Barlow Twins is a simple and concise method for contrastive and self-supervised
 learning.
-*   With this resnet-34 model architecture, we were able to reach 62-64% validation
+*   With this resnet-34 model architecture, we were able to reach 67% validation
 accuracy.
 
 ## Use-Cases of Barlow-Twins(and contrastive learning in General)
 
-*   Semi-supervised learning: You can see that this model gave a 62-64% boost in accuracy
+*   Semi-supervised learning: You can see that this model gave a 67% boost in accuracy
 when it wasn't even trained with the labels. It can be used when you have little labeled
 data but a lot of unlabeled data.
 * You do barlow twins training on the unlabeled data, and then you do secondary training
@@ -1037,12 +1050,15 @@ with the labeled data.
 
 * [Paper](https://arxiv.org/abs/2103.03230)
 * [Original Pytorch Implementation](https://github.com/facebookresearch/barlowtwins)
-* [Sayak Paul's Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
+* [Sayak Paul's
+Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
+Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
 * Thanks to Sayak Paul for his implementation. It helped me with debugging and
 comparisons of accuracy, loss.
-* [resnet34 implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
+* [resnet34
+implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
+implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
   * Thanks to Yashowardhan Shinde for writing the article.
-
 
 
 """
