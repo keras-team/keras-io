@@ -1,11 +1,9 @@
 """
-# Barlow Twins for Contrastive SSL
-
-**Author:** [Abhiraam Eranti](https://github.com/dewball345)<br>
-**Date created:** 11/4/21<br>
-**Last modified:** 1/29/22<br>
-**Description:** A keras implementation of Barlow Twins (constrastive SSL with redundancy
-reduction).
+Title: Barlow Twins for Contrastive SSL
+Author: [Abhiraam Eranti](https://github.com/dewball345)<br>
+Date created: 11/4/21<br>
+Last modified: 1/29/22<br>
+Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
 """
 
 """
@@ -606,9 +604,8 @@ representation neurons are correlated with values that are not on the diagonal.
 
 After this the two parts are summed together.
 
-We will be using the 
-[BarlowLoss](https://github.com/tensorflow/similarity/blob/master/tensorflow_similarity/lo
-sses/barlow.py) 
+We will be using the [BarlowLoss](https://github.com/tensorflow/similarity/blob/master/tensorflow_similarity/lo
+sses/barlow.py)
 module from Tensorflow Similarity
 
 A from-scratch implementation is also included below.
@@ -782,13 +779,13 @@ The model has two parts:
 class ResNet34:
     """Resnet34 class.
 
-        Responsible for the Resnet 34 architecture.
-    Modified from
-https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-        View their website for more information.
+            Responsible for the Resnet 34 architecture.
+        Modified from
+    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
+            View their website for more information.
     """
 
     def identity_block(self, x, filter):
