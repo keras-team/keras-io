@@ -1,8 +1,8 @@
 # Classification with TensorFlow Decision Forests
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
-**Date created:** 2022/01/15<br>
-**Last modified:** 2022/01/15<br>
+**Date created:** 2022/01/25<br>
+**Last modified:** 2022/01/25<br>
 **Description:** Using TensorFlow Decision Forests for structured data classification.
 
 
@@ -20,6 +20,9 @@ The models include [Random Forests](https://www.tensorflow.org/decision_forests/
 [Gradient Boosted Trees](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel),
 and [CART](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/CartModel),
 and can be used for regression, classification, and ranking task.
+For a beginner's guide to TensorFlow Decision Forests,
+please refer to this [tutorial](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab).
+
 
 This example uses Gradient Boosted Trees model in binary classification of
 structured data, and covers the following scenarios:
@@ -55,6 +58,14 @@ from tensorflow.keras import layers
 import tensorflow_decision_forests as tfdf
 ```
 
+<div class="k-default-codeblock">
+```
+2022-01-29 16:47:26.832707: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-01-29 16:47:26.832747: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+WARNING:root:TF Parameter Server distributed training not available (this is expected for the pre-build release).
+
+```
+</div>
 ---
 ## Prepare the data
 
@@ -82,13 +93,62 @@ train_data = pd.read_csv(f"{BASE_PATH}.data.gz", header=None, names=CSV_HEADER,)
 test_data = pd.read_csv(f"{BASE_PATH}.test.gz", header=None, names=CSV_HEADER,)
 ```
 
-We convert the target column from string to integer.
+---
+## Define dataset metadata
+
+Here, we define the metadata of the dataset that will be useful for encoding
+the input features with respect to their types.
 
 
 ```python
-target_labels = [" - 50000.", " 50000+."]
-train_data["income_level"] = train_data["income_level"].map(target_labels.index)
-test_data["income_level"] = test_data["income_level"].map(target_labels.index)
+# Target column name.
+TARGET_COLUMN_NAME = "income_level"
+# The labels of the target columns.
+TARGET_LABELS = [" - 50000.", " 50000+."]
+# Weight column name.
+WEIGHT_COLUMN_NAME = "instance_weight"
+# Numeric feature names.
+NUMERIC_FEATURE_NAMES = [
+    "age",
+    "wage_per_hour",
+    "capital_gains",
+    "capital_losses",
+    "dividends_from_stocks",
+    "num_persons_worked_for_employer",
+    "weeks_worked_in_year",
+]
+# Categorical features and their vocabulary lists.
+CATEGORICAL_FEATURES_WITH_VOCABULARY = {
+    feature_name: sorted(
+        [str(value) for value in list(train_data[feature_name].unique())]
+    )
+    for feature_name in CSV_HEADER
+    if feature_name
+    not in list(NUMERIC_FEATURE_NAMES + [WEIGHT_COLUMN_NAME, TARGET_COLUMN_NAME])
+}
+# All features names.
+FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
+    CATEGORICAL_FEATURES_WITH_VOCABULARY.keys()
+)
+```
+
+Now we perform basic data preparation.
+
+
+```python
+
+def prepare_dataframe(dataframe):
+    # Convert the target labels from string to integer.
+    dataframe[TARGET_COLUMN_NAME] = dataframe[TARGET_COLUMN_NAME].map(
+        TARGET_LABELS.index
+    )
+    # Cast the categorical features to string.
+    for feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+        dataframe[feature_name] = dataframe[feature_name].astype(str)
+
+
+prepare_dataframe(train_data)
+prepare_dataframe(test_data)
 ```
 
 Now let's show the shapes of the training and test dataframes, and display some instances.
@@ -343,43 +403,6 @@ income_level                                                                    
 ```
 </div>
 ---
-## Define dataset metadata
-
-Here, we define the metadata of the dataset that will be useful for encoding
-the input features with respect to their types.
-
-
-```python
-# Target column name.
-TARGET_COLUMN_NAME = "income_level"
-# Weight column name.
-WEIGHT_COLUMN_NAME = "instance_weight"
-# Numeric feature names.
-NUMERIC_FEATURE_NAMES = [
-    "age",
-    "wage_per_hour",
-    "capital_gains",
-    "capital_losses",
-    "dividends_from_stocks",
-    "num_persons_worked_for_employer",
-    "weeks_worked_in_year",
-]
-# Categorical features and their vocabulary lists.
-CATEGORICAL_FEATURES_WITH_VOCABULARY = {
-    feature_name: sorted(
-        [str(value) for value in list(train_data[feature_name].unique())]
-    )
-    for feature_name in CSV_HEADER
-    if feature_name
-    not in list(NUMERIC_FEATURE_NAMES + [WEIGHT_COLUMN_NAME, TARGET_COLUMN_NAME])
-}
-# All features names.
-FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
-    CATEGORICAL_FEATURES_WITH_VOCABULARY.keys()
-)
-```
-
----
 ## Configure hyperparameters
 
 You can find all the parameters of the Gradient Boosted Tree model in the
@@ -387,7 +410,6 @@ You can find all the parameters of the Gradient Boosted Tree model in the
 
 
 ```python
-GROWING_STRATEGY = "BEST_FIRST_GLOBAL"
 NUM_TREES = 250
 MIN_EXAMPLES = 6
 MAX_DEPTH = 5
@@ -402,23 +424,14 @@ VALIDATION_RATIO = 0.1
 
 ```python
 
-def prepare_sample(features, target, weight):
-    for feature_name in features:
-        if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-            if features[feature_name].dtype != tf.dtypes.string:
-                # Convert categorical feature values to string.
-                features[feature_name] = tf.strings.as_string(features[feature_name])
-    return features, target, weight
-
-
 def run_experiment(model, train_data, test_data, num_epochs=1, batch_size=None):
 
     train_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         train_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
-    ).map(prepare_sample, num_parallel_calls=tf.data.AUTOTUNE)
+    )
     test_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         test_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
-    ).map(prepare_sample, num_parallel_calls=tf.data.AUTOTUNE)
+    )
 
     model.fit(train_dataset, epochs=num_epochs, batch_size=batch_size)
     _, accuracy = model.evaluate(test_dataset, verbose=0)
@@ -497,7 +510,6 @@ def create_gbt_model():
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
         features=specify_feature_usages(create_model_inputs()),
         exclude_non_specified_features=True,
-        growing_strategy=GROWING_STRATEGY,
         num_trees=NUM_TREES,
         max_depth=MAX_DEPTH,
         min_examples=MIN_EXAMPLES,
@@ -526,13 +538,25 @@ run_experiment(gbt_model, train_data, test_data)
 
 <div class="k-default-codeblock">
 ```
+Use /tmp/tmpbzi2rcxp as temporary training directory
+
+2022-01-29 16:47:33.339771: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-01-29 16:47:33.339817: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-01-29 16:47:33.339866: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (keras-workbench): /proc/driver/nvidia/version does not exist
+2022-01-29 16:47:33.340228: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/opt/conda/lib/python3.7/site-packages/tensorflow_decision_forests/keras/core.py:2038: FutureWarning: In a future version of pandas all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only
+  features_dataframe = dataframe.drop(label, 1)
+/opt/conda/lib/python3.7/site-packages/tensorflow_decision_forests/keras/core.py:2041: FutureWarning: In a future version of pandas all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only
+  features_dataframe = features_dataframe.drop(weight, 1)
+
 Starting reading the dataset
-198/200 [============================>.] - ETA: 0s
-Dataset read in 0:00:10.359662
+199/200 [============================>.] - ETA: 0s
+Dataset read in 0:00:09.599864
 Training model
-Model trained in 0:01:11.608668
+Model trained in 0:00:47.870510
 Compiling model
-200/200 [==============================] - 82s 386ms/step
+200/200 [==============================] - 58s 263ms/step
 Test accuracy: 95.79%
 
 ```
@@ -619,161 +643,159 @@ Trained with weights
 <div class="k-default-codeblock">
 ```
 Variable Importance: MEAN_MIN_DEPTH:
-    1.                    "family_members_under_18"  4.866616 ################
-    2.              "live_in_this_house_1_year_ago"  4.866616 ################
-    3.               "region_of_previous_residence"  4.866616 ################
-    4.                                    "__LABEL"  4.866616 ################
-    5.                                  "__WEIGHTS"  4.866616 ################
-    6.                                       "year"  4.865916 ###############
-    7.                 "enroll_in_edu_inst_last_wk"  4.865883 ###############
-    8.               "migration_code-change_in_msa"  4.865727 ###############
-    9.              "migration_prev_res_in_sunbelt"  4.865583 ###############
-   10.    "detailed_household_summary_in_household"  4.865518 ###############
-   11.                          "veterans_benefits"  4.865518 ###############
-   12.                                "citizenship"  4.865033 ###############
-   13.               "migration_code-change_in_reg"  4.864541 ###############
-   14.             "migration_code-move_within_reg"  4.860145 ###############
-   15.                      "major_occupation_code"  4.860127 ###############
-   16.                        "major_industry_code"  4.847848 ###############
-   17.                    "reason_for_unemployment"  4.840486 ###############
-   18.                    "member_of_a_labor_union"  4.813595 ###############
-   19.                            "hispanic_origin"  4.745123 ###############
-   20.                                       "race"  4.744956 ###############
-   21.            "num_persons_worked_for_employer"  4.715408 ##############
-   22.                               "marital_stat"  4.702930 ##############
-   23.              "own_business_or_self_employed"  4.699103 ##############
-   24.          "full_or_part_time_employment_stat"  4.692144 ##############
-   25.                             "tax_filer_stat"  4.689370 ##############
-   26. "fill_inc_questionnaire_for_veteran's_admin"  4.623981 ##############
-   27.                    "country_of_birth_father"  4.582914 ##############
-   28.                    "country_of_birth_mother"  4.580564 ##############
-   29.                            "class_of_worker"  4.568425 #############
-   30.                       "weeks_worked_in_year"  4.565960 #############
-   31.                                        "sex"  4.513133 #############
-   32.                      "country_of_birth_self"  4.458652 #############
-   33.                "state_of_previous_residence"  4.458643 #############
-   34.                                        "age"  4.447823 #############
-   35.         "detailed_household_and_family_stat"  4.386165 ############
-   36.                              "wage_per_hour"  4.271582 ###########
-   37.                             "capital_losses"  4.224308 ###########
-   38.                      "dividends_from_stocks"  4.109909 ##########
-   39.                                  "education"  3.874190 #########
-   40.                              "capital_gains"  3.833155 ########
-   41.                   "detailed_industry_recode"  3.275964 #####
-   42.                 "detailed_occupation_recode"  2.505073 
+    1.                 "enroll_in_edu_inst_last_wk"  3.942647 ################
+    2.                    "family_members_under_18"  3.942647 ################
+    3.              "live_in_this_house_1_year_ago"  3.942647 ################
+    4.               "migration_code-change_in_msa"  3.942647 ################
+    5.             "migration_code-move_within_reg"  3.942647 ################
+    6.                                       "year"  3.942647 ################
+    7.                                    "__LABEL"  3.942647 ################
+    8.                                  "__WEIGHTS"  3.942647 ################
+    9.                                "citizenship"  3.942137 ###############
+   10.    "detailed_household_summary_in_household"  3.942137 ###############
+   11.               "region_of_previous_residence"  3.942137 ###############
+   12.                          "veterans_benefits"  3.942137 ###############
+   13.              "migration_prev_res_in_sunbelt"  3.940135 ###############
+   14.               "migration_code-change_in_reg"  3.939926 ###############
+   15.                      "major_occupation_code"  3.937681 ###############
+   16.                        "major_industry_code"  3.933687 ###############
+   17.                    "reason_for_unemployment"  3.926320 ###############
+   18.                            "hispanic_origin"  3.900776 ###############
+   19.                    "member_of_a_labor_union"  3.894843 ###############
+   20.                                       "race"  3.878617 ###############
+   21.            "num_persons_worked_for_employer"  3.818566 ##############
+   22.                               "marital_stat"  3.795667 ##############
+   23.          "full_or_part_time_employment_stat"  3.795431 ##############
+   24.                    "country_of_birth_mother"  3.787967 ##############
+   25.                             "tax_filer_stat"  3.784505 ##############
+   26. "fill_inc_questionnaire_for_veteran's_admin"  3.783607 ##############
+   27.              "own_business_or_self_employed"  3.776398 ##############
+   28.                    "country_of_birth_father"  3.715252 #############
+   29.                                        "sex"  3.708745 #############
+   30.                            "class_of_worker"  3.688424 #############
+   31.                       "weeks_worked_in_year"  3.665290 #############
+   32.                "state_of_previous_residence"  3.657234 #############
+   33.                      "country_of_birth_self"  3.654377 #############
+   34.                                        "age"  3.634295 ############
+   35.                              "wage_per_hour"  3.617817 ############
+   36.         "detailed_household_and_family_stat"  3.594743 ############
+   37.                             "capital_losses"  3.439298 ##########
+   38.                      "dividends_from_stocks"  3.423652 ##########
+   39.                              "capital_gains"  3.222753 ########
+   40.                                  "education"  3.158698 ########
+   41.                   "detailed_industry_recode"  2.981471 ######
+   42.                 "detailed_occupation_recode"  2.364817 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Variable Importance: NUM_AS_ROOT:
-    1.                              "capital_gains" 38.000000 ################
-    2.                                  "education" 23.000000 #########
-    3.                              "wage_per_hour" 23.000000 #########
-    4.                             "capital_losses" 21.000000 ########
-    5.                      "dividends_from_stocks" 17.000000 ######
-    6.                 "detailed_occupation_recode" 14.000000 #####
-    7.         "detailed_household_and_family_stat" 13.000000 ####
-    8. "fill_inc_questionnaire_for_veteran's_admin" 11.000000 ###
-    9.                "state_of_previous_residence" 11.000000 ###
-   10.                      "country_of_birth_self" 10.000000 ###
-   11.                                        "age"  8.000000 ##
-   12.                            "class_of_worker"  6.000000 #
-   13.          "full_or_part_time_employment_stat"  6.000000 #
-   14.                                        "sex"  6.000000 #
-   15.                       "weeks_worked_in_year"  6.000000 #
-   16.                                       "race"  5.000000 
-   17.                    "country_of_birth_mother"  4.000000 
-   18.                            "hispanic_origin"  4.000000 
-   19.                    "country_of_birth_father"  3.000000 
-   20.                               "marital_stat"  3.000000 
-   21.              "own_business_or_self_employed"  3.000000 
+    1.                                  "education" 33.000000 ################
+    2.                              "capital_gains" 29.000000 ##############
+    3.                             "capital_losses" 24.000000 ###########
+    4.         "detailed_household_and_family_stat" 14.000000 ######
+    5.                      "dividends_from_stocks" 14.000000 ######
+    6.                              "wage_per_hour" 12.000000 #####
+    7.                      "country_of_birth_self" 11.000000 #####
+    8.                 "detailed_occupation_recode" 11.000000 #####
+    9.                       "weeks_worked_in_year" 11.000000 #####
+   10.                                        "age" 10.000000 ####
+   11.                "state_of_previous_residence" 10.000000 ####
+   12. "fill_inc_questionnaire_for_veteran's_admin"  9.000000 ####
+   13.                            "class_of_worker"  8.000000 ###
+   14.          "full_or_part_time_employment_stat"  8.000000 ###
+   15.                               "marital_stat"  8.000000 ###
+   16.              "own_business_or_self_employed"  8.000000 ###
+   17.                                        "sex"  6.000000 ##
+   18.                             "tax_filer_stat"  5.000000 ##
+   19.                    "country_of_birth_father"  4.000000 #
+   20.                                       "race"  3.000000 #
+   21.                   "detailed_industry_recode"  2.000000 
+   22.                            "hispanic_origin"  2.000000 
+   23.                    "country_of_birth_mother"  1.000000 
+   24.            "num_persons_worked_for_employer"  1.000000 
+   25.                    "reason_for_unemployment"  1.000000 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Variable Importance: NUM_NODES:
-    1.                 "detailed_occupation_recode" 1373.000000 ################
-    2.                   "detailed_industry_recode" 1263.000000 ##############
-    3.                                  "education" 417.000000 ####
-    4.                      "dividends_from_stocks" 381.000000 ####
-    5.                              "capital_gains" 337.000000 ###
-    6.                             "capital_losses" 276.000000 ###
-    7.                                        "age" 269.000000 ###
-    8.                    "country_of_birth_father" 255.000000 ##
-    9.                    "country_of_birth_mother" 235.000000 ##
-   10.                "state_of_previous_residence" 187.000000 ##
-   11.                      "country_of_birth_self" 155.000000 #
-   12.                              "wage_per_hour" 148.000000 #
-   13.         "detailed_household_and_family_stat" 135.000000 #
-   14.                            "class_of_worker" 128.000000 #
-   15.            "num_persons_worked_for_employer" 112.000000 #
-   16.                             "tax_filer_stat" 104.000000 #
-   17.                       "weeks_worked_in_year" 99.000000 #
-   18.                                        "sex" 89.000000 #
-   19.                               "marital_stat" 61.000000 
-   20.          "full_or_part_time_employment_stat" 44.000000 
-   21.              "own_business_or_self_employed" 44.000000 
-   22.                        "major_industry_code" 39.000000 
-   23.                    "member_of_a_labor_union" 29.000000 
-   24.                            "hispanic_origin" 26.000000 
-   25. "fill_inc_questionnaire_for_veteran's_admin" 23.000000 
-   26.                                       "race" 20.000000 
-   27.                      "major_occupation_code" 15.000000 
-   28.             "migration_code-move_within_reg"  9.000000 
-   29.               "migration_code-change_in_reg"  7.000000 
-   30.                                "citizenship"  4.000000 
-   31.    "detailed_household_summary_in_household"  4.000000 
-   32.                    "reason_for_unemployment"  4.000000 
-   33.               "migration_code-change_in_msa"  3.000000 
-   34.              "migration_prev_res_in_sunbelt"  3.000000 
-   35.                                       "year"  2.000000 
-   36.                 "enroll_in_edu_inst_last_wk"  1.000000 
-   37.                          "veterans_benefits"  1.000000 
+    1.                 "detailed_occupation_recode" 785.000000 ################
+    2.                   "detailed_industry_recode" 668.000000 #############
+    3.                              "capital_gains" 275.000000 #####
+    4.                      "dividends_from_stocks" 220.000000 ####
+    5.                             "capital_losses" 197.000000 ####
+    6.                                  "education" 178.000000 ###
+    7.                    "country_of_birth_mother" 128.000000 ##
+    8.                    "country_of_birth_father" 116.000000 ##
+    9.                                        "age" 114.000000 ##
+   10.                              "wage_per_hour" 98.000000 #
+   11.                "state_of_previous_residence" 95.000000 #
+   12.         "detailed_household_and_family_stat" 78.000000 #
+   13.                            "class_of_worker" 67.000000 #
+   14.                      "country_of_birth_self" 65.000000 #
+   15.                                        "sex" 65.000000 #
+   16.                       "weeks_worked_in_year" 60.000000 #
+   17.                             "tax_filer_stat" 57.000000 #
+   18.            "num_persons_worked_for_employer" 54.000000 #
+   19.              "own_business_or_self_employed" 30.000000 
+   20.                               "marital_stat" 26.000000 
+   21.                    "member_of_a_labor_union" 16.000000 
+   22. "fill_inc_questionnaire_for_veteran's_admin" 15.000000 
+   23.          "full_or_part_time_employment_stat" 15.000000 
+   24.                        "major_industry_code" 15.000000 
+   25.                            "hispanic_origin"  9.000000 
+   26.                      "major_occupation_code"  7.000000 
+   27.                                       "race"  7.000000 
+   28.                                "citizenship"  1.000000 
+   29.    "detailed_household_summary_in_household"  1.000000 
+   30.               "migration_code-change_in_reg"  1.000000 
+   31.              "migration_prev_res_in_sunbelt"  1.000000 
+   32.                    "reason_for_unemployment"  1.000000 
+   33.               "region_of_previous_residence"  1.000000 
+   34.                          "veterans_benefits"  1.000000 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Variable Importance: SUM_SCORE:
-    1.                 "detailed_occupation_recode" 16396598.123479 ################
-    2.                              "capital_gains" 5360688.465133 #####
-    3.                                  "education" 5111382.550547 ####
-    4.                   "detailed_industry_recode" 3751681.298295 ###
-    5.                      "dividends_from_stocks" 3556889.615833 ###
-    6.                                        "age" 2431834.947651 ##
-    7.                                        "sex" 2275814.552990 ##
-    8.                             "capital_losses" 1739087.548472 #
-    9.                       "weeks_worked_in_year" 1257814.870561 #
-   10.            "num_persons_worked_for_employer" 817246.190043 
-   11.                             "tax_filer_stat" 739524.449400 
-   12.         "detailed_household_and_family_stat" 496338.413802 
-   13.                    "country_of_birth_mother" 446776.448403 
-   14.                    "country_of_birth_father" 431989.557821 
-   15.                            "class_of_worker" 399011.337558 
-   16.                "state_of_previous_residence" 359157.377648 
-   17.                              "wage_per_hour" 257399.821752 
-   18.                      "country_of_birth_self" 241391.751734 
-   19.                               "marital_stat" 182216.006652 
-   20.              "own_business_or_self_employed" 96722.488980 
-   21.          "full_or_part_time_employment_stat" 62637.493922 
-   22.                      "major_occupation_code" 38796.587402 
-   23.                        "major_industry_code" 37891.746821 
-   24.                    "member_of_a_labor_union" 29161.354467 
-   25. "fill_inc_questionnaire_for_veteran's_admin" 27952.466597 
-   26.                            "hispanic_origin" 23902.628941 
-   27.                                       "race" 20478.807236 
-   28.             "migration_code-move_within_reg" 7910.678611 
-   29.    "detailed_household_summary_in_household" 7870.980130 
-   30.               "migration_code-change_in_reg" 7416.953436 
-   31.                                "citizenship" 3782.359596 
-   32.               "migration_code-change_in_msa" 3187.757106 
-   33.                    "reason_for_unemployment" 3031.521377 
-   34.                 "enroll_in_edu_inst_last_wk" 2422.099254 
-   35.              "migration_prev_res_in_sunbelt" 2212.001457 
-   36.                          "veterans_benefits" 840.453664 
-   37.                                       "year" 696.065219 
+    1.                 "detailed_occupation_recode" 15392441.075369 ################
+    2.                              "capital_gains" 5277826.822514 #####
+    3.                                  "education" 4751749.289550 ####
+    4.                      "dividends_from_stocks" 3792002.951255 ###
+    5.                   "detailed_industry_recode" 2882200.882109 ##
+    6.                                        "sex" 2559417.877325 ##
+    7.                                        "age" 2042990.944829 ##
+    8.                             "capital_losses" 1735728.772551 #
+    9.                       "weeks_worked_in_year" 1272820.203971 #
+   10.                             "tax_filer_stat" 697890.160846 
+   11.            "num_persons_worked_for_employer" 671351.905595 
+   12.         "detailed_household_and_family_stat" 444620.829557 
+   13.                            "class_of_worker" 362250.565331 
+   14.                    "country_of_birth_mother" 296311.574426 
+   15.                    "country_of_birth_father" 258198.889206 
+   16.                              "wage_per_hour" 239764.219048 
+   17.                "state_of_previous_residence" 237687.602572 
+   18.                      "country_of_birth_self" 103002.168158 
+   19.                               "marital_stat" 102449.735314 
+   20.              "own_business_or_self_employed" 82938.893541 
+   21. "fill_inc_questionnaire_for_veteran's_admin" 22692.700206 
+   22.          "full_or_part_time_employment_stat" 19078.398837 
+   23.                        "major_industry_code" 18450.345505 
+   24.                    "member_of_a_labor_union" 14905.360879 
+   25.                            "hispanic_origin" 12602.867902 
+   26.                      "major_occupation_code" 8709.665989 
+   27.                                       "race" 6116.282065 
+   28.                                "citizenship" 3291.490393 
+   29.    "detailed_household_summary_in_household" 2733.439375 
+   30.                          "veterans_benefits" 1230.940488 
+   31.               "region_of_previous_residence" 1139.240981 
+   32.                    "reason_for_unemployment" 219.245124 
+   33.               "migration_code-change_in_reg" 55.806436 
+   34.              "migration_prev_res_in_sunbelt" 37.780635 
 ```
 </div>
     
@@ -782,240 +804,254 @@ Variable Importance: SUM_SCORE:
 <div class="k-default-codeblock">
 ```
 Loss: BINOMIAL_LOG_LIKELIHOOD
-Validation loss value: 0.227394
+Validation loss value: 0.228983
 Number of trees per iteration: 1
 Node format: NOT_SET
-Number of trees: 235
-Total number of nodes: 12839
+Number of trees: 245
+Total number of nodes: 7179
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Number of nodes by tree:
-Count: 235 Average: 54.634 StdDev: 8.02457
-Min: 27 Max: 61 Ignored: 0
+Count: 245 Average: 29.302 StdDev: 2.96211
+Min: 17 Max: 31 Ignored: 0
 ----------------------------------------------
-[ 27, 28)  1   0.43%   0.43%
-[ 28, 30)  3   1.28%   1.70%
-[ 30, 32)  1   0.43%   2.13%
-[ 32, 34)  1   0.43%   2.55%
-[ 34, 35)  0   0.00%   2.55%
-[ 35, 37)  5   2.13%   4.68% #
-[ 37, 39)  1   0.43%   5.11%
-[ 39, 41)  8   3.40%   8.51% #
-[ 41, 42)  5   2.13%  10.64% #
-[ 42, 44)  2   0.85%  11.49%
-[ 44, 46)  5   2.13%  13.62% #
-[ 46, 48) 10   4.26%  17.87% #
-[ 48, 49)  0   0.00%  17.87%
-[ 49, 51) 11   4.68%  22.55% #
-[ 51, 53) 13   5.53%  28.09% #
-[ 53, 55) 17   7.23%  35.32% ##
-[ 55, 56) 19   8.09%  43.40% ##
-[ 56, 58) 19   8.09%  51.49% ##
-[ 58, 60) 17   7.23%  58.72% ##
-[ 60, 61] 97  41.28% 100.00% ##########
+[ 17, 18)   2   0.82%   0.82%
+[ 18, 19)   0   0.00%   0.82%
+[ 19, 20)   3   1.22%   2.04%
+[ 20, 21)   0   0.00%   2.04%
+[ 21, 22)   4   1.63%   3.67%
+[ 22, 23)   0   0.00%   3.67%
+[ 23, 24)  15   6.12%   9.80% #
+[ 24, 25)   0   0.00%   9.80%
+[ 25, 26)   5   2.04%  11.84%
+[ 26, 27)   0   0.00%  11.84%
+[ 27, 28)  21   8.57%  20.41% #
+[ 28, 29)   0   0.00%  20.41%
+[ 29, 30)  39  15.92%  36.33% ###
+[ 30, 31)   0   0.00%  36.33%
+[ 31, 31] 156  63.67% 100.00% ##########
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Depth by leafs:
-Count: 6537 Average: 4.88542 StdDev: 0.405557
-Min: 2 Max: 5 Ignored: 0
+Count: 3712 Average: 3.95259 StdDev: 0.249814
+Min: 2 Max: 4 Ignored: 0
 ----------------------------------------------
-[ 2, 3)   28   0.43%   0.43%
-[ 3, 4)  122   1.87%   2.29%
-[ 4, 5)  421   6.44%   8.73% #
-[ 5, 5] 5966  91.27% 100.00% ##########
+[ 2, 3)   32   0.86%   0.86%
+[ 3, 4)  112   3.02%   3.88%
+[ 4, 4] 3568  96.12% 100.00% ##########
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Number of training obs by leaf:
-Count: 6537 Average: 0 StdDev: 0
-Min: 0 Max: 0 Ignored: 0
+Count: 3712 Average: 11849.3 StdDev: 33719.3
+Min: 6 Max: 179360 Ignored: 0
 ----------------------------------------------
-[ 0, 0] 6537 100.00% 100.00% ##########
+[      6,   8973) 3100  83.51%  83.51% ##########
+[   8973,  17941)  148   3.99%  87.50%
+[  17941,  26909)   79   2.13%  89.63%
+[  26909,  35877)   36   0.97%  90.60%
+[  35877,  44844)   44   1.19%  91.78%
+[  44844,  53812)   17   0.46%  92.24%
+[  53812,  62780)   20   0.54%  92.78%
+[  62780,  71748)   39   1.05%  93.83%
+[  71748,  80715)   24   0.65%  94.48%
+[  80715,  89683)   12   0.32%  94.80%
+[  89683,  98651)   22   0.59%  95.39%
+[  98651, 107619)   21   0.57%  95.96%
+[ 107619, 116586)   17   0.46%  96.42%
+[ 116586, 125554)   17   0.46%  96.88%
+[ 125554, 134522)   13   0.35%  97.23%
+[ 134522, 143490)    8   0.22%  97.44%
+[ 143490, 152457)    5   0.13%  97.58%
+[ 152457, 161425)    6   0.16%  97.74%
+[ 161425, 170393)   15   0.40%  98.14%
+[ 170393, 179360]   69   1.86% 100.00%
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Attribute in nodes:
-	1373 : detailed_occupation_recode [CATEGORICAL]
-	1263 : detailed_industry_recode [CATEGORICAL]
-	417 : education [CATEGORICAL]
-	381 : dividends_from_stocks [NUMERICAL]
-	337 : capital_gains [NUMERICAL]
-	276 : capital_losses [NUMERICAL]
-	269 : age [NUMERICAL]
-	255 : country_of_birth_father [CATEGORICAL]
-	235 : country_of_birth_mother [CATEGORICAL]
-	187 : state_of_previous_residence [CATEGORICAL]
-	155 : country_of_birth_self [CATEGORICAL]
-	148 : wage_per_hour [NUMERICAL]
-	135 : detailed_household_and_family_stat [CATEGORICAL]
-	128 : class_of_worker [CATEGORICAL]
-	112 : num_persons_worked_for_employer [NUMERICAL]
-	104 : tax_filer_stat [CATEGORICAL]
-	99 : weeks_worked_in_year [NUMERICAL]
-	89 : sex [CATEGORICAL]
-	61 : marital_stat [CATEGORICAL]
-	44 : own_business_or_self_employed [CATEGORICAL]
-	44 : full_or_part_time_employment_stat [CATEGORICAL]
-	39 : major_industry_code [CATEGORICAL]
-	29 : member_of_a_labor_union [CATEGORICAL]
-	26 : hispanic_origin [CATEGORICAL]
-	23 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
-	20 : race [CATEGORICAL]
-	15 : major_occupation_code [CATEGORICAL]
-	9 : migration_code-move_within_reg [CATEGORICAL]
-	7 : migration_code-change_in_reg [CATEGORICAL]
-	4 : reason_for_unemployment [CATEGORICAL]
-	4 : detailed_household_summary_in_household [CATEGORICAL]
-	4 : citizenship [CATEGORICAL]
-	3 : migration_prev_res_in_sunbelt [CATEGORICAL]
-	3 : migration_code-change_in_msa [CATEGORICAL]
-	2 : year [CATEGORICAL]
+	785 : detailed_occupation_recode [CATEGORICAL]
+	668 : detailed_industry_recode [CATEGORICAL]
+	275 : capital_gains [NUMERICAL]
+	220 : dividends_from_stocks [NUMERICAL]
+	197 : capital_losses [NUMERICAL]
+	178 : education [CATEGORICAL]
+	128 : country_of_birth_mother [CATEGORICAL]
+	116 : country_of_birth_father [CATEGORICAL]
+	114 : age [NUMERICAL]
+	98 : wage_per_hour [NUMERICAL]
+	95 : state_of_previous_residence [CATEGORICAL]
+	78 : detailed_household_and_family_stat [CATEGORICAL]
+	67 : class_of_worker [CATEGORICAL]
+	65 : sex [CATEGORICAL]
+	65 : country_of_birth_self [CATEGORICAL]
+	60 : weeks_worked_in_year [NUMERICAL]
+	57 : tax_filer_stat [CATEGORICAL]
+	54 : num_persons_worked_for_employer [NUMERICAL]
+	30 : own_business_or_self_employed [CATEGORICAL]
+	26 : marital_stat [CATEGORICAL]
+	16 : member_of_a_labor_union [CATEGORICAL]
+	15 : major_industry_code [CATEGORICAL]
+	15 : full_or_part_time_employment_stat [CATEGORICAL]
+	15 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
+	9 : hispanic_origin [CATEGORICAL]
+	7 : race [CATEGORICAL]
+	7 : major_occupation_code [CATEGORICAL]
 	1 : veterans_benefits [CATEGORICAL]
-	1 : enroll_in_edu_inst_last_wk [CATEGORICAL]
+	1 : region_of_previous_residence [CATEGORICAL]
+	1 : reason_for_unemployment [CATEGORICAL]
+	1 : migration_prev_res_in_sunbelt [CATEGORICAL]
+	1 : migration_code-change_in_reg [CATEGORICAL]
+	1 : detailed_household_summary_in_household [CATEGORICAL]
+	1 : citizenship [CATEGORICAL]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Attribute in nodes with depth <= 0:
-	38 : capital_gains [NUMERICAL]
-	23 : wage_per_hour [NUMERICAL]
-	23 : education [CATEGORICAL]
-	21 : capital_losses [NUMERICAL]
-	17 : dividends_from_stocks [NUMERICAL]
-	14 : detailed_occupation_recode [CATEGORICAL]
-	13 : detailed_household_and_family_stat [CATEGORICAL]
-	11 : state_of_previous_residence [CATEGORICAL]
-	11 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
-	10 : country_of_birth_self [CATEGORICAL]
-	8 : age [NUMERICAL]
-	6 : weeks_worked_in_year [NUMERICAL]
+	33 : education [CATEGORICAL]
+	29 : capital_gains [NUMERICAL]
+	24 : capital_losses [NUMERICAL]
+	14 : dividends_from_stocks [NUMERICAL]
+	14 : detailed_household_and_family_stat [CATEGORICAL]
+	12 : wage_per_hour [NUMERICAL]
+	11 : weeks_worked_in_year [NUMERICAL]
+	11 : detailed_occupation_recode [CATEGORICAL]
+	11 : country_of_birth_self [CATEGORICAL]
+	10 : state_of_previous_residence [CATEGORICAL]
+	10 : age [NUMERICAL]
+	9 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
+	8 : own_business_or_self_employed [CATEGORICAL]
+	8 : marital_stat [CATEGORICAL]
+	8 : full_or_part_time_employment_stat [CATEGORICAL]
+	8 : class_of_worker [CATEGORICAL]
 	6 : sex [CATEGORICAL]
-	6 : full_or_part_time_employment_stat [CATEGORICAL]
-	6 : class_of_worker [CATEGORICAL]
-	5 : race [CATEGORICAL]
-	4 : hispanic_origin [CATEGORICAL]
-	4 : country_of_birth_mother [CATEGORICAL]
-	3 : own_business_or_self_employed [CATEGORICAL]
-	3 : marital_stat [CATEGORICAL]
-	3 : country_of_birth_father [CATEGORICAL]
+	5 : tax_filer_stat [CATEGORICAL]
+	4 : country_of_birth_father [CATEGORICAL]
+	3 : race [CATEGORICAL]
+	2 : hispanic_origin [CATEGORICAL]
+	2 : detailed_industry_recode [CATEGORICAL]
+	1 : reason_for_unemployment [CATEGORICAL]
+	1 : num_persons_worked_for_employer [NUMERICAL]
+	1 : country_of_birth_mother [CATEGORICAL]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Attribute in nodes with depth <= 1:
-	139 : detailed_occupation_recode [CATEGORICAL]
-	88 : capital_gains [NUMERICAL]
-	59 : capital_losses [NUMERICAL]
-	57 : detailed_industry_recode [CATEGORICAL]
-	53 : education [CATEGORICAL]
-	46 : wage_per_hour [NUMERICAL]
-	46 : dividends_from_stocks [NUMERICAL]
+	140 : detailed_occupation_recode [CATEGORICAL]
+	82 : capital_gains [NUMERICAL]
+	65 : capital_losses [NUMERICAL]
+	62 : education [CATEGORICAL]
+	59 : detailed_industry_recode [CATEGORICAL]
+	47 : dividends_from_stocks [NUMERICAL]
+	31 : wage_per_hour [NUMERICAL]
 	26 : detailed_household_and_family_stat [CATEGORICAL]
-	20 : country_of_birth_self [CATEGORICAL]
-	19 : state_of_previous_residence [CATEGORICAL]
-	19 : sex [CATEGORICAL]
-	17 : weeks_worked_in_year [NUMERICAL]
-	17 : age [NUMERICAL]
-	14 : class_of_worker [CATEGORICAL]
-	11 : own_business_or_self_employed [CATEGORICAL]
+	23 : age [NUMERICAL]
+	22 : state_of_previous_residence [CATEGORICAL]
+	21 : country_of_birth_self [CATEGORICAL]
+	21 : class_of_worker [CATEGORICAL]
+	20 : weeks_worked_in_year [NUMERICAL]
+	20 : sex [CATEGORICAL]
+	15 : country_of_birth_father [CATEGORICAL]
+	12 : own_business_or_self_employed [CATEGORICAL]
 	11 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
-	9 : marital_stat [CATEGORICAL]
+	10 : num_persons_worked_for_employer [NUMERICAL]
+	9 : tax_filer_stat [CATEGORICAL]
 	9 : full_or_part_time_employment_stat [CATEGORICAL]
-	8 : tax_filer_stat [CATEGORICAL]
-	8 : country_of_birth_father [CATEGORICAL]
-	7 : country_of_birth_mother [CATEGORICAL]
-	6 : race [CATEGORICAL]
-	6 : num_persons_worked_for_employer [NUMERICAL]
-	6 : hispanic_origin [CATEGORICAL]
-	2 : reason_for_unemployment [CATEGORICAL]
-	2 : member_of_a_labor_union [CATEGORICAL]
+	8 : marital_stat [CATEGORICAL]
+	8 : country_of_birth_mother [CATEGORICAL]
+	6 : member_of_a_labor_union [CATEGORICAL]
+	5 : race [CATEGORICAL]
+	2 : hispanic_origin [CATEGORICAL]
+	1 : reason_for_unemployment [CATEGORICAL]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Attribute in nodes with depth <= 2:
-	376 : detailed_occupation_recode [CATEGORICAL]
-	254 : detailed_industry_recode [CATEGORICAL]
-	160 : capital_gains [NUMERICAL]
-	110 : capital_losses [NUMERICAL]
-	97 : dividends_from_stocks [NUMERICAL]
-	88 : education [CATEGORICAL]
-	72 : wage_per_hour [NUMERICAL]
-	42 : sex [CATEGORICAL]
-	42 : detailed_household_and_family_stat [CATEGORICAL]
+	399 : detailed_occupation_recode [CATEGORICAL]
+	249 : detailed_industry_recode [CATEGORICAL]
+	170 : capital_gains [NUMERICAL]
+	117 : dividends_from_stocks [NUMERICAL]
+	116 : capital_losses [NUMERICAL]
+	87 : education [CATEGORICAL]
+	59 : wage_per_hour [NUMERICAL]
+	45 : detailed_household_and_family_stat [CATEGORICAL]
+	43 : country_of_birth_father [CATEGORICAL]
+	43 : age [NUMERICAL]
+	40 : country_of_birth_self [CATEGORICAL]
 	38 : state_of_previous_residence [CATEGORICAL]
-	37 : age [NUMERICAL]
-	36 : country_of_birth_self [CATEGORICAL]
-	32 : country_of_birth_father [CATEGORICAL]
-	29 : weeks_worked_in_year [NUMERICAL]
-	29 : tax_filer_stat [CATEGORICAL]
-	29 : class_of_worker [CATEGORICAL]
-	28 : country_of_birth_mother [CATEGORICAL]
-	21 : marital_stat [CATEGORICAL]
-	20 : num_persons_worked_for_employer [NUMERICAL]
-	17 : own_business_or_self_employed [CATEGORICAL]
-	14 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
-	13 : full_or_part_time_employment_stat [CATEGORICAL]
-	12 : hispanic_origin [CATEGORICAL]
+	38 : class_of_worker [CATEGORICAL]
+	37 : sex [CATEGORICAL]
+	36 : weeks_worked_in_year [NUMERICAL]
+	33 : country_of_birth_mother [CATEGORICAL]
+	28 : num_persons_worked_for_employer [NUMERICAL]
+	26 : tax_filer_stat [CATEGORICAL]
+	14 : own_business_or_self_employed [CATEGORICAL]
+	14 : marital_stat [CATEGORICAL]
+	12 : full_or_part_time_employment_stat [CATEGORICAL]
+	12 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
 	8 : member_of_a_labor_union [CATEGORICAL]
 	6 : race [CATEGORICAL]
-	3 : major_industry_code [CATEGORICAL]
-	2 : reason_for_unemployment [CATEGORICAL]
+	6 : hispanic_origin [CATEGORICAL]
+	2 : major_occupation_code [CATEGORICAL]
+	2 : major_industry_code [CATEGORICAL]
+	1 : reason_for_unemployment [CATEGORICAL]
 	1 : migration_prev_res_in_sunbelt [CATEGORICAL]
-	1 : major_occupation_code [CATEGORICAL]
+	1 : migration_code-change_in_reg [CATEGORICAL]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Attribute in nodes with depth <= 3:
-	768 : detailed_occupation_recode [CATEGORICAL]
-	656 : detailed_industry_recode [CATEGORICAL]
-	231 : capital_gains [NUMERICAL]
-	198 : education [CATEGORICAL]
-	197 : dividends_from_stocks [NUMERICAL]
-	177 : capital_losses [NUMERICAL]
-	104 : country_of_birth_mother [CATEGORICAL]
-	101 : wage_per_hour [NUMERICAL]
-	101 : age [NUMERICAL]
-	95 : country_of_birth_father [CATEGORICAL]
-	88 : state_of_previous_residence [CATEGORICAL]
-	82 : country_of_birth_self [CATEGORICAL]
-	70 : detailed_household_and_family_stat [CATEGORICAL]
-	68 : class_of_worker [CATEGORICAL]
-	63 : sex [CATEGORICAL]
-	57 : weeks_worked_in_year [NUMERICAL]
-	53 : tax_filer_stat [CATEGORICAL]
-	48 : num_persons_worked_for_employer [NUMERICAL]
-	34 : marital_stat [CATEGORICAL]
-	27 : own_business_or_self_employed [CATEGORICAL]
-	16 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
-	15 : member_of_a_labor_union [CATEGORICAL]
+	785 : detailed_occupation_recode [CATEGORICAL]
+	668 : detailed_industry_recode [CATEGORICAL]
+	275 : capital_gains [NUMERICAL]
+	220 : dividends_from_stocks [NUMERICAL]
+	197 : capital_losses [NUMERICAL]
+	178 : education [CATEGORICAL]
+	128 : country_of_birth_mother [CATEGORICAL]
+	116 : country_of_birth_father [CATEGORICAL]
+	114 : age [NUMERICAL]
+	98 : wage_per_hour [NUMERICAL]
+	95 : state_of_previous_residence [CATEGORICAL]
+	78 : detailed_household_and_family_stat [CATEGORICAL]
+	67 : class_of_worker [CATEGORICAL]
+	65 : sex [CATEGORICAL]
+	65 : country_of_birth_self [CATEGORICAL]
+	60 : weeks_worked_in_year [NUMERICAL]
+	57 : tax_filer_stat [CATEGORICAL]
+	54 : num_persons_worked_for_employer [NUMERICAL]
+	30 : own_business_or_self_employed [CATEGORICAL]
+	26 : marital_stat [CATEGORICAL]
+	16 : member_of_a_labor_union [CATEGORICAL]
 	15 : major_industry_code [CATEGORICAL]
-	15 : hispanic_origin [CATEGORICAL]
 	15 : full_or_part_time_employment_stat [CATEGORICAL]
-	10 : race [CATEGORICAL]
-	5 : migration_code-move_within_reg [CATEGORICAL]
-	2 : reason_for_unemployment [CATEGORICAL]
-	2 : major_occupation_code [CATEGORICAL]
-	1 : year [CATEGORICAL]
+	15 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
+	9 : hispanic_origin [CATEGORICAL]
+	7 : race [CATEGORICAL]
+	7 : major_occupation_code [CATEGORICAL]
 	1 : veterans_benefits [CATEGORICAL]
+	1 : region_of_previous_residence [CATEGORICAL]
+	1 : reason_for_unemployment [CATEGORICAL]
 	1 : migration_prev_res_in_sunbelt [CATEGORICAL]
 	1 : migration_code-change_in_reg [CATEGORICAL]
-	1 : enroll_in_edu_inst_last_wk [CATEGORICAL]
+	1 : detailed_household_summary_in_household [CATEGORICAL]
 	1 : citizenship [CATEGORICAL]
 ```
 </div>
@@ -1023,72 +1059,69 @@ Attribute in nodes with depth <= 3:
 <div class="k-default-codeblock">
 ```
 Attribute in nodes with depth <= 5:
-	1373 : detailed_occupation_recode [CATEGORICAL]
-	1263 : detailed_industry_recode [CATEGORICAL]
-	417 : education [CATEGORICAL]
-	381 : dividends_from_stocks [NUMERICAL]
-	337 : capital_gains [NUMERICAL]
-	276 : capital_losses [NUMERICAL]
-	269 : age [NUMERICAL]
-	255 : country_of_birth_father [CATEGORICAL]
-	235 : country_of_birth_mother [CATEGORICAL]
-	187 : state_of_previous_residence [CATEGORICAL]
-	155 : country_of_birth_self [CATEGORICAL]
-	148 : wage_per_hour [NUMERICAL]
-	135 : detailed_household_and_family_stat [CATEGORICAL]
-	128 : class_of_worker [CATEGORICAL]
-	112 : num_persons_worked_for_employer [NUMERICAL]
-	104 : tax_filer_stat [CATEGORICAL]
-	99 : weeks_worked_in_year [NUMERICAL]
-	89 : sex [CATEGORICAL]
-	61 : marital_stat [CATEGORICAL]
-	44 : own_business_or_self_employed [CATEGORICAL]
-	44 : full_or_part_time_employment_stat [CATEGORICAL]
-	39 : major_industry_code [CATEGORICAL]
-	29 : member_of_a_labor_union [CATEGORICAL]
-	26 : hispanic_origin [CATEGORICAL]
-	23 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
-	20 : race [CATEGORICAL]
-	15 : major_occupation_code [CATEGORICAL]
-	9 : migration_code-move_within_reg [CATEGORICAL]
-	7 : migration_code-change_in_reg [CATEGORICAL]
-	4 : reason_for_unemployment [CATEGORICAL]
-	4 : detailed_household_summary_in_household [CATEGORICAL]
-	4 : citizenship [CATEGORICAL]
-	3 : migration_prev_res_in_sunbelt [CATEGORICAL]
-	3 : migration_code-change_in_msa [CATEGORICAL]
-	2 : year [CATEGORICAL]
+	785 : detailed_occupation_recode [CATEGORICAL]
+	668 : detailed_industry_recode [CATEGORICAL]
+	275 : capital_gains [NUMERICAL]
+	220 : dividends_from_stocks [NUMERICAL]
+	197 : capital_losses [NUMERICAL]
+	178 : education [CATEGORICAL]
+	128 : country_of_birth_mother [CATEGORICAL]
+	116 : country_of_birth_father [CATEGORICAL]
+	114 : age [NUMERICAL]
+	98 : wage_per_hour [NUMERICAL]
+	95 : state_of_previous_residence [CATEGORICAL]
+	78 : detailed_household_and_family_stat [CATEGORICAL]
+	67 : class_of_worker [CATEGORICAL]
+	65 : sex [CATEGORICAL]
+	65 : country_of_birth_self [CATEGORICAL]
+	60 : weeks_worked_in_year [NUMERICAL]
+	57 : tax_filer_stat [CATEGORICAL]
+	54 : num_persons_worked_for_employer [NUMERICAL]
+	30 : own_business_or_self_employed [CATEGORICAL]
+	26 : marital_stat [CATEGORICAL]
+	16 : member_of_a_labor_union [CATEGORICAL]
+	15 : major_industry_code [CATEGORICAL]
+	15 : full_or_part_time_employment_stat [CATEGORICAL]
+	15 : fill_inc_questionnaire_for_veteran's_admin [CATEGORICAL]
+	9 : hispanic_origin [CATEGORICAL]
+	7 : race [CATEGORICAL]
+	7 : major_occupation_code [CATEGORICAL]
 	1 : veterans_benefits [CATEGORICAL]
-	1 : enroll_in_edu_inst_last_wk [CATEGORICAL]
+	1 : region_of_previous_residence [CATEGORICAL]
+	1 : reason_for_unemployment [CATEGORICAL]
+	1 : migration_prev_res_in_sunbelt [CATEGORICAL]
+	1 : migration_code-change_in_reg [CATEGORICAL]
+	1 : detailed_household_summary_in_household [CATEGORICAL]
+	1 : citizenship [CATEGORICAL]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Condition type in nodes:
-	4638 : ContainsBitmapCondition
-	1622 : HigherCondition
-	42 : ContainsCondition
+	2418 : ContainsBitmapCondition
+	1018 : HigherCondition
+	31 : ContainsCondition
 Condition type in nodes with depth <= 0:
-	118 : ContainsBitmapCondition
-	113 : HigherCondition
-	4 : ContainsCondition
+	137 : ContainsBitmapCondition
+	101 : HigherCondition
+	7 : ContainsCondition
 Condition type in nodes with depth <= 1:
-	420 : ContainsBitmapCondition
-	279 : HigherCondition
-	6 : ContainsCondition
+	448 : ContainsBitmapCondition
+	278 : HigherCondition
+	9 : ContainsCondition
 Condition type in nodes with depth <= 2:
-	1077 : ContainsBitmapCondition
-	525 : HigherCondition
-	15 : ContainsCondition
+	1097 : ContainsBitmapCondition
+	569 : HigherCondition
+	17 : ContainsCondition
 Condition type in nodes with depth <= 3:
-	2380 : ContainsBitmapCondition
-	912 : HigherCondition
-	27 : ContainsCondition
+	2418 : ContainsBitmapCondition
+	1018 : HigherCondition
+	31 : ContainsCondition
 Condition type in nodes with depth <= 5:
-	4638 : ContainsBitmapCondition
-	1622 : HigherCondition
-	42 : ContainsCondition
+	2418 : ContainsBitmapCondition
+	1018 : HigherCondition
+	31 : ContainsCondition
 ```
 </div>
     
@@ -1208,22 +1241,22 @@ class BinaryTargetEncoding(layers.Layer):
         # Cast the inputs int64 a tensor.
         inputs = tf.cast(inputs, tf.dtypes.int64)
         # Lookup positive frequencies for the input feature values.
-        positive_fequency = tf.cast(
+        positive_frequency = tf.cast(
             tf.gather_nd(self.positive_frequency_lookup, inputs),
             dtype=tf.dtypes.float32,
         )
         # Lookup negative frequencies for the input feature values.
-        negative_fequency = tf.cast(
+        negative_frequency = tf.cast(
             tf.gather_nd(self.negative_frequency_lookup, inputs),
             dtype=tf.dtypes.float32,
         )
         # Compute positive probability for the input feature values.
-        positive_probability = positive_fequency / (
-            positive_fequency + negative_fequency
+        positive_probability = positive_frequency / (
+            positive_frequency + negative_frequency
         )
         # Concatenate and return the looked-up statistics.
         return tf.concat(
-            [positive_fequency, negative_fequency, positive_probability], axis=1
+            [positive_frequency, negative_frequency, positive_probability], axis=1
         )
 
 ```
@@ -1327,7 +1360,6 @@ def create_gbt_with_preprocessor(preprocessor):
 
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
         preprocessing=preprocessor,
-        growing_strategy=GROWING_STRATEGY,
         num_trees=NUM_TREES,
         max_depth=MAX_DEPTH,
         min_examples=MIN_EXAMPLES,
@@ -1517,14 +1549,14 @@ Target encoding: Computing unique feature values...
 Target encoding: Computing frequencies for feature values with positive targets...
 Target encoding: Computing frequencies for feature values with negative targets...
 Target encoding: Storing target encoding statistics...
-Use /tmp/tmpxf8sriy5 as temporary training directory
+Use /tmp/tmpggw42xgs as temporary training directory
 Starting reading the dataset
 199/200 [============================>.] - ETA: 0s
-Dataset read in 0:00:07.793913
+Dataset read in 0:00:07.012647
 Training model
-Model trained in 0:05:34.905892
+Model trained in 0:04:26.657000
 Compiling model
-200/200 [==============================] - 343s 2s/step
+200/200 [==============================] - 274s 1s/step
 Test accuracy: 95.81%
 
 ```
@@ -1616,11 +1648,11 @@ run_experiment(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-200/200 [==============================] - 9s 26ms/step - loss: 67492.5078 - accuracy: 0.9233
+200/200 [==============================] - 9s 25ms/step - loss: 56470.7148 - accuracy: 0.9143
 Epoch 2/3
-200/200 [==============================] - 5s 26ms/step - loss: 2280.0027 - accuracy: 0.9386
+200/200 [==============================] - 5s 25ms/step - loss: 427.9976 - accuracy: 0.9420
 Epoch 3/3
-200/200 [==============================] - 5s 26ms/step - loss: 251.2815 - accuracy: 0.9480
+200/200 [==============================] - 5s 25ms/step - loss: 249.2770 - accuracy: 0.9482
 Test accuracy: 94.84%
 
 ```
@@ -1635,14 +1667,14 @@ run_experiment(gbt_model, train_data, test_data)
 
 <div class="k-default-codeblock">
 ```
-Use /tmp/tmpjlc3nb8k as temporary training directory
+Use /tmp/tmp60b5zo1y as temporary training directory
 Starting reading the dataset
 198/200 [============================>.] - ETA: 0s
-Dataset read in 0:00:06.955685
+Dataset read in 0:00:06.947818
 Training model
-Model trained in 0:05:43.275620
+Model trained in 0:04:29.900346
 Compiling model
-200/200 [==============================] - 350s 2s/step
+200/200 [==============================] - 277s 1s/step
 Test accuracy: 95.82%
 
 ```
@@ -1655,7 +1687,6 @@ In our experiments, the Gradient Boosted Tree model achieved 95.79% test accurac
 When using the target encoding with categorical feature, the same model achieved 95.81% test accuracy.
 When pretraining embeddings to be used as inputs to the Gradient Boosted Tree model,
 we achieved 95.82% test accuracy.
-
 
 Decision Forests can be used with Neural Networks, either by
 1) using Neural Networks to learn useful representation of the input data,

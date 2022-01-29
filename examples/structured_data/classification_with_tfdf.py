@@ -16,6 +16,9 @@ The models include [Random Forests](https://www.tensorflow.org/decision_forests/
 [Gradient Boosted Trees](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel),
 and [CART](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/CartModel),
 and can be used for regression, classification, and ranking task.
+For a beginner's guide to TensorFlow Decision Forests,
+please refer to this [tutorial](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab).
+
 
 This example uses Gradient Boosted Trees model in binary classification of
 structured data, and covers the following scenarios:
@@ -76,22 +79,6 @@ train_data = pd.read_csv(f"{BASE_PATH}.data.gz", header=None, names=CSV_HEADER,)
 test_data = pd.read_csv(f"{BASE_PATH}.test.gz", header=None, names=CSV_HEADER,)
 
 """
-We convert the target column from string to integer.
-"""
-
-target_labels = [" - 50000.", " 50000+."]
-train_data["income_level"] = train_data["income_level"].map(target_labels.index)
-test_data["income_level"] = test_data["income_level"].map(target_labels.index)
-
-"""
-Now let's show the shapes of the training and test dataframes, and display some instances.
-"""
-
-print(f"Train data shape: {train_data.shape}")
-print(f"Test data shape: {test_data.shape}")
-print(train_data.head().T)
-
-"""
 ## Define dataset metadata
 
 Here, we define the metadata of the dataset that will be useful for encoding
@@ -100,6 +87,8 @@ the input features with respect to their types.
 
 # Target column name.
 TARGET_COLUMN_NAME = "income_level"
+# The labels of the target columns.
+TARGET_LABELS = [" - 50000.", " 50000+."]
 # Weight column name.
 WEIGHT_COLUMN_NAME = "instance_weight"
 # Numeric feature names.
@@ -127,13 +116,38 @@ FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
 )
 
 """
+Now we perform basic data preparation.
+"""
+
+
+def prepare_dataframe(dataframe):
+    # Convert the target labels from string to integer.
+    dataframe[TARGET_COLUMN_NAME] = dataframe[TARGET_COLUMN_NAME].map(
+        TARGET_LABELS.index
+    )
+    # Cast the categorical features to string.
+    for feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+        dataframe[feature_name] = dataframe[feature_name].astype(str)
+
+
+prepare_dataframe(train_data)
+prepare_dataframe(test_data)
+
+"""
+Now let's show the shapes of the training and test dataframes, and display some instances.
+"""
+
+print(f"Train data shape: {train_data.shape}")
+print(f"Test data shape: {test_data.shape}")
+print(train_data.head().T)
+
+"""
 ## Configure hyperparameters
 
 You can find all the parameters of the Gradient Boosted Tree model in the
 [documentation](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel)
 """
 
-GROWING_STRATEGY = "BEST_FIRST_GLOBAL"
 NUM_TREES = 250
 MIN_EXAMPLES = 6
 MAX_DEPTH = 5
@@ -146,23 +160,14 @@ VALIDATION_RATIO = 0.1
 """
 
 
-def prepare_sample(features, target, weight):
-    for feature_name in features:
-        if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-            if features[feature_name].dtype != tf.dtypes.string:
-                # Convert categorical feature values to string.
-                features[feature_name] = tf.strings.as_string(features[feature_name])
-    return features, target, weight
-
-
 def run_experiment(model, train_data, test_data, num_epochs=1, batch_size=None):
 
     train_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         train_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
-    ).map(prepare_sample, num_parallel_calls=tf.data.AUTOTUNE)
+    )
     test_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         test_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
-    ).map(prepare_sample, num_parallel_calls=tf.data.AUTOTUNE)
+    )
 
     model.fit(train_dataset, epochs=num_epochs, batch_size=batch_size)
     _, accuracy = model.evaluate(test_dataset, verbose=0)
@@ -238,7 +243,6 @@ def create_gbt_model():
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
         features=specify_feature_usages(create_model_inputs()),
         exclude_non_specified_features=True,
-        growing_strategy=GROWING_STRATEGY,
         num_trees=NUM_TREES,
         max_depth=MAX_DEPTH,
         min_examples=MIN_EXAMPLES,
@@ -383,22 +387,22 @@ class BinaryTargetEncoding(layers.Layer):
         # Cast the inputs int64 a tensor.
         inputs = tf.cast(inputs, tf.dtypes.int64)
         # Lookup positive frequencies for the input feature values.
-        positive_fequency = tf.cast(
+        positive_frequency = tf.cast(
             tf.gather_nd(self.positive_frequency_lookup, inputs),
             dtype=tf.dtypes.float32,
         )
         # Lookup negative frequencies for the input feature values.
-        negative_fequency = tf.cast(
+        negative_frequency = tf.cast(
             tf.gather_nd(self.negative_frequency_lookup, inputs),
             dtype=tf.dtypes.float32,
         )
         # Compute positive probability for the input feature values.
-        positive_probability = positive_fequency / (
-            positive_fequency + negative_fequency
+        positive_probability = positive_frequency / (
+            positive_frequency + negative_frequency
         )
         # Concatenate and return the looked-up statistics.
         return tf.concat(
-            [positive_fequency, negative_fequency, positive_probability], axis=1
+            [positive_frequency, negative_frequency, positive_probability], axis=1
         )
 
 
@@ -486,7 +490,6 @@ def create_gbt_with_preprocessor(preprocessor):
 
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
         preprocessing=preprocessor,
-        growing_strategy=GROWING_STRATEGY,
         num_trees=NUM_TREES,
         max_depth=MAX_DEPTH,
         min_examples=MIN_EXAMPLES,
