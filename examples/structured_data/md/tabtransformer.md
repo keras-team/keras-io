@@ -43,13 +43,6 @@ import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 ```
 
-<div class="k-default-codeblock">
-```
-2022-01-18 18:54:01.877364: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-01-18 18:54:01.877410: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 ---
 ## Prepare the data
 
@@ -230,16 +223,7 @@ def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-01-18 18:54:12.579096: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-01-18 18:54:12.579159: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-01-18 18:54:12.579200: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (keras-notebooks): /proc/driver/nvidia/version does not exist
-2022-01-18 18:54:12.580891: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
-```
-</div>
 ---
 ## Implement a training and evaluation procedure
 
@@ -447,10 +431,15 @@ keras.utils.plot_model(baseline_model, show_shapes=True, rankdir="LR")
 <div class="k-default-codeblock">
 ```
 Total model weights: 109629
-('You must install pydot (`pip install pydot`) and install graphviz (see instructions at https://graphviz.gitlab.io/download/) ', 'for plot_model/model_to_dot to work.')
 
 ```
 </div>
+    
+![png](/img/examples/structured_data/tabtransformer/tabtransformer_24_1.png)
+    
+
+
+
 Let's train and evaluate the baseline model:
 
 
@@ -470,37 +459,37 @@ history = run_experiment(
 ```
 Start training the model...
 Epoch 1/15
-123/123 [==============================] - 7s 27ms/step - loss: 110574.9141 - accuracy: 0.7469 - val_loss: 95106.3047 - val_accuracy: 0.7812
+123/123 [==============================] - 6s 25ms/step - loss: 110178.8203 - accuracy: 0.7478 - val_loss: 92703.0859 - val_accuracy: 0.7825
 Epoch 2/15
-123/123 [==============================] - 2s 15ms/step - loss: 90679.1172 - accuracy: 0.7677 - val_loss: 85083.6250 - val_accuracy: 0.7831
+123/123 [==============================] - 2s 14ms/step - loss: 90979.8125 - accuracy: 0.7675 - val_loss: 71798.9219 - val_accuracy: 0.8001
 Epoch 3/15
-123/123 [==============================] - 2s 15ms/step - loss: 75590.9531 - accuracy: 0.7925 - val_loss: 68293.9844 - val_accuracy: 0.8179
+123/123 [==============================] - 2s 14ms/step - loss: 77226.5547 - accuracy: 0.7902 - val_loss: 68581.0312 - val_accuracy: 0.8168
 Epoch 4/15
-123/123 [==============================] - 2s 15ms/step - loss: 72426.5391 - accuracy: 0.8017 - val_loss: 69626.7812 - val_accuracy: 0.8183
+123/123 [==============================] - 2s 14ms/step - loss: 72652.2422 - accuracy: 0.8004 - val_loss: 70084.0469 - val_accuracy: 0.7974
 Epoch 5/15
-123/123 [==============================] - 2s 15ms/step - loss: 70548.9766 - accuracy: 0.8044 - val_loss: 78782.6875 - val_accuracy: 0.8059
+123/123 [==============================] - 2s 14ms/step - loss: 71207.9375 - accuracy: 0.8033 - val_loss: 66552.1719 - val_accuracy: 0.8130
 Epoch 6/15
-123/123 [==============================] - 2s 15ms/step - loss: 69423.2812 - accuracy: 0.8056 - val_loss: 68385.0859 - val_accuracy: 0.8188
+123/123 [==============================] - 2s 14ms/step - loss: 69321.4375 - accuracy: 0.8091 - val_loss: 65837.0469 - val_accuracy: 0.8149
 Epoch 7/15
-123/123 [==============================] - 2s 15ms/step - loss: 68915.7656 - accuracy: 0.8113 - val_loss: 67443.1797 - val_accuracy: 0.8216
+123/123 [==============================] - 2s 14ms/step - loss: 68839.3359 - accuracy: 0.8099 - val_loss: 65613.0156 - val_accuracy: 0.8187
 Epoch 8/15
-123/123 [==============================] - 2s 15ms/step - loss: 68597.8906 - accuracy: 0.8120 - val_loss: 68740.5938 - val_accuracy: 0.8187
+123/123 [==============================] - 2s 14ms/step - loss: 68126.7344 - accuracy: 0.8124 - val_loss: 66155.8594 - val_accuracy: 0.8108
 Epoch 9/15
-123/123 [==============================] - 2s 15ms/step - loss: 68021.6328 - accuracy: 0.8118 - val_loss: 66513.7031 - val_accuracy: 0.8205
+123/123 [==============================] - 2s 14ms/step - loss: 67768.9844 - accuracy: 0.8147 - val_loss: 66705.8047 - val_accuracy: 0.8230
 Epoch 10/15
-123/123 [==============================] - 2s 15ms/step - loss: 67422.9531 - accuracy: 0.8150 - val_loss: 67441.1094 - val_accuracy: 0.8212
+123/123 [==============================] - 2s 14ms/step - loss: 67482.5859 - accuracy: 0.8151 - val_loss: 65668.3672 - val_accuracy: 0.8143
 Epoch 11/15
-123/123 [==============================] - 2s 15ms/step - loss: 67292.8047 - accuracy: 0.8149 - val_loss: 67310.7031 - val_accuracy: 0.8206
+123/123 [==============================] - 2s 14ms/step - loss: 66792.6875 - accuracy: 0.8181 - val_loss: 66536.3828 - val_accuracy: 0.8233
 Epoch 12/15
-123/123 [==============================] - 2s 15ms/step - loss: 67039.5391 - accuracy: 0.8152 - val_loss: 66347.3359 - val_accuracy: 0.8211
+123/123 [==============================] - 2s 14ms/step - loss: 65610.4531 - accuracy: 0.8229 - val_loss: 70377.7266 - val_accuracy: 0.8256
 Epoch 13/15
-123/123 [==============================] - 2s 14ms/step - loss: 66747.0234 - accuracy: 0.8167 - val_loss: 66547.9453 - val_accuracy: 0.8205
+123/123 [==============================] - 2s 14ms/step - loss: 63930.2500 - accuracy: 0.8282 - val_loss: 68294.8516 - val_accuracy: 0.8289
 Epoch 14/15
-123/123 [==============================] - 2s 15ms/step - loss: 66576.5938 - accuracy: 0.8193 - val_loss: 64635.7031 - val_accuracy: 0.8237
+123/123 [==============================] - 2s 14ms/step - loss: 63420.1562 - accuracy: 0.8323 - val_loss: 63050.5859 - val_accuracy: 0.8324
 Epoch 15/15
-123/123 [==============================] - 2s 15ms/step - loss: 65734.0938 - accuracy: 0.8219 - val_loss: 65115.3750 - val_accuracy: 0.8312
+123/123 [==============================] - 2s 14ms/step - loss: 62619.4531 - accuracy: 0.8345 - val_loss: 66933.7500 - val_accuracy: 0.8277
 Model training finished
-Validation accuracy: 83.12%
+Validation accuracy: 82.77%
 
 ```
 </div>
@@ -524,7 +513,7 @@ The [paper](https://arxiv.org/abs/2012.06678) discusses both addition and concat
 *Appendix: Experiment and Model Details* section.
 The architecture of TabTransformer is shown below, as presented in the paper.
 
-![tabtransformer](https://github.com/keras-team/keras-io/blob/master/examples/structured_data/img/tabtransformer/tabtransfoermer.png)
+<img src="https://raw.githubusercontent.com/keras-team/keras-io/master/examples/structured_data/img/tabtransformer/tabtransformer.png" width="500"/>
 
 
 ```python
@@ -631,10 +620,15 @@ keras.utils.plot_model(tabtransformer_model, show_shapes=True, rankdir="LR")
 <div class="k-default-codeblock">
 ```
 Total model weights: 87479
-('You must install pydot (`pip install pydot`) and install graphviz (see instructions at https://graphviz.gitlab.io/download/) ', 'for plot_model/model_to_dot to work.')
 
 ```
 </div>
+    
+![png](/img/examples/structured_data/tabtransformer/tabtransformer_29_1.png)
+    
+
+
+
 Let's train and evaluate the TabTransformer model:
 
 
@@ -654,37 +648,37 @@ history = run_experiment(
 ```
 Start training the model...
 Epoch 1/15
-123/123 [==============================] - 14s 63ms/step - loss: 79315.3516 - accuracy: 0.7970 - val_loss: 66115.7969 - val_accuracy: 0.8406
+123/123 [==============================] - 13s 61ms/step - loss: 82503.1641 - accuracy: 0.7944 - val_loss: 64260.2305 - val_accuracy: 0.8421
 Epoch 2/15
-123/123 [==============================] - 7s 53ms/step - loss: 68751.2109 - accuracy: 0.8253 - val_loss: 65475.8320 - val_accuracy: 0.8397
+123/123 [==============================] - 6s 51ms/step - loss: 68677.9375 - accuracy: 0.8251 - val_loss: 63819.8633 - val_accuracy: 0.8389
 Epoch 3/15
-123/123 [==============================] - 7s 54ms/step - loss: 66452.5312 - accuracy: 0.8297 - val_loss: 62136.4180 - val_accuracy: 0.8463
+123/123 [==============================] - 6s 51ms/step - loss: 66703.8984 - accuracy: 0.8301 - val_loss: 63052.8789 - val_accuracy: 0.8428
 Epoch 4/15
-123/123 [==============================] - 7s 53ms/step - loss: 64246.3477 - accuracy: 0.8366 - val_loss: 62125.8516 - val_accuracy: 0.8452
+123/123 [==============================] - 6s 51ms/step - loss: 65287.8672 - accuracy: 0.8342 - val_loss: 61593.1484 - val_accuracy: 0.8451
 Epoch 5/15
-123/123 [==============================] - 6s 53ms/step - loss: 63572.6055 - accuracy: 0.8387 - val_loss: 61939.7930 - val_accuracy: 0.8447
+123/123 [==============================] - 6s 52ms/step - loss: 63968.8594 - accuracy: 0.8379 - val_loss: 61385.4531 - val_accuracy: 0.8442
 Epoch 6/15
-123/123 [==============================] - 6s 52ms/step - loss: 63012.8477 - accuracy: 0.8415 - val_loss: 62016.4570 - val_accuracy: 0.8454
+123/123 [==============================] - 6s 51ms/step - loss: 63645.7812 - accuracy: 0.8394 - val_loss: 61332.3281 - val_accuracy: 0.8447
 Epoch 7/15
-123/123 [==============================] - 6s 52ms/step - loss: 62265.0547 - accuracy: 0.8424 - val_loss: 61894.2852 - val_accuracy: 0.8471
+123/123 [==============================] - 6s 51ms/step - loss: 62778.6055 - accuracy: 0.8412 - val_loss: 61342.5352 - val_accuracy: 0.8461
 Epoch 8/15
-123/123 [==============================] - 6s 52ms/step - loss: 62148.0352 - accuracy: 0.8424 - val_loss: 61682.7070 - val_accuracy: 0.8422
+123/123 [==============================] - 6s 51ms/step - loss: 62815.6992 - accuracy: 0.8398 - val_loss: 61220.8242 - val_accuracy: 0.8460
 Epoch 9/15
-123/123 [==============================] - 7s 53ms/step - loss: 61794.2773 - accuracy: 0.8441 - val_loss: 62334.7891 - val_accuracy: 0.8421
+123/123 [==============================] - 6s 52ms/step - loss: 62191.1016 - accuracy: 0.8416 - val_loss: 61055.9102 - val_accuracy: 0.8452
 Epoch 10/15
-123/123 [==============================] - 7s 54ms/step - loss: 61479.3867 - accuracy: 0.8439 - val_loss: 62580.0625 - val_accuracy: 0.8418
+123/123 [==============================] - 6s 51ms/step - loss: 61992.1602 - accuracy: 0.8439 - val_loss: 61251.8047 - val_accuracy: 0.8441
 Epoch 11/15
-123/123 [==============================] - 7s 54ms/step - loss: 61184.4883 - accuracy: 0.8462 - val_loss: 61866.2031 - val_accuracy: 0.8456
+123/123 [==============================] - 6s 50ms/step - loss: 61745.1289 - accuracy: 0.8429 - val_loss: 61364.7695 - val_accuracy: 0.8445
 Epoch 12/15
-123/123 [==============================] - 7s 54ms/step - loss: 61241.9336 - accuracy: 0.8448 - val_loss: 61736.5547 - val_accuracy: 0.8431
+123/123 [==============================] - 6s 51ms/step - loss: 61696.3477 - accuracy: 0.8445 - val_loss: 61074.3594 - val_accuracy: 0.8450
 Epoch 13/15
-123/123 [==============================] - 7s 53ms/step - loss: 61207.5625 - accuracy: 0.8453 - val_loss: 61739.3633 - val_accuracy: 0.8433
+123/123 [==============================] - 6s 51ms/step - loss: 61569.1719 - accuracy: 0.8436 - val_loss: 61844.9688 - val_accuracy: 0.8456
 Epoch 14/15
-123/123 [==============================] - 6s 53ms/step - loss: 61024.6758 - accuracy: 0.8450 - val_loss: 61468.6406 - val_accuracy: 0.8450
+123/123 [==============================] - 6s 51ms/step - loss: 61343.0898 - accuracy: 0.8445 - val_loss: 61702.8828 - val_accuracy: 0.8455
 Epoch 15/15
-123/123 [==============================] - 6s 53ms/step - loss: 60983.3984 - accuracy: 0.8455 - val_loss: 62017.6562 - val_accuracy: 0.8422
+123/123 [==============================] - 6s 51ms/step - loss: 61355.0547 - accuracy: 0.8454 - val_loss: 61272.2852 - val_accuracy: 0.8455
 Model training finished
-Validation accuracy: 84.22%
+Validation accuracy: 84.55%
 
 ```
 </div>
