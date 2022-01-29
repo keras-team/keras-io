@@ -1,9 +1,9 @@
 """
-Title: Text Image Denoiser.
-Author: [Anish B](https://twitter.com/anishhacko)
-Date created: 2021/01/18
-Last modified: 2022/01/27
-Description: Example of Text Image Denoiser coupled with Tesseract OCR engine to improve text readability.
+Title: FILLME
+Author: FILLME
+Date created: FILLME
+Last modified: FILLME
+Description: FILLME
 """
 """
 ## Introduction
@@ -16,19 +16,27 @@ popularity for several Image-to-Image tasks. We aim to solve the problem with si
 we focus here is enhancing the Document Images which are deteriorated through external
 degradations like blur, corrupt text blocks etc. We have followed up on few seminal
 papers which are presented below for reference. At the end of this tutorial user will
-gain clear understanding of building custom Image Pre-Processors using Deep-Learning that
-helps us to mitigate real-world OCR issues.
+gain clear understanding of building Custom Image Pre-Processors using Deep-Learning that
+helps us to mitigate real world OCR issues.
+The following example requires an additional Installation of of the following packages
+[pybind11](https://github.com/pybind/pybind11),
+[fastwer](https://github.com/kahne/fastwer),
+[pytesseract](https://pypi.org/project/pytesseract/) and
+[tesseract-ocr](https://github.com/tesseract-ocr/tesseract#installing-tesseract).
+Executing **Additional Setup** codeblock should do the job.
+
 
 **References:**
 - [Enhancing OCR Accuracy with Super
 Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
-- [Improving the Perceptual Quality of Document
-Images Using Deep Neural
+Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
+- [Improving the Perceptual Quality of Document Images Using Deep Neural
+Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 """
 
 """
-## Setup
+## Additional Set-up
 """
 
 # !pip install pybind11
@@ -40,10 +48,10 @@ import fastwer
 import pytesseract
 import numpy as np
 from glob import glob
+import matplotlib.pyplot as plt
+
 import tensorflow as tf
 from tensorflow import keras
-import matplotlib.pyplot as plt
-from tensorflow.keras import callbacks
 from tensorflow.keras.applications import resnet_v2
 
 """
@@ -87,10 +95,10 @@ def data_preprocess(source, target):
     return source_image, target_image
 
 
-def denormalize(array):
-    array += 1
-    array *= 127.5
-    return array
+def denormalize(img_array):
+    img_array += 1
+    img_array *= 127.5
+    return img_array
 
 
 train_set = tf.data.Dataset.from_tensor_slices((train_source, train_targets))
@@ -173,8 +181,16 @@ def denoiser(height, width):
 
     out_conv = keras.layers.Conv2D(3, 5, padding="same", activation="sigmoid")(decode3)
     denoiser_model = keras.Model(base_model.input, out_conv, name="denoiser")
-    denoiser_model.summary()
+    #     denoiser_model.summary()
     return denoiser_model
+
+
+def get_callbacks(early_stopping_patience, best_ckpt_name):
+    early_stop = keras.callbacks.EarlyStopping(patience=early_stopping_patience)
+    model_ckpt = keras.callbacks.ModelCheckpoint(
+        best_ckpt_name, save_best_only=True, save_weights_only=True, verbose=1
+    )
+    return [early_stop, model_ckpt]
 
 
 """
@@ -183,15 +199,17 @@ def denoiser(height, width):
 The Model is Trained with an Objective of minimizing ```Mean Squared Error```.
 """
 
-EPOCHS = 40
+EPOCHS = 25
 LEARNING_RATE = 1e-4
+EARLY_STOPPING_PATIENCE = 8
+BEST_MODEL_CKPT_NAME = "best_ckpt.h5"
 
 denoiser_net = denoiser(height=HEIGHT, width=WIDTH)
-
-early_stop = callbacks.EarlyStopping(patience=8)
-ckpt = callbacks.ModelCheckpoint(
-    "best_ckpt.h5", save_best_only=True, save_weights_only=True, verbose=1
+model_callbacks = get_callbacks(
+    early_stopping_patience=EARLY_STOPPING_PATIENCE, best_ckpt_name=BEST_MODEL_CKPT_NAME
 )
+
+
 optimizer = keras.optimizers.Adam(LEARNING_RATE)
 denoiser_net.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
 
@@ -203,7 +221,7 @@ denoiser_net.fit(
     steps_per_epoch=len(train_source) // BATCH_SIZE,
     validation_steps=len(val_source) // BATCH_SIZE,
     workers=-1,
-    callbacks=[early_stop, ckpt],
+    callbacks=model_callbacks,
 )
 
 """
