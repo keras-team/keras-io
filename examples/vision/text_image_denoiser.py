@@ -8,7 +8,7 @@ Description: Example of Text Image Denoiser coupled with Tesseract OCR engine to
 """
 ## Introduction
 
-This Example explains a simple **Text Image Denoiser for OCR**(Optical Character Recognition) using U-Net based
+This Example explains a simple **Text Image Denoiser for OCR** using U-Net based
 Architectutre. **Autoencoders** are mostly employed for **Image Restoration** problems
 but in recent times **U-Net** based architectures with **Skip-Connections** have gained
 popularity for several Image-to-Image tasks. We aim to solve the problem with simple
@@ -27,9 +27,9 @@ Executing **Additional Setup** code-block should do the job.
 
 
 **References:**
-- [Enhancing OCR Accuracy with Super-Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
+- [Enhancing OCR Accuracy with Super Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
+- [Improving the Perceptual Quality of Document Images Using Deep Neural Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 
-- [Improving the Perceptual Quality of Document Images Using Deep Neural-Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 """
 
 """
@@ -72,6 +72,7 @@ train_targets = sorted(glob("data/target/*.jpg"))[:-80]
 
 val_source = sorted(glob("data/source/*.jpg"))[-80:]
 val_targets = sorted(glob("data/target/*.jpg"))[-80:]
+
 
 HEIGHT, WIDTH = 352, 608
 BATCH_SIZE = 4
@@ -228,8 +229,8 @@ denoiser_net.fit(
 ## Evaluation Utilities
 
 Image Super-Resolution or Denoiser models can be evaluated with PSNR, SSIM metrics for
-perceptual quality assessments but our task of **Text Restoration** requires a bit more,
-our objective is to Enhance simple OCR accuracy engine where our model can act as a
+perceptual quality assessments but our task of **Text Restoration** requires a bit more.
+Our objective is to Enhance simple OCR accuracy engine where our model can act as a
 **Pre-Processor**, to serve the purpose we will use <a
 href="https://towardsdatascience.com/evaluating-ocr-output-quality-with-character-error-ra
 te-cer-and-word-error-rate-wer-853175297510">WER(Word Error Rate) </a> as a metric to
@@ -291,8 +292,8 @@ for f in test_images:
 """
 ## Conclusion
 
-We are able to observe using the model as a Pre-Processor enables significant amount of
-improvement in Word Error Rate and perceptual quality of the image, the experiment can be
-extended to different Image-to-Image applications, also Training with large datasets and
-more epochs can elevate the performance of the model further.
+We are able to observe using the model as a pre-processor enables significant amount of
+improvement in **Word Error Rate** and perceptual quality of the image. They can be
+further improved to handle sophisticated text image restorations by adding more
+variations and training more epochs.
 """
