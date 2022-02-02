@@ -1,5 +1,5 @@
 """
-Title: Text Image Denoiser.
+Title: Text Image Denoiser as OCR Preprocessor.
 Author: [Anish B](https://twitter.com/anishhacko)
 Date created: 2021/01/18
 Last modified: 2022/01/27
@@ -8,28 +8,28 @@ Description: Example of Text Image Denoiser coupled with Tesseract OCR engine to
 """
 ## Introduction
 
-This Example explains a simple **Text Image Denoiser for OCR** using U-Net based
+This Example explains a simple **Text Image Denoiser for OCR**(Optical Character Recognition) using U-Net based
 Architectutre. **Autoencoders** are mostly employed for **Image Restoration** problems
-but in recent times **U-Net** based architectures with **skip-connections** have gained
+but in recent times **U-Net** based architectures with **Skip-Connections** have gained
 popularity for several Image-to-Image tasks. We aim to solve the problem with simple
-**Pretrained U-Net as Encoder** and **Efficient Sub-Pixel CNN as Decoder**. The problem
+Pretrained **U-Net** as Encoder and Efficient **Sub-Pixel** CNN as Decoder. The problem
 we focus here is enhancing the Document Images which are deteriorated through external
 degradations like blur, corrupt text blocks etc. We have followed up on few seminal
 papers which are presented below for reference. At the end of this tutorial user will
 gain clear understanding of building Custom Image Pre-Processors using Deep-Learning that
 helps us to mitigate real world OCR issues.
-The following example requires an additional Installation of of the following packages
+The following example requires an additional Installation of the following packages
 [pybind11](https://github.com/pybind/pybind11),
 [fastwer](https://github.com/kahne/fastwer),
 [pytesseract](https://pypi.org/project/pytesseract/) and
 [tesseract-ocr](https://github.com/tesseract-ocr/tesseract#installing-tesseract).
-Executing **Additional Setup** codeblock should do the job.
+Executing **Additional Setup** code-block should do the job.
 
 
 **References:**
 - [Enhancing OCR Accuracy with Super-Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
 
-- [Improving the Perceptual Quality of Document Images Using Deep Neural Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
+- [Improving the Perceptual Quality of Document Images Using Deep Neural-Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 """
 
 """
@@ -53,8 +53,9 @@ from tensorflow.keras.applications import resnet_v2
 
 """
 ## Dataset
-We have created a synthetic document dataset that depicts several real world document
-noises; we have used Blurs and Morphological filters to reconstruct real world noises.
+A Synthetic Document Dataset that depicts several real world document noises is used to
+train the model. The Dataset is injected with Multiple combinations of random Noises with
+random Kernels to create Blur and Morphological effects to form Noisy Representation.
 """
 
 """shell
@@ -125,9 +126,11 @@ fig.set_tight_layout(None)
 """
 ## Model
 
-We have used Pre-trained ```ResNet50V2``` U-Net as Encoder, The Feature Maps are
-extracted at different levels forming Downscaling path, Then ```Sub-Pixel Layers``` on
-the Upscaling path with skip-connections.
+We have used Encoder and Decoder components for constructing our U-Net block. In the
+Encoder part we extract feature maps at different scales from the pre-trained
+```ResNet50V2``` model forming the Downscaling path in U-Net. In the Decoder part we use
+**Skip-Connection** and ```Sub-Pixel Layer``` forming the Upscaling path of U-Net. The
+model on its design aspect is kept light-weight with just **2.7 million** parameters.
 """
 
 
@@ -178,7 +181,7 @@ def denoiser(height, width):
 
     out_conv = keras.layers.Conv2D(3, 5, padding="same", activation="sigmoid")(decode3)
     denoiser_model = keras.Model(base_model.input, out_conv, name="denoiser")
-    #     denoiser_model.summary()
+
     return denoiser_model
 
 
@@ -201,13 +204,13 @@ LEARNING_RATE = 1e-4
 EARLY_STOPPING_PATIENCE = 8
 BEST_MODEL_CKPT_NAME = "best_ckpt.h5"
 
-denoiser_net = denoiser(height=HEIGHT, width=WIDTH)
 model_callbacks = get_callbacks(
     early_stopping_patience=EARLY_STOPPING_PATIENCE, best_ckpt_name=BEST_MODEL_CKPT_NAME
 )
-
-
 optimizer = keras.optimizers.Adam(LEARNING_RATE)
+
+denoiser_net = denoiser(height=HEIGHT, width=WIDTH)
+denoiser_net.summary()
 denoiser_net.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
 
 denoiser_net.fit(
@@ -290,6 +293,6 @@ for f in test_images:
 
 We are able to observe using the model as a Pre-Processor enables significant amount of
 improvement in Word Error Rate and perceptual quality of the image, the experiment can be
-extended to different Image-to-Image applications, also Training with huge Dataset and
-longer Epochs can elevate the performance of the model further.
+extended to different Image-to-Image applications, also Training with large datasets and
+more epochs can elevate the performance of the model further.
 """
