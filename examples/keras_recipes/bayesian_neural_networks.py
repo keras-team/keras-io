@@ -35,7 +35,7 @@ pip install tensorflow-probability
 We use the [Wine Quality](https://archive.ics.uci.edu/ml/datasets/wine+quality)
 dataset, which is available in the [TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/wine_quality).
 We use the red wine subset, which contains 4,898 examples.
-The dataset has 11numerical physicochemical features of the wine, and the task
+The dataset has 11 numerical physicochemical features of the wine, and the task
 is to predict the wine quality, which is a score between 0 and 10.
 In this example, we treat this as a regression task.
 
@@ -374,7 +374,7 @@ def create_probablistic_bnn_model(train_size):
             activation="sigmoid",
         )(features)
 
-    # Create a probabilisticå output (Normal distribution), and use the `Dense` layer
+    # Create a probabilistic output (Normal distribution), and use the `Dense` layer
     # to produce the parameters of the distribution.
     # We set units=2 to learn both the mean and the variance of the Normal distribution.
     distribution_params = layers.Dense(units=2)(features)
