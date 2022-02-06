@@ -1,8 +1,8 @@
 """
 Title: Barlow Twins for Contrastive SSL
-Author: [Abhiraam Eranti](https://github.com/dewball345)<br>
-Date created: 11/4/21<br>
-Last modified: 1/29/22<br>
+Author: [Abhiraam Eranti](https://github.com/dewball345)
+Date created: 11/4/21
+Last modified: 1/29/22
 Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
 """
 
@@ -132,8 +132,8 @@ Original Implementation:
 """
 
 """shell
-!pip install tensorflow-addons
-!pip install --upgrade-strategy=only-if-needed tensorflow_similarity
+pip install tensorflow-addons
+pip install --upgrade-strategy=only-if-needed tensorflow_similarity
 """
 
 import os
@@ -1047,14 +1047,10 @@ with the labeled data.
 
 * [Paper](https://arxiv.org/abs/2103.03230)
 * [Original Pytorch Implementation](https://github.com/facebookresearch/barlowtwins)
-* [Sayak Paul's
-Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
-Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
+* [Sayak Paul's Implementation](https://colab.research.google.com/github/sayakpaul/Barlow-Twins-TF/blob/main/Barlow_Twins.ipynb#scrollTo=GlWepkM8_prl).
 * Thanks to Sayak Paul for his implementation. It helped me with debugging and
 comparisons of accuracy, loss.
-* [resnet34
-implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
-implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
+* [resnet34 implementation](https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2)
   * Thanks to Yashowardhan Shinde for writing the article.
 
 
