@@ -8,38 +8,44 @@ Description: Example of Text Image Denoiser coupled with Tesseract OCR engine to
 """
 ## Introduction
 
-This Example explains a simple **Text Image Denoiser for OCR** using U-Net based
+This example explains a simple **Text Image Denoiser for OCR** using U-Net based
 Architectutre. **Autoencoders** are mostly employed for **Image Restoration** problems
 but in recent times **U-Net** based architectures with **Skip-Connections** have gained
-popularity for several Image-to-Image tasks. We aim to solve the problem with simple
-Pretrained **U-Net** as Encoder and Efficient **Sub-Pixel** CNN as Decoder. The problem
-we focus here is enhancing the Document Images which are deteriorated through external
-degradations like blur, corrupt text blocks etc. We have followed up on few seminal
-papers which are presented below for reference. At the end of this tutorial user will
-gain clear understanding of building Custom Image Pre-Processors using Deep-Learning that
-helps us to mitigate real world OCR issues.
-The following example requires an additional Installation of the following packages
-[pybind11](https://github.com/pybind/pybind11),
-[fastwer](https://github.com/kahne/fastwer),
-[pytesseract](https://pypi.org/project/pytesseract/) and
-[tesseract-ocr](https://github.com/tesseract-ocr/tesseract#installing-tesseract).
-Executing **Additional Setup** code-block should do the job.
-
+popularity for several image-to-image tasks. We aim to solve the problem with simple
+pre-trained **U-Net** as encoder and Efficient **Sub-Pixel** CNN as decoder. We
+demonstrate our example by training a document image denoiser and chaining it with a OCR
+pipeline to capture significant difference our restoration model can achieve. We have
+followed up on few seminal papers and they are displayed below for reference. At the end
+of this tutorial reader will gain clear understanding of building custom image
+pre-processors using deep-learning, helping to mitigate real world OCR(Optical Character
+Recognition) issues.
 
 **References:**
-- [Enhancing OCR Accuracy with Super Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
-- [Improving the Perceptual Quality of Document Images Using Deep Neural Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
+- [Enhancing OCR Accuracy with Super-Resolution](https://cdn.iiit.ac.in/cdn/cvit.iiit.ac.in/images/ConferencePapers/2018/ocr_Ankit_Lat_ICPR_2018.pdf)
+
+- [Improving the Perceptual Quality of Document Images Using Deep Neural-Network](http://mile.ee.iisc.ac.in/publications/softCopy/DocumentAnalysis/ISNN_11page_65.pdf)
 
 """
 
 """
 ## Additional Set-up
-"""
 
-# !pip install pybind11
-# !pip install fastwer
-# !pip install pytesseract
-# !sudo apt install tesseract-ocr
+The following example requires an additional Installation of the following packages
+[pybind11](https://github.com/pybind/pybind11),
+[fastwer](https://github.com/kahne/fastwer),
+[pytesseract](https://pypi.org/project/pytesseract/) and
+[tesseract-ocr](https://github.com/tesseract-ocr/tesseract#installing-tesseract). 
+
+
+```pip install pybind11``` - Package for seamless operability between C++11 and Python.
+<br>
+```pip install fastwer```  - Package for computing WER(Word Error Rate), CER(Charatcer
+Error Rate) metrics.
+<br>
+```pip install pytesseract``` - OCR package.
+<br>
+```sudo apt install tesseract-ocr``` - OCR engine for operating systems.
+"""
 
 import fastwer
 import pytesseract
@@ -52,10 +58,11 @@ from tensorflow import keras
 from tensorflow.keras.applications import resnet_v2
 
 """
-## Dataset
-A Synthetic Document Dataset that depicts several real world document noises is used to
-train the model. The Dataset is injected with Multiple combinations of random Noises with
-random Kernels to create Blur and Morphological effects to form Noisy Representation.
+## About Dataset
+A **Synthetic Document Dataset** that depicts several real world document noises is used
+to train the model. The Dataset is injected with multiple combinations of random noises
+with random kernels to create blur and morphological effects to form noisy
+representation.
 """
 
 """shell
@@ -73,10 +80,11 @@ train_targets = sorted(glob("data/target/*.jpg"))[:-80]
 val_source = sorted(glob("data/source/*.jpg"))[-80:]
 val_targets = sorted(glob("data/target/*.jpg"))[-80:]
 
-
+# height and width are chosen in a way that image features are not distorted.
 HEIGHT, WIDTH = 352, 608
 BATCH_SIZE = 4
 BUFFER_SIZE = int(len(train_source) * 0.2)
+AUTO = tf.data.AUTOTUNE
 
 
 def preprocess(image):
@@ -88,12 +96,6 @@ def preprocess(image):
     return image
 
 
-def data_preprocess(source, target):
-    source_image = preprocess(source)
-    target_image = preprocess(target)
-    return source_image, target_image
-
-
 def denormalize(img_array):
     img_array += 1
     img_array *= 127.5
@@ -101,11 +103,16 @@ def denormalize(img_array):
 
 
 train_set = tf.data.Dataset.from_tensor_slices((train_source, train_targets))
-train_set = train_set.map(data_preprocess, tf.data.AUTOTUNE).shuffle(BUFFER_SIZE)
-train_set = train_set.batch(BATCH_SIZE).repeat()
+train_set = train_set.map(
+    lambda x, y: (preprocess(x), preprocess(y)), num_parallel_calls=AUTO
+)
+train_set = train_set.batch(BATCH_SIZE, drop_remainder=True).shuffle(BUFFER_SIZE)
 
 valid_set = tf.data.Dataset.from_tensor_slices((val_source, val_targets))
-valid_set = valid_set.map(data_preprocess, tf.data.AUTOTUNE).batch(BATCH_SIZE)
+valid_set = valid_set.map(
+    lambda x, y: (preprocess(x), preprocess(y)), num_parallel_calls=AUTO
+)
+valid_set = valid_set.batch(BATCH_SIZE)
 
 """
 ## Dataset Visualiztion
@@ -197,7 +204,7 @@ def get_callbacks(early_stopping_patience, best_ckpt_name):
 """
 ## Training
 
-The Model is Trained with an Objective of minimizing ```Mean Squared Error```.
+Our Model is trained with an objective of minimizing ```Mean Squared Error```.
 """
 
 EPOCHS = 25
@@ -230,13 +237,13 @@ denoiser_net.fit(
 
 Image Super-Resolution or Denoiser models can be evaluated with PSNR, SSIM metrics for
 perceptual quality assessments but our task of **Text Restoration** requires a bit more.
-Our objective is to Enhance simple OCR accuracy engine where our model can act as a
-**Pre-Processor**, to serve the purpose we will use <a
+Our objective is to enhance simple OCR accuracy engine where our model can act as a
+**pre-processor**, to serve the purpose we will use <a
 href="https://towardsdatascience.com/evaluating-ocr-output-quality-with-character-error-ra
 te-cer-and-word-error-rate-wer-853175297510">WER(Word Error Rate) </a> as a metric to
 evaluate the real-world performance. The following function ```generate_results```  will
-help plot the visual comparisons of outputs given the **Raw Noisy Input** and **Model
-Restored Input** to tesseract OCR engine.
+help plot the visual comparisons of outputs given the **raw noisy input** and **model
+restored input** to tesseract OCR engine.
 """
 
 
@@ -295,5 +302,5 @@ for f in test_images:
 We are able to observe using the model as a pre-processor enables significant amount of
 improvement in **Word Error Rate** and perceptual quality of the image. They can be
 further improved to handle sophisticated text image restorations by adding more
-variations and training more epochs.
+variations and training for more epochs.
 """
