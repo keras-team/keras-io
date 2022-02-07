@@ -14,7 +14,6 @@ import cv2
 import wandb
 import numpy as np
 import matplotlib.pyplot as plt
-from wandb.keras import WandbCallback
 
 import tensorflow as tf
 from tensorflow import keras
