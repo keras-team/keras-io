@@ -374,7 +374,7 @@ MASTER = {
                         },
                         {
                             'path': 'efficientnet_v2',
-                            'title': 'EfficientNet B0 to B3 and S,M,L',
+                            'title': 'EfficientNetV2 B0 to B3 and S, M, L',
                             'generate': [
                                 'tensorflow.keras.applications.EfficientNetV2B0',
                                 'tensorflow.keras.applications.EfficientNetV2B1',
