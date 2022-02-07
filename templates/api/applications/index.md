@@ -40,7 +40,20 @@ then any model loaded from this repository will get built according to the Tenso
 | [EfficientNetB5](efficientnet/#efficientnetb5-function) | 118 | 83.6% | 96.7% | 30.6M | 312 | 579.2 | 25.3 |
 | [EfficientNetB6](efficientnet/#efficientnetb6-function) | 166 | 84.0% | 96.8% | 43.3M | 360 | 958.1 | 40.4 |
 | [EfficientNetB7](efficientnet/#efficientnetb7-function) | 256 | 84.3% | 97.0% | 66.7M | 438 | 1578.9 | 61.6 | 
-
+| [EfficientNetV2B0](efficientnet_v2/#efficientnetv2b0-function) | 29 | 0.787 | 0.943 | 7,200,312 | - | - | - |
+| [EfficientNetV2B1](efficientnet_v2/#efficientnetv2b1-function) | 34 | 0.798 | 0.950 | 8,212,124 | - | - | - |
+| [EfficientNetV2B2](efficientnet_v2/#efficientnetv2b2-function) | 42 | 0.805 | 0.951 | 10,178,374 | - | - | - |
+| [EfficientNetV2B3](efficientnet_v2/#efficientnetv2b3-function) | 59 | 0.820 | 0.958 | 14,467,622 | - | - | - |
+| [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 0.839 | 0.967 | 21,612,360 | - | - | - |
+| [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 0.853 | 0.974 | 54,431,388 | - | - | - |
+| [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 0.857 | 0.975 | 119,027,848 | - | - | - |
+| [EfficientNetV2B0](efficientnet_v2/#efficientnetv2b0-function) | 29 | 0.787 | 0.943 | 7,200,312 | - | - | - |
+| [EfficientNetV2B1](efficientnet_v2/#efficientnetv2b1-function) | 34 | 0.798 | 0.950 | 8,212,124 | - | - | - |
+| [EfficientNetV2B2](efficientnet_v2/#efficientnetv2b2-function) | 42 | 0.805 | 0.951 | 10,178,374 | - | - | - |
+| [EfficientNetV2B3](efficientnet_v2/#efficientnetv2b3-function) | 59 | 0.820 | 0.958 | 14,467,622 | - | - | - |
+| [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 0.839 | 0.967 | 21,612,360 | - | - | - |
+| [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 0.853 | 0.974 | 54,431,388 | - | - | - |
+| [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 0.857 | 0.975 | 119,027,848 | - | - | - |
 <br>
 The top-1 and top-5 accuracy refers to the model's performance on the ImageNet validation dataset.
 
