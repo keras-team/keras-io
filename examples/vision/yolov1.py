@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: End-to-end Object Detection using YOLOv1
+Author: [Soumik Rakshit](https://twitter.com/soumikRakshit96)
+Date created: 2022/02/07
+Last modified: 2022/02/07
+Description: Minimal implementation of the YOLOv1 architecture for end-to-end Object Detection.
 """
 """shell
 !pip -q install wandb
