@@ -2,15 +2,13 @@
 Title: Barlow Twins for Contrastive SSL
 Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
-Last modified: 1/29/22
-Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
+Last modified: 01/29/22
+Description: A Keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
 """
 
 """
 ## Introduction
-"""
 
-"""
 Self-supervised learning (SSL) is a relatively novel technique in which a model
 learns from unlabeled data, and is often used when the data is corrupted or
 if there is very little of it. A practical use for SSL is to create
