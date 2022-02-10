@@ -658,9 +658,13 @@ class GauGAN(keras.Model):
             )
             total_loss = g_loss + kl_loss + vgg_loss + feature_loss
 
-        gradients = tape.gradient(total_loss, self.combined_model.trainable_variables)
+        all_trainable_variables = (
+            self.combined_model.trainable_variables + self.encoder.trainable_variables
+        )
+
+        gradients = tape.gradient(total_loss, all_trainable_variables)
         self.generator_optimizer.apply_gradients(
-            zip(gradients, self.combined_model.trainable_variables + self.encoder.trainable_variables)
+            zip(gradients, all_trainable_variables)
         )
         return total_loss, feature_loss, vgg_loss, kl_loss
 
