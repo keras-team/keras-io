@@ -87,9 +87,9 @@ TensorFlow Addons.
 ```
 Downloading...
 From: https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
-To: /content/keras-io/scripts/tmp_4139658/facades_data.zip
-100% 26.0M/26.0M [00:00<00:00, 230MB/s]
-[K     |████████████████████████████████| 1.1 MB 4.1 MB/s 
+To: /content/keras-io/scripts/tmp_2820468/facades_data.zip
+100% 26.0M/26.0M [00:00<00:00, 261MB/s]
+[K     |████████████████████████████████| 1.1 MB 8.5 MB/s 
 [?25h
 
 ```
@@ -728,9 +728,13 @@ class GauGAN(keras.Model):
             )
             total_loss = g_loss + kl_loss + vgg_loss + feature_loss
 
-        gradients = tape.gradient(total_loss, self.combined_model.trainable_variables)
+        all_trainable_variables = (
+            self.combined_model.trainable_variables + self.encoder.trainable_variables
+        )
+
+        gradients = tape.gradient(total_loss, all_trainable_variables)
         self.generator_optimizer.apply_gradients(
-            zip(gradients, self.combined_model.trainable_variables)
+            zip(gradients, all_trainable_variables)
         )
         return total_loss, feature_loss, vgg_loss, kl_loss
 
@@ -838,7 +842,9 @@ Downloading data from https://storage.googleapis.com/tensorflow/keras-applicatio
 80142336/80134624 [==============================] - 0s 0us/step
 80150528/80134624 [==============================] - 0s 0us/step
 Epoch 1/15
-75/75 [==============================] - ETA: 0s - disc_loss: 1.1176 - gen_loss: 113.1885 - feat_loss: 10.4608 - vgg_loss: 17.4899 - kl_loss: 85.0130
+WARNING:tensorflow:Gradients do not exist for variables ['conv2d_6/kernel:0', 'conv2d_7/kernel:0', 'instance_normalization_3/gamma:0', 'instance_normalization_3/beta:0', 'conv2d_8/kernel:0', 'instance_normalization_4/gamma:0', 'instance_normalization_4/beta:0', 'conv2d_9/kernel:0', 'instance_normalization_5/gamma:0', 'instance_normalization_5/beta:0', 'conv2d_10/kernel:0', 'instance_normalization_6/gamma:0', 'instance_normalization_6/beta:0', 'mean/kernel:0', 'mean/bias:0', 'variance/kernel:0', 'variance/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['conv2d_6/kernel:0', 'conv2d_7/kernel:0', 'instance_normalization_3/gamma:0', 'instance_normalization_3/beta:0', 'conv2d_8/kernel:0', 'instance_normalization_4/gamma:0', 'instance_normalization_4/beta:0', 'conv2d_9/kernel:0', 'instance_normalization_5/gamma:0', 'instance_normalization_5/beta:0', 'conv2d_10/kernel:0', 'instance_normalization_6/gamma:0', 'instance_normalization_6/beta:0', 'mean/kernel:0', 'mean/bias:0', 'variance/kernel:0', 'variance/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+75/75 [==============================] - ETA: 0s - disc_loss: 1.1359 - gen_loss: 114.6762 - feat_loss: 9.6107 - vgg_loss: 17.5540 - kl_loss: 87.3495
 
 ```
 </div>
@@ -859,17 +865,17 @@ Epoch 1/15
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 65s 610ms/step - disc_loss: 1.1176 - gen_loss: 113.1885 - feat_loss: 10.4608 - vgg_loss: 17.4899 - kl_loss: 85.0130 - val_disc_loss: 0.9392 - val_gen_loss: 113.2765 - val_feat_loss: 11.3828 - val_vgg_loss: 17.1672 - val_kl_loss: 84.5438
+75/75 [==============================] - 69s 620ms/step - disc_loss: 1.1359 - gen_loss: 114.6762 - feat_loss: 9.6107 - vgg_loss: 17.5540 - kl_loss: 87.3495 - val_disc_loss: 0.9339 - val_gen_loss: 115.9361 - val_feat_loss: 12.0053 - val_vgg_loss: 17.6576 - val_kl_loss: 86.4241
 Epoch 2/15
-75/75 [==============================] - 39s 519ms/step - disc_loss: 0.8311 - gen_loss: 112.5818 - feat_loss: 11.2419 - vgg_loss: 16.7644 - kl_loss: 83.9872 - val_disc_loss: 0.8797 - val_gen_loss: 113.7591 - val_feat_loss: 10.4079 - val_vgg_loss: 17.0835 - val_kl_loss: 84.3602
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.9191 - gen_loss: 115.4342 - feat_loss: 11.1384 - vgg_loss: 16.6970 - kl_loss: 87.1299 - val_disc_loss: 0.9073 - val_gen_loss: 117.0431 - val_feat_loss: 10.9293 - val_vgg_loss: 17.3108 - val_kl_loss: 87.1910
 Epoch 3/15
-75/75 [==============================] - 40s 529ms/step - disc_loss: 0.7096 - gen_loss: 112.8148 - feat_loss: 11.0823 - vgg_loss: 16.5154 - kl_loss: 84.3543 - val_disc_loss: 0.8018 - val_gen_loss: 113.0965 - val_feat_loss: 12.2914 - val_vgg_loss: 16.8452 - val_kl_loss: 84.5164
+75/75 [==============================] - 40s 530ms/step - disc_loss: 0.7783 - gen_loss: 116.0476 - feat_loss: 11.2018 - vgg_loss: 16.4767 - kl_loss: 87.7456 - val_disc_loss: 0.7877 - val_gen_loss: 115.6750 - val_feat_loss: 11.3406 - val_vgg_loss: 16.9246 - val_kl_loss: 87.8907
 Epoch 4/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.6491 - gen_loss: 113.7675 - feat_loss: 11.0218 - vgg_loss: 16.4683 - kl_loss: 85.2787 - val_disc_loss: 0.6841 - val_gen_loss: 111.6989 - val_feat_loss: 10.0628 - val_vgg_loss: 16.8355 - val_kl_loss: 83.0398
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.6915 - gen_loss: 115.8905 - feat_loss: 10.7578 - vgg_loss: 16.3213 - kl_loss: 88.0270 - val_disc_loss: 0.7651 - val_gen_loss: 115.5427 - val_feat_loss: 11.5930 - val_vgg_loss: 17.0086 - val_kl_loss: 87.3675
 Epoch 5/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.6502 - gen_loss: 112.7470 - feat_loss: 10.8597 - vgg_loss: 16.4198 - kl_loss: 84.5055 - val_disc_loss: 0.5549 - val_gen_loss: 111.5907 - val_feat_loss: 11.1850 - val_vgg_loss: 16.8333 - val_kl_loss: 83.2720
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.6652 - gen_loss: 115.3557 - feat_loss: 10.7736 - vgg_loss: 16.3333 - kl_loss: 87.4493 - val_disc_loss: 0.9139 - val_gen_loss: 115.3157 - val_feat_loss: 11.3612 - val_vgg_loss: 17.0591 - val_kl_loss: 87.6537
 Epoch 6/15
-75/75 [==============================] - ETA: 0s - disc_loss: 0.6576 - gen_loss: 112.8643 - feat_loss: 10.5360 - vgg_loss: 16.3247 - kl_loss: 85.0674
+75/75 [==============================] - ETA: 0s - disc_loss: 0.6541 - gen_loss: 115.2529 - feat_loss: 10.6386 - vgg_loss: 16.2342 - kl_loss: 87.5053
 
 ```
 </div>
@@ -890,17 +896,17 @@ Epoch 6/15
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 42s 566ms/step - disc_loss: 0.6576 - gen_loss: 112.8643 - feat_loss: 10.5360 - vgg_loss: 16.3247 - kl_loss: 85.0674 - val_disc_loss: 0.4916 - val_gen_loss: 113.3400 - val_feat_loss: 10.3066 - val_vgg_loss: 16.8186 - val_kl_loss: 84.6927
+75/75 [==============================] - 43s 573ms/step - disc_loss: 0.6541 - gen_loss: 115.2529 - feat_loss: 10.6386 - vgg_loss: 16.2342 - kl_loss: 87.5053 - val_disc_loss: 0.3999 - val_gen_loss: 116.1638 - val_feat_loss: 11.1031 - val_vgg_loss: 16.9759 - val_kl_loss: 87.5684
 Epoch 7/15
-75/75 [==============================] - 40s 529ms/step - disc_loss: 0.6044 - gen_loss: 112.4453 - feat_loss: 10.6598 - vgg_loss: 16.2306 - kl_loss: 84.5950 - val_disc_loss: 0.4696 - val_gen_loss: 112.4941 - val_feat_loss: 10.6521 - val_vgg_loss: 16.6972 - val_kl_loss: 83.9683
+75/75 [==============================] - 40s 530ms/step - disc_loss: 0.6029 - gen_loss: 115.3866 - feat_loss: 10.6807 - vgg_loss: 16.2025 - kl_loss: 87.5448 - val_disc_loss: 0.4571 - val_gen_loss: 117.5491 - val_feat_loss: 10.7403 - val_vgg_loss: 16.8212 - val_kl_loss: 88.4036
 Epoch 8/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.6134 - gen_loss: 112.1166 - feat_loss: 10.5191 - vgg_loss: 16.2368 - kl_loss: 84.3498 - val_disc_loss: 0.5675 - val_gen_loss: 114.6040 - val_feat_loss: 10.3939 - val_vgg_loss: 17.0217 - val_kl_loss: 85.8596
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5798 - gen_loss: 115.1903 - feat_loss: 10.5906 - vgg_loss: 16.1720 - kl_loss: 87.4315 - val_disc_loss: 0.4470 - val_gen_loss: 114.3039 - val_feat_loss: 10.8104 - val_vgg_loss: 16.9426 - val_kl_loss: 86.1938
 Epoch 9/15
-75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5831 - gen_loss: 111.4992 - feat_loss: 10.3740 - vgg_loss: 16.2139 - kl_loss: 83.8992 - val_disc_loss: 0.4876 - val_gen_loss: 113.4408 - val_feat_loss: 10.3979 - val_vgg_loss: 16.7390 - val_kl_loss: 84.7375
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5412 - gen_loss: 115.6245 - feat_loss: 10.5598 - vgg_loss: 16.1985 - kl_loss: 87.8032 - val_disc_loss: 0.3365 - val_gen_loss: 116.6229 - val_feat_loss: 10.9437 - val_vgg_loss: 16.9026 - val_kl_loss: 87.6305
 Epoch 10/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5850 - gen_loss: 112.9203 - feat_loss: 10.4089 - vgg_loss: 16.2413 - kl_loss: 85.2130 - val_disc_loss: 0.5125 - val_gen_loss: 113.0875 - val_feat_loss: 10.3225 - val_vgg_loss: 17.0858 - val_kl_loss: 84.7437
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5822 - gen_loss: 115.2743 - feat_loss: 10.5127 - vgg_loss: 16.1609 - kl_loss: 87.5487 - val_disc_loss: 0.4711 - val_gen_loss: 116.2798 - val_feat_loss: 11.4271 - val_vgg_loss: 16.7643 - val_kl_loss: 87.5068
 Epoch 11/15
-75/75 [==============================] - ETA: 0s - disc_loss: 0.5773 - gen_loss: 112.9393 - feat_loss: 10.4382 - vgg_loss: 16.1624 - kl_loss: 85.3048
+75/75 [==============================] - ETA: 0s - disc_loss: 0.5588 - gen_loss: 115.1784 - feat_loss: 10.5053 - vgg_loss: 16.0580 - kl_loss: 87.5601
 
 ```
 </div>
@@ -921,15 +927,15 @@ Epoch 11/15
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 42s 564ms/step - disc_loss: 0.5773 - gen_loss: 112.9393 - feat_loss: 10.4382 - vgg_loss: 16.1624 - kl_loss: 85.3048 - val_disc_loss: 0.4232 - val_gen_loss: 115.3184 - val_feat_loss: 10.7941 - val_vgg_loss: 16.8483 - val_kl_loss: 86.9163
+75/75 [==============================] - 43s 571ms/step - disc_loss: 0.5588 - gen_loss: 115.1784 - feat_loss: 10.5053 - vgg_loss: 16.0580 - kl_loss: 87.5601 - val_disc_loss: 0.7086 - val_gen_loss: 116.6372 - val_feat_loss: 11.6103 - val_vgg_loss: 16.9735 - val_kl_loss: 88.3342
 Epoch 12/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5878 - gen_loss: 112.0136 - feat_loss: 10.4251 - vgg_loss: 16.2048 - kl_loss: 84.3484 - val_disc_loss: 0.4578 - val_gen_loss: 113.8054 - val_feat_loss: 10.9661 - val_vgg_loss: 17.1023 - val_kl_loss: 84.8105
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5461 - gen_loss: 115.2417 - feat_loss: 10.5498 - vgg_loss: 16.0916 - kl_loss: 87.5209 - val_disc_loss: 0.5056 - val_gen_loss: 116.8908 - val_feat_loss: 10.3318 - val_vgg_loss: 16.8074 - val_kl_loss: 87.9361
 Epoch 13/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5705 - gen_loss: 111.8788 - feat_loss: 10.2409 - vgg_loss: 16.1567 - kl_loss: 84.4316 - val_disc_loss: 0.5505 - val_gen_loss: 113.5417 - val_feat_loss: 10.3393 - val_vgg_loss: 16.8620 - val_kl_loss: 84.6040
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5482 - gen_loss: 114.9858 - feat_loss: 10.3671 - vgg_loss: 16.0029 - kl_loss: 87.5513 - val_disc_loss: 0.5819 - val_gen_loss: 116.6370 - val_feat_loss: 11.3866 - val_vgg_loss: 17.0710 - val_kl_loss: 88.0975
 Epoch 14/15
-75/75 [==============================] - 39s 520ms/step - disc_loss: 0.5684 - gen_loss: 111.5959 - feat_loss: 10.2455 - vgg_loss: 16.0428 - kl_loss: 84.2599 - val_disc_loss: 0.7734 - val_gen_loss: 114.0701 - val_feat_loss: 11.1744 - val_vgg_loss: 16.9965 - val_kl_loss: 86.2753
+75/75 [==============================] - 39s 522ms/step - disc_loss: 0.5596 - gen_loss: 114.5251 - feat_loss: 10.3841 - vgg_loss: 16.0361 - kl_loss: 86.9755 - val_disc_loss: 0.4472 - val_gen_loss: 115.9854 - val_feat_loss: 10.2750 - val_vgg_loss: 16.9934 - val_kl_loss: 87.2017
 Epoch 15/15
-75/75 [==============================] - 40s 529ms/step - disc_loss: 0.5478 - gen_loss: 112.6102 - feat_loss: 10.3267 - vgg_loss: 16.0363 - kl_loss: 85.1910 - val_disc_loss: 0.5994 - val_gen_loss: 115.2190 - val_feat_loss: 10.3937 - val_vgg_loss: 16.8771 - val_kl_loss: 86.2453
+75/75 [==============================] - 39s 521ms/step - disc_loss: 0.5417 - gen_loss: 114.3627 - feat_loss: 10.1977 - vgg_loss: 15.9871 - kl_loss: 87.1026 - val_disc_loss: 0.4202 - val_gen_loss: 115.1249 - val_feat_loss: 10.2537 - val_vgg_loss: 16.8011 - val_kl_loss: 86.5379
 
 ```
 </div>
@@ -1013,6 +1019,11 @@ for _ in range(5):
 we recommend to use a bigger dataset. GauGAN results were demonstrated with the
 [COCO-Stuff](https://github.com/nightrome/cocostuff) and
 [CityScapes](https://www.cityscapes-dataset.com/) datasets.
+* This example was inspired the Chapter 6 of
+[Hands-On Image Generation with TensorFlow](https://www.packtpub.com/product/hands-on-image-generation-with-tensorflow/9781838826789)
+by [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/) and
+[Implementing SPADE using fastai](https://towardsdatascience.com/implementing-spade-using-fastai-6ad86b94030a) by
+[Divyansh Jha](https://medium.com/@divyanshj.16).
 * If you found this example interesting and exciting, you might want to check out
 [our repository](https://github.com/soumik12345/tf2_gans) which we are
 currently building. It will include reimplementations of popular GANs and pretrained

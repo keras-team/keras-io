@@ -658,9 +658,13 @@ class GauGAN(keras.Model):
             )
             total_loss = g_loss + kl_loss + vgg_loss + feature_loss
 
-        gradients = tape.gradient(total_loss, self.combined_model.trainable_variables)
+        all_trainable_variables = (
+            self.combined_model.trainable_variables + self.encoder.trainable_variables
+        )
+
+        gradients = tape.gradient(total_loss, all_trainable_variables)
         self.generator_optimizer.apply_gradients(
-            zip(gradients, self.combined_model.trainable_variables)
+            zip(gradients, all_trainable_variables)
         )
         return total_loss, feature_loss, vgg_loss, kl_loss
 
@@ -798,6 +802,11 @@ for _ in range(5):
 we recommend to use a bigger dataset. GauGAN results were demonstrated with the
 [COCO-Stuff](https://github.com/nightrome/cocostuff) and
 [CityScapes](https://www.cityscapes-dataset.com/) datasets.
+* This example was inspired the Chapter 6 of
+[Hands-On Image Generation with TensorFlow](https://www.packtpub.com/product/hands-on-image-generation-with-tensorflow/9781838826789)
+by [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/) and
+[Implementing SPADE using fastai](https://towardsdatascience.com/implementing-spade-using-fastai-6ad86b94030a) by
+[Divyansh Jha](https://medium.com/@divyanshj.16).
 * If you found this example interesting and exciting, you might want to check out
 [our repository](https://github.com/soumik12345/tf2_gans) which we are
 currently building. It will include reimplementations of popular GANs and pretrained
