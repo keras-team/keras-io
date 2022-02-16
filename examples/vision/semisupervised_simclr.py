@@ -214,7 +214,7 @@ def get_augmenter(min_area, brightness, jitter):
             layers.Rescaling(1 / 255),
             layers.RandomFlip("horizontal"),
             layers.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
-            # layers.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
+            layers.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
             RandomColorAffine(brightness, jitter),
         ]
     )
@@ -296,7 +296,6 @@ baseline_history = baseline_model.fit(
     labeled_train_dataset, epochs=1, validation_data=test_dataset
 )
 
-baseline_model.save(".")
 print(
     "Maximal validation accuracy: {:.2f}%".format(
         max(baseline_history.history["val_acc"]) * 100
