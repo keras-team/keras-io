@@ -65,8 +65,8 @@ check out
 ## Setup
 """
 
+import math
 import matplotlib.pyplot as plt
-import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
@@ -206,7 +206,7 @@ class RandomColorAffine(layers.Layer):
 
 # Image augmentation module
 def get_augmenter(min_area, brightness, jitter):
-    zoom_factor = 1.0 - np.sqrt(min_area)
+    zoom_factor = 1.0 - math.sqrt(min_area)
     return keras.Sequential(
         [
             keras.Input(shape=(image_size, image_size, image_channels)),
@@ -292,7 +292,7 @@ baseline_model.compile(
 )
 
 baseline_history = baseline_model.fit(
-    labeled_train_dataset, epochs=1, validation_data=test_dataset
+    labeled_train_dataset, epochs=num_epochs, validation_data=test_dataset
 )
 
 print(
