@@ -176,8 +176,7 @@ class RandomColorAffine(layers.Layer):
         self.jitter = jitter
        
     def get_config(self):
-
-        config = super().get_config().copy()
+        config = super().get_config()
         config.update({
             'brightness': self.brightness,
             'jitter': self.jitter
