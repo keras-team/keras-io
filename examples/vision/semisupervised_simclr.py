@@ -174,13 +174,10 @@ class RandomColorAffine(layers.Layer):
 
         self.brightness = brightness
         self.jitter = jitter
-       
+
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'brightness': self.brightness,
-            'jitter': self.jitter
-        })
+        config.update({"brightness": self.brightness, "jitter": self.jitter})
         return config
 
     def call(self, images, training=True):
