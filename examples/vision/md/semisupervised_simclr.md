@@ -1,4 +1,3 @@
-
 # Semi-supervised image classification using contrastive pretraining with SimCLR
 
 **Author:** [András Béres](https://www.linkedin.com/in/andras-beres-789190210)<br>
