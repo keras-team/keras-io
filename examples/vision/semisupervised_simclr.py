@@ -65,6 +65,7 @@ check out
 ## Setup
 """
 
+import math
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -174,6 +175,11 @@ class RandomColorAffine(layers.Layer):
         self.brightness = brightness
         self.jitter = jitter
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"brightness": self.brightness, "jitter": self.jitter})
+        return config
+
     def call(self, images, training=True):
         if training:
             batch_size = tf.shape(images)[0]
@@ -197,7 +203,7 @@ class RandomColorAffine(layers.Layer):
 
 # Image augmentation module
 def get_augmenter(min_area, brightness, jitter):
-    zoom_factor = 1.0 - tf.sqrt(min_area)
+    zoom_factor = 1.0 - math.sqrt(min_area)
     return keras.Sequential(
         [
             keras.Input(shape=(image_size, image_size, image_channels)),
@@ -285,6 +291,7 @@ baseline_model.compile(
 baseline_history = baseline_model.fit(
     labeled_train_dataset, epochs=num_epochs, validation_data=test_dataset
 )
+
 print(
     "Maximal validation accuracy: {:.2f}%".format(
         max(baseline_history.history["val_acc"]) * 100
