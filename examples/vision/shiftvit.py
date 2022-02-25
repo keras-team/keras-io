@@ -67,7 +67,6 @@ class Config(object):
     # DATA
     batch_size = 256
     buffer_size = batch_size * 2
-    auto = tf.data.AUTOTUNE
     input_shape = (32, 32, 3)
     num_classes = 10
 
@@ -111,16 +110,17 @@ print(f"Training samples: {len(x_train)}")
 print(f"Validation samples: {len(x_val)}")
 print(f"Testing samples: {len(x_test)}")
 
+AUTO = tf.data.AUTOTUNE
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_ds = (
-    train_ds.shuffle(config.buffer_size).batch(config.batch_size).prefetch(config.auto)
+    train_ds.shuffle(config.buffer_size).batch(config.batch_size).prefetch(AUTO)
 )
 
 val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_ds = val_ds.batch(config.batch_size).prefetch(config.auto)
+val_ds = val_ds.batch(config.batch_size).prefetch(AUTO)
 
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-test_ds = test_ds.batch(config.batch_size).prefetch(config.auto)
+test_ds = test_ds.batch(config.batch_size).prefetch(AUTO)
 
 """
 ## Data Augmentation
@@ -145,10 +145,10 @@ def get_augmentation_model():
     """Build the data augmentation model."""
     data_augmentation = keras.Sequential(
         [
-            layers.Rescaling(1 / 255.0),
             layers.Resizing(config.input_shape[0] + 20, config.input_shape[0] + 20),
             layers.RandomCrop(config.image_size, config.image_size),
             layers.RandomFlip("horizontal"),
+            layers.Rescaling(1 / 255.0),
         ]
     )
     return data_augmentation
@@ -213,7 +213,7 @@ fully-connected MLP layers.
 """
 
 
-class Mlp(layers.Layer):
+class MLP(layers.Layer):
     """Get the MLP layer for each shift block.
 
     Args:
@@ -362,7 +362,7 @@ class ShiftViTBlock(layers.Layer):
             if self.drop_path_prob > 0.0
             else layers.Activation("linear")
         )
-        self.mlp = Mlp(
+        self.mlp = MLP(
             mlp_expand_ratio=self.mlp_expand_ratio,
             mlp_dropout_rate=self.mlp_dropout_rate,
         )
@@ -405,7 +405,7 @@ class ShiftViTBlock(layers.Layer):
         )
         return shift_pad
 
-    def call(self, x, training):
+    def call(self, x, training=False):
         # Split the feature maps
         x_splits = tf.split(x, num_or_size_splits=self.C // self.num_div, axis=-1)
 
@@ -547,7 +547,7 @@ class StackedShiftBlocks(layers.Layer):
         if self.is_merge:
             self.patch_merge = PatchMerging(epsilon=self.epsilon)
 
-    def call(self, x, training):
+    def call(self, x, training=False):
         for shift_block in self.shift_blocks:
             x = shift_block(x, training=training)
         if self.is_merge:
@@ -638,8 +638,8 @@ class ShiftViTModel(keras.Model):
         )
         return config
 
-    def _calculate_loss(self, inputs, training=False):
-        (images, labels) = inputs
+    def _calculate_loss(self, data, training=False):
+        (images, labels) = data
 
         # Augment the images
         augmented_images = self.data_augmentation(images, training=training)
@@ -662,7 +662,7 @@ class ShiftViTModel(keras.Model):
     def train_step(self, inputs):
         with tf.GradientTape() as tape:
             total_loss, labels, logits = self._calculate_loss(
-                inputs=inputs, training=True
+                data=inputs, training=True
             )
 
         # Apply gradients.
@@ -685,8 +685,8 @@ class ShiftViTModel(keras.Model):
         self.compiled_metrics.update_state(labels, logits)
         return {m.name: m.result() for m in self.metrics}
 
-    def test_step(self, inputs):
-        _, labels, logits = self._calculate_loss(inputs=inputs, training=False)
+    def test_step(self, data):
+        _, labels, logits = self._calculate_loss(data=data, training=False)
 
         # Update the metrics
         self.compiled_metrics.update_state(labels, logits)
@@ -711,7 +711,7 @@ model = ShiftViTModel(
 )
 
 """
-## Warm Up Cosine Schedule
+## Learning rate schedule
 
 In many experiments we want to warmup the model with a slowly increasing learning rate
 and then cool down the model with a slowly decaying learning rate. In the warmup cosine
@@ -744,7 +744,8 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         # steps. If not, then throw a value error.
         if self.total_steps < self.warmup_steps:
             raise ValueError(
-                "Total number of steps must be larger or equal to warmup steps."
+                f"Total number of steps {self.total_steps} must be" +
+                f"larger or equal to warmup steps {self.warmup_steps}."
             )
 
         # `cos_annealed_lr` is a graph that increases to 1 from the initial
@@ -767,7 +768,10 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             # Check whether lr_max is larger that lr_start. If not, throw a value
             # error.
             if self.lr_max < self.lr_start:
-                raise ValueError("lr_start must be smaller or equal to lr_max.")
+                raise ValueError(
+                    f"lr_start {self.lr_start} must be smaller or" +
+                    f"equal to lr_max {self.lr_max}."
+                )
 
             # Calculate the slope with which the learning rate should increase
             # in the warumup schedule. The formula for slope is m = ((b-a)/steps)
