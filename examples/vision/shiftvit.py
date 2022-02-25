@@ -112,9 +112,7 @@ print(f"Testing samples: {len(x_test)}")
 
 AUTO = tf.data.AUTOTUNE
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_ds = (
-    train_ds.shuffle(config.buffer_size).batch(config.batch_size).prefetch(AUTO)
-)
+train_ds = train_ds.shuffle(config.buffer_size).batch(config.batch_size).prefetch(AUTO)
 
 val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 val_ds = val_ds.batch(config.batch_size).prefetch(AUTO)
@@ -744,8 +742,8 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         # steps. If not, then throw a value error.
         if self.total_steps < self.warmup_steps:
             raise ValueError(
-                f"Total number of steps {self.total_steps} must be" +
-                f"larger or equal to warmup steps {self.warmup_steps}."
+                f"Total number of steps {self.total_steps} must be"
+                + f"larger or equal to warmup steps {self.warmup_steps}."
             )
 
         # `cos_annealed_lr` is a graph that increases to 1 from the initial
@@ -769,8 +767,8 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             # error.
             if self.lr_max < self.lr_start:
                 raise ValueError(
-                    f"lr_start {self.lr_start} must be smaller or" +
-                    f"equal to lr_max {self.lr_max}."
+                    f"lr_start {self.lr_start} must be smaller or"
+                    + f"equal to lr_max {self.lr_max}."
                 )
 
             # Calculate the slope with which the learning rate should increase
@@ -808,10 +806,7 @@ warmup_steps = int(total_steps * warmup_epoch_percentage)
 
 # Initialize the warmupcosine schedule.
 scheduled_lrs = WarmUpCosine(
-    lr_start=1e-5,
-    lr_max=1e-3,
-    warmup_steps=warmup_steps,
-    total_steps=total_steps,
+    lr_start=1e-5, lr_max=1e-3, warmup_steps=warmup_steps, total_steps=total_steps,
 )
 
 # Get the optimizer.
@@ -835,11 +830,7 @@ history = model.fit(
     epochs=config.epochs,
     validation_data=val_ds,
     callbacks=[
-        keras.callbacks.EarlyStopping(
-            monitor="val_accuracy",
-            patience=5,
-            mode="auto",
-        )
+        keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=5, mode="auto",)
     ],
 )
 
