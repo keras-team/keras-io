@@ -1,5 +1,5 @@
 """
-Title: Feature Engineering using Keras Funcional API and Lambda layers
+Title: Feature Engineering using Keras Functional API and Lambda layers
 Author: [Fernando Nieuwveldt](https://www.linkedin.com/in/fernandonieuwveldt/)
 Date created: 2022/02/26
 Last modified: 2022/02/26
@@ -16,7 +16,7 @@ different libraries for example Pandas for reading data and also feature enginee
 sklearn for encoding features for example OneHot encoding and Normalization. The
 estimator might be an sklearn classifier, xgboost or it can for example be a Keras model.
 In the latter case, we would end up with artifacts for feature engineering and encoding
-and also different artifacts for the saved model. The pipeline is also disconnected and
+and different artifacts for the saved model. The pipeline is also disconnected and
 an extra step is needed to feed encoded data to the Keras model. For this step the data
 can be mapped from a dataframe to something like tf.data.Datasets type or numpy array
 before feeding it to a Keras model.
@@ -28,12 +28,13 @@ feature engineering will be part of the network architecture and can be persiste
 for inference as standalone.
 
 Steps we will follow:
-- Load data with tf.data
-- Create Input layer
-- Create feature layer using Lambda layers
-- Train model
+* Load data with tf.data
+* Create Input layer
+* Create feature layer using Lambda layers
+* Train model
 
-For constructing our model we will the Functional API. As we build our netwrk we will visualize model.
+For constructing our model we will the Functional API. We will also visualize our network architecture
+as the graph evolves.
 """
 
 """
@@ -74,7 +75,7 @@ categoric_features = ["thal"]
 """
 ## Create Input Layer
 
-We first create a dictionary with feature name and type mapper and than create a dict of Input objects.
+We first create a dictionary with feature name and data type mapper and than create a dict of Input objects.
 """
 
 dtype_mapper = {
@@ -114,19 +115,19 @@ feature_layer_inputs = create_inputs(dtype_mapper)
 """
 ## Visualize Input layer
 
-As our network evolves we will visualize it at different construction points.
+Lets visualize our input layer.
 """
 
 input_layer_graph = tf.keras.Model(
     inputs=feature_layer_inputs, outputs=feature_layer_inputs
 )
-plot_model(input_layer_graph)
+plot_model(input_layer_graph, input_layer_graph='input_layer_graph.png')
 
 """
 ## Engineered Features: Custom functions for Lambda Layers
 
 For feature engineering we will be using Keras Lambda layers. Below are the custom functions that will be used
-transform our features. The categoric feature "thal" we will apply One hot encoding manually to illustrate how it can
+transform our features. For the categoric feature "thal" we will apply One hot encoding manually to illustrate how it can
 be done with Lambda layers.
 """
 
@@ -213,7 +214,7 @@ lambda_feature_layer = tf.keras.layers.concatenate(
 feature_graph = tf.keras.Model(
     inputs=feature_layer_inputs, outputs=lambda_feature_layer
 )
-plot_model(feature_graph)
+plot_model(feature_graph, to_file='lambda_feature_layer.png')
 
 """
 ## Combine all features
@@ -245,7 +246,7 @@ We can now view our complete Feature layer.
 """
 
 full_feature_graph = tf.keras.Model(inputs=feature_layer_inputs, outputs=feature_layer)
-plot_model(full_feature_graph)
+plot_model(full_feature_graph, to_file='complete_feature_layer.png')
 
 """
 ## Compile and fit model
@@ -273,7 +274,7 @@ model.compile(
 Lets visualize our complete model graph.
 """
 
-plot_model(model)
+plot_model(model, to_file='complete_model_graph.png')
 
 """
 # Train Model and Save model
