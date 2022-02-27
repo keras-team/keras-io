@@ -11,7 +11,7 @@ Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug
 In this example, we would be trying to solve one of the Drug Discovery tasks which is to
 generate molecules with the help of a Variational Autoencoder.
 We would be considering the research paper [**Automatic chemical design using a
-data-driven continuous representation of molecules**](https://arxiv.org/abs/1610.02415).
+data-driven continuous representation of molecules**](https://arxiv.org/abs/1610.02415) as a reference.
 The model explained in this paper generate new molecules for efficient exploration and
 optimization through open-ended spaces of chemical compounds. The Model consists of three
 components: Encoder, Decoder and Predictor.  The encoder converts the discrete
