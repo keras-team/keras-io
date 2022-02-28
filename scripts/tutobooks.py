@@ -203,6 +203,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
                     else:
                         print("Removing created file:", fname)
                         os.remove(fpath)
+    return attributes
 
 
 def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
@@ -443,7 +444,7 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
-    if len(lines) != 5:
+    if len(lines) != 6:
         raise ValueError("Invalid header, it should be only 5 lines.")
     title = lines[0][len("Title: ") :]
     author_line = lines[1]
@@ -456,6 +457,7 @@ def _parse_header(header):
     date_created = lines[2][len("Date created: ") :]
     last_modified = lines[3][len("Last modified: ") :]
     description = lines[4][len("Description: ") :]
+    spaces_dir = lines[5][len("Spaces ID: ") :]
     return {
         "title": title,
         "author": author,
@@ -463,6 +465,7 @@ def _parse_header(header):
         "date_created": date_created,
         "last_modified": last_modified,
         "description": description,
+        "spaces_dir": spaces_dir
     }
 
 

@@ -125,7 +125,7 @@ class KerasIO:
         save_file(fpath, md)
 
     def preprocess_tutobook_md_source(
-        self, md_content, fname, github_repo_dir, img_dir, site_img_dir
+        self, md_content, fname, github_repo_dir, img_dir, site_img_dir, spaces_dir
     ):
         # Insert colab button and github button.
         name = fname[:-3]
@@ -145,9 +145,19 @@ class KerasIO:
             + github_repo_dir
             + "/"
             + fname
-            + ")",
-            "\n",
+            + ") "
         ]
+        if spaces_dir != "None":
+            button_lines.append(
+            '<span class="k-dot">•</span>'
+            + '<img class="k-inline-icon" src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"/>'
+            + "[**Try on Spaces**](https://huggingface.co/"
+            + spaces_dir
+            + ")"
+            + "\n"
+            )
+        else:
+            button_lines.append("\n")
         md_content_lines = md_content_lines[:6] + button_lines + md_content_lines[6:]
         md_content = "\n".join(md_content_lines)
         # Normalize img urls
@@ -159,7 +169,7 @@ class KerasIO:
         return md_content
 
     def make_tutobook_sources_for_directory(
-        self, src_dir, target_dir, img_dir, site_img_dir, github_repo_dir
+        self, src_dir, target_dir, img_dir, site_img_dir, github_repo_dir, spaces_dir
     ):
         # e.g.
         # make_tutobook_sources_for_directory(
@@ -181,7 +191,7 @@ class KerasIO:
                 tutobooks.py_to_md(py_path, nb_path, md_path, img_dir)
                 md_content = open(md_path).read()
                 md_content = self.preprocess_tutobook_md_source(
-                    md_content, fname, github_repo_dir, img_dir, site_img_dir
+                    md_content, fname, github_repo_dir, img_dir, site_img_dir, spaces_dir
                 )
                 open(md_path, "w").write(md_content)
         shutil.rmtree(working_ipynb_dir)
@@ -234,13 +244,14 @@ class KerasIO:
         py_path = Path(self.examples_dir) / folder / (name + ".py")
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
-        tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
+        attributes = tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
         github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
         site_img_dir = os.path.join("img", "examples", folder, name)
+        spaces_dir = attributes["spaces_dir"]
         md_content = self.preprocess_tutobook_md_source(
-            md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
+            md_content, name + ".py", github_repo_dir, img_dir, site_img_dir, spaces_dir
         )
         open(md_path, "w").write(md_content)
 
@@ -264,13 +275,14 @@ class KerasIO:
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
 
-        tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
+        attributes = tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
         md_content = open(md_path).read()
         github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
+        spaces_dir = attributes["spaces_dir"]
         md_content = self.preprocess_tutobook_md_source(
-            md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
+            md_content, name + ".py", github_repo_dir, img_dir, site_img_dir, spaces_dir
         )
         open(md_path, "w").write(md_content)
 
