@@ -218,7 +218,9 @@ loss = tfsim.losses.MultiSimilarityLoss()
 
 # compiling and training
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate), loss=loss, steps_per_execution=10,
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=loss,
+    steps_per_execution=10,
 )
 history = model.fit(
     train_ds, epochs=epochs, validation_data=val_ds, validation_steps=val_steps
