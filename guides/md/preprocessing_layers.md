@@ -253,6 +253,27 @@ inference_model = keras.Model(inputs, outputs)
 ```
 
 ---
+## Preprocessing during multi-worker training
+
+Preprocessing layers are compatible with the
+[tf.distribute](https://www.tensorflow.org/api_docs/python/tf/distribute) API
+for running training across multiple machines.
+
+In general, preprocessing layers should be placed inside a `strategy.scope()`
+and called either inside or before the model as discussed above.
+
+```python
+with strategy.scope():
+    inputs = keras.Input(shape=input_shape)
+    preprocessing_layer = tf.keras.layers.Hashing(10)
+    dense_layer = tf.keras.layers.Dense(16)
+```
+
+For more details, refer to the
+[preprocessing section](https://www.tensorflow.org/tutorials/distribute/input#data_preprocessing)
+of the distributed input guide.
+
+---
 ## Quick recipes
 
 ### Image data augmentation
@@ -297,9 +318,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 10s 510ms/step - loss: 9.0162
+5/5 [==============================] - 10s 482ms/step - loss: 7.9075
 
-<keras.callbacks.History at 0x7f558864e580>
+<keras.callbacks.History at 0x12ac847d0>
 
 ```
 </div>
@@ -333,9 +354,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 3s 2ms/step - loss: 2.1250
+1563/1563 [==============================] - 2s 1ms/step - loss: 2.1251
 
-<keras.callbacks.History at 0x7f557bfd2df0>
+<keras.callbacks.History at 0x12ad68090>
 
 ```
 </div>
@@ -509,14 +530,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 2s 2s/step - loss: 0.5208
+1/1 [==============================] - 1s 1s/step - loss: 0.5189
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.01588821]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.02478244]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -594,14 +615,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 183ms/step - loss: 0.5923
+1/1 [==============================] - 0s 180ms/step - loss: 0.3644
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.66376257]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.35137588]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -680,14 +701,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 404ms/step - loss: 0.7536
+1/1 [==============================] - 0s 174ms/step - loss: 0.5875
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.73941016]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[1.3830575]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
