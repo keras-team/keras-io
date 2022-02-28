@@ -199,11 +199,7 @@ The Shift Block as shown in Fig. 3, comprises of the following:
 """
 #### The MLP block
 
-The MLP block is intended to be a stack of densely-connected layers.
-By default, the MLP bloack is implemented by
-`keras.layers.Dense`. However, in this implementation, the data layout is
-in the format `[N, H, W, C]`, therefore we use 1x1 convolution layers to implement
-the fully-connected layers.
+The MLP block is intended to be a stack of densely-connected layers.s
 """
 
 
@@ -226,14 +222,12 @@ class MLP(layers.Layer):
 
         self.mlp = keras.Sequential(
             [
-                layers.Conv2D(
-                    filters=initial_filters,
-                    kernel_size=1,
-                    padding="same",
+                layers.Dense(
+                    units=initial_filters,
                     activation=tf.nn.gelu,
                 ),
                 layers.Dropout(rate=self.mlp_dropout_rate),
-                layers.Conv2D(filters=input_channels, kernel_size=1, padding="same"),
+                layers.Dense(units=input_channels),
                 layers.Dropout(rate=self.mlp_dropout_rate),
             ]
         )
