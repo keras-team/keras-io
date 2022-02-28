@@ -470,10 +470,10 @@ class PatchMerging(layers.Layer):
 """
 #### Stacked Shift Blocks
 
-Each stage will have a different number of stacking, as suggested in the paper. This is a
-generic layer that will contain the stacked shift vit blocks with the patch merging layer
-as well. Combining the two operations (shift ViT block and patch merging) is a design
-choice we picked for better code reusability.
+Each stage will have a variable number of stacked ShiftViT Blocks, as suggested in
+the paper. This is a generic layer that will contain the stacked shift vit blocks
+with the patch merging layer as well. Combining the two operations (shift ViT
+block and patch merging) is a design choice we picked for better code reusability.
 """
 
 # Note: This layer will have a different depth of stacking
