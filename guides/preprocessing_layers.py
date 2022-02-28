@@ -221,6 +221,28 @@ inference_model = keras.Model(inputs, outputs)
 """
 
 """
+## Preprocessing during multi-worker training
+
+Preprocessing layers are compatible with the
+[tf.distribute](https://www.tensorflow.org/api_docs/python/tf/distribute) API
+for running training across multiple machines.
+
+In general, preprocessing layers should be placed inside a `strategy.scope()`
+and called either inside or before the model as discussed above.
+
+```python
+with strategy.scope():
+    inputs = keras.Input(shape=input_shape)
+    preprocessing_layer = tf.keras.layers.Hashing(10)
+    dense_layer = tf.keras.layers.Dense(16)
+```
+
+For more details, refer to the
+[preprocessing section](https://www.tensorflow.org/tutorials/distribute/input#data_preprocessing)
+of the distributed input guide.
+"""
+
+"""
 ## Quick recipes
 
 ### Image data augmentation
