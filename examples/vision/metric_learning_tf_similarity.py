@@ -37,6 +37,13 @@ TensorFlow Similarity provides components that:
 * Make training contrastive models simple and fast.
 * Make it easier to ensure that batches contain pairs of examples.
 * Enable the evaluation of the quality of the embedding.
+
+TensorFlow Similarity can be installed easily via pip, as follows:
+
+```
+pip -q install tensorflow_similarity
+```
+
 """
 
 import random
@@ -48,12 +55,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-# install TF similarity if needed
-try:
-    import tensorflow_similarity as tfsim  # main package
-except ModuleNotFoundError:
-    !pip install tensorflow_similarity
-    import tensorflow_similarity as tfsim
+import tensorflow_similarity as tfsim
 
 tfsim.utils.tf_cap_memory()
 
@@ -216,7 +218,9 @@ loss = tfsim.losses.MultiSimilarityLoss()
 
 # compiling and training
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate), loss=loss, steps_per_execution=10,
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=loss,
+    steps_per_execution=10,
 )
 history = model.fit(
     train_ds, epochs=epochs, validation_data=val_ds, validation_steps=val_steps
