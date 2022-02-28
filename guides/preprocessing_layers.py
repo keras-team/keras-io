@@ -503,7 +503,10 @@ adapt_data = tf.constant(
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
 text_vectorizer = layers.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
-text_vectorizer.adapt(adapt_data)
+
+with tf.device("CPU"):
+    # A bug that prevents this from running on GPU for now.
+    text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(

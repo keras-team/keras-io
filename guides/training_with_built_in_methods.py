@@ -293,7 +293,7 @@ methods:
 - `update_state(self, y_true, y_pred, sample_weight=None)`, which uses the targets
 y_true and the model predictions y_pred to update the state variables.
 - `result(self)`, which uses the state variables to compute the final results.
-- `reset_states(self)`, which reinitializes the state of the metric.
+- `reset_state(self)`, which reinitializes the state of the metric.
 
 State update and results computation are kept separate (in `update_state()` and
 `result()`, respectively) because in some cases, the results computation might be very
@@ -321,7 +321,7 @@ class CategoricalTruePositives(keras.metrics.Metric):
     def result(self):
         return self.true_positives
 
-    def reset_states(self):
+    def reset_state(self):
         # The state of the metric will be reset at the start of each epoch.
         self.true_positives.assign(0.0)
 

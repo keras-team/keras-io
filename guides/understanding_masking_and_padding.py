@@ -69,7 +69,7 @@ raw_inputs = [
 
 # By default, this will pad using 0s; it is configurable via the
 # "value" parameter.
-# Note that you could "pre" padding (at the beginning) or
+# Note that you could use "pre" padding (at the beginning) or
 # "post" padding (at the end).
 # We recommend using "post" padding when working with RNN layers
 # (in order to be able to use the
@@ -263,6 +263,11 @@ y = layer(x)
 mask = layer.compute_mask(x)
 
 print(mask)
+
+"""
+Note: For more details about format limitations related to masking, see the 
+[serialization guide](/guides/serialization_and_saving).
+"""
 
 """
 ## Opting-in to mask propagation on compatible layers

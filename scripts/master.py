@@ -53,43 +53,6 @@ MASTER = {
                 LAYERS_MASTER,
                 CALLBACKS_MASTER,
                 {
-                    'path': 'preprocessing/',
-                    'title': 'Data preprocessing',
-                    'toc': True,
-                    'children': [
-                        {
-                            'path': 'image',
-                            'title': 'Image data preprocessing',
-                            'generate': [
-                                'tensorflow.keras.preprocessing.image_dataset_from_directory',
-                                'tensorflow.keras.preprocessing.image.load_img',
-                                'tensorflow.keras.preprocessing.image.img_to_array',
-                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
-                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
-                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
-                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory',  # LEGACY
-                            ],
-                        },
-                        {
-                            'path': 'timeseries',
-                            'title': 'Timeseries data preprocessing',
-                            'generate': [
-                                'tensorflow.keras.preprocessing.timeseries_dataset_from_array',
-                                'tensorflow.keras.preprocessing.sequence.pad_sequences',
-                                # 'tensorflow.keras.preprocessing.sequence.TimeseriesGenerator',  # LEGACY
-                            ]
-                        },
-                        {
-                            'path': 'text',
-                            'title': 'Text data preprocessing',
-                            'generate': [
-                                'tensorflow.keras.preprocessing.text_dataset_from_directory',
-                                # 'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
-                            ]
-                        },
-                    ]
-                },
-                {
                     'path': 'optimizers/',
                     'title': 'Optimizers',
                     'toc': True,
@@ -302,6 +265,43 @@ MASTER = {
                     ],
                 },
                 {
+                    'path': 'data_loading/',
+                    'title': 'Data loading',
+                    'toc': True,
+                    'children': [
+                        {
+                            'path': 'image',
+                            'title': 'Image data loading',
+                            'generate': [
+                                'tensorflow.keras.utils.image_dataset_from_directory',
+                                'tensorflow.keras.utils.load_img',
+                                'tensorflow.keras.utils.img_to_array',
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory',  # LEGACY
+                            ],
+                        },
+                        {
+                            'path': 'timeseries',
+                            'title': 'Timeseries data loading',
+                            'generate': [
+                                'tensorflow.keras.utils.timeseries_dataset_from_array',
+                                # 'tensorflow.keras.preprocessing.sequence.pad_sequences',  # LEGACY
+                                # 'tensorflow.keras.preprocessing.sequence.TimeseriesGenerator',  # LEGACY
+                            ]
+                        },
+                        {
+                            'path': 'text',
+                            'title': 'Text data loading',
+                            'generate': [
+                                'tensorflow.keras.utils.text_dataset_from_directory',
+                                # 'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
+                            ]
+                        },
+                    ]
+                },
+                {
                     'path': 'datasets/',
                     'title': 'Built-in small datasets',
                     'toc': True,
@@ -370,6 +370,19 @@ MASTER = {
                                 'tensorflow.keras.applications.EfficientNetB5',
                                 'tensorflow.keras.applications.EfficientNetB6',
                                 'tensorflow.keras.applications.EfficientNetB7',
+                            ],
+                        },
+                        {
+                            'path': 'efficientnet_v2',
+                            'title': 'EfficientNetV2 B0 to B3 and S, M, L',
+                            'generate': [
+                                'tensorflow.keras.applications.EfficientNetV2B0',
+                                'tensorflow.keras.applications.EfficientNetV2B1',
+                                'tensorflow.keras.applications.EfficientNetV2B2',
+                                'tensorflow.keras.applications.EfficientNetV2B3',
+                                'tensorflow.keras.applications.EfficientNetV2S',
+                                'tensorflow.keras.applications.EfficientNetV2M',
+                                'tensorflow.keras.applications.EfficientNetV2L',
                             ],
                         },
                         {

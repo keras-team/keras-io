@@ -4,6 +4,21 @@ There are many deep learning frameworks available today. Why use Keras rather th
 
 Here are some of the areas in which Keras compares favorably to existing alternatives.
 
+---
+
+
+## Keras has broad adoption in the industry and the research community
+
+
+With over one million individual users as of late 2021, Keras has strong adoption across both the industry and the research community. Together with TensorFlow 2, Keras has more adoption than any other deep learning solution -- in every vertical.
+
+You are already constantly interacting with features built with Keras -- it is in use at Netflix, Uber, Yelp, Instacart, Zocdoc, Square, and many others. It is especially popular among startups that place deep learning at the core of their products.
+
+Keras & TensorFlow 2 are also a favorite among researchers, coming in #1 in terms of mentions in scientific papers indexed by Google Scholar. Keras has also been adopted by researchers at large scientific organizations, such as CERN and NASA.
+
+
+![2021 deep learning frameworks adoption metrics](/img/deep_learning_frameworks_adoption_2021.jpg)
+
 
 ---
 
@@ -24,21 +39,6 @@ Keras ranked as #1 for deep learning both among primary frameworks and among all
 
 ![All ML frameworks used by top-5 teams on Kaggle](/img/graph-kaggle-2.jpeg)
 
-
----
-
-
-## Keras has broad adoption in the industry and the research community
-
-
-With over 400,000 individual users as of early 2021, Keras has strong adoption across both the industry and the research community. Together with TensorFlow 2, Keras has more adoption than any other deep learning solution -- in every vertical.
-
-You are already constantly interacting with features built with Keras -- it is in use at Netflix, Uber, Yelp, Instacart, Zocdoc, Square, and many others. It is especially popular among startups that place deep learning at the core of their products.
-
-Keras & TensorFlow 2 are also a favorite among researchers, coming in #1 in terms of mentions in scientific papers indexed by Google Scholar. Keras has also been adopted by researchers at large scientific organizations, such as CERN and NASA.
-
-
-![2020 deep learning frameworks adoption metrics](/img/deep_learning_frameworks_adoption_2020.png)
 
 
 ---

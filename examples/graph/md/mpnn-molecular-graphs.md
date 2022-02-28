@@ -1,8 +1,8 @@
-# Message-passing neural network for molecular property prediction
+# Message-passing neural network (MPNN) for molecular property prediction
 
 **Author:** [akensert](http://github.com/akensert)<br>
 **Date created:** 2021/08/16<br>
-**Last modified:** 2021/08/16<br>
+**Last modified:** 2021/12/27<br>
 **Description:** Implementation of an MPNN to predict blood-brain barrier permeability.
 
 
@@ -86,6 +86,11 @@ sudo apt-get -qq install graphviz
 
 
 ```python
+import os
+
+# Temporary suppress tf logs
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -97,9 +102,8 @@ from rdkit import Chem
 from rdkit import RDLogger
 from rdkit.Chem.Draw import IPythonConsole
 from rdkit.Chem.Draw import MolsToGridImage
-import logging
 
-tf.get_logger().setLevel(logging.ERROR)
+# Temporary suppress warnings and RDKit logs
 warnings.filterwarnings("ignore")
 RDLogger.DisableLog("rdApp.*")
 
@@ -113,7 +117,7 @@ tf.random.set_seed(42)
 Information about the dataset can be found in
 [A Bayesian Approach to in Silico Blood-Brain Barrier Penetration Modeling](https://pubs.acs.org/doi/10.1021/ci300124c)
 and [MoleculeNet: A Benchmark for Molecular Machine Learning](https://arxiv.org/abs/1703.00564).
-The dataset will be downloaded from [MoleculeNet.ai](http://moleculenet.ai/datasets-1).
+The dataset will be downloaded from [MoleculeNet.org](https://moleculenet.org/datasets-1).
 
 ### About
 
@@ -224,7 +228,7 @@ df.iloc[96:104]
 ### Define features
 
 To encode features for atoms and bonds (which we will need later),
-we'll define two classes: `AtomFeaturizer` and `BondFeatuzier` respectively.
+we'll define two classes: `AtomFeaturizer` and `BondFeaturizer` respectively.
 
 To reduce the lines of code, i.e., to keep this tutorial short and concise,
 only about a handful of (atom and bond) features will be considered: \[atom features\]
@@ -358,15 +362,11 @@ def graph_from_molecule(molecule):
     for atom in molecule.GetAtoms():
         atom_features.append(atom_featurizer.encode(atom))
 
-        # Add self-loop. Notice, this also helps against some edge cases where the
-        # last node has no edges. Alternatively, if no self-loops are used, for these
-        # edge cases, zero-padding on the output of the edge network is needed.
+        # Add self-loops
         pair_indices.append([atom.GetIdx(), atom.GetIdx()])
         bond_features.append(bond_featurizer.encode(None))
 
-        atom_neighbors = atom.GetNeighbors()
-
-        for neighbor in atom_neighbors:
+        for neighbor in atom.GetNeighbors():
             bond = molecule.GetBondBetweenAtoms(atom.GetIdx(), neighbor.GetIdx())
             pair_indices.append([atom.GetIdx(), neighbor.GetIdx()])
             bond_features.append(bond_featurizer.encode(bond))
@@ -480,31 +480,29 @@ def prepare_batch(x_batch, y_batch):
     num_atoms = atom_features.row_lengths()
     num_bonds = bond_features.row_lengths()
 
-    # Obtain partition indices. atom_partition_indices will be used to
+    # Obtain partition indices (molecule_indicator), which will be used to
     # gather (sub)graphs from global graph in model later on
     molecule_indices = tf.range(len(num_atoms))
-    atom_partition_indices = tf.repeat(molecule_indices, num_atoms)
-    bond_partition_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
+    molecule_indicator = tf.repeat(molecule_indices, num_atoms)
 
     # Merge (sub)graphs into a global (disconnected) graph. Adding 'increment' to
     # 'pair_indices' (and merging ragged tensors) actualizes the global graph
+    gather_indices = tf.repeat(molecule_indices[:-1], num_bonds[1:])
     increment = tf.cumsum(num_atoms[:-1])
-    increment = tf.pad(
-        tf.gather(increment, bond_partition_indices), [(num_bonds[0], 0)]
-    )
+    increment = tf.pad(tf.gather(increment, gather_indices), [(num_bonds[0], 0)])
     pair_indices = pair_indices.merge_dims(outer_axis=0, inner_axis=1).to_tensor()
     pair_indices = pair_indices + increment[:, tf.newaxis]
     atom_features = atom_features.merge_dims(outer_axis=0, inner_axis=1).to_tensor()
     bond_features = bond_features.merge_dims(outer_axis=0, inner_axis=1).to_tensor()
 
-    return (atom_features, bond_features, pair_indices, atom_partition_indices), y_batch
+    return (atom_features, bond_features, pair_indices, molecule_indicator), y_batch
 
 
 def MPNNDataset(X, y, batch_size=32, shuffle=False):
     dataset = tf.data.Dataset.from_tensor_slices((X, (y)))
     if shuffle:
         dataset = dataset.shuffle(1024)
-    return dataset.batch(batch_size).map(prepare_batch, -1)
+    return dataset.batch(batch_size).map(prepare_batch, -1).prefetch(-1)
 
 ```
 
@@ -523,40 +521,34 @@ classification.
 
 The message passing step itself consists of two parts:
 
-1. The *edge network*, which passes messages from 1-hop neighbors `w^{t}_{i}` of `v^{t}`
-to `v^{t}`, based on the edge features between them (`e_{v^{t}w^{t}_{i}}`, where `t =
-0`), resulting in an updated node state `v^{t+1}`. `_{i}` denotes the `i:th` neighbor of
-`v^{t}` and `^{t}` the `t:th` state of `v` or `w`. An important feature of the edge
-network (in contrast to e.g. the relational graph convolutional network) is that it
-allows for non-discrete edge features. However, in this tutorial, only discrete edge
-features will be used.
-
+1. The *edge network*, which passes messages from 1-hop neighbors `w_{i}` of `v`
+to `v`, based on the edge features between them (`e_{vw_{i}}`),
+resulting in an updated node (state) `v'`. `w_{i}` denotes the `i:th` neighbor of
+`v`.
 
 2. The *gated recurrent unit* (GRU), which takes as input the most recent node state
-(e.g., `v^{t+1}`) and updates it based on previous node state(s) (e.g., `v^{t}`). In
-other words, the most recent node states serves as the input to the GRU, while the previous
-node state(s) are incorporated within the memory state of the GRU.
+and updates it based on previous node states. In
+other words, the most recent node state serves as the input to the GRU, while the previous
+node states are incorporated within the memory state of the GRU. This allows information
+to travel from one node state (e.g., `v`) to another (e.g., `v''`).
 
 Importantly, step (1) and (2) are repeated for `k steps`, and where at each step `1...k`,
-the radius (or # hops) of aggregated information from the source node `v` increases by 1.
+the radius (or number of hops) of aggregated information from `v` increases by 1.
 
 
 ```python
 
 class EdgeNetwork(layers.Layer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def build(self, input_shape):
         self.atom_dim = input_shape[0][-1]
         self.bond_dim = input_shape[1][-1]
         self.kernel = self.add_weight(
             shape=(self.bond_dim, self.atom_dim * self.atom_dim),
-            trainable=True,
             initializer="glorot_uniform",
+            name="kernel",
         )
         self.bias = self.add_weight(
-            shape=(self.atom_dim * self.atom_dim), trainable=True, initializer="zeros",
+            shape=(self.atom_dim * self.atom_dim), initializer="zeros", name="bias",
         )
         self.built = True
 
@@ -576,8 +568,10 @@ class EdgeNetwork(layers.Layer):
         # Apply neighborhood aggregation
         transformed_features = tf.matmul(bond_features, atom_features_neighbors)
         transformed_features = tf.squeeze(transformed_features, axis=-1)
-        aggregated_features = tf.math.segment_sum(
-            transformed_features, pair_indices[:, 0]
+        aggregated_features = tf.math.unsorted_segment_sum(
+            transformed_features,
+            pair_indices[:, 0],
+            num_segments=tf.shape(atom_features)[0],
         )
         return aggregated_features
 
@@ -598,17 +592,18 @@ class MessagePassing(layers.Layer):
     def call(self, inputs):
         atom_features, bond_features, pair_indices = inputs
 
-        # Pad atom features if number of desired units exceeds atom_features dim
+        # Pad atom features if number of desired units exceeds atom_features dim.
+        # Alternatively, a dense layer could be used here.
         atom_features_updated = tf.pad(atom_features, [(0, 0), (0, self.pad_length)])
 
         # Perform a number of steps of message passing
         for i in range(self.steps):
-            # Aggregate atom_features from neighbors
+            # Aggregate information from neighbors
             atom_features_aggregated = self.message_step(
                 [atom_features_updated, bond_features, pair_indices]
             )
 
-            # Update aggregated atom_features via a step of GRU
+            # Update node state via a step of GRU
             atom_features_updated, _ = self.update_step(
                 atom_features_aggregated, atom_features_updated
             )
@@ -623,15 +618,15 @@ into subgraphs (correspoding to each molecule in the batch) and subsequently
 reduced to graph-level embeddings. In the
 [original paper](https://arxiv.org/abs/1704.01212), a
 [set-to-set layer](https://arxiv.org/abs/1511.06391) was used for this purpose.
-In this tutorial however, a transformer encoder will be used. Specifically:
+In this tutorial however, a transformer encoder + average pooling will be used. Specifically:
 
 * the k-step-aggregated node states will be partitioned into the subgraphs
 (corresponding to each molecule in the batch);
 * each subgraph will then be padded to match the subgraph with the greatest number of nodes, followed
 by a `tf.stack(...)`;
-* the (stacked) padded tensor, encoding subgraphs (each subgraph containing sets of node states), are
+* the (stacked padded) tensor, encoding subgraphs (each subgraph containing a set of node states), are
 masked to make sure the paddings don't interfere with training;
-* finally, the padded tensor is passed to the transformer followed by an average pooling.
+* finally, the tensor is passed to the transformer followed by average pooling.
 
 
 ```python
@@ -642,48 +637,54 @@ class PartitionPadding(layers.Layer):
         self.batch_size = batch_size
 
     def call(self, inputs):
-        atom_features, atom_partition_indices = inputs
+
+        atom_features, molecule_indicator = inputs
 
         # Obtain subgraphs
-        atom_features = tf.dynamic_partition(
-            atom_features, atom_partition_indices, self.batch_size
+        atom_features_partitioned = tf.dynamic_partition(
+            atom_features, molecule_indicator, self.batch_size
         )
 
         # Pad and stack subgraphs
-        num_atoms = [tf.shape(f)[0] for f in atom_features]
+        num_atoms = [tf.shape(f)[0] for f in atom_features_partitioned]
         max_num_atoms = tf.reduce_max(num_atoms)
-        atom_features_padded = tf.stack(
+        atom_features_stacked = tf.stack(
             [
                 tf.pad(f, [(0, max_num_atoms - n), (0, 0)])
-                for f, n in zip(atom_features, num_atoms)
+                for f, n in zip(atom_features_partitioned, num_atoms)
             ],
             axis=0,
         )
 
-        # Remove empty subgraphs (usually for last batch)
-        nonempty_examples = tf.where(tf.reduce_sum(atom_features_padded, (1, 2)) != 0)
-        nonempty_examples = tf.squeeze(nonempty_examples, axis=-1)
+        # Remove empty subgraphs (usually for last batch in dataset)
+        gather_indices = tf.where(tf.reduce_sum(atom_features_stacked, (1, 2)) != 0)
+        gather_indices = tf.squeeze(gather_indices, axis=-1)
+        return tf.gather(atom_features_stacked, gather_indices, axis=0)
 
-        return tf.gather(atom_features_padded, nonempty_examples, axis=0)
 
-
-class TransformerEncoder(layers.Layer):
-    def __init__(self, num_heads=8, embed_dim=64, dense_dim=512, **kwargs):
+class TransformerEncoderReadout(layers.Layer):
+    def __init__(
+        self, num_heads=8, embed_dim=64, dense_dim=512, batch_size=32, **kwargs
+    ):
         super().__init__(**kwargs)
 
+        self.partition_padding = PartitionPadding(batch_size)
         self.attention = layers.MultiHeadAttention(num_heads, embed_dim)
         self.dense_proj = keras.Sequential(
             [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
-        self.supports_masking = True
+        self.average_pooling = layers.GlobalAveragePooling1D()
 
-    def call(self, inputs, mask=None):
-        attention_mask = mask[:, tf.newaxis, :] if mask is not None else None
-        attention_output = self.attention(inputs, inputs, attention_mask=attention_mask)
-        proj_input = self.layernorm_1(inputs + attention_output)
-        return self.layernorm_2(proj_input + self.dense_proj(proj_input))
+    def call(self, inputs):
+        x = self.partition_padding(inputs)
+        padding_mask = tf.reduce_any(tf.not_equal(x, 0.0), axis=-1)
+        padding_mask = padding_mask[:, tf.newaxis, tf.newaxis, :]
+        attention_output = self.attention(x, x, attention_mask=padding_mask)
+        proj_input = self.layernorm_1(x + attention_output)
+        proj_output = self.layernorm_2(proj_input + self.dense_proj(proj_input))
+        return self.average_pooling(proj_output)
 
 ```
 
@@ -705,29 +706,25 @@ def MPNNModel(
     num_attention_heads=8,
     dense_units=512,
 ):
+
     atom_features = layers.Input((atom_dim), dtype="float32", name="atom_features")
     bond_features = layers.Input((bond_dim), dtype="float32", name="bond_features")
     pair_indices = layers.Input((2), dtype="int32", name="pair_indices")
-    atom_partition_indices = layers.Input(
-        (), dtype="int32", name="atom_partition_indices"
-    )
+    molecule_indicator = layers.Input((), dtype="int32", name="molecule_indicator")
 
     x = MessagePassing(message_units, message_steps)(
         [atom_features, bond_features, pair_indices]
     )
 
-    x = PartitionPadding(batch_size)([x, atom_partition_indices])
+    x = TransformerEncoderReadout(
+        num_attention_heads, message_units, dense_units, batch_size
+    )([x, molecule_indicator])
 
-    x = layers.Masking()(x)
-
-    x = TransformerEncoder(num_attention_heads, message_units, dense_units)(x)
-
-    x = layers.GlobalAveragePooling1D()(x)
     x = layers.Dense(dense_units, activation="relu")(x)
     x = layers.Dense(1, activation="sigmoid")(x)
 
     model = keras.Model(
-        inputs=[atom_features, bond_features, pair_indices, atom_partition_indices],
+        inputs=[atom_features, bond_features, pair_indices, molecule_indicator],
         outputs=[x],
     )
     return model
@@ -782,87 +779,87 @@ plt.legend(fontsize=16)
 <div class="k-default-codeblock">
 ```
 Epoch 1/40
-52/52 - 4s - loss: 0.5240 - AUC: 0.7202 - val_loss: 0.5523 - val_AUC: 0.8310
+52/52 - 26s - loss: 0.5572 - AUC: 0.6527 - val_loss: 0.4660 - val_AUC: 0.8312 - 26s/epoch - 501ms/step
 Epoch 2/40
-52/52 - 1s - loss: 0.4704 - AUC: 0.7899 - val_loss: 0.5592 - val_AUC: 0.8381
+52/52 - 22s - loss: 0.4817 - AUC: 0.7713 - val_loss: 0.6889 - val_AUC: 0.8351 - 22s/epoch - 416ms/step
 Epoch 3/40
-52/52 - 1s - loss: 0.4529 - AUC: 0.8088 - val_loss: 0.5911 - val_AUC: 0.8406
+52/52 - 24s - loss: 0.4611 - AUC: 0.7960 - val_loss: 0.5863 - val_AUC: 0.8444 - 24s/epoch - 457ms/step
 Epoch 4/40
-52/52 - 1s - loss: 0.4385 - AUC: 0.8224 - val_loss: 0.5379 - val_AUC: 0.8435
+52/52 - 19s - loss: 0.4493 - AUC: 0.8069 - val_loss: 0.5059 - val_AUC: 0.8509 - 19s/epoch - 372ms/step
 Epoch 5/40
-52/52 - 1s - loss: 0.4256 - AUC: 0.8348 - val_loss: 0.4765 - val_AUC: 0.8473
+52/52 - 21s - loss: 0.4420 - AUC: 0.8155 - val_loss: 0.4965 - val_AUC: 0.8454 - 21s/epoch - 405ms/step
 Epoch 6/40
-52/52 - 1s - loss: 0.4143 - AUC: 0.8448 - val_loss: 0.4760 - val_AUC: 0.8518
+52/52 - 22s - loss: 0.4344 - AUC: 0.8243 - val_loss: 0.5307 - val_AUC: 0.8540 - 22s/epoch - 419ms/step
 Epoch 7/40
-52/52 - 1s - loss: 0.3968 - AUC: 0.8600 - val_loss: 0.4917 - val_AUC: 0.8592
+52/52 - 26s - loss: 0.4301 - AUC: 0.8293 - val_loss: 0.5131 - val_AUC: 0.8559 - 26s/epoch - 503ms/step
 Epoch 8/40
-52/52 - 1s - loss: 0.3823 - AUC: 0.8716 - val_loss: 0.5301 - val_AUC: 0.8607
+52/52 - 31s - loss: 0.4163 - AUC: 0.8408 - val_loss: 0.5361 - val_AUC: 0.8552 - 31s/epoch - 599ms/step
 Epoch 9/40
-52/52 - 1s - loss: 0.3724 - AUC: 0.8785 - val_loss: 0.5795 - val_AUC: 0.8632
+52/52 - 30s - loss: 0.4095 - AUC: 0.8499 - val_loss: 0.5371 - val_AUC: 0.8572 - 30s/epoch - 578ms/step
 Epoch 10/40
-52/52 - 1s - loss: 0.3610 - AUC: 0.8878 - val_loss: 0.6460 - val_AUC: 0.8655
+52/52 - 23s - loss: 0.4107 - AUC: 0.8459 - val_loss: 0.5923 - val_AUC: 0.8589 - 23s/epoch - 444ms/step
 Epoch 11/40
-52/52 - 1s - loss: 0.3491 - AUC: 0.8956 - val_loss: 0.6604 - val_AUC: 0.8685
+52/52 - 29s - loss: 0.4107 - AUC: 0.8505 - val_loss: 0.5070 - val_AUC: 0.8627 - 29s/epoch - 553ms/step
 Epoch 12/40
-52/52 - 1s - loss: 0.3311 - AUC: 0.9076 - val_loss: 0.6075 - val_AUC: 0.8745
+52/52 - 25s - loss: 0.4005 - AUC: 0.8522 - val_loss: 0.5417 - val_AUC: 0.8781 - 25s/epoch - 471ms/step
 Epoch 13/40
-52/52 - 1s - loss: 0.3162 - AUC: 0.9165 - val_loss: 0.5659 - val_AUC: 0.8832
+52/52 - 22s - loss: 0.3924 - AUC: 0.8623 - val_loss: 0.5915 - val_AUC: 0.8755 - 22s/epoch - 425ms/step
 Epoch 14/40
-52/52 - 1s - loss: 0.3214 - AUC: 0.9131 - val_loss: 0.6581 - val_AUC: 0.8886
+52/52 - 19s - loss: 0.3872 - AUC: 0.8640 - val_loss: 0.5852 - val_AUC: 0.8724 - 19s/epoch - 365ms/step
 Epoch 15/40
-52/52 - 1s - loss: 0.3064 - AUC: 0.9213 - val_loss: 0.6957 - val_AUC: 0.8884
+52/52 - 19s - loss: 0.3812 - AUC: 0.8720 - val_loss: 0.4949 - val_AUC: 0.8759 - 19s/epoch - 362ms/step
 Epoch 16/40
-52/52 - 1s - loss: 0.2999 - AUC: 0.9246 - val_loss: 0.7201 - val_AUC: 0.8868
+52/52 - 27s - loss: 0.3604 - AUC: 0.8864 - val_loss: 0.5076 - val_AUC: 0.8773 - 27s/epoch - 521ms/step
 Epoch 17/40
-52/52 - 1s - loss: 0.2825 - AUC: 0.9338 - val_loss: 0.8034 - val_AUC: 0.8850
+52/52 - 37s - loss: 0.3554 - AUC: 0.8907 - val_loss: 0.4556 - val_AUC: 0.8771 - 37s/epoch - 712ms/step
 Epoch 18/40
-52/52 - 1s - loss: 0.2813 - AUC: 0.9337 - val_loss: 0.8026 - val_AUC: 0.8812
+52/52 - 23s - loss: 0.3554 - AUC: 0.8904 - val_loss: 0.4854 - val_AUC: 0.8887 - 23s/epoch - 452ms/step
 Epoch 19/40
-52/52 - 1s - loss: 0.2725 - AUC: 0.9376 - val_loss: 0.8710 - val_AUC: 0.8867
+52/52 - 26s - loss: 0.3504 - AUC: 0.8942 - val_loss: 0.4622 - val_AUC: 0.8881 - 26s/epoch - 507ms/step
 Epoch 20/40
-52/52 - 1s - loss: 0.2698 - AUC: 0.9378 - val_loss: 0.8262 - val_AUC: 0.8959
+52/52 - 20s - loss: 0.3378 - AUC: 0.9019 - val_loss: 0.5568 - val_AUC: 0.8792 - 20s/epoch - 390ms/step
 Epoch 21/40
-52/52 - 1s - loss: 0.2729 - AUC: 0.9358 - val_loss: 0.7017 - val_AUC: 0.8970
+52/52 - 19s - loss: 0.3324 - AUC: 0.9055 - val_loss: 0.5623 - val_AUC: 0.8789 - 19s/epoch - 363ms/step
 Epoch 22/40
-52/52 - 1s - loss: 0.2707 - AUC: 0.9376 - val_loss: 0.5759 - val_AUC: 0.8897
+52/52 - 19s - loss: 0.3248 - AUC: 0.9109 - val_loss: 0.5486 - val_AUC: 0.8909 - 19s/epoch - 357ms/step
 Epoch 23/40
-52/52 - 1s - loss: 0.2562 - AUC: 0.9440 - val_loss: 0.4482 - val_AUC: 0.8945
+52/52 - 18s - loss: 0.3126 - AUC: 0.9179 - val_loss: 0.5684 - val_AUC: 0.8916 - 18s/epoch - 348ms/step
 Epoch 24/40
-52/52 - 1s - loss: 0.2693 - AUC: 0.9387 - val_loss: 0.4220 - val_AUC: 0.8944
+52/52 - 18s - loss: 0.3296 - AUC: 0.9084 - val_loss: 0.5462 - val_AUC: 0.8858 - 18s/epoch - 352ms/step
 Epoch 25/40
-52/52 - 1s - loss: 0.2753 - AUC: 0.9356 - val_loss: 0.5671 - val_AUC: 0.9081
+52/52 - 18s - loss: 0.3098 - AUC: 0.9193 - val_loss: 0.4212 - val_AUC: 0.9085 - 18s/epoch - 349ms/step
 Epoch 26/40
-52/52 - 1s - loss: 0.2315 - AUC: 0.9538 - val_loss: 0.4307 - val_AUC: 0.9105
+52/52 - 18s - loss: 0.3095 - AUC: 0.9192 - val_loss: 0.4991 - val_AUC: 0.9002 - 18s/epoch - 348ms/step
 Epoch 27/40
-52/52 - 1s - loss: 0.2269 - AUC: 0.9545 - val_loss: 0.4037 - val_AUC: 0.9084
+52/52 - 18s - loss: 0.3056 - AUC: 0.9211 - val_loss: 0.4739 - val_AUC: 0.9060 - 18s/epoch - 349ms/step
 Epoch 28/40
-52/52 - 1s - loss: 0.2318 - AUC: 0.9528 - val_loss: 0.4394 - val_AUC: 0.9133
+52/52 - 18s - loss: 0.2942 - AUC: 0.9270 - val_loss: 0.4188 - val_AUC: 0.9121 - 18s/epoch - 344ms/step
 Epoch 29/40
-52/52 - 1s - loss: 0.2162 - AUC: 0.9584 - val_loss: 0.4683 - val_AUC: 0.9199
+52/52 - 18s - loss: 0.3004 - AUC: 0.9241 - val_loss: 0.4056 - val_AUC: 0.9146 - 18s/epoch - 351ms/step
 Epoch 30/40
-52/52 - 1s - loss: 0.2038 - AUC: 0.9622 - val_loss: 0.4301 - val_AUC: 0.9186
+52/52 - 18s - loss: 0.2810 - AUC: 0.9328 - val_loss: 0.3923 - val_AUC: 0.9172 - 18s/epoch - 355ms/step
 Epoch 31/40
-52/52 - 1s - loss: 0.1924 - AUC: 0.9656 - val_loss: 0.3870 - val_AUC: 0.9253
+52/52 - 18s - loss: 0.2661 - AUC: 0.9398 - val_loss: 0.3609 - val_AUC: 0.9186 - 18s/epoch - 349ms/step
 Epoch 32/40
-52/52 - 1s - loss: 0.2012 - AUC: 0.9632 - val_loss: 0.4105 - val_AUC: 0.9164
+52/52 - 19s - loss: 0.2797 - AUC: 0.9336 - val_loss: 0.3764 - val_AUC: 0.9055 - 19s/epoch - 357ms/step
 Epoch 33/40
-52/52 - 1s - loss: 0.2030 - AUC: 0.9624 - val_loss: 0.3595 - val_AUC: 0.9175
+52/52 - 19s - loss: 0.2552 - AUC: 0.9441 - val_loss: 0.3941 - val_AUC: 0.9187 - 19s/epoch - 368ms/step
 Epoch 34/40
-52/52 - 1s - loss: 0.2041 - AUC: 0.9625 - val_loss: 0.3983 - val_AUC: 0.9116
+52/52 - 23s - loss: 0.2601 - AUC: 0.9435 - val_loss: 0.4128 - val_AUC: 0.9154 - 23s/epoch - 443ms/step
 Epoch 35/40
-52/52 - 1s - loss: 0.2017 - AUC: 0.9631 - val_loss: 0.3790 - val_AUC: 0.9220
+52/52 - 32s - loss: 0.2533 - AUC: 0.9455 - val_loss: 0.4191 - val_AUC: 0.9109 - 32s/epoch - 615ms/step
 Epoch 36/40
-52/52 - 1s - loss: 0.1986 - AUC: 0.9640 - val_loss: 0.3593 - val_AUC: 0.9289
+52/52 - 23s - loss: 0.2530 - AUC: 0.9459 - val_loss: 0.4276 - val_AUC: 0.9213 - 23s/epoch - 435ms/step
 Epoch 37/40
-52/52 - 1s - loss: 0.1892 - AUC: 0.9657 - val_loss: 0.3663 - val_AUC: 0.9235
+52/52 - 31s - loss: 0.2531 - AUC: 0.9456 - val_loss: 0.3950 - val_AUC: 0.9292 - 31s/epoch - 593ms/step
 Epoch 38/40
-52/52 - 1s - loss: 0.1948 - AUC: 0.9632 - val_loss: 0.4329 - val_AUC: 0.9160
+52/52 - 22s - loss: 0.3039 - AUC: 0.9229 - val_loss: 0.3114 - val_AUC: 0.9315 - 22s/epoch - 428ms/step
 Epoch 39/40
-52/52 - 1s - loss: 0.1734 - AUC: 0.9701 - val_loss: 0.3298 - val_AUC: 0.9263
+52/52 - 20s - loss: 0.2477 - AUC: 0.9479 - val_loss: 0.3584 - val_AUC: 0.9292 - 20s/epoch - 391ms/step
 Epoch 40/40
-52/52 - 1s - loss: 0.1800 - AUC: 0.9690 - val_loss: 0.3345 - val_AUC: 0.9246
+52/52 - 22s - loss: 0.2276 - AUC: 0.9565 - val_loss: 0.3279 - val_AUC: 0.9258 - 22s/epoch - 416ms/step
 
-<matplotlib.legend.Legend at 0x7f6c584e7220>
+<matplotlib.legend.Legend at 0x1603c63d0>
 
 ```
 </div>
@@ -897,5 +894,5 @@ MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 
 In this tutorial, we demonstarted a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
-first had to construct graphs from SMILES, and then build a Keras model that could
-operate on these graphs.
+first had to construct graphs from SMILES, then build a Keras model that could
+operate on these graphs, and finally train the model to make the predictions.

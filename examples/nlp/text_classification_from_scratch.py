@@ -106,17 +106,9 @@ raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
-print(
-    "Number of batches in raw_train_ds: %d"
-    % tf.data.experimental.cardinality(raw_train_ds)
-)
-print(
-    "Number of batches in raw_val_ds: %d" % tf.data.experimental.cardinality(raw_val_ds)
-)
-print(
-    "Number of batches in raw_test_ds: %d"
-    % tf.data.experimental.cardinality(raw_test_ds)
-)
+print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
+print(f"Number of batches in raw_val_ds: {raw_val_ds.cardinality()}")
+print(f"Number of batches in raw_test_ds: {raw_test_ds.cardinality()}")
 
 """
 Let's preview a few samples:
@@ -151,7 +143,7 @@ def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
     stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
     return tf.strings.regex_replace(
-        stripped_html, "[%s]" % re.escape(string.punctuation), ""
+        stripped_html, f"[{re.escape(string.punctuation)}]", ""
     )
 
 

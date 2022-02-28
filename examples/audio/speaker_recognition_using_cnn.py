@@ -236,7 +236,9 @@ print(
 def paths_and_labels_to_dataset(audio_paths, labels):
     """Constructs a dataset of audios and labels."""
     path_ds = tf.data.Dataset.from_tensor_slices(audio_paths)
-    audio_ds = path_ds.map(lambda x: path_to_audio(x))
+    audio_ds = path_ds.map(
+        lambda x: path_to_audio(x), num_parallel_calls=tf.data.AUTOTUNE
+    )
     label_ds = tf.data.Dataset.from_tensor_slices(labels)
     return tf.data.Dataset.zip((audio_ds, label_ds))
 
@@ -441,7 +443,10 @@ test_ds = test_ds.shuffle(buffer_size=BATCH_SIZE * 8, seed=SHUFFLE_SEED).batch(
     BATCH_SIZE
 )
 
-test_ds = test_ds.map(lambda x, y: (add_noise(x, noises, scale=SCALE), y))
+test_ds = test_ds.map(
+    lambda x, y: (add_noise(x, noises, scale=SCALE), y),
+    num_parallel_calls=tf.data.AUTOTUNE,
+)
 
 for audios, labels in test_ds.take(1):
     # Get the signal FFT

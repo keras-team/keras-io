@@ -43,7 +43,7 @@ mixing numerical, categorical, and text features, doing feature engineering with
 ## DETR: End-to-End Object Detection with Transformers
 
 - [Reference implementation](https://github.com/facebookresearch/detr)
-- [TF/Keras implementation](https://github.com/auvisusAI/detr-tensorflow)
+- [TF/Keras implementation](https://github.com/Visual-Behavior/detr-tensorflow)
 
 
 ---
@@ -57,6 +57,9 @@ mixing numerical, categorical, and text features, doing feature engineering with
 ---
 
 ## Instance segmentation
+
+- [Tensorflow-YOLACT](https://github.com/leohsuofnthu/Tensorflow-YOLACT)
+- [Additional references](https://www.kaggle.com/c/sartorius-cell-instance-segmentation/discussion/278883#1546104)
 
 ---
 
@@ -84,5 +87,18 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ---
 
+## Keras reproducibility recipes
 
+---
+
+## Standalone Mixture-of-Experts (MoE) layer
+
+MoE layers provide a flexible way to scale deep models to train on larger datasets. The aim of this example should be to show 
+how replace the regular layers (such as `Dense`, `Conv2D`) with compatible MoE layers. 
+
+References:
+
+* A relevant paper on MoE: https://arxiv.org/abs/1701.06538
+* [Switch Transformers on keras.io](https://keras.io/examples/nlp/text_classification_with_switch_transformer/)
+* [Keras implementation of Dense and Conv2D MoE layers](https://github.com/eminorhan/mixture-of-experts)
 

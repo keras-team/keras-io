@@ -203,7 +203,7 @@ def prepare_lm_inputs_labels(text):
     return x, y
 
 
-text_ds = text_ds.map(prepare_lm_inputs_labels)
+text_ds = text_ds.map(prepare_lm_inputs_labels, num_parallel_calls=tf.data.AUTOTUNE)
 text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
 
 

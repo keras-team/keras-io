@@ -259,9 +259,19 @@ LAYERS_MASTER = {
                     'generate': ['tensorflow.keras.layers.Bidirectional']
                 },
                 {
+                    'path': 'conv_lstm1d',
+                    'title': 'ConvLSTM1D layer',
+                    'generate': ['tensorflow.keras.layers.ConvLSTM1D']
+                },
+                {
                     'path': 'conv_lstm2d',
                     'title': 'ConvLSTM2D layer',
                     'generate': ['tensorflow.keras.layers.ConvLSTM2D']
+                },
+                {
+                    'path': 'conv_lstm3d',
+                    'title': 'ConvLSTM3D layer',
+                    'generate': ['tensorflow.keras.layers.ConvLSTM3D']
                 },
                 {
                     'path': 'rnn',

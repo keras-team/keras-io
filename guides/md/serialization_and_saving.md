@@ -134,9 +134,11 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 833us/step - loss: 0.2464
+4/4 [==============================] - 1s 7ms/step - loss: 2.9296
+4/4 [==============================] - 0s 3ms/step - loss: 2.7120
 
-<tensorflow.python.keras.callbacks.History at 0x1511b87d0>
+<keras.callbacks.History at 0x7ba64817d390>
+
 
 ```
 </div>
@@ -152,7 +154,7 @@ containing the following:
 
 <div class="k-default-codeblock">
 ```
-[34massets[m[m         saved_model.pb [34mvariables[m[m
+assets	keras_metadata.pb  saved_model.pb  variables
 
 ```
 </div>
@@ -235,12 +237,9 @@ print("Model loaded without the custom object class:", loaded_2)
 
 <div class="k-default-codeblock">
 ```
-INFO:tensorflow:Assets written to: my_model/assets
-WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-Original model: <__main__.CustomModel object at 0x151ad0990>
-Model Loaded with custom objects: <__main__.CustomModel object at 0x151b03850>
-Model loaded without the custom object class: <tensorflow.python.keras.saving.saved_model.load.CustomModel object at 0x151bb0310>
+Original model: <__main__.CustomModel object at 0x7ba6480b96a0>
+Model Loaded with custom objects: <__main__.CustomModel object at 0x7ba648064518>
+Model loaded without the custom object class: <keras.saving.saved_model.load.CustomModel object at 0x7ba648159940>
 
 ```
 </div>
@@ -292,30 +291,43 @@ reconstructed_model.fit(test_input, test_target)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 967us/step - loss: 0.8106
-4/4 [==============================] - 0s 1ms/step - loss: 0.7184
+4/4 [==============================] - 0s 4ms/step - loss: 0.2223
+4/4 [==============================] - 0s 3ms/step - loss: 0.2035
 
-<tensorflow.python.keras.callbacks.History at 0x151d5ac90>
+<keras.callbacks.History at 0x7ba6404ca588>
 
 ```
 </div>
-#### Limitations
+### Format Limitations
 
-Compared to the SavedModel format, there are two things that don't
-get included in the H5 file:
+Keras SavedModel format limitations:
 
-- **External losses & metrics** added via `model.add_loss()`
+The tracing done by SavedModel to produce the graphs of the layer call functions allows
+SavedModel be more portable than H5, but it comes with drawbacks.
+
+- Can be slower and bulkier than H5.
+- Cannot serialize the ops generated from the mask argument (i.e. if a layer is called
+  with `layer(..., mask=mask_value)`, the mask argument is not saved to SavedModel).
+- Does not save the overridden `train_step()` in subclassed models.
+
+Custom objects that use masks or have a custom training loop can still be saved and loaded
+from SavedModel, except they must override `get_config()`/`from_config()`, and the classes
+must be passed to the `custom_objects` argument when loading.
+
+H5 limitations:
+
+- External losses & metrics added via `model.add_loss()`
 & `model.add_metric()` are not saved (unlike SavedModel).
 If you have such losses & metrics on your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
 Note that this does not apply to losses/metrics created *inside* layers via
 `self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
 these losses & metrics are kept, since they are part of the `call` method of the layer.
-- The **computation graph of custom objects** such as custom layers
+- The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
 See [Custom objects](#custom-objects).
-
+- Does not support preprocessing layers.
 
 ---
 ## Saving the architecture
@@ -425,12 +437,6 @@ x = np.random.uniform(size=(4, 32)).astype(np.float32)
 predicted = tensorflow_graph(x).numpy()
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Assets written to: my_model/assets
-
-```
-</div>
 Note that this method has several drawbacks:
 * For traceability reasons, you should always have access to the custom
 objects that were used. You wouldn't want to put in production a model
@@ -731,7 +737,7 @@ load_status.assert_consumed()
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x151f01150>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402ffbe0>
 
 ```
 </div>
@@ -771,8 +777,8 @@ ckpt_reader.get_variable_to_dtype_map()
 <div class="k-default-codeblock">
 ```
 {'save_counter/.ATTRIBUTES/VARIABLE_VALUE': tf.int64,
- 'layer/var/.ATTRIBUTES/VARIABLE_VALUE': tf.int32,
- '_CHECKPOINTABLE_OBJECT_GRAPH': tf.string}
+ '_CHECKPOINTABLE_OBJECT_GRAPH': tf.string,
+ 'layer/var/.ATTRIBUTES/VARIABLE_VALUE': tf.int32}
 
 ```
 </div>
@@ -844,13 +850,14 @@ pretrained_model.load_weights("pretrained_ckpt")
 ```
 Model: "pretrained_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-digits (InputLayer)          [(None, 784)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
+ digits (InputLayer)         [(None, 784)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
 =================================================================
 Total params: 54,400
 Trainable params: 54,400
@@ -864,15 +871,16 @@ _________________________________________________________________
  --------------------------------------------------
 Model: "new_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-digits (InputLayer)          [(None, 784)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-predictions (Dense)          (None, 5)                 325       
+ digits (InputLayer)         [(None, 784)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
+ predictions (Dense)         (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
@@ -880,18 +888,19 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "sequential_3"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-pretrained (Functional)      (None, 64)                54400     
-_________________________________________________________________
-predictions (Dense)          (None, 5)                 325       
+ pretrained (Functional)     (None, 64)                54400     
+                                                                 
+ predictions (Dense)         (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725
 Non-trainable params: 0
 _________________________________________________________________
 
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x10e58f3d0>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402d4e48>
 
 ```
 </div>
@@ -942,7 +951,7 @@ tf.train.Checkpoint(
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x151ed1110>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7ba6402d4b00>
 
 ```
 </div>
@@ -1055,13 +1064,14 @@ model.summary()
 ```
 Model: "sequential_6"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-dense_1 (Dense)              (None, 64)                50240     
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-dense_3 (Dense)              (None, 5)                 325       
+ dense_1 (Dense)             (None, 64)                50240     
+                                                                 
+ dense_2 (Dense)             (None, 64)                4160      
+                                                                 
+ dense_3 (Dense)             (None, 5)                 325       
+                                                                 
 =================================================================
 Total params: 54,725
 Trainable params: 54,725

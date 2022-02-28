@@ -13,11 +13,15 @@ KT_GUIDES_MASTER = {
         },
         {
             'path': 'custom_tuner',
-            'title': 'Writing your own Tuner to support a custom training loop',
+            'title': 'Tune hyperparameters in your custom training loop',
         },
         {
             'path': 'visualize_tuning',
             'title': 'Visualize the hyperparameter tuning process',
+        },
+        {
+            'path': 'tailor_the_search_space',
+            'title': 'Tailor the search space',
         },
     ]
 }
@@ -37,7 +41,7 @@ GUIDES_MASTER = {
         },
         {
             'path': 'making_new_layers_and_models_via_subclassing',
-            'title': 'Making new Layers & Models via subclassing',
+            'title': 'Making new layers & models via subclassing',
         },
         {
             'path': 'training_with_built_in_methods',
@@ -57,7 +61,7 @@ GUIDES_MASTER = {
         },
         {
             'path': 'writing_your_own_callbacks',
-            'title': 'Writing your own Callbacks',
+            'title': 'Writing your own callbacks',
         },
         # {
         #     'path': 'writing_your_own_metrics',
@@ -69,7 +73,7 @@ GUIDES_MASTER = {
         # },
         {
             'path': 'preprocessing_layers',
-            'title': 'Working with preprocessing Layers',
+            'title': 'Working with preprocessing layers',
         },
         {
             'path': 'working_with_rnns',
