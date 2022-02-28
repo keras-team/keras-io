@@ -222,10 +222,7 @@ class MLP(layers.Layer):
 
         self.mlp = keras.Sequential(
             [
-                layers.Dense(
-                    units=initial_filters,
-                    activation=tf.nn.gelu,
-                ),
+                layers.Dense(units=initial_filters, activation=tf.nn.gelu,),
                 layers.Dropout(rate=self.mlp_dropout_rate),
                 layers.Dense(units=input_channels),
                 layers.Dropout(rate=self.mlp_dropout_rate),
