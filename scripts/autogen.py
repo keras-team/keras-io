@@ -147,7 +147,7 @@ class KerasIO:
             + fname
             + ") "
         ]
-        if spaces_dir != "None":
+        if spaces_dir != None:
             button_lines.append(
             '<span class="k-dot">•</span>'
             + '<img class="k-inline-icon" src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"/>'

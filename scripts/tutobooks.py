@@ -444,8 +444,8 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
-    if len(lines) != 6:
-        raise ValueError("Invalid header, it should be only 5 lines.")
+    if not (len(lines) == 5 or len(lines) == 6):
+        raise ValueError("Invalid header, it should be 5 or 6 lines.")
     title = lines[0][len("Title: ") :]
     author_line = lines[1]
     if author_line.startswith("Authors"):
@@ -457,7 +457,10 @@ def _parse_header(header):
     date_created = lines[2][len("Date created: ") :]
     last_modified = lines[3][len("Last modified: ") :]
     description = lines[4][len("Description: ") :]
-    spaces_dir = lines[5][len("Spaces ID: ") :]
+    if len(lines) == 6:
+        spaces_dir = lines[5][len("Spaces ID: ") :]
+    else:
+        spaces_dir = None
     return {
         "title": title,
         "author": author,
