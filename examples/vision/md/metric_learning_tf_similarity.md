@@ -63,6 +63,9 @@ print("TensorFlow Similarity:", tfsim.__version__)
 
 <div class="k-default-codeblock">
 ```
+TensorFlow: 2.6.0
+TensorFlow Similarity: 0.14
+
 ```
 </div>
 ---
