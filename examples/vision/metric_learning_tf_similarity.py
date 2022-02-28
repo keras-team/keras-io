@@ -2,7 +2,7 @@
 Title: Metric learning for image similarity search using TensorFlow similarity
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
-Last modified: 2021/09/30
+Last modified: 2022/02/29
 Description: Example of using similarity metric learning on CIFAR-10 images.
 """
 
@@ -48,8 +48,12 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-import tensorflow_similarity as tfsim
-
+# install TF similarity if needed
+try:
+    import tensorflow_similarity as tfsim  # main package
+except ModuleNotFoundError:
+    !pip install tensorflow_similarity
+    import tensorflow_similarity as tfsim
 
 tfsim.utils.tf_cap_memory()
 
