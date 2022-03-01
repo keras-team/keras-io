@@ -1,8 +1,8 @@
 """
-Title: Shifting operation replacing attention in ViT
+Title: A Vision Transformer without Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2022/02/24
-Last modified: 2022/02/24
+Last modified: 2022/03/01
 Description: A minimal implementation of ShiftViT
 """
 """
