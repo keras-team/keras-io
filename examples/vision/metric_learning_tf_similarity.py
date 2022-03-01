@@ -372,7 +372,7 @@ cutpoint = "optimal"
 x_confusion, y_confusion = val_ds.get_slice(0, -1)
 
 matches = model.match(x_confusion, cutpoint=cutpoint, no_match_label=10)
-tfsim.visualization.confusion_matrix(
+cm = tfsim.visualization.confusion_matrix(
     matches,
     y_confusion,
     labels=labels,

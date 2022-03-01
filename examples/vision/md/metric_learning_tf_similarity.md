@@ -348,13 +348,13 @@ history = model.fit(
 Distance metric automatically set to cosine use the distance arg to override.
 Epoch 1/3
 
-4000/4000 [==============================] - ETA: 0s - loss: 2.2168Warmup complete
-4000/4000 [==============================] - 38s 9ms/step - loss: 2.2168 - val_loss: 0.9099
+4000/4000 [==============================] - ETA: 0s - loss: 2.2179Warmup complete
+4000/4000 [==============================] - 38s 9ms/step - loss: 2.2179 - val_loss: 0.8894
 Warmup complete
 Epoch 2/3
-4000/4000 [==============================] - 34s 9ms/step - loss: 1.9179 - val_loss: 0.8591
+4000/4000 [==============================] - 34s 9ms/step - loss: 1.9047 - val_loss: 0.8767
 Epoch 3/3
-4000/4000 [==============================] - 34s 9ms/step - loss: 1.6599 - val_loss: 0.8372
+4000/4000 [==============================] - 35s 9ms/step - loss: 1.6336 - val_loss: 0.8469
 
 ```
 </div>
@@ -447,7 +447,7 @@ Building NN list:   0%|          | 0/1000 [00:00<?, ?it/s]
 
 Evaluating:   0%|          | 0/4 [00:00<?, ?it/s]
 
-computing thresholds:   0%|          | 0/979 [00:00<?, ?it/s]
+computing thresholds:   0%|          | 0/989 [00:00<?, ?it/s]
 
 ```
 </div>
@@ -456,7 +456,7 @@ computing thresholds:   0%|          | 0/979 [00:00<?, ?it/s]
 ```
  name       value    distance    precision    recall    binary_accuracy        f1
 -------  -------  ----------  -----------  --------  -----------------  --------
-optimal     0.94   0.0689787        0.881         1              0.881  0.936736
+optimal     0.93    0.048435        0.869         1              0.869  0.929909
 
 ```
 </div>
@@ -642,7 +642,7 @@ cutpoint = "optimal"
 x_confusion, y_confusion = val_ds.get_slice(0, -1)
 
 matches = model.match(x_confusion, cutpoint=cutpoint, no_match_label=10)
-tfsim.visualization.confusion_matrix(
+cm = tfsim.visualization.confusion_matrix(
     matches,
     y_confusion,
     labels=labels,
@@ -657,26 +657,6 @@ tfsim.visualization.confusion_matrix(
     
 
 
-
-
-
-<div class="k-default-codeblock">
-```
-(<AxesSubplot:title={'center':'Confusion matrix for cutpoint:optimal'}, xlabel='Predicted label\naccuracy=0.7467; misclass=0.2533', ylabel='True label'>,
- <tf.Tensor: shape=(10, 10), dtype=float32, numpy=
- array([[74.,  2.,  2.,  3.,  7.,  1.,  0.,  1.,  4.,  6.],
-        [ 2., 92.,  1.,  0.,  1.,  0.,  0.,  0.,  2.,  1.],
-        [ 9.,  0., 66.,  1.,  9.,  7.,  2.,  6.,  0.,  0.],
-        [ 1.,  0., 10., 55.,  8.,  5.,  5., 11.,  3.,  2.],
-        [ 3.,  0.,  4.,  4., 68.,  1.,  2., 15.,  3.,  0.],
-        [ 1.,  0.,  4.,  6.,  5., 67.,  3.,  4.,  9.,  1.],
-        [ 0.,  0.,  7.,  1.,  4.,  2., 81.,  5.,  0.,  0.],
-        [ 0.,  0.,  4.,  2.,  7.,  1.,  1., 83.,  2.,  0.],
-        [ 9.,  2.,  0.,  2.,  6.,  1.,  1.,  1., 75.,  3.],
-        [ 5.,  4.,  3.,  0.,  3.,  0.,  0.,  0.,  0., 85.]], dtype=float32)>)
-
-```
-</div>
 ---
 ## No Match
 
@@ -696,12 +676,12 @@ else:
     print("All queries have a match below the distance threshold.")
 ```
 
-<div class="k-default-codeblock">
-```
-All queries have a match below the distance threshold.
 
-```
-</div>
+    
+![png](/img/examples/vision/metric_learning_tf_similarity/metric_learning_tf_similarity_23_0.png)
+    
+
+
 ---
 ## Visualize clusters
 
