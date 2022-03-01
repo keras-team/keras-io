@@ -1,11 +1,16 @@
-"""
-Title: A Vision Transformer without Attention
-Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
-Date created: 2022/02/24
-Last modified: 2022/03/01
-Description: A minimal implementation of ShiftViT.
-"""
-"""
+# A Vision Transformer without Attention
+
+**Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
+**Date created:** 2022/02/24<br>
+**Last modified:** 2022/03/01<br>
+**Description:** A minimal implementation of ShiftViT.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/shiftvit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/shiftvit.py)
+
+
+
+---
 ## Introduction
 
 [Vision Transformers](https://arxiv.org/abs/2010.11929) (ViTs) have sparked a wave of
@@ -31,12 +36,12 @@ be installed using the following command:
 ```shell
 pip install -qq -U tensorflow-addons
 ```
-"""
 
-"""
+---
 ## Setup and imports
-"""
 
+
+```python
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -49,14 +54,29 @@ import tensorflow_addons as tfa
 # Setting seed for reproducibiltiy
 SEED = 42
 keras.utils.set_random_seed(SEED)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/usr/local/lib/python3.8/dist-packages/tensorflow_addons/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.3.0 and strictly below 2.6.0 (nightly versions are not supported). 
+ The versions of TensorFlow you are currently using is 2.8.0 and is not supported. 
+Some things might work, some things might not.
+If you were to encounter a bug, do not file an issue.
+If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the TensorFlow Addons's version. 
+You can find the compatibility matrix in TensorFlow Addon's readme:
+https://github.com/tensorflow/addons
+  warnings.warn(
+
+```
+</div>
+---
 ## Hyperparameters
 
 These are the hyperparameters that we have chosen for the experiment.
 Please feel free to tune them.
-"""
 
+
+```python
 
 class Config(object):
     # DATA
@@ -89,13 +109,15 @@ class Config(object):
 
 
 config = Config()
+```
 
-"""
+---
 ## Load the CIFAR-10 dataset
 
 We use the CIFAR-10 dataset for our experiments.
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 (x_train, y_train), (x_val, y_val) = (
     (x_train[:40000], y_train[:40000]),
@@ -114,8 +136,21 @@ val_ds = val_ds.batch(config.batch_size).prefetch(AUTO)
 
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 test_ds = test_ds.batch(config.batch_size).prefetch(AUTO)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Training samples: 40000
+Validation samples: 10000
+Testing samples: 10000
+
+2022-03-01 03:10:21.342684: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-03-01 03:10:21.850844: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38420 MB memory:  -> device: 0, name: NVIDIA A100-PCIE-40GB, pci bus id: 0000:61:00.0, compute capability: 8.0
+
+```
+</div>
+---
 ## Data Augmentation
 
 The augmentation pipeline consists of:
@@ -131,8 +166,9 @@ when these layers are called with `training=False` they
 behave differently. Refer to the
 [documentation](https://keras.io/api/layers/preprocessing_layers/image_augmentation/)
 for more details.
-"""
 
+
+```python
 
 def get_augmentation_model():
     """Build the data augmentation model."""
@@ -146,8 +182,9 @@ def get_augmentation_model():
     )
     return data_augmentation
 
+```
 
-"""
+---
 ## The ShiftViT architecture
 
 In this section, we build the architecture proposed in
@@ -174,9 +211,7 @@ We discuss the stages and the modules in detail in what follows.
 
 _Note_: Compared to the [official implementation](https://github.com/microsoft/SPACH/blob/main/models/shiftvit.py)
 we restructure some key components to better fit the Keras API.
-"""
 
-"""
 ### The ShiftViT Block
 
 | ![ShiftViT block](https://i.imgur.com/IDe35vo.gif) |
@@ -194,14 +229,13 @@ The Shift Block as shown in Fig. 3, comprises of the following:
 1. Shift Operation
 2. Linear Normalization
 3. MLP Layer
-"""
 
-"""
 #### The MLP block
 
 The MLP block is intended to be a stack of densely-connected layers.s
-"""
 
+
+```python
 
 class MLP(layers.Layer):
     """Get the MLP layer for each shift block.
@@ -233,16 +267,17 @@ class MLP(layers.Layer):
         x = self.mlp(x)
         return x
 
+```
 
-"""
 #### The DropPath layer
 
 Stochastic depth is a regularization technique that randomly drops a set of
 layers. During inference, the layers are kept as they are. It is very
 similar to Dropout, but it operates on a block of layers rather
 than on individual nodes present inside a layer.
-"""
 
+
+```python
 
 class DropPath(layers.Layer):
     """Drop Path also known as the Stochastic Depth layer.
@@ -265,8 +300,8 @@ class DropPath(layers.Layer):
             return (x / keep_prob) * random_tensor
         return x
 
+```
 
-"""
 #### Block
 
 The most important operation in this paper is the **shift opperation**. In this section,
@@ -303,8 +338,9 @@ directions.
 | Figure 4: The TensorFlow style shifting |
 
 The entire procedure is explained in the Fig. 4.
-"""
 
+
+```python
 
 class ShiftViTBlock(layers.Layer):
     """A unit ShiftViT Block
@@ -409,8 +445,8 @@ class ShiftViTBlock(layers.Layer):
         x = shortcut + self.drop_path(self.mlp(self.layer_norm(x)), training=training)
         return x
 
+```
 
-"""
 ### The ShiftViT blocks
 
 | ![Shift Blokcs](https://i.imgur.com/FKy5NnD.png) |
@@ -422,16 +458,15 @@ contain a variable number of stacked ShiftViT block (as built in the earlier sec
 
 Shift blocks are followed by a PatchMerging layer that scales down feature inputs. The
 PatchMerging layer helps in the pyramidal structure of the model.
-"""
 
-"""
 #### The PatchMerging layer
 
 This layer merges the two adjacent tokens. This layer helps in scaling the features down
 spatially and increasing the features up channel wise. We use a Conv2D layer to merge the
 patches.
-"""
 
+
+```python
 
 class PatchMerging(layers.Layer):
     """The Patch Merging layer.
@@ -457,16 +492,17 @@ class PatchMerging(layers.Layer):
         x = self.reduction(x)
         return x
 
+```
 
-"""
 #### Stacked Shift Blocks
 
 Each stage will have a variable number of stacked ShiftViT Blocks, as suggested in
 the paper. This is a generic layer that will contain the stacked shift vit blocks
 with the patch merging layer as well. Combining the two operations (shift ViT
 block and patch merging) is a design choice we picked for better code reusability.
-"""
 
+
+```python
 # Note: This layer will have a different depth of stacking
 # for different stages on the model.
 class StackedShiftBlocks(layers.Layer):
@@ -540,13 +576,15 @@ class StackedShiftBlocks(layers.Layer):
             x = self.patch_merge(x)
         return x
 
+```
 
-"""
+---
 ## The ShiftViT model
 
 Build the ShiftViT custom model.
-"""
 
+
+```python
 
 class ShiftViTModel(keras.Model):
     """The ShiftViT Model.
@@ -678,11 +716,13 @@ class ShiftViTModel(keras.Model):
         self.compiled_metrics.update_state(labels, logits)
         return {m.name: m.result() for m in self.metrics}
 
+```
 
-"""
+---
 ## Instantiate the model
-"""
 
+
+```python
 model = ShiftViTModel(
     data_augmentation=get_augmentation_model(),
     projected_dim=config.projected_dim,
@@ -695,16 +735,18 @@ model = ShiftViTModel(
     shift_pixel=config.shift_pixel,
     mlp_expand_ratio=config.mlp_expand_ratio,
 )
+```
 
-"""
+---
 ## Learning rate schedule
 
 In many experiments, we want to warm up the model with a slowly increasing learning rate
 and then cool down the model with a slowly decaying learning rate. In the warmup cosine
 decay, the learning rate linearly increases for the warmup steps and then decays with a
 cosine decay.
-"""
 
+
+```python
 
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     """A LearningRateSchedule that uses a warmup cosine decay schedule."""
@@ -780,11 +822,13 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             step > self.total_steps, 0.0, learning_rate, name="learning_rate"
         )
 
+```
 
-"""
+---
 ## Compile and train the model
-"""
 
+
+```python
 # Get the total number of steps for training.
 total_steps = int((len(x_train) / config.batch_size) * config.epochs)
 
@@ -828,8 +872,115 @@ loss, acc_top1, acc_top5 = model.evaluate(test_ds)
 print(f"Loss: {loss:0.2f}")
 print(f"Top 1 test accuracy: {acc_top1*100:0.2f}%")
 print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/100
+
+2022-03-01 03:10:41.373231: I tensorflow/stream_executor/cuda/cuda_dnn.cc:368] Loaded cuDNN version 8202
+2022-03-01 03:10:43.145958: I tensorflow/stream_executor/cuda/cuda_blas.cc:1786] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+157/157 [==============================] - 34s 84ms/step - loss: 3.2975 - accuracy: 0.1084 - top-5-accuracy: 0.4806 - val_loss: 2.1575 - val_accuracy: 0.2017 - val_top-5-accuracy: 0.7184
+Epoch 2/100
+157/157 [==============================] - 11s 67ms/step - loss: 2.1727 - accuracy: 0.2289 - top-5-accuracy: 0.7516 - val_loss: 1.8819 - val_accuracy: 0.3182 - val_top-5-accuracy: 0.8386
+Epoch 3/100
+157/157 [==============================] - 10s 67ms/step - loss: 1.8169 - accuracy: 0.3426 - top-5-accuracy: 0.8592 - val_loss: 1.6174 - val_accuracy: 0.4053 - val_top-5-accuracy: 0.8934
+Epoch 4/100
+157/157 [==============================] - 10s 67ms/step - loss: 1.6215 - accuracy: 0.4092 - top-5-accuracy: 0.8983 - val_loss: 1.4239 - val_accuracy: 0.4903 - val_top-5-accuracy: 0.9216
+Epoch 5/100
+157/157 [==============================] - 10s 66ms/step - loss: 1.5081 - accuracy: 0.4571 - top-5-accuracy: 0.9148 - val_loss: 1.3359 - val_accuracy: 0.5161 - val_top-5-accuracy: 0.9369
+Epoch 6/100
+157/157 [==============================] - 11s 68ms/step - loss: 1.4282 - accuracy: 0.4868 - top-5-accuracy: 0.9249 - val_loss: 1.2929 - val_accuracy: 0.5347 - val_top-5-accuracy: 0.9404
+Epoch 7/100
+157/157 [==============================] - 10s 66ms/step - loss: 1.3465 - accuracy: 0.5181 - top-5-accuracy: 0.9362 - val_loss: 1.2653 - val_accuracy: 0.5497 - val_top-5-accuracy: 0.9449
+Epoch 8/100
+157/157 [==============================] - 10s 67ms/step - loss: 1.2907 - accuracy: 0.5400 - top-5-accuracy: 0.9416 - val_loss: 1.1919 - val_accuracy: 0.5753 - val_top-5-accuracy: 0.9515
+Epoch 9/100
+157/157 [==============================] - 11s 67ms/step - loss: 1.2247 - accuracy: 0.5644 - top-5-accuracy: 0.9480 - val_loss: 1.1741 - val_accuracy: 0.5742 - val_top-5-accuracy: 0.9563
+Epoch 10/100
+157/157 [==============================] - 11s 67ms/step - loss: 1.1983 - accuracy: 0.5760 - top-5-accuracy: 0.9505 - val_loss: 1.4545 - val_accuracy: 0.4804 - val_top-5-accuracy: 0.9198
+Epoch 11/100
+157/157 [==============================] - 10s 66ms/step - loss: 1.2002 - accuracy: 0.5766 - top-5-accuracy: 0.9510 - val_loss: 1.1129 - val_accuracy: 0.6055 - val_top-5-accuracy: 0.9593
+Epoch 12/100
+157/157 [==============================] - 10s 66ms/step - loss: 1.1309 - accuracy: 0.5990 - top-5-accuracy: 0.9575 - val_loss: 1.0369 - val_accuracy: 0.6341 - val_top-5-accuracy: 0.9638
+Epoch 13/100
+157/157 [==============================] - 10s 66ms/step - loss: 1.0786 - accuracy: 0.6204 - top-5-accuracy: 0.9613 - val_loss: 1.0802 - val_accuracy: 0.6193 - val_top-5-accuracy: 0.9594
+Epoch 14/100
+157/157 [==============================] - 10s 65ms/step - loss: 1.0438 - accuracy: 0.6330 - top-5-accuracy: 0.9640 - val_loss: 0.9584 - val_accuracy: 0.6596 - val_top-5-accuracy: 0.9713
+Epoch 15/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.9957 - accuracy: 0.6496 - top-5-accuracy: 0.9684 - val_loss: 0.9530 - val_accuracy: 0.6636 - val_top-5-accuracy: 0.9712
+Epoch 16/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.9710 - accuracy: 0.6599 - top-5-accuracy: 0.9696 - val_loss: 0.8856 - val_accuracy: 0.6863 - val_top-5-accuracy: 0.9756
+Epoch 17/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.9316 - accuracy: 0.6706 - top-5-accuracy: 0.9721 - val_loss: 0.9919 - val_accuracy: 0.6480 - val_top-5-accuracy: 0.9671
+Epoch 18/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.8899 - accuracy: 0.6884 - top-5-accuracy: 0.9763 - val_loss: 0.8753 - val_accuracy: 0.6949 - val_top-5-accuracy: 0.9752
+Epoch 19/100
+157/157 [==============================] - 10s 64ms/step - loss: 0.8529 - accuracy: 0.6979 - top-5-accuracy: 0.9772 - val_loss: 0.8793 - val_accuracy: 0.6943 - val_top-5-accuracy: 0.9754
+Epoch 20/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.8509 - accuracy: 0.7009 - top-5-accuracy: 0.9783 - val_loss: 0.8183 - val_accuracy: 0.7174 - val_top-5-accuracy: 0.9763
+Epoch 21/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.8087 - accuracy: 0.7143 - top-5-accuracy: 0.9809 - val_loss: 0.7885 - val_accuracy: 0.7276 - val_top-5-accuracy: 0.9769
+Epoch 22/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.8004 - accuracy: 0.7192 - top-5-accuracy: 0.9811 - val_loss: 0.7601 - val_accuracy: 0.7371 - val_top-5-accuracy: 0.9805
+Epoch 23/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.7665 - accuracy: 0.7304 - top-5-accuracy: 0.9816 - val_loss: 0.7564 - val_accuracy: 0.7412 - val_top-5-accuracy: 0.9808
+Epoch 24/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.7599 - accuracy: 0.7344 - top-5-accuracy: 0.9832 - val_loss: 0.7475 - val_accuracy: 0.7389 - val_top-5-accuracy: 0.9822
+Epoch 25/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.7398 - accuracy: 0.7427 - top-5-accuracy: 0.9833 - val_loss: 0.7211 - val_accuracy: 0.7504 - val_top-5-accuracy: 0.9829
+Epoch 26/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.7114 - accuracy: 0.7500 - top-5-accuracy: 0.9857 - val_loss: 0.7385 - val_accuracy: 0.7462 - val_top-5-accuracy: 0.9822
+Epoch 27/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.6954 - accuracy: 0.7577 - top-5-accuracy: 0.9851 - val_loss: 0.7477 - val_accuracy: 0.7402 - val_top-5-accuracy: 0.9802
+Epoch 28/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.6807 - accuracy: 0.7588 - top-5-accuracy: 0.9871 - val_loss: 0.7275 - val_accuracy: 0.7536 - val_top-5-accuracy: 0.9822
+Epoch 29/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.6719 - accuracy: 0.7648 - top-5-accuracy: 0.9876 - val_loss: 0.7261 - val_accuracy: 0.7487 - val_top-5-accuracy: 0.9815
+Epoch 30/100
+157/157 [==============================] - 10s 65ms/step - loss: 0.6578 - accuracy: 0.7696 - top-5-accuracy: 0.9871 - val_loss: 0.6932 - val_accuracy: 0.7641 - val_top-5-accuracy: 0.9833
+Epoch 31/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.6489 - accuracy: 0.7740 - top-5-accuracy: 0.9877 - val_loss: 0.7400 - val_accuracy: 0.7486 - val_top-5-accuracy: 0.9820
+Epoch 32/100
+157/157 [==============================] - 10s 65ms/step - loss: 0.6290 - accuracy: 0.7812 - top-5-accuracy: 0.9895 - val_loss: 0.6954 - val_accuracy: 0.7628 - val_top-5-accuracy: 0.9847
+Epoch 33/100
+157/157 [==============================] - 10s 67ms/step - loss: 0.6194 - accuracy: 0.7826 - top-5-accuracy: 0.9894 - val_loss: 0.6913 - val_accuracy: 0.7619 - val_top-5-accuracy: 0.9842
+Epoch 34/100
+157/157 [==============================] - 10s 65ms/step - loss: 0.5917 - accuracy: 0.7930 - top-5-accuracy: 0.9902 - val_loss: 0.6879 - val_accuracy: 0.7715 - val_top-5-accuracy: 0.9831
+Epoch 35/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.5878 - accuracy: 0.7916 - top-5-accuracy: 0.9907 - val_loss: 0.6759 - val_accuracy: 0.7720 - val_top-5-accuracy: 0.9849
+Epoch 36/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.5713 - accuracy: 0.8004 - top-5-accuracy: 0.9913 - val_loss: 0.6920 - val_accuracy: 0.7657 - val_top-5-accuracy: 0.9841
+Epoch 37/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.5590 - accuracy: 0.8040 - top-5-accuracy: 0.9913 - val_loss: 0.6790 - val_accuracy: 0.7718 - val_top-5-accuracy: 0.9831
+Epoch 38/100
+157/157 [==============================] - 11s 67ms/step - loss: 0.5445 - accuracy: 0.8114 - top-5-accuracy: 0.9926 - val_loss: 0.6756 - val_accuracy: 0.7720 - val_top-5-accuracy: 0.9852
+Epoch 39/100
+157/157 [==============================] - 11s 67ms/step - loss: 0.5292 - accuracy: 0.8155 - top-5-accuracy: 0.9930 - val_loss: 0.6578 - val_accuracy: 0.7807 - val_top-5-accuracy: 0.9845
+Epoch 40/100
+157/157 [==============================] - 11s 68ms/step - loss: 0.5169 - accuracy: 0.8181 - top-5-accuracy: 0.9926 - val_loss: 0.6582 - val_accuracy: 0.7795 - val_top-5-accuracy: 0.9849
+Epoch 41/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.5108 - accuracy: 0.8217 - top-5-accuracy: 0.9937 - val_loss: 0.6344 - val_accuracy: 0.7846 - val_top-5-accuracy: 0.9855
+Epoch 42/100
+157/157 [==============================] - 10s 65ms/step - loss: 0.5056 - accuracy: 0.8220 - top-5-accuracy: 0.9936 - val_loss: 0.6723 - val_accuracy: 0.7744 - val_top-5-accuracy: 0.9851
+Epoch 43/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.4824 - accuracy: 0.8317 - top-5-accuracy: 0.9943 - val_loss: 0.6800 - val_accuracy: 0.7771 - val_top-5-accuracy: 0.9834
+Epoch 44/100
+157/157 [==============================] - 10s 67ms/step - loss: 0.4719 - accuracy: 0.8339 - top-5-accuracy: 0.9938 - val_loss: 0.6742 - val_accuracy: 0.7785 - val_top-5-accuracy: 0.9840
+Epoch 45/100
+157/157 [==============================] - 10s 65ms/step - loss: 0.4605 - accuracy: 0.8379 - top-5-accuracy: 0.9953 - val_loss: 0.6732 - val_accuracy: 0.7781 - val_top-5-accuracy: 0.9841
+Epoch 46/100
+157/157 [==============================] - 10s 66ms/step - loss: 0.4608 - accuracy: 0.8390 - top-5-accuracy: 0.9947 - val_loss: 0.6547 - val_accuracy: 0.7846 - val_top-5-accuracy: 0.9852
+TESTING
+40/40 [==============================] - 1s 22ms/step - loss: 0.6801 - accuracy: 0.7720 - top-5-accuracy: 0.9864
+Loss: 0.68
+Top 1 test accuracy: 77.20%
+Top 5 test accuracy: 98.64%
+
+```
+</div>
+---
 ## Conclusion
 
 The most impactful contribution of the paper is not the novel architecture, but
@@ -851,4 +1002,3 @@ GPU credits.
 library.
 - A personal note of thanks to [Puja Roychowdhury](https://twitter.com/pleb_talks) for
 helping us with the Learning Rate Schedule.
-"""
