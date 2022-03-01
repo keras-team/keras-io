@@ -2,7 +2,7 @@
 
 **Author:** [Owen Vallis](https://twitter.com/owenvallis)<br>
 **Date created:** 2021/09/30<br>
-**Last modified:** 2021/09/30<br>
+**Last modified:** 2022/02/29<br>
 **Description:** Example of using similarity metric learning on CIFAR-10 images.
 
 
@@ -41,6 +41,12 @@ TensorFlow Similarity provides components that:
 * Make it easier to ensure that batches contain pairs of examples.
 * Enable the evaluation of the quality of the embedding.
 
+TensorFlow Similarity can be installed easily via pip, as follows:
+
+```
+pip -q install tensorflow_similarity
+```
+
 
 ```python
 import random
@@ -63,8 +69,8 @@ print("TensorFlow Similarity:", tfsim.__version__)
 
 <div class="k-default-codeblock">
 ```
-TensorFlow: 2.6.0
-TensorFlow Similarity: 0.14
+TensorFlow: 2.7.0
+TensorFlow Similarity: 0.15.5
 
 ```
 </div>
@@ -148,12 +154,7 @@ val_ds = tfsim.samplers.TFDatasetMultiShotMemorySampler(
 Batch size is: 80
 ###### Create Training Data ######
 
-2021-10-07 22:48:06.609114: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
 converting train:   0%|          | 0/50000 [00:00<?, ?it/s]
-
-2021-10-07 22:48:06.692705: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
 
 ```
 </div>
@@ -273,31 +274,38 @@ model.summary()
 ```
 Model: "similarity_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 32, 32, 3)]       0         
-_________________________________________________________________
-rescaling (Rescaling)        (None, 32, 32, 3)         0         
-_________________________________________________________________
-conv2d (Conv2D)              (None, 30, 30, 64)        1792      
-_________________________________________________________________
-batch_normalization (BatchNo (None, 30, 30, 64)        256       
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 28, 28, 128)       73856     
-_________________________________________________________________
-batch_normalization_1 (Batch (None, 28, 28, 128)       512       
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 7, 7, 128)         0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 5, 5, 256)         295168    
-_________________________________________________________________
-batch_normalization_2 (Batch (None, 5, 5, 256)         1024      
-_________________________________________________________________
-conv2d_3 (Conv2D)            (None, 3, 3, 256)         590080    
-_________________________________________________________________
-global_max_pooling2d (Global (None, 256)               0         
-_________________________________________________________________
-metric_embedding (MetricEmbe (None, 256)               65792     
+ input_1 (InputLayer)        [(None, 32, 32, 3)]       0         
+                                                                 
+ rescaling (Rescaling)       (None, 32, 32, 3)         0         
+                                                                 
+ conv2d (Conv2D)             (None, 30, 30, 64)        1792      
+                                                                 
+ batch_normalization (BatchN  (None, 30, 30, 64)       256       
+ ormalization)                                                   
+                                                                 
+ conv2d_1 (Conv2D)           (None, 28, 28, 128)       73856     
+                                                                 
+ batch_normalization_1 (Batc  (None, 28, 28, 128)      512       
+ hNormalization)                                                 
+                                                                 
+ max_pooling2d (MaxPooling2D  (None, 7, 7, 128)        0         
+ )                                                               
+                                                                 
+ conv2d_2 (Conv2D)           (None, 5, 5, 256)         295168    
+                                                                 
+ batch_normalization_2 (Batc  (None, 5, 5, 256)        1024      
+ hNormalization)                                                 
+                                                                 
+ conv2d_3 (Conv2D)           (None, 3, 3, 256)         590080    
+                                                                 
+ global_max_pooling2d (Globa  (None, 256)              0         
+ lMaxPooling2D)                                                  
+                                                                 
+ metric_embedding (MetricEmb  (None, 256)              65792     
+ edding)                                                         
+                                                                 
 =================================================================
 Total params: 1,028,480
 Trainable params: 1,027,584
@@ -339,13 +347,14 @@ history = model.fit(
 ```
 Distance metric automatically set to cosine use the distance arg to override.
 Epoch 1/3
-4000/4000 [==============================] - ETA: 0s - loss: 2.2158Warmup complete
-4000/4000 [==============================] - 1072s 268ms/step - loss: 2.2158 - val_loss: 0.8940
+
+4000/4000 [==============================] - ETA: 0s - loss: 2.2168Warmup complete
+4000/4000 [==============================] - 38s 9ms/step - loss: 2.2168 - val_loss: 0.9099
 Warmup complete
 Epoch 2/3
-4000/4000 [==============================] - 1052s 263ms/step - loss: 1.8965 - val_loss: 0.8814
+4000/4000 [==============================] - 34s 9ms/step - loss: 1.9179 - val_loss: 0.8591
 Epoch 3/3
-4000/4000 [==============================] - 1047s 262ms/step - loss: 1.6221 - val_loss: 0.8009
+4000/4000 [==============================] - 34s 9ms/step - loss: 1.6599 - val_loss: 0.8372
 
 ```
 </div>
@@ -438,7 +447,7 @@ Building NN list:   0%|          | 0/1000 [00:00<?, ?it/s]
 
 Evaluating:   0%|          | 0/4 [00:00<?, ?it/s]
 
-computing thresholds:   0%|          | 0/975 [00:00<?, ?it/s]
+computing thresholds:   0%|          | 0/979 [00:00<?, ?it/s]
 
 ```
 </div>
@@ -447,7 +456,7 @@ computing thresholds:   0%|          | 0/975 [00:00<?, ?it/s]
 ```
  name       value    distance    precision    recall    binary_accuracy        f1
 -------  -------  ----------  -----------  --------  -----------------  --------
-optimal     0.94   0.0741751        0.892         1              0.892  0.942918
+optimal     0.94   0.0689787        0.881         1              0.881  0.936736
 
 ```
 </div>
@@ -648,6 +657,26 @@ tfsim.visualization.confusion_matrix(
     
 
 
+
+
+
+<div class="k-default-codeblock">
+```
+(<AxesSubplot:title={'center':'Confusion matrix for cutpoint:optimal'}, xlabel='Predicted label\naccuracy=0.7467; misclass=0.2533', ylabel='True label'>,
+ <tf.Tensor: shape=(10, 10), dtype=float32, numpy=
+ array([[74.,  2.,  2.,  3.,  7.,  1.,  0.,  1.,  4.,  6.],
+        [ 2., 92.,  1.,  0.,  1.,  0.,  0.,  0.,  2.,  1.],
+        [ 9.,  0., 66.,  1.,  9.,  7.,  2.,  6.,  0.,  0.],
+        [ 1.,  0., 10., 55.,  8.,  5.,  5., 11.,  3.,  2.],
+        [ 3.,  0.,  4.,  4., 68.,  1.,  2., 15.,  3.,  0.],
+        [ 1.,  0.,  4.,  6.,  5., 67.,  3.,  4.,  9.,  1.],
+        [ 0.,  0.,  7.,  1.,  4.,  2., 81.,  5.,  0.,  0.],
+        [ 0.,  0.,  4.,  2.,  7.,  1.,  1., 83.,  2.,  0.],
+        [ 9.,  2.,  0.,  2.,  6.,  1.,  1.,  1., 75.,  3.],
+        [ 5.,  4.,  3.,  0.,  3.,  0.,  0.,  0.,  0., 85.]], dtype=float32)>)
+
+```
+</div>
 ---
 ## No Match
 
