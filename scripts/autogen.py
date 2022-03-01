@@ -151,7 +151,7 @@ class KerasIO:
             button_lines.append(
             '<span class="k-dot">•</span>'
             + '<img class="k-inline-icon" src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"/>'
-            + "[**Try on Spaces**](https://huggingface.co/"
+            + "[**Try on Spaces**](https://huggingface.co/spaces/"
             + spaces_dir
             + ")"
             + "\n"

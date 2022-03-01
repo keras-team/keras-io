@@ -458,7 +458,7 @@ def _parse_header(header):
     last_modified = lines[3][len("Last modified: ") :]
     description = lines[4][len("Description: ") :]
     if len(lines) == 6:
-        spaces_dir = lines[5][len("Spaces ID: ") :]
+        spaces_dir = lines[5][len("Space ID: ") :]
     else:
         spaces_dir = None
     return {

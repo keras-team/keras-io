@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/03
 Last modified: 2020/05/03
 Description: Train a 2-layer bidirectional LSTM on the IMDB movie review sentiment classification dataset.
+Space ID: keras-io/bidirectional_lstm_imdb
 """
 """
 ## Setup
@@ -51,4 +52,4 @@ x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
 """
 
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
-model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
+model.fit(x_train, y_train, batch_size=32, epochs=1, validation_data=(x_val, y_val))
