@@ -2,7 +2,7 @@
 Title: Metric learning for image similarity search using TensorFlow Similarity
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
-Last modified: 2021/09/30
+Last modified: 2022/02/29
 Description: Example of using similarity metric learning on CIFAR-10 images.
 """
 
@@ -37,6 +37,13 @@ TensorFlow Similarity provides components that:
 * Make training contrastive models simple and fast.
 * Make it easier to ensure that batches contain pairs of examples.
 * Enable the evaluation of the quality of the embedding.
+
+TensorFlow Similarity can be installed easily via pip, as follows:
+
+```
+pip -q install tensorflow_similarity
+```
+
 """
 
 import random
@@ -365,7 +372,7 @@ cutpoint = "optimal"
 x_confusion, y_confusion = val_ds.get_slice(0, -1)
 
 matches = model.match(x_confusion, cutpoint=cutpoint, no_match_label=10)
-tfsim.visualization.confusion_matrix(
+cm = tfsim.visualization.confusion_matrix(
     matches,
     y_confusion,
     labels=labels,
