@@ -56,19 +56,6 @@ SEED = 42
 keras.utils.set_random_seed(SEED)
 ```
 
-<div class="k-default-codeblock">
-```
-/usr/local/lib/python3.8/dist-packages/tensorflow_addons/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.3.0 and strictly below 2.6.0 (nightly versions are not supported). 
- The versions of TensorFlow you are currently using is 2.8.0 and is not supported. 
-Some things might work, some things might not.
-If you were to encounter a bug, do not file an issue.
-If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the TensorFlow Addons's version. 
-You can find the compatibility matrix in TensorFlow Addon's readme:
-https://github.com/tensorflow/addons
-  warnings.warn(
-
-```
-</div>
 ---
 ## Hyperparameters
 
