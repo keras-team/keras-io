@@ -28,7 +28,7 @@ structured data, and covers the following scenarios:
 to encode the categorical features with respect to their target value co-occurrences,
 and then use the encoded features to build a decision forests model.
 3. Encode the categorical features as [embeddings](https://keras.io/api/layers/core_layers/embedding),
-train these embeddings in a simple linear model, and then use the
+train these embeddings in a simple NN model, and then use the
 trained embeddings as inputs to build decision forests model.
 
 This example uses TensorFlow 2.7 or higher,
@@ -148,15 +148,22 @@ You can find all the parameters of the Gradient Boosted Tree model in the
 [documentation](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel)
 """
 
-NUM_TREES = 250
-MIN_EXAMPLES = 6
-MAX_DEPTH = 5
-SUBSAMPLE = 0.65
-SAMPLING_METHOD = "RANDOM"
-VALIDATION_RATIO = 0.1
+NUM_TREES = 250  # Maximum number of decision trees. The effective number of trained trees can be smaller if early stopping is enabled.
+MIN_EXAMPLES = 6  # Minimum number of examples in a node.
+MAX_DEPTH = (
+    5  # Maximum depth of the tree. max_depth=1 means that all trees will be roots.
+)
+SUBSAMPLE = 0.65  # Ratio of the dataset (sampling without replacement) used to train individual trees for the random sampling method.
+SAMPLING_METHOD = (
+    "RANDOM"  # Control the sampling of the datasets used to train individual trees.
+)
+VALIDATION_RATIO = 0.1  # Ratio of the training dataset used to monitor the training. Require to be >0 if early stopping is enabled.
 
 """
 ## Implement a training and evaluation procedure
+
+The `run_experiment` method is responsible loading the train and test datasets,
+training a given model, and evaluating the trained model.
 """
 
 
@@ -240,6 +247,7 @@ and the optimizer is irrelevant to decision forests models.
 
 
 def create_gbt_model():
+    # See all the model parameters in https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
         features=specify_feature_usages(create_model_inputs()),
         exclude_non_specified_features=True,
@@ -248,6 +256,7 @@ def create_gbt_model():
         min_examples=MIN_EXAMPLES,
         subsample=SUBSAMPLE,
         validation_ratio=VALIDATION_RATIO,
+        early_stopping="LOSS_INCREASE",
         task=tfdf.keras.Task.CLASSIFICATION,
         loss="DEFAULT",
     )
@@ -292,7 +301,10 @@ will produce three new numerical features:
 2. `negative_frequency`: How many times each feature value occurred with a negative target label.
 3. `positive_probability`: The probability that the target label is positive,
 given the feature value, which is computed as
-`positive_frequency / (positive_frequency + negative_frequency)`.
+`positive_frequency / (positive_frequency + negative_frequency + correction)`.
+The `correction` term is added in to make the division more stable for rare categorical values.
+The default value for `correction` is 1.0.
+
 
 
 Note that target encoding is effective with models that cannot automatically
@@ -310,8 +322,9 @@ are in the expected data types and shapes, so no validation logic is added.
 
 
 class BinaryTargetEncoding(layers.Layer):
-    def __init__(self, **kwargs):
+    def __init__(self, correction=1.0, **kwargs):
         super().__init__(**kwargs)
+        self.correction = correction
 
     def adapt(self, data):
         # data is expected to be an integer numpy array to a Tensor shape [num_exmples, 2].
@@ -389,20 +402,23 @@ class BinaryTargetEncoding(layers.Layer):
         # Lookup positive frequencies for the input feature values.
         positive_frequency = tf.cast(
             tf.gather_nd(self.positive_frequency_lookup, inputs),
-            dtype=tf.dtypes.float32,
+            dtype=tf.dtypes.float64,
         )
         # Lookup negative frequencies for the input feature values.
         negative_frequency = tf.cast(
             tf.gather_nd(self.negative_frequency_lookup, inputs),
-            dtype=tf.dtypes.float32,
+            dtype=tf.dtypes.float64,
         )
         # Compute positive probability for the input feature values.
         positive_probability = positive_frequency / (
-            positive_frequency + negative_frequency
+            positive_frequency + negative_frequency + self.correction
         )
         # Concatenate and return the looked-up statistics.
-        return tf.concat(
-            [positive_frequency, negative_frequency, positive_probability], axis=1
+        return tf.cast(
+            tf.concat(
+                [positive_frequency, negative_frequency, positive_probability], axis=1
+            ),
+            dtype=tf.dtypes.float32,
         )
 
 
@@ -495,7 +511,9 @@ def create_gbt_with_preprocessor(preprocessor):
         min_examples=MIN_EXAMPLES,
         subsample=SUBSAMPLE,
         validation_ratio=VALIDATION_RATIO,
+        early_stopping="LOSS_INCREASE",
         task=tfdf.keras.Task.CLASSIFICATION,
+        loss="DEFAULT",
     )
 
     gbt_model.compile(metrics=[keras.metrics.BinaryAccuracy(name="accuracy")])
@@ -517,7 +535,7 @@ In this scenario, we build an encoder model that codes the categorical
 features to embeddings, where the size of the embedding for a given categorical
 feature is the square root to the size of its vocabulary.
 
-We train these embeddings in a simple linear model through backpropagation.
+We train these embeddings in a simple NN model through backpropagation.
 After the embedding encoder is trained, we used it as a preprocessor to the
 input features of a Gradient Boosted Tree model.
 
@@ -532,7 +550,7 @@ and then used as static inputs to the decision forest model.
 """
 
 
-def create_embedding_encoder():
+def create_embedding_encoder(size=None):
     inputs = create_model_inputs()
     encoded_features = []
     for feature_name in inputs:
@@ -561,35 +579,41 @@ def create_embedding_encoder():
         encoded_features.append(encoded_feature)
     # Concatenate all the encoded features.
     encoded_features = layers.concatenate(encoded_features, axis=1)
+    # Apply dropout.
+    encoded_features = layers.Dropout(rate=0.25)(encoded_features)
+    # Perform non-linear projection to the features.
+    encoded_features = layers.Dense(
+        units=size if size else encoded_features.shape[-1], activation="gelu"
+    )(encoded_features)
     # Create and return a Keras model with encoded features as outputs.
     return keras.Model(inputs=inputs, outputs=encoded_features)
 
 
 """
-### Build a linear model to train the embeddings
+### Build an NN model to train the embeddings
 """
 
 
-def create_linear_model(encoder):
+def create_nn_model(encoder):
     inputs = create_model_inputs()
     embeddings = encoder(inputs)
-    linear_output = layers.Dense(units=1, activation="sigmoid")(embeddings)
+    output = layers.Dense(units=1, activation="sigmoid")(embeddings)
 
-    linear_model = keras.Model(inputs=inputs, outputs=linear_output)
-    linear_model.compile(
+    nn_model = keras.Model(inputs=inputs, outputs=output)
+    nn_model.compile(
         optimizer=keras.optimizers.Adam(),
         loss=keras.losses.BinaryCrossentropy(),
         metrics=[keras.metrics.BinaryAccuracy("accuracy")],
     )
-    return linear_model
+    return nn_model
 
 
-embedding_encoder = create_embedding_encoder()
+embedding_encoder = create_embedding_encoder(size=64)
 run_experiment(
-    create_linear_model(embedding_encoder),
+    create_nn_model(embedding_encoder),
     train_data,
     test_data,
-    num_epochs=3,
+    num_epochs=5,
     batch_size=256,
 )
 
