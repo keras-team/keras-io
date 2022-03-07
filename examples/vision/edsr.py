@@ -1,13 +1,14 @@
 """
 Title: Enhanced Deep Residual Networks for Single Image Super-Resolution
 Author: Gitesh Chawda
-Date created: 05-03-2022
-Last modified: 05-03-2022
+Date created: 07-03-2022
+Last modified: 07-03-2022
 Description: Implementing EDSR model on DIV2K Dataset.
 """
 
 """
 ## Introduction 
+
 Enhanced Deep Residual Networks for Single Image Super-Resolution
 [EDSR](https://arxiv.org/abs/1707.02921) by Bee Lim, Sanghyun Son, Heewon Kim, Seungjun
 Nah, Kyoung Mu Lee.
@@ -26,38 +27,37 @@ Alernatively, you can also build a ESPCN Model as shown in the Keras example [Im
 Super-Resolution using an Efficient Sub-Pixel CNN
 ](https://keras.io/examples/vision/super_resolution_sub_pixel/#image-superresolution-using
 -an-efficient-subpixel-cnn). As per the survey paper EDSR performs well than ESPCN. Paper
-: [A comprehensive review of deep learningbased single image
+: 
+
+[A comprehensive review of deep learningbased single image
 super-resolution](https://arxiv.org/abs/2102.09351)
 
 Camparison Graph :
 
 <img src="https://dfzljdn9uc3pi.cloudfront.net/2021/cs-621/1/fig-11-2x.jpg" width="500" />
+
+
+
 """
 
 """
 ## Imports
 """
 
+import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow.keras.optimizers.schedules import PiecewiseConstantDecay
+import matplotlib.pyplot as plt
+
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.models import Model
 
 AUTOTUNE = tf.data.AUTOTUNE
-tf.random.set_seed(2)
-
-import warnings
-
-warnings.simplefilter("ignore")
-
-import matplotlib.pyplot as plt
-from PIL import Image
-import numpy as np
-import keras
-import cv2
-import os
 
 """
 ## Downloading Training Dataset
+
 Using DIV2K Dataset which is a popular single-image super-resolution dataset which
 contains 1,000 images with different scenes and is splitted to 800 for training, 100 for
 validation and 100 for testing. This dataset contains low resolution images with
@@ -83,7 +83,10 @@ def flip_left_right(lr_img, hr_img):
     """
     Flipes Images to left and right
     """
+    # Outputs random values from a uniform distribution in between 0 to 1
     rn = tf.random.uniform(shape=(), maxval=1)
+    # If rn is less than 0.5 it returns original lr_img and hr_img
+    # If rn is greater than 0.5 it returns flipped image
     return tf.cond(
         rn < 0.5,
         lambda: (lr_img, hr_img),
@@ -95,7 +98,9 @@ def random_rotate(lr_img, hr_img):
     """
     Rotates Images by 90 degree
     """
+    # Outputs random values from uniform distribution in between 0 to 4
     rn = tf.random.uniform(shape=(), maxval=4, dtype=tf.int32)
+    # Here rn signifies number of times the image(s) are rotated by 90 degrees
     return tf.image.rot90(lr_img, rn), tf.image.rot90(hr_img, rn)
 
 
@@ -105,8 +110,8 @@ def random_crop(lr_img, hr_img, hr_crop_size=96, scale=4):
     low resolution images : 24x24
     hight resolution images : 96x96
     """
-    lr_crop_size = hr_crop_size // scale
-    lr_img_shape = tf.shape(lr_img)[:2]
+    lr_crop_size = hr_crop_size // scale  # 96//4=24
+    lr_img_shape = tf.shape(lr_img)[:2]  # (height,width)
 
     lr_width = tf.random.uniform(
         shape=(), maxval=lr_img_shape[1] - lr_crop_size + 1, dtype=tf.int32
@@ -179,47 +184,54 @@ def PSNR(sr, hr):
 
 
 """
-The residual block in EDSR is shown below : 
+## Comparison of 3 residual blocks
+
+Authors compared 3 residual blocks from original resnet, SRResNet and proposed. The only
+difference is removal of batch normalization layer, Since batch normalization layers
+normalize the features, they get rid of range flexibility from networks by normalizing
+the features, it is better to remove them, Furthermore, GPU memory usage is also
+sufficiently reduced since the batch normalization layers consume the same amount of
+memory as the preceding convolutional layers.
 
 <img src="https://miro.medium.com/max/1050/1*EPviXGqlGWotVtV2gqVvNg.png" width="500" /> 
 """
 
 # Residual Block
 def ResBlock(inputs):
-    x = tf.keras.layers.Conv2D(64, 3, padding="same", activation="relu")(inputs)
-    x = tf.keras.layers.Conv2D(64, 3, padding="same")(x)
-    x = tf.keras.layers.Add()([inputs, x])
+    x = layers.Conv2D(64, 3, padding="same", activation="relu")(inputs)
+    x = layers.Conv2D(64, 3, padding="same")(x)
+    x = layers.Add()([inputs, x])
     return x
 
 
 # Upsampling Block
 def Upsampling(inputs, factor=2, **kwargs):
-    x = tf.keras.layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(inputs)
+    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(inputs)
     x = tf.nn.depth_to_space(x, block_size=factor)
-    x = tf.keras.layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(x)
+    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(x)
     x = tf.nn.depth_to_space(x, block_size=factor)
     return x
 
 
 def EDSR_MODEL():
     # Flexible Inputs to input_layer
-    input_layer = tf.keras.layers.Input(shape=(None, None, 3))
+    input_layer = layers.Input(shape=(None, None, 3))
     # Normalizing Pixel Values
-    x = tf.keras.layers.Rescaling(scale=1.0 / 255)(input_layer)
-    x = x_new = tf.keras.layers.Conv2D(64, 3, padding="same")(x)
+    x = layers.Rescaling(scale=1.0 / 255)(input_layer)
+    x = x_new = layers.Conv2D(64, 3, padding="same")(x)
 
     # 16 residual blocks
     for _ in range(16):
         x_new = ResBlock(x_new)
 
-    x_new = tf.keras.layers.Conv2D(64, 3, padding="same")(x_new)
-    x = tf.keras.layers.Add()([x, x_new])
+    x_new = layers.Conv2D(64, 3, padding="same")(x_new)
+    x = layers.Add()([x, x_new])
 
     x = Upsampling(x)
-    x = tf.keras.layers.Conv2D(3, 3, padding="same")(x)
+    x = layers.Conv2D(3, 3, padding="same")(x)
     # Denormalizing
-    output_layer = tf.keras.layers.Rescaling(scale=255)(x)
-    return tf.keras.models.Model(input_layer, output_layer)
+    output_layer = layers.Rescaling(scale=255)(x)
+    return Model(input_layer, output_layer)
 
 
 class CustomModel(tf.keras.Model):
@@ -257,16 +269,22 @@ model = CustomModel(edsr.inputs, edsr.outputs)
 # Using Adam Optimizer with initial learning rate as 1e-4, changing learning rate after
 5000 steps to 5e-5
 optim_edsr = tf.keras.optimizers.Adam(
-    learning_rate=PiecewiseConstantDecay(boundaries=[5000], values=[1e-4, 5e-5])
+    learning_rate=keras.optimizers.schedules.PiecewiseConstantDecay(
+        boundaries=[5000], values=[1e-4, 5e-5]
+    )
 )
-# Compiling Model with loss as Mean Absolute Error and metric as psnr
+# Compiling Model with loss as Mean Absolute Error(L1 Loss) and metric as psnr
 model.compile(optimizer=optim_edsr, loss="mae", metrics=PSNR)
 model.fit(ds, epochs=100, steps_per_epoch=1000)
+
+"""
+## Visualize Results
+"""
 
 
 def Predict(model, img):
     """
-    Taking Low Resolution Image and Returns Super Resolution Image
+    Takes Low Resolution Image and Edsr Model and Returns Super Resolution Image
     """
     # Adding dummy dimension using tf.expand_dims and converting to float32 using tf.cast
     sr = model.predict_step(tf.cast(tf.expand_dims(img, axis=0), tf.float32))
@@ -289,15 +307,11 @@ def plot_results(x):
     Displays Low Resolution image and Super Resolution Image
     """
     plt.figure(figsize=(24, 14))
-    plt.subplot(132), plt.imshow(x), plt.title("LR")
+    plt.subplot(132), plt.imshow(x), plt.title("Low Resolution")
     plt.subplot(133), plt.imshow(Predict(model, x)), plt.title("Prediction")
     plt.show()
 
 
-for lr, hr in test.take(5):
-    lr = tf.image.random_crop(lr, (70, 70, 3))
-    plot_results(lr)
-
-for lr, hr in test.take(5):
+for lr, hr in test.take(10):
     lr = tf.image.random_crop(lr, (150, 150, 3))
     plot_results(lr)
