@@ -688,3 +688,4 @@ for low_light_image in random.sample(test_low_light_images, 6):
 
 ![png](/img/examples/vision/mirnet/mirnet_21_5.png)
 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/lowlight-enhance-mirnet) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Enhance_Low_Light_Image).

@@ -689,5 +689,7 @@ Input sentence: Hello!
 Decoded sentence: Salut !
 ```
 </div>
-    
+---
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/char-lstm-seq2seq) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/char-lstm-seq2seq).
+
 

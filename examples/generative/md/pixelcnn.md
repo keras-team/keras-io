@@ -348,3 +348,5 @@ display(Image("generated_image_3.png"))
 
 
 ![png](/img/examples/generative/pixelcnn/pixelcnn_10_4.png)
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/pixel-cnn-mnist) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/pixelcnn-mnist-image-generation).

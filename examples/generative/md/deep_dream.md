@@ -308,3 +308,4 @@ display(Image(result_prefix + ".png"))
 
 ![png](/img/examples/generative/deep_dream/deep_dream_17_0.png)
 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deep-dream) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/deep-dream).

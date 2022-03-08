@@ -534,3 +534,4 @@ Predicted: tf.Tensor(386, shape=(), dtype=int64) [('n02504458', 'African_elephan
 
 ![png](/img/examples/vision/integrated_gradients/integrated_gradients_9_2.png)
 
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/integrated_gradients).
