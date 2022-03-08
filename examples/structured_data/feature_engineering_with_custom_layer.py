@@ -1,12 +1,12 @@
 """
-Title: Feature Engineering using Keras Functional API and Lambda layers
+Title: Feature Engineering using Keras Functional API and custom Feature layer
 Author: [Fernando Nieuwveldt](https://www.linkedin.com/in/fernandonieuwveldt/)
 Date created: 2022/02/26
 Last modified: 2022/02/26
 Description: Feature Engineering as part of your network architecture.
 """
 """
-# Feature Engineering using Keras Lambda Layers for an end to end training pipeline.
+# Feature Engineering using Keras custom Feature Layer for an end to end training pipeline.
 """
 
 """
@@ -22,7 +22,7 @@ can be mapped from a dataframe to something like tf.data.Datasets type or numpy 
 before feeding it to a Keras model.
 
 In this example we will consider implementing a training pipeline natively with
-Keras/Tensorflow. From loading data with tf.data, Lambda layers for feature engineering.
+Keras/Tensorflow. From loading data with tf.data and implementing a custom Keras layer for all feature engineering steps.
 These engineered features will be stateless. We will end up with a training pipeline where
 feature engineering will be part of the network architecture and can be persisted and loaded
 for inference as standalone.
@@ -30,11 +30,10 @@ for inference as standalone.
 Steps we will follow:
 * Load data with tf.data
 * Create Input layer
-* Create feature layer using Lambda layers
+* Create feature layer by subclassing Layer class
 * Train model
 
-For constructing our model we will the Functional API. We will also visualize our network architecture
-as the graph evolves.
+For constructing our model we will use the Functional API.
 """
 
 """
@@ -112,141 +111,61 @@ def create_inputs(data_type_mapper):
 
 feature_layer_inputs = create_inputs(dtype_mapper)
 
-"""
-## Visualize Input layer
-
-Lets visualize our input layer.
-"""
-
-input_layer_graph = tf.keras.Model(
-    inputs=feature_layer_inputs, outputs=feature_layer_inputs
-)
-plot_model(input_layer_graph, input_layer_graph='input_layer_graph.png')
 
 """
-## Engineered Features: Custom functions for Lambda Layers
+## Engineered Features: Custom Keras layer
 
-For feature engineering we will be using Keras Lambda layers. Below are the custom functions that will be used
-transform our features. For the categoric feature "thal" we will apply One hot encoding manually to illustrate how it can
-be done with Lambda layers.
+For feature engineering we will be using a custom Keras layer. When all the features are defined we will concatenate all these into one layer.
 """
 
 
-def ratio(x):
-    """compute the ratio between two numeric features"""
-    return x[0] / x[1]
+class FeatureLayer(tf.keras.layers.Layer):
+    """Custom Layer for Feature engineering steps
+    """
 
+    def __init__(self, *args, **kwargs):
+        super(FeatureLayer, self).__init__(*args, **kwargs)
 
-def cross_feature(x):
-    """compute the crossing of two features"""
-    return tf.cast(x[0] * x[1], dtype=tf.float32)
+    def call(self, inputs):
+        age_and_gender = tf.cast(
+            tf.math.logical_and(inputs["age"] > 50, inputs["sex"] == 1),
+            dtype=tf.float32,
+        )
 
+        thal_fixed_category = tf.cast(inputs["thal"] == "fixed", dtype=tf.float32)
+        thal_reversible_category = tf.cast(inputs["thal"] == "normal", dtype=tf.float32)
+        thal_normal_category = tf.cast(inputs["thal"] == "reversible", dtype=tf.float32)
 
-def age_and_gender(x):
-    """check if age gt 50 and if gender is male"""
-    return tf.cast(tf.math.logical_and(x[0] > 50, x[1] == 1), dtype=tf.float32)
+        trest_chol_ratio = inputs["trestbps"] / inputs["chol"]
+        trest_cross_thalach = inputs["trestbps"] * inputs["thalach"]
 
+        # concat all newly created features into one layer
+        feature_list = [
+            thal_fixed_category,
+            thal_reversible_category,
+            thal_normal_category,
+            age_and_gender,
+            trest_chol_ratio,
+            trest_cross_thalach,
+        ]
 
-def is_fixed(x):
-    """encode categoric feature if value is equal to fixed"""
-    return tf.cast(x == "fixed", dtype=tf.float32)
+        engineered_feature_layer = tf.keras.layers.concatenate(feature_list)
 
+        numeric_feature_layer = tf.keras.layers.concatenate(
+            [inputs[feature] for feature in numeric_features]
+        )
 
-def is_reversible(x):
-    """encode categoric feature if value is equal to fixed"""
-    return tf.cast(x == "reversible", dtype=tf.float32)
+        binary_feature_layer = tf.keras.layers.concatenate(
+            [inputs[feature] for feature in binary_features]
+        )
 
+        # Add the rest of features into final feature layer
+        feature_layer = tf.keras.layers.concatenate(
+            [engineered_feature_layer, numeric_feature_layer, binary_feature_layer]
+        )
 
-def is_normal(x):
-    """encode categoric feature if value is equal to fixed"""
-    return tf.cast(x == "normal", dtype=tf.float32)
+        return feature_layer
 
-
-"""
-## Feature engineering
-
-Now that we have functions for our engineered features, we can start building feature layer. When
-all the layers are defined we will concatenate all these layers.
-"""
-
-is_fixed = tf.keras.layers.Lambda(is_fixed, name="is_fixed")(
-    feature_layer_inputs["thal"]
-)
-
-is_normal = tf.keras.layers.Lambda(is_normal, name="is_normal")(
-    feature_layer_inputs["thal"]
-)
-
-is_reversible = tf.keras.layers.Lambda(is_reversible, name="is_reversible")(
-    feature_layer_inputs["thal"]
-)
-
-age_and_gender = tf.keras.layers.Lambda(age_and_gender, name="age_and_gender")(
-    (feature_layer_inputs["age"], feature_layer_inputs["sex"])
-)
-
-trest_chol_ratio = tf.keras.layers.Lambda(ratio, name="trest_chol_ratio")(
-    (feature_layer_inputs["trestbps"], feature_layer_inputs["chol"])
-)
-
-trest_cross_thalach = tf.keras.layers.Lambda(cross_feature, name="trest_cross_thalach")(
-    (feature_layer_inputs["trestbps"], feature_layer_inputs["thalach"])
-)
-
-# concat all newly created features into one layer
-feature_list = [
-    is_fixed,
-    is_normal,
-    is_reversible,
-    age_and_gender,
-    trest_chol_ratio,
-    trest_cross_thalach,
-]
-
-lambda_feature_layer = tf.keras.layers.concatenate(
-    feature_list, name="lambda_feature_layer"
-)
-
-"""
-## Visualize Lambda feature Layer
-"""
-
-feature_graph = tf.keras.Model(
-    inputs=feature_layer_inputs, outputs=lambda_feature_layer
-)
-plot_model(feature_graph, to_file='lambda_feature_layer.png')
-
-"""
-## Combine all features
-
-All our engineered feature layers are created and we can now combine it with our other
-features into one complete feature layer.
-"""
-
-numeric_feature_layer = tf.keras.layers.concatenate(
-    [feature_layer_inputs[feature] for feature in numeric_features],
-    name="numeric_feature_layer",
-)
-
-binary_feature_layer = tf.keras.layers.concatenate(
-    [feature_layer_inputs[feature] for feature in binary_features],
-    name="binary_feature_layer",
-)
-
-# Add the rest of features
-feature_layer = tf.keras.layers.concatenate(
-    [lambda_feature_layer, numeric_feature_layer, binary_feature_layer],
-    name="feature_layer",
-)
-
-"""
-## Visualize full Feature Layer
-
-We can now view our complete Feature layer.
-"""
-
-full_feature_graph = tf.keras.Model(inputs=feature_layer_inputs, outputs=feature_layer)
-plot_model(full_feature_graph, to_file='complete_feature_layer.png')
 
 """
 ## Compile and fit model
@@ -256,6 +175,7 @@ simple model architecture.
 """
 
 # setup model, this is basically Logistic regression
+feature_layer = FeatureLayer(name="feature_layer")(feature_layer_inputs)
 x = tf.keras.layers.BatchNormalization(name="batch_norm")(feature_layer)
 output = tf.keras.layers.Dense(1, activation="sigmoid", name="target")(x)
 model = tf.keras.Model(inputs=feature_layer_inputs, outputs=output)
@@ -274,7 +194,7 @@ model.compile(
 Lets visualize our complete model graph.
 """
 
-plot_model(model, to_file='complete_model_graph.png')
+plot_model(model, to_file="complete_model_graph.png")
 
 """
 # Train Model and Save model
@@ -283,7 +203,7 @@ plot_model(model, to_file='complete_model_graph.png')
 model.fit(dataset, epochs=10)
 
 # save model
-tf.keras.models.save_model(model, "lambda_layered_model")
+tf.keras.models.save_model(model, "saved_model")
 
 """
 # Load model and predict on raw data
@@ -295,6 +215,6 @@ model endpoint.
 """
 
 # load model for inference
-loaded_model = tf.keras.models.load_model("lambda_layered_model")
+loaded_model = tf.keras.models.load_model("saved_model")
 
 dict(zip(loaded_model.metrics_names, loaded_model.evaluate(dataset)))
