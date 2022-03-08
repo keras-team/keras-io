@@ -521,7 +521,7 @@ model.compile(vae_optimizer)
 history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCHS)
 
 """
-## Model Inferencing
+## Inference
 
 We would be inferring our model to predict over random latent space and try to generate
 100 new valid molecules.
