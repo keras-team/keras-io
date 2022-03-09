@@ -133,8 +133,10 @@ class FeatureLayer(tf.keras.layers.Layer):
         )
 
         thal_fixed_category = tf.cast(inputs["thal"] == "fixed", dtype=tf.float32)
-        thal_reversible_category = tf.cast(inputs["thal"] == "normal", dtype=tf.float32)
-        thal_normal_category = tf.cast(inputs["thal"] == "reversible", dtype=tf.float32)
+        thal_reversible_category = tf.cast(
+            inputs["thal"] == "reversible", dtype=tf.float32
+        )
+        thal_normal_category = tf.cast(inputs["thal"] == "normal", dtype=tf.float32)
 
         trest_chol_ratio = inputs["trestbps"] / inputs["chol"]
         trest_cross_thalach = inputs["trestbps"] * inputs["thalach"]
