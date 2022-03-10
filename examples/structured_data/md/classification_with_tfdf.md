@@ -58,14 +58,6 @@ from tensorflow.keras import layers
 import tensorflow_decision_forests as tfdf
 ```
 
-<div class="k-default-codeblock">
-```
-2022-03-10 16:17:07.435207: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-03-10 16:17:07.435251: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-WARNING:root:TF Parameter Server distributed training not available (this is expected for the pre-build release).
-
-```
-</div>
 ---
 ## Prepare the data
 
@@ -551,18 +543,6 @@ run_experiment(gbt_model, train_data, test_data)
 
 <div class="k-default-codeblock">
 ```
-Use /tmp/tmpdprjpce3 as temporary training directory
-
-2022-03-10 16:17:13.654824: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-03-10 16:17:13.654868: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-03-10 16:17:13.654892: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (keras-workbench): /proc/driver/nvidia/version does not exist
-2022-03-10 16:17:13.655169: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-/opt/conda/lib/python3.7/site-packages/tensorflow_decision_forests/keras/core.py:2036: FutureWarning: In a future version of pandas all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only
-  features_dataframe = dataframe.drop(label, 1)
-/opt/conda/lib/python3.7/site-packages/tensorflow_decision_forests/keras/core.py:2039: FutureWarning: In a future version of pandas all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only
-  features_dataframe = features_dataframe.drop(weight, 1)
-
 Starting reading the dataset
 200/200 [==============================] - ETA: 0s
 Dataset read in 0:00:08.829036
@@ -570,25 +550,6 @@ Training model
 Model trained in 0:00:48.639771
 Compiling model
 200/200 [==============================] - 58s 268ms/step
-
-[INFO kernel.cc:1153] Loading model from path
-[INFO abstract_model.cc:1063] Engine "GradientBoostedTreesQuickScorerExtended" built
-[INFO kernel.cc:1001] Use fast generic engine
-
-WARNING:tensorflow:AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7fb4fccbe710> and will run it as-is.
-Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
-Cause: could not get source code
-To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
-
-WARNING:tensorflow:AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7fb4fccbe710> and will run it as-is.
-Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
-Cause: could not get source code
-To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
-
-WARNING: AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7fb4fccbe710> and will run it as-is.
-Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
-Cause: could not get source code
-To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
 Test accuracy: 95.79%
 
 ```
@@ -1429,9 +1390,6 @@ run_experiment(gbt_model, train_data, test_data)
 
 <div class="k-default-codeblock">
 ```
-/opt/conda/lib/python3.7/site-packages/numpy/core/numeric.py:2446: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-  return bool(asarray(a1 == a2).all())
-
 ### Adapting target encoding for: class_of_worker
 ### Adapting target encoding for: detailed_industry_recode
 ### Adapting target encoding for: detailed_occupation_recode
@@ -1473,11 +1431,6 @@ Training model
 Model trained in 0:04:32.752691
 Compiling model
 200/200 [==============================] - 280s 1s/step
-
-[INFO kernel.cc:1153] Loading model from path
-[INFO abstract_model.cc:1063] Engine "GradientBoostedTreesQuickScorerExtended" built
-[INFO kernel.cc:1001] Use fast generic engine
-
 Test accuracy: 95.81%
 
 ```
@@ -1609,11 +1562,6 @@ Training model
 Model trained in 0:05:18.350298
 Compiling model
 200/200 [==============================] - 325s 2s/step
-
-[INFO kernel.cc:1153] Loading model from path
-[INFO abstract_model.cc:1063] Engine "GradientBoostedTreesQuickScorerExtended" built
-[INFO kernel.cc:1001] Use fast generic engine
-
 Test accuracy: 95.82%
 
 ```
