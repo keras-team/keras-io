@@ -102,18 +102,42 @@ NUMERIC_FEATURE_NAMES = [
     "weeks_worked_in_year",
 ]
 # Categorical features and their vocabulary lists.
-CATEGORICAL_FEATURES_WITH_VOCABULARY = {
-    feature_name: sorted(
-        [str(value) for value in list(train_data[feature_name].unique())]
-    )
-    for feature_name in CSV_HEADER
-    if feature_name
-    not in list(NUMERIC_FEATURE_NAMES + [WEIGHT_COLUMN_NAME, TARGET_COLUMN_NAME])
-}
-# All features names.
-FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
-    CATEGORICAL_FEATURES_WITH_VOCABULARY.keys()
-)
+CATEGORICAL_FEATURE_NAMES = [
+    "class_of_worker",
+    "detailed_industry_recode",
+    "detailed_occupation_recode",
+    "education",
+    "enroll_in_edu_inst_last_wk",
+    "marital_stat",
+    "major_industry_code",
+    "major_occupation_code",
+    "race",
+    "hispanic_origin",
+    "sex",
+    "member_of_a_labor_union",
+    "reason_for_unemployment",
+    "full_or_part_time_employment_stat",
+    "tax_filer_stat",
+    "region_of_previous_residence",
+    "state_of_previous_residence",
+    "detailed_household_and_family_stat",
+    "detailed_household_summary_in_household",
+    "migration_code-change_in_msa",
+    "migration_code-change_in_reg",
+    "migration_code-move_within_reg",
+    "live_in_this_house_1_year_ago",
+    "migration_prev_res_in_sunbelt",
+    "family_members_under_18",
+    "country_of_birth_father",
+    "country_of_birth_mother",
+    "country_of_birth_self",
+    "citizenship",
+    "own_business_or_self_employed",
+    "fill_inc_questionnaire_for_veteran's_admin",
+    "veterans_benefits",
+    "year",
+]
+
 
 """
 Now we perform basic data preparation.
@@ -126,7 +150,7 @@ def prepare_dataframe(dataframe):
         TARGET_LABELS.index
     )
     # Cast the categorical features to string.
-    for feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+    for feature_name in CATEGORICAL_FEATURE_NAMES:
         dataframe[feature_name] = dataframe[feature_name].astype(str)
 
 
@@ -148,22 +172,28 @@ You can find all the parameters of the Gradient Boosted Tree model in the
 [documentation](https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel)
 """
 
-NUM_TREES = 250  # Maximum number of decision trees. The effective number of trained trees can be smaller if early stopping is enabled.
-MIN_EXAMPLES = 6  # Minimum number of examples in a node.
-MAX_DEPTH = (
-    5  # Maximum depth of the tree. max_depth=1 means that all trees will be roots.
-)
-SUBSAMPLE = 0.65  # Ratio of the dataset (sampling without replacement) used to train individual trees for the random sampling method.
-SAMPLING_METHOD = (
-    "RANDOM"  # Control the sampling of the datasets used to train individual trees.
-)
-VALIDATION_RATIO = 0.1  # Ratio of the training dataset used to monitor the training. Require to be >0 if early stopping is enabled.
+# Maximum number of decision trees. The effective number of trained trees can be smaller if early stopping is enabled.
+NUM_TREES = 250
+# Minimum number of examples in a node.
+MIN_EXAMPLES = 6
+# Maximum depth of the tree. max_depth=1 means that all trees will be roots.
+MAX_DEPTH = 5
+# Ratio of the dataset (sampling without replacement) used to train individual trees for the random sampling method.
+SUBSAMPLE = 0.65
+# Control the sampling of the datasets used to train individual trees.
+SAMPLING_METHOD = "RANDOM"
+# Ratio of the training dataset used to monitor the training. Require to be >0 if early stopping is enabled.
+VALIDATION_RATIO = 0.1
 
 """
 ## Implement a training and evaluation procedure
 
-The `run_experiment` method is responsible loading the train and test datasets,
+The `run_experiment()` method is responsible loading the train and test datasets,
 training a given model, and evaluating the trained model.
+
+Note that when training a Decision Forests model, only one epoch is needed to
+read the full dataset. Any extra steps will result in unnecessary slower training.
+Therefore, the default `num_epochs=1` is used in the `run_experiment()` method.
 """
 
 
@@ -179,25 +209,6 @@ def run_experiment(model, train_data, test_data, num_epochs=1, batch_size=None):
     model.fit(train_dataset, epochs=num_epochs, batch_size=batch_size)
     _, accuracy = model.evaluate(test_dataset, verbose=0)
     print(f"Test accuracy: {round(accuracy * 100, 2)}%")
-
-
-"""
-## Create model inputs
-"""
-
-
-def create_model_inputs():
-    inputs = {}
-    for feature_name in FEATURE_NAMES:
-        if feature_name in NUMERIC_FEATURE_NAMES:
-            inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.float32
-            )
-        else:
-            inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.string
-            )
-    return inputs
 
 
 """
@@ -220,20 +231,21 @@ This makes the training faster but may lead to worse models.
 """
 
 
-def specify_feature_usages(inputs):
+def specify_feature_usages():
     feature_usages = []
 
-    for feature_name in inputs:
-        if inputs[feature_name].dtype == tf.dtypes.float32:
-            feature_usage = tfdf.keras.FeatureUsage(
-                name=feature_name, semantic=tfdf.keras.FeatureSemantic.NUMERICAL
-            )
-        else:
-            feature_usage = tfdf.keras.FeatureUsage(
-                name=feature_name, semantic=tfdf.keras.FeatureSemantic.CATEGORICAL
-            )
-
+    for feature_name in NUMERIC_FEATURE_NAMES:
+        feature_usage = tfdf.keras.FeatureUsage(
+            name=feature_name, semantic=tfdf.keras.FeatureSemantic.NUMERICAL
+        )
         feature_usages.append(feature_usage)
+
+    for feature_name in CATEGORICAL_FEATURE_NAMES:
+        feature_usage = tfdf.keras.FeatureUsage(
+            name=feature_name, semantic=tfdf.keras.FeatureSemantic.CATEGORICAL
+        )
+        feature_usages.append(feature_usage)
+
     return feature_usages
 
 
@@ -249,16 +261,14 @@ and the optimizer is irrelevant to decision forests models.
 def create_gbt_model():
     # See all the model parameters in https://www.tensorflow.org/decision_forests/api_docs/python/tfdf/keras/GradientBoostedTreesModel
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
-        features=specify_feature_usages(create_model_inputs()),
+        features=specify_feature_usages(),
         exclude_non_specified_features=True,
         num_trees=NUM_TREES,
         max_depth=MAX_DEPTH,
         min_examples=MIN_EXAMPLES,
         subsample=SUBSAMPLE,
         validation_ratio=VALIDATION_RATIO,
-        early_stopping="LOSS_INCREASE",
         task=tfdf.keras.Task.CLASSIFICATION,
-        loss="DEFAULT",
     )
 
     gbt_model.compile(metrics=[keras.metrics.BinaryAccuracy(name="accuracy")])
@@ -267,10 +277,6 @@ def create_gbt_model():
 
 """
 ### Train and evaluate the model
-
-Note that when training a Decision Forests model, only one epoch is needed to
-read the full dataset. Any extra steps will result in unnecessary slower training.
-Therefore, the default `num_epochs=1` is used in the `run_experiment` method.
 """
 
 gbt_model = create_gbt_model()
@@ -318,12 +324,17 @@ encode categorical features as embeddings.
 
 For simplicity, we assume that the inputs for the `adapt` and `call` methods
 are in the expected data types and shapes, so no validation logic is added.
+
+It is recommended to pass the `vocabulary_size` of the categorical feature to the
+`BinaryTargetEncoding` constructor. If not specified, it will be computed during
+the `adapt()` method execution.
 """
 
 
 class BinaryTargetEncoding(layers.Layer):
-    def __init__(self, correction=1.0, **kwargs):
+    def __init__(self, vocabulary_size=None, correction=1.0, **kwargs):
         super().__init__(**kwargs)
+        self.vocabulary_size = vocabulary_size
         self.correction = correction
 
     def adapt(self, data):
@@ -333,16 +344,13 @@ class BinaryTargetEncoding(layers.Layer):
         # Convert the data to a tensor.
         data = tf.convert_to_tensor(data)
         # Separate the feature values and target values
-        feature_values = tf.cast(data[:, 0], tf.dtypes.int64)
+        feature_values = tf.cast(data[:, 0], tf.dtypes.int32)
         target_values = tf.cast(data[:, 1], tf.dtypes.bool)
 
-        print("Target encoding: Computing unique feature values...")
-        # Get feature vocabulary.
-        unique_feature_values = tf.sort(tf.unique(feature_values).y)
+        # Compute the vocabulary_size of not specified.
+        if self.vocabulary_size is None:
+            self.vocabulary_size = tf.unique(feature_values).y.shape[0]
 
-        print(
-            "Target encoding: Computing frequencies for feature values with positive targets..."
-        )
         # Filter the data where the target label is positive.
         positive_indices = tf.where(condition=target_values)
         postive_feature_values = tf.gather_nd(
@@ -351,15 +359,12 @@ class BinaryTargetEncoding(layers.Layer):
         # Compute how many times each feature value occurred with a positive target label.
         positive_frequency = tf.math.unsorted_segment_sum(
             data=tf.ones(
-                shape=(postive_feature_values.shape[0], 1), dtype=tf.dtypes.int32
+                shape=(postive_feature_values.shape[0], 1), dtype=tf.dtypes.float64
             ),
             segment_ids=postive_feature_values,
-            num_segments=unique_feature_values.shape[0],
+            num_segments=self.vocabulary_size,
         )
 
-        print(
-            "Target encoding: Computing frequencies for feature values with negative targets..."
-        )
         # Filter the data where the target label is negative.
         negative_indices = tf.where(condition=tf.math.logical_not(target_values))
         negative_feature_values = tf.gather_nd(
@@ -368,29 +373,30 @@ class BinaryTargetEncoding(layers.Layer):
         # Compute how many times each feature value occurred with a negative target label.
         negative_frequency = tf.math.unsorted_segment_sum(
             data=tf.ones(
-                shape=(negative_feature_values.shape[0], 1), dtype=tf.dtypes.int32
+                shape=(negative_feature_values.shape[0], 1), dtype=tf.dtypes.float64
             ),
             segment_ids=negative_feature_values,
-            num_segments=unique_feature_values.shape[0],
+            num_segments=self.vocabulary_size,
         )
-
-        print("Target encoding: Storing target encoding statistics...")
-        self.positive_frequency_lookup = tf.constant(positive_frequency)
-        self.negative_frequency_lookup = tf.constant(negative_frequency)
-
-    def reset_state(self):
-        self.positive_frequency_lookup = None
-        self.negative_frequency_lookup = None
+        # Compute positive probability for the input feature values.
+        positive_probability = positive_frequency / (
+            positive_frequency + negative_frequency + self.correction
+        )
+        # Concatenate the computed statistics for traget_encoding.
+        target_encoding_statistics = tf.cast(
+            tf.concat(
+                [positive_frequency, negative_frequency, positive_probability], axis=1
+            ),
+            dtype=tf.dtypes.float32,
+        )
+        self.target_encoding_statistics = tf.constant(target_encoding_statistics)
 
     def call(self, inputs):
         # inputs is expected to be an integer numpy array to a Tensor shape [num_exmples, 1].
         # This includes the feature values for a given feature in the dataset.
 
         # Raise an error if the target encoding statistics are not computed.
-        if (
-            self.positive_frequency_lookup == None
-            or self.negative_frequency_lookup == None
-        ):
+        if self.target_encoding_statistics == None:
             raise ValueError(
                 f"You need to call the adapt method to compute target encoding statistics."
             )
@@ -399,27 +405,12 @@ class BinaryTargetEncoding(layers.Layer):
         inputs = tf.convert_to_tensor(inputs)
         # Cast the inputs int64 a tensor.
         inputs = tf.cast(inputs, tf.dtypes.int64)
-        # Lookup positive frequencies for the input feature values.
-        positive_frequency = tf.cast(
-            tf.gather_nd(self.positive_frequency_lookup, inputs),
-            dtype=tf.dtypes.float64,
-        )
-        # Lookup negative frequencies for the input feature values.
-        negative_frequency = tf.cast(
-            tf.gather_nd(self.negative_frequency_lookup, inputs),
-            dtype=tf.dtypes.float64,
-        )
-        # Compute positive probability for the input feature values.
-        positive_probability = positive_frequency / (
-            positive_frequency + negative_frequency + self.correction
-        )
-        # Concatenate and return the looked-up statistics.
-        return tf.cast(
-            tf.concat(
-                [positive_frequency, negative_frequency, positive_probability], axis=1
-            ),
+        # Lookup target encoding statistics for the input feature values.
+        target_encoding_statistics = tf.cast(
+            tf.gather_nd(self.target_encoding_statistics, inputs),
             dtype=tf.dtypes.float32,
         )
+        return target_encoding_statistics
 
 
 """
@@ -455,6 +446,27 @@ binary_target_encoder.adapt(data)
 print(binary_target_encoder([[0], [1], [2]]))
 
 """
+### Create model inputs
+"""
+
+
+def create_model_inputs():
+    inputs = {}
+
+    for feature_name in NUMERIC_FEATURE_NAMES:
+        inputs[feature_name] = layers.Input(
+            name=feature_name, shape=(), dtype=tf.float32
+        )
+
+    for feature_name in CATEGORICAL_FEATURE_NAMES:
+        inputs[feature_name] = layers.Input(
+            name=feature_name, shape=(), dtype=tf.string
+        )
+
+    return inputs
+
+
+"""
 ### Implement a feature encoding with target encoding
 """
 
@@ -464,8 +476,11 @@ def create_target_encoder():
     target_values = train_data[[TARGET_COLUMN_NAME]].to_numpy()
     encoded_features = []
     for feature_name in inputs:
-        if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-            vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+        if feature_name in CATEGORICAL_FEATURE_NAMES:
+            # Get the vocabulary of the categorical feature.
+            vocabulary = sorted(
+                [str(value) for value in list(train_data[feature_name].unique())]
+            )
             # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
@@ -511,9 +526,7 @@ def create_gbt_with_preprocessor(preprocessor):
         min_examples=MIN_EXAMPLES,
         subsample=SUBSAMPLE,
         validation_ratio=VALIDATION_RATIO,
-        early_stopping="LOSS_INCREASE",
         task=tfdf.keras.Task.CLASSIFICATION,
-        loss="DEFAULT",
     )
 
     gbt_model.compile(metrics=[keras.metrics.BinaryAccuracy(name="accuracy")])
@@ -554,8 +567,11 @@ def create_embedding_encoder(size=None):
     inputs = create_model_inputs()
     encoded_features = []
     for feature_name in inputs:
-        if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-            vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+        if feature_name in CATEGORICAL_FEATURE_NAMES:
+            # Get the vocabulary of the categorical feature.
+            vocabulary = sorted(
+                [str(value) for value in list(train_data[feature_name].unique())]
+            )
             # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
@@ -581,7 +597,7 @@ def create_embedding_encoder(size=None):
     encoded_features = layers.concatenate(encoded_features, axis=1)
     # Apply dropout.
     encoded_features = layers.Dropout(rate=0.25)(encoded_features)
-    # Perform non-linear projection to the features.
+    # Perform non-linearity projection.
     encoded_features = layers.Dense(
         units=size if size else encoded_features.shape[-1], activation="gelu"
     )(encoded_features)
