@@ -407,10 +407,12 @@ MASTER = {
                         },
                         {
                             'path': 'mobilenet',
-                            'title': 'MobileNet and MobileNetV2',
+                            'title': 'MobileNet, MobileNetV2, and MobileNetV3',
                             'generate': [
                                 'tensorflow.keras.applications.MobileNet',
                                 'tensorflow.keras.applications.MobileNetV2',
+                                'tensorflow.keras.applications.MobileNetV3Small',
+                                'tensorflow.keras.applications.MobileNetV3Large',
                             ]
                         },
                         {
