@@ -25,7 +25,7 @@ predictor estimates chemical properties from the latent continuous vector repres
 of the molecule. Continuous representations allow the use of powerful gradient-based
 optimization to efficiently guide the search for optimized functional compounds.
 
-![intro](https://pubs.acs.org/na101/home/literatum/publisher/achs/journals/content/acscii/2018/acscii.2018.4.issue-2/acscentsci.7b00572/20180223/images/medium/oc-2017-00572f_0001.gif)
+![intro](https://bit.ly/3CtPMzM)
 
 **Figure (a)** - A diagram of the autoencoder used for molecular design, including the
 joint property prediction model. Starting from a discrete molecular representation, such
@@ -43,9 +43,9 @@ representations can then be decoded into SMILES strings, at which point their pr
 can be tested empirically.
 
 For MolGAN explanation and implementation please refer to the Keras Example [**WGAN-GP
-with R-GCN for the generation of small molecular
-graphs**](https://keras.io/examples/generative/wgan-graphs/) by Alexander Kensert. Most
-of the functions referred to in this example are from the mentioned Keras example.
+with R-GCN for the generation of small molecular graphs**](https://bit.ly/3pU6zXK) by
+Alexander Kensert. Most of the functions referred to in this example are from the
+mentioned Keras example.
 """
 
 """
@@ -76,11 +76,10 @@ RDLogger.DisableLog("rdApp.*")
 ## Dataset
 
 We would be using [**ZINC – A Free Database of Commercially Available Compounds for
-Virtual Screening**](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1360656/) dataset. The
-dataset comes with molecular formula in SMILE representation along with their respective
-molecular properties such as **logP**( Shows the water–octanal partition coefficient ),
-**SAS**( Shows the synthetic accessibility score ) and **QED**( Shows the Qualitative
-Estimate of Drug-likeness ).
+Virtual Screening**](https://bit.ly/3IVBI4x) dataset. The dataset comes with molecular
+formula in SMILE representation along with their respective molecular properties such as
+**logP**( Shows the water–octanal partition coefficient ), **SAS**( Shows the synthetic
+accessibility score ) and **QED**( Shows the Qualitative Estimate of Drug-likeness ).
 
 """
 
@@ -111,15 +110,15 @@ index_to_SMILE = dict((i, c) for i, c in enumerate(SMILE_CHARSET))
 atom_mapping = dict(SMILE_to_index)
 atom_mapping.update(index_to_SMILE)
 
-BATCH_SIZE = 32
-EPOCHS = 30
+BATCH_SIZE = 100
+EPOCHS = 10
 
 VAE_LR = 5e-4
 NUM_ATOMS = 120  # Maximum number of atoms
 
 ATOM_DIM = len(SMILE_CHARSET)  # Number of atom types
 BOND_DIM = 4 + 1  # Number of bond types
-LATENT_DIM = 64  # Size of the latent space
+LATENT_DIM = 435  # Size of the latent space
 
 
 def smiles_to_graph(smiles):
@@ -199,7 +198,7 @@ train_df = df.sample(frac=0.75, random_state=42)  # random state is a seed value
 train_df.reset_index(drop=True, inplace=True)
 
 adjacency_tensor, feature_tensor, qed_tensor = [], [], []
-for idx in range(5000):
+for idx in range(8000):
     adjacency, features = smiles_to_graph(train_df.loc[idx]["smiles"])
     qed = train_df.loc[idx]["qed"]
     adjacency_tensor.append(adjacency)
@@ -277,28 +276,24 @@ class RelationalGraphConvLayer(keras.layers.Layer):
 
 The Encoder has a graph adjacency matrix and feature matrix of the molecule as input. It
 is then allowed to parse through a Graph Convolution layer, and finally, flatten it to
-parse through dense layers and derive ```z_mean``` and ```log_var```.
+parse through dense layers and derive ```z_mean``` and `log_var`.
 
 **Graph convolutional layer**. The relational graph convolutional layers implement
 non-linearly transformed neighbourhood aggregations. We can define these layers as
 follows:
 
-```H^{l+1} = σ(D^{-1} @ A @ H^{l+1} @ W^{l})```
+`H_hat**(l+1) = σ(D_hat**(-1) * A_hat * H_hat**(l+1) * W**(l))`
 
-Where ```σ``` denotes the non-linear transformation (commonly a ReLU activation), A the
-adjacency tensor, ```H^{l}``` the feature tensor at the l:th layer, ```D^{-1}``` the
-inverse diagonal degree tensor of ```A```, and ```W^{l}``` the trainable weight tensor at
-the l:th layer. Specifically, for each bond type (relation), the degree tensor expresses,
-in the diagonal, the number of bonds attached to each atom.
+Where `σ` denotes the non-linear transformation (commonly a ReLU activation), A the
+adjacency tensor, `H_hat**(l)` the feature tensor at the l:th layer, `D_hat**(-1)` the
+inverse diagonal degree tensor of `A_hat`, and `W_hat**(l)` the trainable weight tensor
+at the l:th layer. Specifically, for each bond type (relation), the degree tensor
+expresses, in the diagonal, the number of bonds attached to each atom.
 
-Source - [WGAN-GP with R-GCN for the generation of small molecular
-graphs](https://keras.io/examples/generative/wgan-graphs/)
+Source- [generation of small molecular graphs](https://bit.ly/3pU6zXK)
 
 The Decoder has Latent space as input and finally predicts the graph adjacency matrix and
 feature matrix after parsing through dense layers.
-
-
-
 """
 
 
@@ -373,20 +368,19 @@ class Sampling(layers.Layer):
 
 """
 ## Building the VAE
+
 With this model we try to optimize four losses:
-
-
-* Categorical Crossentropy Loss
+* Categorical Crossentropy
 * KL Loss
 * Property prediction Loss
-* Graph Loss( Gredient Penalty )
+* Graph Loss( Gradient Penalty )
 
-The Categorical Crossentropy loss is to give a measure of the model's reconstruction
-capacity. The Property prediction loss is to estimate the mean squared error of the
-predicted and actual property after passing the ```z_mean(generated from the encoder)```
-through a property prediction model or property prediction layer. The property prediction
-of model is optimized through binary crossentropy and gradient penalty is further guided
-by the model's property(QED) prediction.
+The Categorical Crossentropy loss function is for giving a measure of the model's
+reconstruction capacity. The Property prediction loss is to estimate the mean squared
+error of the predicted and actual property after passing the `z_mean(generated from the
+encoder)` through a property prediction model or property prediction layer. The property
+prediction of the model is optimized through binary cross-entropy and the gradient
+penalty is further guided by the model's property(QED) prediction.
 """
 
 
@@ -410,7 +404,7 @@ class MoleculeGenerator(keras.Model):
                 graph_real, training=True
             )
             graph_generated = [gen_adjacency, gen_features]
-            total_loss = self.calculate_loss(
+            total_loss = self._compute_loss(
                 z_log_var, z_mean, qed_tensor, qed_pred, graph_real, graph_generated
             )
 
@@ -420,7 +414,7 @@ class MoleculeGenerator(keras.Model):
         self.train_total_loss_tracker.update_state(total_loss)
         return {"loss": self.train_total_loss_tracker.result()}
 
-    def calculate_loss(
+    def _compute_loss(
         self, z_log_var, z_mean, qed_true, qed_pred, graph_real, graph_generated
     ):
 
@@ -482,6 +476,22 @@ class MoleculeGenerator(keras.Model):
             + tf.reduce_mean(grads_features_penalty, axis=(-1))
         )
 
+    def inference(self, batch_size):
+        z = tf.random.normal((batch_size, LATENT_DIM))
+        reconstruction_adjacency, reconstruction_features = model.decoder.predict(z)
+        # obtain one-hot encoded adjacency tensor
+        adjacency = tf.argmax(reconstruction_adjacency, axis=1)
+        adjacency = tf.one_hot(adjacency, depth=BOND_DIM, axis=1)
+        # Remove potential self-loops from adjacency
+        adjacency = tf.linalg.set_diag(adjacency, tf.zeros(tf.shape(adjacency)[:-1]))
+        # obtain one-hot encoded feature tensor
+        features = tf.argmax(reconstruction_features, axis=2)
+        features = tf.one_hot(features, depth=ATOM_DIM, axis=2)
+        return [
+            graph_to_molecule([adjacency[i].numpy(), features[i].numpy()])
+            for i in range(batch_size)
+        ]
+
     def call(self, inputs):
         z_mean, log_var = self.encoder(inputs)
         z = Sampling()([z_mean, log_var])
@@ -521,39 +531,20 @@ model.compile(vae_optimizer)
 history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCHS)
 
 """
-## Inference
+## Model Inferencing
 
 We would be inferring our model to predict over random latent space and try to generate
-100 new valid molecules.
+new valid molecules.
 """
 
 """
-### Trying to generate 100 unique Molecules with the model.
+### Trying to generate unique Molecules with the model.
 """
 
-
-def sample(batch_size):
-
-    z = tf.random.normal((batch_size, LATENT_DIM))
-    reconstruction_adjacency, reconstruction_features = model.decoder.predict(z)
-    # obtain one-hot encoded adjacency tensor
-    adjacency = tf.argmax(reconstruction_adjacency, axis=1)
-    adjacency = tf.one_hot(adjacency, depth=BOND_DIM, axis=1)
-    # Remove potential self-loops from adjacency
-    adjacency = tf.linalg.set_diag(adjacency, tf.zeros(tf.shape(adjacency)[:-1]))
-    # obtain one-hot encoded feature tensor
-    features = tf.argmax(reconstruction_features, axis=2)
-    features = tf.one_hot(features, depth=ATOM_DIM, axis=2)
-    return [
-        graph_to_molecule([adjacency[i].numpy(), features[i].numpy()])
-        for i in range(batch_size)
-    ]
-
-
-molecules = sample(100)
+molecules = model.inference(1000)
 
 MolsToGridImage(
-    [m for m in molecules if m is not None][:100], molsPerRow=5, subImgSize=(260, 160)
+    [m for m in molecules if m is not None][:1000], molsPerRow=5, subImgSize=(260, 160)
 )
 
 """
@@ -561,7 +552,7 @@ MolsToGridImage(
 """
 
 
-def plot_label_clusters(vae, data, labels):
+def plot_latent(vae, data, labels):
     # display a 2D plot of the property in the latent space
     z_mean, _ = vae.encoder.predict(data)
     plt.figure(figsize=(12, 10))
@@ -572,4 +563,21 @@ def plot_label_clusters(vae, data, labels):
     plt.show()
 
 
-plot_label_clusters(model, [adjacency_tensor, feature_tensor], qed_tensor)
+plot_latent(model, [adjacency_tensor[:8000], feature_tensor[:8000]], qed_tensor[:8000])
+
+"""
+## Conclusion
+In this example, we tried combining the model architecture from two papers and training
+our model. "Automatic chemical design using a data-driven continuous representation of
+molecules" is a paper from 2016 and "MolGAN" is a paper from 2018. The former paper
+considers smiles input as a string and tries to generate molecule string in smiles format
+while the later paper considers smiles input as a graph which is a combination adjacency
+and feature matrix and generate molecule as a graph.
+
+The approach allows a new type of directed gradient-based search through chemical space.
+We observe the model's e ability to capture characteristic features of a molecular
+training set into the generative model, good predictive power when training jointly an
+autoencoder and a predictor, and the ability to perform model-based optimization of
+molecules in the smoothed latent space. Further higher training epochs and more examples to
+train over, the model could generate more novel molecules.
+"""
