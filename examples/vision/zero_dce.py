@@ -453,3 +453,8 @@ for val_image_file in test_low_light_images:
         ["Original", "PIL Autocontrast", "Enhanced"],
         (20, 12),
     )
+
+"""
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/low-light-image-enhancement) and try the demo on
+[Hugging Face Spaces](https://huggingface.co/spaces/keras-io/low-light-image-enhancement).
+"""

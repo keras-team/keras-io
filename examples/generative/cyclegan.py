@@ -650,3 +650,8 @@ for i, img in enumerate(test_horses.take(4)):
     prediction.save("predicted_img_{i}.png".format(i=i))
 plt.tight_layout()
 plt.show()
+
+""" 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/CycleGAN) and try
+the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/CycleGAN).
+"""

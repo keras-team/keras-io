@@ -287,3 +287,8 @@ for i in range(0, len(predicted_videos), 2):
         ]
     )
     display(box)
+
+"""
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conv-lstm)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conv-lstm).
+"""

@@ -52,3 +52,8 @@ x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
 
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
+
+"""
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/bidirectional-lstm-imdb)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/bidirectional_lstm_imdb).
+"""

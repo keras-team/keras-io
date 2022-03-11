@@ -665,4 +665,6 @@ accuracy.
 
 I would like to thank [JarvisLabs.ai](https://jarvislabs.ai/) for
 providing GPU credits for this project.
+
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/patch-conv-net).
 """

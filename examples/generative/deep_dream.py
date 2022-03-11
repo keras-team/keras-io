@@ -199,3 +199,8 @@ Display the result.
 """
 
 display(Image(result_prefix + ".png"))
+
+""" 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deep-dream) 
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/deep-dream).
+"""
