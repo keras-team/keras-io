@@ -769,6 +769,4 @@ series at [PyImageSearch](www.pyimagesearch.com).
     Mathworks for the camera calibration article.
 - [Mathew's video](https://www.youtube.com/watch?v=dPWLybp4LL0): A
     great video on NeRF.
-
-You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/NeRF).
 """

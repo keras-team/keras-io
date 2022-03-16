@@ -320,7 +320,4 @@ We can further improve the performance of this model with recipes like
 Conditional generation is also widely used in many modern image generation architectures like
 [VQ-GANs](https://arxiv.org/abs/2012.09841), [DALL-E](https://openai.com/blog/dall-e/),
 etc.
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conditional-gan)
-and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conditional-GAN).
 """

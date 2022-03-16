@@ -317,8 +317,3 @@ plot_predictions(train_images[:4], colormap, model=model)
 """
 
 plot_predictions(val_images[:4], colormap, model=model)
-
-"""
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deeplabv3p-resnet50)
-and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Human-Part-Segmentation).
-"""

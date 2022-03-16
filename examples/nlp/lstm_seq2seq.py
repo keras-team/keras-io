@@ -265,7 +265,3 @@ for seq_index in range(20):
     print("-")
     print("Input sentence:", input_texts[seq_index])
     print("Decoded sentence:", decoded_sentence)
-"""
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/char-lstm-seq2seq) and try the demo on 
-[Hugging Face Spaces](https://huggingface.co/spaces/keras-io/char-lstm-seq2seq).
-"""

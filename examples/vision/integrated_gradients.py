@@ -491,7 +491,3 @@ vis.visualize(
     morphological_cleanup=True,
     outlines=True,
 )
-
-"""
-You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/integrated_gradients).
-"""

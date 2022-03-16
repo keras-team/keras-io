@@ -21,6 +21,7 @@ from tensorflow.keras import layers
 
 max_features = 20000  # Only consider the top 20k words
 maxlen = 200  # Only consider the first 200 words of each movie review
+
 ```
 
 ---
@@ -39,29 +40,24 @@ x = layers.Bidirectional(layers.LSTM(64))(x)
 outputs = layers.Dense(1, activation="sigmoid")(x)
 model = keras.Model(inputs, outputs)
 model.summary()
+
 ```
 
 <div class="k-default-codeblock">
 ```
-2022-03-11 11:36:42.839833: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
 Model: "model"
 _________________________________________________________________
- Layer (type)                Output Shape              Param #   
+Layer (type)                 Output Shape              Param #   
 =================================================================
- input_1 (InputLayer)        [(None, None)]            0         
-                                                                 
- embedding (Embedding)       (None, None, 128)         2560000   
-                                                                 
- bidirectional (Bidirectiona  (None, None, 128)        98816     
- l)                                                              
-                                                                 
- bidirectional_1 (Bidirectio  (None, 128)              98816     
- nal)                                                            
-                                                                 
- dense (Dense)               (None, 1)                 129       
-                                                                 
+input_1 (InputLayer)         [(None, None)]            0         
+_________________________________________________________________
+embedding (Embedding)        (None, None, 128)         2560000   
+_________________________________________________________________
+bidirectional (Bidirectional (None, None, 128)         98816     
+_________________________________________________________________
+bidirectional_1 (Bidirection (None, 128)               98816     
+_________________________________________________________________
+dense (Dense)                (None, 1)                 129       
 =================================================================
 Total params: 2,757,761
 Trainable params: 2,757,761
@@ -80,10 +76,9 @@ _________________________________________________________________
 )
 print(len(x_train), "Training sequences")
 print(len(x_val), "Validation sequences")
-# Use pad_sequence to standardize sequence length:
-# this will truncate sequences longer than 200 words and zero-pad sequences shorter than 200 words.
 x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
 x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
+
 ```
 
 <div class="k-default-codeblock">
@@ -98,20 +93,19 @@ x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
 
 
 ```python
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+model.compile("adam", "binary_crossentropy", metrics=["accuracy"])
 model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
+
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-782/782 [==============================] - 245s 306ms/step - loss: 0.4843 - accuracy: 0.7652 - val_loss: 0.4998 - val_accuracy: 0.7963
+782/782 [==============================] - 220s 281ms/step - loss: 0.4117 - accuracy: 0.8083 - val_loss: 0.6497 - val_accuracy: 0.6983
 Epoch 2/2
-782/782 [==============================] - 250s 320ms/step - loss: 0.2704 - accuracy: 0.8950 - val_loss: 0.3253 - val_accuracy: 0.8691
-
-<keras.callbacks.History at 0x7faf3d2bf5d0>
+726/782 [==========================>...] - ETA: 11s - loss: 0.3170 - accuracy: 0.8683
 
 ```
 </div>
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/bidirectional-lstm-imdb) and try the demo on
-[Hugging Face Spaces](https://huggingface.co/spaces/keras-io/bidirectional_lstm_imdb).
+---
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/bidirectional-lstm-imdb) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/bidirectional_lstm_imdb).
