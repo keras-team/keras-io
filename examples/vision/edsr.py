@@ -1,8 +1,8 @@
 """
 Title: Enhanced Deep Residual Networks for Single Image Super-Resolution
 Author: Gitesh Chawda
-Date created: 07-03-2022
-Last modified: 07-03-2022
+Date created: 16-03-2022
+Last modified: 16-03-2022
 Description: Implementing EDSR model on DIV2K Dataset.
 """
 
@@ -35,9 +35,6 @@ super-resolution](https://arxiv.org/abs/2102.09351)
 Camparison Graph :
 
 <img src="https://dfzljdn9uc3pi.cloudfront.net/2021/cs-621/1/fig-11-2x.jpg" width="500" />
-
-
-
 """
 
 """
@@ -75,7 +72,7 @@ train = div2k_data.as_dataset(split="train", as_supervised=True)
 train_cache = train.cache()
 
 """
-## Flipping, Rotating and Cropping
+## Flip, crop and resize images
 """
 
 
@@ -135,6 +132,13 @@ def random_crop(lr_img, hr_img, hr_crop_size=96, scale=4):
 
 """
 ## Preparing tf.Data.Dataset object
+
+As the paper suggest to use RGB input patches of size 48×48 from lowres image with the
+corresponding highres patches. We augment the training data with random horizontal flips
+and 90 rotations.
+
+But we will be using 24x24 RGB input patches for lowres and corresponding highres
+patches(96x96).
 """
 
 ds = train_cache
@@ -152,25 +156,26 @@ processed
 ds = ds.prefetch(buffer_size=AUTOTUNE)
 
 """
-## Visualizing Images
+## Let's visualize a few sample images:
+
 """
 
-lr, hr = next(iter(ds))
+lowres, highres = next(iter(ds))
 
 # Hight Resolution Images
 plt.figure(figsize=(10, 10))
 for i in range(9):
     ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(hr[i].numpy().astype("uint8"))
-    plt.title(hr[i].shape)
+    plt.imshow(highres[i].numpy().astype("uint8"))
+    plt.title(highres[i].shape)
     plt.axis("off")
 
 # Low Resolution Images
 plt.figure(figsize=(10, 10))
 for i in range(9):
     ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(lr[i].numpy().astype("uint8"))
-    plt.title(lr[i].shape)
+    plt.imshow(lowres[i].numpy().astype("uint8"))
+    plt.title(lowres[i].shape)
     plt.axis("off")
 
 
@@ -184,7 +189,12 @@ def PSNR(sr, hr):
 
 
 """
-## Comparison of 3 residual blocks
+## Build a model
+
+In paper authors hav trained 3 models : EDSR, MDSR and baseline ,so for this code example
+we will be training baseline model.
+
+### Comparison of 3 residual blocks
 
 Authors compared 3 residual blocks from original resnet, SRResNet and proposed. The only
 difference is removal of batch normalization layer, Since batch normalization layers
@@ -216,7 +226,7 @@ def Upsampling(inputs, factor=2, **kwargs):
 def EDSR_MODEL():
     # Flexible Inputs to input_layer
     input_layer = layers.Input(shape=(None, None, 3))
-    # Normalizing Pixel Values
+    # Scaling Pixel Values
     x = layers.Rescaling(scale=1.0 / 255)(input_layer)
     x = x_new = layers.Conv2D(64, 3, padding="same")(x)
 
@@ -229,7 +239,7 @@ def EDSR_MODEL():
 
     x = Upsampling(x)
     x = layers.Conv2D(3, 3, padding="same")(x)
-    # Denormalizing
+
     output_layer = layers.Rescaling(scale=255)(x)
     return Model(input_layer, output_layer)
 
@@ -263,28 +273,29 @@ edsr = EDSR_MODEL()
 model = CustomModel(edsr.inputs, edsr.outputs)
 
 """
-## Training Model
+## Train the model
 """
 
-# Using Adam Optimizer with initial learning rate as 1e-4, changing learning rate after
+# Using adam optimizer with initial learning rate as 1e-4, changing learning rate after
 5000 steps to 5e-5
 optim_edsr = tf.keras.optimizers.Adam(
     learning_rate=keras.optimizers.schedules.PiecewiseConstantDecay(
         boundaries=[5000], values=[1e-4, 5e-5]
     )
 )
-# Compiling Model with loss as Mean Absolute Error(L1 Loss) and metric as psnr
+# Compiling model with loss as mean absolute error(L1 Loss) and metric as psnr
 model.compile(optimizer=optim_edsr, loss="mae", metrics=PSNR)
 model.fit(ds, epochs=100, steps_per_epoch=1000)
 
 """
-## Visualize Results
+## Run model prediction and plot the results
+
 """
 
 
 def Predict(model, img):
     """
-    Takes Low Resolution Image and Edsr Model and Returns Super Resolution Image
+    Takes low resolution image and edsr model and returns super resolution image
     """
     # Adding dummy dimension using tf.expand_dims and converting to float32 using tf.cast
     sr = model.predict_step(tf.cast(tf.expand_dims(img, axis=0), tf.float32))
@@ -304,14 +315,14 @@ test_cache = test.cache()
 
 def plot_results(x):
     """
-    Displays Low Resolution image and Super Resolution Image
+    Displays low resolution image and super resolution image
     """
     plt.figure(figsize=(24, 14))
-    plt.subplot(132), plt.imshow(x), plt.title("Low Resolution")
+    plt.subplot(132), plt.imshow(x), plt.title("Low resolution")
     plt.subplot(133), plt.imshow(Predict(model, x)), plt.title("Prediction")
     plt.show()
 
 
-for lr, hr in test.take(10):
-    lr = tf.image.random_crop(lr, (150, 150, 3))
-    plot_results(lr)
+for lowres, highres in test.take(10):
+    lowres = tf.image.random_crop(lowres, (150, 150, 3))
+    plot_results(lowres)
