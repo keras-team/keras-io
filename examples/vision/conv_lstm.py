@@ -239,6 +239,9 @@ plt.show()
 Finally, we'll pick a few examples from the validation set
 and construct some GIFs with them to see the model's
 predicted videos.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conv-lstm)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conv-lstm).
 """
 
 # Select a few random examples from the dataset.

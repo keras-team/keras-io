@@ -473,4 +473,7 @@ Moving forward one can:
 - Experiment with the various hyperparameters of the involution layer.
 - Build different models with the involution layer.
 - Try building a different kernel generation method altogether.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/involution)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/involution).
 """

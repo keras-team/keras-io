@@ -279,6 +279,8 @@ Finally, we'll pick a few examples from the validation set
 and construct some GIFs with them to see the model's
 predicted videos.
 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conv-lstm) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conv-lstm).
+
 
 ```python
 # Select a few random examples from the dataset.
@@ -337,5 +339,3 @@ for i in range(0, len(predicted_videos), 2):
 </div>
 
 ![Imgur](https://i.imgur.com/UYMTsw7.gif)
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conv-lstm) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conv-lstm).

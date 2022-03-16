@@ -702,6 +702,8 @@ def infer(original_image):
 We compare the test images from LOLDataset enhanced by MIRNet with images enhanced via
 the `PIL.ImageOps.autocontrast()` function.
 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/low-light-image-enhancement) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/low-light-image-enhancement).
+
 
 ```python
 for val_image_file in test_low_light_images:
@@ -772,5 +774,3 @@ for val_image_file in test_low_light_images:
 
 
 ![png](/img/examples/vision/zero_dce/zero_dce_25_14.png)
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/low-light-image-enhancement) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/low-light-image-enhancement).

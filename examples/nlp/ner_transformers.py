@@ -341,4 +341,6 @@ We trained it on the CoNLL 2003 shared task data and got an overall F1 score of 
 State of the art NER models fine-tuned on pretrained models such as BERT or ELECTRA can easily
 get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge
 of words as part of the pretraining process and the usage of subword tokenization.
-"""
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/ner-with-transformers)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ner_with_transformers)."""

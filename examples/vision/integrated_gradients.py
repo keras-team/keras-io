@@ -448,6 +448,7 @@ class GradVisualizer:
 
 """
 ## Let's test-drive it
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/integrated_gradients).
 """
 
 # 1. Convert the image to numpy array
