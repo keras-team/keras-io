@@ -66,7 +66,7 @@ CALLBACKS_MASTER = {
         {
             'path': 'backup_and_restore',
             'title': 'BackupAndRestore',
-            'generate': ['tensorflow.keras.callbacks.experimental.BackupAndRestore']
+            'generate': ['tensorflow.keras.callbacks.BackupAndRestore']
         },
     ]
 }
