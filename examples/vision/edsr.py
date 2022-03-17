@@ -87,8 +87,7 @@ def flip_left_right(lr_img, hr_img):
     return tf.cond(
         rn < 0.5,
         lambda: (lr_img, hr_img),
-        lambda: (tf.image.flip_left_right(lr_img), tf.image.flip_left_right(hr_img)),
-    )
+        lambda: (tf.image.flip_left_right(lr_img), tf.image.flip_left_right(hr_img)),)
 
 
 def random_rotate(lr_img, hr_img):
@@ -111,21 +110,17 @@ def random_crop(lr_img, hr_img, hr_crop_size=96, scale=4):
     lr_img_shape = tf.shape(lr_img)[:2]  # (height,width)
 
     lr_width = tf.random.uniform(
-        shape=(), maxval=lr_img_shape[1] - lr_crop_size + 1, dtype=tf.int32
-    )
+        shape=(), maxval=lr_img_shape[1] - lr_crop_size + 1, dtype=tf.int32)
     lr_height = tf.random.uniform(
-        shape=(), maxval=lr_img_shape[0] - lr_crop_size + 1, dtype=tf.int32
-    )
+        shape=(), maxval=lr_img_shape[0] - lr_crop_size + 1, dtype=tf.int32)
 
     hr_width = lr_width * scale
     hr_height = lr_height * scale
 
     lr_img_cropped = lr_img[
-        lr_height : lr_height + lr_crop_size, lr_width : lr_width + lr_crop_size
-    ]  # 24x24
+        lr_height : lr_height + lr_crop_size, lr_width : lr_width + lr_crop_size]  # 24x24
     hr_img_cropped = hr_img[
-        hr_height : hr_height + hr_crop_size, hr_width : hr_width + hr_crop_size
-    ]  # 96x96
+        hr_height : hr_height + hr_crop_size, hr_width : hr_width + hr_crop_size]  # 96x96
 
     return lr_img_cropped, hr_img_cropped
 
@@ -151,13 +146,11 @@ ds = ds.map(flip_left_right, num_parallel_calls=AUTOTUNE)
 ds = ds.batch(16)
 # Repeating Data, so that cardinality if dataset becomes infinte
 ds = ds.repeat(None)
-# prefetching allows later images to be prepared while the current image is being
-processed
+# prefetching allows later images to be prepared while the current image is being processed
 ds = ds.prefetch(buffer_size=AUTOTUNE)
 
 """
 ## Let's visualize a few sample images:
-
 """
 
 lowres, highres = next(iter(ds))
@@ -289,7 +282,6 @@ model.fit(ds, epochs=100, steps_per_epoch=1000)
 
 """
 ## Run model prediction and plot the results
-
 """
 
 
