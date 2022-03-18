@@ -859,3 +859,5 @@ supplementary of the paper.
 
 I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for
 generously helping with GPU credits.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).

@@ -585,3 +585,5 @@ architecture, like ResNet, and multi-class problems with many labels.
 In addition, large batch sizes and multi-layer projection heads
 improve its effectiveness. See the [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 paper for more details.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/supervised-contrastive-learning-cifar10) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/supervised-contrastive-learning).

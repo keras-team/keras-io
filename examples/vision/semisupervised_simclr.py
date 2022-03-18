@@ -659,4 +659,7 @@ Even though they are generally more dependent on the
 [model](https://generallyintelligent.ai/understanding-self-supervised-contrastive-learning.html)
 [architecture](https://arxiv.org/abs/2010.10241), they can improve
 performance at smaller batch sizes.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/semi-supervised-classification-simclr)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/semi-supervised-classification).
 """

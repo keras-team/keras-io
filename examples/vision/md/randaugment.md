@@ -405,3 +405,5 @@ RandAugment has shown great progress in improving the robustness of deep models 
 computer vision as shown in works like [Noisy Student Training](https://arxiv.org/abs/1911.04252) and
 [FixMatch](https://arxiv.org/abs/2001.07685). This makes RandAugment quite a useful
 recipe for training different vision models.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/randaugment) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/randaugment).
