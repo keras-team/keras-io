@@ -704,7 +704,8 @@ and then cool down the model with a slowly decaying learning rate. In the warmup
 decay, the learning rate linearly increases for the warmup steps and then decays with a
 cosine decay.
 """
-
+# Some code is taken from:
+# https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     """A LearningRateSchedule that uses a warmup cosine decay schedule."""
