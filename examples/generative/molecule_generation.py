@@ -8,44 +8,42 @@ Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug
 """
 ## Introduction
 
-In this example, we would be trying to solve one of the Drug Discovery tasks which are to
-generate molecules with the help of a Variational Autoencoder.
-We would be considering the research papers [**Automatic chemical design using a
-data-driven continuous representation of molecules**](https://arxiv.org/abs/1610.02415)
-and [**MolGAN: An implicit generative model for small molecular
-graphs**](https://arxiv.org/abs/1805.11973) as a reference.
+In this example, we use a Variational Autoencoder to generate molecules for drug discovery.
+We use the research papers
+[Automatic chemical design using a data-driven continuous representation of molecules](https://arxiv.org/abs/1610.02415)
+and [MolGAN: An implicit generative model for small molecular graphs](https://arxiv.org/abs/1805.11973)
+as a reference.
 
-The model explained in the paper **Automatic chemical design using a data-driven
-continuous representation of molecules** generate new molecules for efficient exploration
-and optimization through open-ended spaces of chemical compounds. The Model consists of
-three components: Encoder, Decoder and Predictor.  The encoder converts the discrete
-representation of a molecule into a real-valued continuous vector, and the decoder
-converts these continuous vectors back to discrete molecular representations. The
-predictor estimates chemical properties from the latent continuous vector representation
-of the molecule. Continuous representations allow the use of powerful gradient-based
+The model described in the paper **Automatic chemical design using a data-driven
+continuous representation of molecules** generates new molecules via efficient exploration
+of open-ended spaces of chemical compounds. The model consists of
+three components: Encoder, Decoder and Predictor. The Encoder converts the discrete
+representation of a molecule into a real-valued continuous vector, and the Decoder
+converts these continuous vectors back to discrete molecule representations. The
+Predictor estimates chemical properties from the latent continuous vector representation
+of the molecule. Continuous representations allow the use of gradient-based
 optimization to efficiently guide the search for optimized functional compounds.
 
 ![intro](https://bit.ly/3CtPMzM)
 
-**Figure (a)** - A diagram of the autoencoder used for molecular design, including the
-joint property prediction model. Starting from a discrete molecular representation, such
+**Figure (a)** - A diagram of the autoencoder used for molecule design, including the
+joint property prediction model. Starting from a discrete molecule representation, such
 as a SMILES string, the encoder network converts each molecule into a vector in the
-latent space, which is effectively a continuous molecular representation. Given a point
+latent space, which is effectively a continuous molecule representation. Given a point
 in the latent space, the decoder network produces a corresponding SMILES string. A
 multilayer perceptron network estimates the value of target properties associated with
 each molecule.
 
 **Figure (b)** - Gradient-based optimization in continuous latent space. After training a
-surrogate model f(z) to predict the properties of molecules based on their latent
-representation z, we can optimize f(z) with respect to z to find new latent
-representations expected to have high values of desired properties. These new latent
+surrogate model `f(z)` to predict the properties of molecules based on their latent
+representation `z`, we can optimize `f(z)` with respect to `z` to find new latent
+representations expected to match specific desired properties. These new latent
 representations can then be decoded into SMILES strings, at which point their properties
 can be tested empirically.
 
-For MolGAN explanation and implementation please refer to the Keras Example [**WGAN-GP
-with R-GCN for the generation of small molecular graphs**](https://bit.ly/3pU6zXK) by
-Alexander Kensert. Most of the functions referred to in this example are from the
-mentioned Keras example.
+For an explanation and implementation of MolGAN, please refer to the Keras Example
+[**WGAN-GP with R-GCN for the generation of small molecular graphs**](https://bit.ly/3pU6zXK) by
+Alexander Kensert. Many of the functions used in the present example are from the above Keras example.
 """
 
 """
@@ -53,7 +51,7 @@ mentioned Keras example.
 """
 
 """shell
-!pip -q install rdkit-pypi==2021.9.4
+pip -q install rdkit-pypi==2021.9.4
 """
 
 import ast
@@ -75,11 +73,11 @@ RDLogger.DisableLog("rdApp.*")
 """
 ## Dataset
 
-We would be using [**ZINC – A Free Database of Commercially Available Compounds for
-Virtual Screening**](https://bit.ly/3IVBI4x) dataset. The dataset comes with molecular
+We use the [**ZINC – A Free Database of Commercially Available Compounds for
+Virtual Screening**](https://bit.ly/3IVBI4x) dataset. The dataset comes with molecule
 formula in SMILE representation along with their respective molecular properties such as
-**logP**( Shows the water–octanal partition coefficient ), **SAS**( Shows the synthetic
-accessibility score ) and **QED**( Shows the Qualitative Estimate of Drug-likeness ).
+**logP** (water–octanal partition coefficient), **SAS** (synthetic
+accessibility score) and **QED** (Qualitative Estimate of Drug-likeness).
 
 """
 
@@ -191,7 +189,7 @@ def graph_to_molecule(graph):
 
 
 """
-##  Generate Training set
+##  Generate training set
 """
 
 train_df = df.sample(frac=0.75, random_state=42)  # random state is a seed value
@@ -274,26 +272,27 @@ class RelationalGraphConvLayer(keras.layers.Layer):
 """
 # Build the Encoder and Decoder
 
-The Encoder has a graph adjacency matrix and feature matrix of the molecule as input. It
-is then allowed to parse through a Graph Convolution layer, and finally, flatten it to
-parse through dense layers and derive ```z_mean``` and `log_var`.
+The Encoder takes as input a molecule's graph adjacency matrix and feature matrix.
+These features are processed via a Graph Convolution layer, then are flattened and
+processed by several Dense layers to derive `z_mean` and `log_var`, the
+latent-space representation of the molecule.
 
-**Graph convolutional layer**. The relational graph convolutional layers implement
+**Graph Convolution layer**: The relational graph convolution layer implements
 non-linearly transformed neighbourhood aggregations. We can define these layers as
 follows:
 
 `H_hat**(l+1) = σ(D_hat**(-1) * A_hat * H_hat**(l+1) * W**(l))`
 
-Where `σ` denotes the non-linear transformation (commonly a ReLU activation), A the
-adjacency tensor, `H_hat**(l)` the feature tensor at the l:th layer, `D_hat**(-1)` the
+Where `σ` denotes the non-linear transformation (commonly a ReLU activation), `A` the
+adjacency tensor, `H_hat**(l)` the feature tensor at the `l-th` layer, `D_hat**(-1)` the
 inverse diagonal degree tensor of `A_hat`, and `W_hat**(l)` the trainable weight tensor
-at the l:th layer. Specifically, for each bond type (relation), the degree tensor
+at the `l-th` layer. Specifically, for each bond type (relation), the degree tensor
 expresses, in the diagonal, the number of bonds attached to each atom.
 
-Source- [generation of small molecular graphs](https://bit.ly/3pU6zXK)
+Source: [generation of small molecular graphs](https://bit.ly/3pU6zXK)
 
-The Decoder has Latent space as input and finally predicts the graph adjacency matrix and
-feature matrix after parsing through dense layers.
+The Decoder takes as input the latent-space representation and predicts
+the graph adjacency matrix and feature matrix of the corresponding molecules.
 """
 
 
@@ -353,7 +352,7 @@ def get_decoder(dense_units, dropout_rate, latent_dim, adjacency_shape, feature_
 
 
 """
-## Build Sampling layer
+## Build the Sampling layer
 """
 
 
@@ -367,20 +366,21 @@ class Sampling(layers.Layer):
 
 
 """
-## Building the VAE
+## Build the VAE
 
-With this model we try to optimize four losses:
-* Categorical Crossentropy
-* KL Loss
-* Property prediction Loss
-* Graph Loss( Gradient Penalty )
+This model is trained to optimize four losses:
 
-The Categorical Crossentropy loss function is for giving a measure of the model's
-reconstruction capacity. The Property prediction loss is to estimate the mean squared
-error of the predicted and actual property after passing the `z_mean(generated from the
-encoder)` through a property prediction model or property prediction layer. The property
-prediction of the model is optimized through binary cross-entropy and the gradient
-penalty is further guided by the model's property(QED) prediction.
+* Categorical crossentropy
+* KL divergence loss
+* Property prediction loss
+* Graph loss (gradient penalty)
+
+The categorical crossentropy loss function measures the model's
+reconstruction accuracy. The Property prediction loss estimates the mean squared
+error between predicted and actual properties after running the latent representation
+through a property prediction model. The property
+prediction of the model is optimized via binary crossentropy. The gradient
+penalty is further guided by the model's property (QED) prediction.
 """
 
 
@@ -504,7 +504,7 @@ class MoleculeGenerator(keras.Model):
 
 
 """
-## Model Training
+## Train the model
 """
 
 vae_optimizer = tf.keras.optimizers.Adam(learning_rate=VAE_LR)
@@ -531,14 +531,13 @@ model.compile(vae_optimizer)
 history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCHS)
 
 """
-## Model Inferencing
+## Inference
 
-We would be inferring our model to predict over random latent space and try to generate
-new valid molecules.
+We use our model to generate new valid molecules from different points of the latent space.
 """
 
 """
-### Trying to generate unique Molecules with the model.
+### Generate unique Molecules with the model
 """
 
 molecules = model.inference(1000)
@@ -548,7 +547,7 @@ MolsToGridImage(
 )
 
 """
-## Display the latent space clusters with respect to Molecular properties( QAE ).
+## Display latent space clusters with respect to molecular properties (QAE)
 """
 
 
@@ -567,17 +566,13 @@ plot_latent(model, [adjacency_tensor[:8000], feature_tensor[:8000]], qed_tensor[
 
 """
 ## Conclusion
-In this example, we tried combining the model architecture from two papers and training
-our model. "Automatic chemical design using a data-driven continuous representation of
-molecules" is a paper from 2016 and "MolGAN" is a paper from 2018. The former paper
-considers smiles input as a string and tries to generate molecule string in smiles format
-while the later paper considers smiles input as a graph which is a combination adjacency
-and feature matrix and generate molecule as a graph.
 
-The approach allows a new type of directed gradient-based search through chemical space.
-We observe the model's e ability to capture characteristic features of a molecular
-training set into the generative model, good predictive power when training jointly an
-autoencoder and a predictor, and the ability to perform model-based optimization of
-molecules in the smoothed latent space. Further higher training epochs and more examples to
-train over, the model could generate more novel molecules.
+In this example, we combined model architectures from two papers,
+"Automatic chemical design using a data-driven continuous representation of
+molecules" from 2016 and the "MolGAN" paper from 2018. The former paper
+treats SMILES inputs as strings and seeks to generate molecule strings in SMILES format,
+while the later paper considers SMILES inputs as graphs (a combination of adjacency
+matrices and feature matrices) and seeks to generate molecules as graphs.
+
+This hybrid approach enables a new type of directed gradient-based search through chemical space.
 """
