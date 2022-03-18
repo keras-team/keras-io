@@ -91,7 +91,10 @@ Now let's load the papers data into a Pandas DataFrame.
 
 column_names = ["paper_id"] + [f"term_{idx}" for idx in range(1433)] + ["subject"]
 papers = pd.read_csv(
-    os.path.join(data_dir, "cora.content"), sep="\t", header=None, names=column_names,
+    os.path.join(data_dir, "cora.content"),
+    sep="\t",
+    header=None,
+    names=column_names,
 )
 print("Papers shape:", papers.shape)
 

@@ -122,7 +122,7 @@ def load_balanced_loss(router_probs, expert_mask):
     # num_expert elements. The two vectors will be pushed towards uniform allocation
     # when the dot product is minimized.
     loss = tf.reduce_mean(density_proxy * density) * tf.cast(
-        (num_experts ** 2), tf.dtypes.float32
+        (num_experts**2), tf.dtypes.float32
     )
     return loss
 

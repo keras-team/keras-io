@@ -119,7 +119,11 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(x3, hidden_units=[x.shape[-1] * 2, x.shape[-1]], dropout_rate=0.1,)
+        x3 = mlp(
+            x3,
+            hidden_units=[x.shape[-1] * 2, x.shape[-1]],
+            dropout_rate=0.1,
+        )
         # Skip connection 2.
         x = layers.Add()([x3, x2])
 

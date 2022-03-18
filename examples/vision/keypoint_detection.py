@@ -293,7 +293,9 @@ class KeyPointsDataset(keras.utils.Sequence):
 
             # Apply the augmentation pipeline.
             (new_image, new_kps_obj) = self.aug(image=current_image, keypoints=kps_obj)
-            batch_images[i,] = new_image
+            batch_images[
+                i,
+            ] = new_image
 
             # Parse the coordinates from the new keypoint object.
             kp_temp = []
@@ -302,7 +304,9 @@ class KeyPointsDataset(keras.utils.Sequence):
                 kp_temp.append(np.nan_to_num(keypoint.y))
 
             # More on why this reshaping later.
-            batch_keypoints[i,] = np.array(kp_temp).reshape(1, 1, 24 * 2)
+            batch_keypoints[i,] = np.array(
+                kp_temp
+            ).reshape(1, 1, 24 * 2)
 
         # Scale the coordinates to [0, 1] range.
         batch_keypoints = batch_keypoints / IMG_SIZE

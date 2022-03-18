@@ -251,7 +251,10 @@ def train_and_evaluate(
         callbacks = None
 
     model.fit(
-        train_ds, validation_data=val_ds, epochs=epochs, callbacks=callbacks,
+        train_ds,
+        validation_data=val_ds,
+        epochs=epochs,
+        callbacks=callbacks,
     )
 
     _, accuracy = model.evaluate(val_ds)

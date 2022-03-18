@@ -206,7 +206,7 @@ def encode_position(x):
     positions = [x]
     for i in range(POS_ENCODE_DIMS):
         for fn in [tf.sin, tf.cos]:
-            positions.append(fn(2.0 ** i * x))
+            positions.append(fn(2.0**i * x))
     return tf.concat(positions, axis=-1)
 
 

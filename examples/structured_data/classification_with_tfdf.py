@@ -75,8 +75,16 @@ CSV_HEADER = [
 ][2:]
 CSV_HEADER.append("income_level")
 
-train_data = pd.read_csv(f"{BASE_PATH}.data.gz", header=None, names=CSV_HEADER,)
-test_data = pd.read_csv(f"{BASE_PATH}.test.gz", header=None, names=CSV_HEADER,)
+train_data = pd.read_csv(
+    f"{BASE_PATH}.data.gz",
+    header=None,
+    names=CSV_HEADER,
+)
+test_data = pd.read_csv(
+    f"{BASE_PATH}.test.gz",
+    header=None,
+    names=CSV_HEADER,
+)
 
 """
 ## Define dataset metadata

@@ -201,7 +201,13 @@ def prepare_all_videos(df, root_dir):
         frames = frames[None, ...]
 
         # Initialize placeholders to store the masks and features of the current video.
-        temp_frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
+        temp_frame_mask = np.zeros(
+            shape=(
+                1,
+                MAX_SEQ_LENGTH,
+            ),
+            dtype="bool",
+        )
         temp_frame_features = np.zeros(
             shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32"
         )
@@ -216,8 +222,12 @@ def prepare_all_videos(df, root_dir):
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
-        frame_features[idx,] = temp_frame_features.squeeze()
-        frame_masks[idx,] = temp_frame_mask.squeeze()
+        frame_features[
+            idx,
+        ] = temp_frame_features.squeeze()
+        frame_masks[
+            idx,
+        ] = temp_frame_mask.squeeze()
 
     return (frame_features, frame_masks), labels
 
@@ -304,7 +314,13 @@ data from the UCF101 dataset using [the notebook](https://colab.research.google.
 
 def prepare_single_video(frames):
     frames = frames[None, ...]
-    frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
+    frame_mask = np.zeros(
+        shape=(
+            1,
+            MAX_SEQ_LENGTH,
+        ),
+        dtype="bool",
+    )
     frame_features = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
 
     for i, batch in enumerate(frames):

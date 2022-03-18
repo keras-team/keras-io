@@ -234,7 +234,10 @@ tutorial from Google.
 print("loading the CIFAR10 dataset...")
 (
     (train_images, train_labels),
-    (test_images, test_labels,),
+    (
+        test_images,
+        test_labels,
+    ),
 ) = keras.datasets.cifar10.load_data()
 
 # Normalize pixel values to be between 0 and 1.

@@ -82,7 +82,9 @@ def read_tfrecord(example, labeled):
             "target": tf.io.FixedLenFeature([], tf.int64),
         }
         if labeled
-        else {"image": tf.io.FixedLenFeature([], tf.string),}
+        else {
+            "image": tf.io.FixedLenFeature([], tf.string),
+        }
     )
     example = tf.io.parse_single_example(example, tfrecord_format)
     image = decode_image(example["image"])

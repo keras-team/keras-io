@@ -147,7 +147,8 @@ def DilatedSpatialPyramidPooling(dspp_input):
     x = layers.AveragePooling2D(pool_size=(dims[-3], dims[-2]))(dspp_input)
     x = convolution_block(x, kernel_size=1, use_bias=True)
     out_pool = layers.UpSampling2D(
-        size=(dims[-3] // x.shape[1], dims[-2] // x.shape[2]), interpolation="bilinear",
+        size=(dims[-3] // x.shape[1], dims[-2] // x.shape[2]),
+        interpolation="bilinear",
     )(x)
 
     out_1 = convolution_block(dspp_input, kernel_size=1, dilation_rate=1)

@@ -146,7 +146,7 @@ def wasserstein_loss(y_true, y_pred):
 
 
 def pixel_norm(x, epsilon=1e-8):
-    return x / tf.math.sqrt(tf.reduce_mean(x ** 2, axis=-1, keepdims=True) + epsilon)
+    return x / tf.math.sqrt(tf.reduce_mean(x**2, axis=-1, keepdims=True) + epsilon)
 
 
 def minibatch_std(input_tensor, epsilon=1e-8):
@@ -309,13 +309,13 @@ class Generator:
             10: 16,
         }  # 1024x1024
 
-        start_res = 2 ** start_res_log2
+        start_res = 2**start_res_log2
         self.input_shape = (start_res, start_res, self.filter_nums[start_res_log2])
         self.g_input = layers.Input(self.input_shape, name="generator_input")
 
         for i in range(start_res_log2, target_res_log2 + 1):
             filter_num = self.filter_nums[i]
-            res = 2 ** i
+            res = 2**i
             self.noise_inputs.append(
                 layers.Input(shape=(res, res, 1), name=f"noise_{res}x{res}")
             )
@@ -360,7 +360,7 @@ class Generator:
         return keras.Model([input_tensor, w, noise], x, name=f"genblock_{res}x{res}")
 
     def grow(self, res_log2):
-        res = 2 ** res_log2
+        res = 2**res_log2
 
         num_stages = res_log2 - self.start_res_log2 + 1
         w = layers.Input(shape=(self.num_stages, 512), name="w")
@@ -417,7 +417,7 @@ class Discriminator:
         self.from_rgb = []
 
         for res_log2 in range(self.start_res_log2, self.target_res_log2 + 1):
-            res = 2 ** res_log2
+            res = 2**res_log2
             filter_num = self.filter_nums[res_log2]
             from_rgb = Sequential(
                 [
@@ -463,7 +463,7 @@ class Discriminator:
         return keras.Model(input_tensor, x, name=f"d_{res}")
 
     def grow(self, res_log2):
-        res = 2 ** res_log2
+        res = 2**res_log2
         idx = res_log2 - self.start_res_log2
         alpha = layers.Input(shape=(1), name="d_alpha")
         input_image = layers.Input(shape=(res, res, 3), name="input_image")
@@ -520,7 +520,7 @@ class StyleGAN(tf.keras.Model):
     ):
         self.loss_weights = kwargs.pop("loss_weights", self.loss_weights)
         self.steps_per_epoch = steps_per_epoch
-        if res != 2 ** self.current_res_log2:
+        if res != 2**self.current_res_log2:
             self.grow_model(res)
             self.d_optimizer = d_optimizer
             self.g_optimizer = g_optimizer
@@ -537,7 +537,7 @@ class StyleGAN(tf.keras.Model):
 
     def generate_noise(self, batch_size):
         noise = [
-            tf.random.normal((batch_size, 2 ** res, 2 ** res, 1))
+            tf.random.normal((batch_size, 2**res, 2**res, 1))
             for res in range(self.start_res_log2, self.target_res_log2 + 1)
         ]
         return noise
@@ -607,7 +607,7 @@ class StyleGAN(tf.keras.Model):
 
             # drift loss
             all_pred = tf.concat([pred_fake, pred_real], axis=0)
-            drift_loss = self.loss_weights["drift"] * tf.reduce_mean(all_pred ** 2)
+            drift_loss = self.loss_weights["drift"] * tf.reduce_mean(all_pred**2)
 
             d_loss = loss_fake + loss_real + gradient_penalty + drift_loss
 
@@ -687,7 +687,7 @@ def train(
     target_res_log2 = int(np.log2(target_res))
 
     for res_log2 in range(start_res_log2, target_res_log2 + 1):
-        res = 2 ** res_log2
+        res = 2**res_log2
         for phase in ["TRANSITION", "STABLE"]:
             if res == start_res and phase == "TRANSITION":
                 continue

@@ -394,7 +394,7 @@ def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
     mse = keras.losses.MeanSquaredError()
 
     def exp_func(x, a, b):
-        return a * x ** b
+        return a * x**b
 
     # Define variables, learning rate and number of epochs for fitting with TF
     a = tf.Variable(0.0)

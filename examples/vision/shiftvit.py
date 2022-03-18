@@ -222,7 +222,10 @@ class MLP(layers.Layer):
 
         self.mlp = keras.Sequential(
             [
-                layers.Dense(units=initial_filters, activation=tf.nn.gelu,),
+                layers.Dense(
+                    units=initial_filters,
+                    activation=tf.nn.gelu,
+                ),
                 layers.Dropout(rate=self.mlp_dropout_rate),
                 layers.Dense(units=input_channels),
                 layers.Dropout(rate=self.mlp_dropout_rate),
@@ -794,7 +797,10 @@ warmup_steps = int(total_steps * warmup_epoch_percentage)
 
 # Initialize the warmupcosine schedule.
 scheduled_lrs = WarmUpCosine(
-    lr_start=1e-5, lr_max=1e-3, warmup_steps=warmup_steps, total_steps=total_steps,
+    lr_start=1e-5,
+    lr_max=1e-3,
+    warmup_steps=warmup_steps,
+    total_steps=total_steps,
 )
 
 # Get the optimizer.
@@ -818,7 +824,11 @@ history = model.fit(
     epochs=config.epochs,
     validation_data=val_ds,
     callbacks=[
-        keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=5, mode="auto",)
+        keras.callbacks.EarlyStopping(
+            monitor="val_accuracy",
+            patience=5,
+            mode="auto",
+        )
     ],
 )
 

@@ -403,7 +403,8 @@ def run_experiment(model):
 
     # Create LAMB optimizer with weight decay.
     optimizer = tfa.optimizers.LAMB(
-        learning_rate=learning_rate, weight_decay_rate=weight_decay,
+        learning_rate=learning_rate,
+        weight_decay_rate=weight_decay,
     )
 
     # Compile the model.

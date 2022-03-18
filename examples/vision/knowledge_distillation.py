@@ -72,7 +72,7 @@ class Distiller(keras.Model):
         alpha=0.1,
         temperature=3,
     ):
-        """ Configure the distiller.
+        """Configure the distiller.
 
         Args:
             optimizer: Keras optimizer for the student weights

@@ -307,7 +307,7 @@ with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
 
 
 def get_data(wavs, id_to_text, maxlen=50):
-    """ returns mapping of audio paths and transcription texts """
+    """returns mapping of audio paths and transcription texts"""
     data = []
     for w in wavs:
         id = w.split("/")[-1].split(".")[0]
@@ -464,7 +464,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
         self.steps_per_epoch = steps_per_epoch
 
     def calculate_lr(self, epoch):
-        """ linear warm up - linear decay """
+        """linear warm up - linear decay"""
         warmup_lr = (
             self.init_lr
             + ((self.lr_after_warmup - self.init_lr) / (self.warmup_epochs - 1)) * epoch
@@ -505,7 +505,8 @@ model = Transformer(
     num_classes=34,
 )
 loss_fn = tf.keras.losses.CategoricalCrossentropy(
-    from_logits=True, label_smoothing=0.1,
+    from_logits=True,
+    label_smoothing=0.1,
 )
 
 learning_rate = CustomSchedule(

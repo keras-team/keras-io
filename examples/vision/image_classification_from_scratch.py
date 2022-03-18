@@ -131,7 +131,10 @@ helps expose the model to different aspects of the training data while slowing d
 """
 
 data_augmentation = keras.Sequential(
-    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
+    [
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
+    ]
 )
 
 """
@@ -294,7 +297,10 @@ model.compile(
     metrics=["accuracy"],
 )
 model.fit(
-    train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
+    train_ds,
+    epochs=epochs,
+    callbacks=callbacks,
+    validation_data=val_ds,
 )
 
 """

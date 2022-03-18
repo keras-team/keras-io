@@ -189,7 +189,7 @@ def get_model(upscale_factor=3, channels=1):
     x = layers.Conv2D(64, 5, **conv_args)(inputs)
     x = layers.Conv2D(64, 3, **conv_args)(x)
     x = layers.Conv2D(32, 3, **conv_args)(x)
-    x = layers.Conv2D(channels * (upscale_factor ** 2), 3, **conv_args)(x)
+    x = layers.Conv2D(channels * (upscale_factor**2), 3, **conv_args)(x)
     outputs = tf.nn.depth_to_space(x, upscale_factor)
 
     return keras.Model(inputs, outputs)
@@ -336,7 +336,8 @@ optimizer = keras.optimizers.Adam(learning_rate=0.001)
 epochs = 100
 
 model.compile(
-    optimizer=optimizer, loss=loss_fn,
+    optimizer=optimizer,
+    loss=loss_fn,
 )
 
 model.fit(

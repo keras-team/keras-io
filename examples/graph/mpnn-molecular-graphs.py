@@ -353,8 +353,7 @@ completely separated from the other subgraphs.
 
 
 def prepare_batch(x_batch, y_batch):
-    """Merges (sub)graphs of batch into a single global (disconnected) graph
-    """
+    """Merges (sub)graphs of batch into a single global (disconnected) graph"""
 
     atom_features, bond_features, pair_indices = x_batch
 
@@ -428,7 +427,9 @@ class EdgeNetwork(layers.Layer):
             name="kernel",
         )
         self.bias = self.add_weight(
-            shape=(self.atom_dim * self.atom_dim), initializer="zeros", name="bias",
+            shape=(self.atom_dim * self.atom_dim),
+            initializer="zeros",
+            name="bias",
         )
         self.built = True
 
@@ -550,7 +551,10 @@ class TransformerEncoderReadout(layers.Layer):
         self.partition_padding = PartitionPadding(batch_size)
         self.attention = layers.MultiHeadAttention(num_heads, embed_dim)
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -609,7 +613,8 @@ def MPNNModel(
 
 
 mpnn = MPNNModel(
-    atom_dim=x_train[0][0][0].shape[0], bond_dim=x_train[1][0][0].shape[0],
+    atom_dim=x_train[0][0][0].shape[0],
+    bond_dim=x_train[1][0][0].shape[0],
 )
 
 mpnn.compile(

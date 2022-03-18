@@ -371,7 +371,7 @@ class DepthEstimationModel(tf.keras.Model):
         ssim_loss = tf.reduce_mean(
             1
             - tf.image.ssim(
-                target, pred, max_val=WIDTH, filter_size=7, k1=0.01 ** 2, k2=0.03 ** 2
+                target, pred, max_val=WIDTH, filter_size=7, k1=0.01**2, k2=0.03**2
             )
         )
         # Point-wise depth
@@ -433,7 +433,10 @@ class DepthEstimationModel(tf.keras.Model):
 ## Model training
 """
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=LR, amsgrad=False,)
+optimizer = tf.keras.optimizers.Adam(
+    learning_rate=LR,
+    amsgrad=False,
+)
 model = DepthEstimationModel()
 # Define the loss function
 cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
@@ -449,7 +452,9 @@ validation_loader = DataGenerator(
     data=df[260:].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
 )
 model.fit(
-    train_loader, epochs=EPOCHS, validation_data=validation_loader,
+    train_loader,
+    epochs=EPOCHS,
+    validation_data=validation_loader,
 )
 
 """

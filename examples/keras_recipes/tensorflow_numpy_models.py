@@ -200,7 +200,12 @@ model.compile(
     loss="mean_squared_error",
     metrics=[keras.metrics.MeanAbsolutePercentageError()],
 )
-model.build((None, 13,))
+model.build(
+    (
+        None,
+        13,
+    )
+)
 model.summary()
 
 evaluate_model(model)
@@ -228,7 +233,12 @@ model.compile(
     loss="mean_squared_error",
     metrics=[keras.metrics.MeanAbsolutePercentageError()],
 )
-model.build((None, 13,))
+model.build(
+    (
+        None,
+        13,
+    )
+)
 model.summary()
 
 evaluate_model(model)
@@ -262,7 +272,12 @@ with strategy.scope():
         loss="mean_squared_error",
         metrics=[keras.metrics.MeanAbsolutePercentageError()],
     )
-    model.build((None, 13,))
+    model.build(
+        (
+            None,
+            13,
+        )
+    )
     model.summary()
     evaluate_model(model)
 

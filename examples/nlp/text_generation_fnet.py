@@ -172,7 +172,10 @@ class FNetEncoder(layers.Layer):
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -237,7 +240,10 @@ class FNetDecoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(latent_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(latent_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()

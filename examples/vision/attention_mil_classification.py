@@ -284,7 +284,7 @@ for each bag (after the model has been trained) can be seen.
 
 def plot(data, labels, bag_class, predictions=None, attention_weights=None):
 
-    """"Utility for plotting bags and attention weights.
+    """ "Utility for plotting bags and attention weights.
 
     Args:
       data: Input data that contains the bags of instances.
@@ -445,7 +445,9 @@ def train(train_data, train_labels, val_data, val_labels, model):
 
     # Compile model.
     model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"],
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
     )
 
     # Fit model.

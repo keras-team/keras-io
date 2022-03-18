@@ -271,7 +271,11 @@ example in the batch) which indicates the "realness" of the associated input
 
 
 def GraphGenerator(
-    dense_units, dropout_rate, latent_dim, adjacency_shape, feature_shape,
+    dense_units,
+    dropout_rate,
+    latent_dim,
+    adjacency_shape,
+    feature_shape,
 ):
     z = keras.layers.Input(shape=(LATENT_DIM,))
     # Propagate through one or more densely connected layers

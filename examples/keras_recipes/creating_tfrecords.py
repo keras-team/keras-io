@@ -83,7 +83,10 @@ annotations_url = (
 # Download image files
 if not os.path.exists(images_dir):
     image_zip = tf.keras.utils.get_file(
-        "images.zip", cache_dir=os.path.abspath("."), origin=images_url, extract=True,
+        "images.zip",
+        cache_dir=os.path.abspath("."),
+        origin=images_url,
+        extract=True,
     )
     os.remove(image_zip)
 

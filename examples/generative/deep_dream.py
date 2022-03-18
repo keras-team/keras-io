@@ -173,7 +173,7 @@ original_shape = original_img.shape[1:3]
 
 successive_shapes = [original_shape]
 for i in range(1, num_octave):
-    shape = tuple([int(dim / (octave_scale ** i)) for dim in original_shape])
+    shape = tuple([int(dim / (octave_scale**i)) for dim in original_shape])
     successive_shapes.append(shape)
 successive_shapes = successive_shapes[::-1]
 shrunk_original_img = tf.image.resize(original_img, successive_shapes[0])

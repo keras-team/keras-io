@@ -165,7 +165,10 @@ def get_train_augmentation_model():
 
 def get_test_augmentation_model():
     model = keras.Sequential(
-        [layers.Rescaling(1 / 255.0), layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
+        [
+            layers.Rescaling(1 / 255.0),
+            layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
+        ],
         name="test_data_augmentation",
     )
     return model
@@ -788,7 +791,10 @@ mae_model.compile(
     optimizer=optimizer, loss=keras.losses.MeanSquaredError(), metrics=["mae"]
 )
 history = mae_model.fit(
-    train_ds, epochs=EPOCHS, validation_data=val_ds, callbacks=train_callbacks,
+    train_ds,
+    epochs=EPOCHS,
+    validation_data=val_ds,
+    callbacks=train_callbacks,
 )
 
 # Measure its performance.

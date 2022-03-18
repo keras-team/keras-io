@@ -113,7 +113,10 @@ test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 def get_preprocessing():
     model = keras.Sequential(
-        [layers.Rescaling(1 / 255.0), layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
+        [
+            layers.Rescaling(1 / 255.0),
+            layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
+        ],
         name="preprocessing",
     )
     return model
@@ -204,7 +207,9 @@ class SqueezeExcite(layers.Layer):
         filters = input_shape[-1]
         self.squeeze = layers.GlobalAveragePooling2D(keepdims=True)
         self.reduction = layers.Dense(
-            units=filters // self.ratio, activation="relu", use_bias=False,
+            units=filters // self.ratio,
+            activation="relu",
+            use_bias=False,
         )
         self.excite = layers.Dense(units=filters, activation="sigmoid", use_bias=False)
         self.multiply = layers.Multiply()
@@ -242,7 +247,11 @@ class Trunk(layers.Layer):
     def get_config(self):
         config = super().get_config()
         config.update(
-            {"ratio": self.ratio, "dimensions": self.dimensions, "depth": self.depth,}
+            {
+                "ratio": self.ratio,
+                "dimensions": self.dimensions,
+                "depth": self.depth,
+            }
         )
         return config
 
@@ -320,7 +329,9 @@ class AttentionPooling(layers.Layer):
 
     def build(self, input_shape):
         self.attention = layers.MultiHeadAttention(
-            num_heads=1, key_dim=self.dimensions, dropout=0.2,
+            num_heads=1,
+            key_dim=self.dimensions,
+            dropout=0.2,
         )
         self.layer_norm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layer_norm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -591,7 +602,10 @@ patch_conv_net.compile(
     ],
 )
 history = patch_conv_net.fit(
-    train_ds, epochs=EPOCHS, validation_data=val_ds, callbacks=train_callbacks,
+    train_ds,
+    epochs=EPOCHS,
+    validation_data=val_ds,
+    callbacks=train_callbacks,
 )
 
 # Evaluate the model with the test dataset.
