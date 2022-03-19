@@ -734,7 +734,8 @@ cosine decay.
 
 
 ```python
-
+# Some code is taken from:
+# https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     """A LearningRateSchedule that uses a warmup cosine decay schedule."""
 
