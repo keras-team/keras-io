@@ -52,7 +52,7 @@ Alexander Kensert. Many of the functions used in the present example are from th
 RDKit is an open source toolkit for cheminformatics and machine learning. This toolkit come in handy
 if one is into drug discovery domain. In this example, RDKit is used to conviently
 and efficiently transform SMILES to molecule objects, and then from those obtain sets of atoms 
-and bonds
+and bonds.
 
 (Text below taken from this [tutorial](https://bit.ly/3pU6zXK)).
 SMILES expresses the structure of a given molecule in the form of an ASCII string.
