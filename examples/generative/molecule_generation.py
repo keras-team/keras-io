@@ -54,12 +54,14 @@ if one is into drug discovery domain. In this example, RDKit is used to convient
 and efficiently transform SMILES to molecule objects, and then from those obtain sets of atoms 
 and bonds.
 
-(Text below taken from this [tutorial](https://bit.ly/3pU6zXK)).
-SMILES expresses the structure of a given molecule in the form of an ASCII string.
+Quoting from
+[WGAN-GP with R-GCN for the generation of small molecular graphs](https://keras.io/examples/generative/wgan-graphs/)):
+
+**"SMILES expresses the structure of a given molecule in the form of an ASCII string.
 The SMILES string is a compact encoding which, for smaller molecules, is relatively human-readable.
 Encoding molecules as a string both alleviates and facilitates database and/or web searching
 of a given molecule. RDKit uses algorithms to accurately transform a given SMILES to 
-a molecule object, which can then be used to compute a great number of molecular properties/features.
+a molecule object, which can then be used to compute a great number of molecular properties/features."**
 """
 
 """shell
@@ -394,10 +396,12 @@ through a property prediction model. The property
 prediction of the model is optimized via binary crossentropy. The gradient
 penalty is further guided by the model's property (QED) prediction.
 
-The 1-Lipschitz continuity means the norm of the gradient is atmost 1 at evey single 
-point of the function. A gradient penalty is an alternative soft constraint on the 
+A gradient penalty is an alternative soft constraint on the 
 1-Lipschitz continuity as an improvement upon the gradient clipping scheme from the 
-original neural network. It adds a regularization term to the loss function.
+original neural network
+("1-Lipschitz continuity" means that the norm of the gradient is at most 1 at evey single 
+point of the function).
+It adds a regularization term to the loss function.
 """
 
 
