@@ -129,6 +129,16 @@ MASTER = {
                                     'title': 'InverseTimeDecay',
                                     'generate': ['tensorflow.keras.optimizers.schedules.InverseTimeDecay']
                                 },
+                                {
+                                    'path': 'cosine_decay',
+                                    'title': 'CosineDecay',
+                                    'generate': ['tensorflow.keras.optimizers.schedules.CosineDecay']
+                                },
+                                {
+                                    'path': 'cosine_decay_restarts',
+                                    'title': 'CosineDecayRestarts',
+                                    'generate': ['tensorflow.keras.optimizers.schedules.CosineDecayRestarts']
+                                },
                             ]
                         },
                     ]
