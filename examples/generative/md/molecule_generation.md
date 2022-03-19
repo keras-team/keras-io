@@ -1,11 +1,16 @@
-"""
-Title: Drug Molecule Generation with VAE
-Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
-Date created: 2022/03/10
-Last modified: 2022/03/19
-Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
-"""
-"""
+# Drug Molecule Generation with VAE
+
+**Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>
+**Date created:** 2022/03/10<br>
+**Last modified:** 2022/03/19<br>
+**Description:** Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/molecule_generation.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/molecule_generation.py)
+
+
+
+---
 ## Introduction
 
 In this example, we use a Variational Autoencoder to generate molecules for drug discovery.
@@ -44,9 +49,8 @@ can be tested empirically.
 For an explanation and implementation of MolGAN, please refer to the Keras Example
 [**WGAN-GP with R-GCN for the generation of small molecular graphs**](https://bit.ly/3pU6zXK) by
 Alexander Kensert. Many of the functions used in the present example are from the above Keras example.
-"""
 
-"""
+---
 ## Setup
 
 RDKit is an open source toolkit for cheminformatics and machine learning. This toolkit come in handy
@@ -62,12 +66,13 @@ The SMILES string is a compact encoding which, for smaller molecules, is relativ
 Encoding molecules as a string both alleviates and facilitates database and/or web searching
 of a given molecule. RDKit uses algorithms to accurately transform a given SMILES to
 a molecule object, which can then be used to compute a great number of molecular properties/features."**
-"""
 
-"""shell
-pip -q install rdkit-pypi==2021.9.4
-"""
 
+```python
+!pip -q install rdkit-pypi==2021.9.4
+```
+
+```python
 import ast
 
 import pandas as pd
@@ -83,8 +88,15 @@ from rdkit.Chem import BondType
 from rdkit.Chem.Draw import MolsToGridImage
 
 RDLogger.DisableLog("rdApp.*")
+```
+<div class="k-default-codeblock">
+```
+[K     |████████████████████████████████| 20.6 MB 1.2 MB/s 
+[?25h
 
-"""
+```
+</div>
+---
 ## Dataset
 
 We use the [**ZINC – A Free Database of Commercially Available Compounds for
@@ -93,8 +105,8 @@ formula in SMILE representation along with their respective molecular properties
 **logP** (water–octanal partition coefficient), **SAS** (synthetic
 accessibility score) and **QED** (Qualitative Estimate of Drug-likeness).
 
-"""
 
+```python
 csv_path = keras.utils.get_file(
     "/content/250k_rndm_zinc_drugs_clean_3.csv",
     "https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv",
@@ -103,11 +115,91 @@ csv_path = keras.utils.get_file(
 df = pd.read_csv("/content/250k_rndm_zinc_drugs_clean_3.csv")
 df["smiles"] = df["smiles"].apply(lambda s: s.replace("\n", ""))
 df.head()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv
+22609920/22606589 [==============================] - 0s 0us/step
+22618112/22606589 [==============================] - 0s 0us/step
+
+```
+</div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<div class="k-default-codeblock">
+```
+.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+```
+</div>
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>smiles</th>
+      <th>logP</th>
+      <th>qed</th>
+      <th>SAS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>CC(C)(C)c1ccc2occ(CC(=O)Nc3ccccc3F)c2c1</td>
+      <td>5.05060</td>
+      <td>0.702012</td>
+      <td>2.084095</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>C[C@@H]1CC(Nc2cncc(-c3nncn3C)c2)C[C@@H](C)C1</td>
+      <td>3.11370</td>
+      <td>0.928975</td>
+      <td>3.432004</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>N#Cc1ccc(-c2ccc(O[C@@H](C(=O)N3CCCC3)c3ccccc3)...</td>
+      <td>4.96778</td>
+      <td>0.599682</td>
+      <td>2.470633</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>CCOC(=O)[C@@H]1CCCN(C(=O)c2nc(-c3ccc(C)cc3)n3c...</td>
+      <td>4.00022</td>
+      <td>0.690944</td>
+      <td>2.822753</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>N#CC1=C(SCC(=O)Nc2cccc(Cl)c2)N=C([O-])[C@H](C#...</td>
+      <td>3.60956</td>
+      <td>0.789027</td>
+      <td>4.035182</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+---
 ## Hyperparameters
-"""
 
+
+```python
 SMILE_CHARSET = '["C", "B", "F", "I", "H", "O", "N", "S", "P", "Cl", "Br"]'
 
 bond_mapping = {"SINGLE": 0, "DOUBLE": 1, "TRIPLE": 2, "AROMATIC": 3}
@@ -201,11 +293,13 @@ def graph_to_molecule(graph):
 
     return molecule
 
+```
 
-"""
+---
 ##  Generate training set
-"""
 
+
+```python
 train_df = df.sample(frac=0.75, random_state=42)  # random state is a seed value
 train_df.reset_index(drop=True, inplace=True)
 
@@ -282,8 +376,8 @@ class RelationalGraphConvLayer(keras.layers.Layer):
         # Apply non-linear transformation
         return self.activation(x_reduced)
 
+```
 
-"""
 # Build the Encoder and Decoder
 
 The Encoder takes as input a molecule's graph adjacency matrix and feature matrix.
@@ -308,8 +402,9 @@ Source:
 
 The Decoder takes as input the latent-space representation and predicts
 the graph adjacency matrix and feature matrix of the corresponding molecules.
-"""
 
+
+```python
 
 def get_encoder(
     gconv_units, latent_dim, adjacency_shape, feature_shape, dense_units, dropout_rate
@@ -365,11 +460,13 @@ def get_decoder(dense_units, dropout_rate, latent_dim, adjacency_shape, feature_
 
     return decoder
 
+```
 
-"""
+---
 ## Build the Sampling layer
-"""
 
+
+```python
 
 class Sampling(layers.Layer):
     def call(self, inputs):
@@ -379,8 +476,9 @@ class Sampling(layers.Layer):
         epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
+```
 
-"""
+---
 ## Build the VAE
 
 This model is trained to optimize four losses:
@@ -403,8 +501,9 @@ original neural network
 ("1-Lipschitz continuity" means that the norm of the gradient is at most 1 at evey single
 point of the function).
 It adds a regularization term to the loss function.
-"""
 
+
+```python
 
 class MoleculeGenerator(keras.Model):
     def __init__(self, encoder, decoder, max_len, **kwargs):
@@ -524,11 +623,13 @@ class MoleculeGenerator(keras.Model):
 
         return z_mean, log_var, property_pred, gen_adjacency, gen_features
 
+```
 
-"""
+---
 ## Train the model
-"""
 
+
+```python
 vae_optimizer = tf.keras.optimizers.Adam(learning_rate=VAE_LR)
 
 encoder = get_encoder(
@@ -551,27 +652,61 @@ model = MoleculeGenerator(encoder, decoder, MAX_MOLSIZE)
 
 model.compile(vae_optimizer)
 history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCHS)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/10
+250/250 [==============================] - 10s 22ms/step - loss: 68956.5056
+Epoch 2/10
+250/250 [==============================] - 5s 22ms/step - loss: 68858.0284
+Epoch 3/10
+250/250 [==============================] - 6s 25ms/step - loss: 68816.3545
+Epoch 4/10
+250/250 [==============================] - 5s 22ms/step - loss: 68823.8150
+Epoch 5/10
+250/250 [==============================] - 5s 22ms/step - loss: 68814.6834
+Epoch 6/10
+250/250 [==============================] - 5s 22ms/step - loss: 68809.4373
+Epoch 7/10
+250/250 [==============================] - 5s 22ms/step - loss: 68811.7120
+Epoch 8/10
+250/250 [==============================] - 5s 22ms/step - loss: 68815.0005
+Epoch 9/10
+250/250 [==============================] - 5s 22ms/step - loss: 68812.8435
+Epoch 10/10
+250/250 [==============================] - 5s 22ms/step - loss: 68806.4034
+
+```
+</div>
+---
 ## Inference
 
 We use our model to generate new valid molecules from different points of the latent space.
-"""
 
-"""
 ### Generate unique Molecules with the model
-"""
 
+
+```python
 molecules = model.inference(1000)
 
 MolsToGridImage(
     [m for m in molecules if m is not None][:1000], molsPerRow=5, subImgSize=(260, 160)
 )
+```
 
-"""
+
+
+
+![png](/img/examples/generative/molecule_generation/molecule_generation_21_0.png)
+
+
+
+---
 ## Display latent space clusters with respect to molecular properties (QAE)
-"""
 
+
+```python
 
 def plot_latent(vae, data, labels):
     # display a 2D plot of the property in the latent space
@@ -585,8 +720,13 @@ def plot_latent(vae, data, labels):
 
 
 plot_latent(model, [adjacency_tensor[:8000], feature_tensor[:8000]], qed_tensor[:8000])
+```
 
-"""
+
+![png](/img/examples/generative/molecule_generation/molecule_generation_23_0.png)
+
+
+---
 ## Conclusion
 
 In this example, we combined model architectures from two papers,
@@ -597,4 +737,3 @@ while the later paper considers SMILES inputs as graphs (a combination of adjace
 matrices and feature matrices) and seeks to generate molecules as graphs.
 
 This hybrid approach enables a new type of directed gradient-based search through chemical space.
-"""
