@@ -2,7 +2,7 @@
 
 **Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>
 **Date created:** 2022/03/10<br>
-**Last modified:** 2022/03/19<br>
+**Last modified:** 2022/03/24<br>
 **Description:** Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
 
 
@@ -91,7 +91,7 @@ RDLogger.DisableLog("rdApp.*")
 ```
 <div class="k-default-codeblock">
 ```
-[K     |████████████████████████████████| 20.6 MB 1.2 MB/s 
+[K     |████████████████████████████████| 20.6 MB 1.3 MB/s 
 [?25h
 
 ```
@@ -378,7 +378,8 @@ class RelationalGraphConvLayer(keras.layers.Layer):
 
 ```
 
-# Build the Encoder and Decoder
+---
+## Build the Encoder and Decoder
 
 The Encoder takes as input a molecule's graph adjacency matrix and feature matrix.
 These features are processed via a Graph Convolution layer, then are flattened and
@@ -657,25 +658,25 @@ history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCH
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-250/250 [==============================] - 10s 22ms/step - loss: 68956.5056
+250/250 [==============================] - 19s 55ms/step - loss: 68928.8776
 Epoch 2/10
-250/250 [==============================] - 5s 22ms/step - loss: 68858.0284
+250/250 [==============================] - 14s 54ms/step - loss: 68841.5142
 Epoch 3/10
-250/250 [==============================] - 6s 25ms/step - loss: 68816.3545
+250/250 [==============================] - 14s 55ms/step - loss: 68817.7109
 Epoch 4/10
-250/250 [==============================] - 5s 22ms/step - loss: 68823.8150
+250/250 [==============================] - 14s 54ms/step - loss: 68813.3641
 Epoch 5/10
-250/250 [==============================] - 5s 22ms/step - loss: 68814.6834
+250/250 [==============================] - 14s 54ms/step - loss: 68813.5437
 Epoch 6/10
-250/250 [==============================] - 5s 22ms/step - loss: 68809.4373
+250/250 [==============================] - 14s 55ms/step - loss: 68807.7418
 Epoch 7/10
-250/250 [==============================] - 5s 22ms/step - loss: 68811.7120
+250/250 [==============================] - 14s 55ms/step - loss: 68807.3598
 Epoch 8/10
-250/250 [==============================] - 5s 22ms/step - loss: 68815.0005
+250/250 [==============================] - 14s 55ms/step - loss: 68825.9978
 Epoch 9/10
-250/250 [==============================] - 5s 22ms/step - loss: 68812.8435
+250/250 [==============================] - 14s 55ms/step - loss: 68812.4617
 Epoch 10/10
-250/250 [==============================] - 5s 22ms/step - loss: 68806.4034
+250/250 [==============================] - 14s 55ms/step - loss: 68809.4433
 
 ```
 </div>
@@ -702,8 +703,7 @@ MolsToGridImage(
 
 
 
----
-## Display latent space clusters with respect to molecular properties (QAE)
+### Display latent space clusters with respect to molecular properties (QAE)
 
 
 ```python
