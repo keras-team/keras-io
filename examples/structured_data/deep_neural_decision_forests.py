@@ -246,7 +246,7 @@ class NeuralDecisionTree(keras.Model):
     def __init__(self, depth, num_features, used_features_rate, num_classes):
         super(NeuralDecisionTree, self).__init__()
         self.depth = depth
-        self.num_leaves = 2 ** depth
+        self.num_leaves = 2**depth
         self.num_classes = num_classes
 
         # Create a mask for the randomly selected features.

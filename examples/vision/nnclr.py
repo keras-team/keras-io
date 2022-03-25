@@ -293,7 +293,9 @@ of the encoder.
 
 class NNCLR(keras.Model):
     def __init__(
-        self, temperature, queue_size,
+        self,
+        temperature,
+        queue_size,
     ):
         super(NNCLR, self).__init__()
         self.probe_accuracy = keras.metrics.SparseCategoricalAccuracy()

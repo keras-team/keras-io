@@ -173,7 +173,7 @@ original_shape = original_img.shape[1:3]
 
 successive_shapes = [original_shape]
 for i in range(1, num_octave):
-    shape = tuple([int(dim / (octave_scale ** i)) for dim in original_shape])
+    shape = tuple([int(dim / (octave_scale**i)) for dim in original_shape])
     successive_shapes.append(shape)
 successive_shapes = successive_shapes[::-1]
 shrunk_original_img = tf.image.resize(original_img, successive_shapes[0])
@@ -196,6 +196,9 @@ keras.preprocessing.image.save_img(result_prefix + ".png", deprocess_image(img.n
 
 """
 Display the result.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deep-dream)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/deep-dream).
 """
 
 display(Image(result_prefix + ".png"))

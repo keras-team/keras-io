@@ -287,6 +287,8 @@ The PixelCNN cannot generate the full image at once. Instead, it must generate e
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/pixel-cnn-mnist) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/pixelcnn-mnist-image-generation).
+
 ```python
 from IPython.display import Image, display
 

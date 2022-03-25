@@ -658,7 +658,7 @@ cycle_gan_model.fit(
 </div>
 Test the performance of the model.
 
-
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/CycleGAN) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/CycleGAN).
 ```python
 
 # This model was trained for 90 epochs. We will be loading those weights
@@ -710,4 +710,3 @@ Weights loaded successfully
 ```
 </div>
 ![png](/img/examples/generative/cyclegan/cyclegan_25_1.png)
-

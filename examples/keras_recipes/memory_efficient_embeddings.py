@@ -120,7 +120,11 @@ def run_experiment(model):
     # Read the test data.
     eval_dataset = get_dataset_from_csv("eval_data.csv", batch_size, shuffle=False)
     # Fit the model with the training data.
-    history = model.fit(train_dataset, epochs=num_epochs, validation_data=eval_dataset,)
+    history = model.fit(
+        train_dataset,
+        epochs=num_epochs,
+        validation_data=eval_dataset,
+    )
     return history
 
 
@@ -229,8 +233,14 @@ class QREmbedding(keras.layers.Layer):
         self.index_lookup = StringLookup(
             vocabulary=vocabulary, mask_token=None, num_oov_indices=0
         )
-        self.q_embeddings = layers.Embedding(num_buckets, embedding_dim,)
-        self.r_embeddings = layers.Embedding(num_buckets, embedding_dim,)
+        self.q_embeddings = layers.Embedding(
+            num_buckets,
+            embedding_dim,
+        )
+        self.r_embeddings = layers.Embedding(
+            num_buckets,
+            embedding_dim,
+        )
 
     def call(self, inputs):
         # Get the item index.

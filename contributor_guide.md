@@ -46,6 +46,8 @@ layers.Layer(...)
 layers.Conv2D(...)
 ```
 
+Note: do **not** use `import keras`. Use `from tensorflow import keras` instead.
+
 
 ### Extra dependencies
 

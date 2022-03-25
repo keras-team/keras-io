@@ -177,7 +177,11 @@ class Buffer:
     # This provides a large speed up for blocks of code that contain many small TensorFlow operations such as this one.
     @tf.function
     def update(
-        self, state_batch, action_batch, reward_batch, next_state_batch,
+        self,
+        state_batch,
+        action_batch,
+        reward_batch,
+        next_state_batch,
     ):
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.

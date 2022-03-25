@@ -97,7 +97,13 @@ num_actions = 4
 
 def create_q_model():
     # Network defined by the Deepmind paper
-    inputs = layers.Input(shape=(84, 84, 4,))
+    inputs = layers.Input(
+        shape=(
+            84,
+            84,
+            4,
+        )
+    )
 
     # Convolutions on the frames on the screen
     layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)

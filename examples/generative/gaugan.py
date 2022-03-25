@@ -122,7 +122,10 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 def load(image_files, batch_size, is_train=True):
     def _random_crop(
-        segmentation_map, image, labels, crop_size=(IMG_HEIGHT, IMG_WIDTH),
+        segmentation_map,
+        image,
+        labels,
+        crop_size=(IMG_HEIGHT, IMG_WIDTH),
     ):
         crop_size = tf.convert_to_tensor(crop_size)
         image_shape = tf.shape(image)[:2]

@@ -234,7 +234,10 @@ tutorial from Google.
 print("loading the CIFAR10 dataset...")
 (
     (train_images, train_labels),
-    (test_images, test_labels,),
+    (
+        test_images,
+        test_labels,
+    ),
 ) = keras.datasets.cifar10.load_data()
 
 # Normalize pixel values to be between 0 and 1.
@@ -473,4 +476,7 @@ Moving forward one can:
 - Experiment with the various hyperparameters of the involution layer.
 - Build different models with the involution layer.
 - Try building a different kernel generation method altogether.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/involution)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/involution).
 """

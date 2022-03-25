@@ -1075,3 +1075,5 @@ Avg. PSNR of reconstructions is 26.6233
 
 ```
 </div>
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/super-resolution) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/super-resolution).

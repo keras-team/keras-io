@@ -114,7 +114,8 @@ We implement a utility function to compile, train, and evaluate a given model.
 def run_experiment(model):
     # Create Adam optimizer with weight decay.
     optimizer = tfa.optimizers.AdamW(
-        learning_rate=learning_rate, weight_decay=weight_decay,
+        learning_rate=learning_rate,
+        weight_decay=weight_decay,
     )
     # Compile the model.
     model.compile(

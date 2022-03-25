@@ -206,7 +206,7 @@ def encode_position(x):
     positions = [x]
     for i in range(POS_ENCODE_DIMS):
         for fn in [tf.sin, tf.cos]:
-            positions.append(fn(2.0 ** i * x))
+            positions.append(fn(2.0**i * x))
     return tf.concat(positions, axis=-1)
 
 
@@ -769,4 +769,6 @@ series at [PyImageSearch](www.pyimagesearch.com).
     Mathworks for the camera calibration article.
 - [Mathew's video](https://www.youtube.com/watch?v=dPWLybp4LL0): A
     great video on NeRF.
+
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/NeRF).
 """

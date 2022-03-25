@@ -303,7 +303,11 @@ class Distiller(tf.keras.Model):
         return metrics
 
     def compile(
-        self, optimizer, metrics, distillation_loss_fn, temperature=TEMPERATURE,
+        self,
+        optimizer,
+        metrics,
+        distillation_loss_fn,
+        temperature=TEMPERATURE,
     ):
         super(Distiller, self).compile(optimizer=optimizer, metrics=metrics)
         self.distillation_loss_fn = distillation_loss_fn

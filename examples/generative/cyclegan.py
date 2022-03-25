@@ -614,6 +614,9 @@ cycle_gan_model.fit(
 
 """
 Test the performance of the model.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/CycleGAN)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/CycleGAN).
 """
 
 

@@ -64,7 +64,9 @@ class JaccardScoreCallback(keras.callbacks.Callback):
     def _write_metric(self, name, value):
         with self.summary_writer.as_default():
             tf.summary.scalar(
-                name, value, step=self.epoch,
+                name,
+                value,
+                step=self.epoch,
             )
             self.summary_writer.flush()
 

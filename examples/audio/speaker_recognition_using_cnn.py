@@ -287,12 +287,20 @@ def audio_to_fft(audio):
 # Get the list of audio file paths along with their corresponding labels
 
 class_names = os.listdir(DATASET_AUDIO_PATH)
-print("Our class names: {}".format(class_names,))
+print(
+    "Our class names: {}".format(
+        class_names,
+    )
+)
 
 audio_paths = []
 labels = []
 for label, name in enumerate(class_names):
-    print("Processing speaker {}".format(name,))
+    print(
+        "Processing speaker {}".format(
+            name,
+        )
+    )
     dir_path = Path(DATASET_AUDIO_PATH) / name
     speaker_sample_paths = [
         os.path.join(dir_path, filepath)

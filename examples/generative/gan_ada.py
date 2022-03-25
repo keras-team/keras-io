@@ -392,12 +392,20 @@ def get_generator():
     x = layers.Reshape(target_shape=(4, 4, width))(x)
     for _ in range(depth - 1):
         x = layers.Conv2DTranspose(
-            width, kernel_size=4, strides=2, padding="same", use_bias=False,
+            width,
+            kernel_size=4,
+            strides=2,
+            padding="same",
+            use_bias=False,
         )(x)
         x = layers.BatchNormalization(scale=False)(x)
         x = layers.ReLU()(x)
     image_output = layers.Conv2DTranspose(
-        3, kernel_size=4, strides=2, padding="same", activation="sigmoid",
+        3,
+        kernel_size=4,
+        strides=2,
+        padding="same",
+        activation="sigmoid",
     )(x)
 
     return keras.Model(noise_input, image_output, name="generator")
@@ -409,7 +417,11 @@ def get_discriminator():
     x = image_input
     for _ in range(depth):
         x = layers.Conv2D(
-            width, kernel_size=4, strides=2, padding="same", use_bias=False,
+            width,
+            kernel_size=4,
+            strides=2,
+            padding="same",
+            use_bias=False,
         )(x)
         x = layers.BatchNormalization(scale=False)(x)
         x = layers.LeakyReLU(alpha=leaky_relu_slope)(x)

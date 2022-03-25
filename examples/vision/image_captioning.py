@@ -255,7 +255,9 @@ Our image captioning architecture consists of three models:
 
 def get_cnn_model():
     base_model = efficientnet.EfficientNetB0(
-        input_shape=(*IMAGE_SIZE, 3), include_top=False, weights="imagenet",
+        input_shape=(*IMAGE_SIZE, 3),
+        include_top=False,
+        weights="imagenet",
     )
     # We freeze our feature extractor
     base_model.trainable = False
@@ -399,7 +401,12 @@ class TransformerDecoderBlock(layers.Layer):
 
 class ImageCaptioningModel(keras.Model):
     def __init__(
-        self, cnn_model, encoder, decoder, num_captions_per_image=5, image_aug=None,
+        self,
+        cnn_model,
+        encoder,
+        decoder,
+        num_captions_per_image=5,
+        image_aug=None,
     ):
         super().__init__()
         self.cnn_model = cnn_model
@@ -518,7 +525,10 @@ cnn_model = get_cnn_model()
 encoder = TransformerEncoderBlock(embed_dim=EMBED_DIM, dense_dim=FF_DIM, num_heads=1)
 decoder = TransformerDecoderBlock(embed_dim=EMBED_DIM, ff_dim=FF_DIM, num_heads=2)
 caption_model = ImageCaptioningModel(
-    cnn_model=cnn_model, encoder=encoder, decoder=decoder, image_aug=image_augmentation,
+    cnn_model=cnn_model,
+    encoder=encoder,
+    decoder=decoder,
+    image_aug=image_augmentation,
 )
 
 """

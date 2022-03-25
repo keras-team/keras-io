@@ -179,7 +179,9 @@ We now define our model building utility. Our model is based on the [ResNet50V2 
 
 def get_training_model(num_classes=10):
     resnet50_v2 = tf.keras.applications.ResNet50V2(
-        weights=None, include_top=False, input_shape=(CROP_TO, CROP_TO, 3),
+        weights=None,
+        include_top=False,
+        input_shape=(CROP_TO, CROP_TO, 3),
     )
     model = tf.keras.Sequential(
         [
@@ -256,7 +258,12 @@ class SelfTrainer(tf.keras.Model):
         self.teacher = teacher
 
     def compile(
-        self, optimizer, metrics, student_loss_fn, distillation_loss_fn, temperature=3,
+        self,
+        optimizer,
+        metrics,
+        student_loss_fn,
+        distillation_loss_fn,
+        temperature=3,
     ):
         super(SelfTrainer, self).compile(optimizer=optimizer, metrics=metrics)
         self.student_loss_fn = student_loss_fn

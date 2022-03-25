@@ -132,7 +132,7 @@ def style_loss(style, combination):
     C = gram_matrix(combination)
     channels = 3
     size = img_nrows * img_ncols
-    return tf.reduce_sum(tf.square(S - C)) / (4.0 * (channels ** 2) * (size ** 2))
+    return tf.reduce_sum(tf.square(S - C)) / (4.0 * (channels**2) * (size**2))
 
 
 # An auxiliary loss function
