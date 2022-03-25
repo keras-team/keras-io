@@ -6,8 +6,7 @@ Last modified: 2021/10/27
 Description: The basics of using KerasTuner to tune model hyperparameters.
 """
 
-"""
-## shell
+"""shell
 pip install keras-tuner -q
 """
 

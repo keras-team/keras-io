@@ -10,6 +10,12 @@
 
 
 
+
+```python
+!pip install keras-tuner -q
+```
+
+---
 ## Introduction
 
 The `HyperModel` class in KerasTuner provides a convenient way to
@@ -52,8 +58,8 @@ y_val = np.random.randint(0, 10, (1000, 1))
 
 <div class="k-default-codeblock">
 ```
-2022-01-19 01:20:19.057173: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-01-19 01:20:19.057240: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-03-25 07:16:57.174520: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-03-25 07:16:57.174569: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ```
 </div>
@@ -209,10 +215,10 @@ tuner = kt.RandomSearch(
 
 <div class="k-default-codeblock">
 ```
-2022-01-19 01:20:31.621176: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-01-19 01:20:31.621248: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-01-19 01:20:31.621299: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
-2022-01-19 01:20:31.621899: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+2022-03-25 07:17:19.263507: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-03-25 07:17:19.263605: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-03-25 07:17:19.263648: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
+2022-03-25 07:17:19.265125: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
 ```
@@ -227,15 +233,15 @@ tuner.search(x=x_train, y=y_train, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 01s]
-my_metric: 2.331902503967285
+Trial 2 Complete [00h 00m 04s]
+my_metric: 2.3025386333465576
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best my_metric So Far: 2.3066577911376953
-Total elapsed time: 00h 00m 04s
+Best my_metric So Far: 2.3025386333465576
+Total elapsed time: 00h 00m 08s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -253,7 +259,7 @@ best_model.summary()
 
 <div class="k-default-codeblock">
 ```
-{'units': 32, 'batch_size': 64, 'learning_rate': 0.001}
+{'units': 64, 'batch_size': 64, 'learning_rate': 0.008530402116968146}
 Model: "model"
 _________________________________________________________________
  Layer (type)                Output Shape              Param #   
@@ -262,13 +268,13 @@ _________________________________________________________________
                                                                  
  flatten (Flatten)           (None, 784)               0         
                                                                  
- dense (Dense)               (None, 32)                25120     
+ dense (Dense)               (None, 64)                50240     
                                                                  
- dense_1 (Dense)             (None, 10)                330       
+ dense_1 (Dense)             (None, 10)                650       
                                                                  
 =================================================================
-Total params: 25,450
-Trainable params: 25,450
+Total params: 50,890
+Trainable params: 50,890
 Non-trainable params: 0
 _________________________________________________________________
 
