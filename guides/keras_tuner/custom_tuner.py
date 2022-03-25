@@ -6,8 +6,7 @@ Last modified: 2022/01/12
 Description: Use `HyperModel.fit()` to tune training hyperparameters (such as batch size).
 """
 
-"""
-## shell
+"""shell
 pip install keras-tuner -q
 """
 

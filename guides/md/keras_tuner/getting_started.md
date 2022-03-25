@@ -9,6 +9,12 @@
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_tuner/getting_started.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_tuner/getting_started.py)
 
 
+
+
+```python
+!pip install keras-tuner -q
+```
+
 ---
 ## Introduction
 
@@ -59,8 +65,8 @@ def build_model(hp):
 
 <div class="k-default-codeblock">
 ```
-2021-11-05 20:25:47.680336: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2021-11-05 20:25:47.680383: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-03-25 07:21:55.446979: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-03-25 07:21:55.447031: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ```
 </div>
@@ -75,13 +81,13 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-2021-11-05 20:25:49.112763: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2021-11-05 20:25:49.112805: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2021-11-05 20:25:49.112835: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (a5a615fb2377): /proc/driver/nvidia/version does not exist
-2021-11-05 20:25:49.113040: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+2022-03-25 07:21:57.858733: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-03-25 07:21:57.858813: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-03-25 07:21:57.858850: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
+2022-03-25 07:21:57.859304: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
-<keras.engine.sequential.Sequential at 0x7e1e8fe4bc90>
+<keras.engine.sequential.Sequential at 0x7fda70534670>
 
 ```
 </div>
@@ -127,7 +133,7 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7e1f4afe6a90>
+<keras.engine.sequential.Sequential at 0x7fd9ec7116d0>
 
 ```
 </div>
@@ -189,7 +195,7 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7e1e884d1e10>
+<keras.engine.sequential.Sequential at 0x7fda7048caf0>
 
 ```
 </div>
@@ -241,7 +247,7 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7e1e884ba710>
+<keras.engine.sequential.Sequential at 0x7fda70486e20>
 
 ```
 </div>
@@ -344,15 +350,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 14s]
-val_accuracy: 0.9490000009536743
+Trial 3 Complete [00h 00m 37s]
+val_accuracy: 0.9609000086784363
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9490000009536743
-Total elapsed time: 00h 01m 06s
+Best val_accuracy So Far: 0.9609000086784363
+Total elapsed time: 00h 01m 26s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -383,16 +389,21 @@ best_model.summary()
 ```
 Model: "sequential"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-flatten (Flatten)            (None, 784)               0         
-_________________________________________________________________
-dense (Dense)                (None, 256)               200960    
-_________________________________________________________________
-dense_1 (Dense)              (None, 10)                2570      
+ flatten (Flatten)           (None, 784)               0         
+                                                                 
+ dense (Dense)               (None, 128)               100480    
+                                                                 
+ dense_1 (Dense)             (None, 352)               45408     
+                                                                 
+ dropout (Dropout)           (None, 352)               0         
+                                                                 
+ dense_2 (Dense)             (None, 10)                3530      
+                                                                 
 =================================================================
-Total params: 203,530
-Trainable params: 203,530
+Total params: 149,418
+Trainable params: 149,418
 Non-trainable params: 0
 _________________________________________________________________
 
@@ -410,37 +421,36 @@ tuner.results_summary()
 Results summary
 Results in my_dir/helloworld
 Showing 10 best trials
-Objective(name='val_accuracy', direction='max')
-Trial summary
-Hyperparameters:
-num_layers: 1
-units_0: 256
-activation: tanh
-dropout: False
-lr: 0.006927528298367841
-units_1: 384
-units_2: 288
-Score: 0.9490000009536743
+<keras_tuner.engine.objective.Objective object at 0x7fd9ec732490>
 Trial summary
 Hyperparameters:
 num_layers: 2
-units_0: 512
-activation: tanh
-dropout: False
-lr: 0.003389964511372384
-units_1: 448
-units_2: 256
-Score: 0.948500007390976
+units_0: 128
+activation: relu
+dropout: True
+lr: 0.003658219312391249
+units_1: 352
+units_2: 192
+Score: 0.9609000086784363
 Trial summary
 Hyperparameters:
 num_layers: 3
-units_0: 288
+units_0: 64
 activation: tanh
 dropout: True
-lr: 0.004590811887281893
-units_1: 32
+lr: 0.0002699995872739864
+units_1: 480
 units_2: 32
-Score: 0.9471000134944916
+Score: 0.9438999891281128
+Trial summary
+Hyperparameters:
+num_layers: 2
+units_0: 32
+activation: relu
+dropout: True
+lr: 0.00014976743663164954
+units_1: 32
+Score: 0.9198499917984009
 
 ```
 </div>
@@ -470,9 +480,9 @@ model.fit(x=x_all, y=y_all, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.2619 - accuracy: 0.9225
+1875/1875 [==============================] - 8s 4ms/step - loss: 0.2320 - accuracy: 0.9296
 
-<keras.callbacks.History at 0x7e1e882f9390>
+<keras.callbacks.History at 0x7fd9cd2b5ac0>
 
 ```
 </div>
@@ -541,9 +551,9 @@ hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 2ms/step - loss: 12.6636 - accuracy: 0.0900
+4/4 [==============================] - 0s 3ms/step - loss: 12.3325 - accuracy: 0.0700
 
-<keras.callbacks.History at 0x7e1e783effd0>
+<keras.callbacks.History at 0x7fd9ec471a30>
 
 ```
 </div>
@@ -595,9 +605,9 @@ hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 12.3855 - accuracy: 0.0800
+4/4 [==============================] - 0s 3ms/step - loss: 13.2034 - accuracy: 0.1500
 
-<keras.callbacks.History at 0x7e1e501f2290>
+<keras.callbacks.History at 0x7fd9cd2bdc40>
 
 ```
 </div>
@@ -658,15 +668,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 05s]
-val_accuracy: 0.645799994468689
+Trial 3 Complete [00h 00m 09s]
+val_accuracy: 0.944100022315979
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9753000140190125
-Total elapsed time: 00h 00m 18s
+Best val_accuracy So Far: 0.9679999947547913
+Total elapsed time: 00h 00m 40s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -685,9 +695,9 @@ hypermodel.fit(best_hp, model, x_all, y_all, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.2108 - accuracy: 0.9383
+1875/1875 [==============================] - 7s 3ms/step - loss: 0.2414 - accuracy: 0.9295
 
-<keras.callbacks.History at 0x7e1e50176910>
+<keras.callbacks.History at 0x7fd9cc961f70>
 
 ```
 </div>
@@ -768,31 +778,31 @@ tuner.results_summary()
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_mean_absolute_error: 0.9329107403755188
+val_mean_absolute_error: 0.513309895992279
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_mean_absolute_error So Far: 0.36633360385894775
-Total elapsed time: 00h 00m 01s
+Best val_mean_absolute_error So Far: 0.5003301501274109
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/built_in_metrics
 Showing 10 best trials
-Objective(name='val_mean_absolute_error', direction='min')
-Trial summary
-Hyperparameters:
-units: 64
-Score: 0.36633360385894775
-Trial summary
-Hyperparameters:
-units: 96
-Score: 0.6075559854507446
+<keras_tuner.engine.objective.Objective object at 0x7fd9cc961550>
 Trial summary
 Hyperparameters:
 units: 32
-Score: 0.9329107403755188
+Score: 0.5003301501274109
+Trial summary
+Hyperparameters:
+units: 128
+Score: 0.5021752119064331
+Trial summary
+Hyperparameters:
+units: 64
+Score: 0.513309895992279
 
 ```
 </div>
@@ -887,31 +897,31 @@ tuner.results_summary()
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_custom_metric: 0.30915313959121704
+val_custom_metric: 0.20972459018230438
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_custom_metric So Far: 0.12008240073919296
-Total elapsed time: 00h 00m 01s
+Best val_custom_metric So Far: 0.10604839026927948
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_metrics
 Showing 10 best trials
-Objective(name='val_custom_metric', direction='min')
-Trial summary
-Hyperparameters:
-units: 64
-Score: 0.12008240073919296
+<keras_tuner.engine.objective.Objective object at 0x7fd9ec523520>
 Trial summary
 Hyperparameters:
 units: 128
-Score: 0.30915313959121704
+Score: 0.10604839026927948
 Trial summary
 Hyperparameters:
-units: 32
-Score: 0.3939990699291229
+units: 64
+Score: 0.20972459018230438
+Trial summary
+Hyperparameters:
+units: 96
+Score: 0.21959975361824036
 
 ```
 </div>
@@ -968,31 +978,31 @@ tuner.results_summary()
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-default_objective: 0.2412411448544125
+default_objective: 0.3426917061771521
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 0.23100022641910956
-Total elapsed time: 00h 00m 01s
+Best default_objective So Far: 0.3426917061771521
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_eval
 Showing 10 best trials
-Objective(name='default_objective', direction='min')
+<keras_tuner.engine.objective.DefaultObjective object at 0x7fd9cc90a880>
 Trial summary
 Hyperparameters:
 units: 96
-Score: 0.23100022641910956
+Score: 0.3426917061771521
 Trial summary
 Hyperparameters:
-units: 64
-Score: 0.2412411448544125
+units: 32
+Score: 0.4482046273547885
 Trial summary
 Hyperparameters:
 units: 128
-Score: 0.2530983137665876
+Score: 0.4488315130788639
 
 ```
 </div>
@@ -1050,28 +1060,32 @@ tuner.results_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 00s]
-metric_a: -0.6945157521387751
+Trial 3 Complete [00h 00m 00s]
+metric_a: -0.43190784190846865
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best metric_a So Far: -0.2497985563585922
-Total elapsed time: 00h 00m 00s
+Best metric_a So Far: -0.2869599283678026
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_eval_dict
 Showing 10 best trials
-Objective(name='metric_a', direction='max')
+<keras_tuner.engine.objective.Objective object at 0x7fd9ec594310>
+Trial summary
+Hyperparameters:
+units: 128
+Score: -0.2869599283678026
 Trial summary
 Hyperparameters:
 units: 96
-Score: -0.2497985563585922
+Score: -0.43190784190846865
 Trial summary
 Hyperparameters:
 units: 64
-Score: -0.6945157521387751
+Score: -0.45482696514117504
 
 ```
 </div>
@@ -1120,16 +1134,16 @@ print(tuner.get_best_hyperparameters()[0].get("x"))
 <div class="k-default-codeblock">
 ```
 Trial 20 Complete [00h 00m 00s]
-default_objective: 1.4344639272139101
+default_objective: 1.2179728794532931
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 1.0000144839776872
+Best default_objective So Far: 1.004432921442565
 Total elapsed time: 00h 00m 00s
 INFO:tensorflow:Oracle triggered exit
-0.0038057821386991986
+0.06658018806345356
 
 ```
 </div>
@@ -1200,20 +1214,20 @@ keras_code(**best_hp.values, saving_path="/tmp/best_model")
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-default_objective: 0.5837161480697646
+Trial 3 Complete [00h 00m 01s]
+default_objective: 0.292227453448859
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 0.38188325636156456
-Total elapsed time: 00h 00m 01s
+Best default_objective So Far: 0.292227453448859
+Total elapsed time: 00h 00m 03s
 INFO:tensorflow:Oracle triggered exit
-4/4 [==============================] - 0s 1ms/step - loss: 0.3970
+4/4 [==============================] - 0s 3ms/step - loss: 0.5691
 INFO:tensorflow:Assets written to: /tmp/best_model/assets
 
-0.5514325799865272
+0.5380352347787267
 
 ```
 </div>
@@ -1247,15 +1261,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 47s]
-val_accuracy: 0.10999999940395355
+Trial 2 Complete [00h 01m 02s]
+val_accuracy: 0.10000000149011612
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Best val_accuracy So Far: 0.10999999940395355
-Total elapsed time: 00h 01m 09s
+Total elapsed time: 00h 02m 23s
 INFO:tensorflow:Oracle triggered exit
 
 ```

@@ -10,6 +10,11 @@
 
 
 
+
+```python
+!pip install keras-tuner -q
+```
+
 In this guide, we will show how to tailor the search space without changing the
 `HyperModel` code directly.  For example, you can only tune some of the
 hyperparameters and keep the rest fixed, or you can override the compile
@@ -67,8 +72,8 @@ def build_model(hp):
 
 <div class="k-default-codeblock">
 ```
-2021-11-05 20:32:48.167811: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2021-11-05 20:32:48.167859: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-03-25 07:28:13.595759: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-03-25 07:28:13.595803: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ```
 </div>
@@ -122,14 +127,14 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_accuracy: 0.0
+val_accuracy: 0.05000000074505806
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.15000000596046448
-Total elapsed time: 00h 00m 01s
+Best val_accuracy So Far: 0.05000000074505806
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -190,8 +195,8 @@ val_accuracy: 0.0
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.15000000596046448
-Total elapsed time: 00h 00m 01s
+Best val_accuracy So Far: 0.0
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -244,14 +249,14 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_loss: 16.08868408203125
+val_loss: 25.968280792236328
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 14.065686225891113
-Total elapsed time: 00h 00m 01s
+Best val_loss So Far: 23.808820724487305
+Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -265,13 +270,13 @@ tuner.get_best_models()[0].loss
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Unresolved object in checkpoint: (root).layer_with_weights-0.kernel
-WARNING:tensorflow:Unresolved object in checkpoint: (root).layer_with_weights-0.bias
-WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer's state 'm' for (root).layer_with_weights-0.kernel
-WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer's state 'm' for (root).layer_with_weights-0.bias
-WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer's state 'v' for (root).layer_with_weights-0.kernel
-WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer's state 'v' for (root).layer_with_weights-0.bias
-WARNING:tensorflow:A checkpoint was restored (e.g. tf.train.Checkpoint.restore or tf.keras.Model.load_weights) but not all checkpointed values were used. See above for specific issues. Use expect_partial() on the load status object, e.g. tf.train.Checkpoint.restore(...).expect_partial(), to silence these warnings, or use assert_consumed() to make the check explicit. See https://www.tensorflow.org/guide/checkpoint#loading_mechanics for details.
+WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-0.kernel
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-0.bias
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'm' for (root).layer_with_weights-0.kernel
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'm' for (root).layer_with_weights-0.bias
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'v' for (root).layer_with_weights-0.kernel
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'v' for (root).layer_with_weights-0.bias
 
 'mse'
 
@@ -323,15 +328,15 @@ tuner.search_space_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 02s]
-val_accuracy: 0.05000000074505806
+Trial 3 Complete [00h 00m 07s]
+val_accuracy: 0.10000000149011612
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.20000000298023224
-Total elapsed time: 00h 00m 08s
+Best val_accuracy So Far: 0.10000000149011612
+Total elapsed time: 00h 00m 19s
 INFO:tensorflow:Oracle triggered exit
 Search space summary
 Default search space size: 1

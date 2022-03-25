@@ -6,8 +6,7 @@ Last modified: 2021/10/27
 Description: Tune a subset of the hyperparameters without changing the hypermodel.
 """
 
-"""
-## shell
+"""shell
 pip install keras-tuner -q
 """
 
