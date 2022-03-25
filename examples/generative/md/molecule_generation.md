@@ -2,7 +2,7 @@
 
 **Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>
 **Date created:** 2022/03/10<br>
-**Last modified:** 2022/03/19<br>
+**Last modified:** 2022/03/24<br>
 **Description:** Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
 
 
@@ -378,7 +378,8 @@ class RelationalGraphConvLayer(keras.layers.Layer):
 
 ```
 
-# Build the Encoder and Decoder
+---
+## Build the Encoder and Decoder
 
 The Encoder takes as input a molecule's graph adjacency matrix and feature matrix.
 These features are processed via a Graph Convolution layer, then are flattened and
@@ -702,8 +703,8 @@ MolsToGridImage(
 
 
 
+### Display latent space clusters with respect to molecular properties (QAE)
 ---
-## Display latent space clusters with respect to molecular properties (QAE)
 
 
 ```python
