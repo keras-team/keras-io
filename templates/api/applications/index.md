@@ -47,13 +47,6 @@ then any model loaded from this repository will get built according to the Tenso
 | [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 83.9% | 96.7% | 21.6M | - | - | - |
 | [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 85.3% | 97.4% | 54.4M | - | - | - |
 | [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 85.7% | 97.5% | 119.0M | - | - | - |
-| [EfficientNetV2B0](efficientnet_v2/#efficientnetv2b0-function) | 29 | 78.7% | 94.3% | 7.2M | - | - | - |
-| [EfficientNetV2B1](efficientnet_v2/#efficientnetv2b1-function) | 34 | 79.8% | 95.0% | 8.2M | - | - | - |
-| [EfficientNetV2B2](efficientnet_v2/#efficientnetv2b2-function) | 42 | 80.5% | 95.1% | 10.2M | - | - | - |
-| [EfficientNetV2B3](efficientnet_v2/#efficientnetv2b3-function) | 59 | 82.0% | 95.8% | 14.5M | - | - | - |
-| [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 83.9% | 96.7% | 21.6M | - | - | - |
-| [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 85.3% | 97.4% | 54.4M | - | - | - |
-| [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 85.7% | 97.5% | 119.0M | - | - | - |
 
 The top-1 and top-5 accuracy refers to the model's performance on the ImageNet validation dataset.
 
