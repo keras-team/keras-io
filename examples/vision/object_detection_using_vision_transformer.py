@@ -77,6 +77,9 @@ annot_paths = [
     f for f in os.listdir(PATH_ANNOT) if os.path.isfile(os.path.join(PATH_ANNOT, f))
 ]
 
+annot_paths.sort()
+image_paths.sort()
+
 images = []
 targets = []
 
@@ -499,23 +502,24 @@ def bounding_box_intersection_over_union(boxA, boxB):
     return iou
 
 
-def load_images_from_folder(folder):
+def load_images_from_folder(image_paths):
     images = []
-    for filename in os.listdir(folder):
-        img = cv2.imread(os.path.join(folder, filename))
+    for filename in image_paths:
+        img = cv2.imread(os.path.join(PATH_IMAGES, filename))
         if img is not None:
             images.append(img)
     return images
 
 
 # load original images before resizing as predictions are scaled for original images
-images_original = load_images_from_folder(PATH_IMAGES)
+images_original = load_images_from_folder(image_paths)
 
-i = 0
+showImagesAfter = 790
+i = showImagesAfter
 mIoU = 0
 
 # Compare results for last 10 images which were added to test set
-for inputImage in images_original[790:]:
+for inputImage in images_original[showImagesAfter:]:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 15))
     im = inputImage
 
@@ -558,10 +562,10 @@ for inputImage in images_original[790:]:
         + str(bottomRight_Y)
     )
 
-    topLeft_X = int(targets[0][0] * w)
-    topLeft_Y = int(targets[0][1] * h)
-    bottomRight_X = int(targets[0][2] * w)
-    bottomRight_Y = int(targets[0][3] * h)
+    topLeft_X = int(targets[i][0] * w)
+    topLeft_Y = int(targets[i][1] * h)
+    bottomRight_X = int(targets[i][2] * w)
+    bottomRight_Y = int(targets[i][3] * h)
 
     boxB = topLeft_X, topLeft_Y, bottomRight_X, bottomRight_Y
 
