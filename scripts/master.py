@@ -286,6 +286,7 @@ MASTER = {
                                 'tensorflow.keras.utils.image_dataset_from_directory',
                                 'tensorflow.keras.utils.load_img',
                                 'tensorflow.keras.utils.img_to_array',
+                                'tensorflow.keras.utils.save_img',
                                 # 'tensorflow.keras.preprocessing.image.ImageDataGenerator',  # LEGACY
                                 # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow',  # LEGACY
                                 # 'tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_dataframe',  # LEGACY
