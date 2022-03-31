@@ -120,8 +120,7 @@ df.head()
 <div class="k-default-codeblock">
 ```
 Downloading data from https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv
-22609920/22606589 [==============================] - 0s 0us/step
-22618112/22606589 [==============================] - 0s 0us/step
+22606589/22606589 [==============================] - 0s 0us/step
 
 ```
 </div>
