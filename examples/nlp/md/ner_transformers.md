@@ -153,14 +153,15 @@ def export_to_file(export_file_path, data):
         for record in data:
             ner_tags = record["ner_tags"]
             tokens = record["tokens"]
-            f.write(
-                str(len(tokens))
-                + "\t"
-                + "\t".join(tokens)
-                + "\t"
-                + "\t".join(map(str, ner_tags))
-                + "\n"
-            )
+            if len(tokens) > 0:
+                f.write(
+                    str(len(tokens))
+                    + "\t"
+                    + "\t".join(tokens)
+                    + "\t"
+                    + "\t".join(map(str, ner_tags))
+                    + "\n"
+                )
 
 
 os.mkdir("data")
