@@ -1,8 +1,8 @@
 """
 Title: Enhanced Deep Residual Networks for Single Image Super-Resolution
 Author: Gitesh Chawda
-Date created: 25-03-2022
-Last modified: 25-03-2022
+Date created: 01-04-2022
+Last modified: 01-04-2022
 Description: Implementing EDSR model on DIV2K Dataset.
 """
 
@@ -24,12 +24,13 @@ In this code example we will implementing base model that includes just 16 ResBl
 
 Alternatively, as shown in the Keras example 
 [Image Super-Resolution using an Efficient Sub-Pixel CNN](https://keras.io/examples/vision/super_resolution_sub_pixel/#image-superresolution-using-an-efficient-subpixel-cnn), 
-you can create an ESPCN Model. According to the survey paper, EDSR is one of the top five best-performing methods based on PSNR value, despite
-the fact that it has more parameters and requires more computational power than other
-approaches. It has a PSNR(≈34 db) value that is slightly higher than ESPCN(≈32 db).
+you can create an ESPCN Model. According to the survey paper, EDSR is one of the top 
+five best-performing methods based on PSNR value, despite the fact that it has more 
+parameters and requires more computational power than other approaches. 
+It has a PSNR(≈34 db) value that is slightly higher than ESPCN(≈32 db).
 
 As per the survey paper EDSR performs well than ESPCN. Paper : 
-[A comprehensive review of deep learningbased single image super-resolution](https://arxiv.org/abs/2102.09351)
+[A comprehensive review of deep learning based single image super-resolution](https://arxiv.org/abs/2102.09351)
 
 Comparison Graph :
 
@@ -78,16 +79,20 @@ val_cache = val.cache()
 
 def flip_left_right(lowres_img, highres_img):
     """
-    Flipes Images to left and right
+    Flips Images to left and right
     """
     # Outputs random values from a uniform distribution in between 0 to 1
     rn = tf.random.uniform(shape=(), maxval=1)
     # If rn is less than 0.5 it returns original lowres_img and highres_img
     # If rn is greater than 0.5 it returns flipped image
-    return tf.cond(rn < 0.5,
-                   lambda: (lowres_img, highres_img),
-                   lambda: (tf.image.flip_left_right(lowres_img),
-                            tf.image.flip_left_right(highres_img)))
+    return tf.cond(
+        rn < 0.5,
+        lambda: (lowres_img, highres_img),
+        lambda: (
+            tf.image.flip_left_right(lowres_img),
+            tf.image.flip_left_right(highres_img),
+        ),
+    )
 
 
 def random_rotate(lowres_img, highres_img):
@@ -106,17 +111,25 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
     low resolution images : 24x24
     hight resolution images : 96x96
     """
-    lowres_crop_size = hr_crop_size // scale #96//4=24
-    lowres_img_shape = tf.shape(lowres_img)[:2] #(height,width)
+    lowres_crop_size = hr_crop_size // scale  # 96//4=24
+    lowres_img_shape = tf.shape(lowres_img)[:2]  # (height,width)
 
-    lowres_width = tf.random.uniform(shape=(), maxval=lowres_img_shape[1] - lowres_crop_size + 1, dtype=tf.int32) 
-    lowres_height = tf.random.uniform(shape=(), maxval=lowres_img_shape[0] - lowres_crop_size + 1, dtype=tf.int32)
+    lowres_width = tf.random.uniform(
+        shape=(), maxval=lowres_img_shape[1] - lowres_crop_size + 1, dtype=tf.int32)
+    lowres_height = tf.random.uniform(
+        shape=(), maxval=lowres_img_shape[0] - lowres_crop_size + 1, dtype=tf.int32)
 
     highres_width = lowres_width * scale
     highres_height = lowres_height * scale
 
-    lowres_img_cropped = lowres_img[lowres_height:lowres_height + lowres_crop_size, lowres_width:lowres_width + lowres_crop_size] #24x24
-    highres_img_cropped = highres_img[highres_height:highres_height + hr_crop_size, highres_width:highres_width + hr_crop_size] #96x96
+    lowres_img_cropped = lowres_img[
+        lowres_height : lowres_height + lowres_crop_size,
+        lowres_width : lowres_width + lowres_crop_size,
+    ]  # 24x24
+    highres_img_cropped = highres_img[
+        highres_height : highres_height + hr_crop_size,
+        highres_width : highres_width + hr_crop_size,
+    ]  # 96x96
 
     return lowres_img_cropped, highres_img_cropped
 
@@ -133,27 +146,27 @@ However, for lowres, we'll use 24x24 RGB input patches and corresponding highres
 """
 
 
-def dataset_object(dataset_cache, train=True):
-    
+def dataset_object(dataset_cache, training=True):
+
     ds = dataset_cache
-    ds = ds.map(lambda lowres, highres: random_crop(lowres, highres, scale=4),num_parallel_calls=AUTOTUNE)
-    
-    if train:
-        ds = ds.map(random_rotate,num_parallel_calls=AUTOTUNE)
-        ds = ds.map(flip_left_right,num_parallel_calls=AUTOTUNE)
+    ds = ds.map(lambda lowres, highres: random_crop(lowres, highres, scale=4), num_parallel_calls=AUTOTUNE)
+
+    if training:
+        ds = ds.map(random_rotate, num_parallel_calls=AUTOTUNE)
+        ds = ds.map(flip_left_right, num_parallel_calls=AUTOTUNE)
     # Batching Data
     ds = ds.batch(16)
-    
-    if train:
+
+    if training:
         # Repeating Data, so that cardinality if dataset becomes infinte
-        ds = ds.repeat(None)
-    # prefetching allows later images to be prepared while the current image is being processed 
+        ds = ds.repeat()
+    # prefetching allows later images to be prepared while the current image is being processed
     ds = ds.prefetch(buffer_size=AUTOTUNE)
     return ds
 
 
-train_ds = dataset_object(train_cache, train=True)
-val_ds = dataset_object(val_cache, train=False)
+train_ds = dataset_object(train_cache, training=True)
+val_ds = dataset_object(val_cache, training=False)
 
 """
 ## Let's visualize a few sample images:
@@ -205,45 +218,8 @@ memory as the preceding convolutional layers.
 <img src="https://miro.medium.com/max/1050/1*EPviXGqlGWotVtV2gqVvNg.png" width="500" /> 
 """
 
-# Residual Block
-def ResBlock(inputs):
-    x = layers.Conv2D(64, 3, padding="same", activation="relu")(inputs)
-    x = layers.Conv2D(64, 3, padding="same")(x)
-    x = layers.Add()([inputs, x])
-    return x
-
-
-# Upsampling Block
-def Upsampling(inputs, factor=2, **kwargs):
-    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(inputs)
-    x = tf.nn.depth_to_space(x, block_size=factor)
-    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(x)
-    x = tf.nn.depth_to_space(x, block_size=factor)
-    return x
-
-
-def EDSR_MODEL(num_filters, no_of_residual_blocks):
-    # Flexible Inputs to input_layer
-    input_layer = layers.Input(shape=(None, None, 3))
-    # Scaling Pixel Values
-    x = layers.Rescaling(scale=1.0 / 255)(input_layer)
-    x = x_new = layers.Conv2D(num_filters, 3, padding="same")(x)
-
-    # 16 residual blocks
-    for _ in range(no_of_residual_blocks):
-        x_new = ResBlock(x_new)
-
-    x_new = layers.Conv2D(num_filters, 3, padding="same")(x_new)
-    x = layers.Add()([x, x_new])
-
-    x = Upsampling(x)
-    x = layers.Conv2D(3, 3, padding="same")(x)
-
-    output_layer = layers.Rescaling(scale=255)(x)
-    return keras.Model(input_layer, output_layer)
-
-
-class CustomModel(tf.keras.Model):
+# overriding the training step and predict step function of the Model class
+class EDSRModel(tf.keras.Model):
     def train_step(self, data):
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
@@ -264,7 +240,7 @@ class CustomModel(tf.keras.Model):
         self.compiled_metrics.update_state(y, y_pred)
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
-    
+
     def predict_step(self, x):
         # Adding dummy dimension using tf.expand_dims and converting to float32 using tf.cast
         x = tf.cast(tf.expand_dims(x, axis=0), tf.float32)
@@ -275,41 +251,92 @@ class CustomModel(tf.keras.Model):
         # Rounds the values of a tensor to the nearest integer
         super_resolution_img = tf.round(super_resolution_img)
         # Removes dimensions of size 1 from the shape of a tensor and converting to uint8
-        super_resolution_img = tf.squeeze(tf.cast(super_resolution_img, tf.uint8),axis=0)
+        super_resolution_img = tf.squeeze(
+            tf.cast(super_resolution_img, tf.uint8), axis=0
+        )
         return super_resolution_img
 
 
-# Calling EDSR_MODEL function
-edsr = EDSR_MODEL(num_filters=64, no_of_residual_blocks=16)
-# Creating object of CustomModel
-model = CustomModel(edsr.inputs, edsr.outputs)
+# Residual Block
+def ResBlock(inputs):
+    x = layers.Conv2D(64, 3, padding="same", activation="relu")(inputs)
+    x = layers.Conv2D(64, 3, padding="same")(x)
+    x = layers.Add()([inputs, x])
+    return x
+
+
+# Upsampling Block
+def Upsampling(inputs, factor=2, **kwargs):
+    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(inputs)
+    x = tf.nn.depth_to_space(x, block_size=factor)
+    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(x)
+    x = tf.nn.depth_to_space(x, block_size=factor)
+    return x
+
+
+def make_model(num_filters, num_of_residual_blocks):
+    # Flexible Inputs to input_layer
+    input_layer = layers.Input(shape=(None, None, 3))
+    # Scaling Pixel Values
+    x = layers.Rescaling(scale=1.0 / 255)(input_layer)
+    x = x_new = layers.Conv2D(num_filters, 3, padding="same")(x)
+
+    # 16 residual blocks
+    for _ in range(num_of_residual_blocks):
+        x_new = ResBlock(x_new)
+
+    x_new = layers.Conv2D(num_filters, 3, padding="same")(x_new)
+    x = layers.Add()([x, x_new])
+
+    x = Upsampling(x)
+    x = layers.Conv2D(3, 3, padding="same")(x)
+
+    output_layer = layers.Rescaling(scale=255)(x)
+    return EDSRModel(input_layer, output_layer)
+
+
+model = make_model(num_filters=64, num_of_residual_blocks=16)
 
 """
 ## Train the model
 """
 
 # Using adam optimizer with initial learning rate as 1e-4, changing learning rate after 5000 steps to 5e-5
-optim_edsr = tf.keras.optimizers.Adam(learning_rate=keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[5000], 
-                                                                                                      values=[1e-4, 5e-5]))
+optim_edsr = keras.optimizers.Adam(
+    learning_rate=keras.optimizers.schedules.PiecewiseConstantDecay(
+        boundaries=[5000], values=[1e-4, 5e-5]
+    )
+)
 # Compiling model with loss as mean absolute error(L1 Loss) and metric as psnr
-model.compile(optimizer = optim_edsr, loss = 'mae', metrics = [PSNR])
-model.fit(train_ds, epochs = 100, steps_per_epoch = 200, validation_data = val_ds)
+model.compile(optimizer=optim_edsr, loss="mae", metrics=[PSNR])
+# Training for more epochs will improve results
+model.fit(train_ds, epochs=100, steps_per_epoch=200, validation_data=val_ds)
 
 """
 ## Run model prediction and plot the results
-
 """
 
-def plot_results(x):
+
+def plot_results(lowres, preds):
     """
     Displays low resolution image and super resolution image
     """
     plt.figure(figsize=(24, 14))
-    plt.subplot(132), plt.imshow(x), plt.title("Low resolution")
-    plt.subplot(133), plt.imshow(model.predict_step(x)), plt.title("Prediction")
+    plt.subplot(132), plt.imshow(lowres), plt.title("Low resolution")
+    plt.subplot(133), plt.imshow(preds), plt.title("Prediction")
     plt.show()
 
 
 for lowres, highres in val.take(10):
     lowres = tf.image.random_crop(lowres, (150, 150, 3))
-    plot_results(lowres)
+    preds = model.predict_step(lowres)
+    plot_results(lowres, preds)
+
+"""
+## Final remarks
+
+In this example, we explored the EDSR(Enhanced Deep Residual Networks for Single Image
+Super-Resolution) model and implemented it, alternatively you can implement
+MDSR(multi-scale super-resolution network) suggested in the
+[paper](https://arxiv.org/abs/1707.02921).
+"""
