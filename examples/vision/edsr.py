@@ -1,39 +1,38 @@
 """
-Title: Enhanced Deep Residual Networks for Single Image Super-Resolution
+Title: Enhanced Deep Residual Networks for single-image super-resolution
 Author: Gitesh Chawda
 Date created: 01-04-2022
 Last modified: 01-04-2022
-Description: Implementing EDSR model on DIV2K Dataset.
+Description: Training a EDSR model on the DIV2K Dataset.
 """
 
 """
-## Introduction 
+## Introduction
 
-Enhanced Deep Residual Networks for Single Image Super-Resolution
-[EDSR](https://arxiv.org/abs/1707.02921) by Bee Lim, Sanghyun Son, Heewon Kim, Seungjun
-Nah, Kyoung Mu Lee.
+In this example, We implement
+[Enhanced Deep Residual Networks for Single Image Super-Resolution (EDSR)](https://arxiv.org/abs/1707.02921))
+by Bee Lim, Sanghyun Son, Heewon Kim, Seungjun Nah, and Kyoung Mu Lee.
 
 The EDSR architecture is based on the SRResNet architecture, consisting of multiple
-residual blocks. It uses constant scaling layers instead of batch normalisation layers to
-provide consistent training (input and output have similar distributions, thus
-normalising intermediate features may not be desirable). Instead of using L2 (MSE), the
-authors employed an L1 loss function (absolute error), which performed better empirically
-and required less computation.
-In this code example we will implementing base model that includes just 16 ResBlocks and
-64 channels.
+residual blocks. It uses constant scaling layers instead of batch normalization layers to
+produce consistent results (input and output have similar distributions, thus
+normalizing intermediate features may not be desirable). Instead of using a L2 loss (mean square error),
+the authors employed an L1 loss (mean absolute error), which performs better empirically.
+
+Our implementation only includes 16 residual blocks with 64 channels.
 
 Alternatively, as shown in the Keras example 
 [Image Super-Resolution using an Efficient Sub-Pixel CNN](https://keras.io/examples/vision/super_resolution_sub_pixel/#image-superresolution-using-an-efficient-subpixel-cnn), 
-you can create an ESPCN Model. According to the survey paper, EDSR is one of the top 
-five best-performing methods based on PSNR value, despite the fact that it has more 
+you can create an ESPCN Model. According to the survey paper, EDSR is one of the top-five
+best-performing methods based on PSNR scores. However it has more 
 parameters and requires more computational power than other approaches. 
 It has a PSNR(≈34 db) value that is slightly higher than ESPCN(≈32 db).
+As per the survey paper EDSR performs well than ESPCN.
 
-As per the survey paper EDSR performs well than ESPCN. Paper : 
+Paper:
 [A comprehensive review of deep learning based single image super-resolution](https://arxiv.org/abs/2102.09351)
 
-Comparison Graph :
-
+Comparison Graph:
 <img src="https://dfzljdn9uc3pi.cloudfront.net/2021/cs-621/1/fig-11-2x.jpg" width="500" />
 """
 
@@ -52,16 +51,16 @@ from tensorflow.keras import layers
 AUTOTUNE = tf.data.AUTOTUNE
 
 """
-## Downloading Training Dataset
+## Download the training dataset
 
-Using the DIV2K Dataset, a prominent single-image super-resolution dataset with 1,000
-images of various scenarios divided into 800 for training, 100 for validation, and 100
-for testing. Low-resolution images with various sorts of degradations are included in
-this dataset. As a low quality image, We will be using x4 bicubic downsampled images.
+We use the DIV2K Dataset, a prominent single-image super-resolution dataset with 1,000
+images of scenes with various sorts of degradations,
+divided into 800 images for training, 100 images for validation, and 100
+images for testing. We use 4x bicubic downsampled images as our "low quality" reference.
 """
 
-# Downloading DIV2K Dataset from tensorflow datasets
-# Using bicubic x4 degradation type
+# Download DIV2K from TF Datasets
+# Using bicubic 4x degradation type
 div2k_data = tfds.image.Div2k(config="bicubic_x4")
 div2k_data.download_and_prepare()
 
@@ -78,9 +77,8 @@ val_cache = val.cache()
 
 
 def flip_left_right(lowres_img, highres_img):
-    """
-    Flips Images to left and right
-    """
+    """Flips Images to left and right."""
+
     # Outputs random values from a uniform distribution in between 0 to 1
     rn = tf.random.uniform(shape=(), maxval=1)
     # If rn is less than 0.5 it returns original lowres_img and highres_img
@@ -96,9 +94,8 @@ def flip_left_right(lowres_img, highres_img):
 
 
 def random_rotate(lowres_img, highres_img):
-    """
-    Rotates Images by 90 degree
-    """
+    """Rotates Images by 90 degrees."""
+
     # Outputs random values from uniform distribution in between 0 to 4
     rn = tf.random.uniform(shape=(), maxval=4, dtype=tf.int32)
     # Here rn signifies number of times the image(s) are rotated by 90 degrees
@@ -106,10 +103,10 @@ def random_rotate(lowres_img, highres_img):
 
 
 def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
-    """
-    Cropping Images
-    low resolution images : 24x24
-    hight resolution images : 96x96
+    """Crop images.
+
+    low resolution images: 24x24
+    hight resolution images: 96x96
     """
     lowres_crop_size = hr_crop_size // scale  # 96//4=24
     lowres_img_shape = tf.shape(lowres_img)[:2]  # (height,width)
@@ -135,14 +132,11 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
 
 
 """
-## Preparing tf.Data.Dataset object
+## Prepare a `tf.Data.Dataset` object
 
-As the paper suggest to use RGB input patches of size 48×48 from lowres image with the
-corresponding highres patches. We augment the training data with random horizontal flips
-and 90 rotations.
+We augment the training data with random horizontal flips and 90 rotations.
 
-However, for lowres, we'll use 24x24 RGB input patches and corresponding highres patches
-(96x96).
+As low resolution images, we'll use 24x24 RGB input patches.
 """
 
 
@@ -169,7 +163,9 @@ train_ds = dataset_object(train_cache, training=True)
 val_ds = dataset_object(val_cache, training=False)
 
 """
-## Let's visualize a few sample images:
+## Visualize the data
+
+Let's visualize a few sample images:
 """
 
 lowres, highres = next(iter(train_ds))
@@ -192,23 +188,21 @@ for i in range(9):
 
 
 def PSNR(super_resolution, high_resolution):
-    """
-    Computes the peak signal-to-noise ratio, measures quality of image.
-    """
+    """Compute the peak signal-to-noise ratio, measures quality of image."""
     # Max value of pixel is 255
     psnr_value = tf.image.psnr(high_resolution, super_resolution, max_val=255)[0]
     return psnr_value
 
 
 """
-## Build a model
+## Build the model
 
-In paper authors hav trained 3 models : EDSR, MDSR and baseline, so for this code example
-we will be training baseline model.
+In the paper, the authors train three models: EDSR, MDSR, and baseline. In this code example
+we train the baseline model.
 
-### Comparison of 3 residual blocks
+### Comparison with model with three residual blocks
 
-Authors compared 3 residual blocks from original resnet, SRResNet and proposed. The only
+The authors compared three residual blocks from original resnet, SRResNet and proposed. The only
 difference is removal of batch normalization layer, Since batch normalization layers
 normalize the features, they get rid of range flexibility from networks by normalizing
 the features, it is better to remove them, Furthermore, GPU memory usage is also
@@ -218,7 +212,7 @@ memory as the preceding convolutional layers.
 <img src="https://miro.medium.com/max/1050/1*EPviXGqlGWotVtV2gqVvNg.png" width="500" /> 
 """
 
-# overriding the training step and predict step function of the Model class
+
 class EDSRModel(tf.keras.Model):
     def train_step(self, data):
         # Unpack the data. Its structure depends on your model and
@@ -313,7 +307,7 @@ model.compile(optimizer=optim_edsr, loss="mae", metrics=[PSNR])
 model.fit(train_ds, epochs=100, steps_per_epoch=200, validation_data=val_ds)
 
 """
-## Run model prediction and plot the results
+## Run inference on new images and plot the results
 """
 
 
@@ -335,8 +329,8 @@ for lowres, highres in val.take(10):
 """
 ## Final remarks
 
-In this example, we explored the EDSR(Enhanced Deep Residual Networks for Single Image
-Super-Resolution) model and implemented it, alternatively you can implement
-MDSR(multi-scale super-resolution network) suggested in the
-[paper](https://arxiv.org/abs/1707.02921).
+In this example, we implemented the EDSR model (Enhanced Deep Residual Networks for Single Image
+Super-Resolution). Alternatively you can implement
+the MDSR(multi-scale super-resolution network) model suggested in
+[the following paper](https://arxiv.org/abs/1707.02921).
 """
