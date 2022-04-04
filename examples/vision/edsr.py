@@ -1,8 +1,8 @@
 """
 Title: Enhanced Deep Residual Networks for single-image super-resolution
 Author: Gitesh Chawda
-Date created: 01-04-2022
-Last modified: 01-04-2022
+Date created: 04-04-2022
+Last modified: 04-04-2022
 Description: Training a EDSR model on the DIV2K Dataset.
 """
 
@@ -10,7 +10,7 @@ Description: Training a EDSR model on the DIV2K Dataset.
 ## Introduction
 
 In this example, We implement
-[Enhanced Deep Residual Networks for Single Image Super-Resolution (EDSR)](https://arxiv.org/abs/1707.02921))
+[Enhanced Deep Residual Networks for Single Image Super-Resolution (EDSR)](https://arxiv.org/abs/1707.02921)
 by Bee Lim, Sanghyun Son, Heewon Kim, Seungjun Nah, and Kyoung Mu Lee.
 
 The EDSR architecture is based on the SRResNet architecture, consisting of multiple
@@ -202,9 +202,9 @@ we train the baseline model.
 
 ### Comparison with model with three residual blocks
 
-The authors compared three residual blocks from original resnet, SRResNet and proposed. The only
-difference is removal of batch normalization layer, Since batch normalization layers
-normalize the features, they get rid of range flexibility from networks by normalizing
+The residual block design of EDSR differs from that of ResNet. Batch normalization 
+layers have been removed together with the final ReLU activation, Since batch normalization 
+layers normalize the features, they get rid of range flexibility from networks by normalizing
 the features, it is better to remove them, Furthermore, GPU memory usage is also
 sufficiently reduced since the batch normalization layers consume the same amount of
 memory as the preceding convolutional layers.
@@ -330,7 +330,7 @@ for lowres, highres in val.take(10):
 ## Final remarks
 
 In this example, we implemented the EDSR model (Enhanced Deep Residual Networks for Single Image
-Super-Resolution). Alternatively you can implement
-the MDSR(multi-scale super-resolution network) model suggested in
-[the following paper](https://arxiv.org/abs/1707.02921).
+Super-Resolution), we can improve the accuracy by training the model for more epochs, as well as 
+training the model with a wide variety of data with mixed downgrading factor, so that our model 
+can predict any real-world image.
 """
