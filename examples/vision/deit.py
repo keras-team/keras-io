@@ -372,13 +372,13 @@ class ViTDistilled(ViTClassifier):
         )
 
         if not training or self.regular_training:
-        # During standard train / finetune, inference average the classifier
-        # predictions.
+            # During standard train / finetune, inference average the classifier
+            # predictions.
             return (x + x_dist) / 2
 
         elif training:
-        # Only return separate classification predictions when training in distilled
-        # mode.
+            # Only return separate classification predictions when training in distilled
+            # mode.
             return x, x_dist
 
 
@@ -503,7 +503,7 @@ wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teache
 unzip -q bit_teacher_flowers.zip 
 """
 
-# teacher_model_file = keras.utils.get_file( 
+# teacher_model_file = keras.utils.get_file(
 #     origin="https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip",
 #     extract=True,
 #     cache_subdir="models"
