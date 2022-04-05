@@ -499,8 +499,7 @@ which is about **40x more** than the student.
 """
 
 """shell
-wget -q
-https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip 
+wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip 
 unzip -q bit_teacher_flowers.zip 
 """
 
