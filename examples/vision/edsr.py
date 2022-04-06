@@ -334,5 +334,5 @@ Super-Resolution), we can improve the accuracy by training the model for more ep
 training the model with a wide variety of data with mixed downgrading factor, so that our model 
 can predict any real-world image.
 Likewise you can expand the given basline EDSR model to EDSR+ and check results of the two models, 
-Also you can test MDSR(Multi-Scale super-goal) and MDSR+ proposed in same paper and check results with EDSR model. 
+Also you can test MDSR(Multi-Scale super-resolution) and MDSR+ proposed in same paper and check results with EDSR model. 
 """
