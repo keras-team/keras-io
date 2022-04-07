@@ -1,8 +1,8 @@
 """
 Title: Enhanced Deep Residual Networks for single-image super-resolution
 Author: Gitesh Chawda
-Date created: 04-04-2022
-Last modified: 04-04-2022
+Date created: 07-04-2022
+Last modified: 07-04-2022
 Description: Training a EDSR model on the DIV2K Dataset.
 """
 
@@ -112,9 +112,11 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
     lowres_img_shape = tf.shape(lowres_img)[:2]  # (height,width)
 
     lowres_width = tf.random.uniform(
-        shape=(), maxval=lowres_img_shape[1] - lowres_crop_size + 1, dtype=tf.int32)
+        shape=(), maxval=lowres_img_shape[1] - lowres_crop_size + 1, dtype=tf.int32
+    )
     lowres_height = tf.random.uniform(
-        shape=(), maxval=lowres_img_shape[0] - lowres_crop_size + 1, dtype=tf.int32)
+        shape=(), maxval=lowres_img_shape[0] - lowres_crop_size + 1, dtype=tf.int32
+    )
 
     highres_width = lowres_width * scale
     highres_height = lowres_height * scale
@@ -143,7 +145,10 @@ As low resolution images, we'll use 24x24 RGB input patches.
 def dataset_object(dataset_cache, training=True):
 
     ds = dataset_cache
-    ds = ds.map(lambda lowres, highres: random_crop(lowres, highres, scale=4), num_parallel_calls=AUTOTUNE)
+    ds = ds.map(
+        lambda lowres, highres: random_crop(lowres, highres, scale=4),
+        num_parallel_calls=AUTOTUNE,
+    )
 
     if training:
         ds = ds.map(random_rotate, num_parallel_calls=AUTOTUNE)
