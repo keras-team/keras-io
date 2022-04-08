@@ -9,7 +9,7 @@ Description: A simple keras implementation for object detection using transforme
 """
 ## Introduction
 
- This example is a an implementation of the [Vision Transformer (ViT)] (https://arxiv.org/abs/2010.11929) model by Alexey Dosovitskiy et al. for object detection,
+ This example is a an implementation of the [Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929) model by Alexey Dosovitskiy et al. for object detection,
  it is demonstrated on the Caltech 101 dataset for detecting airplane in an image.
 
  This example requires TensorFlow 2.4 or higher, and
