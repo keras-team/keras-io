@@ -20,9 +20,9 @@ from tensorflow.keras import regularizers
 
 layer = layers.Dense(
     units=64,
-    kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4),
-    bias_regularizer=regularizers.l2(1e-4),
-    activity_regularizer=regularizers.l2(1e-5)
+    kernel_regularizer=regularizers.L1L2(l1=1e-5, l2=1e-4),
+    bias_regularizer=regularizers.L2(1e-4),
+    activity_regularizer=regularizers.L2(1e-5)
 )
 ```
 
@@ -34,9 +34,10 @@ You can access a layer's regularization penalties by calling `layer.losses`
 after calling the layer on inputs:
 
 ```python
-layer = tf.keras.layers.Dense(5, kernel_initializer='ones',
-                              kernel_regularizer=tf.keras.regularizers.l1(0.01),
-                              activity_regularizer=tf.keras.regularizers.l2(0.01))
+layer = layers.Dense(units=5,
+                     kernel_initializer='ones',
+                     kernel_regularizer=regularizers.L1(0.01),
+                     activity_regularizer=regularizers.L2(0.01))
 tensor = tf.ones(shape=(5, 5)) * 2.0
 out = layer(tensor)
 # The kernel regularization term is 0.25

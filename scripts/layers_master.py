@@ -61,9 +61,10 @@ LAYERS_MASTER = {
             'path': 'regularizers',
             'title': 'Layer weight regularizers',
             'generate': [
-                'tensorflow.keras.regularizers.l1',
-                'tensorflow.keras.regularizers.l2',
-                'tensorflow.keras.regularizers.l1_l2',
+                'tensorflow.keras.regularizers.L1',
+                'tensorflow.keras.regularizers.L2',
+                'tensorflow.keras.regularizers.L1L2',
+                'tensorflow.keras.regularizers.OrthogonalRegularizer',
             ]
         },
         {
