@@ -1,8 +1,8 @@
 # Enhanced Deep Residual Networks for single-image super-resolution
 
 **Author:** Gitesh Chawda<br>
-**Date created:** 07-04-2022<br>
-**Last modified:** 07-04-2022<br>
+**Date created:** 2022/04/07<br>
+**Last modified:** 2022/04/07<br>
 **Description:** Training an EDSR model on the DIV2K Dataset.
 
 
