@@ -2,7 +2,7 @@
 Title: Distilling Vision Transformers
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/04/05
-Last modified: 2022/04/05
+Last modified: 2022/04/08
 Description: Distillation of Vision Transformers through attention.
 """
 """
@@ -89,7 +89,13 @@ WEIGHT_DECAY = 0.0001
 # Data
 BATCH_SIZE = 256
 AUTO = tf.data.AUTOTUNE
-NB_CLASSES = 5
+NUM_CLASSES = 5
+
+"""
+You probably noticed that `DROPOUT_RATE` has been set 0.0. Dropout has been used
+in the implementation to keep it complete. For smaller models (like the one used in
+this example) don't need it but for bigger models, using dropout helps.
+"""
 
 """
 ## Load the `tf_flowers` dataset and prepare preprocessing utilities
@@ -102,7 +108,7 @@ and so on. However, to keep the example simple to work through, we'll discard th
 
 
 def preprocess_dataset(is_training=True):
-    def _pp(image, label):
+    def fn(image, label):
         if is_training:
             # Resize to a bigger spatial resolution and take the random
             # crops.
@@ -111,10 +117,10 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (RESOLUTION, RESOLUTION))
-        label = tf.one_hot(label, depth=NB_CLASSES)
+        label = tf.one_hot(label, depth=NUM_CLASSES)
         return image, label
 
-    return _pp
+    return fn
 
 
 def prepare_dataset(dataset, is_training=True):
@@ -152,7 +158,7 @@ class StochasticDepth(layers.Layer):
         super().__init__(**kwargs)
         self.drop_prob = drop_prop
 
-    def call(self, x, training=None):
+    def call(self, x, training=True):
         if training:
             keep_prob = 1 - self.drop_prob
             shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
@@ -267,9 +273,9 @@ class ViTClassifier(keras.Model):
         # Other layers.
         self.dropout = layers.Dropout(DROPOUT_RATE)
         self.layer_norm = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)
-        self.head = layers.Dense(NB_CLASSES, name="classification_head",)
+        self.head = layers.Dense(NUM_CLASSES, name="classification_head",)
 
-    def call(self, inputs, training=None):
+    def call(self, inputs, training=True):
         n = tf.shape(inputs)[0]
 
         # Create patches and project the patches.
@@ -332,8 +338,8 @@ class ViTDistilled(ViTClassifier):
         )
 
         # Head layers.
-        self.head = layers.Dense(NB_CLASSES, name="classification_head",)
-        self.head_dist = layers.Dense(NB_CLASSES, name="distillation_head",)
+        self.head = layers.Dense(NUM_CLASSES, name="classification_head",)
+        self.head_dist = layers.Dense(NUM_CLASSES, name="distillation_head",)
 
     def call(self, inputs, training=True):
         n = tf.shape(inputs)[0]
@@ -421,6 +427,16 @@ class DeiT(keras.Model):
         self.student = student
         self.teacher = teacher
 
+        self.student_loss_tracker = keras.metrics.Mean(name="student_loss")
+        self.dist_loss_tracker = keras.metrics.Mean(name="distillation_loss")
+
+    @property
+    def metrics(self):
+        metrics = super().metrics
+        metrics.append(self.student_loss_tracker)
+        metrics.append(self.dist_loss_tracker)
+        return metrics
+
     def compile(
         self, optimizer, metrics, student_loss_fn, distillation_loss_fn,
     ):
@@ -457,12 +473,11 @@ class DeiT(keras.Model):
         # Update the metrics configured in `compile()`.
         student_predictions = (cls_predictions + dist_predictions) / 2
         self.compiled_metrics.update_state(y, student_predictions)
+        self.dist_loss_tracker.update_state(distillation_loss)
+        self.student_loss_tracker.update_state(student_loss)
 
         # Return a dict of performance.
         results = {m.name: m.result() for m in self.metrics}
-        results.update(
-            {"student_loss": student_loss, "distillation_loss": distillation_loss}
-        )
         return results
 
     def test_step(self, data):
@@ -477,10 +492,10 @@ class DeiT(keras.Model):
 
         # Update the metrics.
         self.compiled_metrics.update_state(y, y_prediction)
+        self.student_loss_tracker.update_state(student_loss)
 
         # Return a dict of performance.
         results = {m.name: m.result() for m in self.metrics}
-        results.update({"student_loss": student_loss})
         return results
 
     def call(self, inputs):
@@ -503,11 +518,6 @@ wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teache
 unzip -q bit_teacher_flowers.zip
 """
 
-# teacher_model_file = keras.utils.get_file(
-#     origin="https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip",
-#     extract=True,
-#     cache_subdir="models"
-# )
 bit_teacher_flowers = keras.models.load_model("bit_teacher_flowers")
 
 """
