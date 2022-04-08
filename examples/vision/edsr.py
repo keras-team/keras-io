@@ -266,9 +266,9 @@ def ResBlock(inputs):
 
 # Upsampling Block
 def Upsampling(inputs, factor=2, **kwargs):
-    x = layers.Conv2D(64 * (factor ** 2), 3, padding="same", **kwargs)(inputs)
+    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(inputs)
     x = tf.nn.depth_to_space(x, block_size=factor)
-    x = layers.Conv2D(64 * (factor ** 2), 3, padding="same", **kwargs)(x)
+    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(x)
     x = tf.nn.depth_to_space(x, block_size=factor)
     return x
 
@@ -343,4 +343,3 @@ You could also improve on the given basline EDSR model by implementing EDSR+,
 or MDSR( Multi-Scale super-resolution) and MDSR+,
 which were proposed in the same paper.
 """
-
