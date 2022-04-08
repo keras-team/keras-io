@@ -78,46 +78,6 @@ val = div2k_data.as_dataset(split="validation", as_supervised=True)
 val_cache = val.cache()
 ```
 
-<div class="k-default-codeblock">
-```
-2022-04-08 14:01:42.858735: W tensorflow/core/platform/cloud/google_auth_provider.cc:184] All attempts to get a Google authentication bearer token failed, returning an empty token. Retrieving token from files failed with "Not found: Could not locate the credentials file.". Retrieving token from GCE failed with "Failed precondition: Error executing an HTTP request: libcurl code 6 meaning 'Couldn't resolve host name', error details: Could not resolve host: metadata".
-
-[1mDownloading and preparing dataset 3.97 GiB (download: 3.97 GiB, generated: Unknown size, total: 3.97 GiB) to /root/tensorflow_datasets/div2k/bicubic_x4/2.0.0...[0m
-EXTRACTING {'train_lr_url': 'https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_LR_bicubic_X4.zip', 'valid_lr_url': 'https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_valid_LR_bicubic_X4.zip', 'train_hr_url': 'https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_HR.zip', 'valid_hr_url': 'https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_valid_HR.zip'}
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/2 [00:00<?, ? splits/s]
-
-Generating train examples...:   0%|          | 0/800 [00:00<?, ? examples/s]
-
-Shuffling div2k-train.tfrecord...:   0%|          | 0/800 [00:00<?, ? examples/s]
-
-Generating validation examples...:   0%|          | 0/100 [00:00<?, ? examples/s]
-
-Shuffling div2k-validation.tfrecord...:   0%|          | 0/100 [00:00<?, ? examples/s]
-
-[1mDataset div2k downloaded and prepared to /root/tensorflow_datasets/div2k/bicubic_x4/2.0.0. Subsequent calls will reuse this data.[0m
-
-2022-04-08 14:04:07.893407: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:08.004427: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:08.005416: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:08.011443: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-04-08 14:04:08.012264: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:08.012970: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:08.013617: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:09.623114: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:09.623902: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:09.624570: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-04-08 14:04:09.625160: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 15403 MB memory:  -> device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:00:04.0, compute capability: 6.0
-
-```
-</div>
 ---
 ## Flip, crop and resize images
 
@@ -252,22 +212,11 @@ def PSNR(super_resolution, high_resolution):
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-04-08 14:04:11.240154: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-04-08 14:04:18.922006: W tensorflow/core/kernels/data/cache_dataset_ops.cc:768] The calling iterator did not fully read the dataset being cached. In order to avoid unexpected truncation of the dataset, the partially cached contents of the dataset  will be discarded. This can happen if you have an input pipeline similar to `dataset.cache().take(k).repeat()`. You should use `dataset.take(k).cache().repeat()` instead.
-
-```
-</div>
     
 ![png](/img/examples/vision/edsr/edsr_11_1.png)
     
 
-
-
-    
-![png](/img/examples/vision/edsr/edsr_11_2.png)
-    
+![png](/img/examples/vision/edsr/edsr_11_2.png)    
 
 
 ---
@@ -389,9 +338,6 @@ model.fit(train_ds, epochs=100, steps_per_epoch=200, validation_data=val_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-
-2022-04-08 14:04:29.342699: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8005
-
 200/200 [==============================] - 78s 322ms/step - loss: 27.7075 - PSNR: 19.4656 - val_loss: 14.7192 - val_PSNR: 22.5129
 Epoch 2/100
 200/200 [==============================] - 6s 28ms/step - loss: 12.6842 - PSNR: 24.7269 - val_loss: 12.4348 - val_PSNR: 22.8793
