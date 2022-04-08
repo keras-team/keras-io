@@ -21,11 +21,11 @@ the authors employed an L1 loss (mean absolute error), which performs better emp
 
 Our implementation only includes 16 residual blocks with 64 channels.
 
-Alternatively, as shown in the Keras example 
-[Image Super-Resolution using an Efficient Sub-Pixel CNN](https://keras.io/examples/vision/super_resolution_sub_pixel/#image-superresolution-using-an-efficient-subpixel-cnn), 
+Alternatively, as shown in the Keras example
+[Image Super-Resolution using an Efficient Sub-Pixel CNN](https://keras.io/examples/vision/super_resolution_sub_pixel/#image-superresolution-using-an-efficient-subpixel-cnn),
 you can do super-resolution using an ESPCN Model. According to the survey paper, EDSR is one of the top-five
-best-performing super-resolution methods based on PSNR scores. However, it has more 
-parameters and requires more computational power than other approaches. 
+best-performing super-resolution methods based on PSNR scores. However, it has more
+parameters and requires more computational power than other approaches.
 It has a PSNR value (≈34db) that is slightly higher than ESPCN (≈32db).
 As per the survey paper, EDSR performs better than ESPCN.
 
@@ -207,14 +207,14 @@ we only train the baseline model.
 
 ### Comparison with model with three residual blocks
 
-The residual block design of EDSR differs from that of ResNet. Batch normalization 
-layers have been removed (together with the final ReLU activation): since batch normalization 
+The residual block design of EDSR differs from that of ResNet. Batch normalization
+layers have been removed (together with the final ReLU activation): since batch normalization
 layers normalize the features, they hurt output value range flexibility.
 It is thus better to remove them. Further, it also helps reduce the
 amount of GPU RAM required by the model, since the batch normalization layers consume the same amount of
 memory as the preceding convolutional layers.
 
-<img src="https://miro.medium.com/max/1050/1*EPviXGqlGWotVtV2gqVvNg.png" width="500" /> 
+<img src="https://miro.medium.com/max/1050/1*EPviXGqlGWotVtV2gqVvNg.png" width="500" />
 """
 
 
@@ -266,9 +266,9 @@ def ResBlock(inputs):
 
 # Upsampling Block
 def Upsampling(inputs, factor=2, **kwargs):
-    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(inputs)
+    x = layers.Conv2D(64 * (factor ** 2), 3, padding="same", **kwargs)(inputs)
     x = tf.nn.depth_to_space(x, block_size=factor)
-    x = layers.Conv2D(64 * (factor**2), 3, padding="same", **kwargs)(x)
+    x = layers.Conv2D(64 * (factor ** 2), 3, padding="same", **kwargs)(x)
     x = tf.nn.depth_to_space(x, block_size=factor)
     return x
 
@@ -335,11 +335,12 @@ for lowres, highres in val.take(10):
 ## Final remarks
 
 In this example, we implemented the EDSR model (Enhanced Deep Residual Networks for Single Image
-Super-Resolution). You could improve the model accuracy by training the model for more epochs, as well as 
+Super-Resolution). You could improve the model accuracy by training the model for more epochs, as well as
 training the model with a wider variety of inputs with mixed downgrading factors, so as to
 be able to handle a greater range of real-world images.
 
 You could also improve on the given basline EDSR model by implementing EDSR+,
 or MDSR( Multi-Scale super-resolution) and MDSR+,
-which were proposed in the same paper. 
+which were proposed in the same paper.
 """
+
