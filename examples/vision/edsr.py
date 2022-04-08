@@ -3,31 +3,31 @@ Title: Enhanced Deep Residual Networks for single-image super-resolution
 Author: Gitesh Chawda
 Date created: 07-04-2022
 Last modified: 07-04-2022
-Description: Training a EDSR model on the DIV2K Dataset.
+Description: Training an EDSR model on the DIV2K Dataset.
 """
 
 """
 ## Introduction
 
-In this example, We implement
+In this example, we implement
 [Enhanced Deep Residual Networks for Single Image Super-Resolution (EDSR)](https://arxiv.org/abs/1707.02921)
 by Bee Lim, Sanghyun Son, Heewon Kim, Seungjun Nah, and Kyoung Mu Lee.
 
-The EDSR architecture is based on the SRResNet architecture, consisting of multiple
+The EDSR architecture is based on the SRResNet architecture and consists of multiple
 residual blocks. It uses constant scaling layers instead of batch normalization layers to
 produce consistent results (input and output have similar distributions, thus
-normalizing intermediate features may not be desirable). Instead of using a L2 loss (mean square error),
+normalizing intermediate features may not be desirable). Instead of using a L2 loss (mean squared error),
 the authors employed an L1 loss (mean absolute error), which performs better empirically.
 
 Our implementation only includes 16 residual blocks with 64 channels.
 
 Alternatively, as shown in the Keras example 
 [Image Super-Resolution using an Efficient Sub-Pixel CNN](https://keras.io/examples/vision/super_resolution_sub_pixel/#image-superresolution-using-an-efficient-subpixel-cnn), 
-you can create an ESPCN Model. According to the survey paper, EDSR is one of the top-five
-best-performing methods based on PSNR scores. However it has more 
+you can do super-resolution using an ESPCN Model. According to the survey paper, EDSR is one of the top-five
+best-performing super-resolution methods based on PSNR scores. However, it has more 
 parameters and requires more computational power than other approaches. 
-It has a PSNR(≈34 db) value that is slightly higher than ESPCN(≈32 db).
-As per the survey paper EDSR performs well than ESPCN.
+It has a PSNR value (≈34db) that is slightly higher than ESPCN (≈32db).
+As per the survey paper, EDSR performs better than ESPCN.
 
 Paper:
 [A comprehensive review of deep learning based single image super-resolution](https://arxiv.org/abs/2102.09351)
@@ -138,7 +138,7 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
 
 We augment the training data with random horizontal flips and 90 rotations.
 
-As low resolution images, we'll use 24x24 RGB input patches.
+As low resolution images, we use 24x24 RGB input patches.
 """
 
 
@@ -202,16 +202,16 @@ def PSNR(super_resolution, high_resolution):
 """
 ## Build the model
 
-In the paper, the authors train three models: EDSR, MDSR, and baseline. In this code example
-we train the baseline model.
+In the paper, the authors train three models: EDSR, MDSR, and a baseline model. In this code example,
+we only train the baseline model.
 
 ### Comparison with model with three residual blocks
 
 The residual block design of EDSR differs from that of ResNet. Batch normalization 
-layers have been removed together with the final ReLU activation, Since batch normalization 
-layers normalize the features, they get rid of range flexibility from networks by normalizing
-the features, it is better to remove them, Furthermore, GPU memory usage is also
-sufficiently reduced since the batch normalization layers consume the same amount of
+layers have been removed (together with the final ReLU activation): since batch normalization 
+layers normalize the features, they hurt output value range flexibility.
+It is thus better to remove them. Further, it also helps reduce the
+amount of GPU RAM required by the model, since the batch normalization layers consume the same amount of
 memory as the preceding convolutional layers.
 
 <img src="https://miro.medium.com/max/1050/1*EPviXGqlGWotVtV2gqVvNg.png" width="500" /> 
@@ -335,9 +335,11 @@ for lowres, highres in val.take(10):
 ## Final remarks
 
 In this example, we implemented the EDSR model (Enhanced Deep Residual Networks for Single Image
-Super-Resolution), we can improve the accuracy by training the model for more epochs, as well as 
-training the model with a wide variety of data with mixed downgrading factor, so that our model 
-can predict any real-world image.
-Likewise you can expand the given basline EDSR model to EDSR+ and check results of the two models, 
-Also you can test MDSR(Multi-Scale super-resolution) and MDSR+ proposed in same paper and check results with EDSR model. 
+Super-Resolution). You could improve the model accuracy by training the model for more epochs, as well as 
+training the model with a wider variety of inputs with mixed downgrading factors, so as to
+be able to handle a greater range of real-world images.
+
+You could also improve on the given basline EDSR model by implementing EDSR+,
+or MDSR( Multi-Scale super-resolution) and MDSR+,
+which were proposed in the same paper. 
 """
