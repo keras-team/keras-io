@@ -1,20 +1,28 @@
 """
-Title: End-to-end Object detection with transformers
+Title: Object detection with vision transformers
 Author: Karan V. Dave
 Date created: 2022/03/27
 Last modified: 2022/03/27
-Description: A simple keras implementation for object detection using transformers.
+Description: A simple keras implementation for object detection task using vision transformers.
 """
 
 """
 ## Introduction
 
- This example is a an implementation of the [Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929) model by Alexey Dosovitskiy et al. for object detection,
- it is demonstrated on the Caltech 101 dataset for detecting airplane in an image.
+This is an implementation of the
+[Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929)
+model by Alexey Dosovitskiy et al. applied to the object detection task.
+The model is trained on
+[Caltech 101 dataset](http://www.vision.caltech.edu/datasets/),
+to detect an airplane in the given image. The article demonstrates
+that a pure transformer applied directly to sequences of the image
+patches can perform well on object detection tasks.
 
  This example requires TensorFlow 2.4 or higher, and
  [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
- which can be installed using the following command:
+ TFA is imported to use `AdamW` optimizer. However, `keras.optimizers.AdamW`
+ is likely to be included in Keras 2.10. TFA can be installed using the following command:
+
 ```
  pip install -U tensorflow-addons
 ```
@@ -38,12 +46,7 @@ import shutil
 ## Prepare dataset
 """
 
-# Dataset
-# http://www.vision.caltech.edu/Image_Datasets/Caltech101/
-# Download the images '101_ObjectCategories.tar.gz' and
-# annotations 'Annotations.tar' available seperately
-# Extract images (using airplanes here) to images folder and
-# all annotations to another folder.
+# Caltech 101 Dataset, http://www.vision.caltech.edu/Image_Datasets/Caltech101/
 
 # Path to images and annotations
 PATH_IMAGES = "/101_ObjectCategories/airplanes/"
@@ -57,7 +60,6 @@ path_to_downloaded_file = tf.keras.utils.get_file(
     cache_dir="/",  # cache and extract in current directory
 )
 
-# `keras.utils.get_file()` has default subdirectory 'datasets' for downloading and extracting files
 # Extracting tar files found inside main zip file
 shutil.unpack_archive("/datasets/caltech-101/101_ObjectCategories.tar.gz", "/")
 shutil.unpack_archive("/datasets/caltech-101/Annotations.tar", "/")
@@ -75,12 +77,11 @@ annot_paths.sort()
 
 image_size = 224  # resize input images to this size
 
-# empty lists
 images, targets = [], []
 
-# loop over the annotation rows, preprocess and store in list
+# loop over the annotations and images, preprocess them and store in lists
 for i in range(0, len(annot_paths)):
-    #   Access bounding box coordinates
+    # Access bounding box coordinates
     annot = scipy.io.loadmat(PATH_ANNOT + annot_paths[i])["box_coord"][0]
 
     topLeft_X = annot[2]
@@ -91,13 +92,12 @@ for i in range(0, len(annot_paths)):
     image = tf.keras.utils.load_img(PATH_IMAGES + image_paths[i],)
     (w, h) = image.size[:2]
 
-    # convert image to array. Store image to images list
-    # and bounding box in targets list
+    # resize train set images
     if i < int(len(annot_paths) * 0.8):
         # resize image if it is for training dataset
         image = image.resize((image_size, image_size))
 
-    # append image to list
+    # convert image to array and append to list
     images.append(tf.keras.utils.img_to_array(image))
 
     # apply relative scaling to bounding boxes as per given image and append to list
@@ -110,7 +110,7 @@ for i in range(0, len(annot_paths)):
         )
     )
 
-# Convert to numpy and split train and test dataset
+# Convert the list to numpy array, split to train and test dataset
 (x_train), (y_train) = (
     np.asarray(images[: int(len(images) * 0.8)]),
     np.asarray(targets[: int(len(targets) * 0.8)]),
@@ -178,7 +178,7 @@ class Patches(tf.keras.layers.Layer):
 
 
 """
-Display patches for a an input image
+Display patches for an input image
 """
 
 patch_size = 32  # Size of the patches to be extracted from the input images
@@ -202,7 +202,7 @@ for i, patch in enumerate(patches[0]):
     plt.axis("off")
 
 """
-## Implement the patch encoding layer
+## Implemention of the patch encoding layer
  The `PatchEncoder` layer linearly transforms a patch by projecting it into a
  vector of size `projection_dim`. It also adds a learnable position
  embedding to the projected vector.
@@ -218,7 +218,7 @@ class PatchEncoder(tf.keras.layers.Layer):
             input_dim=num_patches, output_dim=projection_dim
         )
 
-    #     Override function to avoid error while saving model
+    # Override function to avoid error while saving model
     def get_config(self):
         config = super().get_config().copy()
         config.update(
@@ -244,15 +244,13 @@ class PatchEncoder(tf.keras.layers.Layer):
 
 """
 ## Build the ViT model
- The ViT model have multiple Transformer blocks, after normalizing,
- they use `layers.MultiHeadAttention`
- layer for self attention and fed into multi-layer perceptron which outputs
- four neurons representing bounding box of the object.
 
- In the [paper](https://arxiv.org/abs/2010.11929), learnable
- embedding is prepended to the sequence of encoded patches.
- Here, `layers.Flatten()` layer is used as image representation to
- MLP followed by final four neurons.
+ The ViT model has multiple Transformer blocks,
+ `layers.MultiHeadAttention` layer is used for self-attention
+ and applied to the sequence of image patches. The encoded patches (skip connection)
+ and self-attention layer's output are normalized and fed into a
+multilayer perceptron (MLP) which has a dense network of layers of neurons.
+The model outputs the final four neurons representing the bounding box coordinates of an object.
 """
 
 
@@ -305,16 +303,17 @@ def create_vit_object_detector(
 
 
 """
-## Run experiment
+## Run the experiment
 """
 
 
 def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
+
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
-    #     Comiple model.
+    # Comiple model.
     model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError())
 
     checkpoint_filepath = "logs/"
@@ -383,12 +382,10 @@ history = run_experiment(
 
 import matplotlib.patches as patches
 
-# To save the model in current path
+# Saves the model in current path
 vit_object_detector.save("vit_object_detector.h5", save_format="h5")
 
-# Testing predictions
-
-
+# To calculate IoU (intersection over union, given two bounding boxes)
 def bounding_box_intersection_over_union(boxA, boxB):
     # get (x, y) coordinates of intersection of bounding boxes
     xA = max(boxA[0], boxB[0])
@@ -414,7 +411,7 @@ def bounding_box_intersection_over_union(boxA, boxB):
 
 i, mIoU = 0, 0
 
-# Compare results for last 10 images which were added to test set
+# Compare results for 10 images in the test set
 for inputImage in x_test[:10]:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 15))
     im = inputImage
@@ -436,7 +433,7 @@ for inputImage in x_test[:10]:
     bottomRight_Y = int(preds[3] * h)
 
     boxA = [topLeft_X, topLeft_Y, bottomRight_X, bottomRight_Y]
-    # Create bounding box
+    # Create the bounding box
     rect = patches.Rectangle(
         (topLeft_X, topLeft_Y),
         bottomRight_X - topLeft_X,
@@ -445,7 +442,7 @@ for inputImage in x_test[:10]:
         edgecolor="red",
         linewidth=1,
     )
-    # Add bounding box to the image
+    # Add the bounding box to the image
     ax1.add_patch(rect)
     ax1.set_xlabel(
         "Predicted: "
@@ -466,7 +463,7 @@ for inputImage in x_test[:10]:
     boxB = topLeft_X, topLeft_Y, bottomRight_X, bottomRight_Y
 
     mIoU += bounding_box_intersection_over_union(boxA, boxB)
-    # Create bounding box
+    # Create the bounding box
     rect = patches.Rectangle(
         (topLeft_X, topLeft_Y),
         bottomRight_X - topLeft_X,
@@ -475,7 +472,7 @@ for inputImage in x_test[:10]:
         edgecolor="red",
         linewidth=1,
     )
-    # Add bounding box to the image
+    # Add the bounding box to the image
     ax2.add_patch(rect)
     ax2.set_xlabel(
         "Target: "
@@ -496,5 +493,7 @@ print("mIoU" + str(mIoU / len(x_test[:10])))
 plt.show()
 
 """
-Model can be improved further by tuning hyper-parameters and pre-training.
+This article demonstrates that a pure transformer can be trained to predict the bounding boxes of an object in the given image,
+thus extending the use of transformers for complex computer vision tasks.
+The model can be improved further by tuning hyper-parameters and pre-training.
 """
