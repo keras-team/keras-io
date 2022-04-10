@@ -34,6 +34,8 @@ pip install -U tensorflow-addons
 
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
 import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,10 +51,10 @@ import shutil
 # Caltech 101 Dataset, http://www.vision.caltech.edu/Image_Datasets/Caltech101/
 
 # Path to images and annotations
-PATH_IMAGES = "/101_ObjectCategories/airplanes/"
-PATH_ANNOT = "/Annotations/Airplanes_Side_2/"
+path_images = "/101_ObjectCategories/airplanes/"
+path_annot = "/Annotations/Airplanes_Side_2/"
 
-path_to_downloaded_file = tf.keras.utils.get_file(
+path_to_downloaded_file = keras.utils.get_file(
     fname="caltech_101_zipped",
     origin="https://data.caltech.edu/tindfiles/serve/e41f5188-0b32-41fa-801b-d1e840915e80/",
     extract=True,
@@ -66,10 +68,10 @@ shutil.unpack_archive("/datasets/caltech-101/Annotations.tar", "/")
 
 # list of paths to images and annotations
 image_paths = [
-    f for f in os.listdir(PATH_IMAGES) if os.path.isfile(os.path.join(PATH_IMAGES, f))
+    f for f in os.listdir(path_images) if os.path.isfile(os.path.join(path_images, f))
 ]
 annot_paths = [
-    f for f in os.listdir(PATH_ANNOT) if os.path.isfile(os.path.join(PATH_ANNOT, f))
+    f for f in os.listdir(path_annot) if os.path.isfile(os.path.join(path_annot, f))
 ]
 
 image_paths.sort()
@@ -82,14 +84,12 @@ images, targets = [], []
 # loop over the annotations and images, preprocess them and store in lists
 for i in range(0, len(annot_paths)):
     # Access bounding box coordinates
-    annot = scipy.io.loadmat(PATH_ANNOT + annot_paths[i])["box_coord"][0]
+    annot = scipy.io.loadmat(path_annot + annot_paths[i])["box_coord"][0]
 
-    topLeft_X = annot[2]
-    topLeft_Y = annot[0]
-    bottomRight_X = annot[3]
-    bottomRight_Y = annot[1]
+    top_left_x, top_left_y = annot[2], annot[0]
+    bottom_right_x, bottom_right_y = annot[3], annot[1]
 
-    image = tf.keras.utils.load_img(PATH_IMAGES + image_paths[i],)
+    image = keras.utils.load_img(path_images + image_paths[i],)
     (w, h) = image.size[:2]
 
     # resize train set images
@@ -98,15 +98,15 @@ for i in range(0, len(annot_paths)):
         image = image.resize((image_size, image_size))
 
     # convert image to array and append to list
-    images.append(tf.keras.utils.img_to_array(image))
+    images.append(keras.utils.img_to_array(image))
 
     # apply relative scaling to bounding boxes as per given image and append to list
     targets.append(
         (
-            float(topLeft_X) / w,
-            float(topLeft_Y) / h,
-            float(bottomRight_X) / w,
-            float(bottomRight_Y) / h,
+            float(top_left_x) / w,
+            float(top_left_y) / h,
+            float(bottom_right_x) / w,
+            float(bottom_right_y) / h,
         )
     )
 
@@ -120,9 +120,6 @@ for i in range(0, len(annot_paths)):
     np.asarray(targets[int(len(targets) * 0.8) :]),
 )
 
-print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
-print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
-
 """
 ## Implement multilayer-perceptron (MLP)
 """
@@ -132,8 +129,8 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = tf.keras.layers.Dense(units, activation=tf.nn.gelu)(x)
-        x = tf.keras.layers.Dropout(dropout_rate)(x)
+        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dropout(dropout_rate)(x)
     return x
 
 
@@ -142,7 +139,7 @@ def mlp(x, hidden_units, dropout_rate):
 """
 
 
-class Patches(tf.keras.layers.Layer):
+class Patches(layers.Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
         self.patch_size = patch_size
@@ -173,8 +170,8 @@ class Patches(tf.keras.layers.Layer):
             rates=[1, 1, 1, 1],
             padding="VALID",
         )
-        patches = tf.reshape(patches, [batch_size, -1, patches.shape[-1]])
-        return patches
+        # return patches
+        return tf.reshape(patches, [batch_size, -1, patches.shape[-1]])
 
 
 """
@@ -190,8 +187,8 @@ plt.axis("off")
 patches = Patches(patch_size)(tf.convert_to_tensor([x_train[0]]))
 print(f"Image size: {image_size} X {image_size}")
 print(f"Patch size: {patch_size} X {patch_size}")
-print(f"Patches per image: {patches.shape[1]}")
-print(f"Elements per patch: {patches.shape[-1]}")
+print(f"{patches.shape[1]} patches per image")
+print(f"{patches.shape[-1]} elements per patch")
 
 n = int(np.sqrt(patches.shape[1]))
 plt.figure(figsize=(4, 4))
@@ -203,18 +200,18 @@ for i, patch in enumerate(patches[0]):
 
 """
 ## Implemention of the patch encoding layer
- The `PatchEncoder` layer linearly transforms a patch by projecting it into a
- vector of size `projection_dim`. It also adds a learnable position
- embedding to the projected vector.
+The `PatchEncoder` layer linearly transforms a patch by projecting it into a
+vector of size `projection_dim`. It also adds a learnable position
+embedding to the projected vector.
 """
 
 
-class PatchEncoder(tf.keras.layers.Layer):
+class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dim):
         super(PatchEncoder, self).__init__()
         self.num_patches = num_patches
-        self.projection = tf.keras.layers.Dense(units=projection_dim)
-        self.position_embedding = tf.keras.layers.Embedding(
+        self.projection = layers.Dense(units=projection_dim)
+        self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
         )
 
@@ -237,18 +234,17 @@ class PatchEncoder(tf.keras.layers.Layer):
 
     def call(self, patch):
         positions = tf.range(start=0, limit=self.num_patches, delta=1)
-        return self.projection(patch) + self.position_embedding(
-            positions
-        )  # return encoded
+        encoded = self.projection(patch) + self.position_embedding(positions)
+        return encoded
 
 
 """
 ## Build the ViT model
 
- The ViT model has multiple Transformer blocks,
- `layers.MultiHeadAttention` layer is used for self-attention
- and applied to the sequence of image patches. The encoded patches (skip connection)
- and self-attention layer's output are normalized and fed into a
+The ViT model has multiple Transformer blocks,
+`layers.MultiHeadAttention` layer is used for self-attention
+and applied to the sequence of image patches. The encoded patches (skip connection)
+and self-attention layer's output are normalized and fed into a
 multilayer perceptron (MLP) which has a dense network of layers of neurons.
 The model outputs the final four neurons representing the bounding box coordinates of an object.
 """
@@ -264,7 +260,7 @@ def create_vit_object_detector(
     transformer_layers,
     mlp_head_units,
 ):
-    inputs = tf.keras.layers.Input(shape=input_shape)
+    inputs = layers.Input(shape=input_shape)
     # Create patches
     patches = Patches(patch_size)(inputs)
     # Encode patches
@@ -273,33 +269,33 @@ def create_vit_object_detector(
     # Create multiple layers of the Transformer block.
     for _ in range(transformer_layers):
         # Layer normalization 1.
-        x1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+        x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
         # Create a multi-head attention layer.
-        attention_output = tf.keras.layers.MultiHeadAttention(
+        attention_output = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=projection_dim, dropout=0.1
         )(x1, x1)
         # Skip connection 1.
-        x2 = tf.keras.layers.Add()([attention_output, encoded_patches])
+        x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
-        x3 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(x2)
+        x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP
         x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
         # Skip connection 2.
-        encoded_patches = tf.keras.layers.Add()([x3, x2])
+        encoded_patches = layers.Add()([x3, x2])
 
     # Create a [batch_size, projection_dim] tensor.
-    representation = tf.keras.layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
-    representation = tf.keras.layers.Flatten()(representation)
-    representation = tf.keras.layers.Dropout(0.3)(representation)
+    representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    representation = layers.Flatten()(representation)
+    representation = layers.Dropout(0.3)(representation)
     # Add MLP.
     features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.3)
 
-    bounding_box = tf.keras.layers.Dense(4)(
+    bounding_box = layers.Dense(4)(
         features
     )  # Final four neurons that output bounding box
 
     # return Keras model.
-    return tf.keras.Model(inputs=inputs, outputs=bounding_box)
+    return keras.Model(inputs=inputs, outputs=bounding_box)
 
 
 """
@@ -314,10 +310,10 @@ def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
     )
 
     # Comiple model.
-    model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError())
+    model.compile(optimizer=optimizer, loss=keras.losses.MeanSquaredError())
 
     checkpoint_filepath = "logs/"
-    checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",
         save_best_only=True,
@@ -332,7 +328,7 @@ def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
         validation_split=0.1,
         callbacks=[
             checkpoint_callback,
-            tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=10),
+            keras.callbacks.EarlyStopping(monitor="val_loss", patience=10),
         ],
     )
 
@@ -386,58 +382,65 @@ import matplotlib.patches as patches
 vit_object_detector.save("vit_object_detector.h5", save_format="h5")
 
 # To calculate IoU (intersection over union, given two bounding boxes)
-def bounding_box_intersection_over_union(boxA, boxB):
+def bounding_box_intersection_over_union(box_predicted, box_truth):
     # get (x, y) coordinates of intersection of bounding boxes
-    xA = max(boxA[0], boxB[0])
-    yA = max(boxA[1], boxB[1])
-    xB = min(boxA[2], boxB[2])
-    yB = min(boxA[3], boxB[3])
+    top_x_intersect = max(box_predicted[0], box_truth[0])
+    top_y_intersect = max(box_predicted[1], box_truth[1])
+    bottom_x_intersect = min(box_predicted[2], box_truth[2])
+    bottom_y_intersect = min(box_predicted[3], box_truth[3])
 
-    # calculate area of the intersection bounding box
-    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+    # calculate area of the intersection bb (bounding box)
+    intersection_area = max(0, bottom_x_intersect - top_x_intersect + 1) * max(
+        0, bottom_y_intersect - top_y_intersect + 1
+    )
 
     # calculate area of the prediction bb and ground-truth bb
-    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
-    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+    box_predicted_area = (box_predicted[2] - box_predicted[0] + 1) * (
+        box_predicted[3] - box_predicted[1] + 1
+    )
+    box_truth_area = (box_truth[2] - box_truth[0] + 1) * (
+        box_truth[3] - box_truth[1] + 1
+    )
 
     # calculate intersection over union by taking intersection
-    # area and dividing it by the sum of predicted bb + ground-truth
-    # bb areas - the interesection area
-    iou = interArea / float(boxAArea + boxBArea - interArea)
+    # area and dividing it by the sum of predicted bb and ground truth
+    # bb areas subtracted by  the interesection area
 
     # return ioU
-    return iou
+    return intersection_area / float(
+        box_predicted_area + box_truth_area - intersection_area
+    )
 
 
-i, mIoU = 0, 0
+i, mean_iou = 0, 0
 
 # Compare results for 10 images in the test set
-for inputImage in x_test[:10]:
+for input_image in x_test[:10]:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 15))
-    im = inputImage
+    im = input_image
 
     # Display the image
     ax1.imshow(im.astype("uint8"))
     ax2.imshow(im.astype("uint8"))
 
-    inputImage = cv2.resize(
-        inputImage, (image_size, image_size), interpolation=cv2.INTER_AREA
+    input_image = cv2.resize(
+        input_image, (image_size, image_size), interpolation=cv2.INTER_AREA
     )
-    inputImage = np.expand_dims(inputImage, axis=0)
-    preds = vit_object_detector.predict(inputImage)[0]
+    input_image = np.expand_dims(input_image, axis=0)
+    preds = vit_object_detector.predict(input_image)[0]
 
     (h, w) = (im).shape[0:2]
-    topLeft_X = int(preds[0] * w)
-    topLeft_Y = int(preds[1] * h)
-    bottomRight_X = int(preds[2] * w)
-    bottomRight_Y = int(preds[3] * h)
 
-    boxA = [topLeft_X, topLeft_Y, bottomRight_X, bottomRight_Y]
+    top_left_x, top_left_y = int(preds[0] * w), int(preds[1] * h)
+
+    bottom_right_x, bottom_right_y = int(preds[2] * w), int(preds[3] * h)
+
+    box_predicted = [top_left_x, top_left_y, bottom_right_x, bottom_right_y]
     # Create the bounding box
     rect = patches.Rectangle(
-        (topLeft_X, topLeft_Y),
-        bottomRight_X - topLeft_X,
-        bottomRight_Y - topLeft_Y,
+        (top_left_x, top_left_y),
+        bottom_right_x - top_left_x,
+        bottom_right_y - top_left_y,
         facecolor="none",
         edgecolor="red",
         linewidth=1,
@@ -446,28 +449,27 @@ for inputImage in x_test[:10]:
     ax1.add_patch(rect)
     ax1.set_xlabel(
         "Predicted: "
-        + str(topLeft_X)
+        + str(top_left_x)
         + ", "
-        + str(topLeft_Y)
+        + str(top_left_y)
         + ", "
-        + str(bottomRight_X)
+        + str(bottom_right_x)
         + ", "
-        + str(bottomRight_Y)
+        + str(bottom_right_y)
     )
 
-    topLeft_X = int(y_test[i][0] * w)
-    topLeft_Y = int(y_test[i][1] * h)
-    bottomRight_X = int(y_test[i][2] * w)
-    bottomRight_Y = int(y_test[i][3] * h)
+    top_left_x, top_left_y = int(y_test[i][0] * w), int(y_test[i][1] * h)
 
-    boxB = topLeft_X, topLeft_Y, bottomRight_X, bottomRight_Y
+    bottom_right_x, bottom_right_y = int(y_test[i][2] * w), int(y_test[i][3] * h)
 
-    mIoU += bounding_box_intersection_over_union(boxA, boxB)
+    box_truth = top_left_x, top_left_y, bottom_right_x, bottom_right_y
+
+    mean_iou += bounding_box_intersection_over_union(box_predicted, box_truth)
     # Create the bounding box
     rect = patches.Rectangle(
-        (topLeft_X, topLeft_Y),
-        bottomRight_X - topLeft_X,
-        bottomRight_Y - topLeft_Y,
+        (top_left_x, top_left_y),
+        bottom_right_x - top_left_x,
+        bottom_right_y - top_left_y,
         facecolor="none",
         edgecolor="red",
         linewidth=1,
@@ -476,20 +478,20 @@ for inputImage in x_test[:10]:
     ax2.add_patch(rect)
     ax2.set_xlabel(
         "Target: "
-        + str(topLeft_X)
+        + str(top_left_x)
         + ", "
-        + str(topLeft_Y)
+        + str(top_left_y)
         + ", "
-        + str(bottomRight_X)
+        + str(bottom_right_x)
         + ", "
-        + str(bottomRight_Y)
+        + str(bottom_right_y)
         + "\n"
         + "IoU"
-        + str(bounding_box_intersection_over_union(boxA, boxB))
+        + str(bounding_box_intersection_over_union(box_predicted, box_truth))
     )
     i = i + 1
 
-print("mIoU" + str(mIoU / len(x_test[:10])))
+print("mean_iou" + str(mean_iou / len(x_test[:10])))
 plt.show()
 
 """
