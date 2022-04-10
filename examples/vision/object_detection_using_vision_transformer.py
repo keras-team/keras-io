@@ -24,7 +24,7 @@ TFA is imported to use `AdamW` optimizer. However, `keras.optimizers.AdamW`
 is likely to be included in Keras 2.10. TFA can be installed using the following command:
 
 ```
- pip install -U tensorflow-addons
+pip install -U tensorflow-addons
 ```
 """
 
