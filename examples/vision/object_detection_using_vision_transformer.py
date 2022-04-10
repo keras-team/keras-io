@@ -18,10 +18,10 @@ to detect an airplane in the given image. The article demonstrates
 that a pure transformer applied directly to sequences of the image
 patches can perform well on object detection tasks.
 
- This example requires TensorFlow 2.4 or higher, and
- [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
- TFA is imported to use `AdamW` optimizer. However, `keras.optimizers.AdamW`
- is likely to be included in Keras 2.10. TFA can be installed using the following command:
+This example requires TensorFlow 2.4 or higher, and
+[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
+TFA is imported to use `AdamW` optimizer. However, `keras.optimizers.AdamW`
+is likely to be included in Keras 2.10. TFA can be installed using the following command:
 
 ```
  pip install -U tensorflow-addons
