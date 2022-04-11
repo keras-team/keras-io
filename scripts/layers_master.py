@@ -64,7 +64,7 @@ LAYERS_MASTER = {
                 'tensorflow.keras.regularizers.L1',
                 'tensorflow.keras.regularizers.L2',
                 'tensorflow.keras.regularizers.L1L2',
-                'tensorflow.keras.regularizers.OrthogonalRegularizer',
+                # 'tensorflow.keras.regularizers.OrthogonalRegularizer',
             ]
         },
         {
