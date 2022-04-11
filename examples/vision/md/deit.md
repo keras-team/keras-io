@@ -1,11 +1,16 @@
-"""
-Title: Distilling Vision Transformers
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2022/04/05
-Last modified: 2022/04/08
-Description: Distillation of Vision Transformers through attention.
-"""
-"""
+# Distilling Vision Transformers
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2022/04/05<br>
+**Last modified:** 2022/04/08<br>
+**Description:** Distillation of Vision Transformers through attention.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/deit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/deit.py)
+
+
+
+---
 ## Introduction
 
 In the original *Vision Transformers* (ViT) paper
@@ -43,12 +48,12 @@ refresher:
 
 * [ViT on keras.io](https://keras.io/examples/vision/image_classification_with_vision_transformer)
 * [Knowledge distillation on keras.io](https://keras.io/examples/vision/knowledge_distillation/)
-"""
 
-"""
+---
 ## Imports
-"""
 
+
+```python
 from typing import List
 
 import tensorflow as tf
@@ -60,11 +65,13 @@ from tensorflow.keras import layers
 
 tfds.disable_progress_bar()
 tf.keras.utils.set_random_seed(42)
+```
 
-"""
+---
 ## Constants
-"""
 
+
+```python
 # Model
 MODEL_TYPE = "deit_distilled_tiny_patch16_224"
 RESOLUTION = 224
@@ -90,22 +97,22 @@ WEIGHT_DECAY = 0.0001
 BATCH_SIZE = 256
 AUTO = tf.data.AUTOTUNE
 NUM_CLASSES = 5
+```
 
-"""
 You probably noticed that `DROPOUT_RATE` has been set 0.0. Dropout has been used
 in the implementation to keep it complete. For smaller models (like the one used in
 this example), you don't need it, but for bigger models, using dropout helps.
-"""
 
-"""
+---
 ## Load the `tf_flowers` dataset and prepare preprocessing utilities
 
 The authors use an array of different augmentation techniques, including MixUp
 ([Zhang et al.](https://arxiv.org/abs/1710.09412)),
 RandAugment ([Cubuk et al.](https://arxiv.org/abs/1909.13719)),
 and so on. However, to keep the example simple to work through, we'll discard them.
-"""
 
+
+```python
 
 def preprocess_dataset(is_training=True):
     def fn(image, label):
@@ -140,8 +147,20 @@ print(f"Number of validation examples: {num_val}")
 
 train_dataset = prepare_dataset(train_dataset, is_training=True)
 val_dataset = prepare_dataset(val_dataset, is_training=False)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-04-11 03:33:20.656807: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-04-11 03:33:26.874591: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38414 MB memory:  -> device: 0, name: A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
+
+Number of training examples: 3303
+Number of validation examples: 367
+
+```
+</div>
+---
 ## Implementing the DeiT variants of ViT
 
 Since DeiT is an extension of ViT it'd make sense to first implement ViT and then extend
@@ -150,8 +169,9 @@ it to support DeiT's components.
 First, we'll implement a layer for Stochastic Depth
 ([Huang et al.](https://arxiv.org/abs/1603.09382))
 which is used in DeiT for regularization.
-"""
 
+
+```python
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
@@ -167,11 +187,12 @@ class StochasticDepth(layers.Layer):
             return (x / keep_prob) * random_tensor
         return x
 
+```
 
-"""
 Now, we'll implement the MLP and Transformer blocks.
-"""
 
+
+```python
 
 def mlp(x, dropout_rate: float, hidden_units: List):
     """FFN for a Transformer block."""
@@ -219,14 +240,15 @@ def transformer(drop_prob: float, name: str) -> keras.Model:
 
     return keras.Model(encoded_patches, outputs, name=name)
 
+```
 
-"""
 We'll now implement a `ViTClassifier` class building on top of the components we just
 developed. Here we'll be following the original pooling strategy used in the ViT paper --
 use a class token and use the feature representations corresponding to it for
 classification.
-"""
 
+
+```python
 
 class ViTClassifier(keras.Model):
     """Vision Transformer base class."""
@@ -316,8 +338,8 @@ class ViTClassifier(keras.Model):
         output = self.head(encoded_patches)
         return output
 
+```
 
-"""
 This class can be used standalone as ViT and is end-to-end trainable. Just remove the
 `distilled` phrase in `MODEL_TYPE` and it should work with `vit_tiny = ViTClassifier()`.
 Let's now extend it to DeiT. The following figure presents the schematic of DeiT (taken
@@ -328,8 +350,9 @@ from the DeiT paper):
 Apart from the class token, DeiT has another token for distillation. During distillation,
 the logits corresponding to the class token are compared to the true labels, and the
 logits corresponding to the distillation token are compared to the teacher's predictions.
-"""
 
+
+```python
 
 class ViTDistilled(ViTClassifier):
     def __init__(self, regular_training=False, **kwargs):
@@ -407,18 +430,30 @@ class ViTDistilled(ViTClassifier):
             # mode.
             return x, x_dist
 
+```
 
-"""
 Let's verify if the `ViTDistilled` class can be initialized and called as expected.
-"""
 
+
+```python
 deit_tiny_distilled = ViTDistilled()
 
 dummy_inputs = tf.ones((2, 224, 224, 3))
 outputs = deit_tiny_distilled(dummy_inputs, training=False)
 print(outputs.shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-04-11 03:33:31.378665: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8200
+
+(2, 5)
+
+2022-04-11 03:33:36.855300: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+```
+</div>
+---
 ## Implementing the trainer
 
 Unlike what happens in standard knowledge distillation
@@ -436,8 +471,9 @@ Here,
 * Z_s denotes student predictions
 * y denotes true labels
 * y_t denotes teacher predictions
-"""
 
+
+```python
 
 class DeiT(keras.Model):
     # Reference:
@@ -525,8 +561,9 @@ class DeiT(keras.Model):
     def call(self, inputs):
         return self.student(inputs / 255.0, training=False)
 
+```
 
-"""
+---
 ## Load the teacher model
 
 This model is based on the BiT family of ResNets
@@ -535,19 +572,30 @@ fine-tuned on the `tf_flowers` dataset. You can refer to
 [this notebook](https://github.com/sayakpaul/deit-tf/blob/main/notebooks/bit-teacher.ipynb)
 to know how the training was performed. The teacher model has about 212 Million parameters
 which is about **40x more** than the student.
-"""
 
-"""shell
-wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip
-unzip -q bit_teacher_flowers.zip
-"""
 
+```python
+!wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip
+!unzip -q bit_teacher_flowers.zip
+```
+
+
+```python
 bit_teacher_flowers = keras.models.load_model("bit_teacher_flowers")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-04-11 03:35:42.158481: W tensorflow/core/common_runtime/graph_constructor.cc:803] Node 're_lu_48/PartitionedCall' has 1 outputs but the _output_shapes attribute specifies shapes for 2 outputs. Output shapes may be inaccurate.
+2022-04-11 03:35:42.158628: W tensorflow/core/common_runtime/graph_constructor.cc:803] Node 'global_average_pooling2d/PartitionedCall' has 1 outputs but the _output_shapes attribute specifies shapes for 4 outputs. Output shapes may be inaccurate.
+
+```
+</div>
+---
 ## Training through distillation
-"""
 
+
+```python
 deit_tiny = ViTDistilled()
 deit_distiller = DeiT(student=deit_tiny, teacher=bit_teacher_flowers)
 
@@ -561,8 +609,53 @@ deit_distiller.compile(
     distillation_loss_fn=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
 )
 _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EPOCHS)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/20
+13/13 [==============================] - 43s 2s/step - accuracy: 0.2334 - student_loss: 2.2600 - distillation_loss: 1.7794 - val_accuracy: 0.2561 - val_student_loss: 1.6605 - val_distillation_loss: 0.0000e+00
+Epoch 2/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.2125 - student_loss: 1.6374 - distillation_loss: 1.6129 - val_accuracy: 0.1907 - val_student_loss: 1.6151 - val_distillation_loss: 0.0000e+00
+Epoch 3/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.2546 - student_loss: 1.6073 - distillation_loss: 1.5967 - val_accuracy: 0.1907 - val_student_loss: 1.6089 - val_distillation_loss: 0.0000e+00
+Epoch 4/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.2561 - student_loss: 1.5953 - distillation_loss: 1.5896 - val_accuracy: 0.2970 - val_student_loss: 1.5953 - val_distillation_loss: 0.0000e+00
+Epoch 5/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.2916 - student_loss: 1.5828 - distillation_loss: 1.5687 - val_accuracy: 0.3433 - val_student_loss: 1.5595 - val_distillation_loss: 0.0000e+00
+Epoch 6/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.3851 - student_loss: 1.4810 - distillation_loss: 1.4486 - val_accuracy: 0.3869 - val_student_loss: 1.5020 - val_distillation_loss: 0.0000e+00
+Epoch 7/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.4099 - student_loss: 1.4075 - distillation_loss: 1.3547 - val_accuracy: 0.3597 - val_student_loss: 1.4115 - val_distillation_loss: 0.0000e+00
+Epoch 8/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.4275 - student_loss: 1.3687 - distillation_loss: 1.3036 - val_accuracy: 0.4142 - val_student_loss: 1.3735 - val_distillation_loss: 0.0000e+00
+Epoch 9/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.4653 - student_loss: 1.3032 - distillation_loss: 1.2017 - val_accuracy: 0.4714 - val_student_loss: 1.3220 - val_distillation_loss: 0.0000e+00
+Epoch 10/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.5232 - student_loss: 1.2496 - distillation_loss: 1.1376 - val_accuracy: 0.4605 - val_student_loss: 1.3052 - val_distillation_loss: 0.0000e+00
+Epoch 11/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.5453 - student_loss: 1.2119 - distillation_loss: 1.0985 - val_accuracy: 0.5286 - val_student_loss: 1.1904 - val_distillation_loss: 0.0000e+00
+Epoch 12/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.5671 - student_loss: 1.1719 - distillation_loss: 1.0447 - val_accuracy: 0.5831 - val_student_loss: 1.1522 - val_distillation_loss: 0.0000e+00
+Epoch 13/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.5752 - student_loss: 1.1563 - distillation_loss: 1.0242 - val_accuracy: 0.5695 - val_student_loss: 1.1342 - val_distillation_loss: 0.0000e+00
+Epoch 14/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6064 - student_loss: 1.1367 - distillation_loss: 1.0009 - val_accuracy: 0.5831 - val_student_loss: 1.1332 - val_distillation_loss: 0.0000e+00
+Epoch 15/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6164 - student_loss: 1.1114 - distillation_loss: 0.9822 - val_accuracy: 0.6131 - val_student_loss: 1.0876 - val_distillation_loss: 0.0000e+00
+Epoch 16/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6331 - student_loss: 1.0915 - distillation_loss: 0.9454 - val_accuracy: 0.5695 - val_student_loss: 1.0834 - val_distillation_loss: 0.0000e+00
+Epoch 17/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6309 - student_loss: 1.0845 - distillation_loss: 0.9321 - val_accuracy: 0.6349 - val_student_loss: 1.1140 - val_distillation_loss: 0.0000e+00
+Epoch 18/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6337 - student_loss: 1.0699 - distillation_loss: 0.9143 - val_accuracy: 0.6240 - val_student_loss: 1.0632 - val_distillation_loss: 0.0000e+00
+Epoch 19/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6639 - student_loss: 1.0389 - distillation_loss: 0.8758 - val_accuracy: 0.6322 - val_student_loss: 1.0323 - val_distillation_loss: 0.0000e+00
+Epoch 20/20
+13/13 [==============================] - 14s 1s/step - accuracy: 0.6582 - student_loss: 1.0435 - distillation_loss: 0.8798 - val_accuracy: 0.6431 - val_student_loss: 1.0159 - val_distillation_loss: 0.0000e+00
+
+```
+</div>
 If we had trained the same model (the `ViTClassifier`) from scratch with the exact same
 hyperparameters, the model would have scored about 59% accuracy. You can adapt the following code
 to reproduce this result:
@@ -578,9 +671,8 @@ model = keras.Model(inputs, outputs)
 model.compile(...)
 model.fit(...)
 ```
-"""
 
-"""
+---
 ## Notes
 
 * Through the use of distillation, we're effectively transferring the inductive biases of
@@ -594,6 +686,7 @@ end-to-end reproduction of the original results, don't forget to initialize the 
 * If you want to explore the pre-trained DeiT models in TensorFlow and Keras with code
 for fine-tuning, [check out these models on TF-Hub](https://tfhub.dev/sayakpaul/collections/deit/1).
 
+---
 ## Acknowledgements
 
 * Ross Wightman for keeping
@@ -605,4 +698,3 @@ who implemented some portions of the `ViTClassifier` in another project.
 * [Google Developers Experts](https://developers.google.com/programs/experts/)
 program for supporting me with GCP credits which were used to run experiments for this
 example.
-"""
