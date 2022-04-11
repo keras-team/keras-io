@@ -178,7 +178,10 @@ def mlp(x, dropout_rate: float, hidden_units: List):
     # Iterate over the hidden units and
     # add Dense => Dropout.
     for (idx, units) in enumerate(hidden_units):
-        x = layers.Dense(units, activation=tf.nn.gelu if idx == 0 else None,)(x)
+        x = layers.Dense(
+            units,
+            activation=tf.nn.gelu if idx == 0 else None,
+        )(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -193,7 +196,9 @@ def transformer(drop_prob: float, name: str) -> keras.Model:
 
     # Multi Head Self Attention layer 1.
     attention_output = layers.MultiHeadAttention(
-        num_heads=NUM_HEADS, key_dim=PROJECTION_DIM, dropout=DROPOUT_RATE,
+        num_heads=NUM_HEADS,
+        key_dim=PROJECTION_DIM,
+        dropout=DROPOUT_RATE,
     )(x1, x1)
     attention_output = (
         StochasticDepth(drop_prob)(attention_output) if drop_prob else attention_output
@@ -273,7 +278,10 @@ class ViTClassifier(keras.Model):
         # Other layers.
         self.dropout = layers.Dropout(DROPOUT_RATE)
         self.layer_norm = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)
-        self.head = layers.Dense(NUM_CLASSES, name="classification_head",)
+        self.head = layers.Dense(
+            NUM_CLASSES,
+            name="classification_head",
+        )
 
     def call(self, inputs, training=True):
         n = tf.shape(inputs)[0]
@@ -333,13 +341,25 @@ class ViTDistilled(ViTClassifier):
         init_value = tf.zeros((1, 1, PROJECTION_DIM))
         self.dist_token = tf.Variable(init_value, name="dist_token")
         self.positional_embedding = tf.Variable(
-            tf.zeros((1, NUM_PATCHES + self.num_tokens, PROJECTION_DIM,)),
+            tf.zeros(
+                (
+                    1,
+                    NUM_PATCHES + self.num_tokens,
+                    PROJECTION_DIM,
+                )
+            ),
             name="pos_embedding",
         )
 
         # Head layers.
-        self.head = layers.Dense(NUM_CLASSES, name="classification_head",)
-        self.head_dist = layers.Dense(NUM_CLASSES, name="distillation_head",)
+        self.head = layers.Dense(
+            NUM_CLASSES,
+            name="classification_head",
+        )
+        self.head_dist = layers.Dense(
+            NUM_CLASSES,
+            name="distillation_head",
+        )
 
     def call(self, inputs, training=True):
         n = tf.shape(inputs)[0]
@@ -438,7 +458,11 @@ class DeiT(keras.Model):
         return metrics
 
     def compile(
-        self, optimizer, metrics, student_loss_fn, distillation_loss_fn,
+        self,
+        optimizer,
+        metrics,
+        student_loss_fn,
+        distillation_loss_fn,
     ):
         super().compile(optimizer=optimizer, metrics=metrics)
         self.student_loss_fn = student_loss_fn
