@@ -151,10 +151,6 @@ val_dataset = prepare_dataset(val_dataset, is_training=False)
 
 <div class="k-default-codeblock">
 ```
-2022-04-11 03:33:20.656807: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-04-11 03:33:26.874591: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38414 MB memory:  -> device: 0, name: A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
-
 Number of training examples: 3303
 Number of validation examples: 367
 
@@ -445,12 +441,7 @@ print(outputs.shape)
 
 <div class="k-default-codeblock">
 ```
-2022-04-11 03:33:31.378665: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8200
-
 (2, 5)
-
-2022-04-11 03:33:36.855300: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
-
 ```
 </div>
 ---
@@ -584,13 +575,6 @@ which is about **40x more** than the student.
 bit_teacher_flowers = keras.models.load_model("bit_teacher_flowers")
 ```
 
-<div class="k-default-codeblock">
-```
-2022-04-11 03:35:42.158481: W tensorflow/core/common_runtime/graph_constructor.cc:803] Node 're_lu_48/PartitionedCall' has 1 outputs but the _output_shapes attribute specifies shapes for 2 outputs. Output shapes may be inaccurate.
-2022-04-11 03:35:42.158628: W tensorflow/core/common_runtime/graph_constructor.cc:803] Node 'global_average_pooling2d/PartitionedCall' has 1 outputs but the _output_shapes attribute specifies shapes for 4 outputs. Output shapes may be inaccurate.
-
-```
-</div>
 ---
 ## Training through distillation
 
