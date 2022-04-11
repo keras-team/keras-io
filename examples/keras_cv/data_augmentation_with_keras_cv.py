@@ -369,26 +369,20 @@ with strategy.scope():
     )
 
 """
-# Conclusion & Next Steps
-"""
-
-"""
+## Conclusion & Next Steps
 That's all it takes to assemble state of the art image augmentation pipeliens with
 KerasCV!
-"""
 
-"""
-As a further exercise for readers, you can:
+As an additional exercise for readers, you can:
 
 - Perform a hyper parameter search over the RandAugment parameters to improve the
 classifier accuracy
 - Substitute the Oxford Flowers dataset with your own dataset
-- Experiment with assembling your own augmentation technique instead of relying on
-RandAugment
+- Experiment with custom `RandomAugmentationPipeline`s.
 
 Currently, between Keras core and KerasCV there are [_28 image augmentation
 layers_](https://github.com/keras-team/keras-cv/blob/master/keras_cv/layers/preprocessing/
-__init__.py)!  Each of these can be used independently.  Check it out, and if you find
-any augmentation techniques to be missing please file a [GitHub issue on
+__init__.py)!  Each of these can be used independently.  Check them out, and if you find
+an augmentation techniques you need is missing please file a [GitHub issue on
 KerasCV](https://github.com/keras-team/keras-cv/issues).
 """
