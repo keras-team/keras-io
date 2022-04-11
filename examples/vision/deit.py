@@ -8,27 +8,29 @@ Description: Distillation of Vision Transformers through attention.
 """
 ## Introduction
 
-In the original Vision Transformers (ViT) paper
+In the original *Vision Transformers* (ViT) paper
 ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)),
-the authors concluded that to perform on par with Convolutional Neural Networks (CNN),
+the authors concluded that to perform on par with Convolutional Neural Networks (CNNs),
 ViTs need to be pre-trained on larger datasets. The larger the better. This is mainly
-due to the lack of inductive biases inside ViTs -- unlike CNNs they don't have layers
-that exploit locality. In a follow-up paper
+due to the lack of inductive biases in the ViT architecture -- unlike CNNs,
+they don't have layers that exploit locality. In a follow-up paper
 ([Steiner et al.](https://arxiv.org/abs/2106.10270)),
 the authors show that it is possible to substantially improve the performance of ViTs
-with stronger regularization and longer training lengths.
+with stronger regularization and longer training.
 
-Many groups have proposed different ways to deal with the problem of data hunger of ViTs.
-One such way was shown in DeiT ([Touvron et al.](https://arxiv.org/abs/2012.12877)). The
+Many groups have proposed different ways to deal with the problem
+of data-intensiveness of ViT training.
+One such way was shown in the *Data-efficient image Transformers*,
+(DeiT) paper ([Touvron et al.](https://arxiv.org/abs/2012.12877)). The
 authors introduced a distillation technique that is specific to transformer-based vision
-models. DeiT is among the first works that showed it's possible to train ViTs well
+models. DeiT is among the first works to show that it's possible to train ViTs well
 without using larger datasets. 
 
-In this example, we'll implement the distillation recipe proposed in DeiT. This will
-require us to slightly tweak the original ViT architecture and write a custom loop to
-implement the distillation recipe.
+In this example, we implement the distillation recipe proposed in DeiT. This
+requires us to slightly tweak the original ViT architecture and write a custom training
+loop to implement the distillation recipe.
 
-To run the example, you'll need TensorFlow Addons which you can install with the
+To run the example, you'll need TensorFlow Addons, which you can install with the
 following command:
 
 ```
@@ -39,10 +41,8 @@ To comfortably navigate through this example, you'll be expected to know how a V
 knowledge distillation work. The following are good resources in case you needed a
 refresher:
 
-*
-[ViT on keras.io](https://keras.io/examples/vision/image_classification_with_vision_transformer) 
-* 
-[Knowledge distillation on keras.io](https://keras.io/examples/vision/knowledge_distillation/)
+* [ViT on keras.io](https://keras.io/examples/vision/image_classification_with_vision_transformer) 
+* [Knowledge distillation on keras.io](https://keras.io/examples/vision/knowledge_distillation/)
 """
 
 """
@@ -94,13 +94,13 @@ NUM_CLASSES = 5
 """
 You probably noticed that `DROPOUT_RATE` has been set 0.0. Dropout has been used
 in the implementation to keep it complete. For smaller models (like the one used in
-this example) don't need it but for bigger models, using dropout helps.
+this example), you don't need it, but for bigger models, using dropout helps.
 """
 
 """
 ## Load the `tf_flowers` dataset and prepare preprocessing utilities
 
-The authors use an array of different augmentation techniques including MixUp
+The authors use an array of different augmentation techniques, including MixUp
 ([Zhang et al.](https://arxiv.org/abs/1710.09412)),
 RandAugment ([Cubuk et al.](https://arxiv.org/abs/1909.13719)),
 and so on. However, to keep the example simple to work through, we'll discard them.
@@ -144,7 +144,7 @@ val_dataset = prepare_dataset(val_dataset, is_training=False)
 """
 ## Implementing the DeiT variants of ViT
 
-Since DeiT is an extension of ViTs it'd make sense to first implement ViT and then extend
+Since DeiT is an extension of ViT it'd make sense to first implement ViT and then extend
 it to support DeiT's components.
 
 First, we'll implement a layer for Stochastic Depth
@@ -326,8 +326,8 @@ from the DeiT paper):
 ![](https://i.imgur.com/5lmg2Xs.png)
 
 Apart from the class token, DeiT has another token for distillation. During distillation,
-the logits corresponding to the class token are compared to the true labels and the
-logits corresponding to the distillation token are compared to the teacher predictions. 
+the logits corresponding to the class token are compared to the true labels, and the
+logits corresponding to the distillation token are compared to the teacher's predictions. 
 """
 
 
@@ -421,10 +421,10 @@ print(outputs.shape)
 """
 ## Implementing the trainer
 
-Unlike the standard knowledge distillation
+Unlike what happens in standard knowledge distillation
 ([Hinton et al.](https://arxiv.org/abs/1503.02531)),
-where a temperature-scaled softmax is used as well as KL divergence, DeiT authors use
-the following loss:
+where a temperature-scaled softmax is used as well as KL divergence,
+DeiT authors use the following loss function:
 
 ![](https://i.imgur.com/bXdxsBq.png)
 
@@ -564,8 +564,8 @@ _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EP
 
 """
 If we had trained the same model (the `ViTClassifier`) from scratch with the exact same
-hyperparameters, the model would have given about 59%. You can adapt the following code
-to do so:
+hyperparameters, the model would have scored about 59% accuracy. You can adapt the following code
+to reproduce this result:
 
 ```
 vit_tiny = ViTClassifier()
@@ -592,8 +592,7 @@ model rather than a Transformer as shown in the paper.
 truncated normal, random normal, Glorot uniform, etc. If you're looking for
 end-to-end reproduction of the original results, don't forget to initialize the ViTs well.
 * If you want to explore the pre-trained DeiT models in TensorFlow and Keras with code
-for fine-tuning, [check out these models on
-TF-Hub](https://tfhub.dev/sayakpaul/collections/deit/1). 
+for fine-tuning, [check out these models on TF-Hub](https://tfhub.dev/sayakpaul/collections/deit/1). 
 
 ## Acknowledgements
 
