@@ -89,7 +89,9 @@ for i in range(0, len(annot_paths)):
     top_left_x, top_left_y = annot[2], annot[0]
     bottom_right_x, bottom_right_y = annot[3], annot[1]
 
-    image = keras.utils.load_img(path_images + image_paths[i],)
+    image = keras.utils.load_img(
+        path_images + image_paths[i],
+    )
     (w, h) = image.size[:2]
 
     # resize train set images
@@ -187,8 +189,8 @@ plt.axis("off")
 patches = Patches(patch_size)(tf.convert_to_tensor([x_train[0]]))
 print(f"Image size: {image_size} X {image_size}")
 print(f"Patch size: {patch_size} X {patch_size}")
-print(f"{patches.shape[1]} patches per image")
-print(f"{patches.shape[-1]} elements per patch")
+print(f"{patches.shape[1]} patches per image \n{patches.shape[-1]} elements per patch")
+
 
 n = int(np.sqrt(patches.shape[1]))
 plt.figure(figsize=(4, 4))
@@ -309,7 +311,7 @@ def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
-    # Comiple model.
+    # Compile model.
     model.compile(optimizer=optimizer, loss=keras.losses.MeanSquaredError())
 
     checkpoint_filepath = "logs/"
