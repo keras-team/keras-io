@@ -1,27 +1,30 @@
 """
-Title: Object detection with vision transformers
+Title: Object detection with Vision Transformers
 Author: [Karan V. Dave](https://www.linkedin.com/in/karan-dave-811413164/)
 Date created: 2022/03/27
 Last modified: 2022/03/27
-Description: A simple keras implementation for object detection task using vision transformers.
+Description: A simple Keras implementation of object detection using Vision Transformers.
 """
 
 """
 ## Introduction
 
-This is an implementation of the
+The article
 [Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929)
-model by Alexey Dosovitskiy et al. applied to the object detection task.
-The model is trained on
-[Caltech 101 dataset](http://www.vision.caltech.edu/datasets/),
-to detect an airplane in the given image. The article demonstrates
-that a pure transformer applied directly to sequences of the image
+architecture by Alexey Dosovitskiy et al.
+demonstrates that a pure transformer applied directly to sequences of image
 patches can perform well on object detection tasks.
+
+In this Keras example, we implement an object detection ViT
+and we train it on the
+[Caltech 101 dataset](http://www.vision.caltech.edu/datasets/)
+to detect an airplane in the given image.
 
 This example requires TensorFlow 2.4 or higher, and
 [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-TFA is imported to use `AdamW` optimizer. However, `keras.optimizers.AdamW`
-is likely to be included in Keras 2.10. TFA can be installed using the following command:
+from which we import the `AdamW` optimizer. 
+
+TensorFlow Addons can be installed via the following command:
 
 ```
 pip install -U tensorflow-addons
@@ -46,9 +49,9 @@ import shutil
 
 """
 ## Prepare dataset
-"""
 
-# Caltech 101 Dataset, http://www.vision.caltech.edu/Image_Datasets/Caltech101/
+We use the [Caltech 101 Dataset](http://www.vision.caltech.edu/Image_Datasets/Caltech101/).
+"""
 
 # Path to images and annotations
 path_images = "/101_ObjectCategories/airplanes/"
@@ -124,9 +127,11 @@ for i in range(0, len(annot_paths)):
 
 """
 ## Implement multilayer-perceptron (MLP)
-"""
 
-# Some Code referred from https://github.com/keras-team/keras-io/blob/master/examples/vision/image_classification_with_vision_transformer.py
+We use the code from the Keras example
+[Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/)
+as a reference.
+"""
 
 
 def mlp(x, hidden_units, dropout_rate):
@@ -137,7 +142,7 @@ def mlp(x, hidden_units, dropout_rate):
 
 
 """
-## Implement patch creation layer
+## Implement the patch creation layer
 """
 
 
@@ -177,7 +182,7 @@ class Patches(layers.Layer):
 
 
 """
-Display patches for an input image
+## Display patches for an input image
 """
 
 patch_size = 32  # Size of the patches to be extracted from the input images
@@ -201,7 +206,8 @@ for i, patch in enumerate(patches[0]):
     plt.axis("off")
 
 """
-## Implemention of the patch encoding layer
+## Implement the patch encoding layer
+
 The `PatchEncoder` layer linearly transforms a patch by projecting it into a
 vector of size `projection_dim`. It also adds a learnable position
 embedding to the projected vector.
@@ -243,12 +249,13 @@ class PatchEncoder(layers.Layer):
 """
 ## Build the ViT model
 
-The ViT model has multiple Transformer blocks,
-`layers.MultiHeadAttention` layer is used for self-attention
-and applied to the sequence of image patches. The encoded patches (skip connection)
-and self-attention layer's output are normalized and fed into a
-multilayer perceptron (MLP) which has a dense network of layers of neurons.
-The model outputs the final four neurons representing the bounding box coordinates of an object.
+The ViT model has multiple Transformer blocks.
+The `MultiHeadAttention` layer is used for self-attention,
+applied to the sequence of image patches. The encoded patches (skip connection)
+and self-attention layer outputs are normalized and fed into a
+multilayer perceptron (MLP).
+The model outputs four dimensions representing
+the bounding box coordinates of an object.
 """
 
 
@@ -375,7 +382,7 @@ history = run_experiment(
 
 
 """
-## Model Evaluation
+## Evaluate the model
 """
 
 import matplotlib.patches as patches
@@ -497,7 +504,8 @@ print("mean_iou" + str(mean_iou / len(x_test[:10])))
 plt.show()
 
 """
-This article demonstrates that a pure transformer can be trained to predict the bounding boxes of an object in the given image,
-thus extending the use of transformers for complex computer vision tasks.
+This example demonstrates that a pure Transformer can be trained
+to predict the bounding boxes of an object in a given image,
+thus extending the use of Transformers to object detection tasks.
 The model can be improved further by tuning hyper-parameters and pre-training.
 """
