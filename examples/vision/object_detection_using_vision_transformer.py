@@ -500,7 +500,7 @@ for input_image in x_test[:10]:
     )
     i = i + 1
 
-print("mean_iou: " + str(mean_iou / len(x_test[:10])))
+print("mean_iou" + str(mean_iou / len(x_test[:10])))
 plt.show()
 
 """

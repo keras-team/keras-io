@@ -6,7 +6,8 @@
 **Description:** A simple Keras implementation of object detection using Vision Transformers.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/object_detection_using_vision_transformer.ipynb)  <span class="k-dot">â€¢</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/object_detection_using_vision_transformer.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/object_detection_using_vision_transformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/object_detection_using_vision_transformer.py)
+
 
 
 ---
@@ -131,6 +132,13 @@ for i in range(0, len(annot_paths)):
 )
 ```
 
+<div class="k-default-codeblock">
+```
+C:\Users\DAVE\AppData\Local\Temp\ipykernel_1932\3128706717.py:69: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  np.asarray(images[int(len(images) * 0.8) :]),
+```
+</div>
+    
 
 ---
 ## Implement multilayer-perceptron (MLP)
@@ -230,13 +238,13 @@ Patch size: 32 X 32
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_11_1.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_11_1.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_11_2.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_11_2.png)
     
 
 
@@ -688,74 +696,74 @@ for input_image in x_test[:10]:
     )
     i = i + 1
 
-print("mean_iou: " + str(mean_iou / len(x_test[:10])))
+print("mean_iou" + str(mean_iou / len(x_test[:10])))
 plt.show()
 ```
 
 <div class="k-default-codeblock">
 ```
-mean_iou: 0.8711381770184013
+mean_iou0.8711381770184013
 ```
 </div>
     
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_1.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_1.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_2.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_2.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_3.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_3.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_4.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_4.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_5.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_5.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_6.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_6.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_7.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_7.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_8.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_8.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_9.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_9.png)
     
 
 
 
     
-![png](/img/examples/vision/object_detection_using_vision_transformer/object_detection_using_vision_transformer_19_10.png)
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_10.png)
     
 
 
