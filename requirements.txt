@@ -11,3 +11,4 @@ PyYAML
 jupyter
 keras-tuner
 pandas
+keras-cv

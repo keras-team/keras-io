@@ -1,3 +1,11 @@
+CV_GUIDES_MASTER = {
+    'path': 'keras_cv/',
+    'title': 'Keras Computer Vision Extensions',
+    'toc': True,
+    'children': [
+    ]
+}
+
 KT_GUIDES_MASTER = {
     'path': 'keras_tuner/',
     'title': 'Hyperparameter Tuning',
@@ -100,7 +108,7 @@ GUIDES_MASTER = {
         #     'title': 'Hyperparameter optimization',
         # },
         KT_GUIDES_MASTER,
-
+        # CV_GUIDES_MASTER
         # TODO: mixed precision
     ]
 }
