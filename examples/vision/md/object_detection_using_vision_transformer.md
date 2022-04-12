@@ -1,12 +1,16 @@
-"""
-Title: Object detection with Vision Transformers
-Author: [Karan V. Dave](https://www.linkedin.com/in/karan-dave-811413164/)
-Date created: 2022/03/27
-Last modified: 2022/03/27
-Description: A simple Keras implementation of object detection using Vision Transformers.
-"""
+# Object detection with Vision Transformers
 
-"""
+**Author:** [Karan V. Dave](https://www.linkedin.com/in/karan-dave-811413164/)<br>
+**Date created:** 2022/03/27<br>
+**Last modified:** 2022/03/27<br>
+**Description:** A simple Keras implementation of object detection using Vision Transformers.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/object_detection_using_vision_transformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/object_detection_using_vision_transformer.py)
+
+
+
+---
 ## Introduction
 
 The article
@@ -29,12 +33,12 @@ TensorFlow Addons can be installed via the following command:
 ```
 pip install -U tensorflow-addons
 ```
-"""
 
-"""
+---
 ## Imports and setup
-"""
 
+
+```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -46,13 +50,15 @@ import cv2
 import os
 import scipy.io
 import shutil
+```
 
-"""
+---
 ## Prepare dataset
 
 We use the [Caltech 101 Dataset](http://www.vision.caltech.edu/Image_Datasets/Caltech101/).
-"""
 
+
+```python
 # Path to images and annotations
 path_images = "/101_ObjectCategories/airplanes/"
 path_annot = "/Annotations/Airplanes_Side_2/"
@@ -124,15 +130,25 @@ for i in range(0, len(annot_paths)):
     np.asarray(images[int(len(images) * 0.8) :]),
     np.asarray(targets[int(len(targets) * 0.8) :]),
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+C:\Users\DAVE\AppData\Local\Temp\ipykernel_1932\3128706717.py:69: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  np.asarray(images[int(len(images) * 0.8) :]),
+```
+</div>
+    
+
+---
 ## Implement multilayer-perceptron (MLP)
 
 We use the code from the Keras example
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/)
 as a reference.
-"""
 
+
+```python
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
@@ -140,11 +156,13 @@ def mlp(x, hidden_units, dropout_rate):
         x = layers.Dropout(dropout_rate)(x)
     return x
 
+```
 
-"""
+---
 ## Implement the patch creation layer
-"""
 
+
+```python
 
 class Patches(layers.Layer):
     def __init__(self, patch_size):
@@ -180,11 +198,13 @@ class Patches(layers.Layer):
         # return patches
         return tf.reshape(patches, [batch_size, -1, patches.shape[-1]])
 
+```
 
-"""
+---
 ## Display patches for an input image
-"""
 
+
+```python
 patch_size = 32  # Size of the patches to be extracted from the input images
 
 plt.figure(figsize=(4, 4))
@@ -204,15 +224,39 @@ for i, patch in enumerate(patches[0]):
     patch_img = tf.reshape(patch, (patch_size, patch_size, 3))
     plt.imshow(patch_img.numpy().astype("uint8"))
     plt.axis("off")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Image size: 224 X 224
+Patch size: 32 X 32
+49 patches per image 
+3072 elements per patch
+```
+</div>
+    
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_11_1.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_11_2.png)
+    
+
+
+---
 ## Implement the patch encoding layer
 
 The `PatchEncoder` layer linearly transforms a patch by projecting it into a
 vector of size `projection_dim`. It also adds a learnable position
 embedding to the projected vector.
-"""
 
+
+```python
 
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dim):
@@ -245,8 +289,9 @@ class PatchEncoder(layers.Layer):
         encoded = self.projection(patch) + self.position_embedding(positions)
         return encoded
 
+```
 
-"""
+---
 ## Build the ViT model
 
 The ViT model has multiple Transformer blocks.
@@ -256,8 +301,9 @@ and self-attention layer outputs are normalized and fed into a
 multilayer perceptron (MLP).
 The model outputs four dimensions representing
 the bounding box coordinates of an object.
-"""
 
+
+```python
 
 def create_vit_object_detector(
     input_shape,
@@ -306,11 +352,13 @@ def create_vit_object_detector(
     # return Keras model.
     return keras.Model(inputs=inputs, outputs=bounding_box)
 
+```
 
-"""
+---
 ## Run the experiment
-"""
 
+
+```python
 
 def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
 
@@ -380,11 +428,159 @@ history = run_experiment(
     vit_object_detector, learning_rate, weight_decay, batch_size, num_epochs
 )
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/100
+18/18 [==============================] - 17s 537ms/step - loss: 0.9240 - val_loss: 0.3514
+Epoch 2/100
+18/18 [==============================] - 9s 530ms/step - loss: 0.3749 - val_loss: 0.3061
+Epoch 3/100
+18/18 [==============================] - 10s 568ms/step - loss: 0.3072 - val_loss: 0.2586
+Epoch 4/100
+18/18 [==============================] - 9s 512ms/step - loss: 0.2443 - val_loss: 0.2153
+Epoch 5/100
+18/18 [==============================] - 9s 487ms/step - loss: 0.2023 - val_loss: 0.1768
+Epoch 6/100
+18/18 [==============================] - 8s 476ms/step - loss: 0.1630 - val_loss: 0.1428
+Epoch 7/100
+18/18 [==============================] - 9s 517ms/step - loss: 0.1298 - val_loss: 0.1124
+Epoch 8/100
+18/18 [==============================] - 9s 497ms/step - loss: 0.1015 - val_loss: 0.0860
+Epoch 9/100
+18/18 [==============================] - 9s 481ms/step - loss: 0.0793 - val_loss: 0.0638
+Epoch 10/100
+18/18 [==============================] - 8s 463ms/step - loss: 0.0569 - val_loss: 0.0457
+Epoch 11/100
+18/18 [==============================] - 8s 461ms/step - loss: 0.0437 - val_loss: 0.0316
+Epoch 12/100
+18/18 [==============================] - 9s 491ms/step - loss: 0.0322 - val_loss: 0.0213
+Epoch 13/100
+18/18 [==============================] - 10s 585ms/step - loss: 0.0233 - val_loss: 0.0141
+Epoch 14/100
+18/18 [==============================] - 12s 675ms/step - loss: 0.0181 - val_loss: 0.0091
+Epoch 15/100
+18/18 [==============================] - 10s 545ms/step - loss: 0.0136 - val_loss: 0.0059
+Epoch 16/100
+18/18 [==============================] - 9s 498ms/step - loss: 0.0124 - val_loss: 0.0040
+Epoch 17/100
+18/18 [==============================] - 10s 581ms/step - loss: 0.0106 - val_loss: 0.0029
+Epoch 18/100
+18/18 [==============================] - 10s 545ms/step - loss: 0.0098 - val_loss: 0.0023
+Epoch 19/100
+18/18 [==============================] - 11s 648ms/step - loss: 0.0094 - val_loss: 0.0019
+Epoch 20/100
+18/18 [==============================] - 9s 506ms/step - loss: 0.0089 - val_loss: 0.0016
+Epoch 21/100
+18/18 [==============================] - 9s 504ms/step - loss: 0.0091 - val_loss: 0.0015
+Epoch 22/100
+18/18 [==============================] - 9s 505ms/step - loss: 0.0081 - val_loss: 0.0015
+Epoch 23/100
+18/18 [==============================] - 9s 501ms/step - loss: 0.0086 - val_loss: 0.0015
+Epoch 24/100
+18/18 [==============================] - 9s 479ms/step - loss: 0.0087 - val_loss: 0.0015
+Epoch 25/100
+18/18 [==============================] - 9s 494ms/step - loss: 0.0081 - val_loss: 0.0014
+Epoch 26/100
+18/18 [==============================] - 9s 502ms/step - loss: 0.0088 - val_loss: 0.0014
+Epoch 27/100
+18/18 [==============================] - 9s 507ms/step - loss: 0.0083 - val_loss: 0.0014
+Epoch 28/100
+18/18 [==============================] - 9s 490ms/step - loss: 0.0084 - val_loss: 0.0014
+Epoch 29/100
+18/18 [==============================] - 8s 472ms/step - loss: 0.0088 - val_loss: 0.0014
+Epoch 30/100
+18/18 [==============================] - 9s 494ms/step - loss: 0.0087 - val_loss: 0.0014
+Epoch 31/100
+18/18 [==============================] - 9s 506ms/step - loss: 0.0077 - val_loss: 0.0013
+Epoch 32/100
+18/18 [==============================] - 8s 473ms/step - loss: 0.0080 - val_loss: 0.0013
+Epoch 33/100
+18/18 [==============================] - 9s 490ms/step - loss: 0.0081 - val_loss: 0.0013
+Epoch 34/100
+18/18 [==============================] - 8s 474ms/step - loss: 0.0080 - val_loss: 0.0013
+Epoch 35/100
+18/18 [==============================] - 9s 504ms/step - loss: 0.0086 - val_loss: 0.0013
+Epoch 36/100
+18/18 [==============================] - 9s 519ms/step - loss: 0.0075 - val_loss: 0.0013
+Epoch 37/100
+18/18 [==============================] - 9s 507ms/step - loss: 0.0075 - val_loss: 0.0013
+Epoch 38/100
+18/18 [==============================] - 9s 476ms/step - loss: 0.0076 - val_loss: 0.0013
+Epoch 39/100
+18/18 [==============================] - 8s 463ms/step - loss: 0.0076 - val_loss: 0.0014
+Epoch 40/100
+18/18 [==============================] - 8s 463ms/step - loss: 0.0076 - val_loss: 0.0013
+Epoch 41/100
+18/18 [==============================] - 9s 481ms/step - loss: 0.0074 - val_loss: 0.0013
+Epoch 42/100
+18/18 [==============================] - 8s 469ms/step - loss: 0.0077 - val_loss: 0.0013
+Epoch 43/100
+18/18 [==============================] - 9s 478ms/step - loss: 0.0080 - val_loss: 0.0013
+Epoch 44/100
+18/18 [==============================] - 8s 472ms/step - loss: 0.0075 - val_loss: 0.0013
+Epoch 45/100
+18/18 [==============================] - 11s 600ms/step - loss: 0.0071 - val_loss: 0.0013
+Epoch 46/100
+18/18 [==============================] - 14s 777ms/step - loss: 0.0075 - val_loss: 0.0012
+Epoch 47/100
+18/18 [==============================] - 12s 683ms/step - loss: 0.0073 - val_loss: 0.0012
+Epoch 48/100
+18/18 [==============================] - 10s 539ms/step - loss: 0.0071 - val_loss: 0.0012
+Epoch 49/100
+18/18 [==============================] - 9s 485ms/step - loss: 0.0069 - val_loss: 0.0012
+Epoch 50/100
+18/18 [==============================] - 9s 481ms/step - loss: 0.0064 - val_loss: 0.0013
+Epoch 51/100
+18/18 [==============================] - 8s 470ms/step - loss: 0.0074 - val_loss: 0.0013
+Epoch 52/100
+18/18 [==============================] - 9s 477ms/step - loss: 0.0069 - val_loss: 0.0013
+Epoch 53/100
+18/18 [==============================] - 8s 472ms/step - loss: 0.0069 - val_loss: 0.0012
+Epoch 54/100
+18/18 [==============================] - 10s 586ms/step - loss: 0.0070 - val_loss: 0.0012
+Epoch 55/100
+18/18 [==============================] - 11s 646ms/step - loss: 0.0073 - val_loss: 0.0012
+Epoch 56/100
+18/18 [==============================] - 9s 519ms/step - loss: 0.0065 - val_loss: 0.0012
+Epoch 57/100
+18/18 [==============================] - 10s 540ms/step - loss: 0.0069 - val_loss: 0.0012
+Epoch 58/100
+18/18 [==============================] - 10s 563ms/step - loss: 0.0066 - val_loss: 0.0013
+Epoch 59/100
+18/18 [==============================] - 10s 577ms/step - loss: 0.0070 - val_loss: 0.0012
+Epoch 60/100
+18/18 [==============================] - 9s 499ms/step - loss: 0.0066 - val_loss: 0.0012
+Epoch 61/100
+18/18 [==============================] - 9s 485ms/step - loss: 0.0062 - val_loss: 0.0012
+Epoch 62/100
+18/18 [==============================] - 10s 539ms/step - loss: 0.0065 - val_loss: 0.0012
+Epoch 63/100
+18/18 [==============================] - 9s 527ms/step - loss: 0.0069 - val_loss: 0.0012
+Epoch 64/100
+18/18 [==============================] - 8s 469ms/step - loss: 0.0063 - val_loss: 0.0013
+Epoch 65/100
+18/18 [==============================] - 8s 470ms/step - loss: 0.0064 - val_loss: 0.0012
+Epoch 66/100
+18/18 [==============================] - 8s 466ms/step - loss: 0.0069 - val_loss: 0.0012
+Epoch 67/100
+18/18 [==============================] - 8s 464ms/step - loss: 0.0064 - val_loss: 0.0012
+Epoch 68/100
+18/18 [==============================] - 8s 465ms/step - loss: 0.0068 - val_loss: 0.0012
+Epoch 69/100
+18/18 [==============================] - 8s 464ms/step - loss: 0.0057 - val_loss: 0.0012
+Epoch 70/100
+18/18 [==============================] - 8s 472ms/step - loss: 0.0064 - val_loss: 0.0012
+```
+</div>
+    
+
+---
 ## Evaluate the model
-"""
 
+
+```python
 import matplotlib.patches as patches
 
 # Saves the model in current path
@@ -502,10 +698,76 @@ for input_image in x_test[:10]:
 
 print("mean_iou" + str(mean_iou / len(x_test[:10])))
 plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+mean_iou0.8711381770184013
+```
+</div>
+    
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_1.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_2.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_3.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_4.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_5.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_6.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_7.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_8.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_9.png)
+    
+
+
+
+    
+![png](../examples/vision/md/object_detection_using_vision_transformer_files/../examples/vision/md/object_detection_using_vision_transformer_19_10.png)
+    
+
+
 This example demonstrates that a pure Transformer can be trained
 to predict the bounding boxes of an object in a given image,
 thus extending the use of Transformers to object detection tasks.
 The model can be improved further by tuning hyper-parameters and pre-training.
-"""
