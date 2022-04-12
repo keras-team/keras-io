@@ -6,8 +6,7 @@
 **Description:** A simple Keras implementation of object detection using Vision Transformers.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/object_detection_using_vision_transformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/object_detection_using_vision_transformer.py)
-
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\vision/ipynb/object_detection_using_vision_transformer.ipynb)  <span class="k-dot">â€¢</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\vision/object_detection_using_vision_transformer.py)
 
 
 ---
