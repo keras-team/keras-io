@@ -391,8 +391,8 @@ classifier accuracy
 - Experiment with custom `RandomAugmentationPipeline`s.
 
 Currently, between Keras core and KerasCV there are [_28 image augmentation
-layers_](https://github.com/keras-team/keras-cv/blob/master/keras_cv/layers/preprocessing/
-__init__.py)!  Each of these can be used independently.  Check them out, and if you find
-an augmentation techniques you need is missing please file a [GitHub issue on
+layers_](https://keras.io/api/keras_cv/layers/preprocessing)!
+Each of these can be used independently, or in a pipeline.  Check them out, and if you
+find an augmentation techniques you need is missing please file a [GitHub issue on
 KerasCV](https://github.com/keras-team/keras-cv/issues).
 """
