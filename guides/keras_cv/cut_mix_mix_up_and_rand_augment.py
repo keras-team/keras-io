@@ -308,7 +308,7 @@ Looks great!  You can use RandomAugmentationPipeline however you want.
 """
 
 """
-# Training a CNN
+## Training a CNN
 
 As a final exercise, let's take some of these layers for a spin.  In this section, we
 will use `CutMix`, `MixUp`, and `RandAugment` to train a state of the art `ResNet50`
@@ -393,6 +393,6 @@ classifier accuracy
 Currently, between Keras core and KerasCV there are [_28 image augmentation
 layers_](https://keras.io/api/keras_cv/layers/preprocessing)!
 Each of these can be used independently, or in a pipeline.  Check them out, and if you
-find an augmentation techniques you need is missing please file a [GitHub issue on
-KerasCV](https://github.com/keras-team/keras-cv/issues).
+find an augmentation techniques you need is missing please file a
+[GitHub issue on KerasCV](https://github.com/keras-team/keras-cv/issues).
 """
