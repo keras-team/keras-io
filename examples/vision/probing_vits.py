@@ -249,7 +249,7 @@ def compute_mean_attention_dist(patch_size, attention_weights, model_type):
     ]  # Removing the CLS token
     num_patches = attention_weights.shape[-1]
     length = int(np.sqrt(num_patches))
-    assert length ** 2 == num_patches, "Num patches is not perfect square"
+    assert length**2 == num_patches, "Num patches is not perfect square"
 
     distance_matrix = compute_distance_matrix(patch_size, num_patches, length)
     h, w = distance_matrix.shape
