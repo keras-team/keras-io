@@ -45,7 +45,7 @@ from tensorflow.keras import optimizers
 ## Data loading
 
 This guide uses the
-[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/) 
+[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/)
 for demonstration purposes.
 
 To get started, we first load the dataset:
@@ -377,9 +377,8 @@ with strategy.scope():
     )
 
 """
-## Conclusion & next steps
-
-That's all it takes to assemble state of the art image augmentation pipeliens with
+## Conclusion & Next Steps
+That's all it takes to assemble state of the art image augmentation pipelines with
 KerasCV!
 
 As an additional exercise for readers, you can:
