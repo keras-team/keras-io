@@ -77,14 +77,12 @@ def prepare(image, label):
 def prepare_dataset(dataset, split):
     if split == "train":
         return (
-            dataset.batch(BATCH_SIZE)
-            .map(prepare, num_parallel_calls=AUTOTUNE)
+            dataset.map(prepare, num_parallel_calls=AUTOTUNE)
             .shuffle(10 * BATCH_SIZE)
+            .batch(BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(
-            lambda x, y: prepare(x, y), num_parallel_calls=AUTOTUNE
-        ).batch(BATCH_SIZE)
+        return dataset.map(prepare, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
 
 
 def load_dataset(split="train"):
