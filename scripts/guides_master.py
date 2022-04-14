@@ -6,6 +6,10 @@ CV_GUIDES_MASTER = {
         {
             'path': 'cut_mix_mix_up_and_rand_augment',
             'title': 'CutMix, MixUp, and RandAugment image augmentation with KerasCV'
+        },
+        {
+            'path': 'keras_cv_coco_metrics',
+            'title': 'Using KerasCV COCO Metrics'
         }
     ]
 }
