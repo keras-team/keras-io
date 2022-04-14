@@ -61,12 +61,13 @@ Let's run through a quick code example.
 """
 
 import keras_cv
+
 # import all modules we will need in this example
 import tensorflow as tf
 from tensorflow import keras
 
 # only consider boxes with areas less than a 32x32 square.
-metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32 ** 2))
+metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32**2))
 
 """
 2.) Create Some Bounding Boxes:
@@ -75,26 +76,17 @@ metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32 ** 2
 y_true = tf.ragged.stack(
     [
         # image 1
-        tf.constant([
-            [0, 0, 10, 10, 1],
-            [11, 12, 30, 30, 2]
-        ], tf.float32),
+        tf.constant([[0, 0, 10, 10, 1], [11, 12, 30, 30, 2]], tf.float32),
         # image 2
-        tf.constant([
-            [0, 0, 10, 10, 1]
-        ], tf.float32),
+        tf.constant([[0, 0, 10, 10, 1]], tf.float32),
     ]
 )
 y_pred = tf.ragged.stack(
     [
         # predictions for image 1
-        tf.constant([
-            [5, 5, 10, 10, 1, 0.9]
-        ], tf.float32),
+        tf.constant([[5, 5, 10, 10, 1, 0.9]], tf.float32),
         # predictions for image 2
-        tf.constant([
-            [0, 0, 10, 10, 1, 1.0], [5, 5, 10, 10, 1, 0.9]
-        ], tf.float32),
+        tf.constant([[0, 0, 10, 10, 1, 1.0], [5, 5, 10, 10, 1, 0.9]], tf.float32),
     ]
 )
 
@@ -130,28 +122,15 @@ model = keras.Model(i, i)
 2.) Create some fake bounding boxes:
 """
 
-y_true = tf.constant([
-    [
-      [0, 0, 10, 10, 1],
-      [5, 5, 10, 10, 1]
-    ]
-], tf.float32)
-y_pred = tf.constant([
-    [
-        [0, 0, 10, 10, 1, 1.0],
-        [5, 5, 10, 10, 1, 0.9]
-    ]
-], tf.float32)
+y_true = tf.constant([[[0, 0, 10, 10, 1], [5, 5, 10, 10, 1]]], tf.float32)
+y_pred = tf.constant([[[0, 0, 10, 10, 1, 1.0], [5, 5, 10, 10, 1, 0.9]]], tf.float32)
 
 """
 3.) Create the metric and compile the model
 """
 
 recall = keras_cv.metrics.COCORecall(
-    max_detections=100,
-    class_ids=[1],
-    area_range=(0, 64**2),
-    name='coco_recall'
+    max_detections=100, class_ids=[1], area_range=(0, 64**2), name="coco_recall"
 )
 model.compile(metrics=[recall])
 

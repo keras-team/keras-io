@@ -3,7 +3,7 @@ Title: CutMix, MixUp, and RandAugment image augmentation with KerasCV
 Author: [lukewood](https://lukewood.xyz)
 Date created: 2022/04/08
 Last modified: 2022/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more!
+Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
 """
 
 """
@@ -210,9 +210,7 @@ def cut_mix_and_mix_up(samples):
         return samples
 
 
-train_dataset = load_dataset().map(
-    cut_mix_and_mix_up, num_parallel_calls=AUTOTUNE
-)
+train_dataset = load_dataset().map(cut_mix_and_mix_up, num_parallel_calls=AUTOTUNE)
 
 visualize_dataset(train_dataset, title="After CutMix and MixUp")
 
@@ -336,14 +334,10 @@ train_dataset = (
 
 visualize_dataset(train_dataset, "CutMix, MixUp and RandAugment")
 
-train_dataset = train_dataset.map(
-    preprocess_for_model, num_parallel_calls=AUTOTUNE
-)
+train_dataset = train_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUNE)
 
 test_dataset = load_dataset(split="test")
-test_dataset = test_dataset.map(
-    preprocess_for_model, num_parallel_calls=AUTOTUNE
-)
+test_dataset = test_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUNE)
 
 train_dataset = train_dataset.prefetch(5)
 test_dataset = test_dataset.prefetch(5)
