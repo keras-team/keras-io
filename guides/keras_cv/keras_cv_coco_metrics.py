@@ -60,9 +60,10 @@ Let's run through a quick code example.
 1.) First, we must construct our metric:
 """
 
+import keras_cv
 # import all modules we will need in this example
 import tensorflow as tf
-import keras_cv
+from tensorflow import keras
 
 # only consider boxes with areas less than a 32x32 square.
 metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32 ** 2))
@@ -121,10 +122,6 @@ process.
 
 1.) Construct your the metric and a dummy model
 """
-
-import tensorflow as tf
-from tensorflow import keras
-import keras_cv
 
 i = keras.layers.Input((None, None, 6))
 model = keras.Model(i, i)
