@@ -197,7 +197,6 @@ cut_mix = keras_cv.layers.CutMix()
 mix_up = keras_cv.layers.MixUp()
 
 
-@tf.function
 def cut_mix_and_mix_up(samples):
     choice = tf.random.uniform((), minval=0, maxval=1, dtype=tf.float32)
     if choice < 1 / 3:
@@ -271,7 +270,6 @@ Let's check out the results!
 """
 
 
-@tf.function
 def apply_pipeline(inputs):
     inputs["images"] = pipeline(inputs["images"])
     return inputs
@@ -295,7 +293,6 @@ This pipeline will either apply `GrayScale` or GridMask:
 """
 
 
-@tf.function
 def apply_pipeline(inputs):
     inputs["images"] = pipeline(inputs["images"])
     return inputs
