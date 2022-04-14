@@ -44,7 +44,9 @@ from tensorflow.keras import optimizers
 """
 ## Data Loading
 
-This guide uses the oxford_flowers102 dataset for demonstration purposes.
+This guide uses the 
+[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/) 
+for demonstration purposes.
 
 To get started, we will first load the dataset:
 """
@@ -75,9 +77,9 @@ def prepare(image, label):
 def prepare_dataset(dataset, split):
     if split == "train":
         return (
-            dataset.map(lambda x, y: prepare(x, y), num_parallel_calls=AUTOTUNE)
+            dataset.batch(BATCH_SIZE)
+            .map(prepare, num_parallel_calls=AUTOTUNE)
             .shuffle(10 * BATCH_SIZE)
-            .batch(BATCH_SIZE)
         )
     if split == "test":
         return dataset.map(
@@ -118,7 +120,8 @@ Great!  Now we can move onto the augmentation step.
 """
 
 """
-RandAugment performs a standard set of perturbations to an image based on the parameters
+[RandAugment](https://arxiv.org/abs/1909.13719)
+performs a standard set of augmentations to an image based on the parameters
 `magnitude`, `magnitude_stddev`, `augmentations_per_image` and `rate`.  Each of these
 parameters should be tuned to fit your specific case.  You can read more about these
 parameters in the [RandAugment API documentation](/api/keras_cv/layers/rand_augment).
@@ -157,9 +160,7 @@ def apply_rand_augment(inputs):
     return inputs
 
 
-train_dataset = load_dataset().map(
-    apply_rand_augment, num_parallel_calls=tf.data.AUTOTUNE
-)
+train_dataset = load_dataset().map(apply_rand_augment, num_parallel_calls=AUTOTUNE)
 
 """
 And finally lets inspect some of the results:
@@ -180,7 +181,11 @@ portions of one image and places them over another, and MixUp interpolates the p
 values between two images.  Both of these prevent the model from overfitting the
 training distribution and improve the likelihood that the model can generalize to out of
 distribution examples.  Additionally, CutMix prevents your model from over-relying on
-any particular feature to perform its classifications.
+any particular feature to perform its classifications.  You can read more about these
+techniques in their respective papers:
+
+- [CutMix: Train Strong Classifiers](https://arxiv.org/abs/1905.04899)
+- [MixUp: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412)
 
 In this example, we will use `CutMix` and `MixUp` independently in a manually created
 preprocessing pipeline.  In most state of the art pipelines images are randomly
@@ -206,7 +211,7 @@ def cut_mix_and_mix_up(samples):
 
 
 train_dataset = load_dataset().map(
-    cut_mix_and_mix_up, num_parallel_calls=tf.data.AUTOTUNE
+    cut_mix_and_mix_up, num_parallel_calls=AUTOTUNE
 )
 
 visualize_dataset(train_dataset, title="After CutMix and MixUp")
@@ -276,7 +281,7 @@ def apply_pipeline(inputs):
     return inputs
 
 
-train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=tf.data.AUTOTUNE)
+train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 
 """
@@ -300,7 +305,7 @@ def apply_pipeline(inputs):
     return inputs
 
 
-train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=tf.data.AUTOTUNE)
+train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 
 """
@@ -325,19 +330,19 @@ def preprocess_for_model(inputs):
 
 train_dataset = (
     load_dataset()
-    .map(apply_rand_augment, num_parallel_calls=tf.data.AUTOTUNE)
-    .map(cut_mix_and_mix_up, num_parallel_calls=tf.data.AUTOTUNE)
+    .map(apply_rand_augment, num_parallel_calls=AUTOTUNE)
+    .map(cut_mix_and_mix_up, num_parallel_calls=AUTOTUNE)
 )
 
 visualize_dataset(train_dataset, "CutMix, MixUp and RandAugment")
 
 train_dataset = train_dataset.map(
-    preprocess_for_model, num_parallel_calls=tf.data.AUTOTUNE
+    preprocess_for_model, num_parallel_calls=AUTOTUNE
 )
 
 test_dataset = load_dataset(split="test")
 test_dataset = test_dataset.map(
-    preprocess_for_model, num_parallel_calls=tf.data.AUTOTUNE
+    preprocess_for_model, num_parallel_calls=AUTOTUNE
 )
 
 train_dataset = train_dataset.prefetch(5)
