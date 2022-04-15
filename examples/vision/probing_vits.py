@@ -2,7 +2,7 @@
 Title: Under the Hood of Vision Transformers
 Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
 Date created: 2022/04/12
-Last modified: 2022/04/13
+Last modified: 2022/04/15
 Description: Probing into various variants of Vision Transformers.
 """
 """
@@ -33,14 +33,21 @@ more regularization and distillation ([Touvron et al.](https://arxiv.org/abs/201
 * ViTs trained using self-supervised pre-training ([Caron et al.](https://arxiv.org/abs/2104.14294))
 (DINO).
 
+Since the pre-trained models are not implemented in TensorFlow we reimplemented them as 
+faithfully as possible. We first implement the models following the individual papers
+and then populated them with the official pre-trained parameters. We then evaluated our
+implementations on the ImageNet-1k validation set to ensure the evaluation numbers were
+matching with the original implementations. Our implementation details are available in
+[this repository](https://github.com/sayakpaul/probing-vits).
+
 To keep the example concise, we'll not exhaustively pair each model with the analysis
 methods. But we'll provide notes in the respective sections so that you can pick up the
 pieces. 
 
-To run this example on Colab, we need to update the `gdown` library like so:
+To run this example on Google Colab, we need to update the `gdown` library like so:
 
 ```shell
-$ pip install -U gdown -q
+pip install -U gdown -q
 ```
 """
 
@@ -48,19 +55,18 @@ $ pip install -U gdown -q
 ## Imports
 """
 
-from PIL import Image
+import zipfile
 from io import BytesIO
 
+import cv2
+import gdown
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
-import zipfile
-import gdown
-import cv2
-
-from tensorflow import keras
-import tensorflow_hub as hub
 import tensorflow as tf
+import tensorflow_hub as hub
+from PIL import Image
+from tensorflow import keras
 
 """
 ## Constants
