@@ -3,7 +3,7 @@ Title: CutMix, MixUp, and RandAugment image augmentation with KerasCV
 Author: [lukewood](https://lukewood.xyz)
 Date created: 2022/04/08
 Last modified: 2022/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more!
 """
 
 """
@@ -37,14 +37,15 @@ import keras_cv
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import applications, losses, optimizers
+from tensorflow.keras import applications
+from tensorflow.keras import losses
+from tensorflow.keras import optimizers
 
 """
 ## Data loading
 
 This guide uses the
-[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/)
+[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/) 
 for demonstration purposes.
 
 To get started, we first load the dataset:
@@ -317,7 +318,7 @@ image classifier on the Oxford flowers dataset.
 
 def preprocess_for_model(inputs):
     images, labels = inputs["images"], inputs["labels"]
-    images = tf.cast(images, tf.float32)
+    images = tf.cast(images, tf.float32) / 255.0
     return images, labels
 
 
@@ -346,12 +347,9 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    inputs = keras.layers.Input(input_shape)
-    x = keras.layers.Rescaling(1 / 255.0)(inputs)
-    x = applications.ResNet50(
+    model = applications.ResNet50(
         input_shape=input_shape, classes=num_classes, weights=None
-    )(x)
-    model = keras.Model(inputs, x)
+    )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
         optimizer=optimizers.SGD(momentum=0.9),
@@ -376,8 +374,9 @@ with strategy.scope():
     )
 
 """
-## Conclusion & Next Steps
-That's all it takes to assemble state of the art image augmentation pipelines with
+## Conclusion & next steps
+
+That's all it takes to assemble state of the art image augmentation pipeliens with
 KerasCV!
 
 As an additional exercise for readers, you can:
