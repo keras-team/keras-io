@@ -33,7 +33,7 @@ more regularization and distillation ([Touvron et al.](https://arxiv.org/abs/201
 * ViTs trained using self-supervised pre-training ([Caron et al.](https://arxiv.org/abs/2104.14294))
 (DINO).
 
-Since the pre-trained models are not implemented in TensorFlow we reimplemented them as 
+Since the pre-trained models are not implemented in Keras, we reimplemented them as 
 faithfully as possible. We first implement the models following the individual papers
 and then populated them with the official pre-trained parameters. We then evaluated our
 implementations on the ImageNet-1k validation set to ensure the evaluation numbers were
