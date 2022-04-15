@@ -3,51 +3,52 @@ Title: CutMix, MixUp, and RandAugment image augmentation with KerasCV
 Author: [lukewood](https://lukewood.xyz)
 Date created: 2022/04/08
 Last modified: 2022/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more!
 """
 
 """
 ## Overview
 
-KerasCV makes it easy to assemble state of the art, industry grade data augmentation
-pipelines for image classification and object detection tasks.  KerasCV offers a wide
+KerasCV makes it easy to assemble state-of-the-art, industry-grade data augmentation
+pipelines for image classification and object detection tasks. KerasCV offers a wide
 suite of preprocessing layers implementing common data augmentation techniques.
 
-Perhaps three of the most useful layers are `CutMix`, `MixUp`, and `RandAugment`.  These
-layers are used in nearly all state of the art image classification pipelines.
+Perhaps three of the most useful layers are `CutMix`, `MixUp`, and `RandAugment`. These
+layers are used in nearly all state-of-the-art image classification pipelines.
 
-This guide will show you how to compose these layers into your own state of the art data
-augmentation pipeline for image classification tasks.  This guide will also walk you
+This guide will show you how to compose these layers into your own data
+augmentation pipeline for image classification tasks. This guide will also walk you
 through the process of customizing a KerasCV data augmentation pipeline.
 """
 
 """
-## Imports and Setup
+## Imports & setup
 
 This tutorial requires you to have KerasCV installed:
 
 ```shell
-!pip install keras-cv
+pip install keras-cv
 ```
 
-We will also begin by import all required packages:
+We begin by importing all required packages:
 """
 
 import keras_cv
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import applications, losses, optimizers
+from tensorflow.keras import applications
+from tensorflow.keras import losses
+from tensorflow.keras import optimizers
 
 """
-## Data Loading
+## Data loading
 
 This guide uses the
-[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/)
+[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/) 
 for demonstration purposes.
 
-To get started, we will first load the dataset:
+To get started, we first load the dataset:
 """
 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -55,9 +56,9 @@ tfds.disable_progress_bar()
 data, dataset_info = tfds.load("oxford_flowers102", with_info=True, as_supervised=True)
 
 """
-Next, we resize the images to a constant size, `(224, 224)`, and one hot encode the
-labels.  Please note that `keras_cv.layers.CutMix` and `keras_cv.layers.MixUp` expect
-`labels` to be one hot encoded.  This is because they modify the values held in `labels`
+Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
+labels. Please note that `keras_cv.layers.CutMix` and `keras_cv.layers.MixUp` expect
+targets to be one-hot encoded. This is because they modify the values of the targets
 in a way that is not possible with a sparse label representation.
 """
 
@@ -76,12 +77,14 @@ def prepare(image, label):
 def prepare_dataset(dataset, split):
     if split == "train":
         return (
-            dataset.map(prepare, num_parallel_calls=AUTOTUNE)
+            dataset.batch(BATCH_SIZE)
+            .map(prepare, num_parallel_calls=AUTOTUNE)
             .shuffle(10 * BATCH_SIZE)
-            .batch(BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(prepare, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
+        return dataset.map(
+            lambda x, y: prepare(x, y), num_parallel_calls=AUTOTUNE
+        ).batch(BATCH_SIZE)
 
 
 def load_dataset(split="train"):
@@ -109,7 +112,7 @@ def visualize_dataset(dataset, title):
 visualize_dataset(train_dataset, title="Before Augmentation")
 
 """
-Great!  Now we can move onto the augmentation step.
+Great! Now we can move onto the augmentation step.
 """
 
 """
@@ -118,27 +121,25 @@ Great!  Now we can move onto the augmentation step.
 
 """
 [RandAugment](https://arxiv.org/abs/1909.13719)
-performs a standard set of augmentations to an image based on the parameters
-`magnitude`, `magnitude_stddev`, `augmentations_per_image` and `rate`.  Each of these
-parameters should be tuned to fit your specific case.  You can read more about these
-parameters in the [RandAugment API documentation](/api/keras_cv/layers/rand_augment).
+has been shown to provide improved image
+classification results across numerous datasets.
+It performs a standard set of augmentations on an image.
 
-To remedy this issue KerasCV offers RandAugment, a general purpose image data
-augmentation algorithm.  RandAugment has been shown to provide improved image
-classification results across numerous datasets, and only has two hyperparameters to
-configure.
-
-To use `RandAugment` you need to provide a few values:
+To use RandAugment in KerasCV, you need to provide a few values:
 
 - `value_range` describes the range of values covered in your images
-- `magnitude` is a value between 0 and 10, describing the strength of the perturbations
+- `magnitude` is a value between 0 and 1, describing the strength of the perturbations
 applied
 - `num_layers` is an integer telling the layer how many augmentations to apply to each
 individual image
-- (Optional) `magnitude_standard_deviation` allows `magnitude` to be randomly sampled
-from a distribution with a standard deviation of `magnitude_standard_deviation`
-- (Optional) `probability_to_apply` indicates the probability to apply the augmentation
+- (Optional) `magnitude_stddev` allows `magnitude` to be randomly sampled
+from a distribution with a standard deviation of `magnitude_stddev`
+- (Optional) `rate` indicates the probability to apply the augmentation
 applied at each layer.
+
+You can read more about these
+parameters in the
+[`RandAugment` API documentation](/api/keras_cv/layers/rand_augment).
 
 Let's use KerasCV's RandAugment implementation.
 """
@@ -160,7 +161,7 @@ def apply_rand_augment(inputs):
 train_dataset = load_dataset().map(apply_rand_augment, num_parallel_calls=AUTOTUNE)
 
 """
-And finally lets inspect some of the results:
+Finally, let's inspect some of the results:
 """
 
 visualize_dataset(train_dataset, title="After RandAugment")
@@ -170,23 +171,23 @@ Try tweaking the magnitude settings to see a wider variety of results.
 """
 
 """
-## CutMix and MixUp: Generate High Quality Inter-class Examples
+## CutMix and MixUp: generate high-quality inter-class examples
 
 
-`CutMix` and `MixUp` allow us to produce inter-class examples.  CutMix randomly cuts out
-portions of one image and places them over another, and MixUp interpolates the pixel
-values between two images.  Both of these prevent the model from overfitting the
+`CutMix` and `MixUp` allow us to produce inter-class examples. `CutMix` randomly cuts out
+portions of one image and places them over another, and `MixUp` interpolates the pixel
+values between two images. Both of these prevent the model from overfitting the
 training distribution and improve the likelihood that the model can generalize to out of
-distribution examples.  Additionally, CutMix prevents your model from over-relying on
-any particular feature to perform its classifications.  You can read more about these
+distribution examples. Additionally, `CutMix` prevents your model from over-relying on
+any particular feature to perform its classifications. You can read more about these
 techniques in their respective papers:
 
 - [CutMix: Train Strong Classifiers](https://arxiv.org/abs/1905.04899)
 - [MixUp: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412)
 
 In this example, we will use `CutMix` and `MixUp` independently in a manually created
-preprocessing pipeline.  In most state of the art pipelines images are randomly
-augmented by either `CutMix`, `MixUp`, or neither.  The function below implements this
+preprocessing pipeline. In most state of the art pipelines images are randomly
+augmented by either `CutMix`, `MixUp`, or neither. The function below implements this
 in an equal 1/3 split.
 
 Note that our `cut_mix_and_mix_up` function is annotated with a `tf.function` to ensure
@@ -211,21 +212,21 @@ train_dataset = load_dataset().map(cut_mix_and_mix_up, num_parallel_calls=AUTOTU
 visualize_dataset(train_dataset, title="After CutMix and MixUp")
 
 """
-Great!  Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
+Great! Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
 pipeline.
 """
 
 """
-## Customizing Your Augmentation Pipeline
+## Customizing your augmentation pipeline
 
 Perhaps you want to exclude an augmentation from `RandAugment`, or perhaps you want to
 include the `GridMask()` as an option alongside the default `RandAugment` augmentations.
 
 KerasCV allows you to construct production grade custom data augmentation pipelines using
-the `keras_cv.layers.RandomAugmentationPipeline` layer.  This class operates similarly to
+the `keras_cv.layers.RandomAugmentationPipeline` layer. This class operates similarly to
 `RandAugment`; selecting a random layer to apply to each image `augmentations_per_image`
-times.  `RandAugment` can be thought of as a specific case of
-`RandomAugmentationPipeline`.  In fact, our `RandAugment` implementation inherits from
+times. `RandAugment` can be thought of as a specific case of
+`RandomAugmentationPipeline`. In fact, our `RandAugment` implementation inherits from
 `RandomAugmentationPipeline` internally.
 
 In this example, we will create a custom `RandomAugmentationPipeline` by removing
@@ -278,7 +279,7 @@ train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 
 """
-Awesome!  As you can see, no images were randomly rotated.  You can customize the
+Awesome! As you can see, no images were randomly rotated. You can customize the
 pipeline however you like:
 """
 
@@ -301,13 +302,13 @@ train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 
 """
-Looks great!  You can use RandomAugmentationPipeline however you want.
+Looks great! You can use `RandomAugmentationPipeline` however you want.
 """
 
 """
 ## Training a CNN
 
-As a final exercise, let's take some of these layers for a spin.  In this section, we
+As a final exercise, let's take some of these layers for a spin. In this section, we
 will use `CutMix`, `MixUp`, and `RandAugment` to train a state of the art `ResNet50`
 image classifier on the Oxford flowers dataset.
 
@@ -316,7 +317,7 @@ image classifier on the Oxford flowers dataset.
 
 def preprocess_for_model(inputs):
     images, labels = inputs["images"], inputs["labels"]
-    images = tf.cast(images, tf.float32)
+    images = tf.cast(images, tf.float32) / 255.0
     return images, labels
 
 
@@ -337,20 +338,17 @@ train_dataset = train_dataset.prefetch(5)
 test_dataset = test_dataset.prefetch(5)
 
 """
-Next we should create a the model itself.  Notice that we use `label_smoothing=0.1` in
-the loss function.  When using MixUp, label smoothing is _highly_ recommended.
+Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
+the loss function. When using `MixUp`, label smoothing is _highly_ recommended.
 """
 
 input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    inputs = keras.layers.Input(input_shape)
-    x = keras.layers.Rescaling(1 / 255.0)(inputs)
-    x = applications.ResNet50(
+    model = applications.ResNet50(
         input_shape=input_shape, classes=num_classes, weights=None
-    )(x)
-    model = keras.Model(inputs, x)
+    )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
         optimizer=optimizers.SGD(momentum=0.9),
@@ -375,8 +373,9 @@ with strategy.scope():
     )
 
 """
-## Conclusion & Next Steps
-That's all it takes to assemble state of the art image augmentation pipelines with
+## Conclusion & next steps
+
+That's all it takes to assemble state of the art image augmentation pipeliens with
 KerasCV!
 
 As an additional exercise for readers, you can:
@@ -384,11 +383,11 @@ As an additional exercise for readers, you can:
 - Perform a hyper parameter search over the RandAugment parameters to improve the
 classifier accuracy
 - Substitute the Oxford Flowers dataset with your own dataset
-- Experiment with custom `RandomAugmentationPipeline`s.
+- Experiment with custom `RandomAugmentationPipeline` objects.
 
-Currently, between Keras core and KerasCV there are [_28 image augmentation
-layers_](https://keras.io/api/keras_cv/layers/preprocessing)!
-Each of these can be used independently, or in a pipeline.  Check them out, and if you
+Currently, between Keras core and KerasCV there are
+[_28 image augmentation layers_](https://keras.io/api/keras_cv/layers/preprocessing)!
+Each of these can be used independently, or in a pipeline. Check them out, and if you
 find an augmentation techniques you need is missing please file a
 [GitHub issue on KerasCV](https://github.com/keras-team/keras-cv/issues).
 """
