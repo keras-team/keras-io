@@ -37,9 +37,8 @@ import keras_cv
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow.keras import applications
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
+from tensorflow import keras
+from tensorflow.keras import applications, losses, optimizers
 
 """
 ## Data Loading
@@ -317,7 +316,7 @@ image classifier on the Oxford flowers dataset.
 
 def preprocess_for_model(inputs):
     images, labels = inputs["images"], inputs["labels"]
-    images = tf.cast(images, tf.float32) / 255.0
+    images = tf.cast(images, tf.float32)
     return images, labels
 
 
@@ -346,9 +345,12 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    model = applications.ResNet50(
+    inputs = keras.layers.Input(input_shape)
+    x = keras.layers.Rescaling(1 / 255.0)(inputs)
+    x = applications.ResNet50(
         input_shape=input_shape, classes=num_classes, weights=None
-    )
+    )(x)
+    model = keras.Model(inputs, x)
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
         optimizer=optimizers.SGD(momentum=0.9),
