@@ -37,9 +37,8 @@ import keras_cv
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow.keras import applications
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
+from tensorflow import keras
+from tensorflow.keras import applications, losses, optimizers
 
 """
 ## Data loading
