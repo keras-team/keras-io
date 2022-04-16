@@ -33,16 +33,16 @@ more regularization and distillation ([Touvron et al.](https://arxiv.org/abs/201
 * ViTs trained using self-supervised pre-training ([Caron et al.](https://arxiv.org/abs/2104.14294))
 (DINO).
 
-Since the pre-trained models are not implemented in Keras, we reimplemented them as 
-faithfully as possible. We first implement the models following the individual papers
-and then populated them with the official pre-trained parameters. We then evaluated our
-implementations on the ImageNet-1k validation set to ensure the evaluation numbers were
-matching with the original implementations. Our implementation details are available in
+Since the pre-trained models are not implemented in Keras, we first implemented them as
+faithfully as possible. We then populated them with the official pre-trained parameters.
+Finally, we evaluated our implementations on the ImageNet-1k validation set to ensure the
+evaluation numbers were matching with the original implementations. Our implementation
+details are available in
 [this repository](https://github.com/sayakpaul/probing-vits).
 
 To keep the example concise, we'll not exhaustively pair each model with the analysis
 methods. But we'll provide notes in the respective sections so that you can pick up the
-pieces. 
+pieces.
 
 To run this example on Google Colab, we need to update the `gdown` library like so:
 
@@ -66,6 +66,7 @@ import requests
 import tensorflow as tf
 import tensorflow_hub as hub
 from PIL import Image
+from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 
 """
@@ -316,9 +317,17 @@ plt.grid()
 plt.show()
 
 """
-Here we can notice that different attention heads yield different attention distances
-suggesting they use both local and global information from an image. But as we go deeper
-in the transformer blocks the heads tend to focus more on global aggregate information.
+### Inspecting the plots
+
+**How does self-attention span across the input space? Do they attend
+input regions locally or globally?**
+
+The promise of self-attention is to enable the learning of contextual dependencies
+so that a model can attend to the regions of inputs which are the most salient w.r.t
+the objective. From the above plots we can notice that different attention heads yield
+different attention distances suggesting they use both local and global information
+from an image. But as we go deeper in the transformer blocks the heads tend to
+focus more on global aggregate information.
 
 Inspired by [Raghu et al.](https://arxiv.org/abs/2108.08810) we computed mean attention
 distances over 1000 images randomly taken from the ImageNet-1k validation set and we
@@ -360,9 +369,8 @@ multiplied the weight matrices of all layers. This accounts for the mixing of at
 across tokens through all layers.
 
 We used this
-[notebook](https://colab.research.google.com/github/jeonsworld/ViT-pytorch/blob/main/visua
-lize_attention_map.ipynb) and copy-modified the attention rollout code from it for
-compatibility with our models. 
+[notebook](https://colab.research.google.com/github/jeonsworld/ViT-pytorch/blob/main/visualize_attention_map.ipynb)
+and copy-modified the attention rollout code from it for compatibility with our models.
 """
 
 
@@ -429,6 +437,11 @@ fig.subplots_adjust(top=1.35)
 fig.show()
 
 """
+### Inspecting the plots
+
+**How can we quanitfy the information flow that propagates through the
+attention layers?**
+
 We can notice that the model is able to focus its attention on the
 salient parts of the input image. You're encouraged to apply this
 method on the other models we mentioned and compare the results. The
@@ -465,7 +478,7 @@ map seperately to make sense of "what" each heads looks at.
 
 **Notes**:
 
-* The following code has copy-modified from the
+* The following code has been copy-modified from the
 [original DINO codebase](https://github.com/facebookresearch/dino/blob/main/visualize_attention.py).
 * Here we grab the attention maps of the last transformer block.
 * [DINO](https://arxiv.org/abs/2104.14294) was pre-trained using a self-supervised
@@ -528,6 +541,106 @@ for i in range(3):
             img_count += 1
 
 """
+### Inspecting the plots
+
+**How can we qualitatively evaluate the attention weights?**
+
+The attention weights of a transformer block are computed between the
+key and the query. The weights quantifies how important is the key to the query.
+In the ViTs the key and the query comes from the same image, and hence
+the weights determine which part of the image is important.
+
+Plotting the attention weigths overlayed on the image gives us a great
+intuition about the parts of the image that are important to the transformer.
+This plot qualitatively evaluates the essense of the attention weights.
+"""
+
+"""
+## Method IV: Visualizing the learned projection filters
+
+After extracting non-overlapping patches, ViTs flatten those patches across their
+saptial dimensions, and then linearly project them. One might wonder how do these
+projections look like. Below, we take the ViT B-16 model and visualize its
+learned projections. 
+"""
+
+# Extract the projections.
+projections = vit_base_i21k_patch16_224.layers[0].layers[0].kernel
+projection_dim = projections.shape[-1]
+patch_h, patch_w, patch_channels = projections.shape[:-1]
+
+# Scale the projections.
+scaled_projections = MinMaxScaler().fit_transform(
+    projections.reshape(-1, projection_dim)
+)
+
+# Reshape the scaled projections so that the leading
+# three dimensions resemble an image.
+scaled_projections = scaled_projections.reshape(patch_h, patch_w, patch_channels, -1)
+
+# Visualize the first 128 filters of the learned
+# projections.
+fig, axes = plt.subplots(nrows=8, ncols=16, figsize=(13, 8))
+img_count = 0
+limit = 128
+
+for i in range(8):
+    for j in range(16):
+        if img_count < limit:
+            axes[i, j].imshow(scaled_projections[..., img_count])
+            axes[i, j].axis("off")
+            img_count += 1
+
+fig.tight_layout()
+
+"""
+### Inspecting the plots
+
+*What do the projection filters learn?*
+
+[When visualized](https://distill.pub/2017/feature-visualization/),
+the kernels of a convolutional neural network speak for
+the pattern that they were looking for in a dataset. Sometimes circles,
+sometimes lines and when combined together (later stage of a ConvNet) the filters
+transformed into complex shapes. We have found a stark similarity between such
+ConvNet kernels and the projection filter of a ViT.
+"""
+
+"""
+## Method V: Visualizing the positional emebddings
+
+Transformers are permutation invariant. This means that they have
+no clue about the position of the input tokens. To overcome this
+shortcoming we inject positional information to the input tokens.
+
+The positional information can be in the form of leaned positional
+embeddings or hand-crafted constant embeddings. In our case all the
+three variants of ViTs have learned positional embeddings.
+
+In this section, we will visualize the similarities between the
+learned positional embeddings with itself. Below, we take the ViT B-16
+model and visualize the similarity of the positional embeddings by
+taking their dot-product. 
+"""
+
+position_embeddings = vit_base_i21k_patch16_224.positional_embedding.numpy()
+similarity = position_embeddings @ position_embeddings.T
+plt.imshow(similarity, cmap="inferno")
+plt.show()
+
+"""
+### Inspecting the plots
+
+**What do the positional embeddings tell us?**
+
+The plot has a distinctive diagonal pattern. The main diagonal is the brightest
+signifying that a position is the most similar to itself. An interesting
+pattern to look out for is the repeating diagonals. The repeating pattern
+portrays a sinusoidal function which is close in essence to what was proposed by
+[Vaswani et. al.](https://arxiv.org/abs/1706.03762) as a hand-crafted feature.
+"""
+
+"""
 ## Notes
 
 * DINO extended the attention heatmap generation process to videos. We also
@@ -535,7 +648,7 @@ for i in range(3):
 s-video.ipynb) our DINO implementation on a series of videos and obtained similar
 results. Here's one such video of attention heatmaps:
 
-    ![dino](https://i.imgur.com/kAShjbs.gif)
+  ![dino](https://i.imgur.com/kAShjbs.gif)
 
 * [Raghu et al.](https://arxiv.org/abs/2108.08810) use an array of techniques to
 investigate the representations learned by ViTs and make comparisons with that of
