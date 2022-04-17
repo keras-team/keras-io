@@ -201,8 +201,8 @@ print("Model loaded.")
 ```
 Downloading...
 From: https://drive.google.com/uc?id=1mbtnliT3jRb3yJUHhbItWw8unfYZw8KJ
-To: /content/keras-io/scripts/tmp_3620444/vit_b16_patch16_224.zip
-100%|██████████| 322M/322M [00:01<00:00, 218MB/s]
+To: /content/keras-io/scripts/tmp_9651264/vit_b16_patch16_224.zip
+100%|██████████| 322M/322M [00:03<00:00, 106MB/s]
 
 Model loaded.
 
@@ -382,8 +382,7 @@ notice the following:
 
 | Pretrained on ImageNet-21k<br>Fine-tuned on ImageNet-1k | Pretrained on ImageNet-1k |
 | :--: | :--: |
-| ![](https://drive.google.com/uc?export=view&id=1aFob5Cj0FkRyVhH4Iw7Dh5SFxQH3rpYs) |
-![](https://drive.google.com/uc?export=view&id=13Y-3Ypi58PPRqd-pqP1oHkyNkRHCYypH)
+| ![](https://drive.google.com/uc?export=view&id=1aFob5Cj0FkRyVhH4Iw7Dh5SFxQH3rpYs) | ![](https://drive.google.com/uc?export=view&id=13Y-3Ypi58PPRqd-pqP1oHkyNkRHCYypH) |
 
 
 * When distilled from a CNN ViTs tend to have less global attention spans:
@@ -391,9 +390,7 @@ notice the following:
 
 | No distillation (ViT B-16 from DeiT) | Distilled ViT B-16 from DeiT |
 | :--: | :--: |
-| ![](https://drive.google.com/uc?export=view&id=1yH4cPQcMFCnuo3-IW3S9Baszr_d0o2Se) |
-![](https://drive.google.com/uc?export=view&id=1m_nG12kq7E_zIEkxhsi7U0Xr_VDXhJYE)
-
+| ![](https://drive.google.com/uc?export=view&id=1yH4cPQcMFCnuo3-IW3S9Baszr_d0o2Se) | ![](https://drive.google.com/uc?export=view&id=1m_nG12kq7E_zIEkxhsi7U0Xr_VDXhJYE) |
 
 To reproduce these plots, please refer to
 [this notebook](https://github.com/sayakpaul/probing-vits/blob/main/notebooks/mean-attention-distance-1k.ipynb).
@@ -522,8 +519,8 @@ predictions, attention_score_dict = vit_dino_base16.predict(preprocessed_image)
 ```
 Downloading...
 From: https://drive.google.com/uc?id=16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN
-To: /content/keras-io/scripts/tmp_3620444/vit_dino_base16.zip
-100%|██████████| 326M/326M [00:05<00:00, 64.4MB/s]
+To: /content/keras-io/scripts/tmp_9651264/vit_dino_base16.zip
+100%|██████████| 326M/326M [00:04<00:00, 81.4MB/s]
 
 Model loaded.
 
@@ -684,7 +681,7 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 
 ### Inspecting the plots
 
-*What do the projection filters learn?*
+**What do the projection filters learn?**
 
 [When visualized](https://distill.pub/2017/feature-visualization/),
 the kernels of a convolutional neural network show
@@ -712,7 +709,11 @@ taking their dot-product.
 
 ```python
 position_embeddings = vit_base_i21k_patch16_224.layers[1].positional_embedding.numpy()
-position_embeddings = position_embeddings.squeeze()
+
+# Discard the batch dimension and the position embeddings of the
+# cls token.
+position_embeddings = position_embeddings.squeeze()[1:, ...]
+
 similarity = position_embeddings @ position_embeddings.T
 plt.imshow(similarity, cmap="inferno")
 plt.show()
@@ -758,8 +759,7 @@ custom images using our Hugging Face spaces.
 
 | Attention Heat Maps | Attention Rollout |
 | :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Heat%20Maps-black.svg)](https://huggingface.co/spaces/probing-vits/attention-heat-maps) |
-[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Rollout-black.svg)](https://huggingface.co/spaces/probing-vits/attention-rollout) |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Heat%20Maps-black.svg)](https://huggingface.co/spaces/probing-vits/attention-heat-maps) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Rollout-black.svg)](https://huggingface.co/spaces/probing-vits/attention-rollout) |
 
 ---
 ## Acknowledgements
