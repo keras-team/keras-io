@@ -1,5 +1,5 @@
 """
-Title: Investigating Vision Transformers' representations
+Title: Investigating Vision Transformer representations
 Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
 Date created: 2022/04/12
 Last modified: 2022/04/17
