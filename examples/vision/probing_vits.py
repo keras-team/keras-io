@@ -8,40 +8,39 @@ Description: Probing into various variants of Vision Transformers.
 """
 ## Introduction
 
-In this example, we probe into the representations learned by different vision
-transformer (ViT) models. Our main goal with this example is to provide insights into
+In this example, we look into the representations learned by different Vision
+Transformer (ViT) models. Our main goal with this example is to provide insights into
 what empowers ViTs to learn from image data. In particular, the example discusses
 implementations of a few different ViT analysis tools. 
 
-**Note** that by vision transformer, we refer to a computer vision architecture that
-involves transformer blocks ([Vaswani et al.](https://arxiv.org/abs/1706.03762)) and not
+**Note:** when we say "Vision Transformer", we refer to a computer vision architecture that
+involves Transformer blocks ([Vaswani et al.](https://arxiv.org/abs/1706.03762)) and not
 necessarily the original Vision Transformer model
 ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)).
 
 ## Models considered
 
 Since the inception of the original Vision Transformer, the computer vision community has
-seen different ViT variants covering different aspects: training improvements,
-architectural improvements, and so on. In this example, we consider the following ViT
-model families:
+seen a number of different ViT variants improving upon the original in various ways:
+training improvements, architecture improvements, and so on.
+In this example, we consider the following ViT model families:
 
-* ViTs trained using supervised pre-training with the ImageNet-1k and ImageNet-21k
+* ViTs trained using supervised pretraining with the ImageNet-1k and ImageNet-21k
 datasets ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929))
-* ViTs trained using supervised pre-training but only with the ImageNet-1k dataset with
+* ViTs trained using supervised pretraining but only with the ImageNet-1k dataset with
 more regularization and distillation ([Touvron et al.](https://arxiv.org/abs/2012.12877))
 (DeiT).
-* ViTs trained using self-supervised pre-training ([Caron et al.](https://arxiv.org/abs/2104.14294))
+* ViTs trained using self-supervised pretraining ([Caron et al.](https://arxiv.org/abs/2104.14294))
 (DINO).
 
-Since the pre-trained models are not implemented in Keras, we first implemented them as
-faithfully as possible. We then populated them with the official pre-trained parameters.
+Since the pretrained models are not implemented in Keras, we first implemented them as
+faithfully as possible. We then populated them with the official pretrained parameters.
 Finally, we evaluated our implementations on the ImageNet-1k validation set to ensure the
-evaluation numbers were matching with the original implementations. Our implementation
-details are available in
-[this repository](https://github.com/sayakpaul/probing-vits).
+evaluation numbers were matching with the original implementations. The details of our implementations
+are available in [this repository](https://github.com/sayakpaul/probing-vits).
 
-To keep the example concise, we'll not exhaustively pair each model with the analysis
-methods. But we'll provide notes in the respective sections so that you can pick up the
+To keep the example concise, we won't exhaustively pair each model with the analysis
+methods. We'll provide notes in the respective sections so that you can pick up the
 pieces.
 
 To run this example on Google Colab, we need to update the `gdown` library like so:
@@ -79,7 +78,7 @@ PATCH_SIZE = 16
 """
 ## Data utilities
 
-For original ViT models, the input images need to be scaled to the range of [-1, 1]. For
+For the original ViT models, the input images need to be scaled to the range `[-1, 1]`. For
 the other model families mentioned at the beginning, we need to normalize the images with
 channel-wise mean and standard deviation of the ImageNet-1k training set.
 
@@ -183,10 +182,10 @@ print("Model loaded.")
 """
 **More about the model**:
 
-This model was pre-trained on the ImageNet-21k dataset and was then fine-tuned on the
-ImageNet-1k dataset. To know more about how we developed this model in TensorFlow with
-the pre-trained params (from
-[here](https://github.com/google-research/vision_transformer/)) refer to
+This model was pretrained on the ImageNet-21k dataset and was then fine-tuned on the
+ImageNet-1k dataset. To learn more about how we developed this model in TensorFlow
+(with pretrained weights from
+[this source](https://github.com/google-research/vision_transformer/)) refer to
 [this notebook](https://github.com/sayakpaul/probing-vits/blob/main/notebooks/load-jax-weights-vitb16.ipynb).
 """
 
@@ -204,7 +203,7 @@ print(predicted_label)
 
 """
 `attention_score_dict` contains the attention scores (softmaxed outputs) from each
-attention head of each transformer block.
+attention head of each Transformer block.
 """
 
 """
@@ -212,9 +211,9 @@ attention head of each transformer block.
 
 [Dosovitskiy et al.](https://arxiv.org/abs/2010.11929) and
 [Raghu et al.](https://arxiv.org/abs/2108.08810) use a measure called
-"mean attention distances" from each attention head of different
-transformer blocks to understand how local and global information flow
-into vision transformers. 
+"mean attention distance" from each attention head of different
+Transformer blocks to understand how local and global information flows
+into Vision Transformers. 
 
 Mean attention distance is defined as the distance between query tokens and the other
 tokens times attention weights. So, for a single image
@@ -224,7 +223,7 @@ tokens times attention weights. So, for a single image
 * multiply that with the attention scores.
 
 Attention scores are calculated here after forward passing the image in inference mode
-through the network. The following infographic may help you 
+through the network. The following figure may help you 
 understand the process a little bit better. 
 
 <img src="https://i.imgur.com/pZCgPwl.gif" height=500>
@@ -285,7 +284,7 @@ these utilities to generate a plot of attention distances with our loaded model 
 image.
 """
 
-# Build the mean distances for every transformer block.
+# Build the mean distances for every Transformer block.
 mean_distances = {
     f"{name}_mean_dist": compute_mean_attention_dist(
         patch_size=PATCH_SIZE,
@@ -326,18 +325,18 @@ The promise of self-attention is to enable the learning of contextual dependenci
 so that a model can attend to the regions of inputs which are the most salient w.r.t
 the objective. From the above plots we can notice that different attention heads yield
 different attention distances suggesting they use both local and global information
-from an image. But as we go deeper in the transformer blocks the heads tend to
+from an image. But as we go deeper in the Transformer blocks the heads tend to
 focus more on global aggregate information.
 
 Inspired by [Raghu et al.](https://arxiv.org/abs/2108.08810) we computed mean attention
 distances over 1000 images randomly taken from the ImageNet-1k validation set and we
 repeated the process for all the models mentioned at the beginning. Intrestingly, we
-notice the following things. 
+notice the following: 
 
-* Pre-training with a larger dataset helps with more global attention spans:
+* Pretraining with a larger dataset helps with more global attention spans:
 
 
-| Pre-trained on ImageNet-21k<br>Fine-tuned on ImageNet-1k | Pre-trained on ImageNet-1k |
+| Pretrained on ImageNet-21k<br>Fine-tuned on ImageNet-1k | Pretrained on ImageNet-1k |
 | :--: | :--: | 
 | ![](https://drive.google.com/uc?export=view&id=1aFob5Cj0FkRyVhH4Iw7Dh5SFxQH3rpYs) |
 ![](https://drive.google.com/uc?export=view&id=13Y-3Ypi58PPRqd-pqP1oHkyNkRHCYypH)
@@ -360,24 +359,24 @@ To reproduce these plots, please refer to
 """
 ## Method II: Attention Rollout
 
-[Abnar et al.](https://arxiv.org/abs/2005.00928) introduce "Attention Rollout" for
-quantifying how information flow through self-attention layers of transformer blocks.
-Original ViT authors use this method to investigate the learned representations saying:
+[Abnar et al.](https://arxiv.org/abs/2005.00928) introduce "Attention rollout" for
+quantifying how information flow through self-attention layers of Transformer blocks.
+Original ViT authors use this method to investigate the learned representations, stating:
 
 > Briefly, we averaged attention weights of ViTL/16 across all heads and then recursively
 multiplied the weight matrices of all layers. This accounts for the mixing of attention
 across tokens through all layers.
 
-We used this
-[notebook](https://colab.research.google.com/github/jeonsworld/ViT-pytorch/blob/main/visualize_attention_map.ipynb)
-and copy-modified the attention rollout code from it for compatibility with our models.
+We used
+[this notebook](https://colab.research.google.com/github/jeonsworld/ViT-pytorch/blob/main/visualize_attention_map.ipynb)
+and modified the attention rollout code from it for compatibility with our models.
 """
 
 
 def attention_rollout_map(image, attention_score_dict, model_type):
     num_cls_tokens = 2 if "distilled" in model_type else 1
 
-    # Stack the individual attention matrices from individual transformer blocks.
+    # Stack the individual attention matrices from individual Transformer blocks.
     attn_mat = tf.stack([attention_score_dict[k] for k in attention_score_dict.keys()])
     attn_mat = tf.squeeze(attn_mat, axis=1)
 
@@ -412,10 +411,10 @@ Let's now use these utilities to generate an attention plot based on our previou
 from the "Running regular inference with the model" section. Following are the links to
 download each individual model:
 
-* [Original ViT model (pre-trained on ImageNet-21k)](https://drive.google.com/file/d/1mbtnliT3jRb3yJUHhbItWw8unfYZw8KJ/view?usp=sharing)
-* [Original ViT model (pre-trained on ImageNet-1k)](https://drive.google.com/file/d/1ApOdYe4NXxhPhJABefgZ3KVvqsQzhCL7/view?usp=sharing)
-* [DINO model (pre-trained on ImageNet-1k)](https://drive.google.com/file/d/16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN/view?usp=sharing)
-* [DeiT models (pre-trained on ImageNet-1k including distilled and non-distilled ones)](https://tfhub.dev/sayakpaul/collections/deit/1)
+* [Original ViT model (pretrained on ImageNet-21k)](https://drive.google.com/file/d/1mbtnliT3jRb3yJUHhbItWw8unfYZw8KJ/view?usp=sharing)
+* [Original ViT model (pretrained on ImageNet-1k)](https://drive.google.com/file/d/1ApOdYe4NXxhPhJABefgZ3KVvqsQzhCL7/view?usp=sharing)
+* [DINO model (pretrained on ImageNet-1k)](https://drive.google.com/file/d/16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN/view?usp=sharing)
+* [DeiT models (pretrained on ImageNet-1k including distilled and non-distilled ones)](https://tfhub.dev/sayakpaul/collections/deit/1)
 """
 
 attn_rollout_result = attention_rollout_map(
@@ -442,20 +441,20 @@ fig.show()
 **How can we quanitfy the information flow that propagates through the
 attention layers?**
 
-We can notice that the model is able to focus its attention on the
-salient parts of the input image. You're encouraged to apply this
-method on the other models we mentioned and compare the results. The
+We notice that the model is able to focus its attention on the
+salient parts of the input image. We encourage you to apply this
+method to the other models we mentioned and compare the results. The
 attention rollout plots will differ according to the tasks and
-augmentation the model was trained with. We observer that DeiT has the
-best rollout plot likely due to its augmentation regime.
+augmentation the model was trained with. We observe that DeiT has the
+best rollout plot, likely due to its augmentation regime.
 """
 
 """
 ## Method III: Attention heatmaps
 
-A simple yet useful way to probe into the representation of a vision transformer is to
+A simple yet useful way to probe into the representation of a Vision Transformer is to
 visualise the attention maps overlayed on the input images. This helps form an intuition
-about "what" the model attends to. We use the DINO model for this purpose because it
+about what the model attends to. We use the DINO model for this purpose, because it
 yields better attention heatmaps.
 """
 
@@ -471,17 +470,17 @@ image, preprocessed_image = load_image_from_url(img_url, model_type="dino")
 predictions, attention_score_dict = vit_dino_base16.predict(preprocessed_image)
 
 """
-A transformer block consists of multiple heads. Each head in a transformer block projects
+A Transformer block consists of multiple heads. Each head in a Transformer block projects
 the input data to different sub-spaces. This helps each individual head to attend to
-different parts of the image. Therefore it makes sense to visualize each attention head
-map seperately to make sense of "what" each heads looks at.
+different parts of the image. Therefore, it makes sense to visualize each attention head
+map seperately, to make sense of what each heads looks at.
 
 **Notes**:
 
 * The following code has been copy-modified from the
 [original DINO codebase](https://github.com/facebookresearch/dino/blob/main/visualize_attention.py).
-* Here we grab the attention maps of the last transformer block.
-* [DINO](https://arxiv.org/abs/2104.14294) was pre-trained using a self-supervised
+* Here we grab the attention maps of the last Transformer block.
+* [DINO](https://arxiv.org/abs/2104.14294) was pretrained using a self-supervised
 objective.
 """
 
@@ -489,7 +488,7 @@ objective.
 def attention_heatmap(attention_score_dict, image, model_type="dino"):
     num_tokens = 2 if "distilled" in model_type else 1
 
-    # Sort the transformer blocks in order of their depth.
+    # Sort the Transformer blocks in order of their depth.
     attention_score_list = list(attention_score_dict.keys())
     attention_score_list.sort(key=lambda x: int(x.split("_")[-2]), reverse=True)
 
@@ -545,22 +544,22 @@ for i in range(3):
 
 **How can we qualitatively evaluate the attention weights?**
 
-The attention weights of a transformer block are computed between the
+The attention weights of a Transformer block are computed between the
 key and the query. The weights quantifies how important is the key to the query.
-In the ViTs the key and the query comes from the same image, and hence
+In the ViTs the key and the query comes from the same image, hence
 the weights determine which part of the image is important.
 
 Plotting the attention weigths overlayed on the image gives us a great
-intuition about the parts of the image that are important to the transformer.
-This plot qualitatively evaluates the essense of the attention weights.
+intuition about the parts of the image that are important to the Transformer.
+This plot qualitatively evaluates the purpose of the attention weights.
 """
 
 """
 ## Method IV: Visualizing the learned projection filters
 
 After extracting non-overlapping patches, ViTs flatten those patches across their
-saptial dimensions, and then linearly project them. One might wonder how do these
-projections look like. Below, we take the ViT B-16 model and visualize its
+saptial dimensions, and then linearly project them. One might wonder, how do these
+projections look like? Below, we take the ViT B-16 model and visualize its
 learned projections. 
 """
 
@@ -599,25 +598,25 @@ fig.tight_layout()
 *What do the projection filters learn?*
 
 [When visualized](https://distill.pub/2017/feature-visualization/),
-the kernels of a convolutional neural network speak for
-the pattern that they were looking for in a dataset. Sometimes circles,
-sometimes lines and when combined together (later stage of a ConvNet) the filters
-transformed into complex shapes. We have found a stark similarity between such
-ConvNet kernels and the projection filter of a ViT.
+the kernels of a convolutional neural network show
+the pattern that they look for in an image. This could be circles,
+sometimes lines -- when combined together (in later stage of a ConvNet), the filters
+transform into more complex shapes. We have found a stark similarity between such
+ConvNet kernels and the projection filters of a ViT.
 """
 
 """
 ## Method V: Visualizing the positional emebddings
 
-Transformers are permutation invariant. This means that they have
-no clue about the position of the input tokens. To overcome this
-shortcoming we inject positional information to the input tokens.
+Transformers are permutation-invariant. This means that do not take into account
+the spatial position of the input tokens. To overcome this
+limitation, we add positional information to the input tokens.
 
 The positional information can be in the form of leaned positional
-embeddings or hand-crafted constant embeddings. In our case all the
-three variants of ViTs have learned positional embeddings.
+embeddings or handcrafted constant embeddings. In our case, all the
+three variants of ViTs feature learned positional embeddings.
 
-In this section, we will visualize the similarities between the
+In this section, we visualize the similarities between the
 learned positional embeddings with itself. Below, we take the ViT B-16
 model and visualize the similarity of the positional embeddings by
 taking their dot-product. 
