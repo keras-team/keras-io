@@ -1,9 +1,9 @@
 """
-Title: Under the Hood of Vision Transformers
+Title: Investigating Vision Transformers' representations
 Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
 Date created: 2022/04/12
-Last modified: 2022/04/15
-Description: Probing into various variants of Vision Transformers.
+Last modified: 2022/04/17
+Description: Looking into the representations learned by different Vision Transformers variants.
 """
 """
 ## Introduction
