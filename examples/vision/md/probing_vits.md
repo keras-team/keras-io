@@ -1,11 +1,16 @@
-"""
-Title: Investigating Vision Transformer representations
-Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
-Date created: 2022/04/12
-Last modified: 2022/04/17
-Description: Looking into the representations learned by different Vision Transformers variants.
-"""
-"""
+# Investigating Vision Transformer representations
+
+**Authors:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)<br>
+**Date created:** 2022/04/12<br>
+**Last modified:** 2022/04/17<br>
+**Description:** Looking into the representations learned by different Vision Transformers variants.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/probing_vits.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/probing_vits.py)
+
+
+
+---
 ## Introduction
 
 In this example, we look into the representations learned by different Vision
@@ -18,6 +23,7 @@ involves Transformer blocks ([Vaswani et al.](https://arxiv.org/abs/1706.03762))
 necessarily the original Vision Transformer model
 ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)).
 
+---
 ## Models considered
 
 Since the inception of the original Vision Transformer, the computer vision community has
@@ -48,12 +54,12 @@ To run this example on Google Colab, we need to update the `gdown` library like 
 ```shell
 pip install -U gdown -q
 ```
-"""
 
-"""
+---
 ## Imports
-"""
 
+
+```python
 import zipfile
 from io import BytesIO
 
@@ -67,15 +73,18 @@ import tensorflow_hub as hub
 from PIL import Image
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
+```
 
-"""
+---
 ## Constants
-"""
 
+
+```python
 RESOLUTION = 224
 PATCH_SIZE = 16
+```
 
-"""
+---
 ## Data utilities
 
 For the original ViT models, the input images need to be scaled to the range `[-1, 1]`. For
@@ -83,8 +92,8 @@ the other model families mentioned at the beginning, we need to normalize the im
 channel-wise mean and standard deviation of the ImageNet-1k training set.
 
 
-"""
 
+```python
 crop_layer = keras.layers.CenterCrop(RESOLUTION, RESOLUTION)
 norm_layer = keras.layers.Normalization(
     mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
@@ -123,11 +132,13 @@ def load_image_from_url(url, model_type):
     preprocessed_image = preprocess_image(image, model_type)
     return image, preprocessed_image
 
+```
 
-"""
+---
 ## Load a test image and display it
-"""
 
+
+```python
 # ImageNet-1k label mapping file and load it.
 
 mapping_file = keras.utils.get_file(
@@ -144,11 +155,17 @@ image, preprocessed_image = load_image_from_url(img_url, model_type="original_vi
 plt.imshow(image)
 plt.axis("off")
 plt.show()
+```
 
-"""
+
+![png](/img/examples/vision/probing_vits/probing_vits_9_0.png)
+
+
+---
 ## Load a model
-"""
 
+
+```python
 
 def get_tfhub_model(model_url: str) -> tf.keras.Model:
     inputs = keras.Input((RESOLUTION, RESOLUTION, 3))
@@ -178,8 +195,19 @@ def get_model(url_or_id):
 
 vit_base_i21k_patch16_224 = get_model("1mbtnliT3jRb3yJUHhbItWw8unfYZw8KJ")
 print("Model loaded.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading...
+From: https://drive.google.com/uc?id=1mbtnliT3jRb3yJUHhbItWw8unfYZw8KJ
+To: /content/keras-io/scripts/tmp_3620444/vit_b16_patch16_224.zip
+100%|██████████| 322M/322M [00:01<00:00, 218MB/s]
+
+Model loaded.
+
+```
+</div>
 **More about the model**:
 
 This model was pretrained on the ImageNet-21k dataset and was then fine-tuned on the
@@ -187,26 +215,31 @@ ImageNet-1k dataset. To learn more about how we developed this model in TensorFl
 (with pretrained weights from
 [this source](https://github.com/google-research/vision_transformer/)) refer to
 [this notebook](https://github.com/sayakpaul/probing-vits/blob/main/notebooks/load-jax-weights-vitb16.ipynb).
-"""
 
-"""
+---
 ## Running regular inference with the model
 
 We now run inference with the loaded model on our test image.
-"""
 
+
+```python
 predictions, attention_score_dict = vit_base_i21k_patch16_224.predict(
     preprocessed_image
 )
 predicted_label = imagenet_int_to_str[int(np.argmax(predictions))]
 print(predicted_label)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+bulbul
+
+```
+</div>
 `attention_score_dict` contains the attention scores (softmaxed outputs) from each
 attention head of each Transformer block.
-"""
 
-"""
+---
 ## Method I: Mean attention distance
 
 [Dosovitskiy et al.](https://arxiv.org/abs/2010.11929) and
@@ -229,8 +262,9 @@ little bit better.
 <img src="https://i.imgur.com/pZCgPwl.gif" height=500>
 
 This animation is created by [Ritwik Raha](https://twitter.com/ritwik_raha).
-"""
 
+
+```python
 
 def compute_distance_matrix(patch_size, num_patches, length):
     distance_matrix = np.zeros((num_patches, num_patches))
@@ -275,15 +309,16 @@ def compute_mean_attention_dist(patch_size, attention_weights, model_type):
 
     return mean_distances
 
+```
 
-"""
 Thanks to [Simon Kornblith](https://scholar.google.com/citations?user=1O3RPmsAAAAJ&hl=en)
 from Google who helped us with this code snippet. It can be found
 [here](https://gist.github.com/simonster/155894d48aef2bd36bd2dd8267e62391). Let's now use
 these utilities to generate a plot of attention distances with our loaded model and test
 image.
-"""
 
+
+```python
 # Build the mean distances for every Transformer block.
 mean_distances = {
     f"{name}_mean_dist": compute_mean_attention_dist(
@@ -314,8 +349,17 @@ plt.ylabel("Attention Distance", fontsize=14)
 plt.title("vit_base_i21k_patch16_224", fontsize=14)
 plt.grid()
 plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Num Heads: 12.
+
+```
+</div>
+![png](/img/examples/vision/probing_vits/probing_vits_19_1.png)
+
+
 ### Inspecting the plots
 
 **How does self-attention span across the input space? Do they attend
@@ -354,9 +398,7 @@ notice the following:
 To reproduce these plots, please refer to
 [this notebook](https://github.com/sayakpaul/probing-vits/blob/main/notebooks/mean-attention-distance-1k.ipynb).
 
-"""
-
-"""
+---
 ## Method II: Attention Rollout
 
 [Abnar et al.](https://arxiv.org/abs/2005.00928) introduce "Attention rollout" for
@@ -370,8 +412,9 @@ across tokens through all layers.
 We used
 [this notebook](https://colab.research.google.com/github/jeonsworld/ViT-pytorch/blob/main/visualize_attention_map.ipynb)
 and modified the attention rollout code from it for compatibility with our models.
-"""
 
+
+```python
 
 def attention_rollout_map(image, attention_score_dict, model_type):
     num_cls_tokens = 2 if "distilled" in model_type else 1
@@ -405,8 +448,8 @@ def attention_rollout_map(image, attention_score_dict, model_type):
     result = (mask * image).astype("uint8")
     return result
 
+```
 
-"""
 Let's now use these utilities to generate an attention plot based on our previous results
 from the "Running regular inference with the model" section. Following are the links to
 download each individual model:
@@ -415,8 +458,9 @@ download each individual model:
 * [Original ViT model (pretrained on ImageNet-1k)](https://drive.google.com/file/d/1ApOdYe4NXxhPhJABefgZ3KVvqsQzhCL7/view?usp=sharing)
 * [DINO model (pretrained on ImageNet-1k)](https://drive.google.com/file/d/16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN/view?usp=sharing)
 * [DeiT models (pretrained on ImageNet-1k including distilled and non-distilled ones)](https://tfhub.dev/sayakpaul/collections/deit/1)
-"""
 
+
+```python
 attn_rollout_result = attention_rollout_map(
     image, attention_score_dict, model_type="original_vit"
 )
@@ -434,8 +478,12 @@ ax2.axis("off")
 fig.tight_layout()
 fig.subplots_adjust(top=1.35)
 fig.show()
+```
 
-"""
+
+![png](/img/examples/vision/probing_vits/probing_vits_24_0.png)
+
+
 ### Inspecting the plots
 
 **How can we quanitfy the information flow that propagates through the
@@ -447,17 +495,17 @@ method to the other models we mentioned and compare the results. The
 attention rollout plots will differ according to the tasks and
 augmentation the model was trained with. We observe that DeiT has the
 best rollout plot, likely due to its augmentation regime.
-"""
 
-"""
+---
 ## Method III: Attention heatmaps
 
 A simple yet useful way to probe into the representation of a Vision Transformer is to
 visualise the attention maps overlayed on the input images. This helps form an intuition
 about what the model attends to. We use the DINO model for this purpose, because it
 yields better attention heatmaps.
-"""
 
+
+```python
 # Load the model.
 vit_dino_base16 = get_model("16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN")
 print("Model loaded.")
@@ -468,8 +516,19 @@ image, preprocessed_image = load_image_from_url(img_url, model_type="dino")
 
 # Grab the predictions.
 predictions, attention_score_dict = vit_dino_base16.predict(preprocessed_image)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading...
+From: https://drive.google.com/uc?id=16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN
+To: /content/keras-io/scripts/tmp_3620444/vit_dino_base16.zip
+100%|██████████| 326M/326M [00:05<00:00, 64.4MB/s]
+
+Model loaded.
+
+```
+</div>
 A Transformer block consists of multiple heads. Each head in a Transformer block projects
 the input data to different sub-spaces. This helps each individual head to attend to
 different parts of the image. Therefore, it makes sense to visualize each attention head
@@ -482,8 +541,9 @@ map seperately, to make sense of what each heads looks at.
 * Here we grab the attention maps of the last Transformer block.
 * [DINO](https://arxiv.org/abs/2104.14294) was pretrained using a self-supervised
 objective.
-"""
 
+
+```python
 
 def attention_heatmap(attention_score_dict, image, model_type="dino"):
     num_tokens = 2 if "distilled" in model_type else 1
@@ -510,12 +570,13 @@ def attention_heatmap(attention_score_dict, image, model_type="dino"):
     )
     return attentions
 
+```
 
-"""
 We can use the same image we used for inference with DINO and the `attention_score_dict`
 we extracted from the results.
-"""
 
+
+```python
 # De-normalize the image for visual clarity.
 in1k_mean = tf.constant([0.485 * 255, 0.456 * 255, 0.406 * 255])
 in1k_std = tf.constant([0.229 * 255, 0.224 * 255, 0.225 * 255])
@@ -538,8 +599,12 @@ for i in range(3):
             axes[i, j].title.set_text(f"Attention head: {img_count}")
             axes[i, j].axis("off")
             img_count += 1
+```
 
-"""
+
+![png](/img/examples/vision/probing_vits/probing_vits_31_0.png)
+
+
 ### Inspecting the plots
 
 **How can we qualitatively evaluate the attention weights?**
@@ -552,17 +617,17 @@ the weights determine which part of the image is important.
 Plotting the attention weigths overlayed on the image gives us a great
 intuition about the parts of the image that are important to the Transformer.
 This plot qualitatively evaluates the purpose of the attention weights.
-"""
 
-"""
+---
 ## Method IV: Visualizing the learned projection filters
 
 After extracting non-overlapping patches, ViTs flatten those patches across their
 saptial dimensions, and then linearly project them. One might wonder, how do these
 projections look like? Below, we take the ViT B-16 model and visualize its
 learned projections.
-"""
 
+
+```python
 # Extract the projections.
 projections = (
     vit_base_i21k_patch16_224.layers[1]
@@ -596,8 +661,27 @@ for i in range(8):
             img_count += 1
 
 fig.tight_layout()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+
+```
+</div>
+![png](/img/examples/vision/probing_vits/probing_vits_34_1.png)
+
+
 ### Inspecting the plots
 
 *What do the projection filters learn?*
@@ -608,9 +692,8 @@ the pattern that they look for in an image. This could be circles,
 sometimes lines -- when combined together (in later stage of a ConvNet), the filters
 transform into more complex shapes. We have found a stark similarity between such
 ConvNet kernels and the projection filters of a ViT.
-"""
 
-"""
+---
 ## Method V: Visualizing the positional emebddings
 
 Transformers are permutation-invariant. This means that do not take into account
@@ -625,19 +708,20 @@ In this section, we visualize the similarities between the
 learned positional embeddings with itself. Below, we take the ViT B-16
 model and visualize the similarity of the positional embeddings by
 taking their dot-product.
-"""
 
+
+```python
 position_embeddings = vit_base_i21k_patch16_224.layers[1].positional_embedding.numpy()
-
-# Discard the batch dimension and the position embeddings of the
-# cls token.
-position_embeddings = position_embeddings.squeeze()[1:, ...]
-
+position_embeddings = position_embeddings.squeeze()
 similarity = position_embeddings @ position_embeddings.T
 plt.imshow(similarity, cmap="inferno")
 plt.show()
+```
 
-"""
+
+![png](/img/examples/vision/probing_vits/probing_vits_37_0.png)
+
+
 ### Inspecting the plots
 
 **What do the positional embeddings tell us?**
@@ -647,9 +731,8 @@ signifying that a position is the most similar to itself. An interesting
 pattern to look out for is the repeating diagonals. The repeating pattern
 portrays a sinusoidal function which is close in essence to what was proposed by
 [Vaswani et. al.](https://arxiv.org/abs/1706.03762) as a hand-crafted feature.
-"""
 
-"""
+---
 ## Notes
 
 * DINO extended the attention heatmap generation process to videos. We also
@@ -677,12 +760,10 @@ custom images using our Hugging Face spaces.
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Heat%20Maps-black.svg)](https://huggingface.co/spaces/probing-vits/attention-heat-maps) |
 [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Rollout-black.svg)](https://huggingface.co/spaces/probing-vits/attention-rollout) |
-"""
 
-"""
+---
 ## Acknowledgements
 
 - [PyImageSearch](https://pyimagesearch.com)
 - [Jarvislabs.ai](https://jarvislabs.ai/)
 - [GDE Program](https://developers.google.com/programs/experts/)
-"""
