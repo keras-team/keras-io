@@ -338,8 +338,7 @@ notice the following:
 
 | Pretrained on ImageNet-21k<br>Fine-tuned on ImageNet-1k | Pretrained on ImageNet-1k |
 | :--: | :--: |
-| ![](https://drive.google.com/uc?export=view&id=1aFob5Cj0FkRyVhH4Iw7Dh5SFxQH3rpYs) |
-![](https://drive.google.com/uc?export=view&id=13Y-3Ypi58PPRqd-pqP1oHkyNkRHCYypH)
+| ![](https://drive.google.com/uc?export=view&id=1aFob5Cj0FkRyVhH4Iw7Dh5SFxQH3rpYs) | ![](https://drive.google.com/uc?export=view&id=13Y-3Ypi58PPRqd-pqP1oHkyNkRHCYypH) |
 
 
 * When distilled from a CNN ViTs tend to have less global attention spans:
@@ -347,9 +346,7 @@ notice the following:
 
 | No distillation (ViT B-16 from DeiT) | Distilled ViT B-16 from DeiT |
 | :--: | :--: |
-| ![](https://drive.google.com/uc?export=view&id=1yH4cPQcMFCnuo3-IW3S9Baszr_d0o2Se) |
-![](https://drive.google.com/uc?export=view&id=1m_nG12kq7E_zIEkxhsi7U0Xr_VDXhJYE)
-
+| ![](https://drive.google.com/uc?export=view&id=1yH4cPQcMFCnuo3-IW3S9Baszr_d0o2Se) | ![](https://drive.google.com/uc?export=view&id=1m_nG12kq7E_zIEkxhsi7U0Xr_VDXhJYE) |
 
 To reproduce these plots, please refer to
 [this notebook](https://github.com/sayakpaul/probing-vits/blob/main/notebooks/mean-attention-distance-1k.ipynb).
@@ -600,7 +597,7 @@ fig.tight_layout()
 """
 ### Inspecting the plots
 
-*What do the projection filters learn?*
+**What do the projection filters learn?**
 
 [When visualized](https://distill.pub/2017/feature-visualization/),
 the kernels of a convolutional neural network show
@@ -675,8 +672,7 @@ custom images using our Hugging Face spaces.
 
 | Attention Heat Maps | Attention Rollout |
 | :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Heat%20Maps-black.svg)](https://huggingface.co/spaces/probing-vits/attention-heat-maps) |
-[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Rollout-black.svg)](https://huggingface.co/spaces/probing-vits/attention-rollout) |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Heat%20Maps-black.svg)](https://huggingface.co/spaces/probing-vits/attention-heat-maps) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20Rollout-black.svg)](https://huggingface.co/spaces/probing-vits/attention-rollout) |
 """
 
 """
