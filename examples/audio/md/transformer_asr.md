@@ -334,12 +334,13 @@ def get_data(wavs, id_to_text, maxlen=50):
 ```
 
 <div class="k-default-codeblock">
+
 ```
 Downloading data from https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
 2748579840/2748572632 [==============================] - 57s 0us/step
-
 ```
 </div>
+
 ---
 ## Preprocess the dataset
 
@@ -428,11 +429,12 @@ val_ds = create_tf_dataset(test_data, bs=4)
 ```
 
 <div class="k-default-codeblock">
-```
-vocab size 34
 
 ```
+vocab size 34
+```
 </div>
+
 ---
 ## Callbacks to display predictions
 
