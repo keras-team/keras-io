@@ -55,7 +55,7 @@ BATCH_SIZE = 32
 AUTOTUNE = tf.data.AUTOTUNE
 tfds.disable_progress_bar()
 data, dataset_info = tfds.load("oxford_flowers102", with_info=True, as_supervised=True)
-steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
+steps_per_epoch = dataset_info.splits['train'].num_examples // BATCH_SIZE
 
 """
 Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
