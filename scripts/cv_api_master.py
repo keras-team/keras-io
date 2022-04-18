@@ -1,96 +1,96 @@
 PREPROCESSING_MASTER = {
     'path': 'preprocessing/',
-    'title': 'Preprocessing Layers',
+    'title': 'Preprocessing layers',
     'toc': True,
     'children': [
         {
             'path': 'auto_contrast',
-            'title': 'The AutoContrast class',
+            'title': 'AutoContrast layer',
             'generate': ['keras_cv.layers.AutoContrast']
         },
         {
             'path': 'channel_shuffle',
-            'title': 'The ChannelShuffle class',
+            'title': 'ChannelShuffle layer',
             'generate': ['keras_cv.layers.ChannelShuffle']
         },
         {
             'path': 'cut_mix',
-            'title': 'The CutMix class',
+            'title': 'CutMix layer',
             'generate': ['keras_cv.layers.CutMix']
         },
         {
             'path': 'equalization',
-            'title': 'The Equalization class',
+            'title': 'Equalization layer',
             'generate': ['keras_cv.layers.Equalization']
         },
         {
             'path': 'grayscale',
-            'title': 'The Grayscale class',
+            'title': 'Grayscale layer',
             'generate': ['keras_cv.layers.Grayscale']
         },
         {
             'path': 'grid_mask',
-            'title': 'The GridMask class',
+            'title': 'GridMask layer',
             'generate': ['keras_cv.layers.GridMask']
         },
         {
             'path': 'mix_up',
-            'title': 'The MixUp class',
+            'title': 'MixUp layer',
             'generate': ['keras_cv.layers.MixUp']
         },
         {
             'path': 'posterization',
-            'title': 'The Posterization class',
+            'title': 'Posterization layer',
             'generate': ['keras_cv.layers.Posterization']
         },
         {
             'path': 'rand_augment',
-            'title': 'The RandAugment class',
+            'title': 'RandAugment layer',
             'generate': ['keras_cv.layers.RandAugment']
         },
         {
             'path': 'random_augmentation_pipeline',
-            'title': 'The RandomAugmentationPipeline class',
+            'title': 'RandomAugmentationPipeline layer',
             'generate': ['keras_cv.layers.RandomAugmentationPipeline']
         },
         {
             'path': 'random_channel_shift',
-            'title': 'The RandomChannelShift class',
+            'title': 'RandomChannelShift layer',
             'generate': ['keras_cv.layers.RandomChannelShift']
         },
         {
             'path': 'rancom_color_degeneration',
-            'title': 'The RandomColorDegeneration class',
+            'title': 'RandomColorDegeneration layer',
             'generate': ['keras_cv.layers.RandomColorDegeneration']
         },
         {
             'path': 'random_cutout',
-            'title': 'The RandomCutout class',
+            'title': 'RandomCutout layer',
             'generate': ['keras_cv.layers.RandomCutout']
         },
         {
             'path': 'random_hue',
-            'title': 'The RandomHue class',
+            'title': 'RandomHue layer',
             'generate': ['keras_cv.layers.RandomHue']
         },
         {
             'path': 'random_saturation',
-            'title': 'The RandomSaturation class',
+            'title': 'RandomSaturation layer',
             'generate': ['keras_cv.layers.RandomSaturation']
         },
         {
             'path': 'random_sharpness',
-            'title': 'The RandomSharpness class',
+            'title': 'RandomSharpness layer',
             'generate': ['keras_cv.layers.RandomSharpness']
         },
         {
             'path': 'random_shear',
-            'title': 'The RandomShear class',
+            'title': 'RandomShear layer',
             'generate': ['keras_cv.layers.RandomShear']
         },
         {
             'path': 'solarization',
-            'title': 'The Solarization class',
+            'title': 'Solarization layer',
             'generate': ['keras_cv.layers.Solarization']
         },
     ]
@@ -98,12 +98,12 @@ PREPROCESSING_MASTER = {
 
 REGULARIZATION_MASTER = {
     'path': 'regularization/',
-    'title': 'Regularization Layers',
+    'title': 'Regularization layers',
     'toc': True,
     'children': [
         {
             'path': 'dropblock2d',
-            'title': 'The DropBlock2D class',
+            'title': 'DropBlock2D layer',
             'generate': [
                 'keras_cv.layers.DropBlock2D',
             ]
@@ -129,14 +129,14 @@ METRICS_MASTER = {
     'children': [
         {
             'path': 'coco_mean_average_precision',
-            'title': 'The COCOMeanAveragePrecision class',
+            'title': 'COCOMeanAveragePrecision metric',
             'generate': [
                 'keras_cv.metrics.COCOMeanAveragePrecision',
             ]
         },
         {
             'path': 'coco_recall',
-            'title': 'The COCORecall class',
+            'title': 'COCORecall metric',
             'generate': [
                 'keras_cv.metrics.COCORecall',
             ]

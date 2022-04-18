@@ -51,9 +51,11 @@ for demonstration purposes.
 To get started, we first load the dataset:
 """
 
+BATCH_SIZE = 32
 AUTOTUNE = tf.data.AUTOTUNE
 tfds.disable_progress_bar()
 data, dataset_info = tfds.load("oxford_flowers102", with_info=True, as_supervised=True)
+steps_per_epoch = dataset_info.splits['train'].num_examples // BATCH_SIZE
 
 """
 Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
@@ -63,7 +65,6 @@ in a way that is not possible with a sparse label representation.
 """
 
 IMAGE_SIZE = (224, 224)
-BATCH_SIZE = 32
 num_classes = dataset_info.features["label"].num_classes
 
 
@@ -334,8 +335,8 @@ train_dataset = train_dataset.map(preprocess_for_model, num_parallel_calls=AUTOT
 test_dataset = load_dataset(split="test")
 test_dataset = test_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUNE)
 
-train_dataset = train_dataset.prefetch(5)
-test_dataset = test_dataset.prefetch(5)
+train_dataset = train_dataset.prefetch(AUTOTUNE)
+test_dataset = test_dataset.prefetch(AUTOTUNE)
 
 """
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
@@ -369,7 +370,7 @@ with strategy.scope():
     model = get_model()
     model.fit(
         train_dataset,
-        steps_per_epoch=1000,
+        steps_per_epoch=steps_per_epoch,
         epochs=10,
         validation_data=test_dataset,
         validation_steps=50,
@@ -384,7 +385,7 @@ KerasCV!
 As an additional exercise for readers, you can:
 
 - Perform a hyper parameter search over the RandAugment parameters to improve the
-classifier accuracy
+classifieclassr accuracy
 - Substitute the Oxford Flowers dataset with your own dataset
 - Experiment with custom `RandomAugmentationPipeline` objects.
 
