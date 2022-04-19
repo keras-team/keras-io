@@ -3,15 +3,13 @@
 ---
 ## Quick links
 
-* [Getting started with KerasTuner](/guides/keras_tuner/getting_started/)
-* [KerasTuner developer guides](/guides/keras_tuner/)
-* [KerasTuner API reference](/api/keras_tuner/)
-
+* [Image Data Augmentation](/guides/keras_cv/cut_mix_mix_up_and_rand_augment/)
+* [Using COCO metrics](/guides/keras_cv/coco_metrics/)
 
 ---
 ## Installation
 
-KerasCV requires **Python 3.6+** and **TensorFlow 2.9+**.
+KerasCV requires **Python 3.7+** and **TensorFlow 2.9+**.
 
 Install the latest release:
 
@@ -20,7 +18,7 @@ pip install keras-cv --upgrade
 ```
 
 You can also check out other versions in our
-[GitHub repository](https://github.com/keras-team/keras-tuner).
+[GitHub repository](https://github.com/keras-team/keras-cv/releases).
 
 ---
 ## Quick introduction
