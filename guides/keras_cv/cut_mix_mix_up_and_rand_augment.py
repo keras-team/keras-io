@@ -131,7 +131,7 @@ To use RandAugment in KerasCV, you need to provide a few values:
 - `value_range` describes the range of values covered in your images
 - `magnitude` is a value between 0 and 1, describing the strength of the perturbations
 applied
-- `num_layers` is an integer telling the layer how many augmentations to apply to each
+- `augmentations_per_image` is an integer telling the layer how many augmentations to apply to each
 individual image
 - (Optional) `magnitude_stddev` allows `magnitude` to be randomly sampled
 from a distribution with a standard deviation of `magnitude_stddev`
