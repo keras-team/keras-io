@@ -86,6 +86,13 @@ LAYERS_MASTER = {
                 'keras_nlp.layers.TokenAndPositionEmbedding',
             ]
         },
+        {
+            'path': 'mlm_classification_head',
+            'title': 'MLMClassificationHead layer',
+            'generate': [
+                'keras_nlp.layers.MLMClassificationHead',
+            ]
+        },
         PREPROCESSING_MASTER,
     ]
 }

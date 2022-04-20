@@ -20,6 +20,10 @@ pip install keras-nlp --upgrade
 You can also check out release notes and other releases on our
 [GitHub releases page](https://github.com/keras-team/keras-nlp/releases).
 
+We follow Semantic Versioning, and will provide backwards compatibility for both
+code and saved models. While we continue with pre-release 0.y.z development, we
+may break compatibility at any time and APIs should not be consider stable.
+
 ---
 ## Quick introduction
 
@@ -67,7 +71,7 @@ model.summary()
 ```
 
 To learn more about KerasNLP, check out the
-[transformer pretraining guide](/guides/keras_tuner/transformer_pretraining/).
+[transformer pretraining guide](/guides/keras_nlp/transformer_pretraining/).
 
 ---
 ## Citing KerasNLP
