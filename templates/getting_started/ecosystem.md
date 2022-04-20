@@ -14,6 +14,19 @@ KerasTuner is an easy-to-use, scalable hyperparameter optimization framework tha
 
 ---
 
+## KerasNLP
+
+[KerasNLP Documentation](/keras_nlp/) - [KerasNLP GitHub repository](https://github.com/keras-team/keras-nlp)
+
+KerasNLP is a repository of modular building blocks (e.g. layers, metrics,
+losses) to support Natural Language Processing (NLP) workflows. Engineers
+working with applied NLP can leverage it to rapidly assemble training and
+inference pipelines that are both state-of-the-art and production-grade. Common
+use cases for application include sentiment analysis, named entity recognition,
+text generation, etc.
+
+---
+
 ## AutoKeras
 
 [AutoKeras Documentation](https://autokeras.com/) - [AutoKeras GitHub repository](https://github.com/keras-team/autokeras)
