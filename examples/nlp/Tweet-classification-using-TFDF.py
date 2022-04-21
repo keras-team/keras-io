@@ -1,10 +1,11 @@
 """
 Title: Text Classification using TFDF and Pre-trained embeddings
 Author: Gitesh Chawda
-Date created: 15/04/2022
-Last modified: 15/04/2022
+Date created: 22/04/2022
+Last modified: 22/04/2022
 Description: Using Tensorflow Decision Forest for text classification
 """
+
 """
 ## Introduction
 
@@ -14,14 +15,18 @@ It is a collection of state-of-the-art algorithms of Decision Forest models that
 compatible with Keras APIs. The module includes Random Forests, Gradient Boosted Trees,
 and CART, and can be used for regression, classification, and ranking tasks.
 
-Alternatively for getting started
+Alternatively for getting started you go through official tutorial 
+[Beginner Colab](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab) 
+also text classification using pre-trained embeddings
+[Notebook](https://www.tensorflow.org/decision_forests/tutorials/intermediate_colab).
+
 In this example we will use Gradient Boosted Trees with pre-trained embeddings to
 classify disaster tweets.
 """
 
 """
 Install Tensorflow Decision Forest using following command : 
-`!pip3 install -q tensorflow_decision_forests`
+`!pip3 install -U tensorflow_decision_forests`
 """
 
 """
@@ -63,37 +68,39 @@ or not (0)
 """
 
 # Turn .csv files into pandas DataFrame's
-train_df = pd.read_csv(
-    "https://raw.githubusercontent.com/IMvision12/Tweets-Classification-NLP/main/train.csv"
+df = pd.read_csv(
+"https://raw.githubusercontent.com/IMvision12/Tweets-Classification-NLP/main/train.csv"
 )
-print(train_df.head())
+print(df.head())
 
 # Printing shape of the training dataset
-print(train_df.shape)
+print(f"Training dataset shape: {df.shape}")
 
 # Shuffling training data
-train_df_shuffled = train_df.sample(frac=1, random_state=42)
+df_shuffled = df.sample(frac=1, random_state=42)
 # Dropping id, keyword and location columns as these columns consists of mostly nan values
 # we will be using only text and target columns
-train_df_shuffled.drop(["id", "keyword", "location"], axis=1, inplace=True)
-train_df_shuffled.reset_index(inplace=True, drop=True)
-print(train_df_shuffled.head())
+df_shuffled.drop(["id", "keyword", "location"], axis=1, inplace=True)
+df_shuffled.reset_index(inplace=True, drop=True)
+print(df_shuffled.head())
 
-print(train_df_shuffled.info())
+print(df_shuffled.info())
 
 # Printing total number of Disaster and non-Disaster tweets
-print(train_df_shuffled.target.value_counts())
+print(
+f"Total Number of disaster and non-disaster tweets\n{df_shuffled.target.value_counts()}"
+)
 
 # Viewing 5 records from training data
-for ind, counter in enumerate(train_df_shuffled.index):
-    print(f"Target : {train_df_shuffled['target'][ind]}")
-    print(f"Text : {train_df_shuffled['text'][ind]}")
+for ind, counter in enumerate(df_shuffled.index):
+    print(f"Target : {df_shuffled['target'][ind]}")
+    print(f"Text : {df_shuffled['text'][ind]}")
     if counter == 5:
         break
 
 # Splitting dataset into train and test
-test_df = train_df_shuffled.sample(frac=0.2, random_state=42)
-train_df = train_df_shuffled.drop(test_df.index)
+test_df = df_shuffled.sample(frac=0.2, random_state=42)
+train_df = df_shuffled.drop(test_df.index)
 
 print(f"Using {len(train_df)} samples for training and {len(test_df)} for validation")
 
@@ -102,22 +109,17 @@ print(f"Using {len(train_df)} samples for training and {len(test_df)} for valida
 """
 
 
-def create_dataset(dataframe, training=False):
+def create_dataset(dataframe):
     df = dataframe.copy()
     dataset = tf.data.Dataset.from_tensor_slices(
         (df["text"].to_numpy(), df["target"].to_numpy())
     )
-
-    if training:
-        dataset = dataset.repeat()
-        dataset = dataset.shuffle(1000)
-
-    dataset = dataset.batch(32)
+    dataset = dataset.batch(100)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
-train_ds = create_dataset(train_df, training=True)
+train_ds = create_dataset(train_df)
 test_ds = create_dataset(test_df)
 
 """
@@ -128,18 +130,14 @@ used for text classification, semantic similarity, clustering and other natural 
 tasks.It is trained on a variety of data sources and a variety of tasks. The input is
 variable length English text and the output is a 512 dimensional vector.
 
-To understand better about pre-trained embeddings : [Universal Sentence
-Encoder](https://tfhub.dev/google/universal-sentence-encoder/4)
+To understand better about pre-trained embeddings : 
+[Universal Sentence Encoder](https://tfhub.dev/google/universal-sentence-encoder/4)
 
 
 """
 
 sentence_encoder_layer = hub.KerasLayer(
-    "https://tfhub.dev/google/universal-sentence-encoder/4",
-    input_shape=[],
-    dtype=tf.string,
-    trainable=False,
-    name="USE",
+    "https://tfhub.dev/google/universal-sentence-encoder/4"
 )
 
 """
@@ -157,16 +155,10 @@ predicting disaster tweets.
 
 inputs = layers.Input(shape=(), dtype=tf.string)
 # Passing sentences to sentence_encoder_layer
-x = sentence_encoder_layer(inputs)
-preprocessor = keras.Model(inputs=inputs, outputs=x)
+outputs = sentence_encoder_layer(inputs)
 
-model = tfdf.keras.GradientBoostedTreesModel(
-    preprocessing=preprocessor,
-    num_trees=30,
-    max_vocab_count=1000,
-    max_depth=100,
-    min_examples=10,
-)
+preprocessor = keras.Model(inputs=inputs, outputs=outputs)
+model = tfdf.keras.GradientBoostedTreesModel(preprocessing=preprocessor)
 
 """
 ## Train the model
@@ -174,11 +166,11 @@ model = tfdf.keras.GradientBoostedTreesModel(
 
 # Compiling model
 model.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
-# Training the model
-model.fit(x=train_ds, steps_per_epoch=200)
+# Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
+model.fit(x=train_ds)
 
 # Prints training logs
-model.make_inspector().training_logs()
+print(model.make_inspector().training_logs())
 
 """
 The `model.summary()` function returns a variety of information about your decision trees
