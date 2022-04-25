@@ -168,8 +168,9 @@ blockquote {
   width: 18rem;
   background: #f7f7f7;
   padding: 1.5rem;
+  padding-top: 1rem;
   margin-left: 47rem;
-  margin-top: 7.25rem;
+  margin-top: 3.8rem;
   border-top: 1px solid #ccc;
 }
 
