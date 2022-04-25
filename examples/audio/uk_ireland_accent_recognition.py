@@ -7,18 +7,32 @@ Description: This notebook trains a model to classify UK & Ireland accents using
 """
 
 """
-# Prerequisits
+## Introduction
 
-We need to install TensorFlow IO that we use to resample audio files to 16 kHz as
-required by Yamnet model
+The following example shows how to use feature extraction in order to train a model to classify the English accent spoken in an audio wave.
+
+Instead of training a model from scratch, transfer learnning allows us to take advantage of state-of-the-art deep learning models and use them as feature extractors.
+
+Our process:
+
+*   Use a TF Hub pre-trained model (Yamnet) within the tf.data pipeline which transforms
+the audio files into feature vectors that will be the input to the model that we will train.
+*   Train a dense model on the feature vectors.
+*   Use the trained model to test on a new audio file.
+
+Note:
+
+*   We need to install TensorFlow IO that we use to resample audio files to 16 kHz as required by Yamnet model
+*   In the test section, ffmpeg is used to convert the mp3 file to wav
 """
+
 
 """shell
 pip install -U -q tensorflow_io
 """
 
 """
-# Configuration
+## Configuration
 """
 
 SEED = 1337
@@ -28,7 +42,7 @@ VALIDATION_RATIO = 0.1
 MODEL_NAME = "uk_irish_accent_recognition"
 
 # Location where the dataset will be downloaded.
-# By default (None), keras.utils.get_file will use /root/.keras/ as the CACHE_DIR
+# By default (None), keras.utils.get_file will use ~/.keras/ as the CACHE_DIR
 CACHE_DIR = None
 
 # The location of the dataset
@@ -74,6 +88,10 @@ class_names = [
     "Not a speech",
 ]
 
+"""
+## Imports
+"""
+
 import os
 import io
 import csv
@@ -92,42 +110,25 @@ import seaborn as sns
 from scipy import stats
 from IPython.display import Audio
 
-print(f"TensorFlow: {tf.__version__}")
-print(f"TensorFlow Hub: {hub.__version__}")
-print(f"TensorFlow IO: {tfio.__version__}")
 
-
-def d_prime(auc):
-    standard_normal = stats.norm()
-    d_prime = standard_normal.ppf(auc) * np.sqrt(2.0)
-    return d_prime
-
-
-def reset_random_seed(seed=1337):
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-
-
-reset_random_seed(SEED)
+# Set all random seeds in order to get reproducible results
+keras.utils.set_random_seed(SEED)
 
 # Where to download the dataset
-DATASET_DESTINATION = os.path.join(
-    CACHE_DIR if CACHE_DIR else "/root/.keras/", "datasets"
-)
+DATASET_DESTINATION = os.path.join(CACHE_DIR if CACHE_DIR else "~/.keras/", "datasets")
 
 """
-# Yamnet Model
+## Yamnet Model
 
 Yamnet is an audio event classifier trained on the AudioSet dataset to predict audio
 events from the AudioSet ontology. It is available on TensorFlow Hub.
 
 Yamnet accepts a 1-D tensor of audio samples with a sample rate of 16 kHz.
 As output, the model returns a 3-tuple:
-- scores of shape (N, 521) representing the scores of the 521 classes
-- embeddings of shape (N, 1024)
-- log_mel spectrogram representing the log-mel spectrogram of the entire audio frame
+
+*   scores of shape (N, 521) representing the scores of the 521 classes
+*   embeddings of shape (N, 1024)
+*   log_mel spectrogram representing the log-mel spectrogram of the entire audio frame
 
 We will use the embeddings, which are the features extracted from the audio samples, as the input to our dense model.
 
@@ -137,11 +138,8 @@ For more detailed information about Yamnet, please refer to its [TensorFlow Hub]
 yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 
 """
-# Dataset
-
-The dataset used is the **[Open-source Multi-speaker Corpora of the English Accents in
-the British Isles](https://openslr.org/83/)** which consists of a total of **17,877 audio
-files**.
+## Dataset
+The dataset used is the [Open-source Multi-speaker Corpora of the English Accents in the British Isles](https://openslr.org/83/) which consists of a total of 17,877 audio files.
 """
 
 """
@@ -182,10 +180,6 @@ for i in zip_files:
 
 """
 ## Dataframe
-"""
-
-"""
-### Load & Preprocess
 
 Of the 3 columns (ID, filename and transcript), we are only interested in the filename column in order to read the audio file.
 We will ignore the other 2
@@ -237,7 +231,7 @@ dataframe = preprocess_dataframe(dataframe)
 dataframe.head()
 
 """
-### Train & Validation Sets
+## Train & Validation Sets
 
 Let's split the samples creating training and validation sets
 """
@@ -255,22 +249,22 @@ print(
 
 Next, we need to create a `tf.data` dataset.
 This is done by creating a `dataframe_to_dataset` function that does the following:
+
 *   Create a dataset using filenames and labels
 *   Get the Yamnet embeddings by calling another function `filepath_to_embeddings`
 *   Apply caching, reshuffling and setting batch size
 
 The `filepath_to_embeddings` does the following:
+
 *   Load audio file
 *   Resample audio to 16 kHz
 *   Generate scores and embeddings from Yamnet model
-*   Since Yamnet generates multiple samples for each audio file, this function also duplicates the label for all the generated samples that have `score = 0` i.e. speech whereas sets the label for the others as 'other' indicating that this audio segment is not a speech and we won't label it as one of the accents.
+*   Since Yamnet generates multiple samples for each audio file, this function also duplicates the label for all the generated samples that have `score = 0` (speech) whereas sets the label for the others as 'other' indicating that this audio segment is not a speech and we won't label it as one of the accents.
 
 """
 
 """
-The below **`load_16k_audio_file`** is copied from the following tutorial [Transfer
-learning with YAMNet for environmental sound
-classification](https://www.tensorflow.org/tutorials/audio/transfer_learning_audio)
+The below `load_16k_audio_file` is copied from the following tutorial [Transfer learning with YAMNet for environmental sound classification](https://www.tensorflow.org/tutorials/audio/transfer_learning_audio)
 """
 
 
@@ -316,7 +310,10 @@ def dataframe_to_dataset(dataframe, batch_size=64):
         (dataframe["filename"], dataframe["label"])
     )
 
-    dataset = dataset.map(lambda X, y: filepath_to_embeddings(X, y)).unbatch()
+    dataset = dataset.map(
+        lambda x, y: filepath_to_embeddings(x, y),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE,
+    ).unbatch()
 
     return dataset.cache().batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
@@ -325,9 +322,10 @@ train_ds = dataframe_to_dataset(train_df)
 valid_ds = dataframe_to_dataset(valid_df)
 
 """
-# Model
+## Model
 
-The dense model that we use consists of:
+The model that we use consists of:
+
 *   An input layer which is the embedding output of the Yamnet classifier
 *   4 dense hidden layers and 4 dropout layers
 *   An output dense layer
@@ -337,10 +335,6 @@ The model's hyperparameters were selected using
 """
 
 keras.backend.clear_session()
-
-"""
-## Building & Compilation
-"""
 
 
 def build_and_compile_model():
@@ -364,12 +358,10 @@ def build_and_compile_model():
 
     model = keras.Model(inputs=inputs, outputs=outputs, name="accent_recognition")
 
-    auc = keras.metrics.AUC(name="auc")
-
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=1.9644e-5),
         loss=keras.losses.CategoricalCrossentropy(),
-        metrics=["accuracy", auc],
+        metrics=["accuracy", keras.metrics.AUC(name="auc")],
     )
 
     return model
@@ -382,14 +374,19 @@ model.summary()
 ## Class Weights Calculation
 
 Since the dataset is quite unbalanced, we wil use class_weight during training.
-Getting the class weights is a little tricky because even though we know the number of audio files for each class, it does not represent the number of samples for that class since Yamnet transforms each audio file into multiple audio samples of 0.96 seconds each.
+
+Getting the class weights is a little tricky because even though we know the number of
+audio files for each class, it does not represent the number of samples for that class
+since Yamnet transforms each audio file into multiple audio samples of 0.96 seconds each.
 So every audio file will be split into a number of samples that is proportional to its length.
-Therefore, to get those weights, we have to calculate the number of samples for each class after preprocessing through Yamnet.
+
+Therefore, to get those weights, we have to calculate the number of samples for each class
+after preprocessing through Yamnet.
 """
 
 class_counts = tf.zeros(shape=(len(class_names),), dtype=tf.int32)
 
-for X, y in iter(train_ds):
+for x, y in iter(train_ds):
     class_counts = class_counts + tf.math.bincount(
         tf.cast(tf.math.argmax(y, axis=1), tf.int32), minlength=len(class_names)
     )
@@ -405,6 +402,7 @@ print(class_weight)
 ## Callbacks
 
 A couple of Keras callbacks in order to:
+
 *   Stop whenever the validation AUC stops improving
 *   Save the best model
 *   Call TensorBoard in order to later view the training and validation logs
@@ -439,26 +437,47 @@ history = model.fit(
 
 """
 ## Results
+
+Let's plot the training and validation AUC and accuracy.
 """
 
-"""
-### TensorBoard
-"""
+fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(14, 5))
+
+axs[0].plot(range(EPOCHS), history.history["accuracy"], label="Training")
+axs[0].plot(range(EPOCHS), history.history["val_accuracy"], label="Validation")
+axs[0].set_xlabel("Epochs")
+axs[0].set_title("Training & Validation Accuracy")
+axs[0].legend()
+axs[0].grid(True)
+
+axs[1].plot(range(EPOCHS), history.history["auc"], label="Training")
+axs[1].plot(range(EPOCHS), history.history["val_auc"], label="Validation")
+axs[1].set_xlabel("Epochs")
+axs[1].set_title("Training & Validation AUC")
+axs[1].legend()
+axs[1].grid(True)
+
+plt.show()
 
 """
-```
-%reload_ext tensorboard
-
-%tensorboard --logdir=./logs/ --port=6066
-```
-"""
-
-"""
-### Evaluation
+## Evaluation
 """
 
 train_loss, train_acc, train_auc = model.evaluate(train_ds)
 valid_loss, valid_acc, valid_auc = model.evaluate(valid_ds)
+
+"""
+Let's try to compare our model's performance to Yamnet's using one of Yamnet metrics (d-prime)
+Yamnet achieved a d-prime value of 2.318.
+Let's check our model's performance.
+"""
+
+# The following function calculates the d-prime score from the AUC
+def d_prime(auc):
+    standard_normal = stats.norm()
+    d_prime = standard_normal.ppf(auc) * np.sqrt(2.0)
+    return d_prime
+
 
 print(
     "train d-prime: {0:.3f}, validation d-prime: {1:.3f}".format(
@@ -472,31 +491,36 @@ We can see that the model achieves the following results:
 Results    | Training  | Validation
 -----------|-----------|------------
 Accuracy   | 54%       | 51%
-AUC        | 0.9091    | 0.8910
-d-prime    | 1.888     | 1.742
+AUC        | 0.91      | 0.89
+d-prime    | 1.882     | 1.740
 
 """
 
 """
-### Confusion Matrix
+## Confusion Matrix
 
 Let's now plot the confusion matrix for the validation dataset.
+
+The confusion matrix lets us see, for every class, not only how many samples were correctly classified,
+but also which other classes were the samples confused with.
+
+It allows us to calculate the precision and recall for every class.
 """
 
-# Create X and y tensors
-X_valid = None
+# Create x and y tensors
+x_valid = None
 y_valid = None
 
-for X, y in iter(valid_ds):
-    if X_valid is None:
-        X_valid = X.numpy()
+for x, y in iter(valid_ds):
+    if x_valid is None:
+        x_valid = x.numpy()
         y_valid = y.numpy()
     else:
-        X_valid = np.concatenate((X_valid, X.numpy()), axis=0)
+        x_valid = np.concatenate((x_valid, x.numpy()), axis=0)
         y_valid = np.concatenate((y_valid, y.numpy()), axis=0)
 
 # Generate predictions
-y_pred = model.predict(X_valid)
+y_pred = model.predict(x_valid)
 
 # Calculate confusion matrix
 confusion_mtx = tf.math.confusion_matrix(
@@ -514,7 +538,16 @@ plt.title("Validation Confusion Matrix")
 plt.show()
 
 """
-### Precision & Recall
+## Precision & Recall
+
+For every class:
+
+*   Recall is the ratio of correctly classified samples i.e. it shows how many samples
+of this specific class, the model is able to detect.
+It is the ratio of diagonal elements to the sum of all elements in the row.
+*   Precision shows the accuracy of the classifier. It is the ratio of correctly predicted
+samples among the ones classified as belonging to this class.
+It is the ratio of diagonal elements to the sum of all elements in the column.
 """
 
 for i, label in enumerate(class_names):
@@ -527,14 +560,40 @@ for i, label in enumerate(class_names):
     )
 
 """
-# Inference
+## Run a test
+
+Let's now run a test on a single audio file.
+Let's check this example from [The Scottish Voice](https://www.thescottishvoice.org.uk/home/)
+
+We will:
+
+*   Download the mp3 file
+*   Convert it to a 16k wav file
+*   Run the model on the wav file
+*   Plot the results
 """
+
+filename = "audio-sample-Stuart"
+url = "https://www.thescottishvoice.org.uk/files/cm/files/"
+
+if os.path.exists(filename + ".wav") == False:
+    print(f"Downloading {filename}.mp3 from {url}")
+    command = f"wget {url}{filename}.mp3"
+    os.system(command)
+
+    print(f"Converting mp3 to wav and resampling to 16 kHZ")
+    command = (
+        f"ffmpeg -hide_banner -loglevel panic -y -i {filename}.mp3 -acodec "
+        f"pcm_s16le -ac 1 -ar 16000 {filename}.wav"
+    )
+    os.system(command)
+
+filename = filename + ".wav"
+
 
 """
 The below function `yamnet_class_names_from_csv` was copied and very slightly changed
-from [Yamnet
-Notebook](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/yamnet.ipynb)
-Notebook](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/yamnet.ipynb)
+from [Yamnet Notebook](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/yamnet.ipynb)
 """
 
 
@@ -582,29 +641,8 @@ def filename_to_predictions(filename):
 
 
 """
-## Run a test
-
-Let's check this example from [The Scottish Voice](https://www.thescottishvoice.org.uk/home/)
-
+Let's run the model on the audio file
 """
-
-filename = "audio-sample-Stuart"
-url = "https://www.thescottishvoice.org.uk/files/cm/files/"
-
-if os.path.exists(filename + ".wav") == False:
-    print(f"Downloading {filename}.mp3 from {url}")
-    command = f"wget {url}{filename}.mp3"
-    os.system(command)
-
-    print(f"Converting mp3 to wav and resampling to 16 kHZ")
-    command = (
-        f"ffmpeg -hide_banner -loglevel panic -y -i {filename}.mp3 -acodec "
-        f"pcm_s16le -ac 1 -ar 16000 {filename}.wav"
-    )
-    os.system(command)
-
-filename = filename + ".wav"
-
 
 audio_wav, predictions, mel_spectrogram = filename_to_predictions(filename)
 
@@ -612,21 +650,19 @@ infered_class = class_names[predictions.mean(axis=0).argmax()]
 print(f"The main accent is: {infered_class} English")
 
 """
-## Results
-"""
-
-"""
-### Listen to the uploaded audio
+Listen to the audio
 """
 
 Audio(audio_wav, rate=16000)
 
 """
-### Wavelength, Spectrogram & Prediction
-"""
+The below function was copied from [Yamnet](tinyurl.com/4a8xn7at) notebook and adjusted to our need.
 
-"""
-The below function was copied from [Yamnet](tinyurl.com/4a8xn7at) notebook and adjusted to our need
+This function plots the following:
+
+*   Audio waveform
+*   Mel spectrogram
+*   Predictions for every time step
 """
 
 plt.figure(figsize=(10, 6))
