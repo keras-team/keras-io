@@ -1,5 +1,5 @@
 """
-Title: Pretraining a transformer with KerasNLP
+Title: Pretraining a Transformer from scratch with KerasNLP
 Author: [Matthew Watson](https://github.com/mattdangerw/)
 Date created: 2022/04/18
 Last modified: 2022/04/18
@@ -7,17 +7,14 @@ Description: Use KerasNLP to train a transformer model from scratch.
 """
 
 """
-# Pretraining a Transformer with KerasNLP
-
 KerasNLP makes it easy to build state-of-the-art text processing models. In this guide,
 we will show how KerasNLP components simplify pre-training and fine-tuneing a transformer
 model from scratch.
 
 This guide is broken into three parts:
-
  1. *Setup*, task definition, and establishing a baseline.
  2. *Pre-training* a transformer model.
- 3. *Fine-tuning* the transformer model on our original task.
+ 3. *Fine-tuning* the transformer model on our classification task.
 """
 
 """
@@ -39,18 +36,16 @@ this guide.
 """
 
 """shell
-!pip install -q keras-nlp
-
 # Download pretraining data.
-!curl -O https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-raw-v1.zip
-!unzip wikitext-103-raw-v1.zip
+curl -O https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-raw-v1.zip
+unzip wikitext-103-raw-v1.zip
 
 # Download finetuning data.
-!curl -O https://dl.fbaipublicfiles.com/glue/data/SST-2.zip
-!unzip SST-2.zip
+curl -O https://dl.fbaipublicfiles.com/glue/data/SST-2.zip
+unzip SST-2.zip
 
 # Download vocabulary data.
-!curl -O
+curl -O
 https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt
 """
 
@@ -59,8 +54,8 @@ https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_unc
 
 Next up we can import `keras_nlp`, `tensorflow` and `keras`.
 
-A simple thing we can do here is to enable [mixed
-percision](https://keras.io/api/mixed_precision/), which will speed up training by
+A simple thing we can do here is to enable
+[mixed percision](https://keras.io/api/mixed_precision/), which will speed up training by
 running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
 Training a transformer can take a while, so it is important to pull out all the stops for
 faster training!
@@ -101,7 +96,7 @@ FINETUNING_EPOCHS = 3
 """
 ### Load data
 
-We load our data with [tf.data](https://www.tensorflow.org/guide/data), which will allows
+We load our data with [tf.data](https://www.tensorflow.org/guide/data), which will allow
 us to define input pipelines for tokenizing and preprocessing text.
 """
 
@@ -126,7 +121,7 @@ wiki_val_ds = (
 )
 
 # Take a peak at the sst-2 dataset.
-list(sst_train_ds.unbatch().take(4).as_numpy_iterator())
+print(list(sst_train_ds.unbatch().take(4).as_numpy_iterator()))
 
 """
 You can see that our `SST-2` dataset contains relatively short snippets of movie review
@@ -141,8 +136,8 @@ As a first step, we will establish a baseline of good performance. We don't actu
 KerasNLP for this, we can just use core Keras layers.
 
 We will build a simple bag-of-words model, where we learn a positive or negative weight
-for each word in our input. A sample's score is simply the sum of all words that are
-present in the sample.
+for each word in our input. A sample's score is simply the sum of the weights of all
+words that are present in the sample.
 """
 
 # This layer will turn our input sentence into a list of 1s and 0s the same size
@@ -151,7 +146,7 @@ multi_hot_layer = keras.layers.TextVectorization(
     max_tokens=4000, output_mode="multi_hot"
 )
 multi_hot_layer.adapt(sst_train_ds.map(lambda x, y: x))
-# We then  learn a linear regression over that layer, and that's our entire
+# We then learn a linear regression over that layer, and that's our entire
 # baseline model!
 regression_layer = keras.layers.Dense(1, activation="sigmoid")
 
@@ -168,12 +163,12 @@ performance ceiling.
 
 To do better, we would like to build a model that can evaluate words *in context*. It's
 more useful to see the phrase "not my cup of tea" in an input, than to be told a sample
-contained the word "cup" or "tea" individually. Instead of evaluating each word in a
+contains the words "cup" and "tea". Instead of evaluating each word in a
 void, we need to use the information contained in the *entire ordered sequence* of our
 input.
 
 This runs us into a problem. `SST-2` is very small dataset, and there's simply not enough
-example text to attempt to build a larger, more parameterized, models that can learn on a
+example text to attempt to build a larger, more parameterized model that can learn on a
 sequence. We would quickly start to memorize our training set, without any increase in
 our ability to generalize to unseen examples.
 
@@ -193,7 +188,7 @@ to embed each word in our input as a low dimentional vector. Our wikipedia datas
 labels, so we will use an unsupervised training objective called the *Masked Language
 Modeling* (MLM) ojective.
 
-Essentially, we will be playing a big game of "guess the missing word." For each input
+Essentially, we will be playing a big game of "guess the missing word". For each input
 sample we will obscure 20% of our input data, and train our model to predict the parts we
 covered up.
 
@@ -268,7 +263,7 @@ pretrain_val_ds = wiki_val_ds.map(
 
 # Preview a single input example.
 # The masks will change each time you run the cell.
-pretrain_val_ds.take(1).get_single_element()
+print(pretrain_val_ds.take(1).get_single_element())
 
 """
 The above block sorts our dataset into a (features, labels, weights) tuple, which can be
@@ -298,9 +293,9 @@ Then we can add a series of `keras_nlp.layers.TransformerEncoder` layers. These 
 bread and butter of the transformer model, using an attention mechanism to attend to
 different parts of the input sentence, followed by a multi-layer perceptron block.
 
-The output of this model will be will be a encoded vector per input token id. Unlike the
+The output of this model will be a encoded vector per input token id. Unlike the
 bag-of-words model we used as a baseline, this model will embed each token accounting for
-the context in which in appeared.
+the context in which it appeared.
 """
 
 inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
@@ -364,7 +359,7 @@ outputs = keras_nlp.layers.MLMClassificationHead(
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
 
 # Define and compile our pretraining model.
-pretraining_model = tf.keras.Model(inputs, outputs)
+pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.compile(
     loss="sparse_categorical_crossentropy",
     optimizer=keras.optimizers.Adam(learning_rate=PRETRAINING_LEARNING_RATE),
@@ -409,7 +404,7 @@ finetune_val_ds = sst_val_ds.map(
 ).prefetch(tf.data.AUTOTUNE)
 
 # Preview a single input example.
-finetune_val_ds.take(1).get_single_element()
+print(finetune_val_ds.take(1).get_single_element())
 
 """
 ### Fine-tune the transformer
@@ -430,10 +425,10 @@ encoded_tokens = encoder_model(inputs)
 pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens)
 
 # Predict an output label.
-outputs = tf.keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
+outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
 
 # Define and compile our finetuning model.
-finetuning_model = tf.keras.Model(inputs, outputs)
+finetuning_model = keras.Model(inputs, outputs)
 finetuning_model.compile(
     loss="binary_crossentropy",
     optimizer=keras.optimizers.Adam(learning_rate=FINETUNING_LEARNING_RATE),
@@ -466,12 +461,13 @@ to save and restore a model that can directly run inference on raw text!
 inputs = keras.Input(shape=(), dtype=tf.string)
 tokens = tokenizer(inputs)
 outputs = finetuning_model(tokens)
-final_model = tf.keras.Model(inputs, outputs)
+final_model = keras.Model(inputs, outputs)
 final_model.save("final_model")
 
 # This model can predict directly on raw text.
-restored_model = tf.keras.models.load_model("final_model")
-restored_model(tf.constant(["Terrible, no good, trash.", "So great; I loved it!"]))
+restored_model = keras.models.load_model("final_model")
+inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
+print(restored_model(inference_data))
 
 """
 One of the key goals of KerasNLP is to provide a modular approach to NLP model building.
