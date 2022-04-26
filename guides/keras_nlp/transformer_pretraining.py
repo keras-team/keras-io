@@ -35,19 +35,22 @@ Finally, we will download a WordPiece vocabulary, to do sub-word tokenization la
 this guide.
 """
 
-"""shell
 # Download pretraining data.
-curl -O https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-raw-v1.zip
-unzip wikitext-103-raw-v1.zip
-
+keras.utils.get_file(
+    origin="https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-raw-v1.zip",
+    extract=True,
+)
+wiki_dir = "~/.keras/datasets/wikitext-103-raw/"
 # Download finetuning data.
-curl -O https://dl.fbaipublicfiles.com/glue/data/SST-2.zip
-unzip SST-2.zip
-
+keras.utils.get_file(
+    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
+    extract=True,
+)
+sst_dir = "~/.keras/datasets/SST-2/"
 # Download vocabulary data.
-curl -O
-https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt
-"""
+vocab_file = keras.utils.get_file(
+    origin="https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt",
+)
 
 """
 ### Define hyperparameters
@@ -102,20 +105,20 @@ us to define input pipelines for tokenizing and preprocessing text.
 
 # Load SST-2.
 sst_train_ds = tf.data.experimental.CsvDataset(
-    "SST-2/train.tsv", [tf.string, tf.int32], header=True, field_delim="\t"
+    sst_dir + "train.tsv", [tf.string, tf.int32], header=True, field_delim="\t"
 ).batch(FINETUNING_BATCH_SIZE)
 sst_val_ds = tf.data.experimental.CsvDataset(
-    "SST-2/dev.tsv", [tf.string, tf.int32], header=True, field_delim="\t"
+    sst_dir + "dev.tsv", [tf.string, tf.int32], header=True, field_delim="\t"
 ).batch(FINETUNING_BATCH_SIZE)
 
 # Load wikitext-103 and filter out short lines.
 wiki_train_ds = (
-    tf.data.TextLineDataset("wikitext-103-raw/wiki.train.raw")
+    tf.data.TextLineDataset(wiki_dir + "wiki.train.raw")
     .filter(lambda x: tf.strings.length(x) > 100)
     .batch(PRETRAINING_BATCH_SIZE)
 )
 wiki_val_ds = (
-    tf.data.TextLineDataset("wikitext-103-raw/wiki.valid.raw")
+    tf.data.TextLineDataset(wiki_dir + "wiki.valid.raw")
     .filter(lambda x: tf.strings.length(x) > 100)
     .batch(PRETRAINING_BATCH_SIZE)
 )
@@ -227,7 +230,8 @@ new set of labels to train on.
 # Setting sequence_length will trim or pad the token outputs to shape
 # (batch_size, SEQ_LENGTH).
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary="bert_vocab_uncased.txt", sequence_length=SEQ_LENGTH,
+    vocabulary=vocab_file,
+    sequence_length=SEQ_LENGTH,
 )
 # Setting mask_selection_length will trim or pad the mask outputs to shape
 # (batch_size, PREDICTIONS_PER_SEQ).
@@ -369,7 +373,9 @@ pretraining_model.compile(
 
 # Pretrain the model on our wiki text dataset.
 pretraining_model.fit(
-    pretrain_ds, validation_data=pretrain_val_ds, epochs=PRETRAINING_EPOCHS,
+    pretrain_ds,
+    validation_data=pretrain_val_ds,
+    epochs=PRETRAINING_EPOCHS,
 )
 
 # Save this base model for further finetuning.
@@ -437,7 +443,9 @@ finetuning_model.compile(
 
 # Finetune the model for the SST-2 task.
 finetuning_model.fit(
-    finetune_ds, epochs=FINETUNING_EPOCHS, validation_data=finetune_val_ds,
+    finetune_ds,
+    validation_data=finetune_val_ds,
+    epochs=FINETUNING_EPOCHS,
 )
 
 """
