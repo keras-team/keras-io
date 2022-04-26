@@ -88,9 +88,9 @@ LAYERS_MASTER = {
         },
         {
             'path': 'mlm_classification_head',
-            'title': 'MLMClassificationHead layer',
+            'title': 'MLMHead layer',
             'generate': [
-                'keras_nlp.layers.MLMClassificationHead',
+                'keras_nlp.layers.MLMHead',
             ]
         },
         PREPROCESSING_MASTER,
