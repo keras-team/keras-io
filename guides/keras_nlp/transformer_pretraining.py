@@ -20,9 +20,24 @@ This guide is broken into three parts:
 """
 ## Setup
 
-To begin, we can install the `keras-nlp` package with pip.
+To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
 
-We also download two datasets.
+A simple thing we can do right off the bat is to enable
+[mixed percision](https://keras.io/api/mixed_precision/), which will speed up training by
+running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
+Training a transformer can take a while, so it is important to pull out all the stops for
+faster training!
+"""
+
+import keras_nlp
+import tensorflow as tf
+from tensorflow import keras
+
+policy = keras.mixed_precision.Policy("mixed_float16")
+keras.mixed_precision.set_global_policy(policy)
+
+"""
+Next up, can download two datasets.
 
 - [SST-2](https://paperswithcode.com/sota/sentiment-analysis-on-sst-2-binary) a text
 classification dataset and our "end goal". This dataset is often used to benchmark
@@ -41,38 +56,21 @@ keras.utils.get_file(
     extract=True,
 )
 wiki_dir = "~/.keras/datasets/wikitext-103-raw/"
+
 # Download finetuning data.
 keras.utils.get_file(
     origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
     extract=True,
 )
 sst_dir = "~/.keras/datasets/SST-2/"
+
 # Download vocabulary data.
 vocab_file = keras.utils.get_file(
     origin="https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt",
 )
 
 """
-### Define hyperparameters
-
-Next up we can import `keras_nlp`, `tensorflow` and `keras`.
-
-A simple thing we can do here is to enable
-[mixed percision](https://keras.io/api/mixed_precision/), which will speed up training by
-running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
-Training a transformer can take a while, so it is important to pull out all the stops for
-faster training!
-"""
-
-import keras_nlp
-import tensorflow as tf
-from tensorflow import keras
-
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
-
-"""
-Next we define some hyperparameters we will use during training.
+Next, we define some hyperparameters we will use during training.
 """
 
 # Preprocessing params.
