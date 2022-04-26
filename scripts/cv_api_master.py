@@ -24,6 +24,11 @@ PREPROCESSING_MASTER = {
             'generate': ['keras_cv.layers.Equalization']
         },
         {
+            'path': 'fourier_mix',
+            'title': 'FourierMix layer',
+            'generate': ['keras_cv.layers.FourierMix']
+        },
+        {
             'path': 'grayscale',
             'title': 'Grayscale layer',
             'generate': ['keras_cv.layers.Grayscale']
