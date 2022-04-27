@@ -41,7 +41,7 @@ Next up, can download two datasets.
 
 - [SST-2](https://paperswithcode.com/sota/sentiment-analysis-on-sst-2-binary) a text
 classification dataset and our "end goal". This dataset is often used to benchmark
-language models. 
+language models.
 - [WikiText-103](https://paperswithcode.com/dataset/wikitext-103): A medium sized
 collection of featured articles from English wikipedia, which we will use for
 pre-training.

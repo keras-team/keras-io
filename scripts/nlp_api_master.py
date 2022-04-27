@@ -15,7 +15,7 @@ TOKENIZERS_MASTER = {
         },
         {
             "path": "byte_tokenizer",
-            "title": "WordPieceTokenizer",
+            "title": "ByteTokenizer",
             "generate": ["keras_nlp.tokenizers.ByteTokenizer"],
         },
         {

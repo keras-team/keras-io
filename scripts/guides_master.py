@@ -24,8 +24,8 @@ NLP_GUIDES_MASTER = {
     'toc': True,
     'children': [
         {
-            'path': 'transfomer_pretraining',
-            'title': 'Pretraining a transformer with KerasNLP',
+            'path': 'transformer_pretraining',
+            'title': 'Pretraining a Transformer from scratch with KerasNLP',
         },
     ]
 }
