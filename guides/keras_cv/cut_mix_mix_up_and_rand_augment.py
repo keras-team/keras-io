@@ -37,6 +37,7 @@ import keras_cv
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from tensorflow import keras
 from tensorflow.keras import applications
 from tensorflow.keras import losses
 from tensorflow.keras import optimizers
@@ -45,7 +46,7 @@ from tensorflow.keras import optimizers
 ## Data loading
 
 This guide uses the
-[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/) 
+[102 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/)
 for demonstration purposes.
 
 To get started, we first load the dataset:
@@ -78,8 +79,8 @@ def prepare(image, label):
 def prepare_dataset(dataset, split):
     if split == "train":
         return (
-            dataset.batch(BATCH_SIZE)
-            .map(prepare, num_parallel_calls=AUTOTUNE)
+            dataset.map(prepare, num_parallel_calls=AUTOTUNE)
+            .batch(BATCH_SIZE)
             .shuffle(10 * BATCH_SIZE)
         )
     if split == "test":
@@ -199,14 +200,9 @@ mix_up = keras_cv.layers.MixUp()
 
 
 def cut_mix_and_mix_up(samples):
-    choice = tf.random.uniform((), minval=0, maxval=1, dtype=tf.float32)
-    if choice < 1 / 3:
-        return cut_mix(samples, training=True)
-    elif choice < 2 / 3:
-        return mix_up(samples, training=True)
-    else:
-        return samples
-
+    samples = cut_mix(samples, training=True)
+    samples = mix_up(samples, training=True)
+    return samples
 
 train_dataset = load_dataset().map(cut_mix_and_mix_up, num_parallel_calls=AUTOTUNE)
 
@@ -348,10 +344,9 @@ input_shape = IMAGE_SIZE + (3,)
 
 def get_model():
     inputs = keras.layers.Input(input_shape)
-    x = keras.layers.Rescaling(1 / 255.0)(inputs)
-    x = applications.ResNet50(
+    x = applications.ResNet50V2(
         input_shape=input_shape, classes=num_classes, weights=None
-    )(x)
+    )(inputs)
     model = keras.Model(inputs, x)
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
@@ -385,7 +380,7 @@ KerasCV!
 As an additional exercise for readers, you can:
 
 - Perform a hyper parameter search over the RandAugment parameters to improve the
-classifieclassr accuracy
+classifier accuracy
 - Substitute the Oxford Flowers dataset with your own dataset
 - Experiment with custom `RandomAugmentationPipeline` objects.
 
