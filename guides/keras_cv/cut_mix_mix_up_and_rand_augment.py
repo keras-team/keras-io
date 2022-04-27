@@ -334,6 +334,9 @@ test_dataset = test_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUN
 train_dataset = train_dataset.prefetch(AUTOTUNE)
 test_dataset = test_dataset.prefetch(AUTOTUNE)
 
+train_dataset = train_dataset.repeat()
+test_dataset = test_dataset.repeat()
+
 """
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
 the loss function. When using `MixUp`, label smoothing is _highly_ recommended.
