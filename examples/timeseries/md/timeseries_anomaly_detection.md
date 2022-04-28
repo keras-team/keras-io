@@ -207,7 +207,6 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Please add `keras.layers.InputLayer` instead of `keras.Input` to Sequential model. `keras.Input` is intended to be used by Functional model.
 Model: "sequential"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
