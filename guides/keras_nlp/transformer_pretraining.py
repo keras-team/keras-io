@@ -305,7 +305,7 @@ inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
 # Embed our tokens with a positional embedding.
 embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=tokenizer.vocabulary_size(),
-    max_length=SEQ_LENGTH,
+    sequence_length=SEQ_LENGTH,
     embedding_dim=MODEL_DIM,
 )
 outputs = embedding_layer(inputs)
