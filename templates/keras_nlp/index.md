@@ -1,15 +1,19 @@
 # KerasNLP
 
-KerasNLP is a concise and easy to use API for building Natural Language
-Processing (NLP) models.
+KerasNLP is a simple and powerful API for building Natural Language
+Processing (NLP) models. KerasNLP provides modular building blocks following
+standard Keras interfaces (layers, metrics) that allow you to quickly and
+flexibly iterate on your task. Engineers working in applied NLP can leverage the
+library to assemble training and inference pipelines that are both
+state-of-the-art and production-grade.
 
-KerasNLP provides a library of modular building blocks following standard Keras
-interfaces (layers, metrics) that allow you to quickly and expressively define
-models and workflows. We aim to make the common stuff easy, while still allowing
-advanced low-level customization.
+KerasNLP can be understood as a horizontal extension of the Keras API:
+components are first-party Keras objects that are too specialized to be
+added to core Keras, but that receive the same level of polish as the rest of
+the Keras API.
 
-KerasNLP is scalable. Modern NLP models require efficient multi-worker
-training. KerasNLP components work with TPUs, GPUs, and the
+Modern NLP models require efficient large-scale training. KerasNLP components
+tested work on TPUs, GPUs, and with the
 [tf.distribute](https://www.tensorflow.org/guide/distributed_training) API, so
 that when it's time to scale up your model, you won't need to start over from
 scratch.
