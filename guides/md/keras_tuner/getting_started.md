@@ -65,8 +65,8 @@ def build_model(hp):
 
 <div class="k-default-codeblock">
 ```
-2022-03-25 07:21:55.446979: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-03-25 07:21:55.447031: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-04-28 03:54:31.185833: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-04-28 03:54:31.185890: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ```
 </div>
@@ -74,20 +74,20 @@ You can quickly test if the model builds successfully.
 
 
 ```python
-import keras_tuner as kt
+import keras_tuner
 
-build_model(kt.HyperParameters())
+build_model(keras_tuner.HyperParameters())
 ```
 
 <div class="k-default-codeblock">
 ```
-2022-03-25 07:21:57.858733: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-03-25 07:21:57.858813: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-03-25 07:21:57.858850: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
-2022-03-25 07:21:57.859304: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+2022-04-28 03:54:33.745939: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-04-28 03:54:33.746027: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-04-28 03:54:33.746059: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
+2022-04-28 03:54:33.746443: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
-<keras.engine.sequential.Sequential at 0x7fda70534670>
+<keras.engine.sequential.Sequential at 0x7fa888064c40>
 
 ```
 </div>
@@ -125,7 +125,7 @@ def build_model(hp):
     return model
 
 
-build_model(kt.HyperParameters())
+build_model(keras_tuner.HyperParameters())
 ```
 
 
@@ -133,7 +133,7 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7fd9ec7116d0>
+<keras.engine.sequential.Sequential at 0x7fa8082f1160>
 
 ```
 </div>
@@ -144,7 +144,7 @@ conditions.
 
 
 ```python
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 print(hp.Int("units", min_value=32, max_value=512, step=32))
 ```
 
@@ -187,7 +187,7 @@ def build_model(hp):
     return model
 
 
-build_model(kt.HyperParameters())
+build_model(keras_tuner.HyperParameters())
 ```
 
 
@@ -195,7 +195,7 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7fda7048caf0>
+<keras.engine.sequential.Sequential at 0x7fa8083044f0>
 
 ```
 </div>
@@ -239,7 +239,7 @@ def build_model(hp):
     return model
 
 
-build_model(kt.HyperParameters())
+build_model(keras_tuner.HyperParameters())
 ```
 
 
@@ -247,7 +247,7 @@ build_model(kt.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7fda70486e20>
+<keras.engine.sequential.Sequential at 0x7fa888109ee0>
 
 ```
 </div>
@@ -280,7 +280,7 @@ to start a new search and ignore any previous results.
 
 
 ```python
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=build_model,
     objective="val_accuracy",
     max_trials=3,
@@ -350,15 +350,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 37s]
-val_accuracy: 0.9609000086784363
+Trial 3 Complete [00h 00m 39s]
+val_accuracy: 0.9630500078201294
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9609000086784363
-Total elapsed time: 00h 01m 26s
+Best val_accuracy So Far: 0.9736500084400177
+Total elapsed time: 00h 01m 51s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -393,17 +393,17 @@ _________________________________________________________________
 =================================================================
  flatten (Flatten)           (None, 784)               0         
                                                                  
- dense (Dense)               (None, 128)               100480    
+ dense (Dense)               (None, 224)               175840    
                                                                  
- dense_1 (Dense)             (None, 352)               45408     
+ dense_1 (Dense)             (None, 416)               93600     
                                                                  
- dropout (Dropout)           (None, 352)               0         
+ dropout (Dropout)           (None, 416)               0         
                                                                  
- dense_2 (Dense)             (None, 10)                3530      
+ dense_2 (Dense)             (None, 10)                4170      
                                                                  
 =================================================================
-Total params: 149,418
-Trainable params: 149,418
+Total params: 273,610
+Trainable params: 273,610
 Non-trainable params: 0
 _________________________________________________________________
 
@@ -421,36 +421,34 @@ tuner.results_summary()
 Results summary
 Results in my_dir/helloworld
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fd9ec732490>
+<keras_tuner.engine.objective.Objective object at 0x7fa888109fa0>
 Trial summary
 Hyperparameters:
 num_layers: 2
-units_0: 128
+units_0: 224
 activation: relu
 dropout: True
-lr: 0.003658219312391249
-units_1: 352
-units_2: 192
-Score: 0.9609000086784363
+lr: 0.0009550630393190334
+units_1: 416
+Score: 0.9736500084400177
 Trial summary
 Hyperparameters:
-num_layers: 3
-units_0: 64
+num_layers: 1
+units_0: 480
+activation: relu
+dropout: True
+lr: 0.00749002644603394
+units_1: 320
+Score: 0.9630500078201294
+Trial summary
+Hyperparameters:
+num_layers: 2
+units_0: 480
 activation: tanh
 dropout: True
-lr: 0.0002699995872739864
-units_1: 480
-units_2: 32
-Score: 0.9438999891281128
-Trial summary
-Hyperparameters:
-num_layers: 2
-units_0: 32
-activation: relu
-dropout: True
-lr: 0.00014976743663164954
+lr: 0.00022149269189931809
 units_1: 32
-Score: 0.9198499917984009
+Score: 0.9437499940395355
 
 ```
 </div>
@@ -480,9 +478,9 @@ model.fit(x=x_all, y=y_all, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 8s 4ms/step - loss: 0.2320 - accuracy: 0.9296
+1875/1875 [==============================] - 8s 4ms/step - loss: 0.2121 - accuracy: 0.9368
 
-<keras.callbacks.History at 0x7fd9cd2b5ac0>
+<keras.callbacks.History at 0x7fa7e8a689a0>
 
 ```
 </div>
@@ -513,7 +511,7 @@ contains the callbacks for model saving and tensorboard plugins.
 
 ```python
 
-class MyHyperModel(kt.HyperModel):
+class MyHyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         model = keras.Sequential()
         model.add(layers.Flatten())
@@ -543,7 +541,7 @@ Again, we can do a quick check to see if the code works correctly.
 
 
 ```python
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hypermodel = MyHyperModel()
 model = hypermodel.build(hp)
 hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
@@ -551,9 +549,9 @@ hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 12.3325 - accuracy: 0.0700
+4/4 [==============================] - 0s 3ms/step - loss: 12.1061 - accuracy: 0.1500
 
-<keras.callbacks.History at 0x7fd9ec471a30>
+<keras.callbacks.History at 0x7fa7e8a8e490>
 
 ```
 </div>
@@ -569,7 +567,7 @@ because we need to use them.
 
 ```python
 
-class MyHyperModel(kt.HyperModel):
+class MyHyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         model = keras.Sequential()
         model.add(layers.Flatten())
@@ -597,7 +595,7 @@ class MyHyperModel(kt.HyperModel):
         )
 
 
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hypermodel = MyHyperModel()
 model = hypermodel.build(hp)
 hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
@@ -605,9 +603,9 @@ hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 13.2034 - accuracy: 0.1500
+4/4 [==============================] - 0s 4ms/step - loss: 12.5366 - accuracy: 0.1200
 
-<keras.callbacks.History at 0x7fd9cd2bdc40>
+<keras.callbacks.History at 0x7fa7e8a82d90>
 
 ```
 </div>
@@ -619,7 +617,7 @@ used by data prerprocessing step to crop the images in `fit()`.
 
 ```python
 
-class MyHyperModel(kt.HyperModel):
+class MyHyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         image_size = hp.Int("image_size", 10, 28)
         inputs = keras.Input(shape=(image_size, image_size))
@@ -654,7 +652,7 @@ class MyHyperModel(kt.HyperModel):
         )
 
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     MyHyperModel(),
     objective="val_accuracy",
     max_trials=3,
@@ -669,14 +667,14 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 09s]
-val_accuracy: 0.944100022315979
+val_accuracy: 0.5476999878883362
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9679999947547913
-Total elapsed time: 00h 00m 40s
+Best val_accuracy So Far: 0.9699000120162964
+Total elapsed time: 00h 00m 29s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -695,9 +693,9 @@ hypermodel.fit(best_hp, model, x_all, y_all, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 7s 3ms/step - loss: 0.2414 - accuracy: 0.9295
+1875/1875 [==============================] - 6s 3ms/step - loss: 0.2493 - accuracy: 0.9274
 
-<keras.callbacks.History at 0x7fd9cc961f70>
+<keras.callbacks.History at 0x7fa7e8894df0>
 
 ```
 </div>
@@ -726,11 +724,11 @@ always in the format of `f"val_{metric_name_string}"`. For example, the
 objective name string of mean squared error evaluated on the validation data
 should be `"val_mean_absolute_error"`.
 
-* Wrap it into `kt.Objective`. We usually need to wrap the objective into a
-`kt.Objective` object to specify the direction to optimize the objective. For
-example, we want to minimize the mean squared error, we can use
-`kt.Objective("val_mean_absolute_error", "min")`. The direction should be
-either `"min"` or `"max"`.
+* Wrap it into `keras_tuner.Objective`. We usually need to wrap the objective
+into a `keras_tuner.Objective` object to specify the direction to optimize the
+objective. For example, we want to minimize the mean squared error, we can use
+`keras_tuner.Objective("val_mean_absolute_error", "min")`. The direction should
+be either `"min"` or `"max"`.
 
 * Pass the wrapped objective to the tuner.
 
@@ -755,11 +753,11 @@ def build_regressor(hp):
     return model
 
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=build_regressor,
     # The objective name and direction.
     # Name is the f"val_{snake_case_metric_class_name}".
-    objective=kt.Objective("val_mean_absolute_error", direction="min"),
+    objective=keras_tuner.Objective("val_mean_absolute_error", direction="min"),
     max_trials=3,
     overwrite=True,
     directory="my_dir",
@@ -778,31 +776,31 @@ tuner.results_summary()
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_mean_absolute_error: 0.513309895992279
+val_mean_absolute_error: 0.4645603597164154
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_mean_absolute_error So Far: 0.5003301501274109
+Best val_mean_absolute_error So Far: 0.3443751931190491
 Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/built_in_metrics
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fd9cc961550>
-Trial summary
-Hyperparameters:
-units: 32
-Score: 0.5003301501274109
-Trial summary
-Hyperparameters:
-units: 128
-Score: 0.5021752119064331
+<keras_tuner.engine.objective.Objective object at 0x7fa7e87a8e80>
 Trial summary
 Hyperparameters:
 units: 64
-Score: 0.513309895992279
+Score: 0.3443751931190491
+Trial summary
+Hyperparameters:
+units: 128
+Score: 0.4645603597164154
+Trial summary
+Hyperparameters:
+units: 96
+Score: 0.6250903606414795
 
 ```
 </div>
@@ -875,10 +873,10 @@ def build_regressor(hp):
     return model
 
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=build_regressor,
     # Specify the name and direction of the objective.
-    objective=kt.Objective("val_custom_metric", direction="min"),
+    objective=keras_tuner.Objective("val_custom_metric", direction="min"),
     max_trials=3,
     overwrite=True,
     directory="my_dir",
@@ -897,31 +895,31 @@ tuner.results_summary()
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_custom_metric: 0.20972459018230438
+val_custom_metric: 0.3950428366661072
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_custom_metric So Far: 0.10604839026927948
+Best val_custom_metric So Far: 0.28074973821640015
 Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_metrics
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fd9ec523520>
-Trial summary
-Hyperparameters:
-units: 128
-Score: 0.10604839026927948
-Trial summary
-Hyperparameters:
-units: 64
-Score: 0.20972459018230438
+<keras_tuner.engine.objective.Objective object at 0x7fa7e8a6c4c0>
 Trial summary
 Hyperparameters:
 units: 96
-Score: 0.21959975361824036
+Score: 0.28074973821640015
+Trial summary
+Hyperparameters:
+units: 128
+Score: 0.3950428366661072
+Trial summary
+Hyperparameters:
+units: 64
+Score: 0.407703161239624
 
 ```
 </div>
@@ -936,7 +934,7 @@ TensorBoard view using the Keras metrics.
 
 ```python
 
-class HyperRegressor(kt.HyperModel):
+class HyperRegressor(keras_tuner.HyperModel):
     def build(self, hp):
         model = keras.Sequential(
             [
@@ -957,7 +955,7 @@ class HyperRegressor(kt.HyperModel):
         return np.mean(np.abs(y_pred - y_val))
 
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=HyperRegressor(),
     # No objective to specify.
     # Objective is the return value of `HyperModel.fit()`.
@@ -977,32 +975,28 @@ tuner.results_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-default_objective: 0.3426917061771521
+Trial 2 Complete [00h 00m 00s]
+default_objective: 0.5315216306064647
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 0.3426917061771521
-Total elapsed time: 00h 00m 02s
+Best default_objective So Far: 0.5315216306064647
+Total elapsed time: 00h 00m 01s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_eval
 Showing 10 best trials
-<keras_tuner.engine.objective.DefaultObjective object at 0x7fd9cc90a880>
+<keras_tuner.engine.objective.DefaultObjective object at 0x7fa7e8a8e610>
 Trial summary
 Hyperparameters:
 units: 96
-Score: 0.3426917061771521
+Score: 0.5315216306064647
 Trial summary
 Hyperparameters:
-units: 32
-Score: 0.4482046273547885
-Trial summary
-Hyperparameters:
-units: 128
-Score: 0.4488315130788639
+units: 64
+Score: 0.6146181396007905
 
 ```
 </div>
@@ -1010,12 +1004,12 @@ If you have multiple metrics to track in KerasTuner, but only use one of them
 as the objective, you can return a dictionary, whose keys are the metric names
 and the values are the metrics values, for example, return `{"metric_a": 1.0,
 "metric_b", 2.0}`. Use one of the keys as the objective name, for example,
-`kt.Objective("metric_a", "min")`.
+`keras_tuner.Objective("metric_a", "min")`.
 
 
 ```python
 
-class HyperRegressor(kt.HyperModel):
+class HyperRegressor(keras_tuner.HyperModel):
     def build(self, hp):
         model = keras.Sequential(
             [
@@ -1039,11 +1033,11 @@ class HyperRegressor(kt.HyperModel):
         }
 
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=HyperRegressor(),
     # Objective is one of the keys.
     # Maximize the negative MAE, equivalent to minimize MAE.
-    objective=kt.Objective("metric_a", "max"),
+    objective=keras_tuner.Objective("metric_a", "max"),
     max_trials=3,
     overwrite=True,
     directory="my_dir",
@@ -1061,31 +1055,31 @@ tuner.results_summary()
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-metric_a: -0.43190784190846865
+metric_a: -0.5002187378206384
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best metric_a So Far: -0.2869599283678026
+Best metric_a So Far: -0.4161598418534809
 Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_eval_dict
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fd9ec594310>
-Trial summary
-Hyperparameters:
-units: 128
-Score: -0.2869599283678026
-Trial summary
-Hyperparameters:
-units: 96
-Score: -0.43190784190846865
+<keras_tuner.engine.objective.Objective object at 0x7fa808051670>
 Trial summary
 Hyperparameters:
 units: 64
-Score: -0.45482696514117504
+Score: -0.4161598418534809
+Trial summary
+Hyperparameters:
+units: 96
+Score: -0.5002187378206384
+Trial summary
+Hyperparameters:
+units: 32
+Score: -0.5328526873574686
 
 ```
 </div>
@@ -1107,7 +1101,7 @@ the tuner can be omitted.
 
 ```python
 
-class MyTuner(kt.RandomSearch):
+class MyTuner(keras_tuner.RandomSearch):
     def run_trial(self, trial, *args, **kwargs):
         # Get the hp from trial.
         hp = trial.hyperparameters
@@ -1134,16 +1128,16 @@ print(tuner.get_best_hyperparameters()[0].get("x"))
 <div class="k-default-codeblock">
 ```
 Trial 20 Complete [00h 00m 00s]
-default_objective: 1.2179728794532931
+default_objective: 1.241846646968536
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 1.004432921442565
+Best default_objective So Far: 1.0000468934095137
 Total elapsed time: 00h 00m 00s
 INFO:tensorflow:Oracle triggered exit
-0.06658018806345356
+0.006847876277630949
 
 ```
 </div>
@@ -1193,7 +1187,7 @@ def keras_code(units, optimizer, saving_path):
     return np.mean(np.abs(y_pred - y_val))
 
 
-class MyTuner(kt.RandomSearch):
+class MyTuner(keras_tuner.RandomSearch):
     def run_trial(self, trial, **kwargs):
         hp = trial.hyperparameters
         return keras_code(
@@ -1214,20 +1208,20 @@ keras_code(**best_hp.values, saving_path="/tmp/best_model")
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 01s]
-default_objective: 0.292227453448859
+Trial 3 Complete [00h 00m 00s]
+default_objective: 0.4348094390943946
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 0.292227453448859
+Best default_objective So Far: 0.23868455769793312
 Total elapsed time: 00h 00m 03s
 INFO:tensorflow:Oracle triggered exit
-4/4 [==============================] - 0s 3ms/step - loss: 0.5691
+4/4 [==============================] - 0s 3ms/step - loss: 0.1520
 INFO:tensorflow:Assets written to: /tmp/best_model/assets
 
-0.5380352347787267
+0.2114115606885921
 
 ```
 </div>
@@ -1245,7 +1239,7 @@ from keras_tuner.applications import HyperResNet
 
 hypermodel = HyperResNet(input_shape=(28, 28, 1), classes=10)
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel,
     objective="val_accuracy",
     max_trials=2,
@@ -1261,7 +1255,7 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 01m 02s]
+Trial 2 Complete [00h 01m 34s]
 val_accuracy: 0.10000000149011612
 ```
 </div>
@@ -1269,7 +1263,7 @@ val_accuracy: 0.10000000149011612
 <div class="k-default-codeblock">
 ```
 Best val_accuracy So Far: 0.10999999940395355
-Total elapsed time: 00h 02m 23s
+Total elapsed time: 00h 02m 35s
 INFO:tensorflow:Oracle triggered exit
 
 ```

@@ -35,7 +35,7 @@ The first step is to download and format the data.
 """
 
 import numpy as np
-import keras_tuner as kt
+import keras_tuner
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -108,7 +108,7 @@ CNN and MLP.
 
 
 # Initialize the `HyperParameters` and set the values.
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hp.values["model_type"] = "cnn"
 # Build the model using the `HyperParameters`.
 model = build_model(hp)
@@ -128,7 +128,7 @@ Initialize the `RandomSearch` tuner with 10 trials and using validation
 accuracy as the metric for selecting models.
 """
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     max_trials=10,
     # Do not resume the previous search in the same directory.
