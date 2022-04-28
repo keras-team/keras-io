@@ -6,22 +6,54 @@ TOKENIZERS_MASTER = {
         {
             "path": "tokenizer",
             "title": "Tokenizer base class",
-            "generate": ["keras_nlp.tokenizers.Tokenizer"],
+            "generate": [
+                "keras_nlp.tokenizers.Tokenizer",
+                "keras_nlp.tokenizers.Tokenizer.tokenize",
+                "keras_nlp.tokenizers.Tokenizer.detokenize",
+                "keras_nlp.tokenizers.Tokenizer.get_vocabulary",
+                "keras_nlp.tokenizers.Tokenizer.vocabulary_size",
+                "keras_nlp.tokenizers.Tokenizer.token_to_id",
+                "keras_nlp.tokenizers.Tokenizer.id_to_token",
+            ],
         },
         {
             "path": "word_piece_tokenizer",
             "title": "WordPieceTokenizer",
-            "generate": ["keras_nlp.tokenizers.WordPieceTokenizer"],
+            "generate": [
+                "keras_nlp.tokenizers.WordPieceTokenizer",
+                "keras_nlp.tokenizers.WordPieceTokenizer.tokenize",
+                "keras_nlp.tokenizers.WordPieceTokenizer.detokenize",
+                "keras_nlp.tokenizers.WordPieceTokenizer.get_vocabulary",
+                "keras_nlp.tokenizers.WordPieceTokenizer.vocabulary_size",
+                "keras_nlp.tokenizers.WordPieceTokenizer.token_to_id",
+                "keras_nlp.tokenizers.WordPieceTokenizer.id_to_token",
+            ],
         },
         {
             "path": "byte_tokenizer",
             "title": "ByteTokenizer",
-            "generate": ["keras_nlp.tokenizers.ByteTokenizer"],
+            "generate": [
+                "keras_nlp.tokenizers.ByteTokenizer",
+                "keras_nlp.tokenizers.ByteTokenizer.tokenize",
+                "keras_nlp.tokenizers.ByteTokenizer.detokenize",
+                "keras_nlp.tokenizers.ByteTokenizer.get_vocabulary",
+                "keras_nlp.tokenizers.ByteTokenizer.vocabulary_size",
+                "keras_nlp.tokenizers.ByteTokenizer.token_to_id",
+                "keras_nlp.tokenizers.ByteTokenizer.id_to_token",
+            ],
         },
         {
             "path": "unicode_character_tokenizer",
             "title": "UnicodeCharacterTokenizer",
-            "generate": ["keras_nlp.tokenizers.UnicodeCharacterTokenizer"],
+            "generate": [
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer",
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer.tokenize",
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer.detokenize",
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer.get_vocabulary",
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer.vocabulary_size",
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer.token_to_id",
+                "keras_nlp.tokenizers.UnicodeCharacterTokenizer.id_to_token",
+            ],
         },
     ],
 }
@@ -34,12 +66,18 @@ LAYERS_MASTER = {
         {
             "path": "transformer_encoder",
             "title": "TransformerEncoder layer",
-            "generate": ["keras_nlp.layers.TransformerEncoder"],
+            "generate": [
+                "keras_nlp.layers.TransformerEncoder",
+                "keras_nlp.layers.TransformerEncoder.call",
+            ],
         },
         {
             "path": "transformer_decoder",
             "title": "TransformerDecoder layer",
-            "generate": ["keras_nlp.layers.TransformerDecoder"],
+            "generate": [
+                "keras_nlp.layers.TransformerDecoder",
+                "keras_nlp.layers.TransformerDecoder.call",
+            ],
         },
         {
             "path": "fnet_encoder",

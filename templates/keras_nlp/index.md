@@ -1,10 +1,28 @@
 # KerasNLP
 
+KerasNLP is a concise and easy to use API for building Natural Language
+Processing (NLP) models.
+
+KerasNLP provides a library of modular building blocks following standard Keras
+interfaces (layers, metrics) that allow you to quickly and expressively define
+models and workflows. We aim to make the common stuff easy, while still allowing
+advanced low-level customization.
+
+KerasNLP is scalable. Modern NLP models require efficient multi-worker
+training. KerasNLP components work with TPUs, GPUs, and the
+[tf.distribute](https://www.tensorflow.org/guide/distributed_training) API, so
+that when it's time to scale up your model, you won't need to start over from
+scratch.
+
+KerasNLP is also new and growing! If you are interested in contributing, please
+stop by our [GitHub repository](https://github.com/keras-team/keras-nlp).
+
 ---
 ## Quick links
 
 * [Developer guides](/guides/keras_nlp/)
 * [API reference](/api/keras_nlp/)
+* [GitHub repository](https://github.com/keras-team/keras-nlp)
 
 ---
 ## Installation
@@ -17,61 +35,52 @@ Install the latest release:
 pip install keras-nlp --upgrade
 ```
 
-You can also check out release notes and other releases on our
-[GitHub releases page](https://github.com/keras-team/keras-nlp/releases).
+You can check out release notes and versions on our
+[releases page](https://github.com/keras-team/keras-nlp/releases).
 
-We follow Semantic Versioning, and will provide backwards compatibility for both
-code and saved models. While we continue with pre-release 0.y.z development, we
-may break compatibility at any time and APIs should not be consider stable.
+KerasNLP is currently in pre-release (0.y.z) development. Until version 1.0, we
+may break compatibility at any time and APIs should not be considered stable.
 
 ---
 ## Quick introduction
 
-Import KerasNLP and Keras:
+The following snippet will tokenize some text, build a tiny transformer, and
+train a single batch.
 
 ```python
 import keras_nlp
+import tensorflow as tf
 from tensorflow import keras
-```
 
-Sub-word tokenize a string:
+# Tokenize some inputs with a binary label.
+vocab = ["[UNK]", "the", "qu", "##ick", "br", "##own", "fox", "jumped", "."]
+inputs = ["The quick brown fox jumped.", "The fox slept."]
+tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+    vocabulary=vocab, sequence_length=10)
+X, Y = tokenizer(inputs), tf.constant([1, 0])
 
-```python
-vocab = ["[UNK]", "the", "qu", "##ick", "br", "##own", "fox", "."]
-inputs = "The quick brown fox."
-
-tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(vocabulary=vocab)
-tokenizer(inputs)
-```
-
-Build a tiny transformer:
-
-```python
-sequence_length = 100
-vocab_size = 10000
-model_dim = 64
-intermediate_dim = 128
-num_heads = 4
-
-inputs = keras.Input(shape=(sequence_length,), dtype="int32")
+# Create a tiny transformer.
+inputs = keras.Input(shape=(None,), dtype="int32")
 x = keras_nlp.layers.TokenAndPositionEmbedding(
-    vocabulary_size=vocab_size,
-    max_length=sequence_length,
-    embedding_dim=model_dim,
+    vocabulary_size=len(vocab),
+    sequence_length=10,
+    embedding_dim=16,
 )(inputs)
 x = keras_nlp.layers.TransformerEncoder(
-    num_heads=num_heads,
-    intermediate_dim=intermediate_dim,
+    num_heads=4,
+    intermediate_dim=32,
 )(x)
 x = keras.layers.GlobalAveragePooling1D()(x)
 outputs = keras.layers.Dense(1, activation="sigmoid")(x)
-
 model = keras.Model(inputs, outputs)
-model.summary()
+
+# Run a single batch of gradient descent.
+model.compile(loss="binary_crossentropy")
+model.train_on_batch(X, Y)
 ```
 
-To learn more about KerasNLP, check out the
-[transformer pretraining guide](/guides/keras_nlp/transformer_pretraining/).
+To see an end-to-end example using KerasNLP, check out our guide on
+[pre-training a transfomer from scratch](/guides/keras_nlp/transformer_pretraining/).
 
 ---
 ## Citing KerasNLP

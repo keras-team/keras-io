@@ -20,7 +20,7 @@ CV_GUIDES_MASTER = {
 
 NLP_GUIDES_MASTER = {
     'path': 'keras_nlp/',
-    'title': 'KerasNLP: NLP Extensions for Keras',
+    'title': 'KerasNLP',
     'toc': True,
     'children': [
         {
