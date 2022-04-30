@@ -9,23 +9,26 @@ Description: This notebook trains a model to classify UK & Ireland accents using
 """
 ## Introduction
 
-The following example shows how to use feature extraction in order to train a model to classify the English accent spoken in an audio wave.
+The following example shows how to use feature extraction in order to
+train a model to classify the English accent spoken in an audio wave.
 
-Instead of training a model from scratch, transfer learnning allows us to take advantage of state-of-the-art deep learning models and use them as feature extractors.
+Instead of training a model from scratch, transfer learning enables us to
+take advantage of existing state-of-the-art deep learning models and use them as feature extractors.
 
 Our process:
 
-*   Use a TF Hub pre-trained model (Yamnet) within the tf.data pipeline which transforms
-the audio files into feature vectors that will be the input to the model that we will train.
-*   Train a dense model on the feature vectors.
-*   Use the trained model to test on a new audio file.
+* Use a TF Hub pre-trained model (Yamnet) and apply it as part of the tf.data pipeline which transforms
+the audio files into feature vectors.
+* Train a dense model on the feature vectors.
+* Use the trained model for inference on a new audio file.
 
 Note:
 
-*   We need to install TensorFlow IO that we use to resample audio files to 16 kHz as required by Yamnet model
-*   In the test section, ffmpeg is used to convert the mp3 file to wav
-"""
+* We need to install TensorFlow IO in order to resample audio files to 16 kHz as required by Yamnet model.
+* In the test section, ffmpeg is used to convert the mp3 file to wav.
 
+You can install TensorFlow IO with the following command:
+"""
 
 """shell
 pip install -U -q tensorflow_io
@@ -101,12 +104,9 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_io as tfio
-
 from tensorflow import keras
-
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from scipy import stats
 from IPython.display import Audio
 
@@ -126,9 +126,9 @@ events from the AudioSet ontology. It is available on TensorFlow Hub.
 Yamnet accepts a 1-D tensor of audio samples with a sample rate of 16 kHz.
 As output, the model returns a 3-tuple:
 
-*   scores of shape (N, 521) representing the scores of the 521 classes
-*   embeddings of shape (N, 1024)
-*   log_mel spectrogram representing the log-mel spectrogram of the entire audio frame
+* Scores of shape `(N, 521)` representing the scores of the 521 classes.
+* Embeddings of shape `(N, 1024)`.
+* The log-mel spectrogram of the entire audio frame.
 
 We will use the embeddings, which are the features extracted from the audio samples, as the input to our dense model.
 
@@ -139,7 +139,10 @@ yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 
 """
 ## Dataset
-The dataset used is the [Open-source Multi-speaker Corpora of the English Accents in the British Isles](https://openslr.org/83/) which consists of a total of 17,877 audio files.
+
+The dataset used is the
+[Open-source Multi-speaker Corpora of the English Accents in the British Isles](https://openslr.org/83/)
+which consists of a total of 17,877 audio files.
 """
 
 """
@@ -159,7 +162,7 @@ booktitle = {Proceedings of The 12th Language Resources and Evaluation Conferenc
 """
 
 """
-## Download Dataset
+## Download the data
 """
 
 # CSV file that contains information about the dataset. For each entry, we have:
@@ -179,10 +182,10 @@ for i in zip_files:
     os.remove(zip_file)
 
 """
-## Dataframe
+## Load the data in a Dataframe
 
 Of the 3 columns (ID, filename and transcript), we are only interested in the filename column in order to read the audio file.
-We will ignore the other 2
+We will ignore the other two.
 """
 
 dataframe = pd.read_csv(
@@ -193,11 +196,11 @@ dataframe.head()
 """
 Let's now preprocess the dataset by:
 
-*   Adjusting the filename (removing a leading space & adding ".wav" extension to the
-filename)
-*   Creating a label using the first 2 characters of the filename which indicate the
-accent
-*   Shuffling the samples
+* Adjusting the filename (removing a leading space & adding ".wav" extension to the
+filename).
+* Creating a label using the first 2 characters of the filename which indicate the
+accent.
+* Shuffling the samples.
 """
 
 # The purpose of this function is to preprocess the dataframe by applying the following:
@@ -231,9 +234,9 @@ dataframe = preprocess_dataframe(dataframe)
 dataframe.head()
 
 """
-## Train & Validation Sets
+## Prepare training & validation sets
 
-Let's split the samples creating training and validation sets
+Let's split the samples creating training and validation sets.
 """
 
 split = int(len(dataframe) * (1 - VALIDATION_RATIO))
@@ -245,26 +248,27 @@ print(
 )
 
 """
-## TensorFlow Dataset
+## Prepare a TensorFlow Dataset
 
-Next, we need to create a `tf.data` dataset.
+Next, we need to create a `tf.data.Dataset`.
 This is done by creating a `dataframe_to_dataset` function that does the following:
 
-*   Create a dataset using filenames and labels
-*   Get the Yamnet embeddings by calling another function `filepath_to_embeddings`
-*   Apply caching, reshuffling and setting batch size
+* Create a dataset using filenames and labels.
+* Get the Yamnet embeddings by calling another function `filepath_to_embeddings`.
+* Apply caching, reshuffling and setting batch size.
 
 The `filepath_to_embeddings` does the following:
 
-*   Load audio file
-*   Resample audio to 16 kHz
-*   Generate scores and embeddings from Yamnet model
-*   Since Yamnet generates multiple samples for each audio file, this function also duplicates the label for all the generated samples that have `score = 0` (speech) whereas sets the label for the others as 'other' indicating that this audio segment is not a speech and we won't label it as one of the accents.
+* Load audio file.
+* Resample audio to 16 kHz.
+* Generate scores and embeddings from Yamnet model.
+* Since Yamnet generates multiple samples for each audio file,
+this function also duplicates the label for all the generated samples
+that have `score=0` (speech) whereas sets the label for the others as
+'other' indicating that this audio segment is not a speech and we won't label it as one of the accents.
 
-"""
-
-"""
-The below `load_16k_audio_file` is copied from the following tutorial [Transfer learning with YAMNet for environmental sound classification](https://www.tensorflow.org/tutorials/audio/transfer_learning_audio)
+The below `load_16k_audio_file` is copied from the following tutorial
+[Transfer learning with YAMNet for environmental sound classification](https://www.tensorflow.org/tutorials/audio/transfer_learning_audio)
 """
 
 
@@ -322,13 +326,13 @@ train_ds = dataframe_to_dataset(train_df)
 valid_ds = dataframe_to_dataset(valid_df)
 
 """
-## Model
+## Build the model
 
 The model that we use consists of:
 
-*   An input layer which is the embedding output of the Yamnet classifier
-*   4 dense hidden layers and 4 dropout layers
-*   An output dense layer
+* An input layer which is the embedding output of the Yamnet classifier.
+* 4 dense hidden layers and 4 dropout layers.
+* An output dense layer.
 
 The model's hyperparameters were selected using
 [KerasTuner](https://keras.io/keras_tuner/).
@@ -371,9 +375,9 @@ model = build_and_compile_model()
 model.summary()
 
 """
-## Class Weights Calculation
+## Class weights calculation
 
-Since the dataset is quite unbalanced, we wil use class_weight during training.
+Since the dataset is quite unbalanced, we wil use `class_weight` argument during training.
 
 Getting the class weights is a little tricky because even though we know the number of
 audio files for each class, it does not represent the number of samples for that class
@@ -401,11 +405,11 @@ print(class_weight)
 """
 ## Callbacks
 
-A couple of Keras callbacks in order to:
+We use Keras callbacks in order to:
 
-*   Stop whenever the validation AUC stops improving
-*   Save the best model
-*   Call TensorBoard in order to later view the training and validation logs
+* Stop whenever the validation AUC stops improving.
+* Save the best model.
+* Call TensorBoard in order to later view the training and validation logs.
 """
 
 early_stopping_cb = keras.callbacks.EarlyStopping(
@@ -538,14 +542,14 @@ plt.title("Validation Confusion Matrix")
 plt.show()
 
 """
-## Precision & Recall
+## Precision & recall
 
 For every class:
 
-*   Recall is the ratio of correctly classified samples i.e. it shows how many samples
+* Recall is the ratio of correctly classified samples i.e. it shows how many samples
 of this specific class, the model is able to detect.
 It is the ratio of diagonal elements to the sum of all elements in the row.
-*   Precision shows the accuracy of the classifier. It is the ratio of correctly predicted
+* Precision shows the accuracy of the classifier. It is the ratio of correctly predicted
 samples among the ones classified as belonging to this class.
 It is the ratio of diagonal elements to the sum of all elements in the column.
 """
@@ -560,17 +564,17 @@ for i, label in enumerate(class_names):
     )
 
 """
-## Run a test
+## Run inference on test data
 
 Let's now run a test on a single audio file.
 Let's check this example from [The Scottish Voice](https://www.thescottishvoice.org.uk/home/)
 
 We will:
 
-*   Download the mp3 file
-*   Convert it to a 16k wav file
-*   Run the model on the wav file
-*   Plot the results
+* Download the mp3 file.
+* Convert it to a 16k wav file.
+* Run the model on the wav file.
+* Plot the results.
 """
 
 filename = "audio-sample-Stuart"
@@ -593,7 +597,7 @@ filename = filename + ".wav"
 
 """
 The below function `yamnet_class_names_from_csv` was copied and very slightly changed
-from [Yamnet Notebook](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/yamnet.ipynb)
+from this [Yamnet Notebook](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/yamnet.ipynb).
 """
 
 
@@ -641,7 +645,7 @@ def filename_to_predictions(filename):
 
 
 """
-Let's run the model on the audio file
+Let's run the model on the audio file:
 """
 
 audio_wav, predictions, mel_spectrogram = filename_to_predictions(filename)
@@ -656,13 +660,13 @@ Listen to the audio
 Audio(audio_wav, rate=16000)
 
 """
-The below function was copied from [Yamnet](tinyurl.com/4a8xn7at) notebook and adjusted to our need.
+The below function was copied from this [Yamnet notebook](tinyurl.com/4a8xn7at) and adjusted to our need.
 
 This function plots the following:
 
-*   Audio waveform
-*   Mel spectrogram
-*   Predictions for every time step
+* Audio waveform
+* Mel spectrogram
+* Predictions for every time step
 """
 
 plt.figure(figsize=(10, 6))
