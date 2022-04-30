@@ -44,7 +44,7 @@ the `units` hyperparameter as 64.
 ```python
 from tensorflow import keras
 from tensorflow.keras import layers
-import keras_tuner as kt
+import keras_tuner
 import numpy as np
 
 
@@ -72,8 +72,8 @@ def build_model(hp):
 
 <div class="k-default-codeblock">
 ```
-2022-03-25 07:28:13.595759: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-03-25 07:28:13.595803: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-04-28 04:09:21.924650: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-04-28 04:09:21.924705: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ```
 </div>
@@ -96,13 +96,13 @@ changed its type and value ranges.
 
 
 ```python
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 
 # This will override the `learning_rate` parameter with your
 # own selection of choices
 hp.Float("learning_rate", min_value=1e-4, max_value=1e-2, sampling="log")
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=build_model,
     hyperparameters=hp,
     # Prevents unlisted parameters from being tuned
@@ -127,13 +127,13 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_accuracy: 0.05000000074505806
+val_accuracy: 0.0
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.05000000074505806
+Best val_accuracy So Far: 0.10000000149011612
 Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 
@@ -169,10 +169,10 @@ which allows us to tune the rest of the hyperparameters.
 
 
 ```python
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hp.Fixed("learning_rate", value=1e-4)
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     hyperparameters=hp,
     tune_new_entries=True,
@@ -195,7 +195,7 @@ val_accuracy: 0.0
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.0
+Best val_accuracy So Far: 0.05000000074505806
 Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 
@@ -231,7 +231,7 @@ constructor:
 
 
 ```python
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     optimizer=keras.optimizers.Adam(1e-3),
     loss="mse",
@@ -249,13 +249,13 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-val_loss: 25.968280792236328
+val_loss: 24.548675537109375
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 23.808820724487305
+Best val_loss So Far: 22.171010971069336
 Total elapsed time: 00h 00m 02s
 INFO:tensorflow:Oracle triggered exit
 
@@ -298,15 +298,15 @@ change it by overriding the `loss` in the compile args to
 
 
 ```python
-hypermodel = kt.applications.HyperXception(input_shape=(28, 28, 1), classes=10)
+hypermodel = keras_tuner.applications.HyperXception(input_shape=(28, 28, 1), classes=10)
 
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 
 # This will override the `learning_rate` parameter with your
 # own selection of choices
 hp.Choice("learning_rate", values=[1e-2, 1e-3, 1e-4])
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel,
     hyperparameters=hp,
     # Prevents unlisted parameters from being tuned
@@ -328,15 +328,15 @@ tuner.search_space_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 07s]
-val_accuracy: 0.10000000149011612
+Trial 2 Complete [00h 00m 05s]
+val_accuracy: 0.05000000074505806
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.10000000149011612
-Total elapsed time: 00h 00m 19s
+Best val_accuracy So Far: 0.15000000596046448
+Total elapsed time: 00h 00m 11s
 INFO:tensorflow:Oracle triggered exit
 Search space summary
 Default search space size: 1

@@ -686,10 +686,6 @@ class KerasIO:
         for key, value in replacements.items():
             md_content = md_content.replace(key, value)
 
-        # Convert ```lang notation to the hilite syntax
-        md_content = md_content.replace("```python\n", "```\n:::python\n")
-        md_content = md_content.replace("```shell\n", "```\n:::none\n")
-
         html_content = markdown.markdown(
             md_content,
             extensions=["fenced_code", "tables", "codehilite", "mdx_truly_sane_lists",],

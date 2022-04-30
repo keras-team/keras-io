@@ -96,7 +96,7 @@ search.
 """
 
 
-import keras_tuner as kt
+import keras_tuner
 import tensorflow as tf
 import numpy as np
 
@@ -136,7 +136,7 @@ def build_model(hp):
     return model
 
 
-tuner = kt.Hyperband(
+tuner = keras_tuner.Hyperband(
     hypermodel=build_model,
     objective="val_accuracy",
     max_epochs=2,

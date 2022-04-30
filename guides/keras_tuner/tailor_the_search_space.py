@@ -38,7 +38,7 @@ the `units` hyperparameter as 64.
 
 from tensorflow import keras
 from tensorflow.keras import layers
-import keras_tuner as kt
+import keras_tuner
 import numpy as np
 
 
@@ -81,13 +81,13 @@ In the following example, we only tune the `learning_rate` hyperparameter, and
 changed its type and value ranges.
 """
 
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 
 # This will override the `learning_rate` parameter with your
 # own selection of choices
 hp.Float("learning_rate", min_value=1e-4, max_value=1e-2, sampling="log")
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel=build_model,
     hyperparameters=hp,
     # Prevents unlisted parameters from being tuned
@@ -127,10 +127,10 @@ number of `Fixed` entries).  Also remember to specify `tune_new_entries=True`,
 which allows us to tune the rest of the hyperparameters.
 """
 
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hp.Fixed("learning_rate", value=1e-4)
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     hyperparameters=hp,
     tune_new_entries=True,
@@ -158,7 +158,7 @@ loss, or metrics, you can do so by passing these arguments to the tuner
 constructor:
 """
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     optimizer=keras.optimizers.Adam(1e-3),
     loss="mse",
@@ -193,15 +193,15 @@ change it by overriding the `loss` in the compile args to
 `sparse_categorical_crossentropy`.
 """
 
-hypermodel = kt.applications.HyperXception(input_shape=(28, 28, 1), classes=10)
+hypermodel = keras_tuner.applications.HyperXception(input_shape=(28, 28, 1), classes=10)
 
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 
 # This will override the `learning_rate` parameter with your
 # own selection of choices
 hp.Choice("learning_rate", values=[1e-2, 1e-3, 1e-4])
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     hypermodel,
     hyperparameters=hp,
     # Prevents unlisted parameters from being tuned
