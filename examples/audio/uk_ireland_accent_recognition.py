@@ -141,24 +141,14 @@ yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 ## Dataset
 
 The dataset used is the
-[Open-source Multi-speaker Corpora of the English Accents in the British Isles](https://openslr.org/83/)
-which consists of a total of 17,877 audio files.
-"""
+[Crowdsourced high-quality UK and Ireland English Dialect speech data set](https://openslr.org/83/)
+which consists of a total of 17,877 high-quality audio wav files.
 
-"""
-## Dataset Info
-@inproceedings{demirsahin-etal-2020-open,
-title = {{Open-source Multi-speaker Corpora of the English Accents in the British Isles}},
-author = {Demirsahin, Isin and Kjartansson, Oddur and Gutkin, Alexander and Rivera, Clara},
-booktitle = {Proceedings of The 12th Language Resources and Evaluation Conference (LREC)},
-    month = may,
-    year = {2020},
-    pages = {6532--6541},
-    address = {Marseille, France},
-    publisher = {European Language Resources Association (ELRA)},
-    url = {https://www.aclweb.org/anthology/2020.lrec-1.804},
-    ISBN = {979-10-95546-34-4},
-  }
+This dataset includes over 31 hours of recording from 120 vounteers who self-identify as
+native speakers of Southern England, Midlands, Northern England, Wales, Scotland and Ireland.
+
+For more info, please refer to the above link or to the following paper:
+[Open-source Multi-speaker Corpora of the English Accents in the British Isles](https://aclanthology.org/2020.lrec-1.804.pdf)
 """
 
 """
