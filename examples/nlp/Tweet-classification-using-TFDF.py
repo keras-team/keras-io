@@ -1,8 +1,8 @@
 """
 Title: Text Classification using TFDF and Pre-trained embeddings
 Author: Gitesh Chawda
-Date created: 30/04/2022
-Last modified: 30/04/2022
+Date created: 02/05/2022
+Last modified: 02/05/2022
 Description: Using Tensorflow Decision Forest for text classification
 """
 
@@ -10,13 +10,13 @@ Description: Using Tensorflow Decision Forest for text classification
 ## Introduction
 
 [TensorFlow Decision Forests](https://www.tensorflow.org/decision_forests) (TF-DF)
-provide powerful models, especially with structured data,
+provide powerful models, especially with structured data.
 It is a collection of state-of-the-art algorithms of Decision Forest models that are
 compatible with Keras APIs. The module includes Random Forests, Gradient Boosted Trees,
 and CART, and can be used for regression, classification, and ranking tasks.
 
 Alternatively for getting started you go through official tutorial 
-[beginner Colab](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab) 
+[Beginner Colab](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab) 
 also text classification using pre-trained embeddings
 [Notebook](https://www.tensorflow.org/decision_forests/tutorials/intermediate_colab).
 
@@ -28,6 +28,7 @@ classify disaster tweets.
 Install Tensorflow Decision Forest using following command : 
 `!pip install tensorflow_decision_forests`
 """
+
 
 """
 ## Imports
@@ -85,12 +86,10 @@ print(
     f"Total Number of disaster and non-disaster tweets\n{df_shuffled.target.value_counts()}"
 )
 
-# Viewing 5 records from training data
-for ind, counter in enumerate(df_shuffled.index):
-    print(f"Target : {df_shuffled['target'][ind]}")
-    print(f"Text : {df_shuffled['text'][ind]}")
-    if counter == 5:
-        break
+for index, example in df_shuffled[:5].iterrows():
+    print(f"Example #{index}")
+    print(f"\tTarget : {example['target']}")
+    print(f"\tText : {example['text']}")
 
 # Splitting dataset into train and test
 test_df = df_shuffled.sample(frac=0.1, random_state=42)
@@ -99,6 +98,7 @@ train_df = df_shuffled.drop(test_df.index)
 print(f"Using {len(train_df)} samples for training and {len(test_df)} for validation")
 
 print(train_df["target"].value_counts())
+
 print(test_df["target"].value_counts())
 
 """
@@ -139,10 +139,10 @@ sentence_encoder_layer = hub.KerasLayer(
 """
 ## Build a model
 
-We will create 2 models In first model raw text will be directly passed to the Gradient
-Boosted Trees algorithm and In second model raw text will be first processed by
+We will create 2 models, In first model (model_1) raw text will be first processed by
 pre-trained embeddings and then passed to Gradient Boosted Trees algorithm for
-classification.
+classification whereas in the second model (model_2) raw text will be directly passed to
+the Gradient Boosted Trees algorithm.
 
 
 """
@@ -169,12 +169,12 @@ while some others do (e.g. Gradient Boosted Trees).Therefore, if a validation da
 needed, it will be extracted automatically from the training dataset.
 """
 
-# Compiling model
+# Compiling model_1
 model_1.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
 # Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
 model_1.fit(train_ds)
 
-# Compiling model
+# Compiling model_2
 model_2.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
 # Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
 model_2.fit(train_ds)
@@ -190,7 +190,7 @@ print(logs_2)
 The `model.summary()` function returns a variety of information about your decision trees
 model, including model type, task, input features, and feature importance.
 
-In our the inputs to the GradientBoostedTreesModel are 512 dimensional vectors so, it
+In model_1 the inputs to the GradientBoostedTreesModel are 512 dimensional vectors so, it
 prints all information of those vectors.
 """
 
@@ -198,35 +198,26 @@ print(model_1.summary())
 
 print(model_2.summary())
 
-logs = model_1.make_inspector().training_logs()
-plt.figure(figsize=(12, 4))
 
-plt.subplot(1, 2, 1)
-plt.plot([log.num_trees for log in logs], [log.evaluation.accuracy for log in logs])
-plt.xlabel("Number of trees")
-plt.ylabel("Accuracy")
+def plot_curve(logs):
+    plt.figure(figsize=(12, 4))
 
-plt.subplot(1, 2, 2)
-plt.plot([log.num_trees for log in logs], [log.evaluation.loss for log in logs])
-plt.xlabel("Number of trees")
-plt.ylabel("Loss")
+    plt.subplot(1, 2, 1)
+    plt.plot([log.num_trees for log in logs], [log.evaluation.accuracy for log in logs])
+    plt.xlabel("Number of trees")
+    plt.ylabel("Accuracy")
 
-plt.show()
+    plt.subplot(1, 2, 2)
+    plt.plot([log.num_trees for log in logs], [log.evaluation.loss for log in logs])
+    plt.xlabel("Number of trees")
+    plt.ylabel("Loss")
 
-logs = model_2.make_inspector().training_logs()
-plt.figure(figsize=(12, 4))
+    plt.show()
 
-plt.subplot(1, 2, 1)
-plt.plot([log.num_trees for log in logs], [log.evaluation.accuracy for log in logs])
-plt.xlabel("Number of trees")
-plt.ylabel("Accuracy")
 
-plt.subplot(1, 2, 2)
-plt.plot([log.num_trees for log in logs], [log.evaluation.loss for log in logs])
-plt.xlabel("Number of trees")
-plt.ylabel("Loss")
+plot_curve(logs_1)
 
-plt.show()
+plot_curve(logs_2)
 
 """
 ## Evaluating on test data
@@ -246,19 +237,16 @@ for name, value in results.items():
 # Predicting on validation data
 """
 
-counter = 0
-test_df = test_df.sample(frac=0.1)
+test_df.reset_index(inplace=True, drop=True)
 for index, row in test_df.iterrows():
     text = tf.expand_dims(row["text"], axis=0)
     preds = model_1.predict_step(text)
     preds = tf.squeeze(tf.round(preds))
     print(f"Text: {row['text']}")
-    print(f"Prediction: {preds}")
+    print(f"Prediction: {int(preds)}")
     print(f"Ground Truth : {row['target']}")
-    if counter == 5:
+    if index == 10:
         break
-    else:
-        counter += 1
 
 """
 ## Concluding remarks
