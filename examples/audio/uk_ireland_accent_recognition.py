@@ -1,9 +1,9 @@
 """
-Title: UK & Ireland Accent Recognition Using Transfer Learning
+Title: English speaker accent recognition using Transfer Learning
 Author: [Fadi Badine](https://twitter.com/fadibadine)
-Date created: 16/04/2022
-Last modified: 16/04/2022
-Description: This notebook trains a model to classify UK & Ireland accents using feature extraction from Yamnet.
+Date created: 2022/04/16
+Last modified: 2022/04/16
+Description: Training a model to classify UK & Ireland accents using feature extraction from Yamnet.
 """
 
 """
