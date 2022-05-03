@@ -496,14 +496,6 @@ train_ds = dataframe_to_dataset(train_df)
 valid_ds = dataframe_to_dataset(valid_df)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting IO>AudioResample
-
-WARNING:tensorflow:Using a while_loop for converting IO>AudioResample
-
-```
-</div>
 ---
 ## Build the model
 
@@ -1137,10 +1129,6 @@ print(f"The main accent is: {infered_class} English")
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting IO>AudioResample
-
-WARNING:tensorflow:Using a while_loop for converting IO>AudioResample
-
 Out of 66 samples, 0 are not speech
 The main accent is: Scottish English
 
