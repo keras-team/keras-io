@@ -31,6 +31,11 @@ from keras_cv import bounding_boxes
 import matplotlib.pyplot as plt
 
 
+"""
+First, let's implement some helper functions to visualize intermediate results
+"""
+
+
 def imshow(img):
     img = img.astype(int)
     plt.axis("off")
@@ -48,13 +53,14 @@ def gallery_show(images):
     plt.show()
 
 
-"""## Overview
+"""
+## BaseImageAugmentationLayer Introduction
 
-Image augmentation should operate on a sample-wise basis; not batch-size.
+Image augmentation should operate on a sample-wise basis; not batch-wise.
 This is a common mistake many machine learning practicioners make when implementing
 custom techniques.
 `BaseImageAugmentation` offers a set of clean abstractions to make implementing image
-augmentation techniques on a sample wises basis much easier.
+augmentation techniques on a sample wise basis much easier.
 This is done by allowing the end user to override an `augment_image()` method and then
 performing automatic vectorization under the hood.
 
@@ -67,8 +73,10 @@ present in the input images.  KerasCV offers the `value_range` API to simplify t
 
 In our example, we will use the `FactorSampler` API, the `value_range` API, and
 `BaseImageAugmentationLayer` to implement a robust, configurable, and correct `RandomBlueTint` layer.
+"""
 
-## augment_image()
+"""
+## Overriding `augment_image()`
 
 Let's start off with the minimum:
 """
@@ -76,16 +84,18 @@ Let's start off with the minimum:
 
 class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
     def augment_image(self, image, transformation=None):
+        # image is of shape (height, width, channels)
         [*others, blue] = tf.unstack(image, axis=-1)
         blue = tf.clip_by_value(blue + 100, 0.0, 255.0)
         return tf.stack([*others, blue], axis=-1)
 
 
 """Our layer overrides `BaseImageAugmentationLayer.augment_image()`.  This method is
-used to augment images given to the layer.  By default, using `BaseImageAugmentationLayer` gives you a few nice features for free:
+used to augment images given to the layer.  By default, using
+`BaseImageAugmentationLayer` gives you a few nice features for free:
 
-- support for both unbatched inputs (WHC Tensor)
-- support for batched inputs (BWHC Tensor)
+- support for unbatched inputs (HWC Tensor)
+- support for batched inputs (BHWC Tensor)
 - automatic vectorization on batched inputs (more information on this in automatic
     vectorization performance)
 
@@ -177,7 +187,7 @@ gallery_show(augmented.numpy())
 There are various types of `FactorSamplers` including `UniformFactorSampler`,
 `NormalFactorSampler`, and `ConstantFactorSampler`.  You can also implement you own.
 
-## get_random_transformation()
+## Overridding `get_random_transformation()`
 
 Now, suppose that your layer impacts the prediction targets: whether they are bounding
 boxes, classification labels, or regression targets.
@@ -288,9 +298,7 @@ imshow((augmented * 255).numpy().astype(int))
 """Note that this is an incredibly weak augmentation!
 Factor is only set to 0.1.
 
-In order to fix this, we can update our
-
-Let's resolve at this issue with KerasCV's `value_range` API.
+Let's resolve this issue with KerasCV's `value_range` API.
 """
 
 
