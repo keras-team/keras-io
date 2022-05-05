@@ -85,7 +85,7 @@ def prepare_dataset(dataset, split):
             .batch(BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(preparelambda x, y: prepare(x, y), num_parallel_calls=AUTOTUNE
+        return dataset.map(prepare, num_parallel_calls=AUTOTUNE
         ).batch(BATCH_SIZE)
 
 
