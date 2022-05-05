@@ -56,7 +56,8 @@ BATCH_SIZE = 32
 AUTOTUNE = tf.data.AUTOTUNE
 tfds.disable_progress_bar()
 data, dataset_info = tfds.load("oxford_flowers102", with_info=True, as_supervised=True)
-steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
+train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
+val_steps_per_epoch = dataset_info.splits["test"].num_examples // BATCH_SIZE
 
 """
 Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
@@ -79,13 +80,12 @@ def prepare(image, label):
 def prepare_dataset(dataset, split):
     if split == "train":
         return (
-            dataset.map(prepare, num_parallel_calls=AUTOTUNE)
+            dataset.shuffle(10 * BATCH_SIZE)
+            .map(prepare, num_parallel_calls=AUTOTUNE)
             .batch(BATCH_SIZE)
-            .shuffle(10 * BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(
-            lambda x, y: prepare(x, y), num_parallel_calls=AUTOTUNE
+        return dataset.map(preparelambda x, y: prepare(x, y), num_parallel_calls=AUTOTUNE
         ).batch(BATCH_SIZE)
 
 
@@ -368,10 +368,10 @@ with strategy.scope():
     model = get_model()
     model.fit(
         train_dataset,
-        steps_per_epoch=steps_per_epoch,
         epochs=10,
+        steps_per_epoch=train_steps_per_epoch,
         validation_data=test_dataset,
-        validation_steps=50,
+        validation_steps=val_steps_per_epoch,
     )
 
 """
