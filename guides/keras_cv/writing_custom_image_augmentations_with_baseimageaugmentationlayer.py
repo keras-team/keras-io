@@ -19,8 +19,6 @@ compatible with the KerasCV `RandomAugmentationPipeline` class.
 This guide will show you how to implement your own custom augmentation layers using
 `BaseImageAugmentationLayer`.  As an example, we will implement a layer that tints all
 images blue.
-It is recommended that you read (TODO LINK TO OTHER TUTORIAL ONCE POSTED) as a precursor
-to this tutorial.
 """
 
 import tensorflow as tf
@@ -382,7 +380,7 @@ You are not alone!
 
 Luckily, I have performed extensive analysis on the performance of automatic
 vectorization, manual vectorization, and unvectorized implementations.
-In this benchmark, I implemented a RandomCuout layer using auto vectorization, no auto
+In this benchmark, I implemented a RandomCutout layer using auto vectorization, no auto
 vectorization and manual vectorization.
 All of these were benchmarked inside of an `@tf.function` annotation.
 They were also each benchmarked with the `jit_compile` argument.
