@@ -365,7 +365,7 @@ print("min and max before augmentation:", elephants_0_1.min(), elephants_0_1.max
 augmented = layer(elephants_0_1)
 print(
     "min and max after augmentation:",
-    (augmented.numpy()).min(),
+    augmented.numpy().min(),
     augmented.numpy().max(),
 )
 imshow((augmented * 255).numpy().astype(int))
