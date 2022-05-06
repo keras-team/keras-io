@@ -1,11 +1,12 @@
 # KerasNLP
 
-KerasNLP is a simple and powerful API for building Natural Language
-Processing (NLP) models. KerasNLP provides modular building blocks following
-standard Keras interfaces (layers, metrics) that allow you to quickly and
-flexibly iterate on your task. Engineers working in applied NLP can leverage the
-library to assemble training and inference pipelines that are both
-state-of-the-art and production-grade.
+KerasNLP is a simple and powerful API for building Natural Language Processing
+(NLP) models within the Keras ecosystem.
+
+KerasNLP provides modular building blocks following standard Keras interfaces
+(layers, metrics) that allow you to quickly and flexibly iterate on your task.
+Engineers working in applied NLP can leverage the library to assemble training
+and inference pipelines that are both state-of-the-art and production-grade.
 
 KerasNLP can be understood as a horizontal extension of the Keras API:
 components are first-party Keras objects that are too specialized to be
@@ -19,7 +20,8 @@ that when it's time to scale up your model, you won't need to start over from
 scratch.
 
 KerasNLP is also new and growing! If you are interested in contributing, please
-stop by our [GitHub repository](https://github.com/keras-team/keras-nlp).
+check out our
+[contributing guide](https://github.com/keras-team/keras-nlp/blob/master/CONTRIBUTING.md).
 
 ---
 ## Quick links
