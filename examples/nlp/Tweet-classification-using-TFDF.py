@@ -1,32 +1,31 @@
 """
-Title: Text Classification using TFDF and Pre-trained embeddings
+Title: Text classification using Decision Forests and pretrained embeddings
 Author: Gitesh Chawda
 Date created: 02/05/2022
 Last modified: 02/05/2022
-Description: Using Tensorflow Decision Forest for text classification
+Description: Using Tensorflow Decision Forests for text classification
 """
 
 """
 ## Introduction
 
 [TensorFlow Decision Forests](https://www.tensorflow.org/decision_forests) (TF-DF)
-provide powerful models, especially with structured data.
-It is a collection of state-of-the-art algorithms of Decision Forest models that are
+is a collection of state-of-the-art algorithms for Decision Forest models that are
 compatible with Keras APIs. The module includes Random Forests, Gradient Boosted Trees,
 and CART, and can be used for regression, classification, and ranking tasks.
 
-Alternatively for getting started you go through official tutorial 
-[Beginner Colab](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab) 
-also text classification using pre-trained embeddings
-[Notebook](https://www.tensorflow.org/decision_forests/tutorials/intermediate_colab).
+In this example we will use Gradient Boosted Trees with pretrained embeddings to
+classify disaster-related tweets.
 
-In this example we will use Gradient Boosted Trees with pre-trained embeddings to
-classify disaster tweets.
+### See also:
+
+- [TF-DF beginner tutorial](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab) 
+- [TF-DF intermediate tutorial](https://www.tensorflow.org/decision_forests/tutorials/intermediate_colab).
 """
 
 """
 Install Tensorflow Decision Forest using following command : 
-`!pip install tensorflow_decision_forests`
+`pip install tensorflow_decision_forests`
 """
 
 
@@ -46,20 +45,21 @@ import matplotlib.pyplot as plt
 """
 ## Get the data
 
-Dataset is avaliable at [kaggle](https://www.kaggle.com/c/nlp-getting-started)
+The Dataset is avaliable on [Kaggle](https://www.kaggle.com/c/nlp-getting-started)
 
-dataset description :
+Dataset description :
 
 1. Files
-    - train.csv - the training set
+
+- train.csv - the training set
 
 2. Columns
-    - id - a unique identifier for each tweet
-    - text - the text of the tweet
-    - location - the location the tweet was sent from (may be blank)
-    - keyword - a particular keyword from the tweet (may be blank)
-- target - in train.csv only, this denotes whether a tweet is about a real disaster (1)
-or not (0)
+
+- id - a unique identifier for each tweet
+- text - the text of the tweet
+- location - the location the tweet was sent from (may be blank)
+- keyword - a particular keyword from the tweet (may be blank)
+- target - in train.csv only, this denotes whether a tweet is about a real disaster (1) or not (0)
 """
 
 # Turn .csv files into pandas DataFrame's
@@ -102,7 +102,7 @@ print(train_df["target"].value_counts())
 print(test_df["target"].value_counts())
 
 """
-## Convert data to tf.Dataset
+## Convert data to a `tf.data.Dataset`
 """
 
 
@@ -119,16 +119,15 @@ train_ds = create_dataset(train_df)
 test_ds = create_dataset(test_df)
 
 """
-## Downloading Pre-trained Embeddings
+## Downloading pretrained embeddings
 
-The Universal Sentence Encoder encodes text into high-dimensional vectors that can be
+The Universal Sentence Encoder embeddings encode text into high-dimensional vectors that can be
 used for text classification, semantic similarity, clustering and other natural language
-tasks.It is trained on a variety of data sources and a variety of tasks. The input is
-variable length English text and the output is a 512 dimensional vector.
+tasks. They're trained on a variety of data sources and a variety of tasks. Their input is
+variable-length English text and their output is a 512 dimensional vector.
 
-To understand better about pre-trained embeddings : 
-[Universal Sentence Encoder](https://tfhub.dev/google/universal-sentence-encoder/4)
-
+To learn more about these pretrained embeddings, see 
+[Universal Sentence Encoder](https://tfhub.dev/google/universal-sentence-encoder/4).
 
 """
 
@@ -137,14 +136,12 @@ sentence_encoder_layer = hub.KerasLayer(
 )
 
 """
-## Build a model
+## Creating our models
 
-We will create 2 models, In first model (model_1) raw text will be first processed by
-pre-trained embeddings and then passed to Gradient Boosted Trees algorithm for
-classification whereas in the second model (model_2) raw text will be directly passed to
-the Gradient Boosted Trees algorithm.
-
-
+We create two models. In the first model (model_1) raw text will be first encoded via
+pretrained embeddings and then passed to a Gradient Boosted Tree model for
+classification. In the second model (model_2) raw text will be directly passed to
+the Gradient Boosted Trees model.
 """
 
 inputs = layers.Input(shape=(), dtype=tf.string)
@@ -159,13 +156,14 @@ model_2 = tfdf.keras.GradientBoostedTreesModel()
 """
 ## Train the models
 
-We will compile our model by passing metrics as `Accuracy`, `Recall`, `Precision` and
-`AUC`, and for loss TF-DF, automatically detects it from the task (Classification or
-regression) which is printed in the model summary.
+We compile our model by passing the metrics `Accuracy`, `Recall`, `Precision` and
+`AUC`. When it comes to the loss, TF-DF automatically detects the best loss for the task
+(Classification or regression). It is printed in the model summary.
 
-Also, TF-DF models do not need a validation dataset to monitor overfitting, or to stop
-training early. some algorithms do not use a validation dataset (e.g. Random Forest)
-while some others do (e.g. Gradient Boosted Trees).Therefore, if a validation dataset is
+Also, because they're batch-training models rather than mini-batch gradient descent models,
+TF-DF models do not need a validation dataset to monitor overfitting, or to stop
+training early. Some algorithms do not use a validation dataset (e.g. Random Forest)
+while some others do (e.g. Gradient Boosted Trees). If a validation dataset is
 needed, it will be extracted automatically from the training dataset.
 """
 
@@ -187,11 +185,8 @@ print(logs_1)
 print(logs_2)
 
 """
-The `model.summary()` function returns a variety of information about your decision trees
+The `model.summary()` method prints a variety of information about your decision tree
 model, including model type, task, input features, and feature importance.
-
-In model_1 the inputs to the GradientBoostedTreesModel are 512 dimensional vectors so, it
-prints all information of those vectors.
 """
 
 print(model_1.summary())
@@ -251,10 +246,8 @@ for index, row in test_df.iterrows():
 """
 ## Concluding remarks
 
-TensorFlow Decision Forests provide powerful models, especially with structured data. In
-our experiments, the Gradient Boosted Tree model with pre-trained embedding achieved 94%
-test accuracy while simple Gradient Boosted Tree model had 57.31% accuracy.
-
-In this example we learned how we can process text through pre-trained embeddings and
-then pass these learned embeddings to Gradient Boosted Tree algorithm.
+The TensorFlow Decision Forests package provides powerful models
+that work especially well with structured data. In our experiments,
+the Gradient Boosted Tree model with pretrained embeddings achieved 94%
+test accuracy while the plain Gradient Boosted Tree model had 57.31% accuracy.
 """
