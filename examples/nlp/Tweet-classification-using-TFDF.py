@@ -45,21 +45,21 @@ import matplotlib.pyplot as plt
 """
 ## Get the data
 
-The Dataset is avaliable on [Kaggle](https://www.kaggle.com/c/nlp-getting-started)
+The Dataset is avalaible on [Kaggle](https://www.kaggle.com/c/nlp-getting-started)
 
-Dataset description :
+Dataset description:
 
 1. Files
 
-- train.csv - the training set
+- train.csv: the training set
 
 2. Columns
 
-- id - a unique identifier for each tweet
-- text - the text of the tweet
-- location - the location the tweet was sent from (may be blank)
-- keyword - a particular keyword from the tweet (may be blank)
-- target - in train.csv only, this denotes whether a tweet is about a real disaster (1) or not (0)
+- id: a unique identifier for each tweet
+- text: the text of the tweet
+- location: the location the tweet was sent from (may be blank)
+- keyword: a particular keyword from the tweet (may be blank)
+- target: in train.csv only, this denotes whether a tweet is about a real disaster (1) or not (0)
 """
 
 # Turn .csv files into pandas DataFrame's
@@ -75,7 +75,7 @@ The dataset includes 7613 samples with 5 columns:
 print(f"Training dataset shape: {df.shape}")
 
 """
-Shuffling and dropping unnecessary columns
+Shuffling and dropping unnecessary columns:
 """
 
 df_shuffled = df.sample(frac=1, random_state=42)
@@ -86,17 +86,18 @@ df_shuffled.reset_index(inplace=True, drop=True)
 print(df_shuffled.head())
 
 """
-Printing Information about the shuffled dataframe
+Printing information about the shuffled dataframe:
 """
 
 print(df_shuffled.info())
 
 """
-total number of Disaster and non-Disaster tweets
+Total number of "disaster" and "non-disaster" tweets:
 """
 
 print(
-    f"Total Number of disaster and non-disaster tweets\n{df_shuffled.target.value_counts()}"
+    "Total Number of disaster and non-disaster tweets: "
+    f"{df_shuffled.target.value_counts()}"
 )
 
 """
@@ -109,20 +110,21 @@ for index, example in df_shuffled[:5].iterrows():
     print(f"\tText : {example['text']}")
 
 """
-Splitting dataset into train and test
+Splitting dataset into training and test sets:
 """
 test_df = df_shuffled.sample(frac=0.1, random_state=42)
 train_df = df_shuffled.drop(test_df.index)
 print(f"Using {len(train_df)} samples for training and {len(test_df)} for validation")
 
 """
-Total number of disaster and non-disaster tweets in training data
+Total number of "disaster" and "non-disaster" tweets in the training data:
 """
 print(train_df["target"].value_counts())
 
 """
-Total number of disaster and non-disaster tweets in training data
+Total number of "disaster" and "non-disaster" tweets in the test data:
 """
+
 print(test_df["target"].value_counts())
 
 """
