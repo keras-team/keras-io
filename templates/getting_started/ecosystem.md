@@ -24,14 +24,6 @@ such as [`ImageClassifier`](https://autokeras.com/tutorial/image_classification/
 [`TextClassifier`](https://autokeras.com/tutorial/text_classification/) to solve machine learning problems in a few lines,
 as well as [flexible building blocks](https://autokeras.com/tutorial/customized/) to perform architecture search.
 
----
-
-## TensorFlow Cloud
-
-Managed by the Keras team at Google, [TensorFlow Cloud](https://github.com/tensorflow/cloud) is a set of utilities to help you run large-scale
-Keras training jobs on GCP with very little configuration effort. Running your experiments on 8 or more GPUs in the cloud
-should be as easy as calling `model.fit()`.
-
 
 ---
 
