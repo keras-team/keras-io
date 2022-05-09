@@ -1,9 +1,9 @@
 """
 Title: Text classification using Decision Forests and pretrained embeddings
 Author: Gitesh Chawda
-Date created: 02/05/2022
-Last modified: 02/05/2022
-Description: Using Tensorflow Decision Forests for text classification
+Date created: 09/05/2022
+Last modified: 09/05/2022
+Description: Using Tensorflow Decision Forests for text classification.
 """
 
 """
@@ -19,12 +19,12 @@ classify disaster-related tweets.
 
 ### See also:
 
-- [TF-DF beginner tutorial](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab) 
+- [TF-DF beginner tutorial](https://www.tensorflow.org/decision_forests/tutorials/beginner_colab)
 - [TF-DF intermediate tutorial](https://www.tensorflow.org/decision_forests/tutorials/intermediate_colab).
 """
 
 """
-Install Tensorflow Decision Forest using following command : 
+Install Tensorflow Decision Forest using following command :
 `pip install tensorflow_decision_forests`
 """
 
@@ -68,10 +68,16 @@ df = pd.read_csv(
 )
 print(df.head())
 
-# Printing shape of the training dataset
+"""
+The dataset includes 7613 samples with 5 columns:
+"""
+
 print(f"Training dataset shape: {df.shape}")
 
-# Shuffling training data
+"""
+Shuffling and dropping unnecessary columns
+"""
+
 df_shuffled = df.sample(frac=1, random_state=42)
 # Dropping id, keyword and location columns as these columns consists of mostly nan values
 # we will be using only text and target columns
@@ -79,32 +85,49 @@ df_shuffled.drop(["id", "keyword", "location"], axis=1, inplace=True)
 df_shuffled.reset_index(inplace=True, drop=True)
 print(df_shuffled.head())
 
+"""
+Printing Information about the shuffled dataframe
+"""
+
 print(df_shuffled.info())
 
-# Printing total number of Disaster and non-Disaster tweets
+"""
+total number of Disaster and non-Disaster tweets
+"""
+
 print(
     f"Total Number of disaster and non-disaster tweets\n{df_shuffled.target.value_counts()}"
 )
+
+"""
+Let's preview a few samples:
+"""
 
 for index, example in df_shuffled[:5].iterrows():
     print(f"Example #{index}")
     print(f"\tTarget : {example['target']}")
     print(f"\tText : {example['text']}")
 
-# Splitting dataset into train and test
+"""
+Splitting dataset into train and test
+"""
 test_df = df_shuffled.sample(frac=0.1, random_state=42)
 train_df = df_shuffled.drop(test_df.index)
-
 print(f"Using {len(train_df)} samples for training and {len(test_df)} for validation")
 
+"""
+Total number of disaster and non-disaster tweets in training data
+"""
 print(train_df["target"].value_counts())
 
+"""
+Total number of disaster and non-disaster tweets in training data
+"""
 print(test_df["target"].value_counts())
 
 """
 ## Convert data to a `tf.data.Dataset`
 """
-
 
 def create_dataset(dataframe):
     dataset = tf.data.Dataset.from_tensor_slices(
@@ -126,7 +149,7 @@ used for text classification, semantic similarity, clustering and other natural 
 tasks. They're trained on a variety of data sources and a variety of tasks. Their input is
 variable-length English text and their output is a 512 dimensional vector.
 
-To learn more about these pretrained embeddings, see 
+To learn more about these pretrained embeddings, see
 [Universal Sentence Encoder](https://tfhub.dev/google/universal-sentence-encoder/4).
 
 """
@@ -144,12 +167,18 @@ classification. In the second model (model_2) raw text will be directly passed t
 the Gradient Boosted Trees model.
 """
 
-inputs = layers.Input(shape=(), dtype=tf.string)
-# Passing sentences to sentence_encoder_layer
-outputs = sentence_encoder_layer(inputs)
+"""
+Building model_1
+"""
 
+inputs = layers.Input(shape=(), dtype=tf.string)
+outputs = sentence_encoder_layer(inputs)
 preprocessor = keras.Model(inputs=inputs, outputs=outputs)
 model_1 = tfdf.keras.GradientBoostedTreesModel(preprocessing=preprocessor)
+
+"""
+Building model_2
+"""
 
 model_2 = tfdf.keras.GradientBoostedTreesModel()
 
@@ -177,23 +206,31 @@ model_2.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
 # Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
 model_2.fit(train_ds)
 
-# Prints training logs of model_1 and model_2
+"""
+Prints training logs of model_1
+"""
 logs_1 = model_1.make_inspector().training_logs()
-logs_2 = model_2.make_inspector().training_logs()
-
 print(logs_1)
+
+"""
+Prints training logs of model_2
+"""
+logs_2 = model_2.make_inspector().training_logs()
 print(logs_2)
 
 """
 The `model.summary()` method prints a variety of information about your decision tree
 model, including model type, task, input features, and feature importance.
 """
-
+print("model_1 summary: ")
 print(model_1.summary())
-
+print()
+print("model_2 summary: ")
 print(model_2.summary())
 
-
+"""
+Plotting training an logs
+"""
 def plot_curve(logs):
     plt.figure(figsize=(12, 4))
 
@@ -211,7 +248,6 @@ def plot_curve(logs):
 
 
 plot_curve(logs_1)
-
 plot_curve(logs_2)
 
 """
@@ -219,12 +255,12 @@ plot_curve(logs_2)
 """
 
 results = model_1.evaluate(test_ds, return_dict=True, verbose=0)
-
+print("model_1 Evaluation: \n")
 for name, value in results.items():
     print(f"{name}: {value:.4f}")
 
 results = model_2.evaluate(test_ds, return_dict=True, verbose=0)
-
+print("model_2 Evaluation: \n")
 for name, value in results.items():
     print(f"{name}: {value:.4f}")
 
