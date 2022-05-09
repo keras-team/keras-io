@@ -99,10 +99,6 @@ GUIDES_MASTER = {
         #     'path': 'hyperparameter_optimization',
         #     'title': 'Hyperparameter optimization',
         # },
-        {
-            'path': 'training_keras_models_on_cloud',
-            'title': 'Training Keras models with TensorFlow Cloud',
-        },
         KT_GUIDES_MASTER,
 
         # TODO: mixed precision
