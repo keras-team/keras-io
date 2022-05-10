@@ -49,11 +49,11 @@ The Dataset is avalaible on [Kaggle](https://www.kaggle.com/c/nlp-getting-starte
 
 Dataset description:
 
-1. Files
+**Files:**
 
 - train.csv: the training set
 
-2. Columns
+**Columns:**
 
 - id: a unique identifier for each tweet
 - text: the text of the tweet
@@ -209,30 +209,9 @@ model_2.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
 # Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
 model_2.fit(train_ds)
 
-"""
-Prints training logs of model_1
-"""
-logs_1 = model_1.make_inspector().training_logs()
-print(logs_1)
 
 """
-Prints training logs of model_2
-"""
-logs_2 = model_2.make_inspector().training_logs()
-print(logs_2)
-
-"""
-The `model.summary()` method prints a variety of information about your decision tree
-model, including model type, task, input features, and feature importance.
-"""
-print("model_1 summary: ")
-print(model_1.summary())
-print()
-print("model_2 summary: ")
-print(model_2.summary())
-
-"""
-Plotting training an logs
+## Plotting training metrics
 """
 
 
@@ -270,7 +249,7 @@ for name, value in results.items():
     print(f"{name}: {value:.4f}")
 
 """
-# Predicting on validation data
+## Predicting on validation data
 """
 
 test_df.reset_index(inplace=True, drop=True)
