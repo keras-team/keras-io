@@ -131,6 +131,7 @@ print(test_df["target"].value_counts())
 ## Convert data to a `tf.data.Dataset`
 """
 
+
 def create_dataset(dataframe):
     dataset = tf.data.Dataset.from_tensor_slices(
         (df["text"].to_numpy(), df["target"].to_numpy())
@@ -233,6 +234,8 @@ print(model_2.summary())
 """
 Plotting training an logs
 """
+
+
 def plot_curve(logs):
     plt.figure(figsize=(12, 4))
 
