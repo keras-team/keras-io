@@ -334,8 +334,8 @@ test_dataset = test_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUN
 train_dataset = train_dataset.prefetch(AUTOTUNE)
 test_dataset = test_dataset.prefetch(AUTOTUNE)
 
-train_dataset = train_dataset.repeat()
-test_dataset = test_dataset.repeat()
+train_dataset = train_dataset
+test_dataset = test_dataset
 
 """
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
@@ -369,9 +369,7 @@ with strategy.scope():
     model.fit(
         train_dataset,
         epochs=10,
-        steps_per_epoch=train_steps_per_epoch,
         validation_data=test_dataset,
-        validation_steps=val_steps_per_epoch,
     )
 
 """
