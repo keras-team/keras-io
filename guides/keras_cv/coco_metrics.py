@@ -20,7 +20,7 @@ Let's get started using KerasCV's COCO metrics.
 """
 
 """
-## Input Format
+## Input format
 
 KerasCV COCO metrics require a specific input format.
 
@@ -46,7 +46,7 @@ pad bounding box Tensors with `-1s` are available at
 """
 
 """
-## Independent Metric Use
+## Independent metric use
 
 The usage first pattern for KerasCV COCO metrics is to manually call
 `update_state()` and `result()` methods. This pattern is recommended for users
@@ -107,7 +107,7 @@ Evaluating COCORecall for your object detection model is as simple as that!
 """
 
 """
-## Metric Use in a Model
+## Metric use in a model
 
 You can also leverage COCORecall in your model's training loop.  Let's walk through this
 process.
@@ -146,7 +146,7 @@ detection models.
 """
 
 """
-## Supported Constructor Parameters
+## Supported constructor parameters
 
 KerasCV COCO Metrics are sufficiently parameterized to support all of the
 permutations evaluated in the original COCO challenge, all metrics evaluated in
@@ -212,7 +212,7 @@ The COCOMeanAveragePrecision constructor supports the following parameters
 """
 
 """
-## Conclusion & Next Steps
+## Conclusion & next steps
 KerasCV makes it easier than ever before to evaluate a Keras object detection model.
 Historically, users had to perform post training evaluation.  With KerasCV, you can
 perform train time evaluation to see how these metrics evolve over time!

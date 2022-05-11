@@ -274,7 +274,7 @@ print(augmented["labels"])
 Note how when `transformation` is > 100 the label is modified to contain 2.0 as
 specified in the layer above.
 
-## `value_range` Support
+## `value_range` support
 
 Imagine you are using your new augmentation layer in many pipelines.
 Some pipelines have values in the range `[0, 255]`, some pipelines have normalized their
@@ -377,7 +377,7 @@ Now users can configure the layer to support any value range they may need.  Not
 only layers that interact with color information should use the value range API.
 Many augmentation techniques, such as `RandomRotation` will not need this.
 
-## Auto Vectorization Performance
+## Auto vectorization performance
 
 If you are wondering:
 
@@ -402,7 +402,7 @@ automatic vectorization is marginal!_
 
 Please note that Eager mode performance will be drastically different.
 
-## Common Gotchas
+## Common gotchas
 
 Some layers are not able to be automatically vectorizated.
 An example of this is [GridMask](https://tinyurl.com/ffb5zzf7).
@@ -419,7 +419,7 @@ class UnVectorizable(keras_cv.layers.BaseImageAugmentationLayer):
         self.auto_vectorize = False
 
 
-"""## Conclusion and Next Steps
+"""## Conclusion and next steps
 
 KerasCV offers a standard set of APIs to streamline the process of implementing your
 own data augmentation techniques.
