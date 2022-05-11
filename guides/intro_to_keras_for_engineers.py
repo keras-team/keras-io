@@ -208,7 +208,7 @@ The state of a preprocessing layer is obtained by calling `layer.adapt(data)` on
 
 """
 
-from tensorflow.keras.layers import TextVectorization
+from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 
 # Example training data, of dtype `string`.
 training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
@@ -233,7 +233,7 @@ print(integer_data)
 **Example: turning strings into sequences of one-hot encoded bigrams**
 """
 
-from tensorflow.keras.layers import TextVectorization
+from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 
 # Example training data, of dtype `string`.
 training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
