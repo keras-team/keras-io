@@ -44,14 +44,6 @@ should be as easy as calling `model.fit()`.
 
 ---
 
-## TensorFlow Cloud
-
-Managed by the Keras team at Google, [TensorFlow Cloud](https://github.com/tensorflow/cloud) is a set of utilities to help you run large-scale
-Keras training jobs on GCP with very little configuration effort. Running your experiments on 8 or more GPUs in the cloud
-should be as easy as calling `model.fit()`.
-
----
-
 ## TensorFlow.js
 
 [TensorFlow.js](https://www.tensorflow.org/js) is TensorFlow's JavaScript runtime, capable of running TensorFlow models in the browser or on a [Node.js](https://nodejs.org/en/) server,
