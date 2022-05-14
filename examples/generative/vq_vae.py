@@ -162,7 +162,7 @@ def get_encoder(latent_dim=16):
 
 
 def get_decoder(latent_dim=16):
-    latent_inputs = keras.Input(shape=get_encoder().output.shape[1:])
+    latent_inputs = keras.Input(shape=get_encoder(latent_dim).output.shape[1:])
     x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(
         latent_inputs
     )

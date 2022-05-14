@@ -43,7 +43,7 @@ handle feature normalization or feature value indexing on their own.
   into one-hot, multi-hot, or count dense representations.
 - `tf.keras.layers.Hashing`: performs categorical feature hashing, also known as
   the "hashing trick".
-- `tf.keras.layers.StringLookup`: turns string categorical values an encoded
+- `tf.keras.layers.StringLookup`: turns string categorical values into an encoded
   representation that can be read by an `Embedding` layer or `Dense` layer.
 - `tf.keras.layers.IntegerLookup`: turns integer categorical values into an
   encoded representation that can be read by an `Embedding` layer or `Dense`
