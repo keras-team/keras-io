@@ -307,7 +307,8 @@ print(
 )
 imshow((augmented * 255).numpy().astype(int))
 
-"""Note that this is an incredibly weak augmentation!
+"""
+Note that this is an incredibly weak augmentation!
 Factor is only set to 0.1.
 
 Let's resolve this issue with KerasCV's `value_range` API.
@@ -382,7 +383,8 @@ print(
 )
 imshow((augmented * 255).numpy().astype(int))
 
-"""Now our elephants are only slgihtly blue tinted.  This is the expected behavior when
+"""
+Now our elephants are only slgihtly blue tinted.  This is the expected behavior when
 using a factor of `0.1`.  Great!
 
 Now users can configure the layer to support any value range they may need.  Note that
@@ -431,7 +433,8 @@ class UnVectorizable(keras_cv.layers.BaseImageAugmentationLayer):
         self.auto_vectorize = False
 
 
-"""## Conclusion and next steps
+"""
+## Conclusion and next steps
 
 KerasCV offers a standard set of APIs to streamline the process of implementing your
 own data augmentation techniques.
