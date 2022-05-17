@@ -27,7 +27,6 @@ import keras_cv
 from tensorflow.keras import layers
 from keras_cv.utils import preprocessing as preprocessing_utils
 from keras_cv.layers import BaseImageAugmentationLayer
-from keras_cv import bounding_boxes
 import matplotlib.pyplot as plt
 
 
@@ -130,7 +129,7 @@ imshow(augmented.numpy()[0])
 """
 ## Adding Random Behavior with the `FactorSampler` API.
 
-Most of the time, an image augmentation technique should not do the same thing on every
+Usually an image augmentation technique should not do the same thing on every
 invocation of the layer's `__call__` method.
 KerasCV offers the `FactorSampler` API to allow users to provide configurable random
 distributions.
@@ -185,7 +184,7 @@ We can also configure the layer to draw from a normal distribution:
 
 many_elephants = tf.repeat(tf.expand_dims(elephants, axis=0), 9, axis=0)
 factor = keras_cv.NormalFactorSampler(
-    mean=0.3, standard_deviation=0.1, min_value=0.0, max_value=1.0
+    mean=0.3, stddev=0.1, min_value=0.0, max_value=1.0
 )
 layer = RandomBlueTint(factor=factor)
 augmented = layer(many_elephants)
