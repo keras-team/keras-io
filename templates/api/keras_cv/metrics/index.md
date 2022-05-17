@@ -1,8 +1,7 @@
 # KerasCV Metrics
 
-KerasCV metrics are just `keras.Metric` subclasses with computer vision specific use
-cases.
+KerasCV metrics are `keras.metrics.Metric` subclasses for computer vision specific use cases.
 
-[A guide on using *COCO* metrics is available.](TODO COCO Metric guide link)
+See also the [*COCO* metrics usage guide](/guides/keras_cv/keras_cv_coco_metrics/).
 
 {{toc}}
