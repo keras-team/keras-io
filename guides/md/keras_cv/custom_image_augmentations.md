@@ -122,7 +122,7 @@ imshow(elephants)
 
 
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_9_0.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_9_0.png)
 
 
 
@@ -137,7 +137,7 @@ imshow(augmented.numpy())
 
 
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_11_0.png)
+![png](img/guides/custom_image_augmentations/custom_image_augmentations_11_0.png)
 
 
 
@@ -152,7 +152,7 @@ imshow(augmented.numpy()[0])
 
 
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_13_0.png)
+![png](img/guides/custom_image_augmentations/custom_image_augmentations_13_0.png)
 
 
 
@@ -209,7 +209,7 @@ gallery_show(augmented.numpy())
 
 
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_17_0.png)
+![png](img/guides/custom_image_augmentations/custom_image_augmentations_17_0.png)
 
 
 
@@ -231,7 +231,7 @@ gallery_show(augmented.numpy())
 
 
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_19_0.png)
+![png](img/guides/custom_image_augmentations/custom_image_augmentations_19_0.png)
 
 
 
@@ -374,7 +374,7 @@ min and max after augmentation: 0.0 26.488235
 ```
 </div>
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_27_2.png)
+![png](img/guides/custom_image_augmentations/custom_image_augmentations_27_2.png)
 
 
 
@@ -459,7 +459,7 @@ min and max after augmentation: 0.0 1.0
 ```
 </div>
 
-![png](../guides/img/custom_image_augmentations/custom_image_augmentations_29_1.png)
+![png](img/guides/custom_image_augmentations/custom_image_augmentations_29_1.png)
 
 
 
