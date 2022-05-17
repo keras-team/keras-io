@@ -115,7 +115,7 @@ process.
 1.) Construct your the metric and a dummy model
 """
 
-i = keras.layers.Input((None, None, 6))
+i = keras.layers.Input((None, 6))
 model = keras.Model(i, i)
 
 """
@@ -152,66 +152,10 @@ KerasCV COCO Metrics are sufficiently parameterized to support all of the
 permutations evaluated in the original COCO challenge, all metrics evaluated in
 the accompanying `pycocotools` library, and more!
 
-### COCORecall
+Check out the full documentation for [`COCORecall`](/api/keras_cv/metrics/coco_recall/) and
+[`COCOMeanAveragePrecision`](/api/keras_cv/metrics/coco_mean_average_precision/).
 
-The COCORecall constructor supports the following parameters
 
-| Name            | Usage                                                      |
-| --------------- | ---------------------------------------------------------- |
-| iou\_thresholds | iou\_thresholds expects an iterable. This value is used as |
-:                 : a cutoff to determine the minimum intersection of unions   :
-:                 : required for a classification sample to be considered a    :
-:                 : true positive. If an iterable is passed, the result is the :
-:                 : average across IoU values passed in the                    :
-:                 : iterable.<br>Defaults to `range(0.5, 0.95, incr=0.05)`     :
-| area\_range     | area\_range specifies a range over which to evaluate the   |
-:                 : metric. Only ground truth objects within the area\_range   :
-:                 : are considered in the scoring.<br>Defaults to\: `\[0,      :
-:                 : 1e5\*\*2\]`                                                :
-| max\_detections | max\_detections is a value specifying the max number of    |
-:                 : detections a model is allowed to make.<br>Defaults to\:    :
-:                 : `100`                                                      :
-| class\_ids      | When class\_ids is not None, the metric will only consider |
-:                 : boxes of the matching class label. This is useful when a   :
-:                 : specific class is considered high priority. An example of  :
-:                 : this would be providing the human and animal class indices :
-:                 : in the case of self driving cars.<br>To evaluate all       :
-:                 : categories, users will pass `range(0, num\_classes)`.      :
-
-### COCOMeanAveragePrecision
-
-The COCOMeanAveragePrecision constructor supports the following parameters
-
-| Name               | Usage                                                   |
-| ------------------ | ------------------------------------------------------- |
-| \*\*kwargs         | Passed to COCOBase.super()                              |
-| recall\_thresholds | recall\_thresholds is a list containing the             |
-:                    : recall\_thresholds over which to consider in the        :
-:                    : computation of MeanAveragePrecision.                    :
-| iou\_thresholds    | iou\_thresholds expects an iterable. This value is used |
-:                    : as a cutoff to determine the minimum intersection of    :
-:                    : unions required for a classification sample to be       :
-:                    : considered a true positive. If an iterable is passed,   :
-:                    : the result is the average across IoU values passed in   :
-:                    : the iterable.<br>Defaults to `range(0.5, 0.95,          :
-:                    : incr=0.05)`                                             :
-| area\_range        | area\_range specifies a range over which to evaluate    |
-:                    : the metric. Only ground truth objects within the        :
-:                    : area\_range are considered in the                       :
-:                    : scoring.<br><br>Defaults to\: `\[0, 1e5\*\*2\]`         :
-| max\_detections    | max\_detections is a value specifying the max number of |
-:                    : detections a model is allowed to make.<br><br>Defaults  :
-:                    : to\: `100`                                              :
-| class\_ids         | When class\_ids is not None, the metric will only       |
-:                    : consider boxes of the matching class label. This is     :
-:                    : useful when a specific class is considered high         :
-:                    : priority. An example of this would be providing the     :
-:                    : human and animal class indices in the case of self      :
-:                    : driving cars.<br>To evaluate all categories, users will :
-:                    : pass `range(0, num\_classes)`.                          :
-"""
-
-"""
 ## Conclusion & next steps
 KerasCV makes it easier than ever before to evaluate a Keras object detection model.
 Historically, users had to perform post training evaluation.  With KerasCV, you can

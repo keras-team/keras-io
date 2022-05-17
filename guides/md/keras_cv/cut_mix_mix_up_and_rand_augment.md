@@ -47,23 +47,6 @@ from tensorflow.keras import losses
 from tensorflow.keras import optimizers
 ```
 
-<div class="k-default-codeblock">
-```
-2022-05-16 19:14:44.966202: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base has been moved to tensorflow.python.trackable.base. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.checkpoint_management has been moved to tensorflow.python.checkpoint.checkpoint_management. The old module will be deleted in version 2.9.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.resource has been moved to tensorflow.python.trackable.resource. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.util has been moved to tensorflow.python.checkpoint.checkpoint. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base_delegate has been moved to tensorflow.python.trackable.base_delegate. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.graph_view has been moved to tensorflow.python.checkpoint.graph_view. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.python_state has been moved to tensorflow.python.trackable.python_state. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.functional_saver has been moved to tensorflow.python.checkpoint.functional_saver. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.checkpoint_options has been moved to tensorflow.python.checkpoint.checkpoint_options. The old module will be deleted in version 2.11.
-
-```
-</div>
 ---
 ## Data loading
 
@@ -83,13 +66,6 @@ train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
 val_steps_per_epoch = dataset_info.splits["test"].num_examples // BATCH_SIZE
 ```
 
-<div class="k-default-codeblock">
-```
-2022-05-16 19:14:49.808699: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-```
-</div>
 Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
 labels. Please note that `keras_cv.layers.CutMix` and `keras_cv.layers.MixUp` expect
 targets to be one-hot encoded. This is because they modify the values of the targets
@@ -147,7 +123,7 @@ visualize_dataset(train_dataset, title="Before Augmentation")
 
 
     
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
     
 
 
@@ -198,34 +174,6 @@ def apply_rand_augment(inputs):
 train_dataset = load_dataset().map(apply_rand_augment, num_parallel_calls=AUTOTUNE)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-```
-</div>
 Finally, let's inspect some of the results:
 
 
@@ -235,7 +183,7 @@ visualize_dataset(train_dataset, title="After RandAugment")
 
 
     
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
     
 
 
@@ -283,7 +231,7 @@ visualize_dataset(train_dataset, title="After CutMix and MixUp")
 
 
     
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
     
 
 
@@ -356,36 +304,7 @@ train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-```
-</div>
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_12.png)
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_12.png)
     
 
 
@@ -416,7 +335,7 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 
 
     
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
     
 
 
@@ -458,36 +377,8 @@ train_dataset = train_dataset
 test_dataset = test_dataset
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
-
-```
-</div>
     
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_12.png)
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_12.png)
     
 
 
@@ -530,21 +421,7 @@ with strategy.scope():
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
-WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
-
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
-2022-05-16 19:15:13.682941: W tensorflow/core/grappler/optimizers/data/auto_shard.cc:547] The `assert_cardinality` transformation is currently not handled by the auto-shard rewrite and will be removed.
-2022-05-16 19:15:18.095416: W tensorflow/core/framework/dataset.cc:769] Input of GeneratorDatasetOp::Dataset will not be optimized because the dataset does not implement the AsGraphDefInternal() method needed to apply optimizations.
-
 32/32 [==============================] - ETA: 0s - loss: 4.8694 - accuracy: 0.0049
-
-2022-05-16 19:18:28.626591: W tensorflow/core/grappler/optimizers/data/auto_shard.cc:547] The `assert_cardinality` transformation is currently not handled by the auto-shard rewrite and will be removed.
-2022-05-16 19:18:28.705751: W tensorflow/core/framework/dataset.cc:769] Input of GeneratorDatasetOp::Dataset will not be optimized because the dataset does not implement the AsGraphDefInternal() method needed to apply optimizations.
-
 32/32 [==============================] - 399s 12s/step - loss: 4.8694 - accuracy: 0.0049 - val_loss: 43.5487 - val_accuracy: 0.0187
 
 ```

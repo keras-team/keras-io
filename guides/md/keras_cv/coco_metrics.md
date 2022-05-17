@@ -70,26 +70,6 @@ from tensorflow import keras
 metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32**2))
 ```
 
-<div class="k-default-codeblock">
-```
-2022-05-16 19:04:43.674235: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base has been moved to tensorflow.python.trackable.base. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.checkpoint_management has been moved to tensorflow.python.checkpoint.checkpoint_management. The old module will be deleted in version 2.9.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.resource has been moved to tensorflow.python.trackable.resource. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.util has been moved to tensorflow.python.checkpoint.checkpoint. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base_delegate has been moved to tensorflow.python.trackable.base_delegate. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.graph_view has been moved to tensorflow.python.checkpoint.graph_view. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.python_state has been moved to tensorflow.python.trackable.python_state. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.functional_saver has been moved to tensorflow.python.checkpoint.functional_saver. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.checkpoint_options has been moved to tensorflow.python.checkpoint.checkpoint_options. The old module will be deleted in version 2.11.
-
-2022-05-16 19:04:58.090409: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-```
-</div>
 2.) Create Some Bounding Boxes:
 
 
@@ -147,7 +127,7 @@ process.
 
 
 ```python
-i = keras.layers.Input((None, None, 6))
+i = keras.layers.Input((None, 6))
 model = keras.Model(i, i)
 ```
 
@@ -178,8 +158,7 @@ model.evaluate(y_pred, y_true, return_dict=True)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Model was constructed with shape (None, None, None, 6) for input KerasTensor(type_spec=TensorSpec(shape=(None, None, None, 6), dtype=tf.float32, name='input_1'), name='input_1', description="created by layer 'input_1'"), but it was called on an input with incompatible shape (None, 2, 6).
-1/1 [==============================] - 1s 550ms/step - loss: 0.0000e+00 - coco_recall: 1.0000
+1/1 [==============================] - 1s 615ms/step - loss: 0.0000e+00 - coco_recall: 1.0000
 
 {'loss': 0.0, 'coco_recall': 1.0}
 
@@ -195,63 +174,9 @@ KerasCV COCO Metrics are sufficiently parameterized to support all of the
 permutations evaluated in the original COCO challenge, all metrics evaluated in
 the accompanying `pycocotools` library, and more!
 
-### COCORecall
+Check out the full documentation for [`COCORecall`](/api/keras_cv/metrics/coco_recall/) and
+[`COCOMeanAveragePrecision`](/api/keras_cv/metrics/coco_mean_average_precision/).
 
-The COCORecall constructor supports the following parameters
-
-| Name            | Usage                                                      |
-| --------------- | ---------------------------------------------------------- |
-| iou\_thresholds | iou\_thresholds expects an iterable. This value is used as |
-:                 : a cutoff to determine the minimum intersection of unions   :
-:                 : required for a classification sample to be considered a    :
-:                 : true positive. If an iterable is passed, the result is the :
-:                 : average across IoU values passed in the                    :
-:                 : iterable.<br>Defaults to `range(0.5, 0.95, incr=0.05)`     :
-| area\_range     | area\_range specifies a range over which to evaluate the   |
-:                 : metric. Only ground truth objects within the area\_range   :
-:                 : are considered in the scoring.<br>Defaults to\: `\[0,      :
-:                 : 1e5\*\*2\]`                                                :
-| max\_detections | max\_detections is a value specifying the max number of    |
-:                 : detections a model is allowed to make.<br>Defaults to\:    :
-:                 : `100`                                                      :
-| class\_ids      | When class\_ids is not None, the metric will only consider |
-:                 : boxes of the matching class label. This is useful when a   :
-:                 : specific class is considered high priority. An example of  :
-:                 : this would be providing the human and animal class indices :
-:                 : in the case of self driving cars.<br>To evaluate all       :
-:                 : categories, users will pass `range(0, num\_classes)`.      :
-
-### COCOMeanAveragePrecision
-
-The COCOMeanAveragePrecision constructor supports the following parameters
-
-| Name               | Usage                                                   |
-| ------------------ | ------------------------------------------------------- |
-| \*\*kwargs         | Passed to COCOBase.super()                              |
-| recall\_thresholds | recall\_thresholds is a list containing the             |
-:                    : recall\_thresholds over which to consider in the        :
-:                    : computation of MeanAveragePrecision.                    :
-| iou\_thresholds    | iou\_thresholds expects an iterable. This value is used |
-:                    : as a cutoff to determine the minimum intersection of    :
-:                    : unions required for a classification sample to be       :
-:                    : considered a true positive. If an iterable is passed,   :
-:                    : the result is the average across IoU values passed in   :
-:                    : the iterable.<br>Defaults to `range(0.5, 0.95,          :
-:                    : incr=0.05)`                                             :
-| area\_range        | area\_range specifies a range over which to evaluate    |
-:                    : the metric. Only ground truth objects within the        :
-:                    : area\_range are considered in the                       :
-:                    : scoring.<br><br>Defaults to\: `\[0, 1e5\*\*2\]`         :
-| max\_detections    | max\_detections is a value specifying the max number of |
-:                    : detections a model is allowed to make.<br><br>Defaults  :
-:                    : to\: `100`                                              :
-| class\_ids         | When class\_ids is not None, the metric will only       |
-:                    : consider boxes of the matching class label. This is     :
-:                    : useful when a specific class is considered high         :
-:                    : priority. An example of this would be providing the     :
-:                    : human and animal class indices in the case of self      :
-:                    : driving cars.<br>To evaluate all categories, users will :
-:                    : pass `range(0, num\_classes)`.                          :
 
 ---
 ## Conclusion & next steps

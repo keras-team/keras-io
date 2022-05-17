@@ -6,7 +6,7 @@
 **Description:** Use BaseImageAugmentationLayer to implement custom data augmentations.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/writing_custom_image_augmentations_with_baseimageaugmentationlayer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/writing_custom_image_augmentations_with_baseimageaugmentationlayer.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/custom_image_augmentations.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/custom_image_augmentations.py)
 
 
 
@@ -36,23 +36,6 @@ import matplotlib.pyplot as plt
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-05-16 19:58:19.681550: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base has been moved to tensorflow.python.trackable.base. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.checkpoint_management has been moved to tensorflow.python.checkpoint.checkpoint_management. The old module will be deleted in version 2.9.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.resource has been moved to tensorflow.python.trackable.resource. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.util has been moved to tensorflow.python.checkpoint.checkpoint. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base_delegate has been moved to tensorflow.python.trackable.base_delegate. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.graph_view has been moved to tensorflow.python.checkpoint.graph_view. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.python_state has been moved to tensorflow.python.trackable.python_state. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.functional_saver has been moved to tensorflow.python.checkpoint.functional_saver. The old module will be deleted in version 2.11.
-WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.checkpoint_options has been moved to tensorflow.python.checkpoint.checkpoint_options. The old module will be deleted in version 2.11.
-
-```
-</div>
 First, let's implement some helper functions to visualize intermediate results
 
 
@@ -138,7 +121,7 @@ imshow(elephants)
 
 
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_9_0.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_9_0.png)
     
 
 
@@ -151,15 +134,8 @@ augmented = layer(elephants)
 imshow(augmented.numpy())
 ```
 
-<div class="k-default-codeblock">
-```
-2022-05-16 19:58:23.487212: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-```
-</div>
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_11_1.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_11_1.png)
     
 
 
@@ -174,7 +150,7 @@ imshow(augmented.numpy()[0])
 
 
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_13_0.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_13_0.png)
     
 
 
@@ -231,7 +207,7 @@ gallery_show(augmented.numpy())
 
 
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_17_0.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_17_0.png)
     
 
 
@@ -253,7 +229,7 @@ gallery_show(augmented.numpy())
 
 
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_19_0.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_19_0.png)
     
 
 
@@ -396,7 +372,7 @@ min and max after augmentation: 0.0 26.488235
 ```
 </div>
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_27_2.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_27_2.png)
     
 
 
@@ -485,7 +461,7 @@ min and max after augmentation: 0.0 1.0
 ```
 </div>
     
-![png](../guides/img/writing_custom_image_augmentations_with_baseimageaugmentationlayer/writing_custom_image_augmentations_with_baseimageaugmentationlayer_29_1.png)
+![png](/img/guides/custom_image_augmentations/custom_image_augmentations_29_1.png)
     
 
 
