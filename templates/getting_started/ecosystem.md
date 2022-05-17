@@ -24,6 +24,23 @@ such as [`ImageClassifier`](https://autokeras.com/tutorial/image_classification/
 [`TextClassifier`](https://autokeras.com/tutorial/text_classification/) to solve machine learning problems in a few lines,
 as well as [flexible building blocks](https://autokeras.com/tutorial/customized/) to perform architecture search.
 
+---
+
+## KerasCV
+
+[KerasCV Documentation](/keras_cv/) - [KerasCV GitHub repository](https://github.com/keras-team/keras-cv)
+
+KerasCV is a repository of modular building blocks (layers, metrics, losses, data-augmentation) that applied computer vision engineers can leverage to quickly assemble production-grade, state-of-the-art training and inference pipelines for common use cases such as image classification, object detection, image segmentation, image data augmentation, etc.
+
+KerasCV can be understood as a horizontal extension of the Keras API: the components are new first-party Keras objects (layers, metrics, etc) that are too specialized to be added to core Keras, but that receive the same level of polish and backwards compatibility guarantees as the rest of the Keras API and that are maintained by the Keras team itself (unlike TFAddons).
+
+---
+
+## TensorFlow Cloud
+
+Managed by the Keras team at Google, [TensorFlow Cloud](https://github.com/tensorflow/cloud) is a set of utilities to help you run large-scale
+Keras training jobs on GCP with very little configuration effort. Running your experiments on 8 or more GPUs in the cloud
+should be as easy as calling `model.fit()`.
 
 ---
 
@@ -59,6 +76,3 @@ TFX has [native support for Keras models](https://www.tensorflow.org/tfx/guide/k
 
 
 ---
-
-
-

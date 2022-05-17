@@ -1,3 +1,23 @@
+CV_GUIDES_MASTER = {
+    'path': 'keras_cv/',
+    'title': 'KerasCV: Computer Vision Extensions for Keras',
+    'toc': True,
+    'children': [
+        {
+            'path': 'cut_mix_mix_up_and_rand_augment',
+            'title': 'CutMix, MixUp, and RandAugment image augmentation with KerasCV'
+        },
+        {
+            'path': 'custom_image_augmentations',
+            'title': 'Custom Image Augmentations with BaseImageAugmentationLayer'
+        },
+        {
+            'path': 'keras_cv_coco_metrics',
+            'title': 'Using KerasCV COCO Metrics'
+        }
+    ]
+}
+
 KT_GUIDES_MASTER = {
     'path': 'keras_tuner/',
     'title': 'Hyperparameter Tuning',
@@ -100,7 +120,7 @@ GUIDES_MASTER = {
         #     'title': 'Hyperparameter optimization',
         # },
         KT_GUIDES_MASTER,
-
+        CV_GUIDES_MASTER
         # TODO: mixed precision
     ]
 }
