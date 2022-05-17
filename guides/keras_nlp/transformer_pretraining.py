@@ -7,14 +7,15 @@ Description: Use KerasNLP to train a transformer model from scratch.
 """
 
 """
-KerasNLP makes it easy to build state-of-the-art text processing models. In this guide,
-we will show how KerasNLP components simplify pre-training and fine-tuneing a transformer
-model from scratch.
+KerasNLP aims to make it easy to build state-of-the-art text processing models. In this
+guide, we will show how library components simplify pre-training and fine-tuneing a
+transformer model from scratch.
 
 This guide is broken into three parts:
- 1. *Setup*, task definition, and establishing a baseline.
- 2. *Pre-training* a transformer model.
- 3. *Fine-tuning* the transformer model on our classification task.
+
+1. *Setup*, task definition, and establishing a baseline.
+2. *Pre-training* a transformer model.
+3. *Fine-tuning* the transformer model on our classification task.
 """
 
 """
@@ -28,6 +29,12 @@ running most of our computations with 16 bit (instead of 32 bit) floating point 
 Training a transformer can take a while, so it is important to pull out all the stops for
 faster training!
 """
+
+"""shell
+pip install -q keras-nlp
+"""
+
+import os
 
 import keras_nlp
 import tensorflow as tf
@@ -55,14 +62,13 @@ keras.utils.get_file(
     origin="https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-raw-v1.zip",
     extract=True,
 )
-wiki_dir = "~/.keras/datasets/wikitext-103-raw/"
+wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-103-raw/")
 
 # Download finetuning data.
 keras.utils.get_file(
-    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
-    extract=True,
+    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip", extract=True,
 )
-sst_dir = "~/.keras/datasets/SST-2/"
+sst_dir = os.path.expanduser("~/.keras/datasets/SST-2/")
 
 # Download vocabulary data.
 vocab_file = keras.utils.get_file(
@@ -81,17 +87,17 @@ MASK_RATE = 0.2
 PREDICTIONS_PER_SEQ = 25
 
 # Model params.
-NUM_LAYERS = 4
-MODEL_DIM = 256
-INTERMEDIATE_DIM = 1024
-NUM_HEADS = 4
+NUM_LAYERS = 3
+MODEL_DIM = 128
+INTERMEDIATE_DIM = 512
+NUM_HEADS = 2
 DROPOUT = 0.1
 NORM_EPSILON = 1e-5
 
 # Training params.
-PRETRAINING_LEARNING_RATE = 2e-4
+PRETRAINING_LEARNING_RATE = 5e-4
 PRETRAINING_EPOCHS = 10
-FINETUNING_LEARNING_RATE = 2e-5
+FINETUNING_LEARNING_RATE = 7e-5
 FINETUNING_EPOCHS = 3
 
 """
@@ -122,7 +128,7 @@ wiki_val_ds = (
 )
 
 # Take a peak at the sst-2 dataset.
-print(list(sst_train_ds.unbatch().take(4).as_numpy_iterator()))
+print(sst_train_ds.unbatch().batch(4).take(1).get_single_element())
 
 """
 You can see that our `SST-2` dataset contains relatively short snippets of movie review
@@ -136,8 +142,8 @@ positive sentiment, and a label of 0 negative sentiment.
 As a first step, we will establish a baseline of good performance. We don't actually need
 KerasNLP for this, we can just use core Keras layers.
 
-We will build a simple bag-of-words model, where we learn a positive or negative weight
-for each word in our input. A sample's score is simply the sum of the weights of all
+We will train a simple bag-of-words model, where we learn a positive or negative weight
+for each word in our vocabulary. A sample's score is simply the sum of the weights of all
 words that are present in the sample.
 """
 
@@ -162,16 +168,14 @@ A bag-of-words approach can be a fast and suprisingly powerful, especially when 
 examples contain a large number of words. With shorter sequences, it can hit a
 performance ceiling.
 
-To do better, we would like to build a model that can evaluate words *in context*. It's
-more useful to see the phrase "not my cup of tea" in an input, than to be told a sample
-contains the words "cup" and "tea". Instead of evaluating each word in a
-void, we need to use the information contained in the *entire ordered sequence* of our
-input.
+To do better, we would like to build a model that can evaluate words *in context*. Instead
+of evaluating each word in a void, we need to use the information contained in the
+*entire ordered sequence* of our input.
 
 This runs us into a problem. `SST-2` is very small dataset, and there's simply not enough
 example text to attempt to build a larger, more parameterized model that can learn on a
-sequence. We would quickly start to memorize our training set, without any increase in
-our ability to generalize to unseen examples.
+sequence. We would quickly start to overfit and memorize our training set, without any
+increase in our ability to generalize to unseen examples.
 
 Enter **pre-training**, which will allow us to learn on a larger corpus, and transfer our
 knowledge to the `SST-2` task. And enter **KerasNLP**, which will allow us to pre-train a
@@ -181,10 +185,10 @@ particularly powerful model, the transformer, with ease.
 """
 ## Pre-training
 
-To beat our baseline, we need to leverage the `WikiText103` dataset, an unlabeled
+To beat our baseline, we will leverage the `WikiText103` dataset, an unlabeled
 collection of wikipedia articles that is much bigger than than `SST-2`.
 
-We are going to train a *transformer* model, a highly expressive model which will learn
+We are going to train a *transformer*, a highly expressive model which will learn
 to embed each word in our input as a low dimentional vector. Our wikipedia dataset has no
 labels, so we will use an unsupervised training objective called the *Masked Language
 Modeling* (MLM) ojective.
@@ -192,26 +196,23 @@ Modeling* (MLM) ojective.
 Essentially, we will be playing a big game of "guess the missing word". For each input
 sample we will obscure 20% of our input data, and train our model to predict the parts we
 covered up.
-
-Note that we aren't following any particular transformer architecture here, but you can
-think of our approach as a simplified
-[BERT](https://en.wikipedia.org/wiki/BERT_(language_model)) model.
 """
 
 """
 ### Preprocess data for the MLM task
 
 Our text preprocessing for the MLM task will occur in two stages.
- - First, we tokenize input text into integer sequences of token ids.
- - Second, we mask certain positions in our input to predict on.
 
-To tokenize, we can use a `keras_nlp.tokenizer.Tokenizer`--the KerasNLP building block
+1. Tokenize input text into integer sequences of token ids.
+2. Mask certain positions in our input to predict on.
+
+To tokenize, we can use a `keras_nlp.tokenizer.Tokenizer`—the KerasNLP building block
 for transforming text into sequences of integer token ids.
 
 In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
 *sub-word* tokenization. Sub-word tokenization is popular when training models on large
-text corpora. It offers a good trade off--you don't need a massive vocabulary to encode
-every word in your corpus, but you can still encode common words in their entirety.
+text corpora. Essentially, it allows our model to learn from uncommon words, while not
+requireing a massive vocabulary of every word in our training set.
 
 The second thing we need to do is mask our input for the MLM task. To do this, we can use
 `keras_nlp.layers.MLMMaskGenerator`, which will randomly select a set of tokens in each
@@ -219,8 +220,8 @@ input and mask them out.
 
 The tokenizer and the masking layer can both be used inside a call to
 [tf.data.Dataset.map](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#map).
-This will allow us to efficiently pre-compute each batch on the CPU, while our GPU or TPU
-works on training with the batch that came before. And because our masking layer will
+We can use `tf.data` to efficiently pre-compute each batch on the CPU, while our GPU or TPU
+works on training with the batch that came before. Because our masking layer will
 choose new words to mask each time, each epoch over our dataset will give us a totally
 new set of labels to train on.
 """
@@ -228,8 +229,7 @@ new set of labels to train on.
 # Setting sequence_length will trim or pad the token outputs to shape
 # (batch_size, SEQ_LENGTH).
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab_file,
-    sequence_length=SEQ_LENGTH,
+    vocabulary=vocab_file, sequence_length=SEQ_LENGTH,
 )
 # Setting mask_selection_length will trim or pad the mask outputs to shape
 # (batch_size, PREDICTIONS_PER_SEQ).
@@ -255,7 +255,7 @@ def preprocess(inputs):
     return features, labels, weights
 
 
-# We use prefetch() to pre-compute preprocessed batches on the fly on our CPU.
+# We use prefetch() to pre-compute preprocessed batches on the fly on the CPU.
 pretrain_ds = wiki_train_ds.map(
     preprocess, num_parallel_calls=tf.data.AUTOTUNE
 ).prefetch(tf.data.AUTOTUNE)
@@ -268,12 +268,13 @@ pretrain_val_ds = wiki_val_ds.map(
 print(pretrain_val_ds.take(1).get_single_element())
 
 """
-The above block sorts our dataset into a (features, labels, weights) tuple, which can be
-passed directly to `keras.Model.fit()`.
+The above block sorts our dataset into a `(features, labels, weights)` tuple, which can be
+passed directly to `keras.Model.fit`.
 
 We have two features:
- - `"tokens"`, where some tokens have been replaced with our mask token id.
- - `"mask_positions"`, which keeps track of which tokens we masked out.
+
+1. `"tokens"`, where some tokens have been replaced with our mask token id.
+2. `"mask_positions"`, which keeps track of which tokens we masked out.
 
 Our labels are simply the ids we masked out.
 
@@ -288,7 +289,7 @@ zero weight.
 KerasNLP provides all the building blocks to quickly build a transformer encoder.
 
 We use `keras_nlp.layers.TokenAndPositionEmbedding` to first embed our input token ids.
-This layer simultaneously learns two embeddings--one for words in a sentence and another
+This layer simultaneously learns two embeddings—one for words in a sentence and another
 for integer positions in a sentence. The output embedding is simply the sum of the two.
 
 Then we can add a series of `keras_nlp.layers.TransformerEncoder` layers. These are the
@@ -331,7 +332,7 @@ encoder_model.summary()
 
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
-rig up the encoder to train on the MLM task; to do that we attach a
+set up the encoder to train on the MLM task; to do that we attach a
 `keras_nlp.layers.MLMHead`.
 
 This layer will take as one input the token encodings, and as another the positions we
@@ -356,8 +357,7 @@ encoded_tokens = encoder_model(inputs["tokens"])
 # We use the input token embedding to project from our encoded vectors to
 # vocabulary logits, which has been shown to improve training efficiency.
 outputs = keras_nlp.layers.MLMHead(
-    embedding_weights=embedding_layer.token_embedding.embeddings,
-    activation="softmax",
+    embedding_weights=embedding_layer.token_embedding.embeddings, activation="softmax",
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
 
 # Define and compile our pretraining model.
@@ -371,9 +371,7 @@ pretraining_model.compile(
 
 # Pretrain the model on our wiki text dataset.
 pretraining_model.fit(
-    pretrain_ds,
-    validation_data=pretrain_val_ds,
-    epochs=PRETRAINING_EPOCHS,
+    pretrain_ds, validation_data=pretrain_val_ds, epochs=PRETRAINING_EPOCHS,
 )
 
 # Save this base model for further finetuning.
@@ -419,7 +417,7 @@ the encoded tokens together, and use a single dense layer to make a prediction.
 """
 
 # Reload the encoder model from disk so we can restart fine-tuning from scratch.
-encoder_model = keras.models.load_model("encoder_model")
+encoder_model = keras.models.load_model("encoder_model", compile=False)
 
 # Take as input the tokenized input.
 inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
@@ -441,13 +439,11 @@ finetuning_model.compile(
 
 # Finetune the model for the SST-2 task.
 finetuning_model.fit(
-    finetune_ds,
-    validation_data=finetune_val_ds,
-    epochs=FINETUNING_EPOCHS,
+    finetune_ds, validation_data=finetune_val_ds, epochs=FINETUNING_EPOCHS,
 )
 
 """
-Pre-training was enough to boost our performance to 85%, and this is hardly the ceiling
+Pre-training was enough to boost our performance to 84%, and this is hardly the ceiling
 for transformer models. You may have noticed during pretraining that our validation
 performance was still steadily increasing. Our model is still significantly undertrained.
 Training for more epochs, training a large transformer, and training on more unlabeled
@@ -471,7 +467,7 @@ final_model = keras.Model(inputs, outputs)
 final_model.save("final_model")
 
 # This model can predict directly on raw text.
-restored_model = keras.models.load_model("final_model")
+restored_model = keras.models.load_model("final_model", compile=False)
 inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
 print(restored_model(inference_data))
 
