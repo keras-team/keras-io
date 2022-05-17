@@ -44,7 +44,7 @@ input to the KerasCV COCO metrics, or padding unused bounding boxes with `-1`.
 
 Utility functions to manipulate bounding boxes, transform between formats, and
 pad bounding box Tensors with `-1s` are available at
-[`keras_cv.utils.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/utils/bounding_box.py).
+[`keras_cv.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box).
 
 ---
 ## Independent metric use
@@ -158,7 +158,7 @@ model.evaluate(y_pred, y_true, return_dict=True)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 1s 615ms/step - loss: 0.0000e+00 - coco_recall: 1.0000
+1/1 [==============================] - 1s 822ms/step - loss: 0.0000e+00 - coco_recall: 1.0000
 
 {'loss': 0.0, 'coco_recall': 1.0}
 

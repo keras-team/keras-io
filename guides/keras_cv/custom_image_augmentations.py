@@ -25,11 +25,11 @@ import tensorflow as tf
 from tensorflow import keras
 import keras_cv
 from tensorflow.keras import layers
-from keras_cv.utils import preprocessing as preprocessing_utils
+from keras_cv import utils
 from keras_cv.layers import BaseImageAugmentationLayer
 import matplotlib.pyplot as plt
 
-
+tf.autograph.set_verbosity(0)
 """
 First, let's implement some helper functions to visualize intermediate results
 """
@@ -155,7 +155,7 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
 
     def __init__(self, factor, **kwargs):
         super().__init__(**kwargs)
-        self.factor = preprocessing_utils.parse_factor(factor)
+        self.factor = utils.parse_factor(factor)
 
     def augment_image(self, image, transformation=None):
         [*others, blue] = tf.unstack(image, axis=-1)
@@ -231,7 +231,7 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
 
     def __init__(self, factor, **kwargs):
         super().__init__(**kwargs)
-        self.factor = preprocessing_utils.parse_factor(factor)
+        self.factor = utils.parse_factor(factor)
 
     def get_random_transformation(self, **kwargs):
         # kwargs holds {"images": image, "labels": label, etc...}
@@ -339,22 +339,18 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
     def __init__(self, value_range, factor, **kwargs):
         super().__init__(**kwargs)
         self.value_range = value_range
-        self.factor = preprocessing_utils.parse_factor(factor)
+        self.factor = utils.parse_factor(factor)
 
     def get_random_transformation(self, **kwargs):
         # kwargs holds {"images": image, "labels": label, etc...}
         return self.factor() * 255
 
     def augment_image(self, image, transformation=None, **kwargs):
-        image = preprocessing_utils.transform_value_range(
-            image, self.value_range, (0, 255)
-        )
+        image = utils.transform_value_range(image, self.value_range, (0, 255))
         [*others, blue] = tf.unstack(image, axis=-1)
         blue = tf.clip_by_value(blue + transformation, 0.0, 255.0)
         result = tf.stack([*others, blue], axis=-1)
-        result = preprocessing_utils.transform_value_range(
-            result, (0, 255), self.value_range
-        )
+        result = utils.transform_value_range(result, (0, 255), self.value_range)
         return result
 
     def augment_label(self, label, transformation=None, **kwargs):

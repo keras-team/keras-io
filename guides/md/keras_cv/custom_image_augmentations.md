@@ -30,10 +30,11 @@ import tensorflow as tf
 from tensorflow import keras
 import keras_cv
 from tensorflow.keras import layers
-from keras_cv.utils import preprocessing as preprocessing_utils
+from keras_cv import utils
 from keras_cv.layers import BaseImageAugmentationLayer
 import matplotlib.pyplot as plt
 
+tf.autograph.set_verbosity(0)
 ```
 
 First, let's implement some helper functions to visualize intermediate results
@@ -120,9 +121,9 @@ imshow(elephants)
 ```
 
 
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_9_0.png)
-    
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_9_0.png)
+
 
 
 Next, let's augment it and visualize the result:
@@ -134,9 +135,10 @@ augmented = layer(elephants)
 imshow(augmented.numpy())
 ```
 
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_11_1.png)
-    
+
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_11_0.png)
+
 
 
 Looks great!  We can also call our layer on batched inputs:
@@ -149,9 +151,9 @@ imshow(augmented.numpy()[0])
 ```
 
 
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_13_0.png)
-    
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_13_0.png)
+
 
 
 ---
@@ -184,7 +186,7 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
 
     def __init__(self, factor, **kwargs):
         super().__init__(**kwargs)
-        self.factor = preprocessing_utils.parse_factor(factor)
+        self.factor = utils.parse_factor(factor)
 
     def augment_image(self, image, transformation=None):
         [*others, blue] = tf.unstack(image, axis=-1)
@@ -206,9 +208,9 @@ gallery_show(augmented.numpy())
 ```
 
 
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_17_0.png)
-    
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_17_0.png)
+
 
 
 Each image is augmented differently with a random factor sampled from the range
@@ -228,9 +230,9 @@ gallery_show(augmented.numpy())
 ```
 
 
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_19_0.png)
-    
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_19_0.png)
+
 
 
 As you can see, the augmentations now are drawn from a normal distributions.
@@ -275,7 +277,7 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
 
     def __init__(self, factor, **kwargs):
         super().__init__(**kwargs)
-        self.factor = preprocessing_utils.parse_factor(factor)
+        self.factor = utils.parse_factor(factor)
 
     def get_random_transformation(self, **kwargs):
         # kwargs holds {"images": image, "labels": label, etc...}
@@ -371,9 +373,9 @@ min and max after augmentation: 0.0 26.488235
 
 ```
 </div>
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_27_2.png)
-    
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_27_2.png)
+
 
 
 Note that this is an incredibly weak augmentation!
@@ -408,22 +410,18 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
     def __init__(self, value_range, factor, **kwargs):
         super().__init__(**kwargs)
         self.value_range = value_range
-        self.factor = preprocessing_utils.parse_factor(factor)
+        self.factor = utils.parse_factor(factor)
 
     def get_random_transformation(self, **kwargs):
         # kwargs holds {"images": image, "labels": label, etc...}
         return self.factor() * 255
 
     def augment_image(self, image, transformation=None, **kwargs):
-        image = preprocessing_utils.transform_value_range(
-            image, self.value_range, (0, 255)
-        )
+        image = utils.transform_value_range(image, self.value_range, (0, 255))
         [*others, blue] = tf.unstack(image, axis=-1)
         blue = tf.clip_by_value(blue + transformation, 0.0, 255.0)
         result = tf.stack([*others, blue], axis=-1)
-        result = preprocessing_utils.transform_value_range(
-            result, (0, 255), self.value_range
-        )
+        result = utils.transform_value_range(result, (0, 255), self.value_range)
         return result
 
     def augment_label(self, label, transformation=None, **kwargs):
@@ -460,9 +458,9 @@ min and max after augmentation: 0.0 1.0
 
 ```
 </div>
-    
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_29_1.png)
-    
+
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_29_1.png)
+
 
 
 Now our elephants are only slgihtly blue tinted.  This is the expected behavior when
