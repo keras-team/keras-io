@@ -6,7 +6,7 @@
 **Description:** Using Tensorflow Decision Forests for text classification.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/Tweet-classification-using-TFDF.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/Tweet-classification-using-TFDF.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/tweet-classification-using-tfdf.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/tweet-classification-using-tfdf.py)
 
 
 
@@ -393,11 +393,11 @@ plot_curve(logs_2)
 ```
 
 
-![png](/img/examples/nlp/Tweet-classification-using-TFDF/Tweet-classification-using-TFDF_41_0.png)
+![png](/img/examples/nlp/tweet-classification-using-tfdf/tweet-classification-using-tfdf_41_0.png)
 
 
 
-![png](/img/examples/nlp/Tweet-classification-using-TFDF/Tweet-classification-using-TFDF_41_1.png)
+![png](/img/examples/nlp/tweet-classification-using-tfdf/tweet-classification-using-tfdf_41_1.png)
 
 
 ---
