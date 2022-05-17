@@ -1,6 +1,6 @@
 CV_GUIDES_MASTER = {
     'path': 'keras_cv/',
-    'title': 'KerasCV: Computer Vision Extensions for Keras',
+    'title': 'KerasCV',
     'toc': True,
     'children': [
         {
@@ -12,7 +12,7 @@ CV_GUIDES_MASTER = {
             'title': 'Custom Image Augmentations with BaseImageAugmentationLayer'
         },
         {
-            'path': 'keras_cv_coco_metrics',
+            'path': 'coco_metrics',
             'title': 'Using KerasCV COCO Metrics'
         }
     ]
