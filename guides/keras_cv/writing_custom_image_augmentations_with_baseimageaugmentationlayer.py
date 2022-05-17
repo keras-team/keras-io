@@ -120,7 +120,7 @@ imshow(augmented.numpy())
 
 """
 Looks great!  We can also call our layer on batched inputs:
-    """
+"""
 
 layer = RandomBlueTint()
 augmented = layer(tf.expand_dims(elephants, axis=0))
