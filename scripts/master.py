@@ -503,5 +503,9 @@ MASTER = {
             'path': 'keras_tuner/',
             'title': 'KerasTuner',
         },
+        {
+            'path': 'keras_cv/',
+            'title': 'KerasCV',
+        },
     ]
 }
