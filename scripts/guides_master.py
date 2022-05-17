@@ -10,7 +10,7 @@ CV_GUIDES_MASTER = {
         {
             'path': 'custom_image_augmentations',
             'title': 'Custom Image Augmentations with BaseImageAugmentationLayer'
-        }
+        },
         {
             'path': 'keras_cv_coco_metrics',
             'title': 'Using KerasCV COCO Metrics'

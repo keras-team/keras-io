@@ -90,7 +90,8 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
         return tf.stack([*others, blue], axis=-1)
 
 
-"""Our layer overrides `BaseImageAugmentationLayer.augment_image()`.  This method is
+"""
+Our layer overrides `BaseImageAugmentationLayer.augment_image()`.  This method is
 used to augment images given to the layer.  By default, using
 `BaseImageAugmentationLayer` gives you a few nice features for free:
 
@@ -110,19 +111,24 @@ elephants = tf.keras.utils.load_img(elephants, target_size=SIZE)
 elephants = tf.keras.utils.img_to_array(elephants)
 imshow(elephants)
 
-"""Next, let's augment it and visualize the result:"""
+"""
+Next, let's augment it and visualize the result:
+"""
 
 layer = RandomBlueTint()
 augmented = layer(elephants)
 imshow(augmented.numpy())
 
-"""Looks great!  We can also call our layer on batched inputs:"""
+"""
+Looks great!  We can also call our layer on batched inputs:
+    """
 
 layer = RandomBlueTint()
 augmented = layer(tf.expand_dims(elephants, axis=0))
 imshow(augmented.numpy()[0])
 
-"""## Adding Random Behavior with the `FactorSampler` API.
+"""
+## Adding Random Behavior with the `FactorSampler` API.
 
 Most of the time, an image augmentation technique should not do the same thing on every
 invocation of the layer's `__call__` method.
@@ -159,7 +165,8 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
         return tf.stack([*others, blue], axis=-1)
 
 
-"""Now, we can configure the random behavior of ou `RandomBlueTint` layer.
+"""
+Now, we can configure the random behavior of ou `RandomBlueTint` layer.
 We can give it a range of values to sample from:
 
 """
@@ -169,7 +176,8 @@ layer = RandomBlueTint(factor=0.5)
 augmented = layer(many_elephants)
 gallery_show(augmented.numpy())
 
-"""Each image is augmented differently with a random factor sampled from the range
+"""
+Each image is augmented differently with a random factor sampled from the range
 `(0, 0.5)`.
 
 We can also configure the layer to draw from a normal distribution:
@@ -183,7 +191,8 @@ layer = RandomBlueTint(factor=factor)
 augmented = layer(many_elephants)
 gallery_show(augmented.numpy())
 
-"""As you can see, the augmentations now are drawn from a normal distributions.
+"""
+As you can see, the augmentations now are drawn from a normal distributions.
 There are various types of `FactorSamplers` including `UniformFactorSampler`,
 `NormalFactorSampler`, and `ConstantFactorSampler`.  You can also implement you own.
 
@@ -249,7 +258,8 @@ class RandomBlueTint(keras_cv.layers.BaseImageAugmentationLayer):
         return bounding_boxes
 
 
-"""To make use of these new methods, you will need to feed your inputs in with a
+"""
+To make use of these new methods, you will need to feed your inputs in with a
 dictionary maintaining a mapping from images to targets.
 
 As of now, KerasCV supports the following label types:
@@ -264,13 +274,16 @@ your inputs as follows:
 labels = tf.constant([[1, 0]])
 inputs = {"images": elephants, "labels": labels}
 
-"""Now if we call our layer on the inputs:"""
+"""
+Now if we call our layer on the inputs:
+"""
 
 layer = RandomBlueTint(factor=(0.6, 0.6))
 augmented = layer(inputs)
 print(augmented["labels"])
 
-"""both the inputs and labels are augmented.
+"""
+Both the inputs and labels are augmented.
 Note how when `transformation` is > 100 the label is modified to contain 2.0 as
 specified in the layer above.
 

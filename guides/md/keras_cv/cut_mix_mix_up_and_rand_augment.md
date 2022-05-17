@@ -1,12 +1,16 @@
-"""
-Title: CutMix, MixUp, and RandAugment image augmentation with KerasCV
-Author: [lukewood](https://lukewood.xyz)
-Date created: 2022/04/08
-Last modified: 2022/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
-"""
+# CutMix, MixUp, and RandAugment image augmentation with KerasCV
 
-"""
+**Author:** [lukewood](https://lukewood.xyz)<br>
+**Date created:** 2022/04/08<br>
+**Last modified:** 2022/04/08<br>
+**Description:** Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/cut_mix_mix_up_and_rand_augment.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/cut_mix_mix_up_and_rand_augment.py)
+
+
+
+---
 ## Overview
 
 KerasCV makes it easy to assemble state-of-the-art, industry-grade data augmentation
@@ -19,9 +23,8 @@ layers are used in nearly all state-of-the-art image classification pipelines.
 This guide will show you how to compose these layers into your own data
 augmentation pipeline for image classification tasks. This guide will also walk you
 through the process of customizing a KerasCV data augmentation pipeline.
-"""
 
-"""
+---
 ## Imports & setup
 
 This tutorial requires you to have KerasCV installed:
@@ -31,8 +34,9 @@ pip install keras-cv
 ```
 
 We begin by importing all required packages:
-"""
 
+
+```python
 import keras_cv
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -41,8 +45,26 @@ from tensorflow import keras
 from tensorflow.keras import applications
 from tensorflow.keras import losses
 from tensorflow.keras import optimizers
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-05-16 19:14:44.966202: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base has been moved to tensorflow.python.trackable.base. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.checkpoint_management has been moved to tensorflow.python.checkpoint.checkpoint_management. The old module will be deleted in version 2.9.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.resource has been moved to tensorflow.python.trackable.resource. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.util has been moved to tensorflow.python.checkpoint.checkpoint. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.base_delegate has been moved to tensorflow.python.trackable.base_delegate. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.graph_view has been moved to tensorflow.python.checkpoint.graph_view. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.tracking.python_state has been moved to tensorflow.python.trackable.python_state. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.functional_saver has been moved to tensorflow.python.checkpoint.functional_saver. The old module will be deleted in version 2.11.
+WARNING:tensorflow:Please fix your imports. Module tensorflow.python.training.saving.checkpoint_options has been moved to tensorflow.python.checkpoint.checkpoint_options. The old module will be deleted in version 2.11.
+
+```
+</div>
+---
 ## Data loading
 
 This guide uses the
@@ -50,22 +72,31 @@ This guide uses the
 for demonstration purposes.
 
 To get started, we first load the dataset:
-"""
 
+
+```python
 BATCH_SIZE = 32
 AUTOTUNE = tf.data.AUTOTUNE
 tfds.disable_progress_bar()
 data, dataset_info = tfds.load("oxford_flowers102", with_info=True, as_supervised=True)
 train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
 val_steps_per_epoch = dataset_info.splits["test"].num_examples // BATCH_SIZE
+```
 
-"""
+<div class="k-default-codeblock">
+```
+2022-05-16 19:14:49.808699: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
+```
+</div>
 Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
 labels. Please note that `keras_cv.layers.CutMix` and `keras_cv.layers.MixUp` expect
 targets to be one-hot encoded. This is because they modify the values of the targets
 in a way that is not possible with a sparse label representation.
-"""
 
+
+```python
 IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
@@ -94,11 +125,12 @@ def load_dataset(split="train"):
 
 
 train_dataset = load_dataset()
+```
 
-"""
 Let's inspect some samples from our dataset:
-"""
 
+
+```python
 
 def visualize_dataset(dataset, title):
     plt.figure(figsize=(6, 6)).suptitle(title, fontsize=18)
@@ -111,16 +143,19 @@ def visualize_dataset(dataset, title):
 
 
 visualize_dataset(train_dataset, title="Before Augmentation")
+```
 
-"""
+
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
+    
+
+
 Great! Now we can move onto the augmentation step.
-"""
 
-"""
+---
 ## RandAugment
-"""
 
-"""
 [RandAugment](https://arxiv.org/abs/1909.13719)
 has been shown to provide improved image
 classification results across numerous datasets.
@@ -143,8 +178,9 @@ parameters in the
 [`RandAugment` API documentation](/api/keras_cv/layers/rand_augment).
 
 Let's use KerasCV's RandAugment implementation.
-"""
 
+
+```python
 rand_augment = keras_cv.layers.RandAugment(
     value_range=(0, 255),
     augmentations_per_image=3,
@@ -160,18 +196,52 @@ def apply_rand_augment(inputs):
 
 
 train_dataset = load_dataset().map(apply_rand_augment, num_parallel_calls=AUTOTUNE)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+```
+</div>
 Finally, let's inspect some of the results:
-"""
 
+
+```python
 visualize_dataset(train_dataset, title="After RandAugment")
+```
 
-"""
+
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
+    
+
+
 Try tweaking the magnitude settings to see a wider variety of results.
-"""
 
-"""
+---
 ## CutMix and MixUp: generate high-quality inter-class examples
 
 
@@ -193,7 +263,9 @@ in an equal 1/3 split.
 
 Note that our `cut_mix_and_mix_up` function is annotated with a `tf.function` to ensure
 optimal performance.
-"""
+
+
+```python
 cut_mix = keras_cv.layers.CutMix()
 mix_up = keras_cv.layers.MixUp()
 
@@ -207,13 +279,18 @@ def cut_mix_and_mix_up(samples):
 train_dataset = load_dataset().map(cut_mix_and_mix_up, num_parallel_calls=AUTOTUNE)
 
 visualize_dataset(train_dataset, title="After CutMix and MixUp")
+```
 
-"""
+
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
+    
+
+
 Great! Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
 pipeline.
-"""
 
-"""
+---
 ## Customizing your augmentation pipeline
 
 Perhaps you want to exclude an augmentation from `RandAugment`, or perhaps you want to
@@ -229,43 +306,46 @@ times. `RandAugment` can be thought of as a specific case of
 In this example, we will create a custom `RandomAugmentationPipeline` by removing
 `RandomRotation` layers from the standard `RandAugment` policy, and substitutex a
 `GridMask` layer in its place.
-"""
 
-"""
 As a first step, let's use the helper method `RandAugment.get_standard_policy()` to
 create a base pipeline.
-"""
 
+
+```python
 layers = keras_cv.layers.RandAugment.get_standard_policy(
     value_range=(0, 255), magnitude=0.75, magnitude_stddev=0.3
 )
+```
 
-"""
 First, let's filter out `RandomRotation` layers
-"""
 
+
+```python
 layers = [
     layer for layer in layers if not isinstance(layer, keras_cv.layers.RandomRotation)
 ]
+```
 
-"""
 Next, let's add `GridMask` to our layers:
-"""
 
+
+```python
 layers = layers + [keras_cv.layers.GridMask()]
+```
 
-"""
 Finally, we can put together our pipeline
-"""
 
+
+```python
 pipeline = keras_cv.layers.RandomAugmentationPipeline(
     layers=layers, augmentations_per_image=3
 )
+```
 
-"""
 Let's check out the results!
-"""
 
+
+```python
 
 def apply_pipeline(inputs):
     inputs["images"] = pipeline(inputs["images"])
@@ -274,21 +354,56 @@ def apply_pipeline(inputs):
 
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+```
+</div>
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_12.png)
+    
+
+
 Awesome! As you can see, no images were randomly rotated. You can customize the
 pipeline however you like:
-"""
 
+
+```python
 pipeline = keras_cv.layers.RandomAugmentationPipeline(
     layers=[keras_cv.layers.GridMask(), keras_cv.layers.Grayscale(output_channels=3)],
     augmentations_per_image=1,
 )
+```
 
-"""
 This pipeline will either apply `GrayScale` or GridMask:
-"""
 
+
+```python
 
 def apply_pipeline(inputs):
     inputs["images"] = pipeline(inputs["images"])
@@ -297,20 +412,25 @@ def apply_pipeline(inputs):
 
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
+```
 
-"""
+
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
+    
+
+
 Looks great! You can use `RandomAugmentationPipeline` however you want.
-"""
 
-"""
+---
 ## Training a CNN
 
 As a final exercise, let's take some of these layers for a spin. In this section, we
 will use `CutMix`, `MixUp`, and `RandAugment` to train a state of the art `ResNet50`
 image classifier on the Oxford flowers dataset.
 
-"""
 
+```python
 
 def preprocess_for_model(inputs):
     images, labels = inputs["images"], inputs["labels"]
@@ -336,12 +456,46 @@ test_dataset = test_dataset.prefetch(AUTOTUNE)
 
 train_dataset = train_dataset
 test_dataset = test_dataset
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting StridedSlice cause Input "input" of op 'StridedSlice' expected to be not loop invariant.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting HistogramFixedWidth cause there is no registered converter for this op.
+
+```
+</div>
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_12.png)
+    
+
+
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
 the loss function. When using `MixUp`, label smoothing is _highly_ recommended.
-"""
 
+
+```python
 input_shape = IMAGE_SIZE + (3,)
 
 
@@ -358,11 +512,12 @@ def get_model():
     )
     return model
 
+```
 
-"""
 Finally we train the model:
-"""
 
+
+```python
 strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
     model = get_model()
@@ -371,8 +526,30 @@ with strategy.scope():
         epochs=1,
         validation_data=test_dataset,
     )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
+2022-05-16 19:15:13.682941: W tensorflow/core/grappler/optimizers/data/auto_shard.cc:547] The `assert_cardinality` transformation is currently not handled by the auto-shard rewrite and will be removed.
+2022-05-16 19:15:18.095416: W tensorflow/core/framework/dataset.cc:769] Input of GeneratorDatasetOp::Dataset will not be optimized because the dataset does not implement the AsGraphDefInternal() method needed to apply optimizations.
+
+32/32 [==============================] - ETA: 0s - loss: 4.8694 - accuracy: 0.0049
+
+2022-05-16 19:18:28.626591: W tensorflow/core/grappler/optimizers/data/auto_shard.cc:547] The `assert_cardinality` transformation is currently not handled by the auto-shard rewrite and will be removed.
+2022-05-16 19:18:28.705751: W tensorflow/core/framework/dataset.cc:769] Input of GeneratorDatasetOp::Dataset will not be optimized because the dataset does not implement the AsGraphDefInternal() method needed to apply optimizations.
+
+32/32 [==============================] - 399s 12s/step - loss: 4.8694 - accuracy: 0.0049 - val_loss: 43.5487 - val_accuracy: 0.0187
+
+```
+</div>
+---
 ## Conclusion & next steps
 
 That's all it takes to assemble state of the art image augmentation pipeliens with
@@ -390,4 +567,3 @@ Currently, between Keras core and KerasCV there are
 Each of these can be used independently, or in a pipeline. Check them out, and if you
 find an augmentation techniques you need is missing please file a
 [GitHub issue on KerasCV](https://github.com/keras-team/keras-cv/issues).
-"""
