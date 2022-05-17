@@ -3,19 +3,19 @@ Title: Pretraining a Transformer from scratch with KerasNLP
 Author: [Matthew Watson](https://github.com/mattdangerw/)
 Date created: 2022/04/18
 Last modified: 2022/04/18
-Description: Use KerasNLP to train a transformer model from scratch.
+Description: Use KerasNLP to train a Transformer model from scratch.
 """
 
 """
 KerasNLP aims to make it easy to build state-of-the-art text processing models. In this
-guide, we will show how library components simplify pre-training and fine-tuneing a
-transformer model from scratch.
+guide, we will show how library components simplify pretraining and fine-tuning a
+Transformer model from scratch.
 
 This guide is broken into three parts:
 
 1. *Setup*, task definition, and establishing a baseline.
-2. *Pre-training* a transformer model.
-3. *Fine-tuning* the transformer model on our classification task.
+2. *Pretraining* a Transformer model.
+3. *Fine-tuning* the Transformer model on our classification task.
 """
 
 """
@@ -24,9 +24,9 @@ This guide is broken into three parts:
 To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
 
 A simple thing we can do right off the bat is to enable
-[mixed percision](https://keras.io/api/mixed_precision/), which will speed up training by
+[mixed precision](https://keras.io/api/mixed_precision/), which will speed up training by
 running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
-Training a transformer can take a while, so it is important to pull out all the stops for
+Training a Transformer can take a while, so it is important to pull out all the stops for
 faster training!
 """
 
@@ -51,7 +51,7 @@ classification dataset and our "end goal". This dataset is often used to benchma
 language models.
 - [WikiText-103](https://paperswithcode.com/dataset/wikitext-103): A medium sized
 collection of featured articles from English wikipedia, which we will use for
-pre-training.
+pretraining.
 
 Finally, we will download a WordPiece vocabulary, to do sub-word tokenization later on in
 this guide.
@@ -177,13 +177,13 @@ example text to attempt to build a larger, more parameterized model that can lea
 sequence. We would quickly start to overfit and memorize our training set, without any
 increase in our ability to generalize to unseen examples.
 
-Enter **pre-training**, which will allow us to learn on a larger corpus, and transfer our
-knowledge to the `SST-2` task. And enter **KerasNLP**, which will allow us to pre-train a
-particularly powerful model, the transformer, with ease.
+Enter **pretraining**, which will allow us to learn on a larger corpus, and transfer our
+knowledge to the `SST-2` task. And enter **KerasNLP**, which will allow us to pretrain a
+particularly powerful model, the Transformer, with ease.
 """
 
 """
-## Pre-training
+## Pretraining
 
 To beat our baseline, we will leverage the `WikiText103` dataset, an unlabeled
 collection of wikipedia articles that is much bigger than than `SST-2`.
@@ -206,7 +206,7 @@ Our text preprocessing for the MLM task will occur in two stages.
 1. Tokenize input text into integer sequences of token ids.
 2. Mask certain positions in our input to predict on.
 
-To tokenize, we can use a `keras_nlp.tokenizer.Tokenizer`—the KerasNLP building block
+To tokenize, we can use a `keras_nlp.tokenizer.Tokenizer` -- the KerasNLP building block
 for transforming text into sequences of integer token ids.
 
 In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
@@ -269,7 +269,7 @@ print(pretrain_val_ds.take(1).get_single_element())
 
 """
 The above block sorts our dataset into a `(features, labels, weights)` tuple, which can be
-passed directly to `keras.Model.fit`.
+passed directly to `keras.Model.fit()`.
 
 We have two features:
 
@@ -284,16 +284,16 @@ zero weight.
 """
 
 """
-### Create the transformer encoder
+### Create the Transformer encoder
 
-KerasNLP provides all the building blocks to quickly build a transformer encoder.
+KerasNLP provides all the building blocks to quickly build a Transformer encoder.
 
 We use `keras_nlp.layers.TokenAndPositionEmbedding` to first embed our input token ids.
-This layer simultaneously learns two embeddings—one for words in a sentence and another
+This layer simultaneously learns two embeddings -- one for words in a sentence and another
 for integer positions in a sentence. The output embedding is simply the sum of the two.
 
 Then we can add a series of `keras_nlp.layers.TransformerEncoder` layers. These are the
-bread and butter of the transformer model, using an attention mechanism to attend to
+bread and butter of the Transformer model, using an attention mechanism to attend to
 different parts of the input sentence, followed by a multi-layer perceptron block.
 
 The output of this model will be a encoded vector per input token id. Unlike the
@@ -328,7 +328,7 @@ encoder_model = keras.Model(inputs, outputs)
 encoder_model.summary()
 
 """
-### Pre-train the transformer
+### Pretrain the Transformer
 
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
@@ -340,8 +340,8 @@ masked out in the original input. It will gather the token encodings we masked, 
 transform them back in predictions over our entire vocabulary.
 
 With that, we are ready to compile and run pretraining. If you are running this in a
-colab, note that this will take about an hour. Training transformer is famously compute
-intesive, so even this relatively small transformer will take some time.
+colab, note that this will take about an hour. Training Transformer is famously compute
+intesive, so even this relatively small Transformer will take some time.
 """
 
 # Create the pretraining model by attaching a masked language model head.
@@ -380,7 +380,7 @@ encoder_model.save("encoder_model")
 """
 ## Fine-tuning
 
-After pre-training, we can now fine-tune our model on the `SST-2` dataset. We can
+After pretraining, we can now fine-tune our model on the `SST-2` dataset. We can
 leverage the ability of the encoder we build to predict on words in context to boost our
 our performance on the downstream task.
 """
@@ -388,7 +388,7 @@ our performance on the downstream task.
 """
 ### Preprocess data for classification
 
-Preprocessing for fine-tuning is much simpler than for our pre-training MLM task. We just
+Preprocessing for fine-tuning is much simpler than for our pretraining MLM task. We just
 tokenize our input sentences and we are ready for training!
 """
 
@@ -409,10 +409,10 @@ finetune_val_ds = sst_val_ds.map(
 print(finetune_val_ds.take(1).get_single_element())
 
 """
-### Fine-tune the transformer
+### Fine-tune the Transformer
 
 To go from our encoded token output to a classification prediction, we need to attach
-another "head" to our transformer model. We can afford to be simple here. We simply pool
+another "head" to our Transformer model. We can afford to be simple here. We simply pool
 the encoded tokens together, and use a single dense layer to make a prediction.
 """
 
@@ -443,10 +443,10 @@ finetuning_model.fit(
 )
 
 """
-Pre-training was enough to boost our performance to 84%, and this is hardly the ceiling
-for transformer models. You may have noticed during pretraining that our validation
+Pretraining was enough to boost our performance to 84%, and this is hardly the ceiling
+for Transformer models. You may have noticed during pretraining that our validation
 performance was still steadily increasing. Our model is still significantly undertrained.
-Training for more epochs, training a large transformer, and training on more unlabeled
+Training for more epochs, training a large Transformer, and training on more unlabeled
 text would all continue to boost performance significantly.
 """
 
@@ -455,7 +455,7 @@ text would all continue to boost performance significantly.
 
 The last thing we can do with our fine-tuned model is saveing including our tokenization
 layer. One of the key advantages of KerasNLP is all preprocessing is done inside the
-[tensorflow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
+[TensorFlow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
 to save and restore a model that can directly run inference on raw text!
 """
 
@@ -473,7 +473,7 @@ print(restored_model(inference_data))
 
 """
 One of the key goals of KerasNLP is to provide a modular approach to NLP model building.
-We have shown one approach to building a transformer here, but KerasNLP supports an ever
+We have shown one approach to building a Transformer here, but KerasNLP supports an ever
 growing array of components for preprocessing text and building models. We hope it makes
 it easier to experiment on solutions to your natural language problems.
 """
