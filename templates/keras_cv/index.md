@@ -5,9 +5,9 @@ KerasCV is a toolbox of modular building blocks (layers, metrics, losses, data a
 ---
 ## Quick links
 
-* [Image Data Augmentation](/guides/keras_cv/cut_mix_mix_up_and_rand_augment/)
+* [Image data augmentation](/guides/keras_cv/cut_mix_mix_up_and_rand_augment/)
 * [Using COCO metrics](/guides/keras_cv/coco_metrics/)
-* [Writing Custom Data Augmentation Layers](/guides/keras_cv/custom_image_augmentations/)
+* [Writing custom data augmentation layers](/guides/keras_cv/custom_image_augmentations/)
 ---
 ## Installation
 
