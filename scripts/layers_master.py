@@ -64,7 +64,7 @@ LAYERS_MASTER = {
                 'tensorflow.keras.regularizers.L1',
                 'tensorflow.keras.regularizers.L2',
                 'tensorflow.keras.regularizers.L1L2',
-                # 'tensorflow.keras.regularizers.OrthogonalRegularizer',
+                'tensorflow.keras.regularizers.OrthogonalRegularizer',
             ]
         },
         {
@@ -409,6 +409,11 @@ LAYERS_MASTER = {
                             'title': 'RandomContrast layer',
                             'generate': ['tensorflow.keras.layers.RandomContrast'],
                         },
+                        {
+                            'path': 'random_brightness',
+                            'title': 'RandomBrightness layer',
+                            'generate': ['tensorflow.keras.layers.RandomBrightness'],
+                        },
                     ]
                 },
             ]
@@ -427,6 +432,11 @@ LAYERS_MASTER = {
                     'path': 'layer_normalization',
                     'title': 'LayerNormalization layer',
                     'generate': ['tensorflow.keras.layers.LayerNormalization']
+                },
+                {
+                    'path': 'unit_normalization',
+                    'title': 'UnitNormalization layer',
+                    'generate': ['tensorflow.keras.layers.UnitNormalization']
                 },
             ]
         },
