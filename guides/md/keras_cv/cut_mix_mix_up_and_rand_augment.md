@@ -122,9 +122,9 @@ visualize_dataset(train_dataset, title="Before Augmentation")
 ```
 
 
-    
+
 ![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
-    
+
 
 
 Great! Now we can move onto the augmentation step.
@@ -182,9 +182,9 @@ visualize_dataset(train_dataset, title="After RandAugment")
 ```
 
 
-    
+
 ![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
-    
+
 
 
 Try tweaking the magnitude settings to see a wider variety of results.
@@ -230,9 +230,9 @@ visualize_dataset(train_dataset, title="After CutMix and MixUp")
 ```
 
 
-    
+
 ![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
-    
+
 
 
 Great! Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
@@ -305,7 +305,7 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 ![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_12.png)
-    
+
 
 
 Awesome! As you can see, no images were randomly rotated. You can customize the
@@ -334,9 +334,9 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 
-    
+
 ![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
-    
+
 
 
 Looks great! You can use `RandomAugmentationPipeline` however you want.
@@ -377,9 +377,9 @@ train_dataset = train_dataset
 test_dataset = test_dataset
 ```
 
-    
+
 ![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_12.png)
-    
+
 
 
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
