@@ -1,6 +1,6 @@
 # KerasCV
 
-These guides cover the [KerasCV](https://github.com/keras-team/keras-cv) library.
+These guides cover the [KerasCV](/keras_cv/) library.
 
 ## Available guides
 

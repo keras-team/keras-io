@@ -14,6 +14,7 @@ experiment with new search algorithms.
 * [Getting started with KerasTuner](/guides/keras_tuner/getting_started/)
 * [KerasTuner developer guides](/guides/keras_tuner/)
 * [KerasTuner API reference](/api/keras_tuner/)
+* [KerasTuner on GitHub](https://github.com/keras-team/keras-tuner)
 
 
 ---
