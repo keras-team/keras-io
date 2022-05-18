@@ -12,3 +12,4 @@ jupyter
 keras-tuner
 pandas
 keras-cv
+keras-nlp

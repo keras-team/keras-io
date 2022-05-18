@@ -9,8 +9,21 @@ It spans a wide range of related initiatives that cover every step of the machin
 
 [KerasTuner Documentation](/keras_tuner/) - [KerasTuner GitHub repository](https://github.com/keras-team/keras-tuner)
 
-
 KerasTuner is an easy-to-use, scalable hyperparameter optimization framework that solves the pain points of hyperparameter search. Easily configure your search space with a define-by-run syntax, then leverage one of the available search algorithms to find the best hyperparameter values for your models. KerasTuner comes with Bayesian Optimization, Hyperband, and Random Search algorithms built-in, and is also designed to be easy for researchers to extend in order to experiment with new search algorithms.
+
+---
+
+## KerasNLP
+
+[KerasNLP Documentation](/keras_nlp/) - [KerasNLP GitHub repository](https://github.com/keras-team/keras-nlp)
+
+KerasNLP is a simple and powerful API for building Natural Language
+Processing (NLP) models. KerasNLP provides modular building blocks following
+standard Keras interfaces (layers, metrics) that allow you to quickly and
+flexibly iterate on your task. Engineers working in applied NLP can leverage the
+library to assemble training and inference pipelines that are both
+state-of-the-art and production-grade. KerasNLP is maintained directly by the
+Keras team.
 
 ---
 

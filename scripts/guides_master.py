@@ -18,6 +18,18 @@ CV_GUIDES_MASTER = {
     ]
 }
 
+NLP_GUIDES_MASTER = {
+    'path': 'keras_nlp/',
+    'title': 'KerasNLP',
+    'toc': True,
+    'children': [
+        {
+            'path': 'transformer_pretraining',
+            'title': 'Pretraining a Transformer from scratch with KerasNLP',
+        },
+    ]
+}
+
 KT_GUIDES_MASTER = {
     'path': 'keras_tuner/',
     'title': 'Hyperparameter Tuning',
@@ -120,7 +132,8 @@ GUIDES_MASTER = {
         #     'title': 'Hyperparameter optimization',
         # },
         KT_GUIDES_MASTER,
-        CV_GUIDES_MASTER
+        CV_GUIDES_MASTER,
+        NLP_GUIDES_MASTER,
         # TODO: mixed precision
     ]
 }
