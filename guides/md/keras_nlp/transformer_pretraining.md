@@ -3,22 +3,22 @@
 **Author:** [Matthew Watson](https://github.com/mattdangerw/)<br>
 **Date created:** 2022/04/18<br>
 **Last modified:** 2022/04/18<br>
-**Description:** Use KerasNLP to train a transformer model from scratch.
+**Description:** Use KerasNLP to train a Transformer model from scratch.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_nlp/transformer_pretraining.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_nlp/transformer_pretraining.py)
 
 
 
-KerasNLP aims makes it easy to build state-of-the-art text processing models. In this guide,
-we will show how library components simplify pre-training and fine-tuneing a transformer
-model from scratch.
+KerasNLP aims to make it easy to build state-of-the-art text processing models. In this
+guide, we will show how library components simplify pretraining and fine-tuning a
+Transformer model from scratch.
 
 This guide is broken into three parts:
 
 1. *Setup*, task definition, and establishing a baseline.
-2. *Pre-training* a transformer model.
-3. *Fine-tuning* the transformer model on our classification task.
+2. *Pretraining* a Transformer model.
+3. *Fine-tuning* the Transformer model on our classification task.
 
 ---
 ## Setup
@@ -26,9 +26,9 @@ This guide is broken into three parts:
 To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
 
 A simple thing we can do right off the bat is to enable
-[mixed percision](https://keras.io/api/mixed_precision/), which will speed up training by
+[mixed precision](https://keras.io/api/mixed_precision/), which will speed up training by
 running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
-Training a transformer can take a while, so it is important to pull out all the stops for
+Training a Transformer can take a while, so it is important to pull out all the stops for
 faster training!
 
 
@@ -61,7 +61,7 @@ classification dataset and our "end goal". This dataset is often used to benchma
 language models.
 - [WikiText-103](https://paperswithcode.com/dataset/wikitext-103): A medium sized
 collection of featured articles from English wikipedia, which we will use for
-pre-training.
+pretraining.
 
 Finally, we will download a WordPiece vocabulary, to do sub-word tokenization later on in
 this guide.
@@ -92,24 +92,24 @@ Next, we define some hyperparameters we will use during training.
 
 ```python
 # Preprocessing params.
-PRETRAINING_BATCH_SIZE = 64
+PRETRAINING_BATCH_SIZE = 128
 FINETUNING_BATCH_SIZE = 32
 SEQ_LENGTH = 128
-MASK_RATE = 0.2
-PREDICTIONS_PER_SEQ = 25
+MASK_RATE = 0.25
+PREDICTIONS_PER_SEQ = 32
 
 # Model params.
 NUM_LAYERS = 3
-MODEL_DIM = 128
+MODEL_DIM = 256
 INTERMEDIATE_DIM = 512
-NUM_HEADS = 2
+NUM_HEADS = 4
 DROPOUT = 0.1
 NORM_EPSILON = 1e-5
 
 # Training params.
 PRETRAINING_LEARNING_RATE = 5e-4
-PRETRAINING_EPOCHS = 10
-FINETUNING_LEARNING_RATE = 7e-5
+PRETRAINING_EPOCHS = 8
+FINETUNING_LEARNING_RATE = 5e-5
 FINETUNING_EPOCHS = 3
 ```
 
@@ -152,6 +152,7 @@ array([b'hide new secretions from the parental units ',
        b'that loves its characters and communicates something rather beautiful about human nature ',
        b'remains utterly satisfied to remain the same throughout '],
       dtype=object)>, <tf.Tensor: shape=(4,), dtype=int32, numpy=array([0, 0, 1, 0], dtype=int32)>)
+
 ```
 </div>
 You can see that our `SST-2` dataset contains relatively short snippets of movie review
@@ -189,17 +190,17 @@ baseline_model.fit(sst_train_ds, validation_data=sst_val_ds, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-2105/2105 [==============================] - 13s 6ms/step - loss: 0.6126 - accuracy: 0.6893 - val_loss: 0.5371 - val_accuracy: 0.7511
+2105/2105 [==============================] - 11s 5ms/step - loss: 0.6131 - accuracy: 0.6873 - val_loss: 0.5374 - val_accuracy: 0.7500
 Epoch 2/5
-2105/2105 [==============================] - 12s 6ms/step - loss: 0.5247 - accuracy: 0.7604 - val_loss: 0.4887 - val_accuracy: 0.7821
+2105/2105 [==============================] - 11s 5ms/step - loss: 0.5247 - accuracy: 0.7607 - val_loss: 0.4885 - val_accuracy: 0.7844
 Epoch 3/5
-2105/2105 [==============================] - 12s 6ms/step - loss: 0.4782 - accuracy: 0.7881 - val_loss: 0.4677 - val_accuracy: 0.7959
+2105/2105 [==============================] - 11s 5ms/step - loss: 0.4781 - accuracy: 0.7878 - val_loss: 0.4676 - val_accuracy: 0.7970
 Epoch 4/5
-2105/2105 [==============================] - 12s 6ms/step - loss: 0.4477 - accuracy: 0.8023 - val_loss: 0.4584 - val_accuracy: 0.8028
+2105/2105 [==============================] - 11s 5ms/step - loss: 0.4477 - accuracy: 0.8023 - val_loss: 0.4582 - val_accuracy: 0.8016
 Epoch 5/5
-2105/2105 [==============================] - 12s 6ms/step - loss: 0.4260 - accuracy: 0.8123 - val_loss: 0.4554 - val_accuracy: 0.8016
+2105/2105 [==============================] - 11s 5ms/step - loss: 0.4259 - accuracy: 0.8122 - val_loss: 0.4553 - val_accuracy: 0.7993
 
-<keras.callbacks.History at 0x7f6a9c216c40>
+<keras.callbacks.History at 0x7f120012e4f0>
 
 ```
 </div>
@@ -216,12 +217,12 @@ example text to attempt to build a larger, more parameterized model that can lea
 sequence. We would quickly start to overfit and memorize our training set, without any
 increase in our ability to generalize to unseen examples.
 
-Enter **pre-training**, which will allow us to learn on a larger corpus, and transfer our
-knowledge to the `SST-2` task. And enter **KerasNLP**, which will allow us to pre-train a
-particularly powerful model, the transformer, with ease.
+Enter **pretraining**, which will allow us to learn on a larger corpus, and transfer our
+knowledge to the `SST-2` task. And enter **KerasNLP**, which will allow us to pretrain a
+particularly powerful model, the Transformer, with ease.
 
 ---
-## Pre-training
+## Pretraining
 
 To beat our baseline, we will leverage the `WikiText103` dataset, an unlabeled
 collection of wikipedia articles that is much bigger than than `SST-2`.
@@ -232,7 +233,7 @@ labels, so we will use an unsupervised training objective called the *Masked Lan
 Modeling* (MLM) ojective.
 
 Essentially, we will be playing a big game of "guess the missing word". For each input
-sample we will obscure 20% of our input data, and train our model to predict the parts we
+sample we will obscure 25% of our input data, and train our model to predict the parts we
 covered up.
 
 ### Preprocess data for the MLM task
@@ -242,7 +243,7 @@ Our text preprocessing for the MLM task will occur in two stages.
 1. Tokenize input text into integer sequences of token ids.
 2. Mask certain positions in our input to predict on.
 
-To tokenize, we can use a `keras_nlp.tokenizer.Tokenizer`—the KerasNLP building block
+To tokenize, we can use a `keras_nlp.tokenizers.Tokenizer` -- the KerasNLP building block
 for transforming text into sequences of integer token ids.
 
 In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
@@ -307,40 +308,40 @@ print(pretrain_val_ds.take(1).get_single_element())
 
 <div class="k-default-codeblock">
 ```
-({'tokens': <tf.Tensor: shape=(64, 128), dtype=int32, numpy=
-array([[ 7570,  7849,  2271, ...,  9673,   103,   103],
-       [  103,  7849,   103, ...,  1007,  1012,  2023],
-       [ 1996,  2034,   103, ...,     0,     0,     0],
+({'tokens': <tf.Tensor: shape=(128, 128), dtype=int32, numpy=
+array([[7570, 7849, 2271, ..., 9673,  103,  103],
+       [7570, 7849, 2271, ..., 1007, 1012, 2023],
+       [ 103, 2034, 3940, ...,    0,    0,    0],
        ...,
-       [ 3130,  9613,  2011, ...,     0,     0,     0],
-       [ 2044,  4909,  1037, ...,   103,  1012,     0],
-       [ 2045,  2001,  2172, ...,  1997,  4296, 24976]], dtype=int32)>, 'mask_positions': <tf.Tensor: shape=(64, 25), dtype=int64, numpy=
-array([[  6,   8,  10, ..., 118, 126, 127],
-       [  0,   2,  11, ..., 109, 111, 118],
-       [  2,   7,   8, ...,   0,   0,   0],
+       [ 103, 1996, 2307, ...,    0,    0,    0],
+       [ 103, 2225, 2083, ...,    0,    0,    0],
+       [9794, 2007, 1045, ...,    0,    0,    0]], dtype=int32)>, 'mask_positions': <tf.Tensor: shape=(128, 32), dtype=int64, numpy=
+array([[  7,   8,  11, ..., 119, 126, 127],
+       [  3,  12,  18, ..., 121, 122, 124],
+       [  0,   3,   4, ...,   0,   0,   0],
        ...,
-       [  5,   8,  11, ...,   0,   0,   0],
-       [  3,   7,  17, ..., 118, 122, 125],
-       [ 25,  37,  44, ..., 120, 121, 127]])>}, <tf.Tensor: shape=(64, 25), dtype=int32, numpy=
-array([[ 2124,  1996, 27940, ...,  2095,  1012,  7570],
-       [ 7570,  2271,  1010, ...,  1999,  2000, 14925],
-       [ 3940,  2003,  4273, ...,     0,     0,     0],
+       [  0,   3,   6, ..., 113, 119,   0],
+       [  0,   5,   6, ...,   0,   0,   0],
+       [  4,   9,  12, ...,   0,   0,   0]])>}, <tf.Tensor: shape=(128, 32), dtype=int32, numpy=
+array([[ 2004,  1996,  2030, ...,  2077,  1012,  7570],
+       [13091,  2007,  3438, ...,  1006,  9587,  2075],
+       [ 1996,  1997, 23976, ...,     0,     0,     0],
        ...,
-       [25572,  4841,  2181, ...,     0,     0,     0],
-       [ 2976,  2055,  5292, ...,  2005,  2037,  5433],
-       [17984,  1000,  1996, ..., 16197,  2419,  3667]], dtype=int32)>, <tf.Tensor: shape=(64, 25), dtype=float16, numpy=
+       [ 2076,  6245,  1997, ..., 14280,  3462,     0],
+       [ 3216,  5900,  1010, ...,     0,     0,     0],
+       [ 1011,  2103,  2167, ...,     0,     0,     0]], dtype=int32)>, <tf.Tensor: shape=(128, 32), dtype=float16, numpy=
 array([[1., 1., 1., ..., 1., 1., 1.],
        [1., 1., 1., ..., 1., 1., 1.],
        [1., 1., 1., ..., 0., 0., 0.],
        ...,
+       [1., 1., 1., ..., 1., 1., 0.],
        [1., 1., 1., ..., 0., 0., 0.],
-       [1., 1., 1., ..., 1., 1., 1.],
-       [1., 1., 1., ..., 1., 1., 1.]], dtype=float16)>)
+       [1., 1., 1., ..., 0., 0., 0.]], dtype=float16)>)
 
 ```
 </div>
 The above block sorts our dataset into a `(features, labels, weights)` tuple, which can be
-passed directly to `keras.Model.fit`.
+passed directly to `keras.Model.fit()`.
 
 We have two features:
 
@@ -353,16 +354,16 @@ Because not all sequences will have the same number of masks, we also keep a
 `sample_weight` tensor, which removes padded labels from our loss function by giving them
 zero weight.
 
-### Create the transformer encoder
+### Create the Transformer encoder
 
-KerasNLP provides all the building blocks to quickly build a transformer encoder.
+KerasNLP provides all the building blocks to quickly build a Transformer encoder.
 
 We use `keras_nlp.layers.TokenAndPositionEmbedding` to first embed our input token ids.
-This layer simultaneously learns two embeddings—one for words in a sentence and another
+This layer simultaneously learns two embeddings -- one for words in a sentence and another
 for integer positions in a sentence. The output embedding is simply the sum of the two.
 
 Then we can add a series of `keras_nlp.layers.TransformerEncoder` layers. These are the
-bread and butter of the transformer model, using an attention mechanism to attend to
+bread and butter of the Transformer model, using an attention mechanism to attend to
 different parts of the input sentence, followed by a multi-layer perceptron block.
 
 The output of this model will be a encoded vector per input token id. Unlike the
@@ -406,33 +407,33 @@ _________________________________________________________________
 =================================================================
  input_2 (InputLayer)        [(None, 128)]             0         
                                                                  
- token_and_position_embeddin  (None, 128, 128)         3923200   
+ token_and_position_embeddin  (None, 128, 256)         7846400   
  g (TokenAndPositionEmbeddin                                     
  g)                                                              
                                                                  
- layer_normalization (LayerN  (None, 128, 128)         256       
+ layer_normalization (LayerN  (None, 128, 256)         512       
  ormalization)                                                   
                                                                  
- dropout (Dropout)           (None, 128, 128)          0         
+ dropout (Dropout)           (None, 128, 256)          0         
                                                                  
- transformer_encoder (Transf  (None, 128, 128)         198272    
+ transformer_encoder (Transf  (None, 128, 256)         527104    
  ormerEncoder)                                                   
                                                                  
- transformer_encoder_1 (Tran  (None, 128, 128)         198272    
+ transformer_encoder_1 (Tran  (None, 128, 256)         527104    
  sformerEncoder)                                                 
                                                                  
- transformer_encoder_2 (Tran  (None, 128, 128)         198272    
+ transformer_encoder_2 (Tran  (None, 128, 256)         527104    
  sformerEncoder)                                                 
                                                                  
 =================================================================
-Total params: 4,518,272
-Trainable params: 4,518,272
+Total params: 9,428,224
+Trainable params: 9,428,224
 Non-trainable params: 0
 _________________________________________________________________
 
 ```
 </div>
-### Pre-train the transformer
+### Pretrain the Transformer
 
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
@@ -444,8 +445,8 @@ masked out in the original input. It will gather the token encodings we masked, 
 transform them back in predictions over our entire vocabulary.
 
 With that, we are ready to compile and run pretraining. If you are running this in a
-colab, note that this will take about an hour. Training transformer is famously compute
-intesive, so even this relatively small transformer will take some time.
+colab, note that this will take about an hour. Training Transformer is famously compute
+intesive, so even this relatively small Transformer will take some time.
 
 
 ```python
@@ -485,28 +486,22 @@ encoder_model.save("encoder_model")
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
-11713/11713 [==============================] - 210s 17ms/step - loss: 4.8825 - sparse_categorical_accuracy: 0.2029 - val_loss: 3.6020 - val_sparse_categorical_accuracy: 0.3402
-Epoch 2/10
-11713/11713 [==============================] - 217s 19ms/step - loss: 3.6996 - sparse_categorical_accuracy: 0.3327 - val_loss: 3.1951 - val_sparse_categorical_accuracy: 0.3889
-Epoch 3/10
-11713/11713 [==============================] - 201s 17ms/step - loss: 3.4450 - sparse_categorical_accuracy: 0.3629 - val_loss: 3.0512 - val_sparse_categorical_accuracy: 0.4094
-Epoch 4/10
-11713/11713 [==============================] - 196s 17ms/step - loss: 3.3336 - sparse_categorical_accuracy: 0.3755 - val_loss: 2.9962 - val_sparse_categorical_accuracy: 0.4143
-Epoch 5/10
-11713/11713 [==============================] - 187s 16ms/step - loss: 3.2672 - sparse_categorical_accuracy: 0.3827 - val_loss: 2.9041 - val_sparse_categorical_accuracy: 0.4268
-Epoch 6/10
-11713/11713 [==============================] - 217s 19ms/step - loss: 3.2235 - sparse_categorical_accuracy: 0.3875 - val_loss: 2.9033 - val_sparse_categorical_accuracy: 0.4257
-Epoch 7/10
-11713/11713 [==============================] - 223s 19ms/step - loss: 3.1910 - sparse_categorical_accuracy: 0.3909 - val_loss: 2.8908 - val_sparse_categorical_accuracy: 0.4302
-Epoch 8/10
-11713/11713 [==============================] - 213s 18ms/step - loss: 3.1670 - sparse_categorical_accuracy: 0.3936 - val_loss: 2.8474 - val_sparse_categorical_accuracy: 0.4353
-Epoch 9/10
-11713/11713 [==============================] - 222s 19ms/step - loss: 3.1468 - sparse_categorical_accuracy: 0.3956 - val_loss: 2.8375 - val_sparse_categorical_accuracy: 0.4338
-Epoch 10/10
-11713/11713 [==============================] - 244s 21ms/step - loss: 3.1296 - sparse_categorical_accuracy: 0.3975 - val_loss: 2.8192 - val_sparse_categorical_accuracy: 0.4408
-WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-
+Epoch 1/8
+5857/5857 [==============================] - 220s 36ms/step - loss: 4.7232 - sparse_categorical_accuracy: 0.2181 - val_loss: 3.4623 - val_sparse_categorical_accuracy: 0.3508
+Epoch 2/8
+5857/5857 [==============================] - 201s 34ms/step - loss: 3.4550 - sparse_categorical_accuracy: 0.3596 - val_loss: 3.0361 - val_sparse_categorical_accuracy: 0.4067
+Epoch 3/8
+5857/5857 [==============================] - 201s 34ms/step - loss: 3.1986 - sparse_categorical_accuracy: 0.3888 - val_loss: 2.8759 - val_sparse_categorical_accuracy: 0.4262
+Epoch 4/8
+5857/5857 [==============================] - 201s 34ms/step - loss: 3.0748 - sparse_categorical_accuracy: 0.4029 - val_loss: 2.8121 - val_sparse_categorical_accuracy: 0.4315
+Epoch 5/8
+5857/5857 [==============================] - 202s 35ms/step - loss: 2.9960 - sparse_categorical_accuracy: 0.4119 - val_loss: 2.7216 - val_sparse_categorical_accuracy: 0.4452
+Epoch 6/8
+5857/5857 [==============================] - 198s 34ms/step - loss: 2.9403 - sparse_categorical_accuracy: 0.4181 - val_loss: 2.6829 - val_sparse_categorical_accuracy: 0.4496
+Epoch 7/8
+5857/5857 [==============================] - 195s 33ms/step - loss: 2.8991 - sparse_categorical_accuracy: 0.4226 - val_loss: 2.6581 - val_sparse_categorical_accuracy: 0.4534
+Epoch 8/8
+5857/5857 [==============================] - 192s 33ms/step - loss: 2.8670 - sparse_categorical_accuracy: 0.4262 - val_loss: 2.6064 - val_sparse_categorical_accuracy: 0.4582
 
 INFO:tensorflow:Assets written to: encoder_model/assets
 
@@ -517,13 +512,13 @@ INFO:tensorflow:Assets written to: encoder_model/assets
 ---
 ## Fine-tuning
 
-After pre-training, we can now fine-tune our model on the `SST-2` dataset. We can
+After pretraining, we can now fine-tune our model on the `SST-2` dataset. We can
 leverage the ability of the encoder we build to predict on words in context to boost our
 our performance on the downstream task.
 
 ### Preprocess data for classification
 
-Preprocessing for fine-tuning is much simpler than for our pre-training MLM task. We just
+Preprocessing for fine-tuning is much simpler than for our pretraining MLM task. We just
 tokenize our input sentences and we are ready for training!
 
 
@@ -560,16 +555,16 @@ array([1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0,
 
 ```
 </div>
-### Fine-tune the transformer
+### Fine-tune the Transformer
 
 To go from our encoded token output to a classification prediction, we need to attach
-another "head" to our transformer model. We can afford to be simple here. We simply pool
+another "head" to our Transformer model. We can afford to be simple here. We pool
 the encoded tokens together, and use a single dense layer to make a prediction.
 
 
 ```python
 # Reload the encoder model from disk so we can restart fine-tuning from scratch.
-encoder_model = keras.models.load_model("encoder_model")
+encoder_model = keras.models.load_model("encoder_model", compile=False)
 
 # Take as input the tokenized input.
 inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
@@ -597,32 +592,28 @@ finetuning_model.fit(
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-
-WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-
 Epoch 1/3
-2105/2105 [==============================] - 60s 27ms/step - loss: 0.4674 - accuracy: 0.7670 - val_loss: 0.4535 - val_accuracy: 0.8039
+2105/2105 [==============================] - 47s 22ms/step - loss: 0.4101 - accuracy: 0.8086 - val_loss: 0.3955 - val_accuracy: 0.8154
 Epoch 2/3
-2105/2105 [==============================] - 57s 27ms/step - loss: 0.3135 - accuracy: 0.8648 - val_loss: 0.4096 - val_accuracy: 0.8257
+2105/2105 [==============================] - 45s 22ms/step - loss: 0.2634 - accuracy: 0.8911 - val_loss: 0.3958 - val_accuracy: 0.8383
 Epoch 3/3
-2105/2105 [==============================] - 57s 27ms/step - loss: 0.2488 - accuracy: 0.8978 - val_loss: 0.4308 - val_accuracy: 0.8372
+2105/2105 [==============================] - 45s 21ms/step - loss: 0.2073 - accuracy: 0.9176 - val_loss: 0.4224 - val_accuracy: 0.8429
 
-<keras.callbacks.History at 0x7f697c45f430>
+<keras.callbacks.History at 0x7f1110605280>
 
 ```
 </div>
-Pre-training was enough to boost our performance to 84%, and this is hardly the ceiling
-for transformer models. You may have noticed during pretraining that our validation
+Pretraining was enough to boost our performance to 84%, and this is hardly the ceiling
+for Transformer models. You may have noticed during pretraining that our validation
 performance was still steadily increasing. Our model is still significantly undertrained.
-Training for more epochs, training a large transformer, and training on more unlabeled
+Training for more epochs, training a large Transformer, and training on more unlabeled
 text would all continue to boost performance significantly.
 
 ### Save a model that accepts raw text
 
 The last thing we can do with our fine-tuned model is saveing including our tokenization
 layer. One of the key advantages of KerasNLP is all preprocessing is done inside the
-[tensorflow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
+[TensorFlow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
 to save and restore a model that can directly run inference on raw text!
 
 
@@ -635,7 +626,7 @@ final_model = keras.Model(inputs, outputs)
 final_model.save("final_model")
 
 # This model can predict directly on raw text.
-restored_model = keras.models.load_model("final_model")
+restored_model = keras.models.load_model("final_model", compile=False)
 inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
 print(restored_model(inference_data))
 ```
@@ -647,12 +638,12 @@ INFO:tensorflow:Assets written to: final_model/assets
 INFO:tensorflow:Assets written to: final_model/assets
 
 tf.Tensor(
-[[0.00662]
+[[0.03198]
  [0.999  ]], shape=(2, 1), dtype=float16)
 
 ```
 </div>
 One of the key goals of KerasNLP is to provide a modular approach to NLP model building.
-We have shown one approach to building a transformer here, but KerasNLP supports an ever
+We have shown one approach to building a Transformer here, but KerasNLP supports an ever
 growing array of components for preprocessing text and building models. We hope it makes
 it easier to experiment on solutions to your natural language problems.

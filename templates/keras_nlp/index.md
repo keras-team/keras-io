@@ -20,7 +20,7 @@ check out our
 ---
 ## Quick links
 
-* [Developer guides](/guides/keras_nlp/)
+* [Pretraining guide](/guides/keras_nlp/transformer_pretraining/)
 * [API reference](/api/keras_nlp/)
 * [GitHub repository](https://github.com/keras-team/keras-nlp)
 

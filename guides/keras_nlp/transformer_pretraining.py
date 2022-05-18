@@ -80,24 +80,24 @@ Next, we define some hyperparameters we will use during training.
 """
 
 # Preprocessing params.
-PRETRAINING_BATCH_SIZE = 64
+PRETRAINING_BATCH_SIZE = 128
 FINETUNING_BATCH_SIZE = 32
 SEQ_LENGTH = 128
-MASK_RATE = 0.2
-PREDICTIONS_PER_SEQ = 25
+MASK_RATE = 0.25
+PREDICTIONS_PER_SEQ = 32
 
 # Model params.
 NUM_LAYERS = 3
-MODEL_DIM = 128
+MODEL_DIM = 256
 INTERMEDIATE_DIM = 512
-NUM_HEADS = 2
+NUM_HEADS = 4
 DROPOUT = 0.1
 NORM_EPSILON = 1e-5
 
 # Training params.
 PRETRAINING_LEARNING_RATE = 5e-4
-PRETRAINING_EPOCHS = 10
-FINETUNING_LEARNING_RATE = 7e-5
+PRETRAINING_EPOCHS = 8
+FINETUNING_LEARNING_RATE = 5e-5
 FINETUNING_EPOCHS = 3
 
 """
@@ -194,7 +194,7 @@ labels, so we will use an unsupervised training objective called the *Masked Lan
 Modeling* (MLM) ojective.
 
 Essentially, we will be playing a big game of "guess the missing word". For each input
-sample we will obscure 20% of our input data, and train our model to predict the parts we
+sample we will obscure 25% of our input data, and train our model to predict the parts we
 covered up.
 """
 
@@ -206,7 +206,7 @@ Our text preprocessing for the MLM task will occur in two stages.
 1. Tokenize input text into integer sequences of token ids.
 2. Mask certain positions in our input to predict on.
 
-To tokenize, we can use a `keras_nlp.tokenizer.Tokenizer` -- the KerasNLP building block
+To tokenize, we can use a `keras_nlp.tokenizers.Tokenizer` -- the KerasNLP building block
 for transforming text into sequences of integer token ids.
 
 In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
@@ -364,7 +364,7 @@ outputs = keras_nlp.layers.MLMHead(
 pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.compile(
     loss="sparse_categorical_crossentropy",
-    optimizer=keras.optimizers.Adam(learning_rate=PRETRAINING_LEARNING_RATE),
+    optimizer=keras.optimizers.experimental.AdamW(PRETRAINING_LEARNING_RATE),
     weighted_metrics=["sparse_categorical_accuracy"],
     jit_compile=True,
 )
@@ -412,7 +412,7 @@ print(finetune_val_ds.take(1).get_single_element())
 ### Fine-tune the Transformer
 
 To go from our encoded token output to a classification prediction, we need to attach
-another "head" to our Transformer model. We can afford to be simple here. We simply pool
+another "head" to our Transformer model. We can afford to be simple here. We pool
 the encoded tokens together, and use a single dense layer to make a prediction.
 """
 
@@ -433,7 +433,7 @@ outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
 finetuning_model = keras.Model(inputs, outputs)
 finetuning_model.compile(
     loss="binary_crossentropy",
-    optimizer=keras.optimizers.Adam(learning_rate=FINETUNING_LEARNING_RATE),
+    optimizer=keras.optimizers.experimental.AdamW(FINETUNING_LEARNING_RATE),
     metrics=["accuracy"],
 )
 
