@@ -23,16 +23,6 @@ You can also check out other versions in our
 [GitHub repository](https://github.com/keras-team/keras-cv/releases).
 
 ---
-## Quick introduction
-
-Import KerasCV and TensorFlow:
-
-```python
-import keras_cv
-from tensorflow import keras
-```
-
----
 ## Citing KerasCV
 
 If KerasCV helps your research, we appreciate your citations.
