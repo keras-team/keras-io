@@ -156,6 +156,7 @@ class KerasIO:
         )
         # Insert --- before H2 titles
         md_content = md_content.replace("\n## ", "\n---\n## ")
+        md_content = md_content.replace("../guides/img", "/img/guides")
         return md_content
 
     def make_tutobook_sources_for_directory(
