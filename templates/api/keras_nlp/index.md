@@ -1,9 +1,8 @@
 # KerasNLP
 
-The KerasNLP API is a collection of building blocks following standard
-standard Keras interfaces (e.g. layers, metrics).
-
-These building blocks can be composed to quickly and expressively define an NLP
-model or workflow.
+KerasNLP is a toolbox of modular building blocks (layers, metrics, etc.) that
+NLP engineers can leverage to develop
+production-grade, state-of-the-art training and inference pipelines for common NLP workflows.
 
 {{toc}}
+

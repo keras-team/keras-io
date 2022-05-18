@@ -1,5 +1,5 @@
 # KerasNLP Metrics
 
-KerasNLP metrics are just `keras.Metric` subclasses with NLP specific use cases.
+KerasNLP metrics are `keras.Metric` subclasses for NLP-specific use cases.
 
 {{toc}}

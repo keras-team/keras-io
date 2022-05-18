@@ -1,8 +1,8 @@
 # KerasNLP Layers
 
-KerasNLP layers are just `keras.Layer` subclasses with NLP specific use cases.
+KerasNLP layers are `keras.Layer` subclasses for NLP-specific use cases.
 
 These layers are building blocks for common NLP model architectures
-(e.g. transformers).
+(e.g. Transformers).
 
 {{toc}}
