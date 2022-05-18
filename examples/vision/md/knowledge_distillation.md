@@ -114,10 +114,13 @@ class Distiller(keras.Model):
             # Compute scaled distillation loss from https://arxiv.org/abs/1503.02531
             # The magnitudes of the gradients produced by the soft targets scale
             # as 1/T^2, multiply them by T^2 when using both hard and soft targets.
-            distillation_loss = self.distillation_loss_fn(
-                tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
-                tf.nn.softmax(student_predictions / self.temperature, axis=1),
-            ) * self.temperature**2
+            distillation_loss = (
+                self.distillation_loss_fn(
+                    tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
+                    tf.nn.softmax(student_predictions / self.temperature, axis=1),
+                )
+                * self.temperature**2
+            )
 
             loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
 
