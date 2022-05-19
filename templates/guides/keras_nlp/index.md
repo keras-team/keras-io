@@ -1,4 +1,4 @@
-# KerasCV
+# KerasNLP
 
 These guides cover the [KerasNLP](/keras_nlp/) library.
 
