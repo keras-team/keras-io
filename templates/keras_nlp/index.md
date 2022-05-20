@@ -20,9 +20,9 @@ check out our
 ---
 ## Quick links
 
-* [Pretraining guide](/guides/keras_nlp/transformer_pretraining/)
-* [API reference](/api/keras_nlp/)
-* [GitHub repository](https://github.com/keras-team/keras-nlp)
+* [KerasNLP developer guides](/guides/keras_nlp/)
+* [KerasNLP API reference](/api/keras_nlp/)
+* [KerasNLP on GitHub](https://github.com/keras-team/keras-nlp)
 
 ---
 ## Installation
