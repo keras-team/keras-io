@@ -24,9 +24,11 @@ through the process of customizing a KerasCV data augmentation pipeline.
 """
 ## Imports & setup
 
-This tutorial requires you to have KerasCV installed:
+This tutorial requires you to have KerasCV installed. It also requires installing
+the TensorFlow nightly at this time.
 
 ```shell
+pip install tf-nightly
 pip install keras-cv
 ```
 
