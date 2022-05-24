@@ -28,7 +28,7 @@ This tutorial requires you to have KerasCV installed. It also requires installin
 the TensorFlow nightly at this time.
 
 ```shell
-pip install tf-nightly
+pip install -U tf-nightly
 pip install keras-cv
 ```
 
