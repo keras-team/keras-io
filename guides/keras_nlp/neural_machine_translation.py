@@ -48,7 +48,7 @@ Let's also define our hyperparameters.
 """
 
 BATCH_SIZE = 64
-EPOCHS = 1  # Should be 30 to get decent results.
+EPOCHS = 1  # Should be 20 to get decent results.
 MAX_SEQUENCE_LENGTH = 40
 
 EMBED_DIM = 256
@@ -336,7 +336,7 @@ We'll use accuracy as a quick way to monitor training progress on the validation
 Note that machine translation typically uses BLEU scores as well as other metrics, rather than accuracy.
 
 Here we only train for 1 epoch, but to get the model to actually converge
-you should train for at least 30 epochs.
+you should train for at least 20 epochs.
 """
 
 transformer.summary()
@@ -390,3 +390,47 @@ for i in range(10):
     print(f"*** Example {i} ***")
     print(input_sentence)
     print(translated.numpy()[0].decode("utf-8"))
+
+"""
+After 20 epochs, we get results such as:
+
+*** Example 0 ***
+You are smarter than that.
+[CLS] [UNK] son mas listo que eso. [SEP]
+
+*** Example 1 ***
+Tom is a great motocross rider.
+[CLS] [UNK] es un gran camino de la que se te de la [UNK] [SEP]
+
+*** Example 2 ***
+Why don't you just find another place to live?
+[CLS] [UNK] que no te quiero encontrar otro sitio para vivir? [SEP]
+
+*** Example 3 ***
+Tom wants his money today.
+[CLS] [UNK] su dinero hoy. [SEP]
+
+*** Example 4 ***
+I can't believe that you actually got into Harvard.
+[CLS] [UNK] puedo creer que te lo esta en [UNK] [SEP]
+
+*** Example 5 ***
+Elephants are the largest land animals alive today.
+[CLS] [UNK] son los animales mas de las animales de hoy. [SEP]
+
+*** Example 6 ***
+He loves singing.
+[CLS] [UNK] [UNK] le encanta cantar. [SEP]
+
+*** Example 7 ***
+Tom enjoys working here, I think.
+[CLS] [UNK] [UNK] le gusta trabajar aqui, ¿no. [SEP]
+
+*** Example 8 ***
+Tom wants to be famous.
+[CLS] [UNK] quiere ser famoso. [SEP]
+
+*** Example 9 ***
+We saw it.
+[CLS] [UNK] lo vio. [SEP]
+"""
