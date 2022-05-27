@@ -75,6 +75,7 @@ text_file = pathlib.Path(text_file).parent / "spa-eng" / "spa.txt"
 Each line contains an English sentence and its corresponding Spanish sentence.
 The English sentence is the *source sequence* and Spanish one is the *target sequence*.
 We prepend the token `"[start]"` and we append the token `"[end]"` to the Spanish sentence.
+Additionally, let's convert the text to lowercase.
 """
 
 with open(text_file) as f:
@@ -82,8 +83,9 @@ with open(text_file) as f:
 text_pairs = []
 for line in lines:
     eng, spa = line.split("\t")
+    eng = eng.lower()
     # eng = "[CLS] " + eng + " [SEP]"
-    spa = "[CLS] " + spa + " [SEP]"
+    spa = "[CLS] " + spa.lower() + " [SEP]"
     text_pairs.append((eng, spa))
 
 """
