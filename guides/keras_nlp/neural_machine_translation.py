@@ -34,6 +34,7 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 """shell
 pip install -q keras-nlp
+pip install -q -U "tensorflow-text==2.8.*"
 """
 
 import keras_nlp
@@ -41,7 +42,9 @@ import numpy as np
 import pathlib
 import random
 import tensorflow as tf
+
 from tensorflow import keras
+from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 
 """
 Let's also define our hyperparameters.
@@ -50,6 +53,8 @@ Let's also define our hyperparameters.
 BATCH_SIZE = 64
 EPOCHS = 1  # Should be 20 to get decent results.
 MAX_SEQUENCE_LENGTH = 40
+ENG_VOCAB_SIZE = 15000
+SPA_VOCAB_SIZE = 15000
 
 EMBED_DIM = 256
 INTERMEDIATE_DIM = 2048
@@ -74,8 +79,7 @@ text_file = pathlib.Path(text_file).parent / "spa-eng" / "spa.txt"
 
 Each line contains an English sentence and its corresponding Spanish sentence.
 The English sentence is the *source sequence* and Spanish one is the *target sequence*.
-We prepend the token `"[start]"` and we append the token `"[end]"` to the Spanish sentence.
-Additionally, let's convert the text to lowercase.
+Before adding the text to a list, we convert it to lowercase.
 """
 
 with open(text_file) as f:
@@ -84,8 +88,7 @@ text_pairs = []
 for line in lines:
     eng, spa = line.split("\t")
     eng = eng.lower()
-    # eng = "[CLS] " + eng + " [SEP]"
-    spa = "[CLS] " + spa.lower() + " [SEP]"
+    spa = spa.lower()
     text_pairs.append((eng, spa))
 
 """
@@ -112,51 +115,74 @@ print(f"{len(train_pairs)} training pairs")
 print(f"{len(val_pairs)} validation pairs")
 print(f"{len(test_pairs)} test pairs")
 
+
 """
 ## Tokenizing the data
 We'll define two tokenizers - one for the source language (English), and the other
 for the target language (Spanish). We'll be using the `WordPieceTokenizer` from
 KerasNLP to tokenize the text.
 
-Before we define the tokenizer, let's first download the vocabulary files we'll be using.
-These vocabularies were obtained while training the WordPieceTokenizer on a large
-corpus of text.
+
+Before we define the two tokenizers, we first need to train them on the dataset
+we have. WordPiece Tokenizer is a subword tokenizer; training it on a corpus gives
+us a vocabulary of subwords. Luckily, TensorFlow Text makes it very simple to
+train WordPiece on a corpus. 
+
+For more details about WordPiece, please visit this
+blog: https://ai.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html.
 """
 
-"""shell
-wget https://huggingface.co/bert-base-uncased/raw/main/vocab.txt
-mv vocab.txt eng_vocab.txt
 
-wget https://raw.githubusercontent.com/dccuchile/beto/master/config/uncased_2M/vocab.txt
-mv vocab.txt spa_vocab.txt
+def train_word_piece(text_samples, vocab_size, reserved_tokens):
+    bert_tokenizer_params = dict(lower_case=True)
+
+    bert_vocab_args = dict(
+        # The target vocabulary size
+        vocab_size=vocab_size,
+        # Reserved tokens that must be included in the vocabulary
+        reserved_tokens=reserved_tokens,
+        # Arguments for `text.BertTokenizer`
+        bert_tokenizer_params=bert_tokenizer_params,
+        # Arguments for `wordpiece_vocab.wordpiece_tokenizer_learner_lib.learn`
+        learn_params={},
+    )
+
+    word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
+    vocab = bert_vocab.bert_vocab_from_dataset(
+        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
+    )
+    return vocab
+
+
+reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
+
+eng_samples = [text_pair[0] for text_pair in train_pairs]
+eng_vocab = train_word_piece(eng_samples, ENG_VOCAB_SIZE, reserved_tokens)
+
+spa_samples = [text_pair[1] for text_pair in train_pairs]
+spa_vocab = train_word_piece(spa_samples, SPA_VOCAB_SIZE, reserved_tokens)
+
 """
+Let's see some tokens!
+"""
+print("English Tokens: ", eng_vocab[100:110])
+print("Spanish Tokens: ", spa_vocab[100:110])
 
 """
-Let's now find the vocabulary sizes for both English and Spanish.
-"""
-
-with open("./eng_vocab.txt", "r") as eng_f:
-    ENG_VOCAB_SIZE = len(eng_f.readlines())
-
-with open("./spa_vocab.txt", "r") as spa_f:
-    SPA_VOCAB_SIZE = len(spa_f.readlines())
-
-"""
-Now, let's define the tokenizers. We will use the download vocabulary files as
-input to the tokenizer. The vocabulary files are such that every line contains
-a token. We will also define a maximum sequence length so that all sequences
-are padded to the same length, if the length of the sequence is less than the
-specified sequence length. Otherwise, the sequence is truncated.
+Now, let's define the tokenizers. We will use the vocabularies obtained above as
+input to the tokenizers. We will define a maximum sequence length so that
+all sequences are padded to the same length, if the length of the sequence is
+less than the specified sequence length. Otherwise, the sequence is truncated.
 """
 
 eng_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary="eng_vocab.txt",
+    vocabulary=eng_vocab,
     lowercase=False,
     split_pattern=" ",
     sequence_length=MAX_SEQUENCE_LENGTH,
 )
 spa_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary="spa_vocab.txt",
+    vocabulary=spa_vocab,
     lowercase=False,
     split_pattern=" ",
     sequence_length=MAX_SEQUENCE_LENGTH + 1,
@@ -174,6 +200,8 @@ print("English sentence: ", eng_input_ex)
 print("Tokens: ", eng_tokens_ex)
 print("Recovered text after detokenizing: ", eng_tokenizer.detokenize(eng_tokens_ex))
 
+print()
+
 spa_input_ex = text_pairs[0][1]
 spa_tokens_ex = spa_tokenizer.tokenize(spa_input_ex)
 print("Spanish sentence: ", spa_input_ex)
@@ -181,6 +209,8 @@ print("Tokens: ", spa_tokens_ex)
 print("Recovered text after detokenizing: ", spa_tokenizer.detokenize(spa_tokens_ex))
 
 """
+## Format Datasets
+
 Next, we'll format our datasets.
 
 At each training step, the model will seek to predict target words N+1 (and beyond)
@@ -194,20 +224,26 @@ that is to say, the words 0 to N used to predict word N+1 (and beyond) in the ta
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
 
-Additionally, we will also mask the padding tokens.
+Before we tokenize the text, we will add [START] and [END] tokens to the input
+Spanish sentence.
 """
+
+train_pairs = [
+    (text_pair[0], "[START] " + text_pair[1] + " [END]") for text_pair in train_pairs
+]
+val_pairs = [
+    (text_pair[0], "[START] " + text_pair[1] + " [END]") for text_pair in val_pairs
+]
+test_pairs = [
+    (text_pair[0], "[START] " + text_pair[1] + " [END]") for text_pair in test_pairs
+]
 
 
 def format_dataset(eng, spa):
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
     return (
-        {
-            "encoder_inputs": eng,
-            "encoder_padding_mask": tf.not_equal(eng, 0),
-            "decoder_inputs": spa[:, :-1],
-            "decoder_padding_mask": tf.not_equal(spa[:, :-1], 0),
-        },
+        {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
         spa[:, 1:],
     )
 
@@ -235,27 +271,26 @@ for inputs, targets in train_ds.take(1):
     print(f'inputs["decoder_inputs"].shape: {inputs["decoder_inputs"].shape}')
     print(f"targets.shape: {targets.shape}")
 
+
 """
 ## Building the model
 
 Now, let's move on to the exciting part - defining our model!
 We first need an Embedding layer, i.e., a vector for every token in our input sequence.
-This Embedding layer can be initialised randomly.
-We also need a Positional Embedding layer which encodes the word order in the
-sequence.
-The convention is to add these two embeddings.
-KerasNLP has a `TokenAndPositionEmbedding ` layer which does all of the above
-steps for us.
+This Embedding layer can be initialised randomly. We also need a Positional
+Embedding layer which encodes the word order in the sequence. The convention is
+to add these two embeddings. KerasNLP has a `TokenAndPositionEmbedding ` layer
+which does all of the above steps for us.
 
 Our sequence-to-sequence Transformer consists of a `TransformerEncoder`
 and a `TransformerDecoder` chained together. Earlier, we would have had to define
 these classes. But now, all these layers can be used off-the-shelf from KerasNLP!
 
-The source sequence will be passed to the `TransformerEncoder`,
-which will produce a new representation of it.
-This new representation will then be passed
-to the `TransformerDecoder`, together with the target sequence so far (target words 0 to N).
-The `TransformerDecoder` will then seek to predict the next words in the target sequence (N+1 and beyond).
+The source sequence will be passed to the `TransformerEncoder`, which will
+produce a new representation of it. This new representation will then be passed
+to the `TransformerDecoder`, together with the target sequence so far (target
+words 0 to N). The `TransformerDecoder` will then seek to predict the next words
+in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking.
 The `TransformerDecoder` sees the entire sequences at once, and thus we must make
@@ -264,71 +299,49 @@ sure that it only uses information from target tokens 0 to N when predicting tok
 result in a model that cannot be used at inference time).
 In order to enable causal masking, all we have to do is set the `use_causal_mask`
 argument to True.
+
+We also need to mask the padding tokens ("[PAD]"). For this, we can set the
+`mask_zero` argument of the `TokenAndPositionEmbedding` layer to True. This
+will then be propagated to all subsequent layers.
 """
 
 # Encoder
 encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
-encoder_padding_mask = keras.Input(
-    shape=(None,), dtype="bool", name="encoder_padding_mask"
-)
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=ENG_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
+    mask_zero=True,
 )(encoder_inputs)
 
 encoder_outputs = keras_nlp.layers.TransformerEncoder(
     intermediate_dim=INTERMEDIATE_DIM, num_heads=NUM_HEADS
-)(inputs=x, padding_mask=encoder_padding_mask)
-encoder = keras.Model([encoder_inputs, encoder_padding_mask], encoder_outputs)
+)(inputs=x)
+encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 
 # Decoder
 decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, EMBED_DIM), name="decoder_state_inputs")
 
-decoder_padding_mask = keras.Input(
-    shape=(None,), dtype="bool", name="decoder_padding_mask"
-)
-encoded_seq_padding_mask = keras.Input(
-    shape=(None,), dtype="bool", name="encoded_seq_padding_mask"
-)
-
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=SPA_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
+    mask_zero=True,
 )(decoder_inputs)
 
 x = keras_nlp.layers.TransformerDecoder(
     intermediate_dim=INTERMEDIATE_DIM, num_heads=NUM_HEADS
-)(
-    decoder_sequence=x,
-    encoder_sequence=encoded_seq_inputs,
-    decoder_padding_mask=decoder_padding_mask,
-    encoder_padding_mask=encoded_seq_padding_mask,
-    use_causal_mask=True,
-)
+)(decoder_sequence=x, encoder_sequence=encoded_seq_inputs, use_causal_mask=True,)
 x = keras.layers.Dropout(0.5)(x)
 decoder_outputs = keras.layers.Dense(SPA_VOCAB_SIZE, activation="softmax")(x)
-decoder = keras.Model(
-    [
-        decoder_inputs,
-        encoded_seq_inputs,
-        decoder_padding_mask,
-        encoded_seq_padding_mask,
-    ],
-    decoder_outputs,
-)
-decoder_outputs = decoder(
-    [decoder_inputs, encoder_outputs, decoder_padding_mask, encoder_padding_mask]
-)
+decoder = keras.Model([decoder_inputs, encoded_seq_inputs,], decoder_outputs,)
+decoder_outputs = decoder([decoder_inputs, encoder_outputs])
 
 transformer = keras.Model(
-    [encoder_inputs, decoder_inputs, encoder_padding_mask, decoder_padding_mask],
-    decoder_outputs,
-    name="transformer",
+    [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer",
 )
 
 """
@@ -352,26 +365,18 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 Finally, let's demonstrate how to translate brand new English sentences.
 We simply feed into the model the tokenized English sentence
-as well as the target token `"[CLS]"`, then we repeatedly generated the next token, until
-we hit the token `"[SEP]"`.
+as well as the target token `"[START]"`, then we repeatedly generated the next
+token, until we hit the token `"[END]"`.
 """
 
 
 def decode_sequence(input_sentence):
     tokenized_input_sentence = eng_tokenizer([input_sentence])
-    input_sentence_padding_mask = tf.not_equal(tokenized_input_sentence, 0)
-    tokenized_target_sentence = tf.constant(
-        [[int(spa_tokenizer("[CLS]")[0])]]
-    )  # 4 is the token ID of the "[CLS]" token
+    tokenized_target_sentence = tf.constant([[int(spa_tokenizer("[START]")[0])]])
+
     for i in range(MAX_SEQUENCE_LENGTH):
-        target_sentence_padding_mask = tf.not_equal(tokenized_target_sentence, 0)
         predictions = transformer(
-            [
-                tokenized_input_sentence,
-                tokenized_target_sentence,
-                input_sentence_padding_mask,
-                target_sentence_padding_mask,
-            ]
+            [tokenized_input_sentence, tokenized_target_sentence,]
         )
 
         sampled_token_index = np.argmax(predictions[0, i, :])
@@ -379,7 +384,7 @@ def decode_sequence(input_sentence):
             (tokenized_target_sentence, tf.constant([[sampled_token_index]])), axis=1
         )
 
-        if sampled_token_index == int(spa_tokenizer("[SEP]")[0]):
+        if sampled_token_index == int(spa_tokenizer("[END]")[0]):
             break
     decoded_sentence = spa_tokenizer.detokenize(tokenized_target_sentence)
     return decoded_sentence
@@ -392,47 +397,46 @@ for i in range(10):
     print(f"*** Example {i} ***")
     print(input_sentence)
     print(translated.numpy()[0].decode("utf-8"))
+    print()
 
 """
-After 20 epochs, we get results such as:
-
 *** Example 0 ***
-You are smarter than that.
-[CLS] [UNK] son mas listo que eso. [SEP]
+have you seen this?
+[START] ¿has visto esto? [END]
 
 *** Example 1 ***
-Tom is a great motocross rider.
-[CLS] [UNK] es un gran camino de la que se te de la [UNK] [SEP]
+it's very hot here.
+[START] hace mucho calor aqui. [END]
 
 *** Example 2 ***
-Why don't you just find another place to live?
-[CLS] [UNK] que no te quiero encontrar otro sitio para vivir? [SEP]
+my mother always says she's going to visit me soon.
+[START] mi madre es algo de decir que ella me va a visitar pronto. [END]
 
 *** Example 3 ***
-Tom wants his money today.
-[CLS] [UNK] su dinero hoy. [SEP]
+you can't say that.
+[START] no puedes decir eso. [END]
 
 *** Example 4 ***
-I can't believe that you actually got into Harvard.
-[CLS] [UNK] puedo creer que te lo esta en [UNK] [SEP]
+there are always some chores to be done around the house.
+[START] siempre hay algunos chance para hacer cerca de la casa. [END]
 
 *** Example 5 ***
-Elephants are the largest land animals alive today.
-[CLS] [UNK] son los animales mas de las animales de hoy. [SEP]
+sometimes the boys would play a joke on the teacher.
+[START] a veces los ninos tocaria una broma con el profesor. [END]
 
 *** Example 6 ***
-He loves singing.
-[CLS] [UNK] [UNK] le encanta cantar. [SEP]
+move this table toward the corner.
+[START] muevile esta mesa hacia la car, se muelvale esta mesa. [END]
 
 *** Example 7 ***
-Tom enjoys working here, I think.
-[CLS] [UNK] [UNK] le gusta trabajar aqui, ¿no. [SEP]
+tom asked mary to mind her own business.
+[START] tom le pidio a mary que tenia pelo le importa a su cuenta. [END]
 
 *** Example 8 ***
-Tom wants to be famous.
-[CLS] [UNK] quiere ser famoso. [SEP]
+tom was in town monday night.
+[START] tom estaba en la noche el lunes por la noche. [END]
 
 *** Example 9 ***
-We saw it.
-[CLS] [UNK] lo vio. [SEP]
+what's happened, has happened. it's history.
+[START] lo que paso, ha pasado. es historia. [END]
 """
