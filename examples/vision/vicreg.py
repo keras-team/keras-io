@@ -85,20 +85,11 @@ it)](https://keras.io/examples/vision/barlow_twins/)
 """
 We need `tensorflow-addons` for the LAMB loss function and
 `tensorflow-similarity` for our augmenting, model building, and training setup.
-This needs `nmslib`.
-
-We will be using a custom fork of this repository for now, as there were some
-minor changes to the augmenter that needed to be done. However, this will
-hopefully be updated to use the development(beta) branch instead.
 """
 
 """shell
 !pip install tensorflow-addons
-!pip install -e
-git+https://github.com/dewball345/similarity.git@aug_changes#egg=tensorflow_similarity
-!pip install nmslib
-
-%cd src/tensorflow-similarity/
+!pip install tensorflow-similarity
 """
 
 import os
