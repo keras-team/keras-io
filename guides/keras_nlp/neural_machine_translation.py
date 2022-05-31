@@ -492,3 +492,7 @@ for test_pair in test_pairs[:30]:
     rouge_n(reference_sentence, translated_sentence)
 
 print("ROUGE-2 Score: ", rouge_n.result())
+
+"""
+After 20 epochs, we get a ROUGE-2 score of 0.27.
+"""
