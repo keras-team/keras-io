@@ -12,6 +12,7 @@ LAYERS_MASTER = {
                 'tensorflow.keras.layers.Layer.weights',
                 'tensorflow.keras.layers.Layer.trainable_weights',
                 'tensorflow.keras.layers.Layer.non_trainable_weights',
+                'tensorflow.keras.layers.Layer.add_weight',
                 'tensorflow.keras.layers.Layer.trainable',
                 'tensorflow.keras.layers.Layer.get_weights',
                 'tensorflow.keras.layers.Layer.set_weights',

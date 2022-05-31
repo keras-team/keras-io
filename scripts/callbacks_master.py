@@ -19,6 +19,11 @@ CALLBACKS_MASTER = {
             'generate': ['tensorflow.keras.callbacks.ModelCheckpoint']
         },
         {
+            'path': 'backup_and_restore',
+            'title': 'BackupAndRestore',
+            'generate': ['tensorflow.keras.callbacks.BackupAndRestore']
+        },
+        {
             'path': 'tensorboard',
             'title': 'TensorBoard',
             'generate': ['tensorflow.keras.callbacks.TensorBoard']
@@ -62,11 +67,6 @@ CALLBACKS_MASTER = {
             'path': 'progbar_logger',
             'title': 'ProgbarLogger',
             'generate': ['tensorflow.keras.callbacks.ProgbarLogger']
-        },
-        {
-            'path': 'backup_and_restore',
-            'title': 'BackupAndRestore',
-            'generate': ['tensorflow.keras.callbacks.BackupAndRestore']
         },
     ]
 }

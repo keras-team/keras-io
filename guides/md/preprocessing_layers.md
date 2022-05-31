@@ -99,7 +99,13 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-data = np.array([[0.1, 0.2, 0.3], [0.8, 0.9, 1.0], [1.5, 1.6, 1.7],])
+data = np.array(
+    [
+        [0.1, 0.2, 0.3],
+        [0.8, 0.9, 1.0],
+        [1.5, 1.6, 1.7],
+    ]
+)
 layer = layers.Normalization()
 layer.adapt(data)
 normalized_data = layer(data)
@@ -318,9 +324,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 10s 482ms/step - loss: 7.9075
+5/5 [==============================] - 10s 415ms/step - loss: 8.7501
 
-<keras.callbacks.History at 0x12ac847d0>
+<keras.callbacks.History at 0x1277aa790>
 
 ```
 </div>
@@ -354,9 +360,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 2s 1ms/step - loss: 2.1251
+1563/1563 [==============================] - 2s 1ms/step - loss: 2.1209
 
-<keras.callbacks.History at 0x12ad68090>
+<keras.callbacks.History at 0x1288e7d90>
 
 ```
 </div>
@@ -485,7 +491,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -530,14 +537,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 1s/step - loss: 0.5189
+1/1 [==============================] - 1s 1s/step - loss: 0.4862
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.02478244]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.0396869]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -571,7 +578,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -615,14 +623,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 180ms/step - loss: 0.3644
+1/1 [==============================] - 0s 192ms/step - loss: 2.7082
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.35137588]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.58801]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -645,14 +653,12 @@ adapt_data = tf.constant(
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
 text_vectorizer = layers.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
-
-with tf.device("CPU"):
-    # A bug that prevents this from running on GPU for now.
-    text_vectorizer.adapt(adapt_data)
+text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -701,14 +707,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 174ms/step - loss: 0.5875
+1/1 [==============================] - 0s 192ms/step - loss: 1.3662
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[1.3830575]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[1.6707027]], shape=(1, 1), dtype=float32)
 
 ```
 </div>

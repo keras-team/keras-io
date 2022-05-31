@@ -178,6 +178,10 @@ def get_signature_end(function):
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")
+        # work around case-specific bug
+        signature_end = signature_end.replace(
+            "synchronization=<VariableSynchronization.AUTO: 0>, aggregation=<VariableAggregationV2.NONE: 0>",
+            "synchronization=tf.VariableSynchronization.AUTO, aggregation=tf.VariableSynchronization.NONE")
     return signature_end
 
 

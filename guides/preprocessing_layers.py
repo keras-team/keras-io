@@ -97,7 +97,13 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-data = np.array([[0.1, 0.2, 0.3], [0.8, 0.9, 1.0], [1.5, 1.6, 1.7],])
+data = np.array(
+    [
+        [0.1, 0.2, 0.3],
+        [0.8, 0.9, 1.0],
+        [1.5, 1.6, 1.7],
+    ]
+)
 layer = layers.Normalization()
 layer.adapt(data)
 normalized_data = layer(data)
@@ -408,7 +414,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -474,7 +481,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -529,7 +537,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
