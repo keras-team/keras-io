@@ -19,12 +19,17 @@ You'll learn how to:
 
 - Tokenize text using the `WordPieceTokenizer` from KerasNLP.
 - Implement a sequence-to-sequence Transformer model using KerasNLP's `TransformerEncoder`
-, `TransformerDecoder` and `PositionalEmbedding` layers, and train it.
-- Use the trained model to generate translations of unseen input sentences!
-- Vectorize text using the Keras `TextVectorization` layer.
+, `TransformerDecoder` and `TokenAndPositionEmbedding` layers, and train it.
+- Use KerasNLP's `greedy_search` function to generate translations of unseen
+input sentences using the Greedy Decoding strategy!
 
 Don't worry if you aren't familiar with KerasNLP. This tutorial shows exactly
 how simple and easy it is to use it! So, what are you waiting for? Dive right in!
+
+Note: Please refer to [this example]
+(https://keras.io/examples/nlp/neural_machine_translation_with_transformer/) for
+an implementation of the same NMT pipeline/task without using KerasNLP. Large
+parts of this example are inspired from the same implementation.
 """
 
 """
@@ -47,7 +52,7 @@ from tensorflow import keras
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 
 """
-Let's also define our hyperparameters.
+Let's also define our parameters/hyperparameters.
 """
 
 BATCH_SIZE = 64
@@ -119,14 +124,17 @@ print(f"{len(test_pairs)} test pairs")
 """
 ## Tokenizing the Data
 We'll define two tokenizers - one for the source language (English), and the other
-for the target language (Spanish). We'll be using the `WordPieceTokenizer` from
-KerasNLP to tokenize the text.
+for the target language (Spanish). We'll be using `WordPieceTokenizer` from
+KerasNLP to tokenize the text. `WordPieceTokenizer` takes a WordPiece vocabulary
+and has functions for tokenizing the text, and detokenizing sequences of tokens.
 
 
 Before we define the two tokenizers, we first need to train them on the dataset
 we have. WordPiece Tokenizer is a subword tokenizer; training it on a corpus gives
-us a vocabulary of subwords. Luckily, TensorFlow Text makes it very simple to
-train WordPiece on a corpus. 
+us a vocabulary of subwords. A subword tokenizer is a compromise between word tokenizers
+(word tokenizers have the issue of many OOV tokens), and character tokenizers
+(characters don't really encode meaning like words do). Luckily, TensorFlow Text makes it very
+simple to train WordPiece on a corpus. Reference: https://www.tensorflow.org/text/guide/subwords_tokenizer
 
 For more details about WordPiece, please visit this
 blog: https://ai.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html.
@@ -153,6 +161,15 @@ def train_word_piece(text_samples, vocab_size, reserved_tokens):
     )
     return vocab
 
+
+"""
+Every vocabulary has a few special, reserved tokens. We have four such tokens:
+- [PAD] - Padding token. Padding tokens are appended to the input sequence length
+when the input sequence length is shorter than the maximum sequence length.
+- [UNK] - Unknown token.
+- [START] - Token that marks the start of the input sequence.
+- [END] - Token that marks the end of the input sequence.
+"""
 
 reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
 
@@ -219,7 +236,7 @@ using the source sentence and the target words 0 to N.
 As such, the training dataset will yield a tuple `(inputs, targets)`, where:
 
 - `inputs` is a dictionary with the keys `encoder_inputs` and `decoder_inputs`.
-`encoder_inputs` is the vectorized source sentence and `decoder_inputs` is the target sentence "so far",
+`encoder_inputs` is the tokenized source sentence and `decoder_inputs` is the target sentence "so far",
 that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target sentence.
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
@@ -282,9 +299,9 @@ Embedding layer which encodes the word order in the sequence. The convention is
 to add these two embeddings. KerasNLP has a `TokenAndPositionEmbedding ` layer
 which does all of the above steps for us.
 
-Our sequence-to-sequence Transformer consists of a `TransformerEncoder`
-and a `TransformerDecoder` chained together. Earlier, we would have had to define
-these classes. But now, all these layers can be used off-the-shelf from KerasNLP!
+Our sequence-to-sequence Transformer consists of a `TransformerEncoder` layer
+and a `TransformerDecoder` layer chained together. Earlier, we would have had to
+define these classes. But now, all these layers can be used off-the-shelf from KerasNLP!
 
 The source sequence will be passed to the `TransformerEncoder`, which will
 produce a new representation of it. This new representation will then be passed
@@ -293,7 +310,7 @@ words 0 to N). The `TransformerDecoder` will then seek to predict the next words
 in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking.
-The `TransformerDecoder` sees the entire sequences at once, and thus we must make
+The `TransformerDecoder` sees the entire sequence at once, and thus we must make
 sure that it only uses information from target tokens 0 to N when predicting token N+1
 (otherwise, it could use information from the future, which would
 result in a model that cannot be used at inference time).
@@ -365,37 +382,49 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 Finally, let's demonstrate how to translate brand new English sentences.
 We simply feed into the model the tokenized English sentence
-as well as the target token `"[START]"`, then we repeatedly generated the next
-token, until we hit the token `"[END]"`.
+as well as the target token `"[START]"`. The model outputs probabilities of the
+next token. We then we repeatedly generated the next token conditioned on the
+tokens generated so far, until we hit the token `"[END]"`.
+
+For decoding, we will use the `keras_nlp.utils.greedy_search` function from
+KerasNLP. Greedy Decoding is a text decoding method which outputs the most
+likely next token at each time step, i.e., the token with the highest probability.
 """
 
-def decode_sequence(input_sentence):
-    tokenized_input_sentence = eng_tokenizer([input_sentence])
-    tokenized_target_sentence = tf.constant([[int(spa_tokenizer("[START]")[0])]])
 
-    for i in range(MAX_SEQUENCE_LENGTH):
-        predictions = transformer(
-            [tokenized_input_sentence, tokenized_target_sentence,]
-        )
+def decode_sequences(input_sentences):
+    batch_size = tf.shape(input_sentences)[0]
 
-        sampled_token_index = np.argmax(predictions[0, i, :])
-        tokenized_target_sentence = tf.concat(
-            (tokenized_target_sentence, tf.constant([[sampled_token_index]])), axis=1
-        )
+    # Tokenize the encoder input.
+    encoder_input_tokens = eng_tokenizer(input_sentences)
 
-        if sampled_token_index == int(spa_tokenizer("[END]")[0]):
-            break
-    decoded_sentence = spa_tokenizer.detokenize(tokenized_target_sentence)
-    return decoded_sentence
+    # Define a function that outputs the next token's probability given the
+    # input sequence.
+    def token_probability_fn(decoder_input_tokens):
+        return transformer([encoder_input_tokens, decoder_input_tokens])[:, -1, :]
+
+    # Set the prompt to the "[START]" token.
+    prompt = tf.expand_dims(tf.repeat(spa_tokenizer("[START]")[0], batch_size), axis=1)
+
+    generated_tokens = keras_nlp.utils.greedy_search(
+        token_probability_fn,
+        prompt,
+        max_length=40,
+        end_token_id=spa_tokenizer("[END]")[0],
+    )
+    generated_sentences = spa_tokenizer.detokenize(generated_tokens)
+    return generated_sentences
 
 
 test_eng_texts = [pair[0] for pair in test_pairs]
 for i in range(10):
     input_sentence = random.choice(test_eng_texts)
-    translated = decode_sequence(input_sentence)
+    translated = decode_sequences(tf.constant([input_sentence]))
+    translated = translated.numpy()[0].decode("utf-8")
+    translated = translated.replace("[PAD]", "").strip()
     print(f"*** Example {i} ***")
     print(input_sentence)
-    print(translated.numpy()[0].decode("utf-8"))
+    print(translated)
     print()
 
 """
@@ -456,7 +485,9 @@ for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
     reference_sentence = test_pair[1]
 
-    translated_sentence = decode_sequence(input_sentence)
+    translated_sentence = decode_sequences(tf.constant([input_sentence]))
+    translated_sentence = translated_sentence.numpy()[0].decode("utf-8")
+    translated_sentence = translated_sentence.replace("[PAD]", "").strip()
 
     rouge_n(reference_sentence, translated_sentence)
 
