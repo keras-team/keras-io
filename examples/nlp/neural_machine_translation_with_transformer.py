@@ -248,12 +248,15 @@ class TransformerEncoder(layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            "embed_dim": self.embed_dim,
-            "dense_dim": self.dense_dim,
-            "num_heads": self.num_heads,
-        })
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "dense_dim": self.dense_dim,
+                "num_heads": self.num_heads,
+            }
+        )
         return config
+
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
@@ -280,12 +283,15 @@ class PositionalEmbedding(layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            "sequence_length": self.sequence_length,
-            "vocab_size": self.vocab_size,
-            "embed_dim": self.embed_dim,
-        })
+        config.update(
+            {
+                "sequence_length": self.sequence_length,
+                "vocab_size": self.vocab_size,
+                "embed_dim": self.embed_dim,
+            }
+        )
         return config
+
 
 class TransformerDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
@@ -347,12 +353,15 @@ class TransformerDecoder(layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            "embed_dim": self.embed_dim,
-            "latent_dim": self.latent_dim,
-            "num_heads": self.num_heads,
-        })
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "latent_dim": self.latent_dim,
+                "num_heads": self.num_heads,
+            }
+        )
         return config
+
 
 """
 Next, we assemble the end-to-end model.
