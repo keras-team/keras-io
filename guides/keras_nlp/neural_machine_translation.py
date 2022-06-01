@@ -136,8 +136,8 @@ us a vocabulary of subwords. A subword tokenizer is a compromise between word to
 (characters don't really encode meaning like words do). Luckily, TensorFlow Text makes it very
 simple to train WordPiece on a corpus. Reference: https://www.tensorflow.org/text/guide/subwords_tokenizer
 
-For more details about WordPiece, please visit this
-blog: https://ai.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html.
+For more details about WordPiece, please visit [this
+blog](https://ai.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html).
 """
 
 
