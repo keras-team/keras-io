@@ -188,8 +188,7 @@ techniques in their respective papers:
 
 In this example, we will use `CutMix` and `MixUp` independently in a manually created
 preprocessing pipeline. In most state of the art pipelines images are randomly
-augmented by either `CutMix`, `MixUp`, or neither. The function below implements this
-in an equal 1/3 split.
+augmented by either `CutMix`, `MixUp`, or neither. The function below implements both.
 
 """
 cut_mix = keras_cv.layers.CutMix()
