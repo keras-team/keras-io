@@ -254,7 +254,7 @@ Embedding layer which encodes the word order in the sequence. The convention is
 to add these two embeddings. KerasNLP has a `TokenAndPositionEmbedding ` layer
 which does all of the above steps for us.
 
-Our FNet classification model consists of an `FNetEncoder` layer with a `Dense`
+Our FNet classification model consists of three `FNetEncoder` layer with a `Dense`
 layer on top. The `FNetEncoder` layer can be used off-the-shelf from KerasNLP!
 
 Note: For FNet, masking the padding tokens has a minimal effect on results. In the
@@ -312,7 +312,11 @@ We obtain a test accuracy of around 72%.
 """
 ## Comparison with Transformer Model
 
-Let's compare our FNet Classifier model with a Transformer Classifier model.
+Let's compare our FNet Classifier model with a Transformer Classifier model. We
+keep all the parameters/hyperparameters the same. For example, we use three
+`TransformerEncoder` layers.
+
+We set the number of heads to 2.
 """
 NUM_HEADS = 2
 input_ids = keras.Input(shape=(None,), dtype="int64", name="input_ids")
@@ -372,4 +376,5 @@ Let's make a table and compare the two models.
 |    **Train Accuracy**   |        70.88%       |           78.20%           |
 | **Validation Accuracy** |        70.94%       |           72.39%           |
 |    **Test Accuracy**    |        71.99%       |           73.62%           |
+|       **#Params**       |       2,321,921     |          2,520,065         |
 """
