@@ -191,8 +191,6 @@ preprocessing pipeline. In most state of the art pipelines images are randomly
 augmented by either `CutMix`, `MixUp`, or neither. The function below implements this
 in an equal 1/3 split.
 
-Note that our `cut_mix_and_mix_up` function is annotated with a `tf.function` to ensure
-optimal performance.
 """
 cut_mix = keras_cv.layers.CutMix()
 mix_up = keras_cv.layers.MixUp()
