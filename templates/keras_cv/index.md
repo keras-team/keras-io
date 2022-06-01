@@ -3,7 +3,6 @@
 KerasCV is a toolbox of modular building blocks (layers, metrics, losses, data augmentation) that computer vision engineers can leverage to quickly assemble production-grade, state-of-the-art training and inference pipelines for common use cases such as image classification, object detection, image segmentation, image data augmentation, etc.
 
 <img style="width: 400px; max-width: 90%;" src="/img/keras-cv-augmentations.gif">
-![KerasCV Image Augmentations](/img/keras-cv-augmentations.gif)
 
 ---
 ## Quick links
