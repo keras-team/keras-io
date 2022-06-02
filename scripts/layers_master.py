@@ -152,6 +152,11 @@ LAYERS_MASTER = {
                     'generate': ['tensorflow.keras.layers.DepthwiseConv2D']
                 },
                 {
+                    'path': 'convolution1d_transpose',
+                    'title': 'Conv1DTranspose layer',
+                    'generate': ['tensorflow.keras.layers.Conv1DTranspose']
+                },
+                {
                     'path': 'convolution2d_transpose',
                     'title': 'Conv2DTranspose layer',
                     'generate': ['tensorflow.keras.layers.Conv2DTranspose']
