@@ -21,10 +21,10 @@ contain, and how they're connected.
 The Keras API makes it possible to save all of these pieces to disk at once,
 or to only selectively save some of them:
 
-- Saving everything into a single archive in the TensorFlow SavedModel format
+- Saves everything into a single archive in the TensorFlow SavedModel format
 (or in the older Keras H5 format). This is the standard practice.
-- Saving the architecture / configuration only, typically as a JSON file.
-- Saving the weights values only. This is generally used when training the model.
+- Saves the architecture / configuration only, typically as a JSON file.
+- Saves the weights values only. This is generally used when training the model.
 
 Let's take a look at each of these options. When would you use one or the other,
 and how do they work?
@@ -386,7 +386,7 @@ but it's completely unsafe and means your model cannot be loaded on a different 
 
 In order to save/load a model with custom-defined layers, or a subclassed model,
 you should overwrite the `get_config` and optionally `from_config` methods.
-Additionally, you should use register the custom object so that Keras is aware of it.
+Additionally, you should register the custom object so that Keras is aware of it.
 
 **Custom functions**
 
