@@ -15,21 +15,24 @@ makes it convenient to construct NLP pipelines.
 In this example, we'll use KerasNLP layers to build an encoder-decoder Transformer
 model, and train it on the English-to-Spanish machine translation task.
 
+This example is based on the [English-to-Spanish NMT example]
+(https://keras.io/examples/nlp/neural_machine_translation_with_transformer/) by
+[fchollet](https://twitter.com/fchollet). The original example is more low-level
+and implements layers from scratch, whereas this example uses KerasNLP to show
+some more advanced approaches, such as subword tokenization and using metrics
+to compute the quality of generated translations.
+
 You'll learn how to:
 
-- Tokenize text using the `WordPieceTokenizer` from KerasNLP.
-- Implement a sequence-to-sequence Transformer model using KerasNLP's `TransformerEncoder`
-, `TransformerDecoder` and `TokenAndPositionEmbedding` layers, and train it.
-- Use KerasNLP's `greedy_search` function to generate translations of unseen
-input sentences using the Greedy Decoding strategy!
+- Tokenize text using `keras_nlp.tokenizers.WordPieceTokenizer`.
+- Implement a sequence-to-sequence Transformer model using KerasNLP's
+`keras_nlp.layers.TransformerEncoder`, `keras_nlp.layers.TransformerDecoder` and
+`keras_nlp.layers.TokenAndPositionEmbedding` layers, and train it.
+- Use `keras_nlp.utils.greedy_search` function to generate translations
+of unseen input sentences using the greedy decoding strategy!
 
 Don't worry if you aren't familiar with KerasNLP. This tutorial shows exactly
 how simple and easy it is to use it! So, what are you waiting for? Dive right in!
-
-Note: Please refer to [this example]
-(https://keras.io/examples/nlp/neural_machine_translation_with_transformer/) for
-an implementation of the same NMT pipeline/task without using KerasNLP. Large
-parts of this example are inspired from the same implementation.
 """
 
 """
@@ -56,7 +59,7 @@ Let's also define our parameters/hyperparameters.
 """
 
 BATCH_SIZE = 64
-EPOCHS = 1  # Should be 20 to get decent results.
+EPOCHS = 1  # This should be at least 30 for convergence
 MAX_SEQUENCE_LENGTH = 40
 ENG_VOCAB_SIZE = 15000
 SPA_VOCAB_SIZE = 15000
@@ -123,36 +126,35 @@ print(f"{len(test_pairs)} test pairs")
 
 """
 ## Tokenizing the Data
+
 We'll define two tokenizers - one for the source language (English), and the other
-for the target language (Spanish). We'll be using `WordPieceTokenizer` from
-KerasNLP to tokenize the text. `WordPieceTokenizer` takes a WordPiece vocabulary
+for the target language (Spanish). We'll be using
+`keras_nlp.tokenizers.WordPieceTokenizer` to tokenize the text.
+`keras_nlp.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
 and has functions for tokenizing the text, and detokenizing sequences of tokens.
 
 
 Before we define the two tokenizers, we first need to train them on the dataset
-we have. WordPiece Tokenizer is a subword tokenizer; training it on a corpus gives
-us a vocabulary of subwords. A subword tokenizer is a compromise between word tokenizers
-(word tokenizers have the issue of many OOV tokens), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text makes it very
-simple to train WordPiece on a corpus. Reference: https://www.tensorflow.org/text/guide/subwords_tokenizer
+we have. The WordPiece tokenization algorithm is a subword tokenization algorithm;
+ training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
+ is a compromise between word tokenizers (word tokenizers have the issue of many
+ OOV tokens), and character tokenizers (characters don't really encode meaning
+ like words do). Luckily, TensorFlow Text makes it very simple to train WordPiece
+ on a corpus as described in [this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
 
-For more details about WordPiece, please visit [this
+For more details about the WordPiece algorithm, please visit [this
 blog](https://ai.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html).
 """
 
 
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
-    bert_tokenizer_params = dict(lower_case=True)
-
     bert_vocab_args = dict(
         # The target vocabulary size
         vocab_size=vocab_size,
         # Reserved tokens that must be included in the vocabulary
         reserved_tokens=reserved_tokens,
         # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params=bert_tokenizer_params,
-        # Arguments for `wordpiece_vocab.wordpiece_tokenizer_learner_lib.learn`
-        learn_params={},
+        bert_tokenizer_params={"lower_case": True},
     )
 
     word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
@@ -164,11 +166,11 @@ def train_word_piece(text_samples, vocab_size, reserved_tokens):
 
 """
 Every vocabulary has a few special, reserved tokens. We have four such tokens:
-- [PAD] - Padding token. Padding tokens are appended to the input sequence length
+- `[PAD]` - Padding token. Padding tokens are appended to the input sequence length
 when the input sequence length is shorter than the maximum sequence length.
-- [UNK] - Unknown token.
-- [START] - Token that marks the start of the input sequence.
-- [END] - Token that marks the end of the input sequence.
+- `[UNK]` - Unknown token.
+- `[START]` - Token that marks the start of the input sequence.
+- `[END]` - Token that marks the end of the input sequence.
 """
 
 reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
@@ -241,7 +243,7 @@ that is to say, the words 0 to N used to predict word N+1 (and beyond) in the ta
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
 
-Before we tokenize the text, we will add [START] and [END] tokens to the input
+Before we tokenize the text, we will add `[START]` and `[END]` tokens to the input
 Spanish sentence.
 """
 
@@ -293,33 +295,34 @@ for inputs, targets in train_ds.take(1):
 ## Building the Model
 
 Now, let's move on to the exciting part - defining our model!
-We first need an Embedding layer, i.e., a vector for every token in our input sequence.
-This Embedding layer can be initialised randomly. We also need a Positional
-Embedding layer which encodes the word order in the sequence. The convention is
-to add these two embeddings. KerasNLP has a `TokenAndPositionEmbedding ` layer
-which does all of the above steps for us.
+We first need an embedding layer, i.e., a vector for every token in our input sequence.
+This embedding layer can be initialised randomly. We also need a positional
+embedding layer which encodes the word order in the sequence. The convention is
+to add these two embeddings. KerasNLP has a `keras_nlp.layers.TokenAndPositionEmbedding `
+layer which does all of the above steps for us.
 
-Our sequence-to-sequence Transformer consists of a `TransformerEncoder` layer
-and a `TransformerDecoder` layer chained together. Earlier, we would have had to
-define these classes. But now, all these layers can be used off-the-shelf from KerasNLP!
+Our sequence-to-sequence Transformer consists of a `keras_nlp.layers.TransformerEncoder`
+layer and a `keras_nlp.layers.TransformerDecoder` layer chained together.
+With KerasNLP, we don't need to write these layers ourselves, we can use them
+straight from the library!
 
-The source sequence will be passed to the `TransformerEncoder`, which will
-produce a new representation of it. This new representation will then be passed
-to the `TransformerDecoder`, together with the target sequence so far (target
-words 0 to N). The `TransformerDecoder` will then seek to predict the next words
-in the target sequence (N+1 and beyond).
+The source sequence will be passed to `keras_nlp.layers.TransformerEncoder`, which
+will produce a new representation of it. This new representation will then be passed
+to the `keras_nlp.layers.TransformerDecoder`, together with the target sequence
+so far (target words 0 to N). The `keras_nlp.layers.TransformerDecoder` will
+then seek to predict the next words in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking.
-The `TransformerDecoder` sees the entire sequence at once, and thus we must make
-sure that it only uses information from target tokens 0 to N when predicting token N+1
-(otherwise, it could use information from the future, which would
-result in a model that cannot be used at inference time).
+The `keras_nlp.layers.TransformerDecoder` sees the entire sequence at once, and
+thus we must make sure that it only uses information from target tokens 0 to N
+when predicting token N+1 (otherwise, it could use information from the future,
+ which would result in a model that cannot be used at inference time).
 In order to enable causal masking, all we have to do is set the `use_causal_mask`
 argument to True.
 
-We also need to mask the padding tokens ("[PAD]"). For this, we can set the
-`mask_zero` argument of the `TokenAndPositionEmbedding` layer to True. This
-will then be propagated to all subsequent layers.
+We also need to mask the padding tokens (`[PAD]`). For this, we can set the
+`mask_zero` argument of the `keras_nlp.layers.TokenAndPositionEmbedding` layer
+to True. This will then be propagated to all subsequent layers.
 """
 
 # Encoder
@@ -365,10 +368,13 @@ transformer = keras.Model(
 ## Training our Model
 
 We'll use accuracy as a quick way to monitor training progress on the validation data.
-Note that machine translation typically uses BLEU scores as well as other metrics, rather than accuracy.
+Note that machine translation typically uses BLEU scores as well as other metrics,
+rather than accuracy. However, in order to use metrics like ROUGE, BLEU, etc. we
+will have decode the probabilities and generate the text. Text generation is
+computationally expensive, and performing this during training is not recommended.
 
 Here we only train for 1 epoch, but to get the model to actually converge
-you should train for at least 20 epochs.
+you should train for at least 30 epochs.
 """
 
 transformer.summary()
@@ -382,9 +388,9 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 Finally, let's demonstrate how to translate brand new English sentences.
 We simply feed into the model the tokenized English sentence
-as well as the target token `"[START]"`. The model outputs probabilities of the
+as well as the target token `[START]`. The model outputs probabilities of the
 next token. We then we repeatedly generated the next token conditioned on the
-tokens generated so far, until we hit the token `"[END]"`.
+tokens generated so far, until we hit the token `[END]`.
 
 For decoding, we will use the `keras_nlp.utils.greedy_search` function from
 KerasNLP. Greedy Decoding is a text decoding method which outputs the most
@@ -457,8 +463,8 @@ move this table toward the corner.
 [START] muevile esta mesa hacia la car, se muelvale esta mesa. [END]
 
 *** Example 7 ***
-tom asked mary to mind her own business.
-[START] tom le pidio a mary que tenia pelo le importa a su cuenta. [END]
+tom has never heard mary sing.
+[START] tom nunca ha oído cantar a mary. [END]
 
 *** Example 8 ***
 tom was in town monday night.
@@ -474,9 +480,9 @@ what's happened, has happened. it's history.
 
 There are many metrics which are used for text generation tasks. Here, to
 evaluate translations generated by our model, we will use the ROUGE-N score from
-KerasNLP. We will compute ROUGE-2 score, which essentially means that we will
-consider the number of bigram matches. We will calculate the score over
-30 test samples (since decoding is an expensive process).
+KerasNLP. We will compute ROUGE-2 score. Essentially, ROUGE-2 is a score based on
+the number of common bigrams between the reference text and the generated text. We will
+calculate the score over 30 test samples (since decoding is an expensive process).
 """
 
 rouge_n = keras_nlp.metrics.RougeN(order=2)
