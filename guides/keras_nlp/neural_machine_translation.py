@@ -59,7 +59,7 @@ Let's also define our parameters/hyperparameters.
 """
 
 BATCH_SIZE = 64
-EPOCHS = 1  # This should be at least 30 for convergence
+EPOCHS = 1  # This should be at least 10 for convergence
 MAX_SEQUENCE_LENGTH = 40
 ENG_VOCAB_SIZE = 15000
 SPA_VOCAB_SIZE = 15000
@@ -379,7 +379,7 @@ will have decode the probabilities and generate the text. Text generation is
 computationally expensive, and performing this during training is not recommended.
 
 Here we only train for 1 epoch, but to get the model to actually converge
-you should train for at least 30 epochs.
+you should train for at least 10 epochs.
 """
 
 transformer.summary()
@@ -505,5 +505,5 @@ for test_pair in test_pairs[:30]:
 print("ROUGE-2 Score: ", rouge_n.result())
 
 """
-After 20 epochs, we get a ROUGE-2 score of 0.27.
+After 10 epochs, we get a ROUGE-2 score of 0.20.
 """
