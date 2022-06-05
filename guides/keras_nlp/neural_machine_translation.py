@@ -195,16 +195,10 @@ less than the specified sequence length. Otherwise, the sequence is truncated.
 """
 
 eng_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=eng_vocab,
-    lowercase=False,
-    split_pattern=" ",
-    sequence_length=MAX_SEQUENCE_LENGTH,
+    vocabulary=eng_vocab, lowercase=False, split_pattern=" ",
 )
 spa_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=spa_vocab,
-    lowercase=False,
-    split_pattern=" ",
-    sequence_length=MAX_SEQUENCE_LENGTH + 1,
+    vocabulary=spa_vocab, lowercase=False, split_pattern=" ",
 )
 
 """
@@ -243,24 +237,35 @@ that is to say, the words 0 to N used to predict word N+1 (and beyond) in the ta
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
 
-Before we tokenize the text, we will add `[START]` and `[END]` tokens to the input
-Spanish sentence.
+We will add special tokens, `[START]` and `[END]`, to the input Spanish sentence
+after tokenizing the text.
 """
 
-train_pairs = [
-    (text_pair[0], "[START] " + text_pair[1] + " [END]") for text_pair in train_pairs
-]
-val_pairs = [
-    (text_pair[0], "[START] " + text_pair[1] + " [END]") for text_pair in val_pairs
-]
-test_pairs = [
-    (text_pair[0], "[START] " + text_pair[1] + " [END]") for text_pair in test_pairs
-]
-
+def normalize_length(tokens, max_sequence_length):
+    output_shape = tokens.shape.as_list()
+    output_shape[-1] = max_sequence_length
+    tokens = tokens.to_tensor(shape=output_shape)
+    return tokens
 
 def format_dataset(eng, spa):
+    batch_size = tf.shape(spa)[0]
+
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
+
+    # Add special tokens (`[START]` and `[END]`) to `spa`.
+    start_token_id_tensor = tf.expand_dims(
+        tf.repeat([spa_tokenizer.token_to_id("[START]")], batch_size), axis=1
+    )
+    end_token_id_tensor = tf.expand_dims(
+        tf.repeat([spa_tokenizer.token_to_id("[END]")], batch_size), axis=1
+    )
+    spa = tf.concat([start_token_id_tensor, spa, end_token_id_tensor], axis=1)
+
+    # Truncate text/add padding tokens based on the specified maximum sequence length.
+    eng = normalize_length(eng, MAX_SEQUENCE_LENGTH)
+    spa = normalize_length(spa, MAX_SEQUENCE_LENGTH + 1)
+
     return (
         {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
         spa[:, 1:],
@@ -402,7 +407,7 @@ def decode_sequences(input_sentences):
     batch_size = tf.shape(input_sentences)[0]
 
     # Tokenize the encoder input.
-    encoder_input_tokens = eng_tokenizer(input_sentences)
+    encoder_input_tokens = normalize_length(eng_tokenizer(input_sentences), MAX_SEQUENCE_LENGTH)
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
