@@ -95,6 +95,8 @@ sub-directories: `train` and `test`. Each subdirectory in turn contains two
 folders: `pos` and `neg` for positive and negative reviews, respectively.
 Before we append the text to the list, let's convert it to lowercase.
 """
+
+
 def load_dataset(path):
     ds = []
     pos_review_paths = glob.glob(os.path.join(path, "pos", "*.txt"))
@@ -116,8 +118,8 @@ random.shuffle(test_ds)
 """
 Let's split `test_ds` into two - the validation dataset and the test dataset.
 """
-val_ds = test_ds[:len(test_ds) // 2]
-test_ds = test_ds[len(test_ds) // 2:]
+val_ds = test_ds[: len(test_ds) // 2]
+test_ds = test_ds[len(test_ds) // 2 :]
 
 """
 Let's analyse the train-validation-test split. We'll also print a few samples.
@@ -148,6 +150,7 @@ makes it very simple to train WordPiece on a corpus as described in
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
 
+
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
     bert_vocab_args = dict(
         # The target vocabulary size
@@ -163,6 +166,7 @@ def train_word_piece(text_samples, vocab_size, reserved_tokens):
         word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
     )
     return vocab
+
 
 """
 Every vocabulary has a few special, reserved tokens. We have four such tokens:
@@ -186,9 +190,7 @@ all sequences are padded to the same length, if the length of the sequence is
 less than the specified sequence length. Otherwise, the sequence is truncated.
 """
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab,
-    lowercase=False,
-    sequence_length=MAX_SEQUENCE_LENGTH,
+    vocabulary=vocab, lowercase=False, sequence_length=MAX_SEQUENCE_LENGTH,
 )
 
 """
@@ -211,9 +213,11 @@ Next, we'll format our datasets in the form that will be fed to the models. We
 need to tokenize the text.
 """
 
+
 def format_dataset(sentence, label):
-  sentence = tokenizer(sentence)
-  return ({"input_ids": sentence}, label)
+    sentence = tokenizer(sentence)
+    return ({"input_ids": sentence}, label)
+
 
 def make_dataset(pairs):
     sentences, labels = zip(*pairs)
