@@ -395,7 +395,9 @@ def decode_sequences(input_sentences):
     batch_size = tf.shape(input_sentences)[0]
 
     # Tokenize the encoder input.
-    encoder_input_tokens = eng_tokenizer(input_sentences).to_tensor(shape=(None, MAX_SEQUENCE_LENGTH))
+    encoder_input_tokens = eng_tokenizer(input_sentences).to_tensor(
+        shape=(None, MAX_SEQUENCE_LENGTH)
+    )
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
