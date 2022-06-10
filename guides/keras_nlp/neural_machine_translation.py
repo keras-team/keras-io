@@ -238,13 +238,6 @@ sentence after tokenizing the text.
 """
 
 
-def normalize_length(tokens, max_sequence_length):
-    output_shape = tokens.shape.as_list()
-    output_shape[-1] = max_sequence_length
-    tokens = tokens.to_tensor(shape=output_shape)
-    return tokens
-
-
 def preprocess_batch(eng, spa):
     batch_size = tf.shape(spa)[0]
 
@@ -260,8 +253,8 @@ def preprocess_batch(eng, spa):
     spa = tf.concat([start_token_id_tensor, spa, end_token_id_tensor], axis=1)
 
     # Truncate text/add padding tokens based on the specified maximum sequence length.
-    eng = normalize_length(eng, MAX_SEQUENCE_LENGTH)
-    spa = normalize_length(spa, MAX_SEQUENCE_LENGTH + 1)
+    eng = eng.to_tensor(shape=(None, MAX_SEQUENCE_LENGTH))
+    spa = spa.to_tensor(shape=(None, MAX_SEQUENCE_LENGTH + 1))
 
     return (
         {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
@@ -402,9 +395,7 @@ def decode_sequences(input_sentences):
     batch_size = tf.shape(input_sentences)[0]
 
     # Tokenize the encoder input.
-    encoder_input_tokens = normalize_length(
-        eng_tokenizer(input_sentences), MAX_SEQUENCE_LENGTH
-    )
+    encoder_input_tokens = eng_tokenizer(input_sentences).to_tensor(shape=(None, MAX_SEQUENCE_LENGTH))
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
