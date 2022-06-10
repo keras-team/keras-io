@@ -37,6 +37,7 @@ how simple and easy it is to use it! So, what are you waiting for? Dive right in
 
 """
 ## Setup
+
 Before we start implementing the pipeline, let's import all the libraries we need.
 """
 
@@ -133,17 +134,14 @@ for the target language (Spanish). We'll be using
 `keras_nlp.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
 and has functions for tokenizing the text, and detokenizing sequences of tokens.
 
-
 Before we define the two tokenizers, we first need to train them on the dataset
 we have. The WordPiece tokenization algorithm is a subword tokenization algorithm;
- training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
- is a compromise between word tokenizers (word tokenizers have the issue of many
- OOV tokens), and character tokenizers (characters don't really encode meaning
- like words do). Luckily, TensorFlow Text makes it very simple to train WordPiece
- on a corpus as described in [this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
-
-For more details about the WordPiece algorithm, please visit [this
-blog](https://ai.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html).
+training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
+is a compromise between word tokenizers (word tokenizers need very large
+vocabularies for good coverage of input words), and character tokenizers
+(characters don't really encode meaning like words do). Luckily, TensorFlow Text
+makes it very simple to train WordPiece on a corpus as described in
+[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
 """
 
 
@@ -166,11 +164,11 @@ def train_word_piece(text_samples, vocab_size, reserved_tokens):
 
 """
 Every vocabulary has a few special, reserved tokens. We have four such tokens:
-- `[PAD]` - Padding token. Padding tokens are appended to the input sequence length
-when the input sequence length is shorter than the maximum sequence length.
-- `[UNK]` - Unknown token.
-- `[START]` - Token that marks the start of the input sequence.
-- `[END]` - Token that marks the end of the input sequence.
+- `"[PAD]"` - Padding token. Padding tokens are appended to the input sequence
+length when the input sequence length is shorter than the maximum sequence length.
+- `"[UNK]"` - Unknown token.
+- `"[START]"` - Token that marks the start of the input sequence.
+- `"[END]"` - Token that marks the end of the input sequence.
 """
 
 reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
@@ -189,16 +187,14 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 """
 Now, let's define the tokenizers. We will use the vocabularies obtained above as
-input to the tokenizers. We will define a maximum sequence length so that
-all sequences are padded to the same length, if the length of the sequence is
-less than the specified sequence length. Otherwise, the sequence is truncated.
+input to the tokenizers.
 """
 
 eng_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=eng_vocab, lowercase=False, split_pattern=" ",
+    vocabulary=eng_vocab, lowercase=False
 )
 spa_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=spa_vocab, lowercase=False, split_pattern=" ",
+    vocabulary=spa_vocab, lowercase=False
 )
 
 """
@@ -237,9 +233,10 @@ that is to say, the words 0 to N used to predict word N+1 (and beyond) in the ta
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
 
-We will add special tokens, `[START]` and `[END]`, to the input Spanish sentence
-after tokenizing the text.
+We will add special tokens, `"[START]"` and `"[END]"`, to the input Spanish
+sentence after tokenizing the text.
 """
+
 
 def normalize_length(tokens, max_sequence_length):
     output_shape = tokens.shape.as_list()
@@ -247,19 +244,19 @@ def normalize_length(tokens, max_sequence_length):
     tokens = tokens.to_tensor(shape=output_shape)
     return tokens
 
-def format_dataset(eng, spa):
+
+def preprocess_batch(eng, spa):
     batch_size = tf.shape(spa)[0]
 
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
 
-    # Add special tokens (`[START]` and `[END]`) to `spa`.
-    start_token_id_tensor = tf.expand_dims(
-        tf.repeat([spa_tokenizer.token_to_id("[START]")], batch_size), axis=1
+    # Add special tokens (`"[START]"` and `"[END]"`) to `spa`.
+    start_token_id_tensor = tf.fill(
+        (batch_size, 1), spa_tokenizer.token_to_id("[START]")
     )
-    end_token_id_tensor = tf.expand_dims(
-        tf.repeat([spa_tokenizer.token_to_id("[END]")], batch_size), axis=1
-    )
+    end_token_id_tensor = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[END]"))
+
     spa = tf.concat([start_token_id_tensor, spa, end_token_id_tensor], axis=1)
 
     # Truncate text/add padding tokens based on the specified maximum sequence length.
@@ -278,7 +275,7 @@ def make_dataset(pairs):
     spa_texts = list(spa_texts)
     dataset = tf.data.Dataset.from_tensor_slices((eng_texts, spa_texts))
     dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.map(format_dataset)
+    dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
     return dataset.shuffle(2048).prefetch(16).cache()
 
 
@@ -308,8 +305,6 @@ layer which does all of the above steps for us.
 
 Our sequence-to-sequence Transformer consists of a `keras_nlp.layers.TransformerEncoder`
 layer and a `keras_nlp.layers.TransformerDecoder` layer chained together.
-With KerasNLP, we don't need to write these layers ourselves, we can use them
-straight from the library!
 
 The source sequence will be passed to `keras_nlp.layers.TransformerEncoder`, which
 will produce a new representation of it. This new representation will then be passed
@@ -325,7 +320,7 @@ when predicting token N+1 (otherwise, it could use information from the future,
 In order to enable causal masking, all we have to do is set the `use_causal_mask`
 argument to True.
 
-We also need to mask the padding tokens (`[PAD]`). For this, we can set the
+We also need to mask the padding tokens (`"[PAD]"`). For this, we can set the
 `mask_zero` argument of the `keras_nlp.layers.TokenAndPositionEmbedding` layer
 to True. This will then be propagated to all subsequent layers.
 """
@@ -393,9 +388,9 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 Finally, let's demonstrate how to translate brand new English sentences.
 We simply feed into the model the tokenized English sentence
-as well as the target token `[START]`. The model outputs probabilities of the
+as well as the target token `"[START]"`. The model outputs probabilities of the
 next token. We then we repeatedly generated the next token conditioned on the
-tokens generated so far, until we hit the token `[END]`.
+tokens generated so far, until we hit the token `"[END]"`.
 
 For decoding, we will use the `keras_nlp.utils.greedy_search` function from
 KerasNLP. Greedy Decoding is a text decoding method which outputs the most
@@ -407,7 +402,9 @@ def decode_sequences(input_sentences):
     batch_size = tf.shape(input_sentences)[0]
 
     # Tokenize the encoder input.
-    encoder_input_tokens = normalize_length(eng_tokenizer(input_sentences), MAX_SEQUENCE_LENGTH)
+    encoder_input_tokens = normalize_length(
+        eng_tokenizer(input_sentences), MAX_SEQUENCE_LENGTH
+    )
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -415,13 +412,13 @@ def decode_sequences(input_sentences):
         return transformer([encoder_input_tokens, decoder_input_tokens])[:, -1, :]
 
     # Set the prompt to the "[START]" token.
-    prompt = tf.expand_dims(tf.repeat(spa_tokenizer("[START]")[0], batch_size), axis=1)
+    prompt = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
 
     generated_tokens = keras_nlp.utils.greedy_search(
         token_probability_fn,
         prompt,
         max_length=40,
-        end_token_id=spa_tokenizer("[END]")[0],
+        end_token_id=spa_tokenizer.token_to_id("[END]"),
     )
     generated_sentences = spa_tokenizer.detokenize(generated_tokens)
     return generated_sentences
@@ -484,13 +481,17 @@ what's happened, has happened. it's history.
 ## Evaluating our Model (Quantitative Analysis)
 
 There are many metrics which are used for text generation tasks. Here, to
-evaluate translations generated by our model, let's compute the ROUGE-2 score.
-Essentially, ROUGE-2 is a score based on the number of common bigrams between
-the reference text and the generated text. We will calculate the score over 30
-test samples (since decoding is an expensive process).
+evaluate translations generated by our model, let's compute the ROUGE-1 and
+ROUGE-2 scores. Essentially, ROUGE-N is a score based on the number of common
+n-grams between the reference text and the generated text. ROUGE-1 and ROUGE-2
+use the number of common unigrams and bigrams, respectively.
+
+We will calculate the score over 30 test samples (since decoding is an
+expensive process).
 """
 
-rouge_n = keras_nlp.metrics.RougeN(order=2)
+rouge_1 = keras_nlp.metrics.RougeN(order=1)
+rouge_2 = keras_nlp.metrics.RougeN(order=2)
 
 for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
@@ -498,12 +499,25 @@ for test_pair in test_pairs[:30]:
 
     translated_sentence = decode_sequences(tf.constant([input_sentence]))
     translated_sentence = translated_sentence.numpy()[0].decode("utf-8")
-    translated_sentence = translated_sentence.replace("[PAD]", "").strip()
+    translated_sentence = (
+        translated_sentence.replace("[PAD]", "")
+        .replace("[START]", "")
+        .replace("[END]", "")
+        .strip()
+    )
 
-    rouge_n(reference_sentence, translated_sentence)
+    rouge_1(reference_sentence, translated_sentence)
+    rouge_2(reference_sentence, translated_sentence)
 
-print("ROUGE-2 Score: ", rouge_n.result())
+print("ROUGE-1 Score: ", rouge_1.result())
+print("ROUGE-2 Score: ", rouge_2.result())
 
 """
-After 10 epochs, we get a ROUGE-2 score of 0.20.
+After 10 epochs, the scores are as follows:
+
+|               | **ROUGE-1** | **ROUGE-2** |
+|:-------------:|:-----------:|:-----------:|
+| **Precision** |    0.575    |     0.4     |
+|   **Recall**  |    0.542    |    0.378    |
+|  **F1 Score** |    0.552    |    0.384    |
 """
