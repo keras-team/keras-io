@@ -186,8 +186,8 @@ print("English Tokens: ", eng_vocab[100:110])
 print("Spanish Tokens: ", spa_vocab[100:110])
 
 """
-Now, let's define the tokenizers. We will use the vocabularies obtained above as
-input to the tokenizers.
+Now, let's define the tokenizers. We will configure the tokenizers with the
+the vocabularies trained above.
 """
 
 eng_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
