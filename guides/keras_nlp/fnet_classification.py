@@ -29,7 +29,8 @@ of tokens in the input. Hence, there has been an effort to reduce the time
 complexity of the self-attention mechanism and improve performance without
 sacrificing the quality of results.
 
-In 2020, a paper titled [FNet: Mixing Tokens with Fourier Transforms](https://arxiv.org/abs/2105.03824)
+In 2020, a paper titled
+[FNet: Mixing Tokens with Fourier Transforms](https://arxiv.org/abs/2105.03824)
 replaced the self-attention layer in BERT with a simple Fourier Transform layer
 for "token mixing". This resulted in comparable accuracy and a speed-up during
 training. In particular, a couple of points from the paper stand out:
@@ -92,44 +93,51 @@ tar -xzf aclImdb_v1.tar.gz
 """
 Samples are present in the form of text files. The directory contains two
 sub-directories: `train` and `test`. Each subdirectory in turn contains two
-folders: `pos` and `neg` for positive and negative reviews, respectively.
-Before we append the text to the list, let's convert it to lowercase.
+folders: `pos` and `neg` for positive and negative reviews, respectively. We'll
+use the utility `tf.keras.utils.text_dataset_from_directory` to generate our
+labelled `tf.data.Dataset` dataset from text files. Before that, let's delete
+the unnecessary folders.
 """
 
+"""shell
+ls aclImdb
+ls aclImdb/test
+ls aclImdb/train
+rm -rf aclImdb/train/unsup
+"""
 
-def load_dataset(path):
-    ds = []
-    pos_review_paths = glob.glob(os.path.join(path, "pos", "*.txt"))
-    neg_review_paths = glob.glob(os.path.join(path, "neg", "*.txt"))
-    for pos_review_path in pos_review_paths:
-        with open(pos_review_path, "r") as f:
-            ds.append((f.read().lower(), 1))
-    for neg_review_path in neg_review_paths:
-        with open(neg_review_path, "r") as f:
-            ds.append((f.read().lower(), 0))
-    return ds
-
-
-train_ds = load_dataset("./aclImdb/train")
-test_ds = load_dataset("./aclImdb/test")
-random.shuffle(train_ds)
-random.shuffle(test_ds)
+train_ds = tf.keras.utils.text_dataset_from_directory(
+    "aclImdb/train",
+    batch_size=BATCH_SIZE,
+    validation_split=0.2,
+    subset="training",
+    seed=42,
+)
+val_ds = tf.keras.utils.text_dataset_from_directory(
+    "aclImdb/train",
+    batch_size=BATCH_SIZE,
+    validation_split=0.2,
+    subset="validation",
+    seed=42,
+)
+test_ds = tf.keras.utils.text_dataset_from_directory(
+    "aclImdb/test", batch_size=BATCH_SIZE
+)
 
 """
-Let's split `test_ds` into two - the validation dataset and the test dataset.
+We will now convert the text to lowercase.
 """
-val_ds = test_ds[: len(test_ds) // 2]
-test_ds = test_ds[len(test_ds) // 2 :]
+train_ds = train_ds.map(lambda x, y: (tf.strings.lower(x), y))
+val_ds = val_ds.map(lambda x, y: (tf.strings.lower(x), y))
+test_ds = test_ds.map(lambda x, y: (tf.strings.lower(x), y))
 
 """
-Let's analyse the train-validation-test split. We'll also print a few samples.
+Let's print a few samples.
 """
-print("Number of Training Examples: ", len(train_ds))
-print("Number of Validation Examples: ", len(val_ds))
-print("Number of Test Examples: ", len(test_ds))
-
-for element in train_ds[:5]:
-    print(element)
+for text_batch, label_batch in train_ds.take(1):
+    for i in range(5):
+        print(text_batch.numpy()[i])
+        print(label_batch.numpy()[i])
 
 
 """
@@ -151,7 +159,7 @@ Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
 
 
-def train_word_piece(text_samples, vocab_size, reserved_tokens):
+def train_word_piece(ds, vocab_size, reserved_tokens):
     bert_vocab_args = dict(
         # The target vocabulary size
         vocab_size=vocab_size,
@@ -161,7 +169,8 @@ def train_word_piece(text_samples, vocab_size, reserved_tokens):
         bert_tokenizer_params={"lower_case": True},
     )
 
-    word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
+    # Extract text samples (remove the labels).
+    word_piece_ds = ds.unbatch().map(lambda x, y: x)
     vocab = bert_vocab.bert_vocab_from_dataset(
         word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
     )
@@ -176,7 +185,7 @@ when the input sequence length is shorter than the maximum sequence length.
 """
 reserved_tokens = ["[PAD]", "[UNK]"]
 train_sentences = [element[0] for element in train_ds]
-vocab = train_word_piece(train_sentences, VOCAB_SIZE, reserved_tokens)
+vocab = train_word_piece(train_ds, VOCAB_SIZE, reserved_tokens)
 
 """
 Let's see some tokens!
@@ -198,7 +207,7 @@ Let's try and tokenize a sample from our dataset! To verify whether the text has
 been tokenized correctly, we can also detokenize the list of tokens back to the
 original text.
 """
-input_sentence_ex = train_ds[0][0]
+input_sentence_ex = train_ds.take(1).get_single_element()[0][0]
 input_tokens_ex = tokenizer(input_sentence_ex)
 
 print("Sentence: ", input_sentence_ex)
@@ -219,13 +228,8 @@ def format_dataset(sentence, label):
     return ({"input_ids": sentence}, label)
 
 
-def make_dataset(pairs):
-    sentences, labels = zip(*pairs)
-    sentences = list(sentences)
-    labels = list(labels)
-    dataset = tf.data.Dataset.from_tensor_slices((sentences, labels))
-    dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.map(format_dataset, num_parallel_calls=AUTOTUNE)
+def make_dataset(dataset):
+    dataset = dataset.map(format_dataset, num_parallel_calls=tf.data.AUTOTUNE)
     return dataset.shuffle(512).prefetch(16).cache()
 
 
@@ -287,7 +291,7 @@ fnet_classifier.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 """
 We obtain a train accuracy of around 92% and a validation accuracy of around
-84%. Moreover, for 3 epochs, it takes around 111 seconds to train the model
+83%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
 (on Colab with a 16 GB Tesla T4 GPU).
 
 Let's calculate the test accuracy.
@@ -342,8 +346,8 @@ transformer_classifier.compile(
 transformer_classifier.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 """
-We obtain a train accuracy of around 92% and a validation accuracy of around
-87%. It takes around 204 seconds to train the model (on Colab with a 16 GB Tesla
+We obtain a train accuracy of around 93% and a validation accuracy of around
+87%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
 T4 GPU).
 
 Let's calculate the test accuracy.
@@ -352,14 +356,14 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 """
 Let's make a table and compare the two models. We can see that FNet
-significantly speeds up our run time (2x), with only a small sacrifice in
+significantly speeds up our run time (1.7x), with only a small sacrifice in
 overall accuracy (drop of 3%).
 
 |                         | **FNet Classifier** | **Transformer Classifier** |
 |:-----------------------:|:-------------------:|:--------------------------:|
-|    **Training Time**    |      111 seconds    |         204 seconds        |
-|    **Train Accuracy**   |        92.01%       |           92.89%           |
-| **Validation Accuracy** |        84.61%       |           87.10%           |
-|    **Test Accuracy**    |        84.65%       |           87.41%           |
+|    **Training Time**    |       86 seconds    |         146 seconds        |
+|    **Train Accuracy**   |        91.54%       |           92.98%           |
+| **Validation Accuracy** |        82.98%       |           87.26%           |
+|    **Test Accuracy**    |        81.44%       |           84.31%           |
 |       **#Params**       |       2,321,921     |          2,520,065         |
 """
