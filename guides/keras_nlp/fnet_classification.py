@@ -3,7 +3,7 @@ Title: Text Classification using FNet
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2021/06/01
 Last modified: 2021/06/01
-Description: Text Classification on the SST-2 Dataset using KerasNLP's `FNetEncoder` layer
+Description: Text Classification on the IMDb Dataset using KerasNLP's `FNetEncoder` layer
 """
 
 """
