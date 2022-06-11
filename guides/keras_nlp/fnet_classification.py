@@ -54,14 +54,9 @@ import all the necessary packages.
 """shell
 pip install -q keras-nlp
 """
-import glob
 import keras_nlp
-import numpy as np
-import pathlib
 import random
 import tensorflow as tf
-import tensorflow_datasets as tfds
-import os
 
 from tensorflow import keras
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
@@ -135,7 +130,7 @@ test_ds = test_ds.map(lambda x, y: (tf.strings.lower(x), y))
 Let's print a few samples.
 """
 for text_batch, label_batch in train_ds.take(1):
-    for i in range(5):
+    for i in range(3):
         print(text_batch.numpy()[i])
         print(label_batch.numpy()[i])
 
