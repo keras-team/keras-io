@@ -94,7 +94,7 @@ tar -xzf aclImdb_v1.tar.gz
 Samples are present in the form of text files. The directory contains two
 sub-directories: `train` and `test`. Each subdirectory in turn contains two
 folders: `pos` and `neg` for positive and negative reviews, respectively. We'll
-use the utility `tf.keras.utils.text_dataset_from_directory` to generate our
+use the `tf.keras.utils.text_dataset_from_directory` utility to generate our
 labelled `tf.data.Dataset` dataset from text files. Before that, let's delete
 the unnecessary folders.
 """
