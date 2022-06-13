@@ -797,8 +797,14 @@ Q 458+85  T 543  ☑ 543
 Q 134+431 T 565  ☑ 565 
 Q 807+289 T 1096 ☑ 1096
 Q 100+60  T 160  ☑ 160 
-
 ```
 </div>
+
 You'll get to 99+% validation accuracy after ~30 epochs.
 
+
+Example available in HuggingFace.
+  
+|                                                            Trained Model                                                            |                                                                    Demo                                                                     |
+| :---------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Addition%20LSTM-black.svg)](https://huggingface.co/keras-io/addition-lstm) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Addition%20LSTM-black.svg)](https://huggingface.co/spaces/keras-io/addition-lstm) |

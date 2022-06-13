@@ -240,4 +240,10 @@ for epoch in range(1, epochs):
 
 """
 You'll get to 99+% validation accuracy after ~30 epochs.
+  
+Example available in HuggingFace.
+  
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Addition%20LSTM-black.svg)](https://huggingface.co/keras-io/addition-lstm) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Addition%20LSTM-black.svg)](https://huggingface.co/spaces/keras-io/addition-lstm) |
 """
