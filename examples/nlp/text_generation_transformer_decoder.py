@@ -38,15 +38,15 @@ SEQ_LEN = 128
 NUM_TOKENS_GENERATED = 40
 VOCAB_SIZE = 5000
 MIN_TRAINING_SEQ_LEN = 100
-NUM_TRAINING_BATCHES = 5000
+NUM_TRAINING_BATCHES = 500
 # Training
 LEARNING_RATE = 5e-4
-EPOCHS = 25
+EPOCHS = 8
 # Model
 EMBED_DIM = 256
 FEED_FORWARD_DIM = 256
-NUM_HEADS = 4
-NUM_LAYERS = 3
+NUM_HEADS = 2
+NUM_LAYERS = 1
 
 # Mixed precision policy for faster training
 policy = keras.mixed_precision.Policy("mixed_float16")
