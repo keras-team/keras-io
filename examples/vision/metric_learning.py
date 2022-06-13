@@ -309,3 +309,11 @@ labels = [
 disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
 disp.plot(include_values=True, cmap="viridis", ax=None, xticks_rotation="vertical")
 plt.show()
+
+"""
+Example available in HuggingFace.  
+  
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Cifar10%20Metric%20Learning-black.svg)](https://huggingface.co/keras-io/cifar10_metric_learning) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Metric%20Learning%20for%20Image%20Similarity%Search-black.svg)](https://huggingface.co/spaces/keras-io/metric-learning-image-similarity-search) |
+"""
