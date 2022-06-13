@@ -292,7 +292,6 @@ Processing filter 60
 Processing filter 61
 Processing filter 62
 Processing filter 63
-
 ```
 </div>
 ![png](/img/examples/vision/visualizing_what_convnets_learn/visualizing_what_convnets_learn_17_1.png)
@@ -305,3 +304,6 @@ See also
 [this old blog post](https://blog.keras.io/how-convolutional-neural-networks-see-the-world.html)
 for analysis and interpretation.
 
+Example available in HuggingFace.  
+  
+[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-What%20Convnets%20Learn-black.svg)](https://huggingface.co/spaces/keras-io/what-convnets-learn)
