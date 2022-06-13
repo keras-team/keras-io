@@ -140,7 +140,7 @@ files for the `TextVectorization`, `StringLookup`, or `IntegerLookup` layers alr
 exist, those can be loaded directly into the lookup tables by passing a path to the
 vocabulary file in the layer's constructor arguments.
 
-Here's an example where we instantiate a `StringLookup` layer with precomputed vocabulary:
+Here's an example where you instantiate a `StringLookup` layer with precomputed vocabulary:
 """
 
 vocab = ["a", "b", "c", "d"]
@@ -165,7 +165,7 @@ model = keras.Model(inputs, outputs)
 
 With this option, preprocessing will happen on device, synchronously with the rest of the
 model execution, meaning that it will benefit from GPU acceleration.
-If you're training on GPU, this is the best option for the `Normalization` layer, and for
+If you're training on a GPU, this is the best option for the `Normalization` layer, and for
 all image preprocessing and data augmentation layers.
 
 **Option 2:** apply it to your `tf.data.Dataset`, so as to obtain a dataset that yields
@@ -175,7 +175,7 @@ batches of preprocessed data, like this:
 dataset = dataset.map(lambda x, y: (preprocessing_layer(x), y))
 ```
 
-With this option, your preprocessing will happen on CPU, asynchronously, and will be
+With this option, your preprocessing will happen on a CPU, asynchronously, and will be
 buffered before going into the model.
 In addition, if you call `dataset.prefetch(tf.data.AUTOTUNE)` on your dataset,
 the preprocessing will happen efficiently in parallel with training:
@@ -187,11 +187,15 @@ model.fit(dataset, ...)
 ```
 
 This is the best option for `TextVectorization`, and all structured data preprocessing
-layers. It can also be a good option if you're training on CPU
-and you use image preprocessing layers.
+layers. It can also be a good option if you're training on a CPU and you use image preprocessing
+layers.
 
-**When running on TPU, you should always place preprocessing layers in the `tf.data` pipeline**
-(with the exception of `Normalization` and `Rescaling`, which run fine on TPU and are commonly
+Note that the `TextVectorization` layer can only be executed on a CPU, as it is mostly a
+dictionary lookup operation. Therefore, if you are training your model on a GPU or a TPU,
+you should put the `TextVectorization` layer in the `tf.data` pipeline to get the best performance.
+
+**When running on a TPU, you should always place preprocessing layers in the `tf.data` pipeline**
+(with the exception of `Normalization` and `Rescaling`, which run fine on a TPU and are commonly
 used as the first layer is an image model).
 """
 
@@ -233,7 +237,7 @@ Preprocessing layers are compatible with the
 [tf.distribute](https://www.tensorflow.org/api_docs/python/tf/distribute) API
 for running training across multiple machines.
 
-In general, preprocessing layers should be placed inside a `strategy.scope()`
+In general, preprocessing layers should be placed inside a `tf.distribute.Strategy.scope()`
 and called either inside or before the model as discussed above.
 
 ```python
@@ -243,9 +247,9 @@ with strategy.scope():
     dense_layer = tf.keras.layers.Dense(16)
 ```
 
-For more details, refer to the
-[preprocessing section](https://www.tensorflow.org/tutorials/distribute/input#data_preprocessing)
-of the distributed input guide.
+For more details, refer to the _Data preprocessing_ section
+of the [Distributed input](https://www.tensorflow.org/tutorials/distribute/input)
+tutorial.
 """
 
 """
@@ -459,7 +463,7 @@ use the `TextVectorization` layer as part of the input pipeline.
 """
 
 """
-### Encoding text as a dense matrix of ngrams with multi-hot encoding
+### Encoding text as a dense matrix of N-grams with multi-hot encoding
 
 This is how you should preprocess text to be passed to a `Dense` layer.
 """
@@ -515,7 +519,7 @@ test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
 
 """
-### Encoding text as a dense matrix of ngrams with TF-IDF weighting
+### Encoding text as a dense matrix of N-grams with TF-IDF weighting
 
 This is an alternative way of preprocessing text before passing it to a `Dense` layer.
 """
@@ -579,11 +583,11 @@ print("Model output:", test_output)
 You may find yourself working with a very large vocabulary in a `TextVectorization`, a `StringLookup` layer,
 or an `IntegerLookup` layer. Typically, a vocabulary larger than 500MB would be considered "very large".
 
-In such case, for best performance, you should avoid using `adapt()`.
+In such a case, for best performance, you should avoid using `adapt()`.
 Instead, pre-compute your vocabulary in advance
 (you could use Apache Beam or TF Transform for this)
 and store it in a file. Then load the vocabulary into the layer at construction
-time by passing the filepath as the `vocabulary` argument.
+time by passing the file path as the `vocabulary` argument.
 
 
 ### Using lookup layers on a TPU pod or with `ParameterServerStrategy`.
