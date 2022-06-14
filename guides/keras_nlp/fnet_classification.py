@@ -1,8 +1,8 @@
 """
 Title: Text Classification using FNet
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
-Date created: 2021/06/01
-Last modified: 2021/06/01
+Date created: 2022/06/01
+Last modified: 2022/06/01
 Description: Text Classification on the IMDb Dataset using KerasNLP's `FNetEncoder` layer
 """
 
@@ -236,10 +236,10 @@ test_ds = make_dataset(test_ds)
 ## Building the Model
 
 Now, let's move on to the exciting part - defining our model!
-We first need an embedding layer, i.e., a vector for every token in our input sequence.
-This embedding layer can be initialised randomly. We also need a positional
-embedding layer which encodes the word order in the sequence. The convention is
-to add, i.e., sum, these two embeddings. KerasNLP has a
+We first need an embedding layer, i.e., a layer that maps every token in the input
+sequence to a vector. This embedding layer can be initialised randomly. We also
+need a positional embedding layer which encodes the word order in the sequence.
+The convention is to add, i.e., sum, these two embeddings. KerasNLP has a
 `keras_nlp.layers.TokenAndPositionEmbedding ` layer which does all of the above
 steps for us.
 
