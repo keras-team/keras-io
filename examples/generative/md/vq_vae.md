@@ -36,7 +36,7 @@ TensorFlow Probability, which can be installed using the command below.
 
 
 ```python
-!pip install -q tensorflow-probability
+!pip install -q tensorflow-probability==0.13.0
 ```
 
 ---
