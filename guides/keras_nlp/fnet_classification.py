@@ -57,6 +57,7 @@ pip install -q keras-nlp
 import keras_nlp
 import random
 import tensorflow as tf
+import os
 
 from tensorflow import keras
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
