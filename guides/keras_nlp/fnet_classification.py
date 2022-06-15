@@ -86,19 +86,28 @@ tar -xzf aclImdb_v1.tar.gz
 """
 
 """
-Samples are present in the form of text files. The directory contains two
-sub-directories: `train` and `test`. Each subdirectory in turn contains two
-folders: `pos` and `neg` for positive and negative reviews, respectively. We'll
-use the `tf.keras.utils.text_dataset_from_directory` utility to generate our
-labelled `tf.data.Dataset` dataset from text files. Before that, let's delete
-the unnecessary folders.
+Samples are present in the form of text files. Let's inspect the structure of
+the directory.
+"""
+
+print(os.listdir("./aclImdb"))
+print(os.listdir("./aclImdb/train"))
+print(os.listdir("./aclImdb/test"))
+
+"""
+The directory contains two sub-directories: `train` and `test`. Each subdirectory
+in turn contains two folders: `pos` and `neg` for positive and negative reviews,
+respectively. Before we load the dataset, let's delete the `./aclImdb/train/unsup`
+folder since it has unlabelled samples.
 """
 
 """shell
-ls aclImdb
-ls aclImdb/test
-ls aclImdb/train
 rm -rf aclImdb/train/unsup
+"""
+
+"""
+We'll use the `tf.keras.utils.text_dataset_from_directory` utility to generate
+our labelled `tf.data.Dataset` dataset from text files.
 """
 
 train_ds = tf.keras.utils.text_dataset_from_directory(
