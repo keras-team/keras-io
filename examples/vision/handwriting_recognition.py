@@ -144,6 +144,8 @@ for label in train_labels:
     max_len = max(max_len, len(label))
     train_labels_cleaned.append(label)
 
+characters = sorted(list(characters))
+
 print("Maximum length: ", max_len)
 print("Vocab size: ", len(characters))
 
