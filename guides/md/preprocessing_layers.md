@@ -116,6 +116,14 @@ print("Features std: %.2f" % (normalized_data.numpy().std()))
 
 <div class="k-default-codeblock">
 ```
+2022-06-15 15:02:07.223345: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-06-15 15:02:07.223381: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-06-15 15:02:20.304033: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-06-15 15:02:20.304073: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-06-15 15:02:20.304097: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (codespaces-c67928): /proc/driver/nvidia/version does not exist
+2022-06-15 15:02:20.304650: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
 Features mean: -0.00
 Features std: 1.00
 
@@ -164,7 +172,7 @@ files for the `TextVectorization`, `StringLookup`, or `IntegerLookup` layers alr
 exist, those can be loaded directly into the lookup tables by passing a path to the
 vocabulary file in the layer's constructor arguments.
 
-Here's an example where we instantiate a `StringLookup` layer with precomputed vocabulary:
+Here's an example where you instantiate a `StringLookup` layer with precomputed vocabulary:
 
 
 ```python
@@ -199,7 +207,7 @@ model = keras.Model(inputs, outputs)
 
 With this option, preprocessing will happen on device, synchronously with the rest of the
 model execution, meaning that it will benefit from GPU acceleration.
-If you're training on GPU, this is the best option for the `Normalization` layer, and for
+If you're training on a GPU, this is the best option for the `Normalization` layer, and for
 all image preprocessing and data augmentation layers.
 
 **Option 2:** apply it to your `tf.data.Dataset`, so as to obtain a dataset that yields
@@ -209,7 +217,7 @@ batches of preprocessed data, like this:
 dataset = dataset.map(lambda x, y: (preprocessing_layer(x), y))
 ```
 
-With this option, your preprocessing will happen on CPU, asynchronously, and will be
+With this option, your preprocessing will happen on a CPU, asynchronously, and will be
 buffered before going into the model.
 In addition, if you call `dataset.prefetch(tf.data.AUTOTUNE)` on your dataset,
 the preprocessing will happen efficiently in parallel with training:
@@ -221,11 +229,15 @@ model.fit(dataset, ...)
 ```
 
 This is the best option for `TextVectorization`, and all structured data preprocessing
-layers. It can also be a good option if you're training on CPU
-and you use image preprocessing layers.
+layers. It can also be a good option if you're training on a CPU and you use image preprocessing
+layers.
 
-**When running on TPU, you should always place preprocessing layers in the `tf.data` pipeline**
-(with the exception of `Normalization` and `Rescaling`, which run fine on TPU and are commonly
+Note that the `TextVectorization` layer can only be executed on a CPU, as it is mostly a
+dictionary lookup operation. Therefore, if you are training your model on a GPU or a TPU,
+you should put the `TextVectorization` layer in the `tf.data` pipeline to get the best performance.
+
+**When running on a TPU, you should always place preprocessing layers in the `tf.data` pipeline**
+(with the exception of `Normalization` and `Rescaling`, which run fine on a TPU and are commonly
 used as the first layer is an image model).
 
 ---
@@ -265,7 +277,7 @@ Preprocessing layers are compatible with the
 [tf.distribute](https://www.tensorflow.org/api_docs/python/tf/distribute) API
 for running training across multiple machines.
 
-In general, preprocessing layers should be placed inside a `strategy.scope()`
+In general, preprocessing layers should be placed inside a `tf.distribute.Strategy.scope()`
 and called either inside or before the model as discussed above.
 
 ```python
@@ -275,9 +287,9 @@ with strategy.scope():
     dense_layer = tf.keras.layers.Dense(16)
 ```
 
-For more details, refer to the
-[preprocessing section](https://www.tensorflow.org/tutorials/distribute/input#data_preprocessing)
-of the distributed input guide.
+For more details, refer to the _Data preprocessing_ section
+of the [Distributed input](https://www.tensorflow.org/tutorials/distribute/input)
+tutorial.
 
 ---
 ## Quick recipes
@@ -324,9 +336,21 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 10s 415ms/step - loss: 8.7501
+Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+170498071/170498071 [==============================] - 14s 0us/step
 
-<keras.callbacks.History at 0x1277aa790>
+2022-06-15 15:02:40.512792: W tensorflow/core/framework/cpu_allocator_impl.cc:82] Allocation of 153600000 exceeds 10% of free system memory.
+2022-06-15 15:02:42.635033: W tensorflow/core/framework/cpu_allocator_impl.cc:82] Allocation of 153600000 exceeds 10% of free system memory.
+
+1/5 [=====>........................] - ETA: 46s - loss: 4.4839
+
+2022-06-15 15:02:54.422388: W tensorflow/core/framework/cpu_allocator_impl.cc:82] Allocation of 15040512 exceeds 10% of free system memory.
+2022-06-15 15:02:54.422493: W tensorflow/core/framework/cpu_allocator_impl.cc:82] Allocation of 15040512 exceeds 10% of free system memory.
+2022-06-15 15:02:54.429803: W tensorflow/core/framework/cpu_allocator_impl.cc:82] Allocation of 15040512 exceeds 10% of free system memory.
+
+5/5 [==============================] - 14s 712ms/step - loss: 8.8112
+
+<keras.callbacks.History at 0x7f80ec476620>
 
 ```
 </div>
@@ -360,9 +384,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 2s 1ms/step - loss: 2.1209
+1563/1563 [==============================] - 3s 2ms/step - loss: 2.1300
 
-<keras.callbacks.History at 0x1288e7d90>
+<keras.callbacks.History at 0x7f80e5f0a320>
 
 ```
 </div>
@@ -537,14 +561,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 1s 1s/step - loss: 0.4862
+1/1 [==============================] - 2s 2s/step - loss: 0.4970
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.0396869]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.03878693]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -555,7 +579,7 @@ in the example
 Note that when training such a model, for best performance, you should always
 use the `TextVectorization` layer as part of the input pipeline.
 
-### Encoding text as a dense matrix of ngrams with multi-hot encoding
+### Encoding text as a dense matrix of N-grams with multi-hot encoding
 
 This is how you should preprocess text to be passed to a `Dense` layer.
 
@@ -614,6 +638,7 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
+WARNING:tensorflow:5 out of the last 1567 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f80ec464a60> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
   0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]]
@@ -623,18 +648,18 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 192ms/step - loss: 2.7082
+1/1 [==============================] - 0s 252ms/step - loss: 1.7566
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-0.58801]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.01154183]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
-### Encoding text as a dense matrix of ngrams with TF-IDF weighting
+### Encoding text as a dense matrix of N-grams with TF-IDF weighting
 
 This is an alternative way of preprocessing text before passing it to a `Dense` layer.
 
@@ -694,6 +719,7 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
+WARNING:tensorflow:6 out of the last 1568 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x7f80ec466b90> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[5.461647  1.6945957 0.        0.        0.        0.        0.
   0.        0.        0.        0.        0.        0.        0.
@@ -707,14 +733,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 192ms/step - loss: 1.3662
+1/1 [==============================] - 0s 260ms/step - loss: 6.3598
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[1.6707027]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.33832753]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -726,11 +752,11 @@ Model output: tf.Tensor([[1.6707027]], shape=(1, 1), dtype=float32)
 You may find yourself working with a very large vocabulary in a `TextVectorization`, a `StringLookup` layer,
 or an `IntegerLookup` layer. Typically, a vocabulary larger than 500MB would be considered "very large".
 
-In such case, for best performance, you should avoid using `adapt()`.
+In such a case, for best performance, you should avoid using `adapt()`.
 Instead, pre-compute your vocabulary in advance
 (you could use Apache Beam or TF Transform for this)
 and store it in a file. Then load the vocabulary into the layer at construction
-time by passing the filepath as the `vocabulary` argument.
+time by passing the file path as the `vocabulary` argument.
 
 
 ### Using lookup layers on a TPU pod or with `ParameterServerStrategy`.
