@@ -339,10 +339,10 @@ def validate(py):
         )
 
     # Extra checks.
-    if '//arxiv.org/pdf/' in py:
+    if "//arxiv.org/pdf/" in py:
         raise ValueError(
-            "Do not link to arXiv PDFs directly. "
-            "Instead, link to the abstract page.")
+            "Do not link to arXiv PDFs directly. " "Instead, link to the abstract page."
+        )
 
 
 def count_locs_in_file(py_path):
