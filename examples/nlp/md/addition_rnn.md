@@ -1093,7 +1093,7 @@ Q 892+65  T 957  ☑ 957
 </div>
 You'll get to 99+% validation accuracy after ~30 epochs.
 
-Example available in HuggingFace.
+Example available on HuggingFace.
 
 | Trained Model | Demo |
 | :--: | :--: |

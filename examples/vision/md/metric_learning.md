@@ -425,7 +425,7 @@ plt.show()
     
 
 
-Example available in HuggingFace.
+Example available on HuggingFace.
 
 | Trained Model | Demo |
 | :--: | :--: |

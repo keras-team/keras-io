@@ -311,7 +311,7 @@ disp.plot(include_values=True, cmap="viridis", ax=None, xticks_rotation="vertica
 plt.show()
 
 """
-Example available in HuggingFace.
+Example available on HuggingFace.
 
 | Trained Model | Demo |
 | :--: | :--: |

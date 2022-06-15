@@ -241,7 +241,7 @@ for epoch in range(1, epochs):
 """
 You'll get to 99+% validation accuracy after ~30 epochs.
 
-Example available in HuggingFace.
+Example available on HuggingFace.
 
 | Trained Model | Demo |
 | :--: | :--: |
