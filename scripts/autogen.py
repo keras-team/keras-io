@@ -38,6 +38,12 @@ import generate_tf_guides
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
+PROJECT_URL = {
+    "keras": "https://github.com/keras-team/keras/tree/v2.9.0/",
+    "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/1.1.2/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.2.6/",
+    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.2.0/",
+}
 
 
 class KerasIO:
@@ -65,7 +71,7 @@ class KerasIO:
         self.refresh_guides = refresh_guides
         self.refresh_examples = refresh_examples
 
-        self.docstring_printer = docstrings.TFKerasDocumentationGenerator()
+        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
         self.make_examples_master()
 
     def make_examples_master(self):
@@ -496,7 +502,10 @@ class KerasIO:
             stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
             url = self.url + "/".join(stripped_path_stack)
             location_history.append(
-                {"url": url, "title": title_stack[i],}
+                {
+                    "url": url,
+                    "title": title_stack[i],
+                }
             )
         metadata = json.dumps(
             {
@@ -688,8 +697,17 @@ class KerasIO:
 
         html_content = markdown.markdown(
             md_content,
-            extensions=["fenced_code", "tables", "codehilite", "mdx_truly_sane_lists",],
-            extension_configs={"codehilite": {"guess_lang": False,},},
+            extensions=[
+                "fenced_code",
+                "tables",
+                "codehilite",
+                "mdx_truly_sane_lists",
+            ],
+            extension_configs={
+                "codehilite": {
+                    "guess_lang": False,
+                },
+            },
         )
         html_content = insert_title_ids_in_html(html_content)
         local_nav = [set_active_flag_in_nav_entry(entry, relative_url) for entry in nav]
@@ -705,7 +723,12 @@ class KerasIO:
             }
         )
         html_page = base_template.render(
-            {"title": title, "nav": local_nav, "base_url": self.url, "main": html_docs,}
+            {
+                "title": title,
+                "nav": local_nav,
+                "base_url": self.url,
+                "main": html_docs,
+            }
         )
         save_file(target_path, html_page)
         return relative_url
@@ -766,8 +789,8 @@ def replace_links(content):
         keras_name = entry["source_name"]
         tf_name = entry["target_name"]
         content = content.replace(
-          "https://www.tensorflow.org/guide/keras/" + tf_name,
-          "https://keras.io/guides/" + keras_name,
+            "https://www.tensorflow.org/guide/keras/" + tf_name,
+            "https://keras.io/guides/" + keras_name,
         )
     return content
 
@@ -807,19 +830,31 @@ def make_outline(md_source):
             title = line[2:]
             title = process_outline_title(title)
             outline.append(
-                {"title": title, "url": "#" + turn_title_into_id(title), "depth": 1,}
+                {
+                    "title": title,
+                    "url": "#" + turn_title_into_id(title),
+                    "depth": 1,
+                }
             )
         if line.startswith("## "):
             title = line[3:]
             title = process_outline_title(title)
             outline.append(
-                {"title": title, "url": "#" + turn_title_into_id(title), "depth": 2,}
+                {
+                    "title": title,
+                    "url": "#" + turn_title_into_id(title),
+                    "depth": 2,
+                }
             )
         if line.startswith("### "):
             title = line[4:]
             title = process_outline_title(title)
             outline.append(
-                {"title": title, "url": "#" + turn_title_into_id(title), "depth": 3,}
+                {
+                    "title": title,
+                    "url": "#" + turn_title_into_id(title),
+                    "depth": 3,
+                }
             )
     return outline
 

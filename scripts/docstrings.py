@@ -83,8 +83,9 @@ class TFKerasDocumentationGenerator:
 
     def render_from_object(self, object_, signature_override: str):
         subblocks = []
-        if self.project_url is not None:
-            subblocks.append(make_source_link(object_, self.project_url))
+        source_link = make_source_link(object_, self.project_url)
+        if source_link is not None:
+            subblocks.append(source_link)
         signature = get_signature(object_, signature_override)
         signature = self.process_signature(signature)
         subblocks.append(f"### `{get_name(object_)}` {get_type(object_)}\n")
@@ -119,9 +120,22 @@ def import_object(string: str):
 
 
 def make_source_link(cls, project_url):
-    if isinstance(project_url, dict):
-        base_module = cls.__module__.split(".")[0]
-        project_url = project_url[base_module]
+    if not hasattr(cls, "__module__"):
+        return None
+    if not project_url:
+        return None
+
+    base_module = cls.__module__.split(".")[0]
+    project_url = project_url[base_module]
+    assert project_url.endswith("/")
+    project_url_version = project_url.split("/")[-2].replace("v", "")
+    module_version = importlib.import_module(base_module).__version__
+    if module_version != project_url_version:
+        raise RuntimeError(
+            f"For project {base_module}, URL {project_url} "
+            f"has version number {project_url_version} which does not match the "
+            f"current imported package version {module_version}"
+        )
     path = cls.__module__.replace(".", "/")
     line = inspect.getsourcelines(cls)[-1]
     return (
@@ -181,7 +195,8 @@ def get_signature_end(function):
         # work around case-specific bug
         signature_end = signature_end.replace(
             "synchronization=<VariableSynchronization.AUTO: 0>, aggregation=<VariableAggregationV2.NONE: 0>",
-            "synchronization=tf.VariableSynchronization.AUTO, aggregation=tf.VariableSynchronization.NONE")
+            "synchronization=tf.VariableSynchronization.AUTO, aggregation=tf.VariableSynchronization.NONE",
+        )
     return signature_end
 
 
