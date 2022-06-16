@@ -67,7 +67,9 @@ import tensorflow as tf
 from tensorflow import keras
 
 # only consider boxes with areas less than a 32x32 square.
-metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32**2))
+metric = keras_cv.metrics.COCORecall(
+    bounding_box_format="xyxy", class_ids=[1, 2, 3], area_range=(0, 32**2)
+)
 
 """
 2.) Create Some Bounding Boxes:
@@ -130,7 +132,11 @@ y_pred = tf.constant([[[0, 0, 10, 10, 1, 1.0], [5, 5, 10, 10, 1, 0.9]]], tf.floa
 """
 
 recall = keras_cv.metrics.COCORecall(
-    max_detections=100, class_ids=[1], area_range=(0, 64**2), name="coco_recall"
+    bounding_box_format="xyxy",
+    max_detections=100,
+    class_ids=[1],
+    area_range=(0, 64**2),
+    name="coco_recall",
 )
 model.compile(metrics=[recall])
 
