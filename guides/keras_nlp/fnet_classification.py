@@ -125,9 +125,7 @@ val_ds = keras.utils.text_dataset_from_directory(
     subset="validation",
     seed=42,
 )
-test_ds = keras.utils.text_dataset_from_directory(
-    "aclImdb/test", batch_size=BATCH_SIZE
-)
+test_ds = keras.utils.text_dataset_from_directory("aclImdb/test", batch_size=BATCH_SIZE)
 
 """
 We will now convert the text to lowercase.
