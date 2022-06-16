@@ -430,6 +430,13 @@ class UnVectorizable(keras_cv.layers.BaseImageAugmentationLayer):
 
 
 """
+
+
+Additionally, be sure to accept `**kwargs` to your `augment_*` methods to ensure
+forwards compatibility.  KerasCV will add additional label types in the future, and
+if you do not include a `**kwargs` argument your augmentation layers will not be
+forward compatible.
+
 ## Conclusion and next steps
 
 KerasCV offers a standard set of APIs to streamline the process of implementing your
