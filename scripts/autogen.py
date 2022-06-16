@@ -258,7 +258,6 @@ class KerasIO:
         )
         open(md_path, "w").write(md_content)
 
-
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
 
