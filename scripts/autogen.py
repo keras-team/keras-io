@@ -245,8 +245,11 @@ class KerasIO:
         py_path = Path(self.examples_dir) / folder / (name + ".py")
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
+
+        self.disable_warnings()
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
+
         md_content = open(md_path).read()
         github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
         site_img_dir = os.path.join("img", "examples", folder, name)
@@ -254,6 +257,11 @@ class KerasIO:
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
         open(md_path, "w").write(md_content)
+
+    @staticmethod
+    def disable_logs():
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+        os.environ['AUTOGRAPH_VERBOSITY'] = '0'
 
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
@@ -280,8 +288,10 @@ class KerasIO:
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
 
+        self.disable_warnings()
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
+
         md_content = open(md_path).read()
         github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
