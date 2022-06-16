@@ -22,17 +22,16 @@ Let's get started using KerasCV's COCO metrics.
 """
 ## Input format
 
-KerasCV COCO metrics require a specific input format.
+All KerasCV components that process bounding boxes, including COCO metrics, require a
+`bounding_box_format` parameter.  This parameter is used to tell the components what
+format your bounding boxes are in.  While this guide uses the `xyxy` format, a full
+list of supported formats is available in
+[the bounding_box home page](https://keras.io/keras_cv/bounding_box/).
 
 The metrics expect `y_true` and be a `float` Tensor with the shape `[batch,
-num_images, num_boxes, 5]`. The final axis stores the locational and class
-information for each specific bounding box. The dimensions in order are: `[left,
-top, right, bottom, class]`.
-
-The metrics expect `y_pred` and be a `float` Tensor with the shape `[batch,
-num_images, num_boxes, 56]`. The final axis stores the locational and class
-information for each specific bounding box. The dimensions in order are: `[left,
-top, right, bottom, class, confidence]`.
+num_images, num_boxes, 5]`, with the ordering of last set of axes determined by the
+provided format.  The same is true of `y_pred`, except that an additional `confidence`
+axis must be provided.
 
 Due to the fact that each image may have a different number of bounding boxes,
 the `num_boxes` dimension may actually have a mismatching shape between images.
@@ -40,8 +39,9 @@ KerasCV works around this by allowing you to either pass a `RaggedTensor` as an
 input to the KerasCV COCO metrics, or padding unused bounding boxes with `-1`.
 
 Utility functions to manipulate bounding boxes, transform between formats, and
-pad bounding box Tensors with `-1s` are available at
-[`keras_cv.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box).
+pad bounding box Tensors with `-1s` are available from the
+[`keras_cv.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box)
+package.
 
 """
 
