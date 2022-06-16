@@ -9,6 +9,11 @@ PREPROCESSING_MASTER = {
             "generate": ["keras_cv.layers.AutoContrast"],
         },
         {
+            "path": "aug_mix",
+            "title": "AugMix layer",
+            "generate": ["keras_cv.layers.AugMix"],
+        },
+        {
             "path": "channel_shuffle",
             "title": "ChannelShuffle layer",
             "generate": ["keras_cv.layers.ChannelShuffle"],
@@ -101,8 +106,7 @@ PREPROCESSING_MASTER = {
     ],
 }
 
-BOUNDING_BOX_FORMATS = [
-    {
+BOUNDING_BOX_FORMATS = {
         "path": "formats",
         "title": "Bounding box formats",
         "generate": [
@@ -111,23 +115,20 @@ BOUNDING_BOX_FORMATS = [
             "keras_cv.bounding_box.XYXY",
             "keras_cv.bounding_box.REL_XYXY",
         ],
-    }
-]
+}
 
-BOUNDING_BOX_UTILS = [
-    {
-        "path": "utils",
-        "title": "Bounding box utilities",
-        "toc": True,
-        "children": [
-            {
-                "path": "convert_format",
-                "title": "Convert bounding box formats",
-                "generate": ["keras_cv.bounding_box.convert_format"],
-            },
-        ],
-    }
-]
+BOUNDING_BOX_UTILS = {
+    "path": "utils",
+    "title": "Bounding box utilities",
+    "toc": True,
+    "children": [
+        {
+            "path": "convert_format",
+            "title": "Convert bounding box formats",
+            "generate": ["keras_cv.bounding_box.convert_format"],
+        },
+    ],
+}
 
 BOUNDING_BOX_MASTER = {
     "path": "bounding_box/",
