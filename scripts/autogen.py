@@ -258,10 +258,6 @@ class KerasIO:
         )
         open(md_path, "w").write(md_content)
 
-    @staticmethod
-    def disable_logs():
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-        os.environ['AUTOGRAPH_VERBOSITY'] = '0'
 
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
@@ -299,6 +295,11 @@ class KerasIO:
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
         open(md_path, "w").write(md_content)
+
+    @staticmethod
+    def disable_warnings():
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+        os.environ['AUTOGRAPH_VERBOSITY'] = '0'
 
     def make_tutobook_sources(self, guides=True, examples=True):
         """Populate `examples/nlp/md`, `examples/nlp/img/`, etc.
