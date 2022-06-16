@@ -188,5 +188,5 @@ CV_API_MASTER = {
     "path": "keras_cv/",
     "title": "KerasCV",
     "toc": True,
-    "children": [LAYERS_MASTER, METRICS_MASTER],
+    "children": [LAYERS_MASTER, METRICS_MASTER, BOUNDING_BOX_MASTER],
 }
