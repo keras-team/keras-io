@@ -220,8 +220,13 @@ class KerasIO:
 
     def add_example(self, path, working_dir=None):
         """e.g. add_example('vision/cats_and_dogs')"""
-        assert path.count(os.path.sep) == 1
+
+        # Prune out the ../ path
+        if path.startswith("../examples/"):
+            path = path.replace("../examples/", "")
+
         folder, name = path.split(os.path.sep)
+        assert path.count(os.path.sep) == 1
         if name.endswith(".py"):
             name = name[:-3]
 
@@ -252,6 +257,11 @@ class KerasIO:
 
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
+
+        # Prune out the ../ path
+        if name.startswith("../guides/"):
+            name = name.replace("../guides/", "")
+
         if name.endswith(".py"):
             name = name[:-3]
         ipynb_dir = Path(self.guides_dir) / "ipynb"
