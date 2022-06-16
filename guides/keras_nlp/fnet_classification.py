@@ -62,7 +62,7 @@ import os
 from tensorflow import keras
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 
-random.seed(42)
+keras.utils.set_random_seed(42)
 
 """
 Let's also define our hyperparameters.
@@ -76,7 +76,7 @@ EMBED_DIM = 128
 INTERMEDIATE_DIM = 512
 
 """
-## Loading the Dataset
+## Loading the dataset
 
 First, let's download the IMDB dataset and extract it.
 """
@@ -107,25 +107,25 @@ rm -rf aclImdb/train/unsup
 """
 
 """
-We'll use the `tf.keras.utils.text_dataset_from_directory` utility to generate
+We'll use the `keras.utils.text_dataset_from_directory` utility to generate
 our labelled `tf.data.Dataset` dataset from text files.
 """
 
-train_ds = tf.keras.utils.text_dataset_from_directory(
+train_ds = keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=BATCH_SIZE,
     validation_split=0.2,
     subset="training",
     seed=42,
 )
-val_ds = tf.keras.utils.text_dataset_from_directory(
+val_ds = keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=BATCH_SIZE,
     validation_split=0.2,
     subset="validation",
     seed=42,
 )
-test_ds = tf.keras.utils.text_dataset_from_directory(
+test_ds = keras.utils.text_dataset_from_directory(
     "aclImdb/test", batch_size=BATCH_SIZE
 )
 
@@ -146,7 +146,8 @@ for text_batch, label_batch in train_ds.take(1):
 
 
 """
-### Tokenizing the Data
+### Tokenizing the data
+
 We'll be using the `keras_nlp.tokenizers.WordPieceTokenizer` layer to tokenize
 the text. `keras_nlp.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
 and has functions for tokenizing the text, and detokenizing sequences of tokens.
@@ -183,7 +184,8 @@ def train_word_piece(ds, vocab_size, reserved_tokens):
 
 
 """
-Every vocabulary has a few special, reserved tokens. We have four such tokens:
+Every vocabulary has a few special, reserved tokens. We have two such tokens:
+
 - `"[PAD]"` - Padding token. Padding tokens are appended to the input sequence length
 when the input sequence length is shorter than the maximum sequence length.
 - `"[UNK]"` - Unknown token.
@@ -221,7 +223,7 @@ print("Recovered text after detokenizing: ", tokenizer.detokenize(input_tokens_e
 
 
 """
-## Formatting the Dataset
+## Formatting the dataset
 
 Next, we'll format our datasets in the form that will be fed to the models. We
 need to tokenize the text.
@@ -243,7 +245,7 @@ val_ds = make_dataset(val_ds)
 test_ds = make_dataset(test_ds)
 
 """
-## Building the Model
+## Building the model
 
 Now, let's move on to the exciting part - defining our model!
 We first need an embedding layer, i.e., a layer that maps every token in the input
@@ -281,7 +283,7 @@ outputs = keras.layers.Dense(1, activation="sigmoid")(x)
 fnet_classifier = keras.Model(input_ids, outputs, name="fnet_classifier")
 
 """
-## Training our Model
+## Training our model
 
 We'll use accuracy to monitor training progress on the validation data. Let's
 train our model for 3 epochs.
@@ -305,7 +307,7 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 
 """
-## Comparison with Transformer Model
+## Comparison with Transformer model
 
 Let's compare our FNet Classifier model with a Transformer Classifier model. We
 keep all the parameters/hyperparameters the same. For example, we use three
