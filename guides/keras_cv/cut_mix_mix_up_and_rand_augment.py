@@ -70,7 +70,7 @@ IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
 
-def prepare(image, label):
+def to_dict(image, label):
     image = tf.image.resize(image, IMAGE_SIZE)
     image = tf.cast(image, tf.float32)
     label = tf.one_hot(label, num_classes)
@@ -262,12 +262,6 @@ pipeline = keras_cv.layers.RandomAugmentationPipeline(
 """
 Let's check out the results!
 """
-
-
-def apply_pipeline(inputs):
-    inputs["images"] = pipeline(inputs["images"])
-    return inputs
-
 
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")

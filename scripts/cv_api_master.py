@@ -118,7 +118,7 @@ BOUNDING_BOX_FORMATS = {
 }
 
 BOUNDING_BOX_UTILS = {
-    "path": "utils",
+    "path": "utils/",
     "title": "Bounding box utilities",
     "toc": True,
     "children": [
