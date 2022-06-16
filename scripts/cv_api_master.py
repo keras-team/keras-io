@@ -64,7 +64,7 @@ PREPROCESSING_MASTER = {
             "generate": ["keras_cv.layers.RandomChannelShift"],
         },
         {
-            "path": "rancom_color_degeneration",
+            "path": "random_color_degeneration",
             "title": "RandomColorDegeneration layer",
             "generate": ["keras_cv.layers.RandomColorDegeneration"],
         },
@@ -99,6 +99,44 @@ PREPROCESSING_MASTER = {
             "generate": ["keras_cv.layers.Solarization"],
         },
     ],
+}
+
+BOUNDING_BOX_FORMATS = [
+    {
+        "path": "formats",
+        "title": "Bounding box formats",
+        "generate": [
+            "keras_cv.bounding_box.CENTER_XYWH",
+            "keras_cv.bounding_box.XYWH",
+            "keras_cv.bounding_box.XYXY",
+            "keras_cv.bounding_box.REL_XYXY",
+        ],
+    }
+]
+
+BOUNDING_BOX_UTILS = [
+    {
+        "path": "utils",
+        "title": "Bounding box utilities",
+        "toc": True,
+        "children": [
+            {
+                "path": "convert_format",
+                "title": "Convert bounding box formats",
+                "generate": ["keras_cv.bounding_box.convert_format"],
+            },
+        ],
+    }
+]
+
+BOUNDING_BOX_MASTER = {
+    "path": "bounding_box/",
+    "title": "Bounding box formats and utilities",
+    "toc": True,
+    "children": [
+        BOUNDING_BOX_FORMATS,
+        BOUNDING_BOX_UTILS
+    ]
 }
 
 REGULARIZATION_MASTER = {

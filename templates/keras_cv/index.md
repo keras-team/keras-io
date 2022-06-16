@@ -25,6 +25,12 @@ pip install keras-cv --upgrade
 You can also check out other versions in our
 [GitHub repository](https://github.com/keras-team/keras-cv/releases).
 
+## Quick Introduction
+The following snippet loads the Oxford102 flowers dataset,
+prepares a data augmentation pipeline, constructs a DenseNet model, and trains the model
+for 100 epochs.
+
+
 ---
 ## Citing KerasCV
 
