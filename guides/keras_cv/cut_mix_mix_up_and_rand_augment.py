@@ -13,7 +13,8 @@ KerasCV makes it easy to assemble state-of-the-art, industry-grade data augmenta
 pipelines for image classification and object detection tasks. KerasCV offers a wide
 suite of preprocessing layers implementing common data augmentation techniques.
 
-Perhaps three of the most useful layers are `CutMix`, `MixUp`, and `RandAugment`. These
+Perhaps three of the most useful layers are `keras_cv.layers.CutMix`,
+`keras_cv.layers.MixUp`, and `keras_cv.layers.RandAugment`. These
 layers are used in nearly all state-of-the-art image classification pipelines.
 
 This guide will show you how to compose these layers into your own data
@@ -214,7 +215,8 @@ pipeline.
 ## Customizing your augmentation pipeline
 
 Perhaps you want to exclude an augmentation from `RandAugment`, or perhaps you want to
-include the `GridMask()` as an option alongside the default `RandAugment` augmentations.
+include the `keras_cv.layers.GridMask` as an option alongside the default `RandAugment`
+augmentations.
 
 KerasCV allows you to construct production grade custom data augmentation pipelines using
 the `keras_cv.layers.RandomAugmentationPipeline` layer. This class operates similarly to
@@ -246,7 +248,7 @@ layers = [
 ]
 
 """
-Next, let's add `GridMask` to our layers:
+Next, let's add `keras_cv.layers.GridMask` to our layers:
 """
 
 layers = layers + [keras_cv.layers.GridMask()]
