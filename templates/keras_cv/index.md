@@ -26,10 +26,40 @@ You can also check out other versions in our
 [GitHub repository](https://github.com/keras-team/keras-cv/releases).
 
 ## Quick Introduction
-The following snippet loads the Oxford102 flowers dataset,
-prepares a data augmentation pipeline, constructs a DenseNet model, and trains the model
-for 100 epochs.
+Create a preprocessing pipeline:
+```python
+import keras_cv
+import tensorflow as tf
 
+preprocessing_model = tf.keras.Sequential([
+    keras_cv.layers.RandAugment(value_range=(0, 255))
+    keras_cv.layers.CutMix(),
+    keras_cv.layers.MixUp()
+], name="preprocessing_model")
+```
+
+Augment a TensorFlow dataset:
+
+```python
+dataset = dataset.map(lambda images, labels: {"images": images, "labels": labels})
+dataset = dataset.map(preprocessing_model)
+dataset = dataset.map(lambda inputs: (inputs["images"], inputs["labels"]))
+```
+
+Create a model:
+```python
+densenet = keras_cv.models.DenseNet(
+  include_rescaling=True,
+  include_top=True,
+  num_classes=102
+)
+densenet.compile(optimizer='adam', metrics=['accuracy'])
+```
+
+Fit your model:
+```python
+densenet.fit(dataset)
+```
 
 ---
 ## Citing KerasCV
