@@ -41,7 +41,7 @@ GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guid
 PROJECT_URL = {
     "keras": "https://github.com/keras-team/keras/tree/v2.9.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/1.1.2/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.2.6/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.2.7/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.2.0/",
 }
 
