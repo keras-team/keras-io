@@ -795,9 +795,9 @@ them to our decoder to generate novel images.
 ```python
 # Create a mini sampler model.
 inputs = layers.Input(shape=pixel_cnn.input_shape[1:])
-layers = pixel_cnn(inputs, training=False)
+outputs = pixel_cnn(inputs, training=False)
 categorical_layer = tfp.layers.DistributionLambda(tfp.distributions.Categorical)
-layers = categorical_layer(layers)
+layers = categorical_layer(outputs)
 sampler = keras.Model(inputs, layers)
 ```
 
