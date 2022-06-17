@@ -36,7 +36,7 @@ TensorFlow Probability, which can be installed using the command below.
 
 
 ```python
-!pip install -q tensorflow-probability==0.13.0
+!pip install -q tensorflow-probability
 ```
 
 ---
@@ -795,10 +795,10 @@ them to our decoder to generate novel images.
 ```python
 # Create a mini sampler model.
 inputs = layers.Input(shape=pixel_cnn.input_shape[1:])
-x = pixel_cnn(inputs, training=False)
-dist = tfp.distributions.Categorical(logits=x)
-sampled = dist.sample()
-sampler = keras.Model(inputs, sampled)
+layers = pixel_cnn(inputs, training=False)
+categorical_layer = tfp.layers.DistributionLambda(tfp.distributions.Categorical)
+layers = categorical_layer(layers)
+sampler = keras.Model(inputs, layers)
 ```
 
 We now construct a prior to generate images. Here, we will generate 10 images.
