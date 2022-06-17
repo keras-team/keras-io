@@ -495,8 +495,8 @@ them to our decoder to generate novel images.
 inputs = layers.Input(shape=pixel_cnn.input_shape[1:])
 outputs = pixel_cnn(inputs, training=False)
 categorical_layer = tfp.layers.DistributionLambda(tfp.distributions.Categorical)
-layers = categorical_layer(outputs)
-sampler = keras.Model(inputs, layers)
+outputs = categorical_layer(outputs)
+sampler = keras.Model(inputs, outputs)
 
 """
 We now construct a prior to generate images. Here, we will generate 10 images.
