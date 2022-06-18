@@ -43,7 +43,7 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 """shell
 pip install -q rouge-score
-pip install -q git+https://github.com/abheesht17/keras-nlp.git@rouge-l 
+pip install -q git+https://github.com/abheesht17/keras-nlp.git@d32a47edfa975bbfa21f1b98b66ef7c1ba6b4302
 """
 
 import keras_nlp
@@ -234,7 +234,8 @@ that is to say, the words 0 to N used to predict word N+1 (and beyond) in the ta
 it provides the next words in the target sentence -- what the model will try to predict.
 
 We will add special tokens, `"[START]"` and `"[END]"`, to the input Spanish
-sentence after tokenizing the text.
+sentence after tokenizing the text. We will also pad the input to a fixed length.
+This can be easily done using `keras_nlp.layers.StartEndPacker`.
 """
 
 
@@ -244,17 +245,21 @@ def preprocess_batch(eng, spa):
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
 
-    # Add special tokens (`"[START]"` and `"[END]"`) to `spa`.
-    start_token_id_tensor = tf.fill(
-        (batch_size, 1), spa_tokenizer.token_to_id("[START]")
+    # Pad `eng` to `MAX_SEQUENCE_LENGTH`.
+    eng_start_end_packer = keras_nlp.layers.StartEndPacker(
+        sequence_length=MAX_SEQUENCE_LENGTH,
+        pad_value=eng_tokenizer.token_to_id("[PAD]"),
     )
-    end_token_id_tensor = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[END]"))
+    eng = eng_start_end_packer(eng)
 
-    spa = tf.concat([start_token_id_tensor, spa, end_token_id_tensor], axis=1)
-
-    # Truncate text/add padding tokens based on the specified maximum sequence length.
-    eng = eng.to_tensor(shape=(None, MAX_SEQUENCE_LENGTH))
-    spa = spa.to_tensor(shape=(None, MAX_SEQUENCE_LENGTH + 1))
+    # Add special tokens (`"[START]"` and `"[END]"`) to `spa` and pad it as well.
+    spa_start_end_packer = keras_nlp.layers.StartEndPacker(
+        sequence_length=MAX_SEQUENCE_LENGTH + 1,
+        start_value=spa_tokenizer.token_to_id("[START]"),
+        end_value=spa_tokenizer.token_to_id("[END]"),
+        pad_value=spa_tokenizer.token_to_id("[PAD]"),
+    )
+    spa = spa_start_end_packer(spa)
 
     return (
         {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
@@ -309,9 +314,8 @@ A key detail that makes this possible is causal masking.
 The `keras_nlp.layers.TransformerDecoder` sees the entire sequence at once, and
 thus we must make sure that it only uses information from target tokens 0 to N
 when predicting token N+1 (otherwise, it could use information from the future,
- which would result in a model that cannot be used at inference time).
-In order to enable causal masking, all we have to do is set the `use_causal_mask`
-argument to True.
+which would result in a model that cannot be used at inference time). Causal masking
+is enabled by default in `keras_nlp.layers.TransformerDecoder`.
 
 We also need to mask the padding tokens (`"[PAD]"`). For this, we can set the
 `mask_zero` argument of the `keras_nlp.layers.TokenAndPositionEmbedding` layer
@@ -347,7 +351,7 @@ x = keras_nlp.layers.TokenAndPositionEmbedding(
 
 x = keras_nlp.layers.TransformerDecoder(
     intermediate_dim=INTERMEDIATE_DIM, num_heads=NUM_HEADS
-)(decoder_sequence=x, encoder_sequence=encoded_seq_inputs, use_causal_mask=True,)
+)(decoder_sequence=x, encoder_sequence=encoded_seq_inputs)
 x = keras.layers.Dropout(0.5)(x)
 decoder_outputs = keras.layers.Dense(SPA_VOCAB_SIZE, activation="softmax")(x)
 decoder = keras.Model([decoder_inputs, encoded_seq_inputs,], decoder_outputs,)
