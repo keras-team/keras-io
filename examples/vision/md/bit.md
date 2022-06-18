@@ -3,12 +3,12 @@
 **Author:** [Sayan Nath](https://twitter.com/sayannath2350)<br>
 **Date created:** 2021/09/24<br>
 **Last modified:** 2021/09/24<br>
+**Description:** BigTransfer (BiT) State-of-the-art transfer learning for image classification.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/bit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/bit.py)
 
 
-**Description:** BigTransfer (BiT) State-of-the-art transfer learning for image classification.
 
 ---
 ## Introduction
@@ -21,8 +21,7 @@ model on a target task. The importance of appropriately choosing normalization l
 scaling the architecture capacity as the amount of pre-training data increases.
 
 BigTransfer(BiT) is trained on public datasets, along with code in
-[TF2, Jax and Pytorch](https://github.com/google-research/big_transfer).
-This will help anyone to reach
+[TF2, Jax and Pytorch](https://github.com/google-research/big_transfer). This will help anyone to reach
 state of the art performance on their task of interest, even with just a handful of
 labeled images per class.
 
@@ -72,16 +71,8 @@ train_ds, validation_ds = tfds.load(
 
 <div class="k-default-codeblock">
 ```
-[1mDownloading and preparing dataset tf_flowers/3.0.1 (download: 218.21 MiB, generated: 221.83 MiB, total: 440.05 MiB) to /root/tensorflow_datasets/tf_flowers/3.0.1...[0m
-
-```
-</div>
-    
-
-
-<div class="k-default-codeblock">
-```
-[1mDataset tf_flowers downloaded and prepared to /root/tensorflow_datasets/tf_flowers/3.0.1. Subsequent calls will reuse this data.[0m
+[1mDownloading and preparing dataset 218.21 MiB (download: 218.21 MiB, generated: 221.83 MiB, total: 440.05 MiB) to ~/tensorflow_datasets/tf_flowers/3.0.1...[0m
+[1mDataset tf_flowers downloaded and prepared to ~/tensorflow_datasets/tf_flowers/3.0.1. Subsequent calls will reuse this data.[0m
 
 ```
 </div>
@@ -99,7 +90,9 @@ for i, (image, label) in enumerate(train_ds.take(9)):
 ```
 
 
+    
 ![png](/img/examples/vision/bit/bit_7_0.png)
+    
 
 
 ---
@@ -204,7 +197,9 @@ for n in range(25):
 ```
 
 
+    
 ![png](/img/examples/vision/bit/bit_16_0.png)
+    
 
 
 ---
@@ -308,15 +303,13 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/400
-10/10 [==============================] - 41s 1s/step - loss: 0.7440 - accuracy: 0.7844 - val_loss: 0.1837 - val_accuracy: 0.9582
+10/10 [==============================] - 17s 872ms/step - loss: 0.7454 - accuracy: 0.7859 - val_loss: 0.1845 - val_accuracy: 0.9582
 Epoch 2/400
-10/10 [==============================] - 8s 904ms/step - loss: 0.1499 - accuracy: 0.9547 - val_loss: 0.1094 - val_accuracy: 0.9709
+10/10 [==============================] - 5s 581ms/step - loss: 0.1453 - accuracy: 0.9609 - val_loss: 0.1088 - val_accuracy: 0.9709
 Epoch 3/400
-10/10 [==============================] - 8s 905ms/step - loss: 0.1674 - accuracy: 0.9422 - val_loss: 0.0874 - val_accuracy: 0.9727
+10/10 [==============================] - 5s 537ms/step - loss: 0.1531 - accuracy: 0.9453 - val_loss: 0.0852 - val_accuracy: 0.9709
 Epoch 4/400
-10/10 [==============================] - 8s 905ms/step - loss: 0.1314 - accuracy: 0.9578 - val_loss: 0.0829 - val_accuracy: 0.9727
-Epoch 5/400
-10/10 [==============================] - 8s 903ms/step - loss: 0.1336 - accuracy: 0.9500 - val_loss: 0.0765 - val_accuracy: 0.9727
+10/10 [==============================] - 5s 541ms/step - loss: 0.1332 - accuracy: 0.9469 - val_loss: 0.0827 - val_accuracy: 0.9691
 
 ```
 </div>
@@ -342,7 +335,9 @@ plot_hist(history)
 ```
 
 
+    
 ![png](/img/examples/vision/bit/bit_30_0.png)
+    
 
 
 ---
@@ -356,8 +351,8 @@ print("Accuracy: {:.2f}%".format(accuracy))
 
 <div class="k-default-codeblock">
 ```
-9/9 [==============================] - 6s 646ms/step - loss: 0.0874 - accuracy: 0.9727
-Accuracy: 97.27%
+9/9 [==============================] - 3s 364ms/step - loss: 0.1088 - accuracy: 0.9709
+Accuracy: 97.09%
 
 ```
 </div>
@@ -374,3 +369,9 @@ and 97.0% on CIFAR-10 with 10 examples per class.
 
 You can experiment further with the BigTransfer Method by following the
 [original paper](https://arxiv.org/abs/1912.11370).
+
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-bit-black.svg)](https://huggingface.co/keras-io/bit) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-bit-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
