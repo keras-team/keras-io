@@ -412,4 +412,9 @@ gradients passed to the optimizer to update the model weights at every step. For
 [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
 and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
 
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
 """
