@@ -19,13 +19,13 @@ two of them will be similar (_anchor_ and _positive_ samples), and the third wil
 Our goal is for the model to learn to estimate the similarity between images.
 
 For the network to learn, we use a triplet loss function. You can find an introduction to triplet loss in the
-[FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
+[FaceNet paper](https://arxiv.org/abs/1503.03832) by Schroff et al,. 2015. In this example, we define the triplet
 loss function as follows:
 
 `L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A) - f(N)‖² + margin, 0)`
 
 This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset)
-by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
+by [Rosenfeld et al., 2018](https://arxiv.org/abs/1803.01485).
 """
 
 """
@@ -416,5 +416,5 @@ and [Writing a training loop from scratch](https://www.tensorflow.org/guide/kera
 **Example available on HuggingFace**
 | Trained Model | Demo |
 | :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
 """
