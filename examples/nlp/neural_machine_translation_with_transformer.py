@@ -129,9 +129,7 @@ def custom_standardization(input_string):
 
 
 eng_vectorization = TextVectorization(
-    max_tokens=vocab_size,
-    output_mode="int",
-    output_sequence_length=sequence_length,
+    max_tokens=vocab_size, output_mode="int", output_sequence_length=sequence_length,
 )
 spa_vectorization = TextVectorization(
     max_tokens=vocab_size,
@@ -164,10 +162,7 @@ def format_dataset(eng, spa):
     eng = eng_vectorization(eng)
     spa = spa_vectorization(spa)
     return (
-        {
-            "encoder_inputs": eng,
-            "decoder_inputs": spa[:, :-1],
-        },
+        {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
         spa[:, 1:],
     )
 
@@ -227,10 +222,7 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [
-                layers.Dense(dense_dim, activation="relu"),
-                layers.Dense(embed_dim),
-            ]
+            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -284,10 +276,7 @@ class TransformerDecoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [
-                layers.Dense(latent_dim, activation="relu"),
-                layers.Dense(embed_dim),
-            ]
+            [layers.Dense(latent_dim, activation="relu"), layers.Dense(embed_dim),]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -430,7 +419,7 @@ After 30 epochs, we get results such as:
 > My hotel told me to call you.
 > [start] mi hotel me dijo que te [UNK] [end]
 
-Example available on HuggingFace.
+**Example available on HuggingFace**
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) |

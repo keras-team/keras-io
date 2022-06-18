@@ -92,11 +92,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-("You can dance, can't you?", '[start] Puedes bailar, ¿verdad? [end]')
-('I passed by her house yesterday.', '[start] Me pasé por su casa ayer. [end]')
-('I like tulips.', '[start] Me gustan los tulipanes. [end]')
-('He is fluent in French.', '[start] Habla un francés fluido. [end]')
-('Tom asked me what I had been doing.', '[start] Tom me preguntó qué había estado haciendo. [end]')
+("I know that you're a teacher.", '[start] Sé que tú eres profesor. [end]')
+('I wish I were taller.', '[start] Ojalá fuera más alto. [end]')
+('He is a very sincere person.', '[start] Él es una persona muy sincera. [end]')
+('She always smiles at me.', '[start] Siempre me sonríe. [end]')
+('They accused him of stealing the bicycle.', '[start] Ellos lo acusaron de robar la bicicleta. [end]')
 
 ```
 </div>
@@ -195,7 +195,10 @@ it provides the next words in the target sentence -- what the model will try to 
 def format_dataset(eng, spa):
     eng = eng_vectorization(eng)
     spa = spa_vectorization(spa)
-    return ({"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],}, spa[:, 1:])
+    return (
+        {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
+        spa[:, 1:],
+    )
 
 
 def make_dataset(pairs):
@@ -413,26 +416,29 @@ transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 ```
 Model: "transformer"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+ Layer (type)                   Output Shape         Param #     Connected to                     
 ==================================================================================================
-encoder_inputs (InputLayer)     [(None, None)]       0                                            
-__________________________________________________________________________________________________
-positional_embedding (Positiona (None, None, 256)    3845120     encoder_inputs[0][0]             
-__________________________________________________________________________________________________
-decoder_inputs (InputLayer)     [(None, None)]       0                                            
-__________________________________________________________________________________________________
-transformer_encoder (Transforme (None, None, 256)    3155456     positional_embedding[0][0]       
-__________________________________________________________________________________________________
-model_1 (Functional)            (None, None, 15000)  12959640    decoder_inputs[0][0]             
-                                                                 transformer_encoder[0][0]        
+ encoder_inputs (InputLayer)    [(None, None)]       0           []                               
+                                                                                                  
+ positional_embedding (Position  (None, None, 256)   3845120     ['encoder_inputs[0][0]']         
+ alEmbedding)                                                                                     
+                                                                                                  
+ decoder_inputs (InputLayer)    [(None, None)]       0           []                               
+                                                                                                  
+ transformer_encoder (Transform  (None, None, 256)   3155456     ['positional_embedding[0][0]']   
+ erEncoder)                                                                                       
+                                                                                                  
+ model_1 (Functional)           (None, None, 15000)  12959640    ['decoder_inputs[0][0]',         
+                                                                  'transformer_encoder[0][0]']    
+                                                                                                  
 ==================================================================================================
 Total params: 19,960,216
 Trainable params: 19,960,216
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 1297s 993ms/step - loss: 1.6495 - accuracy: 0.4284 - val_loss: 1.2843 - val_accuracy: 0.5211
+1302/1302 [==============================] - 37s 25ms/step - loss: 1.6753 - accuracy: 0.4178 - val_loss: 1.3184 - val_accuracy: 0.5100
 
-<tensorflow.python.keras.callbacks.History at 0x164a6c250>
+<keras.callbacks.History at 0x7ff31b9f8d90>
 
 ```
 </div>
@@ -493,8 +499,7 @@ After 30 epochs, we get results such as:
 > My hotel told me to call you.
 > [start] mi hotel me dijo que te [UNK] [end]
 
-
-Example available on HuggingFace.
+**Example available on HuggingFace**
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) |
