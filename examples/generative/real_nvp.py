@@ -21,8 +21,8 @@ the determinant of the Jacobian, are easy to obtain (more details in the referen
 
 **Requirements:**
 
-* Tensorflow 2.3
-* Tensorflow probability 0.11.0
+* Tensorflow 2.9.1
+* Tensorflow probability 0.17.0
 
 **Reference:**
 
@@ -47,7 +47,7 @@ import tensorflow_probability as tfp
 """
 
 data = make_moons(3000, noise=0.05)[0].astype("float32")
-norm = layers.experimental.preprocessing.Normalization()
+norm = layers.Normalization()
 norm.adapt(data)
 normalized_data = norm(data)
 
