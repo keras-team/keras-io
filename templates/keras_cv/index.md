@@ -26,19 +26,21 @@ You can also check out other versions in our
 [GitHub repository](https://github.com/keras-team/keras-cv/releases).
 
 ## Quick Introduction
+
 Create a preprocessing pipeline:
+
 ```python
 import keras_cv
-import tensorflow as tf
+from tensorflow import keras
 
-preprocessing_model = tf.keras.Sequential([
+preprocessing_model = keras.Sequential([
     keras_cv.layers.RandAugment(value_range=(0, 255))
     keras_cv.layers.CutMix(),
     keras_cv.layers.MixUp()
 ], name="preprocessing_model")
 ```
 
-Augment a TensorFlow dataset:
+Augment a `tf.data.Dataset`:
 
 ```python
 dataset = dataset.map(lambda images, labels: {"images": images, "labels": labels})
@@ -47,6 +49,7 @@ dataset = dataset.map(lambda inputs: (inputs["images"], inputs["labels"]))
 ```
 
 Create a model:
+
 ```python
 densenet = keras_cv.models.DenseNet(
   include_rescaling=True,
@@ -56,7 +59,8 @@ densenet = keras_cv.models.DenseNet(
 densenet.compile(optimizer='adam', metrics=['accuracy'])
 ```
 
-Fit your model:
+Train your model:
+
 ```python
 densenet.fit(dataset)
 ```

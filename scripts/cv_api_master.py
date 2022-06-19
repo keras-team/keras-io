@@ -107,14 +107,14 @@ PREPROCESSING_MASTER = {
 }
 
 BOUNDING_BOX_FORMATS = {
-        "path": "formats",
-        "title": "Bounding box formats",
-        "generate": [
-            "keras_cv.bounding_box.CENTER_XYWH",
-            "keras_cv.bounding_box.XYWH",
-            "keras_cv.bounding_box.XYXY",
-            "keras_cv.bounding_box.REL_XYXY",
-        ],
+    "path": "formats",
+    "title": "Bounding box formats",
+    "generate": [
+        "keras_cv.bounding_box.CENTER_XYWH",
+        "keras_cv.bounding_box.XYWH",
+        "keras_cv.bounding_box.XYXY",
+        "keras_cv.bounding_box.REL_XYXY",
+    ],
 }
 
 BOUNDING_BOX_UTILS = {
@@ -134,10 +134,7 @@ BOUNDING_BOX_MASTER = {
     "path": "bounding_box/",
     "title": "Bounding box formats and utilities",
     "toc": True,
-    "children": [
-        BOUNDING_BOX_FORMATS,
-        BOUNDING_BOX_UTILS
-    ]
+    "children": [BOUNDING_BOX_FORMATS, BOUNDING_BOX_UTILS],
 }
 
 REGULARIZATION_MASTER = {
