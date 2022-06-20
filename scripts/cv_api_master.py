@@ -182,9 +182,26 @@ METRICS_MASTER = {
     ],
 }
 
+MODELS_MASTER = {
+    "path": "models/",
+    "title": "Models",
+    "toc": True,
+    "children": [
+        {
+            "path": "densenet",
+            "title": "DenseNet models",
+            "generate": [
+                "keras_cv.models.DenseNet121",
+                "keras_cv.models.DenseNet169",
+                "keras_cv.models.DenseNet201",
+            ],
+        },
+    ],
+}
+
 CV_API_MASTER = {
     "path": "keras_cv/",
     "title": "KerasCV",
     "toc": True,
-    "children": [LAYERS_MASTER, METRICS_MASTER, BOUNDING_BOX_MASTER],
+    "children": [LAYERS_MASTER, METRICS_MASTER, MODELS_master, BOUNDING_BOX_MASTER],
 }
