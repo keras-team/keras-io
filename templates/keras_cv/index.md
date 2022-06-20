@@ -51,7 +51,7 @@ dataset = dataset.map(lambda inputs: (inputs["images"], inputs["labels"]))
 Create a model:
 
 ```python
-densenet = keras_cv.models.DenseNet(
+densenet = keras_cv.models.DenseNet121(
   include_rescaling=True,
   include_top=True,
   num_classes=102
