@@ -92,11 +92,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-("I know that you're a teacher.", '[start] Sé que tú eres profesor. [end]')
-('I wish I were taller.', '[start] Ojalá fuera más alto. [end]')
-('He is a very sincere person.', '[start] Él es una persona muy sincera. [end]')
-('She always smiles at me.', '[start] Siempre me sonríe. [end]')
-('They accused him of stealing the bicycle.', '[start] Ellos lo acusaron de robar la bicicleta. [end]')
+('Tom told everyone he was adopted.', '[start] Tom le dijo a todos que era adoptado. [end]')
+("Don't use this faucet.", '[start] No uses esta canilla. [end]')
+("Give me your money or else I'll beat you up.", '[start] Dame tu dinero o te daré una paliza. [end]')
+('Today, I have a lot of homework.', '[start] Hoy tengo muchos deberes. [end]')
+('We can all benefit from his experience.', '[start] Todos nos podemos beneficiar de su experiencia. [end]')
 
 ```
 </div>
@@ -162,7 +162,9 @@ def custom_standardization(input_string):
 
 
 eng_vectorization = TextVectorization(
-    max_tokens=vocab_size, output_mode="int", output_sequence_length=sequence_length,
+    max_tokens=vocab_size,
+    output_mode="int",
+    output_sequence_length=sequence_length,
 )
 spa_vectorization = TextVectorization(
     max_tokens=vocab_size,
@@ -196,7 +198,10 @@ def format_dataset(eng, spa):
     eng = eng_vectorization(eng)
     spa = spa_vectorization(spa)
     return (
-        {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
+        {
+            "encoder_inputs": eng,
+            "decoder_inputs": spa[:, :-1],
+        },
         spa[:, 1:],
     )
 
@@ -267,7 +272,10 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -321,7 +329,10 @@ class TransformerDecoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(latent_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(latent_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -436,9 +447,9 @@ Total params: 19,960,216
 Trainable params: 19,960,216
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 37s 25ms/step - loss: 1.6753 - accuracy: 0.4178 - val_loss: 1.3184 - val_accuracy: 0.5100
+1302/1302 [==============================] - 35s 24ms/step - loss: 1.6296 - accuracy: 0.4361 - val_loss: 1.2795 - val_accuracy: 0.5296
 
-<keras.callbacks.History at 0x7ff31b9f8d90>
+<keras.callbacks.History at 0x7f21ec04b850>
 
 ```
 </div>
