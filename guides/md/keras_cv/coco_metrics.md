@@ -25,17 +25,16 @@ Let's get started using KerasCV's COCO metrics.
 ---
 ## Input format
 
-KerasCV COCO metrics require a specific input format.
+All KerasCV components that process bounding boxes, including COCO metrics, require a
+`bounding_box_format` parameter.  This parameter is used to tell the components what
+format your bounding boxes are in.  While this guide uses the `xyxy` format, a full
+list of supported formats is available in
+[the bounding_box API documentation](/api/keras_cv/bounding_box/formats).
 
 The metrics expect `y_true` and be a `float` Tensor with the shape `[batch,
-num_images, num_boxes, 5]`. The final axis stores the locational and class
-information for each specific bounding box. The dimensions in order are: `[left,
-top, right, bottom, class]`.
-
-The metrics expect `y_pred` and be a `float` Tensor with the shape `[batch,
-num_images, num_boxes, 56]`. The final axis stores the locational and class
-information for each specific bounding box. The dimensions in order are: `[left,
-top, right, bottom, class, confidence]`.
+num_images, num_boxes, 5]`, with the ordering of last set of axes determined by the
+provided format.  The same is true of `y_pred`, except that an additional `confidence`
+axis must be provided.
 
 Due to the fact that each image may have a different number of bounding boxes,
 the `num_boxes` dimension may actually have a mismatching shape between images.
@@ -43,8 +42,9 @@ KerasCV works around this by allowing you to either pass a `RaggedTensor` as an
 input to the KerasCV COCO metrics, or padding unused bounding boxes with `-1`.
 
 Utility functions to manipulate bounding boxes, transform between formats, and
-pad bounding box Tensors with `-1s` are available at
-[`keras_cv.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box).
+pad bounding box Tensors with `-1s` are available from the
+[`keras_cv.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box)
+package.
 
 ---
 ## Independent metric use
@@ -67,7 +67,9 @@ import tensorflow as tf
 from tensorflow import keras
 
 # only consider boxes with areas less than a 32x32 square.
-metric = keras_cv.metrics.COCORecall(class_ids=[1, 2, 3], area_range=(0, 32**2))
+metric = keras_cv.metrics.COCORecall(
+    bounding_box_format="xyxy", class_ids=[1, 2, 3], area_range=(0, 32**2)
+)
 ```
 
 2.) Create Some Bounding Boxes:
@@ -144,7 +146,11 @@ y_pred = tf.constant([[[0, 0, 10, 10, 1, 1.0], [5, 5, 10, 10, 1, 0.9]]], tf.floa
 
 ```python
 recall = keras_cv.metrics.COCORecall(
-    max_detections=100, class_ids=[1], area_range=(0, 64**2), name="coco_recall"
+    bounding_box_format="xyxy",
+    max_detections=100,
+    class_ids=[1],
+    area_range=(0, 64**2),
+    name="coco_recall",
 )
 model.compile(metrics=[recall])
 ```
@@ -158,7 +164,7 @@ model.evaluate(y_pred, y_true, return_dict=True)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 1s 822ms/step - loss: 0.0000e+00 - coco_recall: 1.0000
+1/1 [==============================] - 1s 1s/step - loss: 0.0000e+00 - coco_recall: 1.0000
 
 {'loss': 0.0, 'coco_recall': 1.0}
 

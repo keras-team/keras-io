@@ -17,7 +17,8 @@ KerasCV makes it easy to assemble state-of-the-art, industry-grade data augmenta
 pipelines for image classification and object detection tasks. KerasCV offers a wide
 suite of preprocessing layers implementing common data augmentation techniques.
 
-Perhaps three of the most useful layers are `CutMix`, `MixUp`, and `RandAugment`. These
+Perhaps three of the most useful layers are `keras_cv.layers.CutMix`,
+`keras_cv.layers.MixUp`, and `keras_cv.layers.RandAugment`. These
 layers are used in nearly all state-of-the-art image classification pipelines.
 
 This guide will show you how to compose these layers into your own data
@@ -77,7 +78,7 @@ IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
 
-def prepare(image, label):
+def to_dict(image, label):
     image = tf.image.resize(image, IMAGE_SIZE)
     image = tf.cast(image, tf.float32)
     label = tf.one_hot(label, num_classes)
@@ -88,11 +89,11 @@ def prepare_dataset(dataset, split):
     if split == "train":
         return (
             dataset.shuffle(10 * BATCH_SIZE)
-            .map(prepare, num_parallel_calls=AUTOTUNE)
+            .map(to_dict, num_parallel_calls=AUTOTUNE)
             .batch(BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(prepare, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
+        return dataset.map(to_dict, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
 
 
 def load_dataset(split="train"):
@@ -122,9 +123,9 @@ visualize_dataset(train_dataset, title="Before Augmentation")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
-
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
+    
 
 
 Great! Now we can move onto the augmentation step.
@@ -151,7 +152,7 @@ applied at each layer.
 
 You can read more about these
 parameters in the
-[`RandAugment` API documentation](/api/keras_cv/layers/rand_augment).
+[`RandAugment` API documentation](/api/keras_cv/layers/preprocessing/rand_augment/).
 
 Let's use KerasCV's RandAugment implementation.
 
@@ -182,9 +183,9 @@ visualize_dataset(train_dataset, title="After RandAugment")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
-
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
+    
 
 
 Try tweaking the magnitude settings to see a wider variety of results.
@@ -206,11 +207,7 @@ techniques in their respective papers:
 
 In this example, we will use `CutMix` and `MixUp` independently in a manually created
 preprocessing pipeline. In most state of the art pipelines images are randomly
-augmented by either `CutMix`, `MixUp`, or neither. The function below implements this
-in an equal 1/3 split.
-
-Note that our `cut_mix_and_mix_up` function is annotated with a `tf.function` to ensure
-optimal performance.
+augmented by either `CutMix`, `MixUp`, or neither. The function below implements both.
 
 
 ```python
@@ -230,9 +227,9 @@ visualize_dataset(train_dataset, title="After CutMix and MixUp")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
-
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
+    
 
 
 Great! Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
@@ -242,7 +239,8 @@ pipeline.
 ## Customizing your augmentation pipeline
 
 Perhaps you want to exclude an augmentation from `RandAugment`, or perhaps you want to
-include the `GridMask()` as an option alongside the default `RandAugment` augmentations.
+include the `keras_cv.layers.GridMask` as an option alongside the default `RandAugment`
+augmentations.
 
 KerasCV allows you to construct production grade custom data augmentation pipelines using
 the `keras_cv.layers.RandomAugmentationPipeline` layer. This class operates similarly to
@@ -274,7 +272,7 @@ layers = [
 ]
 ```
 
-Next, let's add `GridMask` to our layers:
+Next, let's add `keras_cv.layers.GridMask` to our layers:
 
 
 ```python
@@ -288,24 +286,26 @@ Finally, we can put together our pipeline
 pipeline = keras_cv.layers.RandomAugmentationPipeline(
     layers=layers, augmentations_per_image=3
 )
+
+
+def apply_pipeline(inputs):
+    inputs["images"] = pipeline(inputs["images"])
+    return inputs
+
 ```
 
 Let's check out the results!
 
 
 ```python
-
-def apply_pipeline(inputs):
-    inputs["images"] = pipeline(inputs["images"])
-    return inputs
-
-
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_12.png)
 
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_0.png)
+    
 
 
 Awesome! As you can see, no images were randomly rotated. You can customize the
@@ -324,19 +324,14 @@ This pipeline will either apply `GrayScale` or GridMask:
 
 ```python
 
-def apply_pipeline(inputs):
-    inputs["images"] = pipeline(inputs["images"])
-    return inputs
-
-
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
-
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
+    
 
 
 Looks great! You can use `RandomAugmentationPipeline` however you want.
@@ -378,8 +373,9 @@ test_dataset = test_dataset
 ```
 
 
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_12.png)
-
+    
+![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_0.png)
+    
 
 
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
@@ -391,11 +387,9 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    inputs = keras.layers.Input(input_shape)
-    x = applications.ResNet50V2(
-        input_shape=input_shape, classes=num_classes, weights=None
-    )(inputs)
-    model = keras.Model(inputs, x)
+    model = keras_cv.models.DenseNet121(
+        include_rescaling=True, include_top=True, classes=num_classes
+    )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
         optimizer=optimizers.SGD(momentum=0.9),
@@ -421,8 +415,15 @@ with strategy.scope():
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - ETA: 0s - loss: 4.8694 - accuracy: 0.0049
-32/32 [==============================] - 399s 12s/step - loss: 4.8694 - accuracy: 0.0049 - val_loss: 43.5487 - val_accuracy: 0.0187
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
+
+32/32 [==============================] - 769s 24s/step - loss: 4.7812 - accuracy: 0.0108 - val_loss: 4.6148 - val_accuracy: 0.0241
 
 ```
 </div>

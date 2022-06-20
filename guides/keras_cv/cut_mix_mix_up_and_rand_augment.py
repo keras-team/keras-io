@@ -82,11 +82,11 @@ def prepare_dataset(dataset, split):
     if split == "train":
         return (
             dataset.shuffle(10 * BATCH_SIZE)
-            .map(prepare, num_parallel_calls=AUTOTUNE)
+            .map(to_dict, num_parallel_calls=AUTOTUNE)
             .batch(BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(prepare, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
+        return dataset.map(to_dict, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
 
 
 def load_dataset(split="train"):
@@ -261,6 +261,12 @@ pipeline = keras_cv.layers.RandomAugmentationPipeline(
     layers=layers, augmentations_per_image=3
 )
 
+
+def apply_pipeline(inputs):
+    inputs["images"] = pipeline(inputs["images"])
+    return inputs
+
+
 """
 Let's check out the results!
 """
@@ -281,11 +287,6 @@ pipeline = keras_cv.layers.RandomAugmentationPipeline(
 """
 This pipeline will either apply `GrayScale` or GridMask:
 """
-
-
-def apply_pipeline(inputs):
-    inputs["images"] = pipeline(inputs["images"])
-    return inputs
 
 
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
@@ -339,11 +340,9 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    inputs = keras.layers.Input(input_shape)
-    x = applications.ResNet50V2(
-        input_shape=input_shape, classes=num_classes, weights=None
-    )(inputs)
-    model = keras.Model(inputs, x)
+    model = keras_cv.models.DenseNet121(
+        include_rescaling=True, include_top=True, classes=num_classes
+    )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
         optimizer=optimizers.SGD(momentum=0.9),

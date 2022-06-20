@@ -121,9 +121,9 @@ imshow(elephants)
 ```
 
 
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_9_0.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_9_0.png)
+    
 
 
 Next, let's augment it and visualize the result:
@@ -136,9 +136,9 @@ imshow(augmented.numpy())
 ```
 
 
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_11_0.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_11_0.png)
+    
 
 
 Looks great!  We can also call our layer on batched inputs:
@@ -151,9 +151,9 @@ imshow(augmented.numpy()[0])
 ```
 
 
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_13_0.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_13_0.png)
+    
 
 
 ---
@@ -208,9 +208,9 @@ gallery_show(augmented.numpy())
 ```
 
 
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_17_0.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_17_0.png)
+    
 
 
 Each image is augmented differently with a random factor sampled from the range
@@ -230,9 +230,9 @@ gallery_show(augmented.numpy())
 ```
 
 
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_19_0.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_19_0.png)
+    
 
 
 As you can see, the augmentations now are drawn from a normal distributions.
@@ -373,9 +373,9 @@ min and max after augmentation: 0.0 26.488235
 
 ```
 </div>
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_27_2.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_27_2.png)
+    
 
 
 Note that this is an incredibly weak augmentation!
@@ -458,9 +458,9 @@ min and max after augmentation: 0.0 1.0
 
 ```
 </div>
-
-![png](/img/guides/custom_image_augmentations/custom_image_augmentations_29_1.png)
-
+    
+![png](../guides/img/custom_image_augmentations/custom_image_augmentations_29_1.png)
+    
 
 
 Now our elephants are only slgihtly blue tinted.  This is the expected behavior when
@@ -515,6 +515,11 @@ class UnVectorizable(keras_cv.layers.BaseImageAugmentationLayer):
         self.auto_vectorize = False
 
 ```
+
+Additionally, be sure to accept `**kwargs` to your `augment_*` methods to ensure
+forwards compatibility.  KerasCV will add additional label types in the future, and
+if you do not include a `**kwargs` argument your augmentation layers will not be
+forward compatible.
 
 ---
 ## Conclusion and next steps
