@@ -65,7 +65,9 @@ tf.random.set_seed(SEEDS)
 
 ```python
 train_ds, validation_ds = tfds.load(
-    "tf_flowers", split=["train[:85%]", "train[85%:]"], as_supervised=True,
+    "tf_flowers",
+    split=["train[:85%]", "train[85%:]"],
+    as_supervised=True,
 )
 ```
 
@@ -303,13 +305,13 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/400
-10/10 [==============================] - 17s 872ms/step - loss: 0.7454 - accuracy: 0.7859 - val_loss: 0.1845 - val_accuracy: 0.9582
+10/10 [==============================] - 18s 852ms/step - loss: 0.7465 - accuracy: 0.7891 - val_loss: 0.1865 - val_accuracy: 0.9582
 Epoch 2/400
-10/10 [==============================] - 5s 581ms/step - loss: 0.1453 - accuracy: 0.9609 - val_loss: 0.1088 - val_accuracy: 0.9709
+10/10 [==============================] - 5s 529ms/step - loss: 0.1389 - accuracy: 0.9578 - val_loss: 0.1075 - val_accuracy: 0.9727
 Epoch 3/400
-10/10 [==============================] - 5s 537ms/step - loss: 0.1531 - accuracy: 0.9453 - val_loss: 0.0852 - val_accuracy: 0.9709
+10/10 [==============================] - 5s 520ms/step - loss: 0.1720 - accuracy: 0.9391 - val_loss: 0.0858 - val_accuracy: 0.9727
 Epoch 4/400
-10/10 [==============================] - 5s 541ms/step - loss: 0.1332 - accuracy: 0.9469 - val_loss: 0.0827 - val_accuracy: 0.9691
+10/10 [==============================] - 5s 525ms/step - loss: 0.1211 - accuracy: 0.9516 - val_loss: 0.0833 - val_accuracy: 0.9691
 
 ```
 </div>
@@ -351,8 +353,8 @@ print("Accuracy: {:.2f}%".format(accuracy))
 
 <div class="k-default-codeblock">
 ```
-9/9 [==============================] - 3s 364ms/step - loss: 0.1088 - accuracy: 0.9709
-Accuracy: 97.09%
+9/9 [==============================] - 3s 364ms/step - loss: 0.1075 - accuracy: 0.9727
+Accuracy: 97.27%
 
 ```
 </div>
