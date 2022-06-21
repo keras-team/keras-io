@@ -83,14 +83,6 @@ positive_images_path = cache_dir / "right"
 
 <div class="k-default-codeblock">
 ```
-/mnt/hdd2/gender_detect/python38venv/lib/python3.8/site-packages/gdown/cli.py:127: FutureWarning: Option `--id` was deprecated in version 4.3.1 and will be removed in 5.0. You don't need to pass it anymore to use a file ID.
-  warnings.warn(
-Downloading...
-From: https://drive.google.com/uc?id=1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34
-To: /mnt/hdd2/keras-io/scripts/tmp_8979114/left.zip
-100%|████████████████████████████████████████| 104M/104M [00:01<00:00, 53.6MB/s]
-/mnt/hdd2/gender_detect/python38venv/lib/python3.8/site-packages/gdown/cli.py:127: FutureWarning: Option `--id` was deprecated in version 4.3.1 and will be removed in 5.0. You don't need to pass it anymore to use a file ID.
-  warnings.warn(
 Downloading...
 From: https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW
 To: /mnt/hdd2/keras-io/scripts/tmp_8979114/right.zip
