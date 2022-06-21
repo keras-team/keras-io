@@ -258,7 +258,6 @@ class KerasIO:
         )
         open(md_path, "w").write(md_content)
 
-
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
 
@@ -948,7 +947,7 @@ def generate_md_toc(entries, url, depth=2):
             title=title, full_url=full_url
         )
         if children:
-            assert path.endswith("/")
+            assert path.endswith("/"), f"{path} should end with /"
             for child in children:
                 if child.get("skip_from_toc", False):
                     continue
