@@ -123,9 +123,9 @@ visualize_dataset(train_dataset, title="Before Augmentation")
 ```
 
 
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
-    
+
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
+
 
 
 Great! Now we can move onto the augmentation step.
@@ -183,9 +183,9 @@ visualize_dataset(train_dataset, title="After RandAugment")
 ```
 
 
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
-    
+
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
+
 
 
 Try tweaking the magnitude settings to see a wider variety of results.
@@ -227,9 +227,9 @@ visualize_dataset(train_dataset, title="After CutMix and MixUp")
 ```
 
 
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
-    
+
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
+
 
 
 Great! Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
@@ -303,9 +303,9 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_0.png)
-    
+
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_0.png)
+
 
 
 Awesome! As you can see, no images were randomly rotated. You can customize the
@@ -329,9 +329,9 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
-    
+
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
+
 
 
 Looks great! You can use `RandomAugmentationPipeline` however you want.
@@ -373,9 +373,9 @@ test_dataset = test_dataset
 ```
 
 
-    
-![png](../guides/img/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_0.png)
-    
+
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_0.png)
+
 
 
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
@@ -415,16 +415,7 @@ with strategy.scope():
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
-WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
-
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
-
 32/32 [==============================] - 769s 24s/step - loss: 4.7812 - accuracy: 0.0108 - val_loss: 4.6148 - val_accuracy: 0.0241
-
 ```
 </div>
 ---
