@@ -164,6 +164,7 @@ def train_word_piece(text_samples, vocab_size, reserved_tokens):
 
 """
 Every vocabulary has a few special, reserved tokens. We have four such tokens:
+
 - `"[PAD]"` - Padding token. Padding tokens are appended to the input sequence
 length when the input sequence length is shorter than the maximum sequence length.
 - `"[UNK]"` - Unknown token.
