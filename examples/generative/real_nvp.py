@@ -26,7 +26,7 @@ the determinant of the Jacobian, are easy to obtain (more details in the referen
 
 **Reference:**
 
-[Density estimation using Real NVP](https://arxiv.org/pdf/1605.08803.pdf)
+[Density estimation using Real NVP](https://arxiv.org/abs/1605.08803)
 """
 
 """
