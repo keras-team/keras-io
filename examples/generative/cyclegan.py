@@ -33,6 +33,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
+
 tfds.disable_progress_bar()
 autotune = tf.data.AUTOTUNE
 
@@ -408,7 +409,12 @@ class CycleGan(keras.Model):
         self.lambda_identity = lambda_identity
 
     def call(self, inputs):
-        return self.disc_X(inputs), self.disc_Y(inputs), self.gen_G(inputs), self.gen_F(inputs)
+        return (
+            self.disc_X(inputs),
+            self.disc_Y(inputs),
+            self.gen_G(inputs),
+            self.gen_F(inputs),
+        )
 
     def compile(
         self,
