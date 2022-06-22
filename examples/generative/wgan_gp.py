@@ -18,7 +18,7 @@ constraint. Though weight clipping works, it can be a problematic way to enforce
 1-Lipschitz constraint and can cause undesirable behavior, e.g. a very deep WGAN
 discriminator (critic) often fails to converge.
 
-The [WGAN-GP](https://arxiv.org/pdf/1704.00028.pdf) method proposes an
+The [WGAN-GP](https://arxiv.org/abs/1704.00028) method proposes an
 alternative to weight clipping to ensure smooth training. Instead of clipping
 the weights, the authors proposed a "gradient penalty" by adding a loss term
 that keeps the L2 norm of the discriminator gradients close to 1.
@@ -66,7 +66,7 @@ using strided convolutions, this can result in a shape with odd dimensions.
 For example,
 `(28, 28) -> Conv_s2 -> (14, 14) -> Conv_s2 -> (7, 7) -> Conv_s2 ->(3, 3)`.
 
-While peforming upsampling in the generator part of the network, we won't get 
+While peforming upsampling in the generator part of the network, we won't get
 the same input shape as the original images if we aren't careful. To avoid this,
 we will do something much simpler:
 - In the discriminator: "zero pad" the input to change the shape to `(32, 32, 1)`
@@ -435,3 +435,11 @@ from IPython.display import Image, display
 display(Image("generated_img_0_19.png"))
 display(Image("generated_img_1_19.png"))
 display(Image("generated_img_2_19.png"))
+
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-WGAN%20GP-black.svg)](https://huggingface.co/keras-io/WGAN-GP) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-WGAN%20GP-black.svg)](https://huggingface.co/spaces/keras-io/WGAN-GP) |
+"""
