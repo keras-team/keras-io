@@ -305,7 +305,8 @@ def get_network():
         )
         angular_speeds = 2.0 * math.pi * frequencies
         embeddings = tf.concat(
-            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3,
+            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)],
+            axis=3,
         )
         return embeddings
 
@@ -475,7 +476,7 @@ class DiffusionModel(keras.Model):
 
     def denormalize(self, images):
         # convert the pixel values back to 0-1 range
-        images = self.normalizer.mean + (images * self.normalizer.variance ** 0.5)
+        images = self.normalizer.mean + (images * self.normalizer.variance**0.5)
         return tf.clip_by_value(images, 0.0, 1.0)
 
     def diffusion_schedule(self, diffusion_times):
@@ -500,7 +501,7 @@ class DiffusionModel(keras.Model):
             network = self.ema_network
 
         # predict noise component and calculate the image component using it
-        pred_noises = network([noisy_images, noise_rates ** 2], training=training)
+        pred_noises = network([noisy_images, noise_rates**2], training=training)
         pred_images = (noisy_images - noise_rates * pred_noises) / signal_rates
 
         return pred_noises, pred_images
@@ -616,7 +617,8 @@ class DiffusionModel(keras.Model):
     def plot_images(self, epoch=None, logs=None, num_rows=3, num_cols=6):
         # plot random generated images for visual evaluation of generation quality
         generated_images = self.generate(
-            num_images=num_rows * num_cols, diffusion_steps=plot_diffusion_steps,
+            num_images=num_rows * num_cols,
+            diffusion_steps=plot_diffusion_steps,
         )
 
         plt.figure(figsize=(num_cols * 2.0, num_rows * 2.0))
