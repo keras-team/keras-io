@@ -59,7 +59,7 @@ you would use:
 img_inputs = keras.Input(shape=(32, 32, 3))
 
 """
-The `inputs` that is returned contain information about the shape and `dtype`
+The `inputs` that is returned contains information about the shape and `dtype`
 of the input data that you feed to your model.
 Here's the shape:
 """
