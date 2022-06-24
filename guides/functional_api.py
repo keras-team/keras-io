@@ -59,7 +59,7 @@ you would use:
 img_inputs = keras.Input(shape=(32, 32, 3))
 
 """
-The `inputs` that is returned contains information about the shape and `dtype`
+The `inputs` that is returned contain information about the shape and `dtype`
 of the input data that you feed to your model.
 Here's the shape:
 """
@@ -816,7 +816,7 @@ Where `mask` is a boolean mask tensor (useful for RNNs, for instance).
 - `call(self, inputs, training=None, mask=None, **kwargs)` --
 Of course, you can have both masking and training-specific behavior at the same time.
 
-Additionally, if you implement the `get_config` method on your custom Layer or model,
+Additionally, if you implement the `get_config` method on your custom layer or model,
 the functional models you create will still be serializable and cloneable.
 
 Here's a quick example of a custom RNN, written from scratch,
