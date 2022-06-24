@@ -305,8 +305,7 @@ def get_network():
         )
         angular_speeds = 2.0 * math.pi * frequencies
         embeddings = tf.concat(
-            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)],
-            axis=3,
+            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3,
         )
         return embeddings
 
@@ -617,8 +616,7 @@ class DiffusionModel(keras.Model):
     def plot_images(self, epoch=None, logs=None, num_rows=3, num_cols=6):
         # plot random generated images for visual evaluation of generation quality
         generated_images = self.generate(
-            num_images=num_rows * num_cols,
-            diffusion_steps=plot_diffusion_steps,
+            num_images=num_rows * num_cols, diffusion_steps=plot_diffusion_steps,
         )
 
         plt.figure(figsize=(num_cols * 2.0, num_rows * 2.0))
