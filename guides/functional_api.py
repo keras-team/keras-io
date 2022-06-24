@@ -3,7 +3,7 @@ Title: The Functional API
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
 Last modified: 2020/04/12
-Description: Complete guide to the functional API.
+Description: A complete guide to the functional API.
 """
 """
 ## Setup
