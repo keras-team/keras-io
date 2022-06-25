@@ -429,4 +429,9 @@ After 30 epochs, we get results such as:
 
 > My hotel told me to call you.
 > [start] mi hotel me dijo que te [UNK] [end]
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) |
 """
