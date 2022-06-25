@@ -17,7 +17,7 @@ Recently, [denoising diffusion models](https://arxiv.org/abs/2006.11239), includ
 powerful class of generative models, that can [rival](https://arxiv.org/abs/2105.05233)
 even [generative adversarial networks (GANs)](https://arxiv.org/abs/1406.2661) in image
 synthesis quality. They tend to generate more diverse samples, while being stable to
-train as easy to scale. One of their drawbacks is however, that they are slower to sample
+train and easy to scale. One of their drawbacks is however, that they are slower to sample
 from, because they require multiple forward passes for generating an image.
 
 Diffusion refers to the process of turning a structured signal (an image) into noise
@@ -28,7 +28,7 @@ image emerging from noise.
 
 ![diffusion process gif](https://i.imgur.com/rZZTgnJ.gif)
 
-My one-sentence summary: **diffusion models are trained to denoise noisy images, and can
+One-sentence summary: **diffusion models are trained to denoise noisy images, and can
 generate images by iteratively denoising pure noise.**
 
 ### Goal of this example
@@ -39,15 +39,15 @@ reasonable performance. My implementation choices and hyperparameter tuning were
 with these goals in mind.
 
 Since currently the literature of diffusion models is
-[mathematically quite complex (see Abstract)](https://arxiv.org/abs/2206.00364)
-with multiple theoretical frameworks (
-[score matching](https://arxiv.org/abs/1907.05600),
+[mathematically quite complex](https://arxiv.org/abs/2206.00364)
+with multiple theoretical frameworks
+([score matching](https://arxiv.org/abs/1907.05600),
 [differential equations](https://arxiv.org/abs/2011.13456),
 [Markov chains](https://arxiv.org/abs/2006.11239)) and sometimes even
 [conflicting notations (see Appendix C.2)](https://arxiv.org/abs/2010.02502),
 it can be daunting trying to understand
-them. My view of these models is that they learn to separate a noisy image into its image
-and noise components.
+them. My view of these models in this example will be that they learn to separate a
+noisy image into its image and noise components.
 
 In this example I made effort to break down all long mathematical expressions into
 digestible pieces and gave all variables explanatory names. I also included numerous
@@ -55,9 +55,9 @@ links to relevant literature to help interested readers dive deeper into the top
 the hope that this code example will become a good starting point for practitioners
 learning about diffusion models.
 
-In the following sections, we will implement a continous time version of [Denoising
-Diffusion Implicit Models (DDIMs)](https://arxiv.org/abs/2010.02502) with deterministic
-sampling.
+In the following sections, we will implement a continous time version of
+[Denoising Diffusion Implicit Models (DDIMs)](https://arxiv.org/abs/2010.02502)
+with deterministic sampling.
 """
 
 """
@@ -108,14 +108,15 @@ weight_decay = 1e-4
 """
 ## Data pipeline
 
-We will use the [Oxford Flowers
-102](https://www.tensorflow.org/datasets/catalog/oxford_flowers102) dataset for
+We will use the
+[Oxford Flowers 102](https://www.tensorflow.org/datasets/catalog/oxford_flowers102)
+dataset for
 generating images of flowers, which is a diverse natural dataset containing around 8000
 images. Unfortunately the official splits are imbalanced, as most of the images are
 contained in the test split. We create new splits (80% train, 20% validation) using the
 [Tensorflow Datasets slicing API](https://www.tensorflow.org/datasets/splits). We apply
 center crops as preprocessing, and repeat the dataset multiple times (reason given in the
-following section).
+next section).
 """
 
 
@@ -164,7 +165,7 @@ metric which was proposed as a replacement for the popular
 [Frechet Inception Distance (FID)](https://arxiv.org/abs/1706.08500).
 I prefer KID to FID because it is simpler to
 implement, can be estimated per-batch, and is computationally lighter. More details
-[here](https://keras.io/examples/generative/gan_ada/#kernel-inception-distance). 
+[here](https://keras.io/examples/generative/gan_ada/#kernel-inception-distance).
 
 In this example, the images are evaluated at the minimal possible resolution of the
 Inception network (75x75 instead of 299x299), and the metric is only measured on the
@@ -260,9 +261,9 @@ components. The latter is required since denoising a signal requires different o
 at different levels of noise. We transform the noise variances using sinusoidal
 embeddings, similarly to positional encodings used both in
 [transformers](https://arxiv.org/abs/1706.03762) and
-[NeRF](https://arxiv.org/abs/2003.08934). This helps the network to be [highly
-sensitive](https://arxiv.org/abs/2006.10739) to the noise level, which is crucial for
-good performance. We implement sinusoidal embeddings using a
+[NeRF](https://arxiv.org/abs/2003.08934). This helps the network to be
+[highly sensitive](https://arxiv.org/abs/2006.10739) to the noise level, which is
+crucial for good performance. We implement sinusoidal embeddings using a
 [Lambda layer](https://keras.io/api/layers/core_layers/lambda/).
 
 Some other considerations:
@@ -278,14 +279,14 @@ usually use some function of the noise level. I
 prefer the latter so that we can change the sampling schedule at inference time, without
 retraining the network.
 * [Diffusion models](https://arxiv.org/abs/2006.11239) input the embedding to each
-convolutional block separately. We only input it at the start of the network for
+convolution block separately. We only input it at the start of the network for
 simplicity, which in my experience barely decreases preformance, because the skip and
 residual connections help the information propagate through the network properly.
 * In the literature it is common to use
 [attention layers](https://keras.io/api/layers/attention_layers/multi_head_attention/)
 at lower resolutions for better global coherence. I omitted it for simplicity.
 * We disable the learnable center and scale parameters of the batch normalization layers,
-since the following convolutional layers make them redundant.
+since the following convolution layers make them redundant.
 * We initialize the last convolution's kernel to all zeros as a good practice, making the
 network predict only zeros after initialization, which is the mean of its targets. This
 will improve behaviour at the start of training and make the mean squared error loss
@@ -387,11 +388,11 @@ in less than 80 lines of code!
 Let us say, that a diffusion process starts at time = 0, and ends at time = 1. This
 variable will be called diffusion time, and can be either discrete (common in diffusion
 models) or continuous (common in score-based models). I choose the latter, so that the
-number of sampling steps can be changed and inference times.
+number of sampling steps can be changed at inference time.
 
 We need to have a function that tells us at each point in the diffusion process the noise
-levels and signal levels of the noisy image corresponding to the diffusion time. This
-will be called the diffusion schedule (see `diffusion_schedule()`).
+levels and signal levels of the noisy image corresponding to the actual diffusion time.
+This will be called the diffusion schedule (see `diffusion_schedule()`).
 
 This schedule outputs two quantities: the `noise_rate` and the `signal_rate`
 (corresponding to sqrt(1 - alpha) and sqrt(alpha) in the DDIM paper, respectively). We
@@ -401,9 +402,9 @@ corresponding rates and adding them together.
 Since the (standard normal) random noises and the (normalized) images both have zero mean
 and unit variance, the noise rate and signal rate can be interpreted as the standard
 deviation of their components in the noisy image, while the squares of their rates can be
-interpreted as their variance. The rates will always be set so that their squared sum is
-1, meaning that the noisy images will always have unit variance, just like its unscaled
-components.
+interpreted as their variance (or their power in the signal processing sense). The rates
+will always be set so that their squared sum is 1, meaning that the noisy images will
+always have unit variance, just like its unscaled components.
 
 We will use a simplified, continuous version of the
 [cosine schedule (Section 3.2)](https://arxiv.org/abs/2102.09672),
@@ -444,8 +445,8 @@ corresponds to *eta = 0* in the paper. One can also use stochastic sampling (in 
 case the model becomes a
 [Denoising Diffusion Probabilistic Model](https://arxiv.org/abs/2006.11239)),
 where a part of the predicted noise is
-replaced with the same or larger amount of random noise (
-[see Equation 16 and below](https://arxiv.org/abs/2010.02502)).
+replaced with the same or larger amount of random noise
+([see Equation 16 and below](https://arxiv.org/abs/2010.02502)).
 
 Stochastic sampling can be used without retraining the network (since both models are
 trained the same way), and it can improve sample quality, while on the other hand
@@ -732,8 +733,8 @@ my experience adding horizontal flips to the training increases generation perfo
 while random crops do not. Since we use a supervised denoising loss, overfitting can be
 an issue, so image augmentations might be important on small datasets. One should also be
 careful not to use
-[leaky augmentations](https://keras.io/examples/generative/gan_ada/#invertible-data-augmentation)
-, which can be done following
+[leaky augmentations](https://keras.io/examples/generative/gan_ada/#invertible-data-augmentation),
+which can be done following
 [this method (end of Section 5)](https://arxiv.org/abs/2206.00364) for instance.
 * **data normalization**: In the literature the pixel values of images are usually
 converted to the -1 to 1 range. For theoretical correctness, I normalize the images to
