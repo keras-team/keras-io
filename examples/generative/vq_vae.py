@@ -68,8 +68,8 @@ mapped as one and the remaining codes are mapped as zeros.
 Since the quantization process is not differentiable, we apply a
 [straight-through estimator](https://www.hassanaskary.com/python/pytorch/deep%20learning/2020/09/19/intuitive-explanation-of-straight-through-estimators.html)
 in between the decoder and the encoder, so that the decoder gradients are directly propagated
-to the encoder. As the encoder and decoder share the same channel space, the hope is that the
-decoder gradients will still be meaningful to the encoder.
+to the encoder. As the encoder and decoder share the same channel space, the decoder gradients are
+still meaningful to the encoder.
 """
 
 
