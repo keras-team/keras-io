@@ -149,9 +149,9 @@ for helping me understand this technique.
 """
 ## Encoder and decoder
 
-We will now implement the encoder and the decoder for the VQ-VAE. We will keep them small so
-that their capacity is a good fit for the MNIST dataset, which we will use to demonstrate
-the results. The definitions of the encoder and decoder come from
+Now for the encoder and the decoder for the VQ-VAE. We will keep them small so
+that their capacity is a good fit for the MNIST dataset. The implementation of the encoder and
+decoder come from
 [this example](https://keras.io/examples/generative/vae).
 """
 
