@@ -6,10 +6,10 @@ Last modified: 2022/06/27
 Description: Training a VQ-VAE for image reconstruction and codebook sampling for generation.
 """
 """
-In this example, we will develop a Vector Quantized Variational Autoencoder (VQ-VAE).
+In this example, we develop a Vector Quantized Variational Autoencoder (VQ-VAE).
 VQ-VAE was proposed in
 [Neural Discrete Representation Learning](https://arxiv.org/abs/1711.00937)
-by van der Oord et al. In traditional VAEs, the latent space is continuous and is sampled
+by van der Oord et al. In standard VAEs, the latent space is continuous and is sampled
 from a Gaussian distribution. It is generally harder to learn such a continuous
 distribution via gradient descent. VQ-VAEs, on the other hand,
 operate on a discrete latent space, making the optimization problem simpler. It does so
@@ -18,16 +18,18 @@ discretizing the distance between continuous embeddings and the encoded
 outputs. These discrete code words are then fed to the decoder, which is trained
 to generate reconstructed samples.
 
-For a detailed overview of VQ-VAEs, please refer to the original paper and
+For an overview of VQ-VAEs, please refer to the original paper and
 [this video explanation](https://www.youtube.com/watch?v=VZFVUrYcig0).
 If you need a refresher on VAEs, you can refer to
 [this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-12/).
 VQ-VAEs are one of the main recipes behind [DALL-E](https://openai.com/blog/dall-e/)
 and the idea of a codebook is used in [VQ-GANs](https://arxiv.org/abs/2012.09841).
-
-This example uses references from the
+This example uses implementation details from the
 [official VQ-VAE tutorial](https://github.com/deepmind/sonnet/blob/master/sonnet/examples/vqvae_example.ipynb)
-from DeepMind. To run this example, you will need TensorFlow 2.5 or higher, as well as
+from DeepMind. 
+
+### Requirements
+To run this example, you will need TensorFlow 2.5 or higher, as well as
 TensorFlow Probability, which can be installed using the command below.
 """
 
