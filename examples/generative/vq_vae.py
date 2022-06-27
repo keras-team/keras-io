@@ -28,7 +28,8 @@ This example uses implementation details from the
 [official VQ-VAE tutorial](https://github.com/deepmind/sonnet/blob/master/sonnet/examples/vqvae_example.ipynb)
 from DeepMind. 
 
-### Requirements
+## Requirements
+
 To run this example, you will need TensorFlow 2.5 or higher, as well as
 TensorFlow Probability, which can be installed using the command below.
 """
