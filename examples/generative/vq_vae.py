@@ -366,16 +366,16 @@ print(f"Input shape of the PixelCNN: {pixelcnn_input_shape}")
 
 """
 This input shape is explained as follows. The first axis represents the 60,000 training samples
-in the [MNIST digits dataset](http://yann.lecun.com/exdb/mnist/). The second and third axes 
-represent the MNIST image size of 28x28 pixels, which pass through two layers of stride-2 
+in the [MNIST digits dataset](http://yann.lecun.com/exdb/mnist/). The second and third axes
+represent the MNIST image size of 28x28 pixels, which pass through two layers of stride-2
 convolution. With "same" padding, this exactly halves the "resolution" of the output shape for each
 stride-2 layer, so with these two layers we end up with a tensor of 7x7 on axes 2 and 3. Since
 the quantization layer in the autoencoder maps these 7x7 matrices to indices of the code book, this
-output layer size must be matched by the PixelCNN as the input shape. The task of the PixelCNN is 
+output layer size must be matched by the PixelCNN as the input shape. The task of the PixelCNN is
 here to generate _likely_ 7x7 arrangements of codebook indices.
 
 Note that the size on the second and third axis is something to optimize for in larger-sized image
-domains. Since the PixelCNN is autoregressive, it needs to pass over each codebook index 
+domains. Since the PixelCNN is autoregressive, it needs to pass over each codebook index
 sequentially in order to generate novel images from the codebook. Each stride-2 (or rather more
 correctly a stride (2, 2)) convolution layer will divide the image generation time by four. Note,
 however, that there is probably some lower bound on this part: when the number of codes for the
