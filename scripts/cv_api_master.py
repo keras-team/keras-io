@@ -9,6 +9,11 @@ PREPROCESSING_MASTER = {
             "generate": ["keras_cv.layers.AutoContrast"],
         },
         {
+            "path": "aug_mix",
+            "title": "AugMix layer",
+            "generate": ["keras_cv.layers.AugMix"],
+        },
+        {
             "path": "channel_shuffle",
             "title": "ChannelShuffle layer",
             "generate": ["keras_cv.layers.ChannelShuffle"],
@@ -64,7 +69,7 @@ PREPROCESSING_MASTER = {
             "generate": ["keras_cv.layers.RandomChannelShift"],
         },
         {
-            "path": "rancom_color_degeneration",
+            "path": "random_color_degeneration",
             "title": "RandomColorDegeneration layer",
             "generate": ["keras_cv.layers.RandomColorDegeneration"],
         },
@@ -99,6 +104,37 @@ PREPROCESSING_MASTER = {
             "generate": ["keras_cv.layers.Solarization"],
         },
     ],
+}
+
+BOUNDING_BOX_FORMATS = {
+    "path": "formats",
+    "title": "Bounding box formats",
+    "generate": [
+        "keras_cv.bounding_box.CENTER_XYWH",
+        "keras_cv.bounding_box.XYWH",
+        "keras_cv.bounding_box.XYXY",
+        "keras_cv.bounding_box.REL_XYXY",
+    ],
+}
+
+BOUNDING_BOX_UTILS = {
+    "path": "utils/",
+    "title": "Bounding box utilities",
+    "toc": True,
+    "children": [
+        {
+            "path": "convert_format",
+            "title": "Convert bounding box formats",
+            "generate": ["keras_cv.bounding_box.convert_format"],
+        },
+    ],
+}
+
+BOUNDING_BOX_MASTER = {
+    "path": "bounding_box/",
+    "title": "Bounding box formats and utilities",
+    "toc": True,
+    "children": [BOUNDING_BOX_FORMATS, BOUNDING_BOX_UTILS],
 }
 
 REGULARIZATION_MASTER = {
@@ -146,9 +182,26 @@ METRICS_MASTER = {
     ],
 }
 
+MODELS_MASTER = {
+    "path": "models/",
+    "title": "Models",
+    "toc": True,
+    "children": [
+        {
+            "path": "densenet",
+            "title": "DenseNet models",
+            "generate": [
+                "keras_cv.models.DenseNet121",
+                "keras_cv.models.DenseNet169",
+                "keras_cv.models.DenseNet201",
+            ],
+        },
+    ],
+}
+
 CV_API_MASTER = {
     "path": "keras_cv/",
     "title": "KerasCV",
     "toc": True,
-    "children": [LAYERS_MASTER, METRICS_MASTER],
+    "children": [LAYERS_MASTER, METRICS_MASTER, MODELS_MASTER, BOUNDING_BOX_MASTER],
 }

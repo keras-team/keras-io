@@ -13,7 +13,8 @@ KerasCV makes it easy to assemble state-of-the-art, industry-grade data augmenta
 pipelines for image classification and object detection tasks. KerasCV offers a wide
 suite of preprocessing layers implementing common data augmentation techniques.
 
-Perhaps three of the most useful layers are `CutMix`, `MixUp`, and `RandAugment`. These
+Perhaps three of the most useful layers are `keras_cv.layers.CutMix`,
+`keras_cv.layers.MixUp`, and `keras_cv.layers.RandAugment`. These
 layers are used in nearly all state-of-the-art image classification pipelines.
 
 This guide will show you how to compose these layers into your own data
@@ -70,7 +71,7 @@ IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
 
-def prepare(image, label):
+def to_dict(image, label):
     image = tf.image.resize(image, IMAGE_SIZE)
     image = tf.cast(image, tf.float32)
     label = tf.one_hot(label, num_classes)
@@ -81,11 +82,11 @@ def prepare_dataset(dataset, split):
     if split == "train":
         return (
             dataset.shuffle(10 * BATCH_SIZE)
-            .map(prepare, num_parallel_calls=AUTOTUNE)
+            .map(to_dict, num_parallel_calls=AUTOTUNE)
             .batch(BATCH_SIZE)
         )
     if split == "test":
-        return dataset.map(prepare, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
+        return dataset.map(to_dict, num_parallel_calls=AUTOTUNE).batch(BATCH_SIZE)
 
 
 def load_dataset(split="train"):
@@ -214,7 +215,8 @@ pipeline.
 ## Customizing your augmentation pipeline
 
 Perhaps you want to exclude an augmentation from `RandAugment`, or perhaps you want to
-include the `GridMask()` as an option alongside the default `RandAugment` augmentations.
+include the `keras_cv.layers.GridMask` as an option alongside the default `RandAugment`
+augmentations.
 
 KerasCV allows you to construct production grade custom data augmentation pipelines using
 the `keras_cv.layers.RandomAugmentationPipeline` layer. This class operates similarly to
@@ -246,7 +248,7 @@ layers = [
 ]
 
 """
-Next, let's add `GridMask` to our layers:
+Next, let's add `keras_cv.layers.GridMask` to our layers:
 """
 
 layers = layers + [keras_cv.layers.GridMask()]
@@ -259,15 +261,15 @@ pipeline = keras_cv.layers.RandomAugmentationPipeline(
     layers=layers, augmentations_per_image=3
 )
 
-"""
-Let's check out the results!
-"""
-
 
 def apply_pipeline(inputs):
     inputs["images"] = pipeline(inputs["images"])
     return inputs
 
+
+"""
+Let's check out the results!
+"""
 
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
 visualize_dataset(train_dataset, title="After custom pipeline")
@@ -285,11 +287,6 @@ pipeline = keras_cv.layers.RandomAugmentationPipeline(
 """
 This pipeline will either apply `GrayScale` or GridMask:
 """
-
-
-def apply_pipeline(inputs):
-    inputs["images"] = pipeline(inputs["images"])
-    return inputs
 
 
 train_dataset = load_dataset().map(apply_pipeline, num_parallel_calls=AUTOTUNE)
@@ -343,11 +340,9 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    inputs = keras.layers.Input(input_shape)
-    x = applications.ResNet50V2(
-        input_shape=input_shape, classes=num_classes, weights=None
-    )(inputs)
-    model = keras.Model(inputs, x)
+    model = keras_cv.models.DenseNet121(
+        include_rescaling=True, include_top=True, classes=num_classes
+    )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
         optimizer=optimizers.SGD(momentum=0.9),
