@@ -153,6 +153,10 @@ Now for the encoder and the decoder for the VQ-VAE. We will keep them small so
 that their capacity is a good fit for the MNIST dataset. The implementation of the encoder and
 decoder come from
 [this example](https://keras.io/examples/generative/vae).
+
+Note that activations _other than ReLU_ may not work for the encoder and decoder layers in the
+quantization architecture: Leaky ReLU activated layers, for example, have proven difficult to
+train, resulting in intermittent loss spikes that the model has trouble recovering from.
 """
 
 
