@@ -93,9 +93,9 @@ class VectorQuantizer(layers.Layer):
         )
 
     def call(self, x):
-        # Calculate the input shape of the inputs and
-        # then flatten the inputs keeping `embedding_dim` intact.
+        # Memorize the input shape of the inputs
         input_shape = tf.shape(x)
+        # Then flatten the inputs, keeping `embedding_dim` intact.
         flattened = tf.reshape(x, [-1, self.embedding_dim])
 
         # Quantization.
