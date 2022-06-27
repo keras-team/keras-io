@@ -102,6 +102,8 @@ class VectorQuantizer(layers.Layer):
         encoding_indices = self.get_code_indices(flattened)
         encodings = tf.one_hot(encoding_indices, self.num_embeddings)
         quantized = tf.matmul(encodings, self.embeddings, transpose_b=True)
+
+        # Reshape the quantized values back to the original input shape
         quantized = tf.reshape(quantized, input_shape)
 
         # Calculate vector quantization loss and add that to the layer. You can learn more
