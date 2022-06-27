@@ -3,8 +3,7 @@ Title: Denoising Diffusion Implicit Models
 Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210)
 Date created: 2022/06/24
 Last modified: 2022/06/24
-Description: Generating images with denoising diffusion implicit models using the
-Oxford Flowers dataset.
+Description: Generating images of flowers with denoising diffusion implicit models.
 """
 
 """
@@ -67,13 +66,10 @@ with deterministic sampling.
 ## Setup
 """
 
-# install tensorflow_addons: pip install tensorflow_addons
-
 import math
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import tensorflow_addons as tfa
 
 from tensorflow import keras
 from keras import layers
@@ -114,7 +110,7 @@ weight_decay = 1e-4
 We will use the
 [Oxford Flowers 102](https://www.tensorflow.org/datasets/catalog/oxford_flowers102)
 dataset for
-generating images of flowers, which is a diverse natural dataset containing around 8000
+generating images of flowers, which is a diverse natural dataset containing around 8,000
 images. Unfortunately the official splits are imbalanced, as most of the images are
 contained in the test split. We create new splits (80% train, 20% validation) using the
 [Tensorflow Datasets slicing API](https://www.tensorflow.org/datasets/splits). We apply
@@ -194,7 +190,7 @@ class KID(keras.metrics.Metric):
         # preprocessing as during pretraining
         self.encoder = keras.Sequential(
             [
-                layers.InputLayer(input_shape=(image_size, image_size, 3)),
+                keras.Input(shape=(image_size, image_size, 3)),
                 layers.Rescaling(255.0),
                 layers.Resizing(height=kid_image_size, width=kid_image_size),
                 layers.Lambda(keras.applications.inception_v3.preprocess_input),
@@ -297,62 +293,65 @@ start at exactly 1.
 """
 
 
-def get_network():
-    def sinusoidal_embedding(x):
-        embedding_min_frequency = 1.0
-        frequencies = tf.exp(
-            tf.linspace(
-                tf.math.log(embedding_min_frequency),
-                tf.math.log(embedding_max_frequency),
-                embedding_dims // 2,
-            )
+def sinusoidal_embedding(x):
+    embedding_min_frequency = 1.0
+    frequencies = tf.exp(
+        tf.linspace(
+            tf.math.log(embedding_min_frequency),
+            tf.math.log(embedding_max_frequency),
+            embedding_dims // 2,
         )
-        angular_speeds = 2.0 * math.pi * frequencies
-        embeddings = tf.concat(
-            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)],
-            axis=3,
-        )
-        return embeddings
+    )
+    angular_speeds = 2.0 * math.pi * frequencies
+    embeddings = tf.concat(
+        [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3
+    )
+    return embeddings
 
-    def ResidualBlock(width):
-        def apply(x):
-            input_width = x.shape[3]
-            if input_width == width:
-                residual = x
-            else:
-                residual = layers.Conv2D(width, kernel_size=1)(x)
-            x = layers.BatchNormalization(center=False, scale=False)(x)
-            x = layers.Conv2D(
-                width, kernel_size=3, padding="same", activation=keras.activations.swish
-            )(x)
-            x = layers.Conv2D(width, kernel_size=3, padding="same")(x)
-            x = layers.Add()([x, residual])
-            return x
 
-        return apply
+def ResidualBlock(width):
+    def apply(x):
+        input_width = x.shape[3]
+        if input_width == width:
+            residual = x
+        else:
+            residual = layers.Conv2D(width, kernel_size=1)(x)
+        x = layers.BatchNormalization(center=False, scale=False)(x)
+        x = layers.Conv2D(
+            width, kernel_size=3, padding="same", activation=keras.activations.swish
+        )(x)
+        x = layers.Conv2D(width, kernel_size=3, padding="same")(x)
+        x = layers.Add()([x, residual])
+        return x
 
-    def DownBlock(width):
-        def apply(x):
-            x, skips = x
-            for _ in range(block_depth):
-                x = ResidualBlock(width)(x)
-                skips.append(x)
-            x = layers.AveragePooling2D(pool_size=2)(x)
-            return x
+    return apply
 
-        return apply
 
-    def UpBlock(width):
-        def apply(x):
-            x, skips = x
-            x = layers.UpSampling2D(size=2, interpolation="bilinear")(x)
-            for _ in range(block_depth):
-                x = layers.Concatenate()([x, skips.pop()])
-                x = ResidualBlock(width)(x)
-            return x
+def DownBlock(width, block_depth):
+    def apply(x):
+        x, skips = x
+        for _ in range(block_depth):
+            x = ResidualBlock(width)(x)
+            skips.append(x)
+        x = layers.AveragePooling2D(pool_size=2)(x)
+        return x
 
-        return apply
+    return apply
 
+
+def UpBlock(width, block_depth):
+    def apply(x):
+        x, skips = x
+        x = layers.UpSampling2D(size=2, interpolation="bilinear")(x)
+        for _ in range(block_depth):
+            x = layers.Concatenate()([x, skips.pop()])
+            x = ResidualBlock(width)(x)
+        return x
+
+    return apply
+
+
+def get_network(image_size, widths, block_depth):
     noisy_images = keras.Input(shape=(image_size, image_size, 3))
     noise_variances = keras.Input(shape=(1, 1, 1))
 
@@ -364,13 +363,13 @@ def get_network():
 
     skips = []
     for width in widths[:-1]:
-        x = DownBlock(width)([x, skips])
+        x = DownBlock(width, block_depth)([x, skips])
 
     for _ in range(block_depth):
         x = ResidualBlock(widths[-1])(x)
 
     for width in reversed(widths[:-1]):
-        x = UpBlock(width)([x, skips])
+        x = UpBlock(width, block_depth)([x, skips])
 
     x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(x)
 
@@ -380,7 +379,7 @@ def get_network():
 """
 This showcases the power of the Functional API. Note how we built a relatively complex
 U-Net with skip connections, residual blocks, multiple inputs, and sinusoidal embeddings
-in less than 80 lines of code!
+in 80 lines of code!
 """
 
 """
@@ -419,6 +418,7 @@ it also has a nice geometric interpretation, using the
 ![diffusion schedule gif](https://i.imgur.com/JW9W0fA.gif)
 
 ### Training process
+
 The training procedure (see `train_step()` and `denoise()`) of denoising diffusion models
 is the following: we sample random diffusion times uniformly, and mix the training images
 with random gaussian noises at rates corresponding to the diffusion times. Then, we train
@@ -434,8 +434,8 @@ instead (similarly to
 [this](https://github.com/lucidrains/denoising-diffusion-pytorch/blob/master/denoising_diffusion_pytorch/denoising_diffusion_pytorch.py#L371)
 implementation), which produces better results at this scale.
 
-
 ### Sampling (reverse diffusion)
+
 When sampling (see `reverse_diffusion()`), at each step we take the previous estimate of
 the noisy image and separate it into image and noise using our network. Then we recombine
 these components using the signal and noise rate of the following step.
@@ -459,11 +459,11 @@ requiring more sampling steps usually.
 
 
 class DiffusionModel(keras.Model):
-    def __init__(self):
+    def __init__(self, image_size, widths, block_depth):
         super().__init__()
 
         self.normalizer = layers.Normalization()
-        self.network = get_network()
+        self.network = get_network(image_size, widths, block_depth)
         self.ema_network = keras.models.clone_model(self.network)
 
         self.initial_noise = None
@@ -643,9 +643,9 @@ class DiffusionModel(keras.Model):
 """
 
 # create and compile the model
-model = DiffusionModel()
+model = DiffusionModel(image_size, widths, block_depth)
 model.compile(
-    optimizer=tfa.optimizers.AdamW(
+    optimizer=keras.optimizers.experimental.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     ),
     loss=keras.losses.mean_absolute_error,
@@ -731,8 +731,8 @@ experience.
 * **weight decay**: I did occasionally run into diverged trainings when scaling up the
 model, and found that weight decay helps in avoiding instabilities at a low performance
 cost. This is why I use
-[AdamW](https://www.tensorflow.org/addons/api_docs/python/tfa/optimizers/AdamW) instead
-of [Adam](https://keras.io/api/optimizers/adam/) in this example.
+[AdamW](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/experimental/AdamW)
+instead of [Adam](https://keras.io/api/optimizers/adam/) in this example.
 * **exponential moving average of weights**: This helps to reduce the variance of the KID
 metric, and helps in averaging out short-term changes during training.
 * **image augmentations**: Though I did not use image augmentations in this example, in
