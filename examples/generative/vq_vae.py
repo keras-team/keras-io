@@ -113,7 +113,9 @@ class VectorQuantizer(layers.Layer):
         commitment_loss = self.beta * tf.reduce_mean(
             (tf.stop_gradient(quantized) - x) ** 2
         )
-        codebook_loss = tf.reduce_mean((quantized - tf.stop_gradient(x)) ** 2)
+        codebook_loss = tf.reduce_mean(
+            (quantized - tf.stop_gradient(x)) ** 2
+            )
         self.add_loss(commitment_loss + codebook_loss)
 
         # Straight-through estimator.
