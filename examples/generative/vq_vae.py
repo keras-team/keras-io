@@ -333,9 +333,8 @@ The figure above shows that the discrete codes have been able to capture some
 regularities from the dataset. Now, you might wonder, ***how do we use these codes to
 generate new samples?*** Specifically, how do we sample from this codebook to create
 novel examples? Since these codes are discrete and we imposed a categorical distribution
-on them, we cannot use them yet to generate anything meaningful. These codes were not
-updated during the training process as well. So, they need to be adjusted further so that
-we can use for them the subsequent image generation task. The authors use a PixelCNN to
+on them, we cannot use them yet to generate anything meaningful until we can generate likely
+sequences of codes that we can give to the decoder. The authors use a PixelCNN to
 train these codes so that they can be used as powerful priors to generate novel examples.
 
 PixelCNN was proposed in
