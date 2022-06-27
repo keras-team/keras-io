@@ -50,7 +50,7 @@ with multiple theoretical frameworks
 [conflicting notations (see Appendix C.2)](https://arxiv.org/abs/2010.02502),
 it can be daunting trying to understand
 them. My view of these models in this example will be that they learn to separate a
-noisy image into its image and noise components.
+noisy image into its image and Gaussian noise components.
 
 In this example I made effort to break down all long mathematical expressions into
 digestible pieces and gave all variables explanatory names. I also included numerous
@@ -725,8 +725,8 @@ setting it to 0 will lead to a division by zero error. The max. signal rate can 
 1, but I found that setting it lower slightly improves generation quality.
 * **loss function**: While large models tend to use mean squared error (MSE) loss, I
 recommend using mean absolute error (MAE) at our scale. MSE loss leads to more diverse
-images, but it also seems to hallucinate more (
-[Section 3](https://arxiv.org/abs/2111.05826)), and led to lower generation quality in my
+images, but it also seems to hallucinate more
+([Section 3](https://arxiv.org/abs/2111.05826)), and led to lower generation quality in my
 experience.
 * **weight decay**: I did occasionally run into diverged trainings when scaling up the
 model, and found that weight decay helps in avoiding instabilities at a low performance
@@ -769,14 +769,13 @@ in the [literature (Tables 11-13)](https://arxiv.org/abs/2105.05233).
 network is crucial for good performance. I recommend setting the min. embedding frequency
 to the reciprocal of the range of this input, and since we use the noise variance in this
 example, it can be left always at 1. The max. embedding frequency controls the smallest
-step in the noise variance that the network will be sensitive to, and the embedding
+change in the noise variance that the network will be sensitive to, and the embedding
 dimensions set the number of frequency components in the embedding. In my experience the
 performance is not too sensitive to these values.
 * **skip connections**: Using skip connections in the network architecture is absolutely
-critical, without them the model will fail to learn to denoise at a reasonable
-performance.
+critical, without them the model will fail to learn to denoise at a good performance.
 * **residual connections**: In my experience residual connections also significantly
-improve the performance, but this might be due to the fact that we only input the noise
+improve performance, but this might be due to the fact that we only input the noise
 level embeddings to the first layer of the network instead of to all of them.
 * **normalization**: When scaling up the model, I did occasionally encounter diverged
 trainings, using normalization layers helped to mitigate this issue. In the literature it
