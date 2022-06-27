@@ -246,6 +246,17 @@ class TransformerEncoder(layers.Layer):
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "dense_dim": self.dense_dim,
+                "num_heads": self.num_heads,
+            }
+        )
+        return config
+
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
@@ -269,6 +280,17 @@ class PositionalEmbedding(layers.Layer):
 
     def compute_mask(self, inputs, mask=None):
         return tf.math.not_equal(inputs, 0)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "sequence_length": self.sequence_length,
+                "vocab_size": self.vocab_size,
+                "embed_dim": self.embed_dim,
+            }
+        )
+        return config
 
 
 class TransformerDecoder(layers.Layer):
@@ -328,6 +350,17 @@ class TransformerDecoder(layers.Layer):
             axis=0,
         )
         return tf.tile(mask, mult)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "latent_dim": self.latent_dim,
+                "num_heads": self.num_heads,
+            }
+        )
+        return config
 
 
 """
