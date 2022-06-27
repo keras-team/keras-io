@@ -92,11 +92,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-("You can dance, can't you?", '[start] Puedes bailar, ¿verdad? [end]')
-('I passed by her house yesterday.', '[start] Me pasé por su casa ayer. [end]')
-('I like tulips.', '[start] Me gustan los tulipanes. [end]')
-('He is fluent in French.', '[start] Habla un francés fluido. [end]')
-('Tom asked me what I had been doing.', '[start] Tom me preguntó qué había estado haciendo. [end]')
+('Tom told everyone he was adopted.', '[start] Tom le dijo a todos que era adoptado. [end]')
+("Don't use this faucet.", '[start] No uses esta canilla. [end]')
+("Give me your money or else I'll beat you up.", '[start] Dame tu dinero o te daré una paliza. [end]')
+('Today, I have a lot of homework.', '[start] Hoy tengo muchos deberes. [end]')
+('We can all benefit from his experience.', '[start] Todos nos podemos beneficiar de su experiencia. [end]')
 
 ```
 </div>
@@ -162,7 +162,9 @@ def custom_standardization(input_string):
 
 
 eng_vectorization = TextVectorization(
-    max_tokens=vocab_size, output_mode="int", output_sequence_length=sequence_length,
+    max_tokens=vocab_size,
+    output_mode="int",
+    output_sequence_length=sequence_length,
 )
 spa_vectorization = TextVectorization(
     max_tokens=vocab_size,
@@ -195,7 +197,13 @@ it provides the next words in the target sentence -- what the model will try to 
 def format_dataset(eng, spa):
     eng = eng_vectorization(eng)
     spa = spa_vectorization(spa)
-    return ({"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],}, spa[:, 1:])
+    return (
+        {
+            "encoder_inputs": eng,
+            "decoder_inputs": spa[:, :-1],
+        },
+        spa[:, 1:],
+    )
 
 
 def make_dataset(pairs):
@@ -264,7 +272,10 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -318,7 +329,10 @@ class TransformerDecoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(latent_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(latent_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -413,26 +427,29 @@ transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 ```
 Model: "transformer"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+ Layer (type)                   Output Shape         Param #     Connected to                     
 ==================================================================================================
-encoder_inputs (InputLayer)     [(None, None)]       0                                            
-__________________________________________________________________________________________________
-positional_embedding (Positiona (None, None, 256)    3845120     encoder_inputs[0][0]             
-__________________________________________________________________________________________________
-decoder_inputs (InputLayer)     [(None, None)]       0                                            
-__________________________________________________________________________________________________
-transformer_encoder (Transforme (None, None, 256)    3155456     positional_embedding[0][0]       
-__________________________________________________________________________________________________
-model_1 (Functional)            (None, None, 15000)  12959640    decoder_inputs[0][0]             
-                                                                 transformer_encoder[0][0]        
+ encoder_inputs (InputLayer)    [(None, None)]       0           []                               
+                                                                                                  
+ positional_embedding (Position  (None, None, 256)   3845120     ['encoder_inputs[0][0]']         
+ alEmbedding)                                                                                     
+                                                                                                  
+ decoder_inputs (InputLayer)    [(None, None)]       0           []                               
+                                                                                                  
+ transformer_encoder (Transform  (None, None, 256)   3155456     ['positional_embedding[0][0]']   
+ erEncoder)                                                                                       
+                                                                                                  
+ model_1 (Functional)           (None, None, 15000)  12959640    ['decoder_inputs[0][0]',         
+                                                                  'transformer_encoder[0][0]']    
+                                                                                                  
 ==================================================================================================
 Total params: 19,960,216
 Trainable params: 19,960,216
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 1297s 993ms/step - loss: 1.6495 - accuracy: 0.4284 - val_loss: 1.2843 - val_accuracy: 0.5211
+1302/1302 [==============================] - 35s 24ms/step - loss: 1.6296 - accuracy: 0.4361 - val_loss: 1.2795 - val_accuracy: 0.5296
 
-<tensorflow.python.keras.callbacks.History at 0x164a6c250>
+<keras.callbacks.History at 0x7f21ec04b850>
 
 ```
 </div>
@@ -492,3 +509,8 @@ After 30 epochs, we get results such as:
 
 > My hotel told me to call you.
 > [start] mi hotel me dijo que te [UNK] [end]
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) |
