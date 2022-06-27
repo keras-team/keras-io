@@ -481,7 +481,7 @@ model.compile(
 Let's plot the model.
 """
 
-keras.utils.plot_model(
+tf.keras.utils.plot_model(
     model,
     show_shapes=True,
     show_dtype=True,
@@ -591,9 +591,9 @@ in the [Embedding Projector](https://projector.tensorflow.org/).
 
 """
 
-Example available on HuggingFace.
+**Example available on HuggingFace**
+
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/Node2Vec_MovieLens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/Node2Vec_MovieLens) |
-
 """
