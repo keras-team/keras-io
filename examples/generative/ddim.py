@@ -17,8 +17,11 @@ Recently, [denoising diffusion models](https://arxiv.org/abs/2006.11239), includ
 powerful class of generative models, that can [rival](https://arxiv.org/abs/2105.05233)
 even [generative adversarial networks (GANs)](https://arxiv.org/abs/1406.2661) in image
 synthesis quality. They tend to generate more diverse samples, while being stable to
-train and easy to scale. One of their drawbacks is however, that they are slower to sample
-from, because they require multiple forward passes for generating an image.
+train and easy to scale. Recent large diffusion models, such as
+[DALL-E 2](https://openai.com/dall-e-2/) and [Imagen](https://imagen.research.google/),
+have shown incredible text-to-image generation capability. One of their drawbacks is
+however, that they are slower to sample from, because they require multiple forward passes
+for generating an image.
 
 Diffusion refers to the process of turning a structured signal (an image) into noise
 step-by-step. By simulating diffusion, we can generate noisy images from our training
@@ -412,6 +415,7 @@ that is quite commonly used in the literature.
 This schedule is symmetric, slow towards the start and end of the diffusion process, and
 it also has a nice geometric interpretation, using the
 [trigonometric properties of the unit circle](https://en.wikipedia.org/wiki/Unit_circle#/media/File:Circle-trig6.svg):
+
 ![diffusion schedule gif](https://i.imgur.com/JW9W0fA.gif)
 
 ### Training process
@@ -443,7 +447,7 @@ of the sampling equation is not widely known.
 This example only implements the deterministic sampling procedure from DDIM, which
 corresponds to *eta = 0* in the paper. One can also use stochastic sampling (in which
 case the model becomes a
-[Denoising Diffusion Probabilistic Model](https://arxiv.org/abs/2006.11239)),
+[Denoising Diffusion Probabilistic Model (DDPM)](https://arxiv.org/abs/2006.11239)),
 where a part of the predicted noise is
 replaced with the same or larger amount of random noise
 ([see Equation 16 and below](https://arxiv.org/abs/2010.02502)).
@@ -683,22 +687,25 @@ model.plot_images()
 """
 ## Results
 
-By running the training for at least 50 epochs, one
-can get high quality image generations using this code example.
+By running the training for at least 50 epochs (takes 2 hours on a T4 GPU and 30 minutes
+on an A100 GPU), one can get high quality image generations using this code example.
 
 The evolution of a batch of images over a 80 epoch training (color artifacts are due to
 GIF compression):
 ![flowers training gif](https://i.imgur.com/gyc8eZX.gif)
 
-Interpolation between initial noise samples:
+Images generated using between 1 and 20 sampling steps from the same initial noise:
+![flowers sampling steps gif](https://i.imgur.com/2APUfGK.gif)
+
+Interpolation (spherical) between initial noise samples:
 ![flowers interpolation gif](https://i.imgur.com/R3akaXn.gif)
 
 Deterministic sampling process (noisy images on top, predicted images on bottom, 40
 steps):
-![flowers generation deterministic gif](https://i.imgur.com/hPZVYUd.gif)
+![flowers deterministic generation gif](https://i.imgur.com/hPZVYUd.gif)
 
 Stochastic sampling process (noisy images on top, predicted images on bottom, 80 steps):
-![flowers generation stochastic gif](https://i.imgur.com/tw7zsf1.gif)
+![flowers stochastic generation gif](https://i.imgur.com/tw7zsf1.gif)
 """
 
 """
@@ -827,7 +834,11 @@ similar style, such as:
 (slides avaliable)
 * [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364):
 attempts unifying diffusion methods under a common framework
-* Score-based models: [NCSN](https://arxiv.org/abs/1907.05600),
+* High-level overview videos: [1](https://www.youtube.com/watch?v=yTAMrHVG1ew),
+[2](https://www.youtube.com/watch?v=344w5h24-h8)
+* Detailed technical videos: [1](https://www.youtube.com/watch?v=fbLgFrlTnGU),
+[2](https://www.youtube.com/watch?v=W-O7AZNzbzQ)
+* Score-based generative models: [NCSN](https://arxiv.org/abs/1907.05600),
 [NCSN+](https://arxiv.org/abs/2006.09011), [NCSN++](https://arxiv.org/abs/2011.13456)
 * Denoising diffusion models: [DDPM](https://arxiv.org/abs/2006.11239),
 [DDIM](https://arxiv.org/abs/2010.02502), [DDPM+](https://arxiv.org/abs/2102.09672),
