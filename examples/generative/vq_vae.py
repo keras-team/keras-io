@@ -1,8 +1,8 @@
 """
 Title: Vector-Quantized Variational Autoencoders
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
+Author: [Sayak Paul](https://twitter.com/RisingSayak), [Rein van 't Veer](https://github.com/reinvantveer)
 Date created: 2021/07/21
-Last modified: 2021/07/21
+Last modified: 2022/06/27
 Description: Training a VQ-VAE for image reconstruction and codebook sampling for generation.
 """
 """
