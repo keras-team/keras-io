@@ -896,3 +896,9 @@ In this tutorial, we demonstarted a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
 first had to construct graphs from SMILES, then build a Keras model that could
 operate on these graphs, and finally train the model to make the predictions.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-mpnn%20molecular%20graphs-black.svg)](https://huggingface.co/keras-io/MPNN-for-molecular-property-prediction) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-mpnn%20molecular%20graphs-black.svg)](https://huggingface.co/spaces/keras-io/molecular-property-prediction) |
