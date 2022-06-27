@@ -52,13 +52,12 @@ import tensorflow as tf
 """
 ## `VectorQuantizer` layer
 
-Here, we will implement a custom layer to encapsulate the vector
-quantizer logic, which is the central component of VQ-VAEs.
-Consider an output from the encoder, with shape `(batch_size, height, width, num_channels)`.
-The vector quantizer will first
-flatten this output, only keeping the `num_channels` dimension intact. So, the shape would
-become `(batch_size * height * width, num_channels)`. The rationale behind this is to
-treat the total number of channels as the space for the latent embeddings.
+First, we implement a custom layer for the vector quantizer, which is the layer in between
+the encoder and decoder. Consider an output from the encoder, with shape `(batch_size, height, width,
+num_filters)`. The vector quantizer will first flatten this output, only keeping the
+`num_filters` dimension intact. So, the shape would become `(batch_size * height * width,
+num_filters)`. The rationale behind this is to treat the total number of filters as the size for
+the latent embeddings.
 
 An embedding table is then initialized to learn a codebook. We measure the L2-normalized
 distance between the flattened encoder outputs and code words of this codebook. We take the
