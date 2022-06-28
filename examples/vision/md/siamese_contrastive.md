@@ -58,6 +58,14 @@ x_test = x_test.astype("float32")
 
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+11501568/11490434 [==============================] - 0s 0us/step
+
+```
+</div>
 ---
 ## Define training and validation sets
 
@@ -251,7 +259,9 @@ visualize(pairs_train[:-1], labels_train[:-1], to_show=4, num_col=4)
 ```
 
 
+    
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_22_0.png)
+    
 
 
 Inspect validation pairs
@@ -262,7 +272,9 @@ visualize(pairs_val[:-1], labels_val[:-1], to_show=4, num_col=4)
 ```
 
 
+    
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_24_0.png)
+    
 
 
 Inspect test pairs
@@ -273,7 +285,9 @@ visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 ```
 
 
+    
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_26_0.png)
+    
 
 
 ---
@@ -342,27 +356,27 @@ siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 def loss(margin=1):
     """Provides 'constrastive_loss' an enclosing scope with variable 'margin'.
 
-  Arguments:
-      margin: Integer, defines the baseline for distance for which pairs
-              should be classified as dissimilar. - (default is 1).
+    Arguments:
+        margin: Integer, defines the baseline for distance for which pairs
+                should be classified as dissimilar. - (default is 1).
 
-  Returns:
-      'constrastive_loss' function with data ('margin') attached.
-  """
+    Returns:
+        'constrastive_loss' function with data ('margin') attached.
+    """
 
     # Contrastive loss = mean( (1-true_value) * square(prediction) +
     #                         true_value * square( max(margin-prediction, 0) ))
     def contrastive_loss(y_true, y_pred):
         """Calculates the constrastive loss.
 
-      Arguments:
-          y_true: List of labels, each label is of type float32.
-          y_pred: List of predictions of same length as of y_true,
-                  each label is of type float32.
+        Arguments:
+            y_true: List of labels, each label is of type float32.
+            y_pred: List of predictions of same length as of y_true,
+                    each label is of type float32.
 
-      Returns:
-          A tensor containing constrastive loss as floating point value.
-      """
+        Returns:
+            A tensor containing constrastive loss as floating point value.
+        """
 
         square_pred = tf.math.square(y_pred)
         margin_square = tf.math.square(tf.math.maximum(margin - (y_pred), 0))
@@ -388,21 +402,23 @@ siamese.summary()
 ```
 Model: "model_1"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+ Layer (type)                   Output Shape         Param #     Connected to                     
 ==================================================================================================
-input_2 (InputLayer)            [(None, 28, 28, 1)]  0                                            
-__________________________________________________________________________________________________
-input_3 (InputLayer)            [(None, 28, 28, 1)]  0                                            
-__________________________________________________________________________________________________
-model (Functional)              (None, 10)           5318        input_2[0][0]                    
-                                                                 input_3[0][0]                    
-__________________________________________________________________________________________________
-lambda (Lambda)                 (None, 1)            0           model[0][0]                      
-                                                                 model[1][0]                      
-__________________________________________________________________________________________________
-batch_normalization_2 (BatchNor (None, 1)            4           lambda[0][0]                     
-__________________________________________________________________________________________________
-dense_1 (Dense)                 (None, 1)            2           batch_normalization_2[0][0]      
+ input_2 (InputLayer)           [(None, 28, 28, 1)]  0           []                               
+                                                                                                  
+ input_3 (InputLayer)           [(None, 28, 28, 1)]  0           []                               
+                                                                                                  
+ model (Functional)             (None, 10)           5318        ['input_2[0][0]',                
+                                                                  'input_3[0][0]']                
+                                                                                                  
+ lambda (Lambda)                (None, 1)            0           ['model[0][0]',                  
+                                                                  'model[1][0]']                  
+                                                                                                  
+ batch_normalization_2 (BatchNo  (None, 1)           4           ['lambda[0][0]']                 
+ rmalization)                                                                                     
+                                                                                                  
+ dense_1 (Dense)                (None, 1)            2           ['batch_normalization_2[0][0]']  
+                                                                                                  
 ==================================================================================================
 Total params: 5,324
 Trainable params: 4,808
@@ -428,17 +444,25 @@ history = siamese.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-3750/3750 [==============================] - 25s 6ms/step - loss: 0.1993 - accuracy: 0.6626 - val_loss: 0.0525 - val_accuracy: 0.9331
+3750/3750 [==============================] - 28s 7ms/step - loss: 0.0918 - accuracy: 0.8755 - val_loss: 0.0374 - val_accuracy: 0.9513
 Epoch 2/10
-3750/3750 [==============================] - 23s 6ms/step - loss: 0.0611 - accuracy: 0.9187 - val_loss: 0.0277 - val_accuracy: 0.9644
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0510 - accuracy: 0.9331 - val_loss: 0.0242 - val_accuracy: 0.9686
 Epoch 3/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0455 - accuracy: 0.9409 - val_loss: 0.0214 - val_accuracy: 0.9719
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0417 - accuracy: 0.9457 - val_loss: 0.0196 - val_accuracy: 0.9744
 Epoch 4/10
-3750/3750 [==============================] - 27s 7ms/step - loss: 0.0386 - accuracy: 0.9506 - val_loss: 0.0198 - val_accuracy: 0.9743
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0376 - accuracy: 0.9508 - val_loss: 0.0173 - val_accuracy: 0.9778
 Epoch 5/10
-3750/3750 [==============================] - 45s 12ms/step - loss: 0.0362 - accuracy: 0.9529 - val_loss: 0.0169 - val_accuracy: 0.9783
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0355 - accuracy: 0.9538 - val_loss: 0.0176 - val_accuracy: 0.9770
 Epoch 6/10
-2497/3750 [==================>...........] - ETA: 10s - loss: 0.0343 - accuracy: 0.9552
+3750/3750 [==============================] - 25s 7ms/step - loss: 0.0318 - accuracy: 0.9590 - val_loss: 0.0174 - val_accuracy: 0.9772
+Epoch 7/10
+3750/3750 [==============================] - 25s 7ms/step - loss: 0.0310 - accuracy: 0.9602 - val_loss: 0.0151 - val_accuracy: 0.9807
+Epoch 8/10
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0303 - accuracy: 0.9602 - val_loss: 0.0147 - val_accuracy: 0.9808
+Epoch 9/10
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0293 - accuracy: 0.9622 - val_loss: 0.0137 - val_accuracy: 0.9824
+Epoch 10/10
+3750/3750 [==============================] - 24s 6ms/step - loss: 0.0292 - accuracy: 0.9627 - val_loss: 0.0145 - val_accuracy: 0.9813
 
 ```
 </div>
@@ -478,11 +502,15 @@ plt_metric(history=history.history, metric="loss", title="Constrastive Loss")
 ```
 
 
+    
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_36_0.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_36_1.png)
+    
 
 
 ---
@@ -496,8 +524,8 @@ print("test loss, test acc:", results)
 
 <div class="k-default-codeblock">
 ```
-625/625 [==============================] - 3s 4ms/step - loss: 0.0150 - accuracy: 0.9810
-test loss, test acc: [0.015001337975263596, 0.9810000061988831]
+625/625 [==============================] - 1s 2ms/step - loss: 0.0126 - accuracy: 0.9835
+test loss, test acc: [0.012602493166923523, 0.9835000038146973]
 
 ```
 </div>
@@ -511,5 +539,12 @@ visualize(pairs_test, labels_test, to_show=3, predictions=predictions, test=True
 ```
 
 
+    
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_40_0.png)
+    
 
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
