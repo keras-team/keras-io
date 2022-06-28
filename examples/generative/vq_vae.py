@@ -366,14 +366,9 @@ pixelcnn_input_shape = encoded_outputs.shape[1:-1]
 print(f"Input shape of the PixelCNN: {pixelcnn_input_shape}")
 
 """
-This input shape represents the MNIST image size reduction from 28x28 pixels in the original digit
-images, that pass through two layers of stride-2 convolution. With "same" padding, this exactly
-halves the "resolution" of the output shape for each stride-2 layer, so with these two layers we
-end up with an encoder output tensor of 7x7 on axes 2 and 3, with the first axis as the batch size
-and the last axis being the code book embedding size. Since the quantization layer in the
-autoencoder maps these 7x7 tensors to indices of the code book, these output layer axis sizes must
-be matched by the PixelCNN as the input shape. The task of the PixelCNN for this architecture is to
-generate _likely_ 7x7 arrangements of codebook indices.
+
+This input shape represents the reduction in the resolution performed by the encoder. With "same" padding, this exactly halves the "resolution" of the output shape for each stride-2 convolution layer. So, with these two layers, we
+end up with an encoder output tensor of 7x7 on axes 2 and 3, with the first axis as the batch size and the last axis being the code book embedding size. Since the quantization layer in the autoencoder maps these 7x7 tensors to indices of the code book, these output layer axis sizes must be matched by the PixelCNN as the input shape. The task of the PixelCNN for this architecture is to generate _likely_ 7x7 arrangements of codebook indices.
 
 Note that this shape is something to optimize for in larger-sized image domains. Since the PixelCNN
 is autoregressive, it needs to pass over each codebook index sequentially in order to generate
