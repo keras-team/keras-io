@@ -860,12 +860,12 @@ axes[1, 1].set_ylim([-2, 2])
 ```
 </div>
     
-![png](../examples/generative/md/real_nvp_files/../examples/generative/md/real_nvp_13_2.png)
+![png](/img/examples/generative/real_nvp/real_nvp_13_1.png)
     
 
 
 
     
-![png](../examples/generative/md/real_nvp_files/../examples/generative/md/real_nvp_13_3.png)
+![png](/img/examples/generative/real_nvp/real_nvp_13_2.png)
     
 
