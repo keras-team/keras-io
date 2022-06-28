@@ -111,13 +111,9 @@ class VectorQuantizer(layers.Layer):
         # about adding losses to different layers here:
         # https://keras.io/guides/making_new_layers_and_models_via_subclassing/. Check
         # the original paper to get a handle on the formulation of the loss function.
-        commitment_loss = self.beta * tf.reduce_mean(
-            (tf.stop_gradient(quantized) - x) ** 2
-        )
-        codebook_loss = tf.reduce_mean(
-            (quantized - tf.stop_gradient(x)) ** 2
-            )
-        self.add_loss(commitment_loss + codebook_loss)
+        commitment_loss = tf.reduce_mean((tf.stop_gradient(quantized) - x) ** 2)
+        codebook_loss = tf.reduce_mean((quantized - tf.stop_gradient(x)) ** 2)
+        self.add_loss(self.beta * commitment_loss + codebook_loss)
 
         # Straight-through estimator.
         quantized = x + tf.stop_gradient(quantized - x)
