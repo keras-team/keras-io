@@ -365,14 +365,19 @@ print(f"Input shape of the PixelCNN: {pixelcnn_input_shape}")
 This input shape represents the reduction in the resolution performed by the encoder. With "same" padding, this exactly halves the "resolution" of the output shape for each stride-2 convolution layer. So, with these two layers, we
 end up with an encoder output tensor of 7x7 on axes 2 and 3, with the first axis as the batch size and the last axis being the code book embedding size. Since the quantization layer in the autoencoder maps these 7x7 tensors to indices of the code book, these output layer axis sizes must be matched by the PixelCNN as the input shape. The task of the PixelCNN for this architecture is to generate _likely_ 7x7 arrangements of codebook indices.
 
-Note that this shape is something to optimize for in larger-sized image domains. Since the PixelCNN
-is autoregressive, it needs to pass over each codebook index sequentially in order to generate
-novel images from the codebook. Each stride-2 (or rather more correctly a stride (2, 2)) convolution
-layer will divide the image generation time by four. Note, however, that there is probably a lower
-bound on this part: when the number of codes for the image to reconstruct is too small, it has
-insufficient information for the decoder to represent the level of detail in the image, so the
-output quality will suffer. Finding the sweet spot for this trade-off can require some architecture
-tweaking and could very well differ per dataset.
+Note that this shape is something to optimize for in larger-sized image domains, along with the code
+book sizes. Since the PixelCNN is autoregressive, it needs to pass over each codebook index sequentially
+in order to generate novel images from the codebook. Each stride-2 (or rather more correctly a 
+stride (2, 2)) convolution layer will divide the image generation time by four. Note, however, that there
+is probably a lower bound on this part: when the number of codes for the image to reconstruct is too small,
+it has insufficient information for the decoder to represent the level of detail in the image, so the
+output quality will suffer. This can be amended at least to some extent by using a larger code book. 
+Since the autoregressive part of the image generation procedure uses codebook indices, there is far less of 
+a performance penalty on using a larger code book as the lookup time for a larger-sized code from a larger
+code book is much smaller in comparison to iterating over a larger sequence of code book indices, although
+the size of the code book does impact on the batch size that can pass through the image generation procedure.
+Finding the sweet spot for this trade-off can require some architecture tweaking and could very well differ
+per dataset.
 """
 
 """
