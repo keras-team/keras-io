@@ -179,11 +179,11 @@ we want to evaluate only after many iterations, but for many iterations.
 
 
 class KID(keras.metrics.Metric):
-    def __init__(self, name="kid", **kwargs):
+    def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)
 
         # KID is estimated per batch and is averaged across batches
-        self.kid_tracker = keras.metrics.Mean()
+        self.kid_tracker = keras.metrics.Mean(name="kid_tracker")
 
         # a pretrained InceptionV3 is used without its classification layer
         # transform the pixel values to the 0-255 range, then use the same
@@ -473,7 +473,7 @@ class DiffusionModel(keras.Model):
 
         self.noise_loss_tracker = keras.metrics.Mean(name="n_loss")
         self.image_loss_tracker = keras.metrics.Mean(name="i_loss")
-        self.kid = KID()
+        self.kid = KID(name="kid")
 
     @property
     def metrics(self):
@@ -833,7 +833,7 @@ similar style, such as:
 (slides avaliable)
 * [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364):
 attempts unifying diffusion methods under a common framework
-* High-level overview videos: [1](https://www.youtube.com/watch?v=yTAMrHVG1ew),
+* High-level video overviews: [1](https://www.youtube.com/watch?v=yTAMrHVG1ew),
 [2](https://www.youtube.com/watch?v=344w5h24-h8)
 * Detailed technical videos: [1](https://www.youtube.com/watch?v=fbLgFrlTnGU),
 [2](https://www.youtube.com/watch?v=W-O7AZNzbzQ)
