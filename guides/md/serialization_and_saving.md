@@ -248,10 +248,10 @@ model is loaded by dynamically creating the model class that acts like the origi
 
 #### Configuring the SavedModel
 
-*New in TensoFlow 2.4*
+*New in TensorFlow 2.4*
 The argument `save_traces` has been added to `model.save`, which allows you to toggle
 SavedModel function tracing. Functions are saved to allow the Keras to re-load custom
-objects without the original class definitons, so when `save_traces=False`, all custom
+objects without the original class definitions, so when `save_traces=False`, all custom
 objects must have defined `get_config`/`from_config` methods. When loading, the custom
 objects must be passed to the `custom_objects` argument. `save_traces=False` reduces the
 disk space used by the SavedModel and saving time.
