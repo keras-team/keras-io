@@ -80,7 +80,7 @@ class VectorQuantizer(layers.Layer):
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
 
-		# The `beta` parameter is best kept between [0.25, 2] as per the paper.
+        # The `beta` parameter is best kept between [0.25, 2] as per the paper.
         self.beta = beta
 
         # Initialize the embeddings which we will quantize.
