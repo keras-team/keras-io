@@ -35,15 +35,12 @@ replaced the self-attention layer in BERT with a simple Fourier Transform layer
 for "token mixing". This resulted in comparable accuracy and a speed-up during
 training. In particular, a couple of points from the paper stand out:
 
-1. The authors claim that FNet is 80% faster than BERT on GPUs and 70% faster
-on TPUs. The reason for this speed-up is two-fold:
-
-a. The Fourier Transform layer is unparametrized, it does not have any parameters!
-
-b. The authors use Fast Fourier Transform (FFT); this reduces the time complexity
-from O(n^2) (in the case of self-attention) to O(n log n).
-
-2. FNet manages to achieve 92-97% of the accuracy of BERT on the GLUE benchmark.
+* The authors claim that FNet is 80% faster than BERT on GPUs and 70% faster on
+TPUs. The reason for this speed-up is two-fold:
+    * The Fourier Transform layer is unparametrized, it does not have any parameters!
+    * The authors use Fast Fourier Transform (FFT); this reduces the time complexity
+    from O(n^2) (in the case of self-attention) to O(n log n).
+* FNet manages to achieve 92-97% of the accuracy of BERT on the GLUE benchmark.
 """
 
 """
