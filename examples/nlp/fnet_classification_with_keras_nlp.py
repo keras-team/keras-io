@@ -3,7 +3,7 @@ Title: Text Classification using FNet
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/06/01
 Last modified: 2022/06/01
-Description: Text Classification on the IMDb Dataset using KerasNLP's `FNetEncoder` layer
+Description: Text Classification on the IMDb Dataset using KerasNLP's `FNetEncoder` layer.
 """
 
 """
@@ -22,7 +22,7 @@ for people who want to build NLP pipelines! :)
 ### Model
 
 Transformer-based language models (LMs) such as BERT, RoBERTa, XLNet, etc. have
-demonstrated the effectiveness of the self-attention mechanism for computing 
+demonstrated the effectiveness of the self-attention mechanism for computing
 rich embeddings for input text. However, the self-attention mechanism is an
 expensive operation, with a time complexity of `O(n^2)`, where `n` is the number
 of tokens in the input. Hence, there has been an effort to reduce the time
