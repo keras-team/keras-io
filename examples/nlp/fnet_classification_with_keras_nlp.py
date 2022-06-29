@@ -47,13 +47,9 @@ The reason for this speed-up is two-fold:
 """
 ## Setup
 
-Before we start with the implementation, let's install the KerasNLP library, and
-import all the necessary packages.
+Before we start with the implementation, let's import all the necessary packages.
 """
 
-"""shell
-pip install -q keras-nlp
-"""
 import keras_nlp
 import random
 import tensorflow as tf
