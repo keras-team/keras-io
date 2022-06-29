@@ -199,7 +199,9 @@ all sequences are padded to the same length, if the length of the sequence is
 less than the specified sequence length. Otherwise, the sequence is truncated.
 """
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab, lowercase=False, sequence_length=MAX_SEQUENCE_LENGTH,
+    vocabulary=vocab,
+    lowercase=False,
+    sequence_length=MAX_SEQUENCE_LENGTH,
 )
 
 """
