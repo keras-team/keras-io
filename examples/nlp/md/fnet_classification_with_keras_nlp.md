@@ -90,7 +90,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-06-29 19:15:53--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2022-06-29 19:30:08--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -101,13 +101,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  68.0MB/s    in 1.2s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  68.4MB/s    in 1.2s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-06-29 19:15:54 (68.0 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2022-06-29 19:30:09 (68.4 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -463,13 +463,13 @@ Trainable params: 2,382,337
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 36s 82ms/step - loss: 0.5906 - accuracy: 0.6339 - val_loss: 0.3496 - val_accuracy: 0.8466
+313/313 [==============================] - 32s 79ms/step - loss: 0.5901 - accuracy: 0.6362 - val_loss: 0.3532 - val_accuracy: 0.8418
 Epoch 2/3
-313/313 [==============================] - 24s 76ms/step - loss: 0.3093 - accuracy: 0.8692 - val_loss: 0.3213 - val_accuracy: 0.8630
+313/313 [==============================] - 23s 74ms/step - loss: 0.3087 - accuracy: 0.8701 - val_loss: 0.3383 - val_accuracy: 0.8550
 Epoch 3/3
-313/313 [==============================] - 24s 76ms/step - loss: 0.2100 - accuracy: 0.9184 - val_loss: 0.3465 - val_accuracy: 0.8616
+313/313 [==============================] - 23s 74ms/step - loss: 0.2009 - accuracy: 0.9212 - val_loss: 0.3527 - val_accuracy: 0.8574
 
-<keras.callbacks.History at 0x7f7b363408d0>
+<keras.callbacks.History at 0x7f197eed2990>
 
 ```
 </div>
@@ -487,9 +487,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 18s 28ms/step - loss: 0.3865 - accuracy: 0.8432
+391/391 [==============================] - 16s 26ms/step - loss: 0.3792 - accuracy: 0.8434
 
-[0.38646069169044495, 0.8431599736213684]
+[0.3792116940021515, 0.8434000015258789]
 
 ```
 </div>
@@ -576,13 +576,13 @@ Trainable params: 2,580,481
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 50s 150ms/step - loss: 0.4569 - accuracy: 0.7592 - val_loss: 0.3013 - val_accuracy: 0.8764
+313/313 [==============================] - 49s 147ms/step - loss: 0.4569 - accuracy: 0.7594 - val_loss: 0.3014 - val_accuracy: 0.8764
 Epoch 2/3
-313/313 [==============================] - 46s 146ms/step - loss: 0.2105 - accuracy: 0.9200 - val_loss: 0.3182 - val_accuracy: 0.8766
+313/313 [==============================] - 45s 145ms/step - loss: 0.2104 - accuracy: 0.9197 - val_loss: 0.3203 - val_accuracy: 0.8754
 Epoch 3/3
-313/313 [==============================] - 46s 147ms/step - loss: 0.1655 - accuracy: 0.9392 - val_loss: 0.3970 - val_accuracy: 0.8738
+313/313 [==============================] - 45s 145ms/step - loss: 0.1654 - accuracy: 0.9387 - val_loss: 0.4010 - val_accuracy: 0.8750
 
-<keras.callbacks.History at 0x7f7b22545dd0>
+<keras.callbacks.History at 0x7f197eedca10>
 
 ```
 </div>
@@ -599,9 +599,9 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 22s 57ms/step - loss: 0.4872 - accuracy: 0.8428
+391/391 [==============================] - 21s 55ms/step - loss: 0.4929 - accuracy: 0.8472
 
-[0.4872429370880127, 0.8428400158882141]
+[0.4929230809211731, 0.8472399711608887]
 
 ```
 </div>
