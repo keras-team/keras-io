@@ -121,8 +121,8 @@ class VectorQuantizer(layers.Layer):
         # Calculate L2-normalized distance between the inputs and the codes.
         similarity = tf.matmul(flattened_inputs, self.embeddings)
         distances = (
-            tf.reduce_sum(flattened_inputs**2, axis=1, keepdims=True)
-            + tf.reduce_sum(self.embeddings**2, axis=0)
+            tf.reduce_sum(flattened_inputs ** 2, axis=1, keepdims=True)
+            + tf.reduce_sum(self.embeddings ** 2, axis=0)
             - 2 * similarity
         )
 
@@ -565,5 +565,5 @@ approach to learn the codebook and to generate the images.
 **Example available on HuggingFace**
 | Trained Model | Demo |
 | :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/vq-vae) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/VQ-VAE) |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-VQ%20VAE-black.svg)](https://huggingface.co/keras-io/vq-vae) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-VQ%20VAE-black.svg)](https://huggingface.co/spaces/keras-io/VQ-VAE) |
 """

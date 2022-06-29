@@ -3,12 +3,12 @@
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/07/21<br>
 **Last modified:** 2021/07/21<br>
+**Description:** Training a VQ-VAE for image reconstruction and codebook sampling for generation.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/vq_vae.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/vq_vae.py)
 
 
-**Description:** Training a VQ-VAE for image reconstruction and codebook sampling for generation.
 
 In this example, we will develop a Vector Quantized Variational Autoencoder (VQ-VAE).
 VQ-VAE was proposed in
@@ -203,23 +203,26 @@ get_vqvae().summary()
 ```
 Model: "vq_vae"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_4 (InputLayer)         [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-encoder (Functional)         (None, 7, 7, 16)          19856     
-_________________________________________________________________
-vector_quantizer (VectorQuan (None, 7, 7, 16)          1024      
-_________________________________________________________________
-decoder (Functional)         (None, 28, 28, 1)         28033     
+ input_4 (InputLayer)        [(None, 28, 28, 1)]       0         
+                                                                 
+ encoder (Functional)        (None, 7, 7, 16)          19856     
+                                                                 
+ vector_quantizer (VectorQua  (None, 7, 7, 16)         1024      
+ ntizer)                                                         
+                                                                 
+ decoder (Functional)        (None, 28, 28, 1)         28033     
+                                                                 
 =================================================================
 Total params: 48,913
 Trainable params: 48,913
 Non-trainable params: 0
 _________________________________________________________________
-
 ```
 </div>
+    
+
 Note that the output channels of the encoder should match the `latent_dim` for the vector
 quantizer.
 
@@ -296,13 +299,6 @@ x_test_scaled = (x_test / 255.0) - 0.5
 data_variance = np.var(x_train / 255.0)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11493376/11490434 [==============================] - 0s 0us/step
-
-```
-</div>
 ---
 ## Train the VQ-VAE model
 
@@ -316,67 +312,75 @@ vqvae_trainer.fit(x_train_scaled, epochs=30, batch_size=128)
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-469/469 [==============================] - 18s 6ms/step - loss: 2.2962 - reconstruction_loss: 0.3869 - vqvae_loss: 1.5950
+469/469 [==============================] - 22s 47ms/step - loss: 1.5608 - reconstruction_loss: 0.3387 - vqvae_loss: 0.8950
 Epoch 2/30
-469/469 [==============================] - 3s 6ms/step - loss: 2.2980 - reconstruction_loss: 0.1692 - vqvae_loss: 2.1108
+469/469 [==============================] - 21s 44ms/step - loss: 1.6895 - reconstruction_loss: 0.1491 - vqvae_loss: 1.5310
 Epoch 3/30
-469/469 [==============================] - 3s 6ms/step - loss: 1.1356 - reconstruction_loss: 0.1281 - vqvae_loss: 0.9997
+469/469 [==============================] - 21s 45ms/step - loss: 0.8352 - reconstruction_loss: 0.1245 - vqvae_loss: 0.7049
 Epoch 4/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.6112 - reconstruction_loss: 0.1030 - vqvae_loss: 0.5031
+469/469 [==============================] - 21s 44ms/step - loss: 0.5325 - reconstruction_loss: 0.1010 - vqvae_loss: 0.4265
 Epoch 5/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.4375 - reconstruction_loss: 0.0883 - vqvae_loss: 0.3464
+469/469 [==============================] - 21s 45ms/step - loss: 0.4049 - reconstruction_loss: 0.0898 - vqvae_loss: 0.3135
 Epoch 6/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.3579 - reconstruction_loss: 0.0788 - vqvae_loss: 0.2775
+469/469 [==============================] - 21s 44ms/step - loss: 0.3628 - reconstruction_loss: 0.0843 - vqvae_loss: 0.2772
 Epoch 7/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.3197 - reconstruction_loss: 0.0725 - vqvae_loss: 0.2457
+469/469 [==============================] - 21s 45ms/step - loss: 0.3407 - reconstruction_loss: 0.0794 - vqvae_loss: 0.2603
 Epoch 8/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2960 - reconstruction_loss: 0.0673 - vqvae_loss: 0.2277
+469/469 [==============================] - 21s 45ms/step - loss: 0.3253 - reconstruction_loss: 0.0756 - vqvae_loss: 0.2487
 Epoch 9/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2798 - reconstruction_loss: 0.0640 - vqvae_loss: 0.2152
+469/469 [==============================] - 21s 45ms/step - loss: 0.3083 - reconstruction_loss: 0.0708 - vqvae_loss: 0.2362
 Epoch 10/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2681 - reconstruction_loss: 0.0612 - vqvae_loss: 0.2061
+469/469 [==============================] - 21s 44ms/step - loss: 0.2912 - reconstruction_loss: 0.0669 - vqvae_loss: 0.2234
 Epoch 11/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2578 - reconstruction_loss: 0.0590 - vqvae_loss: 0.1986
+469/469 [==============================] - 21s 45ms/step - loss: 0.2837 - reconstruction_loss: 0.0642 - vqvae_loss: 0.2188
 Epoch 12/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2551 - reconstruction_loss: 0.0574 - vqvae_loss: 0.1974
+469/469 [==============================] - 21s 45ms/step - loss: 0.2753 - reconstruction_loss: 0.0618 - vqvae_loss: 0.2132
 Epoch 13/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2526 - reconstruction_loss: 0.0560 - vqvae_loss: 0.1961
+469/469 [==============================] - 21s 45ms/step - loss: 0.2678 - reconstruction_loss: 0.0596 - vqvae_loss: 0.2076
 Epoch 14/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2485 - reconstruction_loss: 0.0546 - vqvae_loss: 0.1936
+469/469 [==============================] - 21s 45ms/step - loss: 0.2582 - reconstruction_loss: 0.0572 - vqvae_loss: 0.2006
 Epoch 15/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2462 - reconstruction_loss: 0.0533 - vqvae_loss: 0.1926
+469/469 [==============================] - 21s 45ms/step - loss: 0.2529 - reconstruction_loss: 0.0557 - vqvae_loss: 0.1969
 Epoch 16/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2445 - reconstruction_loss: 0.0523 - vqvae_loss: 0.1920
+469/469 [==============================] - 21s 45ms/step - loss: 0.2492 - reconstruction_loss: 0.0542 - vqvae_loss: 0.1947
 Epoch 17/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2427 - reconstruction_loss: 0.0515 - vqvae_loss: 0.1911
+469/469 [==============================] - 21s 45ms/step - loss: 0.2434 - reconstruction_loss: 0.0528 - vqvae_loss: 0.1903
 Epoch 18/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2405 - reconstruction_loss: 0.0505 - vqvae_loss: 0.1898
+469/469 [==============================] - 21s 45ms/step - loss: 0.2392 - reconstruction_loss: 0.0518 - vqvae_loss: 0.1871
 Epoch 19/30
-469/469 [==============================] - 3s 6ms/step - loss: 0.2368 - reconstruction_loss: 0.0495 - vqvae_loss: 0.1871
+469/469 [==============================] - 21s 45ms/step - loss: 0.2348 - reconstruction_loss: 0.0508 - vqvae_loss: 0.1838
 Epoch 20/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2310 - reconstruction_loss: 0.0486 - vqvae_loss: 0.1822
+469/469 [==============================] - 21s 45ms/step - loss: 0.2328 - reconstruction_loss: 0.0502 - vqvae_loss: 0.1826
 Epoch 21/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2245 - reconstruction_loss: 0.0475 - vqvae_loss: 0.1769
+469/469 [==============================] - 21s 45ms/step - loss: 0.2314 - reconstruction_loss: 0.0495 - vqvae_loss: 0.1818
 Epoch 22/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2205 - reconstruction_loss: 0.0469 - vqvae_loss: 0.1736
+469/469 [==============================] - 21s 45ms/step - loss: 0.2279 - reconstruction_loss: 0.0487 - vqvae_loss: 0.1790
 Epoch 23/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2195 - reconstruction_loss: 0.0465 - vqvae_loss: 0.1730
+469/469 [==============================] - 21s 44ms/step - loss: 0.2249 - reconstruction_loss: 0.0481 - vqvae_loss: 0.1769
 Epoch 24/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2187 - reconstruction_loss: 0.0461 - vqvae_loss: 0.1726
+469/469 [==============================] - 21s 45ms/step - loss: 0.2232 - reconstruction_loss: 0.0474 - vqvae_loss: 0.1757
 Epoch 25/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2180 - reconstruction_loss: 0.0458 - vqvae_loss: 0.1721
+469/469 [==============================] - 21s 45ms/step - loss: 0.2200 - reconstruction_loss: 0.0468 - vqvae_loss: 0.1731
 Epoch 26/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2163 - reconstruction_loss: 0.0454 - vqvae_loss: 0.1709
+469/469 [==============================] - 21s 44ms/step - loss: 0.2175 - reconstruction_loss: 0.0464 - vqvae_loss: 0.1711
 Epoch 27/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2156 - reconstruction_loss: 0.0452 - vqvae_loss: 0.1704
+469/469 [==============================] - 21s 45ms/step - loss: 0.2172 - reconstruction_loss: 0.0460 - vqvae_loss: 0.1710
 Epoch 28/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2146 - reconstruction_loss: 0.0449 - vqvae_loss: 0.1696
+469/469 [==============================] - 21s 45ms/step - loss: 0.2162 - reconstruction_loss: 0.0456 - vqvae_loss: 0.1704
 Epoch 29/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2139 - reconstruction_loss: 0.0447 - vqvae_loss: 0.1692
+469/469 [==============================] - 19s 40ms/step - loss: 0.2148 - reconstruction_loss: 0.0452 - vqvae_loss: 0.1693
 Epoch 30/30
-469/469 [==============================] - 3s 5ms/step - loss: 0.2127 - reconstruction_loss: 0.0444 - vqvae_loss: 0.1682
+469/469 [==============================] - 21s 44ms/step - loss: 0.2119 - reconstruction_loss: 0.0447 - vqvae_loss: 0.1671
+```
+</div>
+    
 
-<tensorflow.python.keras.callbacks.History at 0x7f96402f4e50>
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.callbacks.History at 0x1fa84653c70>
 
 ```
 </div>
@@ -409,44 +413,71 @@ for test_image, reconstructed_image in zip(test_images, reconstructions_test):
     show_subplot(test_image, reconstructed_image)
 ```
 
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 98ms/step
+```
+</div>
+    
 
+
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_0.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_1.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_2.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_3.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_4.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_5.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_6.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_7.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_8.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_20_9.png)
+    
 
 
 These results look decent. You are encouraged to play with different hyperparameters
@@ -479,44 +510,71 @@ for i in range(len(test_images)):
     plt.show()
 ```
 
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 31ms/step
+```
+</div>
+    
 
-![png](/img/examples/generative/vq_vae/vq_vae_23_0.png)
 
-
-
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_1.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_2.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_3.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_4.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_5.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_6.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_7.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_8.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_23_9.png)
+    
+
+
+
+    
+![png](/img/examples/generative/vq_vae/vq_vae_23_10.png)
+    
 
 
 The figure above shows that the discrete codes have been able to capture some
@@ -550,9 +608,10 @@ print(f"Input shape of the PixelCNN: {pixelcnn_input_shape}")
 <div class="k-default-codeblock">
 ```
 Input shape of the PixelCNN: (7, 7)
-
 ```
 </div>
+    
+
 Don't worry about the input shape. It'll become clear in the following sections.
 
 ---
@@ -644,31 +703,38 @@ pixel_cnn.summary()
 ```
 Model: "pixel_cnn"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_9 (InputLayer)         [(None, 7, 7)]            0         
-_________________________________________________________________
-tf.one_hot (TFOpLambda)      (None, 7, 7, 128)         0         
-_________________________________________________________________
-pixel_conv_layer (PixelConvL (None, 7, 7, 128)         802944    
-_________________________________________________________________
-residual_block (ResidualBloc (None, 7, 7, 128)         98624     
-_________________________________________________________________
-residual_block_1 (ResidualBl (None, 7, 7, 128)         98624     
-_________________________________________________________________
-pixel_conv_layer_3 (PixelCon (None, 7, 7, 128)         16512     
-_________________________________________________________________
-pixel_conv_layer_4 (PixelCon (None, 7, 7, 128)         16512     
-_________________________________________________________________
-conv2d_21 (Conv2D)           (None, 7, 7, 128)         16512     
+ input_9 (InputLayer)        [(None, 7, 7)]            0         
+                                                                 
+ tf.one_hot (TFOpLambda)     (None, 7, 7, 128)         0         
+                                                                 
+ pixel_conv_layer (PixelConv  (None, 7, 7, 128)        802944    
+ Layer)                                                          
+                                                                 
+ residual_block (ResidualBlo  (None, 7, 7, 128)        98624     
+ ck)                                                             
+                                                                 
+ residual_block_1 (ResidualB  (None, 7, 7, 128)        98624     
+ lock)                                                           
+                                                                 
+ pixel_conv_layer_3 (PixelCo  (None, 7, 7, 128)        16512     
+ nvLayer)                                                        
+                                                                 
+ pixel_conv_layer_4 (PixelCo  (None, 7, 7, 128)        16512     
+ nvLayer)                                                        
+                                                                 
+ conv2d_21 (Conv2D)          (None, 7, 7, 128)         16512     
+                                                                 
 =================================================================
 Total params: 1,049,728
 Trainable params: 1,049,728
 Non-trainable params: 0
 _________________________________________________________________
-
 ```
 </div>
+    
+
 ---
 ## Prepare data to train the PixelCNN
 
@@ -693,10 +759,12 @@ print(f"Shape of the training data for PixelCNN: {codebook_indices.shape}")
 
 <div class="k-default-codeblock">
 ```
+1875/1875 [==============================] - 2s 1ms/step
 Shape of the training data for PixelCNN: (60000, 7, 7)
-
 ```
 </div>
+    
+
 ---
 ## PixelCNN training
 
@@ -719,67 +787,75 @@ pixel_cnn.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-422/422 [==============================] - 4s 8ms/step - loss: 1.8550 - accuracy: 0.5959 - val_loss: 1.3127 - val_accuracy: 0.6268
+422/422 [==============================] - 43s 100ms/step - loss: 1.8089 - accuracy: 0.6057 - val_loss: 1.2769 - val_accuracy: 0.6538
 Epoch 2/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.2207 - accuracy: 0.6402 - val_loss: 1.1722 - val_accuracy: 0.6482
+422/422 [==============================] - 42s 100ms/step - loss: 1.1955 - accuracy: 0.6670 - val_loss: 1.1492 - val_accuracy: 0.6748
 Epoch 3/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.1412 - accuracy: 0.6536 - val_loss: 1.1313 - val_accuracy: 0.6552
+422/422 [==============================] - 42s 99ms/step - loss: 1.1165 - accuracy: 0.6800 - val_loss: 1.1055 - val_accuracy: 0.6816
 Epoch 4/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.1060 - accuracy: 0.6601 - val_loss: 1.1058 - val_accuracy: 0.6596
+422/422 [==============================] - 42s 99ms/step - loss: 1.0793 - accuracy: 0.6861 - val_loss: 1.0815 - val_accuracy: 0.6849
 Epoch 5/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0828 - accuracy: 0.6646 - val_loss: 1.1020 - val_accuracy: 0.6603
+422/422 [==============================] - 42s 99ms/step - loss: 1.0539 - accuracy: 0.6906 - val_loss: 1.0655 - val_accuracy: 0.6880
 Epoch 6/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0649 - accuracy: 0.6682 - val_loss: 1.0809 - val_accuracy: 0.6638
+422/422 [==============================] - 42s 100ms/step - loss: 1.0366 - accuracy: 0.6938 - val_loss: 1.0569 - val_accuracy: 0.6900
 Epoch 7/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0515 - accuracy: 0.6710 - val_loss: 1.0712 - val_accuracy: 0.6659
+422/422 [==============================] - 42s 100ms/step - loss: 1.0231 - accuracy: 0.6965 - val_loss: 1.0449 - val_accuracy: 0.6923
 Epoch 8/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0406 - accuracy: 0.6733 - val_loss: 1.0647 - val_accuracy: 0.6671
+422/422 [==============================] - 42s 100ms/step - loss: 1.0128 - accuracy: 0.6985 - val_loss: 1.0411 - val_accuracy: 0.6923
 Epoch 9/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0312 - accuracy: 0.6752 - val_loss: 1.0633 - val_accuracy: 0.6674
+422/422 [==============================] - 43s 101ms/step - loss: 1.0039 - accuracy: 0.7003 - val_loss: 1.0367 - val_accuracy: 0.6933
 Epoch 10/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0235 - accuracy: 0.6771 - val_loss: 1.0554 - val_accuracy: 0.6695
+422/422 [==============================] - 43s 102ms/step - loss: 0.9966 - accuracy: 0.7018 - val_loss: 1.0321 - val_accuracy: 0.6935
 Epoch 11/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0162 - accuracy: 0.6788 - val_loss: 1.0518 - val_accuracy: 0.6694
+422/422 [==============================] - 43s 102ms/step - loss: 0.9903 - accuracy: 0.7030 - val_loss: 1.0313 - val_accuracy: 0.6948
 Epoch 12/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0105 - accuracy: 0.6799 - val_loss: 1.0541 - val_accuracy: 0.6693
+422/422 [==============================] - 39s 91ms/step - loss: 0.9840 - accuracy: 0.7044 - val_loss: 1.0280 - val_accuracy: 0.6943
 Epoch 13/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0050 - accuracy: 0.6811 - val_loss: 1.0481 - val_accuracy: 0.6705
+422/422 [==============================] - 37s 88ms/step - loss: 0.9791 - accuracy: 0.7054 - val_loss: 1.0254 - val_accuracy: 0.6960
 Epoch 14/30
-422/422 [==============================] - 3s 7ms/step - loss: 1.0011 - accuracy: 0.6820 - val_loss: 1.0462 - val_accuracy: 0.6709
+422/422 [==============================] - 37s 88ms/step - loss: 0.9737 - accuracy: 0.7066 - val_loss: 1.0276 - val_accuracy: 0.6950
 Epoch 15/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9964 - accuracy: 0.6831 - val_loss: 1.0459 - val_accuracy: 0.6709
+422/422 [==============================] - 39s 92ms/step - loss: 0.9705 - accuracy: 0.7071 - val_loss: 1.0235 - val_accuracy: 0.6955
 Epoch 16/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9922 - accuracy: 0.6840 - val_loss: 1.0444 - val_accuracy: 0.6704
+422/422 [==============================] - 42s 99ms/step - loss: 0.9667 - accuracy: 0.7080 - val_loss: 1.0218 - val_accuracy: 0.6961
 Epoch 17/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9884 - accuracy: 0.6848 - val_loss: 1.0405 - val_accuracy: 0.6725
+422/422 [==============================] - 42s 99ms/step - loss: 0.9624 - accuracy: 0.7089 - val_loss: 1.0354 - val_accuracy: 0.6945
 Epoch 18/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9846 - accuracy: 0.6859 - val_loss: 1.0400 - val_accuracy: 0.6722
+422/422 [==============================] - 42s 99ms/step - loss: 0.9591 - accuracy: 0.7097 - val_loss: 1.0188 - val_accuracy: 0.6972
 Epoch 19/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9822 - accuracy: 0.6864 - val_loss: 1.0394 - val_accuracy: 0.6728
+422/422 [==============================] - 42s 99ms/step - loss: 0.9571 - accuracy: 0.7101 - val_loss: 1.0266 - val_accuracy: 0.6964
 Epoch 20/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9787 - accuracy: 0.6872 - val_loss: 1.0393 - val_accuracy: 0.6717
+422/422 [==============================] - 42s 99ms/step - loss: 0.9539 - accuracy: 0.7108 - val_loss: 1.0228 - val_accuracy: 0.6950
 Epoch 21/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9761 - accuracy: 0.6878 - val_loss: 1.0398 - val_accuracy: 0.6725
+422/422 [==============================] - 42s 99ms/step - loss: 0.9512 - accuracy: 0.7115 - val_loss: 1.0189 - val_accuracy: 0.6971
 Epoch 22/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9733 - accuracy: 0.6884 - val_loss: 1.0376 - val_accuracy: 0.6726
+422/422 [==============================] - 42s 100ms/step - loss: 0.9482 - accuracy: 0.7122 - val_loss: 1.0193 - val_accuracy: 0.6967
 Epoch 23/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9708 - accuracy: 0.6890 - val_loss: 1.0352 - val_accuracy: 0.6732
+422/422 [==============================] - 42s 100ms/step - loss: 0.9464 - accuracy: 0.7125 - val_loss: 1.0181 - val_accuracy: 0.6969
 Epoch 24/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9685 - accuracy: 0.6894 - val_loss: 1.0369 - val_accuracy: 0.6723
+422/422 [==============================] - 42s 100ms/step - loss: 0.9434 - accuracy: 0.7131 - val_loss: 1.0176 - val_accuracy: 0.6974
 Epoch 25/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9660 - accuracy: 0.6901 - val_loss: 1.0384 - val_accuracy: 0.6733
+422/422 [==============================] - 42s 99ms/step - loss: 0.9420 - accuracy: 0.7134 - val_loss: 1.0215 - val_accuracy: 0.6974
 Epoch 26/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9638 - accuracy: 0.6908 - val_loss: 1.0355 - val_accuracy: 0.6728
+422/422 [==============================] - 43s 101ms/step - loss: 0.9404 - accuracy: 0.7139 - val_loss: 1.0151 - val_accuracy: 0.6970
 Epoch 27/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9619 - accuracy: 0.6912 - val_loss: 1.0325 - val_accuracy: 0.6739
+422/422 [==============================] - 42s 100ms/step - loss: 0.9374 - accuracy: 0.7147 - val_loss: 1.0175 - val_accuracy: 0.6971
 Epoch 28/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9594 - accuracy: 0.6917 - val_loss: 1.0334 - val_accuracy: 0.6736
+422/422 [==============================] - 42s 100ms/step - loss: 0.9357 - accuracy: 0.7150 - val_loss: 1.0173 - val_accuracy: 0.6968
 Epoch 29/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9582 - accuracy: 0.6920 - val_loss: 1.0366 - val_accuracy: 0.6733
+422/422 [==============================] - 43s 101ms/step - loss: 0.9340 - accuracy: 0.7152 - val_loss: 1.0176 - val_accuracy: 0.6973
 Epoch 30/30
-422/422 [==============================] - 3s 7ms/step - loss: 0.9561 - accuracy: 0.6926 - val_loss: 1.0336 - val_accuracy: 0.6728
+422/422 [==============================] - 43s 101ms/step - loss: 0.9321 - accuracy: 0.7157 - val_loss: 1.0174 - val_accuracy: 0.6972
+```
+</div>
+    
 
-<tensorflow.python.keras.callbacks.History at 0x7f95838ef750>
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.callbacks.History at 0x1fa917a14f0>
 
 ```
 </div>
@@ -824,10 +900,60 @@ print(f"Prior shape: {priors.shape}")
 
 <div class="k-default-codeblock">
 ```
+1/1 [==============================] - 0s 185ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 13ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 20ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 13ms/step
+1/1 [==============================] - 0s 19ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 17ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 19ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 18ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 17ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 13ms/step
+1/1 [==============================] - 0s 17ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 14ms/step
+1/1 [==============================] - 0s 15ms/step
+1/1 [==============================] - 0s 18ms/step
+1/1 [==============================] - 0s 16ms/step
+1/1 [==============================] - 0s 14ms/step
 Prior shape: (10, 7, 7)
-
 ```
 </div>
+    
+
 We can now use our decoder to generate the images.
 
 
@@ -857,44 +983,71 @@ for i in range(batch):
     plt.show()
 ```
 
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 39ms/step
+```
+</div>
+    
 
-![png](/img/examples/generative/vq_vae/vq_vae_40_0.png)
 
-
-
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_1.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_2.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_3.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_4.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_5.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_6.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_7.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_8.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/vq_vae/vq_vae_40_9.png)
+    
+
+
+
+    
+![png](/img/examples/generative/vq_vae/vq_vae_40_10.png)
+    
 
 
 We can enhance the quality of these generated samples by tweaking the PixelCNN.
@@ -909,3 +1062,8 @@ interested you can check out
 * To further enhance the quality of the generated samples,
 [VQ-VAE-2](https://arxiv.org/abs/1906.00446) was proposed that follows a cascaded
 approach to learn the codebook and to generate the images.
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-VQ%20VAE-black.svg)](https://huggingface.co/keras-io/vq-vae) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-VQ%20VAE-black.svg)](https://huggingface.co/spaces/keras-io/VQ-VAE) |

@@ -427,5 +427,5 @@ for idx in range(sample):
 **Example available on HuggingFace**
 | Trained Model | Demo |
 | :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/ProbabalisticBayesianModel-Wine) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/ProbabilisticBayesianNetwork) |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Bayesian%20Neural%20Networks-black.svg)](https://huggingface.co/keras-io/ProbabalisticBayesianModel-Wine) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Bayesian%20Neural%20Networks-black.svg)](https://huggingface.co/spaces/keras-io/ProbabilisticBayesianNetwork) |
 """
