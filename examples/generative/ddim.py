@@ -466,8 +466,6 @@ class DiffusionModel(keras.Model):
         self.network = get_network(image_size, widths, block_depth)
         self.ema_network = keras.models.clone_model(self.network)
 
-        self.initial_noise = None
-
     def compile(self, **kwargs):
         super().compile(**kwargs)
 
@@ -481,7 +479,7 @@ class DiffusionModel(keras.Model):
 
     def denormalize(self, images):
         # convert the pixel values back to 0-1 range
-        images = self.normalizer.mean + (images * self.normalizer.variance**0.5)
+        images = self.normalizer.mean + images * self.normalizer.variance**0.5
         return tf.clip_by_value(images, 0.0, 1.0)
 
     def diffusion_schedule(self, diffusion_times):
@@ -644,6 +642,10 @@ class DiffusionModel(keras.Model):
 
 # create and compile the model
 model = DiffusionModel(image_size, widths, block_depth)
+# below tensorflow 2.9:
+# pip install tensorflow_addons
+# import tensorflow_addons as tfa
+# optimizer=tfa.optimizers.AdamW
 model.compile(
     optimizer=keras.optimizers.experimental.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
