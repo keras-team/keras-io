@@ -187,7 +187,7 @@ class StochasticDepth(layers.Layer):
     def call(self, x, training=None):
         if training:
             keep_prob = 1 - self.drop_prob
-            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
+            shape = (tf.shape(x)[0],) + (1,) * (tf.shape(x).shape[0] - 1)
             random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
             random_tensor = tf.floor(random_tensor)
             return (x / keep_prob) * random_tensor

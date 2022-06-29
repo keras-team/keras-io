@@ -295,4 +295,10 @@ and 97.0% on CIFAR-10 with 10 examples per class.
 
 You can experiment further with the BigTransfer Method by following the
 [original paper](https://arxiv.org/abs/1912.11370).
+
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-bit-black.svg)](https://huggingface.co/keras-io/bit) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-bit-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
 """

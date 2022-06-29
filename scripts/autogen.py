@@ -38,6 +38,12 @@ import generate_tf_guides
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
+PROJECT_URL = {
+    "keras": "https://github.com/keras-team/keras/tree/v2.9.0/",
+    "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/1.1.2/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.2.7/",
+    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.2.0/",
+}
 
 
 class KerasIO:
@@ -65,7 +71,7 @@ class KerasIO:
         self.refresh_guides = refresh_guides
         self.refresh_examples = refresh_examples
 
-        self.docstring_printer = docstrings.TFKerasDocumentationGenerator()
+        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
         self.make_examples_master()
 
     def make_examples_master(self):
@@ -214,8 +220,13 @@ class KerasIO:
 
     def add_example(self, path, working_dir=None):
         """e.g. add_example('vision/cats_and_dogs')"""
-        assert path.count(os.path.sep) == 1
+
+        # Prune out the ../ path
+        if path.startswith("../examples/"):
+            path = path.replace("../examples/", "")
+
         folder, name = path.split(os.path.sep)
+        assert path.count(os.path.sep) == 1
         if name.endswith(".py"):
             name = name[:-3]
 
@@ -234,8 +245,11 @@ class KerasIO:
         py_path = Path(self.examples_dir) / folder / (name + ".py")
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
+
+        self.disable_warnings()
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
+
         md_content = open(md_path).read()
         github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
         site_img_dir = os.path.join("img", "examples", folder, name)
@@ -246,6 +260,11 @@ class KerasIO:
 
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
+
+        # Prune out the ../ path
+        if name.startswith("../guides/"):
+            name = name.replace("../guides/", "")
+
         if name.endswith(".py"):
             name = name[:-3]
         ipynb_dir = Path(self.guides_dir) / "ipynb"
@@ -264,8 +283,10 @@ class KerasIO:
         md_path = md_dir / (name + ".md")
         nb_path = ipynb_dir / (name + ".ipynb")
 
+        self.disable_warnings()
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
+
         md_content = open(md_path).read()
         github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
@@ -273,6 +294,11 @@ class KerasIO:
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
         open(md_path, "w").write(md_content)
+
+    @staticmethod
+    def disable_warnings():
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+        os.environ['AUTOGRAPH_VERBOSITY'] = '0'
 
     def make_tutobook_sources(self, guides=True, examples=True):
         """Populate `examples/nlp/md`, `examples/nlp/img/`, etc.
@@ -496,7 +522,10 @@ class KerasIO:
             stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
             url = self.url + "/".join(stripped_path_stack)
             location_history.append(
-                {"url": url, "title": title_stack[i],}
+                {
+                    "url": url,
+                    "title": title_stack[i],
+                }
             )
         metadata = json.dumps(
             {
@@ -688,8 +717,17 @@ class KerasIO:
 
         html_content = markdown.markdown(
             md_content,
-            extensions=["fenced_code", "tables", "codehilite", "mdx_truly_sane_lists",],
-            extension_configs={"codehilite": {"guess_lang": False,},},
+            extensions=[
+                "fenced_code",
+                "tables",
+                "codehilite",
+                "mdx_truly_sane_lists",
+            ],
+            extension_configs={
+                "codehilite": {
+                    "guess_lang": False,
+                },
+            },
         )
         html_content = insert_title_ids_in_html(html_content)
         local_nav = [set_active_flag_in_nav_entry(entry, relative_url) for entry in nav]
@@ -705,7 +743,12 @@ class KerasIO:
             }
         )
         html_page = base_template.render(
-            {"title": title, "nav": local_nav, "base_url": self.url, "main": html_docs,}
+            {
+                "title": title,
+                "nav": local_nav,
+                "base_url": self.url,
+                "main": html_docs,
+            }
         )
         save_file(target_path, html_page)
         return relative_url
@@ -766,8 +809,8 @@ def replace_links(content):
         keras_name = entry["source_name"]
         tf_name = entry["target_name"]
         content = content.replace(
-          "https://www.tensorflow.org/guide/keras/" + tf_name,
-          "https://keras.io/guides/" + keras_name,
+            "https://www.tensorflow.org/guide/keras/" + tf_name,
+            "https://keras.io/guides/" + keras_name,
         )
     return content
 
@@ -807,19 +850,31 @@ def make_outline(md_source):
             title = line[2:]
             title = process_outline_title(title)
             outline.append(
-                {"title": title, "url": "#" + turn_title_into_id(title), "depth": 1,}
+                {
+                    "title": title,
+                    "url": "#" + turn_title_into_id(title),
+                    "depth": 1,
+                }
             )
         if line.startswith("## "):
             title = line[3:]
             title = process_outline_title(title)
             outline.append(
-                {"title": title, "url": "#" + turn_title_into_id(title), "depth": 2,}
+                {
+                    "title": title,
+                    "url": "#" + turn_title_into_id(title),
+                    "depth": 2,
+                }
             )
         if line.startswith("### "):
             title = line[4:]
             title = process_outline_title(title)
             outline.append(
-                {"title": title, "url": "#" + turn_title_into_id(title), "depth": 3,}
+                {
+                    "title": title,
+                    "url": "#" + turn_title_into_id(title),
+                    "depth": 3,
+                }
             )
     return outline
 
@@ -892,7 +947,7 @@ def generate_md_toc(entries, url, depth=2):
             title=title, full_url=full_url
         )
         if children:
-            assert path.endswith("/")
+            assert path.endswith("/"), f"{path} should end with /"
             for child in children:
                 if child.get("skip_from_toc", False):
                     continue
