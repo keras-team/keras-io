@@ -3,7 +3,7 @@ Title: Text Classification using FNet
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/06/01
 Last modified: 2022/06/01
-Description: Text Classification on the IMDb Dataset using KerasNLP's `FNetEncoder` layer.
+Description: Text Classification on the IMDb Dataset using `keras_nlp.layers.FNetEncoder` layer.
 """
 
 """
@@ -39,7 +39,7 @@ training. In particular, a couple of points from the paper stand out:
 TPUs. The reason for this speed-up is two-fold:
     * The Fourier Transform layer is unparametrized, it does not have any parameters!
     * The authors use Fast Fourier Transform (FFT); this reduces the time complexity
-    from O(n^2) (in the case of self-attention) to O(n log n).
+    from `O(n^2)` (in the case of self-attention) to `O(n log n)`.
 * FNet manages to achieve 92-97% of the accuracy of BERT on the GLUE benchmark.
 """
 
