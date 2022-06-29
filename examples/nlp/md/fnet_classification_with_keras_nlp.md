@@ -90,7 +90,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-06-29 17:31:54--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2022-06-29 19:15:53--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -101,13 +101,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  15.5MB/s    in 8.8s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  68.0MB/s    in 1.2s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-06-29 17:32:03 (9.11 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2022-06-29 19:15:54 (68.0 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -277,7 +277,9 @@ less than the specified sequence length. Otherwise, the sequence is truncated.
 
 ```python
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab, lowercase=False, sequence_length=MAX_SEQUENCE_LENGTH,
+    vocabulary=vocab,
+    lowercase=False,
+    sequence_length=MAX_SEQUENCE_LENGTH,
 )
 ```
 
@@ -461,13 +463,13 @@ Trainable params: 2,382,337
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 32s 77ms/step - loss: 0.5887 - accuracy: 0.6345 - val_loss: 0.3484 - val_accuracy: 0.8474
+313/313 [==============================] - 36s 82ms/step - loss: 0.5906 - accuracy: 0.6339 - val_loss: 0.3496 - val_accuracy: 0.8466
 Epoch 2/3
-313/313 [==============================] - 23s 73ms/step - loss: 0.3098 - accuracy: 0.8679 - val_loss: 0.3206 - val_accuracy: 0.8646
+313/313 [==============================] - 24s 76ms/step - loss: 0.3093 - accuracy: 0.8692 - val_loss: 0.3213 - val_accuracy: 0.8630
 Epoch 3/3
-313/313 [==============================] - 23s 74ms/step - loss: 0.2026 - accuracy: 0.9217 - val_loss: 0.3775 - val_accuracy: 0.8498
+313/313 [==============================] - 24s 76ms/step - loss: 0.2100 - accuracy: 0.9184 - val_loss: 0.3465 - val_accuracy: 0.8616
 
-<keras.callbacks.History at 0x7f341d6d2710>
+<keras.callbacks.History at 0x7f7b363408d0>
 
 ```
 </div>
@@ -485,9 +487,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 16s 26ms/step - loss: 0.4267 - accuracy: 0.8314
+391/391 [==============================] - 18s 28ms/step - loss: 0.3865 - accuracy: 0.8432
 
-[0.4267362058162689, 0.8314399719238281]
+[0.38646069169044495, 0.8431599736213684]
 
 ```
 </div>
@@ -574,13 +576,13 @@ Trainable params: 2,580,481
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 50s 150ms/step - loss: 0.4569 - accuracy: 0.7594 - val_loss: 0.3013 - val_accuracy: 0.8766
+313/313 [==============================] - 50s 150ms/step - loss: 0.4569 - accuracy: 0.7592 - val_loss: 0.3013 - val_accuracy: 0.8764
 Epoch 2/3
-313/313 [==============================] - 46s 147ms/step - loss: 0.2104 - accuracy: 0.9200 - val_loss: 0.3185 - val_accuracy: 0.8770
+313/313 [==============================] - 46s 146ms/step - loss: 0.2105 - accuracy: 0.9200 - val_loss: 0.3182 - val_accuracy: 0.8766
 Epoch 3/3
-313/313 [==============================] - 46s 148ms/step - loss: 0.1659 - accuracy: 0.9394 - val_loss: 0.3642 - val_accuracy: 0.8778
+313/313 [==============================] - 46s 147ms/step - loss: 0.1655 - accuracy: 0.9392 - val_loss: 0.3970 - val_accuracy: 0.8738
 
-<keras.callbacks.History at 0x7f341cd0ca10>
+<keras.callbacks.History at 0x7f7b22545dd0>
 
 ```
 </div>
@@ -597,9 +599,9 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 22s 56ms/step - loss: 0.4350 - accuracy: 0.8545
+391/391 [==============================] - 22s 57ms/step - loss: 0.4872 - accuracy: 0.8428
 
-[0.43504852056503296, 0.8544800281524658]
+[0.4872429370880127, 0.8428400158882141]
 
 ```
 </div>
