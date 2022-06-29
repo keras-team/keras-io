@@ -3,7 +3,7 @@
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2022/06/01<br>
 **Last modified:** 2022/06/01<br>
-**Description:** Text Classification on the IMDb Dataset using KerasNLP's `FNetEncoder` layer.
+**Description:** Text Classification on the IMDb Dataset using `keras_nlp.layers.FNetEncoder` layer.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/fnet_classification_with_keras_nlp.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/fnet_classification_with_keras_nlp.py)
@@ -43,7 +43,7 @@ training. In particular, a couple of points from the paper stand out:
 TPUs. The reason for this speed-up is two-fold:
     * The Fourier Transform layer is unparametrized, it does not have any parameters!
     * The authors use Fast Fourier Transform (FFT); this reduces the time complexity
-    from O(n^2) (in the case of self-attention) to O(n log n).
+    from `O(n^2)` (in the case of self-attention) to `O(n log n)`.
 * FNet manages to achieve 92-97% of the accuracy of BERT on the GLUE benchmark.
 
 ---
@@ -90,7 +90,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-06-29 15:44:50--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2022-06-29 17:13:36--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -101,13 +101,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  16.1MB/s    in 8.3s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  16.4MB/s    in 8.3s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-06-29 15:44:59 (9.64 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2022-06-29 17:13:44 (9.72 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -125,9 +125,9 @@ print(os.listdir("./aclImdb/test"))
 
 <div class="k-default-codeblock">
 ```
-['imdbEr.txt', 'test', 'imdb.vocab', 'README', 'train']
-['neg', 'unsup', 'urls_pos.txt', 'labeledBow.feat', 'urls_unsup.txt', 'unsupBow.feat', 'urls_neg.txt', 'pos']
-['neg', 'urls_pos.txt', 'labeledBow.feat', 'urls_neg.txt', 'pos']
+['README', 'train', 'test', 'imdbEr.txt', 'imdb.vocab']
+['pos', 'urls_pos.txt', 'urls_unsup.txt', 'unsup', 'labeledBow.feat', 'urls_neg.txt', 'unsupBow.feat', 'neg']
+['pos', 'urls_pos.txt', 'labeledBow.feat', 'urls_neg.txt', 'neg']
 
 ```
 </div>
@@ -461,13 +461,13 @@ Trainable params: 2,382,337
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 33s 77ms/step - loss: 0.5894 - accuracy: 0.6352 - val_loss: 0.3537 - val_accuracy: 0.8430
+313/313 [==============================] - 33s 78ms/step - loss: 0.5914 - accuracy: 0.6331 - val_loss: 0.3615 - val_accuracy: 0.8376
 Epoch 2/3
-313/313 [==============================] - 23s 72ms/step - loss: 0.3091 - accuracy: 0.8709 - val_loss: 0.3271 - val_accuracy: 0.8590
+313/313 [==============================] - 23s 74ms/step - loss: 0.3113 - accuracy: 0.8690 - val_loss: 0.3330 - val_accuracy: 0.8580
 Epoch 3/3
-313/313 [==============================] - 23s 73ms/step - loss: 0.2026 - accuracy: 0.9220 - val_loss: 0.4067 - val_accuracy: 0.8438
+313/313 [==============================] - 23s 75ms/step - loss: 0.1999 - accuracy: 0.9236 - val_loss: 0.3657 - val_accuracy: 0.8514
 
-<keras.callbacks.History at 0x7f3ea0da3750>
+<keras.callbacks.History at 0x7f5200179ad0>
 
 ```
 </div>
@@ -485,9 +485,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 16s 26ms/step - loss: 0.4131 - accuracy: 0.8404
+391/391 [==============================] - 16s 26ms/step - loss: 0.3915 - accuracy: 0.8422
 
-[0.41311976313591003, 0.8404399752616882]
+[0.3914582431316376, 0.8422399759292603]
 
 ```
 </div>
@@ -574,13 +574,13 @@ Trainable params: 2,580,481
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 48s 145ms/step - loss: 0.4569 - accuracy: 0.7595 - val_loss: 0.3013 - val_accuracy: 0.8764
+313/313 [==============================] - 50s 150ms/step - loss: 0.4569 - accuracy: 0.7595 - val_loss: 0.3012 - val_accuracy: 0.8764
 Epoch 2/3
-313/313 [==============================] - 45s 142ms/step - loss: 0.2104 - accuracy: 0.9197 - val_loss: 0.3214 - val_accuracy: 0.8754
+313/313 [==============================] - 46s 147ms/step - loss: 0.2103 - accuracy: 0.9197 - val_loss: 0.3222 - val_accuracy: 0.8754
 Epoch 3/3
-313/313 [==============================] - 45s 142ms/step - loss: 0.1645 - accuracy: 0.9387 - val_loss: 0.3961 - val_accuracy: 0.8722
+313/313 [==============================] - 46s 147ms/step - loss: 0.1625 - accuracy: 0.9402 - val_loss: 0.3699 - val_accuracy: 0.8786
 
-<keras.callbacks.History at 0x7f3e19b8fbd0>
+<keras.callbacks.History at 0x7f5200168290>
 
 ```
 </div>
@@ -597,9 +597,9 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 21s 54ms/step - loss: 0.4845 - accuracy: 0.8438
+391/391 [==============================] - 22s 56ms/step - loss: 0.4468 - accuracy: 0.8538
 
-[0.4845263659954071, 0.8438000082969666]
+[0.44681528210639954, 0.8537600040435791]
 
 ```
 </div>
