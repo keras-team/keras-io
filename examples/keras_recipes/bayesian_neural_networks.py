@@ -422,3 +422,10 @@ for idx in range(sample):
         f"95% CI: [{round(upper[idx][0], 2)} - {round(lower[idx][0], 2)}]"
         f" - Actual: {targets[idx]}"
     )
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/ProbabalisticBayesianModel-Wine) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/ProbabilisticBayesianNetwork) |
+"""

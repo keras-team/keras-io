@@ -221,3 +221,10 @@ axes[1, 1].scatter(x[:, 0], x[:, 1], color="g")
 axes[1, 1].set(title="Generated data space X", label="x", ylabel="y")
 axes[1, 1].set_xlim([-2, 2])
 axes[1, 1].set_ylim([-2, 2])
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/real_nvp) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/Real_NVP) |
+"""

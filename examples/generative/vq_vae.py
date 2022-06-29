@@ -561,3 +561,9 @@ interested you can check out
 [VQ-VAE-2](https://arxiv.org/abs/1906.00446) was proposed that follows a cascaded
 approach to learn the codebook and to generate the images.
 """
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/vq-vae) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/VQ-VAE) |
+"""
