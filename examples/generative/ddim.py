@@ -432,7 +432,7 @@ be used theoretically, however I recommend using
 [mean absolute error](https://keras.io/api/losses/regression_losses/#mean_absolute_error-function)
 instead (similarly to
 [this](https://github.com/lucidrains/denoising-diffusion-pytorch/blob/master/denoising_diffusion_pytorch/denoising_diffusion_pytorch.py#L371)
-implementation), which produces better results at this scale.
+implementation), which produces better results on this dataset.
 
 ### Sampling (reverse diffusion)
 
@@ -708,6 +708,12 @@ steps):
 
 Stochastic sampling process (noisy images on top, predicted images on bottom, 80 steps):
 ![flowers stochastic generation gif](https://i.imgur.com/tw7zsf1.gif)
+
+Trained model and demo available on HuggingFace:
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![model badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-DDIM-black.svg)](https://huggingface.co/keras-io/denoising-diffusion-implicit-models) | [![spaces badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-DDIM-black.svg)](https://huggingface.co/spaces/keras-io/denoising-diffusion-implicit-models) |
 """
 
 """
@@ -726,10 +732,10 @@ setting it too high will make them undersaturated. I recommend tuning it careful
 setting it to 0 will lead to a division by zero error. The max. signal rate can be set to
 1, but I found that setting it lower slightly improves generation quality.
 * **loss function**: While large models tend to use mean squared error (MSE) loss, I
-recommend using mean absolute error (MAE) at our scale. MSE loss leads to more diverse
-images, but it also seems to hallucinate more
-([Section 3](https://arxiv.org/abs/2111.05826)), and led to lower generation quality in my
-experience.
+recommend using mean absolute error (MAE) on this dataset. In my experience MSE loss 
+generates more diverse samples (it also seems to hallucinate more
+[Section 3](https://arxiv.org/abs/2111.05826)), while MAE loss leads to smoother images.
+I recommend trying both.
 * **weight decay**: I did occasionally run into diverged trainings when scaling up the
 model, and found that weight decay helps in avoiding instabilities at a low performance
 cost. This is why I use
