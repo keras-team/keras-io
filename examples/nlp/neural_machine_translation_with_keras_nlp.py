@@ -437,13 +437,20 @@ for i in range(10):
     input_sentence = random.choice(test_eng_texts)
     translated = decode_sequences(tf.constant([input_sentence]))
     translated = translated.numpy()[0].decode("utf-8")
-    translated = translated.replace("[PAD]", "").strip()
+    translated = (
+        translated.replace("[PAD]", "")
+        .replace("[START]", "")
+        .replace("[END]", "")
+        .strip()
+    )
     print(f"*** Example {i} ***")
     print(input_sentence)
     print(translated)
     print()
 
 """
+After 10 epochs, we get samples like these:
+
 *** Example 0 ***
 have you seen this?
 [START] ¿has visto esto? [END]
