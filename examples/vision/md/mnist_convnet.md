@@ -29,7 +29,7 @@ from tensorflow.keras import layers
 num_classes = 10
 input_shape = (28, 28, 1)
 
-# the data, split between train and test sets
+# Load the data and split it between train and test sets
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 # Scale images to the [0, 1] range
