@@ -43,7 +43,6 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 """shell
 pip install -q rouge-score
-pip install -q git+https://github.com/abheesht17/keras-nlp.git@d32a47edfa975bbfa21f1b98b66ef7c1ba6b4302
 """
 
 import keras_nlp
