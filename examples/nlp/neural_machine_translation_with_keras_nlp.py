@@ -453,43 +453,43 @@ After 10 epochs, we get samples like these:
 
 *** Example 0 ***
 have you seen this?
-[START] ¿has visto esto? [END]
+¿has visto esto?
 
 *** Example 1 ***
 it's very hot here.
-[START] hace mucho calor aqui. [END]
+hace mucho calor aqui.
 
 *** Example 2 ***
 my mother always says she's going to visit me soon.
-[START] mi madre es algo de decir que ella me va a visitar pronto. [END]
+mi madre es algo de decir que ella me va a visitar pronto.
 
 *** Example 3 ***
 you can't say that.
-[START] no puedes decir eso. [END]
+no puedes decir eso.
 
 *** Example 4 ***
 there are always some chores to be done around the house.
-[START] siempre hay algunos chance para hacer cerca de la casa. [END]
+siempre hay algunos chance para hacer cerca de la casa.
 
 *** Example 5 ***
 sometimes the boys would play a joke on the teacher.
-[START] a veces los ninos tocaria una broma con el profesor. [END]
+a veces los ninos tocaria una broma con el profesor.
 
 *** Example 6 ***
 move this table toward the corner.
-[START] muevile esta mesa hacia la car, se muelvale esta mesa. [END]
+muevile esta mesa hacia la car, se muelvale esta mesa.
 
 *** Example 7 ***
 tom has never heard mary sing.
-[START] tom nunca ha oído cantar a mary. [END]
+tom nunca ha oído cantar a mary.
 
 *** Example 8 ***
 tom was in town monday night.
-[START] tom estaba en la noche el lunes por la noche. [END]
+tom estaba en la noche el lunes por la noche.
 
 *** Example 9 ***
 what's happened, has happened. it's history.
-[START] lo que paso, ha pasado. es historia. [END]
+lo que paso, ha pasado. es historia.
 """
 
 """
