@@ -433,7 +433,7 @@ def decode_sequences(input_sentences):
 
 
 test_eng_texts = [pair[0] for pair in test_pairs]
-for i in range(10):
+for i in range(2):
     input_sentence = random.choice(test_eng_texts)
     translated = decode_sequences(tf.constant([input_sentence]))
     translated = translated.numpy()[0].decode("utf-8")
