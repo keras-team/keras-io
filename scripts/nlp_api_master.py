@@ -30,6 +30,19 @@ TOKENIZERS_MASTER = {
             ],
         },
         {
+            "path": "sentence_piece_tokenizer",
+            "title": "SentencePieceTokenizer",
+            "generate": [
+                "keras_nlp.tokenizers.SentencePieceTokenizer",
+                "keras_nlp.tokenizers.SentencePieceTokenizer.tokenize",
+                "keras_nlp.tokenizers.SentencePieceTokenizer.detokenize",
+                "keras_nlp.tokenizers.SentencePieceTokenizer.get_vocabulary",
+                "keras_nlp.tokenizers.SentencePieceTokenizer.vocabulary_size",
+                "keras_nlp.tokenizers.SentencePieceTokenizer.token_to_id",
+                "keras_nlp.tokenizers.SentencePieceTokenizer.id_to_token",
+            ],
+        },
+        {
             "path": "byte_tokenizer",
             "title": "ByteTokenizer",
             "generate": [
@@ -109,6 +122,16 @@ LAYERS_MASTER = {
             "title": "MLMHead layer",
             "generate": ["keras_nlp.layers.MLMHead"],
         },
+        {
+            "path": "start_end_packer",
+            "title": "StartEndPacker layer",
+            "generate": ["keras_nlp.layers.StartEndPacker"],
+        },
+        {
+            "path": "multi_segment_packer",
+            "title": "MultiSegmentPacker layer",
+            "generate": ["keras_nlp.layers.MultiSegmentPacker"],
+        },
     ],
 }
 
@@ -123,6 +146,49 @@ METRICS_MASTER = {
             "title": "Perplexity metric",
             "generate": ["keras_nlp.metrics.Perplexity"],
         },
+        {
+            "path": "rouge_l",
+            "title": "RougeL metric",
+            "generate": ["keras_nlp.metrics.RougeL"],
+        },
+        {
+            "path": "rouge_n",
+            "title": "RougeN metric",
+            "generate": ["keras_nlp.metrics.RougeN"],
+        },
+    ],
+}
+
+UTILS_MASTER = {
+    "path": "utils/",
+    "title": "Utils",
+    "toc": True,
+    "children": [
+        {
+            "path": "greedy_search",
+            "title": "greedy_search function",
+            "generate": ["keras_nlp.utils.greedy_search"],
+        },
+        {
+            "path": "top_k_search",
+            "title": "top_k_search function",
+            "generate": ["keras_nlp.utils.top_k_search"],
+        },
+        {
+            "path": "top_p_search",
+            "title": "top_p_search function",
+            "generate": ["keras_nlp.utils.top_p_search"],
+        },
+        {
+            "path": "random_search",
+            "title": "random_search function",
+            "generate": ["keras_nlp.utils.random_search"],
+        },
+        {
+            "path": "beam_search",
+            "title": "beam_search function",
+            "generate": ["keras_nlp.utils.beam_search"],
+        },
     ],
 }
 
@@ -130,5 +196,10 @@ NLP_API_MASTER = {
     "path": "keras_nlp/",
     "title": "KerasNLP",
     "toc": True,
-    "children": [TOKENIZERS_MASTER, LAYERS_MASTER, METRICS_MASTER],
+    "children": [
+        TOKENIZERS_MASTER,
+        LAYERS_MASTER,
+        METRICS_MASTER,
+        UTILS_MASTER,
+    ],
 }
