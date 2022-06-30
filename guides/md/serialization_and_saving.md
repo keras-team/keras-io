@@ -415,7 +415,7 @@ but it's completely unsafe and means your model cannot be loaded on a different 
 
 In order to save/load a model with custom-defined layers, or a subclassed model,
 you should overwrite the `get_config` and optionally `from_config` methods.
-Additionally, you should use register the custom object so that Keras is aware of it.
+Additionally, you should register the custom object so that Keras is aware of it.
 
 **Custom functions**
 
