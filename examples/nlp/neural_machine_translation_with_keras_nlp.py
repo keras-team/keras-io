@@ -262,7 +262,10 @@ def preprocess_batch(eng, spa):
     spa = spa_start_end_packer(spa)
 
     return (
-        {"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],},
+        {
+            "encoder_inputs": eng,
+            "decoder_inputs": spa[:, :-1],
+        },
         spa[:, 1:],
     )
 
@@ -354,11 +357,19 @@ x = keras_nlp.layers.TransformerDecoder(
 )(decoder_sequence=x, encoder_sequence=encoded_seq_inputs)
 x = keras.layers.Dropout(0.5)(x)
 decoder_outputs = keras.layers.Dense(SPA_VOCAB_SIZE, activation="softmax")(x)
-decoder = keras.Model([decoder_inputs, encoded_seq_inputs,], decoder_outputs,)
+decoder = keras.Model(
+    [
+        decoder_inputs,
+        encoded_seq_inputs,
+    ],
+    decoder_outputs,
+)
 decoder_outputs = decoder([decoder_inputs, encoder_outputs])
 
 transformer = keras.Model(
-    [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer",
+    [encoder_inputs, decoder_inputs],
+    decoder_outputs,
+    name="transformer",
 )
 
 """
