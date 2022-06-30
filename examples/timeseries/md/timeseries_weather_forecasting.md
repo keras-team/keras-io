@@ -153,7 +153,7 @@ def show_raw_visualization(data):
 show_raw_visualization(df)
 ```
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_6_1.png)
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_6_1.png)
 
 
 This heat map shows the correlation between different features.
@@ -178,7 +178,7 @@ show_heatmap(df)
 ```
 
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_8_0.png)
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_8_0.png)
 
 
 ---
@@ -425,7 +425,7 @@ visualize_loss(history, "Training and Validation Loss")
 ```
 
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_0.png)
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_24_0.png)
 
 
 ---
@@ -468,21 +468,28 @@ for x, y in dataset_val.take(5):
 ```
 
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_0.png)
+
+
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_26_0.png)
 
 
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_1.png)
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_26_1.png)
+
+
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_26_2.png)
 
 
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_2.png)
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_26_3.png)
 
 
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_3.png)
+![png](/examples/timeseries/img/timeseries_weather_forecasting/timeseries_weather_forecasting_26_4.png)
 
 
+**Example available on HuggingFace**
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_4.png)
-
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Collaborative%20Filtering-black.svg)](https://huggingface.co/keras-io/timeseries_forecasting_for_weather) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Collaborative%20Filtering-black.svg)](https://huggingface.co/spaces/keras-io/timeseries_forecasting_for_weather) |
