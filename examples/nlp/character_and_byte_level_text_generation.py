@@ -77,7 +77,7 @@ print(unicode_tokenized_text[:50])
 print(byte_tokenized_text[:50])
 
 """
-Let's how we can detokenize the text!
+Let's see how we can detokenize the text!
 """
 
 print(UnicodeCharacterTokenizer.detokenize(unicode_tokenized_text[:50]))
@@ -168,7 +168,8 @@ byte_encoded_dataset = (
 
 """
 We create a simple LSTM model with an embedding layer and a dense layer for both our datasets.
-The model will learn 
+The model will learn to predict the next character in the sequence based on the previous characters 
+fed to it.
 """
 
 x_unicode = keras.Input(shape=(None,))
