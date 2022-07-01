@@ -592,3 +592,10 @@ print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
 You can reproduce the results by using these
 [model weights](https://github.com/sayakpaul/AdaMatch-TF/releases/tag/v1.0.0).
 """
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-AdaMatch%20Domain%20Adaption-black.svg)](https://huggingface.co/keras-io/adamatch-domain-adaption) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-AdaMatch%20Domain%20Adaption-black.svg)](https://huggingface.co/spaces/keras-io/adamatch-domain-adaption) |
+"""
