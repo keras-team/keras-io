@@ -2,7 +2,7 @@
 Title: Image similarity estimation using a Siamese Network with a triplet loss
 Authors: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/25
-Last modified: 2021/03/25
+Last modified: 2021/07/02
 Description: Training a Siamese Network to compare the similarity of images using a triplet loss function.
 """
 
@@ -43,9 +43,9 @@ from tensorflow.keras import layers
 from tensorflow.keras import losses
 from tensorflow.keras import optimizers
 from tensorflow.keras import metrics
+from tensorflow.keras import callbacks
 from tensorflow.keras import Model
 from tensorflow.keras.applications import resnet
-
 
 target_shape = (200, 200)
 
@@ -285,8 +285,8 @@ class SiameseModel(Model):
         self.margin = margin
         self.loss_tracker = metrics.Mean(name="loss")
 
-    def call(self, inputs):
-        return self.siamese_network(inputs)
+    def call(self, inputs, training=False):
+        return self.siamese_network(inputs, training=training)
 
     def train_step(self, data):
         # GradientTape is a context manager that records every operation that
@@ -294,7 +294,7 @@ class SiameseModel(Model):
         # the gradients and apply them using the optimizer specified in
         # `compile()`.
         with tf.GradientTape() as tape:
-            loss = self._compute_loss(data)
+            loss = self._compute_loss(data, training=True)
 
         # Storing the gradients of the loss function with respect to the
         # weights/parameters.
@@ -310,17 +310,17 @@ class SiameseModel(Model):
         return {"loss": self.loss_tracker.result()}
 
     def test_step(self, data):
-        loss = self._compute_loss(data)
+        loss = self._compute_loss(data, training=False)
 
         # Let's update and return the loss metric.
         self.loss_tracker.update_state(loss)
         return {"loss": self.loss_tracker.result()}
 
-    def _compute_loss(self, data):
+    def _compute_loss(self, data, training):
         # The output of the network is a tuple containing the distances
         # between the anchor and the positive example, and the anchor and
         # the negative example.
-        ap_distance, an_distance = self.siamese_network(data)
+        ap_distance, an_distance = self(data, training=training)
 
         # Computing the Triplet Loss by subtracting both distances and
         # making sure we don't get a negative value.
@@ -341,9 +341,38 @@ class SiameseModel(Model):
 We are now ready to train our model.
 """
 
+early_stopping = callbacks.EarlyStopping(patience=2)
 siamese_model = SiameseModel(siamese_network)
-siamese_model.compile(optimizer=optimizers.Adam(0.0001))
-siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
+siamese_model.compile(optimizer=optimizers.Adam(0.0001), weighted_metrics=[])
+siamese_model.fit(
+    train_dataset, epochs=15, validation_data=val_dataset, callbacks=[early_stopping]
+)
+
+"""
+Finally, we can compute the cosine similarity between the anchor and positive
+images and compare it with the similarity between the anchor and the negative
+images.
+
+We should expect the similarity between the anchor and positive images to be
+larger than the similarity between the anchor and the negative images.
+"""
+
+
+def compute_similarties(anchor_embedding, positive_embedding, negative_embedding):
+    """Prints similarties between anchor and positive embeddings and anchor and negative embeddings.
+
+    The expected shape of each input: [Batch Size, Height, Width, Channels].
+    """
+    cosine_similarity = metrics.CosineSimilarity()
+    for i, (anchor, positive, negative) in enumerate(
+        zip(anchor_embedding, positive_embedding, negative_embedding)
+    ):
+        positive_similarity = cosine_similarity(anchor, positive)
+        print(f"Positive similarity for sample {i+1}:", positive_similarity.numpy())
+
+        negative_similarity = cosine_similarity(anchor, negative)
+        print(f"Negative similarity for sample {i+1}:", negative_similarity.numpy())
+
 
 """
 ## Inspecting what the network has learned
@@ -360,30 +389,23 @@ embeddings generated for each image.
 sample = next(iter(train_dataset))
 visualize(*sample)
 
-anchor, positive, negative = sample
+# `sample` is a tuple that contains 3 tensors (anchor, positive, negative)
+# and each tensor has a shape of [batch_size, height, width, channels].
+# where batch_size = 32 as mentioned above.
+
+# We will take just 3 examples from that sample.
+anchor, positive, negative = sample[0][0:3, :], sample[1][0:3, :], sample[2][0:3, :]
 anchor_embedding, positive_embedding, negative_embedding = (
     embedding(resnet.preprocess_input(anchor)),
     embedding(resnet.preprocess_input(positive)),
     embedding(resnet.preprocess_input(negative)),
 )
 
-"""
-Finally, we can compute the cosine similarity between the anchor and positive
-images and compare it with the similarity between the anchor and the negative
-images.
-
-We should expect the similarity between the anchor and positive images to be
-larger than the similarity between the anchor and the negative images.
-"""
-
-cosine_similarity = metrics.CosineSimilarity()
-
-positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
-print("Positive similarity:", positive_similarity.numpy())
-
-negative_similarity = cosine_similarity(anchor_embedding, negative_embedding)
-print("Negative similarity", negative_similarity.numpy())
-
+compute_similarties(
+    anchor_embedding=anchor_embedding,
+    positive_embedding=positive_embedding,
+    negative_embedding=negative_embedding,
+)
 
 """
 ## Summary
@@ -412,9 +434,4 @@ gradients passed to the optimizer to update the model weights at every step. For
 [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
 and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
 
-
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
 """
