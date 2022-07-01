@@ -21,10 +21,10 @@ contain, and how they're connected.
 The Keras API makes it possible to save all of these pieces to disk at once,
 or to only selectively save some of them:
 
-- Saves everything into a single archive in the TensorFlow SavedModel format
+- Saving everything into a single archive in the TensorFlow SavedModel format
 (or in the older Keras H5 format). This is the standard practice.
-- Saves the architecture / configuration only, typically as a JSON file.
-- Saves the weights values only. This is generally used when training the model.
+- Saving the architecture / configuration only, typically as a JSON file.
+- Saving the weights values only. This is generally used when training the model.
 
 Let's take a look at each of these options. When would you use one or the other,
 and how do they work?
