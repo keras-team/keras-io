@@ -732,7 +732,7 @@ setting it too high will make them undersaturated. I recommend tuning it careful
 setting it to 0 will lead to a division by zero error. The max. signal rate can be set to
 1, but I found that setting it lower slightly improves generation quality.
 * **loss function**: While large models tend to use mean squared error (MSE) loss, I
-recommend using mean absolute error (MAE) on this dataset. In my experience MSE loss 
+recommend using mean absolute error (MAE) on this dataset. In my experience MSE loss
 generates more diverse samples (it also seems to hallucinate more
 [Section 3](https://arxiv.org/abs/2111.05826)), while MAE loss leads to smoother images.
 I recommend trying both.
