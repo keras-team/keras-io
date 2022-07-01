@@ -293,7 +293,7 @@ fnet_classifier.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 """
 We obtain a train accuracy of around 92% and a validation accuracy of around
-83%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
+85%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
 (on Colab with a 16 GB Tesla T4 GPU).
 
 Let's calculate the test accuracy.
@@ -348,8 +348,8 @@ transformer_classifier.compile(
 transformer_classifier.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 """
-We obtain a train accuracy of around 93% and a validation accuracy of around
-87%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
+We obtain a train accuracy of around 94% and a validation accuracy of around
+86.5%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
 T4 GPU).
 
 Let's calculate the test accuracy.
@@ -359,13 +359,13 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 """
 Let's make a table and compare the two models. We can see that FNet
 significantly speeds up our run time (1.7x), with only a small sacrifice in
-overall accuracy (drop of 3%).
+overall accuracy (drop of 0.75%).
 
 |                         | **FNet Classifier** | **Transformer Classifier** |
 |:-----------------------:|:-------------------:|:--------------------------:|
-|    **Training Time**    |       86 seconds    |         146 seconds        |
-|    **Train Accuracy**   |        91.54%       |           92.98%           |
-| **Validation Accuracy** |        82.98%       |           87.26%           |
-|    **Test Accuracy**    |        81.44%       |           84.31%           |
-|       **#Params**       |       2,321,921     |          2,520,065         |
+|    **Training Time**    |      86 seconds     |         146 seconds        |
+|    **Train Accuracy**   |        92.34%       |           93.85%           |
+| **Validation Accuracy** |        85.21%       |           86.42%           |
+|    **Test Accuracy**    |        83.94%       |           84.69%           |
+|       **#Params**       |      2,321,921      |          2,520,065         |
 """

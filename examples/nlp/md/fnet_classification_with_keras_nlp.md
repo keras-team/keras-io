@@ -90,7 +90,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-06-29 19:30:08--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2022-06-30 16:53:24--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -101,13 +101,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  68.4MB/s    in 1.2s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  16.2MB/s    in 8.7s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-06-29 19:30:09 (68.4 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2022-06-30 16:53:33 (9.22 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -463,18 +463,18 @@ Trainable params: 2,382,337
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 32s 79ms/step - loss: 0.5901 - accuracy: 0.6362 - val_loss: 0.3532 - val_accuracy: 0.8418
+313/313 [==============================] - 32s 78ms/step - loss: 0.5910 - accuracy: 0.6335 - val_loss: 0.3561 - val_accuracy: 0.8414
 Epoch 2/3
-313/313 [==============================] - 23s 74ms/step - loss: 0.3087 - accuracy: 0.8701 - val_loss: 0.3383 - val_accuracy: 0.8550
+313/313 [==============================] - 23s 72ms/step - loss: 0.3109 - accuracy: 0.8695 - val_loss: 0.3246 - val_accuracy: 0.8590
 Epoch 3/3
-313/313 [==============================] - 23s 74ms/step - loss: 0.2009 - accuracy: 0.9212 - val_loss: 0.3527 - val_accuracy: 0.8574
+313/313 [==============================] - 23s 73ms/step - loss: 0.1993 - accuracy: 0.9225 - val_loss: 0.3806 - val_accuracy: 0.8522
 
-<keras.callbacks.History at 0x7f197eed2990>
+<keras.callbacks.History at 0x7fb7f6034210>
 
 ```
 </div>
 We obtain a train accuracy of around 92% and a validation accuracy of around
-83%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
+85%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
 (on Colab with a 16 GB Tesla T4 GPU).
 
 Let's calculate the test accuracy.
@@ -487,9 +487,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 16s 26ms/step - loss: 0.3792 - accuracy: 0.8434
+391/391 [==============================] - 17s 26ms/step - loss: 0.3983 - accuracy: 0.8437
 
-[0.3792116940021515, 0.8434000015258789]
+[0.39833641052246094, 0.843720018863678]
 
 ```
 </div>
@@ -576,18 +576,18 @@ Trainable params: 2,580,481
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 49s 147ms/step - loss: 0.4569 - accuracy: 0.7594 - val_loss: 0.3014 - val_accuracy: 0.8764
+313/313 [==============================] - 48s 143ms/step - loss: 0.4569 - accuracy: 0.7594 - val_loss: 0.3013 - val_accuracy: 0.8764
 Epoch 2/3
-313/313 [==============================] - 45s 145ms/step - loss: 0.2104 - accuracy: 0.9197 - val_loss: 0.3203 - val_accuracy: 0.8754
+313/313 [==============================] - 45s 143ms/step - loss: 0.2104 - accuracy: 0.9197 - val_loss: 0.3206 - val_accuracy: 0.8770
 Epoch 3/3
-313/313 [==============================] - 45s 145ms/step - loss: 0.1654 - accuracy: 0.9387 - val_loss: 0.4010 - val_accuracy: 0.8750
+313/313 [==============================] - 45s 145ms/step - loss: 0.1645 - accuracy: 0.9398 - val_loss: 0.3829 - val_accuracy: 0.8772
 
-<keras.callbacks.History at 0x7f197eedca10>
+<keras.callbacks.History at 0x7fb7f60a8310>
 
 ```
 </div>
-We obtain a train accuracy of around 93% and a validation accuracy of around
-87%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
+We obtain a train accuracy of around 94% and a validation accuracy of around
+86.5%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
 T4 GPU).
 
 Let's calculate the test accuracy.
@@ -599,20 +599,20 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 21s 55ms/step - loss: 0.4929 - accuracy: 0.8472
+391/391 [==============================] - 22s 55ms/step - loss: 0.4617 - accuracy: 0.8540
 
-[0.4929230809211731, 0.8472399711608887]
+[0.46172526478767395, 0.8539599776268005]
 
 ```
 </div>
 Let's make a table and compare the two models. We can see that FNet
 significantly speeds up our run time (1.7x), with only a small sacrifice in
-overall accuracy (drop of 3%).
+overall accuracy (drop of 0.75%).
 
 |                         | **FNet Classifier** | **Transformer Classifier** |
 |:-----------------------:|:-------------------:|:--------------------------:|
-|    **Training Time**    |       86 seconds    |         146 seconds        |
-|    **Train Accuracy**   |        91.54%       |           92.98%           |
-| **Validation Accuracy** |        82.98%       |           87.26%           |
-|    **Test Accuracy**    |        81.44%       |           84.31%           |
-|       **#Params**       |       2,321,921     |          2,520,065         |
+|    **Training Time**    |      86 seconds     |         146 seconds        |
+|    **Train Accuracy**   |        92.34%       |           93.85%           |
+| **Validation Accuracy** |        85.21%       |           86.42%           |
+|    **Test Accuracy**    |        83.94%       |           84.69%           |
+|       **#Params**       |      2,321,921      |          2,520,065         |
