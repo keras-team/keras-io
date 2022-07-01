@@ -590,3 +590,10 @@ Note that unsupervised image clustering techniques are not expected to outperfor
 of supervised image classification techniques, rather showing that they can learn the semantics
 of the images and group them into clusters that are similar to their original classes.
 """
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/keras-io/semantic-image-clustering) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/spaces/keras-io/semantic-image-clustering) |
+"""
