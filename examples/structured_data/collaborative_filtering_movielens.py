@@ -153,7 +153,8 @@ class RecommenderNet(keras.Model):
 
 model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE)
 model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(), optimizer=keras.optimizers.Adam(lr=0.001)
+    loss=tf.keras.losses.BinaryCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=0.001),
 )
 
 """
@@ -224,3 +225,11 @@ print("----" * 8)
 recommended_movies = movie_df[movie_df["movieId"].isin(recommended_movie_ids)]
 for row in recommended_movies.itertuples():
     print(row.title, ":", row.genres)
+
+"""
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Collaborative%20Filtering-black.svg)](https://huggingface.co/keras-io/collaborative-filtering-movielens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Collaborative%20Filtering-black.svg)](https://huggingface.co/spaces/keras-io/collaborative-filtering-movielens) |
+"""

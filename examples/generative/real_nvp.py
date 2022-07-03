@@ -21,12 +21,12 @@ the determinant of the Jacobian, are easy to obtain (more details in the referen
 
 **Requirements:**
 
-* Tensorflow 2.3
-* Tensorflow probability 0.11.0
+* Tensorflow 2.9.1
+* Tensorflow probability 0.17.0
 
 **Reference:**
 
-[Density estimation using Real NVP](https://arxiv.org/pdf/1605.08803.pdf)
+[Density estimation using Real NVP](https://arxiv.org/abs/1605.08803)
 """
 
 """

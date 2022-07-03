@@ -602,4 +602,10 @@ understand the reasoning behind the architecture and training process
 2. For in-depth understanding of the feature matching loss, you can refer to [Improved
 Techniques for Training GANs](https://arxiv.org/pdf/1606.03498v1.pdf) (Tim Salimans et
 al.).
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-MelGan%20spectrogram%20inversion-black.svg)](https://huggingface.co/keras-io/MelGAN-spectrogram-inversion) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-MelGan%20spectrogram%20inversion-black.svg)](https://huggingface.co/spaces/keras-io/MelGAN-spectrogram-inversion) |
 """

@@ -180,7 +180,7 @@ and used for inference.
 Nevertheless, it is always a good practice to define the `get_config`
 and `from_config` methods when writing a custom model or layer class.
 This allows you to easily update the computation later if needed.
-See the section about [Custom objects](#custom-objects)
+See the section about [Custom objects](#custom_objects)
 for more information.
 
 Example:
@@ -248,10 +248,10 @@ model is loaded by dynamically creating the model class that acts like the origi
 
 #### Configuring the SavedModel
 
-*New in TensoFlow 2.4*
+*New in TensorFlow 2.4*
 The argument `save_traces` has been added to `model.save`, which allows you to toggle
 SavedModel function tracing. Functions are saved to allow the Keras to re-load custom
-objects without the original class definitons, so when `save_traces=False`, all custom
+objects without the original class definitions, so when `save_traces=False`, all custom
 objects must have defined `get_config`/`from_config` methods. When loading, the custom
 objects must be passed to the `custom_objects` argument. `save_traces=False` reduces the
 disk space used by the SavedModel and saving time.
@@ -326,7 +326,7 @@ these losses & metrics are kept, since they are part of the `call` method of the
 - The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
 to the Python classes/functions of these objects in order to reconstruct the model.
-See [Custom objects](#custom-objects).
+See [Custom objects](#custom_objects).
 - Does not support preprocessing layers.
 
 ---
@@ -415,7 +415,7 @@ but it's completely unsafe and means your model cannot be loaded on a different 
 
 In order to save/load a model with custom-defined layers, or a subclassed model,
 you should overwrite the `get_config` and optionally `from_config` methods.
-Additionally, you should use register the custom object so that Keras is aware of it.
+Additionally, you should register the custom object so that Keras is aware of it.
 
 **Custom functions**
 
