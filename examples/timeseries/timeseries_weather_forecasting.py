@@ -380,3 +380,12 @@ for x, y in dataset_val.take(5):
         12,
         "Single Step Prediction",
     )
+
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Time%20Series-black.svg)](https://huggingface.co/keras-io/timeseries_forecasting_for_weather) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Time%20Series-black.svg)](https://huggingface.co/spaces/keras-io/timeseries_forecasting_for_weather) |
+
+"""

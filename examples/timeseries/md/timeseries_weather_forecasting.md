@@ -153,7 +153,10 @@ def show_raw_visualization(data):
 show_raw_visualization(df)
 ```
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_6_1.png)
+
+    
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_6_0.png)
+    
 
 
 This heat map shows the correlation between different features.
@@ -178,7 +181,9 @@ show_heatmap(df)
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_8_0.png)
+    
 
 
 ---
@@ -340,15 +345,16 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "functional_1"
+Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 120, 7)]          0
-_________________________________________________________________
-lstm (LSTM)                  (None, 32)                5120
-_________________________________________________________________
-dense (Dense)                (None, 1)                 33
+ input_1 (InputLayer)        [(None, 120, 7)]          0         
+                                                                 
+ lstm (LSTM)                 (None, 32)                5120      
+                                                                 
+ dense (Dense)               (None, 1)                 33        
+                                                                 
 =================================================================
 Total params: 5,153
 Trainable params: 5,153
@@ -385,19 +391,45 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.2059
-Epoch 00001: val_loss improved from inf to 0.16357, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 101s 86ms/step - loss: 0.2059 - val_loss: 0.1636
+1172/1172 [==============================] - ETA: 0s - loss: 0.2205
+Epoch 1: val_loss improved from inf to 0.15801, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 90s 76ms/step - loss: 0.2205 - val_loss: 0.1580
 Epoch 2/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1271
-Epoch 00002: val_loss improved from 0.16357 to 0.13362, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 107s 92ms/step - loss: 0.1271 - val_loss: 0.1336
+1172/1172 [==============================] - ETA: 0s - loss: 0.1284
+Epoch 2: val_loss improved from 0.15801 to 0.14328, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 92s 79ms/step - loss: 0.1284 - val_loss: 0.1433
 Epoch 3/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1089
-Epoch 00005: val_loss did not improve from 0.13362
-1172/1172 [==============================] - 110s 94ms/step - loss: 0.1089 - val_loss: 0.1481
+1172/1172 [==============================] - ETA: 0s - loss: 0.1163
+Epoch 3: val_loss improved from 0.14328 to 0.14239, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 93s 79ms/step - loss: 0.1163 - val_loss: 0.1424
+Epoch 4/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.1113
+Epoch 4: val_loss did not improve from 0.14239
+1172/1172 [==============================] - 92s 79ms/step - loss: 0.1113 - val_loss: 0.1445
+Epoch 5/10
+1171/1172 [============================>.] - ETA: 0s - loss: 0.1076
+Epoch 5: val_loss did not improve from 0.14239
+1172/1172 [==============================] - 93s 80ms/step - loss: 0.1076 - val_loss: 0.1479
 Epoch 6/10
- 271/1172 [=====>........................] - ETA: 1:12 - loss: 0.1117
+1172/1172 [==============================] - ETA: 0s - loss: 0.1059
+Epoch 6: val_loss did not improve from 0.14239
+1172/1172 [==============================] - 94s 80ms/step - loss: 0.1059 - val_loss: 0.1468
+Epoch 7/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.1040
+Epoch 7: val_loss did not improve from 0.14239
+1172/1172 [==============================] - 93s 79ms/step - loss: 0.1040 - val_loss: 0.1437
+Epoch 8/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.1024
+Epoch 8: val_loss improved from 0.14239 to 0.14182, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 98s 84ms/step - loss: 0.1024 - val_loss: 0.1418
+Epoch 9/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.1006
+Epoch 9: val_loss improved from 0.14182 to 0.13901, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 125s 107ms/step - loss: 0.1006 - val_loss: 0.1390
+Epoch 10/10
+1172/1172 [==============================] - ETA: 0s - loss: 0.0991
+Epoch 10: val_loss improved from 0.13901 to 0.13705, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 133s 114ms/step - loss: 0.0991 - val_loss: 0.1371
 
 ```
 </div>
@@ -425,7 +457,9 @@ visualize_loss(history, "Training and Validation Loss")
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_0.png)
+    
 
 
 ---
@@ -467,22 +501,63 @@ for x, y in dataset_val.take(5):
     )
 ```
 
+<div class="k-default-codeblock">
+```
+8/8 [==============================] - 0s 8ms/step
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_0.png)
-
-
-
+```
+</div>
+    
 ![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_1.png)
+    
 
 
+<div class="k-default-codeblock">
+```
+8/8 [==============================] - 0s 11ms/step
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_2.png)
-
-
-
+```
+</div>
+    
 ![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_3.png)
+    
 
 
+<div class="k-default-codeblock">
+```
+8/8 [==============================] - 0s 10ms/step
 
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_4.png)
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_5.png)
+    
 
+
+<div class="k-default-codeblock">
+```
+8/8 [==============================] - 0s 10ms/step
+
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_7.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+8/8 [==============================] - 0s 10ms/step
+
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_9.png)
+    
+
+
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Time%20Series-black.svg)](https://huggingface.co/keras-io/timeseries_forecasting_for_weather) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Time%20Series-black.svg)](https://huggingface.co/spaces/keras-io/timeseries_forecasting_for_weather) |
