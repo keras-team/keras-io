@@ -33,6 +33,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
+
 tfds.disable_progress_bar()
 autotune = tf.data.AUTOTUNE
 
@@ -595,9 +596,6 @@ def discriminator_loss_fn(real, fake):
 cycle_gan_model = CycleGan(
     generator_G=gen_G, generator_F=gen_F, discriminator_X=disc_X, discriminator_Y=disc_Y
 )
-
-# Set input shape
-cycle_gan_model.compute_output_shape(input_shape=(None, 256, 256, 3))
 
 # Compile the model
 cycle_gan_model.compile(
