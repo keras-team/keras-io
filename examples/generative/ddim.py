@@ -28,7 +28,7 @@ images, and can train a neural network to try to denoise them. Using the trained
 we can simulate the opposite of diffusion, reverse diffusion, which is the process of an
 image emerging from noise.
 
-![diffusion process gif](https://i.imgur.com/rZZTgnJ.gif)
+![diffusion process gif](https://i.imgur.com/dipPOfa.gif)
 
 One-sentence summary: **diffusion models are trained to denoise noisy images, and can
 generate images by iteratively denoising pure noise.**
@@ -694,20 +694,25 @@ on an A100 GPU), one can get high quality image generations using this code exam
 
 The evolution of a batch of images over a 80 epoch training (color artifacts are due to
 GIF compression):
-![flowers training gif](https://i.imgur.com/gyc8eZX.gif)
+
+![flowers training gif](https://i.imgur.com/FSCKtZq.gif)
 
 Images generated using between 1 and 20 sampling steps from the same initial noise:
-![flowers sampling steps gif](https://i.imgur.com/2APUfGK.gif)
+
+![flowers sampling steps gif](https://i.imgur.com/tM5LyH3.gif)
 
 Interpolation (spherical) between initial noise samples:
-![flowers interpolation gif](https://i.imgur.com/R3akaXn.gif)
+
+![flowers interpolation gif](https://i.imgur.com/hk5Hd5o.gif)
 
 Deterministic sampling process (noisy images on top, predicted images on bottom, 40
 steps):
-![flowers deterministic generation gif](https://i.imgur.com/hPZVYUd.gif)
+
+![flowers deterministic generation gif](https://i.imgur.com/wCvzynh.gif)
 
 Stochastic sampling process (noisy images on top, predicted images on bottom, 80 steps):
-![flowers stochastic generation gif](https://i.imgur.com/tw7zsf1.gif)
+
+![flowers stochastic generation gif](https://i.imgur.com/kRXOGzd.gif)
 
 Trained model and demo available on HuggingFace:
 
