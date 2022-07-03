@@ -865,6 +865,7 @@ If you would like to dive in deeper to the topic, a recommend checking out
 [this repository](https://github.com/beresandras/clear-diffusion-keras) that I created in
 preparation for this code example, which implements a wider range of features in a
 similar style, such as:
+
 * stochastic sampling
 * second-order sampling based on the
 [differential equation view of DDIMs (Equation 13)](https://arxiv.org/abs/2010.02502)
