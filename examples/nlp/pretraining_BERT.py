@@ -468,14 +468,14 @@ family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"` so for instance:
 
 ```python
-model.push_to_hub("transformers-qa", organization="keras-io")
-tokenizer.push_to_hub("transformers-qa", organization="keras-io")
+model.push_to_hub("pretrained-bert", organization="keras-io")
+tokenizer.push_to_hub("pretrained-bert", organization="keras-io")
 ```
 And after you push your model this is how you can load it in the future!
 
 ```python
-from transformers import TFAutoModelForSeq2SeqLM
+from transformers import TFBertForPreTraining
 
-model = TFAutoModelForSeq2SeqLM.from_pretrained("your-username/my-awesome-model")
+model = TFBertForPreTraining.from_pretrained("your-username/my-awesome-model")
 ```
 """
