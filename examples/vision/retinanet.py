@@ -216,11 +216,11 @@ class AnchorBox:
 
     def __init__(self):
         self.aspect_ratios = [0.5, 1.0, 2.0]
-        self.scales = [2**x for x in [0, 1 / 3, 2 / 3]]
+        self.scales = [2 ** x for x in [0, 1 / 3, 2 / 3]]
 
         self._num_anchors = len(self.aspect_ratios) * len(self.scales)
-        self._strides = [2**i for i in range(3, 8)]
-        self._areas = [x**2 for x in [32.0, 64.0, 128.0, 256.0, 512.0]]
+        self._strides = [2 ** i for i in range(3, 8)]
+        self._areas = [x ** 2 for x in [32.0, 64.0, 128.0, 256.0, 512.0]]
         self._anchor_dims = self._compute_dims()
 
     def _compute_dims(self):
@@ -280,8 +280,8 @@ class AnchorBox:
         """
         anchors = [
             self._get_anchors(
-                tf.math.ceil(image_height / 2**i),
-                tf.math.ceil(image_width / 2**i),
+                tf.math.ceil(image_height / 2 ** i),
+                tf.math.ceil(image_width / 2 ** i),
                 i,
             )
             for i in range(3, 8)
@@ -757,7 +757,7 @@ class RetinaNetBoxLoss(tf.losses.Loss):
     def call(self, y_true, y_pred):
         difference = y_true - y_pred
         absolute_difference = tf.abs(difference)
-        squared_difference = difference**2
+        squared_difference = difference ** 2
         loss = tf.where(
             tf.less(absolute_difference, self._delta),
             0.5 * squared_difference,
@@ -977,3 +977,11 @@ for sample in val_dataset.take(2):
         class_names,
         detections.nmsed_scores[0][:num_detections],
     )
+
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/keras-io/Object-Detection-RetinaNet) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/spaces/keras-io/Object-Detection-Using-RetinaNet) |
+"""
