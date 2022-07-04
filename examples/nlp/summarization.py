@@ -5,11 +5,6 @@ Date created: 2022/07/04
 Last modified: 2022/07/04
 Description: Training T5 using 🤗 Transformers for Abstractive Summarization.
 """
-import tensorflow as tf
-
-gpus = tf.config.list_physical_devices("GPU")
-if gpus:
-    tf.config.set_visible_devices(gpus[1], "GPU")
 
 """
 ## Introduction
