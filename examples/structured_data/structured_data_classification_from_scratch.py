@@ -342,3 +342,11 @@ print(
     "This particular patient had a %.1f percent probability "
     "of having a heart disease, as evaluated by our model." % (100 * predictions[0][0],)
 )
+
+"""
+Demo available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Structured%20Data%20Classification-black.svg)](https://huggingface.co/keras-io/structured-data-classification/settings) | [![Generic badge](https://img.shields.io/badge/🤗%20Space-Structured%20Data%20Classification-black.svg)](https://huggingface.co/spaces/keras-io/structured-data-classification) |
+"""

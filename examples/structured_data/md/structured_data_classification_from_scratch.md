@@ -279,8 +279,8 @@ for x, y in train_ds.take(1):
 
 <div class="k-default-codeblock">
 ```
-Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=63>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=4>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=130>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=254>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=147>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'reversible'>}
-Target: tf.Tensor(1, shape=(), dtype=int64)
+Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=62>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=128>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=208>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=140>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=0.0>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'normal'>}
+Target: tf.Tensor(0, shape=(), dtype=int64)
 
 ```
 </div>
@@ -472,13 +472,12 @@ Let's visualize our connectivity graph:
 keras.utils.plot_model(model, show_shapes=True, rankdir="LR")
 ```
 
+<div class="k-default-codeblock">
+```
+You must install pydot (`pip install pydot`) and install graphviz (see instructions at https://graphviz.gitlab.io/download/) for plot_model/model_to_dot to work.
 
-
-
-![png](/img/examples/structured_data/structured_data_classification_from_scratch/structured_data_classification_from_scratch_23_0.png)
-
-
-
+```
+</div>
 ---
 ## Train the model
 
@@ -490,107 +489,107 @@ model.fit(train_ds, epochs=50, validation_data=val_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-8/8 [==============================] - 1s 38ms/step - loss: 0.6339 - accuracy: 0.6818 - val_loss: 0.5833 - val_accuracy: 0.7213
+8/8 [==============================] - 1s 51ms/step - loss: 0.6024 - accuracy: 0.6901 - val_loss: 0.4522 - val_accuracy: 0.7705
 Epoch 2/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.6120 - accuracy: 0.6653 - val_loss: 0.5536 - val_accuracy: 0.7705
+8/8 [==============================] - 0s 3ms/step - loss: 0.5250 - accuracy: 0.7355 - val_loss: 0.4343 - val_accuracy: 0.7541
 Epoch 3/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.5803 - accuracy: 0.7025 - val_loss: 0.5281 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.5252 - accuracy: 0.7397 - val_loss: 0.4192 - val_accuracy: 0.7869
 Epoch 4/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.5498 - accuracy: 0.7107 - val_loss: 0.5080 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 4ms/step - loss: 0.5083 - accuracy: 0.7603 - val_loss: 0.4078 - val_accuracy: 0.8033
 Epoch 5/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.5349 - accuracy: 0.7479 - val_loss: 0.4896 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.4781 - accuracy: 0.7769 - val_loss: 0.3978 - val_accuracy: 0.7869
 Epoch 6/50
-8/8 [==============================] - 0s 7ms/step - loss: 0.5360 - accuracy: 0.7273 - val_loss: 0.4722 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.4823 - accuracy: 0.7479 - val_loss: 0.3896 - val_accuracy: 0.7869
 Epoch 7/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.4922 - accuracy: 0.7769 - val_loss: 0.4576 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.4707 - accuracy: 0.7397 - val_loss: 0.3835 - val_accuracy: 0.7869
 Epoch 8/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.4761 - accuracy: 0.7438 - val_loss: 0.4442 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.4535 - accuracy: 0.7521 - val_loss: 0.3789 - val_accuracy: 0.8033
 Epoch 9/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.4671 - accuracy: 0.7893 - val_loss: 0.4322 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.4122 - accuracy: 0.7975 - val_loss: 0.3746 - val_accuracy: 0.8033
 Epoch 10/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4560 - accuracy: 0.7727 - val_loss: 0.4216 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.4396 - accuracy: 0.7851 - val_loss: 0.3711 - val_accuracy: 0.8197
 Epoch 11/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4518 - accuracy: 0.7603 - val_loss: 0.4132 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.4418 - accuracy: 0.7769 - val_loss: 0.3685 - val_accuracy: 0.8197
 Epoch 12/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4423 - accuracy: 0.7934 - val_loss: 0.4057 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.4001 - accuracy: 0.8058 - val_loss: 0.3668 - val_accuracy: 0.8197
 Epoch 13/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4154 - accuracy: 0.8017 - val_loss: 0.3995 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.4129 - accuracy: 0.8017 - val_loss: 0.3658 - val_accuracy: 0.8197
 Epoch 14/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4176 - accuracy: 0.7769 - val_loss: 0.3933 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3849 - accuracy: 0.7975 - val_loss: 0.3643 - val_accuracy: 0.8197
 Epoch 15/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3971 - accuracy: 0.8140 - val_loss: 0.3882 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3779 - accuracy: 0.8182 - val_loss: 0.3634 - val_accuracy: 0.8197
 Epoch 16/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4069 - accuracy: 0.8017 - val_loss: 0.3835 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3674 - accuracy: 0.8306 - val_loss: 0.3624 - val_accuracy: 0.8197
 Epoch 17/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3744 - accuracy: 0.8182 - val_loss: 0.3797 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3517 - accuracy: 0.8471 - val_loss: 0.3625 - val_accuracy: 0.8197
 Epoch 18/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3963 - accuracy: 0.8099 - val_loss: 0.3762 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 3ms/step - loss: 0.3570 - accuracy: 0.8223 - val_loss: 0.3627 - val_accuracy: 0.8361
 Epoch 19/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3745 - accuracy: 0.8223 - val_loss: 0.3734 - val_accuracy: 0.8033
+8/8 [==============================] - 0s 4ms/step - loss: 0.3489 - accuracy: 0.8306 - val_loss: 0.3627 - val_accuracy: 0.8361
 Epoch 20/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3843 - accuracy: 0.8306 - val_loss: 0.3715 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3467 - accuracy: 0.8430 - val_loss: 0.3634 - val_accuracy: 0.8361
 Epoch 21/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3565 - accuracy: 0.8471 - val_loss: 0.3697 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3527 - accuracy: 0.8471 - val_loss: 0.3652 - val_accuracy: 0.8361
 Epoch 22/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3576 - accuracy: 0.8471 - val_loss: 0.3680 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3386 - accuracy: 0.8471 - val_loss: 0.3656 - val_accuracy: 0.8525
 Epoch 23/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3548 - accuracy: 0.8223 - val_loss: 0.3673 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3291 - accuracy: 0.8595 - val_loss: 0.3665 - val_accuracy: 0.8525
 Epoch 24/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3698 - accuracy: 0.8512 - val_loss: 0.3669 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3608 - accuracy: 0.8223 - val_loss: 0.3680 - val_accuracy: 0.8525
 Epoch 25/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3328 - accuracy: 0.8347 - val_loss: 0.3660 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3494 - accuracy: 0.8554 - val_loss: 0.3688 - val_accuracy: 0.8525
 Epoch 26/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3493 - accuracy: 0.8264 - val_loss: 0.3657 - val_accuracy: 0.8197
+8/8 [==============================] - 0s 3ms/step - loss: 0.3289 - accuracy: 0.8430 - val_loss: 0.3702 - val_accuracy: 0.8361
 Epoch 27/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3679 - accuracy: 0.8306 - val_loss: 0.3650 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3016 - accuracy: 0.8719 - val_loss: 0.3714 - val_accuracy: 0.8525
 Epoch 28/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3172 - accuracy: 0.8595 - val_loss: 0.3656 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3299 - accuracy: 0.8554 - val_loss: 0.3721 - val_accuracy: 0.8525
 Epoch 29/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3312 - accuracy: 0.8554 - val_loss: 0.3665 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3476 - accuracy: 0.8388 - val_loss: 0.3726 - val_accuracy: 0.8525
 Epoch 30/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3226 - accuracy: 0.8554 - val_loss: 0.3666 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3328 - accuracy: 0.8471 - val_loss: 0.3736 - val_accuracy: 0.8525
 Epoch 31/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3007 - accuracy: 0.8719 - val_loss: 0.3667 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 4ms/step - loss: 0.3203 - accuracy: 0.8471 - val_loss: 0.3741 - val_accuracy: 0.8525
 Epoch 32/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3096 - accuracy: 0.8678 - val_loss: 0.3672 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3119 - accuracy: 0.8636 - val_loss: 0.3749 - val_accuracy: 0.8525
 Epoch 33/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3293 - accuracy: 0.8306 - val_loss: 0.3673 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3082 - accuracy: 0.8719 - val_loss: 0.3761 - val_accuracy: 0.8525
 Epoch 34/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3156 - accuracy: 0.8430 - val_loss: 0.3677 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 4ms/step - loss: 0.3025 - accuracy: 0.8719 - val_loss: 0.3772 - val_accuracy: 0.8525
 Epoch 35/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3272 - accuracy: 0.8595 - val_loss: 0.3680 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.2936 - accuracy: 0.8678 - val_loss: 0.3790 - val_accuracy: 0.8525
 Epoch 36/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3194 - accuracy: 0.8471 - val_loss: 0.3685 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3221 - accuracy: 0.8554 - val_loss: 0.3804 - val_accuracy: 0.8525
 Epoch 37/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3125 - accuracy: 0.8471 - val_loss: 0.3688 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.3063 - accuracy: 0.8595 - val_loss: 0.3813 - val_accuracy: 0.8525
 Epoch 38/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3096 - accuracy: 0.8388 - val_loss: 0.3689 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.2862 - accuracy: 0.8760 - val_loss: 0.3823 - val_accuracy: 0.8525
 Epoch 39/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3096 - accuracy: 0.8512 - val_loss: 0.3696 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2801 - accuracy: 0.8967 - val_loss: 0.3837 - val_accuracy: 0.8525
 Epoch 40/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.2822 - accuracy: 0.8802 - val_loss: 0.3712 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2891 - accuracy: 0.8636 - val_loss: 0.3842 - val_accuracy: 0.8525
 Epoch 41/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3234 - accuracy: 0.8512 - val_loss: 0.3718 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2960 - accuracy: 0.8802 - val_loss: 0.3847 - val_accuracy: 0.8525
 Epoch 42/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3283 - accuracy: 0.8802 - val_loss: 0.3716 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2915 - accuracy: 0.8760 - val_loss: 0.3850 - val_accuracy: 0.8525
 Epoch 43/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3059 - accuracy: 0.8636 - val_loss: 0.3718 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2604 - accuracy: 0.8926 - val_loss: 0.3855 - val_accuracy: 0.8361
 Epoch 44/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3055 - accuracy: 0.8802 - val_loss: 0.3719 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2938 - accuracy: 0.8595 - val_loss: 0.3850 - val_accuracy: 0.8361
 Epoch 45/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2874 - accuracy: 0.8719 - val_loss: 0.3729 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2973 - accuracy: 0.8678 - val_loss: 0.3850 - val_accuracy: 0.8525
 Epoch 46/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2719 - accuracy: 0.8760 - val_loss: 0.3737 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.2987 - accuracy: 0.8884 - val_loss: 0.3859 - val_accuracy: 0.8525
 Epoch 47/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2794 - accuracy: 0.8843 - val_loss: 0.3745 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.2597 - accuracy: 0.8926 - val_loss: 0.3855 - val_accuracy: 0.8525
 Epoch 48/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.2940 - accuracy: 0.8802 - val_loss: 0.3747 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.2743 - accuracy: 0.8636 - val_loss: 0.3860 - val_accuracy: 0.8361
 Epoch 49/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2860 - accuracy: 0.8554 - val_loss: 0.3746 - val_accuracy: 0.8525
+8/8 [==============================] - 0s 3ms/step - loss: 0.2872 - accuracy: 0.8802 - val_loss: 0.3868 - val_accuracy: 0.8361
 Epoch 50/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2845 - accuracy: 0.8595 - val_loss: 0.3743 - val_accuracy: 0.8361
+8/8 [==============================] - 0s 3ms/step - loss: 0.2997 - accuracy: 0.8554 - val_loss: 0.3876 - val_accuracy: 0.8361
 
-<keras.callbacks.History at 0x12eb51e10>
+<keras.callbacks.History at 0x7fdbdeaed590>
 
 ```
 </div>
@@ -635,7 +634,13 @@ print(
 
 <div class="k-default-codeblock">
 ```
-This particular patient had a 25.5 percent probability of having a heart disease, as evaluated by our model.
+1/1 [==============================] - 0s 274ms/step
+This particular patient had a 32.2 percent probability of having a heart disease, as evaluated by our model.
 
 ```
 </div>
+Demo available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Structured%20Data%20Classification-black.svg)](https://huggingface.co/keras-io/structured-data-classification/settings) | [![Generic badge](https://img.shields.io/badge/🤗%20Space-Structured%20Data%20Classification-black.svg)](https://huggingface.co/spaces/keras-io/structured-data-classification) |
