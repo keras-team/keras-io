@@ -409,29 +409,26 @@ compute_similarties(
 
 """
 ## Summary
-
 1. The `tf.data` API enables you to build efficient input pipelines for your model. It is
 particularly useful if you have a large dataset. You can learn more about `tf.data`
 pipelines in [tf.data: Build TensorFlow input pipelines](https://www.tensorflow.org/guide/data).
-
 2. In this example, we use a pre-trained ResNet50 as part of the subnetwork that generates
 the feature embeddings. By using [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en),
 we can significantly reduce the training time and size of the dataset.
-
 3. Notice how we are [fine-tuning](https://www.tensorflow.org/guide/keras/transfer_learning?hl=en#fine-tuning)
 the weights of the final layers of the ResNet50 network but keeping the rest of the layers untouched.
 Using the name assigned to each layer, we can freeze the weights to a certain point and keep the last few layers open.
-
 4. We can create custom layers by creating a class that inherits from `tf.keras.layers.Layer`,
 as we did in the `DistanceLayer` class.
-
 5. We used a cosine similarity metric to measure how to 2 output embeddings are similar to each other.
-
 6. You can implement a custom training loop by overriding the `train_step()` method. `train_step()` uses
 [`tf.GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape),
 which records every operation that you perform inside it. In this example, we use it to access the
 gradients passed to the optimizer to update the model weights at every step. For more details, check out the
 [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
 and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
-
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
 """
