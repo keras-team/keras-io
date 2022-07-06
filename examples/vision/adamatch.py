@@ -21,7 +21,7 @@ be installed using the following command:
 """
 
 """shell
-pip install -q tf-models-official
+pip install -q tf-models-official==2.9.2
 """
 
 """
