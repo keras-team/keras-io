@@ -427,6 +427,8 @@ which records every operation that you perform inside it. In this example, we us
 gradients passed to the optimizer to update the model weights at every step. For more details, check out the
 [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
 and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
+
+
 **Example available on HuggingFace**
 | Trained Model | Demo |
 | :--: | :--: |
