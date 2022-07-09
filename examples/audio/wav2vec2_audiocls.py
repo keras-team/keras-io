@@ -121,7 +121,7 @@ The dataset has the following fields:
 speech_commands_v1
 
 """
-## Data Pre-processing
+## Splitting the Dataset
 """
 
 """
@@ -216,7 +216,7 @@ def preprocess_function(examples):
     return inputs
 
 
-# This line with pre-process our speech_commands_v1 dataset. We will also remove the "audio"
+# This line will pre-process our speech_commands_v1 dataset. We will also remove the "audio"
 # and "file" columns as they will be of no use to us while training.
 
 processed_speech_commands_v1 = speech_commands_v1.map(
