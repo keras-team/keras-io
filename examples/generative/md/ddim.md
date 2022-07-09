@@ -1,12 +1,16 @@
-"""
-Title: Denoising Diffusion Implicit Models
-Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210)
-Date created: 2022/06/24
-Last modified: 2022/06/24
-Description: Generating images of flowers with denoising diffusion implicit models.
-"""
+# Denoising Diffusion Implicit Models
 
-"""
+**Author:** [András Béres](https://www.linkedin.com/in/andras-beres-789190210)<br>
+**Date created:** 2022/06/24<br>
+**Last modified:** 2022/06/24<br>
+**Description:** Generating images of flowers with denoising diffusion implicit models.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/ddim.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/ddim.py)
+
+
+
+---
 ## Introduction
 
 ### What are diffusion models?
@@ -60,12 +64,12 @@ learning about diffusion models.
 In the following sections, we will implement a continous time version of
 [Denoising Diffusion Implicit Models (DDIMs)](https://arxiv.org/abs/2010.02502)
 with deterministic sampling.
-"""
 
-"""
+---
 ## Setup
-"""
 
+
+```python
 import math
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -73,11 +77,13 @@ import tensorflow_datasets as tfds
 
 from tensorflow import keras
 from keras import layers
+```
 
-"""
+---
 ## Hyperparameterers
-"""
 
+
+```python
 # data
 dataset_name = "oxford_flowers102"
 dataset_repetitions = 5
@@ -103,8 +109,9 @@ batch_size = 64
 ema = 0.999
 learning_rate = 1e-3
 weight_decay = 1e-4
+```
 
-"""
+---
 ## Data pipeline
 
 We will use the
@@ -116,8 +123,9 @@ contained in the test split. We create new splits (80% train, 20% validation) us
 [Tensorflow Datasets slicing API](https://www.tensorflow.org/datasets/splits). We apply
 center crops as preprocessing, and repeat the dataset multiple times (reason given in the
 next section).
-"""
 
+
+```python
 
 def preprocess_image(data):
     # center crop image
@@ -155,8 +163,9 @@ def prepare_dataset(split):
 # load dataset
 train_dataset = prepare_dataset("train[:80%]+validation[:80%]+test[:80%]")
 val_dataset = prepare_dataset("train[80%:]+validation[80%:]+test[80%:]")
+```
 
-"""
+---
 ## Kernel inception distance
 
 [Kernel Inception Distance (KID)](https://arxiv.org/abs/1801.01401) is an image quality
@@ -175,8 +184,8 @@ Since the dataset is relatively small, we go over the train and validation split
 multiple times per epoch, because the KID estimation is noisy and compute-intensive, so
 we want to evaluate only after many iterations, but for many iterations.
 
-"""
 
+```python
 
 class KID(keras.metrics.Metric):
     def __init__(self, name, **kwargs):
@@ -240,8 +249,9 @@ class KID(keras.metrics.Metric):
     def reset_state(self):
         self.kid_tracker.reset_state()
 
+```
 
-"""
+---
 ## Network architecture
 
 Here we specify the architecture of the neural network that we will use for denoising. We
@@ -290,8 +300,9 @@ since the following convolution layers make them redundant.
 network predict only zeros after initialization, which is the mean of its targets. This
 will improve behaviour at the start of training and make the mean squared error loss
 start at exactly 1.
-"""
 
+
+```python
 
 def sinusoidal_embedding(x):
     embedding_min_frequency = 1.0
@@ -375,14 +386,13 @@ def get_network(image_size, widths, block_depth):
 
     return keras.Model([noisy_images, noise_variances], x, name="residual_unet")
 
+```
 
-"""
 This showcases the power of the Functional API. Note how we built a relatively complex
 U-Net with skip connections, residual blocks, multiple inputs, and sinusoidal embeddings
 in 80 lines of code!
-"""
 
-"""
+---
 ## Diffusion model
 
 ### Diffusion schedule
@@ -455,8 +465,9 @@ replaced with the same or larger amount of random noise
 Stochastic sampling can be used without retraining the network (since both models are
 trained the same way), and it can improve sample quality, while on the other hand
 requiring more sampling steps usually.
-"""
 
+
+```python
 
 class DiffusionModel(keras.Model):
     def __init__(self, image_size, widths, block_depth):
@@ -635,11 +646,13 @@ class DiffusionModel(keras.Model):
         plt.show()
         plt.close()
 
+```
 
-"""
+---
 ## Training
-"""
 
+
+```python
 # create and compile the model
 model = DiffusionModel(image_size, widths, block_depth)
 # below tensorflow 2.9:
@@ -677,16 +690,45 @@ model.fit(
         checkpoint_callback,
     ],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+511/511 [==============================] - 159s 273ms/step - n_loss: 0.2107 - i_loss: 0.4176 - val_n_loss: 0.7908 - val_i_loss: 2.5105 - val_kid: 2.0629
+
+```
+</div>
+    
+![png](/img/examples/generative/ddim/ddim_16_1.png)
+    
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.callbacks.History at 0x7efbb85f3bd0>
+
+```
+</div>
+---
 ## Inference
-"""
 
+
+```python
 # load the best model and generate images
 model.load_weights(checkpoint_path)
 model.plot_images()
+```
 
-"""
+
+    
+![png](/img/examples/generative/ddim/ddim_18_0.png)
+    
+
+
+---
 ## Results
 
 By running the training for at least 50 epochs (takes 2 hours on a T4 GPU and 30 minutes
@@ -719,9 +761,8 @@ Trained model and demo available on HuggingFace:
 | Trained Model | Demo |
 | :--: | :--: |
 | [![model badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-DDIM-black.svg)](https://huggingface.co/keras-io/denoising-diffusion-implicit-models) | [![spaces badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-DDIM-black.svg)](https://huggingface.co/spaces/keras-io/denoising-diffusion-implicit-models) |
-"""
 
-"""
+---
 ## Lessons learned
 
 During preparation for this code example I have run numerous experiments using
@@ -816,9 +857,8 @@ however.
 
 For a similar list about GANs check out
 [this Keras tutorial](https://keras.io/examples/generative/gan_ada/#gan-tips-and-tricks).
-"""
 
-"""
+---
 ## What to try next?
 
 If you would like to dive in deeper to the topic, a recommend checking out
@@ -833,9 +873,8 @@ similar style, such as:
 * more network output types: predicting image or
 [velocity (Appendix D)](https://arxiv.org/abs/2202.00512) instead of noise
 * more datasets
-"""
 
-"""
+---
 ## Related works
 
 * [Score-based generative modeling](https://yang-song.github.io/blog/2021/score/)
@@ -859,5 +898,3 @@ attempts unifying diffusion methods under a common framework
 * Large diffusion models: [GLIDE](https://arxiv.org/abs/2112.10741),
 [DALL-E 2](https://arxiv.org/abs/2204.06125/), [Imagen](https://arxiv.org/abs/2205.11487)
 
-
-"""

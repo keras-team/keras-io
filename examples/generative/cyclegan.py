@@ -24,14 +24,13 @@ using cycle-consistent adversarial networks.
 ## Setup
 """
 
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
 
@@ -409,6 +408,14 @@ class CycleGan(keras.Model):
         self.lambda_cycle = lambda_cycle
         self.lambda_identity = lambda_identity
 
+    def call(self, inputs):
+        return (
+            self.disc_X(inputs),
+            self.disc_Y(inputs),
+            self.gen_G(inputs),
+            self.gen_F(inputs),
+        )
+
     def compile(
         self,
         gen_G_optimizer,
@@ -571,6 +578,8 @@ class GANMonitor(keras.callbacks.Callback):
 adv_loss_fn = keras.losses.MeanSquaredError()
 
 # Define the loss function for the generators
+
+
 def generator_loss_fn(fake):
     fake_loss = adv_loss_fn(tf.ones_like(fake), fake)
     return fake_loss
