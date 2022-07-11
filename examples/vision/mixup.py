@@ -18,7 +18,7 @@ by Zhang et al. It's implemented with the following formulas:
 (Note that the lambda values are values with the [0, 1] range and are sampled from the
 [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution).)
 
-The technique is quite systematically named - we are literally mixing up the features and
+The technique is quite systematically named. We are literally mixing up the features and
 their corresponding labels. Implementation-wise it's simple. Neural networks are prone
 to [memorizing corrupt labels](https://arxiv.org/abs/1611.03530). mixup relaxes this by
 combining different features with one another (same happens for the labels too) so that
@@ -26,7 +26,7 @@ a network does not get overconfident about the relationship between the features
 their labels.
 
 mixup is specifically useful when we are not sure about selecting a set of augmentation
-transforms for a given dataset, medical imaging datasets, for example. mixup can be
+transforms for a given dataset. for example - medical imaging datasets . mixup can be
 extended to a variety of data modalities such as computer vision, naturallanguage
 processing, speech, and so on.
 
@@ -45,7 +45,7 @@ from tensorflow.keras import layers
 """
 ## Prepare the dataset
 
-In this example, we will be using the [FashionMNIST](https://research.zalando.com/welcome/mission/research-projects/fashion-mnist/) dataset. But this same recipe can
+In this example, we will be using the [FashionMNIST](https://github.com/zalandoresearch/fashion-mnist) dataset. But this same recipe can
 be used for other classification datasets as well.
 """
 
