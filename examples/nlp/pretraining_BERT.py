@@ -5,11 +5,6 @@ Date created: 2022/07/01
 Last modified: 2022/07/01
 Description: Pre-training BERT using Hugging Face Transformers on NSP and MLM.
 """
-import tensorflow as tf
-
-gpus = tf.config.list_physical_devices("GPU")
-if gpus:
-    tf.config.set_visible_devices(gpus[5], "GPU")
 
 """
 ## Introduction
