@@ -1,10 +1,15 @@
 """
-Title: Pre-training BERT with 🤗 Transformers.
+Title: Pre-training BERT with Hugging Face Transformers.
 Author: Sreyan Ghosh
 Date created: 2022/07/01
 Last modified: 2022/07/01
-Description: Pre-training BERT using 🤗 Transformers on NSP and MLM.
+Description: Pre-training BERT using Hugging Face Transformers on NSP and MLM.
 """
+import tensorflow as tf
+
+gpus = tf.config.list_physical_devices("GPU")
+if gpus:
+    tf.config.set_visible_devices(gpus[5], "GPU")
 
 """
 ## Introduction
@@ -36,12 +41,12 @@ allows the model to learn the context of a word based on all of its surroundings
 When training language models, there is a challenge of defining a prediction goal.
 Many models predict the next word in a sequence (e.g. The child came home from _ ),
 a directional approach which inherently limits context learning. To overcome this
-challenge, BERT uses two training strategies:
+challenge, BERT uses two training strategies:<br>
 
 ### Masked Language Modeling (MLM)
 Before feeding word sequences into BERT, 15% of the words in each sequence are replaced
 with a `[MASK]` token. The model then attempts to predict the original value of the masked
-words, based on the context provided by the other, non-masked, words in the sequence.
+words, based on the context provided by the other, non-masked, words in the sequence.<br>
 
 ### Next Sentence Prediction (NSP)
 In the BERT training process, the model receives pairs of sentences as input and learns to
@@ -79,13 +84,16 @@ pip install nltk
 
 import nltk
 import random
+import logging
 
 import tensorflow as tf
 from tensorflow import keras
 
 nltk.download("punkt")
 # Only log error messages
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+tf.get_logger().setLevel(logging.ERROR)
+# Set random seed
+tf.keras.utils.set_random_seed(42)
 
 """
 ### Define certain variables
@@ -95,8 +103,8 @@ TOKENIZER_BATCH_SIZE = 256  # Batch-size to train the tokenizer on
 TOKENIZER_VOCABULARY = 25000  # Total number of unique subwords the tokenizer can have
 
 BLOCK_SIZE = 128  # Maximum number of tokens in an input sample
-NSP_PROB = 0.50
-SHORT_SEQ_PROB = 0.1
+NSP_PROB = 0.50  # Probability that the next sentence is the actual next sentence in NSP
+SHORT_SEQ_PROB = 0.1  # Probability of generating shorter sequences to minimize the mismatch between pre-training and fine-tuning.
 MAX_LENGTH = 512  # Maximum number of tokens in an input sample after padding
 
 MLM_PROB = 0.2  # Probability with which tokens are masked in MLM
@@ -123,7 +131,7 @@ split of the dataset. This can be easily done with the `load_dataset` function.
 
 from datasets import load_dataset
 
-dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
+dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
 
 """
 The dataset just has one column which is the raw text, and this is all we need for
@@ -153,7 +161,7 @@ First we will make a list of all the raw documents from the `WikiText` corpus:
 """
 
 all_texts = [
-    doc for doc in dataset["text"] if len(doc) > 0 and not doc.startswith(" =")
+    doc for doc in dataset["train"]["text"] if len(doc) > 0 and not doc.startswith(" =")
 ]
 
 """
@@ -198,10 +206,11 @@ pre-processing steps.
 
 """
 For the sake of demonstrating the workflow, in this notebook we will only take
-small subset of the entire WikiText dataset.
+small subsets of the entire WikiText `train` and `test` splits.
 """
 
-dataset = dataset.select([i for i in range(1000)])
+dataset["train"] = dataset["train"].select([i for i in range(1000)])
+dataset["validation"] = dataset["validation"].select([i for i in range(1000)])
 
 """
 Before we can feed those texts to our model, we need to pre-process them and get them
@@ -231,22 +240,23 @@ max_num_tokens = BLOCK_SIZE - tokenizer.num_special_tokens_to_add(pair=True)
 
 def prepare_train_features(examples):
 
-    """
-    Input:
-    {"text":Raw Documents
-    (eg: ["I love Keras. I love Tensorflow"])}
-    Output:
-    {"input_ids": Tokenized, Concatnated, and Batched Sentences
-    from the individual raw documents (batch_size x MAX_LENGTH)
-    (eg: [2, 45, 3786, 12242, 1513, 18, 45, 3786, 10667, 1691, 1021, 23473, 3])
-    "token_type_ids" : (batch_size x MAX_LENGTH) ∈ {1,0}
-    (0 for senetence 1, 1 for sentence 2, 0 for padding)
-    "attention_mask": (batch_size x MAX_LENGTH) ∈ {1,0}
-    (1 for non padded tokens, 0 for padded)
-    "next_sentence_label": (batch_size) ∈ {1,0}
-    (1 if the second sentence actually folloows the first, 0 if the senetence
-    is sampled from somewhere else in the corpus)
-    }
+    """Function to prepare features for NSP task
+
+    Attributes:
+      examples: A dictionary with 1 key ("text")
+        text: List of raw documents (str)
+    Returns:
+      examples:  A dictionary with 4 keys
+        input_ids: List of tokenized, concatnated, and batched
+          sentences from the individual raw documents (int)
+        token_type_ids: List of integers (0 or 1) corresponding
+          to: 0 for senetence no. 1 and padding, 1 for sentence
+          no. 2
+        attention_mask: List of integers (0 or 1) corresponding
+          to: 1 for non-padded tokens, 0 for padded
+        next_sentence_label: List of integers (0 or 1) corresponding
+          to: 1 if the second sentence actually follows the first,
+          0 if the senetence is sampled from somewhere else in the corpus
     """
 
     # Remove un-wanted samples from the training set
@@ -409,7 +419,15 @@ the `collator` defined above. The method expects certain parameters:
 - **collate_fn**: our collator function
 """
 
-train = tokenized_dataset.to_tf_dataset(
+train = tokenized_dataset["train"].to_tf_dataset(
+    columns=["input_ids", "token_type_ids", "attention_mask"],
+    label_cols=["labels", "next_sentence_label"],
+    batch_size=TRAIN_BATCH_SIZE,
+    shuffle=True,
+    collate_fn=collater,
+)
+
+validation = tokenized_dataset["validation"].to_tf_dataset(
     columns=["input_ids", "token_type_ids", "attention_mask"],
     label_cols=["labels", "next_sentence_label"],
     batch_size=TRAIN_BATCH_SIZE,
@@ -454,13 +472,21 @@ internally and so we need not worry about that!
 
 optimizer = keras.optimizers.Adam(learning_rate=LEARNING_RATE)
 
-model.compile(optimizer=optimizer, run_eagerly=True)
+model.compile(optimizer=optimizer)
 
 """
 Finally all steps are done and now we can start training our model!
 """
 
-model.fit(train, epochs=MAX_EPOCHS)
+model.fit(train, validation_data=validation, epochs=MAX_EPOCHS)
+
+"""
+Your model has now been trained! We suggest to please train the model on the complete
+dataset for atleast 50 epochs for decent performance. The pre-trained model now acts as
+a language model and is meant to be fine-tuned on a downstream task. Thus it can now be
+taken and fine-tuned on any downstream task like Question-Answering, Text Classification
+etc.!
+"""
 
 """
 Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
@@ -478,4 +504,14 @@ from transformers import TFBertForPreTraining
 
 model = TFBertForPreTraining.from_pretrained("your-username/my-awesome-model")
 ```
+or, since it's a pre-trained model and you would generally use it for fine-tuning
+on a downstream task, you can also load it for some other task like:
+
+```python
+from transformers import TFBertForSequenceClassification
+
+model = TFBertForSequenceClassification.from_pretrained("your-username/my-awesome-model")
+```
+In this case, the pre-training head will be dropped and the model will just be initialized
+with the transformer layers. A new task-specific head will be added with random weights!
 """
