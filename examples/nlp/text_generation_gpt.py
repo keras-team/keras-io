@@ -220,7 +220,7 @@ model.summary()
 
 Now that we have our model, let's train it. We use a subset of the training data to save
 on training time. It would also be beneficial to use a GPU to speed up the training
-process. Take a break and grab a drink while you wait!
+process!
 """
 
 model.fit(ds.take(1), validation_data=ds_valid.take(1), verbose=2, epochs=EPOCHS)
@@ -228,7 +228,7 @@ model.fit(ds.take(1), validation_data=ds_valid.take(1), verbose=2, epochs=EPOCHS
 """
 ## Inference
 
-Welcome back! With our trained model, we can test it out to gauge it's performance. Since
+With our trained model, we can test it out to gauge it's performance. Since
 this is a dataset of mostly fictional books, there is bound to be a hero, so let's use
 "The hero" as our starting string! We run it through the tokenizer to get the input for
 the model. 
