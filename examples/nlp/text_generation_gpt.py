@@ -200,7 +200,8 @@ def create_model():
     outputs = keras.layers.Dense(VOCAB_SIZE)(x)
     model = keras.Model(inputs=inputs, outputs=outputs)
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    model.compile(optimizer="adam", loss=loss_fn, metrics=["accuracy"])
+    perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
+    model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
     return model
 
 
@@ -223,7 +224,7 @@ on training time. It would also be beneficial to use a GPU to speed up the train
 process!
 """
 
-model.fit(ds.take(1), validation_data=ds_valid.take(1), verbose=2, epochs=EPOCHS)
+model.fit(ds.take(NUM_TRAINING_BATCHES), validation_data=ds_valid, verbose=2, epochs=EPOCHS)
 
 """
 ## Inference
@@ -237,7 +238,7 @@ the model.
 MAX_PREDICT_LEN = 80
 start_prompt = "The hero"
 # Unpadded token sequence.
-start_tokens = [tokenizer.token_to_id(_) for _ in start_prompt.split()]
+start_tokens = [tokenizer.token_to_id(_) for _ in start_prompt.lower().split()]
 
 """
 We will use the `keras_nlp.utils` library for inference. Every text generation
