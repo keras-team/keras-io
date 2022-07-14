@@ -821,3 +821,10 @@ contributions!
 [here](https://blogs.nvidia.com/blog/2021/11/22/gaugan2-ai-art-demo/).
 
 """
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-GauGAN%20Image%20Generation-black.svg)](https://huggingface.co/keras-io/GauGAN-Image-generation) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-GauGAN%20Image%20Generation-black.svg)](https://huggingface.co/spaces/keras-io/GauGAN_Conditional_Image_Generation) |
+"""
