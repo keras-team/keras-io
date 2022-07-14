@@ -597,4 +597,10 @@ while the later paper considers SMILES inputs as graphs (a combination of adjace
 matrices and feature matrices) and seeks to generate molecules as graphs.
 
 This hybrid approach enables a new type of directed gradient-based search through chemical space.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/keras-io/drug-molecule-generation-with-VAE) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/spaces/keras-io/generating-drug-molecule-with-VAE) |
 """

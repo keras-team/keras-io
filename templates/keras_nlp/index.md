@@ -20,9 +20,19 @@ check out our
 ---
 ## Quick links
 
-* [KerasNLP developer guides](/guides/keras_nlp/)
 * [KerasNLP API reference](/api/keras_nlp/)
 * [KerasNLP on GitHub](https://github.com/keras-team/keras-nlp)
+
+---
+## Guides
+
+* [Pretraining a Transformer from scratch](/guides/keras_nlp/transformer_pretraining/)
+
+---
+## Examples
+
+* [English-to-Spanish translation](/examples/nlp/neural_machine_translation_with_keras_nlp/)
+* [Text Classification using FNet](/examples/nlp/fnet_classification_with_keras_nlp/)
 
 ---
 ## Installation
