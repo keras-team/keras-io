@@ -87,7 +87,10 @@ but require a longer time to train.
 """
 
 data_preprocessing = keras.Sequential(
-    [layers.Resizing(target_size, target_size), layers.Normalization(),]
+    [
+        layers.Resizing(target_size, target_size),
+        layers.Normalization(),
+    ]
 )
 # Compute the mean and the variance from the data for normalization.
 data_preprocessing.layers[-1].adapt(x_data)
