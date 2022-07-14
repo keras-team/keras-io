@@ -977,3 +977,11 @@ for sample in val_dataset.take(2):
         class_names,
         detections.nmsed_scores[0][:num_detections],
     )
+
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/keras-io/Object-Detection-RetinaNet) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/spaces/keras-io/Object-Detection-Using-RetinaNet) |
+"""

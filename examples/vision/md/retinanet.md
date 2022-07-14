@@ -67,7 +67,8 @@ with zipfile.ZipFile("data.zip", "r") as z_fp:
 <div class="k-default-codeblock">
 ```
 Downloading data from https://github.com/srihari-humbarwadi/datasets/releases/download/v0.1.0/data.zip
-560529408/560525318 [==============================] - 304s 1us/step
+560529408/560525318 [==============================] - 7s 0us/step
+560537600/560525318 [==============================] - 7s 0us/step
 
 ```
 </div>
@@ -887,6 +888,14 @@ optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
 model.compile(loss=loss_fn, optimizer=optimizer)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5
+94773248/94765736 [==============================] - 0s 0us/step
+94781440/94765736 [==============================] - 0s 0us/step
+
+```
+</div>
 ---
 ## Setting up callbacks
 
@@ -981,11 +990,11 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - ETA: 0s - loss: 4.0953
-Epoch 00001: saving model to retinanet/weights_epoch_1
-100/100 [==============================] - 68s 679ms/step - loss: 4.0953 - val_loss: 4.0821
+    100/Unknown - 290s 3s/step - loss: 4.0817
+Epoch 1: saving model to retinanet/weights_epoch_1
+100/100 [==============================] - 336s 3s/step - loss: 4.0817 - val_loss: 4.1082
 
-<tensorflow.python.keras.callbacks.History at 0x7f87005239d0>
+<keras.callbacks.History at 0x7f4c7e0428d0>
 
 ```
 </div>
@@ -1006,7 +1015,7 @@ model.load_weights(latest_checkpoint)
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7f86e0531910>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7f4c6823d0d0>
 
 ```
 </div>
@@ -1059,3 +1068,9 @@ for sample in val_dataset.take(2):
 
 ![png](/img/examples/vision/retinanet/retinanet_44_1.png)
 
+
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/keras-io/Object-Detection-RetinaNet) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/spaces/keras-io/Object-Detection-Using-RetinaNet) |
