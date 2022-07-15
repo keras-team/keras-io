@@ -1,9 +1,9 @@
 """
-Title: Audio Classification with 🤗 Transformers.
+Title: Audio Classification with Hugging Face Transformers.
 Author: Sreyan Ghosh
 Date created: 2022/07/01
 Last modified: 2022/07/01
-Description: Training Wav2Vec 2.0 using 🤗 Transformers for Audio Classification.
+Description: Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
 """
 
 """
@@ -22,7 +22,7 @@ notably Google and Baidu.
 In the past decade, the development of neural models has shown significant performance
 gains on this task. Low-level audio features extracted from raw audio like MFCC of
 mel-filterbanks have been used for decades, the design of these low-level features
-are  [flawed by biases](https://arxiv.org/abs/2101.08596). Moreover, neural models
+are [flawed by biases](https://arxiv.org/abs/2101.08596). Moreover, neural models
 trained on these low-level features can easily overfit to noise or signals irrelevant to the
 task.  This makes it is essential for any system to learn speech representations that make
 high-level information, such as acoustic and linguistic content, including phonemes,
@@ -58,17 +58,16 @@ pip install torch
 ### Importing the necessary libraries
 """
 
-import numpy as np
+import logging
+
 import torch
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-
 from tensorflow.keras import layers
-from sklearn.utils.class_weight import compute_class_weight
 
 # Only log error messages
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-tf.config.run_functions_eagerly(True)
+tf.get_logger().setLevel(logging.ERROR)
 
 """
 ### Define certain variables
@@ -121,7 +120,7 @@ The dataset has the following fields:
 speech_commands_v1
 
 """
-## Splitting the Dataset
+## Data Pre-processing
 """
 
 """
@@ -156,7 +155,7 @@ speech_commands_v1["test"] = speech_commands_v1["test"].select(
 )
 
 """
-Additionally, you can check the actual labels corresponding to each label ID
+Additionally, you can check the actual labels corresponding to each label ID.
 """
 
 labels = speech_commands_v1["train"].features["label"].names
@@ -216,7 +215,7 @@ def preprocess_function(examples):
     return inputs
 
 
-# This line will pre-process our speech_commands_v1 dataset. We will also remove the "audio"
+# This line with pre-process our speech_commands_v1 dataset. We will also remove the "audio"
 # and "file" columns as they will be of no use to us while training.
 
 processed_speech_commands_v1 = speech_commands_v1.map(
