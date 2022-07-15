@@ -240,6 +240,7 @@ def prepare_train_features(examples):
     Attributes:
       examples: A dictionary with 1 key ("text")
         text: List of raw documents (str)
+
     Returns:
       examples:  A dictionary with 4 keys
         input_ids: List of tokenized, concatnated, and batched
