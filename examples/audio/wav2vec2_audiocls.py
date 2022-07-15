@@ -167,10 +167,6 @@ for i, label in enumerate(labels):
 id2label
 
 """
-## Data Pre-processing
-"""
-
-"""
 Before we can feed the audio utterance samples to our model, we need to
 preprocess them. This is done by a 🤗 Transformers `Feature Extractor`
 which will (as the name indicates) re-sample your the inputs to sampling rate
