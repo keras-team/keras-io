@@ -69,7 +69,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
-from official.vision.ops.augment import RandAugment
+from keras_cv.layers import RandAugment
 
 import tensorflow_datasets as tfds
 
@@ -128,7 +128,7 @@ weak augmentation, we will use horizontal flipping and random cropping.
 
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 5.
-augmenter = RandAugment(num_layers=2, magnitude=5)
+augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=3, magnitude=0.5)
 
 
 def weak_augment(image, source=True):
@@ -152,7 +152,7 @@ def strong_augment(image, source=True):
     if source:
         image = tf.image.resize_with_pad(image, RESIZE_TO, RESIZE_TO)
         image = tf.tile(image, [1, 1, 3])
-    image = augmenter.distort(image)
+    image = augmenter(image)
     return image
 
 
