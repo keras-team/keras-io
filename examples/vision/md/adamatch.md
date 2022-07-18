@@ -26,9 +26,16 @@ be installed using the following command:
 
 
 ```python
-!pip install -q tf-models-official
+!pip install -q tf-models-official==2.9.2
 ```
 
+<div class="k-default-codeblock">
+```
+[33mWARNING: You are using pip version 21.3.1; however, version 22.1.2 is available.
+You should consider upgrading via the '/home/johannes/Projects/keras-io/venv/bin/python -m pip install --upgrade pip' command.[0m
+
+```
+</div>
 Before we proceed, let's review a few preliminary concepts underlying this example.
 
 ---
@@ -72,7 +79,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
-from official.vision.image_classification.augment import RandAugment
+from keras_cv.layers import RandAugment
 
 import tensorflow_datasets as tfds
 
@@ -137,7 +144,7 @@ weak augmentation, we will use horizontal flipping and random cropping.
 ```python
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 5.
-augmenter = RandAugment(num_layers=2, magnitude=5)
+augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=3, magnitude=0.5)
 
 
 def weak_augment(image, source=True):
@@ -161,7 +168,7 @@ def strong_augment(image, source=True):
     if source:
         image = tf.image.resize_with_pad(image, RESIZE_TO, RESIZE_TO)
         image = tf.tile(image, [1, 1, 3])
-    image = augmenter.distort(image)
+    image = augmenter(image)
     return image
 
 ```
@@ -577,27 +584,27 @@ adamatch_trainer.fit(total_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-382/382 [==============================] - 53s 96ms/step - loss: 117866954752.0000
+382/382 [==============================] - 180s 456ms/step - loss: 117251055616.0000
 Epoch 2/10
-382/382 [==============================] - 36s 95ms/step - loss: 2.6231
+382/382 [==============================] - 176s 459ms/step - loss: 2.2213
 Epoch 3/10
-382/382 [==============================] - 36s 94ms/step - loss: 4.1699
+382/382 [==============================] - 177s 462ms/step - loss: 2.1647
 Epoch 4/10
-382/382 [==============================] - 36s 95ms/step - loss: 8.2748
+382/382 [==============================] - 175s 458ms/step - loss: 5.9226
 Epoch 5/10
-382/382 [==============================] - 36s 95ms/step - loss: 28.8679
+382/382 [==============================] - 175s 459ms/step - loss: 10.0054
 Epoch 6/10
-382/382 [==============================] - 36s 94ms/step - loss: 14.7112
+382/382 [==============================] - 176s 459ms/step - loss: 13.2228
 Epoch 7/10
-382/382 [==============================] - 36s 94ms/step - loss: 7.8206
+382/382 [==============================] - 173s 451ms/step - loss: 14.3799
 Epoch 8/10
-382/382 [==============================] - 36s 94ms/step - loss: 18.1182
+382/382 [==============================] - 174s 456ms/step - loss: 18.5209
 Epoch 9/10
-382/382 [==============================] - 36s 94ms/step - loss: 22.4258
+382/382 [==============================] - 178s 466ms/step - loss: 18.5917
 Epoch 10/10
-382/382 [==============================] - 36s 95ms/step - loss: 22.1107
+382/382 [==============================] - 168s 439ms/step - loss: 10.6032
 
-<tensorflow.python.keras.callbacks.History at 0x7f9bc4990b50>
+<keras.callbacks.History at 0x7fb4c1bc7730>
 
 ```
 </div>
@@ -618,8 +625,8 @@ print(f"Accuracy on target test set: {accuracy * 100:.2f}%")
 
 <div class="k-default-codeblock">
 ```
-136/136 [==============================] - 2s 10ms/step - loss: 572.9810 - sparse_categorical_accuracy: 0.1960
-Accuracy on target test set: 19.11%
+136/136 [==============================] - 4s 26ms/step - loss: 680.4998 - sparse_categorical_accuracy: 0.2006
+Accuracy on target test set: 20.06%
 
 ```
 </div>
@@ -653,10 +660,15 @@ print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
 
 <div class="k-default-codeblock">
 ```
-53/53 [==============================] - 1s 10ms/step - loss: 572.9810 - sparse_categorical_accuracy: 0.6532
-Accuracy on source test set: 65.32%
+53/53 [==============================] - 2s 26ms/step - loss: 680.4996 - sparse_categorical_accuracy: 0.9398
+Accuracy on source test set: 93.98%
 
 ```
 </div>
 You can reproduce the results by using these
 [model weights](https://github.com/sayakpaul/AdaMatch-TF/releases/tag/v1.0.0).
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-AdaMatch%20Domain%20Adaption-black.svg)](https://huggingface.co/keras-io/adamatch-domain-adaption) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-AdaMatch%20Domain%20Adaption-black.svg)](https://huggingface.co/spaces/keras-io/adamatch-domain-adaption) |
