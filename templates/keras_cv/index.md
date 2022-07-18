@@ -33,8 +33,8 @@ Create a preprocessing pipeline:
 import keras_cv
 from tensorflow import keras
 
-preprocessing_model = keras.Sequential([
-    keras_cv.layers.RandAugment(value_range=(0, 255))
+preprocessing_layers = keras.Sequential([
+    keras_cv.layers.RandAugment(value_range=(0, 255)),
     keras_cv.layers.CutMix(),
     keras_cv.layers.MixUp()
 ], name="preprocessing_model")
@@ -43,9 +43,13 @@ preprocessing_model = keras.Sequential([
 Augment a `tf.data.Dataset`:
 
 ```python
-dataset = dataset.map(lambda images, labels: {"images": images, "labels": labels})
-dataset = dataset.map(preprocessing_model)
-dataset = dataset.map(lambda inputs: (inputs["images"], inputs["labels"]))
+def augment_data(images, labels):
+  inputs = {"images": images, "labels": labels}
+  for layer in preprocessing_layers:
+    inputs = layer(inputs)
+  return layer
+
+dataset = dataset.map(augment_data)
 ```
 
 Create a model:
