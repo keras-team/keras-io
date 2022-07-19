@@ -26,7 +26,7 @@ a network does not get overconfident about the relationship between the features
 their labels.
 
 mixup is specifically useful when we are not sure about selecting a set of augmentation
-transforms for a given dataset. for example - medical imaging datasets . mixup can be
+transforms for a given dataset, medical imaging datasets, for example. mixup can be
 extended to a variety of data modalities such as computer vision, naturallanguage
 processing, speech, and so on.
 
