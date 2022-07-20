@@ -473,73 +473,70 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 <div class="k-default-codeblock">
 ```
-/home/shivalika/anaconda3/envs/keras/lib/python3.9/site-packages/numpy/core/numeric.py:2463: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-  return bool(asarray(a1 == a2).all())
 
 Start training the model...
 Epoch 1/20
-    638/Unknown - 27s 24ms/step - loss: 253.9034 - accuracy: 0.9468WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+    638/Unknown - 27s 24ms/step - loss: 253.9034 - accuracy: 0.9468
 640/640 [==============================] - 31s 29ms/step - loss: 253.8570 - accuracy: 0.9468 - val_loss: 229.4024 - val_accuracy: 0.9495
 Epoch 2/20
-639/640 [============================>.] - ETA: 0s - loss: 230.0264 - accuracy: 0.9497WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+639/640 [============================>.] - ETA: 0s - loss: 230.0264 - accuracy: 0.9497
 640/640 [==============================] - 17s 25ms/step - loss: 229.9359 - accuracy: 0.9497 - val_loss: 223.4970 - val_accuracy: 0.9505
 Epoch 3/20
-638/640 [============================>.] - ETA: 0s - loss: 225.5388 - accuracy: 0.9504WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 225.5388 - accuracy: 0.9504
 640/640 [==============================] - 17s 25ms/step - loss: 225.5644 - accuracy: 0.9504 - val_loss: 222.0078 - val_accuracy: 0.9515
 Epoch 4/20
-639/640 [============================>.] - ETA: 0s - loss: 222.2569 - accuracy: 0.9512WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+639/640 [============================>.] - ETA: 0s - loss: 222.2569 - accuracy: 0.9512
 640/640 [==============================] - 16s 25ms/step - loss: 222.2086 - accuracy: 0.9512 - val_loss: 218.2707 - val_accuracy: 0.9522
 Epoch 5/20
-640/640 [==============================] - ETA: 0s - loss: 218.0359 - accuracy: 0.9523WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+640/640 [==============================] - ETA: 0s - loss: 218.0359 - accuracy: 0.9523
 640/640 [==============================] - 17s 25ms/step - loss: 218.0359 - accuracy: 0.9523 - val_loss: 217.3721 - val_accuracy: 0.9528
 Epoch 6/20
-639/640 [============================>.] - ETA: 0s - loss: 214.8720 - accuracy: 0.9529WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+639/640 [============================>.] - ETA: 0s - loss: 214.8720 - accuracy: 0.9529
 640/640 [==============================] - 17s 26ms/step - loss: 214.8348 - accuracy: 0.9529 - val_loss: 210.3546 - val_accuracy: 0.9543
 Epoch 7/20
-640/640 [==============================] - ETA: 0s - loss: 213.0984 - accuracy: 0.9534WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+640/640 [==============================] - ETA: 0s - loss: 213.0984 - accuracy: 0.9534
 640/640 [==============================] - 17s 26ms/step - loss: 213.0984 - accuracy: 0.9534 - val_loss: 210.2881 - val_accuracy: 0.9544
 Epoch 8/20
-638/640 [============================>.] - ETA: 0s - loss: 211.6730 - accuracy: 0.9538WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 211.6730 - accuracy: 0.9538
 640/640 [==============================] - 17s 26ms/step - loss: 211.6379 - accuracy: 0.9538 - val_loss: 209.3327 - val_accuracy: 0.9550
 Epoch 9/20
-640/640 [==============================] - ETA: 0s - loss: 210.7283 - accuracy: 0.9541WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+640/640 [==============================] - ETA: 0s - loss: 210.7283 - accuracy: 0.9541
 640/640 [==============================] - 17s 26ms/step - loss: 210.7283 - accuracy: 0.9541 - val_loss: 209.5862 - val_accuracy: 0.9543
 Epoch 10/20
-640/640 [==============================] - ETA: 0s - loss: 209.9062 - accuracy: 0.9538WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+640/640 [==============================] - ETA: 0s - loss: 209.9062 - accuracy: 0.9538
 640/640 [==============================] - 17s 26ms/step - loss: 209.9062 - accuracy: 0.9538 - val_loss: 210.1662 - val_accuracy: 0.9537
 Epoch 11/20
-638/640 [============================>.] - ETA: 0s - loss: 209.7006 - accuracy: 0.9540WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 209.7006 - accuracy: 0.9540
 640/640 [==============================] - 16s 25ms/step - loss: 209.6323 - accuracy: 0.9540 - val_loss: 207.9528 - val_accuracy: 0.9552
 Epoch 12/20
-638/640 [============================>.] - ETA: 0s - loss: 208.8091 - accuracy: 0.9544WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 208.8091 - accuracy: 0.9544
 640/640 [==============================] - 16s 25ms/step - loss: 208.7843 - accuracy: 0.9544 - val_loss: 207.5303 - val_accuracy: 0.9550
 Epoch 13/20
-639/640 [============================>.] - ETA: 0s - loss: 207.9309 - accuracy: 0.9544WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+639/640 [============================>.] - ETA: 0s - loss: 207.9309 - accuracy: 0.9544
 640/640 [==============================] - 21s 32ms/step - loss: 207.9983 - accuracy: 0.9544 - val_loss: 206.8800 - val_accuracy: 0.9557
 Epoch 14/20
-639/640 [============================>.] - ETA: 0s - loss: 207.2585 - accuracy: 0.9544WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+639/640 [============================>.] - ETA: 0s - loss: 207.2585 - accuracy: 0.9544
 640/640 [==============================] - 18s 28ms/step - loss: 207.2104 - accuracy: 0.9544 - val_loss: 216.0859 - val_accuracy: 0.9535
 Epoch 15/20
-638/640 [============================>.] - ETA: 0s - loss: 207.2523 - accuracy: 0.9544WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 207.2523 - accuracy: 0.9544
 640/640 [==============================] - 16s 25ms/step - loss: 207.2254 - accuracy: 0.9543 - val_loss: 206.7765 - val_accuracy: 0.9555
 Epoch 16/20
-638/640 [============================>.] - ETA: 0s - loss: 206.7146 - accuracy: 0.9546WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 206.7146 - accuracy: 0.9546
 640/640 [==============================] - 16s 25ms/step - loss: 206.6704 - accuracy: 0.9546 - val_loss: 206.7508 - val_accuracy: 0.9560
 Epoch 17/20
-639/640 [============================>.] - ETA: 0s - loss: 206.1515 - accuracy: 0.9545WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+639/640 [============================>.] - ETA: 0s - loss: 206.1515 - accuracy: 0.9545
 640/640 [==============================] - 19s 30ms/step - loss: 206.1322 - accuracy: 0.9545 - val_loss: 205.9638 - val_accuracy: 0.9562
 Epoch 18/20
-638/640 [============================>.] - ETA: 0s - loss: 205.5037 - accuracy: 0.9545WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+638/640 [============================>.] - ETA: 0s - loss: 205.5037 - accuracy: 0.9545
 640/640 [==============================] - 21s 31ms/step - loss: 205.4764 - accuracy: 0.9545 - val_loss: 206.0258 - val_accuracy: 0.9561
 Epoch 19/20
-640/640 [==============================] - ETA: 0s - loss: 204.3614 - accuracy: 0.9550WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+640/640 [==============================] - ETA: 0s - loss: 204.3614 - accuracy: 0.9550
 640/640 [==============================] - 16s 25ms/step - loss: 204.3614 - accuracy: 0.9550 - val_loss: 207.1424 - val_accuracy: 0.9560
 Epoch 20/20
-640/640 [==============================] - ETA: 0s - loss: 203.9543 - accuracy: 0.9550WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
+640/640 [==============================] - ETA: 0s - loss: 203.9543 - accuracy: 0.9550
 640/640 [==============================] - 16s 25ms/step - loss: 203.9543 - accuracy: 0.9550 - val_loss: 206.4697 - val_accuracy: 0.9554
 Model training finished.
 Evaluating model performance...
-WARNING:tensorflow:`evaluate()` received a value for `sample_weight`, but `weighted_metrics` were not provided.  Did you mean to pass metrics to `weighted_metrics` in `compile()`?  If this is intentional you can pass `weighted_metrics=[]` to `compile()` in order to silence this warning.
 377/377 [==============================] - 4s 11ms/step - loss: 204.5099 - accuracy: 0.9547
 Test accuracy: 95.47%
 
