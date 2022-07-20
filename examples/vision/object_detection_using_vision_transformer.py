@@ -17,7 +17,7 @@ patches can perform well on object detection tasks.
 
 In this Keras example, we implement an object detection ViT
 and we train it on the
-[Caltech 101 dataset](http://www.vision.caltech.edu/datasets/)
+[Caltech 101 dataset](https://data.caltech.edu/records/20086)
 to detect an airplane in the given image.
 
 This example requires TensorFlow 2.4 or higher, and
