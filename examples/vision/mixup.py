@@ -45,7 +45,7 @@ from tensorflow.keras import layers
 """
 ## Prepare the dataset
 
-In this example, we will be using the [FashionMNIST](https://research.zalando.com/welcome/mission/research-projects/fashion-mnist/) dataset. But this same recipe can
+In this example, we will be using the [FashionMNIST](https://github.com/zalandoresearch/fashion-mnist) dataset. But this same recipe can
 be used for other classification datasets as well.
 """
 
