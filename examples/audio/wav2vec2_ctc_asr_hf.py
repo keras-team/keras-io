@@ -49,16 +49,18 @@ finetune our model.
 ### Installing the requirements
 """
 
-# !pip install datasets==1.14
-# !pip install --upgrade --force-reinstall
-# git+https://github.com/huggingface/transformers.git --no-cache
-# !pip install librosa
-# !pip install jiwer
-# !pip install pydub
-# !pip install gdown
-# !pip install soundfile
-# !pip install librosa
-# !pip install Levenshtein
+"""shell
+pip install git+https://github.com/huggingface/transformers.git
+pip install datasets
+pip install huggingface-hub
+pip install librosa
+pip install jiwer
+pip install pydub
+pip install gdown
+pip install soundfile
+pip install librosa
+pip install Levenshtein
+"""
 
 """
 ### Importing the necessary libraries
