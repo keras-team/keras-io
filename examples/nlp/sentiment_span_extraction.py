@@ -1,9 +1,9 @@
 """
-Title: Sentiment Span Extraction with 🤗 Transformers.
+Title: Sentiment Span Extraction with Hugging Face Transformers.
 Author: Sreyan Ghosh
 Date created: 2022/07/24
 Last modified: 2022/07/24
-Description: Training RoBERTa using 🤗 Transformers for Sentiment Span Extraction.
+Description: Training RoBERTa using Hugging Face Transformers for Sentiment Span Extraction.
 """
 
 """
