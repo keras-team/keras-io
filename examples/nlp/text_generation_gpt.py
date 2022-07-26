@@ -1,9 +1,9 @@
 """
 Title: Simple GPT Text Generation with KerasNLP transformers
 Author: [Jesse Chan](https://github.com/jessechancy)
-Date created: 2022/07/07
-Last modified: 2022/07/07
-Description: Use KerasNLP transformers to train a mini-GPT model for text generation.
+Date created: 2022/07/25
+Last modified: 2022/07/25
+Description: Using KerasNLP transformers to train a mini-GPT model for text generation.
 """
 
 """
@@ -18,23 +18,13 @@ which is a dataset made from several novels. It is a good dataset for this examp
 it has a small vocabulary and high word frequency, which is beneficial when training a
 model with few parameters.
 
-This example combines concepts from [Text generation with a miniature GPT](https://keras.io/examples/generative/text_generation_with_miniature_gpt/) 
-with KerasNLP abstractions. We will demonstrate how KerasNLP tokenization, model, metrics, and
-inference libraries can be used to simplify the development process. 
+This example combines concepts from [Text generation with a miniature GPT](https://keras.io/examples/generative/text_generation_with_miniature_gpt/)
+with KerasNLP abstractions. We will demonstrate how KerasNLP tokenization, layers and
+metrics simplify the training
+process, and then show how to generate output text using sampling utilities.
 
-The main KerasNLP features shown in this example are:
-
-- [WordPieceTokenizer](https://keras.io/api/keras_nlp/tokenizers/word_piece_tokenizer/):
-An efficient sub-word tokenizer used by BERT and other models.
-- [TokenAndPositionEmbedding](https://keras.io/api/keras_nlp/layers/token_and_position_embedding/): 
-A layer that learns an embedding based on the token and it's position in the
-input.
-- [TransformerDecoder](https://keras.io/api/keras_nlp/layers/transformer_decoder/): A
-decoder transformer layer with causal masking, as described in the transformers paper
-[Attention Is All You Need](https://arxiv.org/abs/1706.03762?context=cs).
-- [Text Generation Utilities](https://github.com/keras-team/keras-nlp/blob/v0.3.0/keras_nlp/utils/text_generation.py): 
-Utilities for different algorithms for text generation, including Beam Search,
-Top-K and Top-P.
+Note: If you are running this on a colab make sure to enable GPU runtime for faster
+training performance.
 """
 
 """
@@ -58,63 +48,23 @@ from tensorflow import keras
 """
 
 # Data
+BATCH_SIZE = 64
 SEQ_LEN = 128
-MIN_TRAINING_SEQ_LEN = 450
-
-# Inference
-NUM_TOKENS_TO_GENERATE = 80
-
-# Training
-LEARNING_RATE = 5e-4
-EPOCHS = 12
-NUM_TRAINING_BATCHES = 1000
+MIN_TRAINING_SEQ_LEN = 100
 
 # Model
-BATCH_SIZE = 64
 EMBED_DIM = 256
 FEED_FORWARD_DIM = 256
 NUM_HEADS = 3
 NUM_LAYERS = 2
 VOCAB_SIZE = 5000  # Limits parameters in model.
 
-"""
-## Load Tokenizer
+# Training
+LEARNING_RATE = 5e-4
+EPOCHS = 6
 
-Here we download the vocabulary data and initialize
-`keras_nlp.tokenizers.WordPieceTokenizer`. WordPieceTokenizer is an efficient
-implementation of the WordPiece algorithm used by BERT and other models. It will strip,
-lower-case and do other un-reversable preprocessing operations.
-
-The vocabulary data we download is a list of sub-words sorted in descending order by
-frequency. We want to limit the vocabulary as much as possible, as we will see later on
-that it has a large affect on the number of model parameters. We also don't want to take
-too few vocabulary, or there would be too many OOV sub-words. 
-
-We strip the first 1000 vocabulary that are all of the form `"[unusedXX]"`, since they
-are all not useful for this text corpus and unneccesarily increases vocabulary size. Then
-we take the `VOCAB_SIZE` most frequent vocabularies after that. There are also some
-reserved tokens, so we want to make sure that `"[PAD]"` is at index 0 and `"[UNK]"` is in
-the vocabulary, since it is used for padding and unknown words respectively.
-"""
-
-# Download vocabulary data.
-vocab_file = keras.utils.get_file(
-    origin="https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt",
-)
-# Get most frequent VOCAB_SIZE vocab tokens for faster/efficient training.
-vocab_list = []
-with open(vocab_file, "r") as f:
-    for line in f:
-        vocab_list.append(line.strip())
-
-# The first 1000 tokens are unused tokens that unneccesarily increases vocab size.
-vocab_list = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"] + vocab_list[1000:]
-vocab_list = vocab_list[:VOCAB_SIZE]
-
-tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab_list,
-    sequence_length=SEQ_LEN + 1,  # +1 for slicing feature and label.
-)
+# Inference
+NUM_TOKENS_TO_GENERATE = 80
 
 """
 ## Load Data
@@ -130,7 +80,7 @@ keras.utils.get_file(
 dir = os.path.expanduser("~/.keras/datasets/simplebooks/")
 
 # Load simplebooks-92 train set and filter out short lines.
-train_ds = (
+raw_train_ds = (
     tf.data.TextLineDataset(dir + "simplebooks-92-raw/train.txt")
     .filter(lambda x: tf.strings.length(x) > MIN_TRAINING_SEQ_LEN)
     .batch(BATCH_SIZE)
@@ -138,10 +88,48 @@ train_ds = (
 )
 
 # Load simplebooks-92 validation set and filter out short lines.
-valid_ds = (
+raw_val_ds = (
     tf.data.TextLineDataset(dir + "simplebooks-92-raw/valid.txt")
     .filter(lambda x: tf.strings.length(x) > MIN_TRAINING_SEQ_LEN)
     .batch(BATCH_SIZE)
+)
+
+"""
+## Train Tokenizer
+
+We train the tokenizer from the training dataset for a vocabulary size of `VOCAB_SIZE`,
+which is a tuned hyperparameter. We want to limit the vocabulary as much as possible, as
+we will see later on
+that it has a large affect on the number of model parameters. We also don't want to take
+too few vocabulary, or there would be too many out of vocabulary (OOV) sub-words. In
+addition, three tokens are reserved in the vocabulary:
+- `"[PAD]"` for padding sequences to `SEQ_LEN`. This token has index 0 in both
+`reserved_tokens` and `vocab`, since `WordPieceTokenizer` (and other layers) consider
+`0`/`vocab[0]` as the default padding.
+- `"[UNK]"` for OOV sub-words, which should match the default `oov_token="[UNK]"` in
+`WordPieceTokenizer`.
+- `"[BOS]"` stands for beginning of sentence, but here technically it is a token
+representing the beginning of each line of training data.
+"""
+
+# Train tokenizer vocabulary
+vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    raw_train_ds,
+    vocabulary_size=VOCAB_SIZE,
+    reserved_tokens=["[PAD]", "[UNK]", "[BOS]"],
+)
+
+"""
+## Load Tokenizer
+
+We use the vocabulary data to initialize
+`keras_nlp.tokenizers.WordPieceTokenizer`. WordPieceTokenizer is an efficient
+implementation of the WordPiece algorithm used by BERT and other models. It will strip,
+lower-case and do other un-reversable preprocessing operations.
+"""
+
+tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+    vocabulary=vocab, sequence_length=SEQ_LEN
 )
 
 """
@@ -150,19 +138,25 @@ valid_ds = (
 We pre-process the dataset by tokenizing and splitting it into `features` and `labels`.
 """
 
+# packer adds a start token
+start_packer = keras_nlp.layers.StartEndPacker(
+    sequence_length=SEQ_LEN,
+    start_value=tokenizer.token_to_id("[BOS]"),
+)
+
 
 def preprocess(inputs):
     outputs = tokenizer(inputs)
-    features = outputs[:, :-1]
-    labels = outputs[:, 1:]
+    features = start_packer(outputs)
+    labels = outputs
     return features, labels
 
 
 # Tokenize and split into train and label sequences.
-ds = train_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
+train_ds = raw_train_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
-ds_valid = valid_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
+val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
 
@@ -172,46 +166,41 @@ ds_valid = valid_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetc
 We create our scaled down GPT model with the following layers:
 
 - One `keras_nlp.layers.TokenAndPositionEmbedding` layer, which combines the embedding
-for the token and its position. 
+for the token and its position.
 - Multiple `keras_nlp.layers.TransformerDecoder` layers, with the default causal masking.
 The layer has no cross-attention when run with decoder sequence only.
 - One output dense linear layer
 """
 
-
-def create_model():
-    inputs = keras.layers.Input(shape=(SEQ_LEN,), dtype=tf.int32)
-    # Embedding.
-    embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
-        vocabulary_size=VOCAB_SIZE,
-        sequence_length=SEQ_LEN,
-        embedding_dim=EMBED_DIM,
-        mask_zero=True,
+inputs = keras.layers.Input(shape=(None,), dtype=tf.int32)
+# Embedding.
+embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
+    vocabulary_size=VOCAB_SIZE,
+    sequence_length=SEQ_LEN,
+    embedding_dim=EMBED_DIM,
+    mask_zero=True,
+)
+x = embedding_layer(inputs)
+# Transformer decoders.
+for _ in range(NUM_LAYERS):
+    decoder_layer = keras_nlp.layers.TransformerDecoder(
+        num_heads=NUM_HEADS,
+        intermediate_dim=FEED_FORWARD_DIM,
     )
-    x = embedding_layer(inputs)
-    # Transformer decoders.
-    for _ in range(NUM_LAYERS):
-        transformer_block = keras_nlp.layers.TransformerDecoder(
-            num_heads=NUM_HEADS,
-            intermediate_dim=FEED_FORWARD_DIM,
-        )
-        x = transformer_block(x)  # Giving one argument only skips cross-attention.
-    # Output.
-    outputs = keras.layers.Dense(VOCAB_SIZE)(x)
-    model = keras.Model(inputs=inputs, outputs=outputs)
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
-    model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
-    return model
-
-
-model = create_model()
+    x = decoder_layer(x)  # Giving one argument only skips cross-attention.
+# Output.
+outputs = keras.layers.Dense(VOCAB_SIZE)(x)
+model = keras.Model(inputs=inputs, outputs=outputs)
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
+model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 
 """
-Let's take a look at our model summary here! We can see that a large majority of the
-parameters are in the token and position embedding and the output dense layer! This means
+Let's take a look at our model summary - a large majority of the
+parameters are in the `token_and_position_embedding` and the output `dense` layer! This
+means
 that the vocabulary size (`VOCAB_SIZE`) has a large affect on the size of the model,
-while the number of transformer decoder layers (`NUM_LAYERS`) doesn't affect it much.
+while the number of transformer decoder layers (`NUM_LAYERS`) doesn't affect it as much.
 """
 
 model.summary()
@@ -219,41 +208,32 @@ model.summary()
 """
 ## Training
 
-Now that we have our model, let's train it. We use a subset of the training data to save
-on training time. It would also be beneficial to use a GPU to speed up the training
-process!
+Now that we have our model, let's train it with the `fit()` method.
 """
 
-model.fit(ds.take(NUM_TRAINING_BATCHES), validation_data=ds_valid, verbose=2, epochs=EPOCHS)
+model.fit(train_ds, validation_data=val_ds, verbose=2, epochs=EPOCHS)
 
 """
 ## Inference
 
-With our trained model, we can test it out to gauge it's performance. Since
-this is a dataset of mostly fictional books, there is bound to be a hero, so let's use
-"The hero" as our starting string! We run it through the tokenizer to get the input for
-the model. 
+With our trained model, we can test it out to gauge it's performance. Since this model is
+built with a `"[BOS]"` token, we can have an empty starting prompt for text generation.
 """
 
-MAX_PREDICT_LEN = 80
-start_prompt = "The hero"
-# Unpadded token sequence.
-start_tokens = [tokenizer.token_to_id(_) for _ in start_prompt.lower().split()]
+# Unpadded bos token.
+prompt_tokens = tf.convert_to_tensor([tokenizer.token_to_id("[BOS]")])
 
 """
 We will use the `keras_nlp.utils` library for inference. Every text generation
 utility would require a `token_logits_fn()` wrapper around the model. This wrapper takes
 in an unpadded token sequence, and requires the logits of the next token as the output.
-For this transformer model, we will need to pad the input before passing it through the
-model.
 """
 
 
 def token_logits_fn(inputs):
     cur_len = inputs.shape[1]
-    padded = tf.pad(inputs, tf.constant([[0, 0], [0, SEQ_LEN - cur_len]]))
-    output = model(padded)
-    return output[:, cur_len - 1, :]
+    output = model(inputs)
+    return output[:, cur_len - 1, :]  # return next token logits
 
 
 """
@@ -270,7 +250,7 @@ argmax of the model output.
 
 output_tokens = keras_nlp.utils.greedy_search(
     token_logits_fn,
-    tf.convert_to_tensor(start_tokens),
+    prompt_tokens,
     max_length=NUM_TOKENS_TO_GENERATE,
 )
 txt = tokenizer.detokenize(output_tokens)
@@ -295,7 +275,7 @@ Note: beam search with `num_beams=1` is identical to greedy search
 
 output_tokens = keras_nlp.utils.beam_search(
     token_logits_fn,
-    tf.convert_to_tensor(start_tokens),
+    prompt_tokens,
     max_length=NUM_TOKENS_TO_GENERATE,
     num_beams=10,
     from_logits=True,
@@ -317,7 +297,7 @@ token using the softmax probabilities provided by the model.
 
 output_tokens = keras_nlp.utils.random_search(
     token_logits_fn,
-    tf.convert_to_tensor(start_tokens),
+    prompt_tokens,
     max_length=NUM_TOKENS_TO_GENERATE,
     from_logits=True,
 )
@@ -342,7 +322,7 @@ nonsensical words!
 
 output_tokens = keras_nlp.utils.top_k_search(
     token_logits_fn,
-    tf.convert_to_tensor(start_tokens),
+    prompt_tokens,
     max_length=NUM_TOKENS_TO_GENERATE,
     k=10,
     from_logits=True,
@@ -369,7 +349,7 @@ similarly filter out the top 10 tokens to sample from.
 
 output_tokens = keras_nlp.utils.top_p_search(
     token_logits_fn,
-    tf.convert_to_tensor(start_tokens),
+    prompt_tokens,
     max_length=NUM_TOKENS_TO_GENERATE,
     p=0.5,
     from_logits=True,
@@ -394,7 +374,7 @@ class TopKTextGenerator(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         output_tokens = keras_nlp.utils.top_k_search(
             token_logits_fn,
-            tf.convert_to_tensor(start_tokens),
+            prompt_tokens,
             max_length=NUM_TOKENS_TO_GENERATE,
             k=self.k,
             from_logits=True,
@@ -405,14 +385,17 @@ class TopKTextGenerator(keras.callbacks.Callback):
 
 text_generation_callback = TopKTextGenerator(k=10)
 # Dummy training loop to demonstrate callback.
-model.fit(ds.take(1), verbose=2, epochs=2, callbacks=[text_generation_callback])
+model.fit(train_ds.take(1), verbose=2, epochs=2, callbacks=[text_generation_callback])
 
 """
 ## Conclusion
 
-Congrats, you made it through the example! To recap, in this example, we use
-WordPieceTokenizer with the pre-trained BERT vocabulary to create sub-word tokens from our data.
-We then create a simple GPT-like model using Keras NLP's TokenAndPositionEmbedding and
-TransformerDecoder layers. Finally, we demonstrate inference with the text generation
-utility library and show how the different algorithms perform.
+Congrats, you made it through the example! To recap, in this example, we use KerasNLP
+layers to train a sub-word vocabulary, tokenize training data, create a miniature GPT
+model, and perform inference with the text generation library.
+
+If you would like to understand how transformers work, or learn more about training the
+full GPT model, here are some further readings:
+- Attention Is All You Need [Vaswani et al., 2017](https://arxiv.org/pdf/1706.03762.pdf)
+- GPT-3 Paper [Brown et al., 2020](https://arxiv.org/pdf/2005.14165.pdf)
 """
