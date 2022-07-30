@@ -89,14 +89,13 @@ images/Abyssinian_107.jpg | annotations/trimaps/Abyssinian_107.png
 ```python
 from IPython.display import Image, display
 from tensorflow.keras.preprocessing.image import load_img
-import PIL
 from PIL import ImageOps
 
 # Display input image #7
 display(Image(filename=input_img_paths[9]))
 
 # Display auto-contrast version of corresponding target (per-pixel categories)
-img = PIL.ImageOps.autocontrast(load_img(target_img_paths[9]))
+img = ImageOps.autocontrast(load_img(target_img_paths[9]))
 display(img)
 ```
 
@@ -486,7 +485,7 @@ def display_mask(i):
     """Quick utility to display a model's prediction."""
     mask = np.argmax(val_preds[i], axis=-1)
     mask = np.expand_dims(mask, axis=-1)
-    img = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
+    img = ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
     display(img)
 
 
@@ -497,7 +496,7 @@ i = 10
 display(Image(filename=val_input_img_paths[i]))
 
 # Display ground-truth target mask
-img = PIL.ImageOps.autocontrast(load_img(val_target_img_paths[i]))
+img = ImageOps.autocontrast(load_img(val_target_img_paths[i]))
 display(img)
 
 # Display mask predicted by our model
