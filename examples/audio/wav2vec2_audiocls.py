@@ -57,7 +57,7 @@ pip install torch
 """
 ### Importing the necessary libraries
 """
-
+import random
 import logging
 
 import torch
@@ -68,6 +68,8 @@ from tensorflow.keras import layers
 
 # Only log error messages
 tf.get_logger().setLevel(logging.ERROR)
+# Set random seed
+tf.keras.utils.set_random_seed(42)
 
 """
 ### Define certain variables
@@ -80,7 +82,7 @@ SAMPLING_RATE = (
     16000  # Sampling rate is the number of samples of audio recorded every second.
 )
 BATCH_SIZE = 32  # Batch-size for training and evaluating our model.
-NUM_CLASSES = 12  # Number of classes our dataset will have (12 in our case).
+NUM_CLASSES = 11  # Number of classes our dataset will have (11 in our case).
 HIDDEN_DIM = 768  # Dimension of our model output (768 in case of Wav2Vec 2.0 - Base).
 MAX_SEQ_LENGTH = MAX_DURATION * SAMPLING_RATE  # Maximum length of the input audio file.
 MAX_FRAMES = (
@@ -142,7 +144,7 @@ speech_commands_v1 = speech_commands_v1["train"].train_test_split(
     train_size=0.05, test_size=0.05, stratify_by_column="label"
 )
 
-speech_commands_v1.filter(
+speech_commands_v1 = speech_commands_v1.filter(
     lambda x: x["label"]
     != speech_commands_v1["train"].features["label"].names.index("_unknown_")
 )
@@ -241,6 +243,7 @@ together with the config corresponding to the name of the model you have mention
 calling the method. For our task, we will choose the BASE variant of the model that has
 just been pre-trained, since we will fine-tune over it.
 """
+
 from transformers import TFWav2Vec2Model
 
 
@@ -366,6 +369,27 @@ model.fit(
     batch_size=BATCH_SIZE,
     epochs=MAX_EPOCHS,
 )
+
+"""
+Great! Now that we have trained our model, we will now predict the classes
+for audios in the test set using the `model.predict()` method!
+"""
+
+preds = model.predict(test_x)
+
+"""
+Now we will try to infer the model we trained on a randomly sampled audio file.
+We will hear the audio file and then also see how well our model was able to predict!
+"""
+
+import IPython.display as ipd
+
+rand_int = random.randint(0, len(test_x))
+
+ipd.Audio(data=np.asarray(test_x["input_values"][rand_int]), autoplay=True, rate=16000)
+
+print("Original Label is ", id2label[str(test["label"][rand_int])])
+print("Predicted Label is ", id2label[str(np.argmax((preds[rand_int])))])
 
 """
 Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
