@@ -670,7 +670,7 @@ Epoch 10/10
 
 On unfreezing layers:
 
-- The `BathcNormalization` layers need to be kept frozen
+- The `BatchNormalization` layers need to be kept frozen
 ([more details](https://keras.io/guides/transfer_learning/)).
 If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.

@@ -703,3 +703,9 @@ You can obtain better results by increasing the size of the training sample,
 train for more  epochs, explore other base encoders for images and text,
 set the base encoders to be trainable, and tune the hyperparameters,
 especially the `temperature` for the softmax in the loss computation.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-nl%20image%20search-black.svg)](https://huggingface.co/keras-io/dual-encoder-image-search) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-nl%20image%20search-black.svg)](https://huggingface.co/spaces/keras-io/dual-encoder-image-search) |
