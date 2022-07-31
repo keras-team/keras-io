@@ -142,15 +142,16 @@ model.summary()
 ```
 Model: "mnist_model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 784)]             0         
-_________________________________________________________________
-dense (Dense)                (None, 64)                50240     
-_________________________________________________________________
-dense_1 (Dense)              (None, 64)                4160      
-_________________________________________________________________
-dense_2 (Dense)              (None, 10)                650       
+ input_1 (InputLayer)        [(None, 784)]             0         
+                                                                 
+ dense (Dense)               (None, 64)                50240     
+                                                                 
+ dense_1 (Dense)             (None, 64)                4160      
+                                                                 
+ dense_2 (Dense)             (None, 10)                650       
+                                                                 
 =================================================================
 Total params: 55,050
 Trainable params: 55,050
@@ -169,7 +170,9 @@ keras.utils.plot_model(model, "my_first_model.png")
 
 
 
+    
 ![png](/img/guides/functional_api/functional_api_20_0.png)
+    
 
 
 
@@ -184,7 +187,9 @@ keras.utils.plot_model(model, "my_first_model_with_shape_info.png", show_shapes=
 
 
 
+    
 ![png](/img/guides/functional_api/functional_api_22_0.png)
+    
 
 
 
@@ -204,7 +209,7 @@ The `Model` class offers a built-in training loop (the `fit()` method)
 and a built-in evaluation loop (the `evaluate()` method). Note
 that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
 to implement training routines beyond supervised learning
-(e.g. [GANs](/examples/generative/dcgan_overriding_train_step/)).
+(e.g. [GANs](https://keras.io/examples/generative/dcgan_overriding_train_step/)).
 
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
@@ -233,12 +238,12 @@ print("Test accuracy:", test_scores[1])
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 2s 2ms/step - loss: 0.5648 - accuracy: 0.8473 - val_loss: 0.1793 - val_accuracy: 0.9474
+750/750 [==============================] - 2s 2ms/step - loss: 0.3435 - accuracy: 0.9026 - val_loss: 0.1797 - val_accuracy: 0.9507
 Epoch 2/2
-750/750 [==============================] - 1s 1ms/step - loss: 0.1686 - accuracy: 0.9506 - val_loss: 0.1398 - val_accuracy: 0.9576
-313/313 - 0s - loss: 0.1401 - accuracy: 0.9580
-Test loss: 0.14005452394485474
-Test accuracy: 0.9580000042915344
+750/750 [==============================] - 1s 2ms/step - loss: 0.1562 - accuracy: 0.9539 - val_loss: 0.1307 - val_accuracy: 0.9603
+313/313 - 0s - loss: 0.1305 - accuracy: 0.9609 - 248ms/epoch - 793us/step
+Test loss: 0.1305118203163147
+Test accuracy: 0.9609000086784363
 
 ```
 </div>
@@ -315,21 +320,24 @@ autoencoder.summary()
 ```
 Model: "encoder"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-img (InputLayer)             [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-conv2d (Conv2D)              (None, 26, 26, 16)        160       
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 24, 24, 32)        4640      
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 8, 8, 32)          0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 6, 6, 32)          9248      
-_________________________________________________________________
-conv2d_3 (Conv2D)            (None, 4, 4, 16)          4624      
-_________________________________________________________________
-global_max_pooling2d (Global (None, 16)                0         
+ img (InputLayer)            [(None, 28, 28, 1)]       0         
+                                                                 
+ conv2d (Conv2D)             (None, 26, 26, 16)        160       
+                                                                 
+ conv2d_1 (Conv2D)           (None, 24, 24, 32)        4640      
+                                                                 
+ max_pooling2d (MaxPooling2D  (None, 8, 8, 32)         0         
+ )                                                               
+                                                                 
+ conv2d_2 (Conv2D)           (None, 6, 6, 32)          9248      
+                                                                 
+ conv2d_3 (Conv2D)           (None, 4, 4, 16)          4624      
+                                                                 
+ global_max_pooling2d (Globa  (None, 16)               0         
+ lMaxPooling2D)                                                  
+                                                                 
 =================================================================
 Total params: 18,672
 Trainable params: 18,672
@@ -337,33 +345,41 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "autoencoder"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-img (InputLayer)             [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-conv2d (Conv2D)              (None, 26, 26, 16)        160       
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 24, 24, 32)        4640      
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 8, 8, 32)          0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 6, 6, 32)          9248      
-_________________________________________________________________
-conv2d_3 (Conv2D)            (None, 4, 4, 16)          4624      
-_________________________________________________________________
-global_max_pooling2d (Global (None, 16)                0         
-_________________________________________________________________
-reshape (Reshape)            (None, 4, 4, 1)           0         
-_________________________________________________________________
-conv2d_transpose (Conv2DTran (None, 6, 6, 16)          160       
-_________________________________________________________________
-conv2d_transpose_1 (Conv2DTr (None, 8, 8, 32)          4640      
-_________________________________________________________________
-up_sampling2d (UpSampling2D) (None, 24, 24, 32)        0         
-_________________________________________________________________
-conv2d_transpose_2 (Conv2DTr (None, 26, 26, 16)        4624      
-_________________________________________________________________
-conv2d_transpose_3 (Conv2DTr (None, 28, 28, 1)         145       
+ img (InputLayer)            [(None, 28, 28, 1)]       0         
+                                                                 
+ conv2d (Conv2D)             (None, 26, 26, 16)        160       
+                                                                 
+ conv2d_1 (Conv2D)           (None, 24, 24, 32)        4640      
+                                                                 
+ max_pooling2d (MaxPooling2D  (None, 8, 8, 32)         0         
+ )                                                               
+                                                                 
+ conv2d_2 (Conv2D)           (None, 6, 6, 32)          9248      
+                                                                 
+ conv2d_3 (Conv2D)           (None, 4, 4, 16)          4624      
+                                                                 
+ global_max_pooling2d (Globa  (None, 16)               0         
+ lMaxPooling2D)                                                  
+                                                                 
+ reshape (Reshape)           (None, 4, 4, 1)           0         
+                                                                 
+ conv2d_transpose (Conv2DTra  (None, 6, 6, 16)         160       
+ nspose)                                                         
+                                                                 
+ conv2d_transpose_1 (Conv2DT  (None, 8, 8, 32)         4640      
+ ranspose)                                                       
+                                                                 
+ up_sampling2d (UpSampling2D  (None, 24, 24, 32)       0         
+ )                                                               
+                                                                 
+ conv2d_transpose_2 (Conv2DT  (None, 26, 26, 16)       4624      
+ ranspose)                                                       
+                                                                 
+ conv2d_transpose_3 (Conv2DT  (None, 28, 28, 1)        145       
+ ranspose)                                                       
+                                                                 
 =================================================================
 Total params: 28,241
 Trainable params: 28,241
@@ -425,21 +441,24 @@ autoencoder.summary()
 ```
 Model: "encoder"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-original_img (InputLayer)    [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-conv2d_4 (Conv2D)            (None, 26, 26, 16)        160       
-_________________________________________________________________
-conv2d_5 (Conv2D)            (None, 24, 24, 32)        4640      
-_________________________________________________________________
-max_pooling2d_1 (MaxPooling2 (None, 8, 8, 32)          0         
-_________________________________________________________________
-conv2d_6 (Conv2D)            (None, 6, 6, 32)          9248      
-_________________________________________________________________
-conv2d_7 (Conv2D)            (None, 4, 4, 16)          4624      
-_________________________________________________________________
-global_max_pooling2d_1 (Glob (None, 16)                0         
+ original_img (InputLayer)   [(None, 28, 28, 1)]       0         
+                                                                 
+ conv2d_4 (Conv2D)           (None, 26, 26, 16)        160       
+                                                                 
+ conv2d_5 (Conv2D)           (None, 24, 24, 32)        4640      
+                                                                 
+ max_pooling2d_1 (MaxPooling  (None, 8, 8, 32)         0         
+ 2D)                                                             
+                                                                 
+ conv2d_6 (Conv2D)           (None, 6, 6, 32)          9248      
+                                                                 
+ conv2d_7 (Conv2D)           (None, 4, 4, 16)          4624      
+                                                                 
+ global_max_pooling2d_1 (Glo  (None, 16)               0         
+ balMaxPooling2D)                                                
+                                                                 
 =================================================================
 Total params: 18,672
 Trainable params: 18,672
@@ -447,21 +466,27 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "decoder"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-encoded_img (InputLayer)     [(None, 16)]              0         
-_________________________________________________________________
-reshape_1 (Reshape)          (None, 4, 4, 1)           0         
-_________________________________________________________________
-conv2d_transpose_4 (Conv2DTr (None, 6, 6, 16)          160       
-_________________________________________________________________
-conv2d_transpose_5 (Conv2DTr (None, 8, 8, 32)          4640      
-_________________________________________________________________
-up_sampling2d_1 (UpSampling2 (None, 24, 24, 32)        0         
-_________________________________________________________________
-conv2d_transpose_6 (Conv2DTr (None, 26, 26, 16)        4624      
-_________________________________________________________________
-conv2d_transpose_7 (Conv2DTr (None, 28, 28, 1)         145       
+ encoded_img (InputLayer)    [(None, 16)]              0         
+                                                                 
+ reshape_1 (Reshape)         (None, 4, 4, 1)           0         
+                                                                 
+ conv2d_transpose_4 (Conv2DT  (None, 6, 6, 16)         160       
+ ranspose)                                                       
+                                                                 
+ conv2d_transpose_5 (Conv2DT  (None, 8, 8, 32)         4640      
+ ranspose)                                                       
+                                                                 
+ up_sampling2d_1 (UpSampling  (None, 24, 24, 32)       0         
+ 2D)                                                             
+                                                                 
+ conv2d_transpose_6 (Conv2DT  (None, 26, 26, 16)       4624      
+ ranspose)                                                       
+                                                                 
+ conv2d_transpose_7 (Conv2DT  (None, 28, 28, 1)        145       
+ ranspose)                                                       
+                                                                 
 =================================================================
 Total params: 9,569
 Trainable params: 9,569
@@ -469,13 +494,14 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "autoencoder"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-img (InputLayer)             [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-encoder (Functional)         (None, 16)                18672     
-_________________________________________________________________
-decoder (Functional)         (None, 28, 28, 1)         9569      
+ img (InputLayer)            [(None, 28, 28, 1)]       0         
+                                                                 
+ encoder (Functional)        (None, 16)                18672     
+                                                                 
+ decoder (Functional)        (None, 28, 28, 1)         9569      
+                                                                 
 =================================================================
 Total params: 28,241
 Trainable params: 28,241
@@ -584,7 +610,9 @@ keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=Tr
 
 
 
+    
 ![png](/img/guides/functional_api/functional_api_40_0.png)
+    
 
 
 
@@ -643,11 +671,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 3s 21ms/step - loss: 1.2713 - priority_loss: 0.7000 - department_loss: 2.8567
+40/40 [==============================] - 3s 23ms/step - loss: 1.3256 - priority_loss: 0.7024 - department_loss: 3.1160
 Epoch 2/2
-40/40 [==============================] - 1s 22ms/step - loss: 1.2947 - priority_loss: 0.6990 - department_loss: 2.9786
+40/40 [==============================] - 1s 25ms/step - loss: 1.2926 - priority_loss: 0.6976 - department_loss: 2.9749
 
-<tensorflow.python.keras.callbacks.History at 0x156dbce10>
+<keras.callbacks.History at 0x1300d6110>
 
 ```
 </div>
@@ -697,39 +725,42 @@ model.summary()
 ```
 Model: "toy_resnet"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+ Layer (type)                   Output Shape         Param #     Connected to                     
 ==================================================================================================
-img (InputLayer)                [(None, 32, 32, 3)]  0                                            
-__________________________________________________________________________________________________
-conv2d_8 (Conv2D)               (None, 30, 30, 32)   896         img[0][0]                        
-__________________________________________________________________________________________________
-conv2d_9 (Conv2D)               (None, 28, 28, 64)   18496       conv2d_8[0][0]                   
-__________________________________________________________________________________________________
-max_pooling2d_2 (MaxPooling2D)  (None, 9, 9, 64)     0           conv2d_9[0][0]                   
-__________________________________________________________________________________________________
-conv2d_10 (Conv2D)              (None, 9, 9, 64)     36928       max_pooling2d_2[0][0]            
-__________________________________________________________________________________________________
-conv2d_11 (Conv2D)              (None, 9, 9, 64)     36928       conv2d_10[0][0]                  
-__________________________________________________________________________________________________
-add (Add)                       (None, 9, 9, 64)     0           conv2d_11[0][0]                  
-                                                                 max_pooling2d_2[0][0]            
-__________________________________________________________________________________________________
-conv2d_12 (Conv2D)              (None, 9, 9, 64)     36928       add[0][0]                        
-__________________________________________________________________________________________________
-conv2d_13 (Conv2D)              (None, 9, 9, 64)     36928       conv2d_12[0][0]                  
-__________________________________________________________________________________________________
-add_1 (Add)                     (None, 9, 9, 64)     0           conv2d_13[0][0]                  
-                                                                 add[0][0]                        
-__________________________________________________________________________________________________
-conv2d_14 (Conv2D)              (None, 7, 7, 64)     36928       add_1[0][0]                      
-__________________________________________________________________________________________________
-global_average_pooling2d (Globa (None, 64)           0           conv2d_14[0][0]                  
-__________________________________________________________________________________________________
-dense_6 (Dense)                 (None, 256)          16640       global_average_pooling2d[0][0]   
-__________________________________________________________________________________________________
-dropout (Dropout)               (None, 256)          0           dense_6[0][0]                    
-__________________________________________________________________________________________________
-dense_7 (Dense)                 (None, 10)           2570        dropout[0][0]                    
+ img (InputLayer)               [(None, 32, 32, 3)]  0           []                               
+                                                                                                  
+ conv2d_8 (Conv2D)              (None, 30, 30, 32)   896         ['img[0][0]']                    
+                                                                                                  
+ conv2d_9 (Conv2D)              (None, 28, 28, 64)   18496       ['conv2d_8[0][0]']               
+                                                                                                  
+ max_pooling2d_2 (MaxPooling2D)  (None, 9, 9, 64)    0           ['conv2d_9[0][0]']               
+                                                                                                  
+ conv2d_10 (Conv2D)             (None, 9, 9, 64)     36928       ['max_pooling2d_2[0][0]']        
+                                                                                                  
+ conv2d_11 (Conv2D)             (None, 9, 9, 64)     36928       ['conv2d_10[0][0]']              
+                                                                                                  
+ add (Add)                      (None, 9, 9, 64)     0           ['conv2d_11[0][0]',              
+                                                                  'max_pooling2d_2[0][0]']        
+                                                                                                  
+ conv2d_12 (Conv2D)             (None, 9, 9, 64)     36928       ['add[0][0]']                    
+                                                                                                  
+ conv2d_13 (Conv2D)             (None, 9, 9, 64)     36928       ['conv2d_12[0][0]']              
+                                                                                                  
+ add_1 (Add)                    (None, 9, 9, 64)     0           ['conv2d_13[0][0]',              
+                                                                  'add[0][0]']                    
+                                                                                                  
+ conv2d_14 (Conv2D)             (None, 7, 7, 64)     36928       ['add_1[0][0]']                  
+                                                                                                  
+ global_average_pooling2d (Glob  (None, 64)          0           ['conv2d_14[0][0]']              
+ alAveragePooling2D)                                                                              
+                                                                                                  
+ dense_6 (Dense)                (None, 256)          16640       ['global_average_pooling2d[0][0]'
+                                                                 ]                                
+                                                                                                  
+ dropout (Dropout)              (None, 256)          0           ['dense_6[0][0]']                
+                                                                                                  
+ dense_7 (Dense)                (None, 10)           2570        ['dropout[0][0]']                
+                                                                                                  
 ==================================================================================================
 Total params: 223,242
 Trainable params: 223,242
@@ -748,7 +779,9 @@ keras.utils.plot_model(model, "mini_resnet.png", show_shapes=True)
 
 
 
+    
 ![png](/img/guides/functional_api/functional_api_51_0.png)
+    
 
 
 
@@ -775,9 +808,9 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 2s 103ms/step - loss: 2.3218 - acc: 0.1291 - val_loss: 2.3014 - val_acc: 0.1150
+13/13 [==============================] - 2s 98ms/step - loss: 2.3066 - acc: 0.1150 - val_loss: 2.2940 - val_acc: 0.1050
 
-<tensorflow.python.keras.callbacks.History at 0x157848990>
+<keras.callbacks.History at 0x1305fee10>
 
 ```
 </div>
