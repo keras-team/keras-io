@@ -96,7 +96,7 @@ CSV_HEADER = [
     "country_of_birth_self",
     "citizenship",
     "own_business_or_self_employed",
-    "fill_inc_questionnaire_for_veteran's_admin",
+    "fill_inc_questionnaire_for_veterans_admin",
     "veterans_benefits",
     "weeks_worked_in_year",
     "year",
@@ -444,4 +444,12 @@ You should achieve more than 95% accuracy on the test set.
 To increase the learning capacity of the model, you can try increasing the
 `encoding_size` value, or stacking multiple GRN layers on top of the VSN layer.
 This may require to also increase the `dropout_rate` value to avoid overfitting.
+"""
+
+"""
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Classification%20With%20GRN%20%26%20VSN-red)](https://huggingface.co/keras-io/structured-data-classification-grn-vsn) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Classification%20With%20GRN%20%26%20VSN-red)](https://huggingface.co/spaces/keras-io/structured-data-classification-grn-vsn) |
 """
