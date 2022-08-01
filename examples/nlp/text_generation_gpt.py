@@ -28,7 +28,7 @@ training.
 """
 
 """
-## Mini-GPT Text Generation with KerasNLP
+## Mini-GPT text generation with KerasNLP
 
 This example requires KerasNLP. You can install it via the following command: `pip
 install keras-nlp`
