@@ -43,7 +43,7 @@ This guide doesn't cover distributed training, which is covered in our
 ## API overview: a first end-to-end example
 
 When passing data to the built-in training loops of a model, you should either use
-**NumPy arrays** (if your data is small and fits in memory) or **[tf.data.Dataset](https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=nightly)
+**NumPy arrays** (if your data is small and fits in memory) or **[tf.data.Dataset]
 objects**. In the next few paragraphs, we'll use the MNIST dataset as NumPy arrays, in
 order to demonstrate how to use optimizers, losses, and metrics.
 
