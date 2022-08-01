@@ -70,7 +70,7 @@ NUM_TOKENS_TO_GENERATE = 80
 ## Load data
 
 Now, let's download the dataset! The SimpleBooks dataset consists of 1573 Gutenberg books, and has
-one of the smallest ratio of vocabulary size to word-level tokens. It has a vocabulary size of ~98k, 
+one of the smallest vocabulary size to word-level tokens ratio. It has a vocabulary size of ~98k, 
 a third of WikiText-103's, with around the same number of tokens (~100M). This makes it easy to fit a small model.
 """
 
