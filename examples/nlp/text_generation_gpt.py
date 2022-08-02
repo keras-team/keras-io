@@ -67,7 +67,7 @@ NUM_TOKENS_TO_GENERATE = 80
 ## Load the data
 
 Now, let's download the dataset! The SimpleBooks dataset consists of 1,573 Gutenberg books, and has
-one of the smallest vocabulary size to word-level tokens ratio. It has a vocabulary size of ~98k, 
+one of the smallest vocabulary size to word-level tokens ratio. It has a vocabulary size of ~98k,
 a third of WikiText-103's, with around the same number of tokens (~100M). This makes it easy to fit a small model.
 """
 
@@ -389,12 +389,12 @@ model.fit(train_ds.take(1), verbose=2, epochs=2, callbacks=[text_generation_call
 ## Conclusion
 
 To recap, in this example, we use KerasNLP layers to train a sub-word vocabulary,
-tokenize training data, create a miniature GPT model, and perform inference with the 
+tokenize training data, create a miniature GPT model, and perform inference with the
 text generation library.
 
 If you would like to understand how Transformers work, or learn more about training the
 full GPT model, here are some further readings:
 
-- Attention Is All You Need [Vaswani et al., 2017](https://arxiv.org/pdf/1706.03762.pdf)
-- GPT-3 Paper [Brown et al., 2020](https://arxiv.org/pdf/2005.14165.pdf)
+- Attention Is All You Need [Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)
+- GPT-3 Paper [Brown et al., 2020](https://arxiv.org/abs/2005.14165)
 """
