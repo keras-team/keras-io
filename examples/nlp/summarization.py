@@ -1,9 +1,9 @@
 """
-Title: Abstractive Summarization with 🤗 Transformers.
+Title: Abstractive Summarization with Hugging Face Transformers.
 Author: Sreyan Ghosh
 Date created: 2022/07/04
 Last modified: 2022/07/04
-Description: Training T5 using 🤗 Transformers for Abstractive Summarization.
+Description: Training T5 using Hugging Face Transformers for Abstractive Summarization.
 """
 
 """
@@ -54,12 +54,15 @@ pip install rouge-score
 """
 
 import os
-import numpy as np
+import logging
 
 import nltk
+import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+# Only log error messages
+tf.get_logger().setLevel(logging.ERROR)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -115,13 +118,13 @@ The dataset has the following fields:
 - **id**: ID of the document-summary pair
 """
 
-raw_datasets
+print(raw_datasets)
 
 """
 We will now see how the data looks like:
 """
 
-raw_datasets[0]
+print(raw_datasets[0])
 
 """
 For the sake of demonstrating the workflow, in this notebook we will only take
@@ -276,9 +279,9 @@ Now we will define our optimizer and compile the model. The loss calculation is 
 internally and so we need not worry about that!
 """
 
-from transformers import AdamWeightDecay
-
-optimizer = AdamWeightDecay(learning_rate=LEARNING_RATE, weight_decay_rate=WEIGHT_DECAY)
+optimizer = keras.optimizers.experimental.AdamW(
+    learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
+)
 model.compile(optimizer=optimizer)
 
 """
@@ -286,7 +289,7 @@ model.compile(optimizer=optimizer)
 """
 
 """
-To evaluate our model on-the-fly while training, we will defien `metric_fn` which will
+To evaluate our model on-the-fly while training, we will define `metric_fn` which will
 calculate the `ROUGE` score between the groud-truth and predictions.
 """
 
