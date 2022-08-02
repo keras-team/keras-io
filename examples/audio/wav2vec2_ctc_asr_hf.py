@@ -1,9 +1,9 @@
 """
-Title: Finetuning Wav2Vec 2.0 with Hugging Face Transformers.
+Title: Finetuning Wav2Vec 2.0 with Hugging Face Transformers for Automatic Speech Recognition.
 Author: Sreyan Ghosh
 Date created: 2022/07/10
 Last modified: 2022/07/10
-Description: Finetuning Wav2Vec 2.0 with Hugging Face Transformers on CTC.
+Description: Finetuning Wav2Vec 2.0 with Hugging Face Transformers to optimize CTC loss for Automatic Speech Recognition.
 """
 
 """
@@ -13,7 +13,7 @@ Description: Finetuning Wav2Vec 2.0 with Hugging Face Transformers on CTC.
 """
 ### Automatic Speech Recognition (ASR)
 
-Automatic Speech recognition is an subfield of computer science, computational
+Automatic Speech Recognition is an subfield of computer science, computational
 linguistics and electrical engineering that develops methodologies and technologies that
 enable the recognition and translation of spoken utterances into text by computers. With
 the recent advances in Deep Neural Network (DNN) powered AI, ASR has achieved impressive
@@ -70,13 +70,15 @@ import json
 import random
 import logging
 import numpy as np
+import pandas as pd
 
-# import tensorflow as tf
+import tensorflow as tf
 from tensorflow import keras
 import IPython.display as ipd
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
 
+# Only log error messages
 tf.get_logger().setLevel(logging.ERROR)
 
 """
@@ -142,7 +144,7 @@ The dataset has the following fields:
 - **id**: The unique ID for the utterance
 """
 
-librispeech
+print(librispeech)
 
 """
 Many ASR datasets only provide the target text, `'text'` for each audio `'audio'` and file
@@ -186,11 +188,7 @@ Let's write a short function to display some random samples of the dataset and r
 couple of times to get a feeling for the transcriptions.
 """
 
-from datasets import ClassLabel
-import random
-import pandas as pd
 from IPython.display import display, HTML
-
 
 def show_random_elements(dataset, num_examples=10):
     assert num_examples <= len(
@@ -260,7 +258,7 @@ and convert the resulting list into an enumerated dictionary.
 vocab_list = list(set(vocabs["train"]["vocab"][0]) | set(vocabs["test"]["vocab"][0]))
 
 vocab_dict = {v: k for k, v in enumerate(vocab_list)}
-vocab_dict
+print(vocab_dict)
 
 """
 Cool, we see that almost all letters of the alphabet occur in the dataset
@@ -290,7 +288,7 @@ del vocab_dict[" "]
 vocab_dict["[UNK]"] = len(vocab_dict)
 vocab_dict["[PAD]"] = len(vocab_dict)
 
-vocab_dict
+print(vocab_dict)
 
 """
 Cool, now our vocabulary is complete and consists of 30 tokens, which means that the
@@ -329,7 +327,7 @@ transcription. In addition to `'text'`, our datasets include two more column nam
 look.
 """
 
-librispeech["train"][0]["file"]
+print(librispeech["train"][0]["file"])
 
 """
 Wav2Vec 2.0 expects the input in the format of a 1-dimensional array of 16 kHz.
@@ -339,7 +337,7 @@ Thankfully, datasets does this automatically when calling the column audio. Let 
 out.
 """
 
-librispeech["train"][0]["audio"]
+print(librispeech["train"][0]["audio"])
 
 """
 We can see that the audio file has automatically been loaded. 🤗 Datasets automatically
@@ -438,7 +436,6 @@ def prepare_dataset(batch):
     with processor.as_target_processor():
         batch["labels"] = processor(batch["text"]).input_ids
     return batch
-
 
 """
 Let's apply the data preparation function to all examples.
@@ -610,7 +607,7 @@ internally and so we need not worry about that!
 """
 
 optimizer = keras.optimizers.Adam(learning_rate=LEARNING_RATE)
-model.compile(optimizer=optimizer, metrics=[compute_wer])
+model.compile(optimizer=optimizer, metrics=[compute_wer], run_eagerly=True)
 
 """
 ## Training and Evaluating the Model
@@ -620,7 +617,6 @@ model.compile(optimizer=optimizer, metrics=[compute_wer])
 Now we can finally start training our model!
 """
 
-tf.config.run_functions_eagerly(True)
 model.fit(train, validation_data=test, epochs=MAX_EPOCHS)
 
 """
