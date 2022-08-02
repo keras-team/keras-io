@@ -1,5 +1,5 @@
 """
-Title: Audio Classification with Hugging Face Transformers.
+Title: Audio Classification with Hugging Face Transformers
 Author: Sreyan Ghosh
 Date created: 2022/07/01
 Last modified: 2022/07/01
@@ -8,33 +8,31 @@ Description: Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Clas
 
 """
 ## Introduction
-"""
 
-"""
-Identification of speech commands, also known as keyword spotting (KWS),
+Identification of speech commands, also known as *keyword spotting* (KWS),
 is important from an engineering perspective for a wide range of applications,
 from indexing audio databases and indexing keywords, to running speech models locally
-in microcontrollers. Currently, many human-computer interfaces (HCI) like Google
+on microcontrollers. Currently, many human-computer interfaces (HCI) like Google
 Assistant, Microsoft Cortana, Amazon Alexa, Apple Siri and others rely on keyword
 spotting. There is a significant amount of research in the field by all major companies,
 notably Google and Baidu.
 
-In the past decade, the development of neural models has shown significant performance
+In the past decade, deep learning has led to significant performance
 gains on this task. Though low-level audio features extracted from raw audio like MFCC or
 mel-filterbanks have been used for decades, the design of these low-level features
-are [flawed by biases](https://arxiv.org/abs/2101.08596). Moreover, neural models
+are [flawed by biases](https://arxiv.org/abs/2101.08596). Moreover, deep learning models
 trained on these low-level features can easily overfit to noise or signals irrelevant to the
 task.  This makes it is essential for any system to learn speech representations that make
 high-level information, such as acoustic and linguistic content, including phonemes,
 words, semantic meanings, tone, speaker characteristics from speech signals available to
 solve the downstream task. [Wav2Vec 2.0](https://arxiv.org/abs/2006.11477), which solves a
 self-supervised contratsive learning task to learn high-level speech reprentations,
-provides a great alternative to traditional low-level features for training neural
+provides a great alternative to traditional low-level features for training deep learning
 models for KWS.
 
-In this notebook, we will train the Wav2Vec 2.0 (Base) model, built on the
-🤗 transformers library, in an end-to-end fashion on the task of KWS and observe
-it achieve state-of-the-art results on the Google Speech Commands Dataset.
+In this notebook, we train the Wav2Vec 2.0 (base) model, built on the
+🤗 Transformers library, in an end-to-end fashion on the keyword spotting task and
+achieve state-of-the-art results on the Google Speech Commands Dataset.
 """
 
 """
@@ -51,7 +49,6 @@ pip install datasets
 pip install huggingface-hub
 pip install joblib
 pip install librosa
-pip install torch
 """
 
 """
@@ -60,7 +57,6 @@ pip install torch
 import random
 import logging
 
-import torch
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -76,7 +72,7 @@ tf.keras.utils.set_random_seed(42)
 """
 
 MAX_DURATION = (
-    1  # Maximum duration of the input audio file we will feed to our Wav2Vec 2.0 model.
+    1  # Maximum duration of the input audio file we feed to our Wav2Vec 2.0 model.
 )
 SAMPLING_RATE = (
     16000  # Sampling rate is the number of samples of audio recorded every second.
@@ -99,12 +95,12 @@ MODEL_CHECKPOINT = (
 """
 
 """
-We will now download the [Google Speech Commands V1 Dataset](https://arxiv.org/abs/1804.03209),
-a popular benchmark for training and evaluating neural models built for solving the task
-of KWS. The dataset consists of a total of 60,973 audio files, each of 1 second duration,
+We now download the [Google Speech Commands V1 Dataset](https://arxiv.org/abs/1804.03209),
+a popular benchmark for training and evaluating deep learning models built for solving the KWS task.
+The dataset consists of a total of 60,973 audio files, each of 1 second duration,
 divided into ten classes of keywords ("Yes", "No", "Up", "Down", "Left", "Right", "On",
 "Off", "Stop", and "Go"), a class for silence, and an unknown class to include the false
-positive. We will load the dataset from [🤗 Datasets](https://github.com/huggingface/datasets).
+positive. We load the dataset from [🤗 Datasets](https://github.com/huggingface/datasets).
 This can be easily done with the `load_dataset` function.
 """
 
@@ -127,15 +123,15 @@ print(speech_commands_v1)
 """
 
 """
-For the sake of demonstrating the workflow, in this notebook we will only take
+For the sake of demonstrating the workflow, in this notebook we only take
 small stratified balanced splits (5%) of the train as our training and test sets.
 We can easily split teh dataset using the `train_test_split` method which expects
 the split size and the name of the column relative to which you want to stratify.
 
-Post splitting the dataset, we will remove the `unknown` class and only focus on the
+Post splitting the dataset, we remove the `unknown` class and only focus on the
 ten main classes plus silence. The `filter` method does that easily for you.
 
-Next we will sample our train and test splits to a multiple of the BATCH_SIZE to
+Next we sample our train and test splits to a multiple of the `BATCH_SIZE` to
 facilitate smooth training and inference. You can achieve that using the `select`
 method which expects the indices of the samples you want to keep. Rest all are
 discarded.
@@ -171,7 +167,7 @@ print(id2label)
 
 """
 Before we can feed the audio utterance samples to our model, we need to
-pre-process them. This is done by a 🤗 Transformers `Feature Extractor`
+pre-process them. This is done by a 🤗 Transformers "Feature Extractor"
 which will (as the name indicates) re-sample your the inputs to sampling rate
 the the model expects (in-case they exist with a different sampling rate), as well
 as generate the other inputs that model requires.
@@ -184,9 +180,9 @@ We download the config that was used when pretraining this specific checkpoint.
 This will be cached so it's not downloaded again the next time we run the cell.
 
 The `from_pretrained()` method expects the name of a model from the 🤗 Hub. This is
-exactly similar to MODEL_CHECKPOINT and we will just pass that.
+exactly similar to `MODEL_CHECKPOINT` and we just pass that.
 
-We will write a simple function that helps us in the pre-processing that is compatible
+We write a simple function that helps us in the pre-processing that is compatible
 with 🤗 Datasets. To summarize, our pre-processing function should:
 
 - Call the audio column to load and if necessary resample the audio file.
@@ -214,7 +210,7 @@ def preprocess_function(examples):
     return inputs
 
 
-# This line with pre-process our speech_commands_v1 dataset. We will also remove the "audio"
+# This line with pre-process our speech_commands_v1 dataset. We also remove the "audio"
 # and "file" columns as they will be of no use to us while training.
 processed_speech_commands_v1 = speech_commands_v1.map(
     preprocess_function, remove_columns=["audio", "file"], batched=True
@@ -231,7 +227,7 @@ test = processed_speech_commands_v1["test"].shuffle(seed=42).with_format("numpy"
 """
 We now define our model. To be precise, we define a Wav2Vec 2.0 model and add a
 Classification-Head on top to output a probability ditribution of all classes for each
-input audio sample. Since the model might get complex we will first define the Wav2Vec
+input audio sample. Since the model might get complex we first define the Wav2Vec
 2.0 model with Classification-Head as a Keras layer and then build the model using that.
 
 We instantiate our main Wav2Vec 2.0 model using the `TFWav2Vec2Model` class. This will
@@ -239,8 +235,8 @@ instantiate a model which will output 768 or 1024 dimensional embeddings accordi
 the config you choose (BASE or LARGE). The `from_pretrained()` additionally helps you
 load pre-trained weights from the 🤗 Model Hub. It will download the pre-trained weights
 together with the config corresponding to the name of the model you have mentioned when
-calling the method. For our task, we will choose the BASE variant of the model that has
-just been pre-trained, since we will fine-tune over it.
+calling the method. For our task, we choose the BASE variant of the model that has
+just been pre-trained, since we fine-tune over it.
 """
 
 from transformers import TFWav2Vec2Model
@@ -314,9 +310,9 @@ class TFWav2Vec2ForAudioClassification(layers.Layer):
 """
 
 """
-We now build and compile our model. We will use the `SparseCategoricalCrossentropy`
+We now build and compile our model. We use the `SparseCategoricalCrossentropy`
 to train our model since it is a classification task. Following much of literature
-we will evaluate our model on the `accuracy` metric.
+we evaluate our model on the `accuracy` metric.
 """
 
 
@@ -337,7 +333,7 @@ def build_model():
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
     # Optimizer
     optimizer = keras.optimizers.Adam(learning_rate=1e-5)
-    # Compile and Return
+    # Compile and return
     model.compile(loss=loss, optimizer=optimizer, metrics=["accuracy"])
     return model
 
@@ -346,11 +342,9 @@ model = build_model()
 
 """
 ## Training the model
-"""
 
-"""
-Before we start training our model, we will divide the inputs into it's
-dependant and independant variables.
+Before we start training our model, we divide the inputs into its
+dependent and independent variables.
 """
 
 # Remove targets from training dictionaries
@@ -370,18 +364,18 @@ model.fit(
 )
 
 """
-Great! Now that we have trained our model, we will now predict the classes
-for audios in the test set using the `model.predict()` method! We will see
+Great! Now that we have trained our model, we predict the classes
+for audio samples in the test set using the `model.predict()` method! We see
 the model predictions are not that great as it has been trained on a very small
 number of samples for just 1 epoch. For best results, we reccomend training on
-the complete dataset for atleast 5 epochs!
+the complete dataset for at least 5 epochs!
 """
 
 preds = model.predict(test_x)
 
 """
-Now we will try to infer the model we trained on a randomly sampled audio file.
-We will hear the audio file and then also see how well our model was able to predict!
+Now we try to infer the model we trained on a randomly sampled audio file.
+We hear the audio file and then also see how well our model was able to predict!
 """
 
 import IPython.display as ipd
@@ -396,7 +390,7 @@ print("Predicted Label is ", id2label[str(np.argmax((preds[rand_int])))])
 """
 Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
 family, favorite pets: they can all load it with the identifier
-`"your-username/the-name-you-picked"` so for instance:
+`"your-username/the-name-you-picked"`, for instance:
 
 ```python
 model.push_to_hub("wav2vec2-ks", organization="keras-io")
