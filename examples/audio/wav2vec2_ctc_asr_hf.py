@@ -190,6 +190,7 @@ couple of times to get a feeling for the transcriptions.
 
 from IPython.display import display, HTML
 
+
 def show_random_elements(dataset, num_examples=10):
     assert num_examples <= len(
         dataset
@@ -436,6 +437,7 @@ def prepare_dataset(batch):
     with processor.as_target_processor():
         batch["labels"] = processor(batch["text"]).input_ids
     return batch
+
 
 """
 Let's apply the data preparation function to all examples.
