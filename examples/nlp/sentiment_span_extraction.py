@@ -56,7 +56,6 @@ pip install huggingface-hub
 import random
 import logging
 
-import torch
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -71,23 +70,22 @@ tf.keras.utils.set_random_seed(48)
 ### Define certain variables
 """
 
-MAX_LEN = 96
-MAX_EPOCHS = 2
-BATCH_SIZE = 16
-LEARNING_RATE = 3e-5
-TRAIN_TEST_SPLIT = 0.1
+MAX_LEN = 96  # Max length of the tokenized sentence input to the model.
+MAX_EPOCHS = 2  # Max number of epochs to fine-tune the model on.
+BATCH_SIZE = 16  # Number of training samples fed to the model in each batch.
+LEARNING_RATE = 3e-5  # Learning rate for model fine-tuning.
+TRAIN_TEST_SPLIT = 0.1  # Part of the whole dataset to be used for fine-tuning.
 
-MODEL_CHECKPOINT = "roberta-base"
-BASE_URL = "https://huggingface.co/datasets/SetFit/tweet_sentiment_extraction/raw/main/raw_data/"
+MODEL_CHECKPOINT = "roberta-base"  # Name of the pre-trained model from the 🤗 hub.
+BASE_URL = "https://huggingface.co/datasets/SetFit/tweet_sentiment_extraction/raw/main/raw_data/"  # URL tp fetch the data from
 
 """
 ## Load the Kaggle Tweet Sentiment Extraction Dataset
 """
 
 """
-We will now download the [Kaggle Tweet Sentiment Extraction
-Dataset](https://www.kaggle.com/competitions/tweet-sentiment-extraction). This
-competition had been hosted by Kaggle in 2020 and since then the dataset
+We will now download the [Kaggle Tweet Sentiment Extraction Dataset](https://www.kaggle.com/competitions/tweet-sentiment-extraction).
+This competition had been hosted by Kaggle in 2020 and since then the dataset
 has been quite popular for training and evaluating neural models built for solving the
 task of span extraction/classification. The dataset consists of two pre-defined splits, the
 train and the test splits, with a a total of 31,015 tweets, their corresponding sentiment labels
@@ -116,7 +114,7 @@ The dataset has the following fields:
 - **sentiment**: the sentiment label for the corresponding tweet
 """
 
-dataset
+print(dataset)
 
 """
 ## Data Pre-processing
@@ -170,15 +168,15 @@ simple function `show_random_example()` to do that:
 
 
 def show_random_example():
-
     i = random.randint(0, dataset["train"].num_rows)
     example = dataset["train"][i]
     tweet = tokenizer.tokenize(example["text"])
     sentiment = example["sentiment"]
     modified_tweet = ["<s>"] + tweet + ["</s>", "</s>"] + [sentiment] + ["</s>"]
-
     print("The original tweet is:", example["text"])
     print("The modified tweet is:", " ".join(modified_tweet))
+
+    return
 
 
 show_random_example()
@@ -195,7 +193,7 @@ sentiment_id = {}
 for sentiment in list(set(dataset["train"]["sentiment"])):
     sentiment_id[sentiment] = tokenizer.convert_tokens_to_ids("Ġ" + sentiment)
 
-sentiment_id
+print(sentiment_id)
 
 """
 We will now write a simple function called `prepare_train_features()` that helps us
@@ -214,7 +212,6 @@ transforms it into a list of size MAX_LEN.
 
 
 def prepare_train_features(examples):
-
     ct = len(examples["textID"])
 
     # Define empty numpy arrays
@@ -225,7 +222,6 @@ def prepare_train_features(examples):
     examples["end_tokens"] = np.zeros((ct, MAX_LEN), dtype="int32")
 
     for k in range(ct):
-
         # Find Overlap
         text1 = " ".join(examples["text"][k].split())
         text2 = " ".join(examples["selected_text"][k].split())
@@ -353,8 +349,8 @@ from transformers import TFRobertaModel
 
 class RoBERTa_SpanExtraction(tf.keras.layers.Layer):
 
-    """Combines the RoBERTa encoder with a span extraction
-       Classification-Head
+    """Combines the RoBERTa encoder with a
+       Span-Classification-Head
     """
 
     def __init__(self, model_checkpoint):
@@ -462,10 +458,8 @@ test set! We will write a small function that helps us calculate the same.
 
 
 def calculate_jacard(predictions, dataset):
-
     preds_start = predictions["start_tokens"]
     preds_end = predictions["end_tokens"]
-
     prediction_strings = []
     jaccard_scores = []
 
