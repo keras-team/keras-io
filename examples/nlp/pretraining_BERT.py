@@ -115,7 +115,7 @@ MODEL_CHECKPOINT = "bert-base-cased"  # Name of pre-trained model from 🤗 Mode
 """
 
 """
-We will now download the WikiText language modeling dataset. It is a collection of over
+We will now download the `WikiText` language modeling dataset. It is a collection of over
 100 million tokens extracted from the set of verified Good and Featured articles on
 Wikipedia.
 
@@ -133,7 +133,7 @@ The dataset just has one column which is the raw text, and this is all we need f
 pre-training BERT!
 """
 
-dataset
+print(dataset)
 
 """
 ## Training a new Tokenizer
@@ -214,7 +214,6 @@ in total, the `NSP` task and the `MLM` task. 🤗 Transformers have an easy to i
 `collator` called the `DataCollatorForLanguageModeling`. However, we need to get the
 data ready for `NSP` manually.
 
-
 Next we will write a simple function called the `prepare_train_features` that helps us in
 the pre-processing and is compatible with 🤗 Datasets. To summarize, our pre-processing
 function should:
@@ -237,10 +236,9 @@ def prepare_train_features(examples):
 
     """Function to prepare features for NSP task
 
-    Attributes:
+    Arguments:
       examples: A dictionary with 1 key ("text")
         text: List of raw documents (str)
-
     Returns:
       examples:  A dictionary with 4 keys
         input_ids: List of tokenized, concatnated, and batched
@@ -296,7 +294,6 @@ def prepare_train_features(examples):
 
         while i < len(document):
             segment = document[i]
-
             current_chunk.append(segment)
             current_length += len(segment)
             if i == len(document) - 1 or current_length >= target_seq_length:
