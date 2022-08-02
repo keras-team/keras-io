@@ -442,6 +442,7 @@ print(outputs.shape)
 <div class="k-default-codeblock">
 ```
 (2, 5)
+
 ```
 </div>
 ---
@@ -598,45 +599,45 @@ _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EP
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-13/13 [==============================] - 43s 2s/step - accuracy: 0.2334 - student_loss: 2.2600 - distillation_loss: 1.7794 - val_accuracy: 0.2561 - val_student_loss: 1.6605 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 44s 2s/step - accuracy: 0.2343 - student_loss: 2.2630 - distillation_loss: 1.7818 - val_accuracy: 0.2234 - val_student_loss: 1.6622 - val_distillation_loss: 0.0000e+00
 Epoch 2/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.2125 - student_loss: 1.6374 - distillation_loss: 1.6129 - val_accuracy: 0.1907 - val_student_loss: 1.6151 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.2150 - student_loss: 1.6377 - distillation_loss: 1.6138 - val_accuracy: 0.1907 - val_student_loss: 1.6150 - val_distillation_loss: 0.0000e+00
 Epoch 3/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.2546 - student_loss: 1.6073 - distillation_loss: 1.5967 - val_accuracy: 0.1907 - val_student_loss: 1.6089 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.2552 - student_loss: 1.6073 - distillation_loss: 1.5970 - val_accuracy: 0.1907 - val_student_loss: 1.6093 - val_distillation_loss: 0.0000e+00
 Epoch 4/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.2561 - student_loss: 1.5953 - distillation_loss: 1.5896 - val_accuracy: 0.2970 - val_student_loss: 1.5953 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.2564 - student_loss: 1.5954 - distillation_loss: 1.5902 - val_accuracy: 0.2997 - val_student_loss: 1.5958 - val_distillation_loss: 0.0000e+00
 Epoch 5/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.2916 - student_loss: 1.5828 - distillation_loss: 1.5687 - val_accuracy: 0.3433 - val_student_loss: 1.5595 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.2922 - student_loss: 1.5839 - distillation_loss: 1.5704 - val_accuracy: 0.3488 - val_student_loss: 1.5635 - val_distillation_loss: 0.0000e+00
 Epoch 6/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.3851 - student_loss: 1.4810 - distillation_loss: 1.4486 - val_accuracy: 0.3869 - val_student_loss: 1.5020 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.3815 - student_loss: 1.4865 - distillation_loss: 1.4551 - val_accuracy: 0.3815 - val_student_loss: 1.4975 - val_distillation_loss: 0.0000e+00
 Epoch 7/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.4099 - student_loss: 1.4075 - distillation_loss: 1.3547 - val_accuracy: 0.3597 - val_student_loss: 1.4115 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.4151 - student_loss: 1.4027 - distillation_loss: 1.3441 - val_accuracy: 0.3733 - val_student_loss: 1.4083 - val_distillation_loss: 0.0000e+00
 Epoch 8/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.4275 - student_loss: 1.3687 - distillation_loss: 1.3036 - val_accuracy: 0.4142 - val_student_loss: 1.3735 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.4423 - student_loss: 1.3616 - distillation_loss: 1.2877 - val_accuracy: 0.4005 - val_student_loss: 1.4014 - val_distillation_loss: 0.0000e+00
 Epoch 9/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.4653 - student_loss: 1.3032 - distillation_loss: 1.2017 - val_accuracy: 0.4714 - val_student_loss: 1.3220 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.4475 - student_loss: 1.3095 - distillation_loss: 1.2200 - val_accuracy: 0.4496 - val_student_loss: 1.3211 - val_distillation_loss: 0.0000e+00
 Epoch 10/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.5232 - student_loss: 1.2496 - distillation_loss: 1.1376 - val_accuracy: 0.4605 - val_student_loss: 1.3052 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.4959 - student_loss: 1.2638 - distillation_loss: 1.1508 - val_accuracy: 0.4932 - val_student_loss: 1.2839 - val_distillation_loss: 0.0000e+00
 Epoch 11/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.5453 - student_loss: 1.2119 - distillation_loss: 1.0985 - val_accuracy: 0.5286 - val_student_loss: 1.1904 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.5431 - student_loss: 1.2063 - distillation_loss: 1.0948 - val_accuracy: 0.5559 - val_student_loss: 1.1938 - val_distillation_loss: 0.0000e+00
 Epoch 12/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.5671 - student_loss: 1.1719 - distillation_loss: 1.0447 - val_accuracy: 0.5831 - val_student_loss: 1.1522 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.5771 - student_loss: 1.1742 - distillation_loss: 1.0461 - val_accuracy: 0.5695 - val_student_loss: 1.1362 - val_distillation_loss: 0.0000e+00
 Epoch 13/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.5752 - student_loss: 1.1563 - distillation_loss: 1.0242 - val_accuracy: 0.5695 - val_student_loss: 1.1342 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.5601 - student_loss: 1.1724 - distillation_loss: 1.0457 - val_accuracy: 0.5477 - val_student_loss: 1.1929 - val_distillation_loss: 0.0000e+00
 Epoch 14/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6064 - student_loss: 1.1367 - distillation_loss: 1.0009 - val_accuracy: 0.5831 - val_student_loss: 1.1332 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.5777 - student_loss: 1.1717 - distillation_loss: 1.0378 - val_accuracy: 0.5777 - val_student_loss: 1.1171 - val_distillation_loss: 0.0000e+00
 Epoch 15/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6164 - student_loss: 1.1114 - distillation_loss: 0.9822 - val_accuracy: 0.6131 - val_student_loss: 1.0876 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.6173 - student_loss: 1.1232 - distillation_loss: 0.9782 - val_accuracy: 0.5640 - val_student_loss: 1.1229 - val_distillation_loss: 0.0000e+00
 Epoch 16/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6331 - student_loss: 1.0915 - distillation_loss: 0.9454 - val_accuracy: 0.5695 - val_student_loss: 1.0834 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.6237 - student_loss: 1.1091 - distillation_loss: 0.9627 - val_accuracy: 0.5886 - val_student_loss: 1.1371 - val_distillation_loss: 0.0000e+00
 Epoch 17/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6309 - student_loss: 1.0845 - distillation_loss: 0.9321 - val_accuracy: 0.6349 - val_student_loss: 1.1140 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.6261 - student_loss: 1.0880 - distillation_loss: 0.9341 - val_accuracy: 0.6322 - val_student_loss: 1.0972 - val_distillation_loss: 0.0000e+00
 Epoch 18/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6337 - student_loss: 1.0699 - distillation_loss: 0.9143 - val_accuracy: 0.6240 - val_student_loss: 1.0632 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.6427 - student_loss: 1.0688 - distillation_loss: 0.9117 - val_accuracy: 0.6431 - val_student_loss: 1.0548 - val_distillation_loss: 0.0000e+00
 Epoch 19/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6639 - student_loss: 1.0389 - distillation_loss: 0.8758 - val_accuracy: 0.6322 - val_student_loss: 1.0323 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.6458 - student_loss: 1.0529 - distillation_loss: 0.8903 - val_accuracy: 0.6076 - val_student_loss: 1.0761 - val_distillation_loss: 0.0000e+00
 Epoch 20/20
-13/13 [==============================] - 14s 1s/step - accuracy: 0.6582 - student_loss: 1.0435 - distillation_loss: 0.8798 - val_accuracy: 0.6431 - val_student_loss: 1.0159 - val_distillation_loss: 0.0000e+00
+13/13 [==============================] - 16s 1s/step - accuracy: 0.6382 - student_loss: 1.0641 - distillation_loss: 0.9049 - val_accuracy: 0.6240 - val_student_loss: 1.0521 - val_distillation_loss: 0.0000e+00
 
 ```
 </div>
@@ -682,3 +683,9 @@ who implemented some portions of the `ViTClassifier` in another project.
 * [Google Developers Experts](https://developers.google.com/programs/experts/)
 program for supporting me with GCP credits which were used to run experiments for this
 example.
+
+Example available on HuggingFace:
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-DEIT-black.svg)](https://huggingface.co/keras-io/deit) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-DEIT-black.svg)](https://huggingface.co/spaces/keras-io/deit/) |
