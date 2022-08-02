@@ -274,9 +274,11 @@ def prepare_train_features(examples):
     examples["next_sentence_label"] = []
 
     for doc_index, document in enumerate(examples["tokenized_sentences"]):
+
         current_chunk = []  # a buffer stored current working segments
         current_length = 0
         i = 0
+
         # We *usually* want to fill up the entire sequence since we are padding
         # to `block_size` anyways, so short sequences are generally wasted
         # computation. However, we *sometimes*
@@ -356,12 +358,9 @@ def prepare_train_features(examples):
                     examples["input_ids"].append(padded["input_ids"])
                     examples["token_type_ids"].append(padded["token_type_ids"])
                     examples["attention_mask"].append(padded["attention_mask"])
-
                     examples["next_sentence_label"].append(1 if is_random_next else 0)
-
                     current_chunk = []
                     current_length = 0
-
             i += 1
 
     # We will delete all the un-necessary columns from our dataset
