@@ -9,8 +9,8 @@ Description: Using KerasNLP to train a mini-GPT model for text generation.
 """
 ## Introduction
 
-In this example, we will use KerasNLP layers to build a scaled down Generative
-Pre-Trained (GPT) model. GPT is a Transformer based model that allows you to generate
+In this example, we will use KerasNLP to build a scaled down Generative
+Pre-Trained (GPT) model. GPT is a Transformer-based model that allows you to generate
 sophisticated text from a prompt.
 
 We will train the model on the [simplebooks-92](https://arxiv.org/abs/1911.12391) corpus,
@@ -18,20 +18,17 @@ which is a dataset made from several novels. It is a good dataset for this examp
 it has a small vocabulary and high word frequency, which is beneficial when training a
 model with few parameters.
 
-This example combines concepts from [Text generation with a miniature GPT](https://keras.io/examples/generative/text_generation_with_miniature_gpt/)
+This example combines concepts from
+[Text generation with a miniature GPT](https://keras.io/examples/generative/text_generation_with_miniature_gpt/)
 with KerasNLP abstractions. We will demonstrate how KerasNLP tokenization, layers and
 metrics simplify the training
-process, and then show how to generate output text using sampling utilities.
+process, and then show how to generate output text using the KerasNLP sampling utilities.
 
-Note: If you are running this on a Colab make sure to enable GPU runtime for faster
-training.
-"""
+Note: If you are running this example on a Colab,
+make sure to enable GPU runtime for faster training.
 
-"""
-## Mini-GPT text generation with KerasNLP
-
-This example requires KerasNLP. You can install it via the following command: `pip
-install keras-nlp`
+This example requires KerasNLP. You can install it via the following command:
+`pip install keras-nlp`
 """
 
 """
@@ -44,7 +41,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 """
-## Settings / Hyperparameters
+## Settings & hyperparameters
 """
 
 # Data
@@ -67,9 +64,9 @@ EPOCHS = 6
 NUM_TOKENS_TO_GENERATE = 80
 
 """
-## Load data
+## Load the data
 
-Now, let's download the dataset! The SimpleBooks dataset consists of 1573 Gutenberg books, and has
+Now, let's download the dataset! The SimpleBooks dataset consists of 1,573 Gutenberg books, and has
 one of the smallest vocabulary size to word-level tokens ratio. It has a vocabulary size of ~98k, 
 a third of WikiText-103's, with around the same number of tokens (~100M). This makes it easy to fit a small model.
 """
@@ -96,13 +93,13 @@ raw_val_ds = (
 )
 
 """
-## Train tokenizer
+## Train the tokenizer
 
 We train the tokenizer from the training dataset for a vocabulary size of `VOCAB_SIZE`,
 which is a tuned hyperparameter. We want to limit the vocabulary as much as possible, as
 we will see later on
-that it has a large affect on the number of model parameters. We also don't want to take
-too few vocabulary, or there would be too many out of vocabulary (OOV) sub-words. In
+that it has a large affect on the number of model parameters. We also don't want to include
+*too few* vocabulary terms, or there would be too many out-of-vocabulary (OOV) sub-words. In
 addition, three tokens are reserved in the vocabulary:
 
 - `"[PAD]"` for padding sequences to `SEQ_LEN`. This token has index 0 in both
@@ -127,7 +124,7 @@ vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
 We use the vocabulary data to initialize
 `keras_nlp.tokenizers.WordPieceTokenizer`. WordPieceTokenizer is an efficient
 implementation of the WordPiece algorithm used by BERT and other models. It will strip,
-lower-case and do other un-reversable preprocessing operations.
+lower-case and do other irreversible preprocessing operations.
 """
 
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
@@ -163,7 +160,7 @@ val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetc
 )
 
 """
-## Model
+## Build the model
 
 We create our scaled down GPT model with the following layers:
 
@@ -171,7 +168,7 @@ We create our scaled down GPT model with the following layers:
 for the token and its position.
 - Multiple `keras_nlp.layers.TransformerDecoder` layers, with the default causal masking.
 The layer has no cross-attention when run with decoder sequence only.
-- One output dense linear layer
+- One final dense linear layer
 """
 
 inputs = keras.layers.Input(shape=(None,), dtype=tf.int32)
@@ -199,9 +196,8 @@ model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 
 """
 Let's take a look at our model summary - a large majority of the
-parameters are in the `token_and_position_embedding` and the output `dense` layer! This
-means
-that the vocabulary size (`VOCAB_SIZE`) has a large affect on the size of the model,
+parameters are in the `token_and_position_embedding` and the output `dense` layer!
+This means that the vocabulary size (`VOCAB_SIZE`) has a large affect on the size of the model,
 while the number of Transformer decoder layers (`NUM_LAYERS`) doesn't affect it as much.
 """
 
@@ -259,7 +255,7 @@ txt = tokenizer.detokenize(output_tokens)
 print(f"Greedy search generated text: \n{txt}\n")
 
 """
-As we can see, greedy search starts out making some sense, but quickly starts repeating
+As you can see, greedy search starts out making some sense, but quickly starts repeating
 itself. This is a common problem with text generation that can be fixed by some of the
 probabilistic text generation utilities shown later on!
 """
@@ -272,7 +268,7 @@ each timestep, and predicts the best next token from all sequences. It is an imp
 over greedy search since it stores more possibilities. However, it is less efficient than
 greedy search since it has to compute and store multiple potential sequences.
 
-Note: beam search with `num_beams=1` is identical to greedy search
+**Note:** beam search with `num_beams=1` is identical to greedy search.
 """
 
 output_tokens = keras_nlp.utils.beam_search(
@@ -360,7 +356,7 @@ txt = tokenizer.detokenize(output_tokens)
 print(f"Top-P search generated text: \n{txt}\n")
 
 """
-### Using callbacks
+### Using callbacks for text generation
 
 We can also wrap the utilities in a callback, which allows you to print out a prediction
 sequence for every epoch of the model! Here is an example of a callback for top-k search:
