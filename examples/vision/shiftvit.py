@@ -884,6 +884,7 @@ print(f"Loss: {loss:0.2f}")
 print(f"Top 1 test accuracy: {acc_top1*100:0.2f}%")
 print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
 
+
 """
 ## Save Trained Model
 
