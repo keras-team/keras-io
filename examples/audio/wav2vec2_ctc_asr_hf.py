@@ -72,11 +72,11 @@ import logging
 import numpy as np
 import pandas as pd
 
+import typing
+import dataclasses
 import tensorflow as tf
 from tensorflow import keras
 import IPython.display as ipd
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
 
 # Only log error messages
 tf.get_logger().setLevel(logging.ERROR)
@@ -476,18 +476,18 @@ called `DataCollatorCTCWithPadding` compatible with 🤗 Datasets which does the
 """
 
 
-@dataclass
+@dataclasses.dataclass
 class DataCollatorCTCWithPadding:
     """
     Data collator that will dynamically pad the inputs received.
     """
 
     processor: Wav2Vec2Processor
-    padding: Union[bool, str] = True
-    max_length: Optional[int] = None
-    max_length_labels: Optional[int] = None
-    pad_to_multiple_of: Optional[int] = None
-    pad_to_multiple_of_labels: Optional[int] = None
+    padding: typing.Union[bool, str] = True
+    max_length: typing.Optional[int] = None
+    max_length_labels: typing.Optional[int] = None
+    pad_to_multiple_of: typing.Optional[int] = None
+    pad_to_multiple_of_labels: typing.Optional[int] = None
 
     def __call__(self, features):
         # split inputs and labels since they have to be of different lenghts and need
