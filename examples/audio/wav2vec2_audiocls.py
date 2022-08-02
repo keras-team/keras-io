@@ -20,13 +20,13 @@ spotting. There is a significant amount of research in the field by all major co
 notably Google and Baidu.
 
 In the past decade, the development of neural models has shown significant performance
-gains on this task. Low-level audio features extracted from raw audio like MFCC of
+gains on this task. Though low-level audio features extracted from raw audio like MFCC or
 mel-filterbanks have been used for decades, the design of these low-level features
 are [flawed by biases](https://arxiv.org/abs/2101.08596). Moreover, neural models
 trained on these low-level features can easily overfit to noise or signals irrelevant to the
 task.  This makes it is essential for any system to learn speech representations that make
 high-level information, such as acoustic and linguistic content, including phonemes,
-words,semantic meanings, tone, speaker characteristics from speech signals available to
+words, semantic meanings, tone, speaker characteristics from speech signals available to
 solve the downstream task. [Wav2Vec 2.0](https://arxiv.org/abs/2006.11477), which solves a
 self-supervised contratsive learning task to learn high-level speech reprentations,
 provides a great alternative to traditional low-level features for training neural
@@ -107,6 +107,7 @@ divided into ten classes of keywords ("Yes", "No", "Up", "Down", "Left", "Right"
 positive. We will load the dataset from [🤗 Datasets](https://github.com/huggingface/datasets).
 This can be easily done with the `load_dataset` function.
 """
+
 from datasets import load_dataset
 
 speech_commands_v1 = load_dataset("superb", "ks")
@@ -119,7 +120,7 @@ The dataset has the following fields:
 - **label**: label ID of the audio utterance
 """
 
-speech_commands_v1
+print(speech_commands_v1)
 
 """
 ## Data Pre-processing
@@ -131,8 +132,8 @@ small stratified balanced splits (5%) of the train as our training and test sets
 We can easily split teh dataset using the `train_test_split` method which expects
 the split size and the name of the column relative to which you want to stratify.
 
-Post splitting the dataset, we will remove the unknown class and only focus on the
-ten main classes. The `filter` method does that easily for you.
+Post splitting the dataset, we will remove the `unknown` class and only focus on the
+ten main classes plus silence. The `filter` method does that easily for you.
 
 Next we will sample our train and test splits to a multiple of the BATCH_SIZE to
 facilitate smooth training and inference. You can achieve that using the `select`
@@ -166,11 +167,11 @@ for i, label in enumerate(labels):
     label2id[label] = str(i)
     id2label[str(i)] = label
 
-id2label
+print(id2label)
 
 """
 Before we can feed the audio utterance samples to our model, we need to
-preprocess them. This is done by a 🤗 Transformers `Feature Extractor`
+pre-process them. This is done by a 🤗 Transformers `Feature Extractor`
 which will (as the name indicates) re-sample your the inputs to sampling rate
 the the model expects (in-case they exist with a different sampling rate), as well
 as generate the other inputs that model requires.
@@ -193,8 +194,8 @@ with 🤗 Datasets. To summarize, our pre-processing function should:
 model was pretrained with. You can find this information on the Wav2Vec 2.0 model card.
 - Set a maximum input length so longer inputs are batched without being truncated.
 """
-from transformers import AutoFeatureExtractor
 
+from transformers import AutoFeatureExtractor
 
 feature_extractor = AutoFeatureExtractor.from_pretrained(
     MODEL_CHECKPOINT, return_attention_mask=True
@@ -215,13 +216,11 @@ def preprocess_function(examples):
 
 # This line with pre-process our speech_commands_v1 dataset. We will also remove the "audio"
 # and "file" columns as they will be of no use to us while training.
-
 processed_speech_commands_v1 = speech_commands_v1.map(
     preprocess_function, remove_columns=["audio", "file"], batched=True
 )
 
 # Load the whole dataset splits as a dict of numpy arrays
-
 train = processed_speech_commands_v1["train"].shuffle(seed=42).with_format("numpy")[:]
 test = processed_speech_commands_v1["test"].shuffle(seed=42).with_format("numpy")[:]
 
@@ -289,7 +288,7 @@ class TFWav2Vec2ForAudioClassification(layers.Layer):
         # output of the last layer of Wav2vec 2.0
         hidden_states = self.wav2vec2(inputs["input_values"])[0]
 
-        # If attantion mask does exist then mean-pool only un-masked output frames
+        # If attention mask does exist then mean-pool only un-masked output frames
         if tf.is_tensor(inputs["attention_mask"]):
             # Get the length of each audio input by summing up the attention_mask
             # (attention_mask = (BATCH_SIZE x MAX_SEQ_LENGTH) ∈ {1,0})
@@ -300,7 +299,7 @@ class TFWav2Vec2ForAudioClassification(layers.Layer):
                 audio_lengths
             )
             pooled_state = mean_pool(hidden_states, feature_lengths)
-        # If attantion mask does not exist then mean-pool only all output frames
+        # If attention mask does not exist then mean-pool only all output frames
         else:
             pooled_state = self.pooling(hidden_states)
 
@@ -372,7 +371,10 @@ model.fit(
 
 """
 Great! Now that we have trained our model, we will now predict the classes
-for audios in the test set using the `model.predict()` method!
+for audios in the test set using the `model.predict()` method! We will see
+the model predictions are not that great as it has been trained on a very small
+number of samples for just 1 epoch. For best results, we reccomend training on
+the complete dataset for atleast 5 epochs!
 """
 
 preds = model.predict(test_x)
