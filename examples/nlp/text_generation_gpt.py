@@ -1,4 +1,4 @@
-"""
+""" 
 Title: simple GPT text generation with KerasNLP
 Author: [Jesse Chan](https://github.com/jessechancy)
 Date created: 2022/07/25
