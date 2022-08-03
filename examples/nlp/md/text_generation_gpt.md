@@ -101,14 +101,6 @@ raw_val_ds = (
 )
 ```
 
-<div class="k-default-codeblock">
-```
-2022-08-03 03:48:20.045774: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-08-03 03:48:20.667787: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13795 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
-
-```
-</div>
 ---
 ## Train the tokenizer
 
