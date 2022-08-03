@@ -53,7 +53,7 @@ from tensorflow import keras
 # Data
 BATCH_SIZE = 64
 SEQ_LEN = 128
-MIN_TRAINING_SEQ_LEN = 100
+MIN_TRAINING_SEQ_LEN = 450
 
 # Model
 EMBED_DIM = 256
@@ -103,18 +103,9 @@ raw_val_ds = (
 
 <div class="k-default-codeblock">
 ```
-2022-08-02 23:27:07.182636: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.193250: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.193979: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.195812: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+2022-08-03 03:48:20.045774: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-08-02 23:27:07.196715: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.197370: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.197995: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.814282: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.815055: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.815694: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:975] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2022-08-02 23:27:07.816286: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13795 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
+2022-08-03 03:48:20.667787: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13795 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
 
 ```
 </div>
@@ -279,19 +270,19 @@ model.fit(train_ds, validation_data=val_ds, verbose=2, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/6
-18802/18802 - 1232s - loss: 2.1755 - perplexity: 52.7088 - val_loss: 1.5022 - val_perplexity: 40.0212 - 1232s/epoch - 66ms/step
+3169/3169 - 220s - loss: 4.5285 - perplexity: 98.5510 - val_loss: 4.0127 - val_perplexity: 63.4425 - 220s/epoch - 69ms/step
 Epoch 2/6
-18802/18802 - 1230s - loss: 2.0320 - perplexity: 40.5656 - val_loss: 1.4593 - val_perplexity: 36.1564 - 1230s/epoch - 65ms/step
+3169/3169 - 219s - loss: 4.0143 - perplexity: 58.5463 - val_loss: 3.8603 - val_perplexity: 54.1763 - 219s/epoch - 69ms/step
 Epoch 3/6
-18802/18802 - 1230s - loss: 2.0009 - perplexity: 38.3450 - val_loss: 1.4493 - val_perplexity: 35.1694 - 1230s/epoch - 65ms/step
+3169/3169 - 220s - loss: 3.8997 - perplexity: 52.1239 - val_loss: 3.8035 - val_perplexity: 51.1345 - 220s/epoch - 69ms/step
 Epoch 4/6
-18802/18802 - 1230s - loss: 1.9853 - perplexity: 37.2722 - val_loss: 1.4428 - val_perplexity: 34.6659 - 1230s/epoch - 65ms/step
+3169/3169 - 219s - loss: 3.8381 - perplexity: 48.9710 - val_loss: 3.7728 - val_perplexity: 49.3502 - 219s/epoch - 69ms/step
 Epoch 5/6
-18802/18802 - 1230s - loss: 1.9758 - perplexity: 36.6308 - val_loss: 1.4373 - val_perplexity: 34.2467 - 1230s/epoch - 65ms/step
+3169/3169 - 220s - loss: 3.7946 - perplexity: 46.8604 - val_loss: 3.7239 - val_perplexity: 46.9923 - 220s/epoch - 69ms/step
 Epoch 6/6
-18802/18802 - 1230s - loss: 1.9689 - perplexity: 36.1800 - val_loss: 1.4237 - val_perplexity: 33.1127 - 1230s/epoch - 65ms/step
+3169/3169 - 219s - loss: 3.7634 - perplexity: 45.3980 - val_loss: 3.7166 - val_perplexity: 46.7066 - 219s/epoch - 69ms/step
 
-<keras.callbacks.History at 0x7f75c04c6b90>
+<keras.callbacks.History at 0x7f74b1d543d0>
 
 ```
 </div>
@@ -343,7 +334,7 @@ print(f"Greedy search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Greedy search generated text: 
-b'[BOS] " i \' m going to be a little girl , " said the doctor , " and i \' m going to be a nice little girl . i \' m going to be a nice little girl , and i \' m going to be a nice little girl . " [PAD] said she to herself , " and i \' m going to be a nice little girl . " [PAD] , " she said ,'
+b'[BOS] " i have no doubt that , " the captain said , " and i have no doubt that the captain of the united states will be a very different from the english . the captain has been a very good sailor , and he has been a sailor , and he has been a sailor , and he has been a sailor , and he has been a sailor , and he has been a sailor , and'
 ```
 </div>
     
@@ -378,7 +369,7 @@ print(f"Beam search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Beam search generated text: 
-b'[BOS] " i don \' t know , " he said , " but i don \' t know what i \' m going to do . i don \' t know what i \' m going to do . i don \' t know what i \' m going to do , but i \' m going to do it , and i \' m going to do it . " [PAD] went on , " he went on'
+b'[BOS] " i don \' t suppose that , " the captain said , with a smile . " i \' ll tell you what i \' ll have to do . i \' ll tell you what i \' ll do . i \' ll tell you about it . i \' ll tell you what i \' ll do . i \' ll tell you about it . i \' ll tell you about it . i \''
 ```
 </div>
     
@@ -407,7 +398,7 @@ print(f"Random search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Random search generated text: 
-b'[BOS] they brought down their own anchorage , and nipped out a strong knock overboard . harry went a rough de pillow , but there was not any noise ; and george mumbled over the bags . [PAD] was it warmer gas till they were sure to lock the door , when the alarm was ploughin that afforded shelter . a pile of torch opened the door , just then a'
+b'[BOS] he described it to him that he was trying to do all this morning at the time and made him look quite pleased . " i know now that he mentioned his name to our men . i know they have crossed to their homes , and obtained anything like that to hear someone else in being signed by his own as they take the law - house which was still crowded by the search . to my'
 ```
 </div>
     
@@ -441,7 +432,7 @@ print(f"Top-K search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Top-K search generated text: 
-b'[BOS] it is a trifle late that you will find to have a profuse communicated , so you \' ve had a very continent in a telegraphic , and i have a very small note to miss thayer . but there , in one of you , i know you have seen it . " there will be two other elect'
+b'[BOS] " you have got into our hands when he was out , and i thought of you . he had a great pleasure and happiness for his sake . you are very fond of his professication , though he is not a boy of sixteen ; but he will be glad that he is not to have a good time in this country for his services . the young man and his wife ,'
 ```
 </div>
     
@@ -478,7 +469,7 @@ print(f"Top-P search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Top-P search generated text: 
-b'[BOS] " you have , mr . rosalind , " said the colonel , with a smile , " i \' m sorry you don \' t know anything about it . " [PAD] is that a commissioner , the man of the town . [PAD] had a letter , too , that he had no children to pay for the family , and that he would have given up to the family of all'
+b'[BOS] at the end of this the two sisters were so startled that the dog would be in the tree . when they were gone , they were caught in a hint of their clothes , they did not want to stay until they were out of sight of the door , but it was not a little black dog . then they went on their way home , and they went off to the top of the tree'
 ```
 </div>
     
@@ -519,24 +510,24 @@ model.fit(train_ds.take(1), verbose=2, epochs=2, callbacks=[text_generation_call
 ```
 Epoch 1/2
 Top-K search generated text: 
-b'[BOS] " we have a good deal in the house , " said anne , and the others looked in the direction of the corridor . [PAD] , and it seemed as if a little more , that would have been to her , but , though she was not so sure whether to have been on her mind at all , or not , i \' m afraid . " but the young man said ,'
+b'[BOS] as the corrals were very different . the prominent features of this province is in a state of great importance and concessions , the spacious state of affairs of promineering state in the extreme , interpreter , to collect the establishment , in the most economical composition'
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1/1 - 4s - loss: 1.5802 - perplexity: 32.5390 - 4s/epoch - 4s/step
+1/1 - 10s - loss: 3.8154 - perplexity: 46.5370 - 10s/epoch - 10s/step
 Epoch 2/2
 Top-K search generated text: 
-b'[BOS] the commissioner was not a sensation of his own , for he would not have been in such a hurry to start for the city ; but the commissions had not been sent to the hospital for many days , and the men who had come , with their wives , and their wives and daughters in the evenings , and all the women , had given a special re'
+b'[BOS] " we will be a man of great value to the condema - cove . we will not be in a very short time , but we have some of our men . we must be in our hands , as it is , as the province , and we will find the way that a large number is to be made . there is an indian canoe on the shore . if'
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1/1 - 4s - loss: 1.3344 - perplexity: 40.1874 - 4s/epoch - 4s/step
+1/1 - 11s - loss: 3.6902 - perplexity: 42.6255 - 11s/epoch - 11s/step
 
-<keras.callbacks.History at 0x7f75657321d0>
+<keras.callbacks.History at 0x7f74306a9310>
 
 ```
 </div>

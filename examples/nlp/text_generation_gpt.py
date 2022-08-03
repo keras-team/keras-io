@@ -47,7 +47,7 @@ from tensorflow import keras
 # Data
 BATCH_SIZE = 64
 SEQ_LEN = 128
-MIN_TRAINING_SEQ_LEN = 100
+MIN_TRAINING_SEQ_LEN = 450
 
 # Model
 EMBED_DIM = 256
