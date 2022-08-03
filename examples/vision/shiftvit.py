@@ -95,6 +95,21 @@ class Config(object):
     # TRAINING
     epochs = 100
 
+    # INFERENCE
+    label_map = {
+        0: "airplane",
+        1: "automobile",
+        2: "bird",
+        3: "cat",
+        4: "deer",
+        5: "dog",
+        6: "frog",
+        7: "horse",
+        8: "ship",
+        9: "truck",
+    }
+    tf_ds_batch_size = 20
+
 
 config = Config()
 
@@ -886,7 +901,7 @@ print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
 
 
 """
-## Save Trained Model
+## Save trained model
 
 Since we created the model by Subclassing, we can't save the model in HDF5 format.
 
@@ -895,7 +910,7 @@ It can be saved in TF SavedModel format only. In general, this is the recommende
 tf.keras.models.save_model(model, "./ShiftViT")
 
 """
-## Model Inference
+## Model inference
 """
 
 """
@@ -909,7 +924,7 @@ unzip -q inference_set.zip
 
 
 """
-**Load Saved Model**
+**Load saved model**
 """
 # Custom objects are not included when the model is saved.
 # At loading time, these objects need to be passed for reconstruction of the model
@@ -921,20 +936,6 @@ saved_model = tf.keras.models.load_model(
 """
 **Utility functions for inference**
 """
-LABEL_MAP = {
-    0: "airplane",
-    1: "automobile",
-    2: "bird",
-    3: "cat",
-    4: "deer",
-    5: "dog",
-    6: "frog",
-    7: "horse",
-    8: "ship",
-    9: "truck",
-}
-
-BATCH_SIZE = 20
 
 
 def process_image(img_path):
@@ -963,7 +964,7 @@ def create_tf_dataset(image_dir):
     predict_ds = predict_ds.map(process_image, num_parallel_calls=AUTO)
 
     # create a Prefetch Dataset for better latency & throughput
-    predict_ds = predict_ds.batch(BATCH_SIZE).prefetch(AUTO)
+    predict_ds = predict_ds.batch(config.tf_ds_batch_size).prefetch(AUTO)
     return predict_ds
 
 
@@ -978,24 +979,24 @@ def predict(predict_ds):
 
 def get_predicted_class(probabilities):
     class_idx = np.argmax(probabilities)
-    predicted_class = LABEL_MAP[class_idx]
+    predicted_class = config.label_map[class_idx]
     return predicted_class
 
 
 def get_confidence_scores(probabilities):
     confidences = {}
-    # convert tf tensor to list
-    scores = probabilities.numpy().flatten().tolist()
+    # convert tf tensor to numpy array
+    scores = probabilities.numpy()
 
     # get the indexes of the probability scores sorted in descending order
-    score_indexes = np.argsort(probabilities)[::-1].flatten()
+    score_indexes = np.argsort(probabilities)[::-1]
     for idx in score_indexes:
-        confidences[LABEL_MAP[idx]] = (scores[idx]) * 100
+        confidences[config.label_map[idx]] = (scores[idx]) * 100
     return confidences
 
 
 """
-**Get Predictions**
+**Get predictions**
 """
 
 img_dir = "inference_set"
@@ -1006,7 +1007,7 @@ confidences = get_confidence_scores(probabilities[0])
 print(confidences)
 
 """
-**View Predictions**
+**View predictions**
 """
 
 plt.figure(figsize=(10, 10))
