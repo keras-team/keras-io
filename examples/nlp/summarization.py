@@ -42,11 +42,11 @@ task using 🤗 Transformers on the `XSum` dataset loaded from 🤗 Datasets.
 """
 
 """shell
-pip install git+https://github.com/huggingface/transformers.git
+pip install transformers==4.20.0
+pip install keras_nlp==0.3.0
 pip install datasets
 pip install huggingface-hub
 pip install nltk
-pip install rouge-score
 """
 
 """
@@ -69,22 +69,18 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 """
 ### Define certain variables
 """
-
-TRAIN_TEST_SPLIT = (
-    0.1  # The percentage of the dataset you want to split as train and test
-)
+# The percentage of the dataset you want to split as train and test
+TRAIN_TEST_SPLIT = 0.1
 
 MAX_INPUT_LENGTH = 1024  # Maximum length of the input to the model
 MIN_TARGET_LENGTH = 5  # Minimum length of the output by the model
 MAX_TARGET_LENGTH = 128  # Maximum length of the output by the model
 BATCH_SIZE = 8  # Batch-size for training our model
 LEARNING_RATE = 2e-5  # Learning-rate for training our model
-WEIGHT_DECAY = 0.01  # Percentage of decoupled weight decay to apply
 MAX_EPOCHS = 1  # Maximum number of epochs we will train the model for
 
-MODEL_CHECKPOINT = (
-    "t5-small"  # This notebook is built on the t5-small checkpoint from the 🤗 Model Hub
-)
+# This notebook is built on the t5-small checkpoint from the 🤗 Model Hub
+MODEL_CHECKPOINT = "t5-small"
 
 """
 ## Load the dataset
@@ -101,14 +97,13 @@ Following much of literaure, we use the Recall-Oriented Understudy for Gisting E
 (ROUGE) metric to evaluate our sequence-to-sequence abstrative summarization approach.
 
 We will use the [🤗 Datasets](https://github.com/huggingface/datasets) library to download
-the data and get the metric we need to use for evaluation. This can be easily done with the
-functions `load_dataset` and `load_metric`.
+the data we need to use for training and evaluation. This can be easily done with the
+`load_dataset` function.
 """
 
-from datasets import load_dataset, load_metric
+from datasets import load_dataset
 
 raw_datasets = load_dataset("xsum", split="train")
-metric = load_metric("rouge")
 
 """
 The dataset has the following fields:
@@ -279,9 +274,7 @@ Now we will define our optimizer and compile the model. The loss calculation is 
 internally and so we need not worry about that!
 """
 
-optimizer = keras.optimizers.experimental.AdamW(
-    learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
-)
+optimizer = keras.optimizers.Adam(learning_rate=LEARNING_RATE)
 model.compile(optimizer=optimizer)
 
 """
@@ -293,6 +286,10 @@ To evaluate our model on-the-fly while training, we will define `metric_fn` whic
 calculate the `ROUGE` score between the groud-truth and predictions.
 """
 
+import keras_nlp
+
+rouge_l = keras_nlp.metrics.RougeL()
+
 
 def metric_fn(eval_predictions):
     predictions, labels = eval_predictions
@@ -300,23 +297,9 @@ def metric_fn(eval_predictions):
     for label in labels:
         label[label < 0] = tokenizer.pad_token_id  # Replace masked label tokens
     decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-    # Rouge expects a newline after each sentence
-    decoded_predictions = [
-        "\n".join(nltk.sent_tokenize(pred.strip())) for pred in decoded_predictions
-    ]
-    decoded_labels = [
-        "\n".join(nltk.sent_tokenize(label.strip())) for label in decoded_labels
-    ]
-    result = metric.compute(
-        predictions=decoded_predictions, references=decoded_labels, use_stemmer=True
-    )
-    # Extract a few results
-    result = {key: value.mid.fmeasure * 100 for key, value in result.items()}
-    # Add mean generated length
-    prediction_lens = [
-        np.count_nonzero(pred != tokenizer.pad_token_id) for pred in predictions
-    ]
-    result["gen_len"] = np.mean(prediction_lens)
+    result = rouge_l(decoded_labels, decoded_predictions)
+    # We will print only the F1 score, you can use other aggregation metrics as well
+    result = {"RougeL": result["f1_score"]}
 
     return result
 
@@ -337,6 +320,11 @@ callbacks = [metric_callback]
 model.fit(
     train_dataset, validation_data=test_dataset, epochs=MAX_EPOCHS, callbacks=callbacks
 )
+
+"""
+For best results, we recommend training the model for atleast 5 epochs on the entire
+training dataset!
+"""
 
 """
 ## Inference
