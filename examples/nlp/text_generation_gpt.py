@@ -57,7 +57,6 @@ NUM_LAYERS = 2
 VOCAB_SIZE = 5000  # Limits parameters in model.
 
 # Training
-LEARNING_RATE = 5e-4
 EPOCHS = 6
 
 # Inference
