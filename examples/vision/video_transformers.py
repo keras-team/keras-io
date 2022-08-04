@@ -186,7 +186,9 @@ def prepare_all_videos(df, root_dir):
                 else:
                     temp_frame_features[i, j, :] = 0.0
 
-        frame_features[idx,] = temp_frame_features.squeeze()
+        frame_features[
+            idx,
+        ] = temp_frame_features.squeeze()
 
     return frame_features, labels
 
@@ -250,7 +252,10 @@ class PositionalEmbedding(layers.Layer):
     def get_config(self):
         config = super().get_config()
         config.update(
-            {"sequence_length": self.sequence_length, "output_dim": self.output_dim,}
+            {
+                "sequence_length": self.sequence_length,
+                "output_dim": self.output_dim,
+            }
         )
         return config
 
@@ -271,7 +276,10 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim, dropout=0.3
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation=tf.nn.gelu), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation=tf.nn.gelu),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
