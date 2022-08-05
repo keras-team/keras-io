@@ -134,7 +134,7 @@ print(test_df["target"].value_counts())
 
 def create_dataset(dataframe):
     dataset = tf.data.Dataset.from_tensor_slices(
-        (df["text"].to_numpy(), df["target"].to_numpy())
+        (dataframe["text"].to_numpy(), dataframe["target"].to_numpy())
     )
     dataset = dataset.batch(100)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
@@ -235,6 +235,20 @@ plot_curve(logs_1)
 plot_curve(logs_2)
 
 """
+## Evaluating on training data
+"""
+
+results = model_1.evaluate(train_ds, return_dict=True, verbose=0)
+print("model_1 Evaluation: \n")
+for name, value in results.items():
+    print(f"{name}: {value:.4f}")
+
+results = model_2.evaluate(train_ds, return_dict=True, verbose=0)
+print("model_2 Evaluation: \n")
+for name, value in results.items():
+    print(f"{name}: {value:.4f}")
+    
+"""
 ## Evaluating on test data
 """
 
@@ -268,6 +282,6 @@ for index, row in test_df.iterrows():
 
 The TensorFlow Decision Forests package provides powerful models
 that work especially well with structured data. In our experiments,
-the Gradient Boosted Tree model with pretrained embeddings achieved 94%
-test accuracy while the plain Gradient Boosted Tree model had 57.31% accuracy.
+the Gradient Boosted Tree model with pretrained embeddings achieved 81.6%
+test accuracy while the plain Gradient Boosted Tree model had 54.4% accuracy.
 """
