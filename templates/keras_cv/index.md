@@ -69,7 +69,7 @@ Create a model:
 densenet = keras_cv.models.DenseNet121(
   include_rescaling=True,
   include_top=True,
-  num_classes=3
+  classes=3
 )
 densenet.compile(
   loss='categorical_crossentropy',
