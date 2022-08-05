@@ -1,4 +1,4 @@
-# simple GPT text generation with KerasNLP
+# GPT text generation with KerasNLP
 
 **Author:** [Jesse Chan](https://github.com/jessechancy)<br>
 **Date created:** 2022/07/25<br>
@@ -35,7 +35,7 @@ This example requires KerasNLP. You can install it via the following command:
 `pip install keras-nlp`
 
 ---
-## Imports
+## Setup
 
 
 ```python

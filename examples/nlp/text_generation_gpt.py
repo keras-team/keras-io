@@ -1,5 +1,5 @@
 """
-Title: simple GPT text generation with KerasNLP
+Title: GPT text generation with KerasNLP
 Author: [Jesse Chan](https://github.com/jessechancy)
 Date created: 2022/07/25
 Last modified: 2022/07/25
@@ -32,7 +32,7 @@ This example requires KerasNLP. You can install it via the following command:
 """
 
 """
-## Imports
+## Setup
 """
 
 import os
