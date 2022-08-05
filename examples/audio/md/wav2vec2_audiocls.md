@@ -1,12 +1,16 @@
-"""
-Title: Audio Classification with Hugging Face Transformers
-Author: Sreyan Ghosh
-Date created: 2022/07/01
-Last modified: 2022/07/01
-Description: Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
-"""
+# Audio Classification with Hugging Face Transformers
 
-"""
+**Author:** Sreyan Ghosh<br>
+**Date created:** 2022/07/01<br>
+**Last modified:** 2022/07/01<br>
+**Description:** Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/wav2vec2/ipynb/wav2vec2_audiocls.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/wav2vec2/wav2vec2_audiocls.py)
+
+
+
+---
 ## Introduction
 
 Identification of speech commands, also known as *keyword spotting* (KWS),
@@ -33,27 +37,25 @@ models for KWS.
 In this notebook, we train the Wav2Vec 2.0 (base) model, built on the
 🤗 Transformers library, in an end-to-end fashion on the keyword spotting task and
 achieve state-of-the-art results on the Google Speech Commands Dataset.
-"""
 
-"""
+---
 ## Setup
-"""
 
-"""
 ### Installing the requirements
-"""
 
-"""shell
+
+```python
 pip install git+https://github.com/huggingface/transformers.git
 pip install datasets
 pip install huggingface-hub
 pip install joblib
 pip install librosa
-"""
+```
 
-"""
 ### Importing the necessary libraries
-"""
+
+
+```python
 import random
 import logging
 
@@ -66,10 +68,12 @@ from tensorflow.keras import layers
 tf.get_logger().setLevel(logging.ERROR)
 # Set random seed
 tf.keras.utils.set_random_seed(42)
+```
 
-"""
 ### Define certain variables
-"""
+
+
+```python
 # Maximum duration of the input audio file we feed to our Wav2Vec 2.0 model.
 MAX_DURATION = 1
 # Sampling rate is the number of samples of audio recorded every second
@@ -83,12 +87,11 @@ MAX_FRAMES = 49
 MAX_EPOCHS = 2  # Maximum number of training epochs.
 
 MODEL_CHECKPOINT = "facebook/wav2vec2-base"  # Name of pretrained model from 🤗 Model Hub
+```
 
-"""
+---
 ## Load the Google Speech Commands Dataset
-"""
 
-"""
 We now download the [Google Speech Commands V1 Dataset](https://arxiv.org/abs/1804.03209),
 a popular benchmark for training and evaluating deep learning models built for solving the KWS task.
 The dataset consists of a total of 60,973 audio files, each of 1 second duration,
@@ -96,27 +99,55 @@ divided into ten classes of keywords ("Yes", "No", "Up", "Down", "Left", "Right"
 "Off", "Stop", and "Go"), a class for silence, and an unknown class to include the false
 positive. We load the dataset from [🤗 Datasets](https://github.com/huggingface/datasets).
 This can be easily done with the `load_dataset` function.
-"""
 
+
+```python
 from datasets import load_dataset
 
 speech_commands_v1 = load_dataset("superb", "ks")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Reusing dataset superb (/speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e)
+
+  0%|          | 0/3 [00:00<?, ?it/s]
+
+```
+</div>
 The dataset has the following fields:
 
 - **file**: the path to the raw .wav file of the audio
 - **audio**: the audio file sampled at 16kHz
 - **label**: label ID of the audio utterance
-"""
 
+
+```python
 print(speech_commands_v1)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+DatasetDict({
+    train: Dataset({
+        features: ['file', 'audio', 'label'],
+        num_rows: 51094
+    })
+    validation: Dataset({
+        features: ['file', 'audio', 'label'],
+        num_rows: 6798
+    })
+    test: Dataset({
+        features: ['file', 'audio', 'label'],
+        num_rows: 3081
+    })
+})
+
+```
+</div>
+---
 ## Data Pre-processing
-"""
 
-"""
 For the sake of demonstrating the workflow, in this notebook we only take
 small stratified balanced splits (50%) of the train as our training and test sets.
 We can easily split the dataset using the `train_test_split` method which expects
@@ -129,8 +160,9 @@ Next we sample our train and test splits to a multiple of the `BATCH_SIZE` to
 facilitate smooth training and inference. You can achieve that using the `select`
 method which expects the indices of the samples you want to keep. Rest all are
 discarded.
-"""
 
+
+```python
 speech_commands_v1 = speech_commands_v1["train"].train_test_split(
     train_size=0.5, test_size=0.5, stratify_by_column="label"
 )
@@ -151,11 +183,32 @@ speech_commands_v1["test"] = speech_commands_v1["test"].select(
 )
 
 print(speech_commands_v1)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Loading cached split indices for dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-ed55825c778d20d7.arrow and /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-f86ed01fec3469b6.arrow
+Parameter 'function'=<function <lambda> at 0x7fcfe1dd60e0> of the transform datasets.arrow_dataset.Dataset.filter@2.0.1 couldn't be hashed properly, a random hash was used instead. Make sure your transforms and parameters are serializable with pickle or dill for the dataset fingerprinting and caching to work. If you reuse this transform, the caching mechanism will consider it to be different from the previous calls and recompute everything. This warning is only showed once. Subsequent hashing failures won't be showed.
+Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-1c80317fa3b1799d.arrow
+Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-bdd640fb06671ad1.arrow
+
+DatasetDict({
+    train: Dataset({
+        features: ['file', 'audio', 'label'],
+        num_rows: 896
+    })
+    test: Dataset({
+        features: ['file', 'audio', 'label'],
+        num_rows: 896
+    })
+})
+
+```
+</div>
 Additionally, you can check the actual labels corresponding to each label ID.
-"""
 
+
+```python
 labels = speech_commands_v1["train"].features["label"].names
 label2id, id2label = dict(), dict()
 for i, label in enumerate(labels):
@@ -163,8 +216,14 @@ for i, label in enumerate(labels):
     id2label[str(i)] = label
 
 print(id2label)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+{'0': 'yes', '1': 'no', '2': 'up', '3': 'down', '4': 'left', '5': 'right', '6': 'on', '7': 'off', '8': 'stop', '9': 'go', '10': '_silence_', '11': '_unknown_'}
+
+```
+</div>
 Before we can feed the audio utterance samples to our model, we need to
 pre-process them. This is done by a 🤗 Transformers "Feature Extractor"
 which will (as the name indicates) re-sample your the inputs to sampling rate
@@ -188,8 +247,9 @@ with 🤗 Datasets. To summarize, our pre-processing function should:
 - Check the sampling rate of the audio file matches the sampling rate of the audio data a
 model was pretrained with. You can find this information on the Wav2Vec 2.0 model card.
 - Set a maximum input length so longer inputs are batched without being truncated.
-"""
 
+
+```python
 from transformers import AutoFeatureExtractor
 
 feature_extractor = AutoFeatureExtractor.from_pretrained(
@@ -218,12 +278,22 @@ processed_speech_commands_v1 = speech_commands_v1.map(
 # Load the whole dataset splits as a dict of numpy arrays
 train = processed_speech_commands_v1["train"].shuffle(seed=42).with_format("numpy")[:]
 test = processed_speech_commands_v1["test"].shuffle(seed=42).with_format("numpy")[:]
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/speech/sreyan/anaconda3/envs/gsoc-submission/lib/python3.7/site-packages/transformers/configuration_utils.py:353: UserWarning: Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 Transformers. Using `model.gradient_checkpointing_enable()` instead, or if you are using the `Trainer` API, pass `gradient_checkpointing=True` in your `TrainingArguments`.
+  "Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 "
+Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-3eb13b9046685257.arrow
+Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-23b8c1e9392456de.arrow
+Loading cached shuffled indices for dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-7cbe5ca8351fe251.arrow
+Loading cached shuffled indices for dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-ee92c79da57d4dbf.arrow
+
+```
+</div>
+---
 ## Defining the Wav2Vec 2.0 with Classification-Head
-"""
 
-"""
 We now define our model. To be precise, we define a Wav2Vec 2.0 model and add a
 Classification-Head on top to output a probability ditribution of all classes for each
 input audio sample. Since the model might get complex we first define the Wav2Vec
@@ -236,8 +306,9 @@ load pre-trained weights from the 🤗 Model Hub. It will download the pre-train
 together with the config corresponding to the name of the model you have mentioned when
 calling the method. For our task, we choose the BASE variant of the model that has
 just been pre-trained, since we fine-tune over it.
-"""
 
+
+```python
 from transformers import TFWav2Vec2Model
 
 
@@ -303,17 +374,17 @@ class TFWav2Vec2ForAudioClassification(layers.Layer):
 
         return final_state
 
+```
 
-"""
+---
 ## Building and Compiling the model
-"""
 
-"""
 We now build and compile our model. We use the `SparseCategoricalCrossentropy`
 to train our model since it is a classification task. Following much of literature
 we evaluate our model on the `accuracy` metric.
-"""
 
+
+```python
 
 def build_model():
     # Model's input
@@ -338,22 +409,43 @@ def build_model():
 
 
 model = build_model()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/speech/sreyan/anaconda3/envs/gsoc-submission/lib/python3.7/site-packages/transformers/configuration_utils.py:353: UserWarning: Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 Transformers. Using `model.gradient_checkpointing_enable()` instead, or if you are using the `Trainer` API, pass `gradient_checkpointing=True` in your `TrainingArguments`.
+  "Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 "
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+TFWav2Vec2Model has backpropagation operations that are NOT supported on CPU. If you wish to train/fine-tine this model, you need a GPU or a TPU
+Some weights of the PyTorch model were not used when initializing the TF 2.0 model TFWav2Vec2Model: ['project_hid.bias', 'project_q.weight', 'quantizer.weight_proj.weight', 'project_q.bias', 'quantizer.weight_proj.bias', 'project_hid.weight', 'quantizer.codevectors']
+- This IS expected if you are initializing TFWav2Vec2Model from a PyTorch model trained on another task or with another architecture (e.g. initializing a TFBertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing TFWav2Vec2Model from a PyTorch model that you expect to be exactly identical (e.g. initializing a TFBertForSequenceClassification model from a BertForSequenceClassification model).
+All the weights of TFWav2Vec2Model were initialized from the PyTorch model.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use TFWav2Vec2Model for predictions without further training.
+
+```
+</div>
+---
 ## Training the model
 
 Before we start training our model, we divide the inputs into its
 dependent and independent variables.
-"""
 
+
+```python
 # Remove targets from training dictionaries
 train_x = {x: y for x, y in train.items() if x != "label"}
 test_x = {x: y for x, y in test.items() if x != "label"}
+```
 
-"""
 And now we can finally start training our model.
-"""
 
+
+```python
 model.fit(
     train_x,
     train["label"],
@@ -361,22 +453,41 @@ model.fit(
     batch_size=BATCH_SIZE,
     epochs=MAX_EPOCHS,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/2
+28/28 [==============================] - 25s 338ms/step - loss: 2.3122 - accuracy: 0.1205 - val_loss: 2.2023 - val_accuracy: 0.2176
+Epoch 2/2
+28/28 [==============================] - 5s 189ms/step - loss: 2.0533 - accuracy: 0.2868 - val_loss: 1.8177 - val_accuracy: 0.5089
+
+<keras.callbacks.History at 0x7fcee542dc50>
+
+```
+</div>
 Great! Now that we have trained our model, we predict the classes
 for audio samples in the test set using the `model.predict()` method! We see
 the model predictions are not that great as it has been trained on a very small
 number of samples for just 1 epoch. For best results, we reccomend training on
 the complete dataset for at least 5 epochs!
-"""
 
+
+```python
 preds = model.predict(test_x)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+28/28 [==============================] - 4s 44ms/step
+
+```
+</div>
 Now we try to infer the model we trained on a randomly sampled audio file.
 We hear the audio file and then also see how well our model was able to predict!
-"""
 
+
+```python
 import IPython.display as ipd
 
 rand_int = random.randint(0, len(test_x))
@@ -385,8 +496,15 @@ ipd.Audio(data=np.asarray(test_x["input_values"][rand_int]), autoplay=True, rate
 
 print("Original Label is ", id2label[str(test["label"][rand_int])])
 print("Predicted Label is ", id2label[str(np.argmax((preds[rand_int])))])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Original Label is  up
+Predicted Label is  on
+
+```
+</div>
 Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
 family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"`, for instance:
@@ -402,4 +520,3 @@ from transformers import TFWav2Vec2Model
 
 model = TFWav2Vec2Model.from_pretrained("your-username/my-awesome-model", from_pt=True)
 ```
-"""
