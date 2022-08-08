@@ -209,11 +209,33 @@ model_2.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
 # Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
 model_2.fit(train_ds)
 
+"""
+Prints training logs of model_1
+"""
+
+logs_1 = model_1.make_inspector().training_logs()
+print(logs_1)
+
+"""
+Prints training logs of model_2
+"""
+
+logs_2 = model_2.make_inspector().training_logs()
+print(logs_2)
+
+"""
+The model.summary() method prints a variety of information about your decision tree model, including model type, task, input features, and feature importance.
+"""
+
+print("model_1 summary: ")
+print(model_1.summary())
+print()
+print("model_2 summary: ")
+print(model_2.summary())
 
 """
 ## Plotting training metrics
 """
-
 
 def plot_curve(logs):
     plt.figure(figsize=(12, 4))
@@ -234,20 +256,6 @@ def plot_curve(logs):
 plot_curve(logs_1)
 plot_curve(logs_2)
 
-"""
-## Evaluating on training data
-"""
-
-results = model_1.evaluate(train_ds, return_dict=True, verbose=0)
-print("model_1 Evaluation: \n")
-for name, value in results.items():
-    print(f"{name}: {value:.4f}")
-
-results = model_2.evaluate(train_ds, return_dict=True, verbose=0)
-print("model_2 Evaluation: \n")
-for name, value in results.items():
-    print(f"{name}: {value:.4f}")
-    
 """
 ## Evaluating on test data
 """
