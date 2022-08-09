@@ -237,6 +237,7 @@ print(model_2.summary())
 ## Plotting training metrics
 """
 
+
 def plot_curve(logs):
     plt.figure(figsize=(12, 4))
 

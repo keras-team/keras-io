@@ -302,7 +302,7 @@ model_1 = tfdf.keras.GradientBoostedTreesModel(preprocessing=preprocessor)
 
 <div class="k-default-codeblock">
 ```
-Use /tmp/tmpkkl3mzkc as temporary training directory
+Use /tmp/tmpsp7fmsyk as temporary training directory
 
 ```
 </div>
@@ -315,7 +315,7 @@ model_2 = tfdf.keras.GradientBoostedTreesModel()
 
 <div class="k-default-codeblock">
 ```
-Use /tmp/tmpjo3jli0k as temporary training directory
+Use /tmp/tmpl0zj3vw0 as temporary training directory
 
 ```
 </div>
@@ -348,42 +348,42 @@ model_2.fit(train_ds)
 <div class="k-default-codeblock">
 ```
 Reading training dataset...
-Training dataset read in 0:00:08.932185. Found 6852 examples.
+Training dataset read in 0:00:06.473683. Found 6852 examples.
 Training model...
-Model trained in 0:00:53.350559
+Model trained in 0:00:41.461477
 Compiling model...
 
-[INFO kernel.cc:1176] Loading model from path /tmp/tmpkkl3mzkc/model/ with prefix aa14b524f94546c2
+[INFO kernel.cc:1176] Loading model from path /tmp/tmpsp7fmsyk/model/ with prefix 20297ba36a694abd
 [INFO abstract_model.cc:1248] Engine "GradientBoostedTreesQuickScorerExtended" built
 [INFO kernel.cc:1022] Use fast generic engine
 
-WARNING:tensorflow:AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7f651117b400> and will run it as-is.
+WARNING:tensorflow:AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7fe0aaefb5b0> and will run it as-is.
 Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
 Cause: could not get source code
 To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
 
-WARNING:tensorflow:AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7f651117b400> and will run it as-is.
+WARNING:tensorflow:AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7fe0aaefb5b0> and will run it as-is.
 Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
 Cause: could not get source code
 To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
 
-WARNING: AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7f651117b400> and will run it as-is.
+WARNING: AutoGraph could not transform <function simple_ml_inference_op_with_handle at 0x7fe0aaefb5b0> and will run it as-is.
 Please report this to the TensorFlow team. When filing the bug, set the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and attach the full output.
 Cause: could not get source code
 To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
 Model compiled.
 Reading training dataset...
-Training dataset read in 0:00:00.149277. Found 6852 examples.
+Training dataset read in 0:00:00.087930. Found 6852 examples.
 Training model...
-Model trained in 0:00:00.261265
+Model trained in 0:00:00.367492
 Compiling model...
 
-[INFO kernel.cc:1176] Loading model from path /tmp/tmpjo3jli0k/model/ with prefix e60f4aa0360a4d49
+[INFO kernel.cc:1176] Loading model from path /tmp/tmpl0zj3vw0/model/ with prefix a03b7a91241248af
 [INFO kernel.cc:1022] Use fast generic engine
 
 Model compiled.
 
-<keras.callbacks.History at 0x7f650c43ab00>
+<keras.callbacks.History at 0x7fe09ded1b40>
 
 ```
 </div>
@@ -4927,6 +4927,7 @@ None
 
 
 ```python
+
 def plot_curve(logs):
     plt.figure(figsize=(12, 4))
 
