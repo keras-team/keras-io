@@ -115,7 +115,6 @@ vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
     raw_train_ds,
     vocabulary_size=VOCAB_SIZE,
     lowercase=True,
-    strip_accents=True,
     reserved_tokens=["[PAD]", "[UNK]", "[BOS]"],
 )
 
@@ -132,7 +131,6 @@ tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
     vocabulary=vocab,
     sequence_length=SEQ_LEN,
     lowercase=True,
-    strip_accents=True,
 )
 
 """
