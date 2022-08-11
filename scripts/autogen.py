@@ -183,7 +183,6 @@ class KerasIO:
                 py_path = Path(src_dir) / fname
                 nb_path = working_ipynb_dir / (name + ".ipynb")
                 md_path = Path(target_dir) / (name + ".md")
-                print("...Write to", md_path)
                 tutobooks.py_to_md(py_path, nb_path, md_path, img_dir)
                 md_content = open(md_path).read()
                 md_content = self.preprocess_tutobook_md_source(
@@ -467,7 +466,6 @@ class KerasIO:
 
         if os.path.exists(template_path):
             template_file = open(template_path, encoding="utf8")
-            print(template_path)
             template = template_file.read()
             template_file.close()
         else:
