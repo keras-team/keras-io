@@ -391,45 +391,41 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1861
-Epoch 1: val_loss improved from inf to 0.15814, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 103s 86ms/step - loss: 0.1861 - val_loss: 0.1581
+1172/1172 [==============================] - ETA: 0s - loss: 0.2101
+Epoch 1: val_loss improved from inf to 0.16601, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 89s 75ms/step - loss: 0.2101 - val_loss: 0.1660
 Epoch 2/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1296
-Epoch 2: val_loss improved from 0.15814 to 0.14155, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 115s 98ms/step - loss: 0.1296 - val_loss: 0.1416
+1172/1172 [==============================] - ETA: 0s - loss: 0.1288
+Epoch 2: val_loss improved from 0.16601 to 0.14444, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 87s 75ms/step - loss: 0.1288 - val_loss: 0.1444
 Epoch 3/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1167
-Epoch 3: val_loss did not improve from 0.14155
-1172/1172 [==============================] - 107s 91ms/step - loss: 0.1167 - val_loss: 0.1455
+1172/1172 [==============================] - ETA: 0s - loss: 0.1147
+Epoch 3: val_loss did not improve from 0.14444
+1172/1172 [==============================] - 88s 75ms/step - loss: 0.1147 - val_loss: 0.1628
 Epoch 4/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1113
-Epoch 4: val_loss did not improve from 0.14155
-1172/1172 [==============================] - 113s 97ms/step - loss: 0.1113 - val_loss: 0.1450
+1172/1172 [==============================] - ETA: 0s - loss: 0.1166
+Epoch 4: val_loss improved from 0.14444 to 0.13036, saving model to model_checkpoint.h5
+1172/1172 [==============================] - 89s 76ms/step - loss: 0.1166 - val_loss: 0.1304
 Epoch 5/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1098
-Epoch 5: val_loss improved from 0.14155 to 0.14003, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 109s 93ms/step - loss: 0.1098 - val_loss: 0.1400
+1172/1172 [==============================] - ETA: 0s - loss: 0.1083
+Epoch 5: val_loss did not improve from 0.13036
+1172/1172 [==============================] - 104s 89ms/step - loss: 0.1083 - val_loss: 0.1392
 Epoch 6/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1055
-Epoch 6: val_loss improved from 0.14003 to 0.13891, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 117s 100ms/step - loss: 0.1055 - val_loss: 0.1389
+1172/1172 [==============================] - ETA: 0s - loss: 0.1064
+Epoch 6: val_loss did not improve from 0.13036
+1172/1172 [==============================] - 131s 112ms/step - loss: 0.1064 - val_loss: 0.1423
 Epoch 7/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1034
-Epoch 7: val_loss improved from 0.13891 to 0.13599, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 109s 93ms/step - loss: 0.1034 - val_loss: 0.1360
+1172/1172 [==============================] - ETA: 0s - loss: 0.1041
+Epoch 7: val_loss did not improve from 0.13036
+1172/1172 [==============================] - 112s 96ms/step - loss: 0.1041 - val_loss: 0.1378
 Epoch 8/10
-1171/1172 [============================>.] - ETA: 0s - loss: 0.1020
-Epoch 8: val_loss improved from 0.13599 to 0.13264, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 97s 83ms/step - loss: 0.1019 - val_loss: 0.1326
+1172/1172 [==============================] - ETA: 0s - loss: 0.1028
+Epoch 8: val_loss did not improve from 0.13036
+1172/1172 [==============================] - 95s 81ms/step - loss: 0.1028 - val_loss: 0.1369
 Epoch 9/10
-1171/1172 [============================>.] - ETA: 0s - loss: 0.1005
-Epoch 9: val_loss improved from 0.13264 to 0.12832, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 80s 68ms/step - loss: 0.1005 - val_loss: 0.1283
-Epoch 10/10
-1171/1172 [============================>.] - ETA: 0s - loss: 0.0996
-Epoch 10: val_loss improved from 0.12832 to 0.12343, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 81s 69ms/step - loss: 0.0996 - val_loss: 0.1234
+1172/1172 [==============================] - ETA: 0s - loss: 0.1020
+Epoch 9: val_loss did not improve from 0.13036
+1172/1172 [==============================] - 84s 72ms/step - loss: 0.1020 - val_loss: 0.1315
 
 ```
 </div>
@@ -500,12 +496,11 @@ for x, y in dataset_val.take(5):
         "Single Step Prediction",
     )
 
-
 ```
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 7ms/step
+8/8 [==============================] - 0s 11ms/step
 
 ```
 </div>
@@ -516,7 +511,7 @@ for x, y in dataset_val.take(5):
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 9ms/step
+8/8 [==============================] - 0s 8ms/step
 
 ```
 </div>
@@ -527,7 +522,7 @@ for x, y in dataset_val.take(5):
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 9ms/step
+8/8 [==============================] - 0s 11ms/step
 
 ```
 </div>
@@ -549,7 +544,7 @@ for x, y in dataset_val.take(5):
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 7ms/step
+8/8 [==============================] - 0s 9ms/step
 
 ```
 </div>

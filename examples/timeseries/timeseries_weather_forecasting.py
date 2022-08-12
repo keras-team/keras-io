@@ -382,7 +382,6 @@ for x, y in dataset_val.take(5):
     )
 
 
-
 """
 **Example available on HuggingFace**
 | Trained Model | Demo |
