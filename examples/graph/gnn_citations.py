@@ -436,6 +436,7 @@ class GraphConvLayer(layers.Layer):
     def aggregate(self, node_indices, neighbour_messages, node_repesentations):
         # node_indices shape is [num_edges].
         # neighbour_messages shape: [num_edges, representation_dim].
+        # node_repesentations shape is [num_nodes, representation_dim]
         num_nodes = node_repesentations.shape[0]
         if self.aggregation_type == "sum":
             aggregated_message = tf.math.unsorted_segment_sum(
