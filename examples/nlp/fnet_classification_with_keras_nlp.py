@@ -51,7 +51,6 @@ necessary packages.
 """
 
 """shell
-pip install -q rouge-score
 pip uninstall -y keras-nlp
 pip install -q git+https://github.com/keras-team/keras-nlp.git@fc01b18125bb707a0de7e442a6a8e48c8fe913a3
 """
@@ -170,6 +169,7 @@ when the input sequence length is shorter than the maximum sequence length.
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
 
+reserved_tokens = ["[PAD]", "[UNK]"]
 train_sentences = train_ds.unbatch().map(lambda x, y: x)
 vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
     data=train_sentences,
