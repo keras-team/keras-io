@@ -522,7 +522,7 @@ F1-score.
 BLEU is also computed based on the number of common n-grams. However, it has a
 few differences from ROUGE-N. First, BLEU computes the precision. Secondly, it
 considers all n-grams up to a particular order. For example, if the specified
-`max_order` is 3, it will consider unigrams, bigrams and trigrams. Salient 
+`max_order` is 3, it will consider unigrams, bigrams and trigrams. Salient
 features of BLEU include using "clipped count" for calculating precision so that
 repetition is discouraged, and a brevity penalty so as to not
 assign higher scores to short generated translations.
