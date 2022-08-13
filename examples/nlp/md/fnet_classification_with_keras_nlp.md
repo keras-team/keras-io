@@ -49,8 +49,14 @@ Fourier Transform (FFT); this reduces the time complexity from `O(n^2)`
 ---
 ## Setup
 
-Before we start with the implementation, let's import all the necessary packages.
+Before we start with the implementation, let's install and import all the
+necessary packages.
 
+
+```python
+!pip uninstall -y keras-nlp
+!pip install -q git+https://github.com/keras-team/keras-nlp.git@fc01b18125bb707a0de7e442a6a8e48c8fe913a3
+```
 
 ```python
 import keras_nlp
@@ -63,7 +69,15 @@ from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as ber
 
 keras.utils.set_random_seed(42)
 ```
+<div class="k-default-codeblock">
+```
+Found existing installation: keras-nlp 0.3.0
+Uninstalling keras-nlp-0.3.0:
+  Successfully uninstalled keras-nlp-0.3.0
+  Building wheel for keras-nlp (setup.py) ... [?25l[?25hdone
 
+```
+</div>
 Let's also define our hyperparameters.
 
 
@@ -90,7 +104,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-06-30 16:53:24--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2022-08-13 08:02:45--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -101,13 +115,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  16.2MB/s    in 8.7s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  15.8MB/s    in 8.3s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-06-30 16:53:33 (9.22 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2022-08-13 08:02:53 (9.68 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -125,9 +139,9 @@ print(os.listdir("./aclImdb/test"))
 
 <div class="k-default-codeblock">
 ```
-['README', 'train', 'test', 'imdbEr.txt', 'imdb.vocab']
-['pos', 'urls_pos.txt', 'urls_unsup.txt', 'unsup', 'labeledBow.feat', 'urls_neg.txt', 'unsupBow.feat', 'neg']
-['pos', 'urls_pos.txt', 'labeledBow.feat', 'urls_neg.txt', 'neg']
+['test', 'imdbEr.txt', 'train', 'README', 'imdb.vocab']
+['unsupBow.feat', 'unsup', 'labeledBow.feat', 'urls_neg.txt', 'neg', 'urls_unsup.txt', 'pos', 'urls_pos.txt']
+['labeledBow.feat', 'urls_neg.txt', 'neg', 'pos', 'urls_pos.txt']
 
 ```
 </div>
@@ -215,33 +229,9 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
-
-Note: The official implementation of FNet uses the SentencePiece Tokenizer.
-
-
-```python
-
-def train_word_piece(ds, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
-    # Extract text samples (remove the labels).
-    word_piece_ds = ds.unbatch().map(lambda x, y: x)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
-    )
-    return vocab
-
-```
+(characters don't really encode meaning like words do). The
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility function makes it
+very simple to train WordPiece on a corpus.
 
 Every vocabulary has a few special, reserved tokens. We have two such tokens:
 
@@ -249,11 +239,18 @@ Every vocabulary has a few special, reserved tokens. We have two such tokens:
 when the input sequence length is shorter than the maximum sequence length.
 - `"[UNK]"` - Unknown token.
 
+Note: The official implementation of FNet uses the SentencePiece Tokenizer.
+
 
 ```python
 reserved_tokens = ["[PAD]", "[UNK]"]
-train_sentences = [element[0] for element in train_ds]
-vocab = train_word_piece(train_ds, VOCAB_SIZE, reserved_tokens)
+train_sentences = train_ds.unbatch().map(lambda x, y: x)
+vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    data=train_sentences,
+    vocabulary_size=VOCAB_SIZE,
+    lowercase=True,
+    reserved_tokens=reserved_tokens,
+)
 ```
 
 Let's see some tokens!
@@ -265,7 +262,7 @@ print("Tokens: ", vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-Tokens:  ['in', 'this', 'that', 'was', 'as', 'for', 'movie', 'with', 'but', 'film']
+Tokens:  ['ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü']
 
 ```
 </div>
@@ -300,28 +297,28 @@ print("Recovered text after detokenizing: ", tokenizer.detokenize(input_tokens_e
 
 <div class="k-default-codeblock">
 ```
-Sentence:  tf.Tensor(b'this picture seemed way to slanted, it\'s almost as bad as the drum beating of the right wing kooks who say everything is rosy in iraq. it paints a picture so unredeemable that i can\'t help but wonder about it\'s legitimacy and bias. also it seemed to meander from being about the murderous carnage of our troops to the lack of health care in the states for ptsd. to me the subject matter seemed confused, it only cared about portraying the military in a bad light, as a) an organzation that uses mind control to turn ordinary peace loving civilians into baby killers and b) an organization that once having used and spent the bodies of it\'s soldiers then discards them to the despotic bureacracy of the v.a. this is a legitimate argument, but felt off topic for me, almost like a movie in and of itself. i felt that "the war tapes" and "blood of my brother" were much more fair and let the viewer draw some conclusions of their own rather than be beaten over the head with the film makers viewpoint. f-', shape=(), dtype=string)
+Sentence:  tf.Tensor(b"the 60\xc2\xb4s is a well balanced mini series between historical facts and a good plot. in four deliveries, we follow a north american family, with 3 members. but we don't only see them. we also follow the story of several characters as a black reverend, an extremist student leader, and a soldier in vietnam. the filmography is just extraordinary. in the first chapters, we see some shots of the vietnam war, in between the scenes. the next chapter, doesn't start where the last one finished, it starts some time after, giving us a little mystery on what happened. in general, the 60\xc2\xb4s mini series, is a must see, not only for hippies fanatics, but for everyone with little curiosity about the topic.", shape=(), dtype=string)
 Tokens:  tf.Tensor(
-[  101   532   564   184    96    58 13296    13    99     8    58   316
-   104   165   104    93  9712  3634    95    93   300  3231    50 12058
-   120   125   225   380    97    57  2058   250   100  5075    15    99
-  7850    40   532   126  2929  2418  2300 10410   102    48   140     8
-    59   434   108   689   133    99     8    58  4016  8028 13308    94
-  8514    15   170    99   564    96   482  2089   127   203   133    93
-  4679  7293    95   351  4939    96    93   667    95  3916   553   100
-    93  1801   105    55  1136   244    15    96   159    93   965   642
-   564  1658    13    99   153  3935   133  2473    93  1398   100    40
-   165   732    13   104    40    10   124 14151 13368   102  1217   426
-  1255    96   560  2074  2798  1830  9944   173   962  2276    94    41
-    10   124  8426   102   378   355   436    94  1169    93  2498    95
-    99     8    58  1445   183  4276 10675   185    96    93  6266  8489
-   809    41  2172  6501 10725    95    93    61    15    40    15   101
-    97    40  7699  4073    13   108   525   216  3251   105   159    13
-   316   128    40   106   100    94    95   516    15    48   525   102
-     3    93   422  6152     3    94     3   621    95   149   662     3
-   160   163   141  1404    94   373    93   599  2689   138  8377    95
-   155   298   341   162   117  3877   209    93   522   107    93   109
-  1293  8797    15    45    14     0     0     0     0     0     0     0
+[  122     1   126    40   190  7681  2570   325   316  1607  2529   123
+    40   168   229    15   129   813  1759   933    13   187   917    40
+  2540   420   334    13   136    20  1213    15   137   187   207     8
+    59   182   185   214    15   187   199   917   122   181   124   585
+   221   133    40   450 12742    13   153  1365  9257  6956  1281  1669
+  2304    13   123    40  1725   129  2729    15   122  7972   126   161
+  3171    15   129   122   201 10238    13   187   185   167   795   124
+   122  2729   451    13   129   316   122   261    15   122   494  5091
+    13   270     8    59   507   237   122   359   147  1989    13   128
+   639   167   175   219    13   872   302    40   235   861   139   166
+   694    15   129   924    13   122     1  2570   325    13   126    40
+   330   185    13   141   182   134  6889 10843    13   137   134   426
+   136   235  3910   162   122  3282    15     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
@@ -345,7 +342,7 @@ Tokens:  tf.Tensor(
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0], shape=(512,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'this picture seemed way to slanted , it \' s almost as bad as the drum beating of the right wing kooks who say everything is rosy in iraq . it paints a picture so unredeemable that i can \' t help but wonder about it \' s legitimacy and bias . also it seemed to meander from being about the murderous carnage of our troops to the lack of health care in the states for ptsd . to me the subject matter seemed confused , it only cared about portraying the military in a bad light , as a ) an organzation that uses mind control to turn ordinary peace loving civilians into baby killers and b ) an organization that once having used and spent the bodies of it \' s soldiers then discards them to the despotic bureacracy of the v . a . this is a legitimate argument , but felt off topic for me , almost like a movie in and of itself . i felt that " the war tapes " and " blood of my brother " were much more fair and let the viewer draw some conclusions of their own rather than be beaten over the head with the film makers viewpoint . f - [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]', shape=(), dtype=string)
+Recovered text after detokenizing:  tf.Tensor(b"the [UNK] is a well balanced mini series between historical facts and a good plot . in four deliveries , we follow a north american family , with 3 members . but we don ' t only see them . we also follow the story of several characters as a black reverend , an extremist student leader , and a soldier in vietnam . the filmography is just extraordinary . in the first chapters , we see some shots of the vietnam war , in between the scenes . the next chapter , doesn ' t start where the last one finished , it starts some time after , giving us a little mystery on what happened . in general , the [UNK] mini series , is a must see , not only for hippies fanatics , but for everyone with little curiosity about the topic . [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]", shape=(), dtype=string)
 
 ```
 </div>
@@ -463,13 +460,13 @@ Trainable params: 2,382,337
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 32s 78ms/step - loss: 0.5910 - accuracy: 0.6335 - val_loss: 0.3561 - val_accuracy: 0.8414
+313/313 [==============================] - 34s 80ms/step - loss: 0.5810 - accuracy: 0.6431 - val_loss: 0.3597 - val_accuracy: 0.8434
 Epoch 2/3
-313/313 [==============================] - 23s 72ms/step - loss: 0.3109 - accuracy: 0.8695 - val_loss: 0.3246 - val_accuracy: 0.8590
+313/313 [==============================] - 23s 75ms/step - loss: 0.3081 - accuracy: 0.8674 - val_loss: 0.3300 - val_accuracy: 0.8584
 Epoch 3/3
-313/313 [==============================] - 23s 73ms/step - loss: 0.1993 - accuracy: 0.9225 - val_loss: 0.3806 - val_accuracy: 0.8522
+313/313 [==============================] - 24s 76ms/step - loss: 0.2055 - accuracy: 0.9208 - val_loss: 0.3944 - val_accuracy: 0.8456
 
-<keras.callbacks.History at 0x7fb7f6034210>
+<keras.callbacks.History at 0x7fe9f00804d0>
 
 ```
 </div>
@@ -487,9 +484,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 17s 26ms/step - loss: 0.3983 - accuracy: 0.8437
+391/391 [==============================] - 16s 26ms/step - loss: 0.4171 - accuracy: 0.8316
 
-[0.39833641052246094, 0.843720018863678]
+[0.4171285033226013, 0.83160001039505]
 
 ```
 </div>
@@ -576,13 +573,13 @@ Trainable params: 2,580,481
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 48s 143ms/step - loss: 0.4569 - accuracy: 0.7594 - val_loss: 0.3013 - val_accuracy: 0.8764
+313/313 [==============================] - 50s 151ms/step - loss: 0.4522 - accuracy: 0.7678 - val_loss: 0.3437 - val_accuracy: 0.8570
 Epoch 2/3
-313/313 [==============================] - 45s 143ms/step - loss: 0.2104 - accuracy: 0.9197 - val_loss: 0.3206 - val_accuracy: 0.8770
+313/313 [==============================] - 46s 149ms/step - loss: 0.2061 - accuracy: 0.9218 - val_loss: 0.4238 - val_accuracy: 0.8472
 Epoch 3/3
-313/313 [==============================] - 45s 145ms/step - loss: 0.1645 - accuracy: 0.9398 - val_loss: 0.3829 - val_accuracy: 0.8772
+313/313 [==============================] - 47s 149ms/step - loss: 0.1633 - accuracy: 0.9403 - val_loss: 0.3789 - val_accuracy: 0.8746
 
-<keras.callbacks.History at 0x7fb7f60a8310>
+<keras.callbacks.History at 0x7fe9fb4ec610>
 
 ```
 </div>
@@ -599,9 +596,9 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 22s 55ms/step - loss: 0.4617 - accuracy: 0.8540
+391/391 [==============================] - 22s 56ms/step - loss: 0.4404 - accuracy: 0.8556
 
-[0.46172526478767395, 0.8539599776268005]
+[0.4403669834136963, 0.8555999994277954]
 
 ```
 </div>
