@@ -564,4 +564,6 @@ After 10 epochs, the scores are as follows:
 | **Precision** |    0.468    |    0.245    |
 |   **Recall**  |    0.456    |    0.230    |
 |  **F1 Score** |    0.457    |    0.236    |
+
+The BLEU score is 0.227.
 """
