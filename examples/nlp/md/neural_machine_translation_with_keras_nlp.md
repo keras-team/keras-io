@@ -2,7 +2,7 @@
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2022/05/26<br>
-**Last modified:** 2022/05/26<br>
+**Last modified:** 2022/08/13<br>
 **Description:** Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
 
 
@@ -41,13 +41,15 @@ the basics. Let's dive right in!
 ---
 ## Setup
 
-Before we start implementing the pipeline, let's import all the libraries we need.
+Before we start implementing the pipeline, let's install and import all the
+libraries we need.
 
 
 ```python
 !pip install -q rouge-score
+!pip uninstall -y keras-nlp
+!pip install -q git+https://github.com/keras-team/keras-nlp.git@fc01b18125bb707a0de7e442a6a8e48c8fe913a3
 ```
-
 
 ```python
 import keras_nlp
@@ -59,7 +61,15 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 ```
+<div class="k-default-codeblock">
+```
+Found existing installation: keras-nlp 0.3.0
+Uninstalling keras-nlp-0.3.0:
+  Successfully uninstalled keras-nlp-0.3.0
+  Building wheel for keras-nlp (setup.py) ... [?25l[?25hdone
 
+```
+</div>
 Let's also define our parameters/hyperparameters.
 
 
@@ -120,11 +130,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('america is a country of immigrants.', 'estados unidos es un país de inmigrantes.')
-('do you hear the birds singing?', '¿oyes cantar a los pájaros?')
-('if you want to get out of here alive, follow me.', 'sígueme si quieres salir de aquí con vida.')
-('the rain lasted the whole night.', 'la lluvia duró toda la noche.')
-('tom wanted it this way.', 'tom lo quería así.')
+('he seems to have been rich.', 'él parece haber sido rico.')
+('tom and mary kissed one another.', 'tom y mary se besaron.')
+("tell me what you're looking for and i'll help.", 'dime lo que estás buscando y te ayudaré.')
+('he has learned to be patient.', 'él ha aprendido a ser paciente.')
+("it's very sad.", 'es muy triste.')
 
 ```
 </div>
@@ -170,30 +180,9 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
-
-
-```python
-
-def train_word_piece(text_samples, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
-    word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
-    )
-    return vocab
-
-```
+(characters don't really encode meaning like words do). The
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility function makes it
+very simple to train WordPiece on a corpus.
 
 Every vocabulary has a few special, reserved tokens. We have four such tokens:
 
@@ -206,12 +195,25 @@ length when the input sequence length is shorter than the maximum sequence lengt
 
 ```python
 reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
+eng_samples = tf.data.Dataset.from_tensor_slices(
+    [text_pair[0] for text_pair in train_pairs]
+)
+eng_vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    data=eng_samples,
+    vocabulary_size=ENG_VOCAB_SIZE,
+    lowercase=True,
+    reserved_tokens=reserved_tokens,
+)
 
-eng_samples = [text_pair[0] for text_pair in train_pairs]
-eng_vocab = train_word_piece(eng_samples, ENG_VOCAB_SIZE, reserved_tokens)
-
-spa_samples = [text_pair[1] for text_pair in train_pairs]
-spa_vocab = train_word_piece(spa_samples, SPA_VOCAB_SIZE, reserved_tokens)
+spa_samples = tf.data.Dataset.from_tensor_slices(
+    [text_pair[1] for text_pair in train_pairs]
+)
+spa_vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    data=spa_samples,
+    vocabulary_size=SPA_VOCAB_SIZE,
+    lowercase=True,
+    reserved_tokens=reserved_tokens,
+)
 ```
 
 Let's see some tokens!
@@ -224,8 +226,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['as', 'll', 'did', 'very', 'had', 'all', 'here', 'up', 'about', 'didn']
-Spanish Tokens:  ['estaba', 'tengo', 'fue', 'quiero', 'aqui', 'casa', 'cuando', 'hacer', '##n', 'puedo']
+English Tokens:  ['go', 'they', 'her', 'has', 'will', 'time', 're', 'll', 'how', 'did']
+Spanish Tokens:  ['las', 'más', 'al', 'yo', 'tu', 'estoy', 'muy', 'eso', 'este', 'tiene']
 
 ```
 </div>
@@ -265,17 +267,17 @@ print("Recovered text after detokenizing: ", spa_tokenizer.detokenize(spa_tokens
 
 <div class="k-default-codeblock">
 ```
-English sentence:  i didn't think it was so bad.
-Tokens:  tf.Tensor([ 33 109   8  44 110  60  64 135 297  11], shape=(10,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b"i didn ' t think it was so bad .", shape=(), dtype=string)
+English sentence:  i want to go to bed early tonight.
+Tokens:  tf.Tensor([ 34  92  63 100  63 322 405 461  11], shape=(9,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'i want to go to bed early tonight .', shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  no pensé que era tan malo.
-Tokens:  tf.Tensor([ 65 237  62 124 119 629  14], shape=(7,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'no pense que era tan malo .', shape=(), dtype=string)
+Spanish sentence:  esta noche quiero irme pronto a la cama.
+Tokens:  tf.Tensor([110 211 113 895 272  29  77 367  14], shape=(9,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'esta noche quiero irme pronto a la cama .', shape=(), dtype=string)
 
 ```
 </div>
@@ -492,9 +494,9 @@ Total params: 15,368,600
 Trainable params: 15,368,600
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 107s 78ms/step - loss: 1.0684 - accuracy: 0.3975 - val_loss: 0.8740 - val_accuracy: 0.4836
+1302/1302 [==============================] - 109s 80ms/step - loss: 1.1012 - accuracy: 0.3889 - val_loss: 0.9238 - val_accuracy: 0.4619
 
-<keras.callbacks.History at 0x7fe8705e1150>
+<keras.callbacks.History at 0x7f3bd42028d0>
 
 ```
 </div>
@@ -560,16 +562,16 @@ for i in range(2):
 <div class="k-default-codeblock">
 ```
 ** Example 0 **
-the workers asked for an increase in pay.
-el compumpumpulin a un mes en un mes .
+she scolded him for being late.
+ella le dijo a hacer francés .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-my brother insisted on going there alone.
-mi padre se hizo tarde .
+you will do it whether you like it or not.
+te te quieres que no te quieres .
 ```
 </div>
     
@@ -641,10 +643,21 @@ lo que paso, ha pasado. es historia.
 ## Evaluating our model (quantitative analysis)
 
 There are many metrics which are used for text generation tasks. Here, to
-evaluate translations generated by our model, let's compute the ROUGE-1 and
-ROUGE-2 scores. Essentially, ROUGE-N is a score based on the number of common
-n-grams between the reference text and the generated text. ROUGE-1 and ROUGE-2
-use the number of common unigrams and bigrams, respectively.
+evaluate translations generated by our model, let's compute the ROUGE-N and
+BLEU metrics.
+
+ROUGE-N is a metric based on the number of common n-grams between the reference
+text and the generated text. ROUGE-1 and ROUGE-2 use the number of common
+unigrams and bigrams, respectively, to calculate the precision, recall and
+F1-score.
+
+BLEU is also computed based on the number of common n-grams. However, it has a
+few differences from ROUGE-N. First, BLEU computes the precision. Secondly, it
+considers all n-grams up to a particular order. For example, if the specified
+`max_order` is 3, it will consider unigrams, bigrams and trigrams. Salient
+features of BLEU include using "clipped count" for calculating precision so that
+repetition is discouraged, and a brevity penalty so as to not
+assign higher scores to short generated translations.
 
 We will calculate the score over 30 test samples (since decoding is an
 expensive process).
@@ -653,6 +666,7 @@ expensive process).
 ```python
 rouge_1 = keras_nlp.metrics.RougeN(order=1)
 rouge_2 = keras_nlp.metrics.RougeN(order=2)
+bleu = keras_nlp.metrics.Bleu(max_order=4)
 
 for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
@@ -669,15 +683,18 @@ for test_pair in test_pairs[:30]:
 
     rouge_1(reference_sentence, translated_sentence)
     rouge_2(reference_sentence, translated_sentence)
+    bleu([reference_sentence], translated_sentence)
 
 print("ROUGE-1 Score: ", rouge_1.result())
 print("ROUGE-2 Score: ", rouge_2.result())
+print("BLEU Score: ", bleu.result())
 ```
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.24886957>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.19965802>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.21695943>}
-ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.07670634>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.044060845>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.05444546>}
+ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.3226647>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.3117328>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.31005457>}
+ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.10670635>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.10751323>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.10613842>}
+BLEU Score:  tf.Tensor(0.07060583, shape=(), dtype=float32)
 
 ```
 </div>
@@ -688,3 +705,5 @@ After 10 epochs, the scores are as follows:
 | **Precision** |    0.468    |    0.245    |
 |   **Recall**  |    0.456    |    0.230    |
 |  **F1 Score** |    0.457    |    0.236    |
+
+The BLEU score is 0.227.
