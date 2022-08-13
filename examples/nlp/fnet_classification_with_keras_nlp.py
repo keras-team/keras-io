@@ -46,7 +46,14 @@ Fourier Transform (FFT); this reduces the time complexity from `O(n^2)`
 """
 ## Setup
 
-Before we start with the implementation, let's import all the necessary packages.
+Before we start with the implementation, let's install and import all the
+necessary packages.
+"""
+
+"""shell
+pip install -q rouge-score
+pip uninstall -y keras-nlp
+pip install -q git+https://github.com/keras-team/keras-nlp.git@fc01b18125bb707a0de7e442a6a8e48c8fe913a3
 """
 
 import keras_nlp
@@ -150,42 +157,26 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
+(characters don't really encode meaning like words do). The
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility function makes it
+very simple to train WordPiece on a corpus.
 
-Note: The official implementation of FNet uses the SentencePiece Tokenizer.
-"""
-
-
-def train_word_piece(ds, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
-    # Extract text samples (remove the labels).
-    word_piece_ds = ds.unbatch().map(lambda x, y: x)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
-    )
-    return vocab
-
-
-"""
 Every vocabulary has a few special, reserved tokens. We have two such tokens:
 
 - `"[PAD]"` - Padding token. Padding tokens are appended to the input sequence length
 when the input sequence length is shorter than the maximum sequence length.
 - `"[UNK]"` - Unknown token.
+
+Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
-reserved_tokens = ["[PAD]", "[UNK]"]
-train_sentences = [element[0] for element in train_ds]
-vocab = train_word_piece(train_ds, VOCAB_SIZE, reserved_tokens)
+
+train_sentences = train_ds.unbatch().map(lambda x, y: x)
+vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    data=train_sentences,
+    vocabulary_size=VOCAB_SIZE,
+    lowercase=True,
+    reserved_tokens=reserved_tokens,
+)
 
 """
 Let's see some tokens!
