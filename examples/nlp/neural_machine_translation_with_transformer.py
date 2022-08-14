@@ -441,6 +441,7 @@ test_eng_texts = [pair[0] for pair in test_pairs]
 for _ in range(30):
     input_sentence = random.choice(test_eng_texts)
     translated = decode_sequence(input_sentence)
+    print(translated)
 
 """
 After 30 epochs, we get results such as:
