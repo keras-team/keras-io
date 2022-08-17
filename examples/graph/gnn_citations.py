@@ -495,7 +495,9 @@ class GraphConvLayer(layers.Layer):
         # Prepare the messages of the neighbours.
         neighbour_messages = self.prepare(neighbour_repesentations, edge_weights)
         # Aggregate the neighbour messages.
-        aggregated_messages = self.aggregate(node_indices, neighbour_messages, node_repesentations)
+        aggregated_messages = self.aggregate(
+            node_indices, neighbour_messages, node_repesentations
+        )
         # Update the node embedding with the neighbour messages.
         return self.update(node_repesentations, aggregated_messages)
 
