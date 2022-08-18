@@ -186,3 +186,10 @@ a:hover {
   font-size: 1.2rem;
   font-weight: bold;
 }
+
+footer {
+  float: left;
+  width: 100%;
+  padding: 1em;
+  border-top: solid 1px #bbb;
+}
