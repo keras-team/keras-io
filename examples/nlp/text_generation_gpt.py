@@ -114,6 +114,7 @@ representing the beginning of each line of training data.
 vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
     raw_train_ds,
     vocabulary_size=VOCAB_SIZE,
+    lowercase=True,
     reserved_tokens=["[PAD]", "[UNK]", "[BOS]"],
 )
 
@@ -127,7 +128,9 @@ lower-case and do other irreversible preprocessing operations.
 """
 
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab, sequence_length=SEQ_LEN
+    vocabulary=vocab,
+    sequence_length=SEQ_LEN,
+    lowercase=True,
 )
 
 """
