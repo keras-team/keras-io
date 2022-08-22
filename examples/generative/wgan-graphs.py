@@ -43,7 +43,7 @@ adverserial networks, see [GAN](https://arxiv.org/abs/1406.2661),
 ### Install RDKit
 
 [RDKit](https://www.rdkit.org/) is a collection of cheminformatics and machine-learning
-software written in C++ and Python. In this tutorial, RDKit is used to conviently and
+software written in C++ and Python. In this tutorial, RDKit is used to conveniently and
 efficiently transform
 [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system) to
 molecule objects, and then from those obtain sets of atoms and bonds.
