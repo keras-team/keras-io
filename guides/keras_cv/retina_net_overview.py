@@ -1,15 +1,15 @@
 """
 Title: Train an Object Detection Model on Pascal VOC 2007 using KerasCV
 Author: [lukewood](https://lukewood.xyz)
-Date created: 2022/08/02
-Last modified: 2022/08/02
+Date created: 2022/08/22
+Last modified: 2022/08/22
 Description: Use KerasCV to train a RetinaNet on Pascal VOC 2007.
 """
 
 """
 ## Overview
 
-KerasCV offers a complete set of APIs to allow you to train your own state-of-the-art,
+KerasCV offers a complete set of APIs to train your own state-of-the-art,
 production-grade object detection model.  These APIs include object detection specific
 data augmentation techniques, models, and COCO metrics.
 
@@ -20,7 +20,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
-from tensorflow.keras import callbacks as callbacks_lib
 from tensorflow.keras import optimizers
 
 import keras_cv
@@ -32,7 +31,7 @@ EPOCHS = 1
 """
 ## Data loading
 
-In this guide, we use the data-loading function: `keras_cv.loaders.pascal_voc.load()`.
+In this guide, we use the data-loading function: `keras_cv.datasets.pascal_voc.load()`.
 KerasCV supports a `bounding_box_format` argument in all components that process
 bounding boxes.  To match the KerasCV API style, it is recommended that when writing a
 custom data loader, you also support a `bounding_box_format` argument.
@@ -42,7 +41,7 @@ are in.
 For example:
 
 ```python
-train_ds, ds_info = keras_cv.loaders.pascal_voc.load(split='train', bounding_box_format='xywh', batch_size=8)
+train_ds, ds_info = keras_cv.datasets.pascal_voc.load(split='train', bounding_box_format='xywh', batch_size=8)
 ```
 
 Clearly yields bounding boxes in the format `xywh`.  You can read more about
@@ -55,7 +54,7 @@ KerasCV preprocessing components.
 Lets load some data and verify that our data looks as we expect it to.
 """
 
-dataset, dataset_info = keras_cv.loaders.pascal_voc.load(
+dataset, dataset_info = keras_cv.datasets.pascal_voc.load(
     split="train", bounding_box_format="xywh", batch_size=9
 )
 
@@ -63,9 +62,7 @@ dataset, dataset_info = keras_cv.loaders.pascal_voc.load(
 def visualize_dataset(dataset, bounding_box_format):
     color = tf.constant(((255.0, 0, 0),))
     plt.figure(figsize=(10, 10))
-    iterator = iter(dataset)
-    for i in range(9):
-        example = next(iterator)
+    for i, example in enumerate(dataset.take(9)):
         images, boxes = example["images"], example["bounding_boxes"]
         boxes = keras_cv.bounding_box.convert_format(
             boxes, source=bounding_box_format, target="rel_yxyx", images=images
@@ -100,10 +97,10 @@ friendly data augmentation inside of a `tf.data` pipeline.
 
 # train_ds is batched as a (images, bounding_boxes) tuple
 # bounding_boxes are ragged
-train_ds, train_dataset_info = keras_cv.loaders.pascal_voc.load(
+train_ds, train_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="train", batch_size=BATCH_SIZE
 )
-val_ds, val_dataset_info = keras_cv.loaders.pascal_voc.load(
+val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
@@ -130,7 +127,7 @@ the inputs into our model.
 """
 
 
-def unpackage_dict(inputs):
+def dict_to_tuple(inputs):
     return inputs["images"], inputs["bounding_boxes"]
 
 
@@ -154,10 +151,19 @@ the model are expected to be in the range `[0, 255]`.
 """
 
 model = keras_cv.models.RetinaNet(
+    # number of classes to be used in box classification
     classes=20,
+    # For more info on supported bounding box formats, visit
+    # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
+    # KerasCV offers a set of pre-configured backbones
     backbone="resnet50",
+    # Each backbone comes with multiple pre-trained weights
+    # These weights match the weights available in the `keras_cv.model` class.
     backbone_weights="imagenet",
+    # include_rescaling tells the model whether your input images are in the default
+    # pixel range (0, 255) or if you have already rescaled your inputs to the range
+    # (0, 1).  In our case, we feed our model images with inputs in the range (0, 255).
     include_rescaling=True,
 )
 
@@ -239,9 +245,9 @@ All that is left to do is construct some callbacks:
 """
 
 callbacks = [
-    callbacks_lib.TensorBoard(log_dir="logs"),
-    callbacks_lib.EarlyStopping(patience=50),
-    callbacks_lib.ReduceLROnPlateau(patience=20),
+    keras.callbacks.TensorBoard(log_dir="logs"),
+    keras.callbacks.EarlyStopping(patience=50),
+    keras.callbacks.ReduceLROnPlateau(patience=20),
 ]
 
 """
