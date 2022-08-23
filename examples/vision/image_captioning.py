@@ -14,6 +14,8 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import random
+import cv2
 
 import tensorflow as tf
 from tensorflow import keras
@@ -69,7 +71,22 @@ AUTOTUNE = tf.data.AUTOTUNE
 """
 ## Preparing the dataset
 """
+def plot_images_data(filename):
+    """
+    Loads the image data 
+    params: filename: File path that contains the image data
+    """
+    #define the size of plot window
+    plt.figure(figsize=(20,20))
+    for view_images in range(9):
+        plt.subplot(3,3,view_images+1)
+        #resize and plot the image
+        img = cv2.imread(f"{filename}/{random.choice(os.listdir(filename))}")
+        img = cv2.resize(img,(200,200),interpolation=cv2.INTER_CUBIC)
+        plt.axis("off")
+        plt.imshow(img)
 
+plot_images_data('./Flickr8k_Dataset/Flicker8k_Dataset/')
 
 def load_captions_data(filename):
     """Loads captions (text) data and maps them to corresponding images.
