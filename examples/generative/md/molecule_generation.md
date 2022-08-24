@@ -696,8 +696,8 @@ MolsToGridImage(
 ```
 
 
-    
-    
+
+
 ![png](/img/examples/generative/molecule_generation/molecule_generation_21_0.png)
 
 
@@ -722,8 +722,8 @@ def plot_latent(vae, data, labels):
 plot_latent(model, [adjacency_tensor[:8000], feature_tensor[:8000]], qed_tensor[:8000])
 ```
 
-    
-![png](/img/examples/generative/molecule_generation/molecule_generation_23_0.png) 
+
+![png](/img/examples/generative/molecule_generation/molecule_generation_23_0.png)
 
 
 ---
