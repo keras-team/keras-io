@@ -15,7 +15,7 @@ from tensorflow import keras
 """
 ## The `Layer` class: the combination of state (weights) and some computation
 
-One of the central abstraction in Keras is the `Layer` class. A layer
+One of the central abstractions in Keras is the `Layer` class. A layer
 encapsulates both a state (the layer's "weights") and a transformation from
 inputs to outputs (a "call", the layer's forward pass).
 
