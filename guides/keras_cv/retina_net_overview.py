@@ -104,19 +104,14 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
-augmentation_layers = [
-    # keras_cv.layers.RandomShear(x_factor=0.1, bounding_box_format='xywh'),
-    # TODO(lukewood): add color jitter and others
-]
+augmenter = keras_cv.layers.RandomChoice(
+    layers=[
+        keras_cv.layers.RandomShear(x_factor=0.1, bounding_box_format='xywh'),
+        keras_cv.layers.RandomShear(y_factor=0.1, bounding_box_format='xywh'),
+    ]
+)
 
-
-def augment(sample):
-    for layer in augmentation_layers:
-        sample = layer(sample)
-    return sample
-
-
-train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 
 """
@@ -131,8 +126,8 @@ def dict_to_tuple(inputs):
     return inputs["images"], inputs["bounding_boxes"]
 
 
-train_ds = train_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
-val_ds = val_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
+val_ds = val_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 
 train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
@@ -227,15 +222,9 @@ standard Keras workflow, leveraging `compile()` and `fit()`.
 Let's compile our model:
 """
 
-loss = keras_cv.losses.ObjectDetectionLoss(
-    classes=20,
-    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
-    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
-    reduction="auto",
-)
-
 model.compile(
-    loss=loss,
+    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="auto"),
+    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="auto"),
     optimizer=optimizer,
     metrics=metrics,
 )
@@ -256,10 +245,17 @@ And run `model.fit()`!
 
 model.fit(
     train_ds,
-    validation_data=val_ds,
+    validation_data=val_ds.take(100),
     epochs=EPOCHS,
     callbacks=callbacks,
 )
+
+"""
+An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
+metrics at train time.  This is to ensure optimal GPU performance and TPU compatibility.
+If you want to evaluate train time metrics, you may pass
+`evaluate_train_time_metrics=True` to the `keras_cv.models.RetinaNet` constructor.
+"""
 
 """
 ## Results and conclusions
