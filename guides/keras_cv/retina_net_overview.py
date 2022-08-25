@@ -1,4 +1,4 @@
-"""
+guides/keras_cv/retina_net_overview.py"""
 Title: Train an Object Detection Model on Pascal VOC 2007 using KerasCV
 Author: [lukewood](https://lukewood.xyz)
 Date created: 2022/08/22
@@ -25,7 +25,7 @@ from tensorflow.keras import optimizers
 import keras_cv
 from keras_cv import bounding_box
 
-BATCH_SIZE = 8
+BATCH_SIZE = 9
 EPOCHS = 1
 
 """
@@ -256,6 +256,28 @@ metrics at train time.  This is to ensure optimal GPU performance and TPU compat
 If you want to evaluate train time metrics, you may pass
 `evaluate_train_time_metrics=True` to the `keras_cv.models.RetinaNet` constructor.
 """
+
+"""
+## Inference
+
+KerasCV makes object detection inference simple.  `model.predict(images)` returns a
+RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
+a non max suppression operation for you.
+"""
+
+images, labels = next(iter(train_ds.take(1)))
+predictions = keras_cv.predict(images)
+color = tf.constant(((255.0, 0, 0),))
+plt.figure(figsize=(10, 10))
+predictions = keras_cv.bounding_box.convert_format(
+    predictions, source='xywh'', target="rel_yxyx", images=images
+)
+predictions = predictions.to_tensor(default_value=-1)
+plotted_images = tf.image.draw_bounding_boxes(imagespredictions boxes[..., :4], color)
+plt.subplot(9 // 3, 9 // 3, i + 1)
+plt.imshow(plotted_images[0].numpy().astype("uint8"))
+plt.axis("off")
+plt.show()
 
 """
 ## Results and conclusions
