@@ -1,4 +1,4 @@
-guides/keras_cv/retina_net_overview.py"""
+"""
 Title: Train an Object Detection Model on Pascal VOC 2007 using KerasCV
 Author: [lukewood](https://lukewood.xyz)
 Date created: 2022/08/22
@@ -51,7 +51,7 @@ Our data comesloaded into the format
 `{"images": images, "bounding_boxes": bounding_boxes}`.  This format is supported in all
 KerasCV preprocessing components.
 
-Lets load some data and verify that our data looks as we expect it to.
+Let's load some data and verify that our data looks as we expect it to.
 """
 
 dataset, dataset_info = keras_cv.datasets.pascal_voc.load(
@@ -85,7 +85,7 @@ data augmentation pipeline.
 """
 ## Data augmentation
 
-One of the most labor-intensive tasks when constructing object detection pipeliens is
+One of the most labor-intensive tasks when constructing object detection pipelines is
 data augmentation.  Image augmentation techniques must be aware of the underlying
 bounding boxes, and must update them accordingly.
 
@@ -193,7 +193,7 @@ More information on these metrics is available in:
 - [Efficient Graph-Friendly COCO Metric Computation for Train-Time Model Evaluation](https://arxiv.org/abs/2207.12120)
 - [Using KerasCV COCO Metrics](https://keras.io/guides/keras_cv/coco_metrics/)
 
-Lets construct two COCO metrics, an instance of
+Let's construct two COCO metrics, an instance of
 `keras_cv.metrics.COCOMeanAveragePrecision` with the parameterization to match the
 standard COCO Mean Average Precision metric, and `keras_cv.metrics.COCORecall`
 parameterized to match the standard COCO Recall metric.
