@@ -375,10 +375,7 @@ def prepare_train_features(examples):
 
 
 tokenized_dataset = dataset.map(
-    prepare_train_features,
-    batched=True,
-    remove_columns=["text"],
-    num_proc=1,
+    prepare_train_features, batched=True, remove_columns=["text"], num_proc=1,
 )
 
 """
