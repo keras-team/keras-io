@@ -1,8 +1,8 @@
-# Pretraining BERT with Hugging Face Transformers.
+# Pretraining BERT with Hugging Face Transformers
 
 **Author:** Sreyan Ghosh<br>
 **Date created:** 2022/07/01<br>
-**Last modified:** 2022/07/01<br>
+**Last modified:** 2022/08/27<br>
 **Description:** Pretraining BERT using Hugging Face Transformers on NSP and MLM.
 
 
