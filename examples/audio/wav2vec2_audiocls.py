@@ -2,7 +2,7 @@
 Title: Audio Classification with Hugging Face Transformers
 Author: Sreyan Ghosh
 Date created: 2022/07/01
-Last modified: 2022/07/01
+Last modified: 2022/08/27
 Description: Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
 """
 
@@ -31,7 +31,7 @@ provides a great alternative to traditional low-level features for training deep
 models for KWS.
 
 In this notebook, we train the Wav2Vec 2.0 (base) model, built on the
-🤗 Transformers library, in an end-to-end fashion on the keyword spotting task and
+Hugging Face Transformers library, in an end-to-end fashion on the keyword spotting task and
 achieve state-of-the-art results on the Google Speech Commands Dataset.
 """
 
@@ -82,7 +82,7 @@ MAX_SEQ_LENGTH = MAX_DURATION * SAMPLING_RATE  # Maximum length of the input aud
 MAX_FRAMES = 49
 MAX_EPOCHS = 2  # Maximum number of training epochs.
 
-MODEL_CHECKPOINT = "facebook/wav2vec2-base"  # Name of pretrained model from 🤗 Model Hub
+MODEL_CHECKPOINT = "facebook/wav2vec2-base"  # Name of pretrained model from Hugging Face Model Hub
 
 """
 ## Load the Google Speech Commands Dataset
@@ -94,7 +94,7 @@ a popular benchmark for training and evaluating deep learning models built for s
 The dataset consists of a total of 60,973 audio files, each of 1 second duration,
 divided into ten classes of keywords ("Yes", "No", "Up", "Down", "Left", "Right", "On",
 "Off", "Stop", and "Go"), a class for silence, and an unknown class to include the false
-positive. We load the dataset from [🤗 Datasets](https://github.com/huggingface/datasets).
+positive. We load the dataset from [Hugging Face Datasets](https://github.com/huggingface/datasets).
 This can be easily done with the `load_dataset` function.
 """
 
@@ -166,7 +166,7 @@ print(id2label)
 
 """
 Before we can feed the audio utterance samples to our model, we need to
-pre-process them. This is done by a 🤗 Transformers "Feature Extractor"
+pre-process them. This is done by a Hugging Face Transformers "Feature Extractor"
 which will (as the name indicates) re-sample your the inputs to sampling rate
 the the model expects (in-case they exist with a different sampling rate), as well
 as generate the other inputs that model requires.
@@ -178,11 +178,11 @@ We get a `Feature Extractor` that corresponds to the model architecture we want 
 We download the config that was used when pretraining this specific checkpoint.
 This will be cached so it's not downloaded again the next time we run the cell.
 
-The `from_pretrained()` method expects the name of a model from the 🤗 Hub. This is
+The `from_pretrained()` method expects the name of a model from the Hugging Face Hub. This is
 exactly similar to `MODEL_CHECKPOINT` and we just pass that.
 
 We write a simple function that helps us in the pre-processing that is compatible
-with 🤗 Datasets. To summarize, our pre-processing function should:
+with Hugging Face Datasets. To summarize, our pre-processing function should:
 
 - Call the audio column to load and if necessary resample the audio file.
 - Check the sampling rate of the audio file matches the sampling rate of the audio data a
@@ -232,7 +232,7 @@ input audio sample. Since the model might get complex we first define the Wav2Ve
 We instantiate our main Wav2Vec 2.0 model using the `TFWav2Vec2Model` class. This will
 instantiate a model which will output 768 or 1024 dimensional embeddings according to
 the config you choose (BASE or LARGE). The `from_pretrained()` additionally helps you
-load pre-trained weights from the 🤗 Model Hub. It will download the pre-trained weights
+load pre-trained weights from the Hugging Face Model Hub. It will download the pre-trained weights
 together with the config corresponding to the name of the model you have mentioned when
 calling the method. For our task, we choose the BASE variant of the model that has
 just been pre-trained, since we fine-tune over it.
@@ -387,7 +387,7 @@ print("Original Label is ", id2label[str(test["label"][rand_int])])
 print("Predicted Label is ", id2label[str(np.argmax((preds[rand_int])))])
 
 """
-Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
+Now you can push this model to Hugging Face Model Hub and also share it with with all your friends,
 family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"`, for instance:
 

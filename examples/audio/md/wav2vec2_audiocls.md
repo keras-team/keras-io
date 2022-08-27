@@ -2,7 +2,7 @@
 
 **Author:** Sreyan Ghosh<br>
 **Date created:** 2022/07/01<br>
-**Last modified:** 2022/07/01<br>
+**Last modified:** 2022/08/27<br>
 **Description:** Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
 
 
@@ -35,7 +35,7 @@ provides a great alternative to traditional low-level features for training deep
 models for KWS.
 
 In this notebook, we train the Wav2Vec 2.0 (base) model, built on the
-🤗 Transformers library, in an end-to-end fashion on the keyword spotting task and
+Hugging Face Transformers library, in an end-to-end fashion on the keyword spotting task and
 achieve state-of-the-art results on the Google Speech Commands Dataset.
 
 ---
@@ -86,7 +86,7 @@ MAX_SEQ_LENGTH = MAX_DURATION * SAMPLING_RATE  # Maximum length of the input aud
 MAX_FRAMES = 49
 MAX_EPOCHS = 2  # Maximum number of training epochs.
 
-MODEL_CHECKPOINT = "facebook/wav2vec2-base"  # Name of pretrained model from 🤗 Model Hub
+MODEL_CHECKPOINT = "facebook/wav2vec2-base"  # Name of pretrained model from Hugging Face Model Hub
 ```
 
 ---
@@ -97,7 +97,7 @@ a popular benchmark for training and evaluating deep learning models built for s
 The dataset consists of a total of 60,973 audio files, each of 1 second duration,
 divided into ten classes of keywords ("Yes", "No", "Up", "Down", "Left", "Right", "On",
 "Off", "Stop", and "Go"), a class for silence, and an unknown class to include the false
-positive. We load the dataset from [🤗 Datasets](https://github.com/huggingface/datasets).
+positive. We load the dataset from [Hugging Face Datasets](https://github.com/huggingface/datasets).
 This can be easily done with the `load_dataset` function.
 
 
@@ -107,14 +107,6 @@ from datasets import load_dataset
 speech_commands_v1 = load_dataset("superb", "ks")
 ```
 
-<div class="k-default-codeblock">
-```
-Reusing dataset superb (/speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e)
-
-  0%|          | 0/3 [00:00<?, ?it/s]
-
-```
-</div>
 The dataset has the following fields:
 
 - **file**: the path to the raw .wav file of the audio
@@ -187,11 +179,6 @@ print(speech_commands_v1)
 
 <div class="k-default-codeblock">
 ```
-Loading cached split indices for dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-ed55825c778d20d7.arrow and /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-f86ed01fec3469b6.arrow
-Parameter 'function'=<function <lambda> at 0x7fcfe1dd60e0> of the transform datasets.arrow_dataset.Dataset.filter@2.0.1 couldn't be hashed properly, a random hash was used instead. Make sure your transforms and parameters are serializable with pickle or dill for the dataset fingerprinting and caching to work. If you reuse this transform, the caching mechanism will consider it to be different from the previous calls and recompute everything. This warning is only showed once. Subsequent hashing failures won't be showed.
-Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-1c80317fa3b1799d.arrow
-Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-bdd640fb06671ad1.arrow
-
 DatasetDict({
     train: Dataset({
         features: ['file', 'audio', 'label'],
@@ -225,7 +212,7 @@ print(id2label)
 ```
 </div>
 Before we can feed the audio utterance samples to our model, we need to
-pre-process them. This is done by a 🤗 Transformers "Feature Extractor"
+pre-process them. This is done by a Hugging Face Transformers "Feature Extractor"
 which will (as the name indicates) re-sample your the inputs to sampling rate
 the the model expects (in-case they exist with a different sampling rate), as well
 as generate the other inputs that model requires.
@@ -237,11 +224,11 @@ We get a `Feature Extractor` that corresponds to the model architecture we want 
 We download the config that was used when pretraining this specific checkpoint.
 This will be cached so it's not downloaded again the next time we run the cell.
 
-The `from_pretrained()` method expects the name of a model from the 🤗 Hub. This is
+The `from_pretrained()` method expects the name of a model from the Hugging Face Hub. This is
 exactly similar to `MODEL_CHECKPOINT` and we just pass that.
 
 We write a simple function that helps us in the pre-processing that is compatible
-with 🤗 Datasets. To summarize, our pre-processing function should:
+with Hugging Face Datasets. To summarize, our pre-processing function should:
 
 - Call the audio column to load and if necessary resample the audio file.
 - Check the sampling rate of the audio file matches the sampling rate of the audio data a
@@ -280,17 +267,6 @@ train = processed_speech_commands_v1["train"].shuffle(seed=42).with_format("nump
 test = processed_speech_commands_v1["test"].shuffle(seed=42).with_format("numpy")[:]
 ```
 
-<div class="k-default-codeblock">
-```
-/speech/sreyan/anaconda3/envs/gsoc-submission/lib/python3.7/site-packages/transformers/configuration_utils.py:353: UserWarning: Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 Transformers. Using `model.gradient_checkpointing_enable()` instead, or if you are using the `Trainer` API, pass `gradient_checkpointing=True` in your `TrainingArguments`.
-  "Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 "
-Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-3eb13b9046685257.arrow
-Loading cached processed dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-23b8c1e9392456de.arrow
-Loading cached shuffled indices for dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-7cbe5ca8351fe251.arrow
-Loading cached shuffled indices for dataset at /speech/sreyan/.cache/huggingface/datasets/superb/ks/1.9.0/b8183f71eabe8c559d7f3f528ab37a6a21ad1ee088fd3423574cecad8b3ec67e/cache-ee92c79da57d4dbf.arrow
-
-```
-</div>
 ---
 ## Defining the Wav2Vec 2.0 with Classification-Head
 
@@ -302,7 +278,7 @@ input audio sample. Since the model might get complex we first define the Wav2Ve
 We instantiate our main Wav2Vec 2.0 model using the `TFWav2Vec2Model` class. This will
 instantiate a model which will output 768 or 1024 dimensional embeddings according to
 the config you choose (BASE or LARGE). The `from_pretrained()` additionally helps you
-load pre-trained weights from the 🤗 Model Hub. It will download the pre-trained weights
+load pre-trained weights from the Hugging Face Model Hub. It will download the pre-trained weights
 together with the config corresponding to the name of the model you have mentioned when
 calling the method. For our task, we choose the BASE variant of the model that has
 just been pre-trained, since we fine-tune over it.
@@ -411,24 +387,6 @@ def build_model():
 model = build_model()
 ```
 
-<div class="k-default-codeblock">
-```
-/speech/sreyan/anaconda3/envs/gsoc-submission/lib/python3.7/site-packages/transformers/configuration_utils.py:353: UserWarning: Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 Transformers. Using `model.gradient_checkpointing_enable()` instead, or if you are using the `Trainer` API, pass `gradient_checkpointing=True` in your `TrainingArguments`.
-  "Passing `gradient_checkpointing` to a config initialization is deprecated and will be removed in v5 "
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-TFWav2Vec2Model has backpropagation operations that are NOT supported on CPU. If you wish to train/fine-tine this model, you need a GPU or a TPU
-Some weights of the PyTorch model were not used when initializing the TF 2.0 model TFWav2Vec2Model: ['project_hid.bias', 'project_q.weight', 'quantizer.weight_proj.weight', 'project_q.bias', 'quantizer.weight_proj.bias', 'project_hid.weight', 'quantizer.codevectors']
-- This IS expected if you are initializing TFWav2Vec2Model from a PyTorch model trained on another task or with another architecture (e.g. initializing a TFBertForSequenceClassification model from a BertForPreTraining model).
-- This IS NOT expected if you are initializing TFWav2Vec2Model from a PyTorch model that you expect to be exactly identical (e.g. initializing a TFBertForSequenceClassification model from a BertForSequenceClassification model).
-All the weights of TFWav2Vec2Model were initialized from the PyTorch model.
-If your task is similar to the task the model of the checkpoint was trained on, you can already use TFWav2Vec2Model for predictions without further training.
-
-```
-</div>
 ---
 ## Training the model
 
@@ -505,7 +463,7 @@ Predicted Label is  on
 
 ```
 </div>
-Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
+Now you can push this model to Hugging Face Model Hub and also share it with with all your friends,
 family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"`, for instance:
 
