@@ -82,7 +82,9 @@ MAX_SEQ_LENGTH = MAX_DURATION * SAMPLING_RATE  # Maximum length of the input aud
 MAX_FRAMES = 49
 MAX_EPOCHS = 2  # Maximum number of training epochs.
 
-MODEL_CHECKPOINT = "facebook/wav2vec2-base"  # Name of pretrained model from Hugging Face Model Hub
+MODEL_CHECKPOINT = (
+    "facebook/wav2vec2-base"  # Name of pretrained model from Hugging Face Model Hub
+)
 
 """
 ## Load the Google Speech Commands Dataset
