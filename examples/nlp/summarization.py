@@ -1,5 +1,5 @@
 """
-Title: Abstractive Summarization with Hugging Face Transformers.
+Title: Abstractive Summarization with Hugging Face Transformers
 Author: Sreyan Ghosh
 Date created: 2022/07/04
 Last modified: 2022/07/04
@@ -8,29 +8,27 @@ Description: Training T5 using Hugging Face Transformers for Abstractive Summari
 
 """
 ## Introduction
-"""
 
-"""
 Automatic summarization is one of the central problems in
-Natural Language Processing (NLP) posing several challenges relating to understanding
-(i.e., identifying important content) and generation (i.e., aggregating and rewording
-the identified content into a summary).
+Natural Language Processing (NLP). It poses several challenges relating to language
+understanding (e.g. identifying important content)
+and generation (e.g. aggregating and rewording the identified content into a summary).
 
-In this notebook, we tackle the single-document summarization task
+In this tutorial, we tackle the single-document summarization task
 with an abstractive modeling approach. The primary idea here is to generate a short,
 single-sentence news summary answering the question “What is the news article about?”.
-This approach to summarization is also known as `Abstractive Summarization` and has
-as seen growing interest among researchers in various disciplines.
+This approach to summarization is also known as *Abstractive Summarization* and has
+seen growing interest among researchers in various disciplines.
 
-Following prior-work, in this notebook we aim to tackle this problem using a
+Following prior work, we aim to tackle this problem using a
 sequence-to-sequence model. [Text-to-Text Transfer Transformer (`T5`)](https://arxiv.org/abs/1910.10683)
 is a [Transformer-based](https://arxiv.org/abs/1706.03762) model built on the encoder-decoder
-architecture, pre-trained on a multi-task mixture of unsupervised and supervised tasks where each task
+architecture, pretrained on a multi-task mixture of unsupervised and supervised tasks where each task
 is converted into a text-to-text format. T5 shows impressive results in a variety of sequence-to-sequence
 (sequence in this notebook refers to text) like summarization, translation, etc.
 
-In this notebook, we will fine-tune the pre-trained T5 on the `Abstractive Summarization`
-task using 🤗 Transformers on the `XSum` dataset loaded from 🤗 Datasets.
+In this notebook, we will fine-tune the pretrained T5 on the Abstractive Summarization
+task using Hugging Face Transformers on the `XSum` dataset loaded from Hugging Face Datasets.
 """
 
 """
@@ -79,14 +77,12 @@ BATCH_SIZE = 8  # Batch-size for training our model
 LEARNING_RATE = 2e-5  # Learning-rate for training our model
 MAX_EPOCHS = 1  # Maximum number of epochs we will train the model for
 
-# This notebook is built on the t5-small checkpoint from the 🤗 Model Hub
+# This notebook is built on the t5-small checkpoint from the Hugging Face Model Hub
 MODEL_CHECKPOINT = "t5-small"
 
 """
 ## Load the dataset
-"""
 
-"""
 We will now download the [Extreme Summarization (XSum)](https://arxiv.org/abs/1808.08745).
 The dataset consists of BBC articles and accompanying single sentence summaries.
 Specifically, each article is prefaced with an introductory sentence (aka summary) which is
@@ -96,7 +92,7 @@ divided into training (90%, 204,045), validation (5%, 11,332), and test (5%, 11,
 Following much of literaure, we use the Recall-Oriented Understudy for Gisting Evaluation
 (ROUGE) metric to evaluate our sequence-to-sequence abstrative summarization approach.
 
-We will use the [🤗 Datasets](https://github.com/huggingface/datasets) library to download
+We will use the [Hugging Face Datasets](https://github.com/huggingface/datasets) library to download
 the data we need to use for training and evaluation. This can be easily done with the
 `load_dataset` function.
 """
@@ -134,16 +130,14 @@ raw_datasets = raw_datasets.train_test_split(
 
 """
 ## Data Pre-processing
-"""
 
-"""
 Before we can feed those texts to our model, we need to pre-process them and get them
-ready for the task. This is done by a 🤗 Transformers `Tokenizer` which will tokenize
+ready for the task. This is done by a Hugging Face Transformers `Tokenizer` which will tokenize
 the inputs (including converting the tokens to their corresponding IDs in the pretrained
 vocabulary) and put it in a format the model expects, as well as generate the other inputs
 that model requires.
 
-The `from_pretrained()` method expects the name of a model from the 🤗 Model Hub. This is
+The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. This is
 exactly similar to MODEL_CHECKPOINT declared earlier and we will just pass that.
 """
 
@@ -164,7 +158,7 @@ else:
 
 """
 We will write a simple function that helps us in the pre-processing that is compatible
-with 🤗 Datasets. To summarize, our pre-processing function should:
+with Hugging Face Datasets. To summarize, our pre-processing function should:
 
 - Tokenize the text dataset (input and targets) into it's corresponding token ids that
 will be used for embedding look-up in BERT
@@ -199,15 +193,13 @@ tokenized_datasets = raw_datasets.map(preprocess_function, batched=True)
 
 """
 ## Defining the model
-"""
 
-"""
 Now we can download the pretrained model and fine-tune it. Since our task is
 sequence-to-sequence (both the input and output are text sequences), we use the
-`TFAutoModelForSeq2SeqLM` class from the 🤗 Transformers library. Like with the
+`TFAutoModelForSeq2SeqLM` class from the Hugging Face Transformers library. Like with the
 tokenizer, the `from_pretrained` method will download and cache the model for us.
 
-The `from_pretrained()` method expects the name of a model from the 🤗 Model Hub. As
+The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. As
 mentioned earlier, we will use the `t5-base` model checkpoint.
 """
 
@@ -218,7 +210,7 @@ model = TFAutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
 """
 For training Sequence to Sequence models, we need a special kind of data collator,
 which will not only pad the inputs to the maximum length in the batch, but also the
-labels. Thus, we use the `DataCollatorForSeq2Seq` provided by the 🤗 Transformers
+labels. Thus, we use the `DataCollatorForSeq2Seq` provided by the Hugging Face Transformers
 library on our dataset. The `return_tensors='tf'` ensures that we get `tf.Tensor`
 objects back.
 """
@@ -228,7 +220,7 @@ from transformers import DataCollatorForSeq2Seq
 data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="tf")
 
 """
-Next we define our training and testing sets with which we will train our model. Again, 🤗
+Next we define our training and testing sets with which we will train our model. Again, Hugging Face
 Datasets provides us with the `to_tf_dataset` method which will help us integrate our
 dataset with the `collator` defined above. The method expects certain parameters:
 
@@ -267,9 +259,7 @@ generation_dataset = (
 
 """
 ## Building and Compiling the the model
-"""
 
-"""
 Now we will define our optimizer and compile the model. The loss calculation is handled
 internally and so we need not worry about that!
 """
@@ -279,9 +269,7 @@ model.compile(optimizer=optimizer)
 
 """
 ## Training and Evaluating the model
-"""
 
-"""
 To evaluate our model on-the-fly while training, we will define `metric_fn` which will
 calculate the `ROUGE` score between the groud-truth and predictions.
 """
@@ -328,11 +316,9 @@ training dataset!
 
 """
 ## Inference
-"""
 
-"""
 Now we will try to infer the model we trained on an arbitary article. To do so,
-we will use the `pipeline` method from 🤗 Transformers. 🤗 Transformers provides
+we will use the `pipeline` method from Hugging Face Transformers. Hugging Face Transformers provides
 us with a variety of pipelines to choose from. For our task, we use the `summarization`
 pipeline.
 
@@ -351,7 +337,7 @@ summarizer(
 )
 
 """
-Now you can push this model to 🤗 Model Hub and also share it with with all your friends,
+Now you can push this model to Hugging Face Model Hub and also share it with with all your friends,
 family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"` so for instance:
 
