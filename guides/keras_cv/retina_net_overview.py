@@ -111,7 +111,7 @@ augmenter = keras_cv.layers.RandomChoice(
     ]
 )
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+# train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 
 """
@@ -261,7 +261,7 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
 """
 
-model.compile(metrics=metrics, optimizer=model.optmizer, loss=model.loss)
+model.compile(metrics=metrics, optimizer=model.optimizer, loss=model.loss)
 metrics = model.evaluate(val_ds, return_dict=True)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
@@ -286,7 +286,7 @@ for i in range(9):
     plt.subplot(9 // 3, 9 // 3, i + 1)
     plt.imshow(plotted_images[0].numpy().astype("uint8"))
     plt.axis("off")
-plt.show()
+plt.savefig("test.png")
 
 """
 ## Results and conclusions
