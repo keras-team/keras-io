@@ -106,8 +106,8 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
 
 augmenter = keras_cv.layers.RandomChoice(
     layers=[
-        keras_cv.layers.RandomShear(x_factor=0.1, bounding_box_format='xywh'),
-        keras_cv.layers.RandomShear(y_factor=0.1, bounding_box_format='xywh'),
+        keras_cv.layers.RandomShear(x_factor=0.1, bounding_box_format="xywh"),
+        keras_cv.layers.RandomShear(y_factor=0.1, bounding_box_format="xywh"),
     ]
 )
 
@@ -185,35 +185,6 @@ schedule.
 optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
 
 """
-## COCO metrics monitoring
-
-KerasCV offers a suite of in-graph COCO metrics that support batch-wise evaluation.
-More information on these metrics is available in:
-
-- [Efficient Graph-Friendly COCO Metric Computation for Train-Time Model Evaluation](https://arxiv.org/abs/2207.12120)
-- [Using KerasCV COCO Metrics](https://keras.io/guides/keras_cv/coco_metrics/)
-
-Let's construct two COCO metrics, an instance of
-`keras_cv.metrics.COCOMeanAveragePrecision` with the parameterization to match the
-standard COCO Mean Average Precision metric, and `keras_cv.metrics.COCORecall`
-parameterized to match the standard COCO Recall metric.
-"""
-
-metrics = [
-    keras_cv.metrics.COCOMeanAveragePrecision(
-        class_ids=range(20),
-        bounding_box_format="xywh",
-        name="Mean Average Precision",
-    ),
-    keras_cv.metrics.COCORecall(
-        class_ids=range(20),
-        bounding_box_format="xywh",
-        max_detections=100,
-        name="Recall",
-    ),
-]
-
-"""
 ## Training our model
 
 All that is left to do is train our model.  KerasCV object detection models follow the
@@ -226,7 +197,6 @@ model.compile(
     classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="auto"),
     box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="auto"),
     optimizer=optimizer,
-    metrics=metrics,
 )
 
 """
@@ -258,6 +228,44 @@ If you want to evaluate train time metrics, you may pass
 """
 
 """
+## Evaluation with COCO Metrics
+
+KerasCV offers a suite of in-graph COCO metrics that support batch-wise evaluation.
+More information on these metrics is available in:
+
+- [Efficient Graph-Friendly COCO Metric Computation for Train-Time Model Evaluation](https://arxiv.org/abs/2207.12120)
+- [Using KerasCV COCO Metrics](https://keras.io/guides/keras_cv/coco_metrics/)
+
+Let's construct two COCO metrics, an instance of
+`keras_cv.metrics.COCOMeanAveragePrecision` with the parameterization to match the
+standard COCO Mean Average Precision metric, and `keras_cv.metrics.COCORecall`
+parameterized to match the standard COCO Recall metric.
+"""
+
+metrics = [
+    keras_cv.metrics.COCOMeanAveragePrecision(
+        class_ids=range(20),
+        bounding_box_format="xywh",
+        name="Mean Average Precision",
+    ),
+    keras_cv.metrics.COCORecall(
+        class_ids=range(20),
+        bounding_box_format="xywh",
+        max_detections=100,
+        name="Recall",
+    ),
+]
+
+"""
+Next, we can evaluate the metrics by re-compiling the model, and running
+`model.evaluate()`:
+"""
+
+model.compile(metrics=metrics, optimizer=model.optmizer, loss=model.loss)
+metrics = model.evaluate(val_ds, return_dict=True)
+# {"Mean Average Precision": 0.612, "Recall": 0.767}
+
+"""
 ## Inference
 
 KerasCV makes object detection inference simple.  `model.predict(images)` returns a
@@ -270,10 +278,10 @@ predictions = keras_cv.predict(images)
 color = tf.constant(((255.0, 0, 0),))
 plt.figure(figsize=(10, 10))
 predictions = keras_cv.bounding_box.convert_format(
-    predictions, source='xywh'', target="rel_yxyx", images=images
+    predictions, source="xywh", target="rel_yxyx", images=images
 )
 predictions = predictions.to_tensor(default_value=-1)
-plotted_images = tf.image.draw_bounding_boxes(imagespredictions boxes[..., :4], color)
+plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
 plt.subplot(9 // 3, 9 // 3, i + 1)
 plt.imshow(plotted_images[0].numpy().astype("uint8"))
 plt.axis("off")
