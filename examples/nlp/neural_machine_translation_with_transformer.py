@@ -316,11 +316,16 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_3 = layers.LayerNormalization()
         self.supports_masking = True
 
-    def call(self, inputs, encoder_outputs, mask=None):
+    def call(self, inputs, encoder_outputs, mask=None, encoder_input_mask=None):
         causal_mask = self.get_causal_attention_mask(inputs)
+        padding_mask = None
         if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
-            padding_mask = tf.minimum(padding_mask, causal_mask)
+            padding_mask = tf.cast(mask[:, :, tf.newaxis], dtype="int32")
+            causal_mask = tf.minimum(padding_mask, causal_mask)
+            if encoder_input_mask is not None:
+                padding_mask = tf.minimum(
+                    padding_mask, tf.cast(encoder_input_mask[:, tf.newaxis, :], dtype="int32")
+                )
 
         attention_output_1 = self.attention_1(
             query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
@@ -372,19 +377,22 @@ latent_dim = 2048
 num_heads = 8
 
 encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
-x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(encoder_inputs)
+embedding = PositionalEmbedding(sequence_length, vocab_size, embed_dim)
+x = embedding(encoder_inputs)
 encoder_outputs = TransformerEncoder(embed_dim, latent_dim, num_heads)(x)
 encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, embed_dim), name="decoder_state_inputs")
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(decoder_inputs)
-x = TransformerDecoder(embed_dim, latent_dim, num_heads)(x, encoded_seq_inputs)
+x = TransformerDecoder(embed_dim, latent_dim, num_heads)(
+    x, encoded_seq_inputs, encoder_input_mask=embedding.compute_mask(encoder_inputs)
+)
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
-decoder = keras.Model([decoder_inputs, encoded_seq_inputs], decoder_outputs)
+decoder = keras.Model([decoder_inputs, encoded_seq_inputs, encoder_inputs], decoder_outputs)
 
-decoder_outputs = decoder([decoder_inputs, encoder_outputs])
+decoder_outputs = decoder([decoder_inputs, encoder_outputs, encoder_inputs])
 transformer = keras.Model(
     [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer"
 )
