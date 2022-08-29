@@ -2,7 +2,7 @@
 Title: English-to-Spanish translation with a sequence-to-sequence Transformer
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
-Last modified: 2021/05/26
+Last modified: 2022/08/28
 Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
 """
 """
@@ -324,7 +324,8 @@ class TransformerDecoder(layers.Layer):
             causal_mask = tf.minimum(padding_mask, causal_mask)
             if encoder_input_mask is not None:
                 padding_mask = tf.minimum(
-                    padding_mask, tf.cast(encoder_input_mask[:, tf.newaxis, :], dtype="int32")
+                    padding_mask,
+                    tf.cast(encoder_input_mask[:, tf.newaxis, :], dtype="int32"),
                 )
 
         attention_output_1 = self.attention_1(
@@ -390,7 +391,9 @@ x = TransformerDecoder(embed_dim, latent_dim, num_heads)(
 )
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
-decoder = keras.Model([decoder_inputs, encoded_seq_inputs, encoder_inputs], decoder_outputs)
+decoder = keras.Model(
+    [decoder_inputs, encoded_seq_inputs, encoder_inputs], decoder_outputs
+)
 
 decoder_outputs = decoder([decoder_inputs, encoder_outputs, encoder_inputs])
 transformer = keras.Model(
