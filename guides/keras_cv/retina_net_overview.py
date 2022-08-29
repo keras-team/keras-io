@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 9
-EPOCHS = 1
+EPOCHS = 100
 
 """
 ## Data loading
@@ -193,9 +193,15 @@ standard Keras workflow, leveraging `compile()` and `fit()`.
 Let's compile our model:
 """
 
+
+class BigFocalLoss(keras_cv.losses.FocalLoss):
+    def call(self, y_true, y_pred):
+        return 20.0 * super().call(y_true, y_pred)
+
+
 model.compile(
-    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="auto"),
-    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="auto"),
+    classification_loss=BigFocalLoss(from_logits=True),
+    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0),
     optimizer=optimizer,
 )
 
@@ -261,7 +267,12 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
 """
 
-model.compile(metrics=metrics, optimizer=model.optimizer, loss=model.loss)
+model.compile(
+    metrics=metrics,
+    box_loss=model.box_loss,
+    classification_loss=model.classification_loss,
+    optimizer=model.optimizer,
+)
 metrics = model.evaluate(val_ds, return_dict=True)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
