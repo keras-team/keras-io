@@ -174,17 +174,6 @@ network.
 """
 
 """
-## Optimizer
-
-For training, we use a SGD optimizer with a piece-wise learning rate schedule
-consisting of a warm up followed by a ramp up, then a ramp.
-Below, we construct this using a `keras.optimizers.schedules.PiecewiseConstantDecay`
-schedule.
-"""
-
-optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
-
-"""
 ## Training our model
 
 All that is left to do is train our model.  KerasCV object detection models follow the
@@ -192,6 +181,9 @@ standard Keras workflow, leveraging `compile()` and `fit()`.
 
 Let's compile our model:
 """
+
+
+optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
 
 
 class BigFocalLoss(keras_cv.losses.FocalLoss):
