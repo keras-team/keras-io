@@ -1,12 +1,16 @@
-"""
-Title: Abstractive Summarization with Hugging Face Transformers
-Author: Sreyan Ghosh
-Date created: 2022/07/04
-Last modified: 2022/07/04
-Description: Training T5 using Hugging Face Transformers for Abstractive Summarization.
-"""
+# Abstractive Summarization with Hugging Face Transformers
 
-"""
+**Author:** Sreyan Ghosh<br>
+**Date created:** 2022/07/04<br>
+**Last modified:** 2022/08/28<br>
+**Description:** Training T5 using Hugging Face Transformers for Abstractive Summarization.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/t5_hf_summarization.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/t5_hf_summarization.py)
+
+
+
+---
 ## Introduction
 
 Automatic summarization is one of the central problems in
@@ -29,28 +33,25 @@ is converted into a text-to-text format. T5 shows impressive results in a variet
 
 In this notebook, we will fine-tune the pretrained T5 on the Abstractive Summarization
 task using Hugging Face Transformers on the `XSum` dataset loaded from Hugging Face Datasets.
-"""
 
-"""
+---
 ## Setup
-"""
 
-"""
 ### Installing the requirements
-"""
 
-"""shell
+
+```python
 pip install transformers==4.20.0
 pip install keras_nlp==0.3.0
 pip install datasets
 pip install huggingface-hub
 pip install nltk
-"""
+```
 
-"""
 ### Importing the necessary libraries
-"""
 
+
+```python
 import os
 import logging
 
@@ -63,10 +64,12 @@ from tensorflow import keras
 tf.get_logger().setLevel(logging.ERROR)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+```
 
-"""
 ### Define certain variables
-"""
+
+
+```python
 # The percentage of the dataset you want to split as train and test
 TRAIN_TEST_SPLIT = 0.1
 
@@ -79,8 +82,9 @@ MAX_EPOCHS = 1  # Maximum number of epochs we will train the model for
 
 # This notebook is built on the t5-small checkpoint from the Hugging Face Model Hub
 MODEL_CHECKPOINT = "t5-small"
+```
 
-"""
+---
 ## Load the dataset
 
 We will now download the [Extreme Summarization (XSum)](https://arxiv.org/abs/1808.08745).
@@ -95,40 +99,67 @@ Following much of literature, we use the Recall-Oriented Understudy for Gisting 
 We will use the [Hugging Face Datasets](https://github.com/huggingface/datasets) library to download
 the data we need to use for training and evaluation. This can be easily done with the
 `load_dataset` function.
-"""
 
+
+```python
 from datasets import load_dataset
 
 raw_datasets = load_dataset("xsum", split="train")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Using custom data configuration default
+Reusing dataset xsum (/speech/sreyan/.cache/huggingface/datasets/xsum/default/1.2.0/32c23220eadddb1149b16ed2e9430a05293768cfffbdfd151058697d4c11f934)
+
+```
+</div>
 The dataset has the following fields:
 
 - **document**: the original BBC article to me summarized
 - **summary**: the single sentence summary of the BBC article
 - **id**: ID of the document-summary pair
-"""
 
+
+```python
 print(raw_datasets)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Dataset({
+    features: ['document', 'summary', 'id'],
+    num_rows: 204045
+})
+
+```
+</div>
 We will now see how the data looks like:
-"""
 
+
+```python
 print(raw_datasets[0])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+{'document': 'The full cost of damage in Newton Stewart, one of the areas worst affected, is still being assessed.\nRepair work is ongoing in Hawick and many roads in Peeblesshire remain badly affected by standing water.\nTrains on the west coast mainline face disruption due to damage at the Lamington Viaduct.\nMany businesses and householders were affected by flooding in Newton Stewart after the River Cree overflowed into the town.\nFirst Minister Nicola Sturgeon visited the area to inspect the damage.\nThe waters breached a retaining wall, flooding many commercial properties on Victoria Street - the main shopping thoroughfare.\nJeanette Tate, who owns the Cinnamon Cafe which was badly affected, said she could not fault the multi-agency response once the flood hit.\nHowever, she said more preventative work could have been carried out to ensure the retaining wall did not fail.\n"It is difficult but I do think there is so much publicity for Dumfries and the Nith - and I totally appreciate that - but it is almost like we\'re neglected or forgotten," she said.\n"That may not be true but it is perhaps my perspective over the last few days.\n"Why were you not ready to help us a bit more when the warning and the alarm alerts had gone out?"\nMeanwhile, a flood alert remains in place across the Borders because of the constant rain.\nPeebles was badly hit by problems, sparking calls to introduce more defences in the area.\nScottish Borders Council has put a list on its website of the roads worst affected and drivers have been urged not to ignore closure signs.\nThe Labour Party\'s deputy Scottish leader Alex Rowley was in Hawick on Monday to see the situation first hand.\nHe said it was important to get the flood protection plan right but backed calls to speed up the process.\n"I was quite taken aback by the amount of damage that has been done," he said.\n"Obviously it is heart-breaking for people who have been forced out of their homes and the impact on businesses."\nHe said it was important that "immediate steps" were taken to protect the areas most vulnerable and a clear timetable put in place for flood prevention plans.\nHave you been affected by flooding in Dumfries and Galloway or the Borders? Tell us about your experience of the situation and how it was handled. Email us on selkirk.news@bbc.co.uk or dumfries@bbc.co.uk.', 'summary': 'Clean-up operations are continuing across the Scottish Borders and Dumfries and Galloway after flooding caused by Storm Frank.', 'id': '35232142'}
+
+```
+</div>
 For the sake of demonstrating the workflow, in this notebook we will only take
 small stratified balanced splits (10%) of the train as our training and test sets.
 We can easily split teh dataset using the `train_test_split` method which expects
 the split size and the name of the column relative to which you want to stratify.
-"""
 
+
+```python
 raw_datasets = raw_datasets.train_test_split(
     train_size=TRAIN_TEST_SPLIT, test_size=TRAIN_TEST_SPLIT
 )
+```
 
-"""
+---
 ## Data Pre-processing
 
 Before we can feed those texts to our model, we need to pre-process them and get them
@@ -139,24 +170,44 @@ that model requires.
 
 The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. This is
 exactly similar to MODEL_CHECKPOINT declared earlier and we will just pass that.
-"""
 
+
+```python
 from transformers import AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
+```
 
-"""
+
+<div class="k-default-codeblock">
+```
+Downloading:   0%|          | 0.00/1.17k [00:00<?, ?B/s]
+
+Downloading:   0%|          | 0.00/773k [00:00<?, ?B/s]
+
+Downloading:   0%|          | 0.00/1.32M [00:00<?, ?B/s]
+
+/speech/sreyan/anaconda3/envs/gsoc-submission/lib/python3.7/site-packages/transformers/models/t5/tokenization_t5_fast.py:166: FutureWarning: This tokenizer was incorrectly instantiated with a model max length of 512 which will be corrected in Transformers v5.
+For now, this behavior is kept to avoid breaking backwards compatibility when padding/encoding with `truncation is True`.
+- Be aware that you SHOULD NOT rely on t5-small automatically truncating your input to 512 when padding/encoding.
+- If you want to encode/pad to sequences longer than 512 you can either instantiate this tokenizer with `model_max_length` or pass `max_length` when encoding/padding.
+- To avoid this warning, please instantiate this tokenizer with `model_max_length` set to your preferred value.
+  FutureWarning,
+
+```
+</div>
 If you are using one of the five T5 checkpoints we have to prefix the inputs with
 "summarize:" (the model can also translate and it needs the prefix to know which task it
 has to perform).
-"""
 
+
+```python
 if MODEL_CHECKPOINT in ["t5-small", "t5-base", "t5-large", "t5-3b", "t5-11b"]:
     prefix = "summarize: "
 else:
     prefix = ""
+```
 
-"""
 We will write a simple function that helps us in the pre-processing that is compatible
 with Hugging Face Datasets. To summarize, our pre-processing function should:
 
@@ -164,8 +215,9 @@ with Hugging Face Datasets. To summarize, our pre-processing function should:
 will be used for embedding look-up in BERT
 - Add the prefix to the tokens
 - Create additional inputs for the model like `token_type_ids`, `attention_mask`, etc.
-"""
 
+
+```python
 
 def preprocess_function(examples):
     inputs = [prefix + doc for doc in examples["document"]]
@@ -181,17 +233,29 @@ def preprocess_function(examples):
 
     return model_inputs
 
+```
 
-"""
 To apply this function on all the pairs of sentences in our dataset, we just use the
 `map` method of our `dataset` object we created earlier. This will apply the function on
 all the elements of all the splits in `dataset`, so our training, validation and testing
 data will be preprocessed in one single command.
-"""
 
+
+```python
 tokenized_datasets = raw_datasets.map(preprocess_function, batched=True)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Parameter 'function'=<function preprocess_function at 0x7f1d7a2adcb0> of the transform datasets.arrow_dataset.Dataset._map_single couldn't be hashed properly, a random hash was used instead. Make sure your transforms and parameters are serializable with pickle or dill for the dataset fingerprinting and caching to work. If you reuse this transform, the caching mechanism will consider it to be different from the previous calls and recompute everything. This warning is only showed once. Subsequent hashing failures won't be showed.
+
+  0%|          | 0/21 [00:00<?, ?ba/s]
+
+  0%|          | 0/21 [00:00<?, ?ba/s]
+
+```
+</div>
+---
 ## Defining the model
 
 Now we can download the pretrained model and fine-tune it. Since our task is
@@ -201,25 +265,43 @@ tokenizer, the `from_pretrained` method will download and cache the model for us
 
 The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. As
 mentioned earlier, we will use the `t5-base` model checkpoint.
-"""
 
+
+```python
 from transformers import TFAutoModelForSeq2SeqLM, DataCollatorForSeq2Seq
 
 model = TFAutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
+```
 
-"""
+
+<div class="k-default-codeblock">
+```
+Downloading:   0%|          | 0.00/231M [00:00<?, ?B/s]
+
+All model checkpoint layers were used when initializing TFT5ForConditionalGeneration.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+All the layers of TFT5ForConditionalGeneration were initialized from the model checkpoint at t5-small.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use TFT5ForConditionalGeneration for predictions without further training.
+
+```
+</div>
 For training Sequence to Sequence models, we need a special kind of data collator,
 which will not only pad the inputs to the maximum length in the batch, but also the
 labels. Thus, we use the `DataCollatorForSeq2Seq` provided by the Hugging Face Transformers
 library on our dataset. The `return_tensors='tf'` ensures that we get `tf.Tensor`
 objects back.
-"""
 
+
+```python
 from transformers import DataCollatorForSeq2Seq
 
 data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="tf")
+```
 
-"""
 Next we define our training and testing sets with which we will train our model. Again, Hugging Face
 Datasets provides us with the `to_tf_dataset` method which will help us integrate our
 dataset with the `collator` defined above. The method expects certain parameters:
@@ -231,8 +313,9 @@ dataset with the `collator` defined above. The method expects certain parameters
 
 Additionally, we also define a relatively smaller `generation_dataset` to calculate
 `ROUGE` scores on the fly while training.
-"""
 
+
+```python
 train_dataset = tokenized_datasets["train"].to_tf_dataset(
     batch_size=BATCH_SIZE,
     columns=["input_ids", "attention_mask", "labels"],
@@ -256,24 +339,34 @@ generation_dataset = (
         collate_fn=data_collator,
     )
 )
+```
 
-"""
+---
 ## Building and Compiling the the model
 
 Now we will define our optimizer and compile the model. The loss calculation is handled
 internally and so we need not worry about that!
-"""
 
+
+```python
 optimizer = keras.optimizers.Adam(learning_rate=LEARNING_RATE)
 model.compile(optimizer=optimizer)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+No loss specified in compile() - the model's internal loss computation will be used as the loss. Don't panic - this is a common way to train TensorFlow models in Transformers! To disable this behaviour please pass a loss argument, or explicitly pass `loss=None` if you do not want your model to compute a loss.
+
+```
+</div>
+---
 ## Training and Evaluating the model
 
 To evaluate our model on-the-fly while training, we will define `metric_fn` which will
 calculate the `ROUGE` score between the groud-truth and predictions.
-"""
 
+
+```python
 import keras_nlp
 
 rouge_l = keras_nlp.metrics.RougeL()
@@ -291,11 +384,12 @@ def metric_fn(eval_predictions):
 
     return result
 
+```
 
-"""
 Now we can finally start training our model!
-"""
 
+
+```python
 from transformers.keras_callbacks import KerasMetricCallback
 
 metric_callback = KerasMetricCallback(
@@ -308,13 +402,22 @@ callbacks = [metric_callback]
 model.fit(
     train_dataset, validation_data=test_dataset, epochs=MAX_EPOCHS, callbacks=callbacks
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:root:No label_cols specified for KerasMetricCallback, assuming you want the 'labels' key.
+
+2551/2551 [==============================] - 652s 250ms/step - loss: 2.9159 - val_loss: 2.5875 - RougeL: 0.2065
+
+<keras.callbacks.History at 0x7f1d002f9810>
+
+```
+</div>
 For best results, we recommend training the model for atleast 5 epochs on the entire
 training dataset!
-"""
 
-"""
+---
 ## Inference
 
 Now we will try to infer the model we trained on an arbitary article. To do so,
@@ -324,8 +427,9 @@ pipeline.
 
 The `pipeline` method takes in the trained model and tokenizer as arguments. The
 `framework="tf"` argument ensures that you are passing a model that was trained with TF.
-"""
 
+
+```python
 from transformers import pipeline
 
 summarizer = pipeline("summarization", model=model, tokenizer=tokenizer, framework="tf")
@@ -335,8 +439,16 @@ summarizer(
     min_length=MIN_TARGET_LENGTH,
     max_length=MAX_TARGET_LENGTH,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Your max_length is set to 128, but you input_length is only 88. You might consider decreasing max_length manually, e.g. summarizer('...', max_length=44)
+
+[{'summary_text': 'Boss Wagner says he is "a 100% professional and has a winning mentality to play on the pitch."'}]
+
+```
+</div>
 Now you can push this model to Hugging Face Model Hub and also share it with with all your friends,
 family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"` so for instance:
@@ -352,4 +464,3 @@ from transformers import TFAutoModelForSeq2SeqLM
 
 model = TFAutoModelForSeq2SeqLM.from_pretrained("your-username/my-awesome-model")
 ```
-"""
