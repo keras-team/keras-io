@@ -128,7 +128,7 @@ weak augmentation, we will use horizontal flipping and random cropping.
 
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 5.
-augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=3, magnitude=0.5)
+augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=2, magnitude=0.5)
 
 
 def weak_augment(image, source=True):

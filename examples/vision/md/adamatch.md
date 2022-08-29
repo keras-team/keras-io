@@ -29,13 +29,6 @@ be installed using the following command:
 !pip install -q tf-models-official==2.9.2
 ```
 
-<div class="k-default-codeblock">
-```
-[33mWARNING: You are using pip version 21.3.1; however, version 22.1.2 is available.
-You should consider upgrading via the '/home/johannes/Projects/keras-io/venv/bin/python -m pip install --upgrade pip' command.[0m
-
-```
-</div>
 Before we proceed, let's review a few preliminary concepts underlying this example.
 
 ---
@@ -144,7 +137,7 @@ weak augmentation, we will use horizontal flipping and random cropping.
 ```python
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 5.
-augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=3, magnitude=0.5)
+augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=2, magnitude=0.5)
 
 
 def weak_augment(image, source=True):
@@ -584,27 +577,27 @@ adamatch_trainer.fit(total_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-382/382 [==============================] - 180s 456ms/step - loss: 117251055616.0000
+382/382 [==============================] - 155s 392ms/step - loss: 149259583488.0000
 Epoch 2/10
-382/382 [==============================] - 176s 459ms/step - loss: 2.2213
+382/382 [==============================] - 145s 379ms/step - loss: 2.0935
 Epoch 3/10
-382/382 [==============================] - 177s 462ms/step - loss: 2.1647
+382/382 [==============================] - 145s 380ms/step - loss: 1.7237
 Epoch 4/10
-382/382 [==============================] - 175s 458ms/step - loss: 5.9226
+382/382 [==============================] - 142s 370ms/step - loss: 1.9182
 Epoch 5/10
-382/382 [==============================] - 175s 459ms/step - loss: 10.0054
+382/382 [==============================] - 141s 367ms/step - loss: 2.9698
 Epoch 6/10
-382/382 [==============================] - 176s 459ms/step - loss: 13.2228
+382/382 [==============================] - 141s 368ms/step - loss: 3.2622
 Epoch 7/10
-382/382 [==============================] - 173s 451ms/step - loss: 14.3799
+382/382 [==============================] - 141s 367ms/step - loss: 2.9034
 Epoch 8/10
-382/382 [==============================] - 174s 456ms/step - loss: 18.5209
+382/382 [==============================] - 141s 368ms/step - loss: 3.2735
 Epoch 9/10
-382/382 [==============================] - 178s 466ms/step - loss: 18.5917
+382/382 [==============================] - 141s 369ms/step - loss: 3.9449
 Epoch 10/10
-382/382 [==============================] - 168s 439ms/step - loss: 10.6032
+382/382 [==============================] - 141s 369ms/step - loss: 3.5918
 
-<keras.callbacks.History at 0x7fb4c1bc7730>
+<keras.callbacks.History at 0x7f16eb261e20>
 
 ```
 </div>
@@ -625,8 +618,8 @@ print(f"Accuracy on target test set: {accuracy * 100:.2f}%")
 
 <div class="k-default-codeblock">
 ```
-136/136 [==============================] - 4s 26ms/step - loss: 680.4998 - sparse_categorical_accuracy: 0.2006
-Accuracy on target test set: 20.06%
+136/136 [==============================] - 4s 24ms/step - loss: 508.2073 - sparse_categorical_accuracy: 0.2408
+Accuracy on target test set: 24.08%
 
 ```
 </div>
@@ -660,8 +653,8 @@ print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
 
 <div class="k-default-codeblock">
 ```
-53/53 [==============================] - 2s 26ms/step - loss: 680.4996 - sparse_categorical_accuracy: 0.9398
-Accuracy on source test set: 93.98%
+53/53 [==============================] - 2s 24ms/step - loss: 508.2072 - sparse_categorical_accuracy: 0.9736
+Accuracy on source test set: 97.36%
 
 ```
 </div>
