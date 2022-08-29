@@ -107,13 +107,6 @@ from datasets import load_dataset
 raw_datasets = load_dataset("xsum", split="train")
 ```
 
-<div class="k-default-codeblock">
-```
-Using custom data configuration default
-Reusing dataset xsum (/speech/sreyan/.cache/huggingface/datasets/xsum/default/1.2.0/32c23220eadddb1149b16ed2e9430a05293768cfffbdfd151058697d4c11f934)
-
-```
-</div>
 The dataset has the following fields:
 
 - **document**: the original BBC article to me summarized
@@ -178,24 +171,6 @@ from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
 ```
 
-
-<div class="k-default-codeblock">
-```
-Downloading:   0%|          | 0.00/1.17k [00:00<?, ?B/s]
-
-Downloading:   0%|          | 0.00/773k [00:00<?, ?B/s]
-
-Downloading:   0%|          | 0.00/1.32M [00:00<?, ?B/s]
-
-/speech/sreyan/anaconda3/envs/gsoc-submission/lib/python3.7/site-packages/transformers/models/t5/tokenization_t5_fast.py:166: FutureWarning: This tokenizer was incorrectly instantiated with a model max length of 512 which will be corrected in Transformers v5.
-For now, this behavior is kept to avoid breaking backwards compatibility when padding/encoding with `truncation is True`.
-- Be aware that you SHOULD NOT rely on t5-small automatically truncating your input to 512 when padding/encoding.
-- If you want to encode/pad to sequences longer than 512 you can either instantiate this tokenizer with `model_max_length` or pass `max_length` when encoding/padding.
-- To avoid this warning, please instantiate this tokenizer with `model_max_length` set to your preferred value.
-  FutureWarning,
-
-```
-</div>
 If you are using one of the five T5 checkpoints we have to prefix the inputs with
 "summarize:" (the model can also translate and it needs the prefix to know which task it
 has to perform).
@@ -245,16 +220,6 @@ data will be preprocessed in one single command.
 tokenized_datasets = raw_datasets.map(preprocess_function, batched=True)
 ```
 
-<div class="k-default-codeblock">
-```
-Parameter 'function'=<function preprocess_function at 0x7f1d7a2adcb0> of the transform datasets.arrow_dataset.Dataset._map_single couldn't be hashed properly, a random hash was used instead. Make sure your transforms and parameters are serializable with pickle or dill for the dataset fingerprinting and caching to work. If you reuse this transform, the caching mechanism will consider it to be different from the previous calls and recompute everything. This warning is only showed once. Subsequent hashing failures won't be showed.
-
-  0%|          | 0/21 [00:00<?, ?ba/s]
-
-  0%|          | 0/21 [00:00<?, ?ba/s]
-
-```
-</div>
 ---
 ## Defining the model
 
