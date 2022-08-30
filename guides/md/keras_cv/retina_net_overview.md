@@ -116,7 +116,7 @@ Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-validation.t
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_4_12.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
     
 
 
@@ -165,7 +165,7 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 
 
     
-![png](../guides/img/retina_net_overview/retina_net_overview_7_0.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
     
 
 
@@ -381,7 +381,7 @@ plt.show()
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_26_1.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
     
 
 
