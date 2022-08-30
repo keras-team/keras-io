@@ -198,7 +198,7 @@ optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0
 # much smaller than the values from the box loss.
 class ScaledFocalLoss(keras_cv.losses.FocalLoss):
     def call(self, y_true, y_pred):
-        return 40.0 * super().call(y_true, y_pred)
+        return 50.0 * super().call(y_true, y_pred)
 
 
 model.compile(
