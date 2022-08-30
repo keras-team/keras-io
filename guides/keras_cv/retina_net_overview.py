@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = 5
 
 """
 ## Data loading
@@ -188,7 +188,7 @@ Let's compile our model:
 optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
 
 
-# We scale FocalLoss as the loss output values from the classification loss tend to be 
+# We scale FocalLoss as the loss output values from the classification loss tend to be
 # much smaller than the values from the box loss.
 class ScaledFocalLoss(keras_cv.losses.FocalLoss):
     def call(self, y_true, y_pred):
@@ -269,7 +269,7 @@ model.compile(
     classification_loss=model.classification_loss,
     optimizer=model.optimizer,
 )
-metrics = model.evaluate(val_ds.take(100), return_dict=True)
+metrics = model.evaluate(val_ds.take(20), return_dict=True)
 print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
@@ -298,6 +298,10 @@ for i in range(9):
     plt.imshow(plotted_images[0].numpy().astype("uint8"))
     plt.axis("off")
 plt.show()
+
+"""
+To get good results, you should train for at least 50 epochs.
+"""
 
 """
 ## Results and conclusions
