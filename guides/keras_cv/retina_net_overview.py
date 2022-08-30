@@ -302,7 +302,7 @@ predictions = predictions.to_tensor(default_value=-1)
 plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
 for i in range(9):
     plt.subplot(9 // 3, 9 // 3, i + 1)
-    plt.imshow(plotted_images[0].numpy().astype("uint8"))
+    plt.imshow(plotted_images[i].numpy().astype("uint8"))
     plt.axis("off")
 plt.show()
 

@@ -101,15 +101,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteM3TT6C/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteM3TT6C/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteM3TT6C/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -280,9 +280,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 226s 666ms/step - loss: 21.1037 - classification_loss: 2.8980 - box_loss: 18.2056 - val_loss: 198.7246 - val_classification_loss: 181.6521 - val_box_loss: 17.0726 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+313/313 [==============================] - 225s 666ms/step - loss: 20.6372 - classification_loss: 2.9103 - box_loss: 17.7270 - val_loss: 31.4681 - val_classification_loss: 15.3005 - val_box_loss: 16.1676 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
 
-<keras.callbacks.History at 0x7fdf800f7640>
+<keras.callbacks.History at 0x7f2af03e47f0>
 
 ```
 </div>
@@ -340,8 +340,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 126s 6s/step - Mean Average Precision: 0.0000e+00 - Recall: 0.0000e+00 - loss: 186.7479 - classification_loss: 169.7790 - box_loss: 16.9689 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 0.0, 'Recall': 0.0, 'loss': 186.74794006347656, 'classification_loss': 169.77899169921875, 'box_loss': 16.96893882751465, 'regularization_loss': 0.0}
+20/20 [==============================] - 134s 6s/step - Mean Average Precision: 6.8621e-06 - Recall: 0.0024 - loss: 31.8859 - classification_loss: 15.7696 - box_loss: 16.1164 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 6.862050213385373e-06, 'Recall': 0.0023600864224135876, 'loss': 31.88593101501465, 'classification_loss': 15.769584655761719, 'box_loss': 16.116352081298828, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -369,7 +369,7 @@ predictions = predictions.to_tensor(default_value=-1)
 plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
 for i in range(9):
     plt.subplot(9 // 3, 9 // 3, i + 1)
-    plt.imshow(plotted_images[0].numpy().astype("uint8"))
+    plt.imshow(plotted_images[i].numpy().astype("uint8"))
     plt.axis("off")
 plt.show()
 ```
