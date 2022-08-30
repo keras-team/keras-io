@@ -25,8 +25,8 @@ from tensorflow.keras import optimizers
 import keras_cv
 from keras_cv import bounding_box
 
-BATCH_SIZE = 9
-EPOCHS = 100
+BATCH_SIZE = 8
+EPOCHS = 1
 
 """
 ## Data loading
@@ -41,7 +41,9 @@ are in.
 For example:
 
 ```python
-train_ds, ds_info = keras_cv.datasets.pascal_voc.load(split='train', bounding_box_format='xywh', batch_size=8)
+train_ds, ds_info = keras_cv.datasets.pascal_voc.load(
+    split='train', bounding_box_format='xywh', batch_size=8
+)
 ```
 
 Clearly yields bounding boxes in the format `xywh`.  You can read more about
@@ -268,6 +270,7 @@ model.compile(
     optimizer=model.optimizer,
 )
 metrics = model.evaluate(val_ds, return_dict=True)
+print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
 """
@@ -278,8 +281,11 @@ RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
 a non max suppression operation for you.
 """
 
+train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
+    bounding_box_format="xywh", split="train", batch_size=9
+)
 images, labels = next(iter(train_ds.take(1)))
-predictions = keras_cv.predict(images)
+predictions = model.predict(images)
 color = tf.constant(((255.0, 0, 0),))
 plt.figure(figsize=(10, 10))
 predictions = keras_cv.bounding_box.convert_format(
