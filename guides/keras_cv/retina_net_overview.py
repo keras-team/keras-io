@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 9
-EPOCHS = 100
+EPOCHS = 1
 
 """
 ## Data loading
@@ -291,7 +291,7 @@ for i in range(9):
     plt.subplot(9 // 3, 9 // 3, i + 1)
     plt.imshow(plotted_images[0].numpy().astype("uint8"))
     plt.axis("off")
-plt.savefig("test.png")
+plt.show()
 
 """
 ## Results and conclusions
