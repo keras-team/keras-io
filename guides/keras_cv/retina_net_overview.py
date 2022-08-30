@@ -186,14 +186,16 @@ Let's compile our model:
 optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
 
 
-class BigFocalLoss(keras_cv.losses.FocalLoss):
+# We scale FocalLoss as the loss output values from the classification loss tend to be 
+# much smaller than the values from the box loss.
+class ScaledFocalLoss(keras_cv.losses.FocalLoss):
     def call(self, y_true, y_pred):
-        return 20.0 * super().call(y_true, y_pred)
+        return 30.0 * super().call(y_true, y_pred)
 
 
 model.compile(
-    classification_loss=BigFocalLoss(from_logits=True),
-    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0),
+    classification_loss=ScaledFocalLoss(from_logits=True),
+    box_loss=keras.losses.Huber(delta=1.0),
     optimizer=optimizer,
 )
 
