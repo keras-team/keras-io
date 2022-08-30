@@ -217,7 +217,7 @@ And run `model.fit()`!
 
 model.fit(
     train_ds,
-    validation_data=val_ds.take(100),
+    validation_data=val_ds.take(20),
     epochs=EPOCHS,
     callbacks=callbacks,
 )
