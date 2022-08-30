@@ -269,7 +269,7 @@ model.compile(
     classification_loss=model.classification_loss,
     optimizer=model.optimizer,
 )
-metrics = model.evaluate(val_ds, return_dict=True)
+metrics = model.evaluate(val_ds.take(100), return_dict=True)
 print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
