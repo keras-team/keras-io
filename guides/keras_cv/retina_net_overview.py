@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = 100
 
 """
 ## Data loading
@@ -198,7 +198,7 @@ optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0
 # much smaller than the values from the box loss.
 class ScaledFocalLoss(keras_cv.losses.FocalLoss):
     def call(self, y_true, y_pred):
-        return 30.0 * super().call(y_true, y_pred)
+        return 40.0 * super().call(y_true, y_pred)
 
 
 model.compile(
@@ -304,7 +304,7 @@ for i in range(9):
     plt.subplot(9 // 3, 9 // 3, i + 1)
     plt.imshow(plotted_images[i].numpy().astype("uint8"))
     plt.axis("off")
-plt.show()
+plt.savefig("test.png")
 
 """
 To get good results, you should train for at least 50 epochs.
