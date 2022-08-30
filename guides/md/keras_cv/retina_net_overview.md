@@ -101,22 +101,22 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteWEHW2S/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteM3TT6C/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteWEHW2S/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteM3TT6C/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteWEHW2S/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteM3TT6C/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_4_12.png)
     
 
 
@@ -165,7 +165,7 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 
 
     
-![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_7_0.png)
     
 
 
@@ -280,9 +280,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 221s 655ms/step - loss: 21.4794 - classification_loss: 2.7756 - box_loss: 18.7038 - val_loss: 21.1214 - val_classification_loss: 3.5879 - val_box_loss: 17.5335 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+313/313 [==============================] - 226s 666ms/step - loss: 21.1037 - classification_loss: 2.8980 - box_loss: 18.2056 - val_loss: 198.7246 - val_classification_loss: 181.6521 - val_box_loss: 17.0726 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
 
-<keras.callbacks.History at 0x7f6990208490>
+<keras.callbacks.History at 0x7fdf800f7640>
 
 ```
 </div>
@@ -340,8 +340,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 147s 7s/step - Mean Average Precision: 3.7854e-05 - Recall: 0.0082 - loss: 21.2006 - classification_loss: 3.7949 - box_loss: 17.4057 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 3.7853693356737494e-05, 'Recall': 0.008190391585230827, 'loss': 21.2005615234375, 'classification_loss': 3.794874906539917, 'box_loss': 17.40568733215332, 'regularization_loss': 0.0}
+20/20 [==============================] - 126s 6s/step - Mean Average Precision: 0.0000e+00 - Recall: 0.0000e+00 - loss: 186.7479 - classification_loss: 169.7790 - box_loss: 16.9689 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 0.0, 'Recall': 0.0, 'loss': 186.74794006347656, 'classification_loss': 169.77899169921875, 'box_loss': 16.96893882751465, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -381,7 +381,7 @@ plt.show()
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_26_1.png)
     
 
 
