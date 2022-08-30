@@ -290,6 +290,7 @@ a non max suppression operation for you.
 train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="train", batch_size=9
 )
+train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 images, labels = next(iter(train_ds.take(1)))
 predictions = model.predict(images)
 color = tf.constant(((255.0, 0, 0),))
