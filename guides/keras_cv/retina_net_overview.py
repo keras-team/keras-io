@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = 5
 
 """
 ## Data loading
