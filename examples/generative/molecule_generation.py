@@ -50,7 +50,7 @@ Alexander Kensert. Many of the functions used in the present example are from th
 ## Setup
 
 RDKit is an open source toolkit for cheminformatics and machine learning. This toolkit come in handy
-if one is into drug discovery domain. In this example, RDKit is used to conviently
+if one is into drug discovery domain. In this example, RDKit is used to conveniently
 and efficiently transform SMILES to molecule objects, and then from those obtain sets of atoms
 and bonds.
 

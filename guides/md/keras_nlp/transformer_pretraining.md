@@ -267,7 +267,10 @@ new set of labels to train on.
 # Setting sequence_length will trim or pad the token outputs to shape
 # (batch_size, SEQ_LENGTH).
 tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab_file, sequence_length=SEQ_LENGTH,
+    vocabulary=vocab_file,
+    sequence_length=SEQ_LENGTH,
+    lowercase=True,
+    strip_accents=True,
 )
 # Setting mask_selection_length will trim or pad the mask outputs to shape
 # (batch_size, PREDICTIONS_PER_SEQ).
