@@ -329,7 +329,7 @@ decoder to the RetinaNet constructor as follows.
 
 prediction_decoder=keras_cv.layers.NmsPredictionDecoder(
     bounding_box_format='xywh',
-    anchor_generator=keras_cv.models.RetinaNet.default_anchor_generator()
+    anchor_generator=keras_cv.models.RetinaNet.default_anchor_generator(),
     suppression_layers=keras_cv.layers.NonMaxSuppression(
         classes=20,
         confidence_threshold=0.9
