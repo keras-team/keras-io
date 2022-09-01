@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = 100
 
 """
 ## Data loading
@@ -297,7 +297,6 @@ model = keras_cv.models.RetinaNet(
     backbone_weights="imagenet",
     include_rescaling=True,
 )
-<<<<<<< HEAD
 model.load_weights("checkpoint/")
 
 def visualize_detections(model):
