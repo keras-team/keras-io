@@ -31,7 +31,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = 5
 ```
 
 ---
@@ -101,22 +101,22 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteFD2ZVK/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteFD2ZVK/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKJYA9V/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteFD2ZVK/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_4_12.png)
     
 
 
@@ -165,7 +165,7 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 
 
     
-![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_7_0.png)
     
 
 
@@ -245,7 +245,7 @@ optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0
 # much smaller than the values from the box loss.
 class ScaledFocalLoss(keras_cv.losses.FocalLoss):
     def call(self, y_true, y_pred):
-        return 30.0 * super().call(y_true, y_pred)
+        return 50.0 * super().call(y_true, y_pred)
 
 
 model.compile(
@@ -280,9 +280,18 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 225s 666ms/step - loss: 20.6372 - classification_loss: 2.9103 - box_loss: 17.7270 - val_loss: 31.4681 - val_classification_loss: 15.3005 - val_box_loss: 16.1676 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+Epoch 1/5
+313/313 [==============================] - 224s 664ms/step - loss: 23.4331 - classification_loss: 4.5988 - box_loss: 18.8343 - val_loss: 25.9427 - val_classification_loss: 7.4497 - val_box_loss: 18.4931 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+Epoch 2/5
+313/313 [==============================] - 201s 641ms/step - loss: 21.3878 - classification_loss: 4.3128 - box_loss: 17.0751 - val_loss: 21.3617 - val_classification_loss: 4.4179 - val_box_loss: 16.9438 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+Epoch 3/5
+313/313 [==============================] - 200s 638ms/step - loss: 20.1697 - classification_loss: 4.2121 - box_loss: 15.9576 - val_loss: 20.8565 - val_classification_loss: 4.8812 - val_box_loss: 15.9754 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+Epoch 4/5
+313/313 [==============================] - 201s 642ms/step - loss: 19.2850 - classification_loss: 4.1706 - box_loss: 15.1144 - val_loss: 77.0519 - val_classification_loss: 60.7165 - val_box_loss: 16.3354 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+Epoch 5/5
+313/313 [==============================] - 201s 641ms/step - loss: 18.4718 - classification_loss: 4.0754 - box_loss: 14.3965 - val_loss: 27.2020 - val_classification_loss: 12.4752 - val_box_loss: 14.7268 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
 
-<keras.callbacks.History at 0x7f2af03e47f0>
+<keras.callbacks.History at 0x7fd9f4291978>
 
 ```
 </div>
@@ -340,8 +349,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 134s 6s/step - Mean Average Precision: 6.8621e-06 - Recall: 0.0024 - loss: 31.8859 - classification_loss: 15.7696 - box_loss: 16.1164 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 6.862050213385373e-06, 'Recall': 0.0023600864224135876, 'loss': 31.88593101501465, 'classification_loss': 15.769584655761719, 'box_loss': 16.116352081298828, 'regularization_loss': 0.0}
+20/20 [==============================] - 84s 4s/step - Mean Average Precision: 8.7446e-06 - Recall: 9.9348e-04 - loss: 27.7691 - classification_loss: 13.1286 - box_loss: 14.6405 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 8.744610568101052e-06, 'Recall': 0.0009934772970154881, 'loss': 27.769054412841797, 'classification_loss': 13.128570556640625, 'box_loss': 14.640485763549805, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -381,7 +390,7 @@ plt.show()
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_26_1.png)
     
 
 
