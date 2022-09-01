@@ -26,7 +26,7 @@ import keras_cv
 from keras_cv import bounding_box
 
 BATCH_SIZE = 8
-EPOCHS = 100
+EPOCHS = 1
 
 """
 ## Data loading
@@ -264,6 +264,8 @@ metrics = [
     ),
 ]
 
+model.save_weights("checkpoint/")
+
 """
 Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
@@ -287,28 +289,61 @@ RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
 a non max suppression operation for you.
 """
 
-train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
-    bounding_box_format="xywh", split="train", batch_size=9
+model = keras_cv.models.RetinaNet(
+    classes=20,
+    bounding_box_format="xywh",
+    backbone="resnet50",
+    backbone_weights="imagenet",
+    include_rescaling=True,
 )
-train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
-images, labels = next(iter(train_ds.take(1)))
-predictions = model.predict(images)
-color = tf.constant(((255.0, 0, 0),))
-plt.figure(figsize=(10, 10))
-predictions = keras_cv.bounding_box.convert_format(
-    predictions, source="xywh", target="rel_yxyx", images=images
-)
-predictions = predictions.to_tensor(default_value=-1)
-plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
-for i in range(9):
-    plt.subplot(9 // 3, 9 // 3, i + 1)
-    plt.imshow(plotted_images[i].numpy().astype("uint8"))
-    plt.axis("off")
-plt.savefig("test.png")
+model.load_weights("checkpoint/")
+
+def visualize_detections(model):
+    train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
+        bounding_box_format="xywh", split="train", batch_size=9
+    )
+    train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
+    images, labels = next(iter(train_ds.take(1)))
+    predictions = model.predict(images)
+    color = tf.constant(((255.0, 0, 0),))
+    plt.figure(figsize=(10, 10))
+    predictions = keras_cv.bounding_box.convert_format(
+        predictions, source="xywh", target="rel_yxyx", images=images
+    )
+    predictions = predictions.to_tensor(default_value=-1)
+    plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
+    for i in range(9):
+        plt.subplot(9 // 3, 9 // 3, i + 1)
+        plt.imshow(plotted_images[i].numpy().astype("uint8"))
+        plt.axis("off")
+    plt.show()
+
+visualize_detections(model)
 
 """
-To get good results, you should train for at least 50 epochs.
+To get good results, you should train for at least 50 epochs.  You may also need to
+tune the prediction decoder layer.  This can be done by passing a custom prediction
+decoder to the RetinaNet constructor as follows.
 """
+
+prediction_decoder=keras_cv.layers.NmsPredictionDecoder(
+    bounding_box_format='xywh',
+    anchor_generator=keras_cv.models.RetinaNet.default_anchor_generator()
+    suppression_layers=keras_cv.layers.NonMaxSuppression(
+        classes=20,
+        confidence_threshold=0.9
+    )
+)
+model = keras_cv.models.RetinaNet(
+    classes=20,
+    bounding_box_format="xywh",
+    backbone="resnet50",
+    backbone_weights="imagenet",
+    include_rescaling=True,
+    prediction_decoder=prediction_decoder
+)
+model.load_weights("checkpoint/")
+visualize_detections(model)
 
 """
 ## Results and conclusions
