@@ -268,6 +268,7 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
 """
 
+model.load_weights(CHECKPOINT_PATH)
 model.compile(
     metrics=metrics,
     box_loss=model.box_loss,
