@@ -689,7 +689,9 @@ class KerasIO:
 
         # Convert TF symbols to links to tensorflow.org
         tmp_content = copy.copy(md_content)
-        replacements = {}
+        replacements = {
+                "../guides/img": "/img/guides"
+        }
         while "`tf." in tmp_content:
             index = tmp_content.find("`tf.")
             if tmp_content[index - 1] == "[":
