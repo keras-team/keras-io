@@ -27,7 +27,7 @@ from keras_cv import bounding_box
 import os
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
 
 """
@@ -171,9 +171,11 @@ model = keras_cv.models.RetinaNet(
     # pixel range (0, 255) or if you have already rescaled your inputs to the range
     # (0, 1).  In our case, we feed our model images with inputs in the range (0, 255).
     include_rescaling=True,
+    # Typically, you'll want to set this to False when training a real model.
+    # evaluate_train_time_metrics=True makes `train_step()` incompatible with TPU,
+    # and also causes a massive performance hit.
+    evaluate_train_time_metrics=False
 )
-# you can disable training of the backbone and only train the FPN
-model.backbone.trainable = False
 
 """
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -195,19 +197,18 @@ standard Keras workflow, leveraging `compile()` and `fit()`.
 Let's compile our model:
 """
 
-
-optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
-
-
-# We scale FocalLoss as the loss output values from the classification loss tend to be
-# much smaller than the values from the box loss.
-class ScaledFocalLoss(keras_cv.losses.FocalLoss):
-    def call(self, y_true, y_pred):
-        return 50.0 * super().call(y_true, y_pred)
-
-
+# 
+# optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
+learning_rates = [2.5e-06, 0.000625, 0.00125, 0.0025, 0.00025, 2.5e-05]
+learning_rate_boundaries = [125, 250, 500, 240000, 360000]
+learning_rate_fn = tf.optimizers.schedules.PiecewiseConstantDecay(
+    boundaries=learning_rate_boundaries, values=learning_rates
+)
+optimizer = tf.optimizers.SGD(
+    learning_rate=learning_rate_fn, momentum=0.9, global_clipnorm=10.0
+)
 model.compile(
-    classification_loss=ScaledFocalLoss(from_logits=True),
+    classification_loss=keras_cv.losses.FocalLoss(from_logits=True),
     box_loss=keras.losses.Huber(delta=1.0),
     optimizer=optimizer,
 )
@@ -219,7 +220,6 @@ All that is left to do is construct some callbacks:
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
     keras.callbacks.EarlyStopping(patience=15),
-    keras.callbacks.ReduceLROnPlateau(patience=10),
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 
