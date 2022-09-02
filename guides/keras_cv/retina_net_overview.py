@@ -29,6 +29,7 @@ import os
 BATCH_SIZE = 8
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
+INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
 
 """
 ## Data loading
@@ -177,7 +178,7 @@ model = keras_cv.models.RetinaNet(
     evaluate_train_time_metrics=False,
 )
 # Fine-tuning a RetinaNet is as simple as setting backbone.trainable = False
-model.backbone.trainable = True
+model.backbone.trainable = False
 
 """
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -215,7 +216,7 @@ callbacks = [
     keras.callbacks.EarlyStopping(patience=15),
     keras.callbacks.ReduceLROnPlateau(patience=10),
     # Uncomment to train your own RetinaNet
-    # keras.callbacks.ModelCheckpoint("checkpoint/", save_weights_only=True),
+    keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 
 """
@@ -271,15 +272,15 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
 """
 
-model.load_weights(CHECKPOINT_PATH)
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
 model.compile(
     metrics=metrics,
     box_loss=model.box_loss,
     classification_loss=model.classification_loss,
     optimizer=model.optimizer,
 )
-# metrics = model.evaluate(val_ds.take(20), return_dict=True)
-# print(metrics)
+metrics = model.evaluate(val_ds.take(20), return_dict=True)
+print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
 """
@@ -297,7 +298,7 @@ model = keras_cv.models.RetinaNet(
     backbone_weights="imagenet",
     include_rescaling=True,
 )
-model.load_weights(CHECKPOINT_PATH)
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
 
 
 def visualize_detections(model):
@@ -338,7 +339,10 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        bounding_box_format="xywh", classes=20, confidence_threshold=0.15
+        iou_threshold=0.25,
+        bounding_box_format="xywh",
+        classes=20,
+        confidence_threshold=0.85,
     ),
 )
 model = keras_cv.models.RetinaNet(
@@ -349,7 +353,7 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-model.load_weights(CHECKPOINT_PATH)
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
 visualize_detections(model)
 
 """
@@ -370,3 +374,4 @@ without data augmentation.
     https://tinyurl.com/y34xx65w
 )
 """
+
