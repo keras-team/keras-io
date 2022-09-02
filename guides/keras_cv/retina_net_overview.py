@@ -222,12 +222,13 @@ callbacks = [
 And run `model.fit()`!
 """
 
-model.fit(
-    train_ds,
-    validation_data=val_ds.take(20),
-    epochs=EPOCHS,
-    callbacks=callbacks,
-)
+# # model.fit(
+#     train_ds,
+#     validation_data=val_ds.take(20),
+#     epochs=EPOCHS,
+#     callbacks=callbacks,
+# )
+# model.save_weights("checkpoint/")
 
 """
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
@@ -265,7 +266,6 @@ metrics = [
     ),
 ]
 
-model.save_weights("checkpoint/")
 
 """
 Next, we can evaluate the metrics by re-compiling the model, and running
@@ -278,8 +278,8 @@ model.compile(
     classification_loss=model.classification_loss,
     optimizer=model.optimizer,
 )
-metrics = model.evaluate(val_ds.take(20), return_dict=True)
-print(metrics)
+# metrics = model.evaluate(val_ds.take(20), return_dict=True)
+# print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
 """
@@ -343,7 +343,7 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     prediction_decoder=prediction_decoder
 )
-model.load_weights("checkpoint/")
+model.load_weights("gs://luke-keras/retinanet/checkpoint/")
 visualize_detections(model)
 
 """
