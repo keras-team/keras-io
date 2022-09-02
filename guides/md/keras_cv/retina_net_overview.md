@@ -118,7 +118,7 @@ Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-validation.t
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_4_12.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
     
 
 
@@ -168,7 +168,7 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 
 
     
-![png](../guides/img/retina_net_overview/retina_net_overview_7_0.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
     
 
 
@@ -402,7 +402,7 @@ visualize_detections(model)
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_26_1.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
     
 
 
@@ -444,7 +444,7 @@ WARNING:tensorflow:Inconsistent references when loading the checkpoint into this
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_28_3.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_28_3.png)
     
 
 
