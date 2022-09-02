@@ -287,6 +287,7 @@ class KerasIO:
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
 
         md_content = open(md_path).read()
+        md_content = md_content.replace("../guides/img/", "/img/guides/")
         github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
         md_content = self.preprocess_tutobook_md_source(
