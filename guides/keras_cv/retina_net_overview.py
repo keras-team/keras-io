@@ -297,7 +297,8 @@ model = keras_cv.models.RetinaNet(
     backbone_weights="imagenet",
     include_rescaling=True,
 )
-model.load_weights("checkpoint/")
+model.load_weights("gs://luke-keras/retinanet/checkpoint/")
+
 
 def visualize_detections(model):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
@@ -319,6 +320,7 @@ def visualize_detections(model):
         plt.axis("off")
     plt.show()
 
+
 visualize_detections(model)
 
 """
@@ -327,13 +329,14 @@ tune the prediction decoder layer.  This can be done by passing a custom predict
 decoder to the RetinaNet constructor as follows.
 """
 
-prediction_decoder=keras_cv.layers.NmsPredictionDecoder(
-    bounding_box_format='xywh',
-    anchor_generator=keras_cv.models.RetinaNet.default_anchor_generator(),
-    suppression_layers=keras_cv.layers.NonMaxSuppression(
-        classes=20,
-        confidence_threshold=0.9
-    )
+prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
+    bounding_box_format="xywh",
+    anchor_generator=keras_cv.models.RetinaNet.default_anchor_generator(
+        bounding_box_format="xywh"
+    ),
+    suppression_layer=keras_cv.layers.NonMaxSuppression(
+        bounding_box_format="xywh", classes=20, confidence_threshold=0.9
+    ),
 )
 model = keras_cv.models.RetinaNet(
     classes=20,
@@ -341,7 +344,7 @@ model = keras_cv.models.RetinaNet(
     backbone="resnet50",
     backbone_weights="imagenet",
     include_rescaling=True,
-    prediction_decoder=prediction_decoder
+    prediction_decoder=prediction_decoder,
 )
 model.load_weights("gs://luke-keras/retinanet/checkpoint/")
 visualize_detections(model)
