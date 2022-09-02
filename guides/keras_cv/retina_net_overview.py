@@ -170,6 +170,8 @@ model = keras_cv.models.RetinaNet(
     # (0, 1).  In our case, we feed our model images with inputs in the range (0, 255).
     include_rescaling=True,
 )
+# you can disable training of the backbone and only train the FPN
+model.backbone.trainable = False
 
 """
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -222,13 +224,13 @@ callbacks = [
 And run `model.fit()`!
 """
 
-# # model.fit(
-#     train_ds,
-#     validation_data=val_ds.take(20),
-#     epochs=EPOCHS,
-#     callbacks=callbacks,
-# )
-# model.save_weights("checkpoint/")
+model.fit(
+    train_ds,
+    validation_data=val_ds.take(20),
+    epochs=EPOCHS,
+    callbacks=callbacks,
+)
+model.save_weights("checkpoint/")
 
 """
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
@@ -278,8 +280,8 @@ model.compile(
     classification_loss=model.classification_loss,
     optimizer=model.optimizer,
 )
-# metrics = model.evaluate(val_ds.take(20), return_dict=True)
-# print(metrics)
+metrics = model.evaluate(val_ds.take(20), return_dict=True)
+print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 
 """
@@ -318,7 +320,7 @@ def visualize_detections(model):
         plt.subplot(9 // 3, 9 // 3, i + 1)
         plt.imshow(plotted_images[i].numpy().astype("uint8"))
         plt.axis("off")
-    plt.show()
+    plt.savefig("test.png")
 
 
 visualize_detections(model)
@@ -335,7 +337,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        bounding_box_format="xywh", classes=20, confidence_threshold=0.9
+        bounding_box_format="xywh", classes=20, confidence_threshold=0.99
     ),
 )
 model = keras_cv.models.RetinaNet(
