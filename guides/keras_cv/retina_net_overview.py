@@ -230,7 +230,7 @@ model.fit(
     epochs=EPOCHS,
     callbacks=callbacks,
 )
-model.save_weights("checkpoint/")
+model.save_weights("gs://luke-keras/retinanet/checkpoint2/")
 
 """
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
@@ -299,7 +299,7 @@ model = keras_cv.models.RetinaNet(
     backbone_weights="imagenet",
     include_rescaling=True,
 )
-model.load_weights("gs://luke-keras/retinanet/checkpoint/")
+model.load_weights("gs://luke-keras/retinanet/checkpoint/2")
 
 
 def visualize_detections(model):
@@ -348,7 +348,7 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-model.load_weights("gs://luke-keras/retinanet/checkpoint/")
+model.load_weights("gs://luke-keras/retinanet/checkpoint2/")
 visualize_detections(model)
 
 """
