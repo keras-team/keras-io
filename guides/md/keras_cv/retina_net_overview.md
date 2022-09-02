@@ -32,7 +32,7 @@ from keras_cv import bounding_box
 import os
 
 BATCH_SIZE = 8
-EPOCHS = 1
+EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
 ```
 
@@ -103,22 +103,22 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRUP7NJ/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRUP7NJ/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRUP7NJ/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_4_12.png)
     
 
 
@@ -168,7 +168,7 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 
 
     
-![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_7_0.png)
     
 
 
@@ -218,9 +218,11 @@ model = keras_cv.models.RetinaNet(
     # pixel range (0, 255) or if you have already rescaled your inputs to the range
     # (0, 1).  In our case, we feed our model images with inputs in the range (0, 255).
     include_rescaling=True,
+    # Typically, you'll want to set this to False when training a real model.
+    # evaluate_train_time_metrics=True makes `train_step()` incompatible with TPU,
+    # and also causes a massive performance hit.
+    evaluate_train_time_metrics=False,
 )
-# you can disable training of the backbone and only train the FPN
-model.backbone.trainable = False
 ```
 
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -229,7 +231,7 @@ This matches what we have constructed in our input pipeline above.
 
 The RetinaNet `call()` method outputs two values: training targets and inference targets.
 In this guide, we are primarily concerned with the inference targets.  Internally, the
-training targets are used by `keras_cv.losses.ObjectDetectionLoss()` to train the
+training targets are used by `box_loss` and `classification_loss` to train the
 network.
 
 ---
@@ -242,20 +244,10 @@ Let's compile our model:
 
 
 ```python
-
-optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
-
-
-# We scale FocalLoss as the loss output values from the classification loss tend to be
-# much smaller than the values from the box loss.
-class ScaledFocalLoss(keras_cv.losses.FocalLoss):
-    def call(self, y_true, y_pred):
-        return 50.0 * super().call(y_true, y_pred)
-
-
+optimizer = tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
 model.compile(
-    classification_loss=ScaledFocalLoss(from_logits=True),
-    box_loss=keras.losses.Huber(delta=1.0),
+    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
+    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
     optimizer=optimizer,
 )
 ```
@@ -286,9 +278,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 133s 388ms/step - loss: 23.3660 - classification_loss: 4.5084 - box_loss: 18.8576 - val_loss: 23.3321 - val_classification_loss: 5.0505 - val_box_loss: 18.2815 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+313/313 [==============================] - 230s 681ms/step - loss: 1.9453 - classification_loss: 1.0951 - box_loss: 0.8502 - val_loss: 1.9123 - val_classification_loss: 1.0743 - val_box_loss: 0.8380 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
 
-<keras.callbacks.History at 0x7f39e8090130>
+<keras.callbacks.History at 0x7fe288289820>
 
 ```
 </div>
@@ -347,8 +339,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 39s 2s/step - Mean Average Precision: 2.8289e-05 - Recall: 1.1628e-04 - loss: 23.0661 - classification_loss: 4.9130 - box_loss: 18.1531 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 2.8288544854149222e-05, 'Recall': 0.00011627907224465162, 'loss': 23.066057205200195, 'classification_loss': 4.912976264953613, 'box_loss': 18.153078079223633, 'regularization_loss': 0.0}
+20/20 [==============================] - 38s 2s/step - Mean Average Precision: 0.0000e+00 - Recall: 0.0000e+00 - loss: 1.9190 - classification_loss: 1.0754 - box_loss: 0.8436 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 0.0, 'Recall': 0.0, 'loss': 1.9189770221710205, 'classification_loss': 1.0754024982452393, 'box_loss': 0.8435747027397156, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -389,7 +381,7 @@ def visualize_detections(model):
         plt.subplot(9 // 3, 9 // 3, i + 1)
         plt.imshow(plotted_images[i].numpy().astype("uint8"))
         plt.axis("off")
-    plt.savefig("test.png")
+    plt.show()
 
 
 visualize_detections(model)
@@ -397,12 +389,12 @@ visualize_detections(model)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 18s 18s/step
+1/1 [==============================] - 19s 19s/step
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_26_1.png)
     
 
 
@@ -418,7 +410,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        bounding_box_format="xywh", classes=20, confidence_threshold=0.99
+        bounding_box_format="xywh", classes=20, confidence_threshold=0.9
     ),
 )
 model = keras_cv.models.RetinaNet(
@@ -435,16 +427,16 @@ visualize_detections(model)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579700> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579640>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe1ec40a730> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe1ec40a700>).
 
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579700> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579640>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe1ec40a730> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe1ec40a700>).
 
-1/1 [==============================] - 15s 15s/step
+1/1 [==============================] - 16s 16s/step
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_28_3.png)
+![png](../guides/img/retina_net_overview/retina_net_overview_28_3.png)
     
 
 
