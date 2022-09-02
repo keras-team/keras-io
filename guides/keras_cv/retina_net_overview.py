@@ -24,9 +24,11 @@ from tensorflow.keras import optimizers
 
 import keras_cv
 from keras_cv import bounding_box
+import os
 
 BATCH_SIZE = 8
 EPOCHS = 100
+CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
 
 """
 ## Data loading
@@ -216,8 +218,9 @@ All that is left to do is construct some callbacks:
 
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
-    keras.callbacks.EarlyStopping(patience=50),
-    keras.callbacks.ReduceLROnPlateau(patience=20),
+    keras.callbacks.EarlyStopping(patience=15),
+    keras.callbacks.ReduceLROnPlateau(patience=10),
+    keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 
 """
@@ -230,7 +233,6 @@ model.fit(
     epochs=EPOCHS,
     callbacks=callbacks,
 )
-model.save_weights("gs://luke-keras/retinanet/checkpoint2/")
 
 """
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
@@ -299,7 +301,7 @@ model = keras_cv.models.RetinaNet(
     backbone_weights="imagenet",
     include_rescaling=True,
 )
-model.load_weights("gs://luke-keras/retinanet/checkpoint/2")
+model.load_weights(CHECKPOINT_PATH)
 
 
 def visualize_detections(model):
@@ -348,7 +350,7 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-model.load_weights("gs://luke-keras/retinanet/checkpoint2/")
+model.load_weights(CHECKPOINT_PATH)
 visualize_detections(model)
 
 """
