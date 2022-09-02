@@ -174,7 +174,7 @@ model = keras_cv.models.RetinaNet(
     # Typically, you'll want to set this to False when training a real model.
     # evaluate_train_time_metrics=True makes `train_step()` incompatible with TPU,
     # and also causes a massive performance hit.
-    evaluate_train_time_metrics=False
+    evaluate_train_time_metrics=False,
 )
 
 """
@@ -184,7 +184,7 @@ This matches what we have constructed in our input pipeline above.
 
 The RetinaNet `call()` method outputs two values: training targets and inference targets.
 In this guide, we are primarily concerned with the inference targets.  Internally, the
-training targets are used by `keras_cv.losses.ObjectDetectionLoss()` to train the
+training targets are used by `box_loss` and `classification_loss` to train the
 network.
 """
 
@@ -197,19 +197,10 @@ standard Keras workflow, leveraging `compile()` and `fit()`.
 Let's compile our model:
 """
 
-# 
-# optimizer = optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
-learning_rates = [2.5e-06, 0.000625, 0.00125, 0.0025, 0.00025, 2.5e-05]
-learning_rate_boundaries = [125, 250, 500, 240000, 360000]
-learning_rate_fn = tf.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=learning_rate_boundaries, values=learning_rates
-)
-optimizer = tf.optimizers.SGD(
-    learning_rate=learning_rate_fn, momentum=0.9, global_clipnorm=10.0
-)
+optimizer = tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
 model.compile(
-    classification_loss=keras_cv.losses.FocalLoss(from_logits=True),
-    box_loss=keras.losses.Huber(delta=1.0),
+    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
+    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
     optimizer=optimizer,
 )
 
@@ -220,6 +211,7 @@ All that is left to do is construct some callbacks:
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
     keras.callbacks.EarlyStopping(patience=15),
+    keras.callbacks.ReduceLROnPlateau(patience=10),
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 
@@ -322,7 +314,7 @@ def visualize_detections(model):
         plt.subplot(9 // 3, 9 // 3, i + 1)
         plt.imshow(plotted_images[i].numpy().astype("uint8"))
         plt.axis("off")
-    plt.savefig("test.png")
+    plt.show()
 
 
 visualize_detections(model)
@@ -339,7 +331,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        bounding_box_format="xywh", classes=20, confidence_threshold=0.99
+        bounding_box_format="xywh", classes=20, confidence_threshold=0.9
     ),
 )
 model = keras_cv.models.RetinaNet(
