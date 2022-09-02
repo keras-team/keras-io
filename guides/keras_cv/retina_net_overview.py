@@ -177,7 +177,7 @@ model = keras_cv.models.RetinaNet(
     evaluate_train_time_metrics=False,
 )
 # Fine-tuning a RetinaNet is as simple as setting backbone.trainable = False
-model.backbone.trainable = False
+model.backbone.trainable = True
 
 """
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
