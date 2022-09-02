@@ -29,9 +29,11 @@ from tensorflow.keras import optimizers
 
 import keras_cv
 from keras_cv import bounding_box
+import os
 
 BATCH_SIZE = 8
-EPOCHS = 5
+EPOCHS = 1
+CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
 ```
 
 ---
@@ -101,15 +103,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteFD2ZVK/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteFD2ZVK/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteFD2ZVK/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteKLBU4O/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -148,6 +150,7 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
 
 augmenter = keras_cv.layers.RandomChoice(
     layers=[
+        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.RandomColorJitter(
             value_range=(0, 255),
             brightness_factor=0.1,
@@ -216,6 +219,8 @@ model = keras_cv.models.RetinaNet(
     # (0, 1).  In our case, we feed our model images with inputs in the range (0, 255).
     include_rescaling=True,
 )
+# you can disable training of the backbone and only train the FPN
+model.backbone.trainable = False
 ```
 
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -261,8 +266,9 @@ All that is left to do is construct some callbacks:
 ```python
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
-    keras.callbacks.EarlyStopping(patience=50),
-    keras.callbacks.ReduceLROnPlateau(patience=20),
+    keras.callbacks.EarlyStopping(patience=15),
+    keras.callbacks.ReduceLROnPlateau(patience=10),
+    keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 ```
 
@@ -280,18 +286,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
-313/313 [==============================] - 224s 664ms/step - loss: 23.4331 - classification_loss: 4.5988 - box_loss: 18.8343 - val_loss: 25.9427 - val_classification_loss: 7.4497 - val_box_loss: 18.4931 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
-Epoch 2/5
-313/313 [==============================] - 201s 641ms/step - loss: 21.3878 - classification_loss: 4.3128 - box_loss: 17.0751 - val_loss: 21.3617 - val_classification_loss: 4.4179 - val_box_loss: 16.9438 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
-Epoch 3/5
-313/313 [==============================] - 200s 638ms/step - loss: 20.1697 - classification_loss: 4.2121 - box_loss: 15.9576 - val_loss: 20.8565 - val_classification_loss: 4.8812 - val_box_loss: 15.9754 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
-Epoch 4/5
-313/313 [==============================] - 201s 642ms/step - loss: 19.2850 - classification_loss: 4.1706 - box_loss: 15.1144 - val_loss: 77.0519 - val_classification_loss: 60.7165 - val_box_loss: 16.3354 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
-Epoch 5/5
-313/313 [==============================] - 201s 641ms/step - loss: 18.4718 - classification_loss: 4.0754 - box_loss: 14.3965 - val_loss: 27.2020 - val_classification_loss: 12.4752 - val_box_loss: 14.7268 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+313/313 [==============================] - 133s 388ms/step - loss: 23.3660 - classification_loss: 4.5084 - box_loss: 18.8576 - val_loss: 23.3321 - val_classification_loss: 5.0505 - val_box_loss: 18.2815 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
 
-<keras.callbacks.History at 0x7fd9f4291978>
+<keras.callbacks.History at 0x7f39e8090130>
 
 ```
 </div>
@@ -329,6 +326,7 @@ metrics = [
         name="Recall",
     ),
 ]
+
 ```
 
 Next, we can evaluate the metrics by re-compiling the model, and running
@@ -349,8 +347,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 84s 4s/step - Mean Average Precision: 8.7446e-06 - Recall: 9.9348e-04 - loss: 27.7691 - classification_loss: 13.1286 - box_loss: 14.6405 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 8.744610568101052e-06, 'Recall': 0.0009934772970154881, 'loss': 27.769054412841797, 'classification_loss': 13.128570556640625, 'box_loss': 14.640485763549805, 'regularization_loss': 0.0}
+20/20 [==============================] - 39s 2s/step - Mean Average Precision: 2.8289e-05 - Recall: 1.1628e-04 - loss: 23.0661 - classification_loss: 4.9130 - box_loss: 18.1531 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 2.8288544854149222e-05, 'Recall': 0.00011627907224465162, 'loss': 23.066057205200195, 'classification_loss': 4.912976264953613, 'box_loss': 18.153078079223633, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -363,29 +361,43 @@ a non max suppression operation for you.
 
 
 ```python
-train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
-    bounding_box_format="xywh", split="train", batch_size=9
+model = keras_cv.models.RetinaNet(
+    classes=20,
+    bounding_box_format="xywh",
+    backbone="resnet50",
+    backbone_weights="imagenet",
+    include_rescaling=True,
 )
-train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
-images, labels = next(iter(train_ds.take(1)))
-predictions = model.predict(images)
-color = tf.constant(((255.0, 0, 0),))
-plt.figure(figsize=(10, 10))
-predictions = keras_cv.bounding_box.convert_format(
-    predictions, source="xywh", target="rel_yxyx", images=images
-)
-predictions = predictions.to_tensor(default_value=-1)
-plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
-for i in range(9):
-    plt.subplot(9 // 3, 9 // 3, i + 1)
-    plt.imshow(plotted_images[i].numpy().astype("uint8"))
-    plt.axis("off")
-plt.show()
+model.load_weights(CHECKPOINT_PATH)
+
+
+def visualize_detections(model):
+    train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
+        bounding_box_format="xywh", split="train", batch_size=9
+    )
+    train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
+    images, labels = next(iter(train_ds.take(1)))
+    predictions = model.predict(images)
+    color = tf.constant(((255.0, 0, 0),))
+    plt.figure(figsize=(10, 10))
+    predictions = keras_cv.bounding_box.convert_format(
+        predictions, source="xywh", target="rel_yxyx", images=images
+    )
+    predictions = predictions.to_tensor(default_value=-1)
+    plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
+    for i in range(9):
+        plt.subplot(9 // 3, 9 // 3, i + 1)
+        plt.imshow(plotted_images[i].numpy().astype("uint8"))
+        plt.axis("off")
+    plt.savefig("test.png")
+
+
+visualize_detections(model)
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 4s 4s/step
+1/1 [==============================] - 18s 18s/step
 
 ```
 </div>
@@ -394,7 +406,47 @@ plt.show()
     
 
 
-To get good results, you should train for at least 50 epochs.
+To get good results, you should train for at least 50 epochs.  You may also need to
+tune the prediction decoder layer.  This can be done by passing a custom prediction
+decoder to the RetinaNet constructor as follows.
+
+
+```python
+prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
+    bounding_box_format="xywh",
+    anchor_generator=keras_cv.models.RetinaNet.default_anchor_generator(
+        bounding_box_format="xywh"
+    ),
+    suppression_layer=keras_cv.layers.NonMaxSuppression(
+        bounding_box_format="xywh", classes=20, confidence_threshold=0.99
+    ),
+)
+model = keras_cv.models.RetinaNet(
+    classes=20,
+    bounding_box_format="xywh",
+    backbone="resnet50",
+    backbone_weights="imagenet",
+    include_rescaling=True,
+    prediction_decoder=prediction_decoder,
+)
+model.load_weights(CHECKPOINT_PATH)
+visualize_detections(model)
+```
+
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579700> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579640>).
+
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579700> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f3910579640>).
+
+1/1 [==============================] - 15s 15s/step
+
+```
+</div>
+    
+![png](../guides/img/retina_net_overview/retina_net_overview_28_3.png)
+    
+
 
 ---
 ## Results and conclusions

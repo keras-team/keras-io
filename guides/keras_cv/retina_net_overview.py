@@ -27,7 +27,7 @@ from keras_cv import bounding_box
 import os
 
 BATCH_SIZE = 8
-EPOCHS = 100
+EPOCHS = 1
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
 
 """
