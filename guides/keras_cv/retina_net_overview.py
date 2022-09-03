@@ -341,7 +341,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        iou_threshold=0.25,
+        iou_threshold=0.75,
         bounding_box_format="xywh",
         classes=20,
         confidence_threshold=0.85,
@@ -366,10 +366,8 @@ the KerasCV object detection components can be used independently, but also have
 integration with each other.  With KerasCV, bounding box augmentation, train-time COCO
 metrics evaluation, and more, are all made simple and consistent.
 
-By default, this script runs for a single epoch.  To run training to convergence,
-invoke the script with a command line flag `--epochs=500`.  To save you the effort of
-running the script for 500 epochs, we have produced a Weights and Biases report covering
-the training results below!  As a bonus, the report includes a training run with and
-without data augmentation.
+Some follow up exercises for the reader:
 
+- tune the hyperparameters and data augmentation used to produce high quality results
+- train an object detection model on another dataset
 """
