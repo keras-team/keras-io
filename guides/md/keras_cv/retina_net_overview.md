@@ -104,15 +104,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteAQCGAQ/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteTWM4PH/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteAQCGAQ/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteTWM4PH/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteAQCGAQ/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteTWM4PH/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -282,9 +282,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 220s 654ms/step - loss: 1.9517 - classification_loss: 1.0967 - box_loss: 0.8550 - val_loss: 1.9192 - val_classification_loss: 1.0766 - val_box_loss: 0.8426 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+313/313 [==============================] - 221s 656ms/step - loss: 1.9452 - classification_loss: 1.0872 - box_loss: 0.8579 - val_loss: 1.9011 - val_classification_loss: 1.0588 - val_box_loss: 0.8423 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
 
-<keras.callbacks.History at 0x7f21147b2080>
+<keras.callbacks.History at 0x7f4ac8059198>
 
 ```
 </div>
@@ -344,8 +344,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 124s 6s/step - Mean Average Precision: 1.5651e-05 - Recall: 0.0058 - loss: 14.0037 - classification_loss: 12.4200 - box_loss: 1.5837 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 1.5650550267309882e-05, 'Recall': 0.005763889290392399, 'loss': 14.003679275512695, 'classification_loss': 12.419997215270996, 'box_loss': 1.5836809873580933, 'regularization_loss': 0.0}
+20/20 [==============================] - 129s 6s/step - Mean Average Precision: 5.8534e-06 - Recall: 0.0029 - loss: 16.7834 - classification_loss: 15.0423 - box_loss: 1.7412 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 5.853380571352318e-06, 'Recall': 0.0028824899345636368, 'loss': 16.78342056274414, 'classification_loss': 15.042257308959961, 'box_loss': 1.741162896156311, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -394,7 +394,7 @@ visualize_detections(model)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 20s 20s/step
+1/1 [==============================] - 22s 22s/step
 
 ```
 </div>
@@ -438,11 +438,11 @@ visualize_detections(model)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfe10> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfdd8>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47a438> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47af28>).
 
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfe10> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfdd8>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47a438> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47af28>).
 
-1/1 [==============================] - 29s 29s/step
+1/1 [==============================] - 17s 17s/step
 
 ```
 </div>
