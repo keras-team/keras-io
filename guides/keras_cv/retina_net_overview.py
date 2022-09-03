@@ -34,8 +34,8 @@ INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PA
 """
 ## Data loading
 
-In this guide, we use the data-loading function: `keras_cv.datasets.pascal_voc.load()`.
-KerasCV supports a `bounding_box_format` argument in all components that process
+In this guide, we use the function: `keras_cv.datasets.pascal_voc.load()` to load our
+data. KerasCV requires a `bounding_box_format` argument in all components that process
 bounding boxes.  To match the KerasCV API style, it is recommended that when writing a
 custom data loader, you also support a `bounding_box_format` argument.
 This makes it clear to those invoking your data loader what format the bounding boxes
@@ -82,6 +82,7 @@ def visualize_dataset(dataset, bounding_box_format):
 
 visualize_dataset(dataset, bounding_box_format="xywh")
 
+
 """
 Looks like everything is structured as expected.  Now we can move on to constructing our
 data augmentation pipeline.
@@ -109,17 +110,21 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
-augmenter = keras_cv.layers.RandomChoice(
+augmenter = keras_cv.layers.Augmenter(
     layers=[
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
-        keras_cv.layers.RandomColorJitter(
-            value_range=(0, 255),
-            brightness_factor=0.1,
-            contrast_factor=0.1,
-            saturation_factor=0.1,
-            hue_factor=0.1,
+        keras_cv.layers.RandomChoice(
+            layers=[
+                keras_cv.layers.RandomColorJitter(
+                    value_range=(0, 255),
+                    brightness_factor=0.1,
+                    contrast_factor=0.1,
+                    saturation_factor=0.1,
+                    hue_factor=0.1,
+                ),
+                keras_cv.layers.RandomSharpness(value_range=(0, 255), factor=0.1),
+            ]
         ),
-        keras_cv.layers.RandomSharpness(value_range=(0, 255), factor=0.1),
     ]
 )
 
@@ -152,7 +157,8 @@ Our data pipeline is now complete.  We can now move on to model creation and tra
 ## Model creation
 
 We'll use the KerasCV API to construct a RetinaNet model.  In this tutorial we use
-a pretrained ResNet50 backbone using weights.  In order to perform fine-tuning, we
+a pretrained ResNet50 backbone, initializing the weights to weights produced by training
+on the imagenet dataset.  In order to perform fine-tuning, we
 freeze the backbone before training.  When `include_rescaling=True` is set, inputs to
 the model are expected to be in the range `[0, 255]`.
 """
@@ -184,11 +190,6 @@ model.backbone.trainable = False
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
 dense image Tensors and ragged bounding box Tensors to `fit()` and `train_on_batch()`
 This matches what we have constructed in our input pipeline above.
-
-The RetinaNet `call()` method outputs two values: training targets and inference targets.
-In this guide, we are primarily concerned with the inference targets.  Internally, the
-training targets are used by `box_loss` and `classification_loss` to train the
-network.
 """
 
 """
@@ -208,7 +209,7 @@ model.compile(
 )
 
 """
-All that is left to do is construct some callbacks:
+Next, we can construct some callbacks:
 """
 
 callbacks = [
@@ -229,6 +230,7 @@ model.fit(
     epochs=EPOCHS,
     callbacks=callbacks,
 )
+model.save_weights(CHECKPOINT_PATH)
 
 """
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
