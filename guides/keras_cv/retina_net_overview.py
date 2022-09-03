@@ -28,7 +28,7 @@ import os
 
 BATCH_SIZE = 8
 EPOCHS = int(os.getenv("EPOCHS", "1"))
-CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
+CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
 
 """
@@ -224,10 +224,10 @@ And run `model.fit()`!
 """
 
 model.fit(
-   train_ds,
-   validation_data=val_ds.take(20),
-   epochs=EPOCHS,
-   callbacks=callbacks,
+    train_ds,
+    validation_data=val_ds.take(20),
+    epochs=EPOCHS,
+    callbacks=callbacks,
 )
 
 """

@@ -33,7 +33,8 @@ import os
 
 BATCH_SIZE = 8
 EPOCHS = int(os.getenv("EPOCHS", "1"))
-CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint")
+CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
+INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
 ```
 
 ---
@@ -103,22 +104,22 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteG8GEQ1/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteAQCGAQ/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteG8GEQ1/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteAQCGAQ/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteG8GEQ1/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteAQCGAQ/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_4_12.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
     
 
 
@@ -168,7 +169,7 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 
 
     
-![png](../guides/img/retina_net_overview/retina_net_overview_7_0.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
     
 
 
@@ -224,7 +225,7 @@ model = keras_cv.models.RetinaNet(
     evaluate_train_time_metrics=False,
 )
 # Fine-tuning a RetinaNet is as simple as setting backbone.trainable = False
-model.backbone.trainable = False
+model.backbone.trainable = True
 ```
 
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -263,7 +264,7 @@ callbacks = [
     keras.callbacks.EarlyStopping(patience=15),
     keras.callbacks.ReduceLROnPlateau(patience=10),
     # Uncomment to train your own RetinaNet
-    # keras.callbacks.ModelCheckpoint("checkpoint/", save_weights_only=True),
+    keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 ```
 
@@ -271,14 +272,22 @@ And run `model.fit()`!
 
 
 ```python
-# model.fit(
-#    train_ds,
-#    validation_data=val_ds.take(20),
-#    epochs=EPOCHS,
-#    callbacks=callbacks,
-# )
+model.fit(
+    train_ds,
+    validation_data=val_ds.take(20),
+    epochs=EPOCHS,
+    callbacks=callbacks,
+)
 ```
 
+<div class="k-default-codeblock">
+```
+313/313 [==============================] - 220s 654ms/step - loss: 1.9517 - classification_loss: 1.0967 - box_loss: 0.8550 - val_loss: 1.9192 - val_classification_loss: 1.0766 - val_box_loss: 0.8426 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
+
+<keras.callbacks.History at 0x7f21147b2080>
+
+```
+</div>
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
 metrics at train time.  This is to ensure optimal GPU performance and TPU compatibility.
 If you want to evaluate train time metrics, you may pass
@@ -321,18 +330,25 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 
 
 ```python
-model.load_weights(CHECKPOINT_PATH)
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
 model.compile(
     metrics=metrics,
     box_loss=model.box_loss,
     classification_loss=model.classification_loss,
     optimizer=model.optimizer,
 )
-# metrics = model.evaluate(val_ds.take(20), return_dict=True)
-# print(metrics)
+metrics = model.evaluate(val_ds.take(20), return_dict=True)
+print(metrics)
 # {"Mean Average Precision": 0.612, "Recall": 0.767}
 ```
 
+<div class="k-default-codeblock">
+```
+20/20 [==============================] - 124s 6s/step - Mean Average Precision: 1.5651e-05 - Recall: 0.0058 - loss: 14.0037 - classification_loss: 12.4200 - box_loss: 1.5837 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 1.5650550267309882e-05, 'Recall': 0.005763889290392399, 'loss': 14.003679275512695, 'classification_loss': 12.419997215270996, 'box_loss': 1.5836809873580933, 'regularization_loss': 0.0}
+
+```
+</div>
 ---
 ## Inference
 
@@ -349,7 +365,7 @@ model = keras_cv.models.RetinaNet(
     backbone_weights="imagenet",
     include_rescaling=True,
 )
-model.load_weights(CHECKPOINT_PATH)
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
 
 
 def visualize_detections(model):
@@ -383,7 +399,7 @@ visualize_detections(model)
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_26_1.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
     
 
 
@@ -402,7 +418,10 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        bounding_box_format="xywh", classes=20, confidence_threshold=0.15
+        iou_threshold=0.25,
+        bounding_box_format="xywh",
+        classes=20,
+        confidence_threshold=0.85,
     ),
 )
 model = keras_cv.models.RetinaNet(
@@ -413,106 +432,22 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-model.load_weights(CHECKPOINT_PATH)
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
 visualize_detections(model)
 ```
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe9602dcb00> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe9602dcc18>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfe10> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfdd8>).
 
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe9602dcb00> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7fe9602dcc18>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfe10> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f20582dfdd8>).
 
-WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.
-
-WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.iter
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.iter
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.decay
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.decay
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.learning_rate
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.learning_rate
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.momentum
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer.momentum
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_1x1.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_1x1.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_1x1.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_1x1.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_1x1.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_1x1.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_1x1.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_1x1.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_1x1.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_1x1.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_1x1.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_1x1.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c3_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c4_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c5_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c6_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c6_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c6_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c6_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c7_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c7_3x3.kernel
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c7_3x3.bias
-
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'momentum' for (root).feature_pyramid.conv_c7_3x3.bias
-
-1/1 [==============================] - 16s 16s/step
+1/1 [==============================] - 29s 29s/step
 
 ```
 </div>
     
-![png](../guides/img/retina_net_overview/retina_net_overview_28_45.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_28_3.png)
     
 
 
