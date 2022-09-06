@@ -112,23 +112,18 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
 
 augmenter = keras_cv.layers.Augmenter(
     layers=[
-        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
-        keras_cv.layers.RandomChoice(
-            layers=[
-                keras_cv.layers.RandomColorJitter(
-                    value_range=(0, 255),
-                    brightness_factor=0.1,
-                    contrast_factor=0.1,
-                    saturation_factor=0.1,
-                    hue_factor=0.1,
-                ),
-                keras_cv.layers.RandomSharpness(value_range=(0, 255), factor=0.1),
-            ]
+        keras_cv.layers.RandomColorJitter(
+            value_range=(0, 255),
+            brightness_factor=0.1,
+            contrast_factor=0.1,
+            saturation_factor=0.1,
+            hue_factor=0.1,
         ),
+        keras_cv.layers.RandomSharpness(value_range=(0, 255), factor=0.1),
     ]
 )
 
-# train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 
 """
