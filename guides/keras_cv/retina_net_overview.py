@@ -280,6 +280,7 @@ model.compile(
     classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
     box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
     optimizer=tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0),
+    metrics=metrics,
 )
 metrics = model.evaluate(val_ds.take(20), return_dict=True)
 print(metrics)
