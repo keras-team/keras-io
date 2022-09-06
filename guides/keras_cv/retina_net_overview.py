@@ -128,7 +128,7 @@ augmenter = keras_cv.layers.Augmenter(
     ]
 )
 
-# train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 
 """
