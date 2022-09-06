@@ -9,7 +9,7 @@ pathlib
 PyYAML
 pandas
 jupyter
-tensorflow
+tensorflow==2.9.2
 keras-tuner
 keras-cv
 keras-nlp
