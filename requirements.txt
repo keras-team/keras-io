@@ -2,6 +2,7 @@ sphinx~=3.0.3
 black==22.1.0
 pygments>=2.7.4
 markdown>=3.3
+matplotlib
 jinja2
 requests
 mdx_truly_sane_lists
