@@ -180,7 +180,8 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     # Typically, you'll want to set this to False when training a real model.
     # evaluate_train_time_metrics=True makes `train_step()` incompatible with TPU,
-    # and also causes a massive performance hit.
+    # and also causes a massive performance hit.  It can, however be useful to produce
+    # train time metrics when debugging your model training pipeline.
     evaluate_train_time_metrics=False,
 )
 # Fine-tuning a RetinaNet is as simple as setting backbone.trainable = False
@@ -276,10 +277,9 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 
 model.load_weights(INFERENCE_CHECKPOINT_PATH)
 model.compile(
-    metrics=metrics,
-    box_loss=model.box_loss,
-    classification_loss=model.classification_loss,
-    optimizer=model.optimizer,
+    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
+    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
+    optimizer=tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0),
 )
 metrics = model.evaluate(val_ds.take(20), return_dict=True)
 print(metrics)
@@ -329,10 +329,7 @@ visualize_detections(model)
 """
 To get good results, you should train for at least 100 epochs.  You also need to
 tune the prediction decoder layer.  This can be done by passing a custom prediction
-decoder to the RetinaNet constructor as follows.
-
-Luckily, tuning a prediction decoder does not require any sort of retraining - so it
-may be done iteratively.  Below is an example showing how to do this:
+decoder to the RetinaNet constructor as follows:
 """
 
 prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
@@ -351,12 +348,10 @@ model = keras_cv.models.RetinaNet(
     classes=20,
     bounding_box_format="xywh",
     backbone="resnet50",
-    backbone_weights="imagenet",
+    backbone_weights=None,
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-model.load_weights(INFERENCE_CHECKPOINT_PATH)
-visualize_detections(model)
 
 """
 ## Results and conclusions
