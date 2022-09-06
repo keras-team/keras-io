@@ -353,7 +353,8 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
+visualize_detections(model)
 """
 ## Results and conclusions
 
