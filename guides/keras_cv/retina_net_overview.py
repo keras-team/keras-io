@@ -229,6 +229,7 @@ model.fit(
     epochs=EPOCHS,
     callbacks=callbacks,
 )
+weights = model.get_weights()
 
 """
 An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
@@ -327,10 +328,7 @@ visualize_detections(model)
 """
 To get good results, you should train for at least 100 epochs.  You also need to
 tune the prediction decoder layer.  This can be done by passing a custom prediction
-decoder to the RetinaNet constructor as follows.
-
-Luckily, tuning a prediction decoder does not require any sort of retraining - so it
-may be done iteratively.  Below is an example showing how to do this:
+decoder to the RetinaNet constructor as follows:
 """
 
 prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
@@ -349,12 +347,10 @@ model = keras_cv.models.RetinaNet(
     classes=20,
     bounding_box_format="xywh",
     backbone="resnet50",
-    backbone_weights="imagenet",
+    backbone_weights=None,
     include_rescaling=True,
     prediction_decoder=prediction_decoder,
 )
-model.load_weights(INFERENCE_CHECKPOINT_PATH)
-visualize_detections(model)
 
 """
 ## Results and conclusions
