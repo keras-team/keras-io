@@ -100,7 +100,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [1]
+        labels += [0]
 
         # add a non-matching example
         label2 = random.randint(0, num_classes - 1)
@@ -111,7 +111,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [0]
+        labels += [1]
 
     return np.array(pairs), np.array(labels).astype("float32")
 
