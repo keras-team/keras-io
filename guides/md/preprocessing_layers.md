@@ -238,7 +238,7 @@ you should put the `TextVectorization` layer in the `tf.data` pipeline to get th
 
 **When running on a TPU, you should always place preprocessing layers in the `tf.data` pipeline**
 (with the exception of `Normalization` and `Rescaling`, which run fine on a TPU and are commonly
-used as the first layer is an image model).
+used as the first layer in an image model).
 
 ---
 ## Benefits of doing preprocessing inside the model at inference time
