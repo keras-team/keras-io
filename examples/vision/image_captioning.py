@@ -73,10 +73,8 @@ AUTOTUNE = tf.data.AUTOTUNE
 """
 def plot_images_data(filename):
     """
-    Loads the image data 
-    params: filename: File path that contains the image data
+    displays the random images from Image dataset
     """
-    #define the size of plot window
     plt.figure(figsize=(20,20))
     for view_images in range(9):
         plt.subplot(3,3,view_images+1)

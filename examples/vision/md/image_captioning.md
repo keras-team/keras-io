@@ -80,6 +80,19 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 ```python
 
+def plot_images_data(filename):
+    """
+    displays the random images from Image dataset
+    """
+    plt.figure(figsize=(20,20))
+    for view_images in range(9):
+        plt.subplot(3,3,view_images+1)
+        #resize and plot the image
+        img = cv2.imread(f"{filename}/{random.choice(os.listdir(filename))}")
+        img = cv2.resize(img,(200,200),interpolation=cv2.INTER_CUBIC)
+        plt.axis("off")
+        plt.imshow(img)
+        
 def load_captions_data(filename):
     """Loads captions (text) data and maps them to corresponding images.
 
