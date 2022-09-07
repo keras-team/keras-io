@@ -274,6 +274,7 @@ def euclidean_distance(vects):
 
 # Convolutional model
 def Convolutional_model():
+  
   input = layers.Input((28, 28, 1))
   x = tf.keras.layers.BatchNormalization()(input)
   x = layers.Conv2D(4, (5, 5), activation="tanh")(x)
@@ -281,9 +282,9 @@ def Convolutional_model():
   x = layers.Conv2D(16, (5, 5), activation="tanh")(x)
   x = layers.AveragePooling2D(pool_size=(2, 2))(x)
   x = layers.Flatten()(x)
-
   x = tf.keras.layers.BatchNormalization()(x)
   x = layers.Dense(10, activation="tanh")(x)
+  
   embedding_network = keras.Model(input, x)
   return embedding_network
 
@@ -291,12 +292,11 @@ def Convolutional_model():
 
 
 def siamese_network():
-
-  # we will use Convolutional model as a embedding layer
-  embedding_network=Convolutional_model()
-
   input_1 = layers.Input((28, 28, 1))
   input_2 = layers.Input((28, 28, 1))
+  
+  # we will use Convolutional model as a embedding layer
+  embedding_network=Convolutional_model()
 
   # As mentioned above, Siamese Network share weights between
   # tower networks (sister networks). To allow this, we will use
@@ -307,6 +307,7 @@ def siamese_network():
   merge_layer = layers.Lambda(euclidean_distance)([tower_1, tower_2])
   normal_layer = tf.keras.layers.BatchNormalization()(merge_layer)
   output_layer = layers.Dense(1, activation="sigmoid")(normal_layer)
+  
   siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
   return siamese
 
