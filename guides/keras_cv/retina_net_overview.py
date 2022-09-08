@@ -294,6 +294,7 @@ RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
 a non max suppression operation for you.
 """
 
+
 def visualize_detections(model):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
         bounding_box_format="xywh", split="train", batch_size=9
@@ -347,8 +348,9 @@ metrics evaluation, and more, are all made simple and consistent.
 
 Some follow up exercises for the reader:
 
+- add additional augmentation techniques to improve model performance
 - grid search `confidence_threshold` and `iou_threshold` on `NmsPredictionDecoder` to
-    achieve an optimal Mean Average Precision.
+    achieve an optimal Mean Average Precision
 - tune the hyperparameters and data augmentation used to produce high quality results
 - train an object detection model on another dataset
 """

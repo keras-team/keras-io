@@ -40,8 +40,8 @@ INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PA
 ---
 ## Data loading
 
-In this guide, we use the data-loading function: `keras_cv.datasets.pascal_voc.load()`.
-KerasCV supports a `bounding_box_format` argument in all components that process
+In this guide, we use the function: `keras_cv.datasets.pascal_voc.load()` to load our
+data. KerasCV requires a `bounding_box_format` argument in all components that process
 bounding boxes.  To match the KerasCV API style, it is recommended that when writing a
 custom data loader, you also support a `bounding_box_format` argument.
 This makes it clear to those invoking your data loader what format the bounding boxes
@@ -88,6 +88,7 @@ def visualize_dataset(dataset, bounding_box_format):
 
 
 visualize_dataset(dataset, bounding_box_format="xywh")
+
 ```
 
 <div class="k-default-codeblock">
@@ -104,15 +105,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteTWM4PH/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incomplete09SWLE/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteTWM4PH/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incomplete09SWLE/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteTWM4PH/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incomplete09SWLE/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -149,9 +150,8 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
-augmenter = keras_cv.layers.RandomChoice(
+augmenter = keras_cv.layers.Augmenter(
     layers=[
-        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.RandomColorJitter(
             value_range=(0, 255),
             brightness_factor=0.1,
@@ -163,13 +163,72 @@ augmenter = keras_cv.layers.RandomChoice(
     ]
 )
 
-# train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
 
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformFullIntV2
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformFullIntV2
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomGetKeyCounter
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomGetKeyCounter
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
+
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
+
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
+
+WARNING:tensorflow:Using a while_loop for converting AdjustContrastv2
+
+WARNING:tensorflow:Using a while_loop for converting AdjustContrastv2
+
+WARNING:tensorflow:Using a while_loop for converting AdjustSaturation
+
+WARNING:tensorflow:Using a while_loop for converting AdjustSaturation
+
+WARNING:tensorflow:Using a while_loop for converting AdjustHue
+
+WARNING:tensorflow:Using a while_loop for converting AdjustHue
+
+WARNING:tensorflow:Using a while_loop for converting DepthwiseConv2dNative
+
+WARNING:tensorflow:Using a while_loop for converting DepthwiseConv2dNative
+
+```
+</div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_7_0.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_7_28.png)
     
 
 
@@ -198,7 +257,8 @@ Our data pipeline is now complete.  We can now move on to model creation and tra
 ## Model creation
 
 We'll use the KerasCV API to construct a RetinaNet model.  In this tutorial we use
-a pretrained ResNet50 backbone using weights.  In order to perform fine-tuning, we
+a pretrained ResNet50 backbone, initializing the weights to weights produced by training
+on the imagenet dataset.  In order to perform fine-tuning, we
 freeze the backbone before training.  When `include_rescaling=True` is set, inputs to
 the model are expected to be in the range `[0, 255]`.
 
@@ -221,77 +281,17 @@ model = keras_cv.models.RetinaNet(
     include_rescaling=True,
     # Typically, you'll want to set this to False when training a real model.
     # evaluate_train_time_metrics=True makes `train_step()` incompatible with TPU,
-    # and also causes a massive performance hit.
+    # and also causes a massive performance hit.  It can, however be useful to produce
+    # train time metrics when debugging your model training pipeline.
     evaluate_train_time_metrics=False,
 )
 # Fine-tuning a RetinaNet is as simple as setting backbone.trainable = False
-model.backbone.trainable = True
+model.backbone.trainable = False
 ```
 
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
 dense image Tensors and ragged bounding box Tensors to `fit()` and `train_on_batch()`
 This matches what we have constructed in our input pipeline above.
-
-The RetinaNet `call()` method outputs two values: training targets and inference targets.
-In this guide, we are primarily concerned with the inference targets.  Internally, the
-training targets are used by `box_loss` and `classification_loss` to train the
-network.
-
----
-## Training our model
-
-All that is left to do is train our model.  KerasCV object detection models follow the
-standard Keras workflow, leveraging `compile()` and `fit()`.
-
-Let's compile our model:
-
-
-```python
-optimizer = tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
-model.compile(
-    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
-    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
-    optimizer=optimizer,
-)
-```
-
-All that is left to do is construct some callbacks:
-
-
-```python
-callbacks = [
-    keras.callbacks.TensorBoard(log_dir="logs"),
-    keras.callbacks.EarlyStopping(patience=15),
-    keras.callbacks.ReduceLROnPlateau(patience=10),
-    # Uncomment to train your own RetinaNet
-    keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
-]
-```
-
-And run `model.fit()`!
-
-
-```python
-model.fit(
-    train_ds,
-    validation_data=val_ds.take(20),
-    epochs=EPOCHS,
-    callbacks=callbacks,
-)
-```
-
-<div class="k-default-codeblock">
-```
-313/313 [==============================] - 221s 656ms/step - loss: 1.9452 - classification_loss: 1.0872 - box_loss: 0.8579 - val_loss: 1.9011 - val_classification_loss: 1.0588 - val_box_loss: 0.8423 - val_regularization_loss: 0.0000e+00 - lr: 0.1000
-
-<keras.callbacks.History at 0x7f4ac8059198>
-
-```
-</div>
-An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
-metrics at train time.  This is to ensure optimal GPU performance and TPU compatibility.
-If you want to evaluate train time metrics, you may pass
-`evaluate_train_time_metrics=True` to the `keras_cv.models.RetinaNet` constructor.
 
 ---
 ## Evaluation with COCO Metrics
@@ -306,6 +306,13 @@ Let's construct two COCO metrics, an instance of
 `keras_cv.metrics.COCOMeanAveragePrecision` with the parameterization to match the
 standard COCO Mean Average Precision metric, and `keras_cv.metrics.COCORecall`
 parameterized to match the standard COCO Recall metric.
+
+An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
+metrics at train time.  This is to ensure optimal GPU performance and TPU compatibility.
+If you want to evaluate train time metrics, you may pass
+`evaluate_train_time_metrics=True` to the `keras_cv.models.RetinaNet` constructor.
+Due to this, it is recommended to keep your test set small during training and only
+evaluate COCO metrics for your full evaluation set as a post-training step.
 
 
 ```python
@@ -325,27 +332,82 @@ metrics = [
 
 ```
 
+---
+## Training our model
+
+All that is left to do is train our model.  KerasCV object detection models follow the
+standard Keras workflow, leveraging `compile()` and `fit()`.
+
+Let's compile our model:
+
+
+```python
+optimizer = tf.optimizers.SGD(global_clipnorm=10.0)
+model.compile(
+    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
+    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
+    optimizer=optimizer,
+    metrics=[
+        keras_cv.metrics.COCOMeanAveragePrecision(
+            class_ids=range(20),
+            bounding_box_format="xywh",
+            name="Mean Average Precision",
+        ),
+        keras_cv.metrics.COCORecall(
+            class_ids=range(20),
+            bounding_box_format="xywh",
+            max_detections=100,
+            name="Recall",
+        ),
+    ],
+)
+```
+
+Next, we can construct some callbacks:
+
+
+```python
+callbacks = [
+    keras.callbacks.TensorBoard(log_dir="logs"),
+    keras.callbacks.ReduceLROnPlateau(patience=5),
+    # Uncomment to train your own RetinaNet
+    keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
+]
+```
+
+And run `model.fit()`!
+
+
+```python
+model.fit(
+    train_ds,
+    validation_data=val_ds.take(20),
+    epochs=EPOCHS,
+    callbacks=callbacks,
+)
+model.save_weights(CHECKPOINT_PATH)
+```
+
+<div class="k-default-codeblock">
+```
+313/313 [==============================] - 139s 405ms/step - loss: 18.1313 - classification_loss: 11.0240 - box_loss: 6.7573 - val_Mean Average Precision: 0.0134 - val_Recall: 0.0487 - val_loss: 11.1881 - val_classification_loss: 5.1746 - val_box_loss: 5.6641 - val_regularization_loss: 0.3494 - lr: 0.0100
+
+```
+</div>
 Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
 
 
 ```python
 model.load_weights(INFERENCE_CHECKPOINT_PATH)
-model.compile(
-    metrics=metrics,
-    box_loss=model.box_loss,
-    classification_loss=model.classification_loss,
-    optimizer=model.optimizer,
-)
-metrics = model.evaluate(val_ds.take(20), return_dict=True)
+metrics = model.evaluate(val_ds.take(100), return_dict=True)
 print(metrics)
-# {"Mean Average Precision": 0.612, "Recall": 0.767}
 ```
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - 129s 6s/step - Mean Average Precision: 5.8534e-06 - Recall: 0.0029 - loss: 16.7834 - classification_loss: 15.0423 - box_loss: 1.7412 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 5.853380571352318e-06, 'Recall': 0.0028824899345636368, 'loss': 16.78342056274414, 'classification_loss': 15.042257308959961, 'box_loss': 1.741162896156311, 'regularization_loss': 0.0}
+100/100 [==============================] - 206s 2s/step - Mean Average Precision: 0.0449 - Recall: 0.2189 - loss: 7.8212 - classification_loss: 3.3964 - box_loss: 4.0785 - regularization_loss: 0.3463
+{'Mean Average Precision': 0.04490693286061287, 'Recall': 0.21893127262592316, 'loss': 7.8212127685546875, 'classification_loss': 3.3964245319366455, 'box_loss': 4.078465461730957, 'regularization_loss': 0.34632351994514465}
 
 ```
 </div>
@@ -358,15 +420,6 @@ a non max suppression operation for you.
 
 
 ```python
-model = keras_cv.models.RetinaNet(
-    classes=20,
-    bounding_box_format="xywh",
-    backbone="resnet50",
-    backbone_weights="imagenet",
-    include_rescaling=True,
-)
-model.load_weights(INFERENCE_CHECKPOINT_PATH)
-
 
 def visualize_detections(model):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
@@ -394,21 +447,18 @@ visualize_detections(model)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 22s 22s/step
+1/1 [==============================] - 4s 4s/step
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_26_1.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_25_1.png)
     
 
 
 To get good results, you should train for at least 100 epochs.  You also need to
 tune the prediction decoder layer.  This can be done by passing a custom prediction
-decoder to the RetinaNet constructor as follows.
-
-Luckily, tuning a prediction decoder does not require any sort of retraining - so it
-may be done iteratively.  Below is an example showing how to do this:
+decoder to the RetinaNet constructor as follows:
 
 
 ```python
@@ -418,36 +468,24 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         bounding_box_format="xywh"
     ),
     suppression_layer=keras_cv.layers.NonMaxSuppression(
-        iou_threshold=0.25,
+        iou_threshold=0.75,
         bounding_box_format="xywh",
         classes=20,
         confidence_threshold=0.85,
     ),
 )
-model = keras_cv.models.RetinaNet(
-    classes=20,
-    bounding_box_format="xywh",
-    backbone="resnet50",
-    backbone_weights="imagenet",
-    include_rescaling=True,
-    prediction_decoder=prediction_decoder,
-)
-model.load_weights(INFERENCE_CHECKPOINT_PATH)
+model.prediction_decoder = prediction_decoder
 visualize_detections(model)
 ```
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47a438> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47af28>).
-
-WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47a438> and <keras_cv.layers.object_detection.anchor_generator.AnchorGenerator object at 0x7f4a2c47af28>).
-
-1/1 [==============================] - 17s 17s/step
+1/1 [==============================] - 2s 2s/step
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_28_3.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_27_1.png)
     
 
 
@@ -459,12 +497,10 @@ the KerasCV object detection components can be used independently, but also have
 integration with each other.  With KerasCV, bounding box augmentation, train-time COCO
 metrics evaluation, and more, are all made simple and consistent.
 
-By default, this script runs for a single epoch.  To run training to convergence,
-invoke the script with a command line flag `--epochs=500`.  To save you the effort of
-running the script for 500 epochs, we have produced a Weights and Biases report covering
-the training results below!  As a bonus, the report includes a training run with and
-without data augmentation.
+Some follow up exercises for the reader:
 
-[Metrics from a 500 epoch Weights and Biases Run are available here](
-    https://tinyurl.com/y34xx65w
-)
+- add additional augmentation techniques to improve model performance
+- grid search `confidence_threshold` and `iou_threshold` on `NmsPredictionDecoder` to
+    achieve an optimal Mean Average Precision
+- tune the hyperparameters and data augmentation used to produce high quality results
+- train an object detection model on another dataset
