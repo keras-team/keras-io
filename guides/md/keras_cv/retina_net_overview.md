@@ -167,66 +167,6 @@ train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformFullIntV2
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformFullIntV2
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomGetKeyCounter
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomGetKeyCounter
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
-
-WARNING:tensorflow:Using a while_loop for converting AdjustContrastv2
-
-WARNING:tensorflow:Using a while_loop for converting AdjustContrastv2
-
-WARNING:tensorflow:Using a while_loop for converting AdjustSaturation
-
-WARNING:tensorflow:Using a while_loop for converting AdjustSaturation
-
-WARNING:tensorflow:Using a while_loop for converting AdjustHue
-
-WARNING:tensorflow:Using a while_loop for converting AdjustHue
-
-WARNING:tensorflow:Using a while_loop for converting DepthwiseConv2dNative
-
-WARNING:tensorflow:Using a while_loop for converting DepthwiseConv2dNative
-
-```
-</div>
     
 ![png](/img/guides/retina_net_overview/retina_net_overview_7_28.png)
     
