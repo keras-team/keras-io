@@ -189,6 +189,43 @@ This matches what we have constructed in our input pipeline above.
 """
 
 """
+## Evaluation with COCO Metrics
+
+KerasCV offers a suite of in-graph COCO metrics that support batch-wise evaluation.
+More information on these metrics is available in:
+
+- [Efficient Graph-Friendly COCO Metric Computation for Train-Time Model Evaluation](https://arxiv.org/abs/2207.12120)
+- [Using KerasCV COCO Metrics](https://keras.io/guides/keras_cv/coco_metrics/)
+
+Let's construct two COCO metrics, an instance of
+`keras_cv.metrics.COCOMeanAveragePrecision` with the parameterization to match the
+standard COCO Mean Average Precision metric, and `keras_cv.metrics.COCORecall`
+parameterized to match the standard COCO Recall metric.
+
+An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
+metrics at train time.  This is to ensure optimal GPU performance and TPU compatibility.
+If you want to evaluate train time metrics, you may pass
+`evaluate_train_time_metrics=True` to the `keras_cv.models.RetinaNet` constructor.
+Due to this, it is recommended to keep your test set small during training and only
+evaluate COCO metrics for your full evaluation set as a post-training step.
+"""
+
+metrics = [
+    keras_cv.metrics.COCOMeanAveragePrecision(
+        class_ids=range(20),
+        bounding_box_format="xywh",
+        name="Mean Average Precision",
+    ),
+    keras_cv.metrics.COCORecall(
+        class_ids=range(20),
+        bounding_box_format="xywh",
+        max_detections=100,
+        name="Recall",
+    ),
+]
+
+
+"""
 ## Training our model
 
 All that is left to do is train our model.  KerasCV object detection models follow the
@@ -241,55 +278,12 @@ model.fit(
 model.save_weights(CHECKPOINT_PATH)
 
 """
-An important nuance to note is that by default the KerasCV RetinaNet does not evaluate
-metrics at train time.  This is to ensure optimal GPU performance and TPU compatibility.
-If you want to evaluate train time metrics, you may pass
-`evaluate_train_time_metrics=True` to the `keras_cv.models.RetinaNet` constructor.
-"""
-
-"""
-## Evaluation with COCO Metrics
-
-KerasCV offers a suite of in-graph COCO metrics that support batch-wise evaluation.
-More information on these metrics is available in:
-
-- [Efficient Graph-Friendly COCO Metric Computation for Train-Time Model Evaluation](https://arxiv.org/abs/2207.12120)
-- [Using KerasCV COCO Metrics](https://keras.io/guides/keras_cv/coco_metrics/)
-
-Let's construct two COCO metrics, an instance of
-`keras_cv.metrics.COCOMeanAveragePrecision` with the parameterization to match the
-standard COCO Mean Average Precision metric, and `keras_cv.metrics.COCORecall`
-parameterized to match the standard COCO Recall metric.
-"""
-
-metrics = [
-    keras_cv.metrics.COCOMeanAveragePrecision(
-        class_ids=range(20),
-        bounding_box_format="xywh",
-        name="Mean Average Precision",
-    ),
-    keras_cv.metrics.COCORecall(
-        class_ids=range(20),
-        bounding_box_format="xywh",
-        max_detections=100,
-        name="Recall",
-    ),
-]
-
-
-"""
 Next, we can evaluate the metrics by re-compiling the model, and running
 `model.evaluate()`:
 """
 
 model.load_weights(INFERENCE_CHECKPOINT_PATH)
-model.compile(
-    classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
-    box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
-    optimizer=tf.optimizers.SGD(momentum=0.9, global_clipnorm=10.0),
-    metrics=metrics,
-)
-metrics = model.evaluate(val_ds.take(20), return_dict=True)
+metrics = model.evaluate(val_ds.take(100), return_dict=True)
 print(metrics)
 
 """
@@ -299,16 +293,6 @@ KerasCV makes object detection inference simple.  `model.predict(images)` return
 RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
 a non max suppression operation for you.
 """
-
-model = keras_cv.models.RetinaNet(
-    classes=20,
-    bounding_box_format="xywh",
-    backbone="resnet50",
-    backbone_weights="imagenet",
-    include_rescaling=True,
-)
-model.load_weights(INFERENCE_CHECKPOINT_PATH)
-
 
 def visualize_detections(model):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
@@ -351,15 +335,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
         confidence_threshold=0.85,
     ),
 )
-model = keras_cv.models.RetinaNet(
-    classes=20,
-    bounding_box_format="xywh",
-    backbone="resnet50",
-    backbone_weights=None,
-    include_rescaling=True,
-    prediction_decoder=prediction_decoder,
-)
-model.load_weights(INFERENCE_CHECKPOINT_PATH)
+model.prediction_decoder = prediction_decoder
 visualize_detections(model)
 """
 ## Results and conclusions
@@ -371,6 +347,8 @@ metrics evaluation, and more, are all made simple and consistent.
 
 Some follow up exercises for the reader:
 
+- grid search `confidence_threshold` and `iou_threshold` on `NmsPredictionDecoder` to
+    achieve an optimal Mean Average Precision.
 - tune the hyperparameters and data augmentation used to produce high quality results
 - train an object detection model on another dataset
 """
