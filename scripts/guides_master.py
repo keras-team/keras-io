@@ -8,6 +8,10 @@ CV_GUIDES_MASTER = {
             "title": "CutMix, MixUp, and RandAugment image augmentation with KerasCV",
         },
         {
+            "path": "retina_net_overview",
+            "title": "Train an Object Detection Model on Pascal VOC 2007 using KerasCV",
+        },
+        {
             "path": "custom_image_augmentations",
             "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
         },
