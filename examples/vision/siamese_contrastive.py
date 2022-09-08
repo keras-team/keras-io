@@ -272,8 +272,8 @@ def euclidean_distance(vects):
 
 
 
-# Convolutional model
-def Convolutional_model():
+# Convolutional layers
+def Convolutional_layers():
   
   input = layers.Input((28, 28, 1))
   x = tf.keras.layers.BatchNormalization()(input)
@@ -295,8 +295,8 @@ def siamese_network():
   input_1 = layers.Input((28, 28, 1))
   input_2 = layers.Input((28, 28, 1))
   
-  # we will use Convolutional model as a embedding layer
-  embedding_network=Convolutional_model()
+  # we will use Convolutional layers as a embedding layer
+  embedding_network=Convolutional_layers()
 
   # As mentioned above, Siamese Network share weights between
   # tower networks (sister networks). To allow this, we will use
