@@ -180,7 +180,7 @@ model = keras_cv.models.RetinaNet(
     evaluate_train_time_metrics=False,
 )
 # Fine-tuning a RetinaNet is as simple as setting backbone.trainable = False
-model.backbone.trainable = True
+model.backbone.trainable = False
 
 """
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
@@ -197,11 +197,24 @@ standard Keras workflow, leveraging `compile()` and `fit()`.
 Let's compile our model:
 """
 
-optimizer = tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0)
+optimizer = tf.optimizers.SGD(global_clipnorm=10.0)
 model.compile(
     classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
     box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
     optimizer=optimizer,
+    metrics=[
+        keras_cv.metrics.COCOMeanAveragePrecision(
+            class_ids=range(20),
+            bounding_box_format="xywh",
+            name="Mean Average Precision",
+        ),
+        keras_cv.metrics.COCORecall(
+            class_ids=range(20),
+            bounding_box_format="xywh",
+            max_detections=100,
+            name="Recall",
+        ),
+    ],
 )
 
 """
@@ -210,8 +223,7 @@ Next, we can construct some callbacks:
 
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
-    keras.callbacks.EarlyStopping(patience=15),
-    keras.callbacks.ReduceLROnPlateau(patience=10),
+    keras.callbacks.ReduceLROnPlateau(patience=5),
     # Uncomment to train your own RetinaNet
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
@@ -274,12 +286,11 @@ model.load_weights(INFERENCE_CHECKPOINT_PATH)
 model.compile(
     classification_loss=keras_cv.losses.FocalLoss(from_logits=True, reduction="none"),
     box_loss=keras_cv.losses.SmoothL1Loss(l1_cutoff=1.0, reduction="none"),
-    optimizer=tf.optimizers.SGD(learning_rate=0.1, momentum=0.9, global_clipnorm=10.0),
+    optimizer=tf.optimizers.SGD(momentum=0.9, global_clipnorm=10.0),
     metrics=metrics,
 )
 metrics = model.evaluate(val_ds.take(20), return_dict=True)
 print(metrics)
-# {"Mean Average Precision": 0.612, "Recall": 0.767}
 
 """
 ## Inference
