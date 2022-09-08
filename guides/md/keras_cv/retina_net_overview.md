@@ -105,15 +105,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incomplete09SWLE/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteSN36LB/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incomplete09SWLE/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteSN36LB/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incomplete09SWLE/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteSN36LB/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -390,7 +390,7 @@ model.save_weights(CHECKPOINT_PATH)
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 139s 405ms/step - loss: 18.1313 - classification_loss: 11.0240 - box_loss: 6.7573 - val_Mean Average Precision: 0.0134 - val_Recall: 0.0487 - val_loss: 11.1881 - val_classification_loss: 5.1746 - val_box_loss: 5.6641 - val_regularization_loss: 0.3494 - lr: 0.0100
+313/313 [==============================] - 145s 424ms/step - loss: 17.2746 - classification_loss: 10.0500 - box_loss: 6.8747 - val_Mean Average Precision: 0.0105 - val_Recall: 0.0744 - val_loss: 11.2469 - val_classification_loss: 5.2460 - val_box_loss: 5.6515 - val_regularization_loss: 0.3493 - lr: 0.0100
 
 ```
 </div>
@@ -406,8 +406,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 206s 2s/step - Mean Average Precision: 0.0449 - Recall: 0.2189 - loss: 7.8212 - classification_loss: 3.3964 - box_loss: 4.0785 - regularization_loss: 0.3463
-{'Mean Average Precision': 0.04490693286061287, 'Recall': 0.21893127262592316, 'loss': 7.8212127685546875, 'classification_loss': 3.3964245319366455, 'box_loss': 4.078465461730957, 'regularization_loss': 0.34632351994514465}
+100/100 [==============================] - 206s 2s/step - Mean Average Precision: 0.0457 - Recall: 0.2207 - loss: 7.7596 - classification_loss: 3.3602 - box_loss: 4.0531 - regularization_loss: 0.3463
+{'Mean Average Precision': 0.04574195295572281, 'Recall': 0.22066783905029297, 'loss': 7.759613513946533, 'classification_loss': 3.360184669494629, 'box_loss': 4.053106307983398, 'regularization_loss': 0.34632351994514465}
 
 ```
 </div>
