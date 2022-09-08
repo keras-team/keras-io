@@ -2,7 +2,7 @@
 Title: Image similarity estimation using a Siamese Network with a contrastive loss
 Author: Mehdi
 Date created: 2021/05/06
-Last modified: 2021/05/06
+Last modified: 2022/09/08
 Description: Similarity learning using a siamese network trained with a contrastive loss.
 """
 
@@ -247,7 +247,7 @@ visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 """
 ## Define the model
 
-There are be two input layers, each leading to its own network, which
+There are two input layers, each leading to its own network, which
 produces embeddings. A `Lambda` layer then merges them using an
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged output is fed to the final network.
