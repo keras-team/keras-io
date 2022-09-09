@@ -90,35 +90,6 @@ def visualize_dataset(dataset, bounding_box_format):
 visualize_dataset(dataset, bounding_box_format="xywh")
 
 ```
-
-<div class="k-default-codeblock">
-```
-[1mDownloading and preparing dataset 868.85 MiB (download: 868.85 MiB, generated: Unknown size, total: 868.85 MiB) to ~/tensorflow_datasets/voc/2007/4.0.0...[0m
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
-
-Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteSN36LB/voc-test.tfrecord*...:   0%|          | 0/4952…
-
-Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteSN36LB/voc-train.tfrecord*...:   0%|          | 0/250…
-
-Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteSN36LB/voc-validation.tfrecord*...:   0%|          | …
-
-[1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
-
-```
-</div>
     
 ![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
     
