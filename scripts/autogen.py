@@ -701,7 +701,14 @@ class KerasIO:
                 symbol = tmp_content[: tmp_content.find("`")]
                 tmp_content = tmp_content[tmp_content.find("`") + 1 :]
                 if "/" not in symbol and "(" not in symbol:
-                    path = symbol.replace(".", "/")
+                    # Check if we're looking at a method on a class
+                    symbol_parts = symbol.split(".")
+                    if len(symbol_parts) >= 3 and symbol_parts[-2][0].isupper():
+                        # In this case the link should look like ".../class#method"
+                        path = '/'.join(symbol_parts[:-1]) + '#' + symbol_parts[-1]
+                    else:
+                        # Otherwise just ".../module/class_or_fn"
+                        path = symbol.replace(".", "/")
                     path = path.replace("(", "")
                     path = path.replace(")", "")
                     replacements["`" + symbol + "`"] = (
