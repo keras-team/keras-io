@@ -2,7 +2,7 @@
 Title: Image similarity estimation using a Siamese Network with a contrastive loss
 Author: Mehdi
 Date created: 2021/05/06
-Last modified: 2022/09/08
+Last modified: 2022/09/10
 Description: Similarity learning using a siamese network trained with a contrastive loss.
 """
 
