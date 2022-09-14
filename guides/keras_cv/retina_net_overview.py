@@ -110,13 +110,19 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
-augmenter = keras_cv.layers.RandAugment(
+random_flip = keras_cv.layers.RandomFlip(mode='horizontal', bounding_box_format='xywh')
+rand_augment = keras_cv.layers.RandAugment(
         value_range=(0, 255),
         augmentations_per_image=2,
         geometric=False,
 )
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+def augment(inputs):
+    inputs["images"] = rand_augment(inputs["images"])
+    inputs = random_flip(inputs)
+    return inputs
+
+train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 
 """
