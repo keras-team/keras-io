@@ -50,7 +50,7 @@ import shutil
 """
 ## Prepare dataset
 
-We use the [Caltech 101 Dataset](http://www.vision.caltech.edu/datasets/).
+We use the [Caltech 101 Dataset](https://data.caltech.edu/records/20086).
 """
 
 # Path to images and annotations
