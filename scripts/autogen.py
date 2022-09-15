@@ -39,9 +39,9 @@ import generate_tf_guides
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
-    "keras": "https://github.com/keras-team/keras/tree/v2.9.0/",
+    "keras": "https://github.com/keras-team/keras/tree/v2.10.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/1.1.3/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.2.10/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.3.1/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.3.0/",
 }
 
@@ -287,6 +287,7 @@ class KerasIO:
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
 
         md_content = open(md_path).read()
+        md_content = md_content.replace("../guides/img/", "/img/guides/")
         github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
         md_content = self.preprocess_tutobook_md_source(
@@ -700,7 +701,14 @@ class KerasIO:
                 symbol = tmp_content[: tmp_content.find("`")]
                 tmp_content = tmp_content[tmp_content.find("`") + 1 :]
                 if "/" not in symbol and "(" not in symbol:
-                    path = symbol.replace(".", "/")
+                    # Check if we're looking at a method on a class
+                    symbol_parts = symbol.split(".")
+                    if len(symbol_parts) >= 3 and symbol_parts[-2][0].isupper():
+                        # In this case the link should look like ".../class#method"
+                        path = '/'.join(symbol_parts[:-1]) + '#' + symbol_parts[-1]
+                    else:
+                        # Otherwise just ".../module/class_or_fn"
+                        path = symbol.replace(".", "/")
                     path = path.replace("(", "")
                     path = path.replace(")", "")
                     replacements["`" + symbol + "`"] = (
@@ -748,6 +756,7 @@ class KerasIO:
                 "main": html_docs,
             }
         )
+        html_page = html_page.replace("../guides/img/", "/img/guides/")
         save_file(target_path, html_page)
         return relative_url
 

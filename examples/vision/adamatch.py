@@ -21,7 +21,7 @@ be installed using the following command:
 """
 
 """shell
-pip install -q tf-models-official
+pip install -q tf-models-official==2.9.2
 """
 
 """
@@ -69,7 +69,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
-from official.vision.image_classification.augment import RandAugment
+from keras_cv.layers import RandAugment
 
 import tensorflow_datasets as tfds
 
@@ -128,7 +128,7 @@ weak augmentation, we will use horizontal flipping and random cropping.
 
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 5.
-augmenter = RandAugment(num_layers=2, magnitude=5)
+augmenter = RandAugment(value_range=(0, 255), augmentations_per_image=2, magnitude=0.5)
 
 
 def weak_augment(image, source=True):
@@ -152,7 +152,7 @@ def strong_augment(image, source=True):
     if source:
         image = tf.image.resize_with_pad(image, RESIZE_TO, RESIZE_TO)
         image = tf.tile(image, [1, 1, 3])
-    image = augmenter.distort(image)
+    image = augmenter(image)
     return image
 
 
@@ -591,4 +591,11 @@ print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
 """
 You can reproduce the results by using these
 [model weights](https://github.com/sayakpaul/AdaMatch-TF/releases/tag/v1.0.0).
+"""
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-AdaMatch%20Domain%20Adaption-black.svg)](https://huggingface.co/keras-io/adamatch-domain-adaption) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-AdaMatch%20Domain%20Adaption-black.svg)](https://huggingface.co/spaces/keras-io/adamatch-domain-adaption) |
 """
