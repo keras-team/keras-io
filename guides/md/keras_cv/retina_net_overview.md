@@ -154,7 +154,7 @@ random_flip = keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format=
 rand_augment = keras_cv.layers.RandAugment(
     value_range=(0, 255),
     augmentations_per_image=2,
-    # we disable geometirc augmentations for object detection tasks
+    # we disable geometric augmentations for object detection tasks
     geometric=False,
 )
 
