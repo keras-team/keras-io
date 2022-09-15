@@ -311,23 +311,24 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
+        self.add = layers.Add() # instead of `+` to preserve mask
         self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, mask=None):
         attention_output_1 = self.attention_1(
             query=inputs, value=inputs, key=inputs, use_causal_mask=True
         )
-        out_1 = self.layernorm_1(inputs + attention_output_1)
+        out_1 = self.layernorm_1(self.add([inputs, attention_output_1]))
 
         attention_output_2 = self.attention_2(
             query=out_1,
             value=encoder_outputs,
             key=encoder_outputs,
         )
-        out_2 = self.layernorm_2(out_1 + attention_output_2)
+        out_2 = self.layernorm_2(self.add([out_1, attention_output_2]))
 
         proj_output = self.dense_proj(out_2)
-        return self.layernorm_3(out_2 + proj_output)
+        return self.layernorm_3(self.add([out_2, proj_output]))
 
     def get_config(self):
         config = super().get_config()
