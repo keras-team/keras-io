@@ -90,6 +90,35 @@ def visualize_dataset(dataset, bounding_box_format):
 visualize_dataset(dataset, bounding_box_format="xywh")
 
 ```
+
+<div class="k-default-codeblock">
+```
+[1mDownloading and preparing dataset 868.85 MiB (download: 868.85 MiB, generated: Unknown size, total: 868.85 MiB) to ~/tensorflow_datasets/voc/2007/4.0.0...[0m
+
+Dl Completed...: 0 url [00:00, ? url/s]
+
+Dl Size...: 0 MiB [00:00, ? MiB/s]
+
+Extraction completed...: 0 file [00:00, ? file/s]
+
+Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
+
+Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
+
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteY70G83/voc-test.tfrecord*...:   0%|          | 0/4952…
+
+Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
+
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteY70G83/voc-train.tfrecord*...:   0%|          | 0/250…
+
+Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
+
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteY70G83/voc-validation.tfrecord*...:   0%|          | …
+
+[1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
+
+```
+</div>
     
 ![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
     
@@ -121,25 +150,49 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
-augmenter = keras_cv.layers.Augmenter(
-    layers=[
-        keras_cv.layers.RandomColorJitter(
-            value_range=(0, 255),
-            brightness_factor=0.1,
-            contrast_factor=0.1,
-            saturation_factor=0.1,
-            hue_factor=0.1,
-        ),
-        keras_cv.layers.RandomSharpness(value_range=(0, 255), factor=0.1),
-    ]
+random_flip = keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh")
+rand_augment = keras_cv.layers.RandAugment(
+    value_range=(0, 255),
+    augmentations_per_image=2,
+    # we disable geometirc augmentations for object detection tasks
+    geometric=False,
 )
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+
+def augment(inputs):
+    # In future KerasCV releases, RandAugment will support
+    # bounding box detection
+    inputs["images"] = rand_augment(inputs["images"])
+    inputs = random_flip(inputs)
+    return inputs
+
+
+train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
+
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
+
+```
+</div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_7_28.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_7_8.png)
     
 
 
@@ -301,7 +354,7 @@ model.save_weights(CHECKPOINT_PATH)
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 145s 424ms/step - loss: 17.2746 - classification_loss: 10.0500 - box_loss: 6.8747 - val_Mean Average Precision: 0.0105 - val_Recall: 0.0744 - val_loss: 11.2469 - val_classification_loss: 5.2460 - val_box_loss: 5.6515 - val_regularization_loss: 0.3493 - lr: 0.0100
+313/313 [==============================] - 162s 481ms/step - loss: 12.5135 - classification_loss: 6.3680 - regularization_loss: 0.0000e+00 - box_loss: 6.1454 - val_Mean Average Precision: 0.0151 - val_Recall: 0.0432 - val_loss: 10.3468 - val_classification_loss: 5.1704 - val_box_loss: 5.1764 - val_regularization_loss: 0.0000e+00 - lr: 0.0100
 
 ```
 </div>
@@ -317,8 +370,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 206s 2s/step - Mean Average Precision: 0.0457 - Recall: 0.2207 - loss: 7.7596 - classification_loss: 3.3602 - box_loss: 4.0531 - regularization_loss: 0.3463
-{'Mean Average Precision': 0.04574195295572281, 'Recall': 0.22066783905029297, 'loss': 7.759613513946533, 'classification_loss': 3.360184669494629, 'box_loss': 4.053106307983398, 'regularization_loss': 0.34632351994514465}
+100/100 [==============================] - 197s 2s/step - Mean Average Precision: 0.1165 - Recall: 0.2858 - loss: 5.3522 - classification_loss: 2.3509 - box_loss: 3.0013 - regularization_loss: 0.0000e+00
+{'Mean Average Precision': 0.1164998784661293, 'Recall': 0.2858008146286011, 'loss': 5.352220058441162, 'classification_loss': 2.3509249687194824, 'box_loss': 3.001293897628784, 'regularization_loss': 0.0}
 
 ```
 </div>
@@ -358,7 +411,7 @@ visualize_detections(model)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 4s 4s/step
+1/1 [==============================] - 5s 5s/step
 
 ```
 </div>
