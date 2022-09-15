@@ -171,27 +171,7 @@ train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
 
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2
-
-```
-</div>
-    
 ![png](/img/guides/retina_net_overview/retina_net_overview_7_8.png)
     
 
