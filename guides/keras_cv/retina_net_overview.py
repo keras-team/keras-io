@@ -306,7 +306,7 @@ def visualize_detections(model):
     train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
     images, labels = next(iter(train_ds.take(1)))
     predictions = model.predict(images)
-    color = tf.constant(((255.0, 0, 0),))
+    color = tf.constant(((255.0, 255.0, 0),))
     plt.figure(figsize=(10, 10))
     predictions = keras_cv.bounding_box.convert_format(
         predictions, source="xywh", target="rel_yxyx", images=images
