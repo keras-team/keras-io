@@ -199,7 +199,7 @@ MODELS_MASTER = {
     "children": [
         {
             "path": "retinanet",
-            "title": "the RetinaNet model",
+            "title": "The RetinaNet model",
             "generate": [
                 "keras_cv.models.RetinaNet",
             ],
