@@ -325,3 +325,4 @@ print(
     "This image is %.2f percent cat and %.2f percent dog."
     % (100 * (1 - score), 100 * score)
 )
+plt.imshow(img);
