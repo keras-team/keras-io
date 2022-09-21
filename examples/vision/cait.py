@@ -102,13 +102,18 @@ The practical implementation of LayerScale is simpler than it might sound.
 
 
 class LayerScale(layers.Layer):
-    """LayerScale as introduced in CaiT: https://arxiv.org/abs/2103.17239."""
+    """LayerScale as introduced in CaiT: https://arxiv.org/abs/2103.17239.
+    
+    Args:
+        init_values (float): value to initialize the diagonal matrix of LayerScale.
+        projection_dim (int): projection dimension used in LayerScale.
+    """
 
-    def __init__(self, config: mlc.ConfigDict, **kwargs):
+    def __init__(self, init_values, projection_dim, **kwargs):
         super().__init__(**kwargs)
-        self.gamma = tf.Variable(config.init_values * tf.ones((config.projection_dim,)))
+        self.gamma = tf.Variable(init_values * tf.ones((projection_dim,)))
 
-    def call(self, x):
+    def call(self, x, training=False):
         return x * self.gamma
 
 
@@ -130,9 +135,9 @@ class StochasticDepth(layers.Layer):
         https://github.com/rwightman/pytorch-image-models
     """
 
-    def __init__(self, drop_prop: float, **kwargs):
+    def __init__(self, drop_prob, **kwargs):
         super().__init__(**kwargs)
-        self.drop_prob = drop_prop
+        self.drop_prob = drop_prob
 
     def call(self, x, training=False):
         if training:
@@ -183,26 +188,36 @@ CLS token embeddings and the image patch embeddings are fed as keys as well valu
 
 
 class ClassAttention(layers.Layer):
-    def __init__(self, config: mlc.ConfigDict, **kwargs):
+    """Class attention as proposed in CaiT: https://arxiv.org/abs/2103.17239.
+
+    Args:
+        projection_dim (int): projection dimension for the query, key, and value
+            of attention.
+        num_heads (int): number of attention heads.
+        dropout_rate (float): dropout rate to be used for dropout in the attention
+            scores as well as the final projected outputs.
+    """
+    def __init__(self, projection_dim, num_heads, dropout_rate, **kwargs):
         super().__init__(**kwargs)
-        self.config = config
-        head_dim = config.projection_dim // config.num_heads
+        self.num_heads = num_heads 
+
+        head_dim = projection_dim // num_heads
         self.scale = head_dim**-0.5
 
-        self.q = keras.layers.Dense(config.projection_dim)
-        self.k = keras.layers.Dense(config.projection_dim)
-        self.v = keras.layers.Dense(config.projection_dim)
-        self.attn_drop = keras.layers.Dropout(config.dropout_rate)
-        self.proj = keras.layers.Dense(config.projection_dim)
-        self.proj_drop = keras.layers.Dropout(config.dropout_rate)
+        self.q = layers.Dense(projection_dim)
+        self.k = layers.Dense(projection_dim)
+        self.v = layers.Dense(projection_dim)
+        self.attn_drop = layers.Dropout(dropout_rate)
+        self.proj = layers.Dense(projection_dim)
+        self.proj_drop = layers.Dropout(dropout_rate)
 
-    def call(self, x, training):
-        B, N, C = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
+    def call(self, x, training=False):
+        batch_size, num_patches, num_channels = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
 
         # Query projection. `cls_token` embeddings are queries.
         q = tf.expand_dims(self.q(x[:, 0]), axis=1)
         q = tf.reshape(
-            q, (B, 1, self.config.num_heads, C // self.config.num_heads)
+            q, (batch_size, 1, self.num_heads, num_channels // self.num_heads)
         )  # Shape: (batch_size, 1, num_heads, dimension_per_head)
         q = tf.transpose(q, perm=[0, 2, 1, 3])
         scale = tf.cast(self.scale, dtype=q.dtype)
@@ -211,23 +226,23 @@ class ClassAttention(layers.Layer):
         # Key projection. Patch embeddings as well the cls embedding are used as keys.
         k = self.k(x)
         k = tf.reshape(
-            k, (B, N, self.config.num_heads, C // self.config.num_heads)
+            k, (batch_size, num_patches, self.num_heads, num_channels // self.num_heads)
         )  # Shape: (batch_size, num_tokens, num_heads, dimension_per_head)
         k = tf.transpose(k, perm=[0, 2, 1, 3])
 
         # Value projection. Patch embeddings as well the cls embedding are used as values.
         v = self.v(x)
-        v = tf.reshape(v, (B, N, self.config.num_heads, C // self.config.num_heads))
+        v = tf.reshape(v, (batch_size, num_patches, self.num_heads, num_channels // self.num_heads))
         v = tf.transpose(v, perm=[0, 2, 1, 3])
 
-        # Calculate attention between cls_token embedding and patch embeddings.
+        # Calculate attention scores between cls_token embedding and patch embeddings.
         attn = tf.matmul(q, k, transpose_b=True)
         attn = tf.nn.softmax(attn, axis=-1)
         attn = self.attn_drop(attn, training)
 
         x_cls = tf.matmul(attn, v)
         x_cls = tf.transpose(x_cls, perm=[0, 2, 1, 3])
-        x_cls = tf.reshape(x_cls, (B, 1, C))
+        x_cls = tf.reshape(x_cls, (batch_size, 1, num_channels))
         x_cls = self.proj(x_cls)
         x_cls = self.proj_drop(x_cls, training)
 
@@ -250,28 +265,36 @@ mechanisms, the readers should refer to the respective papers.
 """
 
 
-class TalkingHeadAttn(layers.Layer):
-    def __init__(self, config: mlc.ConfigDict, **kwargs):
+class TalkingHeadAttention(layers.Layer):
+    """Talking-head attention as proposed in CaiT: https://arxiv.org/abs/2003.02436.
+
+    Args:
+        projection_dim (int): projection dimension for the query, key, and value
+            of attention.
+        num_heads (int): number of attention heads.
+        dropout_rate (float): dropout rate to be used for dropout in the attention
+            scores as well as the final projected outputs.
+    """
+    def __init__(self, projection_dim, num_heads, dropout_rate, **kwargs):
         super().__init__(**kwargs)
-        self.config = config
 
-        self.num_heads = self.config.num_heads
+        self.num_heads = num_heads
 
-        head_dim = self.config.projection_dim // self.num_heads
+        head_dim = projection_dim // self.num_heads
 
         self.scale = head_dim**-0.5
 
-        self.qkv = keras.layers.Dense(config.projection_dim * 3)
-        self.attn_drop = keras.layers.Dropout(config.dropout_rate)
+        self.qkv = layers.Dense(projection_dim * 3)
+        self.attn_drop = layers.Dropout(dropout_rate)
 
-        self.proj = keras.layers.Dense(config.projection_dim)
+        self.proj = layers.Dense(projection_dim)
 
-        self.proj_l = keras.layers.Dense(config.num_heads)
-        self.proj_w = keras.layers.Dense(config.num_heads)
+        self.proj_l = layers.Dense(self.num_heads)
+        self.proj_w = layers.Dense(self.num_heads)
 
-        self.proj_drop = keras.layers.Dropout(config.dropout_rate)
+        self.proj_drop = layers.Dropout(dropout_rate)
 
-    def call(self, x, training):
+    def call(self, x, training=False):
         B, N, C = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
 
         # Project the inputs all at once.
@@ -321,15 +344,15 @@ Transformer block.
 """
 
 
-def mlp(x: int, dropout_rate: float, hidden_units: List[int]):
+def mlp(x, dropout_rate, hidden_units):
     """FFN for a Transformer block."""
     for (idx, units) in enumerate(hidden_units):
-        x = keras.layers.Dense(
+        x = layers.Dense(
             units,
             activation=tf.nn.gelu if idx == 0 else None,
             bias_initializer=keras.initializers.RandomNormal(stddev=1e-6),
         )(x)
-        x = keras.layers.Dropout(dropout_rate)(x)
+        x = layers.Dropout(dropout_rate)(x)
     return x
 
 
@@ -347,53 +370,77 @@ Stochastic Depth.
 """
 
 
-def LayerScaleBlockClassAttention(config: mlc.ConfigDict, drop_prob: float, name: str):
+def LayerScaleBlockClassAttention(projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     cls token and the embeddings of image patches.
 
     Includes LayerScale and Stochastic Depth.
+
+    Args:
+        projection_dim (int):
+        layer_norm_eps (float): 
+        init_values (float):
+        mlp_units (List[int]): 
+        dropout_rate (float):
+        sd_prob (float): 
+        name (str): 
+
+    Returns:
+        A keras.Model instance.
     """
-    x = keras.Input((None, config.projection_dim))
-    x_cls = keras.Input((None, config.projection_dim))
+    x = keras.Input((None, projection_dim))
+    x_cls = keras.Input((None, projection_dim))
     inputs = keras.layers.Concatenate(axis=1)([x_cls, x])
 
     # Class attention (CA).
-    x1 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(inputs)
+    x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(inputs)
     attn_output, attn_scores = ClassAttention(config)(x1)
-    attn_output = LayerScale(config)(attn_output) if config.init_values else attn_output
-    attn_output = StochasticDepth(drop_prob)(attn_output) if drop_prob else attn_output
+    attn_output = LayerScale(config)(attn_output) if init_values else attn_output
+    attn_output = StochasticDepth(sd_prob)(attn_output) if sd_prob else attn_output
     x2 = keras.layers.Add()([x_cls, attn_output])
 
     # FFN.
-    x3 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(x2)
-    x4 = mlp(x3, hidden_units=config.mlp_units, dropout_rate=config.dropout_rate)
-    x4 = LayerScale(config)(x4) if config.init_values else x4
-    x4 = StochasticDepth(drop_prob)(x4) if drop_prob else x4
+    x3 = layers.LayerNormalization(epsilon=layer_norm_eps)(x2)
+    x4 = mlp(x3, hidden_units=mlp_units, dropout_rate=dropout_rate)
+    x4 = LayerScale(config)(x4) if init_values else x4
+    x4 = StochasticDepth(sd_prob)(x4) if sd_prob else x4
     outputs = keras.layers.Add()([x2, x4])
 
     return keras.Model([x, x_cls], [outputs, attn_scores], name=name)
 
 
-def LayerScaleBlock(config: mlc.ConfigDict, drop_prob: float, name: str):
+def LayerScaleBlock(projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     image patches.
 
     Includes LayerScale and Stochastic Depth.
+
+        Args:
+        projection_dim (int):
+        layer_norm_eps (float): 
+        init_values (float):
+        mlp_units (List[int]): 
+        dropout_rate (float):
+        sd_prob (float): 
+        name (str): 
+
+    Returns:
+        A keras.Model instance.
     """
-    encoded_patches = keras.Input((None, config.projection_dim))
+    encoded_patches = keras.Input((None, projection_dim))
 
     # Self-attention.
-    x1 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(encoded_patches)
-    attn_output, attn_scores = TalkingHeadAttn(config)(x1)
-    attn_output = LayerScale(config)(attn_output) if config.init_values else attn_output
-    attn_output = StochasticDepth(drop_prob)(attn_output) if drop_prob else attn_output
+    x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(encoded_patches)
+    attn_output, attn_scores = TalkingHeadAttention(config)(x1)
+    attn_output = LayerScale(config)(attn_output) if init_values else attn_output
+    attn_output = StochasticDepth(sd_prob)(attn_output) if sd_prob else attn_output
     x2 = keras.layers.Add()([encoded_patches, attn_output])
 
     # FFN.
-    x3 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(x2)
-    x4 = mlp(x3, hidden_units=config.mlp_units, dropout_rate=config.dropout_rate)
-    x4 = LayerScale(config)(x4) if config.init_values else x4
-    x4 = StochasticDepth(drop_prob)(x4) if drop_prob else x4
+    x3 = layers.LayerNormalization(epsilon=layer_norm_eps)(x2)
+    x4 = mlp(x3, hidden_units=mlp_units, dropout_rate=dropout_rate)
+    x4 = LayerScale(config)(x4) if init_values else x4
+    x4 = StochasticDepth(sd_prob)(x4) if sd_prob else x4
     outputs = keras.layers.Add()([x2, x4])
 
     return keras.Model(encoded_patches, [outputs, attn_scores], name=name)
@@ -441,7 +488,7 @@ class CaiT(keras.Model):
         )
 
         # Projection dropout.
-        self.pos_drop = keras.layers.Dropout(
+        self.pos_drop = layers.Dropout(
             config.dropout_rate, name="projection_dropout"
         )
 
@@ -474,11 +521,11 @@ class CaiT(keras.Model):
 
         # Classification head.
         if not config.pre_logits:
-            self.head = keras.layers.Dense(
+            self.head = layers.Dense(
                 config.num_classes, name="classification_head"
             )
 
-    def call(self, x: tf.Tensor):
+    def call(self, x, training=False):
         # Notice how CLS token is not added here.
         x = self.projection(x)
         x = x + self.pos_embed
@@ -595,9 +642,6 @@ cait_xxs24_224 = CaiT(config)
 
 dummy_inputs = tf.ones((2, 224, 224, 3))
 _ = cait_xxs24_224(dummy_inputs)
-print(cait_xxs24_224.summary(expand_nested=True))
-
-del cait_xxs24_224
 
 """
 We can successfully perform inference with the model. But what about implementation
@@ -654,7 +698,6 @@ def preprocess_image(image, size=input_resolution):
 
 
 def load_image_from_url(url):
-    # Credit: Willi Gierke
     image_bytes = BytesIO(urlopen(url).read())
     image = Image.open(image_bytes)
     preprocessed_image = preprocess_image(image)
@@ -674,7 +717,7 @@ label_path = tf.keras.utils.get_file(origin=imagenet_labels)
 
 with open(label_path, "r") as f:
     lines = f.readlines()
-imagenet_int_to_str = [line.rstrip() for line in lines]
+imagenet_labels = [line.rstrip() for line in lines]
 
 """
 ## Load an Image
@@ -695,7 +738,7 @@ plt.show()
 logits, sa_atn_score_dict, ca_atn_score_dict = pretrained_model.predict(
     preprocessed_image
 )
-predicted_label = imagenet_int_to_str[int(np.argmax(logits))]
+predicted_label = imagenet_labels[int(np.argmax(logits))]
 print(predicted_label)
 
 """
@@ -713,6 +756,7 @@ layer.
 """
 
 # (batch_size, nb_attention_heads, num_cls_token, seq_length)
+print("Shape of the attention scores from a class attention block:")
 print(ca_atn_score_dict["ca_ffn_block_0_att"].shape)
 
 """
@@ -753,14 +797,12 @@ def get_cls_attention_map(
 
     # Taking the representations from CLS token.
     attentions = attention_scores[0, :, 0, 1:].reshape(nh, -1)
-    print(attentions.shape)
 
     # Reshape the attention scores to resemble mini patches.
     attentions = attentions.reshape(nh, w_featmap, h_featmap)
 
     if not return_saliency:
         attentions = attentions.transpose((1, 2, 0))
-        print(attentions.shape)
 
     else:
         attentions = np.mean(attentions, axis=0)
@@ -768,7 +810,6 @@ def get_cls_attention_map(
             attentions.max() - attentions.min()
         )
         attentions = np.expand_dims(attentions, -1)
-        print(attentions.shape)
 
     # Resize the attention patches to 224x224 (224: 14x16)
     attentions = tf.image.resize(
@@ -776,7 +817,6 @@ def get_cls_attention_map(
         size=(h_featmap * patch_size, w_featmap * patch_size),
         method="bicubic",
     )
-    print(attentions.shape)
 
     return attentions
 
