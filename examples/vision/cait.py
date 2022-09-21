@@ -2,14 +2,14 @@
 Title: Class Attention image transformers with LayerScale
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/09/19
-Last modified: 2022/09/19
+Last modified: 2022/09/21
 Description: Implementing an image transformer equipped with Class Attention and LayerScale.
 """
 """
 
 ## Introduction
 
-In this tutorial, we'll implement the CaiT (Class-Attention in Image Transformers)
+In this tutorial, we implement the CaiT (Class-Attention in Image Transformers)
 proposed in [Going deeper with Image Transformers](https://arxiv.org/abs/2103.17239) by
 Touvron et al. Depth scaling, i.e. increasing the model depth for obtaining better
 performance and generalization has been quite successful for convolutional neural
@@ -32,7 +32,9 @@ The tutorial is structured like so:
 * Obtaining prediction results 
 * Visualization of the different attention layers of CaiT
 
-The readers are assumed to be familiar with Vision Transformers already. 
+The readers are assumed to be familiar with Vision Transformers already. Here is
+an implementation of Vision Transformers in Keras: 
+[Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 """
 
 """
@@ -43,27 +45,23 @@ ease configuring our model.
 """
 
 """shell
-!pip install ml-collections -q
+pip install ml-collections -q
 """
 
 """
 ## Imports
 """
 
-from copy import deepcopy
-from typing import List, Dict
-
-import tensorflow as tf
-import ml_collections as mlc
-
-from tensorflow import keras
-
-from PIL import Image
 from io import BytesIO
+from urllib.request import urlopen
 
 import matplotlib.pyplot as plt
+import ml_collections as mlc
 import numpy as np
-import requests
+import tensorflow as tf
+from PIL import Image
+from tensorflow import keras
+from tensorflow.keras import layers
 
 """
 ## The LayerScale layer
@@ -103,7 +101,7 @@ The practical implementation of LayerScale is simpler than it might sound.
 """
 
 
-class LayerScale(keras.layers.Layer):
+class LayerScale(layers.Layer):
     """LayerScale as introduced in CaiT: https://arxiv.org/abs/2103.17239."""
 
     def __init__(self, config: mlc.ConfigDict, **kwargs):
@@ -125,7 +123,7 @@ you need a refresher.
 """
 
 
-class StochasticDepth(keras.layers.Layer):
+class StochasticDepth(layers.Layer):
     """Stochastic Depth layer (https://arxiv.org/abs/1603.09382).
 
     Reference:
@@ -184,7 +182,7 @@ CLS token embeddings and the image patch embeddings are fed as keys as well valu
 """
 
 
-class ClassAttn(keras.layers.Layer):
+class ClassAttention(layers.Layer):
     def __init__(self, config: mlc.ConfigDict, **kwargs):
         super().__init__(**kwargs)
         self.config = config
@@ -252,7 +250,7 @@ mechanisms, the readers should refer to the respective papers.
 """
 
 
-class TalkingHeadAttn(keras.layers.Layer):
+class TalkingHeadAttn(layers.Layer):
     def __init__(self, config: mlc.ConfigDict, **kwargs):
         super().__init__(**kwargs)
         self.config = config
@@ -340,7 +338,7 @@ def mlp(x: int, dropout_rate: float, hidden_units: List[int]):
 
 In the next two cells, we implement the remaining blocks as standalone functions:
 
-* `LayerScaleBlockClassAttn()` which returns a `keras.Model`. It is a Transformer block
+* `LayerScaleBlockClassAttention()` which returns a `keras.Model`. It is a Transformer block
 equipped with Class Attention, LayerScale, and Stochastic Depth. It operates on the CLS
 embeddings and the image patch embeddings. 
 * `LayerScaleBlock()` which returns a `keras.model`. It is also a Transformer block that
@@ -349,7 +347,7 @@ Stochastic Depth.
 """
 
 
-def LayerScaleBlockClassAttn(config: mlc.ConfigDict, drop_prob: float, name: str):
+def LayerScaleBlockClassAttention(config: mlc.ConfigDict, drop_prob: float, name: str):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     cls token and the embeddings of image patches.
 
@@ -360,14 +358,14 @@ def LayerScaleBlockClassAttn(config: mlc.ConfigDict, drop_prob: float, name: str
     inputs = keras.layers.Concatenate(axis=1)([x_cls, x])
 
     # Class attention (CA).
-    x1 = keras.layers.LayerNormalization(epsilon=config.layer_norm_eps)(inputs)
-    attn_output, attn_scores = ClassAttn(config)(x1)
+    x1 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(inputs)
+    attn_output, attn_scores = ClassAttention(config)(x1)
     attn_output = LayerScale(config)(attn_output) if config.init_values else attn_output
     attn_output = StochasticDepth(drop_prob)(attn_output) if drop_prob else attn_output
     x2 = keras.layers.Add()([x_cls, attn_output])
 
     # FFN.
-    x3 = keras.layers.LayerNormalization(epsilon=config.layer_norm_eps)(x2)
+    x3 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(x2)
     x4 = mlp(x3, hidden_units=config.mlp_units, dropout_rate=config.dropout_rate)
     x4 = LayerScale(config)(x4) if config.init_values else x4
     x4 = StochasticDepth(drop_prob)(x4) if drop_prob else x4
@@ -385,14 +383,14 @@ def LayerScaleBlock(config: mlc.ConfigDict, drop_prob: float, name: str):
     encoded_patches = keras.Input((None, config.projection_dim))
 
     # Self-attention.
-    x1 = keras.layers.LayerNormalization(epsilon=config.layer_norm_eps)(encoded_patches)
+    x1 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(encoded_patches)
     attn_output, attn_scores = TalkingHeadAttn(config)(x1)
     attn_output = LayerScale(config)(attn_output) if config.init_values else attn_output
     attn_output = StochasticDepth(drop_prob)(attn_output) if drop_prob else attn_output
     x2 = keras.layers.Add()([encoded_patches, attn_output])
 
     # FFN.
-    x3 = keras.layers.LayerNormalization(epsilon=config.layer_norm_eps)(x2)
+    x3 = layers.LayerNormalization(epsilon=config.layer_norm_eps)(x2)
     x4 = mlp(x3, hidden_units=config.mlp_units, dropout_rate=config.dropout_rate)
     x4 = LayerScale(config)(x4) if config.init_values else x4
     x4 = StochasticDepth(drop_prob)(x4) if drop_prob else x4
@@ -463,14 +461,14 @@ class CaiT(keras.Model):
         with ca_config.unlocked():
             ca_config.dropout_rate = 0.0
         self.blocks_token_only = [
-            LayerScaleBlockClassAttn(
+            LayerScaleBlockClassAttention(
                 config=ca_config, name=f"ca_ffn_block_{i}", drop_prob=0.0
             )
             for i in range(config.ca_ffn_layers)
         ]
 
         # Pre-classification layer normalization.
-        self.norm = keras.layers.LayerNormalization(
+        self.norm = layers.LayerNormalization(
             epsilon=config.layer_norm_eps, name="head_norm"
         )
 
@@ -657,8 +655,8 @@ def preprocess_image(image, size=input_resolution):
 
 def load_image_from_url(url):
     # Credit: Willi Gierke
-    response = requests.get(url)
-    image = Image.open(BytesIO(response.content))
+    image_bytes = BytesIO(urlopen(url).read())
+    image = Image.open(image_bytes)
     preprocessed_image = preprocess_image(image)
     return image, preprocessed_image
 
