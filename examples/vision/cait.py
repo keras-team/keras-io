@@ -38,25 +38,14 @@ an implementation of Vision Transformers in Keras:
 """
 
 """
-## Installations
-
-We install the [`ml_collections`](https://github.com/google/ml_collections) library to
-ease configuring our model. 
-"""
-
-"""shell
-pip install ml-collections -q
-"""
-
-"""
 ## Imports
 """
 
 from io import BytesIO
+from typing import Dict, List
 from urllib.request import urlopen
 
 import matplotlib.pyplot as plt
-import ml_collections as mlc
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -109,7 +98,7 @@ class LayerScale(layers.Layer):
         projection_dim (int): projection dimension used in LayerScale.
     """
 
-    def __init__(self, init_values, projection_dim, **kwargs):
+    def __init__(self, init_values: float, projection_dim: int, **kwargs):
         super().__init__(**kwargs)
         self.gamma = tf.Variable(init_values * tf.ones((projection_dim,)))
 
@@ -135,7 +124,7 @@ class StochasticDepth(layers.Layer):
         https://github.com/rwightman/pytorch-image-models
     """
 
-    def __init__(self, drop_prob, **kwargs):
+    def __init__(self, drop_prob: float, **kwargs):
         super().__init__(**kwargs)
         self.drop_prob = drop_prob
 
@@ -198,7 +187,9 @@ class ClassAttention(layers.Layer):
             scores as well as the final projected outputs.
     """
 
-    def __init__(self, projection_dim, num_heads, dropout_rate, **kwargs):
+    def __init__(
+        self, projection_dim: int, num_heads: int, dropout_rate: float, **kwargs
+    ):
         super().__init__(**kwargs)
         self.num_heads = num_heads
 
@@ -283,7 +274,9 @@ class TalkingHeadAttention(layers.Layer):
             scores as well as the final projected outputs.
     """
 
-    def __init__(self, projection_dim, num_heads, dropout_rate, **kwargs):
+    def __init__(
+        self, projection_dim: int, num_heads: int, dropout_rate: float, **kwargs
+    ):
         super().__init__(**kwargs)
 
         self.num_heads = num_heads
@@ -352,7 +345,7 @@ Transformer block.
 """
 
 
-def mlp(x, dropout_rate, hidden_units):
+def mlp(x, dropout_rate: float, hidden_units: List[int]):
     """FFN for a Transformer block."""
     for (idx, units) in enumerate(hidden_units):
         x = layers.Dense(
@@ -379,7 +372,13 @@ Stochastic Depth.
 
 
 def LayerScaleBlockClassAttention(
-    projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name
+    projection_dim: int,
+    layer_norm_eps: float,
+    init_values: float,
+    mlp_units: List[int],
+    dropout_rate: float,
+    sd_prob: float,
+    name: str,
 ):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     cls token and the embeddings of image patches.
@@ -387,13 +386,16 @@ def LayerScaleBlockClassAttention(
     Includes LayerScale and Stochastic Depth.
 
     Args:
-        projection_dim (int):
-        layer_norm_eps (float):
-        init_values (float):
-        mlp_units (List[int]):
-        dropout_rate (float):
-        sd_prob (float):
-        name (str):
+        projection_dim (int): projection dimension to be used in the
+            Transformer blocks and patch projection layer.
+        layer_norm_eps (float): epsilon to be used for Layer Normalization.
+        init_values (float): initial value for the diagonal matrix used in LayerScale.
+        mlp_units (List[int]): dimensions of the feed-forward network used in
+            the Transformer blocks.
+        dropout_rate (float): dropout rate to be used for dropout in the attention
+            scores as well as the final projected outputs.
+        sd_prob (float): stochastic depth rate.
+        name (str): a name identifier for the block.
 
     Returns:
         A keras.Model instance.
@@ -420,7 +422,13 @@ def LayerScaleBlockClassAttention(
 
 
 def LayerScaleBlock(
-    projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name
+    projection_dim: int,
+    layer_norm_eps: float,
+    init_values: float,
+    mlp_units: List[int],
+    dropout_rate: float,
+    sd_prob: float,
+    name: str,
 ):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     image patches.
@@ -428,13 +436,16 @@ def LayerScaleBlock(
     Includes LayerScale and Stochastic Depth.
 
         Args:
-        projection_dim (int):
-        layer_norm_eps (float):
-        init_values (float):
-        mlp_units (List[int]):
-        dropout_rate (float):
-        sd_prob (float):
-        name (str):
+            projection_dim (int): projection dimension to be used in the
+                Transformer blocks and patch projection layer.
+            layer_norm_eps (float): epsilon to be used for Layer Normalization.
+            init_values (float): initial value for the diagonal matrix used in LayerScale.
+            mlp_units (List[int]): dimensions of the feed-forward network used in
+                the Transformer blocks.
+            dropout_rate (float): dropout rate to be used for dropout in the attention
+                scores as well as the final projected outputs.
+            sd_prob (float): stochastic depth rate.
+            name (str): a name identifier for the block.
 
     Returns:
         A keras.Model instance.
@@ -446,14 +457,14 @@ def LayerScaleBlock(
     attn_output, attn_scores = TalkingHeadAttention(config)(x1)
     attn_output = LayerScale(config)(attn_output) if init_values else attn_output
     attn_output = StochasticDepth(sd_prob)(attn_output) if sd_prob else attn_output
-    x2 = keras.layers.Add()([encoded_patches, attn_output])
+    x2 = layers.Add()([encoded_patches, attn_output])
 
     # FFN.
     x3 = layers.LayerNormalization(epsilon=layer_norm_eps)(x2)
     x4 = mlp(x3, hidden_units=mlp_units, dropout_rate=dropout_rate)
     x4 = LayerScale(config)(x4) if init_values else x4
     x4 = StochasticDepth(sd_prob)(x4) if sd_prob else x4
-    outputs = keras.layers.Add()([x2, x4])
+    outputs = layers.Add()([x2, x4])
 
     return keras.Model(encoded_patches, [outputs, attn_scores], name=name)
 
@@ -468,25 +479,66 @@ Given all these blocks, we are now ready to collate them into the final CaiT mod
 
 
 class CaiT(keras.Model):
-    """CaiT model."""
+    """CaiT model.
 
-    def __init__(self, config: mlc.ConfigDict, **kwargs):
+    Args:
+        projection_dim (int): projection dimension to be used in the
+            Transformer blocks and patch projection layer.
+        patch_size (int): patch size of the input images.
+        num_patches (int): number of patches after extracting the image patches.
+        init_values (float): initial value for the diagonal matrix used in LayerScale.
+        mlp_units: (List[int]): dimensions of the feed-forward network used in
+            the Transformer blocks.
+        sa_ffn_layers (int): number of self-attention Transformer blocks.
+        ca_ffn_layers (int): number of class-attention Transformer blocks.
+        layer_norm_eps (float): epsilon to be used for Layer Normalization.
+        dropout_rate (float): dropout rate to be used for dropout in the attention
+            scores as well as the final projected outputs.
+        sd_prob (float): stochastic depth rate.
+        global_pool (str): denotes how to pool the representations coming out of
+            the final Transformer block.
+        pre_logits (bool): if set to True then don't add a classification head.
+        num_classes (int): number of classes to construct the final classification
+            layer with.
+    """
+
+    def __init__(
+        self,
+        projection_dim: int,
+        patch_size: int,
+        num_patches: int,
+        init_values: float,
+        mlp_units: List[int],
+        sa_ffn_layers: int,
+        ca_ffn_layers: int,
+        layer_norm_eps: float,
+        dropout_rate: float,
+        sd_prob: float,
+        global_pool: str,
+        pre_logits: bool,
+        num_classes: int,
+        **kwargs,
+    ):
+        if global_pool not in ["token", "avg"]:
+            raise ValueError(
+                'Invalid value received for `global_pool`, should be either `"token"` or `"avg"`.'
+            )
+
         super().__init__(**kwargs)
-        self.config = config
 
         # Responsible for patchifying the input images and the linearly projecting them.
         self.projection = keras.Sequential(
             [
-                keras.layers.Conv2D(
-                    filters=config.projection_dim,
-                    kernel_size=(config.patch_size, config.patch_size),
-                    strides=(config.patch_size, config.patch_size),
+                layers.Conv2D(
+                    filters=projection_dim,
+                    kernel_size=(patch_size, patch_size),
+                    strides=(patch_size, patch_size),
                     padding="VALID",
                     name="conv_projection",
                     kernel_initializer="lecun_normal",
                 ),
-                keras.layers.Reshape(
-                    target_shape=(-1, config.projection_dim),
+                layers.Reshape(
+                    target_shape=(-1, projection_dim),
                     name="flatten_projection",
                 ),
             ],
@@ -494,44 +546,56 @@ class CaiT(keras.Model):
         )
 
         # CLS token and the positional embeddings.
-        self.cls_token = tf.Variable(tf.zeros((1, 1, config.projection_dim)))
-        self.pos_embed = tf.Variable(
-            tf.zeros((1, config.num_patches, config.projection_dim))
-        )
+        self.cls_token = tf.Variable(tf.zeros((1, 1, projection_dim)))
+        self.pos_embed = tf.Variable(tf.zeros((1, num_patches, projection_dim)))
 
         # Projection dropout.
-        self.pos_drop = layers.Dropout(config.dropout_rate, name="projection_dropout")
+        self.pos_drop = layers.Dropout(dropout_rate, name="projection_dropout")
 
         # Stochastic depth schedule.
-        dpr = [config.drop_path_rate for _ in range(config.sa_ffn_layers)]
+        dpr = [sd_prob for _ in range(sa_ffn_layers)]
 
         # Self-attention (SA) Transformer blocks operating only on the image patch
         # embeddings.
         self.blocks = [
-            LayerScaleBlock(config, name=f"sa_ffn_block_{i}", drop_prob=dpr[i])
-            for i in range(config.sa_ffn_layers)
+            LayerScaleBlock(
+                projection_dim=projection_dim,
+                layer_norm_eps=layer_norm_eps,
+                init_values=init_values,
+                mlp_units=mlp_units,
+                dropout_rate=dropout_rate,
+                sd_prob=dpr[i],
+                name=f"sa_ffn_block_{i}",
+            )
+            for i in range(sa_ffn_layers)
         ]
 
         # Class Attention (CA) Transformer blocks operating on the CLS token and image patch
         # embeddings.
-        ca_config = deepcopy(config)
-        with ca_config.unlocked():
-            ca_config.dropout_rate = 0.0
         self.blocks_token_only = [
             LayerScaleBlockClassAttention(
-                config=ca_config, name=f"ca_ffn_block_{i}", drop_prob=0.0
+                projection_dim=projection_dim,
+                layer_norm_eps=layer_norm_eps,
+                init_values=init_values,
+                mlp_units=mlp_units,
+                dropout_rate=dropout_rate,
+                name=f"ca_ffn_block_{i}",
+                sd_prob=0.0,  # No Stochastic Depth in the class attention layers.
             )
-            for i in range(config.ca_ffn_layers)
+            for i in range(ca_ffn_layers)
         ]
 
         # Pre-classification layer normalization.
-        self.norm = layers.LayerNormalization(
-            epsilon=config.layer_norm_eps, name="head_norm"
-        )
+        self.norm = layers.LayerNormalization(epsilon=layer_norm_eps, name="head_norm")
+
+        # Representation pooling for classification head.
+        self.global_pool = global_pool
 
         # Classification head.
-        if not config.pre_logits:
-            self.head = layers.Dense(config.num_classes, name="classification_head")
+        self.pre_logits = pre_logits
+        self.num_classes = num_classes
+        if not pre_logits:
+            self.head = layers.Dense(num_classes, name="classification_head")
 
     def call(self, x, training=False):
         # Notice how CLS token is not added here.
@@ -557,15 +621,15 @@ class CaiT(keras.Model):
 
         # Always return the attention scores from the SA+FFN and CA+FFN layers
         # for convenience.
-        if self.config.global_pool:
+        if self.global_pool:
             x = (
                 tf.reduce_mean(x[:, 1:], axis=1)
-                if self.config.global_pool == "avg"
+                if self.global_pool == "avg"
                 else x[:, 0]
             )
         return (
             (x, sa_ffn_attn, ca_ffn_attn)
-            if self.config.pre_logits
+            if self.pre_logits
             else (self.head(x), sa_ffn_attn, ca_ffn_attn)
         )
 
@@ -588,50 +652,59 @@ a model configuration that will be passed to our `CaiT` class for initialization
 
 
 def get_config(
-    model_name: str = "cait_xxs24_224",
     image_size: int = 224,
     patch_size: int = 16,
     projection_dim: int = 192,
     sa_ffn_layers: int = 24,
     ca_ffn_layers: int = 2,
     num_heads: int = 4,
-    mlp_ratio=4,
+    mlp_ratio: int = 4,
     layer_norm_eps=1e-6,
     init_values: float = 1e-5,
     dropout_rate: float = 0.0,
-    drop_path_rate: float = 0.0,
+    sd_prob: float = 0.0,
+    global_pool: str = "token",
     pre_logits: bool = False,
-) -> mlc.ConfigDict:
+    num_classes: int = 1000,
+) -> Dict:
     """Default configuration for CaiT models (cait_xxs24_224).
 
     Reference:
         https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/cait.py
     """
-    config = mlc.ConfigDict()
-    config.model_name = model_name
+    config = {}
 
-    config.image_size = image_size
-    config.patch_size = patch_size
-    config.num_patches = (config.image_size // config.patch_size) ** 2
-    config.num_classes = 1000
+    # Patchification and projection.
+    config["patch_size"] = patch_size
+    config["num_patches"] = (image_size // patch_size) ** 2
 
-    config.initializer_range = 0.02
-    config.layer_norm_eps = layer_norm_eps
-    config.projection_dim = projection_dim
-    config.num_heads = num_heads
-    config.sa_ffn_layers = sa_ffn_layers
-    config.ca_ffn_layers = ca_ffn_layers
-    config.mlp_units = [
-        config.projection_dim * mlp_ratio,
-        config.projection_dim,
+    # LayerScale.
+    config["init_values"] = init_values
+
+    # Dropout and Stochastic Depth.
+    config["dropout_rate"] = dropout_rate
+    config["sd_prob"] = sd_prob
+
+    # Shared across different blocks and layers.
+    config["initializer_range"] = 0.02
+    config["layer_norm_eps"] = layer_norm_eps
+    config["projection_dim"] = projection_dim
+    config["mlp_units"] = [
+        projection_dim * mlp_ratio,
+        projection_dim,
     ]
-    config.dropout_rate = dropout_rate
-    config.init_values = init_values
-    config.drop_path_rate = drop_path_rate
-    config.global_pool = "token"
-    config.pre_logits = pre_logits
 
-    return config.lock()
+    # Attention layers.
+    config["num_heads"] = num_heads
+    config["sa_ffn_layers"] = sa_ffn_layers
+    config["ca_ffn_layers"] = ca_ffn_layers
+
+    # Representation pooling and task specific parameters.
+    config["global_pool"] = global_pool
+    config["pre_logits"] - pre_logits
+    config["num_classes"] = num_classes
+
+    return config
 
 
 """
@@ -645,10 +718,14 @@ amend this `get_config()` method to instantiate a CaiT model for your own datase
 ## Model Instantiation
 """
 
-config = get_config(model_name="cait_xxs24_224")
-cait_xxs24_224 = CaiT(config)
+image_size = 224
+num_channels = 3
+batch_size = 2
 
-dummy_inputs = tf.ones((2, 224, 224, 3))
+config = get_config()
+cait_xxs24_224 = CaiT(**config)
+
+dummy_inputs = tf.ones((batch_size, image_size, image_size, num_channels))
 _ = cait_xxs24_224(dummy_inputs)
 
 """
@@ -682,22 +759,19 @@ pretrained_model = keras.models.load_model(model_gcs_path)
 In the next couple of cells, we develop preprocessing utilities needed to run inference
 with the pretrained model. 
 """
-
-input_resolution = 224
-
 # The preprocessing transformations include center cropping, and normalizing
 # the pixel values with the ImageNet-1k training stats (mean and standard deviation).
-crop_layer = keras.layers.CenterCrop(input_resolution, input_resolution)
+crop_layer = keras.layers.CenterCrop(image_size, image_size)
 norm_layer = keras.layers.Normalization(
     mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
     variance=[(0.229 * 255) ** 2, (0.224 * 255) ** 2, (0.225 * 255) ** 2],
 )
 
 
-def preprocess_image(image, size=input_resolution):
+def preprocess_image(image, size=image_size):
     image = np.array(image)
     image_resized = tf.expand_dims(image, 0)
-    resize_size = int((256 / input_resolution) * size)
+    resize_size = int((256 / image_size) * size)
     image_resized = tf.image.resize(
         image_resized, (resize_size, resize_size), method="bicubic"
     )
@@ -721,7 +795,7 @@ loading was pretrained on the ImageNet-1k dataset.
 imagenet_labels = (
     "https://storage.googleapis.com/bit_models/ilsvrc2012_wordnet_lemmas.txt"
 )
-label_path = tf.keras.utils.get_file(origin=imagenet_labels)
+label_path = keras.utils.get_file(origin=imagenet_labels)
 
 with open(label_path, "r") as f:
     lines = f.readlines()
@@ -879,7 +953,7 @@ saliency_attention = get_cls_attention_map(return_saliency=True)
 
 image = np.array(image)
 image_resized = tf.expand_dims(image, 0)
-resize_size = int((256 / 224) * input_resolution)
+resize_size = int((256 / 224) * image_size)
 image_resized = tf.image.resize(
     image_resized, (resize_size, resize_size), method="bicubic"
 )
