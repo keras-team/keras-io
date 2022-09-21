@@ -92,11 +92,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('Do you know what it is?', '[start] ¿Sabes qué es? [end]')
-('Thank you for your honesty.', '[start] Gracias por tu honestidad. [end]')
-('I know the reason that she quit her job.', '[start] Yo sé la razón por la que ella renunció a su empleo. [end]')
-("I can't make myself understood in French.", '[start] No me puedo hacer entender en francés. [end]')
-('What do you learn English for?', '[start] ¿Para qué aprendes inglés? [end]')
+('My hobby is stamp collecting.', '[start] Mi pasatiempo es la filatelia. [end]')
+('I was with Tom all day.', '[start] Estuve todo el día con Tom. [end]')
+("Let's get started right away.", '[start] Comencemos en seguida. [end]')
+('I made him talk to his aunt on the phone.', '[start] Le hice hablar por teléfono con su tía. [end]')
+('We ran out of gas in the middle of the intersection.', '[start] Nos quedamos sin bencina en medio del cruce. [end]')
 
 ```
 </div>
@@ -261,6 +261,7 @@ result in a model that cannot be used at inference time).
 
 
 ```python
+
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
         super(TransformerEncoder, self).__init__(**kwargs)
@@ -281,9 +282,7 @@ class TransformerEncoder(layers.Layer):
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
-        attention_output = self.attention(
-            query=inputs, value=inputs, key=inputs
-        )
+        attention_output = self.attention(query=inputs, value=inputs, key=inputs)
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
@@ -356,7 +355,7 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
-        self.add = layers.Add() # instead of `+` to preserve mask
+        self.add = layers.Add()  # instead of `+` to preserve mask
         self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, mask=None):
@@ -459,9 +458,9 @@ Total params: 19,960,216
 Trainable params: 19,960,216
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 460s 349ms/step - loss: 1.8666 - accuracy: 0.3399 - val_loss: 1.5751 - val_accuracy: 0.4061
+1302/1302 [==============================] - 544s 414ms/step - loss: 1.6122 - accuracy: 0.4443 - val_loss: 1.2147 - val_accuracy: 0.5527
 
-<keras.callbacks.History at 0x7f5380091990>
+<keras.callbacks.History at 0x7f081816d600>
 
 ```
 </div>

@@ -216,6 +216,7 @@ sure that it only uses information from target tokens 0 to N when predicting tok
 result in a model that cannot be used at inference time).
 """
 
+
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
         super(TransformerEncoder, self).__init__(**kwargs)
@@ -236,9 +237,7 @@ class TransformerEncoder(layers.Layer):
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
-        attention_output = self.attention(
-            query=inputs, value=inputs, key=inputs
-        )
+        attention_output = self.attention(query=inputs, value=inputs, key=inputs)
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
@@ -311,7 +310,7 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
-        self.add = layers.Add() # instead of `+` to preserve mask
+        self.add = layers.Add()  # instead of `+` to preserve mask
         self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, mask=None):
