@@ -103,7 +103,7 @@ The practical implementation of LayerScale is simpler than it might sound.
 
 class LayerScale(layers.Layer):
     """LayerScale as introduced in CaiT: https://arxiv.org/abs/2103.17239.
-    
+
     Args:
         init_values (float): value to initialize the diagonal matrix of LayerScale.
         projection_dim (int): projection dimension used in LayerScale.
@@ -197,9 +197,10 @@ class ClassAttention(layers.Layer):
         dropout_rate (float): dropout rate to be used for dropout in the attention
             scores as well as the final projected outputs.
     """
+
     def __init__(self, projection_dim, num_heads, dropout_rate, **kwargs):
         super().__init__(**kwargs)
-        self.num_heads = num_heads 
+        self.num_heads = num_heads
 
         head_dim = projection_dim // num_heads
         self.scale = head_dim**-0.5
@@ -212,7 +213,11 @@ class ClassAttention(layers.Layer):
         self.proj_drop = layers.Dropout(dropout_rate)
 
     def call(self, x, training=False):
-        batch_size, num_patches, num_channels = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
+        batch_size, num_patches, num_channels = (
+            tf.shape(x)[0],
+            tf.shape(x)[1],
+            tf.shape(x)[2],
+        )
 
         # Query projection. `cls_token` embeddings are queries.
         q = tf.expand_dims(self.q(x[:, 0]), axis=1)
@@ -232,7 +237,9 @@ class ClassAttention(layers.Layer):
 
         # Value projection. Patch embeddings as well the cls embedding are used as values.
         v = self.v(x)
-        v = tf.reshape(v, (batch_size, num_patches, self.num_heads, num_channels // self.num_heads))
+        v = tf.reshape(
+            v, (batch_size, num_patches, self.num_heads, num_channels // self.num_heads)
+        )
         v = tf.transpose(v, perm=[0, 2, 1, 3])
 
         # Calculate attention scores between cls_token embedding and patch embeddings.
@@ -275,6 +282,7 @@ class TalkingHeadAttention(layers.Layer):
         dropout_rate (float): dropout rate to be used for dropout in the attention
             scores as well as the final projected outputs.
     """
+
     def __init__(self, projection_dim, num_heads, dropout_rate, **kwargs):
         super().__init__(**kwargs)
 
@@ -370,7 +378,9 @@ Stochastic Depth.
 """
 
 
-def LayerScaleBlockClassAttention(projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name):
+def LayerScaleBlockClassAttention(
+    projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name
+):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     cls token and the embeddings of image patches.
 
@@ -378,12 +388,12 @@ def LayerScaleBlockClassAttention(projection_dim, layer_norm_eps, init_values, m
 
     Args:
         projection_dim (int):
-        layer_norm_eps (float): 
+        layer_norm_eps (float):
         init_values (float):
-        mlp_units (List[int]): 
+        mlp_units (List[int]):
         dropout_rate (float):
-        sd_prob (float): 
-        name (str): 
+        sd_prob (float):
+        name (str):
 
     Returns:
         A keras.Model instance.
@@ -409,7 +419,9 @@ def LayerScaleBlockClassAttention(projection_dim, layer_norm_eps, init_values, m
     return keras.Model([x, x_cls], [outputs, attn_scores], name=name)
 
 
-def LayerScaleBlock(projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name):
+def LayerScaleBlock(
+    projection_dim, layer_norm_eps, init_values, mlp_units, dropout_rate, sd_prob, name
+):
     """Pre-norm transformer block meant to be applied to the embeddings of the
     image patches.
 
@@ -417,12 +429,12 @@ def LayerScaleBlock(projection_dim, layer_norm_eps, init_values, mlp_units, drop
 
         Args:
         projection_dim (int):
-        layer_norm_eps (float): 
+        layer_norm_eps (float):
         init_values (float):
-        mlp_units (List[int]): 
+        mlp_units (List[int]):
         dropout_rate (float):
-        sd_prob (float): 
-        name (str): 
+        sd_prob (float):
+        name (str):
 
     Returns:
         A keras.Model instance.
@@ -488,9 +500,7 @@ class CaiT(keras.Model):
         )
 
         # Projection dropout.
-        self.pos_drop = layers.Dropout(
-            config.dropout_rate, name="projection_dropout"
-        )
+        self.pos_drop = layers.Dropout(config.dropout_rate, name="projection_dropout")
 
         # Stochastic depth schedule.
         dpr = [config.drop_path_rate for _ in range(config.sa_ffn_layers)]
@@ -521,9 +531,7 @@ class CaiT(keras.Model):
 
         # Classification head.
         if not config.pre_logits:
-            self.head = layers.Dense(
-                config.num_classes, name="classification_head"
-            )
+            self.head = layers.Dense(config.num_classes, name="classification_head")
 
     def call(self, x, training=False):
         # Notice how CLS token is not added here.
