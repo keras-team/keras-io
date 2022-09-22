@@ -267,7 +267,7 @@ def process_input(img_path, captions):
 
 def make_dataset(images, captions):
     dataset = tf.data.Dataset.from_tensor_slices((images, captions))
-    dataset = dataset.shuffle(BATCH_SIZE*8)
+    dataset = dataset.shuffle(BATCH_SIZE * 8)
     dataset = dataset.map(process_input, num_parallel_calls=AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE).prefetch(AUTOTUNE)
 
