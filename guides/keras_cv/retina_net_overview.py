@@ -301,9 +301,7 @@ And run `model.fit()`!
 
 model.fit(
     train_ds,
-    steps_per_epoch=1,
-    # val_steps_per_epoch=1,
-    # validation_data=val_ds.take(20),
+    validation_data=val_ds.take(20),
     epochs=EPOCHS,
     callbacks=callbacks,
 )
@@ -315,8 +313,8 @@ Next, we can evaluate the metrics by re-compiling the model, and running
 """
 
 model.load_weights(INFERENCE_CHECKPOINT_PATH)
-# metrics = model.evaluate(val_ds.take(100), return_dict=True)
-# print(metrics)
+metrics = model.evaluate(val_ds.take(100), return_dict=True)
+print(metrics)
 
 """
 ## Inference
@@ -327,9 +325,9 @@ a non max suppression operation for you.
 """
 
 
-def visualize_detections(model):
+def visualize_detections(model, bounding_box_format):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
-        bounding_box_format="xywh", split="train", batch_size=9
+        bounding_box_format=bounding_box_format, split="train", batch_size=9
     )
     train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
     images, y_true = next(iter(train_ds.take(1)))
@@ -351,7 +349,7 @@ def visualize_detections(model):
 
 
 
-visualize_detections(model)
+visualize_detections(model, bounding_box_format='xywh')
 
 """
 To get good results, you should train for at least 100 epochs.  You also need to
