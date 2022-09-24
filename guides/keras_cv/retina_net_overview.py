@@ -26,7 +26,7 @@ from keras_cv import bounding_box
 import os
 from luketils import visualization
 
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
@@ -60,7 +60,7 @@ Let's load some data and verify that our data looks as we expect it to.
 """
 
 dataset, dataset_info = keras_cv.datasets.pascal_voc.load(
-    split="train", bounding_box_format="xywh", batch_size=9
+    split="train", bounding_box_format="xywh", batch_size=BATCH_SIZE
 )
 
 class_ids = [
@@ -98,7 +98,7 @@ def visualize_dataset(dataset, bounding_box_format):
         bounding_box_format=bounding_box_format,
         y_true=boxes,
         scale=4,
-        rows=3,
+        rows=2,
         cols=3,
         show=True,
         thickness=4,
@@ -327,7 +327,7 @@ a non max suppression operation for you.
 
 def visualize_detections(model, bounding_box_format):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
-        bounding_box_format=bounding_box_format, split="train", batch_size=9
+        bounding_box_format=bounding_box_format, split="train", batch_size=BATCH_SIZE
     )
     train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
     images, y_true = next(iter(train_ds.take(1)))
@@ -339,7 +339,7 @@ def visualize_detections(model, bounding_box_format):
         y_true=y_true,
         y_pred=y_pred,
         scale=4,
-        rows=3,
+        rows=2,
         cols=3,
         show=True,
         thickness=4,
