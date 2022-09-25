@@ -3,7 +3,7 @@ Title: Generate images using KerasCV's StableDiffusion's at unprecedented speeds
 Author: [fchollet](https://github.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)
 Date created: 2022/09/24
 Last modified: 2022/09/24
-Description:
+Description: Generate new images using KerasCV's StableDiffusion model.
 """
 
 """
@@ -50,7 +50,9 @@ stable_diffusion = keras_cv.models.StableDiffusion(width=512, height=512)
 Next, we give it a prompt:
 """
 
-images = stable_diffusion.text_to_image("a cartoon caterpillar wearing glasses", batch_size=3)
+images = stable_diffusion.text_to_image(
+    "a cartoon caterpillar wearing glasses", batch_size=3
+)
 
 visualization.plot_gallery(
     images,
@@ -66,6 +68,7 @@ Pretty incredible!
 
 But that's not all this model can do.  Lets try a more complex prompt:
 """
+
 
 def visualize_prompt(prompt, sd_model=None):
     sd_model = sd_model or stable_diffusion
@@ -134,7 +137,7 @@ visualize_prompt(
     sd_model=stable_diffusion,
 )
 end = time.time()
-benchmark_result.append(['Standard', end - start])
+benchmark_result.append(["Standard", end - start])
 print(f"Standard model took {end - start} seconds")
 
 """
@@ -158,9 +161,7 @@ That's all.  Out of the box - it just works.
 # clear session to preserve memory
 tf.keras.backend.clear_session()
 stable_diffusion = keras_cv.models.StableDiffusion()
-print(
-    "Compute dtype:", stable_diffusion_mixed_precision.diffusion_model.compute_dtype
-)
+print("Compute dtype:", stable_diffusion_mixed_precision.diffusion_model.compute_dtype)
 print(
     "Variable dtype:",
     stable_diffusion_mixed_precision.diffusion_model.variable_dtype,
@@ -181,7 +182,7 @@ visualize_prompt(
     sd_model=stable_diffusion,
 )
 end = time.time()
-benchmark_result.append(['Mixed Precision', end - start])
+benchmark_result.append(["Mixed Precision", end - start])
 print(f"Mixed precision model took {end - start} seconds")
 
 """
@@ -217,7 +218,7 @@ visualize_prompt(
     sd_model=stable_diffusion,
 )
 end = time.time()
-benchmark_result.append(['XLA', end - start])
+benchmark_result.append(["XLA", end - start])
 print(f"With XLA took {end - start} seconds")
 
 """
@@ -251,13 +252,13 @@ visualize_prompt(
     sd_model=stable_diffusion,
 )
 end = time.time()
-benchmark_result.append(['XLA + Mixed Precision', end - start])
+benchmark_result.append(["XLA + Mixed Precision", end - start])
 print(f"XLA + mixed precision took {end - start} seconds")
 
 """
 Lets check out the results:
 """
-print("{:<10} {:<10}".format('Model', 'Runtime'))
+print("{:<10} {:<10}".format("Model", "Runtime"))
 for result in benchmark_result:
     name, runtime = result
     print("{:<10} {:<10}".format(name, runtime))
