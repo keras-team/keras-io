@@ -13,7 +13,7 @@ In this tutorial, we implement the CaiT (Class-Attention in Image Transformers)
 proposed in [Going deeper with Image Transformers](https://arxiv.org/abs/2103.17239) by
 Touvron et al. Depth scaling, i.e. increasing the model depth for obtaining better
 performance and generalization has been quite successful for convolutional neural
-networks ([Tan et al.](https://arxiv.org/abs/1905.11946), 
+networks ([Tan et al.](https://arxiv.org/abs/1905.11946),
 [Dollár et al.](https://arxiv.org/abs/2103.06877), for example). But applying
 the same model scaling principles to
 Vision Transformers ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)) doesn't
@@ -29,11 +29,11 @@ The tutorial is structured like so:
 * Implementation of the individual blocks of CaiT
 * Collating all the blocks to create the CaiT model
 * Loading a pre-trained CaiT model
-* Obtaining prediction results 
+* Obtaining prediction results
 * Visualization of the different attention layers of CaiT
 
 The readers are assumed to be familiar with Vision Transformers already. Here is
-an implementation of Vision Transformers in Keras: 
+an implementation of Vision Transformers in Keras:
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 """
 
@@ -250,7 +250,7 @@ class ClassAttention(layers.Layer):
 """
 ## Talking Head Attention
 
-The CaiT authors use the Talking Head attention 
+The CaiT authors use the Talking Head attention
 ([Shazeer et al.](https://arxiv.org/abs/2003.02436))
 instead of the vanilla scaled dot-product multi-head attention used in
 the original Transformer paper
@@ -338,7 +338,7 @@ class TalkingHeadAttention(layers.Layer):
 
 
 """
-## Feed-forward Network 
+## Feed-forward Network
 
 Next, we implement the feed-forward network which is one of the components within a
 Transformer block.
@@ -373,6 +373,7 @@ Stochastic Depth.
 
 def LayerScaleBlockClassAttention(
     projection_dim: int,
+    num_heads: int,
     layer_norm_eps: float,
     init_values: float,
     mlp_units: typing.List[int],
@@ -388,6 +389,7 @@ def LayerScaleBlockClassAttention(
     Args:
         projection_dim (int): projection dimension to be used in the
             Transformer blocks and patch projection layer.
+        num_heads (int): number of attention heads.
         layer_norm_eps (float): epsilon to be used for Layer Normalization.
         init_values (float): initial value for the diagonal matrix used in LayerScale.
         mlp_units (List[int]): dimensions of the feed-forward network used in
@@ -406,15 +408,21 @@ def LayerScaleBlockClassAttention(
 
     # Class attention (CA).
     x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(inputs)
-    attn_output, attn_scores = ClassAttention(config)(x1)
-    attn_output = LayerScale(config)(attn_output) if init_values else attn_output
+    attn_output, attn_scores = ClassAttention(projection_dim, num_heads, dropout_rate)(
+        x1
+    )
+    attn_output = (
+        LayerScale(init_values, projection_dim)(attn_output)
+        if init_values
+        else attn_output
+    )
     attn_output = StochasticDepth(sd_prob)(attn_output) if sd_prob else attn_output
     x2 = keras.layers.Add()([x_cls, attn_output])
 
     # FFN.
     x3 = layers.LayerNormalization(epsilon=layer_norm_eps)(x2)
     x4 = mlp(x3, hidden_units=mlp_units, dropout_rate=dropout_rate)
-    x4 = LayerScale(config)(x4) if init_values else x4
+    x4 = LayerScale(init_values, projection_dim)(x4) if init_values else x4
     x4 = StochasticDepth(sd_prob)(x4) if sd_prob else x4
     outputs = keras.layers.Add()([x2, x4])
 
@@ -423,6 +431,7 @@ def LayerScaleBlockClassAttention(
 
 def LayerScaleBlock(
     projection_dim: int,
+    num_heads: int,
     layer_norm_eps: float,
     init_values: float,
     mlp_units: typing.List[int],
@@ -438,6 +447,7 @@ def LayerScaleBlock(
         Args:
             projection_dim (int): projection dimension to be used in the
                 Transformer blocks and patch projection layer.
+            num_heads (int): number of attention heads.
             layer_norm_eps (float): epsilon to be used for Layer Normalization.
             init_values (float): initial value for the diagonal matrix used in LayerScale.
             mlp_units (List[int]): dimensions of the feed-forward network used in
@@ -454,15 +464,21 @@ def LayerScaleBlock(
 
     # Self-attention.
     x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(encoded_patches)
-    attn_output, attn_scores = TalkingHeadAttention(config)(x1)
-    attn_output = LayerScale(config)(attn_output) if init_values else attn_output
+    attn_output, attn_scores = TalkingHeadAttention(
+        projection_dim, num_heads, dropout_rate
+    )(x1)
+    attn_output = (
+        LayerScale(init_values, projection_dim)(attn_output)
+        if init_values
+        else attn_output
+    )
     attn_output = StochasticDepth(sd_prob)(attn_output) if sd_prob else attn_output
     x2 = layers.Add()([encoded_patches, attn_output])
 
     # FFN.
     x3 = layers.LayerNormalization(epsilon=layer_norm_eps)(x2)
     x4 = mlp(x3, hidden_units=mlp_units, dropout_rate=dropout_rate)
-    x4 = LayerScale(config)(x4) if init_values else x4
+    x4 = LayerScale(init_values, projection_dim)(x4) if init_values else x4
     x4 = StochasticDepth(sd_prob)(x4) if sd_prob else x4
     outputs = layers.Add()([x2, x4])
 
@@ -470,7 +486,7 @@ def LayerScaleBlock(
 
 
 """
-Given all these blocks, we are now ready to collate them into the final CaiT model. 
+Given all these blocks, we are now ready to collate them into the final CaiT model.
 """
 
 """
@@ -491,6 +507,7 @@ class CaiT(keras.Model):
             the Transformer blocks.
         sa_ffn_layers (int): number of self-attention Transformer blocks.
         ca_ffn_layers (int): number of class-attention Transformer blocks.
+        num_heads (int): number of attention heads.
         layer_norm_eps (float): epsilon to be used for Layer Normalization.
         dropout_rate (float): dropout rate to be used for dropout in the attention
             scores as well as the final projected outputs.
@@ -511,6 +528,7 @@ class CaiT(keras.Model):
         mlp_units: typing.List[int],
         sa_ffn_layers: int,
         ca_ffn_layers: int,
+        num_heads: int,
         layer_norm_eps: float,
         dropout_rate: float,
         sd_prob: float,
@@ -686,7 +704,6 @@ def get_config(
     config["sd_prob"] = sd_prob
 
     # Shared across different blocks and layers.
-    config["initializer_range"] = 0.02
     config["layer_norm_eps"] = layer_norm_eps
     config["projection_dim"] = projection_dim
     config["mlp_units"] = [
@@ -701,7 +718,7 @@ def get_config(
 
     # Representation pooling and task specific parameters.
     config["global_pool"] = global_pool
-    config["pre_logits"] - pre_logits
+    config["pre_logits"] = pre_logits
     config["num_classes"] = num_classes
 
     return config
@@ -735,7 +752,7 @@ correctness? There are many ways to verify it:
 * Obtain the performance of the model (given it's been populated with the pre-trained
 parameters) on the ImageNet-1k validation set (as the pretraining dataset was
 ImageNet-1k).
-* Fine-tune the model on a different dataset. 
+* Fine-tune the model on a different dataset.
 
 In order to verify that, we will load another instance of the same model that has been
 already populated with the pre-trained parameters. Please refer to
@@ -856,7 +873,7 @@ induced in the CaiT model.
 CA layer aggregates information from the region(s) of interest in the images.
 
 This utility is referred from Figures 6 and 7 of the original
-[CaiT paper](https://arxiv.org/abs/2103.17239). This is also a part of 
+[CaiT paper](https://arxiv.org/abs/2103.17239). This is also a part of
 [this notebook](https://github.com/sayakpaul/cait-tf/blob/main/notebooks/classification.ipynb)
 (developed by the author of this tutorial).
 """
