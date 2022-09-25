@@ -1,12 +1,16 @@
-"""
-Title: Class Attention image transformers with LayerScale
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2022/09/19
-Last modified: 2022/09/25
-Description: Implementing an image transformer equipped with Class Attention and LayerScale.
-"""
-"""
+# Class Attention image transformers with LayerScale
 
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2022/09/19<br>
+**Last modified:** 2022/09/25<br>
+**Description:** Implementing an image transformer equipped with Class Attention and LayerScale.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/cait.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/cait.py)
+
+
+
+---
 ## Introduction
 
 In this tutorial, we implement the CaiT (Class-Attention in Image Transformers)
@@ -35,12 +39,12 @@ The tutorial is structured like so:
 The readers are assumed to be familiar with Vision Transformers already. Here is
 an implementation of Vision Transformers in Keras:
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
-"""
 
-"""
+---
 ## Imports
-"""
 
+
+```python
 import io
 import typing
 from urllib.request import urlopen
@@ -51,8 +55,9 @@ import PIL
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+```
 
-"""
+---
 ## The LayerScale layer
 
 We begin by implementing a **LayerScale** layer which is one of the two modifications
@@ -91,8 +96,9 @@ of the individual dimensions of the residual inputs as it is applied on a per-ch
 basis.
 
 The practical implementation of LayerScale is simpler than it might sound.
-"""
 
+
+```python
 
 class LayerScale(layers.Layer):
     """LayerScale as introduced in CaiT: https://arxiv.org/abs/2103.17239.
@@ -109,8 +115,9 @@ class LayerScale(layers.Layer):
     def call(self, x, training=False):
         return x * self.gamma
 
+```
 
-"""
+---
 ## Stochastic depth layer
 
 Since its introduction ([Huang et al.](https://arxiv.org/abs/1603.09382)), Stochastic
@@ -118,8 +125,9 @@ Depth has become a favorite component in almost all modern neural network archit
 CaiT is no exception. Discussing Stochastic Depth is out of scope for this notebook. You
 can refer to [this resource](https://paperswithcode.com/method/stochastic-depth) in case
 you need a refresher.
-"""
 
+
+```python
 
 class StochasticDepth(layers.Layer):
     """Stochastic Depth layer (https://arxiv.org/abs/1603.09382).
@@ -141,8 +149,9 @@ class StochasticDepth(layers.Layer):
             return (x / keep_prob) * random_tensor
         return x
 
+```
 
-"""
+---
 ## Class attention
 
 The vanilla ViT uses self-attention (SA) layers for modelling how the image patches and
@@ -177,8 +186,9 @@ This is achieved by treating the CLS token embeddings as the queries in the CA l
 CLS token embeddings and the image patch embeddings are fed as keys as well values.
 
 **Note** that "embeddings" and "representations" have been used interchangeably here.
-"""
 
+
+```python
 
 class ClassAttention(layers.Layer):
     """Class attention as proposed in CaiT: https://arxiv.org/abs/2103.17239.
@@ -250,8 +260,9 @@ class ClassAttention(layers.Layer):
 
         return x_cls, attn
 
+```
 
-"""
+---
 ## Talking Head Attention
 
 The CaiT authors use the Talking Head attention
@@ -264,8 +275,9 @@ operations for obtaining better results.
 
 For a more rigorous treatment of the Talking Head attention and the vanilla attention
 mechanisms, please refer to their respective papers (linked above).
-"""
 
+
+```python
 
 class TalkingHeadAttention(layers.Layer):
     """Talking-head attention as proposed in CaiT: https://arxiv.org/abs/2003.02436.
@@ -340,14 +352,16 @@ class TalkingHeadAttention(layers.Layer):
 
         return x, attn
 
+```
 
-"""
+---
 ## Feed-forward Network
 
 Next, we implement the feed-forward network which is one of the components within a
 Transformer block.
-"""
 
+
+```python
 
 def mlp(x, dropout_rate: float, hidden_units: typing.List[int]):
     """FFN for a Transformer block."""
@@ -360,8 +374,9 @@ def mlp(x, dropout_rate: float, hidden_units: typing.List[int]):
         x = layers.Dropout(dropout_rate)(x)
     return x
 
+```
 
-"""
+---
 ## Other blocks
 
 In the next two cells, we implement the remaining blocks as standalone functions:
@@ -372,8 +387,9 @@ embeddings and the image patch embeddings.
 * `LayerScaleBlock()` which returns a `keras.model`. It is also a Transformer block that
 operates only on the embeddings of the image patches. It is equipped with LayerScale and
 Stochastic Depth.
-"""
 
+
+```python
 
 def LayerScaleBlockClassAttention(
     projection_dim: int,
@@ -488,15 +504,15 @@ def LayerScaleBlock(
 
     return keras.Model(encoded_patches, [outputs, attn_scores], name=name)
 
+```
 
-"""
 Given all these blocks, we are now ready to collate them into the final CaiT model.
-"""
 
-"""
+---
 ## Putting the pieces together: The CaiT model
-"""
 
+
+```python
 
 class CaiT(keras.Model):
     """CaiT model.
@@ -657,8 +673,8 @@ class CaiT(keras.Model):
             else (self.head(x), sa_ffn_attn, ca_ffn_attn)
         )
 
+```
 
-"""
 Having the SA and CA layers segregated this way helps the model to focus on underlying
 objectives more concretely:
 
@@ -668,12 +684,12 @@ the task at hand
 
 Now that we have defined the CaiT model, it's time to test it. We will start by defining
 a model configuration that will be passed to our `CaiT` class for initialization.
-"""
 
-"""
+---
 ## Defining Model Configuration
-"""
 
+
+```python
 
 def get_config(
     image_size: int = 224,
@@ -729,18 +745,18 @@ def get_config(
 
     return config
 
+```
 
-"""
 Most of the configuration variables should sound familiar to you if you already know the
 ViT architecture. Point of focus is given to `sa_ffn_layers` and `ca_ffn_layers` that
 control the number of SA-Transformer blocks and CA-Transformer blocks. You can easily
 amend this `get_config()` method to instantiate a CaiT model for your own dataset.
-"""
 
-"""
+---
 ## Model Instantiation
-"""
 
+
+```python
 image_size = 224
 num_channels = 3
 batch_size = 2
@@ -750,8 +766,8 @@ cait_xxs24_224 = CaiT(**config)
 
 dummy_inputs = tf.ones((batch_size, image_size, image_size, num_channels))
 _ = cait_xxs24_224(dummy_inputs)
+```
 
-"""
 We can successfully perform inference with the model. But what about implementation
 correctness? There are many ways to verify it:
 
@@ -768,21 +784,30 @@ Additionally, the repository provides code to verify model performance on the
 [ImageNet-1k validation set](https://github.com/sayakpaul/cait-tf/tree/main/i1k_eval)
 as well as
 [fine-tuning](https://github.com/sayakpaul/cait-tf/blob/main/notebooks/finetune.ipynb).
-"""
 
-"""
+---
 ## Load a pretrained model
-"""
 
+
+```python
 model_gcs_path = "gs://tfhub-modules/sayakpaul/cait_xxs24_224/1/uncompressed"
 pretrained_model = keras.models.load_model(model_gcs_path)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+
+```
+</div>
+---
 ## Inference utilities
 
 In the next couple of cells, we develop preprocessing utilities needed to run inference
 with the pretrained model.
-"""
+
+
+```python
 # The preprocessing transformations include center cropping, and normalizing
 # the pixel values with the ImageNet-1k training stats (mean and standard deviation).
 crop_layer = keras.layers.CenterCrop(image_size, image_size)
@@ -809,12 +834,13 @@ def load_image_from_url(url):
     preprocessed_image = preprocess_image(image)
     return image, preprocessed_image
 
+```
 
-"""
 Now, we retrieve the ImageNet-1k labels and load them as the model we're
 loading was pretrained on the ImageNet-1k dataset.
-"""
 
+
+```python
 # ImageNet-1k class labels.
 imagenet_labels = (
     "https://storage.googleapis.com/bit_models/ilsvrc2012_wordnet_lemmas.txt"
@@ -824,11 +850,13 @@ label_path = keras.utils.get_file(origin=imagenet_labels)
 with open(label_path, "r") as f:
     lines = f.readlines()
 imagenet_labels = [line.rstrip() for line in lines]
+```
 
-"""
+---
 ## Load an Image
-"""
 
+
+```python
 img_url = "https://i.imgur.com/ErgfLTn.jpg"
 image, preprocessed_image = load_image_from_url(img_url)
 
@@ -836,36 +864,58 @@ image, preprocessed_image = load_image_from_url(img_url)
 plt.imshow(image)
 plt.axis("off")
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/cait/cait_33_0.png)
+    
+
+
+---
 ## Obtain Predictions
-"""
 
+
+```python
 logits, sa_atn_score_dict, ca_atn_score_dict = pretrained_model.predict(
     preprocessed_image
 )
 predicted_label = imagenet_labels[int(np.argmax(logits))]
 print(predicted_label)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 3s 3s/step
+monarch, monarch_butterfly, milkweed_butterfly, Danaus_plexippus
+
+```
+</div>
 Now that we have obtained the predictions (which appear to be as expected), we can
 further extend our investigation. Following the CaiT authors, we can investigate the
 attention scores from the attention layers. This helps us to get deeper insights into the
 modifications introduced in the CaiT paper.
-"""
 
-"""
+---
 ## Visualizing the Attention Layers
 
 We start by inspecting the shape of the attention weights returned by a Class Attention
 layer.
-"""
 
+
+```python
 # (batch_size, nb_attention_heads, num_cls_token, seq_length)
 print("Shape of the attention scores from a class attention block:")
 print(ca_atn_score_dict["ca_ffn_block_0_att"].shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Shape of the attention scores from a class attention block:
+(1, 4, 1, 197)
+
+```
+</div>
 The shape denotes we have got attention weights for each of the individual attention
 heads. They quantify the information about how the CLS token is related to itself and the
 rest of the image patches.
@@ -882,8 +932,9 @@ This utility is referred from Figures 6 and 7 of the original
 [CaiT paper](https://arxiv.org/abs/2103.17239). This is also a part of
 [this notebook](https://github.com/sayakpaul/cait-tf/blob/main/notebooks/classification.ipynb)
 (developed by the author of this tutorial).
-"""
 
+
+```python
 # Reference:
 # https://github.com/facebookresearch/dino/blob/main/visualize_attention.py
 
@@ -936,12 +987,13 @@ def get_cls_attention_map(
 
     return attentions
 
+```
 
-"""
 In the first CA layer, we notice that the model is focusing solely on the region of
 interest.
-"""
 
+
+```python
 attentions_ca_block_0 = get_cls_attention_map()
 
 
@@ -957,12 +1009,19 @@ for i in range(attentions_ca_block_0.shape[-1]):
 
 fig.tight_layout()
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/cait/cait_42_0.png)
+    
+
+
 Whereas in the second CA layer, the model is trying to focus more on the context that
 contains discriminative signals.
-"""
 
+
+```python
 attentions_ca_block_1 = get_cls_attention_map(block_key="ca_ffn_block_1_att")
 
 
@@ -978,11 +1037,18 @@ for i in range(attentions_ca_block_1.shape[-1]):
 
 fig.tight_layout()
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/cait/cait_44_0.png)
+    
+
+
 Finally, we obtain the saliency map for the given image.
-"""
 
+
+```python
 saliency_attention = get_cls_attention_map(return_saliency=True)
 
 image = np.array(image)
@@ -998,8 +1064,20 @@ plt.imshow(saliency_attention.numpy().squeeze(), cmap="cividis", alpha=0.9)
 plt.axis("off")
 
 plt.show()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+
+```
+</div>
+    
+![png](/img/examples/vision/cait/cait_46_1.png)
+    
+
+
+---
 ## Conclusion
 
 In this notebook, we implemented the CaiT model. It shows how to mitigate the issues in
@@ -1007,8 +1085,8 @@ ViTs when trying scale their depth while keeping the pretraining dataset fixed. 
 the additional visualizations provided in the notebook spark excitement in the community
 and people develop interesting methods to probe what models like ViT learn.
 
+---
 ## Acknowledgement
 
 Thanks to the ML Developer Programs team at Google providing Google Cloud Platform
 support.
-"""
