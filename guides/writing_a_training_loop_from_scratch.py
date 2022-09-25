@@ -221,7 +221,7 @@ As such, our training loop above executes eagerly.
 This is great for debugging, but graph compilation has a definite performance
 advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
-the framework is constrained to greedly execute one operation after another,
+the framework is constrained to greedily execute one operation after another,
 with no knowledge of what comes next.
 
 You can compile into a static graph any function that takes tensors as input.
