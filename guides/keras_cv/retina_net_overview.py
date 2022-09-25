@@ -16,7 +16,6 @@ data augmentation techniques, models, and COCO metrics.
 To get started, let's sort out all of our imports and define global configuration parameters.
 """
 
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
@@ -25,8 +24,9 @@ from tensorflow.keras import optimizers
 import keras_cv
 from keras_cv import bounding_box
 import os
+from luketils import visualization
 
-BATCH_SIZE = 8
+BATCH_SIZE = 16
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
@@ -60,24 +60,51 @@ Let's load some data and verify that our data looks as we expect it to.
 """
 
 dataset, dataset_info = keras_cv.datasets.pascal_voc.load(
-    split="train", bounding_box_format="xywh", batch_size=9
+    split="train", bounding_box_format="xywh", batch_size=BATCH_SIZE
 )
+
+class_ids = [
+    "Aeroplane",
+    "Bicycle",
+    "Bird",
+    "Boat",
+    "Bottle",
+    "Bus",
+    "Car",
+    "Cat",
+    "Chair",
+    "Cow",
+    "Dining Table",
+    "Dog",
+    "Horse",
+    "Motorbike",
+    "Person",
+    "Potted Plant",
+    "Sheep",
+    "Sofa",
+    "Train",
+    "Tvmonitor",
+    "Total",
+]
+class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 
 def visualize_dataset(dataset, bounding_box_format):
-    color = tf.constant(((255.0, 0, 0),))
-    plt.figure(figsize=(10, 10))
-    for i, example in enumerate(dataset.take(9)):
-        images, boxes = example["images"], example["bounding_boxes"]
-        boxes = keras_cv.bounding_box.convert_format(
-            boxes, source=bounding_box_format, target="rel_yxyx", images=images
-        )
-        boxes = boxes.to_tensor(default_value=-1)
-        plotted_images = tf.image.draw_bounding_boxes(images, boxes[..., :4], color)
-        plt.subplot(9 // 3, 9 // 3, i + 1)
-        plt.imshow(plotted_images[0].numpy().astype("uint8"))
-        plt.axis("off")
-    plt.show()
+    example = next(iter(dataset))
+    images, boxes = example["images"], example["bounding_boxes"]
+    visualization.plot_bounding_box_gallery(
+        images,
+        value_range=(0, 255),
+        bounding_box_format=bounding_box_format,
+        y_true=boxes,
+        scale=4,
+        rows=3,
+        cols=3,
+        show=True,
+        thickness=4,
+        font_scale=1,
+        class_mapping=class_mapping,
+    )
 
 
 visualize_dataset(dataset, bounding_box_format="xywh")
@@ -110,20 +137,24 @@ val_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
     bounding_box_format="xywh", split="validation", batch_size=BATCH_SIZE
 )
 
-augmenter = keras_cv.layers.Augmenter(
-    layers=[
-        keras_cv.layers.RandomColorJitter(
-            value_range=(0, 255),
-            brightness_factor=0.1,
-            contrast_factor=0.1,
-            saturation_factor=0.1,
-            hue_factor=0.1,
-        ),
-        keras_cv.layers.RandomSharpness(value_range=(0, 255), factor=0.1),
-    ]
+random_flip = keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh")
+rand_augment = keras_cv.layers.RandAugment(
+    value_range=(0, 255),
+    augmentations_per_image=2,
+    # we disable geometric augmentations for object detection tasks
+    geometric=False,
 )
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+
+def augment(inputs):
+    # In future KerasCV releases, RandAugment will support
+    # bounding box detection
+    inputs["images"] = rand_augment(inputs["images"])
+    inputs = random_flip(inputs)
+    return inputs
+
+
+train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 
 """
@@ -295,28 +326,30 @@ a non max suppression operation for you.
 """
 
 
-def visualize_detections(model):
+def visualize_detections(model, bounding_box_format):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
-        bounding_box_format="xywh", split="train", batch_size=9
+        bounding_box_format=bounding_box_format, split="train", batch_size=BATCH_SIZE
     )
     train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
-    images, labels = next(iter(train_ds.take(1)))
-    predictions = model.predict(images)
-    color = tf.constant(((255.0, 0, 0),))
-    plt.figure(figsize=(10, 10))
-    predictions = keras_cv.bounding_box.convert_format(
-        predictions, source="xywh", target="rel_yxyx", images=images
+    images, y_true = next(iter(train_ds.take(1)))
+    y_pred = model.predict(images)
+    visualization.plot_bounding_box_gallery(
+        images,
+        value_range=(0, 255),
+        bounding_box_format=bounding_box_format,
+        y_true=y_true,
+        y_pred=y_pred,
+        scale=4,
+        rows=3,
+        cols=3,
+        show=True,
+        thickness=4,
+        font_scale=1,
+        class_mapping=class_mapping,
     )
-    predictions = predictions.to_tensor(default_value=-1)
-    plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
-    for i in range(9):
-        plt.subplot(9 // 3, 9 // 3, i + 1)
-        plt.imshow(plotted_images[i].numpy().astype("uint8"))
-        plt.axis("off")
-    plt.show()
 
 
-visualize_detections(model)
+visualize_detections(model, bounding_box_format="xywh")
 
 """
 To get good results, you should train for at least 100 epochs.  You also need to
@@ -337,7 +370,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
     ),
 )
 model.prediction_decoder = prediction_decoder
-visualize_detections(model)
+visualize_detections(model, bounding_box_format="xywh")
 """
 ## Results and conclusions
 
