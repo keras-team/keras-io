@@ -44,7 +44,7 @@ Check out the power of `keras_cv.models.StableDiffusion()`.
 First, we construct a model:
 """
 
-stable_diffusion = keras_cv.models.StableDiffusion(width=512, height=512)
+stable_diffusion = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
 
 """
 Next, we give it a prompt:
@@ -161,10 +161,10 @@ That's all.  Out of the box - it just works.
 # clear session to preserve memory
 tf.keras.backend.clear_session()
 stable_diffusion = keras_cv.models.StableDiffusion()
-print("Compute dtype:", stable_diffusion_mixed_precision.diffusion_model.compute_dtype)
+print("Compute dtype:", stable_diffusion.diffusion_model.compute_dtype)
 print(
     "Variable dtype:",
-    stable_diffusion_mixed_precision.diffusion_model.variable_dtype,
+    stable_diffusion.diffusion_model.variable_dtype,
 )
 
 """
