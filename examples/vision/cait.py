@@ -82,7 +82,7 @@ where, the lambdas are learnable parameters and are initialized with a very smal
 Intuitively, LayerScale helps control the contribution of the residual branches. The
 learnable parameters of LayerScale are initialized to a small value to let the branches
 act like identity functions and then let them figure out the degrees of interactions
-during the training. The diagonal matrix additionally helps to control the contributions
+during the training. The diagonal matrix additionally helps control the contributions
 of the individual dimensions of the residual inputs as it is applied on a per-channel
 basis. 
 
@@ -259,7 +259,7 @@ They introduce two linear projections before and after the softmax
 operations for obtaining better results. 
 
 For a more rigorous treatment of the Talking Head attention and the vanilla attention
-mechanisms, the readers should refer to the respective papers. 
+mechanisms, please refer to their respective papers (linked above). 
 """
 
 
@@ -738,11 +738,12 @@ ImageNet-1k).
 * Fine-tune the model on a different dataset. 
 
 In order to verify that, we will load another instance of the same model that has been
-already populated with the pre-trained parameters. Please refer to [this
-repository](https://github.com/sayakpaul/cait-tf) (developed by the author of this
-notebook) for more details. Additionally, the repository provides code to verify model
-performance on the [ImageNet-1k validation
-set](https://github.com/sayakpaul/cait-tf/tree/main/i1k_eval) as well as
+already populated with the pre-trained parameters. Please refer to
+[this repository](https://github.com/sayakpaul/cait-tf)
+(developed by the author of this notebook) for more details.
+Additionally, the repository provides code to verify model performance on the
+[ImageNet-1k validation set](https://github.com/sayakpaul/cait-tf/tree/main/i1k_eval)
+as well as
 [fine-tuning](https://github.com/sayakpaul/cait-tf/blob/main/notebooks/finetune.ipynb). 
 """
 
