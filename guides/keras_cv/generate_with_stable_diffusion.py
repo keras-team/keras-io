@@ -1,6 +1,6 @@
 """
 Title: Generate images using KerasCV's StableDiffusion's at unprecedented speeds
-Author: [fchollet](https://github.com/fchollet), [lukewood](https://lukewood.xyz), [ianstenbit](https://github.com/ianstenbit), ... and others if anyone wants to contribute
+Author: [divamgupta](https://github.com/divamgupta), [fchollet](https://github.com/fchollet), [lukewood](https://lukewood.xyz), [ianstenbit](https://github.com/ianstenbit), ... and others if anyone wants to contribute
 Date created: 2022/09/24
 Last modified: 2022/09/24
 Description:
@@ -60,11 +60,13 @@ def visualize_prompt(prompt, sd_model=None):
     sd_model = sd_model or stable_diffusion
     visualization.plot_gallery(
         sd_model.text_to_image(prompt, batch_size=3),
-        rows=1, cols=3,
+        rows=1,
+        cols=3,
         scale=4,
         value_range=(0, 255),
-        show=True
+        show=True,
     )
+
 
 visualize_prompt("a cartoon caterpillar wearing glasses")
 
@@ -77,8 +79,7 @@ Have you ever seen a monkey surf?
 """
 
 visualize_prompt(
-    "The worlds cutest monkey surfing on a "
-    "beautiful wave in the sunshine!"
+    "The worlds cutest monkey surfing on a " "beautiful wave in the sunshine!"
 )
 
 """
@@ -86,8 +87,7 @@ Or the Garden of Eden filled with cats?
 """
 
 visualize_prompt(
-    "Absolutely stunning artwork of the garden of eden, "
-    "but filled with cats!"
+    "Absolutely stunning artwork of the garden of eden, " "but filled with cats!"
 )
 
 """
@@ -144,7 +144,7 @@ xla_stable_diffusion = keras_cv.models.StableDiffusion(jit_compile=True)
 # warm up the model by running inference once before timing it
 visualize_prompt(
     "An oldschool macintosh computer showing an avocado on its screen",
-    sd_model=xla_stable_diffusion
+    sd_model=xla_stable_diffusion,
 )
 
 """
@@ -154,7 +154,7 @@ Now lets compare the runtimes of our models
 with ez_timer() as timer:
     visualize_prompt(
         "A cute water-colored otter in a rainbow whirlpool holding shells",
-        sd_model=stable_diffusion
+        sd_model=stable_diffusion,
     )
 print(f"Without XLA took {timer.result} seconds")
 
@@ -165,7 +165,7 @@ and now with XLA
 with ez_timer() as timer:
     visualize_prompt(
         "A cute water-colored otter in a rainbow whirlpool holding shells",
-        sd_model=xla_stable_diffusion
+        sd_model=xla_stable_diffusion,
     )
 print(f"With XLA took {timer.result} seconds")
 
@@ -186,7 +186,7 @@ with ez_timer() as timer:
         "a cute magical flying dog, fantasy art drawn by disney concept artists, "
         "golden colour, high quality, highly detailed, elegant, sharp focus, "
         "concept art, character concepts, digital painting, mystery, adventure",
-        sd_model=stable_diffusion
+        sd_model=stable_diffusion,
     )
 print(f"Without mixed precision took {timer.result} seconds")
 
@@ -194,31 +194,36 @@ print(f"Without mixed precision took {timer.result} seconds")
 Now lets construct a model with mixed precision.
 Here is what it takes to do so:
 """
-mixed_precision.set_global_policy('mixed_float16')
+mixed_precision.set_global_policy("mixed_float16")
 
 """
 That's all.  Out of the box - it just works.
 """
 
 stable_diffusion_mixed_precision = keras_cv.models.StableDiffusion()
-print('Old compute dtype:', stable_diffusion.diffusion_model.compute_dtype)
-print('Old variable dtype:', stable_diffusion.diffusion_model.variable_dtype)
-print('New compute dtype:', stable_diffusion_mixed_precision.diffusion_model.compute_dtype)
-print('New variable dtype:', stable_diffusion_mixed_precision.diffusion_model.variable_dtype)
+print("Old compute dtype:", stable_diffusion.diffusion_model.compute_dtype)
+print("Old variable dtype:", stable_diffusion.diffusion_model.variable_dtype)
+print(
+    "New compute dtype:", stable_diffusion_mixed_precision.diffusion_model.compute_dtype
+)
+print(
+    "New variable dtype:",
+    stable_diffusion_mixed_precision.diffusion_model.variable_dtype,
+)
 
 """
 As you can see, the model constructed above now uses mixed precision computation;
 leveraging the speed of `float16` for computation, and `float32` to store variables.
 """
 # warm up model to run graph tracing before benchmarking
-stable_diffusion_mixed_precision.text_to_image('warming up the model')
+stable_diffusion_mixed_precision.text_to_image("warming up the model")
 
 with ez_timer() as timer:
     visualize_prompt(
         "a cute magical flying dog, fantasy art drawn by disney concept artists, "
         "golden colour, high quality, highly detailed, elegant, sharp focus, "
         "concept art, character concepts, digital painting, mystery, adventure",
-        sd_model=stable_diffusion_mixed_precision
+        sd_model=stable_diffusion_mixed_precision,
     )
 print(f"With mixed precision took {timer.result} seconds")
 
@@ -229,12 +234,12 @@ So?  How do you assemble the world's most performant stable diffusion inference 
 
 Two lines of code:
 """
-mixed_precision.set_global_policy('mixed_float16')
+mixed_precision.set_global_policy("mixed_float16")
 supermodel = keras_cv.models.StableDiffusion(jit_compile=True)
 """
 and to use it...
 """
-supermodel.text_to_image('warming up the model')
+supermodel.text_to_image("warming up the model")
 
 """
 Exactly how fast is it?
@@ -246,7 +251,7 @@ with ez_timer() as timer:
         "A mysterious dark stranger visits the great pyramids of egypt, "
         "high quality, highly detailed, elegant, sharp focus, "
         "concept art, character concepts, digital painting",
-        sd_model=supermodel
+        sd_model=supermodel,
     )
 print(f"With XLA and mixed precision took {timer.result} seconds")
 
