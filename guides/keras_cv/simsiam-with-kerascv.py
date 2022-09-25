@@ -601,3 +601,4 @@ Some follow-up exercises to this tutorial:
 - Train an EfficientNetV2B0 on STL-10
 - Experiment with other data augmentation techniques in pretraining
 - Train a model using the BarlowTwins implementation in TensorFlow similarity
+"""
