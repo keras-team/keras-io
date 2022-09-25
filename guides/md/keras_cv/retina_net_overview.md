@@ -21,7 +21,6 @@ To get started, let's sort out all of our imports and define global configuratio
 
 
 ```python
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
@@ -30,8 +29,9 @@ from tensorflow.keras import optimizers
 import keras_cv
 from keras_cv import bounding_box
 import os
+from luketils import visualization
 
-BATCH_SIZE = 8
+BATCH_SIZE = 16
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
@@ -67,61 +67,58 @@ Let's load some data and verify that our data looks as we expect it to.
 
 ```python
 dataset, dataset_info = keras_cv.datasets.pascal_voc.load(
-    split="train", bounding_box_format="xywh", batch_size=9
+    split="train", bounding_box_format="xywh", batch_size=BATCH_SIZE
 )
+
+class_ids = [
+    "Aeroplane",
+    "Bicycle",
+    "Bird",
+    "Boat",
+    "Bottle",
+    "Bus",
+    "Car",
+    "Cat",
+    "Chair",
+    "Cow",
+    "Dining Table",
+    "Dog",
+    "Horse",
+    "Motorbike",
+    "Person",
+    "Potted Plant",
+    "Sheep",
+    "Sofa",
+    "Train",
+    "Tvmonitor",
+    "Total",
+]
+class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 
 def visualize_dataset(dataset, bounding_box_format):
-    color = tf.constant(((255.0, 0, 0),))
-    plt.figure(figsize=(10, 10))
-    for i, example in enumerate(dataset.take(9)):
-        images, boxes = example["images"], example["bounding_boxes"]
-        boxes = keras_cv.bounding_box.convert_format(
-            boxes, source=bounding_box_format, target="rel_yxyx", images=images
-        )
-        boxes = boxes.to_tensor(default_value=-1)
-        plotted_images = tf.image.draw_bounding_boxes(images, boxes[..., :4], color)
-        plt.subplot(9 // 3, 9 // 3, i + 1)
-        plt.imshow(plotted_images[0].numpy().astype("uint8"))
-        plt.axis("off")
-    plt.show()
+    example = next(iter(dataset))
+    images, boxes = example["images"], example["bounding_boxes"]
+    visualization.plot_bounding_box_gallery(
+        images,
+        value_range=(0, 255),
+        bounding_box_format=bounding_box_format,
+        y_true=boxes,
+        scale=4,
+        rows=3,
+        cols=3,
+        show=True,
+        thickness=4,
+        font_scale=1,
+        class_mapping=class_mapping,
+    )
 
 
 visualize_dataset(dataset, bounding_box_format="xywh")
 
-```
-
-<div class="k-default-codeblock">
-```
-[1mDownloading and preparing dataset 868.85 MiB (download: 868.85 MiB, generated: Unknown size, total: 868.85 MiB) to ~/tensorflow_datasets/voc/2007/4.0.0...[0m
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
-
-Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteY70G83/voc-test.tfrecord*...:   0%|          | 0/4952…
-
-Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteY70G83/voc-train.tfrecord*...:   0%|          | 0/250…
-
-Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteY70G83/voc-validation.tfrecord*...:   0%|          | …
-
-[1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
-
-```
-</div>
     
 ![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
-    
+ 
 
 
 Looks like everything is structured as expected.  Now we can move on to constructing our
@@ -171,7 +168,7 @@ train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(train_ds, bounding_box_format="xywh")
 ```
 
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_7_8.png)
     
 
@@ -334,7 +331,7 @@ model.save_weights(CHECKPOINT_PATH)
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 162s 481ms/step - loss: 12.5135 - classification_loss: 6.3680 - regularization_loss: 0.0000e+00 - box_loss: 6.1454 - val_Mean Average Precision: 0.0151 - val_Recall: 0.0432 - val_loss: 10.3468 - val_classification_loss: 5.1704 - val_box_loss: 5.1764 - val_regularization_loss: 0.0000e+00 - lr: 0.0100
+157/157 [==============================] - 180s 1s/step - loss: 26.5893 - classification_loss: 13.6207 - box_loss: 12.9686 - val_Mean Average Precision: 0.0029 - val_Recall: 0.0079 - val_loss: 22.9552 - val_classification_loss: 11.2301 - val_box_loss: 11.7251 - lr: 0.0100
 
 ```
 </div>
@@ -350,8 +347,8 @@ print(metrics)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 197s 2s/step - Mean Average Precision: 0.1165 - Recall: 0.2858 - loss: 5.3522 - classification_loss: 2.3509 - box_loss: 3.0013 - regularization_loss: 0.0000e+00
-{'Mean Average Precision': 0.1164998784661293, 'Recall': 0.2858008146286011, 'loss': 5.352220058441162, 'classification_loss': 2.3509249687194824, 'box_loss': 3.001293897628784, 'regularization_loss': 0.0}
+100/100 [==============================] - 391s 4s/step - Mean Average Precision: 0.0912 - Recall: 0.2442 - loss: 11.2131 - classification_loss: 4.8064 - box_loss: 6.4066  
+{'Mean Average Precision': 0.09121730178594589, 'Recall': 0.24424493312835693, 'loss': 11.213068962097168, 'classification_loss': 4.8064470291137695, 'box_loss': 6.406621932983398}
 
 ```
 </div>
@@ -365,33 +362,35 @@ a non max suppression operation for you.
 
 ```python
 
-def visualize_detections(model):
+def visualize_detections(model, bounding_box_format):
     train_ds, val_dataset_info = keras_cv.datasets.pascal_voc.load(
-        bounding_box_format="xywh", split="train", batch_size=9
+        bounding_box_format=bounding_box_format, split="train", batch_size=BATCH_SIZE
     )
     train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
-    images, labels = next(iter(train_ds.take(1)))
-    predictions = model.predict(images)
-    color = tf.constant(((255.0, 0, 0),))
-    plt.figure(figsize=(10, 10))
-    predictions = keras_cv.bounding_box.convert_format(
-        predictions, source="xywh", target="rel_yxyx", images=images
+    images, y_true = next(iter(train_ds.take(1)))
+    y_pred = model.predict(images)
+    visualization.plot_bounding_box_gallery(
+        images,
+        value_range=(0, 255),
+        bounding_box_format=bounding_box_format,
+        y_true=y_true,
+        y_pred=y_pred,
+        scale=4,
+        rows=3,
+        cols=3,
+        show=True,
+        thickness=4,
+        font_scale=1,
+        class_mapping=class_mapping,
     )
-    predictions = predictions.to_tensor(default_value=-1)
-    plotted_images = tf.image.draw_bounding_boxes(images, predictions[..., :4], color)
-    for i in range(9):
-        plt.subplot(9 // 3, 9 // 3, i + 1)
-        plt.imshow(plotted_images[i].numpy().astype("uint8"))
-        plt.axis("off")
-    plt.show()
 
 
-visualize_detections(model)
+visualize_detections(model, bounding_box_format="xywh")
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 5s 5s/step
+1/1 [==============================] - 2s 2s/step
 
 ```
 </div>
@@ -419,12 +418,12 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
     ),
 )
 model.prediction_decoder = prediction_decoder
-visualize_detections(model)
+visualize_detections(model, bounding_box_format="xywh")
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 2s 2s/step
+1/1 [==============================] - 3s 3s/step
 
 ```
 </div>
