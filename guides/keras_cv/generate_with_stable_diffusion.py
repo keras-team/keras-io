@@ -198,7 +198,7 @@ Lets use this below:
 """
 
 tf.keras.backend.clear_session()
-# set bak to the default for benchmarking purposes
+# set back to the default for benchmarking purposes
 mixed_precision.set_global_policy("float32")
 stable_diffusion = keras_cv.models.StableDiffusion(jit_compile=True)
 # before we benchmark the model, we run inference once to make sure the TensorFlow
