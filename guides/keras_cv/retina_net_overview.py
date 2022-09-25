@@ -26,7 +26,7 @@ from keras_cv import bounding_box
 import os
 from luketils import visualization
 
-BATCH_SIZE = 8
+BATCH_SIZE = 16
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
@@ -98,13 +98,14 @@ def visualize_dataset(dataset, bounding_box_format):
         bounding_box_format=bounding_box_format,
         y_true=boxes,
         scale=4,
-        rows=2,
+        rows=3,
         cols=3,
         show=True,
         thickness=4,
         font_scale=1,
         class_mapping=class_mapping,
     )
+
 
 visualize_dataset(dataset, bounding_box_format="xywh")
 
@@ -339,7 +340,7 @@ def visualize_detections(model, bounding_box_format):
         y_true=y_true,
         y_pred=y_pred,
         scale=4,
-        rows=2,
+        rows=3,
         cols=3,
         show=True,
         thickness=4,
@@ -348,8 +349,7 @@ def visualize_detections(model, bounding_box_format):
     )
 
 
-
-visualize_detections(model, bounding_box_format='xywh')
+visualize_detections(model, bounding_box_format="xywh")
 
 """
 To get good results, you should train for at least 100 epochs.  You also need to
@@ -370,7 +370,7 @@ prediction_decoder = keras_cv.layers.NmsPredictionDecoder(
     ),
 )
 model.prediction_decoder = prediction_decoder
-visualize_detections(model)
+visualize_detections(model, bounding_box_format="xywh")
 """
 ## Results and conclusions
 
