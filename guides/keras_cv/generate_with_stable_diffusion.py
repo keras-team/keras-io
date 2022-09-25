@@ -1,6 +1,6 @@
 """
 Title: Generate images using KerasCV's StableDiffusion's at unprecedented speeds
-Author: [lukewood](https://lukewood.xyz), [fchollet](https://github.com/fchollet), [ianstenbit](https://github.com/ianstenbit), ... and others if anyone wants to contribute
+Author: [fchollet](https://github.com/fchollet), [lukewood](https://lukewood.xyz), [ianstenbit](https://github.com/ianstenbit), ... and others if anyone wants to contribute
 Date created: 2022/09/24
 Last modified: 2022/09/24
 Description:
