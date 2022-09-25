@@ -1,5 +1,5 @@
 """
-Title: Class Attention image transformers with LayerScale
+Title: Class Attention Image Transformers with LayerScale
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/09/19
 Last modified: 2022/09/25

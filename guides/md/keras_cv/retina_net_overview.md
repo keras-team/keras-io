@@ -115,6 +115,7 @@ def visualize_dataset(dataset, bounding_box_format):
 
 
 visualize_dataset(dataset, bounding_box_format="xywh")
+```
 
     
 ![png](/img/guides/retina_net_overview/retina_net_overview_4_12.png)
