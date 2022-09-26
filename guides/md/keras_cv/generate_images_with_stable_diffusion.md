@@ -1,12 +1,16 @@
-"""
-Title: High-performance image generation using StableDiffusion in KerasCV
-Authors: [fchollet](https://twitter.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)
-Date created: 2022/09/25
-Last modified: 2022/09/25
-Description: Generate new images using KerasCV's StableDiffusion model.
-"""
+# High-performance image generation using StableDiffusion in KerasCV
 
-"""
+**Authors:** [fchollet](https://twitter.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)<br>
+**Date created:** 2022/09/25<br>
+**Last modified:** 2022/09/25<br>
+**Description:** Generate new images using KerasCV's StableDiffusion model.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/generate_images_with_stable_diffusion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/generate_images_with_stable_diffusion.py)
+
+
+
+---
 ## Overview
 
 In this guide, we will show how to generate novel images based on a text prompt using
@@ -25,13 +29,16 @@ these powerful performance boosts, and explore the performance benefits
 that they offer.
 
 To get started, let's install a few dependencies and sort out some imports:
-"""
+
+
+```python
 import time
 import keras_cv
 from tensorflow import keras
 import matplotlib.pyplot as plt
+```
 
-"""
+---
 ## Introduction
 
 Unlike most tutorials, where we first explain a topic then show how to implement it,
@@ -40,14 +47,16 @@ with text to image generation it is easier to show instead of tell.
 Check out the power of `keras_cv.models.StableDiffusion()`.
 
 First, we construct a model:
-"""
 
+
+```python
 model = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
+```
 
-"""
 Next, we give it a prompt:
-"""
 
+
+```python
 images = model.text_to_image("photograph of an astronaut riding a horse", batch_size=3)
 
 
@@ -60,13 +69,25 @@ def plot_images(images):
 
 
 plot_images(images)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 19s 317ms/step
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_6_1.png)
+    
+
+
 Pretty incredible!
 
 But that's not all this model can do.  Let's try a more complex prompt:
-"""
 
+
+```python
 images = model.text_to_image(
     "cute magical flying dog, fantasy art, "
     "golden color, high quality, highly detailed, elegant, sharp focus, "
@@ -74,13 +95,23 @@ images = model.text_to_image(
     batch_size=3,
 )
 plot_images(images)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 8s 315ms/step
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_8_1.png)
+    
+
+
 The possibilities are literally endless (or at least extend to the boundaries of
 StableDiffusion's latent manifold).
-"""
 
-"""
+---
 ## Wait, how does this even work?
 
 Unlike what you might expect at this point, StableDiffusion doesn't actually run on magic.
@@ -138,9 +169,8 @@ fits in four files that represent less than 500 lines of code in total:
 
 But this relatively simple system starts looking like magic once you train on billions of pictures and their captions.
 As Feynman said about the universe: _"It's not complicated, it's just a lot of it!"_
-"""
 
-"""
+---
 ## Perks of KerasCV
 
 With several implementations of StableDiffusion publicly available why shoud you use
@@ -202,8 +232,9 @@ This may be largely attributed to XLA compilation.
 significantly between hardware setups.**
 
 To get started, let's first benchmark our unoptimized model:
-"""
 
+
+```python
 benchmark_result = []
 start = time.time()
 images = model.text_to_image(
@@ -216,8 +247,20 @@ plot_images(images)
 
 print(f"Standard model: {(end - start):.2f} seconds")
 keras.backend.clear_session()  # Clear session to preserve memory.
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 8s 315ms/step
+Standard model: 8.16 seconds
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_12_1.png)
+    
+
+
 ### Mixed precision
 
 "Mixed precision" consists of performing computation using `float16`
@@ -227,14 +270,23 @@ significantly faster kernels than their `float32` counterparts on modern NVIDIA 
 
 Enabling mixed precision computation in Keras
 (and therefore for `keras_cv.models.StableDiffusion`) is as simple as calling:
-"""
 
+
+```python
 keras.mixed_precision.set_global_policy("mixed_float16")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-SXM4-40GB, compute capability 8.0
+
+```
+</div>
 That's all.  Out of the box - it just works.
-"""
 
+
+```python
 model = keras_cv.models.StableDiffusion()
 
 print("Compute dtype:", model.diffusion_model.compute_dtype)
@@ -242,13 +294,21 @@ print(
     "Variable dtype:",
     model.diffusion_model.variable_dtype,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Compute dtype: float16
+Variable dtype: float32
+
+```
+</div>
 As you can see, the model constructed above now uses mixed precision computation;
 leveraging the speed of `float16` operations for computation, while storing variables
 in `float32` precision.
-"""
 
+
+```python
 # Warm up model to run graph tracing before benchmarking.
 model.text_to_image("warming up the model", batch_size=3)
 
@@ -265,8 +325,21 @@ plot_images(images)
 
 print(f"Mixed precision model: {(end - start):.2f} seconds")
 keras.backend.clear_session()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 15s 224ms/step
+25/25 [==============================] - 6s 223ms/step
+Mixed precision model: 5.97 seconds
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_18_1.png)
+    
+
+
 ### XLA Compilation
 
 TensorFlow comes with the
@@ -276,8 +349,9 @@ Setting this argument to `True` enables XLA compilation, resulting in a signific
 speed-up.
 
 Let's use this below:
-"""
 
+
+```python
 # Set back to the default for benchmarking purposes.
 keras.mixed_precision.set_global_policy("float32")
 
@@ -286,11 +360,23 @@ model = keras_cv.models.StableDiffusion(jit_compile=True)
 # graph has already been traced.
 images = model.text_to_image("An avocado armchair", batch_size=3)
 plot_images(images)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 36s 245ms/step
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_20_1.png)
+    
+
+
 Let's benchmark our XLA model:
-"""
 
+
+```python
 start = time.time()
 images = model.text_to_image(
     "A cute otter in a rainbow whirlpool holding shells, watercolor",
@@ -302,39 +388,64 @@ plot_images(images)
 
 print(f"With XLA: {(end - start):.2f} seconds")
 keras.backend.clear_session()
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 6s 243ms/step
+With XLA: 6.23 seconds
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_22_1.png)
+    
+
+
 On an A100 GPU, we get about a 2x speedup.  Fantastic!
-"""
 
-"""
+---
 ## Putting it all together
 
 So, how do you assemble the world's most performant stable diffusion inference
 pipeline (as of September 2022).
 
 With these two lines of code:
-"""
 
+
+```python
 keras.mixed_precision.set_global_policy("mixed_float16")
 model = keras_cv.models.StableDiffusion(jit_compile=True)
+```
 
-"""
 And to use it...
-"""
 
+
+```python
 # Let's make sure to warm up the model
 images = model.text_to_image(
     "Teddy bears conducting machine learning research",
     batch_size=3,
 )
 plot_images(images)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 39s 155ms/step
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_27_1.png)
+    
+
+
 Exactly how fast is it?
 Let's find out!
-"""
 
+
+```python
 start = time.time()
 images = model.text_to_image(
     "A mysterious dark stranger visits the great pyramids of egypt, "
@@ -347,22 +458,44 @@ benchmark_result.append(["XLA + Mixed Precision", end - start])
 plot_images(images)
 
 print(f"XLA + mixed precision: {(end - start):.2f} seconds")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 4s 156ms/step
+XLA + mixed precision: 4.20 seconds
+
+```
+</div>
+    
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_29_1.png)
+    
+
+
 Let's check out the results:
-"""
 
+
+```python
 print("{:<20} {:<20}".format("Model", "Runtime"))
 for result in benchmark_result:
     name, runtime = result
     print("{:<20} {:<20}".format(name, runtime))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Model                Runtime             
+Standard             8.15594744682312    
+Mixed Precision      5.970782279968262   
+XLA                  6.225290298461914   
+XLA + Mixed Precision 4.203771591186523   
+
+```
+</div>
 It only took our fully-optimized model four seconds to generate three novel images from
 a text prompt on an A100 GPU.
-"""
 
-"""
+---
 ## Conclusions
 
 KerasCV offers a state-of-the-art implementation of StableDiffusion -- and
@@ -376,4 +509,3 @@ This time, we leave you with one idea:
 If you have your own NVIDIA GPU, or a M1 MacBookPro, you can also run the model locally on your machine.
 (Note that when running on a M1 MacBookPro, you should not enable mixed precision, as it is not yet well supported
 by Apple's Metal runtime.)
-"""
