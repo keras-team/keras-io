@@ -51,7 +51,9 @@ Next, we give it a prompt:
 """
 
 images = stable_diffusion.text_to_image(
-    "a cartoon caterpillar wearing glasses", batch_size=3
+    "A digital illustration of a treetop house with fireflies, vivid colors, 4k, "
+    "fantasy",
+    batch_size=3,
 )
 
 visualization.plot_gallery(
