@@ -1,7 +1,6 @@
 """Lightweight fork of Keras-Autodocs.
 """
 import warnings
-from inspect import Signature
 import black
 import re
 import inspect
@@ -185,7 +184,8 @@ def get_signature_start(function):
 
 
 def get_signature_end(function):
-    signature_end = Signature(function).format_args()
+    params = inspect.signature(function).parameters.values()
+    signature_end = "(" + ", ".join([str(x) for x in params]) + ")"
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")
