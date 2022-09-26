@@ -285,11 +285,11 @@ keras.utils.plot_model(model, show_shapes=True)
 And let's apply data augmentation to our training dataset:
 """
 
-# Apply `data_augmentation` to the training images.
-train_ds = train_ds.map(
-    lambda img, label: (data_augmentation(img), label),
-    num_parallel_calls=tf.data.AUTOTUNE,
-)
+# # Apply `data_augmentation` to the training images.
+# train_ds = train_ds.map(
+#     lambda img, label: (data_augmentation(img), label),
+#     num_parallel_calls=tf.data.AUTOTUNE,
+# )
 # Prefetching samples in GPU memory helps maximize GPU utilization.
 train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 
