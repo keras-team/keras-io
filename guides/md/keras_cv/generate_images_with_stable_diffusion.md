@@ -30,6 +30,8 @@ that they offer.
 
 To get started, let's install a few dependencies and sort out some imports:
 
+pip install --upgrade keras-cv
+
 
 ```python
 import time
@@ -78,7 +80,7 @@ plot_images(images)
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_6_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_7_1.png)
     
 
 
@@ -99,12 +101,12 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 8s 315ms/step
+25/25 [==============================] - 8s 316ms/step
 
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_8_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_9_1.png)
     
 
 
@@ -251,13 +253,13 @@ keras.backend.clear_session()  # Clear session to preserve memory.
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 8s 315ms/step
-Standard model: 8.16 seconds
+25/25 [==============================] - 8s 316ms/step
+Standard model: 8.17 seconds
 
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_12_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_13_1.png)
     
 
 
@@ -329,14 +331,14 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 15s 224ms/step
-25/25 [==============================] - 6s 223ms/step
-Mixed precision model: 5.97 seconds
+25/25 [==============================] - 15s 226ms/step
+25/25 [==============================] - 6s 226ms/step
+Mixed precision model: 6.02 seconds
 
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_18_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_19_1.png)
     
 
 
@@ -369,7 +371,7 @@ plot_images(images)
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_20_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_21_1.png)
     
 
 
@@ -392,13 +394,13 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 6s 243ms/step
-With XLA: 6.23 seconds
+25/25 [==============================] - 6s 245ms/step
+With XLA: 6.27 seconds
 
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_22_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_23_1.png)
     
 
 
@@ -432,12 +434,12 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 39s 155ms/step
+25/25 [==============================] - 39s 157ms/step
 
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_27_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_28_1.png)
     
 
 
@@ -462,13 +464,13 @@ print(f"XLA + mixed precision: {(end - start):.2f} seconds")
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 4s 156ms/step
-XLA + mixed precision: 4.20 seconds
+25/25 [==============================] - 4s 158ms/step
+XLA + mixed precision: 4.25 seconds
 
 ```
 </div>
     
-![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_29_1.png)
+![png](/img/guides/generate_images_with_stable_diffusion/generate_images_with_stable_diffusion_30_1.png)
     
 
 
@@ -485,10 +487,10 @@ for result in benchmark_result:
 <div class="k-default-codeblock">
 ```
 Model                Runtime             
-Standard             8.15594744682312    
-Mixed Precision      5.970782279968262   
-XLA                  6.225290298461914   
-XLA + Mixed Precision 4.203771591186523   
+Standard             8.17177152633667    
+Mixed Precision      6.022329568862915   
+XLA                  6.265935659408569   
+XLA + Mixed Precision 4.252242088317871   
 
 ```
 </div>
