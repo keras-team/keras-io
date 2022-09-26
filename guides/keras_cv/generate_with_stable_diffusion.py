@@ -236,7 +236,11 @@ stable_diffusion = keras_cv.models.StableDiffusion(jit_compile=True)
 """
 and to use it...
 """
-stable_diffusion.text_to_image("warming up the model", batch_size=3)
+# Lets make sure to warm up the model
+
+visualize_prompt(
+    "Teddy bears conducting machine learning research", sd_model=stable_diffusion
+)
 
 """
 Exactly how fast is it?
