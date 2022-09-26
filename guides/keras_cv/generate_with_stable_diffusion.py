@@ -145,6 +145,7 @@ reported. Cold-start execution time is a one time cost on model creation, and is
 therefore neglible in a production environment.  Regardless, here are the cold-start
 numbers:
 
+
 | GPU        | Model                  | Runtime |
 |------------|------------------------|---------|
 | Tesla T4   | KerasCV (Cold Start)   | 83.47s  |
