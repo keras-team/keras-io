@@ -51,8 +51,8 @@ Next, we give it a prompt:
 """
 
 images = stable_diffusion.text_to_image(
-    "A digital illustration of a treetop house with fireflies, vivid colors, 4k, "
-    "fantasy",
+    "A beautiful mansion with flowered gardens and a fountain, painting, oil on canvas, "
+    "4k, detailed, bokeh",
     batch_size=3,
 )
 
