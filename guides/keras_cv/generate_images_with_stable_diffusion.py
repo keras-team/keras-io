@@ -284,9 +284,7 @@ keras.mixed_precision.set_global_policy("float32")
 model = keras_cv.models.StableDiffusion(jit_compile=True)
 # Before we benchmark the model, we run inference once to make sure the TensorFlow
 # graph has already been traced.
-images = model.text_to_image(
-    "An oldschool macintosh computer showing an avocado on its screen",
-)
+images = model.text_to_image("An avocado armchair", batch_size=3)
 plot_images(images)
 
 """
