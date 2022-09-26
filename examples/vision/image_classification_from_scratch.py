@@ -84,20 +84,12 @@ print("Deleted %d images" % num_skipped)
 """
 
 image_size = (180, 180)
-batch_size = 32
+batch_size = 128
 
-train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+train_ds, val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     "PetImages",
     validation_split=0.2,
-    subset="training",
-    seed=1337,
-    image_size=image_size,
-    batch_size=batch_size,
-)
-val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "PetImages",
-    validation_split=0.2,
-    subset="validation",
+    subset="both",
     seed=1337,
     image_size=image_size,
     batch_size=batch_size,
@@ -297,7 +289,7 @@ train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 ## Train the model
 """
 
-epochs = 50
+epochs = 25
 
 callbacks = [
     keras.callbacks.ModelCheckpoint("save_at_{epoch}.keras"),
@@ -306,7 +298,7 @@ model.compile(
     optimizer=keras.optimizers.Adam(1e-3),
     loss="binary_crossentropy",
     metrics=["accuracy"],
-    jit_compile=True,  # Enable XLA compilation
+    jit_compile=True,  # Enable XLA compilation for faster execution
 )
 model.fit(
     train_ds,
@@ -316,7 +308,7 @@ model.fit(
 )
 
 """
-We get to ~96% validation accuracy after training for 50 epochs on the full dataset.
+We get to ~96% validation accuracy after training for 25 epochs on the full dataset.
 """
 
 """
