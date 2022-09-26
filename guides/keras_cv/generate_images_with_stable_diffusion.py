@@ -26,6 +26,11 @@ that they offer.
 
 To get started, let's install a few dependencies and sort out some imports:
 """
+
+"""shell
+pip install keras-cv
+"""
+
 import time
 import keras_cv
 from tensorflow import keras
