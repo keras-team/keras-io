@@ -73,7 +73,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 19s 316ms/step
+25/25 [==============================] - 19s 317ms/step
 
 ```
 </div>
@@ -329,9 +329,9 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 15s 226ms/step
-25/25 [==============================] - 6s 226ms/step
-Mixed precision model: 6.07 seconds
+25/25 [==============================] - 15s 224ms/step
+25/25 [==============================] - 6s 223ms/step
+Mixed precision model: 5.97 seconds
 
 ```
 </div>
@@ -358,15 +358,13 @@ keras.mixed_precision.set_global_policy("float32")
 model = keras_cv.models.StableDiffusion(jit_compile=True)
 # Before we benchmark the model, we run inference once to make sure the TensorFlow
 # graph has already been traced.
-images = model.text_to_image(
-    "An oldschool macintosh computer showing an avocado on its screen",
-)
+images = model.text_to_image("An avocado armchair", batch_size=3)
 plot_images(images)
 ```
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 31s 154ms/step
+25/25 [==============================] - 36s 245ms/step
 
 ```
 </div>
@@ -394,8 +392,8 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 39s 246ms/step
-With XLA: 56.22 seconds
+25/25 [==============================] - 6s 243ms/step
+With XLA: 6.23 seconds
 
 ```
 </div>
@@ -434,7 +432,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 40s 157ms/step
+25/25 [==============================] - 39s 155ms/step
 
 ```
 </div>
@@ -464,8 +462,8 @@ print(f"XLA + mixed precision: {(end - start):.2f} seconds")
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 4s 157ms/step
-XLA + mixed precision: 4.21 seconds
+25/25 [==============================] - 4s 156ms/step
+XLA + mixed precision: 4.20 seconds
 
 ```
 </div>
@@ -487,10 +485,10 @@ for result in benchmark_result:
 <div class="k-default-codeblock">
 ```
 Model                Runtime             
-Standard             8.164055824279785   
-Mixed Precision      6.0718467235565186  
-XLA                  56.22104263305664   
-XLA + Mixed Precision 4.211399078369141   
+Standard             8.15594744682312    
+Mixed Precision      5.970782279968262   
+XLA                  6.225290298461914   
+XLA + Mixed Precision 4.203771591186523   
 
 ```
 </div>
