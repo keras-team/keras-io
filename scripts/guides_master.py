@@ -12,6 +12,10 @@ CV_GUIDES_MASTER = {
             "title": "Train an Object Detection Model on Pascal VOC 2007 using KerasCV",
         },
         {
+            "path": "generate_images_with_stable_diffusion",
+            "title": "High-performance image generation using Stable Diffusion in KerasCV",
+        },
+        {
             "path": "custom_image_augmentations",
             "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
         },

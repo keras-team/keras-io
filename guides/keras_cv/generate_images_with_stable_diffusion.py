@@ -1,5 +1,5 @@
 """
-Title: High-performance image generation using StableDiffusion in KerasCV
+Title: High-performance image generation using Stable Diffusion in KerasCV
 Authors: [fchollet](https://twitter.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)
 Date created: 2022/09/25
 Last modified: 2022/09/25
@@ -10,10 +10,10 @@ Description: Generate new images using KerasCV's StableDiffusion model.
 ## Overview
 
 In this guide, we will show how to generate novel images based on a text prompt using
-the KerasCV implementation of [stability.ai's](https://stability.ai/) image to text model,
+the KerasCV implementation of [stability.ai](https://stability.ai/)'s text-to-image model,
 [Stable Diffusion](https://github.com/CompVis/stable-diffusion).
 
-Stable Diffusion is a powerful, open-source text to image generation model.  While there
+Stable Diffusion is a powerful, open-source text-to-image generation model.  While there
 exist multiple open-source implementations that allow you to easily create images from
 textual prompts, KerasCV's offers a few distinct advantages.
 These include [XLA compilation](https://www.tensorflow.org/xla) and
@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 ## Introduction
 
 Unlike most tutorials, where we first explain a topic then show how to implement it,
-with text to image generation it is easier to show instead of tell.
+with text-to-image generation it is easier to show instead of tell.
 
 Check out the power of `keras_cv.models.StableDiffusion()`.
 
