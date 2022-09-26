@@ -1,6 +1,6 @@
 """
 Title: Generate images using KerasCV's StableDiffusion's at unprecedented speeds
-Author: [fchollet](https://github.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)
+Author: [fchollet](https://twitter.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)
 Date created: 2022/09/24
 Last modified: 2022/09/24
 Description: Generate new images using KerasCV's StableDiffusion model.
@@ -15,24 +15,22 @@ model,
 [StableDiffusion](https://github.com/CompVis/stable-diffusion).
 
 StableDiffusion is a powerful, open-source text to image generation model.  While there
-exist numerous open source implementations that allow you to easily create images from
+exist multiple open-source implementations that allow you to easily create images from
 textual prompts, KerasCV's offers a few distinct advantages.
 These include [XLA compilation](https://www.tensorflow.org/xla) and
-[mixed precision computation](https://www.tensorflow.org/guide/mixed_precision).
+[mixed precision](https://www.tensorflow.org/guide/mixed_precision) support,
+which achieve state-of-the-art generation speed.
 
 In this guide, we will explore KerasCV's StableDiffusion implementation, show how to use
 these powerful performance boosts, and explore the performance benefits
 that they offer.
 
-To get started, lets install a few dependencies and sort out some imports:
+To get started, let's install a few dependencies and sort out some imports:
 """
-import keras_cv
-from luketils import visualization
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import mixed_precision
 import time
+import keras_cv
+from tensorflow import keras
+from luketils import visualization
 
 """
 ## Introduction
@@ -44,13 +42,13 @@ Check out the power of `keras_cv.models.StableDiffusion()`.
 First, we construct a model:
 """
 
-stable_diffusion = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
+model = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
 
 """
 Next, we give it a prompt:
 """
 
-images = stable_diffusion.text_to_image(
+images = model.text_to_image(
     "a cartoon caterpillar wearing glasses", batch_size=3
 )
 
@@ -66,14 +64,13 @@ visualization.plot_gallery(
 """
 Pretty incredible!
 
-But that's not all this model can do.  Lets try a more complex prompt:
+But that's not all this model can do.  let's try a more complex prompt:
 """
 
 
-def visualize_prompt(prompt, sd_model=None):
-    sd_model = sd_model or stable_diffusion
+def visualize_prompt_results(prompt):
     visualization.plot_gallery(
-        sd_model.text_to_image(prompt, batch_size=3),
+        model.text_to_image(prompt, batch_size=3),
         rows=1,
         cols=3,
         scale=4,
@@ -82,7 +79,7 @@ def visualize_prompt(prompt, sd_model=None):
     )
 
 
-visualize_prompt(
+visualize_prompt_results(
     "a cute magical flying dog, fantasy art drawn by disney concept artists, "
     "golden colour, high quality, highly detailed, elegant, sharp focus, "
     "concept art, character concepts, digital painting, mystery, adventure"
@@ -92,26 +89,26 @@ visualize_prompt(
 The possibilities are literally endless (or at least extend to the boundaries of
 StableDiffusion's latent manifold).
 
-Pretty incredible!  The idea should be self evident at this point.
-Now lets take a step back and look at how this algorithm actually works.
+## Wait, how does this even work?
 
-## The StableDiffusion Algorithm
+Unlike what you might expect, StableDiffusion doesn't run on magic.
 
-TODO(fchollet): write this
+One way to think about such models is as a kind of 
+
 """
-# Need to write up the actual algorithm and provide an overview
 
 """
 ## Perks of KerasCV
 
-With numerous implementations of StableDiffusion publicly available why shoud you use
-`keras_cv.models.StableDiffusion()`?
+With several implementations of StableDiffusion publicly available why shoud you use
+`keras_cv.models.StableDiffusion`?
 
-Aside from the easy-to-use API, KerasCV's StableDiffusion model comes with some nice
-bells and trinkets.  These extra features include but are not limited to:
+Aside from the easy-to-use API, KerasCV's StableDiffusion model comes
+with some powerful advantages, including:
 
-- out of the box support for XLA compilation
-- support for mixed precision computation out of the box
+- XLA compilation through `jit_compile=True`
+- support for mixed precision computation
+- graph mode execution
 
 When these are combined, the KerasCV StableDiffusion model runs orders of magnitude
 faster than naive implementations.  This section shows how to enable all of these
@@ -127,18 +124,18 @@ This may be largely attributed to XLA compilation.
 **Note: The difference between the performance benefits from each optimization vary
 drastically between hardware**
 
-To get started, lets first benchmark our unoptimized model:
+To get started, let's first benchmark our unoptimized model:
 """
 
 benchmark_result = []
 start = time.time()
-visualize_prompt(
+visualize_prompt_results(
     "A cute water-colored otter in a rainbow whirlpool holding shells",
     sd_model=stable_diffusion,
 )
 end = time.time()
 benchmark_result.append(["Standard", end - start])
-print(f"Standard model took {end - start} seconds")
+print(f"Standard model: {end - start} seconds")
 
 """
 ### Mixed Precision
@@ -152,14 +149,15 @@ While a low-level setting, enabling mixed precision computation in Keras
 (and therefore for `keras_cv.models.StableDiffusion`) is as simple as calling:
 
 """
-mixed_precision.set_global_policy("mixed_float16")
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
 That's all.  Out of the box - it just works.
 """
 
-# clear session to preserve memory
-tf.keras.backend.clear_session()
+# Clear session to preserve memory.
+keras.backend.clear_session()
+
 stable_diffusion = keras_cv.models.StableDiffusion()
 print("Compute dtype:", stable_diffusion.diffusion_model.compute_dtype)
 print(
@@ -171,11 +169,11 @@ print(
 As you can see, the model constructed above now uses mixed precision computation;
 leveraging the speed of `float16` for computation, and `float32` to store variables.
 """
-# warm up model to run graph tracing before benchmarking
+# Warm up model to run graph tracing before benchmarking.
 stable_diffusion.text_to_image("warming up the model", batch_size=3)
 
 start = time.time()
-visualize_prompt(
+visualize_prompt_results(
     "a cute magical flying dog, fantasy art drawn by disney concept artists, "
     "golden colour, high quality, highly detailed, elegant, sharp focus, "
     "concept art, character concepts, digital painting, mystery, adventure",
@@ -183,7 +181,8 @@ visualize_prompt(
 )
 end = time.time()
 benchmark_result.append(["Mixed Precision", end - start])
-print(f"Mixed precision model took {end - start} seconds")
+print(f"Mixed precision model: {end - start} seconds")
+keras.backend.clear_session()
 
 """
 ### XLA Compilation
@@ -194,62 +193,60 @@ TensorFlow comes with the
 Setting this argument to `True` enables XLA compilation, resulting in a significant
 speed-up.
 
-Lets use this below:
+let's use this below:
 """
 
-tf.keras.backend.clear_session()
-# set back to the default for benchmarking purposes
-mixed_precision.set_global_policy("float32")
+# Set back to the default for benchmarking purposes.
+keras.mixed_precision.set_global_policy("float32")
 stable_diffusion = keras_cv.models.StableDiffusion(jit_compile=True)
-# before we benchmark the model, we run inference once to make sure the TensorFlow
+# Before we benchmark the model, we run inference once to make sure the TensorFlow
 # graph has already been traced.
-visualize_prompt(
+visualize_prompt_results(
     "An oldschool macintosh computer showing an avocado on its screen",
     sd_model=stable_diffusion,
 )
 
 """
-Lets benchmark our XLA model:
+let's benchmark our XLA model:
 """
 
 start = time.time()
-visualize_prompt(
+visualize_prompt_results(
     "A cute water-colored otter in a rainbow whirlpool holding shells",
     sd_model=stable_diffusion,
 )
 end = time.time()
 benchmark_result.append(["XLA", end - start])
-print(f"With XLA took {end - start} seconds")
+print(f"With XLA: {end - start} seconds")
+keras.backend.clear_session()
 
 """
 On my hardware I see about a 2x speedup.  Fantastic!
 ## Putting It All Together
 
-So?  How do you assemble the world's most performant stable diffusion inference
+So, how do you assemble the world's most performant stable diffusion inference
 pipeline (as of September 2022).
 
-Two lines of code:
+With these two lines of code:
 """
-tf.keras.backend.clear_session()
-mixed_precision.set_global_policy("mixed_float16")
+keras.mixed_precision.set_global_policy("mixed_float16")
 stable_diffusion = keras_cv.models.StableDiffusion(jit_compile=True)
 """
-and to use it...
+And to use it...
 """
-# Lets make sure to warm up the model
+# let's make sure to warm up the model
 
-visualize_prompt(
+visualize_prompt_results(
     "Teddy bears conducting machine learning research", sd_model=stable_diffusion
 )
 
 """
 Exactly how fast is it?
-Lets find out!
+Let's find out!
 """
 
-
 start = time.time()
-visualize_prompt(
+visualize_prompt_results(
     "A mysterious dark stranger visits the great pyramids of egypt, "
     "high quality, highly detailed, elegant, sharp focus, "
     "concept art, character concepts, digital painting",
@@ -257,30 +254,34 @@ visualize_prompt(
 )
 end = time.time()
 benchmark_result.append(["XLA + Mixed Precision", end - start])
-print(f"XLA + mixed precision took {end - start} seconds")
+print(f"XLA + mixed precision: {end - start} seconds")
 
 """
-Lets check out the results:
+Let's check out the results:
 """
+
 print("{:<20} {:<20}".format("Model", "Runtime"))
 for result in benchmark_result:
     name, runtime = result
     print("{:<20} {:<20}".format(name, runtime))
+
 """
 It only took our fully optimized model four seconds to generate three novel images from
-a text prompt.
-
-What a time to be alive!
+a text prompt on an A100 GPU.
 """
 
 """
 ## Conclusions
 
-KerasCV offers a high quality API to leverage StableDiffusion today.
-Through the use of XLA and mixed precision Tensorflow allows us to construct the fastest StableDiffusion pipeline available as of September 2022.
+KerasCV offers a state-of-the-art implementation of StableDiffusion -- and
+through the use of XLA and mixed precision, it delivers the fastest StableDiffusion pipeline available as of September 2022.
 
 Normally, at the end of a keras.io tutorial we leave you with some future directions to continue in to learn.
 This time, we leave you with one idea:
 
 **Go run your own prompts through the model!  It is an absolute blast!**
+
+If you have your own NVIDIA GPU, or a M1 MacBookPro, you can also run the model locally on your machine.
+(Note that when running on a M1 MacBookPro, you should not enable mixed precision, as it is not yet well supported
+by Apple's Metal runtime.)
 """
