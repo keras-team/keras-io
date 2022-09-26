@@ -1,15 +1,11 @@
 """Lightweight fork of Keras-Autodocs.
 """
 import warnings
-from sphinx.util.inspect import Signature
+from inspect import Signature
 import black
 import re
-import os
 import inspect
 import importlib
-import shutil
-import pathlib
-from typing import Dict, Union
 import itertools
 
 
