@@ -59,9 +59,7 @@ Next, we give it a prompt:
 
 
 ```python
-images = stable_diffusion.text_to_image(
-    "a cartoon caterpillar wearing glasses", batch_size=3
-)
+images = stable_diffusion.text_to_image("An astronaut riding a horse", batch_size=3)
 
 visualization.plot_gallery(
     images,
@@ -112,7 +110,7 @@ visualize_prompt(
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 8s 315ms/step
+25/25 [==============================] - 8s 316ms/step
 
 ```
 </div>
@@ -225,7 +223,7 @@ print(f"Standard model took {end - start} seconds")
 
 <div class="k-default-codeblock">
 ```
-Standard model took 8.533406972885132 seconds
+Standard model took 8.52483057975769 seconds
 
 ```
 </div>
@@ -295,7 +293,7 @@ print(f"Mixed precision model took {end - start} seconds")
 <div class="k-default-codeblock">
 ```
 25/25 [==============================] - 15s 226ms/step
-25/25 [==============================] - 6s 225ms/step
+25/25 [==============================] - 6s 226ms/step
 
 ```
 </div>
@@ -306,7 +304,7 @@ print(f"Mixed precision model took {end - start} seconds")
 
 <div class="k-default-codeblock">
 ```
-Mixed precision model took 6.357478857040405 seconds
+Mixed precision model took 6.369470596313477 seconds
 
 ```
 </div>
@@ -372,7 +370,7 @@ print(f"With XLA took {end - start} seconds")
 
 <div class="k-default-codeblock">
 ```
-With XLA took 6.641193389892578 seconds
+With XLA took 6.662989139556885 seconds
 
 ```
 </div>
@@ -405,7 +403,7 @@ visualize_prompt(
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 39s 157ms/step
+25/25 [==============================] - 39s 158ms/step
 
 ```
 </div>
@@ -434,7 +432,7 @@ print(f"XLA + mixed precision took {end - start} seconds")
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 4s 157ms/step
+25/25 [==============================] - 4s 158ms/step
 
 ```
 </div>
@@ -445,7 +443,7 @@ print(f"XLA + mixed precision took {end - start} seconds")
 
 <div class="k-default-codeblock">
 ```
-XLA + mixed precision took 4.567935943603516 seconds
+XLA + mixed precision took 4.5636537075042725 seconds
 
 ```
 </div>
@@ -462,10 +460,10 @@ for result in benchmark_result:
 <div class="k-default-codeblock">
 ```
 Model                Runtime             
-Standard             8.533406972885132   
-Mixed Precision      6.357478857040405   
-XLA                  6.641193389892578   
-XLA + Mixed Precision 4.567935943603516   
+Standard             8.52483057975769    
+Mixed Precision      6.369470596313477   
+XLA                  6.662989139556885   
+XLA + Mixed Precision 4.5636537075042725  
 
 ```
 </div>

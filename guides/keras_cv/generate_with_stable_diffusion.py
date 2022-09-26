@@ -50,9 +50,7 @@ stable_diffusion = keras_cv.models.StableDiffusion(img_width=512, img_height=512
 Next, we give it a prompt:
 """
 
-images = stable_diffusion.text_to_image(
-    "a cartoon caterpillar wearing glasses", batch_size=3
-)
+images = stable_diffusion.text_to_image("An astronaut riding a horse", batch_size=3)
 
 visualization.plot_gallery(
     images,
