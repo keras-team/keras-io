@@ -24,7 +24,7 @@ In this guide, we will explore KerasCV's StableDiffusion implementation, show ho
 these powerful performance boosts, and explore the performance benefits
 that they offer.
 
-To get started, lets install a few dependencies and sort out some imports:
+To get started, let's install a few dependencies and sort out some imports:
 """
 import keras_cv
 from luketils import visualization
@@ -66,7 +66,7 @@ visualization.plot_gallery(
 """
 Pretty incredible!
 
-But that's not all this model can do.  Lets try a more complex prompt:
+But that's not all this model can do.  Let's try a more complex prompt:
 """
 
 
@@ -93,7 +93,7 @@ The possibilities are literally endless (or at least extend to the boundaries of
 StableDiffusion's latent manifold).
 
 Pretty incredible!  The idea should be self evident at this point.
-Now lets take a step back and look at how this algorithm actually works.
+Now let's take a step back and look at how this algorithm actually works.
 
 ## The StableDiffusion Algorithm
 
@@ -110,16 +110,50 @@ With numerous implementations of StableDiffusion publicly available why shoud yo
 Aside from the easy-to-use API, KerasCV's StableDiffusion model comes with some nice
 bells and trinkets.  These extra features include but are not limited to:
 
-- out of the box support for XLA compilation
-- support for mixed precision computation out of the box
+- XLA compilation through `jit_compile=True`
+- support for mixed precision computation
+- graph mode execution
 
 When these are combined, the KerasCV StableDiffusion model runs orders of magnitude
 faster than naive implementations.  This section shows how to enable all of these
 features, and the resulting performance gain yielded from using them.
 
-For the purposes of comparison, I ran some benchmarks with the
+For the purposes of comparison, I ran benchmarks comparing the runtime of the
 [HuggingFace diffusers](https://github.com/huggingface/diffusers) implementation of
-StableDiffusion on an A100 GPU it took around 12.8 seconds to generate three images.
+StableDiffusion against the KerasCV implementation.
+Both implementations were tasked to generate 3 images with a step count of 50 for each
+image.  In this benchmark, I used a Tesla T4 GPU.
+
+
+[All of my benchmarks are open source on GitHub, and may be re-run on Colab to
+reproduce the results.](https://github.com/LukeWood/stable-diffusion-performance-benchmarks)
+The results from the benchmark are displayed in the table below:
+
+
+| GPU        | Model                  | Runtime |
+|------------|------------------------|---------|
+| Tesla T4   | KerasCV (Warm Start)   | _28.97s_  |
+| Tesla T4   | diffusers (Warm Start) | 41.33s  |
+| Tesla V100 | KerasCV (Warm Start)   | _12.45_   |
+| Tesla V100 | diffusers (Warm Start) | 12.72   |
+
+
+30% improvement in execution time on the Tesla T4!.  While the improvement is much lower
+on the V100, we expect the results of the benchmark to consistently favor the KerasCV.
+For the sake of completeness, both cold-start and warm-start generation times are
+reported. Cold-start execution time is a one time cost on model creation, and is
+therefore neglible in a production environment.  Regardless, here are the cold-start
+numbers:
+
+
+| GPU        | Model                  | Runtime |
+|------------|------------------------|---------|
+| Tesla T4   | KerasCV (Cold Start)   | 83.47s  |
+| Tesla T4   | diffusers (Cold Start) | 46.27s  |
+| Tesla V100 | KerasCV (Cold Start)   | 76.43   |
+| Tesla V100 | diffusers (Cold Start) | 13.90   |
+
+
 The runtime results from running this guide may vary, in my testing the KerasCV
 implementation of StableDiffusion is significantly faster than the PyTorch counterpart.
 This may be largely attributed to XLA compilation.
@@ -127,7 +161,7 @@ This may be largely attributed to XLA compilation.
 **Note: The difference between the performance benefits from each optimization vary
 drastically between hardware**
 
-To get started, lets first benchmark our unoptimized model:
+To get started, let's first benchmark our unoptimized model:
 """
 
 benchmark_result = []
@@ -194,7 +228,7 @@ TensorFlow comes with the
 Setting this argument to `True` enables XLA compilation, resulting in a significant
 speed-up.
 
-Lets use this below:
+Let's use this below:
 """
 
 tf.keras.backend.clear_session()
@@ -209,7 +243,7 @@ visualize_prompt(
 )
 
 """
-Lets benchmark our XLA model:
+Let's benchmark our XLA model:
 """
 
 start = time.time()
@@ -236,7 +270,7 @@ stable_diffusion = keras_cv.models.StableDiffusion(jit_compile=True)
 """
 and to use it...
 """
-# Lets make sure to warm up the model
+# Let's make sure to warm up the model
 
 visualize_prompt(
     "Teddy bears conducting machine learning research", sd_model=stable_diffusion
@@ -244,7 +278,7 @@ visualize_prompt(
 
 """
 Exactly how fast is it?
-Lets find out!
+Let's find out!
 """
 
 
@@ -260,7 +294,7 @@ benchmark_result.append(["XLA + Mixed Precision", end - start])
 print(f"XLA + mixed precision took {end - start} seconds")
 
 """
-Lets check out the results:
+Let's check out the results:
 """
 print("{:<20} {:<20}".format("Model", "Runtime"))
 for result in benchmark_result:
