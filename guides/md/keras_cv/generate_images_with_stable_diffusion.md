@@ -31,9 +31,8 @@ that they offer.
 To get started, let's install a few dependencies and sort out some imports:
 
 ```
-pip install --upgrade keras-cv
+!pip install --upgrade keras-cv
 ```
-
 
 ```python
 import time
