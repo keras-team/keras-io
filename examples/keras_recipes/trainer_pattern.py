@@ -8,13 +8,14 @@ Description: Guide on how to share a custom training step across multiple Keras 
 """
 ## Introduction
 
-This example shows how to create a custom training step using the Trainer pattern,
+This example shows how to create a custom training step using the "Trainer pattern",
 which can then be shared across multiple Keras models. This pattern overrides the
-`train_step` method of the `keras.Model` class, allowing for the addition of
-custom loss functions and metrics.
+`train_step()` method of the `keras.Model` class, allowing for training loops
+beyond plain supervised learning.
 
 The Trainer pattern can also easily be adapted to more complex models with larger
-custom training steps, such as this [end-to-end GAN model](https://keras.io/guides/customizing_what_happens_in_fit/#wrapping-up-an-endtoend-gan-example),
+custom training steps, such as
+[this end-to-end GAN model](https://keras.io/guides/customizing_what_happens_in_fit/#wrapping-up-an-endtoend-gan-example),
 by putting the custom training step in the Trainer class definition.
 """
 
@@ -25,16 +26,16 @@ by putting the custom training step in the Trainer class definition.
 import tensorflow as tf
 from tensorflow import keras
 
-# Load MNIST dataset and normalize
+# Load MNIST dataset and standardize the data
 mnist = keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train, x_test = x_train / 255.0, x_test / 255.0
 
 
 """
-## Sharing custom training step across multiple models
+## Define the custom training step
 
-A custom training step can be created by overriding the train_step method of a Model subclass.
+A custom training step can be created by overriding the `train_step()` method of a Model subclass:
 """
 
 
@@ -72,7 +73,7 @@ class MyTrainer(keras.Model):
 """
 ## Define multiple models to share the custom training step
 
-Let's define two different models that can share our Trainer class and its custom train_step
+Let's define two different models that can share our Trainer class and its custom `train_step()`:
 """
 
 # A model defined using Sequential API
@@ -97,12 +98,14 @@ model_b = keras.Model(func_input, func_output)
 """
 ## Create Trainer class objects from the models
 """
+
 trainer_1 = MyTrainer(model_a)
 trainer_2 = MyTrainer(model_b)
 
 """
 ## Compile and fit the models to the MNIST dataset
 """
+
 trainer_1.compile(
     keras.optimizers.SGD(), loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
