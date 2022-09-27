@@ -196,7 +196,7 @@ Stable Diffusion against the KerasCV implementation.
 Both implementations were tasked to generate 3 images with a step count of 50 for each
 image.  In this benchmark, we used a Tesla T4 GPU.
 
-[All of my benchmarks are open source on GitHub, and may be re-run on Colab to
+[All of our benchmarks are open source on GitHub, and may be re-run on Colab to
 reproduce the results.](https://github.com/LukeWood/stable-diffusion-performance-benchmarks)
 The results from the benchmark are displayed in the table below:
 
