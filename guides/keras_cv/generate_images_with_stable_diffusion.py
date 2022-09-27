@@ -3,7 +3,7 @@ Title: High-performance image generation using Stable Diffusion in KerasCV
 Authors: [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml), [divamgupta](https://github.com/divamgupta)
 Date created: 2022/09/25
 Last modified: 2022/09/25
-Description: Generate new images using KerasCV's StableDiffusion model.
+Description: Generate new images using KerasCV's Stable Diffusion model.
 """
 
 """
@@ -20,7 +20,7 @@ These include [XLA compilation](https://www.tensorflow.org/xla) and
 [mixed precision](https://www.tensorflow.org/guide/mixed_precision) support,
 which together achieve state-of-the-art generation speed.
 
-In this guide, we will explore KerasCV's StableDiffusion implementation, show how to use
+In this guide, we will explore KerasCV's Stable Diffusion implementation, show how to use
 these powerful performance boosts, and explore the performance benefits
 that they offer.
 
@@ -82,13 +82,13 @@ plot_images(images)
 
 """
 The possibilities are literally endless (or at least extend to the boundaries of
-StableDiffusion's latent manifold).
+Stable Diffusion's latent manifold).
 """
 
 """
 ## Wait, how does this even work?
 
-Unlike what you might expect at this point, StableDiffusion doesn't actually run on magic.
+Unlike what you might expect at this point, Stable Diffusion doesn't actually run on magic.
 It's a kind of "latent diffusion model". Let's dig into what that means.
 
 You may be familiar with the idea of _super-resolution_:
@@ -148,23 +148,23 @@ As Feynman said about the universe: _"It's not complicated, it's just a lot of i
 """
 ## Perks of KerasCV
 
-With several implementations of StableDiffusion publicly available why shoud you use
+With several implementations of Stable Diffusion publicly available why shoud you use
 `keras_cv.models.StableDiffusion`?
 
-Aside from the easy-to-use API, KerasCV's StableDiffusion model comes
+Aside from the easy-to-use API, KerasCV's Stable Diffusion model comes
 with some powerful advantages, including:
 
 - Graph mode execution
 - XLA compilation through `jit_compile=True`
 - Support for mixed precision computation
 
-When these are combined, the KerasCV StableDiffusion model runs orders of magnitude
+When these are combined, the KerasCV Stable Diffusion model runs orders of magnitude
 faster than naive implementations.  This section shows how to enable all of these
 features, and the resulting performance gain yielded from using them.
 
 For the purposes of comparison, we ran benchmarks comparing the runtime of the
 [HuggingFace diffusers](https://github.com/huggingface/diffusers) implementation of
-StableDiffusion against the KerasCV implementation.
+Stable Diffusion against the KerasCV implementation.
 Both implementations were tasked to generate 3 images with a step count of 50 for each
 image.  In this benchmark, we used a Tesla T4 GPU.
 
@@ -200,7 +200,7 @@ many times). Regardless, here are the cold-start numbers:
 
 
 While the runtime results from running this guide may vary, in our testing the KerasCV
-implementation of StableDiffusion is significantly faster than its PyTorch counterpart.
+implementation of Stable Diffusion is significantly faster than its PyTorch counterpart.
 This may be largely attributed to XLA compilation.
 
 **Note: The performance benefits of each optimization can vary
@@ -370,7 +370,7 @@ a text prompt on an A100 GPU.
 """
 ## Conclusions
 
-KerasCV offers a state-of-the-art implementation of StableDiffusion -- and
+KerasCV offers a state-of-the-art implementation of Stable Diffusion -- and
 through the use of XLA and mixed precision, it delivers the fastest Stable Diffusion pipeline available as of September 2022.
 
 Normally, at the end of a keras.io tutorial we leave you with some future directions to continue in to learn.
