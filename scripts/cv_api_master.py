@@ -198,6 +198,13 @@ MODELS_MASTER = {
     "toc": True,
     "children": [
         {
+            "path": "stablediffusion",
+            "title": "The StableDiffusion model",
+            "generate": [
+                "keras_cv.models.StableDiffusion",
+            ],
+        },
+        {
             "path": "retinanet",
             "title": "The RetinaNet model",
             "generate": [
