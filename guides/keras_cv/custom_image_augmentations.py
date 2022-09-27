@@ -1,6 +1,6 @@
 """
 Title: Custom Image Augmentations with BaseImageAugmentationLayer
-Author: [lukewood](https://lukewood.xyz)
+Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/04/26
 Last modified: 2022/04/26
 Description: Use BaseImageAugmentationLayer to implement custom data augmentations.
