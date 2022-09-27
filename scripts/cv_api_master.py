@@ -110,10 +110,10 @@ BOUNDING_BOX_FORMATS = {
     "path": "formats",
     "title": "Bounding box formats",
     "generate": [
-        "keras_cv.bounding_box.CENTER_XYWH",
-        "keras_cv.bounding_box.XYWH",
-        "keras_cv.bounding_box.XYXY",
-        "keras_cv.bounding_box.REL_XYXY",
+        "keras_cv.data.bounding_box.CENTER_XYWH",
+        "keras_cv.data.bounding_box.XYWH",
+        "keras_cv.data.bounding_box.XYXY",
+        "keras_cv.data.bounding_box.REL_XYXY",
     ],
 }
 
@@ -125,17 +125,17 @@ BOUNDING_BOX_UTILS = {
         {
             "path": "convert_format",
             "title": "Convert bounding box formats",
-            "generate": ["keras_cv.bounding_box.convert_format"],
+            "generate": ["keras_cv.data.bounding_box.convert_format"],
         },
         {
             "path": "compute_iou",
             "title": "Compute intersection over union of bounding boxes",
-            "generate": ["keras_cv.bounding_box.compute_iou"],
+            "generate": ["keras_cv.data.bounding_box.compute_iou"],
         },
         {
             "path": "clip_to_image",
             "title": "Clip bounding boxes to be within the bounds of provided images",
-            "generate": ["keras_cv.bounding_box.clip_to_image"],
+            "generate": ["keras_cv.data.bounding_box.clip_to_image"],
         },
     ],
 }

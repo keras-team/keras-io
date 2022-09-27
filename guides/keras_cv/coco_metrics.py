@@ -40,7 +40,7 @@ input to the KerasCV COCO metrics, or padding unused bounding boxes with `-1`.
 
 Utility functions to manipulate bounding boxes, transform between formats, and
 pad bounding box Tensors with `-1s` are available from the
-[`keras_cv.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box)
+[`keras_cv.data.bounding_box`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/bounding_box)
 package.
 
 """

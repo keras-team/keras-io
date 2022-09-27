@@ -27,7 +27,7 @@ from tensorflow import keras
 from tensorflow.keras import optimizers
 
 import keras_cv
-from keras_cv import bounding_box
+from keras_cv.data import bounding_box
 import os
 from luketils import visualization
 
