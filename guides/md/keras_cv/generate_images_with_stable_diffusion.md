@@ -1,6 +1,6 @@
 # High-performance image generation using Stable Diffusion in KerasCV
 
-**Authors:** [fchollet](https://twitter.com/fchollet), [lukewood](https://lukewood.xyz), [divamgupta](https://github.com/divamgupta)<br>
+**Authors:** [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml), [divamgupta](https://github.com/divamgupta)<br>
 **Date created:** 2022/09/25<br>
 **Last modified:** 2022/09/25<br>
 **Description:** Generate new images using KerasCV's StableDiffusion model.

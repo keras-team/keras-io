@@ -1,6 +1,6 @@
 """
 Title: Train an Object Detection Model on Pascal VOC 2007 using KerasCV
-Author: [lukewood](https://lukewood.xyz)
+Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/08/22
 Last modified: 2022/08/22
 Description: Use KerasCV to train a RetinaNet on Pascal VOC 2007.
