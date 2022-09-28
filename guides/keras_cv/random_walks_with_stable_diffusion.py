@@ -9,17 +9,42 @@ Description: Explore the latent manifold of Stable Diffusion
 """
 ## Overview
 
+Generative models learn a low dimensional latent representation of their
+training data.  The inference process for these models typically involves
+starting from some point in latent space and running the latent vector
+through the decoder portion of the generative model.  StableDiffusion
+has two latent spaces: the image representation space learned by the
+Variation AutoEncoder used during training, and the prompt latent space
+which is learned using a combination of pretraining and train time
+finetuning.
+
+Latent walking, or latent exploration is the process of
+sampling a point in latent space and incrementally changing the latent
+representation.  Its most common application is generating videos or gifs,
+where each sampled point is fed to the decoder and is stored as a
+frame in the final gif or video.
+For high quality latent representations, this produces coherent looking
+videos.  These videos can provide insight into the feature map of the
+latent space, and can ultimately lead to improvements in the training
+process.  One such GIF is displayed below:
+
+TODO(replace with a unique gif)
+![Dog to Fruit 5](https://imgur.com/a/617Qjxb)
+
 In this guide, we will show how to take advantage of the Stable Diffusion API
-in KerasCV to perform prompt interpolation and random walks through the image
-generation space for individual prompts as well as through the text encoder's
-latent manifold. This guide assumes the reader has a high-level understanding
-of Stable Diffusion. If you haven't already, you should start by reading the
-[Stable Diffusion Tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
+in KerasCV to perform prompt interpolation and circular walks through
+ StableDiffusion's learned latent space for image representation, as well as through
+ the text encoder's latent manifold.
+
+ This guide assumes the reader has a
+high-level understanding of Stable Diffusion.
+If you haven't already, you should start
+by reading the [Stable Diffusion Tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
 
 To start, we import KerasCV and load up a stable diffusion model using the
-optimizations discussed in the Stable Diffusion tutorial. Note that some of these
-optimizations may not work well (or at all) on your machine. Check out the
-Stable Diffusion tutorial for more info.
+optimizations discussed in the Stable Diffusion tutorial.
+Note that if you are running with a M1 Mac GPU you should not enabled mixed precision.
+Check out the [basic Stable Diffusion tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/) for more info.
 """
 
 """shell
