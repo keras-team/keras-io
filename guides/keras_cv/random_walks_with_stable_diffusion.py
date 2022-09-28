@@ -60,8 +60,7 @@ from PIL import Image
 
 
 keras.mixed_precision.set_global_policy("mixed_float16")
-with tf.distribute.MirroredStrategy().scope():
-    model = keras_cv.models.StableDiffusion(jit_compile=True)
+model = keras_cv.models.StableDiffusion(jit_compile=True)
 
 """
 ## Interpolating Between Text Prompts
