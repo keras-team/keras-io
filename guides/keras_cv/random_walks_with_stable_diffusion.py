@@ -84,7 +84,6 @@ the gif.
 """
 
 def export_as_gif(filename, images, frames_per_second=20, rubber_band=False):
-    images = images.copy()
     if rubber_band:
         images += images[2:-1][::-1]
     images[0].save(filename, save_all=True, append_images=images[1:],
