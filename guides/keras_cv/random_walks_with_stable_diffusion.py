@@ -54,6 +54,7 @@ import keras_cv
 from tensorflow import keras
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import numpy as np
 import math
 from PIL import Image
 
@@ -116,14 +117,25 @@ IImage("doggo-and-fruit-5.gif")
 ```
 """
 
+
 def export_as_gif(filename, images, frames_per_second=10, rubber_band=False):
     if rubber_band:
         images += images[2:-1][::-1]
-    images[0].save(filename, save_all=True, append_images=images[1:],
-                   duration=1000 // frames_per_second, loop=0)
+    images[0].save(
+        filename,
+        save_all=True,
+        append_images=images[1:],
+        duration=1000 // frames_per_second,
+        loop=0,
+    )
 
-export_as_gif("doggo-and-fruit-5.gif", [Image.fromarray(img) for img in images],
-              frames_per_second=2, rubber_band=True)
+
+export_as_gif(
+    "doggo-and-fruit-5.gif",
+    [Image.fromarray(img) for img in images],
+    frames_per_second=2,
+    rubber_band=True,
+)
 
 """
 ![Dog to Fruit 5](https://imgur.com/a/LHXceUi)
@@ -147,17 +159,22 @@ encoding_step = tf.squeeze(encoding_step)
 
 images = []
 for step_index in range(interpolation_steps // batch_size):
-    step_offsets = tf.linspace(batch_size*step_index,
-                               batch_size*(step_index+1) - 1, batch_size)
-    step_offsets = tf.tensordot(tf.cast(step_offsets, encoding_step.dtype),
-                                encoding_step, 0)
+    step_offsets = tf.linspace(
+        batch_size * step_index, batch_size * (step_index + 1) - 1, batch_size
+    )
+    step_offsets = tf.tensordot(
+        tf.cast(step_offsets, encoding_step.dtype), encoding_step, 0
+    )
     encodings = encoding_1 + tf.cast(step_offsets, encoding_1.dtype)
-    images += [Image.fromarray(img) for img in model.generate_image(
-        encodings,
-        batch_size=batch_size,
-        num_steps=25,
-        diffusion_noise=noise,
-    )]
+    images += [
+        Image.fromarray(img)
+        for img in model.generate_image(
+            encodings,
+            batch_size=batch_size,
+            num_steps=25,
+            diffusion_noise=noise,
+        )
+    ]
 
 export_as_gif("doggo-and-fruit-160.gif", images, rubber_band=True)
 
@@ -167,6 +184,98 @@ export_as_gif("doggo-and-fruit-160.gif", images, rubber_band=True)
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
 
+We can even extend this concept for more than 1 image. For example, we can
+interpolate between 4 prompts:
+"""
+
+prompt_1 = "A watercolor painting of a Golden Retriever at the beach"
+prompt_2 = "A still life DSLR photo of a bowl of fruit"
+prompt_3 = "The eiffel tower in the style of starry night"
+prompt_4 = "An architectural sketch of a skyscraper"
+
+interpolation_steps = 6
+batches = 2
+
+encoding_1 = tf.squeeze(model.encode_text(prompt_1))
+encoding_2 = tf.squeeze(model.encode_text(prompt_2))
+encoding_3 = tf.squeeze(model.encode_text(prompt_3))
+encoding_4 = tf.squeeze(model.encode_text(prompt_4))
+
+interpolated_encodings = tf.linspace(
+    tf.linspace(encoding_1, encoding_2, interpolation_steps),
+    tf.linspace(encoding_3, encoding_4, interpolation_steps),
+    interpolation_steps,
+)
+interpolated_encodings = tf.reshape(
+    interpolated_encodings, (interpolation_steps**2, 77, 768)
+)
+batched_encodings = tf.split(interpolated_encodings, batches)
+
+images = []
+for batch in range(batches):
+    images.append(
+        model.generate_image(
+            batched_encodings[batch],
+            batch_size=interpolation_steps**2 // batches,
+            diffusion_noise=noise,
+        )
+    )
+
+
+def plot_grid(
+    images,
+    path,
+    grid_size,
+    scale=2,
+):
+    fig = plt.figure(figsize=(grid_size * scale, grid_size * scale))
+    fig.tight_layout()
+    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.margins(x=0, y=0)
+    plt.axis("off")
+    images = images.astype(int)
+    for row in range(grid_size):
+        for col in range(grid_size):
+            index = row * columns + col
+            plt.subplot(grid_size, grid_size, index + 1)
+            plt.imshow(images[index].astype("uint8"))
+            plt.axis("off")
+            plt.margins(x=0, y=0)
+    plt.savefig(
+        fname=path,
+        pad_inches=0,
+        bbox_inches="tight",
+        transparent=False,
+        dpi=60,
+    )
+
+
+images = np.concatenate(images)
+plot_grid(images, "4-way-interpolation.jpg", interpolation_steps)
+
+"""
+![4-Way Interpolation](https://imgur.com/a/uO9OSkz)
+
+We can also interpolate while allowing diffusion noise to vary by dropping
+the `diffusion_noise` parameter:
+"""
+
+images = []
+for batch in range(batches):
+    images.append(
+        model.generate_image(
+            batched_encodings[batch], batch_size=interpolation_steps**2 // batches
+        )
+    )
+
+images = np.concatenate(images)
+plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
+
+"""
+![4-Way Interpolation With Noise](https://imgur.com/a/iM3qKZZ)
+
+Next up -- let's go for some walks!
+
 ## A Random Walk Around a Text Prompt
 
 Our next experiment will be to go for a random walk around the latent manifold
@@ -175,7 +284,7 @@ starting from a point produced by a particular prompt.
 
 walk_steps = 160
 batch_size = 16
-step_size = .05
+step_size = 0.05
 
 encoding = model.encode_text("A rubber duck swimming in a bowl of cereal")
 
@@ -188,12 +297,15 @@ for step_index in range(walk_steps // batch_size):
         random_deltas = tf.random.normal((77, 768), stddev=step_size, seed=seed)
         encoding += random_deltas
     batch_encodings = tf.stack(batch_encodings)
-    images += [Image.fromarray(img) for img in model.generate_image(
-        batch_encodings,
-        batch_size=batch_size,
-        num_steps=25,
-        diffusion_noise=noise,
-    )]
+    images += [
+        Image.fromarray(img)
+        for img in model.generate_image(
+            batch_encodings,
+            batch_size=batch_size,
+            num_steps=25,
+            diffusion_noise=noise,
+        )
+    ]
 
 export_as_gif("ducky.gif", images, rubber_band=True)
 
@@ -228,17 +340,30 @@ walk_noise_y = tf.random.normal(noise.shape, dtype=tf.float64)
 
 images = []
 for step in range(walk_steps // batch_size):
-    walk_scale_x = tf.cos(tf.linspace(batch_size*step, batch_size*(step+1) - 1, batch_size) * 2 * math.pi / walk_steps)
-    walk_scale_y = tf.sin(tf.linspace(batch_size*step, batch_size*(step+1) - 1, batch_size) * 2 * math.pi / walk_steps)
+    walk_scale_x = tf.cos(
+        tf.linspace(batch_size * step, batch_size * (step + 1) - 1, batch_size)
+        * 2
+        * math.pi
+        / walk_steps
+    )
+    walk_scale_y = tf.sin(
+        tf.linspace(batch_size * step, batch_size * (step + 1) - 1, batch_size)
+        * 2
+        * math.pi
+        / walk_steps
+    )
     noise_x = tf.tensordot(walk_scale_x, walk_noise_x, axes=0)
     noise_y = tf.tensordot(walk_scale_y, walk_noise_y, axes=0)
     noise = tf.add(noise_x, noise_y)
-    images += [Image.fromarray(img) for img in model.generate_image(
-        encoding,
-        batch_size=batch_size,
-        num_steps=25,
-        diffusion_noise=noise,
-    )]
+    images += [
+        Image.fromarray(img)
+        for img in model.generate_image(
+            encoding,
+            batch_size=batch_size,
+            num_steps=25,
+            diffusion_noise=noise,
+        )
+    ]
 
 export_as_gif("cows.gif", images)
 
