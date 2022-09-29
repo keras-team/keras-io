@@ -92,7 +92,7 @@ Note that in order to maintain some stability between the resulting images we
 keep the diffusion noise constant between images.
 """
 
-seed = 92922
+seed = 12345
 noise = tf.random.normal((512 // 8, 512 // 8, 4), seed=seed)
 
 images = model.generate_image(
@@ -120,7 +120,7 @@ export_as_gif("doggo-and-fruit-5.gif", [Image.fromarray(img) for img in images],
               frames_per_second=2, rubber_band=True)
 
 """
-![Dog to Fruit 5](https://imgur.com/a/617Qjxb)
+![Dog to Fruit 5](https://imgur.com/a/LHXceUi)
 
 The results may seem surprising. Generally, interpolating between prompts
 produces coherent looking images, and often demonstrate a progressive concept
@@ -156,7 +156,7 @@ for step_index in range(interpolation_steps // batch_size):
 export_as_gif("doggo-and-fruit-160.gif", images, rubber_band=True)
 
 """
-![Dog to Fruit 160](https://imgur.com/a/iNfRnH4)
+![Dog to Fruit 160](https://imgur.com/a/8B1kHoN)
 
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
@@ -192,7 +192,7 @@ for step_index in range(walk_steps // batch_size):
 export_as_gif("ducky.gif", images, rubber_band=True)
 
 """
-![Rubber Ducky Goes on a Walk](https://imgur.com/a/hZAlHrz)
+![Rubber Ducky Goes on a Walk](https://imgur.com/a/KZG8vyg)
 
 Perhaps unsurprisingly, randomly walking through the encoder's latent manifold
 produces a lot of images that look incoherent. Try it for yourself by setting
@@ -237,7 +237,7 @@ for step in range(walk_steps // batch_size):
 export_as_gif("cows.gif", images)
 
 """
-![Happy Cows](https://imgur.com/a/ZLOVIB2)
+![Happy Cows](https://imgur.com/a/5tPC4Zl)
 
 Experiment with your own prompts and with different values of
 `unconditional_guidance_scale`!
