@@ -357,10 +357,10 @@ print(f"XLA + mixed precision: {(end - start):.2f} seconds")
 Let's check out the results:
 """
 
-print("{:<20} {:<20}".format("Model", "Runtime"))
+print("{:<22} {:<22}".format("Model", "Runtime"))
 for result in benchmark_result:
     name, runtime = result
-    print("{:<20} {:<20}".format(name, runtime))
+    print("{:<22} {:<22}".format(name, runtime))
 
 """
 It only took our fully-optimized model four seconds to generate three novel images from
