@@ -66,9 +66,9 @@ model = keras_cv.models.StableDiffusion(jit_compile=True)
 ## Interpolating Between Text Prompts
 
 In stable diffusion, a text prompt is encoded, and that encoding is used to
-guide the diffusion process. The latent manifold of this encoding is vast, and
-when we give StableDiffusion a text prompt, we're generating images from just
-one point in this manifold.
+guide the diffusion process. The latent manifold of this encoding has shape
+77x768 (that's huge!), and when we give StableDiffusion a text prompt, we're
+generating images from just one point in this manifold.
 
 To explore more of this manifold, we can interpolate between two text encodings
 and generate images at those interpolated points:
@@ -83,13 +83,16 @@ encoding_2 = tf.squeeze(model.encode_text(prompt_2))
 
 interpolated_encodings = tf.linspace(encoding_1, encoding_2, interpolation_steps)
 
+# Show the size of the latent manifold
+print(encoding_1.shape)
+
 """
 Once we've interpolated the encodings, we can generate images from each point.
 Note that in order to maintain some stability between the resulting images we
 keep the diffusion noise constant between images.
 """
 
-seed = 1337
+seed = 92922
 noise = tf.random.normal((512 // 8, 512 // 8, 4), seed=seed)
 
 images = model.generate_image(
@@ -107,7 +110,7 @@ images where the first and last images don't match conceptually, we rubber-band
 the gif.
 """
 
-def export_as_gif(filename, images, frames_per_second=20, rubber_band=False):
+def export_as_gif(filename, images, frames_per_second=10, rubber_band=False):
     if rubber_band:
         images += images[2:-1][::-1]
     images[0].save(filename, save_all=True, append_images=images[1:],
@@ -121,7 +124,8 @@ export_as_gif("doggo-and-fruit-5.gif", [Image.fromarray(img) for img in images],
 
 The results may seem surprising. Generally, interpolating between prompts
 produces coherent looking images, and often demonstrate a progressive concept
-shift between the contents of the two prompts.
+shift between the contents of the two prompts. This is indiciative of a high
+quality representation space.
 
 To best visualize this, we should do a much more fine-grained interpolation,
 using hundreds of steps. In order to keep batch size small (so that we don't
