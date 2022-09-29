@@ -28,8 +28,7 @@ videos.  These videos can provide insight into the feature map of the
 latent space, and can ultimately lead to improvements in the training
 process.  One such GIF is displayed below:
 
-TODO(replace with a unique gif)
-![Dog to Fruit 5](https://imgur.com/a/617Qjxb)
+![Panda to Plane](https://imgur.com/a/hlmii8V)
 
 In this guide, we will show how to take advantage of the Stable Diffusion API
 in KerasCV to perform prompt interpolation and circular walks through
