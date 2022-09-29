@@ -487,10 +487,10 @@ for result in benchmark_result:
 
 <div class="k-default-codeblock">
 ```
-Model                Runtime             
-Standard             8.17177152633667    
-Mixed Precision      6.022329568862915   
-XLA                  6.265935659408569   
+Model                 Runtime             
+Standard              8.17177152633667    
+Mixed Precision       6.022329568862915   
+XLA                   6.265935659408569   
 XLA + Mixed Precision 4.252242088317871   
 
 ```
