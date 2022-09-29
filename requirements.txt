@@ -10,6 +10,7 @@ PyYAML
 pandas
 jupyter
 tensorflow==2.10.0
+tensorflow_datasets
 keras-tuner
 keras-cv
 keras-nlp
