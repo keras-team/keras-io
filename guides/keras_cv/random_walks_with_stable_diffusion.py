@@ -152,7 +152,7 @@ encodings.
 """
 
 interpolation_steps = 160
-batch_size = 16
+batch_size = 3
 
 encoding_step = (encoding_2 - encoding_1) / interpolation_steps
 encoding_step = tf.squeeze(encoding_step)
@@ -276,26 +276,26 @@ plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
 
 Next up -- let's go for some walks!
 
-## A Random Walk Around a Text Prompt
+## A Walk Around a Text Prompt
 
-Our next experiment will be to go for a random walk around the latent manifold
+Our next experiment will be to go for a walk around the latent manifold
 starting from a point produced by a particular prompt.
 """
 
 walk_steps = 160
-batch_size = 16
-step_size = 0.05
+batch_size = 3
+step_size = 0.005
+# Note that (77, 768) is the shape of the text encoding.
+delta = tf.ones((77, 768)) * step_size
 
-encoding = model.encode_text("A rubber duck swimming in a bowl of cereal")
+encoding = model.encode_text("The Eiffel Tower in the style of starry night")
 
 images = []
 for step_index in range(walk_steps // batch_size):
     batch_encodings = []
     for individual_image_step in range(batch_size):
         batch_encodings.append(encoding)
-        # Note that (77, 768) is the shape of the text encoding.
-        random_deltas = tf.random.normal((77, 768), stddev=step_size, seed=seed)
-        encoding += random_deltas
+        encoding += delta
     batch_encodings = tf.stack(batch_encodings)
     images += [
         Image.fromarray(img)
@@ -307,13 +307,13 @@ for step_index in range(walk_steps // batch_size):
         )
     ]
 
-export_as_gif("ducky.gif", images, rubber_band=True)
+export_as_gif("eiffel-tower-starry-night.gif", images, rubber_band=True)
 
 """
-![Rubber Ducky Goes on a Walk](https://imgur.com/a/KZG8vyg)
+![Eiffel tower walk gif](https://i.imgur.com/9MMYtal.gif)
 
-Perhaps unsurprisingly, randomly walking through the encoder's latent manifold
-produces a lot of images that look incoherent. Try it for yourself by setting
+Perhaps unsurprisingly, walking too far from the encoder's latent manifold
+produces images that look incoherent. Try it for yourself by setting
 your own prompt, and adjusting step_size to increase or decrease the magnitude
 of the walk. Note that when the magnitude of the walk gets large, the walk often
 leads into spaces in the latent manifold which produce extremely noisy images.
