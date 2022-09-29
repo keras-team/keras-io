@@ -107,6 +107,13 @@ Throughout this tutorial, we're going to export sequences of images as gifs so
 that they can be easily viewed with some temporal context. For sequences of
 images where the first and last images don't match conceptually, we rubber-band
 the gif.
+
+If you're running in Colab, you can view your own GIFs by running:
+
+```
+from IPython.display import Image as IImage
+IImage("doggo-and-fruit-5.gif")
+```
 """
 
 def export_as_gif(filename, images, frames_per_second=10, rubber_band=False):
