@@ -1,5 +1,5 @@
 """
-Title: Random Walks with Stable Diffusion in KerasCV
+Title: A walk through latent space with Stable Diffusion
 Authors: Ian Stenbit, [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/09/28
 Last modified: 2022/09/28
@@ -84,7 +84,7 @@ encoding_2 = tf.squeeze(model.encode_text(prompt_2))
 interpolated_encodings = tf.linspace(encoding_1, encoding_2, interpolation_steps)
 
 # Show the size of the latent manifold
-print(encoding_1.shape)
+print(f"Encoding shape: {encoding_1.shape}")
 
 """
 Once we've interpolated the encodings, we can generate images from each point.
