@@ -151,35 +151,29 @@ OOM our accelerators), this requires manually batching our interpolated
 encodings.
 """
 
-interpolation_steps = 160
+interpolation_steps = 150
 batch_size = 3
+batches = interpolation_steps // batch_size
 
-encoding_step = (encoding_2 - encoding_1) / interpolation_steps
-encoding_step = tf.squeeze(encoding_step)
+interpolated_encodings = tf.linspace(encoding_1, encoding_2, interpolation_steps)
+batched_encodings = tf.split(interpolated_encodings, batches)
 
 images = []
-for step_index in range(interpolation_steps // batch_size):
-    step_offsets = tf.linspace(
-        batch_size * step_index, batch_size * (step_index + 1) - 1, batch_size
-    )
-    step_offsets = tf.tensordot(
-        tf.cast(step_offsets, encoding_step.dtype), encoding_step, 0
-    )
-    encodings = encoding_1 + tf.cast(step_offsets, encoding_1.dtype)
+for batch in range(batches):
     images += [
         Image.fromarray(img)
         for img in model.generate_image(
-            encodings,
+            batched_encodings[batch],
             batch_size=batch_size,
             num_steps=25,
             diffusion_noise=noise,
         )
     ]
 
-export_as_gif("doggo-and-fruit-160.gif", images, rubber_band=True)
+export_as_gif("doggo-and-fruit-150.gif", images, rubber_band=True)
 
 """
-![Dog to Fruit 160](https://imgur.com/a/8B1kHoN)
+![Dog to Fruit 150](https://imgur.com/a/8B1kHoN)
 
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
@@ -194,7 +188,8 @@ prompt_3 = "The eiffel tower in the style of starry night"
 prompt_4 = "An architectural sketch of a skyscraper"
 
 interpolation_steps = 6
-batches = 2
+batch_size = 3
+batches = (interpolation_steps**2) // batch_size
 
 encoding_1 = tf.squeeze(model.encode_text(prompt_1))
 encoding_2 = tf.squeeze(model.encode_text(prompt_2))
@@ -216,7 +211,7 @@ for batch in range(batches):
     images.append(
         model.generate_image(
             batched_encodings[batch],
-            batch_size=interpolation_steps**2 // batches,
+            batch_size=batch_size,
             diffusion_noise=noise,
         )
     )
@@ -236,7 +231,7 @@ def plot_grid(
     images = images.astype(int)
     for row in range(grid_size):
         for col in range(grid_size):
-            index = row * columns + col
+            index = row * grid_size + col
             plt.subplot(grid_size, grid_size, index + 1)
             plt.imshow(images[index].astype("uint8"))
             plt.axis("off")
@@ -262,11 +257,7 @@ the `diffusion_noise` parameter:
 
 images = []
 for batch in range(batches):
-    images.append(
-        model.generate_image(
-            batched_encodings[batch], batch_size=interpolation_steps**2 // batches
-        )
-    )
+    images.append(model.generate_image(batched_encodings[batch], batch_size=batch_size))
 
 images = np.concatenate(images)
 plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
@@ -282,25 +273,30 @@ Our next experiment will be to go for a walk around the latent manifold
 starting from a point produced by a particular prompt.
 """
 
-walk_steps = 160
+walk_steps = 150
 batch_size = 3
+batches = walk_steps // batch_size
 step_size = 0.005
-# Note that (77, 768) is the shape of the text encoding.
-delta = tf.ones((77, 768)) * step_size
 
-encoding = model.encode_text("The Eiffel Tower in the style of starry night")
+encoding = tf.squeeze(
+    model.encode_text("The Eiffel Tower in the style of starry night")
+)
+# Note that (77, 768) is the shape of the text encoding.
+delta = tf.ones_like(encoding) * step_size
+
+walked_encodings = []
+for step_index in range(walk_steps):
+    walked_encodings.append(encoding)
+    encoding += delta
+walked_encodings = tf.stack(walked_encodings)
+batched_encodings = tf.split(walked_encodings, batches)
 
 images = []
-for step_index in range(walk_steps // batch_size):
-    batch_encodings = []
-    for individual_image_step in range(batch_size):
-        batch_encodings.append(encoding)
-        encoding += delta
-    batch_encodings = tf.stack(batch_encodings)
+for batch in range(batches):
     images += [
         Image.fromarray(img)
         for img in model.generate_image(
-            batch_encodings,
+            batched_encodings[batch],
             batch_size=batch_size,
             num_steps=25,
             diffusion_noise=noise,
@@ -318,7 +314,7 @@ your own prompt, and adjusting step_size to increase or decrease the magnitude
 of the walk. Note that when the magnitude of the walk gets large, the walk often
 leads into spaces in the latent manifold which produce extremely noisy images.
 
-## A Random Walk Through the Diffusion Noise Space for a Single Prompt
+## A Circular Walk Through the Diffusion Noise Space for a Single Prompt
 
 Our final experiment is to stick to one prompt and explore the variety of images
 that the diffusion model can produce from that prompt. We do this by controlling
@@ -331,37 +327,30 @@ we began our walk, so we get a "loopable" result!
 """
 
 prompt = "An oil paintings of cows in a field next to a windmill in Holland"
-encoding = model.encode_text(prompt)
-walk_steps = 160
-batch_size = 16
+encoding = tf.squeeze(model.encode_text(prompt))
+walk_steps = 150
+batch_size = 3
+batches = walk_steps // batch_size
 
 walk_noise_x = tf.random.normal(noise.shape, dtype=tf.float64)
 walk_noise_y = tf.random.normal(noise.shape, dtype=tf.float64)
 
+walk_scale_x = tf.cos(tf.linspace(0, 2, walk_steps) * math.pi)
+walk_scale_y = tf.sin(tf.linspace(0, 2, walk_steps) * math.pi)
+noise_x = tf.tensordot(walk_scale_x, walk_noise_x, axes=0)
+noise_y = tf.tensordot(walk_scale_y, walk_noise_y, axes=0)
+noise = tf.add(noise_x, noise_y)
+batched_noise = tf.split(noise, batches)
+
 images = []
-for step in range(walk_steps // batch_size):
-    walk_scale_x = tf.cos(
-        tf.linspace(batch_size * step, batch_size * (step + 1) - 1, batch_size)
-        * 2
-        * math.pi
-        / walk_steps
-    )
-    walk_scale_y = tf.sin(
-        tf.linspace(batch_size * step, batch_size * (step + 1) - 1, batch_size)
-        * 2
-        * math.pi
-        / walk_steps
-    )
-    noise_x = tf.tensordot(walk_scale_x, walk_noise_x, axes=0)
-    noise_y = tf.tensordot(walk_scale_y, walk_noise_y, axes=0)
-    noise = tf.add(noise_x, noise_y)
+for batch in range(batches):
     images += [
         Image.fromarray(img)
         for img in model.generate_image(
             encoding,
             batch_size=batch_size,
             num_steps=25,
-            diffusion_noise=noise,
+            diffusion_noise=batched_noise[batch],
         )
     ]
 
