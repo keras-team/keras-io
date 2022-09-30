@@ -12,8 +12,10 @@ Description: Explore the latent manifold of Stable Diffusion.
 Generative image models learn a "latent manifold" of the visual world:
 a low-dimensional vector space where each point maps to an image.
 Going from such a point on the manifold back to a displayble image
-is called "decoding" -- in the Stable Diffusion model, this is handle by
+is called "decoding" -- in the Stable Diffusion model, this is handled by
 the "decoder" model.
+
+![The Stable Diffusion architecture](https://i.imgur.com/2uC8rYJ.png)
 
 This latent manifold of images is continuous and interpolative, meaning that:
 
@@ -43,7 +45,7 @@ process. One such GIF is displayed below:
 
 In this guide, we will show how to take advantage of the Stable Diffusion API
 in KerasCV to perform prompt interpolation and circular walks through
-Stable Diffusion's learned latent space for image representation, as well as through
+Stable Diffusion's visual latent manifold, as well as through
 the text encoder's latent manifold.
 
 This guide assumes the reader has a
