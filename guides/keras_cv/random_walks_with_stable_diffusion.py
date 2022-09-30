@@ -3,51 +3,62 @@ Title: A walk through latent space with Stable Diffusion
 Authors: Ian Stenbit, [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/09/28
 Last modified: 2022/09/28
-Description: Explore the latent manifold of Stable Diffusion
+Description: Explore the latent manifold of Stable Diffusion.
 """
 
 """
 ## Overview
 
-Generative models learn a low dimensional latent representation of their
-training data.  The inference process for these models typically involves
-starting from some point in latent space and running the latent vector
-through the decoder portion of the generative model.  StableDiffusion
-has two latent spaces: the image representation space learned by the
-Variation AutoEncoder used during training, and the prompt latent space
-which is learned using a combination of pretraining and train time
-finetuning.
+Generative image models learn a "latent manifold" of the visual world:
+a low-dimensional vector space where each point maps to an image.
+Going from such a point on the manifold back to a displayble image
+is called "decoding" -- in the Stable Diffusion model, this is handle by
+the "decoder" model.
 
-Latent walking, or latent exploration is the process of
+This latent manifold of images is continuous and interpolative, meaning that:
+
+1. Moving a little on the manifold only changes the corresponding image a little (continuity).
+2. For any two points A and B on the manifold (i.e. any two images), it is possible
+to move from A to B via a path where each intermediate point is also on the manifold (i.e.
+is also a valid image). Intermediate points would be called "interpolations" between
+the two starting images.
+
+Stable Diffusion isn't just an image model, though, it's also a natural language model.
+It has two latent spaces: the image representation space learned by the
+encoder used during training, and the prompt latent space
+which is learned using a combination of pretraining and training-time
+fine-tuning.
+
+_Latent space walking_, or _latent space exploration_, is the process of
 sampling a point in latent space and incrementally changing the latent
-representation.  Its most common application is generating videos or gifs,
+representation. Its most common application is generating animations
 where each sampled point is fed to the decoder and is stored as a
-frame in the final gif or video.
-For high quality latent representations, this produces coherent looking
-videos.  These videos can provide insight into the feature map of the
+frame in the final animation.
+For high-quality latent representations, this produces coherent-looking
+animations. These animations can provide insight into the feature map of the
 latent space, and can ultimately lead to improvements in the training
-process.  One such GIF is displayed below:
+process. One such GIF is displayed below:
 
 ![Panda to Plane](https://imgur.com/a/hlmii8V)
 
 In this guide, we will show how to take advantage of the Stable Diffusion API
 in KerasCV to perform prompt interpolation and circular walks through
- StableDiffusion's learned latent space for image representation, as well as through
- the text encoder's latent manifold.
+Stable Diffusion's learned latent space for image representation, as well as through
+the text encoder's latent manifold.
 
- This guide assumes the reader has a
+This guide assumes the reader has a
 high-level understanding of Stable Diffusion.
 If you haven't already, you should start
 by reading the [Stable Diffusion Tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
 
-To start, we import KerasCV and load up a stable diffusion model using the
-optimizations discussed in the Stable Diffusion tutorial.
-Note that if you are running with a M1 Mac GPU you should not enabled mixed precision.
-Check out the [basic Stable Diffusion tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/) for more info.
+To start, we import KerasCV and load up a Stable Diffusion model using the
+optimizations discussed in the tutorial
+[Generate images with Stable Diffusion](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
+Note that if you are running with a M1 Mac GPU you should not enable mixed precision.
 """
 
 """shell
-pip install --upgrade keras-cv
+pip install keras-cv --upgrade --quiet
 """
 
 import keras_cv
@@ -58,17 +69,21 @@ import numpy as np
 import math
 from PIL import Image
 
-
+# Enable mixed precision
+# (only do this if you have a recent NVIDIA GPU)
 keras.mixed_precision.set_global_policy("mixed_float16")
+
+# Instantiate the Stable Diffusion model
 model = keras_cv.models.StableDiffusion(jit_compile=True)
 
 """
-## Interpolating Between Text Prompts
+## Interpolating between text prompts
 
-In stable diffusion, a text prompt is encoded, and that encoding is used to
-guide the diffusion process. The latent manifold of this encoding has shape
-77x768 (that's huge!), and when we give StableDiffusion a text prompt, we're
-generating images from just one point in this manifold.
+In Stable Diffusion, a text prompt is first encoded into a vector,
+and that encoding is used to guide the diffusion process.
+The latent encoding vector has shape
+77x768 (that's huge!), and when we give Stable Diffusion a text prompt, we're
+generating images from just one such point on the latent manifold.
 
 To explore more of this manifold, we can interpolate between two text encodings
 and generate images at those interpolated points:
@@ -142,12 +157,13 @@ export_as_gif(
 
 The results may seem surprising. Generally, interpolating between prompts
 produces coherent looking images, and often demonstrate a progressive concept
-shift between the contents of the two prompts. This is indiciative of a high
-quality representation space.
+shift between the contents of the two prompts. This is indicative of a high
+quality representation space, that closely mirrors the natural structure
+of the visual world.
 
 To best visualize this, we should do a much more fine-grained interpolation,
 using hundreds of steps. In order to keep batch size small (so that we don't
-OOM our accelerators), this requires manually batching our interpolated
+OOM our GPU), this requires manually batching our interpolated
 encodings.
 """
 
@@ -178,8 +194,8 @@ export_as_gif("doggo-and-fruit-150.gif", images, rubber_band=True)
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
 
-We can even extend this concept for more than 1 image. For example, we can
-interpolate between 4 prompts:
+We can even extend this concept for more than one image. For example, we can
+interpolate between four prompts:
 """
 
 prompt_1 = "A watercolor painting of a Golden Retriever at the beach"
@@ -267,7 +283,7 @@ plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
 
 Next up -- let's go for some walks!
 
-## A Walk Around a Text Prompt
+## A walk around a text prompt
 
 Our next experiment will be to go for a walk around the latent manifold
 starting from a point produced by a particular prompt.
@@ -310,18 +326,18 @@ export_as_gif("eiffel-tower-starry-night.gif", images, rubber_band=True)
 
 Perhaps unsurprisingly, walking too far from the encoder's latent manifold
 produces images that look incoherent. Try it for yourself by setting
-your own prompt, and adjusting step_size to increase or decrease the magnitude
+your own prompt, and adjusting `step_size` to increase or decrease the magnitude
 of the walk. Note that when the magnitude of the walk gets large, the walk often
-leads into spaces in the latent manifold which produce extremely noisy images.
+leads into areas which produce extremely noisy images.
 
-## A Circular Walk Through the Diffusion Noise Space for a Single Prompt
+## A circular walk through the diffusion noise space for a single prompt
 
 Our final experiment is to stick to one prompt and explore the variety of images
 that the diffusion model can produce from that prompt. We do this by controlling
 the noise that is used to seed the diffusion process.
 
-We create two noise components, x, and y, and do a walk from 0 to 2PI, summing
-the cosine of our x component and the sin of our y component to produce noise.
+We create two noise components, `x` and `y`, and do a walk from 0 to 2π, summing
+the cosine of our `x` component and the sin of our `y` component to produce noise.
 Using this approach, the end of our walk arrives at the same noise inputs where
 we began our walk, so we get a "loopable" result!
 """
@@ -364,8 +380,8 @@ Experiment with your own prompts and with different values of
 
 ## Conclusion
 
-Stable Diffusion offers a lot more than just single text-to-image translations.
+Stable Diffusion offers a lot more than just single text-to-image generation.
 Exploring the latent manifold of the text encoder and the noise space of the
 diffusion model are two fun ways to experience the power of this model, and
-KerasCV makes it easy to explore!
+KerasCV makes it easy!
 """
