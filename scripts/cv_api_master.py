@@ -198,8 +198,8 @@ MODELS_MASTER = {
     "toc": True,
     "children": [
         {
-            "path": "stablediffusion",
-            "title": "The StableDiffusion model",
+            "path": "stable_diffusion",
+            "title": "StableDiffusion image-generation model",
             "generate": [
                 "keras_cv.models.StableDiffusion",
             ],
