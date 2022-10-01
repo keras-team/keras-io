@@ -106,7 +106,7 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
     """Crop images.
 
     low resolution images: 24x24
-    hight resolution images: 96x96
+    high resolution images: 96x96
     """
     lowres_crop_size = hr_crop_size // scale  # 96//4=24
     lowres_img_shape = tf.shape(lowres_img)[:2]  # (height,width)
@@ -175,7 +175,7 @@ Let's visualize a few sample images:
 
 lowres, highres = next(iter(train_ds))
 
-# Hight Resolution Images
+# High Resolution Images
 plt.figure(figsize=(10, 10))
 for i in range(9):
     ax = plt.subplot(3, 3, i + 1)
@@ -339,7 +339,7 @@ Super-Resolution). You could improve the model accuracy by training the model fo
 training the model with a wider variety of inputs with mixed downgrading factors, so as to
 be able to handle a greater range of real-world images.
 
-You could also improve on the given basline EDSR model by implementing EDSR+,
+You could also improve on the given baseline EDSR model by implementing EDSR+,
 or MDSR( Multi-Scale super-resolution) and MDSR+,
 which were proposed in the same paper.
 """
