@@ -175,7 +175,7 @@ Let's visualize a few sample images:
 
 lowres, highres = next(iter(train_ds))
 
-# Hight Resolution Images
+# High Resolution Images
 plt.figure(figsize=(10, 10))
 for i in range(9):
     ax = plt.subplot(3, 3, i + 1)
