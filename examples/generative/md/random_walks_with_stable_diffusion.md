@@ -366,7 +366,7 @@ plot_grid(images, "4-way-interpolation.jpg", interpolation_steps)
 ```
 </div>
     
-![png](/examples/generative/img/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_13_2.png)
+![png](/img/examples/generative/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_13_2.png)
 
 We can also interpolate while allowing diffusion noise to vary by dropping
 the `diffusion_noise` parameter:
@@ -398,7 +398,7 @@ plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
 ```
 </div>
     
-![png](/examples/generative/img/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_15_2.png)
+![png](/img/examples/generative/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_15_2.png)
 
 
 Next up -- let's go for some walks!
