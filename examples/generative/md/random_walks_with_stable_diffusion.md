@@ -6,7 +6,7 @@
 **Description:** Explore the latent manifold of Stable Diffusion.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/random_walks_with_stable_diffusion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/random_walks_with_stable_diffusion.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/random_walks_with_stable_diffusion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/random_walks_with_stable_diffusion.py)
 
 
 
@@ -45,7 +45,7 @@ animations. These animations can provide insight into the feature map of the
 latent space, and can ultimately lead to improvements in the training
 process. One such GIF is displayed below:
 
-![Panda to Plane](https://imgur.com/a/hlmii8V)
+![Panda to Plane](TODO)
 
 In this guide, we will show how to take advantage of the Stable Diffusion API
 in KerasCV to perform prompt interpolation and circular walks through
@@ -55,11 +55,11 @@ the text encoder's latent manifold.
 This guide assumes the reader has a
 high-level understanding of Stable Diffusion.
 If you haven't already, you should start
-by reading the [Stable Diffusion Tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
+by reading the [Stable Diffusion Tutorial](https://keras.io/examples/generative/generate_images_with_stable_diffusion/).
 
 To start, we import KerasCV and load up a Stable Diffusion model using the
 optimizations discussed in the tutorial
-[Generate images with Stable Diffusion](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
+[Generate images with Stable Diffusion](https://keras.io/examples/generative/generate_images_with_stable_diffusion/).
 Note that if you are running with a M1 Mac GPU you should not enable mixed precision.
 
 
@@ -85,8 +85,6 @@ model = keras_cv.models.StableDiffusion(jit_compile=True)
 ```
 <div class="k-default-codeblock">
 ```
-/bin/bash: /home/ianjjohnson/miniconda3/envs/tf/lib/libtinfo.so.6: no version information available (required by /bin/bash)
-
 INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
 Your GPUs will likely run quickly with dtype policy mixed_float16 as they all have compute capability of at least 7.0
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
@@ -123,7 +121,6 @@ print(f"Encoding shape: {encoding_1.shape}")
 <div class="k-default-codeblock">
 ```
 Encoding shape: (77, 768)
-
 ```
 </div>
 Once we've interpolated the encodings, we can generate images from each point.
@@ -145,7 +142,6 @@ images = model.generate_image(
 <div class="k-default-codeblock">
 ```
 25/25 [==============================] - 50s 340ms/step
-
 ```
 </div>
 Now that we've generated some interpolated images, let's take a look at them!
@@ -185,7 +181,7 @@ export_as_gif(
 )
 ```
 
-![Dog to Fruit 5](https://imgur.com/a/LHXceUi)
+![Dog to Fruit 5](https://i.imgur.com/4ZCxZY4.gif)
 
 The results may seem surprising. Generally, interpolating between prompts
 produces coherent looking images, and often demonstrate a progressive concept
@@ -274,10 +270,9 @@ export_as_gif("doggo-and-fruit-150.gif", images, rubber_band=True)
 25/25 [==============================] - 6s 244ms/step
 25/25 [==============================] - 6s 243ms/step
 25/25 [==============================] - 6s 244ms/step
-
 ```
 </div>
-![Dog to Fruit 150](https://imgur.com/a/8B1kHoN)
+![Dog to Fruit 150](TODO)
 
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
@@ -368,18 +363,10 @@ plot_grid(images, "4-way-interpolation.jpg", interpolation_steps)
 25/25 [==============================] - 6s 244ms/step
 25/25 [==============================] - 6s 244ms/step
 25/25 [==============================] - 6s 244ms/step
-
-/tmp/ipykernel_177535/3715149815.py:51: MatplotlibDeprecationWarning: Auto-removal of overlapping axes is deprecated since 3.6 and will be removed two minor releases later; explicitly call ax.remove() as needed.
-  plt.subplot(grid_size, grid_size, index + 1)
-
 ```
 </div>
     
-![png](/img/guides/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_13_2.png)
-    
-
-
-![4-Way Interpolation](https://imgur.com/a/uO9OSkz)
+![png](/examples/generative/img/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_13_2.png)
 
 We can also interpolate while allowing diffusion noise to vary by dropping
 the `diffusion_noise` parameter:
@@ -408,18 +395,11 @@ plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
 25/25 [==============================] - 6s 243ms/step
 25/25 [==============================] - 6s 243ms/step
 25/25 [==============================] - 6s 243ms/step
-
-/tmp/ipykernel_177535/3715149815.py:51: MatplotlibDeprecationWarning: Auto-removal of overlapping axes is deprecated since 3.6 and will be removed two minor releases later; explicitly call ax.remove() as needed.
-  plt.subplot(grid_size, grid_size, index + 1)
-
 ```
 </div>
     
-![png](/img/guides/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_15_2.png)
-    
+![png](/examples/generative/img/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_15_2.png)
 
-
-![4-Way Interpolation With Noise](https://imgur.com/a/iM3qKZZ)
 
 Next up -- let's go for some walks!
 
@@ -627,7 +607,7 @@ export_as_gif("cows.gif", images)
 
 ```
 </div>
-![Happy Cows](https://imgur.com/a/5tPC4Zl)
+![Happy Cows](TODO)
 
 Experiment with your own prompts and with different values of
 `unconditional_guidance_scale`!

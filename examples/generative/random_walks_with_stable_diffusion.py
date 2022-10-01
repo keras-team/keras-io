@@ -41,7 +41,7 @@ animations. These animations can provide insight into the feature map of the
 latent space, and can ultimately lead to improvements in the training
 process. One such GIF is displayed below:
 
-![Panda to Plane](https://imgur.com/a/hlmii8V)
+![Panda to Plane](TODOD)
 
 In this guide, we will show how to take advantage of the Stable Diffusion API
 in KerasCV to perform prompt interpolation and circular walks through
@@ -155,7 +155,7 @@ export_as_gif(
 )
 
 """
-![Dog to Fruit 5](https://imgur.com/a/LHXceUi)
+![Dog to Fruit 5](https://i.imgur.com/4ZCxZY4.gif)
 
 The results may seem surprising. Generally, interpolating between prompts
 produces coherent looking images, and often demonstrate a progressive concept
@@ -191,7 +191,7 @@ for batch in range(batches):
 export_as_gif("doggo-and-fruit-150.gif", images, rubber_band=True)
 
 """
-![Dog to Fruit 150](https://imgur.com/a/8B1kHoN)
+![Dog to Fruit 150](TODO)
 
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
@@ -267,8 +267,6 @@ images = np.concatenate(images)
 plot_grid(images, "4-way-interpolation.jpg", interpolation_steps)
 
 """
-![4-Way Interpolation](https://imgur.com/a/uO9OSkz)
-
 We can also interpolate while allowing diffusion noise to vary by dropping
 the `diffusion_noise` parameter:
 """
@@ -281,8 +279,6 @@ images = np.concatenate(images)
 plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
 
 """
-![4-Way Interpolation With Noise](https://imgur.com/a/iM3qKZZ)
-
 Next up -- let's go for some walks!
 
 ## A walk around a text prompt
@@ -375,7 +371,7 @@ for batch in range(batches):
 export_as_gif("cows.gif", images)
 
 """
-![Happy Cows](https://imgur.com/a/5tPC4Zl)
+![Happy Cows](TODO)
 
 Experiment with your own prompts and with different values of
 `unconditional_guidance_scale`!
