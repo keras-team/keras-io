@@ -938,7 +938,7 @@ unzip -q inference_set.zip
 # Custom objects are not included when the model is saved.
 # At loading time, these objects need to be passed for reconstruction of the model
 saved_model = tf.keras.models.load_model(
-    "./ShiftViT",
+    "ShiftViT",
     custom_objects={"WarmUpCosine": WarmUpCosine, "AdamW": tfa.optimizers.AdamW},
 )
 
@@ -992,18 +992,6 @@ def get_predicted_class(probabilities):
     return predicted_class
 
 
-def get_confidence_scores(probabilities):
-    confidences = {}
-    # convert tf tensor to numpy array
-    scores = probabilities.numpy()
-
-    # get the indexes of the probability scores sorted in descending order
-    score_indexes = np.argsort(probabilities)[::-1]
-    for idx in score_indexes:
-        confidences[config.label_map[idx]] = (scores[idx]) * 100
-    return confidences
-
-
 """
 **Get predictions**
 """
@@ -1011,9 +999,6 @@ def get_confidence_scores(probabilities):
 img_dir = "inference_set"
 predict_ds = create_tf_dataset(img_dir)
 probabilities = predict(predict_ds)
-print(probabilities[0])
-confidences = get_confidence_scores(probabilities[0])
-print(confidences)
 
 """
 **View predictions**
