@@ -11,7 +11,7 @@ Description: Explore the latent manifold of Stable Diffusion.
 
 Generative image models learn a "latent manifold" of the visual world:
 a low-dimensional vector space where each point maps to an image.
-Going from such a point on the manifold back to a displayble image
+Going from such a point on the manifold back to a displayable image
 is called "decoding" -- in the Stable Diffusion model, this is handled by
 the "decoder" model.
 
@@ -158,7 +158,7 @@ export_as_gif(
 ![Dog to Fruit 5](https://i.imgur.com/4ZCxZY4.gif)
 
 The results may seem surprising. Generally, interpolating between prompts
-produces coherent looking images, and often demonstrate a progressive concept
+produces coherent looking images, and often demonstrates a progressive concept
 shift between the contents of the two prompts. This is indicative of a high
 quality representation space, that closely mirrors the natural structure
 of the visual world.
