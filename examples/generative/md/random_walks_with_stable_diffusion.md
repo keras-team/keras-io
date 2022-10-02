@@ -15,7 +15,7 @@
 
 Generative image models learn a "latent manifold" of the visual world:
 a low-dimensional vector space where each point maps to an image.
-Going from such a point on the manifold back to a displayble image
+Going from such a point on the manifold back to a displayable image
 is called "decoding" -- in the Stable Diffusion model, this is handled by
 the "decoder" model.
 
@@ -55,11 +55,11 @@ the text encoder's latent manifold.
 This guide assumes the reader has a
 high-level understanding of Stable Diffusion.
 If you haven't already, you should start
-by reading the [Stable Diffusion Tutorial](https://keras.io/examples/generative/generate_images_with_stable_diffusion/).
+by reading the [Stable Diffusion Tutorial](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
 
 To start, we import KerasCV and load up a Stable Diffusion model using the
 optimizations discussed in the tutorial
-[Generate images with Stable Diffusion](https://keras.io/examples/generative/generate_images_with_stable_diffusion/).
+[Generate images with Stable Diffusion](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/).
 Note that if you are running with a M1 Mac GPU you should not enable mixed precision.
 
 
@@ -184,7 +184,7 @@ export_as_gif(
 ![Dog to Fruit 5](https://i.imgur.com/4ZCxZY4.gif)
 
 The results may seem surprising. Generally, interpolating between prompts
-produces coherent looking images, and often demonstrate a progressive concept
+produces coherent looking images, and often demonstrates a progressive concept
 shift between the contents of the two prompts. This is indicative of a high
 quality representation space, that closely mirrors the natural structure
 of the visual world.
