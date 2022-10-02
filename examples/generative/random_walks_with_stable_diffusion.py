@@ -41,7 +41,7 @@ animations. These animations can provide insight into the feature map of the
 latent space, and can ultimately lead to improvements in the training
 process. One such GIF is displayed below:
 
-![Panda to Plane](https://imgur.com/a/1G1Hupl)
+![Panda to Plane](/img/examples/generative/random_walks_with_stable_diffusion/panda2plane.gif)
 
 In this guide, we will show how to take advantage of the Stable Diffusion API
 in KerasCV to perform prompt interpolation and circular walks through
@@ -191,7 +191,7 @@ for batch in range(batches):
 export_as_gif("doggo-and-fruit-150.gif", images, rubber_band=True)
 
 """
-![Dog to Fruit 150](https://imgur.com/a/8r6mIGR)
+![Dog to Fruit 150](/img/examples/generative/random_walks_with_stable_diffusion/dog2fruit150.gif)
 
 The resulting gif shows a much clearer and more coherent shift between the two
 prompts. Try out some prompts of your own and experiment!
@@ -371,7 +371,7 @@ for batch in range(batches):
 export_as_gif("cows.gif", images)
 
 """
-![Happy Cows](https://imgur.com/a/F1MRI2Y)
+![Happy Cows](/img/examples/generative/random_walks_with_stable_diffusion/happycows.gif)
 
 Experiment with your own prompts and with different values of
 `unconditional_guidance_scale`!
