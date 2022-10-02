@@ -993,7 +993,7 @@ have also provided the outputs of the model trained for more epochs.
 ## Way forward
 
 If anyone is interested to go deeper into NeRF, we have built a 3-part blog 
-series at [PyImageSearch](www.pyimagesearch.com).
+series at [PyImageSearch](https://www.pyimagesearch.com).
 
 - [Prerequisites of NeRF](https://www.pyimagesearch.com/2021/11/10/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-1/)
 - [Concepts of NeRF](https://www.pyimagesearch.com/2021/11/17/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-2/)

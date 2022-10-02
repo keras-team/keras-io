@@ -43,7 +43,7 @@ adverserial networks, see [GAN](https://arxiv.org/abs/1406.2661),
 ### Install RDKit
 
 [RDKit](https://www.rdkit.org/) is a collection of cheminformatics and machine-learning
-software written in C++ and Python. In this tutorial, RDKit is used to conviently and
+software written in C++ and Python. In this tutorial, RDKit is used to conveniently and
 efficiently transform
 [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system) to
 molecule objects, and then from those obtain sets of atoms and bonds.
@@ -257,8 +257,8 @@ networks will then output (for each example in the batch) a tanh-activated vecto
 followed by a reshape and softmax to match that of a multi-dimensional adjacency/feature
 tensor.
 
-As the discriminator network will recieves as input a graph (`A`, `H`) from either the
-genrator or from the training set, we'll need to implement graph convolutional layers,
+As the discriminator network will receives as input a graph (`A`, `H`) from either the
+generator or from the training set, we'll need to implement graph convolutional layers,
 which allows us to operate on graphs. This means that input to the discriminator network
 will first pass through graph convolutional layers, then an average-pooling layer,
 and finally a few fully-connected layers. The final output should be a scalar (for each

@@ -70,7 +70,7 @@ We use [OpenAIGym](http://gym.openai.com/docs) to create the environment.
 We will use the `upper_bound` parameter to scale our actions later.
 """
 
-problem = "Pendulum-v0"
+problem = "Pendulum-v1"
 env = gym.make(problem)
 
 num_states = env.observation_space.shape[0]

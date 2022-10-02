@@ -253,7 +253,7 @@ Name: target, dtype: int64
 
 def create_dataset(dataframe):
     dataset = tf.data.Dataset.from_tensor_slices(
-        (df["text"].to_numpy(), df["target"].to_numpy())
+        (dataframe["text"].to_numpy(), dataframe["target"].to_numpy())
     )
     dataset = dataset.batch(100)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
@@ -302,7 +302,7 @@ model_1 = tfdf.keras.GradientBoostedTreesModel(preprocessing=preprocessor)
 
 <div class="k-default-codeblock">
 ```
-Use /tmp/tmpkpl10aj9 as temporary training directory
+Use /tmp/tmpsp7fmsyk as temporary training directory
 
 ```
 </div>
@@ -315,7 +315,7 @@ model_2 = tfdf.keras.GradientBoostedTreesModel()
 
 <div class="k-default-codeblock">
 ```
-Use /tmp/tmpysfsq6o0 as temporary training directory
+Use /tmp/tmpl0zj3vw0 as temporary training directory
 
 ```
 </div>
@@ -347,26 +347,452 @@ model_2.fit(train_ds)
 
 <div class="k-default-codeblock">
 ```
-Starting reading the dataset
-77/77 [==============================] - ETA: 0s
-Dataset read in 0:00:15.844516
-Training model
-Model trained in 0:02:30.922245
-Compiling model
-77/77 [==============================] - 167s 2s/step
-Starting reading the dataset
-55/77 [====================>.........] - ETA: 0s
-Dataset read in 0:00:00.219258
-Training model
-Model trained in 0:00:00.289591
-Compiling model
-77/77 [==============================] - 1s 6ms/step
+Reading training dataset...
+Training dataset read in 0:00:06.473683. Found 6852 examples.
+Training model...
+Model trained in 0:00:41.461477
+Compiling model...
 
-<keras.callbacks.History at 0x7f453f9349d0>
+Model compiled.
+Reading training dataset...
+Training dataset read in 0:00:00.087930. Found 6852 examples.
+Training model...
+Model trained in 0:00:00.367492
+Compiling model...
+
+Model compiled.
+
+<keras.callbacks.History at 0x7fe09ded1b40>
 
 ```
 </div>
+Prints training logs of model_1
 
+
+```python
+logs_1 = model_1.make_inspector().training_logs()
+print(logs_1)
+```
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+Prints training logs of model_2
+
+
+```python
+logs_2 = model_2.make_inspector().training_logs()
+print(logs_2)
+```
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+The model.summary() method prints a variety of information about your decision tree model, including model type, task, input features, and feature importance.
+
+
+```python
+print("model_1 summary: ")
+print(model_1.summary())
+print()
+print("model_2 summary: ")
+print(model_2.summary())
+```
+
+<div class="k-default-codeblock">
+```
+model_1 summary: 
+Model: "gradient_boosted_trees_model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ model (Functional)          (None, 512)               256797824 
+                                                                 
+=================================================================
+Total params: 256,797,825
+Trainable params: 0
+Non-trainable params: 256,797,825
+_________________________________________________________________
+Type: "GRADIENT_BOOSTED_TREES"
+Task: CLASSIFICATION
+Label: "__LABEL"
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+No weights
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+ 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+    
+    
+<div class="k-default-codeblock">
+```
+Loss: BINOMIAL_LOG_LIKELIHOOD
+Validation loss value: 0.806777
+Number of trees per iteration: 1
+Node format: NOT_SET
+Number of trees: 137
+Total number of nodes: 6671
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Number of nodes by tree:
+Count: 137 Average: 48.6934 StdDev: 9.91023
+Min: 21 Max: 63 Ignored: 0
+----------------------------------------------
+[ 21, 23)  1   0.73%   0.73%
+[ 23, 25)  1   0.73%   1.46%
+[ 25, 27)  0   0.00%   1.46%
+[ 27, 29)  1   0.73%   2.19%
+[ 29, 31)  3   2.19%   4.38% #
+[ 31, 33)  3   2.19%   6.57% #
+[ 33, 36)  9   6.57%  13.14% ####
+[ 36, 38)  4   2.92%  16.06% ##
+[ 38, 40)  4   2.92%  18.98% ##
+[ 40, 42)  8   5.84%  24.82% ####
+[ 42, 44)  8   5.84%  30.66% ####
+[ 44, 46)  9   6.57%  37.23% ####
+[ 46, 48)  7   5.11%  42.34% ###
+[ 48, 51) 10   7.30%  49.64% #####
+[ 51, 53) 13   9.49%  59.12% ######
+[ 53, 55) 10   7.30%  66.42% #####
+[ 55, 57) 10   7.30%  73.72% #####
+[ 57, 59)  6   4.38%  78.10% ###
+[ 59, 61)  8   5.84%  83.94% ####
+[ 61, 63] 22  16.06% 100.00% ##########
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Depth by leafs:
+Count: 3404 Average: 4.81052 StdDev: 0.557183
+Min: 1 Max: 5 Ignored: 0
+----------------------------------------------
+[ 1, 2)    6   0.18%   0.18%
+[ 2, 3)   38   1.12%   1.29%
+[ 3, 4)  117   3.44%   4.73%
+[ 4, 5)  273   8.02%  12.75% #
+[ 5, 5] 2970  87.25% 100.00% ##########
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Number of training obs by leaf:
+Count: 3404 Average: 248.806 StdDev: 517.403
+Min: 5 Max: 4709 Ignored: 0
+----------------------------------------------
+[    5,  240) 2615  76.82%  76.82% ##########
+[  240,  475)  243   7.14%  83.96% #
+[  475,  710)  162   4.76%  88.72% #
+[  710,  946)  104   3.06%  91.77%
+[  946, 1181)   80   2.35%  94.12%
+[ 1181, 1416)   48   1.41%  95.53%
+[ 1416, 1651)   44   1.29%  96.83%
+[ 1651, 1887)   27   0.79%  97.62%
+[ 1887, 2122)   18   0.53%  98.15%
+[ 2122, 2357)   19   0.56%  98.71%
+[ 2357, 2592)   10   0.29%  99.00%
+[ 2592, 2828)    6   0.18%  99.18%
+[ 2828, 3063)    8   0.24%  99.41%
+[ 3063, 3298)    7   0.21%  99.62%
+[ 3298, 3533)    3   0.09%  99.71%
+[ 3533, 3769)    5   0.15%  99.85%
+[ 3769, 4004)    2   0.06%  99.91%
+[ 4004, 4239)    1   0.03%  99.94%
+[ 4239, 4474)    1   0.03%  99.97%
+[ 4474, 4709]    1   0.03% 100.00%
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Condition type in nodes:
+	3267 : HigherCondition
+Condition type in nodes with depth <= 0:
+	137 : HigherCondition
+Condition type in nodes with depth <= 1:
+	405 : HigherCondition
+Condition type in nodes with depth <= 2:
+	903 : HigherCondition
+Condition type in nodes with depth <= 3:
+	1782 : HigherCondition
+Condition type in nodes with depth <= 5:
+	3267 : HigherCondition
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+None
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+model_2 summary: 
+Model: "gradient_boosted_trees_model_1"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+=================================================================
+Total params: 1
+Trainable params: 0
+Non-trainable params: 1
+_________________________________________________________________
+Type: "GRADIENT_BOOSTED_TREES"
+Task: CLASSIFICATION
+Label: "__LABEL"
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Input Features (1):
+	data:0
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+No weights
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Variable Importance: MEAN_MIN_DEPTH:
+    1. "__LABEL"  2.250000 ################
+    2.  "data:0"  0.000000 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Variable Importance: NUM_AS_ROOT:
+    1. "data:0" 117.000000 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Variable Importance: NUM_NODES:
+    1. "data:0" 351.000000 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Variable Importance: SUM_SCORE:
+    1. "data:0" 32.035971 
+```
+</div>
+    
+    
+    
+<div class="k-default-codeblock">
+```
+Loss: BINOMIAL_LOG_LIKELIHOOD
+Validation loss value: 1.36429
+Number of trees per iteration: 1
+Node format: NOT_SET
+Number of trees: 117
+Total number of nodes: 819
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Number of nodes by tree:
+Count: 117 Average: 7 StdDev: 0
+Min: 7 Max: 7 Ignored: 0
+----------------------------------------------
+[ 7, 7] 117 100.00% 100.00% ##########
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Depth by leafs:
+Count: 468 Average: 2.25 StdDev: 0.829156
+Min: 1 Max: 3 Ignored: 0
+----------------------------------------------
+[ 1, 2) 117  25.00%  25.00% #####
+[ 2, 3) 117  25.00%  50.00% #####
+[ 3, 3] 234  50.00% 100.00% ##########
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Number of training obs by leaf:
+Count: 468 Average: 1545.5 StdDev: 2660.15
+Min: 5 Max: 6153 Ignored: 0
+----------------------------------------------
+[    5,  312) 351  75.00%  75.00% ##########
+[  312,  619)   0   0.00%  75.00%
+[  619,  927)   0   0.00%  75.00%
+[  927, 1234)   0   0.00%  75.00%
+[ 1234, 1542)   0   0.00%  75.00%
+[ 1542, 1849)   0   0.00%  75.00%
+[ 1849, 2157)   0   0.00%  75.00%
+[ 2157, 2464)   0   0.00%  75.00%
+[ 2464, 2772)   0   0.00%  75.00%
+[ 2772, 3079)   0   0.00%  75.00%
+[ 3079, 3386)   0   0.00%  75.00%
+[ 3386, 3694)   0   0.00%  75.00%
+[ 3694, 4001)   0   0.00%  75.00%
+[ 4001, 4309)   0   0.00%  75.00%
+[ 4309, 4616)   0   0.00%  75.00%
+[ 4616, 4924)   0   0.00%  75.00%
+[ 4924, 5231)   0   0.00%  75.00%
+[ 5231, 5539)   0   0.00%  75.00%
+[ 5539, 5846)   0   0.00%  75.00%
+[ 5846, 6153] 117  25.00% 100.00% ###
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Attribute in nodes:
+	351 : data:0 [CATEGORICAL]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Attribute in nodes with depth <= 0:
+	117 : data:0 [CATEGORICAL]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Attribute in nodes with depth <= 1:
+	234 : data:0 [CATEGORICAL]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Attribute in nodes with depth <= 2:
+	351 : data:0 [CATEGORICAL]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Attribute in nodes with depth <= 3:
+	351 : data:0 [CATEGORICAL]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Attribute in nodes with depth <= 5:
+	351 : data:0 [CATEGORICAL]
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Condition type in nodes:
+	351 : ContainsBitmapCondition
+Condition type in nodes with depth <= 0:
+	117 : ContainsBitmapCondition
+Condition type in nodes with depth <= 1:
+	234 : ContainsBitmapCondition
+Condition type in nodes with depth <= 2:
+	351 : ContainsBitmapCondition
+Condition type in nodes with depth <= 3:
+	351 : ContainsBitmapCondition
+Condition type in nodes with depth <= 5:
+	351 : ContainsBitmapCondition
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+None
+
+```
+</div>
+---
 ## Plotting training metrics
 
 
@@ -393,11 +819,15 @@ plot_curve(logs_2)
 ```
 
 
+    
 ![png](/img/examples/nlp/tweet-classification-using-tfdf/tweet-classification-using-tfdf_41_0.png)
+    
 
 
 
+    
 ![png](/img/examples/nlp/tweet-classification-using-tfdf/tweet-classification-using-tfdf_41_1.png)
+    
 
 
 ---
@@ -425,10 +855,10 @@ model_1 Evaluation:
 <div class="k-default-codeblock">
 ```
 loss: 0.0000
-Accuracy: 0.9631
-recall: 0.9425
-precision: 0.9707
-auc: 0.9890
+Accuracy: 0.8160
+recall: 0.7241
+precision: 0.8514
+auc: 0.8700
 model_2 Evaluation: 
 ```
 </div>
@@ -436,13 +866,14 @@ model_2 Evaluation:
 <div class="k-default-codeblock">
 ```
 loss: 0.0000
-Accuracy: 0.5731
-recall: 0.0064
+Accuracy: 0.5440
+recall: 0.0029
 precision: 1.0000
-auc: 0.5035
+auc: 0.5026
 
 ```
 </div>
+---
 ## Predicting on validation data
 
 
@@ -471,7 +902,7 @@ Text: Gunmen kill four in El Salvador bus attack: Suspected Salvadoran gang memb
 Prediction: 1
 Ground Truth : 1
 Text: @camilacabello97 Internally and externally screaming
-Prediction: 1
+Prediction: 0
 Ground Truth : 1
 Text: Radiation emergency #preparedness starts with knowing to: get inside stay inside and stay tuned http://t.co/RFFPqBAz2F via @CDCgov
 Prediction: 1
@@ -502,5 +933,5 @@ Ground Truth : 0
 
 The TensorFlow Decision Forests package provides powerful models
 that work especially well with structured data. In our experiments,
-the Gradient Boosted Tree model with pretrained embeddings achieved 96.31%
-test accuracy while the plain Gradient Boosted Tree model had 57.31% accuracy.
+the Gradient Boosted Tree model with pretrained embeddings achieved 81.6%
+test accuracy while the plain Gradient Boosted Tree model had 54.4% accuracy.

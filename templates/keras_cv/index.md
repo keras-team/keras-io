@@ -35,24 +35,20 @@ import tensorflow as tf
 from tensorflow import keras
 import tensorflow_datasets as tfds
 
-preprocessing_layers = [
-    keras_cv.layers.RandomResizedCrop(
-      target_size=(224, 224),
-      crop_area_factor=(0.8, 1.0),
-      aspect_ratio_factor=(3/4, 4/3)
-    ),
-    keras_cv.layers.RandomFlip(),
-    keras_cv.layers.RandAugment(value_range=(0, 255)),
-    keras_cv.layers.CutMix(),
-    keras_cv.layers.MixUp()
-]
+augmenter = keras_cv.layers.Augmenter(
+  layers=[
+      keras_cv.layers.RandomFlip(),
+      keras_cv.layers.RandAugment(value_range=(0, 255)),
+      keras_cv.layers.CutMix(),
+      keras_cv.layers.MixUp()
+    ]
+)
 
 def augment_data(images, labels):
   labels = tf.one_hot(labels, 3)
   inputs = {"images": images, "labels": labels}
-  for layer in preprocessing_layers:
-    inputs = layer(inputs)
-  return inputs['images'], inputs['labels']
+  outputs = augmenter(inputs)
+  return outputs['images'], outputs['labels']
 ```
 
 Augment a `tf.data.Dataset`:
@@ -60,7 +56,7 @@ Augment a `tf.data.Dataset`:
 ```python
 dataset = tfds.load('rock_paper_scissors', as_supervised=True, split='train')
 dataset = dataset.batch(64)
-dataset = dataset.map(augment_data)
+dataset = dataset.map(augment_data, num_parallel_calls=tf.data.AUTOTUNE)
 ```
 
 Create a model:
@@ -69,7 +65,7 @@ Create a model:
 densenet = keras_cv.models.DenseNet121(
   include_rescaling=True,
   include_top=True,
-  num_classes=3
+  classes=3
 )
 densenet.compile(
   loss='categorical_crossentropy',
