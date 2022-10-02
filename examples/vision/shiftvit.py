@@ -856,7 +856,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
 # pass sample data to the model so that input shape is available at the time of
 # saving the model using tf.keras.models.save_model()
 sample_ds, _ = next(iter(train_ds))
-model(sample_ds, training=False).shape
+model(sample_ds, training=False)
 
 # Get the total number of steps for training.
 total_steps = int((len(x_train) / config.batch_size) * config.epochs)
@@ -916,7 +916,7 @@ Since we created the model by Subclassing, we can't save the model in HDF5 forma
 
 It can be saved in TF SavedModel format only. In general, this is the recommended format for saving models as well.
 """
-tf.keras.models.save_model(model, "./ShiftViT")
+model.save("ShiftViT")
 
 """
 ## Model inference
