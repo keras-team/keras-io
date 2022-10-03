@@ -31,7 +31,6 @@ we use Keras image preprocessing layers for image standardization and data augme
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 ```
 
 ---
@@ -44,14 +43,12 @@ First, let's download the 786M ZIP archive of the raw data:
 
 
 ```python
-!curl -O https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_3367a.zip
-
+!curl -O https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip
 ```
 
 ```python
-!unzip -q kagglecatsanddogs_3367a.zip
+!unzip -q kagglecatsanddogs_5340.zip
 !ls
-
 ```
 <div class="k-default-codeblock">
 ```
@@ -60,7 +57,7 @@ First, let's download the 786M ZIP archive of the raw data:
 100  786M  100  786M    0     0  44.4M      0  0:00:17  0:00:17 --:--:-- 49.6M
 
 image_classification_from_scratch.ipynb  MSR-LA - 3467.docx  readme[1].txt
-kagglecatsanddogs_3367a.zip		 PetImages
+kagglecatsanddogs_5340.zip		 PetImages
 
 ```
 </div>
@@ -71,7 +68,6 @@ Now we have a `PetImages` folder which contain two subfolders, `Cat` and `Dog`. 
 
 ```python
 !ls PetImages
-
 ```
 
 <div class="k-default-codeblock">
@@ -108,7 +104,6 @@ for folder_name in ("Cat", "Dog"):
             os.remove(fpath)
 
 print("Deleted %d images" % num_skipped)
-
 ```
 
 <div class="k-default-codeblock">
@@ -142,7 +137,6 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     image_size=image_size,
     batch_size=batch_size,
 )
-
 ```
 
 <div class="k-default-codeblock">
@@ -172,7 +166,6 @@ for images, labels in train_ds.take(1):
         plt.imshow(images[i].numpy().astype("uint8"))
         plt.title(int(labels[i]))
         plt.axis("off")
-
 ```
 
 
@@ -197,7 +190,6 @@ data_augmentation = keras.Sequential(
         layers.RandomRotation(0.1),
     ]
 )
-
 ```
 
 Let's visualize what the augmented samples look like, by applying `data_augmentation`
@@ -213,7 +205,6 @@ for images, _ in train_ds.take(1):
         ax = plt.subplot(3, 3, i + 1)
         plt.imshow(augmented_images[0].numpy().astype("uint8"))
         plt.axis("off")
-
 ```
 
 
@@ -282,7 +273,6 @@ Let's make sure to use buffered prefetching so we can yield data from disk witho
 ```python
 train_ds = train_ds.prefetch(buffer_size=32)
 val_ds = val_ds.prefetch(buffer_size=32)
-
 ```
 
 ---
@@ -357,7 +347,6 @@ def make_model(input_shape, num_classes):
 
 model = make_model(input_shape=image_size + (3,), num_classes=2)
 keras.utils.plot_model(model, show_shapes=True)
-
 ```
 
 <div class="k-default-codeblock">
@@ -385,7 +374,6 @@ model.compile(
 model.fit(
     train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
 )
-
 ```
 
 <div class="k-default-codeblock">
@@ -470,12 +458,10 @@ print(
     "This image is %.2f percent cat and %.2f percent dog."
     % (100 * (1 - score), 100 * score)
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
 This image is 84.34 percent cat and 15.66 percent dog.
-
 ```
 </div>

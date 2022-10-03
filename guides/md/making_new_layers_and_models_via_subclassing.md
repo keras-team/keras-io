@@ -167,7 +167,7 @@ trainable_weights: []
 ---
 ## Best practice: deferring weight creation until the shape of the inputs is known
 
-Our `Linear` layer above took an `input_dim `argument that was used to compute
+Our `Linear` layer above took an `input_dim` argument that was used to compute
 the shape of the weights `w` and `b` in `__init__()`:
 
 

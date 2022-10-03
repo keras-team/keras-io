@@ -127,6 +127,16 @@ BOUNDING_BOX_UTILS = {
             "title": "Convert bounding box formats",
             "generate": ["keras_cv.bounding_box.convert_format"],
         },
+        {
+            "path": "compute_iou",
+            "title": "Compute intersection over union of bounding boxes",
+            "generate": ["keras_cv.bounding_box.compute_iou"],
+        },
+        {
+            "path": "clip_to_image",
+            "title": "Clip bounding boxes to be within the bounds of provided images",
+            "generate": ["keras_cv.bounding_box.clip_to_image"],
+        },
     ],
 }
 
@@ -187,6 +197,20 @@ MODELS_MASTER = {
     "title": "Models",
     "toc": True,
     "children": [
+        {
+            "path": "stable_diffusion",
+            "title": "StableDiffusion image-generation model",
+            "generate": [
+                "keras_cv.models.StableDiffusion",
+            ],
+        },
+        {
+            "path": "retinanet",
+            "title": "The RetinaNet model",
+            "generate": [
+                "keras_cv.models.RetinaNet",
+            ],
+        },
         {
             "path": "densenet",
             "title": "DenseNet models",

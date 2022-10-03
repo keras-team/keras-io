@@ -1,15 +1,10 @@
 """Lightweight fork of Keras-Autodocs.
 """
 import warnings
-from sphinx.util.inspect import Signature
 import black
 import re
-import os
 import inspect
 import importlib
-import shutil
-import pathlib
-from typing import Dict, Union
 import itertools
 
 
@@ -189,7 +184,8 @@ def get_signature_start(function):
 
 
 def get_signature_end(function):
-    signature_end = Signature(function).format_args()
+    params = inspect.signature(function).parameters.values()
+    signature_end = "(" + ", ".join([str(x) for x in params]) + ")"
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")

@@ -19,10 +19,10 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ---
 
-## StyleGAN2
+## Text-to-image
 
-- [Paper](https://arxiv.org/abs/1912.04958)
-- [Reference TF implementation](https://github.com/NVlabs/stylegan2)
+A text-to-image diffusion model in the style of Imagen, using a frozen BERT encoder from KerasNLP
+and a multi-stage diffusion model.
 
 
 ---
