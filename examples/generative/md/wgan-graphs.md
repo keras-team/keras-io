@@ -45,7 +45,7 @@ adverserial networks, see [GAN](https://arxiv.org/abs/1406.2661),
 ### Install RDKit
 
 [RDKit](https://www.rdkit.org/) is a collection of cheminformatics and machine-learning
-software written in C++ and Python. In this tutorial, RDKit is used to conviently and
+software written in C++ and Python. In this tutorial, RDKit is used to conveniently and
 efficiently transform
 [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system) to
 molecule objects, and then from those obtain sets of atoms and bonds.
@@ -289,8 +289,8 @@ networks will then output (for each example in the batch) a tanh-activated vecto
 followed by a reshape and softmax to match that of a multi-dimensional adjacency/feature
 tensor.
 
-As the discriminator network will recieves as input a graph (`A`, `H`) from either the
-genrator or from the training set, we'll need to implement graph convolutional layers,
+As the discriminator network will receives as input a graph (`A`, `H`) from either the
+generator or from the training set, we'll need to implement graph convolutional layers,
 which allows us to operate on graphs. This means that input to the discriminator network
 will first pass through graph convolutional layers, then an average-pooling layer,
 and finally a few fully-connected layers. The final output should be a scalar (for each
@@ -683,27 +683,27 @@ wgan.fit([adjacency_tensor, feature_tensor], epochs=10, batch_size=16)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-837/837 [==============================] - 27s 29ms/step - loss_gen: 1.2595 - loss_dis: -3.7314
+837/837 [==============================] - 197s 226ms/step - loss_gen: 2.4626 - loss_dis: -4.3158
 Epoch 2/10
-837/837 [==============================] - 24s 29ms/step - loss_gen: 0.2039 - loss_dis: -1.4319
+837/837 [==============================] - 188s 225ms/step - loss_gen: 1.2832 - loss_dis: -1.3941
 Epoch 3/10
-837/837 [==============================] - 25s 29ms/step - loss_gen: 0.2395 - loss_dis: -1.4390
+837/837 [==============================] - 199s 237ms/step - loss_gen: 0.6742 - loss_dis: -1.2663
 Epoch 4/10
-837/837 [==============================] - 26s 31ms/step - loss_gen: -0.0859 - loss_dis: -1.2093
+837/837 [==============================] - 187s 224ms/step - loss_gen: 0.5090 - loss_dis: -1.6628
 Epoch 5/10
-837/837 [==============================] - 25s 29ms/step - loss_gen: 0.3703 - loss_dis: -1.4996
+837/837 [==============================] - 187s 223ms/step - loss_gen: 0.3686 - loss_dis: -1.4759
 Epoch 6/10
-837/837 [==============================] - 24s 29ms/step - loss_gen: 0.9488 - loss_dis: -1.9018
+837/837 [==============================] - 199s 237ms/step - loss_gen: 0.6925 - loss_dis: -1.5122
 Epoch 7/10
-837/837 [==============================] - 24s 29ms/step - loss_gen: 0.8143 - loss_dis: -2.0511
+837/837 [==============================] - 194s 232ms/step - loss_gen: 0.3966 - loss_dis: -1.5041
 Epoch 8/10
-837/837 [==============================] - 25s 30ms/step - loss_gen: 0.9974 - loss_dis: -2.0642
+837/837 [==============================] - 195s 233ms/step - loss_gen: 0.3595 - loss_dis: -1.6277
 Epoch 9/10
-837/837 [==============================] - 24s 29ms/step - loss_gen: 1.2580 - loss_dis: -2.3094
+837/837 [==============================] - 194s 232ms/step - loss_gen: 0.5862 - loss_dis: -1.7277
 Epoch 10/10
-837/837 [==============================] - 24s 29ms/step - loss_gen: 1.6188 - loss_dis: -2.5193
+837/837 [==============================] - 185s 221ms/step - loss_gen: -0.1642 - loss_dis: -1.5273
 
-<tensorflow.python.keras.callbacks.History at 0x7f6df01608b0>
+<keras.callbacks.History at 0x7ff8daed3a90>
 
 ```
 </div>

@@ -28,7 +28,7 @@ handle feature normalization or feature value indexing on their own.
 
 ### Numerical features preprocessing
 
-- `tf.keras.layers.Normalization`: performs feature-wise normalize of
+- `tf.keras.layers.Normalization`: performs feature-wise normalization of
   input features.
 - `tf.keras.layers.Discretization`: turns continuous numerical features
   into integer categorical features.
@@ -52,7 +52,7 @@ These layers are for standardizing the inputs of an image model.
 
 - `tf.keras.layers.Resizing`: resizes a batch of images to a target size.
 - `tf.keras.layers.Rescaling`: rescales and offsets the values of a batch of
-  image (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
+  images (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
   range.
 - `tf.keras.layers.CenterCrop`: returns a center crop of a batch of images.
 
@@ -196,7 +196,7 @@ you should put the `TextVectorization` layer in the `tf.data` pipeline to get th
 
 **When running on a TPU, you should always place preprocessing layers in the `tf.data` pipeline**
 (with the exception of `Normalization` and `Rescaling`, which run fine on a TPU and are commonly
-used as the first layer is an image model).
+used as the first layer in an image model).
 """
 
 """

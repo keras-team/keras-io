@@ -316,6 +316,13 @@ MASTER = {
                                 # 'tensorflow.keras.preprocessing.text.Tokenizer',  # LEGACY
                             ],
                         },
+                        {
+                            "path": "audio",
+                            "title": "Audio data loading",
+                            "generate": [
+                                "tensorflow.keras.utils.audio_dataset_from_directory",
+                            ],
+                        },
                     ],
                 },
                 {

@@ -1,6 +1,6 @@
 # CutMix, MixUp, and RandAugment image augmentation with KerasCV
 
-**Author:** [lukewood](https://lukewood.xyz)<br>
+**Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
 **Date created:** 2022/04/08<br>
 **Last modified:** 2022/04/08<br>
 **Description:** Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.

@@ -143,13 +143,13 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 119.2370
+Training loss (for one batch) at step 0: 73.7585
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 2.1698
+Training loss (for one batch) at step 200: 1.6058
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.1696
+Training loss (for one batch) at step 400: 1.5083
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.8985
+Training loss (for one batch) at step 600: 0.8864
 Seen so far: 38464 samples
 ```
 </div>
@@ -157,13 +157,13 @@ Seen so far: 38464 samples
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.9260
+Training loss (for one batch) at step 0: 0.7323
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.3808
+Training loss (for one batch) at step 200: 0.5691
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.5850
+Training loss (for one batch) at step 400: 1.0518
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.6255
+Training loss (for one batch) at step 600: 0.7325
 Seen so far: 38464 samples
 
 ```
@@ -256,34 +256,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 99.8348
+Training loss (for one batch) at step 0: 114.2934
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.7872
+Training loss (for one batch) at step 200: 1.2070
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.2578
+Training loss (for one batch) at step 400: 1.0815
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.2309
+Training loss (for one batch) at step 600: 1.1833
 Seen so far: 38464 samples
-Training acc over epoch: 0.6845
-Validation acc: 0.7683
-Time taken: 4.16s
+Training acc over epoch: 0.7122
+Validation acc: 0.7990
+Time taken: 7.11s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.7814
+Training loss (for one batch) at step 0: 0.7461
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4360
+Training loss (for one batch) at step 200: 0.4287
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.8505
+Training loss (for one batch) at step 400: 0.5779
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.7776
+Training loss (for one batch) at step 600: 0.6071
 Seen so far: 38464 samples
-Training acc over epoch: 0.8263
-Validation acc: 0.8106
-Time taken: 4.17s
+Training acc over epoch: 0.8284
+Validation acc: 0.8722
+Time taken: 6.79s
 
 ```
 </div>
@@ -297,7 +297,7 @@ As such, our training loop above executes eagerly.
 This is great for debugging, but graph compilation has a definite performance
 advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
-the framework is constrained to greedly execute one operation after another,
+the framework is constrained to greedily execute one operation after another,
 with no knowledge of what comes next.
 
 You can compile into a static graph any function that takes tensors as input.
@@ -374,34 +374,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.5857
+Training loss (for one batch) at step 0: 0.4484
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4440
+Training loss (for one batch) at step 200: 0.4571
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.4354
+Training loss (for one batch) at step 400: 0.2813
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.7005
+Training loss (for one batch) at step 600: 0.8279
 Seen so far: 38464 samples
-Training acc over epoch: 0.8685
-Validation acc: 0.8848
-Time taken: 1.25s
+Training acc over epoch: 0.8728
+Validation acc: 0.8918
+Time taken: 1.66s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.3965
+Training loss (for one batch) at step 0: 0.5541
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3314
+Training loss (for one batch) at step 200: 0.2975
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.2886
+Training loss (for one batch) at step 400: 0.8051
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.2908
+Training loss (for one batch) at step 600: 0.2754
 Seen so far: 38464 samples
-Training acc over epoch: 0.8881
-Validation acc: 0.8955
-Time taken: 0.90s
+Training acc over epoch: 0.8889
+Validation acc: 0.9016
+Time taken: 1.23s
 
 ```
 </div>
@@ -674,8 +674,8 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.68
-adversarial loss at step 0: 0.62
+discriminator loss at step 0: 0.69
+adversarial loss at step 0: 0.70
 
 ```
 </div>

@@ -2,7 +2,7 @@
 Title: Image similarity estimation using a Siamese Network with a contrastive loss
 Author: Mehdi
 Date created: 2021/05/06
-Last modified: 2021/05/06
+Last modified: 2022/09/10
 Description: Similarity learning using a siamese network trained with a contrastive loss.
 """
 
@@ -100,7 +100,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [1]
+        labels += [0]
 
         # add a non-matching example
         label2 = random.randint(0, num_classes - 1)
@@ -111,7 +111,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [0]
+        labels += [1]
 
     return np.array(pairs), np.array(labels).astype("float32")
 
@@ -247,7 +247,7 @@ visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 """
 ## Define the model
 
-There are be two input layers, each leading to its own network, which
+There are two input layers, each leading to its own network, which
 produces embeddings. A `Lambda` layer then merges them using an
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged output is fed to the final network.
