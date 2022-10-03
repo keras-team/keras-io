@@ -226,9 +226,6 @@ add these positional embeddings to the precomputed CNN feature maps.
 """
 
 
-@tf.keras.utils.register_keras_serializable(
-    package="Custom", name="PositionalEmbedding"
-)
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, output_dim, **kwargs):
         super().__init__(**kwargs)
@@ -265,7 +262,6 @@ Now, we can create a subclassed layer for the Transformer.
 """
 
 
-@tf.keras.utils.register_keras_serializable(package="Custom", name="TransformerEncoder")
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
         super().__init__(**kwargs)
