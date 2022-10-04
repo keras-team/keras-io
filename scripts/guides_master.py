@@ -16,6 +16,10 @@ CV_GUIDES_MASTER = {
             "title": "High-performance image generation using Stable Diffusion in KerasCV",
         },
         {
+            "path": "random_walks_with_stable_diffusion",
+            "title": "A walk through latent space with Stable Diffusion"
+        },
+        {
             "path": "custom_image_augmentations",
             "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
         },
