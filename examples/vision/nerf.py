@@ -127,7 +127,9 @@ file_name = "tiny_nerf_data.npz"
 url = "https://people.eecs.berkeley.edu/~bmild/nerf/tiny_nerf_data.npz"
 if not os.path.exists(file_name):
     data = keras.utils.get_file(fname=file_name, origin=url)
-
+else:
+    data = file_name
+    
 data = np.load(data)
 images = data["images"]
 im_shape = images.shape
