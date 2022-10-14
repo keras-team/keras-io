@@ -968,7 +968,7 @@ def build_model(hp):
     inputs = keras.Input(shape=(784,))
     x = layers.Dense(
         units=hp.Int('units', min_value=32, max_value=512, step=32),
-        activation='relu'))(inputs)
+        activation='relu')(inputs)
     outputs = layers.Dense(10, activation='softmax')(x)
     model = keras.Model(inputs, outputs)
     model.compile(
