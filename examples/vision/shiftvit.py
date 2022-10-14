@@ -1,8 +1,8 @@
 """
 Title: A Vision Transformer without Attention
-Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
+Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha), [Shivalika Singh](https://www.linkedin.com/in/shivalika-singh/)
 Date created: 2022/02/24
-Last modified: 2022/03/01
+Last modified: 2022/10/15
 Description: A minimal implementation of ShiftViT.
 """
 """
@@ -25,18 +25,11 @@ operation with a shifting operation.
 In this example, we minimally implement the paper with close alignement to the author's
 [official implementation](https://github.com/microsoft/SPACH/blob/main/models/shiftvit.py).
 
-This example requires TensorFlow 2.9.1 or higher, as well as TensorFlow Addons, which can
+This example requires TensorFlow 2.9 or higher, as well as TensorFlow Addons, which can
 be installed using the following command:
 """
 """shell
 pip install -qq -U tensorflow-addons
-pip install -qq tensorflow==2.9.1
-"""
-"""
-If you're running this notebook on Colab and the default tensorflow version is <2.9.1 then run below cell to install few CUDA dependencies:
-"""
-"""shell
-apt install --allow-change-held-packages libcudnn8=8.1.0.77-1+cuda11.2
 """
 
 """
@@ -854,7 +847,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
 """
 
 # pass sample data to the model so that input shape is available at the time of
-# saving the model using tf.keras.models.save_model()
+# saving the model
 sample_ds, _ = next(iter(train_ds))
 model(sample_ds, training=False)
 
@@ -987,9 +980,19 @@ def predict(predict_ds):
 
 
 def get_predicted_class(probabilities):
-    class_idx = np.argmax(probabilities)
-    predicted_class = config.label_map[class_idx]
+    pred_label = np.argmax(probabilities)
+    predicted_class = config.label_map[pred_label]
     return predicted_class
+
+
+def get_confidence_scores(probabilities):
+    # get the indices of the probability scores sorted in descending order
+    labels = np.argsort(probabilities)[::-1]
+    confidences = {
+        config.label_map[label]: np.round((probabilities[label]) * 100, 2)
+        for label in labels
+    }
+    return confidences
 
 
 """
@@ -999,6 +1002,9 @@ def get_predicted_class(probabilities):
 img_dir = "inference_set"
 predict_ds = create_tf_dataset(img_dir)
 probabilities = predict(predict_ds)
+print(f"probabilities: {probabilities[0]}")
+confidences = get_confidence_scores(probabilities[0])
+print(confidences)
 
 """
 **View predictions**
