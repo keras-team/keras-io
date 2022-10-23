@@ -713,6 +713,7 @@ There are many other built-in metrics in Keras you can use as the objective.
 Here is [a list of the built-in metrics](https://keras.io/api/metrics/).
 
 To use a built-in metric as the objective, you need to follow these steps:
+
 * Compile the model with the the built-in metric. For example, you want to use
 `MeanAbsoluteError()`. You need to compile the model with
 `metrics=[MeanAbsoluteError()]`. You may also use its name string instead:
