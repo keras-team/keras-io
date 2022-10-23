@@ -89,7 +89,7 @@ Here is the BibTeX entry:
 ```bibtex
 @misc{wood2022kerascv,
   title={KerasCV},
-  author={Wood, Luke and Zhu, Scott and Chollet, Fran\c{c}ois and others},
+  author={Wood, Luke and Tan, Zhenyu and Ian, Stenbit and Zhu, Scott and Chollet, Fran\c{c}ois and others},
   year={2022},
   howpublished={\url{https://github.com/keras-team/keras-cv}},
 }
