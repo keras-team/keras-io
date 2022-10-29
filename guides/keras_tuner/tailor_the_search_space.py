@@ -162,7 +162,9 @@ tuner = keras_tuner.RandomSearch(
     build_model,
     optimizer=keras.optimizers.Adam(1e-3),
     loss="mse",
-    metrics=["sparse_categorical_crossentropy",],
+    metrics=[
+        "sparse_categorical_crossentropy",
+    ],
     objective="val_loss",
     max_trials=3,
     overwrite=True,

@@ -1109,7 +1109,10 @@ classes = 10
 
 # This is the main network we'll actually use to predict labels.
 main_network = keras.Sequential(
-    [keras.layers.Dense(64, activation=tf.nn.relu), keras.layers.Dense(classes),]
+    [
+        keras.layers.Dense(64, activation=tf.nn.relu),
+        keras.layers.Dense(classes),
+    ]
 )
 
 # It doesn't need to create its own weights, so let's mark its layers

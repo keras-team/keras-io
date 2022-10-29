@@ -123,14 +123,15 @@ model.fit(x, y, epochs=3)
 
 <div class="k-default-codeblock">
 ```
+Metal device set to: Apple M1 Pro
 Epoch 1/3
-32/32 [==============================] - 0s 721us/step - loss: 0.5791 - mae: 0.6232
+32/32 [==============================] - 0s 4ms/step - loss: 0.6307 - mae: 0.6654
 Epoch 2/3
-32/32 [==============================] - 0s 601us/step - loss: 0.2739 - mae: 0.4296
+32/32 [==============================] - 0s 4ms/step - loss: 0.2814 - mae: 0.4246
 Epoch 3/3
-32/32 [==============================] - 0s 576us/step - loss: 0.2547 - mae: 0.4078
+32/32 [==============================] - 0s 4ms/step - loss: 0.2329 - mae: 0.3889
 
-<tensorflow.python.keras.callbacks.History at 0x1423856d0>
+<keras.callbacks.History at 0x15a357c70>
 
 ```
 </div>
@@ -143,7 +144,7 @@ everything *manually* in `train_step`. Likewise for metrics.
 Here's a lower-level
 example, that only uses `compile()` to configure the optimizer:
 
-- We start by creating `Metric` instances to track our loss and a MAE score.
+- We start by creating `Metric` instances to track our loss and a MAE score (in `__init__()`).
 - We implement a custom `train_step()` that updates the state of these metrics
 (by calling `update_state()` on them), then query them (via `result()`) to return their current average value,
 to be displayed by the progress bar and to be pass to any callback.
@@ -156,11 +157,13 @@ on any object listed here at the beginning of each `fit()` epoch or at the begin
 
 
 ```python
-loss_tracker = keras.metrics.Mean(name="loss")
-mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
-
 
 class CustomModel(keras.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
+
     def train_step(self, data):
         x, y = data
 
@@ -177,9 +180,9 @@ class CustomModel(keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Compute our own metrics
-        loss_tracker.update_state(loss)
-        mae_metric.update_state(y, y_pred)
-        return {"loss": loss_tracker.result(), "mae": mae_metric.result()}
+        self.loss_tracker.update_state(loss)
+        self.mae_metric.update_state(y, y_pred)
+        return {"loss": self.loss_tracker.result(), "mae": self.mae_metric.result()}
 
     @property
     def metrics(self):
@@ -188,7 +191,7 @@ class CustomModel(keras.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        return [loss_tracker, mae_metric]
+        return [self.loss_tracker, self.mae_metric]
 
 
 # Construct an instance of CustomModel
@@ -209,17 +212,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-32/32 [==============================] - 0s 645us/step - loss: 0.2661 - mae: 0.4126
+32/32 [==============================] - 0s 4ms/step - loss: 0.2959 - mae: 0.4333
 Epoch 2/5
-32/32 [==============================] - 0s 515us/step - loss: 0.2401 - mae: 0.3932
+32/32 [==============================] - 0s 4ms/step - loss: 0.2715 - mae: 0.4154
 Epoch 3/5
-32/32 [==============================] - 0s 605us/step - loss: 0.2283 - mae: 0.3833
+32/32 [==============================] - 0s 4ms/step - loss: 0.2560 - mae: 0.4040
 Epoch 4/5
-32/32 [==============================] - 0s 508us/step - loss: 0.2176 - mae: 0.3742
+32/32 [==============================] - 0s 4ms/step - loss: 0.2407 - mae: 0.3922
 Epoch 5/5
-32/32 [==============================] - 0s 448us/step - loss: 0.2070 - mae: 0.3654
+32/32 [==============================] - 0s 4ms/step - loss: 0.2266 - mae: 0.3809
 
-<tensorflow.python.keras.callbacks.History at 0x151c8ee50>
+<keras.callbacks.History at 0x15b0c5900>
 
 ```
 </div>
@@ -291,13 +294,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 709us/step - loss: 0.6128 - mae: 1.0027
+32/32 [==============================] - 0s 5ms/step - loss: 0.1557 - mae: 0.4389
 Epoch 2/3
-32/32 [==============================] - 0s 681us/step - loss: 0.2476 - mae: 0.6092
+32/32 [==============================] - 0s 4ms/step - loss: 0.1320 - mae: 0.4063
 Epoch 3/3
-32/32 [==============================] - 0s 669us/step - loss: 0.1248 - mae: 0.4186
+32/32 [==============================] - 0s 4ms/step - loss: 0.1264 - mae: 0.3978
 
-<tensorflow.python.keras.callbacks.History at 0x151d5a590>
+<keras.callbacks.History at 0x15d23b3a0>
 
 ```
 </div>
@@ -339,9 +342,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 578us/step - loss: 0.7436 - mae: 0.7455
+32/32 [==============================] - 0s 3ms/step - loss: 0.4079 - mae: 0.5194
 
-[0.744135320186615, 0.7466798424720764]
+[0.40791139006614685, 0.5194447636604309]
 
 ```
 </div>
@@ -408,6 +411,8 @@ class GAN(keras.Model):
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
+        self.d_loss_tracker = keras.metrics.Mean(name="d_loss")
+        self.g_loss_tracker = keras.metrics.Mean(name="g_loss")
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super(GAN, self).compile()
@@ -457,7 +462,14 @@ class GAN(keras.Model):
             g_loss = self.loss_fn(misleading_labels, predictions)
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
-        return {"d_loss": d_loss, "g_loss": g_loss}
+
+        # Update metrics and return their value.
+        self.d_loss_tracker.update_state(d_loss)
+        self.g_loss_tracker.update_state(g_loss)
+        return {
+            "d_loss": self.d_loss_tracker.result(),
+            "g_loss": self.g_loss_tracker.result(),
+        }
 
 ```
 
@@ -488,9 +500,9 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 60s 591ms/step - d_loss: 0.4534 - g_loss: 0.9839
+100/100 [==============================] - 9s 67ms/step - d_loss: 0.4685 - g_loss: 0.9918
 
-<tensorflow.python.keras.callbacks.History at 0x151e64290>
+<keras.callbacks.History at 0x15d24c700>
 
 ```
 </div>

@@ -122,7 +122,7 @@ everything *manually* in `train_step`. Likewise for metrics.
 Here's a lower-level
 example, that only uses `compile()` to configure the optimizer:
 
-- We start by creating `Metric` instances to track our loss and a MAE score.
+- We start by creating `Metric` instances to track our loss and a MAE score (in `__init__()`).
 - We implement a custom `train_step()` that updates the state of these metrics
 (by calling `update_state()` on them), then query them (via `result()`) to return their current average value,
 to be displayed by the progress bar and to be pass to any callback.
@@ -134,11 +134,13 @@ on any object listed here at the beginning of each `fit()` epoch or at the begin
 `evaluate()`.
 """
 
-loss_tracker = keras.metrics.Mean(name="loss")
-mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
-
 
 class CustomModel(keras.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
+
     def train_step(self, data):
         x, y = data
 
@@ -155,9 +157,9 @@ class CustomModel(keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Compute our own metrics
-        loss_tracker.update_state(loss)
-        mae_metric.update_state(y, y_pred)
-        return {"loss": loss_tracker.result(), "mae": mae_metric.result()}
+        self.loss_tracker.update_state(loss)
+        self.mae_metric.update_state(y, y_pred)
+        return {"loss": self.loss_tracker.result(), "mae": self.mae_metric.result()}
 
     @property
     def metrics(self):
@@ -166,7 +168,7 @@ class CustomModel(keras.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        return [loss_tracker, mae_metric]
+        return [self.loss_tracker, self.mae_metric]
 
 
 # Construct an instance of CustomModel
@@ -342,6 +344,8 @@ class GAN(keras.Model):
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
+        self.d_loss_tracker = keras.metrics.Mean(name="d_loss")
+        self.g_loss_tracker = keras.metrics.Mean(name="g_loss")
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super(GAN, self).compile()
@@ -391,7 +395,14 @@ class GAN(keras.Model):
             g_loss = self.loss_fn(misleading_labels, predictions)
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
-        return {"d_loss": d_loss, "g_loss": g_loss}
+
+        # Update metrics and return their value.
+        self.d_loss_tracker.update_state(d_loss)
+        self.g_loss_tracker.update_state(g_loss)
+        return {
+            "d_loss": self.d_loss_tracker.result(),
+            "g_loss": self.g_loss_tracker.result(),
+        }
 
 
 """

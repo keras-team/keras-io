@@ -166,7 +166,11 @@ inner_model = keras.Sequential(
 )
 
 model = keras.Sequential(
-    [keras.Input(shape=(3,)), inner_model, keras.layers.Dense(3, activation="sigmoid"),]
+    [
+        keras.Input(shape=(3,)),
+        inner_model,
+        keras.layers.Dense(3, activation="sigmoid"),
+    ]
 )
 
 model.trainable = False  # Freeze the outer model
@@ -474,7 +478,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
-    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
+    [
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
+    ]
 )
 
 """
