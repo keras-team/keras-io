@@ -381,7 +381,7 @@ plt.colorbar()
 
 
 
-![png](/content/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_19_2.png)
+![png](https://raw.githubusercontent.com/emirhanai/keras-io/master/examples/vision/img/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_19_2/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_19_2.png)
 
 
 ### A.B. Resize the images
@@ -454,7 +454,7 @@ SVGCircuit(x_train_circ[0])
 
 
 
-![svg](/content/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_30_0.svg)
+![svg](https://raw.githubusercontent.com/emirhanai/keras-io/00dcd9cfa5233de89816886df62bfeb74fd20ec0/examples/vision/img/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_19_2/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_30_0.svg)
 
 
 
@@ -521,7 +521,7 @@ SVGCircuit(circuit)
 
 
 
-![svg](/content/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_39_0.svg)
+![svg](https://raw.githubusercontent.com/emirhanai/keras-io/00dcd9cfa5233de89816886df62bfeb74fd20ec0/examples/vision/img/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_19_2/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_39_0.svg)
 
 
 
@@ -686,5 +686,5 @@ sns.barplot(["Quantum6 Accuracy","Convolutional Neural Network"],
 
 
 
-![png](/content/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_55_2.png)
+![png](https://raw.githubusercontent.com/emirhanai/keras-io/master/examples/vision/img/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_19_2/Quantum_with_6G_Technology_in_Computer_Vision_on_AI_55_2.png)
 
