@@ -317,8 +317,8 @@ dataset_val = keras.preprocessing.timeseries_dataset_from_array(
 for batch in dataset_train.take(1):
     inputs, targets = batch
 
-    print("Input shape:", inputs.numpy().shape)
-    print("Target shape:", targets.numpy().shape)
+print("Input shape:", inputs.numpy().shape)
+print("Target shape:", targets.numpy().shape)
 ```
 
 <div class="k-default-codeblock">
