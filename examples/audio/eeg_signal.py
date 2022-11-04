@@ -1,16 +1,17 @@
 """
-Title: EEG Signal Classification for Stimuli identification
-Author: [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
+Title: Electroencephalogram Signal Classification for action identification
+Author: [Suvaditya Mukherjee](https://github.com/suvadityamuk)
 Date created: 2022/11/03
-Last modified: 2022/11/04
+Last modified: 2022/11/05
 Description: Training a Convolutional model to classify EEG signals produced by exposure to certain stimuli.
 """
+
 """
 ## Introduction
 
 The following example explores how we can make a Convolution-based Neural Network to
-perform classification on EEG signals captured when subjects were exposed to different
-stimuli.
+perform classification on Electroencephalogram signals captured when subjects were
+exposed to different stimuli.
 We train a model from scratch since such signal-classification models are fairly scarce
 in pre-trained format.
 The data we use is sourced from the UC Berkeley-Biosense Lab where the data was collected
@@ -18,6 +19,7 @@ from 15 subjects at the same time.
 Our process is as follows:
 
 - Load the [UC Berkeley-Biosense Synchronized Brainwave
+Dataset](https://www.kaggle.com/datasets/berkeley-biosense/synchronized-brainwave-dataset)
 Dataset](https://www.kaggle.com/datasets/berkeley-biosense/synchronized-brainwave-dataset)
 - Visualize random samples from the data
 - Pre-process, collate and scale the data to finally make a `tf.data.Dataset`
@@ -27,8 +29,11 @@ Dataset](https://www.kaggle.com/datasets/berkeley-biosense/synchronized-brainwav
 - Train the model
 - Plot metrics from History and perform evaluation
 
-This example needs the following external dependencies (gdown, Scikit-learn, Pandas,
-NumPy, Matplotlib). You can install it via the following commands.
+This example needs the following external dependencies (Gdown, Scikit-learn, Pandas,
+Numpy, Matplotlib). You can install it via the following commands.
+
+Gdown is an external package used to download large files from Google Drive. To know
+more, you can refer to its [PyPi page here](https://pypi.org/project/gdown)
 """
 
 """
@@ -43,6 +48,8 @@ pip install pandas
 pip install numpy
 pip install matplotlib
 gdown 1V5B7Bt6aJm0UHbR7cRKBEK8jx7lYPVuX
+# gdown will download eeg-data.csv onto the local drive for use. Total size of
+eeg-data.csv is 105.7 MB
 """
 
 import pandas as pd
@@ -52,8 +59,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow as tf
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.model_selection import train_test_split
+from sklearn import preprocessing, model_selection
 import random
 
 QUALITY_THRESHOLD = 128
@@ -125,14 +131,14 @@ like
 """
 
 
-def viewEEGPlot(idx):
+def view_eeg_plot(idx):
     data = eeg.loc[idx, "raw_values"]
     plt.plot(data)
-    plt.title("Sample random plot")
+    plt.title(f"Sample random plot")
     plt.show()
 
 
-viewEEGPlot(7)
+view_eeg_plot(7)
 
 """
 ## Pre-process and collate data
@@ -147,32 +153,7 @@ in an integer format.
 
 print("Before replacing labels")
 print(eeg["label"].unique(), "\n")
-
-instructionLabels = [
-    "blinkInstruction",
-    "relaxInstruction",
-    "mathInstruction",
-    "musicInstruction",
-    "videoInstruction",
-    "thinkOfItemsInstruction",
-    "colorInstruction",
-]
-
-labels = [
-    "blink",
-    "relax",
-    "math",
-    "music",
-    "video",
-    "thinkOfItems",
-    "readyRound",
-    "colorRound1",
-    "colorRound2",
-    "colorRound3",
-    "colorRound4",
-    "colorRound5",
-    "colorRound6",
-]
+print(len(eeg["label"].unique()), "\n")
 
 
 def updateLabel(data):
@@ -254,8 +235,9 @@ updateLabel(eeg)
 
 print("After replacing labels")
 print(eeg["label"].unique())
+print(len(eeg["label"].unique()))
 
-le = LabelEncoder()
+le = preprocessing.LabelEncoder()
 le.fit(eeg["label"])
 eeg["label"] = le.transform(eeg["label"])
 
@@ -275,7 +257,7 @@ plt.title("Number of samples per class")
 plt.show()
 
 """
-## Scale data, prepare `tf.data.Dataset` and make Class Weights using Naive methods
+## Scale and split data
 """
 
 """
@@ -283,7 +265,7 @@ We perform a simple Min-Max scaling to bring the value-range between 0 and 1. We
 use Standard Scaling as the data does not follow a Gaussian distribution.
 """
 
-scaler = MinMaxScaler()
+scaler = preprocessing.MinMaxScaler()
 series_list = [
     scaler.fit_transform(np.asarray(i).reshape(-1, 1)) for i in eeg["raw_values"]
 ]
@@ -297,11 +279,13 @@ label-encoded form to a one-hot encoding to enable use of several different
 `keras.metrics` functions.
 """
 
-x_train, x_test, y_train, y_test = train_test_split(
+x_train, x_test, y_train, y_test = model_selection.train_test_split(
     series_list, labels_list, test_size=0.15, random_state=42, shuffle=True
 )
 
-print(len(x_train), len(x_test), len(y_train), len(y_test))
+print(
+    f"Length of x_train : {len(x_train)}\nLength of x_test : {len(x_test)}\nLength of y_train : {len(y_train)}\nLength of y_test : {len(y_test)}"
+)
 
 x_train = np.asarray(x_train).astype(np.float32).reshape(-1, 512, 1)
 y_train = np.asarray(y_train).astype(np.float32).reshape(-1, 1)
@@ -310,6 +294,10 @@ y_train = keras.utils.to_categorical(y_train)
 x_test = np.asarray(x_test).astype(np.float32).reshape(-1, 512, 1)
 y_test = np.asarray(y_test).astype(np.float32).reshape(-1, 1)
 y_test = keras.utils.to_categorical(y_test)
+
+"""
+## Prepare `tf.data.Dataset`
+"""
 
 """
 We now create a `tf.data.Dataset` from this data to prepare it for training. We also
@@ -321,6 +309,10 @@ test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
 train_dataset = train_dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
 test_dataset = test_dataset.batch(BATCH_SIZE)
+
+"""
+## Make Class Weights using Naive method
+"""
 
 """
 As we can see from the plot of number of samples per class, the dataset is imbalanced.
@@ -345,7 +337,6 @@ total = sum(vals_dict.values())
 
 weight_dict = {k: (1 - (v / total)) for k, v in vals_dict.items()}
 print(weight_dict)
-print(vals_dict)
 
 """
 ## Define simple function to plot all the metrics present in a `keras.callbacks.History`
@@ -353,7 +344,7 @@ object
 """
 
 
-def plotHistoryMetrics(history: keras.callbacks.History):
+def plot_history_metrics(history: keras.callbacks.History):
     total_plots = len(history.history)
     cols = total_plots // 2
 
@@ -425,11 +416,10 @@ def make_conv_model():
         1024, activation="relu", kernel_regularizer=keras.regularizers.L2()
     )(x)
     x = layers.Dropout(0.2)(x)
-
+    
     x = layers.Dense(
         128, activation="relu", kernel_regularizer=keras.regularizers.L2()
     )(x)
-
     output_layer = layers.Dense(num_classes, activation="softmax")(x)
 
     return keras.Model(inputs=input_layer, outputs=output_layer)
@@ -482,6 +472,7 @@ loss = keras.losses.CategoricalCrossentropy()
 We use the `Adam` optimizer since it is commonly considered the best choice for
 preliminary training, and was found to be the best optimizer.
 We use `CategoricalCrossentropy` as the loss as our labels are in a one-hot-encoded form.
+
 We define the `TopKCategoricalAccuracy(k=3)`, `AUC`, `Precision` and `Recall` metrics to
 further aid in understanding the model better.
 """
@@ -513,7 +504,7 @@ conv_model_history = conv_model.fit(
 We use the function defined above to see model metrics during training.
 """
 
-plotHistoryMetrics(conv_model_history)
+plot_history_metrics(conv_model_history)
 
 """
 ## Evaluate model on test data
@@ -525,3 +516,39 @@ print(f"Top 3 Categorical Accuracy : {accuracy}")
 print(f"Area under the Curve (ROC) : {auc}")
 print(f"Precision : {precision}")
 print(f"Recall : {recall}")
+
+
+def view_evaluated_eeg_plots(model):
+    start_index = random.randint(10, len(eeg))
+    end_index = start_index + 11
+    data = eeg.loc[start_index:end_index, "raw_values"]
+    data_array = [scaler.fit_transform(np.asarray(i).reshape(-1, 1)) for i in data]
+    data_array = [np.asarray(data_array).astype(np.float32).reshape(-1, 512, 1)]
+    original_labels = eeg.loc[start_index:end_index, "label"]
+    predicted_labels = np.argmax(model.predict(data_array, verbose=0), axis=1)
+    original_labels = [
+        le.inverse_transform(np.array(label).reshape(-1))[0]
+        for label in original_labels
+    ]
+    predicted_labels = [
+        le.inverse_transform(np.array(label).reshape(-1))[0]
+        for label in predicted_labels
+    ]
+    total_plots = 12
+    cols = total_plots // 3
+    rows = total_plots // cols
+    if total_plots % cols != 0:
+        rows += 1
+    pos = range(1, total_plots + 1)
+    fig = plt.figure(figsize=(20, 10))
+    for i, (plot_data, og_label, pred_label) in enumerate(
+        zip(data, original_labels, predicted_labels)
+    ):
+        plt.subplot(rows, cols, pos[i])
+        plt.plot(plot_data)
+        plt.title(f"Actual Label : {og_label}\nPredicted Label : {pred_label}")
+        fig.subplots_adjust(hspace=0.5)
+    plt.show()
+
+
+view_evaluated_eeg_plots(conv_model)
