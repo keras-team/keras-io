@@ -18,9 +18,7 @@ The data we use is sourced from the UC Berkeley-Biosense Lab where the data was 
 from 15 subjects at the same time.
 Our process is as follows:
 
-- Load the [UC Berkeley-Biosense Synchronized Brainwave
-Dataset](https://www.kaggle.com/datasets/berkeley-biosense/synchronized-brainwave-dataset)
-Dataset](https://www.kaggle.com/datasets/berkeley-biosense/synchronized-brainwave-dataset)
+- Load the [UC Berkeley-Biosense Synchronized Brainwave Dataset](https://www.kaggle.com/datasets/berkeley-biosense/synchronized-brainwave-dataset)
 - Visualize random samples from the data
 - Pre-process, collate and scale the data to finally make a `tf.data.Dataset`
 - Prepare class weights in order to tackle major imbalances
@@ -36,20 +34,30 @@ Gdown is an external package used to download large files from Google Drive. To 
 more, you can refer to its [PyPi page here](https://pypi.org/project/gdown)
 """
 
+
 """
-## Setup and Import headers
+## Setup and Data Downloads
+
+First, lets install our dependencies:
 """
 
 """shell
-pip install gdown
 pip install gdown
 pip install sklearn
 pip install pandas
 pip install numpy
 pip install matplotlib
+"""
+
+"""
+Next, lets download our dataset.
+The gdown package makes it easy to download the data from Google Drive:
+"""
+
+"""shell
 gdown 1V5B7Bt6aJm0UHbR7cRKBEK8jx7lYPVuX
 # gdown will download eeg-data.csv onto the local drive for use. Total size of
-eeg-data.csv is 105.7 MB
+# eeg-data.csv is 105.7 MB
 """
 
 import pandas as pd
@@ -64,7 +72,7 @@ import random
 
 QUALITY_THRESHOLD = 128
 BATCH_SIZE = 64
-SHUFFLE_BUFFER_SIZE = 100
+SHUFFLE_BUFFER_SIZE = BATCH_SIZE * 2
 
 """
 ## Read data from `eeg-data.csv`
@@ -110,12 +118,12 @@ based on an arbitrary cutoff limit of 128.
 """
 
 
-def makeNumpy(value_string):
+def convert_string_data_to_values(value_string):
     str_list = json.loads(value_string)
     return str_list
 
 
-eeg["raw_values"] = eeg["raw_values"].apply(makeNumpy)
+eeg["raw_values"] = eeg["raw_values"].apply(convert_string_data_to_values)
 
 eeg = eeg.loc[eeg["signal_quality"] < QUALITY_THRESHOLD]
 print(eeg.shape)
@@ -156,88 +164,84 @@ print(eeg["label"].unique(), "\n")
 print(len(eeg["label"].unique()), "\n")
 
 
-def updateLabel(data):
-    data.replace(
-        {
-            "label": {
-                "blink1": "blink",
-                "blink2": "blink",
-                "blink3": "blink",
-                "blink4": "blink",
-                "blink5": "blink",
-                "math1": "math",
-                "math2": "math",
-                "math3": "math",
-                "math4": "math",
-                "math5": "math",
-                "math6": "math",
-                "math7": "math",
-                "math8": "math",
-                "math9": "math",
-                "math10": "math",
-                "math11": "math",
-                "math12": "math",
-                "thinkOfItems-ver1": "thinkOfItems",
-                "thinkOfItems-ver2": "thinkOfItems",
-                "video-ver1": "video",
-                "video-ver2": "video",
-                "thinkOfItemsInstruction-ver1": "thinkOfItemsInstruction",
-                "thinkOfItemsInstruction-ver2": "thinkOfItemsInstruction",
-                "colorRound1-1": "colorRound1",
-                "colorRound1-2": "colorRound1",
-                "colorRound1-3": "colorRound1",
-                "colorRound1-4": "colorRound1",
-                "colorRound1-5": "colorRound1",
-                "colorRound1-6": "colorRound1",
-                "colorRound2-1": "colorRound2",
-                "colorRound2-2": "colorRound2",
-                "colorRound2-3": "colorRound2",
-                "colorRound2-4": "colorRound2",
-                "colorRound2-5": "colorRound2",
-                "colorRound2-6": "colorRound2",
-                "colorRound3-1": "colorRound3",
-                "colorRound3-2": "colorRound3",
-                "colorRound3-3": "colorRound3",
-                "colorRound3-4": "colorRound3",
-                "colorRound3-5": "colorRound3",
-                "colorRound3-6": "colorRound3",
-                "colorRound4-1": "colorRound4",
-                "colorRound4-2": "colorRound4",
-                "colorRound4-3": "colorRound4",
-                "colorRound4-4": "colorRound4",
-                "colorRound4-5": "colorRound4",
-                "colorRound4-6": "colorRound4",
-                "colorRound5-1": "colorRound5",
-                "colorRound5-2": "colorRound5",
-                "colorRound5-3": "colorRound5",
-                "colorRound5-4": "colorRound5",
-                "colorRound5-5": "colorRound5",
-                "colorRound5-6": "colorRound5",
-                "colorInstruction1": "colorInstruction",
-                "colorInstruction2": "colorInstruction",
-                "readyRound1": "readyRound",
-                "readyRound2": "readyRound",
-                "readyRound3": "readyRound",
-                "readyRound4": "readyRound",
-                "readyRound5": "readyRound",
-                "colorRound1": "colorRound",
-                "colorRound2": "colorRound",
-                "colorRound3": "colorRound",
-                "colorRound4": "colorRound",
-                "colorRound5": "colorRound",
-            }
-        },
-        inplace=True,
-    )
-
-
-updateLabel(eeg)
+eeg.replace(
+    {
+        "label": {
+            "blink1": "blink",
+            "blink2": "blink",
+            "blink3": "blink",
+            "blink4": "blink",
+            "blink5": "blink",
+            "math1": "math",
+            "math2": "math",
+            "math3": "math",
+            "math4": "math",
+            "math5": "math",
+            "math6": "math",
+            "math7": "math",
+            "math8": "math",
+            "math9": "math",
+            "math10": "math",
+            "math11": "math",
+            "math12": "math",
+            "thinkOfItems-ver1": "thinkOfItems",
+            "thinkOfItems-ver2": "thinkOfItems",
+            "video-ver1": "video",
+            "video-ver2": "video",
+            "thinkOfItemsInstruction-ver1": "thinkOfItemsInstruction",
+            "thinkOfItemsInstruction-ver2": "thinkOfItemsInstruction",
+            "colorRound1-1": "colorRound1",
+            "colorRound1-2": "colorRound1",
+            "colorRound1-3": "colorRound1",
+            "colorRound1-4": "colorRound1",
+            "colorRound1-5": "colorRound1",
+            "colorRound1-6": "colorRound1",
+            "colorRound2-1": "colorRound2",
+            "colorRound2-2": "colorRound2",
+            "colorRound2-3": "colorRound2",
+            "colorRound2-4": "colorRound2",
+            "colorRound2-5": "colorRound2",
+            "colorRound2-6": "colorRound2",
+            "colorRound3-1": "colorRound3",
+            "colorRound3-2": "colorRound3",
+            "colorRound3-3": "colorRound3",
+            "colorRound3-4": "colorRound3",
+            "colorRound3-5": "colorRound3",
+            "colorRound3-6": "colorRound3",
+            "colorRound4-1": "colorRound4",
+            "colorRound4-2": "colorRound4",
+            "colorRound4-3": "colorRound4",
+            "colorRound4-4": "colorRound4",
+            "colorRound4-5": "colorRound4",
+            "colorRound4-6": "colorRound4",
+            "colorRound5-1": "colorRound5",
+            "colorRound5-2": "colorRound5",
+            "colorRound5-3": "colorRound5",
+            "colorRound5-4": "colorRound5",
+            "colorRound5-5": "colorRound5",
+            "colorRound5-6": "colorRound5",
+            "colorInstruction1": "colorInstruction",
+            "colorInstruction2": "colorInstruction",
+            "readyRound1": "readyRound",
+            "readyRound2": "readyRound",
+            "readyRound3": "readyRound",
+            "readyRound4": "readyRound",
+            "readyRound5": "readyRound",
+            "colorRound1": "colorRound",
+            "colorRound2": "colorRound",
+            "colorRound3": "colorRound",
+            "colorRound4": "colorRound",
+            "colorRound5": "colorRound",
+        }
+    },
+    inplace=True,
+)
 
 print("After replacing labels")
 print(eeg["label"].unique())
 print(len(eeg["label"].unique()))
 
-le = preprocessing.LabelEncoder()
+le = preprocessing.LabelEncoder()  # Generates a look-up table
 le.fit(eeg["label"])
 eeg["label"] = le.transform(eeg["label"])
 
@@ -367,7 +371,7 @@ def plot_history_metrics(history: keras.callbacks.History):
 """
 
 
-def make_conv_model():
+def create_model():
     input_layer = keras.Input(shape=(512, 1))
 
     x = layers.Conv1D(
@@ -416,7 +420,6 @@ def make_conv_model():
         1024, activation="relu", kernel_regularizer=keras.regularizers.L2()
     )(x)
     x = layers.Dropout(0.2)(x)
-    
     x = layers.Dense(
         128, activation="relu", kernel_regularizer=keras.regularizers.L2()
     )(x)
@@ -429,7 +432,7 @@ def make_conv_model():
 ## Get Model summary
 """
 
-conv_model = make_conv_model()
+conv_model = create_model()
 
 print(conv_model.summary())
 
