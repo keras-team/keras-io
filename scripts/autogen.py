@@ -649,7 +649,7 @@ class KerasIO:
         save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
         # Redirects
-        shutil.copytree(self.redirects_dir, self.site_dir)
+        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
 
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):
