@@ -57,6 +57,7 @@ class KerasIO:
         theme_dir,
         guides_dir,
         examples_dir,
+        redirects_dir,
         refresh_guides=False,
         refresh_examples=False,
     ):
@@ -68,6 +69,7 @@ class KerasIO:
         self.theme_dir = theme_dir
         self.guides_dir = guides_dir
         self.examples_dir = examples_dir
+        self.redirects_dir = redirects_dir
         self.refresh_guides = refresh_guides
         self.refresh_examples = refresh_examples
 
@@ -646,6 +648,9 @@ class KerasIO:
         sitemap = "\n".join(all_urls_list) + "\n"
         save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
+        # Redirects
+        shutil.copytree(self.redirects_dir, self.site_dir)
+
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):
             return
@@ -1000,6 +1005,7 @@ if __name__ == "__main__":
         theme_dir=os.path.join("..", "theme"),
         guides_dir=os.path.join("..", "guides"),
         examples_dir=os.path.join("..", "examples"),
+        redirects_dir=os.path.join("..", "redirects"),
         refresh_guides=False,
         refresh_examples=False,
     )
