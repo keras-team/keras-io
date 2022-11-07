@@ -197,12 +197,20 @@ which one to pick, this second option (asynchronous preprocessing) is always a s
 """
 ## Configure the dataset for performance
 
-Let's make sure to use buffered prefetching so we can yield data from disk without
+Let's apply data augmentation to our training dataset,
+and let's make sure to use buffered prefetching so we can yield data from disk without
 having I/O becoming blocking:
+
 """
 
-train_ds = train_ds.prefetch(buffer_size=32)
-val_ds = val_ds.prefetch(buffer_size=32)
+# Apply `data_augmentation` to the training images.
+train_ds = train_ds.map(
+    lambda img, label: (data_augmentation(img), label),
+    num_parallel_calls=tf.data.AUTOTUNE,
+)
+# Prefetching samples in GPU memory helps maximize GPU utilization.
+train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
 
 """
 ## Build a model
@@ -272,18 +280,6 @@ def make_model(input_shape, num_classes):
 
 model = make_model(input_shape=image_size + (3,), num_classes=2)
 keras.utils.plot_model(model, show_shapes=True)
-
-"""
-And let's apply data augmentation to our training dataset:
-"""
-
-# Apply `data_augmentation` to the training images.
-train_ds = train_ds.map(
-    lambda img, label: (data_augmentation(img), label),
-    num_parallel_calls=tf.data.AUTOTUNE,
-)
-# Prefetching samples in GPU memory helps maximize GPU utilization.
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 
 """
 ## Train the model

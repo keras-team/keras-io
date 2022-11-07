@@ -66,7 +66,8 @@ wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-103-raw/")
 
 # Download finetuning data.
 keras.utils.get_file(
-    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip", extract=True,
+    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
+    extract=True,
 )
 sst_dir = os.path.expanduser("~/.keras/datasets/SST-2/")
 
@@ -360,7 +361,8 @@ encoded_tokens = encoder_model(inputs["tokens"])
 # We use the input token embedding to project from our encoded vectors to
 # vocabulary logits, which has been shown to improve training efficiency.
 outputs = keras_nlp.layers.MLMHead(
-    embedding_weights=embedding_layer.token_embedding.embeddings, activation="softmax",
+    embedding_weights=embedding_layer.token_embedding.embeddings,
+    activation="softmax",
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
 
 # Define and compile our pretraining model.
@@ -374,7 +376,9 @@ pretraining_model.compile(
 
 # Pretrain the model on our wiki text dataset.
 pretraining_model.fit(
-    pretrain_ds, validation_data=pretrain_val_ds, epochs=PRETRAINING_EPOCHS,
+    pretrain_ds,
+    validation_data=pretrain_val_ds,
+    epochs=PRETRAINING_EPOCHS,
 )
 
 # Save this base model for further finetuning.
@@ -442,7 +446,9 @@ finetuning_model.compile(
 
 # Finetune the model for the SST-2 task.
 finetuning_model.fit(
-    finetune_ds, validation_data=finetune_val_ds, epochs=FINETUNING_EPOCHS,
+    finetune_ds,
+    validation_data=finetune_val_ds,
+    epochs=FINETUNING_EPOCHS,
 )
 
 """

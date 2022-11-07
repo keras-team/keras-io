@@ -288,10 +288,10 @@ import numpy as np
 class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
     """Stop training when the loss is at its min, i.e. the loss stops decreasing.
 
-  Arguments:
-      patience: Number of epochs to wait after min has been hit. After this
-      number of no improvement, training stops.
-  """
+    Arguments:
+        patience: Number of epochs to wait after min has been hit. After this
+        number of no improvement, training stops.
+    """
 
     def __init__(self, patience=0):
         super(EarlyStoppingAtMinLoss, self).__init__()
@@ -351,11 +351,11 @@ See `callbacks.LearningRateScheduler` for a more general implementations.
 class CustomLearningRateScheduler(keras.callbacks.Callback):
     """Learning rate scheduler which sets the learning rate according to schedule.
 
-  Arguments:
-      schedule: a function that takes an epoch index
-          (integer, indexed from 0) and current learning rate
-          as inputs and returns a new learning rate as output (float).
-  """
+    Arguments:
+        schedule: a function that takes an epoch index
+            (integer, indexed from 0) and current learning rate
+            as inputs and returns a new learning rate as output (float).
+    """
 
     def __init__(self, schedule):
         super(CustomLearningRateScheduler, self).__init__()

@@ -136,7 +136,10 @@ receive a mask, which means it will ignore padded values:
 """
 
 model = keras.Sequential(
-    [layers.Embedding(input_dim=5000, output_dim=16, mask_zero=True), layers.LSTM(32),]
+    [
+        layers.Embedding(input_dim=5000, output_dim=16, mask_zero=True),
+        layers.LSTM(32),
+    ]
 )
 
 """
@@ -331,7 +334,9 @@ class TemporalSoftmax(keras.layers.Layer):
     def call(self, inputs, mask=None):
         broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
         inputs_exp = tf.exp(inputs) * broadcast_float_mask
-        inputs_sum = tf.reduce_sum(inputs_exp * broadcast_float_mask, axis=-1, keepdims=True)
+        inputs_sum = tf.reduce_sum(
+            inputs_exp * broadcast_float_mask, axis=-1, keepdims=True
+        )
         return inputs_exp / inputs_sum
 
 

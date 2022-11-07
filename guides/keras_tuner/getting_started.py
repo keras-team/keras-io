@@ -51,7 +51,9 @@ def build_model(hp):
     )
     model.add(layers.Dense(10, activation="softmax"))
     model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
     )
     return model
 
@@ -353,7 +355,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         )
         model.add(layers.Dense(10, activation="softmax"))
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -399,7 +403,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         )
         model.add(layers.Dense(10, activation="softmax"))
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -440,7 +446,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         outputs = layers.Dense(10, activation="softmax")(outputs)
         model = keras.Model(inputs, outputs)
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -665,7 +673,8 @@ class HyperRegressor(keras_tuner.HyperModel):
             ]
         )
         model.compile(
-            optimizer="adam", loss="mean_squared_error",
+            optimizer="adam",
+            loss="mean_squared_error",
         )
         return model
 
@@ -712,7 +721,8 @@ class HyperRegressor(keras_tuner.HyperModel):
             ]
         )
         model.compile(
-            optimizer="adam", loss="mean_squared_error",
+            optimizer="adam",
+            loss="mean_squared_error",
         )
         return model
 
@@ -806,10 +816,14 @@ import os
 def keras_code(units, optimizer, saving_path):
     # Build model
     model = keras.Sequential(
-        [layers.Dense(units=units, activation="relu"), layers.Dense(units=1),]
+        [
+            layers.Dense(units=units, activation="relu"),
+            layers.Dense(units=1),
+        ]
     )
     model.compile(
-        optimizer=optimizer, loss="mean_squared_error",
+        optimizer=optimizer,
+        loss="mean_squared_error",
     )
 
     # Prepare data
@@ -842,7 +856,10 @@ class MyTuner(keras_tuner.RandomSearch):
 
 
 tuner = MyTuner(
-    max_trials=3, overwrite=True, directory="my_dir", project_name="keep_code_separate",
+    max_trials=3,
+    overwrite=True,
+    directory="my_dir",
+    project_name="keep_code_separate",
 )
 tuner.search()
 # Retraining the model
