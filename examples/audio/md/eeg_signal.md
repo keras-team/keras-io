@@ -44,51 +44,13 @@ First, lets install our dependencies:
 
 
 ```python
-!pip install gdown
-!pip install sklearn
-!pip install pandas
-!pip install numpy
-!pip install matplotlib
+!pip install gdown -q
+!pip install sklearn -q
+!pip install pandas -q
+!pip install numpy -q
+!pip install matplotlib -q
 ```
 
-<div class="k-default-codeblock">
-```
-Requirement already satisfied: gdown in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (4.5.3)
-Requirement already satisfied: tqdm in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (4.64.0)
-Requirement already satisfied: beautifulsoup4 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (4.11.1)
-Requirement already satisfied: six in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (1.16.0)
-Requirement already satisfied: filelock in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (3.8.0)
-Requirement already satisfied: requests[socks] in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (2.27.1)
-Requirement already satisfied: soupsieve>1.2 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from beautifulsoup4->gdown) (2.3.2.post1)
-Requirement already satisfied: certifi>=2017.4.17 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (2022.5.18.1)
-Requirement already satisfied: idna<4,>=2.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (3.3)
-Requirement already satisfied: charset-normalizer~=2.0.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (2.0.12)
-Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (1.26.9)
-Requirement already satisfied: PySocks!=1.5.7,>=1.5.6 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (1.7.1)
-Requirement already satisfied: sklearn in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (0.0)
-Requirement already satisfied: scikit-learn in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from sklearn) (1.1.2)
-Requirement already satisfied: threadpoolctl>=2.0.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (3.1.0)
-Requirement already satisfied: numpy>=1.17.3 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.23.2)
-Requirement already satisfied: scipy>=1.3.2 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.9.0)
-Requirement already satisfied: joblib>=1.0.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.1.0)
-Requirement already satisfied: pandas in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (1.4.3)
-Requirement already satisfied: python-dateutil>=2.8.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (2.8.2)
-Requirement already satisfied: pytz>=2020.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (2022.1)
-Requirement already satisfied: numpy>=1.18.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (1.23.2)
-Requirement already satisfied: six>=1.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from python-dateutil>=2.8.1->pandas) (1.16.0)
-Requirement already satisfied: numpy in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (1.23.2)
-Requirement already satisfied: matplotlib in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (3.5.2)
-Requirement already satisfied: pillow>=6.2.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (9.1.1)
-Requirement already satisfied: cycler>=0.10 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (0.11.0)
-Requirement already satisfied: pyparsing>=2.2.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (3.0.9)
-Requirement already satisfied: packaging>=20.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (21.3)
-Requirement already satisfied: python-dateutil>=2.7 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (2.8.2)
-Requirement already satisfied: fonttools>=4.22.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (4.33.3)
-Requirement already satisfied: numpy>=1.17 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (1.23.2)
-Requirement already satisfied: kiwisolver>=1.0.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (1.4.3)
-Requirement already satisfied: six>=1.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from python-dateutil>=2.7->matplotlib) (1.16.0)
-
-```
 </div>
 Next, lets download our dataset.
 The gdown package makes it easy to download the data from Google Drive:

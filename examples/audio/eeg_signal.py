@@ -42,11 +42,11 @@ First, lets install our dependencies:
 """
 
 """shell
-pip install gdown
-pip install sklearn
-pip install pandas
-pip install numpy
-pip install matplotlib
+pip install gdown -q
+pip install sklearn -q
+pip install pandas -q
+pip install numpy -q
+pip install matplotlib -q
 """
 
 """
