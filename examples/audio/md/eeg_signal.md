@@ -54,11 +54,11 @@ First, lets install our dependencies:
 <div class="k-default-codeblock">
 ```
 Requirement already satisfied: gdown in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (4.5.3)
+Requirement already satisfied: tqdm in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (4.64.0)
+Requirement already satisfied: beautifulsoup4 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (4.11.1)
 Requirement already satisfied: six in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (1.16.0)
 Requirement already satisfied: filelock in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (3.8.0)
-Requirement already satisfied: beautifulsoup4 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (4.11.1)
 Requirement already satisfied: requests[socks] in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (2.27.1)
-Requirement already satisfied: tqdm in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from gdown) (4.64.0)
 Requirement already satisfied: soupsieve>1.2 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from beautifulsoup4->gdown) (2.3.2.post1)
 Requirement already satisfied: certifi>=2017.4.17 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (2022.5.18.1)
 Requirement already satisfied: idna<4,>=2.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (3.3)
@@ -67,25 +67,25 @@ Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/suvaditya/Programm
 Requirement already satisfied: PySocks!=1.5.7,>=1.5.6 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from requests[socks]->gdown) (1.7.1)
 Requirement already satisfied: sklearn in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (0.0)
 Requirement already satisfied: scikit-learn in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from sklearn) (1.1.2)
-Requirement already satisfied: scipy>=1.3.2 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.9.0)
-Requirement already satisfied: numpy>=1.17.3 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.23.2)
 Requirement already satisfied: threadpoolctl>=2.0.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (3.1.0)
+Requirement already satisfied: numpy>=1.17.3 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.23.2)
+Requirement already satisfied: scipy>=1.3.2 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.9.0)
 Requirement already satisfied: joblib>=1.0.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from scikit-learn->sklearn) (1.1.0)
 Requirement already satisfied: pandas in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (1.4.3)
+Requirement already satisfied: python-dateutil>=2.8.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (2.8.2)
 Requirement already satisfied: pytz>=2020.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (2022.1)
 Requirement already satisfied: numpy>=1.18.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (1.23.2)
-Requirement already satisfied: python-dateutil>=2.8.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from pandas) (2.8.2)
 Requirement already satisfied: six>=1.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from python-dateutil>=2.8.1->pandas) (1.16.0)
 Requirement already satisfied: numpy in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (1.23.2)
 Requirement already satisfied: matplotlib in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (3.5.2)
-Requirement already satisfied: python-dateutil>=2.7 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (2.8.2)
-Requirement already satisfied: kiwisolver>=1.0.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (1.4.3)
 Requirement already satisfied: pillow>=6.2.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (9.1.1)
-Requirement already satisfied: pyparsing>=2.2.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (3.0.9)
-Requirement already satisfied: fonttools>=4.22.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (4.33.3)
-Requirement already satisfied: packaging>=20.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (21.3)
 Requirement already satisfied: cycler>=0.10 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (0.11.0)
+Requirement already satisfied: pyparsing>=2.2.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (3.0.9)
+Requirement already satisfied: packaging>=20.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (21.3)
+Requirement already satisfied: python-dateutil>=2.7 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (2.8.2)
+Requirement already satisfied: fonttools>=4.22.0 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (4.33.3)
 Requirement already satisfied: numpy>=1.17 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (1.23.2)
+Requirement already satisfied: kiwisolver>=1.0.1 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from matplotlib) (1.4.3)
 Requirement already satisfied: six>=1.5 in /home/suvaditya/Programming/personal/oss/oss-ml/lib/python3.8/site-packages (from python-dateutil>=2.7->matplotlib) (1.16.0)
 
 ```
@@ -119,8 +119,8 @@ SHUFFLE_BUFFER_SIZE = BATCH_SIZE * 2
 ```
 Downloading...
 From: https://drive.google.com/uc?id=1V5B7Bt6aJm0UHbR7cRKBEK8jx7lYPVuX
-To: /home/suvaditya/Programming/personal/oss/keras-io/scripts/tmp_5852548/eeg-data.csv
-100%|████████████████████████████████████████| 106M/106M [00:06<00:00, 17.3MB/s]
+To: /home/suvaditya/Programming/personal/oss/keras-io/scripts/tmp_8705318/eeg-data.csv
+100%|████████████████████████████████████████| 106M/106M [00:05<00:00, 17.7MB/s]
 
 ```
 </div>
@@ -864,65 +864,65 @@ conv_model_history = conv_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-133/133 [==============================] - 13s 63ms/step - loss: 13.7334 - top_k_categorical_accuracy: 0.2678 - auc: 0.6498 - precision: 0.1259 - recall: 0.0020 - val_loss: 4.1816 - val_top_k_categorical_accuracy: 0.2610 - val_auc: 0.6638 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
+133/133 [==============================] - 11s 63ms/step - loss: 12.8625 - top_k_categorical_accuracy: 0.2747 - auc: 0.6495 - precision: 0.0806 - recall: 5.9102e-04 - val_loss: 3.9201 - val_top_k_categorical_accuracy: 0.2610 - val_auc: 0.6191 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
 Epoch 2/30
-133/133 [==============================] - 8s 58ms/step - loss: 3.3075 - top_k_categorical_accuracy: 0.3199 - auc: 0.6986 - precision: 0.0000e+00 - recall: 0.0000e+00 - val_loss: 3.2463 - val_top_k_categorical_accuracy: 0.2329 - val_auc: 0.6395 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
+133/133 [==============================] - 8s 58ms/step - loss: 3.1074 - top_k_categorical_accuracy: 0.3106 - auc: 0.6959 - precision: 0.0000e+00 - recall: 0.0000e+00 - val_loss: 3.1456 - val_top_k_categorical_accuracy: 0.2610 - val_auc: 0.6480 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
 Epoch 3/30
-133/133 [==============================] - 8s 58ms/step - loss: 2.7907 - top_k_categorical_accuracy: 0.3383 - auc: 0.7165 - precision: 0.2000 - recall: 1.1820e-04 - val_loss: 3.0565 - val_top_k_categorical_accuracy: 0.2510 - val_auc: 0.6351 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
+133/133 [==============================] - 8s 58ms/step - loss: 2.7097 - top_k_categorical_accuracy: 0.3190 - auc: 0.7112 - precision: 0.3000 - recall: 3.5461e-04 - val_loss: 3.1122 - val_top_k_categorical_accuracy: 0.2222 - val_auc: 0.6147 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
 Epoch 4/30
-133/133 [==============================] - 8s 57ms/step - loss: 2.5643 - top_k_categorical_accuracy: 0.3846 - auc: 0.7574 - precision: 0.7143 - recall: 0.0012 - val_loss: 3.0693 - val_top_k_categorical_accuracy: 0.2791 - val_auc: 0.6383 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 2.0000e-04
+133/133 [==============================] - 8s 59ms/step - loss: 2.5204 - top_k_categorical_accuracy: 0.3603 - auc: 0.7473 - precision: 0.4706 - recall: 0.0019 - val_loss: 2.9930 - val_top_k_categorical_accuracy: 0.2697 - val_auc: 0.6289 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 2.0000e-04
 Epoch 5/30
-133/133 [==============================] - 8s 58ms/step - loss: 2.3815 - top_k_categorical_accuracy: 0.4480 - auc: 0.8014 - precision: 0.6000 - recall: 0.0050 - val_loss: 3.1906 - val_top_k_categorical_accuracy: 0.3166 - val_auc: 0.6714 - val_precision: 0.2500 - val_recall: 6.6934e-04 - lr: 2.0000e-04
+133/133 [==============================] - 8s 59ms/step - loss: 2.3726 - top_k_categorical_accuracy: 0.4090 - auc: 0.7879 - precision: 0.5238 - recall: 0.0052 - val_loss: 3.0241 - val_top_k_categorical_accuracy: 0.3039 - val_auc: 0.6718 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 2.0000e-04
 Epoch 6/30
-133/133 [==============================] - 8s 58ms/step - loss: 2.1999 - top_k_categorical_accuracy: 0.5260 - auc: 0.8424 - precision: 0.6138 - recall: 0.0242 - val_loss: 3.4796 - val_top_k_categorical_accuracy: 0.2932 - val_auc: 0.6534 - val_precision: 0.1795 - val_recall: 0.0047 - lr: 2.0000e-04
+133/133 [==============================] - 8s 60ms/step - loss: 2.2426 - top_k_categorical_accuracy: 0.4736 - auc: 0.8214 - precision: 0.5230 - recall: 0.0108 - val_loss: 3.4078 - val_top_k_categorical_accuracy: 0.3112 - val_auc: 0.6652 - val_precision: 0.1053 - val_recall: 0.0013 - lr: 2.0000e-04
 Epoch 7/30
-133/133 [==============================] - 8s 59ms/step - loss: 2.0204 - top_k_categorical_accuracy: 0.6294 - auc: 0.8766 - precision: 0.6336 - recall: 0.0695 - val_loss: 3.7237 - val_top_k_categorical_accuracy: 0.3092 - val_auc: 0.6488 - val_precision: 0.2143 - val_recall: 0.0161 - lr: 2.0000e-04
+133/133 [==============================] - 8s 59ms/step - loss: 2.1656 - top_k_categorical_accuracy: 0.5063 - auc: 0.8391 - precision: 0.5207 - recall: 0.0104 - val_loss: 3.4816 - val_top_k_categorical_accuracy: 0.2871 - val_auc: 0.6571 - val_precision: 0.1944 - val_recall: 0.0047 - lr: 2.0000e-04
 Epoch 8/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.7604 - top_k_categorical_accuracy: 0.7287 - auc: 0.9148 - precision: 0.7522 - recall: 0.1327 - val_loss: 4.1081 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6592 - val_precision: 0.2000 - val_recall: 0.0341 - lr: 4.0000e-05
+133/133 [==============================] - 8s 59ms/step - loss: 2.0417 - top_k_categorical_accuracy: 0.5721 - auc: 0.8654 - precision: 0.5032 - recall: 0.0184 - val_loss: 3.8548 - val_top_k_categorical_accuracy: 0.2979 - val_auc: 0.6512 - val_precision: 0.2308 - val_recall: 0.0100 - lr: 2.0000e-04
 Epoch 9/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.4884 - top_k_categorical_accuracy: 0.8099 - auc: 0.9450 - precision: 0.7830 - recall: 0.2572 - val_loss: 4.6625 - val_top_k_categorical_accuracy: 0.3273 - val_auc: 0.6527 - val_precision: 0.2061 - val_recall: 0.0589 - lr: 4.0000e-05
+133/133 [==============================] - 8s 59ms/step - loss: 1.8322 - top_k_categorical_accuracy: 0.6704 - auc: 0.9003 - precision: 0.5526 - recall: 0.0242 - val_loss: 3.9738 - val_top_k_categorical_accuracy: 0.2972 - val_auc: 0.6630 - val_precision: 0.3333 - val_recall: 6.6934e-04 - lr: 4.0000e-05
 Epoch 10/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.2871 - top_k_categorical_accuracy: 0.8560 - auc: 0.9620 - precision: 0.8197 - recall: 0.3837 - val_loss: 5.2381 - val_top_k_categorical_accuracy: 0.3307 - val_auc: 0.6487 - val_precision: 0.1834 - val_recall: 0.0723 - lr: 4.0000e-05
+133/133 [==============================] - 8s 59ms/step - loss: 1.6351 - top_k_categorical_accuracy: 0.7643 - auc: 0.9261 - precision: 0.5908 - recall: 0.0473 - val_loss: 4.4714 - val_top_k_categorical_accuracy: 0.2945 - val_auc: 0.6523 - val_precision: 0.1944 - val_recall: 0.0047 - lr: 4.0000e-05
 Epoch 11/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.1167 - top_k_categorical_accuracy: 0.8909 - auc: 0.9740 - precision: 0.8458 - recall: 0.4959 - val_loss: 5.7839 - val_top_k_categorical_accuracy: 0.3333 - val_auc: 0.6414 - val_precision: 0.1778 - val_recall: 0.0857 - lr: 4.0000e-05
+133/133 [==============================] - 8s 59ms/step - loss: 1.4918 - top_k_categorical_accuracy: 0.8257 - auc: 0.9418 - precision: 0.6353 - recall: 0.0861 - val_loss: 4.5518 - val_top_k_categorical_accuracy: 0.3153 - val_auc: 0.6513 - val_precision: 0.1930 - val_recall: 0.0074 - lr: 8.0000e-06
 Epoch 12/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.9559 - top_k_categorical_accuracy: 0.9226 - auc: 0.9831 - precision: 0.8802 - recall: 0.6002 - val_loss: 6.4426 - val_top_k_categorical_accuracy: 0.3280 - val_auc: 0.6380 - val_precision: 0.1824 - val_recall: 0.1071 - lr: 4.0000e-05
+133/133 [==============================] - 8s 58ms/step - loss: 1.4434 - top_k_categorical_accuracy: 0.8461 - auc: 0.9467 - precision: 0.6641 - recall: 0.1024 - val_loss: 4.6866 - val_top_k_categorical_accuracy: 0.3099 - val_auc: 0.6517 - val_precision: 0.1944 - val_recall: 0.0094 - lr: 8.0000e-06
 Epoch 13/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.8390 - top_k_categorical_accuracy: 0.9447 - auc: 0.9885 - precision: 0.8976 - recall: 0.6726 - val_loss: 7.0075 - val_top_k_categorical_accuracy: 0.3226 - val_auc: 0.6295 - val_precision: 0.1764 - val_recall: 0.1151 - lr: 4.0000e-05
+133/133 [==============================] - 8s 58ms/step - loss: 1.4034 - top_k_categorical_accuracy: 0.8583 - auc: 0.9503 - precision: 0.6641 - recall: 0.1234 - val_loss: 4.8320 - val_top_k_categorical_accuracy: 0.3186 - val_auc: 0.6484 - val_precision: 0.1682 - val_recall: 0.0120 - lr: 8.0000e-06
 Epoch 14/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.7354 - top_k_categorical_accuracy: 0.9635 - auc: 0.9926 - precision: 0.9145 - recall: 0.7219 - val_loss: 7.0575 - val_top_k_categorical_accuracy: 0.3226 - val_auc: 0.6327 - val_precision: 0.1898 - val_recall: 0.1225 - lr: 8.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.3726 - top_k_categorical_accuracy: 0.8743 - auc: 0.9530 - precision: 0.6652 - recall: 0.1416 - val_loss: 4.9853 - val_top_k_categorical_accuracy: 0.3166 - val_auc: 0.6464 - val_precision: 0.1679 - val_recall: 0.0147 - lr: 8.0000e-06
 Epoch 15/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6792 - top_k_categorical_accuracy: 0.9713 - auc: 0.9946 - precision: 0.9336 - recall: 0.7558 - val_loss: 7.1773 - val_top_k_categorical_accuracy: 0.3266 - val_auc: 0.6329 - val_precision: 0.1919 - val_recall: 0.1265 - lr: 8.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.3389 - top_k_categorical_accuracy: 0.8800 - auc: 0.9556 - precision: 0.6668 - recall: 0.1587 - val_loss: 5.1136 - val_top_k_categorical_accuracy: 0.3220 - val_auc: 0.6452 - val_precision: 0.1491 - val_recall: 0.0161 - lr: 8.0000e-06
 Epoch 16/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6428 - top_k_categorical_accuracy: 0.9743 - auc: 0.9957 - precision: 0.9456 - recall: 0.7749 - val_loss: 7.1511 - val_top_k_categorical_accuracy: 0.3273 - val_auc: 0.6343 - val_precision: 0.1938 - val_recall: 0.1258 - lr: 1.6000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.3102 - top_k_categorical_accuracy: 0.8909 - auc: 0.9581 - precision: 0.6685 - recall: 0.1819 - val_loss: 5.2552 - val_top_k_categorical_accuracy: 0.3246 - val_auc: 0.6442 - val_precision: 0.1717 - val_recall: 0.0228 - lr: 8.0000e-06
 Epoch 17/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6380 - top_k_categorical_accuracy: 0.9766 - auc: 0.9958 - precision: 0.9490 - recall: 0.7786 - val_loss: 7.1815 - val_top_k_categorical_accuracy: 0.3266 - val_auc: 0.6345 - val_precision: 0.1925 - val_recall: 0.1272 - lr: 1.6000e-06
+133/133 [==============================] - 8s 60ms/step - loss: 1.2734 - top_k_categorical_accuracy: 0.9048 - auc: 0.9609 - precision: 0.6883 - recall: 0.2078 - val_loss: 5.4066 - val_top_k_categorical_accuracy: 0.3226 - val_auc: 0.6419 - val_precision: 0.1799 - val_recall: 0.0288 - lr: 8.0000e-06
 Epoch 18/30
-133/133 [==============================] - 8s 58ms/step - loss: 0.6313 - top_k_categorical_accuracy: 0.9766 - auc: 0.9959 - precision: 0.9499 - recall: 0.7845 - val_loss: 7.1852 - val_top_k_categorical_accuracy: 0.3286 - val_auc: 0.6338 - val_precision: 0.1884 - val_recall: 0.1238 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.2415 - top_k_categorical_accuracy: 0.9092 - auc: 0.9633 - precision: 0.6850 - recall: 0.2247 - val_loss: 5.5507 - val_top_k_categorical_accuracy: 0.3213 - val_auc: 0.6390 - val_precision: 0.1707 - val_recall: 0.0328 - lr: 8.0000e-06
 Epoch 19/30
-133/133 [==============================] - 8s 58ms/step - loss: 0.6276 - top_k_categorical_accuracy: 0.9765 - auc: 0.9960 - precision: 0.9499 - recall: 0.7851 - val_loss: 7.2069 - val_top_k_categorical_accuracy: 0.3300 - val_auc: 0.6344 - val_precision: 0.1886 - val_recall: 0.1245 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.2207 - top_k_categorical_accuracy: 0.9155 - auc: 0.9650 - precision: 0.7097 - recall: 0.2482 - val_loss: 5.5749 - val_top_k_categorical_accuracy: 0.3186 - val_auc: 0.6396 - val_precision: 0.1736 - val_recall: 0.0335 - lr: 1.6000e-06
 Epoch 20/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6243 - top_k_categorical_accuracy: 0.9758 - auc: 0.9961 - precision: 0.9515 - recall: 0.7865 - val_loss: 7.2225 - val_top_k_categorical_accuracy: 0.3286 - val_auc: 0.6341 - val_precision: 0.1874 - val_recall: 0.1232 - lr: 1.0000e-06
+133/133 [==============================] - 8s 62ms/step - loss: 1.2110 - top_k_categorical_accuracy: 0.9186 - auc: 0.9657 - precision: 0.7066 - recall: 0.2491 - val_loss: 5.6133 - val_top_k_categorical_accuracy: 0.3173 - val_auc: 0.6400 - val_precision: 0.1650 - val_recall: 0.0328 - lr: 1.6000e-06
 Epoch 21/30
-133/133 [==============================] - 8s 58ms/step - loss: 0.6236 - top_k_categorical_accuracy: 0.9770 - auc: 0.9961 - precision: 0.9492 - recall: 0.7861 - val_loss: 7.2446 - val_top_k_categorical_accuracy: 0.3286 - val_auc: 0.6339 - val_precision: 0.1891 - val_recall: 0.1252 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.2038 - top_k_categorical_accuracy: 0.9181 - auc: 0.9663 - precision: 0.7131 - recall: 0.2595 - val_loss: 5.6321 - val_top_k_categorical_accuracy: 0.3173 - val_auc: 0.6397 - val_precision: 0.1577 - val_recall: 0.0315 - lr: 1.0000e-06
 Epoch 22/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6174 - top_k_categorical_accuracy: 0.9772 - auc: 0.9963 - precision: 0.9493 - recall: 0.7878 - val_loss: 7.2727 - val_top_k_categorical_accuracy: 0.3273 - val_auc: 0.6337 - val_precision: 0.1899 - val_recall: 0.1265 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.1998 - top_k_categorical_accuracy: 0.9229 - auc: 0.9666 - precision: 0.6866 - recall: 0.2538 - val_loss: 5.6516 - val_top_k_categorical_accuracy: 0.3193 - val_auc: 0.6403 - val_precision: 0.1589 - val_recall: 0.0321 - lr: 1.0000e-06
 Epoch 23/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6129 - top_k_categorical_accuracy: 0.9786 - auc: 0.9964 - precision: 0.9523 - recall: 0.7866 - val_loss: 7.2914 - val_top_k_categorical_accuracy: 0.3280 - val_auc: 0.6334 - val_precision: 0.1892 - val_recall: 0.1265 - lr: 1.0000e-06
+133/133 [==============================] - 8s 60ms/step - loss: 1.1948 - top_k_categorical_accuracy: 0.9206 - auc: 0.9668 - precision: 0.7076 - recall: 0.2606 - val_loss: 5.6690 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6397 - val_precision: 0.1607 - val_recall: 0.0328 - lr: 1.0000e-06
 Epoch 24/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6074 - top_k_categorical_accuracy: 0.9794 - auc: 0.9965 - precision: 0.9580 - recall: 0.8000 - val_loss: 7.3214 - val_top_k_categorical_accuracy: 0.3293 - val_auc: 0.6335 - val_precision: 0.1900 - val_recall: 0.1272 - lr: 1.0000e-06
+133/133 [==============================] - 7s 51ms/step - loss: 1.1970 - top_k_categorical_accuracy: 0.9233 - auc: 0.9666 - precision: 0.6933 - recall: 0.2595 - val_loss: 5.6968 - val_top_k_categorical_accuracy: 0.3206 - val_auc: 0.6391 - val_precision: 0.1608 - val_recall: 0.0335 - lr: 1.0000e-06
 Epoch 25/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6064 - top_k_categorical_accuracy: 0.9784 - auc: 0.9965 - precision: 0.9538 - recall: 0.7929 - val_loss: 7.3337 - val_top_k_categorical_accuracy: 0.3280 - val_auc: 0.6333 - val_precision: 0.1882 - val_recall: 0.1258 - lr: 1.0000e-06
+133/133 [==============================] - 8s 60ms/step - loss: 1.1919 - top_k_categorical_accuracy: 0.9240 - auc: 0.9670 - precision: 0.7035 - recall: 0.2636 - val_loss: 5.7125 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6398 - val_precision: 0.1546 - val_recall: 0.0328 - lr: 1.0000e-06
 Epoch 26/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.6006 - top_k_categorical_accuracy: 0.9794 - auc: 0.9967 - precision: 0.9554 - recall: 0.8002 - val_loss: 7.3597 - val_top_k_categorical_accuracy: 0.3280 - val_auc: 0.6323 - val_precision: 0.1890 - val_recall: 0.1265 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.1896 - top_k_categorical_accuracy: 0.9227 - auc: 0.9671 - precision: 0.6973 - recall: 0.2661 - val_loss: 5.7305 - val_top_k_categorical_accuracy: 0.3206 - val_auc: 0.6388 - val_precision: 0.1567 - val_recall: 0.0335 - lr: 1.0000e-06
 Epoch 27/30
-133/133 [==============================] - 8s 58ms/step - loss: 0.5970 - top_k_categorical_accuracy: 0.9790 - auc: 0.9966 - precision: 0.9582 - recall: 0.8051 - val_loss: 7.3698 - val_top_k_categorical_accuracy: 0.3280 - val_auc: 0.6317 - val_precision: 0.1874 - val_recall: 0.1252 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.1820 - top_k_categorical_accuracy: 0.9234 - auc: 0.9677 - precision: 0.7033 - recall: 0.2690 - val_loss: 5.7487 - val_top_k_categorical_accuracy: 0.3226 - val_auc: 0.6381 - val_precision: 0.1610 - val_recall: 0.0348 - lr: 1.0000e-06
 Epoch 28/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.5937 - top_k_categorical_accuracy: 0.9793 - auc: 0.9968 - precision: 0.9601 - recall: 0.8051 - val_loss: 7.3871 - val_top_k_categorical_accuracy: 0.3300 - val_auc: 0.6314 - val_precision: 0.1873 - val_recall: 0.1258 - lr: 1.0000e-06
+133/133 [==============================] - 8s 59ms/step - loss: 1.1780 - top_k_categorical_accuracy: 0.9251 - auc: 0.9680 - precision: 0.7105 - recall: 0.2701 - val_loss: 5.7676 - val_top_k_categorical_accuracy: 0.3193 - val_auc: 0.6391 - val_precision: 0.1560 - val_recall: 0.0341 - lr: 1.0000e-06
 Epoch 29/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.5920 - top_k_categorical_accuracy: 0.9805 - auc: 0.9968 - precision: 0.9585 - recall: 0.8061 - val_loss: 7.4167 - val_top_k_categorical_accuracy: 0.3293 - val_auc: 0.6318 - val_precision: 0.1865 - val_recall: 0.1258 - lr: 1.0000e-06
+133/133 [==============================] - 8s 58ms/step - loss: 1.1737 - top_k_categorical_accuracy: 0.9275 - auc: 0.9684 - precision: 0.7024 - recall: 0.2765 - val_loss: 5.7901 - val_top_k_categorical_accuracy: 0.3193 - val_auc: 0.6391 - val_precision: 0.1518 - val_recall: 0.0341 - lr: 1.0000e-06
 Epoch 30/30
-133/133 [==============================] - 8s 59ms/step - loss: 0.5898 - top_k_categorical_accuracy: 0.9805 - auc: 0.9969 - precision: 0.9597 - recall: 0.8099 - val_loss: 7.4371 - val_top_k_categorical_accuracy: 0.3286 - val_auc: 0.6319 - val_precision: 0.1858 - val_recall: 0.1258 - lr: 1.0000e-06
+133/133 [==============================] - 8s 58ms/step - loss: 1.1725 - top_k_categorical_accuracy: 0.9252 - auc: 0.9685 - precision: 0.7119 - recall: 0.2780 - val_loss: 5.8028 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6382 - val_precision: 0.1450 - val_recall: 0.0328 - lr: 1.0000e-06
 
 ```
 </div>
@@ -993,12 +993,12 @@ view_evaluated_eeg_plots(conv_model)
 
 <div class="k-default-codeblock">
 ```
-24/24 [==============================] - 0s 9ms/step - loss: 7.4371 - top_k_categorical_accuracy: 0.3286 - auc: 0.6319 - precision: 0.1858 - recall: 0.1258
-Loss : 7.437110424041748
-Top 3 Categorical Accuracy : 0.3286479115486145
-Area under the Curve (ROC) : 0.6319202780723572
-Precision : 0.18577075004577637
-Recall : 0.12583668529987335
+24/24 [==============================] - 0s 9ms/step - loss: 5.8028 - top_k_categorical_accuracy: 0.3199 - auc: 0.6382 - precision: 0.1450 - recall: 0.0328
+Loss : 5.802786827087402
+Top 3 Categorical Accuracy : 0.31994643807411194
+Area under the Curve (ROC) : 0.6381803750991821
+Precision : 0.14497041702270508
+Recall : 0.032797858119010925
 
 ```
 </div>
