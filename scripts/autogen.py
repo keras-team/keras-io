@@ -638,6 +638,9 @@ class KerasIO:
         )
         save_file(Path(self.site_dir) / "404.html", page404)
 
+        # Favicon
+        shutil.copyfile(Path(self.theme_dir) / "favicon.ico", Path(self.site_dir) / "favicon.ico")
+
         # Tutobooks
         self.sync_tutobook_media()
         sitemap = "\n".join(all_urls_list) + "\n"
