@@ -32,6 +32,7 @@ import requests
 import multiprocessing
 
 from master import MASTER
+from examples_master import EXAMPLES_MASTER
 import tutobooks
 import generate_tf_guides
 
@@ -618,7 +619,7 @@ class KerasIO:
                 "title": "Search Keras documentation",
                 "nav": nav,
                 "base_url": self.url,
-                "main": search_main,
+                "main": search_main,    
             }
         )
         save_file(Path(self.site_dir) / "search.html", search_page)
@@ -941,6 +942,33 @@ def turn_title_into_id(title):
     title = title.replace(" ", "-")
     return title
 
+
+def generate_examples_page():
+
+    def add_key_val(key, val, dictionary):
+        if key in dictionary:
+            dictionary[key].append(val)
+        else:
+            dictionary[key] = [val]
+
+    category_to_examples = {}
+    for key, val in EXAMPLES_MASTER:
+        categories = val["category"]
+        if len(categories) == 1:
+            add_key_val(categories[0], key, category_to_examples)
+        elif len(categories) == 2:
+            if categories[0] in category_to_examples:
+                dictionary = category_to_examples[categories[0]]
+                add_key_val(categories[1], key, dictionary)
+            else:
+                category_to_examples[categories[0]] = {
+                    categories[1]: [key],
+                }
+
+
+        
+    
+    for 
 
 def generate_md_toc(entries, url, depth=2):
     assert url.endswith("/")

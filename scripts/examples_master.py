@@ -102,3 +102,21 @@ EXAMPLES_MASTER = {
         },
     ],
 }
+
+EXAMPLES_INFO = {
+    "Image classification from scratch": {
+        "category": ["Computer Vision", "Image Classification"],
+        "difficulty": "Beginner",
+        "path": "vision/image_classification_from_scratch",
+    },
+    "A walk through latent space with Stable Diffusion": {
+        "category": ["Computer Vision", "Image Generation"],
+        "difficulty": "Intermediate",
+        "path": "generative/random_walks_with_stable_diffusion",
+    },
+    "English-to-Spanish translation with KerasNLP": {
+        "category": ["Natural Language Processing", "Machine Translation"],
+        "difficulty": "Intermediate",
+        "path": "nlp/neural_machine_translation_with_keras_nlp",
+    }
+}
