@@ -108,15 +108,18 @@ EXAMPLES_INFO = {
         "category": ["Computer Vision", "Image Classification"],
         "difficulty": "Beginner",
         "path": "vision/image_classification_from_scratch",
+        "on_landing_page": True,
     },
     "A walk through latent space with Stable Diffusion": {
         "category": ["Computer Vision", "Image Generation"],
         "difficulty": "Intermediate",
         "path": "generative/random_walks_with_stable_diffusion",
+        "on_landing_page": True,
     },
     "English-to-Spanish translation with KerasNLP": {
         "category": ["Natural Language Processing", "Machine Translation"],
         "difficulty": "Intermediate",
         "path": "nlp/neural_machine_translation_with_keras_nlp",
+        "on_landing_page": True,
     }
 }

@@ -32,7 +32,7 @@ import requests
 import multiprocessing
 
 from master import MASTER
-from examples_master import EXAMPLES_MASTER
+from examples_master import EXAMPLES_INFO
 import tutobooks
 import generate_tf_guides
 
@@ -113,7 +113,9 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
+        self.generate_examples_page()
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
+        
         self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
 
     def sync_external_readmes_to_sources(self):
@@ -515,30 +517,31 @@ class KerasIO:
             md_source_path = source_path.with_suffix(".md")
             metadata_path = str(source_path) + "_metadata.json"
 
-        # Save md source file
-        save_file(md_source_path, template)
+        if not path == "examples/":
+            # Save md source file
+            save_file(md_source_path, template)
 
-        # Save metadata file
-        location_history = []
-        for i in range(len(path_stack)):
-            stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
-            url = self.url + "/".join(stripped_path_stack)
-            location_history.append(
+            # Save metadata file
+            location_history = []
+            for i in range(len(path_stack)):
+                stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
+                url = self.url + "/".join(stripped_path_stack)
+                location_history.append(
+                    {
+                        "url": url,
+                        "title": title_stack[i],
+                    }
+                )
+            metadata = json.dumps(
                 {
-                    "url": url,
-                    "title": title_stack[i],
+                    "location_history": location_history[:-1],
+                    "outline": make_outline(template) if entry.get("outline", True) else [],
+                    "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
+                    "url": parent_url,
+                    "title": entry["title"],
                 }
             )
-        metadata = json.dumps(
-            {
-                "location_history": location_history[:-1],
-                "outline": make_outline(template) if entry.get("outline", True) else [],
-                "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
-                "url": parent_url,
-                "title": entry["title"],
-            }
-        )
-        save_file(metadata_path, metadata)
+            save_file(metadata_path, metadata)
 
         if children:
             for entry in children:
@@ -569,6 +572,106 @@ class KerasIO:
         self._map_of_symbol_names_to_api_urls = recursive_make_map(
             self.master, Path("")
         )
+
+    def generate_page(self, category_to_examples, path_stack, md_content, title_level=1):
+        toc_content = ""
+        title_prefix = "#" * title_level
+        for category, entry in category_to_examples.items():
+            toc_content += f"{title_prefix} {category}\n"
+
+            if isinstance(entry, list):
+                toc_content += generate_examples_list_md(entry)
+            else:
+                title_prefix += "#"
+                for child_category, child_entry in entry.items():
+                    toc_content += f"{title_prefix} {child_category}\n"
+                    toc_content += generate_examples_list_md(child_entry)
+        
+        md_content = md_content.replace("{{toc}}", toc_content)
+        md_path = Path(self.md_sources_dir) / Path(*path_stack)
+        if not os.path.exists(md_path):
+            os.makedirs(md_path)
+
+        metadata = json.dumps(
+            {
+                "location_history": [],
+                "outline": make_outline(md_content),
+                "location": "/examples",
+                "url": self.url + "/examples/",
+                "title": "Code examples",
+            }
+        )
+
+        md_file_path = md_path / "index.md"
+        metadata_file_path = md_path / "index_metadata.json"
+
+        save_file(md_file_path, md_content)
+        save_file(metadata_file_path, metadata)
+
+    def generate_examples_page(self):
+
+        def add_key_val(key, val, dictionary):
+            if key in dictionary:
+                dictionary[key].append(val)
+            else:
+                dictionary[key] = [val]
+
+        category_to_examples = {}
+        for example_name, val in EXAMPLES_INFO.items():
+            categories = val["category"] 
+            # Category has at most 2 levels.
+            if len(categories) == 1:
+                add_key_val(categories[0], example_name, category_to_examples)
+            elif len(categories) == 2:
+                if categories[0] in category_to_examples:
+                    dictionary = category_to_examples[categories[0]]
+                    add_key_val(categories[1], example_name, dictionary)
+                else:
+                    category_to_examples[categories[0]] = {
+                        categories[1]: [example_name],
+                    }
+
+        # Generate the landing page.
+        landing_page_file = open("../templates/examples/index.md", encoding="utf8")
+        landing_page_md = landing_page_file.read()
+        landing_page_file.close()
+        self.generate_page(category_to_examples, ["examples"], landing_page_md, title_level=2)
+
+        for category, entry in category_to_examples.items():
+            if isinstance(entry)
+
+        toc_content = ""
+        for category, entry in category_to_examples.items():
+            toc_content += f"## {category}\n"
+
+            if isinstance(entry, list):
+                toc_content += generate_examples_list_md(entry)
+            else:
+                for child_category, child_entry in entry.items():
+                    toc_content += f"### {child_category}\n"
+                    toc_content += generate_examples_list_md(child_entry)
+        
+        landing_page_md = landing_page_md.replace("{{toc}}", toc_content)
+        landing_page_path = Path(self.md_sources_dir) / Path("examples")
+        if not os.path.exists(landing_page_path):
+            os.makedirs(landing_page_path)
+
+        metadata = json.dumps(
+            {
+                "location_history": [],
+                "outline": make_outline(landing_page_md),
+                "location": "/examples",
+                "url": self.url + "/examples/",
+                "title": "Code examples",
+            }
+        )
+
+        md_file_path = landing_page_path / "index.md"
+        metadata_file_path = landing_page_path / "index_metadata.json"
+
+        save_file(md_file_path, landing_page_md)
+        save_file(metadata_file_path, metadata)
+        
 
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
@@ -942,33 +1045,15 @@ def turn_title_into_id(title):
     title = title.replace(" ", "-")
     return title
 
-
-def generate_examples_page():
-
-    def add_key_val(key, val, dictionary):
-        if key in dictionary:
-            dictionary[key].append(val)
-        else:
-            dictionary[key] = [val]
-
-    category_to_examples = {}
-    for key, val in EXAMPLES_MASTER:
-        categories = val["category"]
-        if len(categories) == 1:
-            add_key_val(categories[0], key, category_to_examples)
-        elif len(categories) == 2:
-            if categories[0] in category_to_examples:
-                dictionary = category_to_examples[categories[0]]
-                add_key_val(categories[1], key, dictionary)
-            else:
-                category_to_examples[categories[0]] = {
-                    categories[1]: [key],
-                }
-
-
-        
-    
-    for 
+def generate_examples_list_md(examples_list):
+    md_content = ""
+    for example_name in examples_list: 
+        example_properties = EXAMPLES_INFO[example_name]
+        example_path = example_properties["path"]
+        example_url = f"{example_path}"
+        example_item = f"- [{example_name}]({example_url})\n"
+        md_content += example_item
+    return md_content
 
 def generate_md_toc(entries, url, depth=2):
     assert url.endswith("/")
