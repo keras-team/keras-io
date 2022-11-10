@@ -200,7 +200,6 @@ which one to pick, this second option (asynchronous preprocessing) is always a s
 Let's apply data augmentation to our training dataset,
 and let's make sure to use buffered prefetching so we can yield data from disk without
 having I/O becoming blocking:
-
 """
 
 # Apply `data_augmentation` to the training images.
@@ -217,7 +216,7 @@ val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
 
 We'll build a small version of the Xception network. We haven't particularly tried to
 optimize the architecture; if you want to do a systematic search for the best model
- configuration, consider using
+configuration, consider using
 [KerasTuner](https://github.com/keras-team/keras-tuner).
 
 Note that:
@@ -233,17 +232,13 @@ def make_model(input_shape, num_classes):
 
     # Entry block
     x = layers.Rescaling(1.0 / 255)(inputs)
-    x = layers.Conv2D(32, 3, strides=2, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
-
-    x = layers.Conv2D(64, 3, padding="same")(x)
+    x = layers.Conv2D(128, 3, strides=2, padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.Activation("relu")(x)
 
     previous_block_activation = x  # Set aside residual
 
-    for size in [128, 256, 512, 728]:
+    for size in [256, 512, 728]:
         x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(size, 3, padding="same")(x)
         x = layers.BatchNormalization()(x)
@@ -320,5 +315,5 @@ img_array = keras.preprocessing.image.img_to_array(img)
 img_array = tf.expand_dims(img_array, 0)  # Create batch axis
 
 predictions = model.predict(img_array)
-score = predictions[0]
+score = float(predictions[0])
 print(f"This image is {100 * (1 - score):.2f}% cat and {100 * score:.2f}% dog.")
