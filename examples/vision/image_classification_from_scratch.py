@@ -289,7 +289,6 @@ model.compile(
     optimizer=keras.optimizers.Adam(1e-3),
     loss="binary_crossentropy",
     metrics=["accuracy"],
-    jit_compile=True,  # Enable XLA compilation for faster training
 )
 model.fit(
     train_ds,
