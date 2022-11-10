@@ -349,7 +349,6 @@ def count_locs_in_file(py_path):
     f = open(py_path)
     py = f.read()
     f.close()
-    validate(py)
     _get_next_script_element(py)  # Header
     loc = 0
     while py:
