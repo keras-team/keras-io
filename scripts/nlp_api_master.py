@@ -42,6 +42,19 @@ TOKENIZERS_MASTER = {
                 "keras_nlp.tokenizers.SentencePieceTokenizer.id_to_token",
             ],
         },
+       {
+            "path": "byte_pair_tokenizer",
+            "title": "BytePairTokenizer",
+            "generate": [
+                "keras_nlp.tokenizers.BytePairTokenizer",
+                "keras_nlp.tokenizers.BytePairTokenizer.tokenize",
+                "keras_nlp.tokenizers.BytePairTokenizer.detokenize",
+                "keras_nlp.tokenizers.BytePairTokenizer.get_vocabulary",
+                "keras_nlp.tokenizers.BytePairTokenizer.vocabulary_size",
+                "keras_nlp.tokenizers.BytePairTokenizer.token_to_id",
+                "keras_nlp.tokenizers.BytePairTokenizer.id_to_token",
+            ],
+        },
         {
             "path": "byte_tokenizer",
             "title": "ByteTokenizer",
