@@ -430,14 +430,6 @@ train_ds_with_no_labels = train_ds.map(lambda x, _: x)
 feature_space.adapt(train_ds_with_no_labels)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /home/fchollet/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 At this point, the `FeatureSpace` can be called on a dict of raw feature values, and will return a
 single concatenate vector for each sample, combining encoded features and feature crosses.
 
