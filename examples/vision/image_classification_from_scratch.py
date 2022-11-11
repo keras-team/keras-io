@@ -2,7 +2,7 @@
 Title: Image classification from scratch
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/27
-Last modified: 2020/04/28
+Last modified: 2022/11/10
 Description: Training an image classifier from scratch on the Kaggle Cats vs Dogs dataset.
 """
 """
@@ -298,7 +298,8 @@ model.fit(
 )
 
 """
-We get to ~96% validation accuracy after training for 25 epochs on the full dataset.
+We get to >90% validation accuracy after training for 25 epochs on the full dataset
+(in practice, you can train for 50+ epochs before validation performance starts degrading).
 """
 
 """
