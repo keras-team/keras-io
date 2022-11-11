@@ -295,7 +295,7 @@ do inference with an end-to-end model that includes the `FeatureSpace`.
 """
 
 """
-Let's create a training and validation dataset of preprocessed batches: 
+Let's create a training and validation dataset of preprocessed batches:
 """
 
 preprocessed_train_ds = train_ds.map(
