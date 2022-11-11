@@ -167,13 +167,10 @@ feature_space = FeatureSpace(
         "restecg": "integer_categorical",
         "exang": "integer_categorical",
         "ca": "integer_categorical",
-
         # Categorical feature encoded as string
         "thal": "string_categorical",
-
         # Numerical features to normalize
         "age": "float_discretized",
-
         # Numerical features to normalize
         "trestbps": "float_normalized",
         "chol": "float_normalized",
@@ -222,13 +219,10 @@ feature_space = FeatureSpace(
         "restecg": FeatureSpace.integer_categorical(num_oov_indices=0),
         "exang": FeatureSpace.integer_categorical(num_oov_indices=0),
         "ca": FeatureSpace.integer_categorical(num_oov_indices=0),
-
         # Categorical feature encoded as string
         "thal": FeatureSpace.string_categorical(num_oov_indices=0),
-
         # Numerical features to normalize
         "age": FeatureSpace.float_discretized(num_bins=30),
-
         # Numerical features to normalize
         "trestbps": FeatureSpace.float_normalized(),
         "chol": FeatureSpace.float_normalized(),
@@ -238,9 +232,7 @@ feature_space = FeatureSpace(
     },
     # Specify feature cross with a custom crossing dim.
     crosses=[
-        FeatureSpace.cross(
-            feature_names=("sex", "age"),
-            crossing_dim=64),
+        FeatureSpace.cross(feature_names=("sex", "age"), crossing_dim=64),
         FeatureSpace.cross(
             feature_names=("thal", "ca"),
             crossing_dim=16,
@@ -306,10 +298,14 @@ do inference with an end-to-end model that includes the `FeatureSpace`.
 Let's create a training and validation dataset of preprocessed batches: 
 """
 
-preprocessed_train_ds = train_ds.map(lambda x, y: (feature_space(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+preprocessed_train_ds = train_ds.map(
+    lambda x, y: (feature_space(x), y), num_parallel_calls=tf.data.AUTOTUNE
+)
 preprocessed_train_ds = preprocessed_train_ds.prefetch(tf.data.AUTOTUNE)
 
-preprocessed_val_ds = val_ds.map(lambda x, y: (feature_space(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+preprocessed_val_ds = val_ds.map(
+    lambda x, y: (feature_space(x), y), num_parallel_calls=tf.data.AUTOTUNE
+)
 preprocessed_val_ds = preprocessed_val_ds.prefetch(tf.data.AUTOTUNE)
 
 """
@@ -329,7 +325,9 @@ x = keras.layers.Dropout(0.5)(x)
 predictions = keras.layers.Dense(1, activation="sigmoid")(x)
 
 training_model = keras.Model(inputs=encoded_features, outputs=predictions)
-training_model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+training_model.compile(
+    optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+)
 
 inference_model = keras.Model(inputs=dict_inputs, outputs=predictions)
 
@@ -340,7 +338,9 @@ Let's train our model for 50 epochs. Note that feature preprocessing is happenin
 as part of the tf.data pipeline, not as part of the model.
 """
 
-training_model.fit(preprocessed_train_ds, epochs=20, validation_data=preprocessed_val_ds, verbose=2)
+training_model.fit(
+    preprocessed_train_ds, epochs=20, validation_data=preprocessed_val_ds, verbose=2
+)
 
 """
 We quickly get to 80% validation accuracy.
