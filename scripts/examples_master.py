@@ -110,6 +110,12 @@ EXAMPLES_INFO = {
         "path": "vision/image_classification_from_scratch",
         "on_landing_page": True,
     },
+    "Image classification from scratch 2": {
+        "category": ["Computer Vision", "Image Classification"],
+        "difficulty": "Beginner",
+        "path": "vision/image_classification_from_scratch",
+        "on_landing_page": False,
+    },
     "A walk through latent space with Stable Diffusion": {
         "category": ["Computer Vision", "Image Generation"],
         "difficulty": "Intermediate",
@@ -122,4 +128,9 @@ EXAMPLES_INFO = {
         "path": "nlp/neural_machine_translation_with_keras_nlp",
         "on_landing_page": True,
     }
+}
+
+EXAMPLES_NAV = {
+    "Computer Vision": ["Image Classification", "Image Generation"],
+    "Natural Language Processing": ["Machine Translation"],
 }

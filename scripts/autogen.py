@@ -32,7 +32,7 @@ import requests
 import multiprocessing
 
 from master import MASTER
-from examples_master import EXAMPLES_INFO
+from examples_master import EXAMPLES_INFO, EXAMPLES_NAV
 import tutobooks
 import generate_tf_guides
 
@@ -423,12 +423,48 @@ class KerasIO:
                             Path(self.site_dir) / "img" / "examples" / dir_name / name,
                         )
 
+    def make_examples_nav_index(self):
+        examples_index = []
+        landing_url = self.url + "examples/"
+        relative_landing_url = "/examples/"
+        for parent_category, children_categories in EXAMPLES_NAV.items():
+            children_index = []
+            parent_path = parent_category.lower().replace(" ", "_")
+            parent_url = landing_url + parent_path + "/"
+            relative_parent_url = relative_landing_url + parent_path + "/"
+            for child_category in children_categories:
+                child_path = child_category.lower().replace(" ", "_")
+                url = parent_url + child_path + "/"
+                relative_url = relative_parent_url + child_path + "/"
+                children_index.append({
+                    "title": child_category,
+                    "relative_url": relative_url,
+                    "url": url,
+                    "children": [],
+                })
+            examples_index.append({
+                    "title": parent_category,
+                    "relative_url": parent_url,
+                    "url": relative_parent_url,
+                    "children": children_index,
+                })
+            
+        return {
+            "title": "Code examples",
+            "relative_url": landing_url,
+            "url": relative_landing_url,
+            "children": examples_index,
+        }
+
     def make_nav_index(self):
         max_depth = 3
         path_stack = []
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
             path = entry["path"]
+            if path == "examples/":
+                # Specially handle the example page, because it is not generated from directory structure.
+                return self.make_examples_nav_index()
             if path != "/":
                 path_stack.append(path)
             url = self.url + str(Path(*path_stack)) + "/"
@@ -517,7 +553,7 @@ class KerasIO:
             md_source_path = source_path.with_suffix(".md")
             metadata_path = str(source_path) + "_metadata.json"
 
-        if not path == "examples/":
+        if not path.endswith("/") or not "examples/" in path:
             # Save md source file
             save_file(md_source_path, template)
 
@@ -573,40 +609,53 @@ class KerasIO:
             self.master, Path("")
         )
 
-    def generate_page(self, category_to_examples, path_stack, md_content, title_level=1):
-        toc_content = ""
-        title_prefix = "#" * title_level
-        for category, entry in category_to_examples.items():
-            toc_content += f"{title_prefix} {category}\n"
 
-            if isinstance(entry, list):
-                toc_content += generate_examples_list_md(entry)
-            else:
-                title_prefix += "#"
-                for child_category, child_entry in entry.items():
-                    toc_content += f"{title_prefix} {child_category}\n"
-                    toc_content += generate_examples_list_md(child_entry)
-        
+    def save_example_md_files(self, md_content, toc_content, page_title, path_stack):
         md_content = md_content.replace("{{toc}}", toc_content)
-        md_path = Path(self.md_sources_dir) / Path(*path_stack)
-        if not os.path.exists(md_path):
-            os.makedirs(md_path)
+        # Lower case and replace space with underscore for `path_stack`.
+        path_stack = [s.lower().replace(" ", "_") for s in path_stack]
+        save_dir = Path(self.md_sources_dir) / Path(*path_stack)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
         metadata = json.dumps(
             {
                 "location_history": [],
                 "outline": make_outline(md_content),
-                "location": "/examples",
-                "url": self.url + "/examples/",
-                "title": "Code examples",
+                "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
+                "url": self.url + str(Path(*path_stack)) + "/",
+                "title": page_title,
             }
         )
 
-        md_file_path = md_path / "index.md"
-        metadata_file_path = md_path / "index_metadata.json"
+        md_file_path = save_dir / "index.md"
+        metadata_file_path = save_dir / "index_metadata.json"
 
         save_file(md_file_path, md_content)
         save_file(metadata_file_path, metadata)
+    
+
+    def generate_page(self, page_title, category_to_examples, path_stack, md_content):
+        url = generate_example_page_url(path_stack)
+        toc_content = f"# [{page_title}]({url})\n"
+    
+        if isinstance(category_to_examples, list):
+            toc_content += generate_examples_list_md(category_to_examples, path_stack, is_landing_page=False)
+            self.save_example_md_files(md_content, toc_content, page_title, path_stack)
+            toc_content_to_return = f"# [{page_title}]({url})\n"
+            toc_content_to_return += generate_examples_list_md(category_to_examples, path_stack, is_landing_page=True)
+            return toc_content_to_return
+
+        for category, entry in category_to_examples.items():
+            child_toc_content = self.generate_page(category, entry, path_stack + [category], "{{toc}}")
+            # Correct the title level.
+            child_toc_content = re.sub(r"(#+)", r"\1#", child_toc_content)
+            toc_content += child_toc_content
+        self.save_example_md_files(md_content, toc_content, page_title, path_stack)     
+        return toc_content       
+                
+        
+       
 
     def generate_examples_page(self):
 
@@ -635,43 +684,7 @@ class KerasIO:
         landing_page_file = open("../templates/examples/index.md", encoding="utf8")
         landing_page_md = landing_page_file.read()
         landing_page_file.close()
-        self.generate_page(category_to_examples, ["examples"], landing_page_md, title_level=2)
-
-        for category, entry in category_to_examples.items():
-            if isinstance(entry)
-
-        toc_content = ""
-        for category, entry in category_to_examples.items():
-            toc_content += f"## {category}\n"
-
-            if isinstance(entry, list):
-                toc_content += generate_examples_list_md(entry)
-            else:
-                for child_category, child_entry in entry.items():
-                    toc_content += f"### {child_category}\n"
-                    toc_content += generate_examples_list_md(child_entry)
-        
-        landing_page_md = landing_page_md.replace("{{toc}}", toc_content)
-        landing_page_path = Path(self.md_sources_dir) / Path("examples")
-        if not os.path.exists(landing_page_path):
-            os.makedirs(landing_page_path)
-
-        metadata = json.dumps(
-            {
-                "location_history": [],
-                "outline": make_outline(landing_page_md),
-                "location": "/examples",
-                "url": self.url + "/examples/",
-                "title": "Code examples",
-            }
-        )
-
-        md_file_path = landing_page_path / "index.md"
-        metadata_file_path = landing_page_path / "index_metadata.json"
-
-        save_file(md_file_path, landing_page_md)
-        save_file(metadata_file_path, metadata)
-        
+        self.generate_page("Code Examples", category_to_examples, ["examples"], landing_page_md)
 
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
@@ -1045,14 +1058,25 @@ def turn_title_into_id(title):
     title = title.replace(" ", "-")
     return title
 
-def generate_examples_list_md(examples_list):
+def generate_example_page_url(path_stack):
+        path_stack = [s.lower().replace(" ", "_") for s in path_stack]
+        return "/" + str(Path(*path_stack)) + "/"
+
+def generate_examples_list_md(examples_list, path_stack, is_landing_page):
     md_content = ""
     for example_name in examples_list: 
         example_properties = EXAMPLES_INFO[example_name]
+        # On landing page, we only show selected samples.
+        if is_landing_page and not example_properties["on_landing_page"]:
+            continue
         example_path = example_properties["path"]
         example_url = f"{example_path}"
         example_item = f"- [{example_name}]({example_url})\n"
         md_content += example_item
+    if is_landing_page:
+        path_stack = [path.lower().replace(" ", "_") for path in path_stack]
+        url = generate_example_page_url(path_stack)
+        md_content += f"- [More examples...]({url})\n"
     return md_content
 
 def generate_md_toc(entries, url, depth=2):
