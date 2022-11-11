@@ -320,7 +320,7 @@ epochs = 20
 
 shallow_mlp_model = make_model()
 shallow_mlp_model.compile(
-    loss="binary_crossentropy", optimizer="adam", metrics=["categorical_accuracy"]
+    loss="binary_crossentropy", optimizer="adam", metrics=["binary_accuracy"]
 )
 
 history = shallow_mlp_model.fit(
@@ -340,7 +340,7 @@ def plot_result(item):
 
 
 plot_result("loss")
-plot_result("categorical_accuracy")
+plot_result("binary_accuracy")
 
 """
 While training, we notice an initial sharp fall in the loss followed by a gradual decay.
@@ -350,11 +350,11 @@ While training, we notice an initial sharp fall in the loss followed by a gradua
 ### Evaluate the model
 """
 
-_, categorical_acc = shallow_mlp_model.evaluate(test_dataset)
-print(f"Categorical accuracy on the test set: {round(categorical_acc * 100, 2)}%.")
+_, binary_acc = shallow_mlp_model.evaluate(test_dataset)
+print(f"Categorical accuracy on the test set: {round(binary_acc * 100, 2)}%.")
 
 """
-The trained model gives us an evaluation accuracy of ~87%.
+The trained model gives us an evaluation accuracy of ~99%.
 """
 
 """
