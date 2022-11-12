@@ -71,8 +71,8 @@ def build_model(hp):
         for i in range(hp.Int("mlp_layers", 1, 3)):
             # Number of units of each layer are
             # different hyperparameters with different names.
-            output_node = layers.Dense(
-                units=hp.Int(f"units_{i}", 32, 128, step=32),
+            x = layers.Dense(
+                units=hp.Int(f"units_{i}", 32, 128, step=32), 
                 activation="relu",
             )(x)
     else:
