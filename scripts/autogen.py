@@ -30,10 +30,10 @@ import jinja2
 import markdown
 import requests
 import multiprocessing
+import autogen_utils
+import generate_example_pages
 
 from master import MASTER
-from autogen_utils import make_outline, save_file, turn_title_into_id
-from generate_example_pages import generate_all_examples_page, make_examples_nav_index
 import tutobooks
 import generate_tf_guides
 
@@ -114,7 +114,7 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
-        generate_all_examples_page(self.md_sources_dir, self.url)
+        generate_example_pages.generate_all_examples_page(self.md_sources_dir, self.url)
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
 
         self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
@@ -134,7 +134,7 @@ class KerasIO:
         md = open(fpath).read()
         assert "{{sig_readme}}" in md
         md = md.replace("{{sig_readme}}", content)
-        save_file(fpath, md)
+        autogen_utils.save_file(fpath, md)
 
     def preprocess_tutobook_md_source(
         self, md_content, fname, github_repo_dir, img_dir, site_img_dir
@@ -432,7 +432,7 @@ class KerasIO:
             path = entry["path"]
             if path == "examples/":
                 # Specially handle the example page, because it is not generated from directory structure.
-                return make_examples_nav_index(self.url)
+                return generate_example_pages.make_examples_nav_index(self.url)
             if path != "/":
                 path_stack.append(path)
             url = self.url + str(Path(*path_stack)) + "/"
@@ -524,7 +524,7 @@ class KerasIO:
         if not path.endswith("/") or not "examples/" in path_stack:
             # Example page takes a different flow, so we don't save md for it.
             # Save md source file
-            save_file(md_source_path, template)
+            autogen_utils.save_file(md_source_path, template)
 
             # Save metadata file
             location_history = []
@@ -540,7 +540,7 @@ class KerasIO:
             metadata = json.dumps(
                 {
                     "location_history": location_history[:-1],
-                    "outline": make_outline(template)
+                    "outline": autogen_utils.make_outline(template)
                     if entry.get("outline", True)
                     else [],
                     "location": "/"
@@ -549,7 +549,7 @@ class KerasIO:
                     "title": entry["title"],
                 }
             )
-            save_file(metadata_path, metadata)
+            autogen_utils.save_file(metadata_path, metadata)
 
         if children:
             for entry in children:
@@ -630,7 +630,7 @@ class KerasIO:
             open(Path(self.theme_dir) / "landing.html").read()
         )
         landing_page = landing_template.render({"base_url": self.url})
-        save_file(Path(self.site_dir) / "index.html", landing_page)
+        autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
 
         # Search page
         search_main = open(Path(self.theme_dir) / "search.html").read()
@@ -642,7 +642,7 @@ class KerasIO:
                 "main": search_main,
             }
         )
-        save_file(Path(self.site_dir) / "search.html", search_page)
+        autogen_utils.save_file(Path(self.site_dir) / "search.html", search_page)
 
         # 404 page
         page404 = base_template.render(
@@ -659,7 +659,7 @@ class KerasIO:
                 ),
             }
         )
-        save_file(Path(self.site_dir) / "404.html", page404)
+        autogen_utils.save_file(Path(self.site_dir) / "404.html", page404)
 
         # Favicon
         shutil.copyfile(
@@ -669,7 +669,7 @@ class KerasIO:
         # Tutobooks
         self.sync_tutobook_media()
         sitemap = "\n".join(all_urls_list) + "\n"
-        save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
+        autogen_utils.save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
         # Redirects
         # shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
@@ -791,7 +791,7 @@ class KerasIO:
             }
         )
         html_page = html_page.replace("../guides/img/", "/img/guides/")
-        save_file(target_path, html_page)
+        autogen_utils.save_file(target_path, html_page)
         return relative_url
 
     def make(self):
@@ -896,7 +896,7 @@ def insert_title_ids_in_html(html):
         if ">" in normalized_title:
             normalized_title = normalized_title[normalized_title.find(">") + 1 :]
             normalized_title = normalized_title[: normalized_title.find("</")]
-        normalized_title = turn_title_into_id(normalized_title)
+        normalized_title = autogen_utils.turn_title_into_id(normalized_title)
         html = html.replace(marker + title + marker_end, normalized_title)
     return html
 

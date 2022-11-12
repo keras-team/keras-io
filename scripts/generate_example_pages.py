@@ -3,42 +3,18 @@ import os
 import re
 from pathlib import Path
 
-from autogen_utils import make_outline, save_file
+import autogen_utils
+
 from examples_master import EXAMPLES_INFO
-
-
-def parse_examples():
-    # Helper method to parse EXAMPLE_INFO into the format
-    # `{category: {sub_category: example_data}}.``
-    def add_key_val(key, val, dictionary):
-        if key in dictionary:
-            dictionary[key].append(val)
-        else:
-            dictionary[key] = [val]
-
-    category_to_examples = {}
-    for example_name, val in EXAMPLES_INFO.items():
-        categories = val["category"]
-        # Category has at most 2 levels.
-        if len(categories) == 1:
-            add_key_val(categories[0], example_name, category_to_examples)
-        elif len(categories) == 2:
-            if categories[0] in category_to_examples:
-                dictionary = category_to_examples[categories[0]]
-                add_key_val(categories[1], example_name, dictionary)
-            else:
-                category_to_examples[categories[0]] = {
-                    categories[1]: [example_name],
-                }
-    return category_to_examples
 
 
 def make_examples_nav_index(base_url):
     # Makes the navbar index for example pages.
-    category_to_examples = parse_examples()
+    category_to_examples = EXAMPLES_INFO
     examples_nav = []
     for parent_category, entry in category_to_examples.items():
-        if isinstance(entry, list):
+        sample_value = next(iter(category_to_examples.values()))
+        if "path" in sample_value:
             child_categories = []
         else:
             child_categories = list(entry.keys())
@@ -105,7 +81,7 @@ def save_example_md_files(
         os.makedirs(save_dir)
 
     location_history = []
-    for i in range(len(path_stack)):
+    for i in range(len(path_stack) - 1):
         location_history.append(
             {
                 "url": generate_example_page_url(path_stack[: i + 1]),
@@ -116,7 +92,7 @@ def save_example_md_files(
     metadata = json.dumps(
         {
             "location_history": location_history,
-            "outline": make_outline(md_content),
+            "outline": autogen_utils.make_outline(md_content),
             "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
             "url": base_url + str(Path(*path_stack)) + "/",
             "title": page_title,
@@ -126,8 +102,8 @@ def save_example_md_files(
     md_file_path = save_dir / "index.md"
     metadata_file_path = save_dir / "index_metadata.json"
 
-    save_file(md_file_path, md_content)
-    save_file(metadata_file_path, metadata)
+    autogen_utils.save_file(md_file_path, md_content)
+    autogen_utils.save_file(metadata_file_path, metadata)
 
 
 def generate_example_page(
@@ -142,7 +118,8 @@ def generate_example_page(
     url = generate_example_page_url(path_stack)
     toc_content = f"# [{page_title}]({url})\n"
 
-    if isinstance(category_to_examples, list):
+    sample_value = next(iter(category_to_examples.values()))
+    if "path" in sample_value:
         toc_content += generate_examples_list_md(
             category_to_examples, path_stack, is_landing_page=False
         )
@@ -178,11 +155,10 @@ def generate_example_page(
     return toc_content
 
 
-def generate_examples_list_md(examples_list, path_stack, is_landing_page):
+def generate_examples_list_md(examples_dict, path_stack, is_landing_page):
     # Helper method to generate a markdown list from example list.
     md_content = ""
-    for example_name in examples_list:
-        example_properties = EXAMPLES_INFO[example_name]
+    for example_name, example_properties in examples_dict.items():
         # On landing page, we only show selected samples.
         if is_landing_page and not example_properties["on_landing_page"]:
             continue
@@ -198,8 +174,7 @@ def generate_examples_list_md(examples_list, path_stack, is_landing_page):
 
 
 def generate_all_examples_page(base_md_source_dir, base_url):
-    # Generate all example pages, from the landing page "/examples/".
-    category_to_examples = parse_examples()
+    category_to_examples = EXAMPLES_INFO
 
     # Generate the landing page and children pages.
     landing_page_file = open("../templates/examples/index.md", encoding="utf8")
