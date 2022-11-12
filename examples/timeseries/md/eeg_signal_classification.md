@@ -6,7 +6,7 @@
 **Description:** Training a Convolutional model to classify EEG signals produced by exposure to certain stimuli.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/timeseries/ipynb/eeg_signal.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/timeseries/eeg_signal.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/timeseries/ipynb/eeg_signal_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/timeseries/eeg_signal_classification.py)
 
 
 
@@ -51,7 +51,6 @@ First, lets install our dependencies:
 !pip install matplotlib -q
 ```
 
-</div>
 Next, lets download our dataset.
 The gdown package makes it easy to download the data from Google Drive:
 
@@ -127,26 +126,6 @@ eeg.head()
 ```
 
 
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-<div class="k-default-codeblock">
-```
-.dataframe tbody tr th {
-    vertical-align: top;
-}
-
-.dataframe thead th {
-    text-align: right;
-}
-```
-</div>
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -201,8 +180,6 @@ eeg.head()
     </tr>
   </tbody>
 </table>
-</div>
-
 
 
 In the data, the samples recorded are given a score from 0 to 128 based on how
@@ -230,24 +207,7 @@ eeg.head()
 
 ```
 </div>
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-<div class="k-default-codeblock">
-```
-.dataframe tbody tr th {
-    vertical-align: top;
-}
-
-.dataframe thead th {
-    text-align: right;
-}
-```
-</div>
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -302,8 +262,6 @@ eeg.head()
     </tr>
   </tbody>
 </table>
-</div>
-
 
 
 ---
@@ -327,7 +285,7 @@ view_eeg_plot(7)
 
 
     
-![png](/img/examples/timeseries/eeg_signal/eeg_signal_15_0.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_15_0.png)
     
 
 
@@ -491,7 +449,7 @@ plt.show()
 
 
     
-![png](/img/examples/timeseries/eeg_signal/eeg_signal_22_0.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_22_0.png)
     
 
 
@@ -900,7 +858,7 @@ plot_history_metrics(conv_model_history)
 
 
     
-![png](/img/examples/timeseries/eeg_signal/eeg_signal_48_0.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_48_0.png)
     
 
 
@@ -965,6 +923,6 @@ Recall : 0.032797858119010925
 ```
 </div>
     
-![png](/img/examples/timeseries/eeg_signal/eeg_signal_50_1.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_50_1.png)
     
 
