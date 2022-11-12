@@ -6,7 +6,7 @@
 **Description:** Training a Convolutional model to classify EEG signals produced by exposure to certain stimuli.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/audio/ipynb/eeg_signal.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/audio/eeg_signal.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/timeseries/ipynb/eeg_signal.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/timeseries/eeg_signal.py)
 
 
 
@@ -327,7 +327,7 @@ view_eeg_plot(7)
 
 
     
-![png](/img/examples/audio/eeg_signal/eeg_signal_15_0.png)
+![png](/img/examples/timeseries/eeg_signal/eeg_signal_15_0.png)
     
 
 
@@ -491,7 +491,7 @@ plt.show()
 
 
     
-![png](/img/examples/audio/eeg_signal/eeg_signal_22_0.png)
+![png](/img/examples/timeseries/eeg_signal/eeg_signal_22_0.png)
     
 
 
@@ -900,7 +900,7 @@ plot_history_metrics(conv_model_history)
 
 
     
-![png](/img/examples/audio/eeg_signal/eeg_signal_48_0.png)
+![png](/img/examples/timeseries/eeg_signal/eeg_signal_48_0.png)
     
 
 
@@ -965,6 +965,6 @@ Recall : 0.032797858119010925
 ```
 </div>
     
-![png](/img/examples/audio/eeg_signal/eeg_signal_50_1.png)
+![png](/img/examples/timeseries/eeg_signal/eeg_signal_50_1.png)
     
 
