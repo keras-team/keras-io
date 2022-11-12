@@ -299,8 +299,8 @@ class KerasIO:
 
     @staticmethod
     def disable_warnings():
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-        os.environ['AUTOGRAPH_VERBOSITY'] = '0'
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+        os.environ["AUTOGRAPH_VERBOSITY"] = "0"
 
     def make_tutobook_sources(self, guides=True, examples=True):
         """Populate `examples/nlp/md`, `examples/nlp/img/`, etc.
@@ -641,7 +641,9 @@ class KerasIO:
         save_file(Path(self.site_dir) / "404.html", page404)
 
         # Favicon
-        shutil.copyfile(Path(self.theme_dir) / "favicon.ico", Path(self.site_dir) / "favicon.ico")
+        shutil.copyfile(
+            Path(self.theme_dir) / "favicon.ico", Path(self.site_dir) / "favicon.ico"
+        )
 
         # Tutobooks
         self.sync_tutobook_media()
@@ -649,7 +651,7 @@ class KerasIO:
         save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
         # Redirects
-        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
+        # shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
 
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):
@@ -713,7 +715,7 @@ class KerasIO:
                     symbol_parts = symbol.split(".")
                     if len(symbol_parts) >= 3 and symbol_parts[-2][0].isupper():
                         # In this case the link should look like ".../class#method"
-                        path = '/'.join(symbol_parts[:-1]) + '#' + symbol_parts[-1]
+                        path = "/".join(symbol_parts[:-1]) + "#" + symbol_parts[-1]
                     else:
                         # Otherwise just ".../module/class_or_fn"
                         path = symbol.replace(".", "/")
