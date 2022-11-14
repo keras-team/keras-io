@@ -724,13 +724,17 @@ EXAMPLES_INFO = {
                 "path": "/examples/structured_data/structured_data_classification_from_scratch/",
                 "on_landing_page": True
             },
+            "Structured data classification with FeatureSpace": {
+                "path": "/examples/structured_data/structured_data_classification_with_feature_space/",
+                "on_landing_page": True
+            },
             "Imbalanced classification: credit card fraud detection": {
                 "path": "/examples/structured_data/imbalanced_classification/",
                 "on_landing_page": True
             },
             "Structured data learning with Wide, Deep, and Cross networks": {
                 "path": "/examples/structured_data/wide_deep_cross_networks/",
-                "on_landing_page": True
+                "on_landing_page": False
             },
             "Probabilistic Bayesian Neural Networks": {
                 "path": "/examples/keras_recipes/bayesian_neural_networks/",
@@ -787,6 +791,10 @@ EXAMPLES_INFO = {
         },
         "Timeseries forecasting for weather prediction": {
             "path": "/examples/timeseries/timeseries_weather_forecasting/",
+            "on_landing_page": False
+        },
+        "Electroencephalogram Signal Classification for action identification": {
+            "path": "/examples/timeseries/eeg_singal_classifiction/",
             "on_landing_page": False
         }
     }
