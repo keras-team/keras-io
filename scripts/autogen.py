@@ -30,6 +30,8 @@ import jinja2
 import markdown
 import requests
 import multiprocessing
+import autogen_utils
+import generate_example_pages
 
 from master import MASTER
 import tutobooks
@@ -112,7 +114,9 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
+        generate_example_pages.generate_all_examples_page(self.md_sources_dir, self.url)
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
+
         self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
 
     def sync_external_readmes_to_sources(self):
@@ -130,7 +134,7 @@ class KerasIO:
         md = open(fpath).read()
         assert "{{sig_readme}}" in md
         md = md.replace("{{sig_readme}}", content)
-        save_file(fpath, md)
+        autogen_utils.save_file(fpath, md)
 
     def preprocess_tutobook_md_source(
         self, md_content, fname, github_repo_dir, img_dir, site_img_dir
@@ -426,6 +430,9 @@ class KerasIO:
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
             path = entry["path"]
+            if path == "examples/":
+                # Specially handle the example page, because it is not generated from directory structure.
+                return generate_example_pages.make_examples_nav_index(self.url)
             if path != "/":
                 path_stack.append(path)
             url = self.url + str(Path(*path_stack)) + "/"
@@ -514,30 +521,35 @@ class KerasIO:
             md_source_path = source_path.with_suffix(".md")
             metadata_path = str(source_path) + "_metadata.json"
 
-        # Save md source file
-        save_file(md_source_path, template)
+        if not path.endswith("/") or not "examples/" in path_stack:
+            # Example page takes a different flow, so we don't save md for it.
+            # Save md source file
+            autogen_utils.save_file(md_source_path, template)
 
-        # Save metadata file
-        location_history = []
-        for i in range(len(path_stack)):
-            stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
-            url = self.url + "/".join(stripped_path_stack)
-            location_history.append(
+            # Save metadata file
+            location_history = []
+            for i in range(len(path_stack)):
+                stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
+                url = self.url + "/".join(stripped_path_stack)
+                location_history.append(
+                    {
+                        "url": url,
+                        "title": title_stack[i],
+                    }
+                )
+            metadata = json.dumps(
                 {
-                    "url": url,
-                    "title": title_stack[i],
+                    "location_history": location_history[:-1],
+                    "outline": autogen_utils.make_outline(template)
+                    if entry.get("outline", True)
+                    else [],
+                    "location": "/"
+                    + "/".join([s.replace("/", "") for s in path_stack]),
+                    "url": parent_url,
+                    "title": entry["title"],
                 }
             )
-        metadata = json.dumps(
-            {
-                "location_history": location_history[:-1],
-                "outline": make_outline(template) if entry.get("outline", True) else [],
-                "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
-                "url": parent_url,
-                "title": entry["title"],
-            }
-        )
-        save_file(metadata_path, metadata)
+            autogen_utils.save_file(metadata_path, metadata)
 
         if children:
             for entry in children:
@@ -568,6 +580,15 @@ class KerasIO:
         self._map_of_symbol_names_to_api_urls = recursive_make_map(
             self.master, Path("")
         )
+
+    def generate_examples_page(self):
+        category_to_examples = self.parse_examples()
+
+        # Generate the landing page.
+        landing_page_file = open("../templates/examples/index.md", encoding="utf8")
+        landing_page_md = landing_page_file.read()
+        landing_page_file.close()
+        self.generate_page("", category_to_examples, ["examples"], landing_page_md)
 
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
@@ -609,7 +630,7 @@ class KerasIO:
             open(Path(self.theme_dir) / "landing.html").read()
         )
         landing_page = landing_template.render({"base_url": self.url})
-        save_file(Path(self.site_dir) / "index.html", landing_page)
+        autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
 
         # Search page
         search_main = open(Path(self.theme_dir) / "search.html").read()
@@ -621,7 +642,7 @@ class KerasIO:
                 "main": search_main,
             }
         )
-        save_file(Path(self.site_dir) / "search.html", search_page)
+        autogen_utils.save_file(Path(self.site_dir) / "search.html", search_page)
 
         # 404 page
         page404 = base_template.render(
@@ -638,7 +659,7 @@ class KerasIO:
                 ),
             }
         )
-        save_file(Path(self.site_dir) / "404.html", page404)
+        autogen_utils.save_file(Path(self.site_dir) / "404.html", page404)
 
         # Favicon
         shutil.copyfile(
@@ -648,7 +669,7 @@ class KerasIO:
         # Tutobooks
         self.sync_tutobook_media()
         sitemap = "\n".join(all_urls_list) + "\n"
-        save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
+        autogen_utils.save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
         # Redirects
         # shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
@@ -749,6 +770,9 @@ class KerasIO:
         local_nav = [set_active_flag_in_nav_entry(entry, relative_url) for entry in nav]
 
         title = md_content[2 : md_content.find("\n")]
+        if title[0] == "[":
+            # If the title comes as a markdown link, we extract out the content.
+            title = title[1 : title.find("]")]
         html_docs = docs_template.render(
             {
                 "title": title,
@@ -767,7 +791,7 @@ class KerasIO:
             }
         )
         html_page = html_page.replace("../guides/img/", "/img/guides/")
-        save_file(target_path, html_page)
+        autogen_utils.save_file(target_path, html_page)
         return relative_url
 
     def make(self):
@@ -800,12 +824,6 @@ class KerasIO:
             server.server_close()
 
 
-def save_file(path, content):
-    f = open(path, "w", encoding="utf8")
-    f.write(content)
-    f.close()
-
-
 def set_active_flag_in_nav_entry(entry, relative_url):
     entry = copy.copy(entry)
     if relative_url.startswith(entry["relative_url"]):
@@ -832,12 +850,6 @@ def replace_links(content):
     return content
 
 
-def process_outline_title(title):
-    title = re.sub(r"`(.*?)`", r"<code>\1</code>", title)
-    title = re.sub(r"\[(.*?)\]\(.*?\)", r"\1", title)
-    return title
-
-
 def strip_markdown_tags(md):
     # Strip links
     md = re.sub(r"\[(.*?)\]\(.*?\)", r"\1", md)
@@ -852,48 +864,6 @@ def copy_inner_contents(src, dst, ext=".md"):
             shutil.copyfile(fpath, fdst)
         if os.path.isdir(fpath):
             copy_inner_contents(fpath, fdst, ext)
-
-
-def make_outline(md_source):
-    lines = md_source.split("\n")
-    outline = []
-    in_code_block = False
-    for line in lines:
-        if line.startswith("```"):
-            in_code_block = not in_code_block
-        if in_code_block:
-            continue
-        if line.startswith("# "):
-            title = line[2:]
-            title = process_outline_title(title)
-            outline.append(
-                {
-                    "title": title,
-                    "url": "#" + turn_title_into_id(title),
-                    "depth": 1,
-                }
-            )
-        if line.startswith("## "):
-            title = line[3:]
-            title = process_outline_title(title)
-            outline.append(
-                {
-                    "title": title,
-                    "url": "#" + turn_title_into_id(title),
-                    "depth": 2,
-                }
-            )
-        if line.startswith("### "):
-            title = line[4:]
-            title = process_outline_title(title)
-            outline.append(
-                {
-                    "title": title,
-                    "url": "#" + turn_title_into_id(title),
-                    "depth": 3,
-                }
-            )
-    return outline
 
 
 def insert_title_ids_in_html(html):
@@ -926,20 +896,9 @@ def insert_title_ids_in_html(html):
         if ">" in normalized_title:
             normalized_title = normalized_title[normalized_title.find(">") + 1 :]
             normalized_title = normalized_title[: normalized_title.find("</")]
-        normalized_title = turn_title_into_id(normalized_title)
+        normalized_title = autogen_utils.turn_title_into_id(normalized_title)
         html = html.replace(marker + title + marker_end, normalized_title)
     return html
-
-
-def turn_title_into_id(title):
-    title = title.lower()
-    title = title.replace("&amp", "amp")
-    title = title.replace("&", "amp")
-    title = title.replace("<code>", "")
-    title = title.replace("</code>", "")
-    title = title.translate(str.maketrans("", "", string.punctuation))
-    title = title.replace(" ", "-")
-    return title
 
 
 def generate_md_toc(entries, url, depth=2):

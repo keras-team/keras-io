@@ -96,6 +96,11 @@ blockquote {
   padding-top: 0.45rem;
   padding-bottom: 0.45rem;
 }
+.nav-sublink2 {
+  font-size: 0.8rem;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
 @media screen and (max-width: 1342px) {
   .k-nav {
     width: 17rem;
@@ -157,6 +162,11 @@ blockquote {
     font-size: 1.1rem;
   }
   .nav-sublink {
+    font-size: 1rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+  }
+  .nav-sublink2 {
     font-size: 1rem;
     padding-top: 0.6rem;
     padding-bottom: 0.6rem;
@@ -251,6 +261,11 @@ blockquote {
   background-color: #d00000;
   color: white;
 }
+.nav-pills .nav-sublink2.active {
+  background-color: #e56112;
+  color: white;
+}
+
 .nav-pills .nav-link {
   border-radius: 0;
   border-top: 1px solid #ddd;
@@ -259,6 +274,13 @@ blockquote {
 }
 .nav-pills .nav-sublink {
   padding-left: 1.5rem;
+  padding-right: 0.8rem;
+  background-color: white;
+  color: black;
+  text-decoration: none;
+}
+.nav-pills .nav-sublink2 {
+  padding-left: 1.7rem;
   padding-right: 0.8rem;
   background-color: white;
   color: black;
@@ -273,11 +295,13 @@ blockquote {
   background-color: #222;
   color: white;
 }
-.nav-pills .nav-sublink.active:hover {
+.nav-pills .nav-sublink.active:hover,  
+.nav-pills .nav-sublink2.active:hover{
   background-color: #f42424;
   color: white;
 }
-.nav-sublink:hover {
+.nav-sublink:hover, 
+.nav-sublink2:hover {
   background-color: #eee;
   color: black;
 }
