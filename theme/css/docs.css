@@ -262,7 +262,7 @@ blockquote {
   color: white;
 }
 .nav-pills .nav-sublink2.active {
-  background-color: #e56112;
+  background-color: #555555;
   color: white;
 }
 
@@ -280,7 +280,7 @@ blockquote {
   text-decoration: none;
 }
 .nav-pills .nav-sublink2 {
-  padding-left: 1.7rem;
+  padding-left: 2.5rem;
   padding-right: 0.8rem;
   background-color: white;
   color: black;

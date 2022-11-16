@@ -31,7 +31,7 @@ import markdown
 import requests
 import multiprocessing
 import autogen_utils
-import generate_example_pages
+import examples_page
 
 from master import MASTER
 import tutobooks
@@ -114,7 +114,7 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
-        generate_example_pages.generate_all_examples_page(self.md_sources_dir, self.url)
+        examples_page.generate_all_examples_page(self.md_sources_dir, self.url)
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
 
         self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
@@ -425,14 +425,14 @@ class KerasIO:
                         )
 
     def make_nav_index(self):
-        max_depth = 3
+        max_depth = 4
         path_stack = []
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
             path = entry["path"]
             if path == "examples/":
                 # Specially handle the example page, because it is not generated from directory structure.
-                return generate_example_pages.make_examples_nav_index(self.url)
+                return examples_page.make_examples_nav_index(self.url)
             if path != "/":
                 path_stack.append(path)
             url = self.url + str(Path(*path_stack)) + "/"
