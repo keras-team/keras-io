@@ -645,6 +645,7 @@ class KerasIO:
         html_content = html_content.replace(
             "<p>{{examples_list}}</p>", html_example_cards
         )
+        html_content = insert_title_ids_in_html(html_content)
 
         relative_url = "/examples/"
         local_nav = [
