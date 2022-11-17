@@ -444,3 +444,21 @@ td {
   padding-bottom: 10px;
   padding-top: 5px;
 }
+
+.example-card {
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  background-color: #efefef40;
+}
+.example-card-title {
+  color: #d00000;
+  text-decoration: none;
+}
+.example-subcategory-title {
+  margin-top: 1rem;
+}
+.example-highlight {
+  float: left;
+  margin-right: 0.5rem;
+}

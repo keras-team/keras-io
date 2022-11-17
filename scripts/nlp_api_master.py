@@ -42,7 +42,7 @@ TOKENIZERS_MASTER = {
                 "keras_nlp.tokenizers.SentencePieceTokenizer.id_to_token",
             ],
         },
-       {
+        {
             "path": "byte_pair_tokenizer",
             "title": "BytePairTokenizer",
             "generate": [

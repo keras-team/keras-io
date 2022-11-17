@@ -72,7 +72,7 @@ def build_model(hp):
             # Number of units of each layer are
             # different hyperparameters with different names.
             x = layers.Dense(
-                units=hp.Int(f"units_{i}", 32, 128, step=32), 
+                units=hp.Int(f"units_{i}", 32, 128, step=32),
                 activation="relu",
             )(x)
     else:

@@ -1,23 +1,299 @@
 EXAMPLES_MASTER = {
     "path": "examples/",
     "title": "Code examples",
-    "toc": True,
+    "toc": False,
     "children": [
         {
             "path": "vision/",
             "title": "Computer Vision",
             "toc": True,
             "children": [
+                # Image classification
                 {
                     "path": "image_classification_from_scratch",
                     "title": "Image classification from scratch",
+                    "subcategory": "Image classification",
+                    "highlight": True,
                 },
-                {"path": "mnist_convnet", "title": "Simple MNIST convnet"},
+                {
+                    "path": "mnist_convnet",
+                    "title": "Simple MNIST convnet",
+                    "subcategory": "Image classification",
+                    "highlight": True,
+                },
+                {
+                    "path": "image_classification_efficientnet_fine_tuning",
+                    "title": "Image classification via fine-tuning with EfficientNet",
+                    "subcategory": "Image classification",
+                    "highlight": True,
+                },
+                {
+                    "path": "image_classification_with_vision_transformer",
+                    "title": "Image classification with Vision Transformer",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "bit",
+                    "title": "Image Classification using BigTransfer (BiT)",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "attention_mil_classification",
+                    "title": "Classification using Attention-based Deep Multiple Instance Learning",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "mlp_image_classification",
+                    "title": "Image classification with modern MLP models",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "mobilevit",
+                    "title": "A mobile-friendly Transformer-based model for image classification",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "xray_classification_with_tpus",
+                    "title": "Pneumonia Classification on TPU",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "cct",
+                    "title": "Compact Convolutional Transformers",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "convmixer",
+                    "title": "Image classification with ConvMixer",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "eanet",
+                    "title": "Image classification with EANet (External Attention Transformer)",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "involution",
+                    "title": "Involutional neural networks",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "perceiver_image_classification",
+                    "title": "Image classification with Perceiver",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "reptile",
+                    "title": "Few-Shot learning with Reptile",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "semisupervised_simclr",
+                    "title": "Semi-supervised image classification using contrastive pretraining with SimCLR",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "swin_transformers",
+                    "title": "Image classification with Swin Transformers",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "vit_small_ds",
+                    "title": "Train a Vision Transformer on small datasets",
+                    "subcategory": "Image classification",
+                },
+                {
+                    "path": "shiftvit",
+                    "title": "A Vision Transformer without Attention",
+                    "subcategory": "Image classification",
+                },
+                # Image segmentation
                 {
                     "path": "oxford_pets_image_segmentation",
                     "title": "Image segmentation with a U-Net-like architecture",
+                    "subcategory": "Image segmentation",
+                    "highlight": True,
                 },
-                # Remainder will be autogenerated
+                {
+                    "path": "deeplabv3_plus",
+                    "title": "Multiclass semantic segmentation using DeepLabV3+",
+                    "subcategory": "Image segmentation",
+                },
+                # Object Detection
+                {
+                    "path": "retinanet",
+                    "title": "Object Detection with RetinaNet",
+                    "subcategory": "Object detection",
+                },
+                {
+                    "path": "keypoint_detection",
+                    "title": "Keypoint Detection with Transfer Learning",
+                    "subcategory": "Object detection",
+                },
+                {
+                    "path": "object_detection_using_vision_transformer",
+                    "title": "Object detection with Vision Transformers",
+                    "subcategory": "Object detection",
+                },
+                # 3D
+                {
+                    "path": "3D_image_classification",
+                    "title": "3D image classification from CT scans",
+                    "subcategory": "3D",
+                },
+                {
+                    "path": "depth_estimation",
+                    "title": "Monocular depth estimation",
+                    "subcategory": "3D",
+                },
+                {
+                    "path": "nerf",
+                    "title": "3D volumetric rendering with NeRF",
+                    "subcategory": "3D",
+                },
+                {
+                    "path": "pointnet",
+                    "title": "Point cloud classification",
+                    "subcategory": "3D",
+                },
+                # OCR
+                {
+                    "path": "captcha_ocr",
+                    "title": "OCR model for reading Captchas",
+                    "subcategory": "OCR",
+                    "highlight": True,
+                },
+                {
+                    "path": "handwriting_recognition",
+                    "title": "Handwriting recognition",
+                    "subcategory": "OCR",
+                },
+                # Image enhancement
+                {
+                    "path": "autoencoder",
+                    "title": "Convolutional autoencoder for image denoising",
+                    "subcategory": "Image enhancement",
+                },
+                {
+                    "path": "mirnet",
+                    "title": "Low-light image enhancement using MIRNet",
+                    "subcategory": "Image enhancement",
+                },
+                {
+                    "path": "super_resolution_sub_pixel",
+                    "title": "Image Super-Resolution using an Efficient Sub-Pixel CNN",
+                    "subcategory": "Image enhancement",
+                },
+                {
+                    "path": "edsr",
+                    "title": "Enhanced Deep Residual Networks for single-image super-resolution",
+                    "subcategory": "Image enhancement",
+                },
+                {
+                    "path": "zero_dce",
+                    "title": "Zero-DCE for low-light image enhancement",
+                    "subcategory": "Image enhancement",
+                },
+                # Data augmentation
+                {
+                    "path": "cutmix",
+                    "title": "CutMix data augmentation for image classification",
+                    "subcategory": "Data augmentation",
+                },
+                {
+                    "path": "mixup",
+                    "title": "MixUp augmentation for image classification",
+                    "subcategory": "Data augmentation",
+                },
+                {
+                    "path": "randaugment",
+                    "title": "RandAugment for Image Classification for Improved Robustness",
+                    "subcategory": "Data augmentation",
+                },
+                # Image & Text
+                {
+                    "path": "image_captioning",
+                    "title": "Image captioning",
+                    "subcategory": "Image & Text",
+                },
+                {
+                    "path": "nl_image_search",
+                    "title": "Natural language image search with a Dual Encoder",
+                    "subcategory": "Image & Text",
+                },
+                # Vision models interpretability
+                {
+                    "path": "visualizing_what_convnets_learn",
+                    "title": "Visualizing what convnets learn",
+                    "subcategory": "Vision models interpretability",
+                },
+                {
+                    "path": "integrated_gradients",
+                    "title": "Model interpretability with Integrated Gradients",
+                    "subcategory": "Vision models interpretability",
+                },
+                {
+                    "path": "probing_vits",
+                    "title": "Investigating Vision Transformer representations",
+                    "subcategory": "Vision models interpretability",
+                },
+                {
+                    "path": "grad_cam",
+                    "title": "Grad-CAM class activation visualization",
+                    "subcategory": "Vision models interpretability",
+                },
+                # Image similarity search
+                {
+                    "path": "near_dup_search",
+                    "title": "Near-duplicate image search",
+                    "subcategory": "Image similarity search",
+                },
+                {
+                    "path": "semantic_image_clustering",
+                    "title": "Semantic Image Clustering",
+                    "subcategory": "Image similarity search",
+                },
+                {
+                    "path": "siamese_contrastive",
+                    "title": "Image similarity estimation using a Siamese Network with a contrastive loss",
+                    "subcategory": "Image similarity search",
+                },
+                {
+                    "path": "siamese_network",
+                    "title": "Image similarity estimation using a Siamese Network with a triplet loss",
+                    "subcategory": "Image similarity search",
+                },
+                {
+                    "path": "metric_learning",
+                    "title": "Metric learning for image similarity search",
+                    "subcategory": "Image similarity search",
+                },
+                {
+                    "path": "metric_learning_tf_similarity",
+                    "title": "Metric learning for image similarity search using TensorFlow Similarity",
+                    "subcategory": "Image similarity search",
+                },
+                # Video
+                {
+                    "path": "video_classification",
+                    "title": "Video Classification with a CNN-RNN Architecture",
+                    "subcategory": "Video",
+                },
+                {
+                    "path": "conv_lstm",
+                    "title": "Next-Frame Video Prediction with Convolutional LSTMs",
+                    "subcategory": "Video",
+                },
+                {
+                    "path": "video_transformers",
+                    "title": "Video Classification with Transformers",
+                    "subcategory": "Video",
+                },
+                {
+                    "path": "vivit",
+                    "title": "Video Vision Transformer",
+                    "subcategory": "Video",
+                },
             ],
         },
         {
@@ -25,11 +301,111 @@ EXAMPLES_MASTER = {
             "title": "Natural Language Processing",
             "toc": True,
             "children": [
+                # Text classification
                 {
                     "path": "text_classification_from_scratch",
                     "title": "Text classification from scratch",
+                    "subcategory": "Text classification",
+                    "highlight": True,
                 },
-                # Remainder will be autogenerated
+                {
+                    "path": "active_learning_review_classification",
+                    "title": "Review Classification using Active Learning",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "fnet_classification_with_keras_nlp",
+                    "title": "Text Classification using FNet",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "multi_label_classification",
+                    "title": "Large-scale multi-label text classification",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "text_classification_with_transformer",
+                    "title": "Text classification with Transformer",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "text_classification_with_switch_transformer",
+                    "title": "Text classification with Switch Transformer",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "tweet-classification-using-tfdf",
+                    "title": "Text classification using Decision Forests and pretrained embeddings",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "pretrained_word_embeddings",
+                    "title": "Using pre-trained word embeddings",
+                    "subcategory": "Text classification",
+                },
+                {
+                    "path": "bidirectional_lstm_imdb",
+                    "title": "Bidirectional LSTM on IMDB",
+                    "subcategory": "Text classification",
+                },
+                # Machine translation
+                {
+                    "path": "neural_machine_translation_with_keras_nlp",
+                    "title": "English-to-Spanish translation with KerasNLP",
+                    "subcategory": "Machine translation",
+                    "highlight": True,
+                },
+                {
+                    "path": "neural_machine_translation_with_transformer",
+                    "title": "English-to-Spanish translation with a sequence-to-sequence Transformer",
+                    "subcategory": "Machine translation",
+                },
+                {
+                    "path": "lstm_seq2seq",
+                    "title": "Character-level recurrent sequence-to-sequence model",
+                    "subcategory": "Machine translation",
+                },
+                # Entailement prediction
+                {
+                    "path": "multimodal_entailment",
+                    "title": "Multimodal entailment",
+                    "subcategory": "Entailment prediction",
+                },
+                # Named entity recognition
+                {
+                    "path": "ner_transformers",
+                    "title": "Named Entity Recognition using Transformers",
+                    "subcategory": "Named entity recognition",
+                },
+                # Sequence-to-sequence
+                {
+                    "path": "text_extraction_with_bert",
+                    "title": "Text Extraction with BERT",
+                    "subcategory": "Sequence-to-sequence",
+                },
+                {
+                    "path": "addition_rnn",
+                    "title": "Sequence to sequence learning for performing number addition",
+                    "subcategory": "Sequence-to-sequence",
+                },
+                # Text similarity search
+                {
+                    "path": "semantic_similarity_with_bert",
+                    "title": "Semantic Similarity with BERT",
+                    "subcategory": "Text similarity search",
+                },
+                # Language modeling
+                {
+                    "path": "masked_language_modeling",
+                    "title": "End-to-end Masked Language Modeling with BERT",
+                    "subcategory": "Language modeling",
+                },
+                {
+                    "path": "pretraining_BERT",
+                    "title": "Pretraining BERT with Hugging Face Transformers",
+                    "subcategory": "Language modeling",
+                },
+                # Remainder is autogenerated
             ],
         },
         {
@@ -38,10 +414,63 @@ EXAMPLES_MASTER = {
             "toc": True,
             "children": [
                 {
+                    "path": "structured_data_classification_with_feature_space",
+                    "title": "Structured data classification with FeatureSpace",
+                    "subcategory": "Structured data classification",
+                    "highlight": True,
+                },
+                {
+                    "path": "imbalanced_classification",
+                    "title": "Imbalanced classification: credit card fraud detection",
+                    "subcategory": "Structured data classification",
+                    "highlight": True,
+                },
+                {
                     "path": "structured_data_classification_from_scratch",
                     "title": "Structured data classification from scratch",
+                    "subcategory": "Structured data classification",
                 },
-                # Remainder will be autogenerated
+                {
+                    "path": "wide_deep_cross_networks",
+                    "title": "Structured data learning with Wide, Deep, and Cross networks",
+                    "subcategory": "Structured data classification",
+                },
+                {
+                    "path": "bayesian_neural_networks",
+                    "title": "Probabilistic Bayesian Neural Networks",
+                    "subcategory": "Structured data classification",
+                },
+                {
+                    "path": "classification_with_grn_and_vsn",
+                    "title": "Classification with Gated Residual and Variable Selection Networks",
+                    "subcategory": "Structured data classification",
+                },
+                {
+                    "path": "classification_with_tfdf",
+                    "title": "Classification with TensorFlow Decision Forests",
+                    "subcategory": "Structured data classification",
+                },
+                {
+                    "path": "deep_neural_decision_forests",
+                    "title": "Classification with Neural Decision Forests",
+                    "subcategory": "Structured data classification",
+                },
+                {
+                    "path": "tabtransformer",
+                    "title": "Structured data learning with TabTransformer",
+                    "subcategory": "Structured data classification",
+                },
+                # Recommendation
+                {
+                    "path": "collaborative_filtering_movielens",
+                    "title": "Collaborative Filtering for Movie Recommendations",
+                    "subcategory": "Recommendation",
+                },
+                {
+                    "path": "movielens_recommendations_transformers",
+                    "title": "A Transformer-based recommendation system",
+                    "subcategory": "Recommendation",
+                },
             ],
         },
         {
@@ -49,7 +478,159 @@ EXAMPLES_MASTER = {
             "title": "Timeseries",
             "toc": True,
             "children": [
-                # Will be autogenerated
+                # Timeseries classification
+                {
+                    "path": "timeseries_classification_from_scratch",
+                    "title": "Timeseries classification from scratch",
+                    "subcategory": "Timeseries classification",
+                    "highlight": True,
+                },
+                {
+                    "path": "timeseries_classification_transformer",
+                    "title": "Timeseries classification with a Transformer model",
+                    "subcategory": "Timeseries classification",
+                },
+                {
+                    "path": "eeg_signal_classification",
+                    "title": "Electroencephalogram Signal Classification for action identification",
+                    "subcategory": "Timeseries classification",
+                },
+                # Anomaly detection
+                {
+                    "path": "timeseries_anomaly_detection",
+                    "title": "Timeseries anomaly detection using an Autoencoder",
+                    "subcategory": "Anomaly detection",
+                },
+                # Timeseries forecasting
+                {
+                    "path": "timeseries_traffic_forecasting",
+                    "title": "Traffic forecasting using graph neural networks and LSTM",
+                    "subcategory": "Timeseries forecasting",
+                },
+                {
+                    "path": "timeseries_weather_forecasting",
+                    "title": "Timeseries forecasting for weather prediction",
+                    "subcategory": "Timeseries forecasting",
+                },
+            ],
+        },
+        {
+            "path": "generative/",
+            "title": "Generative Deep Learning",
+            "toc": True,
+            "children": [
+                # Image generation
+                {
+                    "path": "ddim",
+                    "title": "Denoising Diffusion Implicit Models",
+                    "subcategory": "Image generation",
+                    "highlight": True,
+                },
+                {
+                    "path": "random_walks_with_stable_diffusion",
+                    "title": "A walk through latent space with Stable Diffusion",
+                    "subcategory": "Image generation",
+                    "highlight": True,
+                },
+                {
+                    "path": "vae",
+                    "title": "Variational AutoEncoder",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "dcgan_overriding_train_step",
+                    "title": "GAN overriding Model.train_step",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "wgan_gp",
+                    "title": "WGAN-GP overriding Model.train_step",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "conditional_gan",
+                    "title": "Conditional GAN",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "cyclegan",
+                    "title": "CycleGAN",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "gan_ada",
+                    "title": "Data-efficient GANs with Adaptive Discriminator Augmentation",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "deep_dream",
+                    "title": "Deep Dream",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "gaugan",
+                    "title": "GauGAN for conditional image generation",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "pixelcnn",
+                    "title": "PixelCNN",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "stylegan",
+                    "title": "Face image generation with StyleGAN",
+                    "subcategory": "Image generation",
+                },
+                {
+                    "path": "vq_vae",
+                    "title": "Vector-Quantized Variational Autoencoders",
+                    "subcategory": "Image generation",
+                },
+                # Style transfer
+                {
+                    "path": "neural_style_transfer",
+                    "title": "Neural style transfer",
+                    "subcategory": "Style transfer",
+                },
+                {
+                    "path": "adain",
+                    "title": "Neural Style Transfer with AdaIN",
+                    "subcategory": "Style transfer",
+                },
+                # Text generation
+                {
+                    "path": "text_generation_gpt",
+                    "title": "GPT text generation with KerasNLP",
+                    "subcategory": "Text generation",
+                    "highlight": True,
+                },
+                {
+                    "path": "text_generation_with_miniature_gpt",
+                    "title": "Text generation with a miniature GPT",
+                    "subcategory": "Text generation",
+                },
+                {
+                    "path": "lstm_character_level_text_generation",
+                    "title": "Character-level text generation with LSTM",
+                    "subcategory": "Text generation",
+                },
+                {
+                    "path": "text_generation_fnet",
+                    "title": "Text Generation using FNet",
+                    "subcategory": "Text generation",
+                },
+                # Graph generation
+                {
+                    "path": "molecule_generation",
+                    "title": "Drug Molecule Generation with VAE",
+                    "subcategory": "Graph generation",
+                },
+                {
+                    "path": "wgan-graphs",
+                    "title": "WGAN-GP with R-GCN for the generation of small molecular graphs",
+                    "subcategory": "Graph generation",
+                },
             ],
         },
         {
@@ -58,22 +639,6 @@ EXAMPLES_MASTER = {
             "toc": True,
             "children": [
                 # Will be autogenerated
-            ],
-        },
-        {
-            "path": "generative/",
-            "title": "Generative Deep Learning",
-            "toc": True,
-            "children": [
-                {"path": "vae", "title": "Variational AutoEncoder"},
-                {
-                    "path": "dcgan_overriding_train_step",
-                    "title": "GAN overriding `Model.train_step`",
-                },
-                {"path": "wgan_gp", "title": "WGAN-GP overriding `Model.train_step`"},
-                {"path": "neural_style_transfer", "title": "Neural style transfer"},
-                {"path": "deep_dream", "title": "Deep Dream"},
-                # Remainder will be autogenerated
             ],
         },
         {
@@ -102,701 +667,3 @@ EXAMPLES_MASTER = {
         },
     ],
 }
-
-EXAMPLES_INFO = {
-    "Audio": {
-        "Speaker Recognition": {
-            "path": "/examples/audio/speaker_recognition_using_cnn/",
-            "on_landing_page": True
-        },
-        "Automatic Speech Recognition with Transformer": {
-            "path": "/examples/audio/transformer_asr/",
-            "on_landing_page": True
-        },
-        "Automatic Speech Recognition using CTC": {
-            "path": "/examples/audio/ctc_asr/",
-            "on_landing_page": True
-        },
-        "MelGAN-based spectrogram inversion using feature matching": {
-            "path": "/examples/audio/melgan_spectrogram_inversion/",
-            "on_landing_page": False
-        },
-        "English speaker accent recognition using Transfer Learning": {
-            "path": "/examples/audio/uk_ireland_accent_recognition/",
-            "on_landing_page": False
-        }
-    },
-    "Computer Vision": {
-        "3D": {
-            "Monocular depth estimation": {
-                "path": "/examples/vision/depth_estimation/",
-                "on_landing_page": True
-            },
-            "3D volumetric rendering with NeRF": {
-                "path": "/examples/vision/nerf/",
-                "on_landing_page": True
-            },
-            "Point cloud classification": {
-                "path": "/examples/vision/pointnet/",
-                "on_landing_page": True
-            },
-            "Point cloud segmentation with PointNet": {
-                "path": "/examples/vision/pointnet_segmentation/",
-                "on_landing_page": False
-            }
-        },
-        "Data Augmentation": {
-            "CutMix data augmentation for image classification": {
-                "path": "/examples/vision/cutmix/",
-                "on_landing_page": True
-            },
-            "MixUp augmentation for image classification": {
-                "path": "/examples/vision/mixup/",
-                "on_landing_page": True
-            },
-            "RandAugment for Image Classification for Improved Robustness": {
-                "path": "/examples/vision/randaugment/",
-                "on_landing_page": True
-            }
-        },
-        "Image & Text": {
-            "Image Captioning": {
-                "path": "/examples/vision/image_captioning/",
-                "on_landing_page": True
-            },
-            "Natural language image search with a Dual Encoder": {
-                "path": "/examples/nlp/nl_image_search/",
-                "on_landing_page": True
-            }
-        },
-        "Image Classification": {
-            "Image classification from scratch": {
-                "path": "/examples/vision/image_classification_from_scratch/",
-                "on_landing_page": True
-            },
-            "Simple MNIST convnet": {
-                "path": "/examples/vision/mnist_convnet/",
-                "on_landing_page": True
-            },
-            "Image classification via fine-tuning with EfficientNet": {
-                "path": "/examples/vision/image_classification_efficientnet_fine_tuning/",
-                "on_landing_page": True
-            },
-            "Image classification with Vision Transformer": {
-                "path": "/examples/vision/image_classification_with_vision_transformer/",
-                "on_landing_page": False
-            },
-            "Image Classification using BigTransfer (BiT)": {
-                "path": "/examples/vision/bit/",
-                "on_landing_page": False
-            },
-            "Classification using Attention-based Deep Multiple Instance Learning (MIL).": {
-                "path": "/examples/vision/attention_mil_classification/",
-                "on_landing_page": False
-            },
-            "Image classification with modern MLP models": {
-                "path": "/examples/vision/mlp_image_classification/",
-                "on_landing_page": False
-            },
-            "MobileViT: A mobile-friendly Transformer-based model for image classification": {
-                "path": "/examples/vision/mobilevit/",
-                "on_landing_page": False
-            },
-            "Pneumonia Classification on TPU": {
-                "path": "/examples/vision/xray_classification_with_tpus/",
-                "on_landing_page": False
-            },
-            "3D image classification from CT scans": {
-                "path": "/examples/vision/3D_image_classification/",
-                "on_landing_page": False
-            },
-            "Compact Convolutional Transformers": {
-                "path": "/examples/vision/cct/",
-                "on_landing_page": False
-            },
-            "Image classification with ConvMixer": {
-                "path": "/examples/vision/convmixer/",
-                "on_landing_page": False
-            },
-            "Image classification with EANet (External Attention Transformer": {
-                "path": "/examples/vision/eanet/",
-                "on_landing_page": False
-            },
-            "Involutional neural networks": {
-                "path": "/examples/vision/involution/",
-                "on_landing_page": False
-            },
-            "Image classification with Perceiver": {
-                "path": "/examples/vision/perceiver_image_classification/",
-                "on_landing_page": False
-            },
-            "Few-Shot learning with Reptile": {
-                "path": "/examples/vision/reptile/",
-                "on_landing_page": False
-            },
-            "Semi-supervised image classification using contrastive pretraining with SimCLR": {
-                "path": "/examples/vision/semisupervised_simclr/",
-                "on_landing_page": False
-            },
-            "Image classification with Swin Transformers": {
-                "path": "/examples/vision/swin_transformers/",
-                "on_landing_page": False
-            }
-        },
-        "Image Enhancement": {
-            "Low-light image enhancement using MIRNet": {
-                "path": "/examples/vision/mirnet/",
-                "on_landing_page": True
-            },
-            "Image Super-Resolution using an Efficient Sub-Pixel CNN": {
-                "path": "/examples/vision/super_resolution_sub_pixel/",
-                "on_landing_page": True
-            },
-            "Convolutional autoencoder for image denoising": {
-                "path": "/examples/vision/autoencoder/",
-                "on_landing_page": True
-            },
-            "Enhanced Deep Residual Networks for single-image super-resolution": {
-                "path": "/examples/vision/edsr/",
-                "on_landing_page": False
-            },
-            "Zero-DCE for low-light image enhancement": {
-                "path": "/examples/vision/zero_dce/",
-                "on_landing_page": False
-            }
-        },
-        "Image Segmentation": {
-            "Multiclass semantic segmentation using DeepLabV3+": {
-                "path": "/examples/vision/deeplabv3_plus/",
-                "on_landing_page": True
-            },
-            "Image segmentation with a U-Net-like architecture": {
-                "path": "/examples/vision/oxford_pets_image_segmentation/",
-                "on_landing_page": True
-            }
-        },
-        "Interpretation": {
-            "Visualizing what convnets learn": {
-                "path": "/examples/vision/visualizing_what_convnets_learn/",
-                "on_landing_page": True
-            },
-            "Model interpretability with Integrated Gradients": {
-                "path": "/examples/vision/integrated_gradients/",
-                "on_landing_page": True
-            },
-            "Investigating Vision Transformer representations": {
-                "path": "/examples/vision/probing_vits/",
-                "on_landing_page": True
-            },
-            "Grad-CAM class activation visualization": {
-                "path": "/examples/vision/grad_cam/",
-                "on_landing_page": False
-            }
-        },
-        "Object Detection": {
-            "Object Detection with RetinaNet": {
-                "path": "/examples/vision/retinanet/",
-                "on_landing_page": True
-            },
-            "Keypoint Detection with Transfer Learning": {
-                "path": "/examples/vision/keypoint_detection/",
-                "on_landing_page": True
-            },
-            "Object detection with Vision Transformers": {
-                "path": "/examples/vision/object_detection_using_vision_transformer/",
-                "on_landing_page": True
-            }
-        },
-        "OCR": {
-            "OCR model for reading Captchas": {
-                "path": "/examples/vision/captcha_ocr/",
-                "on_landing_page": True
-            },
-            "Handwriting recognition": {
-                "path": "/examples/vision/handwriting_recognition/",
-                "on_landing_page": True
-            }
-        },
-        "Similarity": {
-            "Near-duplicate image search": {
-                "path": "/examples/vision/near_dup_search/",
-                "on_landing_page": True
-            },
-            "Semantic Image Clustering": {
-                "path": "/examples/vision/semantic_image_clustering/",
-                "on_landing_page": True
-            },
-            "Image similarity estimation using a Siamese Network with a contrastive loss": {
-                "path": "/examples/vision/siamese_contrastive/",
-                "on_landing_page": True
-            },
-            "Image similarity estimation using a Siamese Network with a triplet loss": {
-                "path": "/examples/vision/siamese_network/",
-                "on_landing_page": False
-            },
-            "Metric learning for image similarity search": {
-                "path": "/examples/vision/metric_learning/",
-                "on_landing_page": False
-            },
-            "Metric learning for image similarity search using TensorFlow Similarity": {
-                "path": "/examples/vision/metric_learning_tf_similarity/",
-                "on_landing_page": False
-            }
-        },
-        "Training Improvements": {
-            "Distilling Vision Transformers": {
-                "path": "/examples/vision/deit/",
-                "on_landing_page": True
-            },
-            "Knowledge Distillation": {
-                "path": "/examples/vision/knowledge_distillation/",
-                "on_landing_page": True
-            },
-            "Knowledge distillation recipes": {
-                "path": "/examples/keras_recipes/better_knowledge_distillation/",
-                "on_landing_page": True
-            },
-            "Masked image modeling with Autoencoders": {
-                "path": "/examples/vision/masked_image_modeling/",
-                "on_landing_page": False
-            },
-            "Barlow Twins for Contrastive SSL": {
-                "path": "/examples/vision/barlow_twins/",
-                "on_landing_page": False
-            },
-            "Consistency training with supervision": {
-                "path": "/examples/vision/consistency_training/",
-                "on_landing_page": False
-            },
-            "FixRes: Fixing train-test resolution discrepancy": {
-                "path": "/examples/vision/fixres/",
-                "on_landing_page": False
-            },
-            "Self-supervised contrastive learning with SimSiam": {
-                "path": "/examples/vision/simsiam/",
-                "on_landing_page": False
-            },
-            "Supervised Contrastive Learning": {
-                "path": "/examples/vision/supervised-contrastive-learning/",
-                "on_landing_page": False
-            },
-            "Estimating required sample size for model training": {
-                "path": "/examples/keras_recipes/sample_size_estimate/",
-                "on_landing_page": False
-            },
-            "Class Attention Image Transformers with LayerScale": {
-                "path": "/examples/vision/cait/",
-                "on_landing_page": False
-            },
-            "Semi-supervision and domain adaptation with AdaMatch": {
-                "path": "/examples/vision/adamatch/",
-                "on_landing_page": False
-            },
-            "Gradient Centralization for Better Training Performance": {
-                "path": "/examples/vision/gradient_centralization/",
-                "on_landing_page": False
-            },
-            "Learning to Resize in Computer Vision": {
-                "path": "/examples/vision/learnable_resizer/",
-                "on_landing_page": False
-            },
-            "Self-supervised contrastive learning with NNCLR": {
-                "path": "/examples/vision/nnclr/",
-                "on_landing_page": False
-            },
-            "Augmenting convnets with aggregated attention": {
-                "path": "/examples/vision/patch_convnet/",
-                "on_landing_page": False
-            }
-        },
-        "Video Classification": {
-            "Video Classification with a CNN-RNN Architecture": {
-                "path": "/examples/vision/video_classification/",
-                "on_landing_page": True
-            },
-            "Video Classification with Transformers": {
-                "path": "/examples/vision/video_transformers/",
-                "on_landing_page": True
-            },
-            "Next-Frame Video Prediction with Convolutional LSTMs": {
-                "path": "/examples/vision/conv_lstm/",
-                "on_landing_page": True
-            }
-        },
-        "Vision Transformers": {
-            "Train a Vision Transformer on small datasets": {
-                "path": "/examples/vision/vit_small_ds/",
-                "on_landing_page": True
-            },
-            "Video Vision Transformer": {
-                "path": "/examples/vision/vivit/",
-                "on_landing_page": True
-            },
-            "A Vision Transformer without Attention": {
-                "path": "/examples/vision/shiftvit/",
-                "on_landing_page": True
-            },
-            "Learning to tokenize in Vision Transformers": {
-                "path": "/examples/vision/token_learner/",
-                "on_landing_page": False
-            }
-        }
-    },
-    "Deep Generative Learning": {
-        "Image Generation": {
-            "Variational AutoEncoder": {
-                "path": "/examples/generative/vae/",
-                "on_landing_page": True
-            },
-            "DCGAN to generate face images": {
-                "path": "/examples/generative/dcgan_overriding_train_step/",
-                "on_landing_page": True
-            },
-            "WGAN-GP overriding Model.train_step": {
-                "path": "/examples/generative/wgan_gp/",
-                "on_landing_page": False
-            },
-            "A walk through latent space with Stable Diffusion": {
-                "path": "/examples/generative/random_walks_with_stable_diffusion/",
-                "on_landing_page": True
-            },
-            "Neural style transfer": {
-                "path": "/examples/generative/neural_style_transfer/",
-                "on_landing_page": False
-            },
-            "Deep Dream": {
-                "path": "/examples/generative/deep_dream/",
-                "on_landing_page": False
-            },
-            "Neural Style Transfer with AdaIN": {
-                "path": "/examples/generative/adain/",
-                "on_landing_page": False
-            },
-            "Conditional GAN": {
-                "path": "/examples/generative/conditional_gan/",
-                "on_landing_page": False
-            },
-            "CycleGAN": {
-                "path": "/examples/generative/cyclegan/",
-                "on_landing_page": False
-            },
-            "Denoising Diffusion Implicit Models": {
-                "path": "/examples/generative/ddim/",
-                "on_landing_page": False
-            },
-            "Data-efficient GANs with Adaptive Discriminator Augmentation": {
-                "path": "/examples/generative/gan_ada/",
-                "on_landing_page": False
-            },
-            "GauGAN for conditional image generation": {
-                "path": "/examples/generative/gaugan/",
-                "on_landing_page": False
-            },
-            "PixelCNN": {
-                "path": "/examples/generative/pixelcnn/",
-                "on_landing_page": False
-            },
-            "Face image generation with StyleGAN": {
-                "path": "/examples/generative/stylegan/",
-                "on_landing_page": False
-            },
-            "Vector-Quantized Variational Autoencoders": {
-                "path": "/examples/generative/vq_vae/",
-                "on_landing_page": False
-            }
-        },
-        "Others": {
-            "Drug Molecule Generation with VAE": {
-                "path": "/examples/generative/molecule_generation/",
-                "on_landing_page": True
-            },
-            "Density estimation using Real NVP": {
-                "path": "/examples/generative/real_nvp/",
-                "on_landing_page": True
-            },
-            "WGAN-GP with R-GCN for the generation of small molecular graphs": {
-                "path": "/examples/generative/wgan-graphs/",
-                "on_landing_page": True
-            }
-        },
-        "Text Generation": {
-            "GPT text generation with KerasNLP": {
-                "path": "/examples/nlp/text_generation_gpt/",
-                "on_landing_page": True
-            },
-            "Character-level text generation with LSTM": {
-                "path": "/examples/generative/lstm_character_level_text_generation/",
-                "on_landing_page": True
-            },
-            "Text generation with a miniature GPT": {
-                "path": "/examples/generative/text_generation_with_miniature_gpt/",
-                "on_landing_page": True
-            },
-            "Text Generation using FNet": {
-                "path": "/examples/nlp/text_generation_fnet/",
-                "on_landing_page": False
-            }
-        }
-    },
-    "Graph Neural Networks": {
-        "Node Classification with Graph Neural Networks": {
-            "path": "/examples/graph/gnn_citations/",
-            "on_landing_page": True
-        },
-        "Graph attention network (GAT) for node classification": {
-            "path": "/examples/graph/gat_node_classification/",
-            "on_landing_page": True
-        },
-        "Message-passing neural network (MPNN) for molecular property prediction": {
-            "path": "/examples/graph/mpnn-molecular-graphs/",
-            "on_landing_page": True
-        },
-        "Graph representation learning with node2vec": {
-            "path": "/examples/graph/node2vec_movielens/",
-            "on_landing_page": False
-        }
-    },
-    "Natural Language Processing": {
-        "Entailment Prediction": {
-            "Multimodal entailment": {
-                "path": "/examples/nlp/multimodal_entailment/",
-                "on_landing_page": True
-            }
-        },
-        "HuggingFace": {
-            "Pretraining BERT with Hugging Face Transformers": {
-                "path": "/examples/nlp/pretraining_BERT/",
-                "on_landing_page": True
-            },
-            "Question Answering with Hugging Face Transformers": {
-                "path": "/examples/nlp/question_answering/",
-                "on_landing_page": True
-            },
-            "Abstractive Summarization with Hugging Face Transformers": {
-                "path": "/examples/nlp/t5_hf_summarization/",
-                "on_landing_page": True
-            },
-            "Audio Classification with Hugging Face Transformers": {
-                "path": "/examples/audio/wav2vec2_audiocls/",
-                "on_landing_page": False
-            }
-        },
-        "Machine Translation": {
-            "English-to-Spanish translation with KerasNLP": {
-                "path": "/examples/nlp/neural_machine_translation_with_keras_nlp/",
-                "on_landing_page": True
-            },
-            "English-to-Spanish translation with a sequence-to-sequence Transformer": {
-                "path": "/examples/nlp/neural_machine_translation_with_transformer/",
-                "on_landing_page": True
-            },
-            "Character-level recurrent sequence-to-sequence model": {
-                "path": "/examples/nlp/lstm_seq2seq/",
-                "on_landing_page": True
-            }
-        },
-        "NER": {
-            "Named Entity Recognition using Transformers": {
-                "path": "/examples/nlp/ner_transformers/",
-                "on_landing_page": True
-            }
-        },
-        "Seq2Seq": {
-            "Text Extraction with BERT": {
-                "path": "/examples/nlp/text_extraction_with_bert/",
-                "on_landing_page": True
-            },
-            "Sequence to sequence learning for performing number addition": {
-                "path": "/examples/nlp/addition_rnn/",
-                "on_landing_page": True
-            }
-        },
-        "Similarity": {
-            "Semantic Similarity with BERT": {
-                "path": "/examples/nlp/semantic_similarity_with_bert/",
-                "on_landing_page": True
-            }
-        },
-        "Text Classification": {
-            "Text classification from scratch": {
-                "path": "/examples/nlp/text_classification_from_scratch/",
-                "on_landing_page": True
-            },
-            "Bidirectional LSTM on IMDB": {
-                "path": "/examples/nlp/bidirectional_lstm_imdb/",
-                "on_landing_page": True
-            },
-            "Review Classification using Active Learning": {
-                "path": "/examples/nlp/active_learning_review_classification/",
-                "on_landing_page": True
-            },
-            "Text Classification using FNet": {
-                "path": "/examples/nlp/fnet_classification_with_keras_nlp/",
-                "on_landing_page": False
-            },
-            "Large-scale multi-label text classification": {
-                "path": "/examples/nlp/multi_label_classification/",
-                "on_landing_page": False
-            },
-            "Text classification with Transformer": {
-                "path": "/examples/nlp/text_classification_with_transformer/",
-                "on_landing_page": False
-            },
-            "Text classification with Switch Transformer": {
-                "path": "/examples/nlp/text_classification_with_switch_transformer/",
-                "on_landing_page": False
-            },
-            "Text classification using Decision Forests and pretrained embeddings": {
-                "path": "/examples/nlp/tweet-classification-using-tfdf/",
-                "on_landing_page": False
-            }
-        },
-        "Training Improvements": {
-            "End-to-end Masked Language Modeling with BERT": {
-                "path": "/examples/nlp/masked_language_modeling/",
-                "on_landing_page": True
-            },
-            "Using pre-trained word embeddings": {
-                "path": "/examples/nlp/pretrained_word_embeddings/",
-                "on_landing_page": True
-            }
-        }
-    },
-    "Quick Keras Recipes": {
-        "Simple custom layer example: Antirectifier": {
-            "path": "/examples/keras_recipes/antirectifier/",
-            "on_landing_page": True
-        },
-        "Creating TFRecords": {
-            "path": "/examples/keras_recipes/creating_tfrecords/",
-            "on_landing_page": True
-        },
-        "Keras debugging tips": {
-            "path": "/examples/keras_recipes/debugging_tips/",
-            "on_landing_page": True
-        },
-        "Endpoint layer pattern": {
-            "path": "/examples/keras_recipes/endpoint_layer_pattern/",
-            "on_landing_page": False
-        },
-        "Evaluating and exporting scikit-learn metrics in a Keras callback": {
-            "path": "/examples/keras_recipes/sklearn_metric_callbacks/",
-            "on_landing_page": False
-        },
-        "Customizing the convolution operation of a Conv2D layer": {
-            "path": "/examples/keras_recipes/subclassing_conv_layers/",
-            "on_landing_page": False
-        },
-        "How to train a Keras model on TFRecord files": {
-            "path": "/examples/keras_recipes/tfrecord/",
-            "on_landing_page": False
-        },
-        "A Quasi-SVM in Keras": {
-            "path": "/examples/keras_recipes/quasi_svm/",
-            "on_landing_page": False
-        },
-        "Writing Keras Models With TensorFlow NumPy": {
-            "path": "/examples/keras_recipes/tensorflow_numpy_models/",
-            "on_landing_page": False
-        }
-    },
-    "Reinforcement Learning": {
-        "Deep Q-Learning for Atari Breakout": {
-            "path": "/examples/rl/deep_q_network_breakout/",
-            "on_landing_page": True
-        },
-        "Actor Critic Method": {
-            "path": "/examples/rl/actor_critic_cartpole/",
-            "on_landing_page": True
-        },
-        "Deep Deterministic Policy Gradient (DDPG)": {
-            "path": "/examples/rl/ddpg_pendulum/",
-            "on_landing_page": True
-        },
-        "Proximal Policy Optimization": {
-            "path": "/examples/rl/ppo_cartpole/",
-            "on_landing_page": False
-        }
-    },
-    "Structured Data": {
-        "Classification": {
-            "Structured data classification from scratch": {
-                "path": "/examples/structured_data/structured_data_classification_from_scratch/",
-                "on_landing_page": True
-            },
-            "Structured data classification with FeatureSpace": {
-                "path": "/examples/structured_data/structured_data_classification_with_feature_space/",
-                "on_landing_page": True
-            },
-            "Imbalanced classification: credit card fraud detection": {
-                "path": "/examples/structured_data/imbalanced_classification/",
-                "on_landing_page": True
-            },
-            "Structured data learning with Wide, Deep, and Cross networks": {
-                "path": "/examples/structured_data/wide_deep_cross_networks/",
-                "on_landing_page": False
-            },
-            "Probabilistic Bayesian Neural Networks": {
-                "path": "/examples/keras_recipes/bayesian_neural_networks/",
-                "on_landing_page": False
-            },
-            "Classification with Gated Residual and Variable Selection Networks": {
-                "path": "/examples/structured_data/classification_with_grn_and_vsn/",
-                "on_landing_page": False
-            },
-            "Classification with TensorFlow Decision Forests": {
-                "path": "/examples/structured_data/classification_with_tfdf/",
-                "on_landing_page": False
-            },
-            "Classification with Neural Decision Forests": {
-                "path": "/examples/structured_data/deep_neural_decision_forests/",
-                "on_landing_page": False
-            },
-            "Structured data learning with TabTransformer": {
-                "path": "/examples/structured_data/tabtransformer/",
-                "on_landing_page": False
-            }
-        },
-        "Recommendation": {
-            "Collaborative Filtering for Movie Recommendations": {
-                "path": "/examples/structured_data/collaborative_filtering_movielens/",
-                "on_landing_page": True
-            },
-            "A Transformer-based recommendation system": {
-                "path": "/examples/structured_data/movielens_recommendations_transformers/",
-                "on_landing_page": True
-            },
-            "Memory-efficient embeddings for recommendation systems": {
-                "path": "/examples/keras_recipes/memory_efficient_embeddings/",
-                "on_landing_page": True
-            }
-        }
-    },
-    "Time Series": {
-        "Timeseries classification from scratch": {
-            "path": "/examples/timeseries/timeseries_classification_from_scratch/",
-            "on_landing_page": True
-        },
-        "Timeseries classification with a Transformer model": {
-            "path": "/examples/timeseries/timeseries_classification_transformer/",
-            "on_landing_page": True
-        },
-        "Timeseries anomaly detection using an Autoencoder": {
-            "path": "/examples/timeseries/timeseries_anomaly_detection/",
-            "on_landing_page": True
-        },
-        "Traffic forecasting using graph neural networks and LSTM": {
-            "path": "/examples/timeseries/timeseries_traffic_forecasting/",
-            "on_landing_page": False
-        },
-        "Timeseries forecasting for weather prediction": {
-            "path": "/examples/timeseries/timeseries_weather_forecasting/",
-            "on_landing_page": False
-        },
-        "Electroencephalogram Signal Classification for action identification": {
-            "path": "/examples/timeseries/eeg_singal_classifiction/",
-            "on_landing_page": False
-        }
-    }
-}
-

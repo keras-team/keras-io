@@ -1,5 +1,7 @@
 import re
 import string
+import markdown
+import copy
 
 
 def save_file(path, content):
@@ -65,3 +67,34 @@ def make_outline(md_source):
                 }
             )
     return outline
+
+
+def render_markdown_to_html(md_content):
+    return markdown.markdown(
+        md_content,
+        extensions=[
+            "fenced_code",
+            "tables",
+            "codehilite",
+            "mdx_truly_sane_lists",
+        ],
+        extension_configs={
+            "codehilite": {
+                "guess_lang": False,
+            },
+        },
+    )
+
+
+def set_active_flag_in_nav_entry(entry, relative_url):
+    entry = copy.copy(entry)
+    if relative_url.startswith(entry["relative_url"]):
+        entry["active"] = True
+    else:
+        entry["active"] = False
+    children = [
+        set_active_flag_in_nav_entry(child, relative_url)
+        for child in entry.get("children", [])
+    ]
+    entry["children"] = children
+    return entry

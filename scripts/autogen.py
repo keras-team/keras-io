@@ -27,11 +27,9 @@ import socketserver
 import signal
 import docstrings
 import jinja2
-import markdown
 import requests
 import multiprocessing
 import autogen_utils
-import examples_page
 
 from master import MASTER
 import tutobooks
@@ -75,8 +73,9 @@ class KerasIO:
         self.refresh_guides = refresh_guides
         self.refresh_examples = refresh_examples
 
-        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
         self.make_examples_master()
+        self.nav = self.make_nav_index()
+        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
 
     def make_examples_master(self):
         for entry in self.master["children"]:
@@ -114,9 +113,11 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
-        examples_page.generate_all_examples_page(self.md_sources_dir, self.url)
+        # Recursively generate all md sources based on the MASTER tree
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
 
+        # Pull some content from GitHub (governance, contributing)
+        # This enables us to keep a single source of truth for that content.
         self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
 
     def sync_external_readmes_to_sources(self):
@@ -430,9 +431,6 @@ class KerasIO:
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
             path = entry["path"]
-            if path == "examples/":
-                # Specially handle the example page, because it is not generated from directory structure.
-                return examples_page.make_examples_nav_index(self.url)
             if path != "/":
                 path_stack.append(path)
             url = self.url + str(Path(*path_stack)) + "/"
@@ -521,35 +519,32 @@ class KerasIO:
             md_source_path = source_path.with_suffix(".md")
             metadata_path = str(source_path) + "_metadata.json"
 
-        if not path.endswith("/") or not "examples/" in path_stack:
-            # Example page takes a different flow, so we don't save md for it.
-            # Save md source file
-            autogen_utils.save_file(md_source_path, template)
+        # Save md source file
+        autogen_utils.save_file(md_source_path, template)
 
-            # Save metadata file
-            location_history = []
-            for i in range(len(path_stack)):
-                stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
-                url = self.url + "/".join(stripped_path_stack)
-                location_history.append(
-                    {
-                        "url": url,
-                        "title": title_stack[i],
-                    }
-                )
-            metadata = json.dumps(
+        # Save metadata file
+        location_history = []
+        for i in range(len(path_stack)):
+            stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
+            url = self.url + "/".join(stripped_path_stack)
+            location_history.append(
                 {
-                    "location_history": location_history[:-1],
-                    "outline": autogen_utils.make_outline(template)
-                    if entry.get("outline", True)
-                    else [],
-                    "location": "/"
-                    + "/".join([s.replace("/", "") for s in path_stack]),
-                    "url": parent_url,
-                    "title": entry["title"],
+                    "url": url,
+                    "title": title_stack[i],
                 }
             )
-            autogen_utils.save_file(metadata_path, metadata)
+        metadata = json.dumps(
+            {
+                "location_history": location_history[:-1],
+                "outline": autogen_utils.make_outline(template)
+                if entry.get("outline", True)
+                else [],
+                "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
+                "url": parent_url,
+                "title": entry["title"],
+            }
+        )
+        autogen_utils.save_file(metadata_path, metadata)
 
         if children:
             for entry in children:
@@ -581,14 +576,83 @@ class KerasIO:
             self.master, Path("")
         )
 
-    def generate_examples_page(self):
-        category_to_examples = self.parse_examples()
+    def generate_examples_landing_page(self):
+        """Create the html file /examples/index.html.
 
-        # Generate the landing page.
-        landing_page_file = open("../templates/examples/index.md", encoding="utf8")
-        landing_page_md = landing_page_file.read()
-        landing_page_file.close()
-        self.generate_page("", category_to_examples, ["examples"], landing_page_md)
+        - Load examples information and metadata
+        - Group them by category (e.g. CV) and subcategory (e.g. image classification)
+        - Render a card for each example
+        """
+        examples_by_category = {}
+        category_names = []
+        category_paths = []
+        for child in self.master["children"]:
+            if child["path"] == "examples/":
+                examples_master = child
+                break
+
+        for category in examples_master["children"]:
+            category_name = category["title"]
+            category_names.append(category_name)
+            category_paths.append(category["path"])
+            examples_by_category[category_name] = category["children"]
+
+        categories_to_render = []
+        for category_name, category_path in zip(category_names, category_paths):
+            examples_by_subcategory = {}
+            subcategory_names = []
+            for example in examples_by_category[category_name]:
+                subcategory_name = example.get("subcategory", "Other")
+                if subcategory_name not in examples_by_subcategory:
+                    examples_by_subcategory[subcategory_name] = []
+                    subcategory_names.append(subcategory_name)
+                example["path"] = category_path + example["path"]
+                examples_by_subcategory[subcategory_name].append(example)
+
+            subcategories_to_render = []
+            for subcategory_name in subcategory_names:
+                subcategories_to_render.append(
+                    {
+                        "title": subcategory_name,
+                        "examples": examples_by_subcategory[subcategory_name],
+                    }
+                )
+
+            category_dict = {"title": category_name, "path": category_path}
+            if len(subcategories_to_render) > 1:
+                category_dict["subcategories"] = subcategories_to_render
+            else:
+                category_dict["examples"] = subcategories_to_render[0]["examples"]
+            categories_to_render.append(category_dict)
+
+        with open(Path(self.templates_dir) / "examples/index.md") as f:
+            md_content = f.read()
+
+        with open(Path(self.md_sources_dir) / "examples/index_metadata.json") as f:
+            metadata = json.loads(f.read())
+
+        html_example_cards = jinja2.Template(
+            open(Path(self.theme_dir) / "examples.html").read()
+        ).render({"categories": categories_to_render})
+
+        html_content = autogen_utils.render_markdown_to_html(md_content)
+        html_content = html_content.replace(
+            "<p>{{examples_list}}</p>", html_example_cards
+        )
+
+        relative_url = "/examples/"
+        local_nav = [
+            autogen_utils.set_active_flag_in_nav_entry(entry, relative_url)
+            for entry in self.nav
+        ]
+        self.render_single_docs_page_from_html(
+            target_path=Path(self.site_dir) / "examples/index.html",
+            title="Code examples",
+            html_content=html_content,
+            location_history=metadata["location_history"],
+            outline=metadata["outline"],
+            local_nav=local_nav,
+        )
 
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
@@ -602,14 +666,11 @@ class KerasIO:
             print("Clearing", self.site_dir)
             shutil.rmtree(self.site_dir)
 
-        nav = self.make_nav_index()
-
         for src_location, _, fnames in os.walk(self.md_sources_dir):
-
             pool = multiprocessing.Pool(processes=8)
             workers = [
                 pool.apply_async(
-                    self.render_single_file, args=(src_location, fname, nav)
+                    self.render_single_file, args=(src_location, fname, self.nav)
                 )
                 for fname in fnames
             ]
@@ -637,7 +698,7 @@ class KerasIO:
         search_page = base_template.render(
             {
                 "title": "Search Keras documentation",
-                "nav": nav,
+                "nav": self.nav,
                 "base_url": self.url,
                 "main": search_main,
             }
@@ -648,7 +709,7 @@ class KerasIO:
         page404 = base_template.render(
             {
                 "title": "Page not found",
-                "nav": nav,
+                "nav": self.nav,
                 "base_url": self.url,
                 "main": docs_template.render(
                     {
@@ -674,12 +735,12 @@ class KerasIO:
         # Redirects
         # shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
 
+        # Examples landing page
+        self.generate_examples_landing_page()
+
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):
             return
-
-        base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
-        docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
 
         src_dir = Path(src_location)
         target_dir = src_location.replace(self.md_sources_dir, self.site_dir)
@@ -691,9 +752,9 @@ class KerasIO:
                 pass
 
         # Load metadata for page
-        metadata_file = open(str(Path(src_location) / fname[:-3]) + "_metadata.json")
-        metadata = json.loads(metadata_file.read())
-        metadata_file.close()
+        with open(str(Path(src_location) / fname[:-3]) + "_metadata.json") as f:
+            metadata = json.loads(f.read())
+
         if fname == "index.md":
             # Render as index.html
             target_path = Path(target_dir) / "index.html"
@@ -752,34 +813,36 @@ class KerasIO:
         for key, value in replacements.items():
             md_content = md_content.replace(key, value)
 
-        html_content = markdown.markdown(
-            md_content,
-            extensions=[
-                "fenced_code",
-                "tables",
-                "codehilite",
-                "mdx_truly_sane_lists",
-            ],
-            extension_configs={
-                "codehilite": {
-                    "guess_lang": False,
-                },
-            },
-        )
+        html_content = autogen_utils.render_markdown_to_html(md_content)
         html_content = insert_title_ids_in_html(html_content)
-        local_nav = [set_active_flag_in_nav_entry(entry, relative_url) for entry in nav]
-
+        local_nav = [
+            autogen_utils.set_active_flag_in_nav_entry(entry, relative_url)
+            for entry in nav
+        ]
         title = md_content[2 : md_content.find("\n")]
-        if title[0] == "[":
-            # If the title comes as a markdown link, we extract out the content.
-            title = title[1 : title.find("]")]
+
+        self.render_single_docs_page_from_html(
+            target_path,
+            title,
+            html_content,
+            metadata["location_history"],
+            metadata["outline"],
+            local_nav,
+        )
+        return relative_url
+
+    def render_single_docs_page_from_html(
+        self, target_path, title, html_content, location_history, outline, local_nav
+    ):
+        base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
+        docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
         html_docs = docs_template.render(
             {
                 "title": title,
                 "content": html_content,
-                "location_history": metadata["location_history"],
+                "location_history": location_history,
                 "base_url": self.url,
-                "outline": metadata["outline"],
+                "outline": outline,
             }
         )
         html_page = base_template.render(
@@ -792,7 +855,6 @@ class KerasIO:
         )
         html_page = html_page.replace("../guides/img/", "/img/guides/")
         autogen_utils.save_file(target_path, html_page)
-        return relative_url
 
     def make(self):
         self.make_md_sources()
@@ -822,20 +884,6 @@ class KerasIO:
             pass
         finally:
             server.server_close()
-
-
-def set_active_flag_in_nav_entry(entry, relative_url):
-    entry = copy.copy(entry)
-    if relative_url.startswith(entry["relative_url"]):
-        entry["active"] = True
-    else:
-        entry["active"] = False
-    children = [
-        set_active_flag_in_nav_entry(child, relative_url)
-        for child in entry.get("children", [])
-    ]
-    entry["children"] = children
-    return entry
 
 
 def replace_links(content):
