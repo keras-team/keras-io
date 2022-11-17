@@ -1,4 +1,3 @@
-
 # Video Vision Transformer
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](https://twitter.com/ayushthakur0) (equal contribution)<br>

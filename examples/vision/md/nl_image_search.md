@@ -6,7 +6,7 @@
 **Description:** Implementation of a dual encoder model for retrieving images that match natural language queries.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/nl_image_search.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/nl_image_search.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/nl_image_search.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/nl_image_search.py)
 
 
 
@@ -524,7 +524,7 @@ plt.show()
 
 
     
-![png](/img/examples/nlp/nl_image_search/nl_image_search_23_0.png)
+![png](/img/examples/vision/nl_image_search/nl_image_search_23_0.png)
     
 
 
@@ -629,7 +629,7 @@ for i in range(9):
 
 
     
-![png](/img/examples/nlp/nl_image_search/nl_image_search_30_0.png)
+![png](/img/examples/vision/nl_image_search/nl_image_search_30_0.png)
     
 
 
