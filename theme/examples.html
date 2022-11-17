@@ -1,4 +1,6 @@
+{% if legend %}
 <p><div class="example-highlight">★</div> = Good starter example</p>
+{% endif %}
 
 {% for category in categories %}
 	<h2><a href="{{category.path}}">{{category.title}}</a></h2>

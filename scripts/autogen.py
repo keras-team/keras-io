@@ -606,7 +606,7 @@ class KerasIO:
                 if subcategory_name not in examples_by_subcategory:
                     examples_by_subcategory[subcategory_name] = []
                     subcategory_names.append(subcategory_name)
-                example["path"] = category_path + example["path"]
+                example["path"] = "/examples/" + category_path + example["path"]
                 examples_by_subcategory[subcategory_name].append(example)
 
             subcategories_to_render = []
@@ -618,7 +618,10 @@ class KerasIO:
                     }
                 )
 
-            category_dict = {"title": category_name, "path": category_path}
+            category_dict = {
+                "title": category_name,
+                "path": "/examples/" + category_path,
+            }
             if len(subcategories_to_render) > 1:
                 category_dict["subcategories"] = subcategories_to_render
             else:
@@ -631,9 +634,12 @@ class KerasIO:
         with open(Path(self.md_sources_dir) / "examples/index_metadata.json") as f:
             metadata = json.loads(f.read())
 
-        html_example_cards = jinja2.Template(
+        examples_template = jinja2.Template(
             open(Path(self.theme_dir) / "examples.html").read()
-        ).render({"categories": categories_to_render})
+        )
+        html_example_cards = examples_template.render(
+            {"categories": categories_to_render, "legend": True}
+        )
 
         html_content = autogen_utils.render_markdown_to_html(md_content)
         html_content = html_content.replace(
@@ -653,6 +659,38 @@ class KerasIO:
             outline=metadata["outline"],
             local_nav=local_nav,
         )
+
+        # Save per-category landing pages
+        for category_name, category_path in zip(category_names, category_paths):
+            with open(
+                Path(self.md_sources_dir)
+                / "examples"
+                / category_path
+                / "index_metadata.json"
+            ) as f:
+                metadata = json.loads(f.read())
+            relative_url = f"/examples/{category_path}"
+            local_nav = [
+                autogen_utils.set_active_flag_in_nav_entry(entry, relative_url)
+                for entry in self.nav
+            ]
+            to_render = [
+                cat for cat in categories_to_render if cat["title"] == category_name
+            ]
+            html_example_cards = examples_template.render(
+                {"categories": to_render, "legend": False}
+            )
+            self.render_single_docs_page_from_html(
+                target_path=Path(self.site_dir)
+                / "examples"
+                / category_path
+                / "index.html",
+                title=category_name,
+                html_content=html_example_cards,
+                location_history=metadata["location_history"],
+                outline=metadata["outline"],
+                local_nav=local_nav,
+            )
 
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
