@@ -336,7 +336,7 @@ feature_space = FeatureSpace(
         "ca": "integer_categorical",
         # Categorical feature encoded as string
         "thal": "string_categorical",
-        # Numerical features to normalize
+        # Numerical features to discretize
         "age": "float_discretized",
         # Numerical features to normalize
         "trestbps": "float_normalized",
