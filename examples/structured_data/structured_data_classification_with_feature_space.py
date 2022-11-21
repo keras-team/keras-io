@@ -169,7 +169,7 @@ feature_space = FeatureSpace(
         "ca": "integer_categorical",
         # Categorical feature encoded as string
         "thal": "string_categorical",
-        # Numerical features to normalize
+        # Numerical features to discretize
         "age": "float_discretized",
         # Numerical features to normalize
         "trestbps": "float_normalized",
@@ -221,7 +221,7 @@ feature_space = FeatureSpace(
         "ca": FeatureSpace.integer_categorical(num_oov_indices=0),
         # Categorical feature encoded as string
         "thal": FeatureSpace.string_categorical(num_oov_indices=0),
-        # Numerical features to normalize
+        # Numerical features to discretize
         "age": FeatureSpace.float_discretized(num_bins=30),
         # Numerical features to normalize
         "trestbps": FeatureSpace.float_normalized(),
