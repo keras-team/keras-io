@@ -443,6 +443,11 @@ LAYERS_MASTER = {
                     "title": "UnitNormalization layer",
                     "generate": ["tensorflow.keras.layers.UnitNormalization"],
                 },
+                {
+                    "path": "group_normalization",
+                    "title": "GroupNormalization layer",
+                    "generate": ["tensorflow.keras.layers.GroupNormalization"],
+                },
             ],
         },
         {
