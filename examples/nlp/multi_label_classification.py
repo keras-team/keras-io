@@ -418,6 +418,5 @@ We would like to thank [Matt Watson](https://github.com/mattdangerw) for helping
 tackle the multi-label binarization part and inverse-transforming the processed labels
 to the original form.
 
-Thanks [Cingis Kratochvil](https://github.com/cumbalik) for suggesting and extending
-this code example by the binary accuracy.
+Thanks to [Cingis Kratochvil](https://github.com/cumbalik) for suggesting and extending this code example by introducing binary accuracy as the evaluation metric.
 """
