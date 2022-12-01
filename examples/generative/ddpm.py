@@ -394,6 +394,7 @@ class AttentionBlock(layers.Layer):
         units: Number of units in the dense layers
         groups: Number of groups to be used for GroupNormalization layer
     """
+
     def __init__(self, units, groups=8, **kwargs):
         self.units = units
         self.groups = groups
@@ -488,6 +489,7 @@ def DownSample(width):
             kernel_initializer=kernel_init(1.0),
         )(x)
         return x
+
     return apply
 
 
@@ -498,18 +500,18 @@ def UpSample(width, interpolation="nearest"):
             width, kernel_size=3, padding="same", kernel_initializer=kernel_init(1.0)
         )(x)
         return x
+
     return apply
 
 
 def TimeMLP(units, activation_fn=keras.activations.swish):
     def apply(inputs):
         temb = layers.Dense(
-            units,
-            activation=activation_fn,
-            kernel_initializer=kernel_init(1.0)
+            units, activation=activation_fn, kernel_initializer=kernel_init(1.0)
         )(inputs)
         temb = layers.Dense(units, kernel_initializer=kernel_init(1.0))(temb)
         return temb
+
     return apply
 
 
@@ -521,7 +523,7 @@ def build_model(
     num_res_blocks=2,
     norm_groups=8,
     interpolation="nearest",
-    activation_fn=keras.activations.swish
+    activation_fn=keras.activations.swish,
 ):
     image_input = layers.Input(
         shape=(img_size, img_size, img_channels), name="image_input"
@@ -543,7 +545,9 @@ def build_model(
     # DownBlock
     for i in range(len(widths)):
         for _ in range(num_res_blocks):
-            x = ResidualBlock(widths[i], groups=norm_groups, activation_fn=activation_fn)([x, temb])
+            x = ResidualBlock(
+                widths[i], groups=norm_groups, activation_fn=activation_fn
+            )([x, temb])
             if has_attention[i]:
                 x = AttentionBlock(widths[i], groups=norm_groups)(x)
             skips.append(x)
@@ -553,15 +557,21 @@ def build_model(
             skips.append(x)
 
     # MiddleBlock
-    x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)([x, temb])
+    x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)(
+        [x, temb]
+    )
     x = AttentionBlock(widths[-1], groups=norm_groups)(x)
-    x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)([x, temb])
+    x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)(
+        [x, temb]
+    )
 
     # UpBlock
     for i in reversed(range(len(widths))):
         for _ in range(num_res_blocks + 1):
             x = layers.Concatenate(axis=-1)([x, skips.pop()])
-            x = ResidualBlock(widths[i], groups=norm_groups, activation_fn=activation_fn)([x, temb])
+            x = ResidualBlock(
+                widths[i], groups=norm_groups, activation_fn=activation_fn
+            )([x, temb])
             if has_attention[i]:
                 x = AttentionBlock(widths[i], groups=norm_groups)(x)
 
