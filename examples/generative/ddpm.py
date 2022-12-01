@@ -23,6 +23,48 @@ import tensorflow_datasets as tfds
 
 
 """
+## Introduction
+
+Generative Modeling experienced tremendous growth in the last five years. Models like
+VAEs, GANs, and Flow-based models, proved to be a great success in generating
+high-quality content, especially images. Diffusion models are a new type of generative
+model that has proven to be better than all the generative models in the past. 
+
+Diffusion models are inspired by non-equilibrium thermodynamics, and they learn to
+generate by denoising. The idea of learning by denoising consists of two processes,
+each of which is a Markov Chain. These are:
+
+1. The forward process: In the forward process, we slowly add random noise to the data
+in a series of time steps `(t1, t2,....,tn )`. Samples at the current time step are
+drawn from a Gaussian distribution where the mean of the distribution is conditioned
+on the sample at the previous time step, and the variance of the distribution follows
+a fixed schedule. At the end of the forward process, the samples end up with a pure
+noise distribution. 
+
+2. The reverse process: During the reverse process, we try to undo the added noise at
+every time step. We start with the pure noise distribution (the last step of the
+forward process) and try to denoise the samples in the backward direction `(tn,
+tn-1,...., t1)`.
+
+![diffusion process gif](https://i.imgur.com/dipPOfa.gif)
+
+Implementing the idea of a diffusion model is simple. We define a model that takes
+two inputs: Images and the randomly sampled time steps. At each training step, we
+perform the following operations to train our model:
+
+1. Sample random noise to be added to the inputs.
+2. Apply the forward process to diffuse the inputs with the sampled noise.
+3. Your model takes these noisy samples as inputs and outputs the noise
+prediction at each time step.
+4. Given true noise and predicted noise, calculate the loss values
+5. Calculate the gradients and update the model weights.
+
+Given that our model knows how to denoise a noisy sample at a given time step,
+we can leverage this to generate new samples, starting from a pure noise distribution.
+"""
+
+
+"""
 ## Hyperparameters
 """
 
@@ -119,10 +161,9 @@ train_ds = (
 """
 ## Gaussian Diffusion Utilities
 
-Any diffusion model consists of two processes: The forward process, and the reverse
-process. We will define both these processes as a separate utility. Most of the code
-in this utility has been borrowed from the original implementation with some slight
-modifications.
+Defines the forward process, and the reverse process. We are defining both these
+processes as a separate utility. Most of the code in this utility has been borrowed
+from the original implementation with some slight modifications.
 """
 
 
@@ -214,7 +255,7 @@ class GaussianDiffusion:
 
         Args:
             a: Tensor to extract from
-            t: Time step for which the coefficients are to be extracted
+            t: Timestep for which the coefficients are to be extracted
             x_shape: Shape of the current batched samples
         """
         batch_size = x_shape[0]
@@ -244,7 +285,7 @@ class GaussianDiffusion:
             t: Current timestep
             noise: Gaussian noise to be added at the current timestep
         Returns:
-            Diffused samples at time step `t`
+            Diffused samples at timestep `t`
         """
         x_start_shape = tf.shape(x_start)
         return (
@@ -287,7 +328,7 @@ class GaussianDiffusion:
         x_recon = self.predict_start_from_noise(x, t=t, noise=pred_noise)
         if clip_denoised:
             x_recon = tf.clip_by_value(x_recon, self.clip_min, self.clip_max)
-        
+
         model_mean, posterior_variance, posterior_log_variance = self.q_posterior(
             x_start=x_recon, x_t=x, t=t
         )
@@ -330,15 +371,11 @@ activation function throughout the network. We will use variance scaling kernel
 initializer. 
 
 The only difference here is the number of groups used for GroupNormalization layer.
-For the flowers dataset, I found that a value of `groups=8` produces better results
+For the flowers dataset, we found that a value of `groups=8` produces better results
 compared to the default value of `groups=32`. Dropout is optional and should be
 used where chances of over fitting is high. In the paper, the authors used dropout
 only when training on CIFAR10.
 """
-
-
-# Activation function to use
-act_fn = keras.activations.swish
 
 
 # Kernel initializer to use
@@ -350,17 +387,34 @@ def kernel_init(scale):
     )
 
 
-def AttentionBlock(units, groups=8):
-    def apply(inputs):
+class AttentionBlock(layers.Layer):
+    """Applies self-attention.
+
+    Args:
+        units: Number of units in the dense layers
+        groups: Number of groups to be used for GroupNormalization layer
+    """
+    def __init__(self, units, groups=8, **kwargs):
+        self.units = units
+        self.groups = groups
+        super().__init__(**kwargs)
+
+        self.norm = layers.GroupNormalization(groups=groups)
+        self.query = layers.Dense(units, kernel_initializer=kernel_init(1.0))
+        self.key = layers.Dense(units, kernel_initializer=kernel_init(1.0))
+        self.value = layers.Dense(units, kernel_initializer=kernel_init(1.0))
+        self.proj = layers.Dense(units, kernel_initializer=kernel_init(0.0))
+
+    def call(self, inputs):
         batch_size = tf.shape(inputs)[0]
         height = tf.shape(inputs)[1]
         width = tf.shape(inputs)[2]
-        scale = tf.cast(units, tf.float32) ** (-0.5)
+        scale = tf.cast(self.units, tf.float32) ** (-0.5)
 
-        inputs = layers.GroupNormalization(groups=groups)(inputs)
-        q = layers.Dense(units, kernel_initializer=kernel_init(1.0))(inputs)
-        k = layers.Dense(units, kernel_initializer=kernel_init(1.0))(inputs)
-        v = layers.Dense(units, kernel_initializer=kernel_init(1.0))(inputs)
+        inputs = self.norm(inputs)
+        q = self.query(inputs)
+        k = self.key(inputs)
+        v = self.value(inputs)
 
         attn_score = tf.einsum("bhwc, bHWc->bhwHW", q, k) * scale
         attn_score = tf.reshape(attn_score, [batch_size, height, width, height * width])
@@ -369,25 +423,26 @@ def AttentionBlock(units, groups=8):
         attn_score = tf.reshape(attn_score, [batch_size, height, width, height, width])
 
         proj = tf.einsum("bhwHW,bHWc->bhwc", attn_score, v)
-        proj = layers.Dense(units, kernel_initializer=kernel_init(0.0))(inputs)
+        proj = self.proj(proj)
         return inputs + proj
 
-    return apply
+
+class TimeEmbedding(layers.Layer):
+    def __init__(self, dim, **kwargs):
+        super().__init__(**kwargs)
+        self.dim = dim
+        self.half_dim = dim // 2
+        self.emb = math.log(10000) / (self.half_dim - 1)
+        self.emb = tf.exp(tf.range(self.half_dim, dtype=tf.float32) * -self.emb)
+
+    def call(self, inputs):
+        inputs = tf.cast(inputs, dtype=tf.float32)
+        emb = inputs[:, None] * self.emb[None, :]
+        emb = tf.concat([tf.sin(emb), tf.cos(emb)], axis=-1)
+        return emb
 
 
-def TimeEmbedding(inputs, dim=32):
-    """Transformer sinusoidal position embedding."""
-    half_dim = dim // 2
-    emb = math.log(10000) / (half_dim - 1)
-    emb = tf.exp(tf.range(half_dim, dtype=tf.float32) * -emb)
-
-    inputs = tf.cast(inputs, dtype=tf.float32)
-    emb = inputs[:, None] * emb[None, :]
-    emb = tf.concat([tf.sin(emb), tf.cos(emb)], axis=-1)
-    return emb
-
-
-def ResidualBlock(width, groups=8):
+def ResidualBlock(width, groups=8, activation_fn=keras.activations.swish):
     def apply(inputs):
         x, t = inputs
         input_width = x.shape[3]
@@ -399,20 +454,20 @@ def ResidualBlock(width, groups=8):
                 width, kernel_size=1, kernel_initializer=kernel_init(1.0)
             )(x)
 
-        temb = act_fn(t)
+        temb = activation_fn(t)
         temb = layers.Dense(width, kernel_initializer=kernel_init(1.0))(temb)[
             :, None, None, :
         ]
 
         x = layers.GroupNormalization(groups=groups)(x)
-        x = act_fn(x)
+        x = activation_fn(x)
         x = layers.Conv2D(
             width, kernel_size=3, padding="same", kernel_initializer=kernel_init(1.0)
         )(x)
 
         x = layers.Add()([x, temb])
         x = layers.GroupNormalization(groups=groups)(x)
-        x = act_fn(x)
+        x = activation_fn(x)
 
         x = layers.Conv2D(
             width, kernel_size=3, padding="same", kernel_initializer=kernel_init(0.0)
@@ -433,30 +488,41 @@ def DownSample(width):
             kernel_initializer=kernel_init(1.0),
         )(x)
         return x
-
     return apply
 
 
-def UpSample(width):
+def UpSample(width, interpolation="nearest"):
     def apply(x):
-        x = layers.UpSampling2D(size=2, interpolation="nearest")(x)
+        x = layers.UpSampling2D(size=2, interpolation=interpolation)(x)
         x = layers.Conv2D(
             width, kernel_size=3, padding="same", kernel_initializer=kernel_init(1.0)
         )(x)
         return x
-
     return apply
 
 
-def TimeMLP(temb, units):
-    temb = layers.Dense(units, activation=act_fn, kernel_initializer=kernel_init(1.0))(
-        temb
-    )
-    temb = layers.Dense(units, kernel_initializer=kernel_init(1.0))(temb)
-    return temb
+def TimeMLP(units, activation_fn=keras.activations.swish):
+    def apply(inputs):
+        temb = layers.Dense(
+            units,
+            activation=activation_fn,
+            kernel_initializer=kernel_init(1.0)
+        )(inputs)
+        temb = layers.Dense(units, kernel_initializer=kernel_init(1.0))(temb)
+        return temb
+    return apply
 
 
-def build_network():
+def build_model(
+    img_size,
+    img_channels,
+    widths,
+    has_attention,
+    num_res_blocks=2,
+    norm_groups=8,
+    interpolation="nearest",
+    activation_fn=keras.activations.swish
+):
     image_input = layers.Input(
         shape=(img_size, img_size, img_channels), name="image_input"
     )
@@ -469,17 +535,15 @@ def build_network():
         kernel_initializer=kernel_init(1.0),
     )(image_input)
 
-    temb = layers.Lambda(TimeEmbedding, arguments={"dim": first_conv_channels * 4})(
-        time_input
-    )
-    temb = TimeMLP(temb, units=first_conv_channels * 4)
+    temb = TimeEmbedding(dim=first_conv_channels * 4)(time_input)
+    temb = TimeMLP(units=first_conv_channels * 4, activation_fn=activation_fn)(temb)
 
     skips = [x]
 
     # DownBlock
     for i in range(len(widths)):
         for _ in range(num_res_blocks):
-            x = ResidualBlock(widths[i], groups=norm_groups)([x, temb])
+            x = ResidualBlock(widths[i], groups=norm_groups, activation_fn=activation_fn)([x, temb])
             if has_attention[i]:
                 x = AttentionBlock(widths[i], groups=norm_groups)(x)
             skips.append(x)
@@ -489,24 +553,24 @@ def build_network():
             skips.append(x)
 
     # MiddleBlock
-    x = ResidualBlock(widths[-1], groups=norm_groups)([x, temb])
+    x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)([x, temb])
     x = AttentionBlock(widths[-1], groups=norm_groups)(x)
-    x = ResidualBlock(widths[-1], groups=norm_groups)([x, temb])
+    x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)([x, temb])
 
     # UpBlock
     for i in reversed(range(len(widths))):
         for _ in range(num_res_blocks + 1):
             x = layers.Concatenate(axis=-1)([x, skips.pop()])
-            x = ResidualBlock(widths[i], groups=norm_groups)([x, temb])
+            x = ResidualBlock(widths[i], groups=norm_groups, activation_fn=activation_fn)([x, temb])
             if has_attention[i]:
                 x = AttentionBlock(widths[i], groups=norm_groups)(x)
 
         if i != 0:
-            x = UpSample(widths[i])(x)
+            x = UpSample(widths[i], interpolation=interpolation)(x)
 
     # End block
     x = layers.GroupNormalization(groups=norm_groups)(x)
-    x = act_fn(x)
+    x = activation_fn(x)
     x = layers.Conv2D(3, (3, 3), padding="same", kernel_initializer=kernel_init(0.0))(x)
     return keras.Model([image_input, time_input], x, name="unet")
 
@@ -540,9 +604,6 @@ class DiffusionModel(keras.Model):
         self.timesteps = timesteps
         self.gdf_util = gdf_util
         self.ema = ema
-
-    def compile(self, **kwargs):
-        super().compile(**kwargs)
 
     def train_step(self, images):
         # 1. Get the batch size
@@ -621,8 +682,24 @@ class DiffusionModel(keras.Model):
 
 
 # Build the unet model
-network = build_network()
-ema_network = build_network()
+network = build_model(
+    img_size=img_size,
+    img_channels=img_channels,
+    widths=widths,
+    has_attention=has_attention,
+    num_res_blocks=num_res_blocks,
+    norm_groups=norm_groups,
+    activation_fn=keras.activations.swish,
+)
+ema_network = build_model(
+    img_size=img_size,
+    img_channels=img_channels,
+    widths=widths,
+    has_attention=has_attention,
+    num_res_blocks=num_res_blocks,
+    norm_groups=norm_groups,
+    activation_fn=keras.activations.swish,
+)
 ema_network.set_weights(network.get_weights())  # Initially the weights are the same
 
 # Get an instance of the Gaussian Diffusion utilities
@@ -651,9 +728,9 @@ model.fit(
 )
 
 """
-## Evaluation
+## Results
 
-I trained this model for 500 epochs on a machine equipped with a V100 GPU,
+We trained this model for 500 epochs on a machine equipped with a V100 GPU,
 and each epoch took almost 8 seconds to finish. We will load those weights
 here, and we will generate a few samples starting from pure noise.
 """
@@ -669,6 +746,21 @@ model.ema_network.load_weights("diffusion_model_checkpoint")
 # Generate and plot some samples
 model.plot_images()
 
+
+"""
+## Conclusion
+
+We successfully implemented and trained a diffusion model exactly in the same
+fashion as implemented by the authors of the DDPMs paper. You can find the
+original implementation [here](https://github.com/hojonathanho/diffusion).
+
+There are a few things that you can try to improve the model:
+
+1. Increasing the width of each block. A bigger model can learn to denoise
+in fewer epochs, though you may have to take care of overfitting.
+2. We implemented the linear schedule for variance scheduling. You can implement
+other schemes like cosine scheduling and compare the performance.
+"""
 
 """
 ## References
