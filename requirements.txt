@@ -1,4 +1,4 @@
-black==22.1.0
+black==22.3.1
 pygments>=2.7.4
 markdown>=3.3
 matplotlib
