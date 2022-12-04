@@ -383,8 +383,7 @@ only when training on CIFAR10.
 
 # Kernel initializer to use
 def kernel_init(scale):
-    if scale == 0.0:
-        scale = 1e-10
+    scale = max(scale, 1e-10)
     return keras.initializers.VarianceScaling(
         scale, mode="fan_avg", distribution="uniform"
     )
