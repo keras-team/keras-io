@@ -28,7 +28,7 @@ import tensorflow_datasets as tfds
 Generative Modeling experienced tremendous growth in the last five years. Models like
 VAEs, GANs, and Flow-based models, proved to be a great success in generating
 high-quality content, especially images. Diffusion models are a new type of generative
-model that has proven to be better than all the generative models in the past. 
+model that has proven to be better than all the generative models in the past.
 
 Diffusion models are inspired by non-equilibrium thermodynamics, and they learn to
 generate by denoising. The idea of learning by denoising consists of two processes,
@@ -39,14 +39,16 @@ in a series of time steps `(t1, t2,....,tn )`. Samples at the current time step 
 drawn from a Gaussian distribution where the mean of the distribution is conditioned
 on the sample at the previous time step, and the variance of the distribution follows
 a fixed schedule. At the end of the forward process, the samples end up with a pure
-noise distribution. 
+noise distribution.
 
 2. The reverse process: During the reverse process, we try to undo the added noise at
 every time step. We start with the pure noise distribution (the last step of the
 forward process) and try to denoise the samples in the backward direction `(tn,
 tn-1,...., t1)`.
 
-![diffusion process gif](https://i.imgur.com/dipPOfa.gif)
+This is how the diffusion process looks like (image -> noise::noise -> image)
+
+![diffusion process gif](https://imgur.com/Yn7tho9.gif)
 
 Implementing the idea of a diffusion model is simple. We define a model that takes
 two inputs: Images and the randomly sampled time steps. At each training step, we
@@ -55,12 +57,13 @@ perform the following operations to train our model:
 1. Sample random noise to be added to the inputs.
 2. Apply the forward process to diffuse the inputs with the sampled noise.
 3. Your model takes these noisy samples as inputs and outputs the noise
-prediction at each time step.
-4. Given true noise and predicted noise, calculate the loss values
-5. Calculate the gradients and update the model weights.
+prediction for each time step.
+4. Given true noise and predicted noise, we calculate the loss values
+5. We then calculate the gradients and update the model weights.
 
 Given that our model knows how to denoise a noisy sample at a given time step,
-we can leverage this to generate new samples, starting from a pure noise distribution.
+we can leverage this idea to generate new samples, starting from a pure noise
+distribution.
 """
 
 
@@ -368,7 +371,7 @@ widely used for implementing diffusion models but with some slight modifications
 
 We will implement most of the things as used in the original paper. We will use `swish`
 activation function throughout the network. We will use variance scaling kernel
-initializer. 
+initializer.
 
 The only difference here is the number of groups used for GroupNormalization layer.
 For the flowers dataset, we found that a value of `groups=8` produces better results
@@ -746,12 +749,12 @@ here, and we will generate a few samples starting from pure noise.
 """
 
 """shell
-curl -LO https://github.com/AakashKumarNain/ddpms/releases/download/v1.0.0/diffusion_model_checkpoint.zip
-unzip diffusion_model_checkpoint.zip
+curl -LO https://github.com/AakashKumarNain/ddpms/releases/download/v3.0.0/checkpoints.zip
+unzip -qq checkpoints.zip
 """
 
 # Load the model weights
-model.ema_network.load_weights("diffusion_model_checkpoint")
+model.ema_network.load_weights("checkpoints/diffusion_model_checkpoint")
 
 # Generate and plot some samples
 model.plot_images()
@@ -775,7 +778,7 @@ other schemes like cosine scheduling and compare the performance.
 """
 ## References
 
-1. [Denoising Diffusion Probabilistic Models](https://arxiv.org/pdf/2006.11239.pdf)
+1. [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
 2. [Author's implementation](https://github.com/hojonathanho/diffusion)
 3. [A deep dive into DDPMs](https://magic-with-latents.github.io/latent/posts/ddpms/part3/)
 4. [Denoising Diffusion Implicit Models](https://keras.io/examples/generative/ddim/)
