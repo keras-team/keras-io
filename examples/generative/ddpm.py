@@ -7,35 +7,19 @@ Description: Generating images of flowers with denoising diffusion probabilistic
 """
 
 """
-## Setup
-"""
-
-import math
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Requires TensorFlow >=2.11 as GroupNormalization layer was introduced
-# in release 2.11 only
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_datasets as tfds
-
-
-"""
 ## Introduction
 
-Generative Modeling experienced tremendous growth in the last five years. Models like
-VAEs, GANs, and Flow-based models, proved to be a great success in generating
+Generative modeling experienced tremendous growth in the last five years. Models like
+VAEs, GANs, and flow-based models proved to be a great success in generating
 high-quality content, especially images. Diffusion models are a new type of generative
-model that has proven to be better than all the generative models in the past.
+model that has proven to be better than previous approaches.
 
 Diffusion models are inspired by non-equilibrium thermodynamics, and they learn to
-generate by denoising. The idea of learning by denoising consists of two processes,
+generate by denoising. Learning by denoising consists of two processes,
 each of which is a Markov Chain. These are:
 
 1. The forward process: In the forward process, we slowly add random noise to the data
-in a series of time steps `(t1, t2,....,tn )`. Samples at the current time step are
+in a series of time steps `(t1, t2, ..., tn )`. Samples at the current time step are
 drawn from a Gaussian distribution where the mean of the distribution is conditioned
 on the sample at the previous time step, and the variance of the distribution follows
 a fixed schedule. At the end of the forward process, the samples end up with a pure
@@ -43,14 +27,14 @@ noise distribution.
 
 2. The reverse process: During the reverse process, we try to undo the added noise at
 every time step. We start with the pure noise distribution (the last step of the
-forward process) and try to denoise the samples in the backward direction `(tn,
-tn-1,...., t1)`.
+forward process) and try to denoise the samples in the backward direction
+`(tn, tn-1, ..., t1)`.
 
-This is how the diffusion process looks like (image -> noise::noise -> image)
+This is what the diffusion process looks like (image -> noise::noise -> image)
 
 ![diffusion process gif](https://imgur.com/Yn7tho9.gif)
 
-Implementing the idea of a diffusion model is simple. We define a model that takes
+Implementing a diffusion model is simple. We define a model that takes
 two inputs: Images and the randomly sampled time steps. At each training step, we
 perform the following operations to train our model:
 
@@ -66,6 +50,19 @@ we can leverage this idea to generate new samples, starting from a pure noise
 distribution.
 """
 
+"""
+## Setup
+"""
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Requires TensorFlow >=2.11 for the GroupNormalization layer.
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import tensorflow_datasets as tfds
 
 """
 ## Hyperparameters
@@ -95,12 +92,12 @@ splits = ["train"]
 """
 ## Dataset
 
-We will use the [Oxford Flowers 102](https://www.tensorflow.org/datasets/catalog/oxford_flowers102)
-dataset for generating images of flowers. In terms of preprocessing, we will use center
-crops for resizing the images to the desired image size, and we will rescale the pixel
-values in the range [-1.0, 1.0]. This is inline with the range of the pixel values that
+We use the [Oxford Flowers 102](https://www.tensorflow.org/datasets/catalog/oxford_flowers102)
+dataset for generating images of flowers. In terms of preprocessing, we use center
+cropping for resizing the images to the desired image size, and we rescale the pixel
+values in the range `[-1.0, 1.0]`. This is in line with the range of the pixel values that
 was applied by the authors of the [DDPMs paper](https://arxiv.org/abs/2006.11239). For
-augmenting training data, we will randomly flip the images left/right.
+augmenting training data, we randomly flip the images left/right.
 """
 
 
@@ -162,10 +159,10 @@ train_ds = (
 
 
 """
-## Gaussian Diffusion Utilities
+## Gaussian diffusion utilities
 
-Defines the forward process, and the reverse process. We are defining both these
-processes as a separate utility. Most of the code in this utility has been borrowed
+We define the forward process and the reverse process
+as a separate utility. Most of the code in this utility has been borrowed
 from the original implementation with some slight modifications.
 """
 
@@ -359,9 +356,9 @@ class GaussianDiffusion:
 
 
 """
-## Network Architecture
+## Network architecture
 
-U-Net, originally developed for semantic segmentation, is the architecture that is
+U-Net, originally developed for semantic segmentation, is an architecture that is
 widely used for implementing diffusion models but with some slight modifications:
 
 1. The network accepts two inputs: Image and time step
@@ -369,12 +366,13 @@ widely used for implementing diffusion models but with some slight modifications
 (16x16 in the paper)
 3. Group Normalization instead of weight normalization
 
-We will implement most of the things as used in the original paper. We will use `swish`
-activation function throughout the network. We will use variance scaling kernel
-initializer.
+We implement most of the things as used in the original paper. We use the
+`swish` activation function throughout the network. We use the variance scaling
+kernel initializer.
 
-The only difference here is the number of groups used for GroupNormalization layer.
-For the flowers dataset, we found that a value of `groups=8` produces better results
+The only difference here is the number of groups used for the
+`GroupNormalization` layer. For the flowers dataset,
+we found that a value of `groups=8` produces better results
 compared to the default value of `groups=32`. Dropout is optional and should be
 used where chances of over fitting is high. In the paper, the authors used dropout
 only when training on CIFAR10.
@@ -590,14 +588,14 @@ def build_model(
 """
 ## Training
 
-We will follow the same setup for training the diffusion model as described
-in the paper. We will use `Adam` optimizer with a learning rate of `2e-4`.
-We will use EMA on model parameters with a decay factor of 0.999. We will
+We follow the same setup for training the diffusion model as described
+in the paper. We use `Adam` optimizer with a learning rate of `2e-4`.
+We use EMA on model parameters with a decay factor of 0.999. We
 treat our model as noise prediction network i.e. at every training step, we
-will input a batch of images and corresponding time steps to our UNet,
-and the network will output the noise as predictions.
+input a batch of images and corresponding time steps to our UNet,
+and the network outputs the noise as predictions.
 
-The only difference is that we will not be using the Kernel Inception Distance (KID)
+The only difference is that we aren't using the Kernel Inception Distance (KID)
 or Frechet Inception Distance (FID) for evaluating the quality of generated
 samples during training. This is because both these metrics are compute heavy
 and are skipped for the brevity of implementation.
@@ -742,9 +740,9 @@ model.fit(
 """
 ## Results
 
-We trained this model for 500 epochs on a machine equipped with a V100 GPU,
-and each epoch took almost 8 seconds to finish. We will load those weights
-here, and we will generate a few samples starting from pure noise.
+We trained this model for 500 epochs on a V100 GPU,
+and each epoch took almost 8 seconds to finish. We load those weights
+here, and we generate a few samples starting from pure noise.
 """
 
 """shell
