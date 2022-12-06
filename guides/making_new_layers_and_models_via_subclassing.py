@@ -241,9 +241,7 @@ class ActivityRegularizationLayer(keras.layers.Layer):
 
 """
 Notice that `add_loss()` can take the result of plain TensorFlow operations.
-There is no need to call a `Loss` object here. (In fact, you could *not* use
-the convenient default reduction by batch size, because that is not allowed
-under a distribution strategy.)
+There is no need to call a `Loss` object here.
 
 These losses (including those created by any inner layer) can be retrieved via
 `layer.losses`. This property is reset at the start of every `__call__()` to
