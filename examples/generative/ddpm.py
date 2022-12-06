@@ -2,7 +2,7 @@
 Title: Denoising Diffusion Probabilistic Model
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2022/11/30
-Last modified: 2022/11/30
+Last modified: 2022/12/06
 Description: Generating images of flowers with denoising diffusion probabilistic models.
 """
 
@@ -30,11 +30,40 @@ every time step. We start with the pure noise distribution (the last step of the
 forward process) and try to denoise the samples in the backward direction
 `(tn, tn-1, ..., t1)`.
 
-This is what the diffusion process looks like (image -> noise::noise -> image)
+We implement the [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
+paper or DDPMs for short in this code example. It was the first paper demonstrating
+the usage of diffusion models for generating high-quality images. The authors show
+that a certain parameterization of diffusion models reveals an equivalence with
+denoising score matching over multiple noise levels during training and with annealed
+Langevin dynamics during sampling that generates the best quality results.
+
+This paper replicates the exact two Markov chains involved in the diffusion process
+but for images. The forward process is fixed and gradually adds Gaussian noise to the
+images according to a fixed variance schedule denoted by beta in the paper. This is
+what the diffusion process looks like (image -> noise::noise -> image)
 
 ![diffusion process gif](https://imgur.com/Yn7tho9.gif)
 
-Implementing a diffusion model is simple. We define a model that takes
+
+The paper describes two algorithms, one for training the model, and the other for
+sampling from the trained model. Training is performed by optimizing the usual
+variational bound on negative log-likelihood. The objective function is further
+simplified, and the network is treated as a noise prediction network. Once optimized,
+we can sample from the network to generate new images from noise samples. Here is an
+overview of both algorithms as presented in the paper:
+
+![ddpms](https://i.imgur.com/S7KH5hZ.png)
+
+
+**Note:** DDPM is just one way of implementing a diffusion model. Also, the sampling
+algorithm in the DDPM replicates the complete Markov chain. Hence it's slow in
+generating new samples compared to other generative models like GANs. Lots of research
+efforts have been made to address this issue. One such example is Denoising Diffusion
+Implicit Models, or DDIM for short, where the authors replaced the Markov chain with a
+non-Markovian process to sample faster. You can find the code example for DDIM
+[here](https://keras.io/examples/generative/ddim/)
+
+Implementing a DDPM model is simple. We define a model that takes
 two inputs: Images and the randomly sampled time steps. At each training step, we
 perform the following operations to train our model:
 
@@ -740,7 +769,7 @@ model.fit(
 """
 ## Results
 
-We trained this model for 500 epochs on a V100 GPU,
+We trained this model for 800 epochs on a V100 GPU,
 and each epoch took almost 8 seconds to finish. We load those weights
 here, and we generate a few samples starting from pure noise.
 """
