@@ -519,6 +519,7 @@ def _make_output_code_blocks(md):
 
 NB_BASE = {
     "metadata": {
+        "accelerator": "GPU",
         "colab": {
             "collapsed_sections": [],
             "name": "",  # FILL ME
