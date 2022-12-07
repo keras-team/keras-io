@@ -55,8 +55,6 @@ MASTER = {
                     "toc": True,
                     "generate": [
                         "tensorflow.keras.optimizers.Optimizer.apply_gradients",
-                        "tensorflow.keras.optimizers.Optimizer.weights",
-                        "tensorflow.keras.optimizers.Optimizer.get_weights",
                         "tensorflow.keras.optimizers.Optimizer.set_weights",
                     ],
                     "children": [
@@ -76,11 +74,6 @@ MASTER = {
                             "generate": ["tensorflow.keras.optimizers.Adam"],
                         },
                         {
-                            "path": "adamw",
-                            "title": "AdamW",
-                            "generate": ["tensorflow.keras.optimizers.AdamW"],
-                        },
-                        {
                             "path": "adadelta",
                             "title": "Adadelta",
                             "generate": ["tensorflow.keras.optimizers.Adadelta"],
@@ -98,7 +91,7 @@ MASTER = {
                         {
                             "path": "adafactor",
                             "title": "Adafactor",
-                            "generate": ["tensorflow.keras.optimizers.Adafactor"],
+                            "generate": ["tensorflow.keras.optimizers.experimental.Adafactor"],
                         },
                         {
                             "path": "Nadam",
