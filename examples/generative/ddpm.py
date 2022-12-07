@@ -32,15 +32,16 @@ forward process) and try to denoise the samples in the backward direction
 
 We implement the [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
 paper or DDPMs for short in this code example. It was the first paper demonstrating
-the usage of diffusion models for generating high-quality images. The authors show
+the use of diffusion models for generating high-quality images. The authors proved
 that a certain parameterization of diffusion models reveals an equivalence with
 denoising score matching over multiple noise levels during training and with annealed
 Langevin dynamics during sampling that generates the best quality results.
 
-This paper replicates the exact two Markov chains involved in the diffusion process
-but for images. The forward process is fixed and gradually adds Gaussian noise to the
-images according to a fixed variance schedule denoted by beta in the paper. This is
-what the diffusion process looks like (image -> noise::noise -> image)
+This paper replicates both the Markov chains (forward process and reverse process)
+involved in the diffusion process but for images. The forward process is fixed and
+gradually adds Gaussian noise to the images according to a fixed variance schedule
+denoted by beta in the paper. This is what the diffusion process looks like in case
+of images: (image -> noise::noise -> image)
 
 ![diffusion process gif](https://imgur.com/Yn7tho9.gif)
 
