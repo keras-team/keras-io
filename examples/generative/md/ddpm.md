@@ -784,7 +784,7 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-31/31 [==============================] - ETA: 0s - loss: 0.7692
+31/31 [==============================] - ETA: 0s - loss: 0.7746
 
 ```
 </div>
@@ -795,9 +795,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-31/31 [==============================] - 183s 4s/step - loss: 0.7610
+31/31 [==============================] - 194s 4s/step - loss: 0.7668
 
-<keras.callbacks.History at 0x7fe51073b6a0>
+<keras.callbacks.History at 0x7fc9e86ce610>
 
 ```
 </div>
@@ -827,7 +827,7 @@ model.plot_images(num_rows=4, num_cols=8)
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-100  222M  100  222M    0     0  6409k      0  0:00:35  0:00:35 --:--:-- 6302k
+100  222M  100  222M    0     0  16.0M      0  0:00:13  0:00:13 --:--:-- 14.7M
 
 ```
 </div>
@@ -847,6 +847,7 @@ There are a few things that you can try to improve the model:
 
 1. Increasing the width of each block. A bigger model can learn to denoise
 in fewer epochs, though you may have to take care of overfitting.
+
 2. We implemented the linear schedule for variance scheduling. You can implement
 other schemes like cosine scheduling and compare the performance.
 

@@ -798,6 +798,7 @@ There are a few things that you can try to improve the model:
 
 1. Increasing the width of each block. A bigger model can learn to denoise
 in fewer epochs, though you may have to take care of overfitting.
+
 2. We implemented the linear schedule for variance scheduling. You can implement
 other schemes like cosine scheduling and compare the performance.
 """
