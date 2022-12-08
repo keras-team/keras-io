@@ -2,7 +2,7 @@
 Title: Denoising Diffusion Probabilistic Model
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2022/11/30
-Last modified: 2022/12/06
+Last modified: 2022/12/07
 Description: Generating images of flowers with denoising diffusion probabilistic models.
 """
 
@@ -784,7 +784,7 @@ unzip -qq checkpoints.zip
 model.ema_network.load_weights("checkpoints/diffusion_model_checkpoint")
 
 # Generate and plot some samples
-model.plot_images()
+model.plot_images(num_rows=4, num_cols=8)
 
 
 """
