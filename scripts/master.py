@@ -74,6 +74,11 @@ MASTER = {
                             "generate": ["tensorflow.keras.optimizers.Adam"],
                         },
                         {
+                            "path": "adamw",
+                            "title": "AdamW",
+                            "generate": ["tensorflow.keras.optimizers.experimental.AdamW"],
+                        },
+                        {
                             "path": "adadelta",
                             "title": "Adadelta",
                             "generate": ["tensorflow.keras.optimizers.Adadelta"],
