@@ -44,13 +44,14 @@ StableDiffusion so we can use some of the sub-components for fine-tuning.
 !pip install -q tensorflow==2.11.0
 """
 import math
-from keras_cv.models.stable_diffusion import NoiseScheduler
-import keras_cv
-from keras_cv import layers as cv_layers
-import tensorflow as tf
-from tensorflow import keras
-import numpy as np
 import random
+
+import keras_cv
+import numpy as np
+import tensorflow as tf
+from keras_cv import layers as cv_layers
+from keras_cv.models.stable_diffusion import NoiseScheduler
+from tensorflow import keras
 
 stable_diffusion = keras_cv.models.StableDiffusion()
 
