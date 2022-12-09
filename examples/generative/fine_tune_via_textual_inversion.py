@@ -20,7 +20,7 @@ Perhaps the most impressive new algorithm being used is
 Inversion_](https://textual-inversion.github.io/)
 
 Textual-inversion is the process of teaching an image generator the concept of a
-wpecific thing through the use of fine-tuning. In the diagram below, you can see an 
+specific thing through the use of fine-tuning. In the diagram below, you can see an 
 example of this process where the authors teach the model new concepts, calling them 
 "S_*".
 
