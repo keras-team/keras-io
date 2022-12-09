@@ -1,5 +1,7 @@
 # KerasNLP
 
+<a class="github-button" href="https://github.com/keras-team/keras-nlp" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-nlp on GitHub">Star</a>
+
 KerasNLP is a simple and powerful API for building Natural Language Processing
 (NLP) models within the Keras ecosystem.
 
