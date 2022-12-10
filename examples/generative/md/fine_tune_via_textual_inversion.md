@@ -1,12 +1,16 @@
-"""
-Title: Teach StableDiffusion new concepts via Textual Inversion
-Authors: Ian Stenbit, [lukewood](https://lukewood.xyz)
-Date created: 2022/12/09
-Last modified: 2022/12/09
-Description: Learning new visual concepts with KerasCV's StableDiffusion implementation.
-"""
+# Teach StableDiffusion new concepts via Textual Inversion
 
-"""
+**Authors:** Ian Stenbit, [lukewood](https://lukewood.xyz)<br>
+**Date created:** 2022/12/09<br>
+**Last modified:** 2022/12/09<br>
+**Description:** Learning new visual concepts with KerasCV's StableDiffusion implementation.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/fine_tune_via_textual_inversion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/fine_tune_via_textual_inversion.py)
+
+
+
+---
 ## Textual Inversion
 
 Since its release, StableDiffusion has quickly become a favorite amongst
@@ -37,13 +41,14 @@ write the "Gandalf the Gray as a <my-funny-cat-token>".
 
 First, let's import the packages we need, and create a
 StableDiffusion instance so we can use some of its subcomponents for fine-tuning.
-"""
 
-"""shell
-pip install -q git+https://github.com/keras-team/keras-cv.git
-pip install -q tensorflow==2.11.0
-"""
 
+```python
+!pip install -q git+https://github.com/keras-team/keras-cv.git
+!pip install -q tensorflow==2.11.0
+```
+
+```python
 import math
 import random
 
@@ -56,11 +61,118 @@ from tensorflow import keras
 import matplotlib.pyplot as plt
 
 stable_diffusion = keras_cv.models.StableDiffusion()
+```
+<div class="k-default-codeblock">
+```
+--- Logging error ---
+Traceback (most recent call last):
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 177, in emit
+    self.console.print(renderable, overflow="ignore", crop=False, style=style)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1673, in print
+    extend(render(renderable, render_options))
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1305, in render
+    for render_output in iter_render:
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 134, in __rich_console__
+    for line in lines:
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/segment.py", line 249, in split_lines
+    for segment in segments:
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1283, in render
+    renderable = rich_cast(renderable)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/protocol.py", line 36, in rich_cast
+    renderable = cast_method()
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 130, in __rich__
+    pip_cmd = get_best_invocation_for_this_pip()
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/entrypoints.py", line 60, in get_best_invocation_for_this_pip
+    os.path.join(binary_prefix, exe_name),
+  File "/usr/lib/python3.7/genericpath.py", line 97, in samefile
+    s2 = os.stat(f2)
+FileNotFoundError: [Errno 2] No such file or directory: '/usr/bin/pip'
+Call stack:
+  File "/home/lukewood/.local/bin/pip", line 10, in <module>
+    sys.exit(main())
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/main.py", line 70, in main
+    return command.main(cmd_args)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 101, in main
+    return self._main(args)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 223, in _main
+    self.handle_pip_version_check(options)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/req_command.py", line 190, in handle_pip_version_check
+    pip_self_version_check(session, options)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 236, in pip_self_version_check
+    logger.warning("[present-rich] %s", upgrade_prompt)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1395, in warning
+    self._log(WARNING, msg, args, **kwargs)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1519, in _log
+    self.handle(record)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1529, in handle
+    self.callHandlers(record)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1591, in callHandlers
+    hdlr.handle(record)
+  File "/usr/lib/python3.7/logging/__init__.py", line 905, in handle
+    self.emit(record)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 179, in emit
+    self.handleError(record)
+Message: '[present-rich] %s'
+Arguments: (UpgradePrompt(old='22.2.2', new='22.3.1'),)
+--- Logging error ---
+Traceback (most recent call last):
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 177, in emit
+    self.console.print(renderable, overflow="ignore", crop=False, style=style)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1673, in print
+    extend(render(renderable, render_options))
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1305, in render
+    for render_output in iter_render:
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 134, in __rich_console__
+    for line in lines:
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/segment.py", line 249, in split_lines
+    for segment in segments:
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1283, in render
+    renderable = rich_cast(renderable)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/protocol.py", line 36, in rich_cast
+    renderable = cast_method()
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 130, in __rich__
+    pip_cmd = get_best_invocation_for_this_pip()
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/entrypoints.py", line 60, in get_best_invocation_for_this_pip
+    os.path.join(binary_prefix, exe_name),
+  File "/usr/lib/python3.7/genericpath.py", line 97, in samefile
+    s2 = os.stat(f2)
+FileNotFoundError: [Errno 2] No such file or directory: '/usr/bin/pip'
+Call stack:
+  File "/home/lukewood/.local/bin/pip", line 10, in <module>
+    sys.exit(main())
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/main.py", line 70, in main
+    return command.main(cmd_args)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 101, in main
+    return self._main(args)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 223, in _main
+    self.handle_pip_version_check(options)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/req_command.py", line 190, in handle_pip_version_check
+    pip_self_version_check(session, options)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 236, in pip_self_version_check
+    logger.warning("[present-rich] %s", upgrade_prompt)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1395, in warning
+    self._log(WARNING, msg, args, **kwargs)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1519, in _log
+    self.handle(record)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1529, in handle
+    self.callHandlers(record)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1591, in callHandlers
+    hdlr.handle(record)
+  File "/usr/lib/python3.7/logging/__init__.py", line 905, in handle
+    self.emit(record)
+  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 179, in emit
+    self.handleError(record)
+Message: '[present-rich] %s'
+Arguments: (UpgradePrompt(old='22.2.2', new='22.3.1'),)
 
-"""
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
+
+```
+</div>
 Next, let's define a visualization utility to show off the generated images:
-"""
 
+
+```python
 
 def plot_images(images):
     plt.figure(figsize=(20, 20))
@@ -69,8 +181,9 @@ def plot_images(images):
         plt.imshow(images[i])
         plt.axis("off")
 
+```
 
-"""
+---
 ## Assembling a text-image pair dataset
 
 In order to train the embedding of our new token, we first must assemble a dataset
@@ -83,8 +196,9 @@ avatars:
 ![gh-avatars](https://i.imgur.com/WyEHDIR.jpg)
 
 First, let's construct an image dataset of cat dolls:
-"""
 
+
+```python
 
 def assemble_image_dataset(urls):
     # Fetch all remote files
@@ -119,11 +233,12 @@ def assemble_image_dataset(urls):
     )
     return image_dataset
 
+```
 
-"""
 Next, we assemble a text dataset:
-"""
 
+
+```python
 MAX_PROMPT_LENGTH = 77
 placeholder_token = "<my-funny-cat-token>"
 
@@ -145,11 +260,12 @@ def assemble_text_dataset(prompts):
     text_dataset = text_dataset.shuffle(100, reshuffle_each_iteration=True)
     return text_dataset
 
+```
 
-"""
 Finally, we zip our datasets together to produce a text-image pair dataset.
-"""
 
+
+```python
 
 def assemble_dataset(urls, prompts):
     image_dataset = assemble_image_dataset(urls)
@@ -163,13 +279,14 @@ def assemble_dataset(urls, prompts):
     text_dataset = text_dataset.repeat(5)
     return tf.data.Dataset.zip((image_dataset, text_dataset))
 
+```
 
-"""
 In order to ensure our prompts are descriptive, we use extremely generic prompts.
 
 Let's try this out with some sample images and prompts.
-"""
 
+
+```python
 train_ds = assemble_dataset(
     urls=[
         "https://i.imgur.com/VIedH1X.jpg",
@@ -207,8 +324,17 @@ train_ds = assemble_dataset(
         "a photo of a small {}",
     ],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:From /home/lukewood/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
+Instructions for updating:
+Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+
+```
+</div>
+---
 ## On the importance of prompt accuracy
 
 During our first attempt at writing this guide we included images of groups of these cat
@@ -230,8 +356,9 @@ In addition to separating the images into singular and group images, we also rem
 inaccurate prompts; such as "a dark photo of the {}"
 
 Keeping this in mind, we assemble our final training dataset below:
-"""
 
+
+```python
 single_ds = assemble_dataset(
     urls=[
         "https://i.imgur.com/VIedH1X.jpg",
@@ -268,15 +395,16 @@ single_ds = assemble_dataset(
         "a photo of a small {}",
     ],
 )
+```
 
-"""
 ![https://i.imgur.com/gQCRjK6.png](https://i.imgur.com/gQCRjK6.png)
 
 Looks great!
 
 Next, we assemble a dataset of groups of our GitHub avatars:
-"""
 
+
+```python
 group_ds = assemble_dataset(
     urls=[
         "https://i.imgur.com/yVmZ2Qa.jpg",
@@ -311,24 +439,28 @@ group_ds = assemble_dataset(
         "a photo of a small group of {}",
     ],
 )
+```
 
-"""
 ![https://i.imgur.com/GY9Pf3D.png](https://i.imgur.com/GY9Pf3D.png)
 
 Finally, we concatenate the two datasets:
-"""
 
+
+```python
 train_ds = single_ds.concatenate(group_ds)
 train_ds = train_ds.batch(1).shuffle(
     train_ds.cardinality(), reshuffle_each_iteration=True
 )
+```
 
-"""
+---
 ## Adding a new token to the text encoder
 
 Next, we create a new text encoder for the StableDiffusion model and add our new
 embedding for '<my-funny-cat-token>' into the model.
-"""
+
+
+```python
 tokenized_initializer = stable_diffusion.tokenizer.encode("cat")[1]
 new_weights = stable_diffusion.text_encoder.layers[2].token_embedding(
     tf.constant(tokenized_initializer)
@@ -349,11 +481,12 @@ old_token_weights = old_token_weights[0]
 new_weights = np.expand_dims(new_weights, axis=0)
 new_weights = np.concatenate([old_token_weights, new_weights], axis=0)
 
+```
 
-"""
 Let's construct a new TextEncoder and prepare it.
-"""
 
+
+```python
 # Have to set download_weights False so we can init (otherwise tries to load weights)
 new_encoder = keras_cv.models.stable_diffusion.TextEncoder(
     keras_cv.models.stable_diffusion.stable_diffusion.MAX_PROMPT_LENGTH,
@@ -372,16 +505,18 @@ new_encoder.layers[2].position_embedding.set_weights(old_position_weights)
 
 stable_diffusion._text_encoder = new_encoder
 stable_diffusion._text_encoder.compile(jit_compile=True)
+```
 
-"""
+---
 ## Training
 
 Now we can move on to the exciting part: training!
 
 In TextualInversion, the only piece of the model that is trained is the embedding vector.
 Let's freeze the rest of the model.
-"""
 
+
+```python
 
 stable_diffusion.diffusion_model.trainable = False
 stable_diffusion.decoder.trainable = False
@@ -407,19 +542,27 @@ for layer in traverse_layers(stable_diffusion.text_encoder):
         layer.trainable = False
 
 new_encoder.layers[2].position_embedding.trainable = False
+```
 
-"""
 Let's confirm the proper weights are set to trainable.
-"""
 
+
+```python
 all_models = [
     stable_diffusion.text_encoder,
     stable_diffusion.diffusion_model,
     stable_diffusion.decoder,
 ]
 print([[w.shape for w in model.trainable_weights] for model in all_models])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[[TensorShape([49409, 768])], [], []]
+
+```
+</div>
+---
 ## Training the new embedding
 
 In order to train the embedding, we need a couple of utilities.
@@ -432,8 +575,9 @@ encoder, rather than taking just the mean (like many other SD applications)
 diffusion model
 - `get_position_ids` produces a tensor of position IDs for the text encoder (which is just a
 series from `[1, MAX_PROMPT_LENGTH]`)
-"""
 
+
+```python
 
 # Remove the top layer from the encoder, which cuts off the variance and only returns
 # the mean
@@ -464,8 +608,8 @@ def get_timestep_embedding(timestep, dim=320, max_period=10000):
 def get_position_ids():
     return tf.convert_to_tensor([list(range(MAX_PROMPT_LENGTH))], dtype=tf.int32)
 
+```
 
-"""
 Next, we implement a `StableDiffusionFineTuner`, which is a subclass of `keras.Model`
 that overrides `train_step` to train the token embeddings of our text encoder.
 This is the core of the Textual Inversion algorithm.
@@ -486,8 +630,9 @@ train step we zero-out the gradients for all tokens other than the token that we
 learning.
 
 See in-line code comments for more details about the train step.
-"""
 
+
+```python
 
 class StableDiffusionFineTuner(keras.Model):
     def __init__(self, stable_diffusion, noise_scheduler, **kwargs):
@@ -568,26 +713,39 @@ class StableDiffusionFineTuner(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_weights))
         return {"loss": loss}
 
+```
 
-"""
 Before we start training, let's take a look at what StableDiffusion produces for our
 token.
-"""
 
+
+```python
 generated = stable_diffusion.text_to_image(
     f"an oil painting of {placeholder_token}", seed=1337, batch_size=3
 )
 plot_images(generated)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 19s 314ms/step
+
+```
+</div>
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_33_1.png)
+    
+
+
 As you can see, the model still thinks of our token as a cat, as this was the seed token
 we used to initialize our custom token.
 
 Now, to get started with training, we can just `compile()` our model like any other
 Keras model. Before doing so, we also instantiate a noise scheduler for training and
 configure our training parameters such as learning rate and optimizer.
-"""
 
+
+```python
 noise_scheduler = NoiseScheduler(
     beta_start=0.00085,
     beta_end=0.012,
@@ -608,16 +766,17 @@ trainer.compile(
     # We are performing reduction manually in our train step, so none is required here.
     loss=keras.losses.MeanSquaredError(reduction="none"),
 )
+```
 
-"""
 To monitor training, we can produce a `keras.callbacks.Callback` to produce a few images
 every epoch using our custom token.
 
 We create three callbacks with different prompts so that we can see how they progress
 over the course of training. We use a fixed seed so that we can easily see the
 progression of the learned token.
-"""
 
+
+```python
 
 class GenerateImages(keras.callbacks.Callback):
     def __init__(
@@ -653,24 +812,235 @@ cbs = [
         seed=1337,
     ),
 ]
+```
 
-"""
 Now, all that is left to do is to call `model.fit()`!
-"""
 
+
+```python
 trainer.fit(
     train_ds,
     epochs=EPOCHS,
     callbacks=cbs,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/50
+50/50 [==============================] - 16s 318ms/step
+50/50 [==============================] - 16s 318ms/step
+50/50 [==============================] - 16s 318ms/step
+250/250 [==============================] - 194s 469ms/step - loss: 0.1533
+Epoch 2/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1557
+Epoch 3/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1359
+Epoch 4/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1693
+Epoch 5/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1475
+Epoch 6/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1472
+Epoch 7/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1533
+Epoch 8/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1450
+Epoch 9/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1639
+Epoch 10/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1351
+Epoch 11/50
+50/50 [==============================] - 16s 316ms/step
+50/50 [==============================] - 16s 316ms/step
+50/50 [==============================] - 16s 317ms/step
+250/250 [==============================] - 116s 464ms/step - loss: 0.1474
+Epoch 12/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1737
+Epoch 13/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1427
+Epoch 14/50
+250/250 [==============================] - 68s 269ms/step - loss: 0.1698
+Epoch 15/50
+250/250 [==============================] - 68s 270ms/step - loss: 0.1424
+Epoch 16/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1339
+Epoch 17/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1397
+Epoch 18/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1469
+Epoch 19/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1649
+Epoch 20/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1582
+Epoch 21/50
+50/50 [==============================] - 16s 315ms/step
+50/50 [==============================] - 16s 316ms/step
+50/50 [==============================] - 16s 316ms/step
+250/250 [==============================] - 116s 462ms/step - loss: 0.1331
+Epoch 22/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1319
+Epoch 23/50
+250/250 [==============================] - 68s 267ms/step - loss: 0.1521
+Epoch 24/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1486
+Epoch 25/50
+250/250 [==============================] - 68s 267ms/step - loss: 0.1449
+Epoch 26/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1349
+Epoch 27/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1454
+Epoch 28/50
+250/250 [==============================] - 68s 268ms/step - loss: 0.1394
+Epoch 29/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1489
+Epoch 30/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1338
+Epoch 31/50
+50/50 [==============================] - 16s 315ms/step
+50/50 [==============================] - 16s 320ms/step
+50/50 [==============================] - 16s 315ms/step
+250/250 [==============================] - 116s 462ms/step - loss: 0.1328
+Epoch 32/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1693
+Epoch 33/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1420
+Epoch 34/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1255
+Epoch 35/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1239
+Epoch 36/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1558
+Epoch 37/50
+250/250 [==============================] - 68s 267ms/step - loss: 0.1527
+Epoch 38/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1461
+Epoch 39/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1555
+Epoch 40/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1515
+Epoch 41/50
+50/50 [==============================] - 16s 315ms/step
+50/50 [==============================] - 16s 315ms/step
+50/50 [==============================] - 16s 315ms/step
+250/250 [==============================] - 116s 461ms/step - loss: 0.1291
+Epoch 42/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1474
+Epoch 43/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1908
+Epoch 44/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1506
+Epoch 45/50
+250/250 [==============================] - 68s 267ms/step - loss: 0.1424
+Epoch 46/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1601
+Epoch 47/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1312
+Epoch 48/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1524
+Epoch 49/50
+250/250 [==============================] - 67s 266ms/step - loss: 0.1477
+Epoch 50/50
+250/250 [==============================] - 67s 267ms/step - loss: 0.1397
+
+<keras.callbacks.History at 0x7f183aea3eb8>
+
+```
+</div>
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_2.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_3.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_4.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_5.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_6.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_7.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_8.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_9.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_10.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_11.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_12.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_13.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_14.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_15.png)
+    
+
+
+
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_39_16.png)
+    
+
+
 It's pretty fun to see how the model learns our new token over time. Play around with it
 and see how you can tune training parameters and your training dataset to produce the
 best images!
-"""
 
-"""
+---
 ## Taking the Fine Tuned Model for a Spin
 
 Now for the really fun part. We've learned a token embedding for our custom token, so
@@ -679,8 +1049,9 @@ token!
 
 Here are some fun example prompts to get you started, with sample outputs from our cat
 doll token!
-"""
 
+
+```python
 generated = stable_diffusion.text_to_image(
     f"Gandalf as a {placeholder_token} fantasy art drawn by disney concept artists, "
     "golden colour, high quality, highly detailed, elegant, sharp focus, concept art, "
@@ -688,10 +1059,21 @@ generated = stable_diffusion.text_to_image(
     batch_size=3,
 )
 plot_images(generated)
+```
 
-"""
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 8s 316ms/step
 
+```
+</div>
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_42_1.png)
+    
+
+
+
+```python
 generated = stable_diffusion.text_to_image(
     f"A masterpiece of a {placeholder_token} crying out to the heavens. "
     f"Behind the {placeholder_token}, an dark, evil shade looms over it - sucking the "
@@ -699,25 +1081,59 @@ generated = stable_diffusion.text_to_image(
     batch_size=3,
 )
 plot_images(generated)
+```
 
-"""
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 8s 314ms/step
 
+```
+</div>
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_43_1.png)
+    
+
+
+
+```python
 generated = stable_diffusion.text_to_image(
     f"An evil {placeholder_token}.", batch_size=3
 )
 plot_images(generated)
+```
 
-"""
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 8s 322ms/step
 
+```
+</div>
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_44_1.png)
+    
+
+
+
+```python
 generated = stable_diffusion.text_to_image(
     f"A mysterious {placeholder_token} approaches the great pyramids of egypt.",
     batch_size=3,
 )
 plot_images(generated)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 8s 315ms/step
+
+```
+</div>
+    
+![png](/img/examples/generative/fine_tune_via_textual_inversion/fine_tune_via_textual_inversion_45_1.png)
+    
+
+
+---
 ## Conclusions
 
 Using the Textual Inversion algorithm you can teach StableDiffusion new concepts!
@@ -727,4 +1143,3 @@ Some possible next steps to follow:
 - Try out your own prompts
 - Teach the model a style
 - Gather a dataset of your favorite pet cat or dog and teach the model about it
-"""
