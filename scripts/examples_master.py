@@ -538,6 +538,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image generation",
                 },
                 {
+                    "path": "fine_tune_via_textual_inversion",
+                    "title": "Teach StableDiffusion new concepts via Textual Inversion",
+                    "subcategory": "Image generation",
+                },
+                {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
                     "subcategory": "Image generation",

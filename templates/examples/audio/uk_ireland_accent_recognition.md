@@ -182,6 +182,47 @@ for i in zip_files:
     os.remove(zip_file)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://www.openslr.org/resources/83/line_index_all.csv
+1990656/1986139 [==============================] - 1s 0us/step
+1998848/1986139 [==============================] - 1s 0us/step
+Downloading data from https://www.openslr.org/resources/83/irish_english_male.zip
+164536320/164531638 [==============================] - 9s 0us/step
+164544512/164531638 [==============================] - 9s 0us/step
+Downloading data from https://www.openslr.org/resources/83/midlands_english_female.zip
+103088128/103085118 [==============================] - 6s 0us/step
+103096320/103085118 [==============================] - 6s 0us/step
+Downloading data from https://www.openslr.org/resources/83/midlands_english_male.zip
+166838272/166833961 [==============================] - 9s 0us/step
+166846464/166833961 [==============================] - 9s 0us/step
+Downloading data from https://www.openslr.org/resources/83/northern_english_female.zip
+314990592/314983063 [==============================] - 15s 0us/step
+314998784/314983063 [==============================] - 15s 0us/step
+Downloading data from https://www.openslr.org/resources/83/northern_english_male.zip
+817774592/817772034 [==============================] - 39s 0us/step
+817782784/817772034 [==============================] - 39s 0us/step
+Downloading data from https://www.openslr.org/resources/83/scottish_english_female.zip
+351444992/351443880 [==============================] - 17s 0us/step
+351453184/351443880 [==============================] - 17s 0us/step
+Downloading data from https://www.openslr.org/resources/83/scottish_english_male.zip
+620257280/620254118 [==============================] - 30s 0us/step
+620265472/620254118 [==============================] - 30s 0us/step
+Downloading data from https://www.openslr.org/resources/83/southern_english_female.zip
+1636704256/1636701939 [==============================] - 77s 0us/step
+1636712448/1636701939 [==============================] - 77s 0us/step
+Downloading data from https://www.openslr.org/resources/83/southern_english_male.zip
+1700962304/1700955740 [==============================] - 79s 0us/step
+1700970496/1700955740 [==============================] - 79s 0us/step
+Downloading data from https://www.openslr.org/resources/83/welsh_english_female.zip
+595689472/595683538 [==============================] - 29s 0us/step
+595697664/595683538 [==============================] - 29s 0us/step
+Downloading data from https://www.openslr.org/resources/83/welsh_english_male.zip
+757653504/757645790 [==============================] - 37s 0us/step
+757661696/757645790 [==============================] - 37s 0us/step
+
+```
+</div>
 ---
 ## Load the data in a Dataframe
 
@@ -197,12 +238,16 @@ dataframe.head()
 ```
 
 
+
+
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
 
+<div class="k-default-codeblock">
+```
 .dataframe tbody tr th {
     vertical-align: top;
 }
@@ -210,7 +255,8 @@ dataframe.head()
 .dataframe thead th {
     text-align: right;
 }
-
+```
+</div>
 </style>
 <table border="1" class="dataframe">
   <thead>
@@ -288,12 +334,16 @@ dataframe.head()
 ```
 
 
+
+
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
 
+<div class="k-default-codeblock">
+```
 .dataframe tbody tr th {
     vertical-align: top;
 }
@@ -301,7 +351,8 @@ dataframe.head()
 .dataframe thead th {
     text-align: right;
 }
-
+```
+</div>
 </style>
 <table border="1" class="dataframe">
   <thead>

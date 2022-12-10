@@ -64,107 +64,6 @@ stable_diffusion = keras_cv.models.StableDiffusion()
 ```
 <div class="k-default-codeblock">
 ```
---- Logging error ---
-Traceback (most recent call last):
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 177, in emit
-    self.console.print(renderable, overflow="ignore", crop=False, style=style)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1673, in print
-    extend(render(renderable, render_options))
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1305, in render
-    for render_output in iter_render:
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 134, in __rich_console__
-    for line in lines:
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/segment.py", line 249, in split_lines
-    for segment in segments:
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1283, in render
-    renderable = rich_cast(renderable)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/protocol.py", line 36, in rich_cast
-    renderable = cast_method()
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 130, in __rich__
-    pip_cmd = get_best_invocation_for_this_pip()
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/entrypoints.py", line 60, in get_best_invocation_for_this_pip
-    os.path.join(binary_prefix, exe_name),
-  File "/usr/lib/python3.7/genericpath.py", line 97, in samefile
-    s2 = os.stat(f2)
-FileNotFoundError: [Errno 2] No such file or directory: '/usr/bin/pip'
-Call stack:
-  File "/home/lukewood/.local/bin/pip", line 10, in <module>
-    sys.exit(main())
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/main.py", line 70, in main
-    return command.main(cmd_args)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 101, in main
-    return self._main(args)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 223, in _main
-    self.handle_pip_version_check(options)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/req_command.py", line 190, in handle_pip_version_check
-    pip_self_version_check(session, options)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 236, in pip_self_version_check
-    logger.warning("[present-rich] %s", upgrade_prompt)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1395, in warning
-    self._log(WARNING, msg, args, **kwargs)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1519, in _log
-    self.handle(record)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1529, in handle
-    self.callHandlers(record)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1591, in callHandlers
-    hdlr.handle(record)
-  File "/usr/lib/python3.7/logging/__init__.py", line 905, in handle
-    self.emit(record)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 179, in emit
-    self.handleError(record)
-Message: '[present-rich] %s'
-Arguments: (UpgradePrompt(old='22.2.2', new='22.3.1'),)
---- Logging error ---
-Traceback (most recent call last):
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 177, in emit
-    self.console.print(renderable, overflow="ignore", crop=False, style=style)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1673, in print
-    extend(render(renderable, render_options))
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1305, in render
-    for render_output in iter_render:
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 134, in __rich_console__
-    for line in lines:
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/segment.py", line 249, in split_lines
-    for segment in segments:
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/console.py", line 1283, in render
-    renderable = rich_cast(renderable)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_vendor/rich/protocol.py", line 36, in rich_cast
-    renderable = cast_method()
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 130, in __rich__
-    pip_cmd = get_best_invocation_for_this_pip()
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/entrypoints.py", line 60, in get_best_invocation_for_this_pip
-    os.path.join(binary_prefix, exe_name),
-  File "/usr/lib/python3.7/genericpath.py", line 97, in samefile
-    s2 = os.stat(f2)
-FileNotFoundError: [Errno 2] No such file or directory: '/usr/bin/pip'
-Call stack:
-  File "/home/lukewood/.local/bin/pip", line 10, in <module>
-    sys.exit(main())
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/main.py", line 70, in main
-    return command.main(cmd_args)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 101, in main
-    return self._main(args)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/base_command.py", line 223, in _main
-    self.handle_pip_version_check(options)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/cli/req_command.py", line 190, in handle_pip_version_check
-    pip_self_version_check(session, options)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/self_outdated_check.py", line 236, in pip_self_version_check
-    logger.warning("[present-rich] %s", upgrade_prompt)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1395, in warning
-    self._log(WARNING, msg, args, **kwargs)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1519, in _log
-    self.handle(record)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1529, in handle
-    self.callHandlers(record)
-  File "/usr/lib/python3.7/logging/__init__.py", line 1591, in callHandlers
-    hdlr.handle(record)
-  File "/usr/lib/python3.7/logging/__init__.py", line 905, in handle
-    self.emit(record)
-  File "/home/lukewood/.local/lib/python3.7/site-packages/pip/_internal/utils/logging.py", line 179, in emit
-    self.handleError(record)
-Message: '[present-rich] %s'
-Arguments: (UpgradePrompt(old='22.2.2', new='22.3.1'),)
-
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
 
 ```
@@ -326,14 +225,6 @@ train_ds = assemble_dataset(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /home/lukewood/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 ---
 ## On the importance of prompt accuracy
 
