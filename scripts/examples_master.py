@@ -533,6 +533,11 @@ EXAMPLES_MASTER = {
                     "highlight": True,
                 },
                 {
+                    "path": "ddpm",
+                    "title": "Denoising Diffusion Probabilistic Models",
+                    "subcategory": "Image generation",
+                },
+                {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
                     "subcategory": "Image generation",
