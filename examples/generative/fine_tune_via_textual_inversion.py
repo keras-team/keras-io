@@ -1,26 +1,25 @@
 """
-Title: Teach StableDiffusion New Concepts via TextualInversion
+Title: Teach StableDiffusion new concepts via Textual Inversion
 Authors: Ian Stenbit, [lukewood](https://lukewood.xyz)
-Date created: 2022/09/25
-Last modified: 2022/12/08
-Description: Learning new concepts in KerasCV's StableDiffusion implementation.
+Date created: 2022/12/09
+Last modified: 2022/12/09
+Description: Learning new visual concepts with KerasCV's StableDiffusion implementation.
 """
 
 """
-# Textual Inversion
+## Textual Inversion
 
-StableDiffusion: the first high quality open source image generator.  Since its
-release, StableDiffusion has quickly become a favorite amongst the machine learning
-community.  The high volume of traffic has led to open source contributed improvements,
+Since its release, StableDiffusion has quickly become a favorite amongst
+the generative machine learning community.
+The high volume of traffic has led to open source contributed improvements,
 heavy prompt engineering, and even the invention of novel algorithms.
 
 Perhaps the most impressive new algorithm being used is
-[Textual-inversion](https://github.com/rinongal/textual_inversion), presented in
-[_An Image is Worth One Word: Personalizing Text-to-Image Generation using Textual
-Inversion_](https://textual-inversion.github.io/)
+[Textual Inversion](https://github.com/rinongal/textual_inversion), presented in
+[_An Image is Worth One Word: Personalizing Text-to-Image Generation using Textual Inversion_](https://textual-inversion.github.io/)
 
-Textual-inversion is the process of teaching an image generator the concept of a
-specific thing through the use of fine-tuning. In the diagram below, you can see an 
+Textual Inversion is the process of teaching an image generator a specific visual concept
+through the use of fine-tuning. In the diagram below, you can see an 
 example of this process where the authors teach the model new concepts, calling them 
 "S_*".
 
@@ -35,14 +34,15 @@ write the "Gandalf the Gray as a <my-funny-cat-token>".
 
 ![https://i.imgur.com/rcb1Yfx.png](https://i.imgur.com/rcb1Yfx.png)
 
-First, lets start by importing the packages we will need, and constructing
-StableDiffusion so we can use some of the sub-components for fine-tuning.
+First, let's import the packages we need, and create a 
+StableDiffusion instance so we can use some of its subcomponents for fine-tuning.
 """
 
 """shell
-!pip install -q git+https://github.com/keras-team/keras-cv.git
-!pip install -q tensorflow==2.11.0
+pip install -q git+https://github.com/keras-team/keras-cv.git
+pip install -q tensorflow==2.11.0
 """
+
 import math
 import random
 
@@ -56,7 +56,7 @@ from tensorflow import keras
 stable_diffusion = keras_cv.models.StableDiffusion()
 
 """
-Next, lets define a visualization utility to show off the generated images:
+Next, let's define a visualization utility to show off the generated images:
 """
 
 
@@ -77,16 +77,16 @@ Each sample from the dataset must contain an image of the concept we are teachin
 StableDiffusion, as well as a caption accurately representing the content of the image.
 
 In this tutorial, we will teach StableDiffusion the concept of Luke and Ian's GitHub
-avatar's:
+avatars:
 
 ![gh-avatars](https://i.imgur.com/WyEHDIR.jpg)
 
-First, lets construct an image dataset of cat dolls:
+First, let's construct an image dataset of cat dolls:
 """
 
 
 def assemble_image_dataset(urls):
-    # fetch all remote files
+    # Fetch all remote files
     files = [tf.keras.utils.get_file(origin=url) for url in urls]
 
     # Resize images
@@ -95,13 +95,14 @@ def assemble_image_dataset(urls):
     images = [keras.utils.img_to_array(img) for img in images]
     images = np.array([resize(img) for img in images])
 
-    # pipe into tf.data.Dataset
-    # the StableDiffusion image encoder requires images to be normalized to the
+    # The StableDiffusion image encoder requires images to be normalized to the
     # [-1, 1] pixel value range
     images = images / 127.5 - 1
+
+    # Create the tf.data.Dataset
     image_dataset = tf.data.Dataset.from_tensor_slices(images)
 
-    # shuffle and introduce random noise
+    # Shuffle and introduce random noise
     image_dataset = image_dataset.shuffle(50, reshuffle_each_iteration=True)
     image_dataset = image_dataset.map(
         cv_layers.RandomCropAndResize(
@@ -119,7 +120,7 @@ def assemble_image_dataset(urls):
 
 
 """
-Next, we will need to assemble a text dataset:
+Next, we assemble a text dataset:
 """
 
 MAX_PROMPT_LENGTH = 77
@@ -145,7 +146,7 @@ def assemble_text_dataset(prompts):
 
 
 """
-Finally, we need to zip our datasets together to produce a text-image pair dataset.
+Finally, we zip our datasets together to produce a text-image pair dataset.
 """
 
 
@@ -165,8 +166,9 @@ def assemble_dataset(urls, prompts):
 """
 In order to ensure our prompts are descriptive, we use extremely generic prompts.
 
-Lets try this out with some sample images and prompts.
+Let's try this out with some sample images and prompts.
 """
+
 train_ds = assemble_dataset(
     urls=[
         "https://i.imgur.com/VIedH1X.jpg",
@@ -228,6 +230,7 @@ inaccurate prompts; such as "a dark photo of the {}"
 
 Keeping this in mind, we assemble our final training dataset below:
 """
+
 single_ds = assemble_dataset(
     urls=[
         "https://i.imgur.com/VIedH1X.jpg",
@@ -270,7 +273,7 @@ single_ds = assemble_dataset(
 
 Looks great!
 
-Next we assemble a dataset of groups of our GitHub avatars:
+Next, we assemble a dataset of groups of our GitHub avatars:
 """
 
 group_ds = assemble_dataset(
@@ -311,8 +314,9 @@ group_ds = assemble_dataset(
 """
 ![https://i.imgur.com/GY9Pf3D.png](https://i.imgur.com/GY9Pf3D.png)
 
-Finally we concatenate the two datasets:
+Finally, we concatenate the two datasets:
 """
+
 train_ds = single_ds.concatenate(group_ds)
 train_ds = train_ds.batch(1).shuffle(
     train_ds.cardinality(), reshuffle_each_iteration=True
@@ -320,7 +324,8 @@ train_ds = train_ds.batch(1).shuffle(
 
 """
 ## Adding a new token to the text encoder
-Next we will create a new text encoder for the StableDiffusion model and add our new
+
+Next, we create a new text encoder for the StableDiffusion model and add our new
 embedding for '<my-funny-cat-token>' into the model.
 """
 tokenized_initializer = stable_diffusion.tokenizer.encode("cat")[1]
@@ -345,7 +350,7 @@ new_weights = np.concatenate([old_token_weights, new_weights], axis=0)
 
 
 """
-Lets construct a new TextEncoder and prepare it.
+Let's construct a new TextEncoder and prepare it.
 """
 
 # Have to set download_weights False so we can init (otherwise tries to load weights)
@@ -372,8 +377,8 @@ stable_diffusion._text_encoder.compile(jit_compile=True)
 
 Now we can move on to the exciting part: training!
 
-In TextualInversion the only piece of the model that is trained is the embedding vector.
-Lets freeze the rest of the model.
+In TextualInversion, the only piece of the model that is trained is the embedding vector.
+Let's freeze the rest of the model.
 """
 
 
@@ -403,8 +408,9 @@ for layer in traverse_layers(stable_diffusion.text_encoder):
 new_encoder.layers[2].position_embedding.trainable = False
 
 """
-Lets confirm the proper weights are set to trainable.
+Let's confirm the proper weights are set to trainable.
 """
+
 all_models = [
     stable_diffusion.text_encoder,
     stable_diffusion.diffusion_model,
@@ -414,7 +420,8 @@ print([[w.shape for w in model.trainable_weights] for model in all_models])
 
 """
 ## Training the new embedding
-In order to train the embedding, we'll need a couple of utilities.
+
+In order to train the embedding, we need a couple of utilities.
 We import a NoiseScheduler from KerasCV, and define the following utilities below:
 
 - `sample_from_encoder_outputs` is a wrapper around the base StableDiffusion image
@@ -605,7 +612,7 @@ trainer.compile(
 To monitor training, we can produce a `keras.callbacks.Callback` to produce a few images
 every epoch using our custom token.
 
-We'll create three callbacks with different prompts so that we can see how they progress
+We create three callbacks with different prompts so that we can see how they progress
 over the course of training. We use a fixed seed so that we can easily see the
 progression of the learned token.
 """
@@ -649,6 +656,7 @@ cbs = [
 """
 Now, all that is left to do is to call `model.fit()`!
 """
+
 trainer.fit(
     train_ds,
     epochs=EPOCHS,
@@ -715,7 +723,7 @@ Using the Textual Inversion algorithm you can teach StableDiffusion new concepts
 
 Some possible next steps to follow:
 
-- try out your own prompts
-- teach the model a style
-- gather a dataset of your favorite pet cat or dog and teach the model the concept
+- Try out your own prompts
+- Teach the model a style
+- Gather a dataset of your favorite pet cat or dog and teach the model about it
 """
