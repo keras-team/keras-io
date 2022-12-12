@@ -4,6 +4,7 @@ Author: [Ilias Chrysovergis](https://twitter.com/iliachry)
 Date created: 2021/06/24
 Last modified: 2021/06/24
 Description: Implementation of a Proximal Policy Optimization agent for the CartPole-v0 environment.
+Accelerator: NONE
 """
 
 """

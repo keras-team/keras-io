@@ -4,6 +4,7 @@ Author: [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)
 Date created: 2021/12/28
 Last modified: 2021/12/28
 Description: This example demonstrates how to do timeseries forecasting over graphs.
+Accelerator: GPU
 """
 """
 ## Introduction

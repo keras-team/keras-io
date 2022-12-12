@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
 Last modified: 2021/05/26
 Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
+Accelerator: GPU
 """
 """
 ## Introduction

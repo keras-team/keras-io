@@ -4,6 +4,7 @@ Author: [akensert](http://github.com/akensert)
 Date created: 2021/08/16
 Last modified: 2021/12/27
 Description: Implementation of an MPNN to predict blood-brain barrier permeability.
+Accelerator: GPU
 """
 """
 ## Introduction

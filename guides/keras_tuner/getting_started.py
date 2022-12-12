@@ -4,6 +4,7 @@ Authors: Luca Invernizzi, James Long, Francois Chollet, Tom O'Malley, Haifeng Ji
 Date created: 2019/05/31
 Last modified: 2021/10/27
 Description: The basics of using KerasTuner to tune model hyperparameters.
+Accelerator: GPU
 """
 
 """shell

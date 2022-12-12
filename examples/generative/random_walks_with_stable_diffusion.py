@@ -4,6 +4,7 @@ Authors: Ian Stenbit, [fchollet](https://twitter.com/fchollet), [lukewood](https
 Date created: 2022/09/28
 Last modified: 2022/09/28
 Description: Explore the latent manifold of Stable Diffusion.
+Accelerator: NONE
 """
 
 """

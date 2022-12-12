@@ -4,6 +4,7 @@ Authors: Francois Chollet, Mark Omernick
 Date created: 2020/07/25
 Last modified: 2021/04/23
 Description: Overview of how to leverage preprocessing layers to create end-to-end models.
+Accelerator: GPU
 """
 """
 ## Keras preprocessing

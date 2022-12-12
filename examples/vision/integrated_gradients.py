@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/02
 Last modified: 2020/06/02
 Description: How to obtain integrated gradients for a classification model.
+Accelerator: NONE
 """
 
 """

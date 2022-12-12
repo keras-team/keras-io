@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/01
 Last modified: 2020/10/02
 Description: Everything you need to know to use Keras & TensorFlow for deep learning research.
+Accelerator: GPU
 """
 """
 ## Setup

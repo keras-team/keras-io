@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/05/9
 Last modified: 2020/05/9
 Description: Implementation of Wasserstein GAN with Gradient Penalty.
+Accelerator: GPU
 """
 
 """

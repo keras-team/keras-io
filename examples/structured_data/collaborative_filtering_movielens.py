@@ -4,6 +4,7 @@ Author: [Siddhartha Banerjee](https://twitter.com/sidd2006)
 Date created: 2020/05/24
 Last modified: 2020/05/24
 Description: Recommending movies using a model trained on Movielens dataset.
+Accelerator: GPU
 """
 """
 ## Introduction

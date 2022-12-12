@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
 Last modified: 2020/12/30
 Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
+Accelerator: GPU
 """
 
 """

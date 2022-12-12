@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/14
 Last modified: 2020/06/26
 Description: How to implement an OCR model using CNNs, RNNs and CTC loss.
+Accelerator: GPU
 """
 
 """

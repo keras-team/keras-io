@@ -4,6 +4,7 @@ Author: [Kenneth Borup](https://twitter.com/Kennethborup)
 Date created: 2020/09/01
 Last modified: 2020/09/01
 Description: Implementation of classical Knowledge Distillation.
+Accelerator: GPU
 """
 
 """

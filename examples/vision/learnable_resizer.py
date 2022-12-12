@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/30
 Last modified: 2021/05/13
 Description: How to optimally learn representations of images for a given resolution.
+Accelerator: GPU
 """
 """
 It is a common belief that if we constrain vision models to perceive things as humans do,

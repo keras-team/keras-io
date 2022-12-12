@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/28
 Last modified: 2021/02/28
 Description: Semantic Clustering by Adopting Nearest neighbors (SCAN) algorithm.
+Accelerator: GPU
 """
 
 """

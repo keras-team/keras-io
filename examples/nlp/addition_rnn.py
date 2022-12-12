@@ -4,6 +4,7 @@ Author: [Smerity](https://twitter.com/Smerity) and others
 Date created: 2015/08/17
 Last modified: 2020/04/17
 Description: A model that learns to add strings of numbers, e.g. "535+61" -> "596".
+Accelerator: GPU
 """
 """
 ## Introduction

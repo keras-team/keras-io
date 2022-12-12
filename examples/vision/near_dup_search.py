@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/09/10
 Last modified: 2021/09/10
 Description: Building a near-duplicate image search utility using deep learning and locality-sensitive hashing.
+Accelerator: NONE
 """
 """
 ## Introduction

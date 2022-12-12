@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2021/07/25
 Last modified: 2021/07/25
 Description: Deep dive into location-specific and channel-agnostic "involution" kernels.
+Accelerator: GPU
 """
 """
 ## Introduction

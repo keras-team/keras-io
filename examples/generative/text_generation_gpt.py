@@ -4,6 +4,7 @@ Author: [Jesse Chan](https://github.com/jessechancy)
 Date created: 2022/07/25
 Last modified: 2022/07/25
 Description: Using KerasNLP to train a mini-GPT model for text generation.
+Accelerator: GPU
 """
 
 """

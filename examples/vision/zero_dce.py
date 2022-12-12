@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/18
 Last modified: 2021/09/19
 Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement.
+Accelerator: GPU
 """
 """
 ## Introduction

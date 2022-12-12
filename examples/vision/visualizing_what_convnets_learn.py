@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/29
 Last modified: 2020/05/29
 Description: Displaying the visual patterns that convnet filters respond to.
+Accelerator: NONE
 """
 """
 ## Introduction

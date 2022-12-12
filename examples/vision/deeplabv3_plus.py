@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/08/31
 Last modified: 2021/09/1
 Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
+Accelerator: GPU
 """
 """
 ## Introduction

@@ -4,6 +4,7 @@ Author: Sreyan Ghosh
 Date created: 2022/07/04
 Last modified: 2022/08/28
 Description: Training T5 using Hugging Face Transformers for Abstractive Summarization.
+Accelerator: GPU
 """
 
 """

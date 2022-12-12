@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/19
 Last modified: 2021/06/19
 Description: Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
+Accelerator: GPU
 """
 """
 ## Introduction

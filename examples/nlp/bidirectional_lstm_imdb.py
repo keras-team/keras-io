@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/03
 Last modified: 2020/05/03
 Description: Train a 2-layer bidirectional LSTM on the IMDB movie review sentiment classification dataset.
+Accelerator: GPU
 """
 """
 ## Setup

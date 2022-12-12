@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2021/05/15
 Description: Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
+Accelerator: GPU
 """
 
 """

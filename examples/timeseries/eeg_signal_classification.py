@@ -4,6 +4,7 @@ Author: [Suvaditya Mukherjee](https://github.com/suvadityamuk)
 Date created: 2022/11/03
 Last modified: 2022/11/05
 Description: Training a Convolutional model to classify EEG signals produced by exposure to certain stimuli.
+Accelerator: GPU
 """
 
 """
