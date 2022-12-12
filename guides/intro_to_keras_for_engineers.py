@@ -4,7 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/01
 Last modified: 2020/04/28
 Description: Everything you need to know to use Keras to build real-world machine learning solutions.
-Accelerator: GPU
+Accelerator: None
 """
 
 """
