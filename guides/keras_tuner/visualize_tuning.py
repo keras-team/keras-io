@@ -4,7 +4,7 @@ Author: Haifeng Jin
 Date created: 2021/06/25
 Last modified: 2021/06/05
 Description: Using TensorBoard to visualize the hyperparameter tuning process in KerasTuner.
-Accelerator: NONE
+Accelerator: GPU
 """
 
 """shell

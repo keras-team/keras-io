@@ -4,7 +4,7 @@ Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/04/13
 Last modified: 2022/04/13
 Description: Use KerasCV COCO metrics to evaluate object detection models.
-Accelerator: NONE
+Accelerator: None
 """
 
 """
