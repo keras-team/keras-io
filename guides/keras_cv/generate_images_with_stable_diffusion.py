@@ -4,7 +4,7 @@ Authors: [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.co
 Date created: 2022/09/25
 Last modified: 2022/09/25
 Description: Generate new images using KerasCV's Stable Diffusion model.
-Accelerator: NONE
+Accelerator: GPU
 """
 
 """
