@@ -251,7 +251,7 @@ def preprocess(inputs):
     # Split the masking layer outputs into a (features, labels, and weights)
     # tuple that we can use with keras.Model.fit().
     features = {
-        "token_ids": outputs["token_ids"],
+        "tokens": outputs["tokens"],
         "mask_positions": outputs["mask_positions"],
     }
     labels = outputs["mask_ids"]
@@ -277,7 +277,7 @@ passed directly to `keras.Model.fit()`.
 
 We have two features:
 
-1. `"token_ids"`, where some tokens have been replaced with our mask token id.
+1. `"tokens"`, where some tokens have been replaced with our mask token id.
 2. `"mask_positions"`, which keeps track of which tokens we masked out.
 
 Our labels are simply the ids we masked out.
@@ -350,12 +350,12 @@ intesive, so even this relatively small Transformer will take some time.
 
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
+    "tokens": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
     "mask_positions": keras.Input(shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32),
 }
 
 # Encode the tokens.
-encoded_tokens = encoder_model(inputs["token_ids"])
+encoded_tokens = encoder_model(inputs["tokens"])
 
 # Predict an output word for each masked input token.
 # We use the input token embedding to project from our encoded vectors to
