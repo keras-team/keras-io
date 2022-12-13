@@ -36,14 +36,16 @@ In this tutorial, we will use the [SimSiam](https://arxiv.org/abs/2011.10566) al
 for contrastive learning.  As of 2022, SimSiam is the state of the art algorithm for
 contrastive learning; allowing for unprecedented scores on CIFAR-100 and other datasets.
 
+You may need to install:
+
+```bash
+pip -q install tensorflow_similarity
+pip -q install keras-cv
+```
+
 To get started, we will sort out some imports.
 """
 import resource
-
-low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
-resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
-
-
 import gc
 import os
 import random
@@ -51,7 +53,6 @@ import time
 import tensorflow_addons as tfa
 import keras_cv
 from pathlib import Path
-from tensorflow_similarity.layers import GeneralizedMeanPooling2D, MetricEmbedding
 import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.keras import layers
@@ -62,6 +63,15 @@ from keras_cv import layers as cv_layers
 
 import tensorflow_datasets as tfds
 
+"""
+Lets sort out some high level config issues and define some constants.
+The resource limit increase is required to load STL-10, `tfsim.utils.tf_cap_memory()`
+prevents TensorFlow from hogging the GPU memory in a cluster, and
+`tfds.disable_progress_bar()` makes tfds less noisy.
+"""
+
+low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
+resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
 tfsim.utils.tf_cap_memory()  # Avoid GPU memory blow up
 tfds.disable_progress_bar()
 
@@ -112,6 +122,12 @@ x_test, y_test = tfds.load(
 )
 x_test, y_test = tf.cast(x_test, tf.float32), tf.cast(y_test, tf.float32)
 
+"""
+In self supervised learning, queries and indexes are labeled subset datasets used to
+evaluate the quality of the produced latent embedding.  The following code assembles
+these datasets:
+"""
+
 # Compute the indicies for query, index, val, and train splits
 query_idxs, index_idxs, val_idxs, train_idxs = [], [], [], []
 for cid in range(ds_info.features["label"].num_classes):
@@ -155,7 +171,7 @@ print(
             ["index", x_index.shape, y_index.shape],
             ["test", x_test.shape, y_test.shape],
         ],
-        headers=["Examples", "Labels"],
+        headers=["# of Examples", "Labels"],
     )
 )
 
@@ -224,18 +240,18 @@ def process(img):
     return augmenter(img), augmenter(img)
 
 
-train_ds = train_ds.repeat()
-train_ds = train_ds.shuffle(1024)
-train_ds = train_ds.batch(BATCH_SIZE)
-train_ds = train_ds.map(process, num_parallel_calls=tf.data.AUTOTUNE)
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+def prepare_dataset(dataset):
+    dataset = dataset.repeat()
+    dataset = dataset.shuffle(1024)
+    dataset = dataset.batch(BATCH_SIZE)
+    dataset = dataset.map(process, num_parallel_calls=tf.data.AUTOTUNE)
+    return dataset.prefetch(tf.data.AUTOTUNE)
+
+
+train_ds = prepare_dataset(train_ds)
 
 val_ds = tf.data.Dataset.from_tensor_slices(x_val)
-val_ds = val_ds.repeat()
-val_ds = val_ds.shuffle(1024)
-val_ds = val_ds.batch(BATCH_SIZE)
-val_ds = val_ds.map(process, num_parallel_calls=tf.data.AUTOTUNE)
-val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+val_ds = prepare_dataset(val_ds)
 
 print("train_ds", train_ds)
 print("val_ds", val_ds)
@@ -271,8 +287,8 @@ def get_backbone(input_shape):
         input_shape=input_shape,
         include_rescaling=True,
         include_top=False,
+        pooling="avg",
     )(x)
-    x = layers.GlobalAveragePooling2D(name="avg_pool")(x)
     return tfsim.models.SimilarityModel(inputs, x)
 
 
@@ -285,10 +301,7 @@ layers of the same size. However, SimSiam only uses 2 layers for the smaller CIF
 images. Having too much capacity in the models can make it difficult for the loss to
 stabilize and converge.
 
-Additionally, the SimSiam paper found that disabling the center and scale parameters
-can lead to a small boost in the final loss.
-
-NOTE This is the model output that is returned by `ContrastiveModel.predict()` and
+Note: This is the model output that is returned by `ContrastiveModel.predict()` and
 represents the distance based embedding. This embedding can be used for the KNN
 lookups and matching classification metrics. However, when using the pre-train
 model for downstream tasks, only the `ContrastiveModel.backbone` is used.
@@ -410,10 +423,24 @@ contrastive_model.compile(
 )
 
 """
-We track the training using several callbacks.
+We track the training using `EvalCallback`.
+`EvalCallback` creates an index at the end of each epoch and provides a proxy for the
+nearest neighbor matching classification using `binary_accuracy`.
+Calculates how often the query label matches the derived lookup label.
 
-* **EvalCallback** creates an index at the end of each epoch and provides a proxy for the nearest neighbor matching classification using `binary_accuracy`.
-* **TensordBoard** and **ModelCheckpoint** are provided for tracking the training progress.
+Accuracy is technically (TP+TN)/(TP+FP+TN+FN), but here we filter all
+queries above the distance threshold. In the case of binary matching, this
+makes all the TPs and FPs below the distance threshold and all the TNs and
+FNs above the distance threshold.
+
+As we are only concerned with the matches below the distance threshold, the
+accuracy simplifies to TP/(TP+FP) and is equivalent to the precision with
+respect to the unfiltered queries. However, we also want to consider the
+query coverage at the distance threshold, i.e., the percentage of queries
+that retrun a match, computed as (TP+FP)/(TP+FP+TN+FN). Therefore, we can
+take $ precision \times query_coverage $ to produce a measure that capture
+the precision scaled by the query coverage. This simplifies down to the
+binary accuracy presented here, giving TP/(TP+FP+TN+FN).
 """
 
 DATA_PATH = Path("./")
@@ -489,13 +516,16 @@ plt.show()
 
 """
 ## Fine Tuning on the Labelled Data
-TODO
+
+As a final step we will fine tune a classifier on 10% of the training data.  This will
+allow us to evaluate the quality of our learned representation.  First, we handle data
+loading:
 """
 
 eval_augmenter = keras_cv.layers.Augmenter(
     [
         keras_cv.layers.RandomCropAndResize(
-            (96, 96), crop_area_factor=(0.2, 1.0), aspect_ratio_factor=(1.0, 1.0)
+            (96, 96), crop_area_factor=(0.8, 1.0), aspect_ratio_factor=(1.0, 1.0)
         ),
         keras_cv.layers.RandomFlip(mode="horizontal"),
     ]
@@ -520,6 +550,8 @@ eval_val_ds = eval_val_ds.prefetch(tf.data.AUTOTUNE)
 
 """
 ## Benchmark Against a Naive Model
+
+Finally, lets setup a naive model that does not leverage the unlabeled data corpus.
 """
 
 TEST_EPOCHS = 50
