@@ -1,9 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
+Title: KerasNLP quick tour
+Author: [jbischof](https://github.com/jbischof)
+Date created: 2022-12-15
+Last modified: 2022-12-15
+Description: An introduction to the KerasNLP API.
 """
 """
 <a
