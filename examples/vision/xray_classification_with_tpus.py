@@ -4,6 +4,7 @@ Author: Amy MiHyun Jang
 Date created: 2020/07/28
 Last modified: 2020/08/24
 Description: Medical image classification on TPU.
+Accelerator: TPU
 """
 """
 ## Introduction + Set-up

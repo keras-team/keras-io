@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/30
 Last modified: 2021/06/30
 Description: Compact Convolutional Transformers for efficient image classification.
+Accelerator: GPU
 """
 """
 As discussed in the [Vision Transformers (ViT)](https://arxiv.org/abs/2010.11929) paper,

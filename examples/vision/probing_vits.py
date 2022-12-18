@@ -4,6 +4,7 @@ Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](ht
 Date created: 2022/04/12
 Last modified: 2022/04/17
 Description: Looking into the representations learned by different Vision Transformers variants.
+Accelerator: NONE
 """
 """
 ## Introduction

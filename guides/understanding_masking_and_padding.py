@@ -4,6 +4,7 @@ Authors: Scott Zhu, Francois Chollet
 Date created: 2019/07/16
 Last modified: 2020/04/14
 Description: Complete guide to using mask-aware sequence layers in Keras.
+Accelerator: None
 """
 """
 ## Setup

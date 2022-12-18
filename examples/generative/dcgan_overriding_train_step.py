@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/04/29
 Last modified: 2021/01/01
 Description: A simple DCGAN trained using `fit()` by overriding `train_step` on CelebA images.
+Accelerator: GPU
 """
 """
 ## Setup

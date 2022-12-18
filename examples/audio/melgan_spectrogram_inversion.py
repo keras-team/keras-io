@@ -4,6 +4,7 @@ Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 02/09/2021
 Last modified: 15/09/2021
 Description: Inversion of audio from mel-spectrograms using the MelGAN architecture and feature matching.
+Accelerator: GPU
 """
 
 """

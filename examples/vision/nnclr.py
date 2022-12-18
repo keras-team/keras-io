@@ -4,6 +4,7 @@ Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/13
 Last modified: 2021/09/13
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
+Accelerator: GPU
 """
 """
 ## Introduction

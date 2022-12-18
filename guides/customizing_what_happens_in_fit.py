@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/15
 Last modified: 2020/04/15
 Description: Complete guide to overriding the training step of the Model class.
+Accelerator: GPU
 """
 
 """

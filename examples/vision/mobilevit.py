@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/20
 Last modified: 2021/10/20
 Description: MobileViT for image classification with combined benefits of convolutions and Transformers.
+Accelerator: GPU
 """
 """
 ## Introduction

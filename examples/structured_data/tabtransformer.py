@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2022/01/18
 Last modified: 2022/01/18
 Description: Using contextual embeddings for structured data classification.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210)
 Date created: 2022/06/24
 Last modified: 2022/06/24
 Description: Generating images of flowers with denoising diffusion implicit models.
+Accelerator: GPU
 """
 
 """

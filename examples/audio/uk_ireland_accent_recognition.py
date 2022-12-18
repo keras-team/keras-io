@@ -4,6 +4,7 @@ Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 2022/04/16
 Last modified: 2022/04/16
 Description: Training a model to classify UK & Ireland accents using feature extraction from Yamnet.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/03/13
 Last modified: 2021/03/17
 Description: RandAugment for training an image classification model with improved robustness.
+Accelerator: GPU
 """
 """
 Data augmentation is a very useful technique that can help to improve the translational

@@ -4,6 +4,7 @@ Author: [Mohamad Jaber](https://www.linkedin.com/in/mohamadjaber1/)
 Date created: 2021/08/16
 Last modified: 2021/11/25
 Description: MIL approach to classify bags of instances and get their individual instance score.
+Accelerator: GPU
 """
 """
 ## Introduction

@@ -4,6 +4,7 @@ Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
 Last modified: 2022/02/29
 Description: Example of using similarity metric learning on CIFAR-10 images.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/26
 Last modified: 2021/03/07
 Description: How to obtain a class activation heatmap for an image classification model.
+Accelerator: NONE
 """
 """
 Adapted from Deep Learning with Python (2017).

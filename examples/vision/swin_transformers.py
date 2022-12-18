@@ -4,6 +4,7 @@ Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/08
 Last modified: 2021/09/08
 Description: Image classification using Swin Transformers, a general-purpose backbone for computer vision.
+Accelerator: GPU
 """
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)

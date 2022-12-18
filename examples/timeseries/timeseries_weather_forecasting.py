@@ -4,6 +4,7 @@ Authors: [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](htt
 Date created: 2020/06/23
 Last modified: 2020/07/20
 Description: This notebook demonstrates how to do timeseries forecasting using a LSTM model.
+Accelerator: GPU
 """
 
 """

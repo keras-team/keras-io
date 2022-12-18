@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2022/11/09
 Last modified: 2022/11/09
 Description: Classify tabular data in a few lines of code.
+Accelerator: GPU
 """
 """
 ## Introduction

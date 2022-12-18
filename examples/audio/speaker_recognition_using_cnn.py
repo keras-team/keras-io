@@ -4,6 +4,7 @@ Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 14/06/2020
 Last modified: 03/07/2020
 Description: Classify speakers using Fast Fourier Transform (FFT) and a 1D Convnet.
+Accelerator: GPU
 """
 """
 ## Introduction

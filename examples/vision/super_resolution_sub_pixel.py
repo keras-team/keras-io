@@ -4,6 +4,7 @@ Author: [Xingyu Long](https://github.com/xingyu-long)
 Date created: 2020/07/28
 Last modified: 2020/08/27
 Description: Implementing Super-Resolution using Efficient sub-pixel model on BSDS500.
+Accelerator: GPU
 """
 
 """

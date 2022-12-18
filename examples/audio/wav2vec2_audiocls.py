@@ -4,6 +4,7 @@ Author: Sreyan Ghosh
 Date created: 2022/07/01
 Last modified: 2022/08/27
 Description: Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
+Accelerator: GPU
 """
 
 """

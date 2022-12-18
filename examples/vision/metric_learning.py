@@ -4,6 +4,7 @@ Author: [Mat Kelcey](https://twitter.com/mat_kelcey)
 Date created: 2020/06/05
 Last modified: 2020/06/09
 Description: Example of using similarity metric learning on CIFAR-10 images.
+Accelerator: GPU
 """
 """
 ## Overview

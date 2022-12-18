@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/13
 Last modified: 2021/04/19
 Description: Training with consistency regularization for robustness against data distribution shifts.
+Accelerator: GPU
 """
 """
 Deep learning models excel in many image recognition tasks when the data is independent

@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](ht
 Date created: 2021/11/08
 Last modified: 2021/11/08
 Description: Neural Style Transfer with Adaptive Instance Normalization.
+Accelerator: GPU
 """
 """
 # Introduction

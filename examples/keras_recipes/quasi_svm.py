@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/17
 Last modified: 2020/04/17
 Description: Demonstration of how to train a Keras model that approximates a SVM.
+Accelerator: GPU
 """
 """
 ## Introduction

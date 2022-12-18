@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/31
 Last modified: 2021/05/05
 Description: Using Wide & Deep and Deep & Cross networks for structured data classification.
+Accelerator: GPU
 """
 
 """

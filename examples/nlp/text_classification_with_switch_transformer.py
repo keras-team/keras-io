@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/05/10
 Last modified: 2021/02/15
 Description: Implement a Switch Transformer for text classification.
+Accelerator: GPU
 """
 
 """

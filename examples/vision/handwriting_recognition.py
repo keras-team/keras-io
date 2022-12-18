@@ -4,6 +4,7 @@ Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.
 Date created: 2021/08/16
 Last modified: 2021/08/16
 Description: Training a handwriting recognition model with variable-length sequences.
+Accelerator: GPU
 """
 """
 ## Introduction

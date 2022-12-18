@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2016/01/13
 Last modified: 2020/05/02
 Description: Generating Deep Dreams with Keras.
+Accelerator: GPU
 """
 """
 ## Introduction
