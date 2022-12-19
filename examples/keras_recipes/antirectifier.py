@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2016/01/06
 Last modified: 2020/04/20
 Description: Demonstration of custom layer creation.
+Accelerator: GPU
 """
 """
 ## Introduction

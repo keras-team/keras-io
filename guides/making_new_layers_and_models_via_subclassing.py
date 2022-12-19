@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
 Last modified: 2020/04/13
 Description: Complete guide to writing `Layer` and `Model` objects from scratch.
+Accelerator: GPU
 """
 """
 ## Setup

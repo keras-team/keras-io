@@ -4,6 +4,7 @@ Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/05/26
 Last modified: 2022/05/26
 Description: Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
+Accelerator: GPU
 """
 
 """

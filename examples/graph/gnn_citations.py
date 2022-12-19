@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
 Description: Implementing a graph neural network model for predicting the topic of a paper given its citations.
+Accelerator: GPU
 """
 
 """

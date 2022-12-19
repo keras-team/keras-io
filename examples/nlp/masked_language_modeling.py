@@ -4,6 +4,7 @@ Author: [Ankur Singh](https://twitter.com/ankur310794)
 Date created: 2020/09/18
 Last modified: 2020/09/18
 Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
+Accelerator: GPU
 """
 """
 ## Introduction

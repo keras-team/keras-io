@@ -4,6 +4,7 @@ Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/17
 Last modified: 2020/05/23
 Description: PixelCNN implemented in Keras.
+Accelerator: GPU
 """
 
 """

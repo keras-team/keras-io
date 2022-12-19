@@ -1,5 +1,7 @@
 # KerasCV
 
+<a class="github-button" href="https://github.com/keras-team/keras-cv" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-cv on GitHub">Star</a>
+
 KerasCV is a toolbox of modular building blocks (layers, metrics, losses, data augmentation) that computer vision engineers can leverage to quickly assemble production-grade, state-of-the-art training and inference pipelines for common use cases such as image classification, object detection, image segmentation, image data augmentation, etc.
 
 <img style="width: 440px; max-width: 90%;" src="/img/keras-cv-augmentations.gif">

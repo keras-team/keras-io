@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/15
 Last modified: 2021/01/15
 Description: Building probabilistic Bayesian neural network models with TensorFlow Probability.
+Accelerator: GPU
 """
 
 """

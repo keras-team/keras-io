@@ -4,6 +4,7 @@ Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/08/22
 Last modified: 2022/08/22
 Description: Use KerasCV to train a RetinaNet on Pascal VOC 2007.
+Accelerator: GPU
 """
 
 """

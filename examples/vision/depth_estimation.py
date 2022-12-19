@@ -4,6 +4,7 @@ Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2021/08/30
 Last modified: 2021/08/30
 Description: Implement a depth estimation model with a convnet.
+Accelerator: GPU
 """
 
 """

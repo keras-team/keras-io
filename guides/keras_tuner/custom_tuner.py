@@ -4,6 +4,7 @@ Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/28
 Last modified: 2022/01/12
 Description: Use `HyperModel.fit()` to tune training hyperparameters (such as batch size).
+Accelerator: GPU
 """
 
 """shell

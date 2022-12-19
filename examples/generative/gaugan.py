@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://t
 Date created: 2021/12/26
 Last modified: 2022/01/03
 Description: Implementing a GauGAN for conditional image generation.
+Accelerator: GPU
 """
 """
 ## Introduction

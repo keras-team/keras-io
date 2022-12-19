@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/06/09
 Last modified: 2020/06/09
 Description: Binary classification of structured data including numerical and categorical features.
+Accelerator: GPU
 """
 """
 ## Introduction

@@ -63,6 +63,7 @@ Finally, submit a PR adding `examples/your_example.py`.
 import os
 import sys
 import json
+import copy
 import random
 import shutil
 import tempfile
@@ -169,8 +170,9 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
             cells.append(cell)
     notebook = {}
     for key in NB_BASE.keys():
-        notebook[key] = NB_BASE[key]
+        notebook[key] = copy.deepcopy(NB_BASE[key])
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
+    notebook["metadata"]["accelerator"] = attributes['accelerator']
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
@@ -442,8 +444,8 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
-    if len(lines) != 5:
-        raise ValueError("Invalid header, it should be only 5 lines.")
+    if len(lines) != 6:
+        raise ValueError("Invalid header, it should be exactly 6 lines.")
     title = lines[0][len("Title: ") :]
     author_line = lines[1]
     if author_line.startswith("Authors"):
@@ -455,6 +457,7 @@ def _parse_header(header):
     date_created = lines[2][len("Date created: ") :]
     last_modified = lines[3][len("Last modified: ") :]
     description = lines[4][len("Description: ") :]
+    accelerator = lines[5][len("Accelerator: ") :]
     return {
         "title": title,
         "author": author,
@@ -462,6 +465,7 @@ def _parse_header(header):
         "date_created": date_created,
         "last_modified": last_modified,
         "description": description,
+        "accelerator": accelerator
     }
 
 
@@ -519,6 +523,7 @@ def _make_output_code_blocks(md):
 
 NB_BASE = {
     "metadata": {
+        "accelerator": "GPU",
         "colab": {
             "collapsed_sections": [],
             "name": "",  # FILL ME

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://
 Date created: 2020/09/25
 Last modified: 2020/12/23
 Description: Implementing a large-scale multi-label text classification model.
+Accelerator: GPU
 """
 """
 ## Introduction

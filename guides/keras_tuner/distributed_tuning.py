@@ -4,6 +4,7 @@ Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/24
 Last modified: 2021/06/02
 Description: Tuning the hyperparameters of the models with multiple GPUs and multiple machines.
+Accelerator: None
 """
 
 """shell

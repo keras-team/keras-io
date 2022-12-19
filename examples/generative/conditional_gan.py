@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/07/13
 Last modified: 2021/07/15
 Description: Training a GAN conditioned on class labels to generate handwritten digits.
+Accelerator: GPU
 """
 """
 Generative Adversarial Networks (GANs) let us generate novel image data, video data,

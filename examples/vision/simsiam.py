@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/03/19
 Last modified: 2021/03/20
 Description: Implementation of a self-supervised learning method for computer vision.
+Accelerator: GPU
 """
 """
 Self-supervised learning (SSL) is an interesting branch of study in the field of

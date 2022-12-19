@@ -4,6 +4,7 @@ Author: [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/)
 Date created: 2021/07/01
 Last modified: 2021/07/01
 Description: Implementation of StyleGAN for image generation.
+Accelerator: GPU
 """
 """
 ## Introduction

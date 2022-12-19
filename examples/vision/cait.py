@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/09/19
 Last modified: 2022/09/25
 Description: Implementing an image transformer equipped with Class Attention and LayerScale.
+Accelerator: NONE
 """
 """
 

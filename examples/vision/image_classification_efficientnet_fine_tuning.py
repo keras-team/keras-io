@@ -4,6 +4,7 @@ Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
 Last modified: 2020/07/16
 Description: Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
+Accelerator: TPU
 """
 """
 

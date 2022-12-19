@@ -4,6 +4,7 @@ Author: [ZhiYong Chang](https://github.com/czy00000)
 Date created: 2021/10/19
 Last modified: 2021/10/19
 Description: Image classification with a Transformer that leverages external attention.
+Accelerator: GPU
 """
 
 """

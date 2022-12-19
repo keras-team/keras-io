@@ -4,6 +4,7 @@ Author: [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner]
 Date created: 2020/05/23
 Last modified: 2020/06/17
 Description: Play Atari Breakout with a Deep Q-Network.
+Accelerator: NONE
 """
 """
 ## Introduction

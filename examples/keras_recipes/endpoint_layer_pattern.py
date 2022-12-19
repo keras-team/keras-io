@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/05/10
 Last modified: 2019/05/10
 Description: Demonstration of the "endpoint layer" pattern (layer that handles loss management).
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/04/05
 Last modified: 2022/04/08
 Description: Distillation of Vision Transformers through attention.
+Accelerator: GPU
 """
 """
 ## Introduction

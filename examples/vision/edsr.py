@@ -4,6 +4,7 @@ Author: Gitesh Chawda
 Date created: 2022/04/07
 Last modified: 2022/04/07
 Description: Training an EDSR model on the DIV2K Dataset.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 2021/10/29
 Last modified: 2021/10/29
 Description: Demonstrating the advantages of active learning through review classification.
+Accelerator: GPU
 """
 """
 ## Introduction

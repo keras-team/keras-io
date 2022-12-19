@@ -4,6 +4,7 @@ Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
 Last modified: 2021/06/06
 Description: Modeling the relationship between training set size and model accuracy.
+Accelerator: GPU
 """
 
 """

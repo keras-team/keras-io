@@ -4,6 +4,7 @@ Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/06/01
 Last modified: 2022/06/01
 Description: Text Classification on the IMDb Dataset using `keras_nlp.layers.FNetEncoder` layer.
+Accelerator: GPU
 """
 
 """

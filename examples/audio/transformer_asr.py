@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2021/01/13
 Last modified: 2021/01/13
 Description: Training a sequence-to-sequence Transformer for automatic speech recognition.
+Accelerator: GPU
 """
 """
 ## Introduction

@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/10
 Last modified: 2021/02/10
 Description: Using Gated Residual and Variable Selection Networks for income level prediction.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Authors: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](h
 Date created: 2021/08/09
 Last modified: 2021/08/09
 Description: Minimal implementation of volumetric rendering as shown in NeRF.
+Accelerator: GPU
 """
 """
 ## Introduction

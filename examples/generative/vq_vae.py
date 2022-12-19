@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/07/21
 Last modified: 2022/06/27
 Description: Training a VQ-VAE for image reconstruction and codebook sampling for generation.
+Accelerator: GPU
 """
 """
 In this example, we develop a Vector Quantized Variational Autoencoder (VQ-VAE).

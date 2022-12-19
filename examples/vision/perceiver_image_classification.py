@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/04/30
 Last modified: 2021/01/30
 Description: Implementing the Perceiver model for image classification.
+Accelerator: GPU
 """
 
 """

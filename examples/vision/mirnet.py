@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/11
 Last modified: 2021/09/15
 Description: Implementing the MIRNet architecture for low-light image enhancement.
+Accelerator: GPU
 """
 """
 ## Introduction

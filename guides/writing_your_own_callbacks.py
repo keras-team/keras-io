@@ -4,6 +4,7 @@ Authors: Rick Chao, Francois Chollet
 Date created: 2019/03/20
 Last modified: 2020/07/12
 Description: Complete guide to writing new Keras callbacks.
+Accelerator: GPU
 """
 """
 ## Introduction

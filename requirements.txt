@@ -1,15 +1,14 @@
-black==22.1.0
+black~=22.3.0
 pygments>=2.7.4
 markdown>=3.3
 matplotlib
 jinja2
 requests
 mdx_truly_sane_lists
-pathlib
 PyYAML
 pandas
 jupyter
-tensorflow==2.11.0
+tensorflow~=2.11.0
 tensorflow_datasets
 keras-tuner
 keras-cv

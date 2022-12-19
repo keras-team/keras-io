@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/18
 Last modified: 2021/01/18
 Description: Implementing the Vision Transformer (ViT) model for image classification.
+Accelerator: GPU
 """
 
 """
