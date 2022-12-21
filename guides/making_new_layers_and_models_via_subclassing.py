@@ -236,11 +236,14 @@ class ActivityRegularizationLayer(keras.layers.Layer):
         self.rate = rate
 
     def call(self, inputs):
-        self.add_loss(self.rate * tf.reduce_sum(inputs))
+        self.add_loss(self.rate * tf.reduce_mean(inputs))
         return inputs
 
 
 """
+Notice that `add_loss()` can take the result of plain TensorFlow operations.
+There is no need to call a `Loss` object here.
+
 These losses (including those created by any inner layer) can be retrieved via
 `layer.losses`. This property is reset at the start of every `__call__()` to
 the top-level layer, so that `layer.losses` always contains the loss values
