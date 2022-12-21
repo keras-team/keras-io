@@ -165,10 +165,10 @@ Finally, the 64x64 latent image is sent through the decoder to properly render i
 All-in-all, it's a pretty simple system -- the Keras implementation
 fits in four files that represent less than 500 lines of code in total:
 
-- [text_encoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/text_encoder.py): 87 LOC
-- [diffusion_model.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/diffusion_model.py): 181 LOC
-- [decoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/decoder.py): 86 LOC
-- [stable_diffusion.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/stable_diffusion.py): 106 LOC
+- [text_encoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/text_encoder.py): 87 LOC
+- [diffusion_model.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/diffusion_model.py): 181 LOC
+- [decoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/decoder.py): 86 LOC
+- [stable_diffusion.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/stable_diffusion.py): 106 LOC
 
 But this relatively simple system starts looking like magic once you train on billions of pictures and their captions.
 As Feynman said about the universe: _"It's not complicated, it's just a lot of it!"_
