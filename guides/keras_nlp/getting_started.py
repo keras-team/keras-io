@@ -1,40 +1,35 @@
 """
-Title: KerasNLP quick tour
+Title: Getting Started with KerasNLP
 Author: [jbischof](https://github.com/jbischof)
 Date created: 2022-12-15
 Last modified: 2022-12-15
 Description: An introduction to the KerasNLP API.
 """
-"""
-<a
-href="https://colab.research.google.com/github/jbischof/keras-io/blob/quickstart/guides/ke
-ras_nlp/keras_nlp_quick_tour.ipynb" target="_parent"><img
-src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-"""
 
 import keras_nlp
 import tensorflow as tf
 from tensorflow import keras
-import tensorflow_datasets as tfds
 
 # Use mixed precision for optimal performance
 keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
-# KerasNLP: Modular NLP Workflows for Keras
+## KerasNLP: Modular NLP Workflows for Keras
 
 
-`keras-nlp` is a natural language processing library that supports users through their
+KerasNLP is a natural language processing library that supports users through their
 entire development cycle. Our workflows are built from modular components that have SoTA
 preset weights and architectures when used out-of-the-box and are easily customizable
 when more control is needed.
 
-This library is an extension of the core `keras` API; all high level modules are `Layers`
-or `Models`. If you are familiar with `keras`, congratulations! You already understand
-most of `keras-nlp`.
+This library is an extension of the core Keras API; all high level modules are
+[`Layers`](https://keras.io/api/layers/) or
+[`Models`](https://keras.io/api/models/). If you are familiar with Keras,
+congratulations! You already understand most of KerasNLP.
 
 This guide demonstrates our modular approach using a sentiment analysis example at six
 levels of complexity:
+
 * Inference with a pretrained classifier
 * Fine tuning a pretrained backbone
 * Fine tuning with user-controlled preprocessing
@@ -46,29 +41,47 @@ Throughout our guide we use Professor Keras, the official Keras mascot, as a vis
 reference for the complexity of the material:
 
 ![picture](https://drive.google.com/uc?id=1d14Qpmfgjf6zu4z30HBaonH8PYDHgVoU)
-
-
 """
 
 """
-# API quickstart
+## API quickstart
 
-Our highest level API is `keras_nlp.models`. For each `XX` architecture (e.g., `Bert`),
-we offer the following modules:
+Our highest level API is `keras_nlp.models`. These symbols cover the complete user
+journey of converting strings to tokens, tokens to dense features, and dense features to
+task-specific output. For each `XX` architecture (e.g., `Bert`), we offer the following
+modules:
+
 * **Tokenizer**: `keras_nlp.models.XXTokenizer`
-    * Maps raw text to `tf.RaggedTensor`s of token ids.
-    * Inherits from `keras.Layer`.
+    * **What it does**: Converts strings to `tf.RaggedTensor`s of token ids.
+* **Why it's important**: The raw bytes of a string are too high dimensional to be useful
+features so we first map them to a small number of tokens, for example `"The quick brown
+fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
+    * **Inherits from**: `keras.Layer`.
 * **Preprocessor**: `keras_nlp.models.XXPreprocessor`
-    * Maps raw text to a dictonary of dense tensors consumed by the model.
-    * Has a `XXTokenizer`.
-    * Inherits from `keras.Layer`.
+* **What it does**: Converts strings to a dictonary of preprocessed tensors consumed by
+the backbone, starting with tokenization.
+* **Why it's important**: Each model uses special tokens and extra tensors to understand
+the input such as deliminting input segments and identifying padding tokens. Padding each
+sequence to the same length improves computational efficiency.
+    * **Has a**: `XXTokenizer`.
+    * **Inherits from**: `keras.Layer`.
 * **Backbone**: `keras_nlp.models.XXBackbone`
-    * Maps preprocessed tensors to dense representation. *Does not handle raw text*.
-    * Inherits from `keras.Model`.
+* **What it does**: Converts preprocessed tensors to dense features. *Does not handle
+strings; call the preprocessor first.*
+* **Why it's important**: The backbone distills the input tokens into dense features that
+can be used in downstream tasks. It is generally pretrained on a language modeling task
+using massive amounts of unlabeled data. Transfering this information to a new task is a
+major breakthrough in modern NLP.
+    * **Inherits from**: `keras.Model`.
 * **Task**: e.g., `keras_nlp.models.XXClassifier`
-    * Maps raw text to task-specific output (e.g., classification probabilities).
-    * Has a `XXBackbone` and `XXPreprocessor`.
-    * Inherits from `keras.Model`.
+* **What it does**: Converts strings to task-specific output (e.g., classification
+probabilities).
+* **Why it's important**: Task models combine string preprocessing and the backbone model
+with task-specific `Layers` to solve a problem such as sentence classification, token
+classification, or text generation. The additional `Layers` must be fine-tuned on labeled
+data.
+    * **Has a**: `XXBackbone` and `XXPreprocessor`.
+    * **Inherits from**: `keras.Model`.
 
 Here is the modular hierarchy for `BertClassifier` (all relationships are compositional):
 
@@ -80,40 +93,47 @@ weights (see examples below).
 """
 
 """
-# Data
+## Data
 
 We will use a running example of sentiment analysis of IMDB movie reviews. In this task,
 we use the text to predict whether the review was positive (`label = 1`) or negative
 (`label = 0`).
 
-We load the data from `tensorflow_datasets`, a collection of machine learning benchmarks
-that uses the powerful `tf.data.Dataset` format for examples.
+We load the data using `keras.utils.text_dataset_from_directory`, which utilizes the
+powerful `tf.data.Dataset` format for examples.
+"""
+
+"""shell
+!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+!tar -xf aclImdb_v1.tar.gz
+# Remove unsupervised examples
+!rm -r aclImdb/train/unsup
 """
 
 BATCH_SIZE = 16
-imdb_train, imdb_test = tfds.load(
-    "imdb_reviews",
-    split=["train", "test"],
-    as_supervised=True,
+imdb_train = tf.keras.preprocessing.text_dataset_from_directory(
+    "aclImdb/train",
+    batch_size=BATCH_SIZE,
+)
+imdb_test = tf.keras.preprocessing.text_dataset_from_directory(
+    "aclImdb/test",
     batch_size=BATCH_SIZE,
 )
 
 # Inspect first review
 # Format is (review text tensor, label tensor)
-imdb_train.unbatch().take(1).get_single_element()
+print(imdb_train.unbatch().take(1).get_single_element())
 
 """
-# Inference with a pretrained classifier
+## Inference with a pretrained classifier
 
 ![picture](https://drive.google.com/uc?id=1xeMHVCxYhm3_oC37Gg7k0bG-yhsVr0Dv)
 
-The highest level module in `keras-nlp` is a **task**. A **task** is a `keras.Model`
+The highest level module in KerasNLP is a **task**. A **task** is a `keras.Model`
 consisting of a (generally pretrained) **backbone** model and task-specific layers.
 Here's an example using `keras_nlp.models.BertClassifier`.
 
-**Note**: Outputs are the logits per class (`[0, 0]` is 50% chance of positive).
-
-
+**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive).
 """
 
 classifier = keras_nlp.models.BertClassifier.from_preset("bert_tiny_en_uncased_sst2")
@@ -121,33 +141,36 @@ classifier = keras_nlp.models.BertClassifier.from_preset("bert_tiny_en_uncased_s
 classifier.predict(["I love modular workflows in keras-nlp!"])
 
 """
-
-"""
-
-"""
 All **tasks** have a `from_preset` method that constructs a `keras.Model` instance with
 preset preprocessing, architecture and weights. This means that we can pass raw strings
 in any format accepted by a `keras.Model` and get output specific to our task.
 
-This particular **preset** is a `bert_tiny_uncased_en` **backbone** fine-tuned on `sst2`,
-another movie review sentiment analysis (this time from Rotten Tomatoes). We use the
-`tiny` architecture for demo purposes, but larger models are recommended for SoTA
+This particular **preset** is a `"bert_tiny_uncased_en"` **backbone** fine-tuned on
+`sst2`, another movie review sentiment analysis (this time from Rotten Tomatoes). We use
+the `tiny` architecture for demo purposes, but larger models are recommended for SoTA
 performance. For all the task-specific presets available for `BertClassifier`, see
 [keras.io](https://resilient-dango-43f7b8.netlify.app/api/keras_nlp/models/).
 
 Let's evaluate our classifier on the IMDB dataset. We first need to compile the
-`keras.Model`. Since we are not training, we do not need a `loss` argument.
+`keras.Model`. The output is `[loss, accuracy]`,
+
+**Note**: We don't need an optimizer since we're not training the model.
 """
 
 classifier.compile(
-    metrics=["sparse_categorical_accuracy"],
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=keras.metrics.SparseCategoricalAccuracy(),
     jit_compile=True,
 )
 
 classifier.evaluate(imdb_test)
 
 """
-# Fine tuning a pretrained BERT backbone
+Our result is 78% accuracy without training anything. Not bad!
+"""
+
+"""
+## Fine tuning a pretrained BERT backbone
 
 ![picture](https://drive.google.com/uc?id=1YytOYRSqsrhJ4NLatVOSuVMbLPa9iXrw)
 
@@ -166,7 +189,6 @@ layers in preparation for training. For all the **backbone** presets available f
 To train your classifier, use `Model.compile()` and `Model.fit()` as with any other
 `keras.Model`. Since preprocessing is included in all **tasks** by default, we again pass
 the raw data.
-
 """
 
 classifier = keras_nlp.models.BertClassifier.from_preset(
@@ -188,11 +210,10 @@ classifier.fit(
 """
 Here we see significant lift in validation accuracy (0.78 -> 0.87) with a single epoch of
 training even though the IMDB dataset is much smaller than `sst2`.
-
 """
 
 """
-# Fine tuning with user-controlled preprocessing
+## Fine tuning with user-controlled preprocessing
 ![picture](https://drive.google.com/uc?id=1T_40vtl8daihS-kKYTFWejFd19KJAyDK)
 
 For some advanced training scenarios, users might prefer direct control over
@@ -201,13 +222,11 @@ disk or preprocessed by a separate worker pool using `tf.data.experimental.servi
 other cases, custom preprocessing is needed to handle the inputs.
 
 Pass `preprocessor=None` to the constructor of a **task** `Model` to skip automatic
-preprocessing or supply your own `keras.Layer` to perform a custom operation instead.
-
-
+preprocessing or pass a custom `BertPreprocessor` instead.
 """
 
 """
-## Separate preprocessing from the same preset
+### Separate preprocessing from the same preset
 
 Each model architecture has a parallel **preprocessor** `Layer` with its own
 `from_preset` constructor. Using the same **preset** for this `Layer` will return the
@@ -220,7 +239,10 @@ which computes the preprocessing once and caches the result before fitting begin
 `cache()`.
 """
 
-preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
+preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
+    "bert_tiny_en_uncased",
+    sequence_length=512,
+)
 
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
@@ -246,21 +268,20 @@ classifier.fit(
 )
 
 """
-After three epochs, our validation accuracy has only increased to 0.88. This is mainly a
-function of the small size of our dataset; even with the `bert_tiny` architecture we've
-already learned most generalizable patterns in the first pass.
+After three epochs, our validation accuracy has only increased to 0.88. This is both a
+function of the small size of our dataset and our model. To exceed 90% accuracy, try
+larger **presets** such as  `"bert_base_en_uncased"`.
 """
 
 """
-## Custom preprocessing
+### Custom preprocessing
 
 In cases where custom preprocessing is required, we offer direct access to the
 `Tokenizer` class that maps raw strings to tokens. It also has a `from_preset`
 constructor to get the vocabulary matching pretraining.
 
-**Note:** `Tokenizer` does not pad sequences, so output is `tf.RaggedTensor`.
-
-
+**Note:** `BertTokenizer` does not pad sequences by default, so the output is
+a `tf.RaggedTensor`.
 """
 
 tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
@@ -270,11 +291,13 @@ tokenizer(["I love modular workflows!", "Libraries over frameworks!"])
 packer = keras_nlp.layers.MultiSegmentPacker(
     start_value=tokenizer.cls_token_id,
     end_value=tokenizer.sep_token_id,
+    # Note: This cannot be longer than the preset's `sequence_length`, and there
+    # is no check for a custom preprocessor!
     sequence_length=64,
 )
 
 
-def preprocess(x, y):
+def preprocessor(x, y):
     token_ids, segment_ids = packer(tokenizer(x))
     x = {
         "token_ids": token_ids,
@@ -284,18 +307,18 @@ def preprocess(x, y):
     return x, y
 
 
-imbd_train_preprocessed = imdb_train.map(preprocess, tf.data.AUTOTUNE).prefetch(
+imbd_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
-imdb_test_preprocessed = imdb_test.map(preprocess, tf.data.AUTOTUNE).prefetch(
+imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
 
 # Preprocessed example
-imbd_train_preprocessed.unbatch().take(1).get_single_element()
+print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
 
 """
-# Fine tuning with a custom model
+## Fine tuning with a custom model
 ![picture](https://drive.google.com/uc?id=1T_40vtl8daihS-kKYTFWejFd19KJAyDK)
 
 For more advanced applications, an appropriate **task** `Model` may not be available. In
@@ -311,7 +334,6 @@ transfomer layers to adapt to the new input.
 
 **Note**: We can igonore the warning about gradients for the `pooled_dense` layer because
 we are using BERT's sequence output.
-
 """
 
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
@@ -332,7 +354,7 @@ for _ in range(2):
         num_heads=2,
         intermediate_dim=512,
         dropout=0.1,
-    )(sequence, padding_mask=inputs["padding_mask"])
+    )(sequence)
 # Use [CLS] token output to classify
 outputs = keras.layers.Dense(2)(sequence[:, backbone.cls_token_index, :])
 
@@ -357,7 +379,7 @@ accounting for cached preprocessing.
 """
 
 """
-# Pretraining a backbone model
+## Pretraining a backbone model
 ![picture](https://drive.google.com/uc?id=1pzwLPCtvzmHY3DKzH-MBzmjWFJ3pKVB5)
 
 Do you have access to large unlabeled datasets in your domain? Are they are around the
@@ -370,7 +392,7 @@ given the visible words in an input sentence. For example, given the input `"The
 The lower layers of this model are then packaged as a **backbone** to be combined with
 layers relating to a new task.
 
-The `keras-nlp` library offers SoTA **backbones** and **tokenizers** to be trained from
+The KerasNLP library offers SoTA **backbones** and **tokenizers** to be trained from
 scratch without presets.
 
 In this workflow we pretrain a BERT **backbone** using our IMDB review text. We skip the
@@ -381,14 +403,14 @@ bd5d/examples/bert) for step-by-step details on how to replicate the original pa
 """
 
 """
-## Preprocessing
+### Preprocessing
 """
 
 # All BERT `en` models have the same vocabulary, so reuse preprocessor from
 # "bert_tiny_en_uncased"
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_tiny_en_uncased",
-    sequence_length=128,
+    sequence_length=256,
 )
 packer = preprocessor.packer
 tokenizer = preprocessor.tokenizer
@@ -397,7 +419,7 @@ tokenizer = preprocessor.tokenizer
 masker = keras_nlp.layers.MLMMaskGenerator(
     vocabulary_size=tokenizer.vocabulary_size(),
     mask_selection_rate=0.25,
-    mask_selection_length=32,
+    mask_selection_length=64,
     mask_token_id=tokenizer.token_to_id("[MASK]"),
     unselectable_token_ids=[
         tokenizer.token_to_id(x) for x in ["[CLS]", "[PAD]", "[SEP]"]
@@ -429,10 +451,10 @@ pretrain_val_ds = imdb_test.map(
 ).prefetch(tf.data.AUTOTUNE)
 
 # Tokens with ID 103 are "masked"
-pretrain_ds.unbatch().take(1).get_single_element()
+print(pretrain_ds.unbatch().take(1).get_single_element())
 
 """
-## Pretraining model
+### Pretraining model
 """
 
 # BERT backbone
@@ -486,13 +508,13 @@ After pretraining save your `backbone` submodel to use in a new task!
 """
 
 """
-# Build and train your own transformer from scratch
+## Build and train your own transformer from scratch
 ![picture](https://drive.google.com/uc?id=1pzwLPCtvzmHY3DKzH-MBzmjWFJ3pKVB5)
 
-Want to implement a novel transformer architecture? The `keras-nlp` library offers all
-the low-level modules used to build SoTA architectures in our `models` API. This includes
-training your own subword tokenizer using `WordPiece`, `BytePairEncoder`, or
-`SentencePiece`.
+Want to implement a novel transformer architecture? The KerasNLP library offers all the
+low-level modules used to build SoTA architectures in our `models` API. This includes the
+`keras_nlp.tokenizers` API which allows you to train your own subword tokenizer using
+`WordPieceTokenizer`, `BytePairTokenizer`, or `SentencePieceTokenizer`.
 
 In this workflow we train a custom tokenizer on the IMDB data and design a backbone with
 custom transformer architecture. For simplicity we then train directly on the
@@ -502,12 +524,12 @@ https://keras.io/guides/keras_nlp/transformer_pretraining/
 """
 
 """
-## Train custom vocabulary from IMBD data
+### Train custom vocabulary from IMBD data
 """
 
 vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
     imdb_train.map(lambda x, y: x),
-    vocabulary_size=10_000,  # Increase to 20_000 for better performance
+    vocabulary_size=20_000,
     lowercase=True,
     strip_accents=True,
     reserved_tokens=["[PAD]", "[START]", "[END]", "[MASK]", "[UNK]"],
@@ -520,25 +542,20 @@ tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
 )
 
 """
-
-## Preprocess data with custom tokenizer
+### Preprocess data with custom tokenizer
 """
 
 packer = keras_nlp.layers.StartEndPacker(
     start_value=tokenizer.token_to_id("[START]"),
     end_value=tokenizer.token_to_id("[END]"),
     pad_value=tokenizer.token_to_id("[PAD]"),
-    sequence_length=64,
+    sequence_length=512,
 )
 
 
 def preprocess(x, y):
     token_ids = packer(tokenizer(x))
-    x = {
-        "token_ids": token_ids,
-        "padding_mask": token_ids != tokenizer.token_to_id("[PAD]"),
-    }
-    return x, y
+    return token_ids, y
 
 
 imdb_preproc_train_ds = imdb_train.map(
@@ -548,22 +565,17 @@ imdb_preproc_val_ds = imdb_test.map(
     preprocess, num_parallel_calls=tf.data.AUTOTUNE
 ).prefetch(tf.data.AUTOTUNE)
 
-imdb_preproc_train_ds.unbatch().take(1).get_single_element()
+print(imdb_preproc_train_ds.unbatch().take(1).get_single_element())
 
 """
 
-## Design a tiny transformer
+### Design a tiny transformer
 """
 
 token_id_input = keras.Input(
     shape=(None,),
     dtype="int32",
     name="token_ids",
-)
-padding_mask = keras.Input(
-    shape=(None,),
-    dtype="int32",
-    name="padding_mask",
 )
 outputs = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=len(vocab),
@@ -574,21 +586,18 @@ outputs = keras_nlp.layers.TransformerEncoder(
     num_heads=2,
     intermediate_dim=128,
     dropout=0.1,
-)(outputs, padding_mask=padding_mask)
+)(outputs)
 # Use "[START]" token to classify
 outputs = keras.layers.Dense(2)(outputs[:, 0, :])
 model = keras.Model(
-    inputs={
-        "token_ids": token_id_input,
-        "padding_mask": padding_mask,
-    },
+    inputs=token_id_input,
     outputs=outputs,
 )
 
 model.summary()
 
 """
-## Train the transformer directly on the classification objective
+### Train the transformer directly on the classification objective
 """
 
 model.compile(
@@ -604,7 +613,7 @@ model.fit(
 )
 
 """
-While our classification accuracy is a fairly poor 0.76, the transformer architecture is
-too complicated to learn from scratch on a small dataset. The large performance gap with
-our earlier models shows the power of pretraining and transfer learning in modern NLP.
+Excitingly, our custom classifier is similar to the performance of fine-tuning
+`"bert_tiny_en_uncased"`! To see the advantages of pretraining and exceed 90% accuracy we
+would need to use larger **presets** such as `"bert_base_en_uncased"`.
 """
