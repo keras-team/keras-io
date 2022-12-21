@@ -2,20 +2,25 @@
 
 <a class="github-button" href="https://github.com/keras-team/keras-nlp" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-nlp on GitHub">Star</a>
 
-KerasNLP is a simple and powerful API for building Natural Language Processing
-(NLP) models within the Keras ecosystem.
+KerasNLP is a natural language processing library that supports users through
+their entire development cycle. Our workflows are built from modular components 
+that have state-of-the-art preset weights and architectures when used 
+out-of-the-box and are easily customizable when more control is needed. We 
+emphasize in-graph computation for all workflows so that developers can expect 
+easy productionization using the Tensorflow ecosystem.
 
-KerasNLP provides modular building blocks following standard Keras interfaces
-(layers, metrics) that allow you to quickly and flexibly iterate on your task.
-Engineers working in applied NLP can leverage the library to assemble training
-and inference pipelines that are both state-of-the-art and production-grade.
+This library is an extension of the core Keras API; all high-level modules are 
+[`Layers`](https://keras.io/api/layers/) or 
+[`Models`](https://keras.io/api/models/) that recieve that same level of polish 
+as core Keras. If you are familiar with Keras, congratulations! You already 
+understand most of KerasNLP.
 
-KerasNLP can be understood as a horizontal extension of the Keras API:
-components are first-party Keras objects that are too specialized to be
-added to core Keras, but that receive the same level of polish as the rest of
-the Keras API.
+See our [Getting Started guide](https://keras.io/guides/keras_nlp/getting_started) 
+for example usage of our modular API starting with evaluating pretrained models 
+and building up to designing a novel transformer architecture and training a 
+tokenizer from scratch.  
 
-KerasNLP is also new and growing! If you are interested in contributing, please
+KerasNLP is new and growing! If you are interested in contributing, please
 check out our
 [contributing guide](https://github.com/keras-team/keras-nlp/blob/master/CONTRIBUTING.md).
 
@@ -24,10 +29,10 @@ check out our
 
 * [KerasNLP API reference](/api/keras_nlp/)
 * [KerasNLP on GitHub](https://github.com/keras-team/keras-nlp)
-
 ---
 ## Guides
 
+* [Getting Started with KerasNLP](/guides/keras-nlp/getting_started/)
 * [Pretraining a Transformer from scratch](/guides/keras_nlp/transformer_pretraining/)
 
 ---
@@ -39,64 +44,72 @@ check out our
 ---
 ## Installation
 
-KerasNLP requires **Python 3.7+** and **TensorFlow 2.9+**.
-
-Install the latest release:
+To install the latest official release:
 
 ```
 pip install keras-nlp --upgrade
 ```
 
-You can check out release notes and versions on our
-[releases page](https://github.com/keras-team/keras-nlp/releases).
+To install the latest unreleased changes to the library, we recommend using
+pip to install directly from the master branch on github:
 
-KerasNLP is currently in pre-release (0.y.z) development. Until version 1.0, we
-may break compatibility at any time and APIs should not be considered stable.
+```
+pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
+```
 
----
-## Quick introduction
+## Quickstart
 
-The following snippet will tokenize some text, build a tiny transformer, and
-train a single batch.
+Fine-tune BERT on a small sentiment analysis task using the 
+[`keras_nlp.models`](https://keras.io/api/keras_nlp/models/) API:
 
 ```python
 import keras_nlp
-import tensorflow as tf
 from tensorflow import keras
+import tensorflow_datasets as tfds
 
-# Tokenize some inputs with a binary label.
-vocab = ["[UNK]", "the", "qu", "##ick", "br", "##own", "fox", "."]
-sentences = ["The quick brown fox jumped.", "The fox slept."]
-tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab,
-    sequence_length=10,
+# Use mixed precision for optimal performance
+keras.mixed_precision.set_global_policy('mixed_float16')
+
+imdb_train, imdb_test = tfds.load(
+    "imdb_reviews",
+    split=["train", "test"],
+    as_supervised=True,
+    batch_size=16,
 )
-x, y = tokenizer(sentences), tf.constant([1, 0])
+classifier = keras_nlp.models.BertClassifier.from_preset(
+    "bert_base_en_uncased",
+)
+classifier.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.experimental.AdamW(5e-5),
+    metrics=keras.metrics.SparseCategoricalAccuracy(),
+    jit_compile=True,
+)
+classifier.fit(
+    imdb_train,
+    validation_data=imdb_test,
+    epochs=1,
+)
 
-# Create a tiny transformer.
-inputs = keras.Input(shape=(None,), dtype="int32")
-outputs = keras_nlp.layers.TokenAndPositionEmbedding(
-    vocabulary_size=len(vocab),
-    sequence_length=10,
-    embedding_dim=16,
-)(inputs)
-outputs = keras_nlp.layers.TransformerEncoder(
-    num_heads=4,
-    intermediate_dim=32,
-)(outputs)
-outputs = keras.layers.GlobalAveragePooling1D()(outputs)
-outputs = keras.layers.Dense(1, activation="sigmoid")(outputs)
-model = keras.Model(inputs, outputs)
-
-# Run a single batch of gradient descent.
-model.compile(optimizer="rmsprop", loss="binary_crossentropy", jit_compile=True)
-model.train_on_batch(x, y)
+# Predict a new example
+classifier.predict(["What an amazing movie, three hours of pure bliss!"])
 ```
 
-To see an end-to-end example using KerasNLP, check out our guide on
-[pre-training a transfomer from scratch](/guides/keras_nlp/transformer_pretraining/).
+## Compatibility
 
----
+We follow [Semantic Versioning](https://semver.org/), and plan to
+provide backwards compatibility guarantees both for code and saved models built
+with our components. While we continue with pre-release `0.y.z` development, we
+may break compatibility at any time and APIs should not be consider stable.
+
+## Disclaimer
+
+KerasNLP provides access to pre-trained models via the `keras_nlp.models` API.
+These pre-trained models are provided on an "as is" basis, without warranties
+or conditions of any kind. The following underlying models are provided by third
+parties, and subject to separate licenses:
+DistilBERT, RoBERTa, XLM-RoBERTa, GPT-2.
+
 ## Citing KerasNLP
 
 If KerasNLP helps your research, we appreciate your citations.
@@ -105,7 +118,8 @@ Here is the BibTeX entry:
 ```bibtex
 @misc{kerasnlp2022,
   title={KerasNLP},
-  author={Watson, Matthew, and Qian, Chen, and Zhu, Scott and Chollet, Fran\c{c}ois and others},
+  author={Watson, Matthew, and Qian, Chen, and Bischof, Jonathan and Chollet, 
+  Fran\c{c}ois and others},
   year={2022},
   howpublished={\url{https://github.com/keras-team/keras-nlp}},
 }
