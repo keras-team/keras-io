@@ -10,12 +10,11 @@ emphasize in-graph computation for all workflows so that developers can expect
 easy productionization using the Tensorflow ecosystem.
 
 This library is an extension of the core Keras API; all high-level modules are 
-[`Layers`](https://keras.io/api/layers/) or 
-[`Models`](https://keras.io/api/models/) that recieve that same level of polish 
-as core Keras. If you are familiar with Keras, congratulations! You already 
-understand most of KerasNLP.
+[`Layers`](/api/layers/) or [`Models`](/api/models/) that recieve that same 
+level of polish as core Keras. If you are familiar with Keras, congratulations! 
+You already understand most of KerasNLP.
 
-See our [Getting Started guide](https://keras.io/guides/keras_nlp/getting_started) 
+See our [Getting Started guide](/guides/keras_nlp/getting_started) 
 for example usage of our modular API starting with evaluating pretrained models 
 and building up to designing a novel transformer architecture and training a 
 tokenizer from scratch.  
@@ -60,7 +59,7 @@ pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
 ## Quickstart
 
 Fine-tune BERT on a small sentiment analysis task using the 
-[`keras_nlp.models`](https://keras.io/api/keras_nlp/models/) API:
+[`keras_nlp.models`](/api/keras_nlp/models/) API:
 
 ```python
 import keras_nlp
@@ -108,7 +107,7 @@ KerasNLP provides access to pre-trained models via the `keras_nlp.models` API.
 These pre-trained models are provided on an "as is" basis, without warranties
 or conditions of any kind. The following underlying models are provided by third
 parties, and subject to separate licenses:
-DistilBERT, RoBERTa, XLM-RoBERTa, GPT-2.
+DistilBERT, RoBERTa, XLM-RoBERTa, DeBERTa, and GPT-2.
 
 ## Citing KerasNLP
 
