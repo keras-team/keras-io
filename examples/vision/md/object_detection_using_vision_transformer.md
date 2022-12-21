@@ -54,7 +54,7 @@ import shutil
 ---
 ## Prepare dataset
 
-We use the [Caltech 101 Dataset](http://www.vision.caltech.edu/Image_Datasets/Caltech101/).
+We use the [Caltech 101 Dataset](https://data.caltech.edu/records/mzrjq-6wc02).
 
 
 ```python
@@ -64,7 +64,7 @@ path_annot = "/Annotations/Airplanes_Side_2/"
 
 path_to_downloaded_file = keras.utils.get_file(
     fname="caltech_101_zipped",
-    origin="https://data.caltech.edu/tindfiles/serve/e41f5188-0b32-41fa-801b-d1e840915e80/",
+    origin="https://data.caltech.edu/records/mzrjq-6wc02/files/caltech-101.zip",
     extract=True,
     archive_format="zip",  # downloaded file format
     cache_dir="/",  # cache and extract in current directory
