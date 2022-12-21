@@ -22,7 +22,7 @@ from tensorflow import keras
 ---
 ## The `Layer` class: the combination of state (weights) and some computation
 
-One of the central abstraction in Keras is the `Layer` class. A layer
+One of the central abstractions in Keras is the `Layer` class. A layer
 encapsulates both a state (the layer's "weights") and a transformation from
 inputs to outputs (a "call", the layer's forward pass).
 
@@ -63,8 +63,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.01103698  0.03099662 -0.1009444   0.10721317]
- [ 0.01103698  0.03099662 -0.1009444   0.10721317]], shape=(2, 4), dtype=float32)
+[[-0.02134706 -0.11407568 -0.06567862 -0.03393517]
+ [-0.02134706 -0.11407568 -0.06567862 -0.03393517]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -103,8 +103,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.09724902  0.04435382  0.06548684  0.1264643 ]
- [-0.09724902  0.04435382  0.06548684  0.1264643 ]], shape=(2, 4), dtype=float32)
+[[-0.0213856  -0.05269931  0.04779436  0.02541557]
+ [-0.0213856  -0.05269931  0.04779436  0.02541557]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -293,10 +293,13 @@ class ActivityRegularizationLayer(keras.layers.Layer):
         self.rate = rate
 
     def call(self, inputs):
-        self.add_loss(self.rate * tf.reduce_sum(inputs))
+        self.add_loss(self.rate * tf.reduce_mean(inputs))
         return inputs
 
 ```
+
+Notice that `add_loss()` can take the result of plain TensorFlow operations.
+There is no need to call a `Loss` object here.
 
 These losses (including those created by any inner layer) can be retrieved via
 `layer.losses`. This property is reset at the start of every `__call__()` to
@@ -353,7 +356,7 @@ print(layer.losses)
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.0023243506>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.0021371832>]
 
 ```
 </div>
@@ -406,10 +409,10 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 131ms/step - loss: 0.1269
-1/1 [==============================] - 0s 45ms/step - loss: 0.0274
+1/1 [==============================] - 0s 95ms/step - loss: 0.1557
+1/1 [==============================] - 0s 47ms/step - loss: 0.0044
 
-<keras.callbacks.History at 0x1643af310>
+<keras.callbacks.History at 0x12e57e760>
 
 ```
 </div>
@@ -465,7 +468,7 @@ print("current accuracy value:", float(layer.metrics[0].result()))
 
 <div class="k-default-codeblock">
 ```
-layer.metrics: [<keras.metrics.BinaryAccuracy object at 0x161505450>]
+layer.metrics: [<keras.metrics.metrics.BinaryAccuracy object at 0x12e2d36d0>]
 current accuracy value: 1.0
 
 ```
@@ -491,9 +494,9 @@ model.fit(data)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 240ms/step - loss: 0.9455 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 219ms/step - loss: 1.0331 - binary_accuracy: 0.0000e+00
 
-<keras.callbacks.History at 0x1644acd50>
+<keras.callbacks.History at 0x12e5f5cd0>
 
 ```
 </div>
@@ -839,28 +842,30 @@ for epoch in range(epochs):
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11490434/11490434 [==============================] - 1s 0us/step
 Start of epoch 0
-step 0: mean loss = 0.3431
-step 100: mean loss = 0.1273
-step 200: mean loss = 0.1001
-step 300: mean loss = 0.0897
-step 400: mean loss = 0.0847
-step 500: mean loss = 0.0812
-step 600: mean loss = 0.0790
-step 700: mean loss = 0.0774
-step 800: mean loss = 0.0762
-step 900: mean loss = 0.0751
+step 0: mean loss = 0.3169
+step 100: mean loss = 0.1252
+step 200: mean loss = 0.0990
+step 300: mean loss = 0.0891
+step 400: mean loss = 0.0842
+step 500: mean loss = 0.0809
+step 600: mean loss = 0.0787
+step 700: mean loss = 0.0771
+step 800: mean loss = 0.0760
+step 900: mean loss = 0.0750
 Start of epoch 1
-step 0: mean loss = 0.0748
-step 100: mean loss = 0.0742
-step 200: mean loss = 0.0737
-step 300: mean loss = 0.0732
-step 400: mean loss = 0.0728
-step 500: mean loss = 0.0724
-step 600: mean loss = 0.0721
-step 700: mean loss = 0.0718
-step 800: mean loss = 0.0716
-step 900: mean loss = 0.0713
+step 0: mean loss = 0.0747
+step 100: mean loss = 0.0740
+step 200: mean loss = 0.0735
+step 300: mean loss = 0.0730
+step 400: mean loss = 0.0727
+step 500: mean loss = 0.0723
+step 600: mean loss = 0.0720
+step 700: mean loss = 0.0717
+step 800: mean loss = 0.0715
+step 900: mean loss = 0.0712
 
 ```
 </div>
@@ -884,7 +889,7 @@ Epoch 1/2
 Epoch 2/2
 938/938 [==============================] - 2s 2ms/step - loss: 0.0676
 
-<keras.callbacks.History at 0x164668d90>
+<keras.callbacks.History at 0x12e6e48b0>
 
 ```
 </div>
@@ -936,13 +941,13 @@ vae.fit(x_train, x_train, epochs=3, batch_size=64)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-938/938 [==============================] - 2s 1ms/step - loss: 0.0746
+938/938 [==============================] - 2s 2ms/step - loss: 0.0748
 Epoch 2/3
-938/938 [==============================] - 1s 1ms/step - loss: 0.0676
+938/938 [==============================] - 2s 2ms/step - loss: 0.0676
 Epoch 3/3
-938/938 [==============================] - 1s 1ms/step - loss: 0.0676
+938/938 [==============================] - 2s 2ms/step - loss: 0.0675
 
-<keras.callbacks.History at 0x16469fc50>
+<keras.callbacks.History at 0x12e6ab7f0>
 
 ```
 </div>
