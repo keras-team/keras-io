@@ -416,7 +416,7 @@ packer = preprocessor.packer
 tokenizer = preprocessor.tokenizer
 
 # keras.Layer to replace some input tokens with the "[MASK]" token
-masker = keras_nlp.layers.MLMMaskGenerator(
+masker = keras_nlp.layers.MaskedLMMaskGenerator(
     vocabulary_size=tokenizer.vocabulary_size(),
     mask_selection_rate=0.25,
     mask_selection_length=64,
@@ -467,7 +467,7 @@ backbone = keras_nlp.models.BertBackbone(
 )
 
 # Language modeling head
-mlm_head = keras_nlp.layers.MLMHead(
+mlm_head = keras_nlp.layers.MaskedLMHead(
     embedding_weights=backbone.token_embedding.embeddings,
 )
 
