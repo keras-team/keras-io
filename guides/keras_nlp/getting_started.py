@@ -16,7 +16,6 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 """
 ## Introduction
 
-
 KerasNLP is a natural language processing library that supports users through their
 entire development cycle. Our workflows are built from modular components that have SoTA
 preset weights and architectures when used out-of-the-box and are easily customizable
