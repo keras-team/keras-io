@@ -217,7 +217,7 @@ text corpora. Essentially, it allows our model to learn from uncommon words, whi
 requireing a massive vocabulary of every word in our training set.
 
 The second thing we need to do is mask our input for the MLM task. To do this, we can use
-`keras_nlp.layers.MLMMaskGenerator`, which will randomly select a set of tokens in each
+`keras_nlp.layers.MaskedLMMaskGenerator`, which will randomly select a set of tokens in each
 input and mask them out.
 
 The tokenizer and the masking layer can both be used inside a call to
@@ -238,7 +238,7 @@ tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
 )
 # Setting mask_selection_length will trim or pad the mask outputs to shape
 # (batch_size, PREDICTIONS_PER_SEQ).
-masker = keras_nlp.layers.MLMMaskGenerator(
+masker = keras_nlp.layers.MaskedLMMaskGenerator(
     vocabulary_size=tokenizer.vocabulary_size(),
     mask_selection_rate=MASK_RATE,
     mask_selection_length=PREDICTIONS_PER_SEQ,
@@ -252,7 +252,7 @@ def preprocess(inputs):
     # Split the masking layer outputs into a (features, labels, and weights)
     # tuple that we can use with keras.Model.fit().
     features = {
-        "tokens": outputs["tokens"],
+        "token_ids": outputs["token_ids"],
         "mask_positions": outputs["mask_positions"],
     }
     labels = outputs["mask_ids"]
@@ -278,7 +278,7 @@ passed directly to `keras.Model.fit()`.
 
 We have two features:
 
-1. `"tokens"`, where some tokens have been replaced with our mask token id.
+1. `"token_ids"`, where some tokens have been replaced with our mask token id.
 2. `"mask_positions"`, which keeps track of which tokens we masked out.
 
 Our labels are simply the ids we masked out.
@@ -338,7 +338,7 @@ encoder_model.summary()
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
 set up the encoder to train on the MLM task; to do that we attach a
-`keras_nlp.layers.MLMHead`.
+`keras_nlp.layers.MaskedLMHead`.
 
 This layer will take as one input the token encodings, and as another the positions we
 masked out in the original input. It will gather the token encodings we masked, and
@@ -351,17 +351,17 @@ intesive, so even this relatively small Transformer will take some time.
 
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "tokens": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
+    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
     "mask_positions": keras.Input(shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32),
 }
 
 # Encode the tokens.
-encoded_tokens = encoder_model(inputs["tokens"])
+encoded_tokens = encoder_model(inputs["token_ids"])
 
 # Predict an output word for each masked input token.
 # We use the input token embedding to project from our encoded vectors to
 # vocabulary logits, which has been shown to improve training efficiency.
-outputs = keras_nlp.layers.MLMHead(
+outputs = keras_nlp.layers.MaskedLMHead(
     embedding_weights=embedding_layer.token_embedding.embeddings,
     activation="softmax",
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
@@ -478,7 +478,9 @@ final_model.save("final_model")
 
 # This model can predict directly on raw text.
 restored_model = keras.models.load_model("final_model", compile=False)
-inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
+inference_data = tf.constant(
+    ["Terrible, no good, trash.", "So great; I loved it!"]
+)
 print(restored_model(inference_data))
 
 """
