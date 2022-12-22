@@ -14,7 +14,7 @@ from tensorflow import keras
 keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
-## KerasNLP: Modular NLP Workflows for Keras
+## Introduction
 
 
 KerasNLP is a natural language processing library that supports users through their
