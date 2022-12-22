@@ -16,10 +16,12 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 """
 ## Introduction
 
-KerasNLP is a natural language processing library that supports users through their
-entire development cycle. Our workflows are built from modular components that have SoTA
-preset weights and architectures when used out-of-the-box and are easily customizable
-when more control is needed.
+KerasNLP is a natural language processing library that supports users through
+their entire development cycle. Our workflows are built from modular components 
+that have state-of-the-art preset weights and architectures when used 
+out-of-the-box and are easily customizable when more control is needed. We 
+emphasize in-graph computation for all workflows so that developers can expect 
+easy productionization using the TensorFlow ecosystem.
 
 This library is an extension of the core Keras API; all high level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
