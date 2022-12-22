@@ -478,9 +478,7 @@ final_model.save("final_model")
 
 # This model can predict directly on raw text.
 restored_model = keras.models.load_model("final_model", compile=False)
-inference_data = tf.constant(
-    ["Terrible, no good, trash.", "So great; I loved it!"]
-)
+inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
 print(restored_model(inference_data))
 
 """
