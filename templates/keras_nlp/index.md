@@ -7,7 +7,7 @@ their entire development cycle. Our workflows are built from modular components
 that have state-of-the-art preset weights and architectures when used 
 out-of-the-box and are easily customizable when more control is needed. We 
 emphasize in-graph computation for all workflows so that developers can expect 
-easy productionization using the Tensorflow ecosystem.
+easy productionization using the TensorFlow ecosystem.
 
 This library is an extension of the core Keras API; all high-level modules are 
 [`Layers`](/api/layers/) or [`Models`](/api/models/) that recieve that same 
@@ -65,9 +65,6 @@ Fine-tune BERT on a small sentiment analysis task using the
 import keras_nlp
 from tensorflow import keras
 import tensorflow_datasets as tfds
-
-# Use mixed precision for optimal performance
-keras.mixed_precision.set_global_policy('mixed_float16')
 
 imdb_train, imdb_test = tfds.load(
     "imdb_reviews",

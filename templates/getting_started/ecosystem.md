@@ -22,7 +22,7 @@ their entire development cycle. Our workflows are built from modular components
 that have state-of-the-art preset weights and architectures when used 
 out-of-the-box and are easily customizable when more control is needed. We 
 emphasize in-graph computation for all workflows so that developers can expect 
-easy productionization using the Tensorflow ecosystem.
+easy productionization using the TensorFlow ecosystem.
 
 ---
 
