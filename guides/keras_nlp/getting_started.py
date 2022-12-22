@@ -39,7 +39,7 @@ levels of complexity:
 Throughout our guide we use Professor Keras, the official Keras mascot, as a visual
 reference for the complexity of the material:
 
-![picture](https://drive.google.com/uc?id=1d14Qpmfgjf6zu4z30HBaonH8PYDHgVoU)
+![prof_keras_evolution](/guides/img/getting_started_keras_nlp/prof_keras_evolution.png)
 """
 
 """
@@ -84,7 +84,7 @@ data.
 
 Here is the modular hierarchy for `BertClassifier` (all relationships are compositional):
 
-![picture](https://drive.google.com/uc?id=1vHBQ1oFbto8ItfhsLcxKhIwOIdJE1X9n)
+![class_diagram](/guides/img/getting_started_keras_nlp/class_diagram)
 
 All modules can be used independently and have a `from_preset()` method in addition to
 the standard constructor that instantiates the class with **preset** architecture and
@@ -126,7 +126,7 @@ print(imdb_train.unbatch().take(1).get_single_element())
 """
 ## Inference with a pretrained classifier
 
-![picture](https://drive.google.com/uc?id=1xeMHVCxYhm3_oC37Gg7k0bG-yhsVr0Dv)
+![prof_keras_beginner](/guides/img/getting_started_keras_nlp/prof_keras_beginner.png)
 
 The highest level module in KerasNLP is a **task**. A **task** is a `keras.Model`
 consisting of a (generally pretrained) **backbone** model and task-specific layers.
@@ -171,7 +171,7 @@ Our result is 78% accuracy without training anything. Not bad!
 """
 ## Fine tuning a pretrained BERT backbone
 
-![picture](https://drive.google.com/uc?id=1YytOYRSqsrhJ4NLatVOSuVMbLPa9iXrw)
+![prof_keras_intermediate](/guides/img/getting_started_keras_nlp/prof_keras_intermediate.png)
 
 When labeled text specific to our task is available, fine-tuning a custom classifier can
 improve performance. If we want to predict IMDB review sentiment, using IMDB data should
@@ -212,7 +212,7 @@ training even though the IMDB dataset is much smaller than `sst2`.
 
 """
 ## Fine tuning with user-controlled preprocessing
-![picture](https://drive.google.com/uc?id=1T_40vtl8daihS-kKYTFWejFd19KJAyDK)
+![prof_keras_advanced](/guides/img/getting_started_keras_nlp/prof_keras_advanced.png)
 
 For some advanced training scenarios, users might prefer direct control over
 preprocessing. For large datasets, examples can be preprocessed in advance and saved to
@@ -318,7 +318,7 @@ print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
 
 """
 ## Fine tuning with a custom model
-![picture](https://drive.google.com/uc?id=1T_40vtl8daihS-kKYTFWejFd19KJAyDK)
+![prof_keras_advanced](/guides/img/getting_started_keras_nlp/prof_keras_advanced.png)
 
 For more advanced applications, an appropriate **task** `Model` may not be available. In
 this case we provide direct access to the **backbone** `Model`, which has its own
@@ -379,7 +379,7 @@ accounting for cached preprocessing.
 
 """
 ## Pretraining a backbone model
-![picture](https://drive.google.com/uc?id=1pzwLPCtvzmHY3DKzH-MBzmjWFJ3pKVB5)
+![prof_keras_expert](/guides/img/getting_started_keras_nlp/prof_keras_expert.png)
 
 Do you have access to large unlabeled datasets in your domain? Are they are around the
 same size as used to train popular backbones such as BERT, RoBERTa, or GPT2 (XX+ GiB)? If
@@ -508,7 +508,7 @@ After pretraining save your `backbone` submodel to use in a new task!
 
 """
 ## Build and train your own transformer from scratch
-![picture](https://drive.google.com/uc?id=1pzwLPCtvzmHY3DKzH-MBzmjWFJ3pKVB5)
+![prof_keras_expert](/guides/img/getting_started_keras_nlp/prof_keras_expert.png)
 
 Want to implement a novel transformer architecture? The KerasNLP library offers all the
 low-level modules used to build SoTA architectures in our `models` API. This includes the
