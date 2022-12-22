@@ -323,7 +323,7 @@ print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
 For more advanced applications, an appropriate **task** `Model` may not be available. In
 this case we provide direct access to the **backbone** `Model`, which has its own
 `from_preset` constructor and can be composed with custom `Layer`s. Detailed examples can
-be found at https://keras.io/guides/transfer_learning/.
+be found at our [transfer learning guide](/guides/transfer_learning/).
 
 A **backbone** `Model` does not include automatic preprocessing but can be paired with a
 matching **preprocessor** using the same **preset** as shown in the previous workflow.
