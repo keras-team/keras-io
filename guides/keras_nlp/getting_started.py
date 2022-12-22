@@ -23,8 +23,7 @@ preset weights and architectures when used out-of-the-box and are easily customi
 when more control is needed.
 
 This library is an extension of the core Keras API; all high level modules are
-[`Layers`](https://keras.io/api/layers/) or
-[`Models`](https://keras.io/api/models/). If you are familiar with Keras,
+[`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
 
 This guide demonstrates our modular approach using a sentiment analysis example at six
@@ -149,7 +148,7 @@ This particular **preset** is a `"bert_tiny_uncased_en"` **backbone** fine-tuned
 `sst2`, another movie review sentiment analysis (this time from Rotten Tomatoes). We use
 the `tiny` architecture for demo purposes, but larger models are recommended for SoTA
 performance. For all the task-specific presets available for `BertClassifier`, see
-[keras.io](https://resilient-dango-43f7b8.netlify.app/api/keras_nlp/models/).
+our keras.io [models page](/api/keras_nlp/models/).
 
 Let's evaluate our classifier on the IMDB dataset. We first need to compile the
 `keras.Model`. The output is `[loss, accuracy]`,
@@ -183,8 +182,7 @@ The workflow for fine-tuning is almost identical to above, except that we reques
 **preset** for the **backbone**-only model rather than the entire classifier. When passed
 a **backone** **preset**, a **task** `Model` will randomly initialize all task-specific
 layers in preparation for training. For all the **backbone** presets available for
-`BertClassifier`, see
-[keras.io](https://resilient-dango-43f7b8.netlify.app/api/keras_nlp/models/).
+`BertClassifier`, see our keras.io [models page](/api/keras_nlp/models/).
 
 To train your classifier, use `Model.compile()` and `Model.fit()` as with any other
 `keras.Model`. Since preprocessing is included in all **tasks** by default, we again pass
@@ -270,7 +268,8 @@ classifier.fit(
 """
 After three epochs, our validation accuracy has only increased to 0.88. This is both a
 function of the small size of our dataset and our model. To exceed 90% accuracy, try
-larger **presets** such as  `"bert_base_en_uncased"`.
+larger **presets** such as  `"bert_base_en_uncased"`. For all the **backbone** presets 
+available for `BertClassifier`, see our keras.io [models page](/api/keras_nlp/models/).
 """
 
 """
@@ -398,8 +397,8 @@ scratch without presets.
 In this workflow we pretrain a BERT **backbone** using our IMDB review text. We skip the
 "next sentence prediction" (NSP) loss because it adds significant complexity to the data
 processing and was dropped by later models like RoBERTa. See our e2e [BERT pretraining
-example](https://github.com/keras-team/keras-nlp/tree/4f9ebefa82af22b4f4267dfa80fa525f7a03
-bd5d/examples/bert) for step-by-step details on how to replicate the original paper.
+example](https://github.com/keras-team/keras-nlp/tree/master/examples/bert) for 
+step-by-step details on how to replicate the original paper.
 """
 
 """
@@ -519,8 +518,8 @@ low-level modules used to build SoTA architectures in our `models` API. This inc
 In this workflow we train a custom tokenizer on the IMDB data and design a backbone with
 custom transformer architecture. For simplicity we then train directly on the
 classification task. Interested in more details? We wrote an entire guide to pretraining
-and finetuning a custom transformer:
-https://keras.io/guides/keras_nlp/transformer_pretraining/
+and finetuning a custom transformer on 
+[keras.io](/guides/keras_nlp/transformer_pretraining/),
 """
 
 """
