@@ -18,7 +18,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "bert_preprocessor",
-                    "title": "BertPreprocessor",
+                    "title": "BertPreprocessor layer",
                     "generate": [
                         "keras_nlp.models.BertPreprocessor",
                         "keras_nlp.models.BertPreprocessor.from_preset",
@@ -27,7 +27,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "bert_backbone",
-                    "title": "BertBackbone",
+                    "title": "BertBackbone model",
                     "generate": [
                         "keras_nlp.models.BertBackbone",
                         "keras_nlp.models.BertBackbone.from_preset",
@@ -35,12 +35,44 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "bert_classifier",
-                    "title": "BertClassifier",
+                    "title": "BertClassifier model",
                     "generate": [
                         "keras_nlp.models.BertClassifier",
                         "keras_nlp.models.BertClassifier.from_preset",
                         "keras_nlp.models.BertClassifier.backbone",
                         "keras_nlp.models.BertClassifier.preprocessor",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "deberta_v3/",
+            "title": "DebertaV3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "deberta_tokenizer",
+                    "title": "DebertaTokenizer",
+                    "generate": [
+                        "keras_nlp.models.DebertaTokenizer",
+                        "keras_nlp.models.DebertaTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "deberta_preprocessor",
+                    "title": "DebertaPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.DebertaPreprocessor",
+                        "keras_nlp.models.DebertaPreprocessor.from_preset",
+                        "keras_nlp.models.DebertaPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "deberta_backbone",
+                    "title": "DebertaBackbone model",
+                    "generate": [
+                        "keras_nlp.models.DebertaBackbone",
+                        "keras_nlp.models.DebertaBackbone.from_preset",
                     ],
                 },
             ],
@@ -60,7 +92,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "distil_bert_preprocessor",
-                    "title": "DistilBertPreprocessor",
+                    "title": "DistilBertPreprocessor layer",
                     "generate": [
                         "keras_nlp.models.DistilBertPreprocessor",
                         "keras_nlp.models.DistilBertPreprocessor.from_preset",
@@ -69,7 +101,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "distil_bert_backbone",
-                    "title": "DistilBertBackbone",
+                    "title": "DistilBertBackbone model",
                     "generate": [
                         "keras_nlp.models.DistilBertBackbone",
                         "keras_nlp.models.DistilBertBackbone.from_preset",
@@ -77,7 +109,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "distil_bert_classifier",
-                    "title": "DistilBertClassifier",
+                    "title": "DistilBertClassifier model",
                     "generate": [
                         "keras_nlp.models.DistilBertClassifier",
                         "keras_nlp.models.DistilBertClassifier.from_preset",
@@ -102,7 +134,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "roberta_preprocessor",
-                    "title": "RobertaPreprocessor",
+                    "title": "RobertaPreprocessor layer",
                     "generate": [
                         "keras_nlp.models.RobertaPreprocessor",
                         "keras_nlp.models.RobertaPreprocessor.from_preset",
@@ -111,7 +143,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "roberta_backbone",
-                    "title": "RobertaBackbone",
+                    "title": "RobertaBackbone model",
                     "generate": [
                         "keras_nlp.models.RobertaBackbone",
                         "keras_nlp.models.RobertaBackbone.from_preset",
@@ -119,7 +151,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "roberta_classifier",
-                    "title": "RobertaClassifier",
+                    "title": "RobertaClassifier model",
                     "generate": [
                         "keras_nlp.models.RobertaClassifier",
                         "keras_nlp.models.RobertaClassifier.from_preset",
@@ -144,7 +176,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "xlm_roberta_preprocessor",
-                    "title": "XLMRobertaPreprocessor",
+                    "title": "XLMRobertaPreprocessor layer",
                     "generate": [
                         "keras_nlp.models.XLMRobertaPreprocessor",
                         "keras_nlp.models.XLMRobertaPreprocessor.from_preset",
@@ -153,7 +185,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "xlm_roberta_backbone",
-                    "title": "XLMRobertaBackbone",
+                    "title": "XLMRobertaBackbone model",
                     "generate": [
                         "keras_nlp.models.XLMRobertaBackbone",
                         "keras_nlp.models.XLMRobertaBackbone.from_preset",
@@ -161,7 +193,7 @@ MODELS_MASTER = {
                 },
                 {
                     "path": "xlm_roberta_classifier",
-                    "title": "XLMRobertaClassifier",
+                    "title": "XLMRobertaClassifier model",
                     "generate": [
                         "keras_nlp.models.XLMRobertaClassifier",
                         "keras_nlp.models.XLMRobertaClassifier.from_preset",
@@ -259,12 +291,12 @@ TOKENIZERS_MASTER = {
         },
         {
             "path": "compute_word_piece_vocabulary",
-            "title": "compute_word_piece_vocabulary",
+            "title": "compute_word_piece_vocabulary function",
             "generate": ["keras_nlp.tokenizers.compute_word_piece_vocabulary"],
         },
         {
             "path": "compute_sentence_piece_proto",
-            "title": "compute_sentence_piece_proto",
+            "title": "compute_sentence_piece_proto function",
             "generate": ["keras_nlp.tokenizers.compute_sentence_piece_proto"],
         },
     ],
@@ -276,33 +308,33 @@ PREPROCESSING_LAYERS_MASTER = {
     "toc": True,
     "children": [
         {
-            "path": "mlm_mask_generator",
-            "title": "MLMMaskGenerator",
-            "generate": ["keras_nlp.layers.MLMMaskGenerator"],
+            "path": "masked_lm_mask_generator",
+            "title": "MaskedLMMaskGenerator layer",
+            "generate": ["keras_nlp.layers.MaskedLMMaskGenerator"],
         },
         {
-            "path": "mlm_head",
-            "title": "MLMHead",
-            "generate": ["keras_nlp.layers.MLMHead"],
+            "path": "masked_lm_head",
+            "title": "MaskedLMHead layer",
+            "generate": ["keras_nlp.layers.MaskedLMHead"],
         },
         {
             "path": "start_end_packer",
-            "title": "StartEndPacker",
+            "title": "StartEndPacker layer",
             "generate": ["keras_nlp.layers.StartEndPacker"],
         },
         {
             "path": "multi_segment_packer",
-            "title": "MultiSegmentPacker",
+            "title": "MultiSegmentPacker layer",
             "generate": ["keras_nlp.layers.MultiSegmentPacker"],
         },
         {
             "path": "random_swap",
-            "title": "RandomSwap",
+            "title": "RandomSwap layer",
             "generate": ["keras_nlp.layers.RandomSwap"],
         },
         {
             "path": "random_deletion",
-            "title": "RandomDeletion",
+            "title": "RandomDeletion layer",
             "generate": ["keras_nlp.layers.RandomDeletion"],
         },
     ],
@@ -315,7 +347,7 @@ MODELING_LAYERS_MASTER = {
     "children": [
         {
             "path": "transformer_encoder",
-            "title": "TransformerEncoder",
+            "title": "TransformerEncoder layer",
             "generate": [
                 "keras_nlp.layers.TransformerEncoder",
                 "keras_nlp.layers.TransformerEncoder.call",
@@ -323,7 +355,7 @@ MODELING_LAYERS_MASTER = {
         },
         {
             "path": "transformer_decoder",
-            "title": "TransformerDecoder",
+            "title": "TransformerDecoder layer",
             "generate": [
                 "keras_nlp.layers.TransformerDecoder",
                 "keras_nlp.layers.TransformerDecoder.call",
@@ -331,28 +363,28 @@ MODELING_LAYERS_MASTER = {
         },
         {
             "path": "fnet_encoder",
-            "title": "FNetEncoder",
+            "title": "FNetEncoder layer",
             "generate": ["keras_nlp.layers.FNetEncoder"],
         },
         {
             "path": "position_embedding",
-            "title": "PositionEmbedding",
+            "title": "PositionEmbedding layer",
             "generate": ["keras_nlp.layers.PositionEmbedding"],
         },
         {
             "path": "sine_position_encoding",
-            "title": "SinePositionEncoding",
+            "title": "SinePositionEncoding layer",
             "generate": ["keras_nlp.layers.SinePositionEncoding"],
         },
         {
             "path": "token_and_position_embedding",
-            "title": "TokenAndPositionEmbedding",
+            "title": "TokenAndPositionEmbedding layer",
             "generate": ["keras_nlp.layers.TokenAndPositionEmbedding"],
         },
         {
-            "path": "mlm_head",
-            "title": "MLMHead",
-            "generate": ["keras_nlp.layers.MLMHead"],
+            "path": "masked_lm_head",
+            "title": "MaskedLMHead layer",
+            "generate": ["keras_nlp.layers.MaskedLMHead"],
         },
     ],
 }
@@ -365,27 +397,27 @@ METRICS_MASTER = {
     "children": [
         {
             "path": "perplexity",
-            "title": "Perplexity",
+            "title": "Perplexity metric",
             "generate": ["keras_nlp.metrics.Perplexity"],
         },
         {
             "path": "rouge_l",
-            "title": "RougeL",
+            "title": "RougeL metric",
             "generate": ["keras_nlp.metrics.RougeL"],
         },
         {
             "path": "rouge_n",
-            "title": "RougeN",
+            "title": "RougeN metric",
             "generate": ["keras_nlp.metrics.RougeN"],
         },
         {
             "path": "bleu",
-            "title": "Bleu",
+            "title": "Bleu metric",
             "generate": ["keras_nlp.metrics.Bleu"],
         },
         {
             "path": "edit_distance",
-            "title": "EditDistance",
+            "title": "EditDistance metric",
             "generate": ["keras_nlp.metrics.EditDistance"],
         },
 
