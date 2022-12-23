@@ -126,8 +126,8 @@ This gives rise to the Stable Diffusion architecture. Stable Diffusion consists 
 - A decoder, which turns the final 64x64 latent patch into a higher-resolution 512x512 image.
 
 First, your text prompt gets projected into a latent vector space by the text encoder,
-which is simply a pretrained, frozen language model. Then that prompt vector is concatenate
-to a randomly generated noise patch, which is repeatedly "denoised" by the decoder over a series
+which is simply a pretrained, frozen language model. Then that prompt vector is concatenated
+to a randomly generated noise patch, which is repeatedly "denoised" by the diffusion model over a series
 of "steps" (the more steps you run the clearer and nicer your image will be -- the default value is 50 steps).
 
 Finally, the 64x64 latent image is sent through the decoder to properly render it in high resolution.
