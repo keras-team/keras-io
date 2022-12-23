@@ -85,7 +85,7 @@ IDs below can be used with the `from_preset()` constructor for classifier models
 and preprocessing layers.
 
 ```python
-backbone = keras_nlp.models.BertBackbone.from_preset("bert_tiny_en_uncased_sst2")
+classifier = keras_nlp.models.BertClassifier.from_preset("bert_tiny_en_uncased_sst2")
 tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased_sst2")
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased_sst2")
 ```
