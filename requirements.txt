@@ -12,4 +12,4 @@ tensorflow~=2.11.0
 tensorflow_datasets
 keras-tuner
 keras-cv
-git+https://github.com/keras-team/keras-nlp.git
+keras-nlp
