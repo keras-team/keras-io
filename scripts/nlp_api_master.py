@@ -46,48 +46,6 @@ MODELS_MASTER = {
             ],
         },
         {
-            "path": "deberta_v3/",
-            "title": "DebertaV3",
-            "toc": True,
-            "children": [
-                {
-                    "path": "deberta_v3_tokenizer",
-                    "title": "DebertaV3Tokenizer",
-                    "generate": [
-                        "keras_nlp.models.DebertaV3Tokenizer",
-                        "keras_nlp.models.DebertaV3Tokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "deberta_v3_preprocessor",
-                    "title": "DebertaV3Preprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.DebertaV3Preprocessor",
-                        "keras_nlp.models.DebertaV3Preprocessor.from_preset",
-                        "keras_nlp.models.DebertaV3Preprocessor.tokenizer",
-                    ],
-                },
-                {
-                    "path": "deberta_v3_backbone",
-                    "title": "DebertaV3Backbone model",
-                    "generate": [
-                        "keras_nlp.models.DebertaV3Backbone",
-                        "keras_nlp.models.DebertaV3Backbone.from_preset",
-                    ],
-                },
-                {
-                    "path": "deberta_v3_classifier",
-                    "title": "DebertaV3Classifier model",
-                    "generate": [
-                        "keras_nlp.models.DebertaV3Classifier",
-                        "keras_nlp.models.DebertaV3Classifier.from_preset",
-                        "keras_nlp.models.DebertaV3Classifier.backbone",
-                        "keras_nlp.models.DebertaV3Classifier.preprocessor",
-                    ],
-                },
-            ],
-        },
-        {
             "path": "distil_bert/",
             "title": "DistilBert",
             "toc": True,
