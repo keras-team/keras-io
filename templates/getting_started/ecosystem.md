@@ -17,13 +17,12 @@ KerasTuner is an easy-to-use, scalable hyperparameter optimization framework tha
 
 [KerasNLP Documentation](/keras_nlp/) - [KerasNLP GitHub repository](https://github.com/keras-team/keras-nlp)
 
-KerasNLP is a simple and powerful API for building Natural Language
-Processing (NLP) models. KerasNLP provides modular building blocks following
-standard Keras interfaces (layers, metrics) that allow you to quickly and
-flexibly iterate on your task. Engineers working in applied NLP can leverage the
-library to assemble training and inference pipelines that are both
-state-of-the-art and production-grade. KerasNLP is maintained directly by the
-Keras team.
+KerasNLP is a natural language processing library that supports users through
+their entire development cycle. Our workflows are built from modular components 
+that have state-of-the-art preset weights and architectures when used 
+out-of-the-box and are easily customizable when more control is needed. We 
+emphasize in-graph computation for all workflows so that developers can expect 
+easy productionization using the TensorFlow ecosystem.
 
 ---
 
