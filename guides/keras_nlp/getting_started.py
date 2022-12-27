@@ -10,10 +10,10 @@ Accelerator: GPU
 ## Introduction
 
 KerasNLP is a natural language processing library that supports users through
-their entire development cycle. Our workflows are built from modular components 
-that have state-of-the-art preset weights and architectures when used 
-out-of-the-box and are easily customizable when more control is needed. We 
-emphasize in-graph computation for all workflows so that developers can expect 
+their entire development cycle. Our workflows are built from modular components
+that have state-of-the-art preset weights and architectures when used
+out-of-the-box and are easily customizable when more control is needed. We
+emphasize in-graph computation for all workflows so that developers can expect
 easy productionization using the TensorFlow ecosystem.
 
 This library is an extension of the core Keras API; all high level modules are
@@ -52,36 +52,36 @@ task-specific output. For each `XX` architecture (e.g., `Bert`), we offer the fo
 modules:
 
 * **Tokenizer**: `keras_nlp.models.XXTokenizer`
-    * **What it does**: Converts strings to `tf.RaggedTensor`s of token ids.
-* **Why it's important**: The raw bytes of a string are too high dimensional to be useful
-features so we first map them to a small number of tokens, for example `"The quick brown
-fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
-    * **Inherits from**: `keras.Layer`.
+  * **What it does**: Converts strings to `tf.RaggedTensor`s of token ids.
+  * **Why it's important**: The raw bytes of a string are too high dimensional to be useful
+    features so we first map them to a small number of tokens, for example `"The quick brown
+    fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
+  * **Inherits from**: `keras.layers.Layer`.
 * **Preprocessor**: `keras_nlp.models.XXPreprocessor`
-* **What it does**: Converts strings to a dictonary of preprocessed tensors consumed by
-the backbone, starting with tokenization.
-* **Why it's important**: Each model uses special tokens and extra tensors to understand
-the input such as deliminting input segments and identifying padding tokens. Padding each
-sequence to the same length improves computational efficiency.
-    * **Has a**: `XXTokenizer`.
-    * **Inherits from**: `keras.Layer`.
+  * **What it does**: Converts strings to a dictonary of preprocessed tensors consumed by
+    the backbone, starting with tokenization.
+  * **Why it's important**: Each model uses special tokens and extra tensors to understand
+    the input such as deliminting input segments and identifying padding tokens. Padding each
+    sequence to the same length improves computational efficiency.
+  * **Has a**: `XXTokenizer`.
+  * **Inherits from**: `keras.layers.Layer`.
 * **Backbone**: `keras_nlp.models.XXBackbone`
-* **What it does**: Converts preprocessed tensors to dense features. *Does not handle
-strings; call the preprocessor first.*
-* **Why it's important**: The backbone distills the input tokens into dense features that
-can be used in downstream tasks. It is generally pretrained on a language modeling task
-using massive amounts of unlabeled data. Transfering this information to a new task is a
-major breakthrough in modern NLP.
-    * **Inherits from**: `keras.Model`.
+  * **What it does**: Converts preprocessed tensors to dense features. *Does not handle
+    strings; call the preprocessor first.*
+  * **Why it's important**: The backbone distills the input tokens into dense features that
+    can be used in downstream tasks. It is generally pretrained on a language modeling task
+    using massive amounts of unlabeled data. Transfering this information to a new task is a
+    major breakthrough in modern NLP.
+  * **Inherits from**: `keras.Model`.
 * **Task**: e.g., `keras_nlp.models.XXClassifier`
-* **What it does**: Converts strings to task-specific output (e.g., classification
-probabilities).
-* **Why it's important**: Task models combine string preprocessing and the backbone model
-with task-specific `Layers` to solve a problem such as sentence classification, token
-classification, or text generation. The additional `Layers` must be fine-tuned on labeled
-data.
-    * **Has a**: `XXBackbone` and `XXPreprocessor`.
-    * **Inherits from**: `keras.Model`.
+  * **What it does**: Converts strings to task-specific output (e.g., classification
+    probabilities).
+  * **Why it's important**: Task models combine string preprocessing and the backbone model
+    with task-specific `Layers` to solve a problem such as sentence classification, token
+    classification, or text generation. The additional `Layers` must be fine-tuned on labeled
+    data.
+  * **Has a**: `XXBackbone` and `XXPreprocessor`.
+  * **Inherits from**: `keras.Model`.
 
 Here is the modular hierarchy for `BertClassifier` (all relationships are compositional):
 
@@ -269,7 +269,7 @@ classifier.fit(
 """
 After three epochs, our validation accuracy has only increased to 0.88. This is both a
 function of the small size of our dataset and our model. To exceed 90% accuracy, try
-larger **presets** such as  `"bert_base_en_uncased"`. For all the **backbone** presets 
+larger **presets** such as  `"bert_base_en_uncased"`. For all the **backbone** presets
 available for `BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 """
 
@@ -398,7 +398,7 @@ scratch without presets.
 In this workflow we pretrain a BERT **backbone** using our IMDB review text. We skip the
 "next sentence prediction" (NSP) loss because it adds significant complexity to the data
 processing and was dropped by later models like RoBERTa. See our e2e [BERT pretraining
-example](https://github.com/keras-team/keras-nlp/tree/master/examples/bert) for 
+example](https://github.com/keras-team/keras-nlp/tree/master/examples/bert) for
 step-by-step details on how to replicate the original paper.
 """
 
@@ -519,7 +519,7 @@ low-level modules used to build SoTA architectures in our `models` API. This inc
 In this workflow we train a custom tokenizer on the IMDB data and design a backbone with
 custom transformer architecture. For simplicity we then train directly on the
 classification task. Interested in more details? We wrote an entire guide to pretraining
-and finetuning a custom transformer on 
+and finetuning a custom transformer on
 [keras.io](https://keras.io/guides/keras_nlp/transformer_pretraining/),
 """
 
