@@ -246,15 +246,15 @@ collection of wikipedia articles that is much bigger than than `SST-2`.
 We are going to train a *transformer*, a highly expressive model which will learn
 to embed each word in our input as a low dimentional vector. Our wikipedia dataset has no
 labels, so we will use an unsupervised training objective called the *Masked Language
-Modeling* (MLM) ojective.
+Modeling* (MaskedLM) ojective.
 
 Essentially, we will be playing a big game of "guess the missing word". For each input
 sample we will obscure 25% of our input data, and train our model to predict the parts we
 covered up.
 
-### Preprocess data for the MLM task
+### Preprocess data for the MaskedLM task
 
-Our text preprocessing for the MLM task will occur in two stages.
+Our text preprocessing for the MaskedLM task will occur in two stages.
 
 1. Tokenize input text into integer sequences of token ids.
 2. Mask certain positions in our input to predict on.
@@ -267,7 +267,7 @@ In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
 text corpora. Essentially, it allows our model to learn from uncommon words, while not
 requireing a massive vocabulary of every word in our training set.
 
-The second thing we need to do is mask our input for the MLM task. To do this, we can use
+The second thing we need to do is mask our input for the MaskedLM task. To do this, we can use
 `keras_nlp.layers.MaskedLMMaskGenerator`, which will randomly select a set of tokens in each
 input and mask them out.
 
@@ -456,7 +456,7 @@ _________________________________________________________________
 
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
-set up the encoder to train on the MLM task; to do that we attach a
+set up the encoder to train on the MaskedLM task; to do that we attach a
 `keras_nlp.layers.MaskedLMHead`.
 
 This layer will take as one input the token encodings, and as another the positions we
@@ -543,7 +543,7 @@ our performance on the downstream task.
 
 ### Preprocess data for classification
 
-Preprocessing for fine-tuning is much simpler than for our pretraining MLM task. We just
+Preprocessing for fine-tuning is much simpler than for our pretraining MaskedLM task. We just
 tokenize our input sentences and we are ready for training!
 
 

@@ -149,9 +149,9 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
+(characters don't really encode meaning like words do). Luckily, KerasNLP
+makes it very simple to train WordPiece on a corpus with the 
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
