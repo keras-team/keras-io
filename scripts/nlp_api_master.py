@@ -276,16 +276,6 @@ PREPROCESSING_LAYERS_MASTER = {
     "toc": True,
     "children": [
         {
-            "path": "masked_lm_mask_generator",
-            "title": "MaskedLMMaskGenerator layer",
-            "generate": ["keras_nlp.layers.MaskedLMMaskGenerator"],
-        },
-        {
-            "path": "masked_lm_head",
-            "title": "MaskedLMHead layer",
-            "generate": ["keras_nlp.layers.MaskedLMHead"],
-        },
-        {
             "path": "start_end_packer",
             "title": "StartEndPacker layer",
             "generate": ["keras_nlp.layers.StartEndPacker"],
@@ -304,6 +294,11 @@ PREPROCESSING_LAYERS_MASTER = {
             "path": "random_deletion",
             "title": "RandomDeletion layer",
             "generate": ["keras_nlp.layers.RandomDeletion"],
+        },
+        {
+            "path": "masked_lm_mask_generator",
+            "title": "MaskedLMMaskGenerator layer",
+            "generate": ["keras_nlp.layers.MaskedLMMaskGenerator"],
         },
     ],
 }

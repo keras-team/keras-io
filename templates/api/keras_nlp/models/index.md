@@ -62,18 +62,18 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncas
 | bert_small_en_uncased        | [BERT](bert)               | 28M         | 4-layer BERT model where all input is lowercased. Trained on English Wikipedia + BooksCorpus. |
 | bert_medium_en_uncased       | [BERT](bert)               | 41M         | 8-layer BERT model where all input is lowercased. Trained on English Wikipedia + BooksCorpus. |
 | bert_base_en_uncased         | [BERT](bert)               | 109M        | 12-layer BERT model where all input is lowercased. Trained on English Wikipedia + BooksCorpus. |
-| bert_base_en_cased           | [BERT](bert)               | 108M        | 12-layer BERT model where case is maintained. Trained on English Wikipedia + BooksCorpus. |
+| bert_base_en                 | [BERT](bert)               | 108M        | 12-layer BERT model where case is maintained. Trained on English Wikipedia + BooksCorpus. |
 | bert_base_zh                 | [BERT](bert)               | 102M        | 12-layer BERT model. Trained on Chinese Wikipedia. |
-| bert_base_multi_cased        | [BERT](bert)               | 177M        | 12-layer BERT model where case is maintained. Trained on Wikipedias of 104 languages. |
+| bert_base_multi              | [BERT](bert)               | 177M        | 12-layer BERT model where case is maintained. Trained on Wikipedias of 104 languages. |
 | bert_large_en_uncased        | [BERT](bert)               | 335M        | 24-layer BERT model where all input is lowercased. Trained on English Wikipedia + BooksCorpus. |
-| bert_large_en_cased          | [BERT](bert)               | 333M        | 24-layer BERT model where case is maintained. Trained on English Wikipedia + BooksCorpus. |
-| roberta_base                 | [RoBERTa](roberta)         | 124M        | 12-layer RoBERTa model where case is maintained. Trained on English Wikipedia, BooksCorpus, CommonCraw, and OpenWebText. |
-| roberta_large                | [RoBERTa](roberta)         | 354M        | 24-layer RoBERTa model where case is maintained. Trained on English Wikipedia, BooksCorpus, CommonCraw, and OpenWebText. |
-| xlm_roberta_base             | [XLM-RoBERTa](xlm_roberta) | 277M        | 12-layer XLM-RoBERTa model where case is maintained. Trained on CommonCrawl in 100 languages. |
-| xlm_roberta_large            | [XLM-RoBERTa](xlm_roberta) | 558M        | 24-layer XLM-RoBERTa model where case is maintained. Trained on CommonCrawl in 100 languages. |
+| bert_large_en                | [BERT](bert)               | 333M        | 24-layer BERT model where case is maintained. Trained on English Wikipedia + BooksCorpus. |
 | distil_bert_base_en_uncased  | [DistilBert](distil_bert)  | 66M         | 6-layer DistilBERT model where all input is lowercased. Trained on English Wikipedia + BooksCorpus. |
-| distil_bert_base_en_cased    | [DistilBert](distil_bert)  | 65M         | 6-layer DistilBERT model where case is maintained. Trained on English Wikipedia + BooksCorpus. |
-| distil_bert_base_multi_cased | [DistilBert](distil_bert)  | 134M        | 6-layer DistilBERT model where case is maintained. Trained on Wikipedias of 104 languages. |
+| distil_bert_base_en          | [DistilBert](distil_bert)  | 65M         | 6-layer DistilBERT model where case is maintained. Trained on English Wikipedia + BooksCorpus. |
+| distil_bert_base_multi       | [DistilBert](distil_bert)  | 134M        | 6-layer DistilBERT model where case is maintained. Trained on Wikipedias of 104 languages. |
+| roberta_base_en              | [RoBERTa](roberta)         | 124M        | 12-layer RoBERTa model where case is maintained. Trained on English Wikipedia, BooksCorpus, CommonCraw, and OpenWebText. |
+| roberta_large_en             | [RoBERTa](roberta)         | 354M        | 24-layer RoBERTa model where case is maintained. Trained on English Wikipedia, BooksCorpus, CommonCraw, and OpenWebText. |
+| xlm_roberta_base_multi       | [XLM-RoBERTa](xlm_roberta) | 277M        | 12-layer XLM-RoBERTa model where case is maintained. Trained on CommonCrawl in 100 languages. |
+| xlm_roberta_large_multi      | [XLM-RoBERTa](xlm_roberta) | 558M        | 24-layer XLM-RoBERTa model where case is maintained. Trained on CommonCrawl in 100 languages. |
 
 ## Classification presets
 
