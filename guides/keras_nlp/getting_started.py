@@ -4,6 +4,7 @@ Author: [jbischof](https://github.com/jbischof)
 Date created: 2022-12-15
 Last modified: 2022-12-15
 Description: An introduction to the KerasNLP API.
+Accelerator: GPU
 """
 
 import keras_nlp
@@ -104,10 +105,10 @@ powerful `tf.data.Dataset` format for examples.
 """
 
 """shell
-!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-!tar -xf aclImdb_v1.tar.gz
+curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+tar -xf aclImdb_v1.tar.gz
 # Remove unsupervised examples
-!rm -r aclImdb/train/unsup
+rm -r aclImdb/train/unsup
 """
 
 BATCH_SIZE = 16
