@@ -1,19 +1,11 @@
 """
 Title: Getting Started with KerasNLP
 Author: [jbischof](https://github.com/jbischof)
-Date created: 2022-12-15
-Last modified: 2022-12-15
+Date created: 2022/12/15
+Last modified: 2022/12/15
 Description: An introduction to the KerasNLP API.
 Accelerator: GPU
 """
-
-import keras_nlp
-import tensorflow as tf
-from tensorflow import keras
-
-# Use mixed precision for optimal performance
-keras.mixed_precision.set_global_policy("mixed_float16")
-
 """
 ## Introduction
 
@@ -43,6 +35,13 @@ reference for the complexity of the material:
 
 <img src="https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png" alt="drawing" height="250"/>
 """
+
+import keras_nlp
+import tensorflow as tf
+from tensorflow import keras
+
+# Use mixed precision for optimal performance
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
 ## API quickstart
@@ -150,7 +149,7 @@ This particular **preset** is a `"bert_tiny_uncased_en"` **backbone** fine-tuned
 `sst2`, another movie review sentiment analysis (this time from Rotten Tomatoes). We use
 the `tiny` architecture for demo purposes, but larger models are recommended for SoTA
 performance. For all the task-specific presets available for `BertClassifier`, see
-our keras.io [models page](/api/keras_nlp/models/).
+our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 
 Let's evaluate our classifier on the IMDB dataset. We first need to compile the
 `keras.Model`. The output is `[loss, accuracy]`,
@@ -184,7 +183,7 @@ The workflow for fine-tuning is almost identical to above, except that we reques
 **preset** for the **backbone**-only model rather than the entire classifier. When passed
 a **backone** **preset**, a **task** `Model` will randomly initialize all task-specific
 layers in preparation for training. For all the **backbone** presets available for
-`BertClassifier`, see our keras.io [models page](/api/keras_nlp/models/).
+`BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 
 To train your classifier, use `Model.compile()` and `Model.fit()` as with any other
 `keras.Model`. Since preprocessing is included in all **tasks** by default, we again pass
@@ -271,14 +270,14 @@ classifier.fit(
 After three epochs, our validation accuracy has only increased to 0.88. This is both a
 function of the small size of our dataset and our model. To exceed 90% accuracy, try
 larger **presets** such as  `"bert_base_en_uncased"`. For all the **backbone** presets 
-available for `BertClassifier`, see our keras.io [models page](/api/keras_nlp/models/).
+available for `BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 """
 
 """
 ### Custom preprocessing
 
 In cases where custom preprocessing is required, we offer direct access to the
-`Tokenizer` class that maps raw strings to tokens. It also has a `from_preset`
+`Tokenizer` class that maps raw strings to tokens. It also has a `from_preset()`
 constructor to get the vocabulary matching pretraining.
 
 **Note:** `BertTokenizer` does not pad sequences by default, so the output is
@@ -325,7 +324,7 @@ print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
 For more advanced applications, an appropriate **task** `Model` may not be available. In
 this case we provide direct access to the **backbone** `Model`, which has its own
 `from_preset` constructor and can be composed with custom `Layer`s. Detailed examples can
-be found at our [transfer learning guide](/guides/transfer_learning/).
+be found at our [transfer learning guide](https://keras.io/guides/transfer_learning/).
 
 A **backbone** `Model` does not include automatic preprocessing but can be paired with a
 matching **preprocessor** using the same **preset** as shown in the previous workflow.
@@ -388,8 +387,8 @@ same size as used to train popular backbones such as BERT, RoBERTa, or GPT2 (XX+
 so, you might benefit from domain-specific pretraining of your own backbone models.
 
 NLP models are generally pretrained on a language modeling task, predicting masked words
-given the visible words in an input sentence. For example, given the input `"The fox
-[MASK] over the [MASK] dog"`, the model might be asked to predict `["jumped", "lazy"]`.
+given the visible words in an input sentence. For example, given the input
+`"The fox [MASK] over the [MASK] dog"`, the model might be asked to predict `["jumped", "lazy"]`.
 The lower layers of this model are then packaged as a **backbone** to be combined with
 layers relating to a new task.
 
@@ -521,7 +520,7 @@ In this workflow we train a custom tokenizer on the IMDB data and design a backb
 custom transformer architecture. For simplicity we then train directly on the
 classification task. Interested in more details? We wrote an entire guide to pretraining
 and finetuning a custom transformer on 
-[keras.io](/guides/keras_nlp/transformer_pretraining/),
+[keras.io](https://keras.io/guides/keras_nlp/transformer_pretraining/),
 """
 
 """
