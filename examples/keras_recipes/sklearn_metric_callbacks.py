@@ -4,6 +4,7 @@ Author: [lukewood](https://lukewood.xyz)
 Date created: 10/07/2021
 Last modified: 10/07/2021
 Description: This example shows how to use Keras callbacks to evaluate and export non-TensorFlow based metrics.
+Accelerator: GPU
 """
 """
 ## Introduction

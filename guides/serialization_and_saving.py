@@ -4,6 +4,7 @@ Authors: Kathy Wu, Francois Chollet
 Date created: 2020/04/28
 Last modified: 2020/04/28
 Description: Complete guide to saving & serializing models.
+Accelerator: GPU
 """
 
 """

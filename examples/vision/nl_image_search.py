@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/30
 Last modified: 2021/01/30
 Description: Implementation of a dual encoder model for retrieving images that match natural language queries.
+Accelerator: GPU
 """
 
 """

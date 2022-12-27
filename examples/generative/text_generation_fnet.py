@@ -4,6 +4,7 @@ Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 2021/10/05
 Last modified: 2021/10/05
 Description: FNet transformer for text generation in Keras.
+Accelerator: GPU
 """
 """
 ## Introduction

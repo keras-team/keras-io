@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
 Last modified: 2020/04/13
 Description: Complete guide to training & evaluation with `fit()` and `evaluate()`.
+Accelerator: GPU
 """
 
 

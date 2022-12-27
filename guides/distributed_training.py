@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/28
 Last modified: 2020/04/29
 Description: Guide to multi-GPU & distributed training for Keras models.
+Accelerator: GPU
 """
 """
 ## Introduction

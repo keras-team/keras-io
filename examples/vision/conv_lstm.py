@@ -4,6 +4,7 @@ Author: [Amogh Joshi](https://github.com/amogh7joshi)
 Date created: 2021/06/02
 Last modified: 2021/06/05
 Description: How to build and train a convolutional LSTM model for next-frame video prediction.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [akensert](https://github.com/akensert)
 Date created: 2021/06/30
 Last modified: 2021/06/30
 Description: Complete implementation of WGAN-GP with R-GCN to generate novel molecules.
+Accelerator: GPU
 """
 
 """

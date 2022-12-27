@@ -4,6 +4,7 @@ Author: [David Griffiths](https://dgriffiths3.github.io)
 Date created: 2020/05/25
 Last modified: 2020/05/26
 Description: Implementation of PointNet for ModelNet10 classification.
+Accelerator: GPU
 """
 """
 # Point cloud classification

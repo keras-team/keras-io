@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/08
 Last modified: 2021/06/08
 Description: Training a video classifier with hybrid transformers.
+Accelerator: GPU
 """
 """
 This example is a follow-up to the

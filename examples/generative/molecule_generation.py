@@ -4,6 +4,7 @@ Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2022/03/10
 Last modified: 2022/03/24
 Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
+Accelerator: GPU
 """
 """
 ## Introduction

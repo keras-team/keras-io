@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
 Last modified: 2020/04/15
 Description: Complete guide to writing low-level training & evaluation loops.
+Accelerator: None
 """
 """
 ## Setup

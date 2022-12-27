@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/01
 Last modified: 2021/08/01
 Description: Training better student models via knowledge distillation with function matching.
+Accelerator: GPU
 """
 """
 ## Introduction

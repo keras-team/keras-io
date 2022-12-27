@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://g
 Date created: 2020/10/23
 Last modified: 2020/10/24
 Description: Implementation of a PointNet-based model for segmenting point clouds.
+Accelerator: GPU
 """
 """
 ## Introduction

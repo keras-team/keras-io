@@ -4,6 +4,7 @@ Author: Gitesh Chawda
 Date created: 2022/04/07
 Last modified: 2022/04/07
 Description: Training an EDSR model on the DIV2K Dataset.
+Accelerator: GPU
 """
 
 """
@@ -134,7 +135,7 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
 
 
 """
-## Prepare a `tf.Data.Dataset` object
+## Prepare a `tf.data.Dataset` object
 
 We augment the training data with random horizontal flips and 90 rotations.
 

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/02
 Last modified: 2021/05/02
 Description: Training a keypoint detector with data augmentation and transfer learning.
+Accelerator: GPU
 """
 """
 Keypoint detection consists of locating key object parts. For example, the key parts

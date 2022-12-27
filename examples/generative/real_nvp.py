@@ -4,6 +4,7 @@ Authors: [Mandolini Giorgio Maria](https://www.linkedin.com/in/giorgio-maria-man
 Date created: 2020/08/10
 Last modified: 2020/08/10
 Description: Estimating the density distribution of the "double moon" dataset.
+Accelerator: GPU
 """
 
 """

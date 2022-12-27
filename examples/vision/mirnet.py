@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/11
 Last modified: 2021/09/15
 Description: Implementing the MIRNet architecture for low-light image enhancement.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -349,7 +350,7 @@ def multi_scale_residual_block(input_tensor, channels):
         up_sampling_module(dual_attention_unit_block(level3_skff))
     )
     # SKFF 2
-    skff_ = selective_kernel_feature_fusion(level1_dau_2, level3_dau_2, level3_dau_2)
+    skff_ = selective_kernel_feature_fusion(level1_dau_2, level2_dau_2, level3_dau_2)
     conv = layers.Conv2D(channels, kernel_size=(3, 3), padding="same")(skff_)
     return layers.Add()([input_tensor, conv])
 

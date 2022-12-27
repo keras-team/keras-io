@@ -4,6 +4,7 @@ Author: [amifunny](https://github.com/amifunny)
 Date created: 2020/06/04
 Last modified: 2020/09/21
 Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
+Accelerator: NONE
 """
 """
 ## Introduction

@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](ht
 Date created: 2022/02/24
 Last modified: 2022/03/01
 Description: A minimal implementation of ShiftViT.
+Accelerator: GPU
 """
 """
 ## Introduction

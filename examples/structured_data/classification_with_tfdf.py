@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2022/01/25
 Last modified: 2022/01/25
 Description: Using TensorFlow Decision Forests for structured data classification.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210)
 Date created: 2021/10/28
 Last modified: 2021/10/28
 Description: Generating images from limited data using the Caltech Birds dataset.
+Accelerator: GPU
 """
 """
 ## Introduction

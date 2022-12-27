@@ -4,6 +4,7 @@ Authors: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarr
 Date created: 2021/03/25
 Last modified: 2021/03/25
 Description: Training a Siamese Network to compare the similarity of images using a triplet loss function.
+Accelerator: GPU
 """
 
 """

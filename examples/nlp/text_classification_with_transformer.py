@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/10
 Last modified: 2020/05/10
 Description: Implement a Transformer block as a Keras layer and use it for text classification.
+Accelerator: GPU
 """
 """
 ## Setup

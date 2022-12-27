@@ -4,6 +4,7 @@ Author: fchollet
 Date created: 2020/04/04
 Last modified: 2020/04/04
 Description: Complete guide to the functional API.
+Accelerator: GPU
 """
 
 """

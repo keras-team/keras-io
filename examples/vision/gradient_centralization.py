@@ -4,6 +4,7 @@ Author: [Rishit Dagli](https://github.com/Rishit-dagli)
 Date created: 06/18/21
 Last modified: 06/18/21
 Description: Implement Gradient Centralization to improve training performance of DNNs.
+Accelerator: GPU
 """
 """
 ## Introduction

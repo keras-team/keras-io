@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/27
 Last modified: 2022/11/10
 Description: Training an image classifier from scratch on the Kaggle Cats vs Dogs dataset.
+Accelerator: GPU
 """
 """
 ## Introduction

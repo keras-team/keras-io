@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](htt
 Date created: 2021/12/20
 Last modified: 2021/12/21
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
+Accelerator: GPU
 """
 """
 ## Introduction

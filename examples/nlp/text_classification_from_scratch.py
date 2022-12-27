@@ -4,6 +4,7 @@ Authors: Mark Omernick, Francois Chollet
 Date created: 2019/11/06
 Last modified: 2020/05/17
 Description: Text sentiment classification starting from raw text files.
+Accelerator: GPU
 """
 """
 ## Introduction

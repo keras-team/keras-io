@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/29
 Last modified: 2020/05/29
 Description: Implement a miniature version of GPT and train it to generate text.
+Accelerator: GPU
 """
 """
 ## Introduction

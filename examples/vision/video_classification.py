@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
 Last modified: 2021/06/05
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
+Accelerator: GPU
 """
 """
 This example demonstrates video classification, an important use-case with

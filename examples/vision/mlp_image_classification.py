@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
 Description: Implementing the MLP-Mixer, FNet, and gMLP models for CIFAR-100 image classification.
+Accelerator: GPU
 """
 
 """

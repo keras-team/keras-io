@@ -424,6 +424,17 @@ MASTER = {
                             ],
                         },
                         {
+                            "path": "convnext",
+                            "title": "ConvNeXt Tiny, Small, Base, Large, XLarge",
+                            "generate": [
+                                "tensorflow.keras.applications.ConvNeXtTiny",
+                                "tensorflow.keras.applications.ConvNeXtSmall",
+                                "tensorflow.keras.applications.ConvNeXtBase",
+                                "tensorflow.keras.applications.ConvNeXtLarge",
+                                "tensorflow.keras.applications.ConvNeXtXLarge",
+                            ],
+                        },
+                        {
                             "path": "vgg",
                             "title": "VGG16 and VGG19",
                             "generate": [

@@ -4,6 +4,7 @@ Authors: [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.co
 Date created: 2022/09/25
 Last modified: 2022/09/25
 Description: Generate new images using KerasCV's Stable Diffusion model.
+Accelerator: GPU
 """
 
 """
@@ -125,8 +126,8 @@ This gives rise to the Stable Diffusion architecture. Stable Diffusion consists 
 - A decoder, which turns the final 64x64 latent patch into a higher-resolution 512x512 image.
 
 First, your text prompt gets projected into a latent vector space by the text encoder,
-which is simply a pretrained, frozen language model. Then that prompt vector is concatenate
-to a randomly generated noise patch, which is repeatedly "denoised" by the decoder over a series
+which is simply a pretrained, frozen language model. Then that prompt vector is concatenated
+to a randomly generated noise patch, which is repeatedly "denoised" by the diffusion model over a series
 of "steps" (the more steps you run the clearer and nicer your image will be -- the default value is 50 steps).
 
 Finally, the 64x64 latent image is sent through the decoder to properly render it in high resolution.
@@ -136,10 +137,10 @@ Finally, the 64x64 latent image is sent through the decoder to properly render i
 All-in-all, it's a pretty simple system -- the Keras implementation
 fits in four files that represent less than 500 lines of code in total:
 
-- [text_encoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/text_encoder.py): 87 LOC
-- [diffusion_model.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/diffusion_model.py): 181 LOC
-- [decoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/decoder.py): 86 LOC
-- [stable_diffusion.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/generative/stable_diffusion/stable_diffusion.py): 106 LOC
+- [text_encoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/text_encoder.py): 87 LOC
+- [diffusion_model.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/diffusion_model.py): 181 LOC
+- [decoder.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/decoder.py): 86 LOC
+- [stable_diffusion.py](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/stable_diffusion/stable_diffusion.py): 106 LOC
 
 But this relatively simple system starts looking like magic once you train on billions of pictures and their captions.
 As Feynman said about the universe: _"It's not complicated, it's just a lot of it!"_
