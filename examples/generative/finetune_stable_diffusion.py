@@ -361,7 +361,9 @@ diffusion_ft_trainer.fit(training_dataset, epochs=num_epochs)
 We fine-tuned the model for 20 epochs on an image resolution of 512x512. To allow
 training with this resolution, we also incorporated mixed-precision support. You can
 check out [this repository](https://github.com/sayakpaul/stabe-diffusion-keras-ft) for
-more details.
+more details. It additionally provides support for exponential moving averaging of
+the fine-tuned model parameters and model checkpointing.
+
 
 For this section, we'll use a checkpoint derived after 20 epochs of fine-tuning.
 """
