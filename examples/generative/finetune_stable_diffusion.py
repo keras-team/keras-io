@@ -24,6 +24,10 @@ Following resources can be helpful if you're looking for resources in that regar
 It's highly recommended that you use a GPU having at least 30 GBs of memory to execute
 the code.
 
+By the end of the guide, you'll be able to generate images of interesting pokemons:
+
+![](https://i.ibb.co/t3qmtTS/image.png)
+
 For the code, the tutorial relies on KerasCV 0.3.5 which is not yet available on PyPI.
 So, we need to install it from the source.
 """
