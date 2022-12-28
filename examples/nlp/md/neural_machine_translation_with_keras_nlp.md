@@ -2,7 +2,7 @@
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2022/05/26<br>
-**Last modified:** 2022/05/26<br>
+**Last modified:** 2022/12/21<br>
 **Description:** Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
 
 
@@ -20,7 +20,8 @@ In this example, we'll use KerasNLP layers to build an encoder-decoder Transform
 model, and train it on the English-to-Spanish machine translation task.
 
 This example is based on the
-[English-to-Spanish NMT example](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
+[English-to-Spanish NMT
+example](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
 by [fchollet](https://twitter.com/fchollet). The original example is more low-level
 and implements layers from scratch, whereas this example uses KerasNLP to show
 some more advanced approaches, such as subword tokenization and using metrics
@@ -32,8 +33,8 @@ You'll learn how to:
 - Implement a sequence-to-sequence Transformer model using KerasNLP's
 `keras_nlp.layers.TransformerEncoder`, `keras_nlp.layers.TransformerDecoder` and
 `keras_nlp.layers.TokenAndPositionEmbedding` layers, and train it.
-- Use `keras_nlp.utils.greedy_search` function to generate translations
-of unseen input sentences using the greedy decoding strategy!
+- Use `keras_nlp.utils.top_p_search` function to generate translations
+of unseen input sentences using the top-p decoding strategy!
 
 Don't worry if you aren't familiar with KerasNLP. This tutorial will start with
 the basics. Let's dive right in!
@@ -45,21 +46,30 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 
 ```python
-!pip install -q rouge-score
+!!pip install -q rouge-score
+!!pip install -q git+https://github.com/keras-team/keras-nlp.git --upgrade
 ```
+
+
 
 
 ```python
 import keras_nlp
-import numpy as np
 import pathlib
 import random
 import tensorflow as tf
 
 from tensorflow import keras
-from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
+from tensorflow_text.tools.wordpiece_vocab import (
+    bert_vocab_from_dataset as bert_vocab,
+)
 ```
+<div class="k-default-codeblock">
+```
+[]
 
+```
+</div>
 Let's also define our parameters/hyperparameters.
 
 
@@ -120,11 +130,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('america is a country of immigrants.', 'estados unidos es un país de inmigrantes.')
-('do you hear the birds singing?', '¿oyes cantar a los pájaros?')
-('if you want to get out of here alive, follow me.', 'sígueme si quieres salir de aquí con vida.')
-('the rain lasted the whole night.', 'la lluvia duró toda la noche.')
-('tom wanted it this way.', 'tom lo quería así.')
+('tom and mary are dancing.', 'tom y mary están bailando.')
+("it can't be removed. it's fixed.", 'no se puede quitar. está fijo.')
+('you can get a loan from a bank.', 'puedes conseguir un préstamo de un banco.')
+("you're so stuck up.", 'sois tan engreídas.')
+('can man live without having a social life?', '¿puede un hombre vivir sin tener una vida social?')
 
 ```
 </div>
@@ -170,26 +180,19 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
+(characters don't really encode meaning like words do). Luckily, KerasNLP
+makes it very simple to train WordPiece on a corpus with the 
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 
 ```python
 
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
     word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
+    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+        word_piece_ds.batch(1000).prefetch(2),
+        vocabulary_size=vocab_size,
+        reserved_tokens=reserved_tokens,
     )
     return vocab
 
@@ -214,6 +217,14 @@ spa_samples = [text_pair[1] for text_pair in train_pairs]
 spa_vocab = train_word_piece(spa_samples, SPA_VOCAB_SIZE, reserved_tokens)
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:From /usr/local/google/home/chenmoney/anaconda3/envs/keras-io-dev/lib/python3.9/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
+Instructions for updating:
+Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+
+```
+</div>
 Let's see some tokens!
 
 
@@ -224,8 +235,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['as', 'll', 'did', 'very', 'had', 'all', 'here', 'up', 'about', 'didn']
-Spanish Tokens:  ['estaba', 'tengo', 'fue', 'quiero', 'aqui', 'casa', 'cuando', 'hacer', '##n', 'puedo']
+English Tokens:  ['him', 'there', 'they', 'go', 'her', 'has', 'will', 'time', 'how', 're']
+Spanish Tokens:  ['mary', 'las', 'más', 'al', 'yo', 'tu', 'estoy', 'eso', 'este', 'muy']
 
 ```
 </div>
@@ -252,7 +263,10 @@ eng_input_ex = text_pairs[0][0]
 eng_tokens_ex = eng_tokenizer.tokenize(eng_input_ex)
 print("English sentence: ", eng_input_ex)
 print("Tokens: ", eng_tokens_ex)
-print("Recovered text after detokenizing: ", eng_tokenizer.detokenize(eng_tokens_ex))
+print(
+    "Recovered text after detokenizing: ",
+    eng_tokenizer.detokenize(eng_tokens_ex),
+)
 
 print()
 
@@ -260,22 +274,25 @@ spa_input_ex = text_pairs[0][1]
 spa_tokens_ex = spa_tokenizer.tokenize(spa_input_ex)
 print("Spanish sentence: ", spa_input_ex)
 print("Tokens: ", spa_tokens_ex)
-print("Recovered text after detokenizing: ", spa_tokenizer.detokenize(spa_tokens_ex))
+print(
+    "Recovered text after detokenizing: ",
+    spa_tokenizer.detokenize(spa_tokens_ex),
+)
 ```
 
 <div class="k-default-codeblock">
 ```
-English sentence:  i didn't think it was so bad.
-Tokens:  tf.Tensor([ 33 109   8  44 110  60  64 135 297  11], shape=(10,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b"i didn ' t think it was so bad .", shape=(), dtype=string)
+English sentence:  think about it.
+Tokens:  tf.Tensor([120 117  70  12], shape=(4,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'think about it .', shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  no pensé que era tan malo.
-Tokens:  tf.Tensor([ 65 237  62 124 119 629  14], shape=(7,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'no pense que era tan malo .', shape=(), dtype=string)
+Spanish sentence:  piénsalo.
+Tokens:  tf.Tensor([  44 1677 2782  207   15], shape=(5,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'pi\xc3\xa9nsalo .', shape=(), dtype=string)
 
 ```
 </div>
@@ -290,8 +307,10 @@ using the source sentence and the target words 0 to N.
 As such, the training dataset will yield a tuple `(inputs, targets)`, where:
 
 - `inputs` is a dictionary with the keys `encoder_inputs` and `decoder_inputs`.
-`encoder_inputs` is the tokenized source sentence and `decoder_inputs` is the target sentence "so far",
-that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target sentence.
+`encoder_inputs` is the tokenized source sentence and `decoder_inputs` is the target
+sentence "so far",
+that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target
+sentence.
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
 
@@ -492,9 +511,9 @@ Total params: 15,368,600
 Trainable params: 15,368,600
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 107s 78ms/step - loss: 1.0684 - accuracy: 0.3975 - val_loss: 0.8740 - val_accuracy: 0.4836
+1302/1302 [==============================] - 548s 418ms/step - loss: 3.8116 - accuracy: 0.4294 - val_loss: 2.8681 - val_accuracy: 0.5342
 
-<keras.callbacks.History at 0x7fe8705e1150>
+<keras.callbacks.History at 0x7f2af05291c0>
 
 ```
 </div>
@@ -530,9 +549,10 @@ def decode_sequences(input_sentences):
     # Set the prompt to the "[START]" token.
     prompt = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
 
-    generated_tokens = keras_nlp.utils.greedy_search(
+    generated_tokens = keras_nlp.utils.top_p_search(
         token_probability_fn,
         prompt,
+        p=0.1,
         max_length=40,
         end_token_id=spa_tokenizer.token_to_id("[END]"),
     )
@@ -560,82 +580,20 @@ for i in range(2):
 <div class="k-default-codeblock">
 ```
 ** Example 0 **
-the workers asked for an increase in pay.
-el compumpumpulin a un mes en un mes .
+when did this occur?
+¿ cuándo se apulul ?
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-my brother insisted on going there alone.
-mi padre se hizo tarde .
+have you ever interrupted your manager?
+¿ has dis tu opul ?
 ```
 </div>
     
 
-
-After 10 epochs, we get samples like these:
-
-** Example 0 **
-
-have you seen this?
-
-¿has visto esto?
-
-** Example 1 **
-
-it's very hot here.
-
-hace mucho calor aqui.
-
-** Example 2 **
-
-my mother always says she's going to visit me soon.
-
-mi madre es algo de decir que ella me va a visitar pronto.
-
-** Example 3 **
-
-you can't say that.
-
-no puedes decir eso.
-
-** Example 4 **
-
-there are always some chores to be done around the house.
-
-siempre hay algunos chance para hacer cerca de la casa.
-
-** Example 5 **
-
-sometimes the boys would play a joke on the teacher.
-
-a veces los ninos tocaria una broma con el profesor.
-
-** Example 6 **
-
-move this table toward the corner.
-
-muevile esta mesa hacia la car, se muelvale esta mesa.
-
-** Example 7 **
-
-tom has never heard mary sing.
-
-tom nunca ha oído cantar a mary.
-
-** Example 8 **
-
-tom was in town monday night.
-
-tom estaba en la noche el lunes por la noche.
-
-** Example 9 **
-
-what's happened, has happened. it's history.
-
-lo que paso, ha pasado. es historia.
 
 ---
 ## Evaluating our model (quantitative analysis)
@@ -676,8 +634,8 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.24886957>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.19965802>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.21695943>}
-ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.07670634>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.044060845>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.05444546>}
+ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.4015512>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.34473664>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.3574271>}
+ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.1584127>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.12230159>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.13493896>}
 
 ```
 </div>
@@ -685,6 +643,6 @@ After 10 epochs, the scores are as follows:
 
 |               | **ROUGE-1** | **ROUGE-2** |
 |:-------------:|:-----------:|:-----------:|
-| **Precision** |    0.468    |    0.245    |
-|   **Recall**  |    0.456    |    0.230    |
-|  **F1 Score** |    0.457    |    0.236    |
+| **Precision** |    0.568    |    0.374    |
+|   **Recall**  |    0.615    |    0.394    |
+|  **F1 Score** |    0.579    |    0.381    |

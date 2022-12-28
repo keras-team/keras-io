@@ -51,6 +51,7 @@ keras.mixed_precision.set_global_policy(policy)
 <div class="k-default-codeblock">
 ```
 INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: Tesla V100-SXM2-16GB, compute capability 7.0
 
 ```
 </div>
@@ -77,7 +78,8 @@ wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-103-raw/")
 
 # Download finetuning data.
 keras.utils.get_file(
-    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip", extract=True,
+    origin="https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
+    extract=True,
 )
 sst_dir = os.path.expanduser("~/.keras/datasets/SST-2/")
 
@@ -87,6 +89,17 @@ vocab_file = keras.utils.get_file(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-raw-v1.zip
+191984949/191984949 [==============================] - 5s 0us/step
+Downloading data from https://dl.fbaipublicfiles.com/glue/data/SST-2.zip
+7439277/7439277 [==============================] - 0s 0us/step
+Downloading data from https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt
+231508/231508 [==============================] - 0s 0us/step
+
+```
+</div>
 Next, we define some hyperparameters we will use during training.
 
 
@@ -190,17 +203,17 @@ baseline_model.fit(sst_train_ds, validation_data=sst_val_ds, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-2105/2105 [==============================] - 11s 5ms/step - loss: 0.6131 - accuracy: 0.6873 - val_loss: 0.5374 - val_accuracy: 0.7500
+2105/2105 [==============================] - 10s 4ms/step - loss: 0.6126 - accuracy: 0.6903 - val_loss: 0.5376 - val_accuracy: 0.7489
 Epoch 2/5
-2105/2105 [==============================] - 11s 5ms/step - loss: 0.5247 - accuracy: 0.7607 - val_loss: 0.4885 - val_accuracy: 0.7844
+2105/2105 [==============================] - 8s 4ms/step - loss: 0.5248 - accuracy: 0.7606 - val_loss: 0.4892 - val_accuracy: 0.7752
 Epoch 3/5
-2105/2105 [==============================] - 11s 5ms/step - loss: 0.4781 - accuracy: 0.7878 - val_loss: 0.4676 - val_accuracy: 0.7970
+2105/2105 [==============================] - 8s 4ms/step - loss: 0.4786 - accuracy: 0.7877 - val_loss: 0.4684 - val_accuracy: 0.7924
 Epoch 4/5
-2105/2105 [==============================] - 11s 5ms/step - loss: 0.4477 - accuracy: 0.8023 - val_loss: 0.4582 - val_accuracy: 0.8016
+2105/2105 [==============================] - 8s 4ms/step - loss: 0.4485 - accuracy: 0.8015 - val_loss: 0.4592 - val_accuracy: 0.7959
 Epoch 5/5
-2105/2105 [==============================] - 11s 5ms/step - loss: 0.4259 - accuracy: 0.8122 - val_loss: 0.4553 - val_accuracy: 0.7993
+2105/2105 [==============================] - 8s 4ms/step - loss: 0.4271 - accuracy: 0.8116 - val_loss: 0.4561 - val_accuracy: 0.8005
 
-<keras.callbacks.History at 0x7f120012e4f0>
+<keras.callbacks.History at 0x7fbe9c6ffd90>
 
 ```
 </div>
@@ -230,15 +243,15 @@ collection of wikipedia articles that is much bigger than than `SST-2`.
 We are going to train a *transformer*, a highly expressive model which will learn
 to embed each word in our input as a low dimentional vector. Our wikipedia dataset has no
 labels, so we will use an unsupervised training objective called the *Masked Language
-Modeling* (MLM) ojective.
+Modeling* (MaskedLM) ojective.
 
 Essentially, we will be playing a big game of "guess the missing word". For each input
 sample we will obscure 25% of our input data, and train our model to predict the parts we
 covered up.
 
-### Preprocess data for the MLM task
+### Preprocess data for the MaskedLM task
 
-Our text preprocessing for the MLM task will occur in two stages.
+Our text preprocessing for the MaskedLM task will occur in two stages.
 
 1. Tokenize input text into integer sequences of token ids.
 2. Mask certain positions in our input to predict on.
@@ -251,8 +264,8 @@ In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
 text corpora. Essentially, it allows our model to learn from uncommon words, while not
 requireing a massive vocabulary of every word in our training set.
 
-The second thing we need to do is mask our input for the MLM task. To do this, we can use
-`keras_nlp.layers.MLMMaskGenerator`, which will randomly select a set of tokens in each
+The second thing we need to do is mask our input for the MaskedLM task. To do this, we can use
+`keras_nlp.layers.MaskedLMMaskGenerator`, which will randomly select a set of tokens in each
 input and mask them out.
 
 The tokenizer and the masking layer can both be used inside a call to
@@ -274,7 +287,7 @@ tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
 )
 # Setting mask_selection_length will trim or pad the mask outputs to shape
 # (batch_size, PREDICTIONS_PER_SEQ).
-masker = keras_nlp.layers.MLMMaskGenerator(
+masker = keras_nlp.layers.MaskedLMMaskGenerator(
     vocabulary_size=tokenizer.vocabulary_size(),
     mask_selection_rate=MASK_RATE,
     mask_selection_length=PREDICTIONS_PER_SEQ,
@@ -288,7 +301,7 @@ def preprocess(inputs):
     # Split the masking layer outputs into a (features, labels, and weights)
     # tuple that we can use with keras.Model.fit().
     features = {
-        "tokens": outputs["tokens"],
+        "token_ids": outputs["token_ids"],
         "mask_positions": outputs["mask_positions"],
     }
     labels = outputs["mask_ids"]
@@ -311,28 +324,28 @@ print(pretrain_val_ds.take(1).get_single_element())
 
 <div class="k-default-codeblock">
 ```
-({'tokens': <tf.Tensor: shape=(128, 128), dtype=int32, numpy=
-array([[7570, 7849, 2271, ..., 9673,  103,  103],
-       [7570, 7849, 2271, ..., 1007, 1012, 2023],
-       [ 103, 2034, 3940, ...,    0,    0,    0],
+({'token_ids': <tf.Tensor: shape=(128, 128), dtype=int32, numpy=
+array([[ 7570,  7849,   103, ...,   103,  1012,  7570],
+       [14445,   103,  7822, ...,  1007,  1012,   103],
+       [ 1996,  2034,   103, ...,     0,     0,     0],
        ...,
-       [ 103, 1996, 2307, ...,    0,    0,    0],
-       [ 103, 2225, 2083, ...,    0,    0,    0],
-       [9794, 2007, 1045, ...,    0,    0,    0]], dtype=int32)>, 'mask_positions': <tf.Tensor: shape=(128, 32), dtype=int64, numpy=
-array([[  7,   8,  11, ..., 119, 126, 127],
-       [  3,  12,  18, ..., 121, 122, 124],
-       [  0,   3,   4, ...,   0,   0,   0],
+       [ 2076,  1996,  2307, ...,     0,     0,     0],
+       [ 3216,  2225,  2083, ...,     0,     0,     0],
+       [ 9794,  2007,  1045, ...,     0,     0,     0]], dtype=int32)>, 'mask_positions': <tf.Tensor: shape=(128, 32), dtype=int64, numpy=
+array([[  2,   4,   6, ..., 119, 124, 125],
+       [  0,   1,   2, ..., 122, 124, 127],
+       [  2,   3,   5, ...,   0,   0,   0],
        ...,
-       [  0,   3,   6, ..., 113, 119,   0],
-       [  0,   5,   6, ...,   0,   0,   0],
-       [  4,   9,  12, ...,   0,   0,   0]])>}, <tf.Tensor: shape=(128, 32), dtype=int32, numpy=
-array([[ 2004,  1996,  2030, ...,  2077,  1012,  7570],
-       [13091,  2007,  3438, ...,  1006,  9587,  2075],
-       [ 1996,  1997, 23976, ...,     0,     0,     0],
+       [  3,   9,  10, ..., 114, 117,   0],
+       [  3,   7,  12, ...,   0,   0,   0],
+       [  9,  17,  19, ...,   0,   0,   0]])>}, <tf.Tensor: shape=(128, 32), dtype=int32, numpy=
+array([[ 2271,  7946,  2124, ...,  2077, 25009,  9673],
+       [ 7570,  7849,  2271, ...,  9587,  2075,  2023],
+       [ 3940,  1997,  3695, ...,     0,     0,     0],
        ...,
-       [ 2076,  6245,  1997, ..., 14280,  3462,     0],
-       [ 3216,  5900,  1010, ...,     0,     0,     0],
-       [ 1011,  2103,  2167, ...,     0,     0,     0]], dtype=int32)>, <tf.Tensor: shape=(128, 32), dtype=float16, numpy=
+       [ 6245, 23133, 19816, ...,  2501,  1999,     0],
+       [ 4027,  2776,  3146, ...,     0,     0,     0],
+       [ 2103,  8820,  6041, ...,     0,     0,     0]], dtype=int32)>, <tf.Tensor: shape=(128, 32), dtype=float16, numpy=
 array([[1., 1., 1., ..., 1., 1., 1.],
        [1., 1., 1., ..., 1., 1., 1.],
        [1., 1., 1., ..., 0., 0., 0.],
@@ -348,7 +361,7 @@ passed directly to `keras.Model.fit()`.
 
 We have two features:
 
-1. `"tokens"`, where some tokens have been replaced with our mask token id.
+1. `"token_ids"`, where some tokens have been replaced with our mask token id.
 2. `"mask_positions"`, which keeps track of which tokens we masked out.
 
 Our labels are simply the ids we masked out.
@@ -440,8 +453,8 @@ _________________________________________________________________
 
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
-set up the encoder to train on the MLM task; to do that we attach a
-`keras_nlp.layers.MLMHead`.
+set up the encoder to train on the MaskedLM task; to do that we attach a
+`keras_nlp.layers.MaskedLMHead`.
 
 This layer will take as one input the token encodings, and as another the positions we
 masked out in the original input. It will gather the token encodings we masked, and
@@ -455,32 +468,35 @@ intesive, so even this relatively small Transformer will take some time.
 ```python
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "tokens": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
+    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
     "mask_positions": keras.Input(shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32),
 }
 
 # Encode the tokens.
-encoded_tokens = encoder_model(inputs["tokens"])
+encoded_tokens = encoder_model(inputs["token_ids"])
 
 # Predict an output word for each masked input token.
 # We use the input token embedding to project from our encoded vectors to
 # vocabulary logits, which has been shown to improve training efficiency.
-outputs = keras_nlp.layers.MLMHead(
-    embedding_weights=embedding_layer.token_embedding.embeddings, activation="softmax",
+outputs = keras_nlp.layers.MaskedLMHead(
+    embedding_weights=embedding_layer.token_embedding.embeddings,
+    activation="softmax",
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
 
 # Define and compile our pretraining model.
 pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.compile(
     loss="sparse_categorical_crossentropy",
-    optimizer=keras.optimizers.Adam(learning_rate=PRETRAINING_LEARNING_RATE),
+    optimizer=keras.optimizers.experimental.AdamW(PRETRAINING_LEARNING_RATE),
     weighted_metrics=["sparse_categorical_accuracy"],
     jit_compile=True,
 )
 
 # Pretrain the model on our wiki text dataset.
 pretraining_model.fit(
-    pretrain_ds, validation_data=pretrain_val_ds, epochs=PRETRAINING_EPOCHS,
+    pretrain_ds,
+    validation_data=pretrain_val_ds,
+    epochs=PRETRAINING_EPOCHS,
 )
 
 # Save this base model for further finetuning.
@@ -490,21 +506,24 @@ encoder_model.save("encoder_model")
 <div class="k-default-codeblock">
 ```
 Epoch 1/8
-5857/5857 [==============================] - 220s 36ms/step - loss: 4.7232 - sparse_categorical_accuracy: 0.2181 - val_loss: 3.4623 - val_sparse_categorical_accuracy: 0.3508
+5857/5857 [==============================] - 229s 36ms/step - loss: 4.6098 - sparse_categorical_accuracy: 0.2304 - val_loss: 3.3744 - val_sparse_categorical_accuracy: 0.3656
 Epoch 2/8
-5857/5857 [==============================] - 201s 34ms/step - loss: 3.4550 - sparse_categorical_accuracy: 0.3596 - val_loss: 3.0361 - val_sparse_categorical_accuracy: 0.4067
+5857/5857 [==============================] - 194s 33ms/step - loss: 3.4230 - sparse_categorical_accuracy: 0.3635 - val_loss: 3.0055 - val_sparse_categorical_accuracy: 0.4110
 Epoch 3/8
-5857/5857 [==============================] - 201s 34ms/step - loss: 3.1986 - sparse_categorical_accuracy: 0.3888 - val_loss: 2.8759 - val_sparse_categorical_accuracy: 0.4262
+5857/5857 [==============================] - 192s 33ms/step - loss: 3.1818 - sparse_categorical_accuracy: 0.3912 - val_loss: 2.8714 - val_sparse_categorical_accuracy: 0.4270
 Epoch 4/8
-5857/5857 [==============================] - 201s 34ms/step - loss: 3.0748 - sparse_categorical_accuracy: 0.4029 - val_loss: 2.8121 - val_sparse_categorical_accuracy: 0.4315
+5857/5857 [==============================] - 192s 33ms/step - loss: 3.0617 - sparse_categorical_accuracy: 0.4047 - val_loss: 2.7956 - val_sparse_categorical_accuracy: 0.4369
 Epoch 5/8
-5857/5857 [==============================] - 202s 35ms/step - loss: 2.9960 - sparse_categorical_accuracy: 0.4119 - val_loss: 2.7216 - val_sparse_categorical_accuracy: 0.4452
+5857/5857 [==============================] - 192s 33ms/step - loss: 2.9838 - sparse_categorical_accuracy: 0.4133 - val_loss: 2.7038 - val_sparse_categorical_accuracy: 0.4464
 Epoch 6/8
-5857/5857 [==============================] - 198s 34ms/step - loss: 2.9403 - sparse_categorical_accuracy: 0.4181 - val_loss: 2.6829 - val_sparse_categorical_accuracy: 0.4496
+5857/5857 [==============================] - 192s 33ms/step - loss: 2.9295 - sparse_categorical_accuracy: 0.4196 - val_loss: 2.6891 - val_sparse_categorical_accuracy: 0.4519
 Epoch 7/8
-5857/5857 [==============================] - 195s 33ms/step - loss: 2.8991 - sparse_categorical_accuracy: 0.4226 - val_loss: 2.6581 - val_sparse_categorical_accuracy: 0.4534
+5857/5857 [==============================] - 191s 33ms/step - loss: 2.8886 - sparse_categorical_accuracy: 0.4239 - val_loss: 2.6289 - val_sparse_categorical_accuracy: 0.4577
 Epoch 8/8
-5857/5857 [==============================] - 192s 33ms/step - loss: 2.8670 - sparse_categorical_accuracy: 0.4262 - val_loss: 2.6064 - val_sparse_categorical_accuracy: 0.4582
+5857/5857 [==============================] - 191s 33ms/step - loss: 2.8562 - sparse_categorical_accuracy: 0.4277 - val_loss: 2.6046 - val_sparse_categorical_accuracy: 0.4602
+WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+
+WARNING:absl:Found untraced functions such as token_embedding1_layer_call_fn, token_embedding1_layer_call_and_return_conditional_losses, position_embedding1_layer_call_fn, position_embedding1_layer_call_and_return_conditional_losses, multi_head_attention_layer_call_fn while saving (showing 5 of 82). These functions will not be directly callable after loading.
 
 INFO:tensorflow:Assets written to: encoder_model/assets
 
@@ -521,7 +540,7 @@ our performance on the downstream task.
 
 ### Preprocess data for classification
 
-Preprocessing for fine-tuning is much simpler than for our pretraining MLM task. We just
+Preprocessing for fine-tuning is much simpler than for our pretraining MaskedLM task. We just
 tokenize our input sentences and we are ready for training!
 
 
@@ -583,26 +602,28 @@ outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
 finetuning_model = keras.Model(inputs, outputs)
 finetuning_model.compile(
     loss="binary_crossentropy",
-    optimizer=keras.optimizers.Adam(learning_rate=FINETUNING_LEARNING_RATE),
+    optimizer=keras.optimizers.experimental.AdamW(FINETUNING_LEARNING_RATE),
     metrics=["accuracy"],
 )
 
 # Finetune the model for the SST-2 task.
 finetuning_model.fit(
-    finetune_ds, validation_data=finetune_val_ds, epochs=FINETUNING_EPOCHS,
+    finetune_ds,
+    validation_data=finetune_val_ds,
+    epochs=FINETUNING_EPOCHS,
 )
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-2105/2105 [==============================] - 47s 22ms/step - loss: 0.4101 - accuracy: 0.8086 - val_loss: 0.3955 - val_accuracy: 0.8154
+2105/2105 [==============================] - 76s 31ms/step - loss: 0.4010 - accuracy: 0.8149 - val_loss: 0.3849 - val_accuracy: 0.8383
 Epoch 2/3
-2105/2105 [==============================] - 45s 22ms/step - loss: 0.2634 - accuracy: 0.8911 - val_loss: 0.3958 - val_accuracy: 0.8383
+2105/2105 [==============================] - 38s 18ms/step - loss: 0.2559 - accuracy: 0.8937 - val_loss: 0.3784 - val_accuracy: 0.8498
 Epoch 3/3
-2105/2105 [==============================] - 45s 21ms/step - loss: 0.2073 - accuracy: 0.9176 - val_loss: 0.4224 - val_accuracy: 0.8429
+2105/2105 [==============================] - 38s 18ms/step - loss: 0.1919 - accuracy: 0.9240 - val_loss: 0.3845 - val_accuracy: 0.8475
 
-<keras.callbacks.History at 0x7f1110605280>
+<keras.callbacks.History at 0x7fbe20b85910>
 
 ```
 </div>
@@ -636,12 +657,8 @@ print(restored_model(inference_data))
 
 <div class="k-default-codeblock">
 ```
-INFO:tensorflow:Assets written to: final_model/assets
-
-INFO:tensorflow:Assets written to: final_model/assets
-
 tf.Tensor(
-[[0.03198]
+[[0.00919]
  [0.999  ]], shape=(2, 1), dtype=float16)
 
 ```
