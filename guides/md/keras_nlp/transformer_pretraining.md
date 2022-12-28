@@ -33,7 +33,7 @@ faster training!
 
 
 ```python
-!pip install -q keras-nlp
+!pip install -q --upgrade keras-nlp tensorflow
 ```
 
 
