@@ -97,7 +97,7 @@ for more details.
 """
 
 data_path = tf.keras.utils.get_file(
-    origin="https://huggingface.co/datasets/sayakpaul/pokemon-blip-original-version/resolve/main/pokemon_dataset.tar.gz",   
+    origin="https://huggingface.co/datasets/sayakpaul/pokemon-blip-original-version/resolve/main/pokemon_dataset.tar.gz",
     untar=True,
 )
 
@@ -238,9 +238,10 @@ for i in range(3):
 ## A trainer class for the fine-tuning loop
 """
 
+
 class Trainer(tf.keras.Model):
-# Reference:
-# https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py
+    # Reference:
+    # https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py
 
     def __init__(
         self, diffusion_model, vae, noise_scheduler, max_grad_norm=1.0, **kwargs
