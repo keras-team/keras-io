@@ -31,8 +31,9 @@ check out our
 ---
 ## Guides
 
-* [Getting Started with KerasNLP](/guides/keras-nlp/getting_started/)
+* [Getting Started with KerasNLP](/guides/keras_nlp/getting_started/)
 * [Pretraining a Transformer from scratch](/guides/keras_nlp/transformer_pretraining/)
+
 
 ---
 ## Examples
