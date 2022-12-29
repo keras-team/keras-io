@@ -265,26 +265,28 @@ class Trainer(tf.keras.Model):
 
         with tf.GradientTape() as tape:
             # Project image into the latent space.
-            latents = self.vae(images, training=False)
+            latents = self.sample_from_encoder_outputs(self.vae(images, training=False))
+            # Know more about the magic number here:
+            # https://keras.io/examples/generative/fine_tune_via_textual_inversion/
             latents = latents * 0.18215
 
-            # Sample noise that we'll add to the latents
+            # Sample noise that we'll add to the latents.
             noise = tf.random.normal(tf.shape(latents))
 
-            # Sample a random timestep for each image
+            # Sample a random timestep for each image.
             timesteps = tnp.random.randint(
                 0, self.noise_scheduler.train_timesteps, (bsz,)
             )
 
             # Add noise to the latents according to the noise magnitude at each timestep
-            # (this is the forward diffusion process)
+            # (this is the forward diffusion process).
             noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
 
             # Get the target for loss depending on the prediction type
             # just the sampled noise for now.
             target = noise  # noise_schedule.predict_epsilon == True
 
-            # Predict the noise residual and compute loss
+            # Predict the noise residual and compute loss.
             timestep_embedding = tf.map_fn(
                 lambda t: self.get_timestep_embedding(t), timesteps, dtype=tf.float32
             )
@@ -313,9 +315,21 @@ class Trainer(tf.keras.Model):
         embedding = tf.reshape(embedding, [1, -1])
         return embedding
 
+    def sample_from_encoder_outputs(self, outputs):
+        mean, logvar = tf.split(outputs, 2, axis=-1)
+        logvar = tf.clip_by_value(logvar, -30.0, 20.0)
+        std = tf.exp(0.5 * logvar)
+        sample = tf.random.normal(tf.shape(mean))
+        return mean + std * sample
+
 
 """
-Note that it's common to add support for mixed-precision training along with exponential
+One important implementation detail to note here. Instead of directly taking
+the latent produced by the image encoder (which is a VAE), we sample from the
+mean and log-variance predicted by it. This way, we can achieve better sample
+quality and diversity. 
+
+It's common to add support for mixed-precision training along with exponential
 moving averaging of model weights for fine-tuning these models. However, in the interest
 of brevity, we discarded those elements. More on this later in the tutorial.
 """
@@ -324,10 +338,16 @@ of brevity, we discarded those elements. More on this later in the tutorial.
 ## Initialize the trainer and compile it
 """
 
+image_encoder = ImageEncoder(RESOLUTION, RESOLUTION)
 diffusion_ft_trainer = Trainer(
-    DiffusionModel(RESOLUTION, RESOLUTION, MAX_PROMPT_LENGTH),
-    ImageEncoder(RESOLUTION, RESOLUTION),
-    NoiseScheduler(),
+    diffusion_model=DiffusionModel(RESOLUTION, RESOLUTION, MAX_PROMPT_LENGTH),
+    # Remove the top layer from the encoder, which cuts off the variance and only returns
+    # the mean.
+    vae=tf.keras.Model(
+        image_encoder.input,
+        image_encoder.layers[-2].output,
+    ),
+    noise_scheduler=NoiseScheduler(),
 )
 
 # These hyperparameters come from this tutorial by Hugging Face:
