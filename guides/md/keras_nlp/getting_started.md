@@ -41,6 +41,10 @@ reference for the complexity of the material:
 
 
 ```python
+!pip install -q --upgrade keras-nlp tensorflow
+```
+
+```python
 import keras_nlp
 import tensorflow as tf
 from tensorflow import keras

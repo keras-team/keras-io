@@ -3,21 +3,21 @@
 <a class="github-button" href="https://github.com/keras-team/keras-nlp" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-nlp on GitHub">Star</a>
 
 KerasNLP is a natural language processing library that supports users through
-their entire development cycle. Our workflows are built from modular components 
-that have state-of-the-art preset weights and architectures when used 
-out-of-the-box and are easily customizable when more control is needed. We 
-emphasize in-graph computation for all workflows so that developers can expect 
+their entire development cycle. Our workflows are built from modular components
+that have state-of-the-art preset weights and architectures when used
+out-of-the-box and are easily customizable when more control is needed. We
+emphasize in-graph computation for all workflows so that developers can expect
 easy productionization using the TensorFlow ecosystem.
 
-This library is an extension of the core Keras API; all high-level modules are 
-[`Layers`](/api/layers/) or [`Models`](/api/models/) that recieve that same 
-level of polish as core Keras. If you are familiar with Keras, congratulations! 
+This library is an extension of the core Keras API; all high-level modules are
+[`Layers`](/api/layers/) or [`Models`](/api/models/) that recieve that same
+level of polish as core Keras. If you are familiar with Keras, congratulations!
 You already understand most of KerasNLP.
 
-See our [Getting Started guide](/guides/keras_nlp/getting_started) 
-for example usage of our modular API starting with evaluating pretrained models 
-and building up to designing a novel transformer architecture and training a 
-tokenizer from scratch.  
+See our [Getting Started guide](/guides/keras_nlp/getting_started)
+for example usage of our modular API starting with evaluating pretrained models
+and building up to designing a novel transformer architecture and training a
+tokenizer from scratch.
 
 KerasNLP is new and growing! If you are interested in contributing, please
 check out our
@@ -47,19 +47,19 @@ check out our
 To install the latest official release:
 
 ```
-pip install keras-nlp --upgrade
+pip install --upgrade keras-nlp tensorflow
 ```
 
 To install the latest unreleased changes to the library, we recommend using
 pip to install directly from the master branch on github:
 
 ```
-pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
+pip install --upgrade git+https://github.com/keras-team/keras-nlp.git tensorflow
 ```
 
 ## Quickstart
 
-Fine-tune BERT on a small sentiment analysis task using the 
+Fine-tune BERT on a small sentiment analysis task using the
 [`keras_nlp.models`](/api/keras_nlp/models/) API:
 
 ```python
@@ -78,7 +78,7 @@ classifier = keras_nlp.models.BertClassifier.from_preset(
 )
 classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
+    optimizer=keras.optimizers.Adam(5e-5),
     metrics=keras.metrics.SparseCategoricalAccuracy(),
     jit_compile=True,
 )

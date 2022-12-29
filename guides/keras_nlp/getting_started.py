@@ -36,6 +36,10 @@ reference for the complexity of the material:
 <img src="https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png" alt="drawing" height="250"/>
 """
 
+"""shell
+pip install -q --upgrade keras-nlp tensorflow
+"""
+
 import keras_nlp
 import tensorflow as tf
 from tensorflow import keras
