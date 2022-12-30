@@ -794,7 +794,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
 
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps

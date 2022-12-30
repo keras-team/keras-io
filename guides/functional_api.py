@@ -579,7 +579,7 @@ The following is a basic implementation of `tf.keras.layers.Dense`:
 
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
-        super(CustomDense, self).__init__()
+        super().__init__()
         self.units = units
 
     def build(self, input_shape):
@@ -609,7 +609,7 @@ method that returns the constructor arguments of the layer instance:
 
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
-        super(CustomDense, self).__init__()
+        super().__init__()
         self.units = units
 
     def build(self, input_shape):
@@ -673,7 +673,7 @@ The following properties are also true for Sequential models
 
 #### Less verbose
 
-There is no `super(MyClass, self).__init__(...)`, no `def call(self, ...):`, etc.
+There is no `super().__init__(...)`, no `def call(self, ...):`, etc.
 
 Compare:
 
@@ -690,7 +690,7 @@ With the subclassed version:
 class MLP(keras.Model):
 
   def __init__(self, **kwargs):
-    super(MLP, self).__init__(**kwargs)
+    super().__init__(**kwargs)
     self.dense_1 = layers.Dense(64, activation='relu')
     self.dense_2 = layers.Dense(10)
 
@@ -778,7 +778,7 @@ model = keras.Model(inputs, outputs)
 
 class CustomRNN(layers.Layer):
     def __init__(self):
-        super(CustomRNN, self).__init__()
+        super().__init__()
         self.units = units
         self.projection_1 = layers.Dense(units=units, activation="tanh")
         self.projection_2 = layers.Dense(units=units, activation="tanh")
@@ -832,7 +832,7 @@ batch_size = 16
 
 class CustomRNN(layers.Layer):
     def __init__(self):
-        super(CustomRNN, self).__init__()
+        super().__init__()
         self.units = units
         self.projection_1 = layers.Dense(units=units, activation="tanh")
         self.projection_2 = layers.Dense(units=units, activation="tanh")

@@ -211,7 +211,7 @@ class Augmentation(keras.layers.Layer):
     """
 
     def __init__(self):
-        super(Augmentation, self).__init__()
+        super().__init__()
 
     @tf.function
     def random_execute(self, prob: float) -> bool:
@@ -344,7 +344,7 @@ class RandomResizedCrop(Augmentation):
     """
 
     def __init__(self, image_size):
-        super(Augmentation, self).__init__()
+        super().__init__()
         self.image_size = image_size
 
     def call(self, x: tf.Tensor) -> tf.Tensor:
@@ -458,7 +458,7 @@ class RandomAugmentor(keras.Model):
     """
 
     def __init__(self, image_size: int):
-        super(RandomAugmentor, self).__init__()
+        super().__init__()
 
         self.image_size = image_size
         self.random_resized_crop = RandomResizedCrop(image_size)
@@ -650,7 +650,7 @@ class BarlowLoss(keras.losses.Loss):
               dataset. Used for cross correlation matrix calculation.
         """
 
-        super(BarlowLoss, self).__init__()
+        super().__init__()
         self.lambda_amt = 5e-3
         self.batch_size = batch_size
 
@@ -921,7 +921,7 @@ class BarlowModel(keras.Model):
     """
 
     def __init__(self):
-        super(BarlowModel, self).__init__()
+        super().__init__()
         self.model = build_twin()
         self.loss_tracker = keras.metrics.Mean(name="loss")
 

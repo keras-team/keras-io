@@ -321,7 +321,7 @@ Then, we use crossentropy to compute the loss between the targets and the predic
 
 class DualEncoder(keras.Model):
     def __init__(self, text_encoder, image_encoder, temperature=1.0, **kwargs):
-        super(DualEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.text_encoder = text_encoder
         self.image_encoder = image_encoder
         self.temperature = temperature

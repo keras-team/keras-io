@@ -592,7 +592,7 @@ class FeaturePyramid(keras.layers.Layer):
     """
 
     def __init__(self, backbone=None, **kwargs):
-        super(FeaturePyramid, self).__init__(name="FeaturePyramid", **kwargs)
+        super().__init__(name="FeaturePyramid", **kwargs)
         self.backbone = backbone if backbone else get_backbone()
         self.conv_c3_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
         self.conv_c4_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
@@ -677,7 +677,7 @@ class RetinaNet(keras.Model):
     """
 
     def __init__(self, num_classes, backbone=None, **kwargs):
-        super(RetinaNet, self).__init__(name="RetinaNet", **kwargs)
+        super().__init__(name="RetinaNet", **kwargs)
         self.fpn = FeaturePyramid(backbone)
         self.num_classes = num_classes
 
@@ -733,7 +733,7 @@ class DecodePredictions(tf.keras.layers.Layer):
         box_variance=[0.1, 0.1, 0.2, 0.2],
         **kwargs
     ):
-        super(DecodePredictions, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.num_classes = num_classes
         self.confidence_threshold = confidence_threshold
         self.nms_iou_threshold = nms_iou_threshold
@@ -786,7 +786,7 @@ class RetinaNetBoxLoss(tf.losses.Loss):
     """Implements Smooth L1 loss"""
 
     def __init__(self, delta):
-        super(RetinaNetBoxLoss, self).__init__(
+        super().__init__(
             reduction="none", name="RetinaNetBoxLoss"
         )
         self._delta = delta
@@ -807,7 +807,7 @@ class RetinaNetClassificationLoss(tf.losses.Loss):
     """Implements Focal loss"""
 
     def __init__(self, alpha, gamma):
-        super(RetinaNetClassificationLoss, self).__init__(
+        super().__init__(
             reduction="none", name="RetinaNetClassificationLoss"
         )
         self._alpha = alpha
@@ -828,7 +828,7 @@ class RetinaNetLoss(tf.losses.Loss):
     """Wrapper to combine both the losses"""
 
     def __init__(self, num_classes=80, alpha=0.25, gamma=2.0, delta=1.0):
-        super(RetinaNetLoss, self).__init__(reduction="auto", name="RetinaNetLoss")
+        super().__init__(reduction="auto", name="RetinaNetLoss")
         self._clf_loss = RetinaNetClassificationLoss(alpha, gamma)
         self._box_loss = RetinaNetBoxLoss(delta)
         self._num_classes = num_classes

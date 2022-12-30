@@ -381,7 +381,7 @@ class WGAN(keras.Model):
         discriminator_extra_steps=3,
         gp_weight=10.0,
     ):
-        super(WGAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
@@ -389,7 +389,7 @@ class WGAN(keras.Model):
         self.gp_weight = gp_weight
 
     def compile(self, d_optimizer, g_optimizer, d_loss_fn, g_loss_fn):
-        super(WGAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.d_loss_fn = d_loss_fn

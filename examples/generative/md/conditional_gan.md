@@ -186,7 +186,7 @@ generator = keras.Sequential(
 
 class ConditionalGAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
-        super(ConditionalGAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
@@ -198,7 +198,7 @@ class ConditionalGAN(keras.Model):
         return [self.gen_loss_tracker, self.disc_loss_tracker]
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super(ConditionalGAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn

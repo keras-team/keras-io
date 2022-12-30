@@ -283,7 +283,7 @@ class Linear(keras.layers.Layer):
     """y = w.x + b"""
 
     def __init__(self, units=32, input_dim=32):
-        super(Linear, self).__init__()
+        super().__init__()
         w_init = tf.random_normal_initializer()
         self.w = tf.Variable(
             initial_value=w_init(shape=(input_dim, units), dtype="float32"),
@@ -336,7 +336,7 @@ class Linear(keras.layers.Layer):
     """y = w.x + b"""
 
     def __init__(self, units=32):
-        super(Linear, self).__init__()
+        super().__init__()
         self.units = units
 
     def build(self, input_shape):
@@ -438,7 +438,7 @@ class ComputeSum(keras.layers.Layer):
     """Returns the sum of the inputs."""
 
     def __init__(self, input_dim):
-        super(ComputeSum, self).__init__()
+        super().__init__()
         # Create a non-trainable weight.
         self.total = tf.Variable(initial_value=tf.zeros((input_dim,)), trainable=False)
 
@@ -485,7 +485,7 @@ class MLP(keras.layers.Layer):
     """Simple stack of Linear layers."""
 
     def __init__(self):
-        super(MLP, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.linear_2 = Linear(32)
         self.linear_3 = Linear(10)
@@ -537,7 +537,7 @@ class ActivityRegularization(keras.layers.Layer):
     """Layer that creates an activity sparsity regularization loss."""
 
     def __init__(self, rate=1e-2):
-        super(ActivityRegularization, self).__init__()
+        super().__init__()
         self.rate = rate
 
     def call(self, inputs):
@@ -559,7 +559,7 @@ class SparseMLP(keras.layers.Layer):
     """Stack of Linear layers with a sparsity regularization loss."""
 
     def __init__(self):
-        super(SparseMLP, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.regularization = ActivityRegularization(1e-2)
         self.linear_3 = Linear(10)
@@ -895,7 +895,7 @@ inference modes.
 
 class Dropout(keras.layers.Layer):
     def __init__(self, rate):
-        super(Dropout, self).__init__()
+        super().__init__()
         self.rate = rate
 
     def call(self, inputs, training=None):
@@ -906,7 +906,7 @@ class Dropout(keras.layers.Layer):
 
 class MLPWithDropout(keras.layers.Layer):
     def __init__(self):
-        super(MLPWithDropout, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.dropout = Dropout(0.5)
         self.linear_3 = Linear(10)
@@ -1137,7 +1137,7 @@ class Encoder(layers.Layer):
     """Maps MNIST digits to a triplet (z_mean, z_log_var, z)."""
 
     def __init__(self, latent_dim=32, intermediate_dim=64, **kwargs):
-        super(Encoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dense_proj = layers.Dense(intermediate_dim, activation=tf.nn.relu)
         self.dense_mean = layers.Dense(latent_dim)
         self.dense_log_var = layers.Dense(latent_dim)
@@ -1162,7 +1162,7 @@ class Decoder(layers.Layer):
     """Converts z, the encoded digit vector, back into a readable digit."""
 
     def __init__(self, original_dim, intermediate_dim=64, **kwargs):
-        super(Decoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dense_proj = layers.Dense(intermediate_dim, activation=tf.nn.relu)
         self.dense_output = layers.Dense(original_dim, activation=tf.nn.sigmoid)
 
@@ -1182,7 +1182,7 @@ class VariationalAutoEncoder(layers.Layer):
     """Combines the encoder and decoder into an end-to-end model for training."""
 
     def __init__(self, original_dim, intermediate_dim=64, latent_dim=32, **kwargs):
-        super(VariationalAutoEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.original_dim = original_dim
         self.encoder = Encoder(latent_dim=latent_dim, intermediate_dim=intermediate_dim)
         self.decoder = Decoder(original_dim, intermediate_dim=intermediate_dim)

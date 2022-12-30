@@ -163,7 +163,7 @@ def minibatch_std(input_tensor, epsilon=1e-8):
 
 class EqualizedConv(layers.Layer):
     def __init__(self, out_channels, kernel=3, gain=2, **kwargs):
-        super(EqualizedConv, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.kernel = kernel
         self.out_channels = out_channels
         self.gain = gain
@@ -197,7 +197,7 @@ class EqualizedConv(layers.Layer):
 
 class EqualizedDense(layers.Layer):
     def __init__(self, units, gain=2, learning_rate_multiplier=1, **kwargs):
-        super(EqualizedDense, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.units = units
         self.gain = gain
         self.learning_rate_multiplier = learning_rate_multiplier
@@ -240,7 +240,7 @@ class AddNoise(layers.Layer):
 
 class AdaIN(layers.Layer):
     def __init__(self, gain=1, **kwargs):
-        super(AdaIN, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.gain = gain
 
     def build(self, input_shapes):
@@ -488,7 +488,7 @@ class Discriminator:
 
 class StyleGAN(tf.keras.Model):
     def __init__(self, z_dim=512, target_res=64, start_res=4):
-        super(StyleGAN, self).__init__()
+        super().__init__()
         self.z_dim = z_dim
 
         self.target_res_log2 = log2(target_res)
@@ -530,7 +530,7 @@ class StyleGAN(tf.keras.Model):
         self.phase = phase
         self.d_loss_metric = keras.metrics.Mean(name="d_loss")
         self.g_loss_metric = keras.metrics.Mean(name="g_loss")
-        super(StyleGAN, self).compile(*args, **kwargs)
+        super().compile(*args, **kwargs)
 
     @property
     def metrics(self):

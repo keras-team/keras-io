@@ -407,7 +407,7 @@ and implementing the entire GAN algorithm in 17 lines in `train_step`:
 
 class GAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
-        super(GAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
@@ -415,7 +415,7 @@ class GAN(keras.Model):
         self.g_loss_tracker = keras.metrics.Mean(name="g_loss")
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super(GAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn

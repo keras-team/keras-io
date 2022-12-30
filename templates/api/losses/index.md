@@ -178,7 +178,7 @@ class MyActivityRegularizer(Layer):
   """Layer that creates an activity sparsity regularization loss."""
   
   def __init__(self, rate=1e-2):
-    super(MyActivityRegularizer, self).__init__()
+    super().__init__()
     self.rate = rate
   
   def call(self, inputs):
@@ -198,7 +198,7 @@ class SparseMLP(Layer):
   """Stack of Linear layers with a sparsity regularization loss."""
 
   def __init__(self, output_dim):
-      super(SparseMLP, self).__init__()
+      super().__init__()
       self.dense_1 = layers.Dense(32, activation=tf.nn.relu)
       self.regularization = MyActivityRegularizer(1e-2)
       self.dense_2 = layers.Dense(output_dim)

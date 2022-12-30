@@ -117,7 +117,7 @@ class CCTTokenizer(layers.Layer):
         positional_emb=positional_emb,
         **kwargs,
     ):
-        super(CCTTokenizer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # This is our tokenizer.
         self.conv_model = keras.Sequential()
@@ -182,7 +182,7 @@ encoder.
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
-        super(StochasticDepth, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.drop_prob = drop_prop
 
     def call(self, x, training=None):

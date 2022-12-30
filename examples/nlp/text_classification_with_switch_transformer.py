@@ -75,7 +75,7 @@ It consists of two seperate embedding layers, one for tokens, one for token inde
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
@@ -138,7 +138,7 @@ class Router(layers.Layer):
         self.num_experts = num_experts
         self.route = layers.Dense(units=num_experts)
         self.expert_capacity = expert_capacity
-        super(Router, self).__init__()
+        super().__init__()
 
     def call(self, inputs, training=False):
         # inputs shape: [tokens_per_batch, embed_dim]
@@ -207,7 +207,7 @@ class Switch(layers.Layer):
 
         self.expert_capacity = num_tokens_per_batch // self.num_experts
         self.router = Router(self.num_experts, self.expert_capacity)
-        super(Switch, self).__init__()
+        super().__init__()
 
     def call(self, inputs):
         batch_size = tf.shape(inputs)[0]
@@ -250,7 +250,7 @@ class Switch(layers.Layer):
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ffn, dropout_rate=0.1):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         # The ffn can be either a standard feedforward network or a switch
         # layer with a Mixture of Experts.

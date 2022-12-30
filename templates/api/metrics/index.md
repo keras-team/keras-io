@@ -158,7 +158,7 @@ Here's a simple example computing binary true positives:
 class BinaryTruePositives(tf.keras.metrics.Metric):
 
   def __init__(self, name='binary_true_positives', **kwargs):
-    super(BinaryTruePositives, self).__init__(name=name, **kwargs)
+    super().__init__(name=name, **kwargs)
     self.true_positives = self.add_weight(name='tp', initializer='zeros')
 
   def update_state(self, y_true, y_pred, sample_weight=None):

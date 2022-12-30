@@ -156,7 +156,7 @@ class ReflectionPadding2D(layers.Layer):
 
     def __init__(self, padding=(1, 1), **kwargs):
         self.padding = tuple(padding)
-        super(ReflectionPadding2D, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def call(self, input_tensor, mask=None):
         padding_width, padding_height = self.padding
@@ -401,7 +401,7 @@ class CycleGan(keras.Model):
         lambda_cycle=10.0,
         lambda_identity=0.5,
     ):
-        super(CycleGan, self).__init__()
+        super().__init__()
         self.gen_G = generator_G
         self.gen_F = generator_F
         self.disc_X = discriminator_X
@@ -426,7 +426,7 @@ class CycleGan(keras.Model):
         gen_loss_fn,
         disc_loss_fn,
     ):
-        super(CycleGan, self).compile()
+        super().compile()
         self.gen_G_optimizer = gen_G_optimizer
         self.gen_F_optimizer = gen_F_optimizer
         self.disc_X_optimizer = disc_X_optimizer

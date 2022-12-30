@@ -208,7 +208,7 @@ quantizer.
 
 class VQVAETrainer(keras.models.Model):
     def __init__(self, train_variance, latent_dim=32, num_embeddings=128, **kwargs):
-        super(VQVAETrainer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.train_variance = train_variance
         self.latent_dim = latent_dim
         self.num_embeddings = num_embeddings
@@ -402,7 +402,7 @@ copy-edits and minor code clean-ups.
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
     def __init__(self, mask_type, **kwargs):
-        super(PixelConvLayer, self).__init__()
+        super().__init__()
         self.mask_type = mask_type
         self.conv = layers.Conv2D(**kwargs)
 
@@ -426,7 +426,7 @@ class PixelConvLayer(layers.Layer):
 # This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
-        super(ResidualBlock, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.conv1 = keras.layers.Conv2D(
             filters=filters, kernel_size=1, activation="relu"
         )

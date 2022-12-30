@@ -314,7 +314,7 @@ class TFWav2Vec2ForAudioClassification(layers.Layer):
     """Combines the encoder and decoder into an end-to-end model for training."""
 
     def __init__(self, model_checkpoint, num_classes):
-        super(TFWav2Vec2ForAudioClassification, self).__init__()
+        super().__init__()
         # Instantiate the Wav2Vec 2.0 model without the Classification-Head
         self.wav2vec2 = TFWav2Vec2Model.from_pretrained(
             model_checkpoint, apply_spec_augment=False, from_pt=True
