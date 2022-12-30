@@ -87,7 +87,7 @@ print("Deleted %d images" % num_skipped)
 image_size = (180, 180)
 batch_size = 128
 
-train_ds, val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
     "PetImages",
     validation_split=0.2,
     subset="both",

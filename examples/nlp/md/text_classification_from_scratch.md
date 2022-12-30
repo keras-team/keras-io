@@ -91,7 +91,7 @@ We are only interested in the `pos` and `neg` subfolders, so let's delete the re
 !rm -r aclImdb/train/unsup
 ```
 
-You can use the utility `tf.keras.preprocessing.text_dataset_from_directory` to
+You can use the utility `tf.keras.utils.text_dataset_from_directory` to
 generate a labeled `tf.data.Dataset` object from a set of text files on disk filed
  into class-specific folders.
 
@@ -113,21 +113,21 @@ get have no overlap.
 
 ```python
 batch_size = 32
-raw_train_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_train_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="training",
     seed=1337,
 )
-raw_val_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_val_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="validation",
     seed=1337,
 )
-raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_test_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 

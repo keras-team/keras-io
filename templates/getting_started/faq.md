@@ -571,9 +571,9 @@ On the other hand, the testing loss for an epoch is computed using the model as 
 You should use the [`tf.data` API](https://www.tensorflow.org/guide/data) to create `tf.data.Dataset` objects -- an abstraction over a data pipeline
 that can pull data from local disk, from a distributed file system, from GCS, etc., as well as efficiently apply various data transformations.
 
-For instance, the utility [`tf.keras.preprocessing.image_dataset_from_directory`](https://keras.io/api/preprocessing/image/#imagedatasetfromdirectory-function)
+For instance, the utility [`tf.keras.utils.image_dataset_from_directory`](https://keras.io/api/data_loading/image/)
 will create a dataset that reads image data from a local directory.
-Likewise, the utility [`tf.keras.preprocessing.text_dataset_from_directory`](https://keras.io/api/preprocessing/text/#textdatasetfromdirectory-function)
+Likewise, the utility [`tf.keras.utils.text_dataset_from_directory`](https://keras.io/api/data_loading/text/#text_dataset_from_directory-function)
 will create a dataset that reads text files from a local directory.
 
 Dataset objects can be directly passed to `fit()`, or can be iterated over in a custom low-level training loop.
