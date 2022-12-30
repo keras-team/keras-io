@@ -289,7 +289,7 @@ a `tf.RaggedTensor`.
 """
 
 tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
-print(tokenizer(["I love modular workflows!", "Libraries over frameworks!"]))
+tokenizer(["I love modular workflows!", "Libraries over frameworks!"])
 
 # Write your own packer or use one our `Layers`
 packer = keras_nlp.layers.MultiSegmentPacker(
@@ -523,8 +523,8 @@ low-level modules used to build SoTA architectures in our `models` API. This inc
 In this workflow we train a custom tokenizer on the IMDB data and design a backbone with
 custom transformer architecture. For simplicity we then train directly on the
 classification task. Interested in more details? We wrote an entire guide to pretraining
-and finetuning a custom transformer:
-[Pretraining a Transformer from scratch with KerasNLP](https://keras.io/guides/keras_nlp/transformer_pretraining/).
+and finetuning a custom transformer on
+[keras.io](https://keras.io/guides/keras_nlp/transformer_pretraining/),
 """
 
 """
@@ -532,7 +532,7 @@ and finetuning a custom transformer:
 """
 
 vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
-    imdb_train.map(lambda x, _: x),
+    imdb_train.map(lambda x, y: x),
     vocabulary_size=20_000,
     lowercase=True,
     strip_accents=True,
