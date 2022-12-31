@@ -341,8 +341,8 @@ of brevity, we discarded those elements. More on this later in the tutorial.
 image_encoder = ImageEncoder(RESOLUTION, RESOLUTION)
 diffusion_ft_trainer = Trainer(
     diffusion_model=DiffusionModel(RESOLUTION, RESOLUTION, MAX_PROMPT_LENGTH),
-    # Remove the top layer from the encoder, which cuts off the variance and only returns
-    # the mean.
+    # Remove the top layer from the encoder, which cuts off the variance and only
+    # returns the mean.
     vae=tf.keras.Model(
         image_encoder.input,
         image_encoder.layers[-2].output,
@@ -403,7 +403,7 @@ pokemon_model.diffusion_model.load_weights(weights_path)
 Now, we can take this model for a test-drive.
 """
 
-prompts = ["Yoda", "Hello Kitty", "A pokemon with green eye"]
+prompts = ["Yoda", "Hello Kitty", "A pokemon with red eyes"]
 image_to_generate = 3
 outputs = {}
 
@@ -419,7 +419,7 @@ up to the mark. So, we experimented with the number of steps Stable Diffusion ta
 during the inference time and the `unconditional_guidance_scale` parameter.
 
 We found the best results with this checkpoint with `unconditional_guidance_scale` set to
-50.
+40.
 """
 
 
@@ -438,7 +438,7 @@ for prompt in outputs:
 """
 We can notice that the model has started adapting to the style of our dataset. You can
 check the
-[accompanying repository](https://github.com/sayakpaul/stable-diffusion-keras-ft)
+[accompanying repository](https://github.com/sayakpaul/stable-diffusion-keras-ft#results)
 for more comparisons and commentary.
 """
 
