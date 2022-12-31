@@ -407,7 +407,7 @@ learning & fine-tuning example. We will load the Xception model, pre-trained on
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
 you'll probably want to use the utility
-`tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
+`tf.keras.utils.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
 Transfer learning is most useful when working with very small datasets. To keep our

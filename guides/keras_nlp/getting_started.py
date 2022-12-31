@@ -115,11 +115,11 @@ rm -r aclImdb/train/unsup
 """
 
 BATCH_SIZE = 16
-imdb_train = tf.keras.preprocessing.text_dataset_from_directory(
+imdb_train = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=BATCH_SIZE,
 )
-imdb_test = tf.keras.preprocessing.text_dataset_from_directory(
+imdb_test = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/test",
     batch_size=BATCH_SIZE,
 )

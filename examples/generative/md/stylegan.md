@@ -82,7 +82,7 @@ with ZipFile("celeba_gan/data.zip", "r") as zipobj:
 
 # Create a dataset from our folder, and rescale the images to the [0-1] range:
 
-ds_train = keras.preprocessing.image_dataset_from_directory(
+ds_train = keras.utils.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
 )
 ds_train = ds_train.map(lambda x: x / 255.0)

@@ -88,9 +88,9 @@ using `Dataset` objects, since they will take care of performance-critical detai
 
 Keras features a range of utilities to help you turn raw data on disk into a `Dataset`:
 
-- `tf.keras.preprocessing.image_dataset_from_directory` turns image files sorted into
+- `tf.keras.utils.image_dataset_from_directory` turns image files sorted into
  class-specific folders into a labeled dataset of image tensors.
-- `tf.keras.preprocessing.text_dataset_from_directory` does the same for text files.
+- `tf.keras.utils.text_dataset_from_directory` does the same for text files.
 
 In addition, the TensorFlow `tf.data` includes other similar utilities, such as
 `tf.data.experimental.make_csv_dataset` to load structured data from CSV files.
@@ -113,7 +113,7 @@ Then you can do:
 
 ```python
 # Create a dataset.
-dataset = keras.preprocessing.image_dataset_from_directory(
+dataset = keras.utils.image_dataset_from_directory(
   'path/to/main_directory', batch_size=64, image_size=(200, 200))
 
 # For demonstration, iterate over the batches yielded by the dataset.
@@ -135,7 +135,7 @@ Likewise for text: if you have `.txt` documents sorted by class in different fol
  you can do:
 
 ```python
-dataset = keras.preprocessing.text_dataset_from_directory(
+dataset = keras.utils.text_dataset_from_directory(
   'path/to/main_directory', batch_size=64)
 
 # For demonstration, iterate over the batches yielded by the dataset.
