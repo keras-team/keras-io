@@ -447,9 +447,14 @@ for more comparisons and commentary.
 
 We demonstrated how to fine-tune the Stable Diffusion model on a custom dataset. While
 the results are far from aesthetically pleasing, we believe with more epochs of
-fine-tuning, they will certainly improve. To enable that, having support for gradient
+fine-tuning, they will likely improve. To enable that, having support for gradient
 accumulation and distributed training is crucial. This can be thought of as the next step
 in this tutorial.
+
+There is another interesting way in which Stable Diffusion models can be fine-tuned,
+called textual inversion. You can refer to
+[this tutorial](https://keras.io/examples/generative/fine_tune_via_textual_inversion/)
+to know more about it.
 
 We'd like to acknowledge the GCP Credit support from ML Developer Programs' team at
 Google. We'd like to thank the Hugging Face team for providing the
