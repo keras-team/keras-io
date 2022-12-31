@@ -26,7 +26,7 @@ the code.
 
 By the end of the guide, you'll be able to generate images of interesting pokemons:
 
-![](https://i.ibb.co/t3qmtTS/image.png)
+![custom-pokemons](https://i.imgur.com/RtVBPzp.png)
 
 For the code, the tutorial relies on KerasCV 0.3.5 which is not yet available on PyPI.
 So, we need to install it from the source.
@@ -261,7 +261,7 @@ class Trainer(tf.keras.Model):
     def train_step(self, inputs):
         images = inputs["images"]
         encoded_text = inputs["encoded_text"]
-        bsz = tf.shape(images)[0]
+        batch_size = tf.shape(images)[0]
 
         with tf.GradientTape() as tape:
             # Project image into the latent space and sample from it.
@@ -275,7 +275,7 @@ class Trainer(tf.keras.Model):
 
             # Sample a random timestep for each image.
             timesteps = tnp.random.randint(
-                0, self.noise_scheduler.train_timesteps, (bsz,)
+                0, self.noise_scheduler.train_timesteps, (batch_size,)
             )
 
             # Add noise to the latents according to the noise magnitude at each timestep
@@ -372,8 +372,8 @@ diffusion_ft_trainer.compile(optimizer=optimizer, loss="mse")
 To keep the runtime of this tutorial short, we just fine-tune for an epoch.
 """
 
-num_epochs = 1
-diffusion_ft_trainer.fit(training_dataset, epochs=num_epochs)
+epochs = 1
+diffusion_ft_trainer.fit(training_dataset, epochs=epochs)
 
 """
 ## Inference
@@ -459,5 +459,5 @@ to know more about it.
 We'd like to acknowledge the GCP Credit support from ML Developer Programs' team at
 Google. We'd like to thank the Hugging Face team for providing the
 [fine-tuning script](https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py)
-;it's very readable and easy to understand. 
+. It's very readable and easy to understand. 
 """
