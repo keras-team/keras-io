@@ -203,7 +203,7 @@ def prepare_dataset(image_paths, tokenized_texts, batch_size=1):
 
 """
 The baseline Stable Diffusion model was trained using images of 512x512 resolution. It's
-unlikely for a model that's trained using higher resolution imaged to transfer well to
+unlikely for a model that's trained using higher resolution images to transfer well to
 lower resolution images. However, the current model will lead to OOM if we keep the
 resolution to 512x512 (without enabling mixed-precision). Therefore, in the interest of
 interactive demonstration, we kept the input resolution to 256x256.
@@ -264,7 +264,7 @@ class Trainer(tf.keras.Model):
         bsz = tf.shape(images)[0]
 
         with tf.GradientTape() as tape:
-            # Project image into the latent space.
+            # Project image into the latent space and sample from it.
             latents = self.sample_from_encoder_outputs(self.vae(images, training=False))
             # Know more about the magic number here:
             # https://keras.io/examples/generative/fine_tune_via_textual_inversion/
