@@ -160,7 +160,7 @@ preprocess_img = preprocess(sample_img)
 print(f"Preprocessed image shape: {preprocess_img.shape}")
 print(
     f"Preprocessed image pixel range: ({preprocess_img.numpy().min()},",
-    f"{preprocess_img.numpy().max()})"
+    f"{preprocess_img.numpy().max()})",
 )
 
 batched_img = tf.expand_dims(preprocess_img, axis=0)
@@ -318,8 +318,7 @@ servable by not specifying a particular version.
 """
 
 data = json.dumps(
-    {"signature_name": "serving_default",
-     "instances": batched_img.numpy().tolist()}
+    {"signature_name": "serving_default", "instances": batched_img.numpy().tolist()}
 )
 url = "http://localhost:8501/v1/models/model:predict"
 
@@ -377,8 +376,7 @@ stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
 # Get the serving_input key
 loaded_model = tf.saved_model.load(model_export_path)
 input_name = list(
-    loaded_model.signatures["serving_default"]
-                .structured_input_signature[1].keys()
+    loaded_model.signatures["serving_default"].structured_input_signature[1].keys()
 )[0]
 
 
@@ -438,9 +436,7 @@ this allows this model to make predictions on raw data.
 
 
 def export_model(model, labels):
-    @tf.function(
-        input_signature=[tf.TensorSpec([None, None, None, 3], tf.float32)]
-        )
+    @tf.function(input_signature=[tf.TensorSpec([None, None, None, 3], tf.float32)])
     def serving_fn(image):
         processed_img = preprocess(image)
         probs = model(processed_img)
@@ -492,8 +488,7 @@ models that share the same base parent folder.
 """
 
 data = json.dumps(
-    {"signature_name": "serving_default",
-     "instances": batched_raw_img.numpy().tolist()}
+    {"signature_name": "serving_default", "instances": batched_raw_img.numpy().tolist()}
 )
 url_sig = "http://localhost:8501/v1/models/model/versions/2:predict"
 
@@ -520,8 +515,7 @@ stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
 """
 
 input_name = list(
-    loaded_model.signatures["serving_default"]
-                .structured_input_signature[1].keys()
+    loaded_model.signatures["serving_default"].structured_input_signature[1].keys()
 )[0]
 
 """
