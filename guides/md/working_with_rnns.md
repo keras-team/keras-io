@@ -609,7 +609,7 @@ class NestedCell(keras.layers.Layer):
         self.unit_3 = unit_3
         self.state_size = [tf.TensorShape([unit_1]), tf.TensorShape([unit_2, unit_3])]
         self.output_size = [tf.TensorShape([unit_1]), tf.TensorShape([unit_2, unit_3])]
-        super(NestedCell, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def build(self, input_shapes):
         # expect input_shape to contain 2 items, [(batch, i1), (batch, i2, i3)]

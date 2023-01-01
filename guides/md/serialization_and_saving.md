@@ -190,7 +190,7 @@ Example:
 
 class CustomModel(keras.Model):
     def __init__(self, hidden_units):
-        super(CustomModel, self).__init__()
+        super().__init__()
         self.hidden_units = hidden_units
         self.dense_layers = [keras.layers.Dense(u) for u in hidden_units]
 
@@ -522,7 +522,7 @@ in section above "Defining the config methods")
 
 class CustomLayer(keras.layers.Layer):
     def __init__(self, units=32, **kwargs):
-        super(CustomLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.units = units
 
     def build(self, input_shape):
@@ -539,7 +539,7 @@ class CustomLayer(keras.layers.Layer):
         return tf.matmul(inputs, self.w) + self.b
 
     def get_config(self):
-        config = super(CustomLayer, self).get_config()
+        config = super().get_config()
         config.update({"units": self.units})
         return config
 
@@ -633,7 +633,7 @@ functional_model = keras.Model(inputs=inputs, outputs=outputs, name="3_layer_mlp
 # Define a subclassed model with the same architecture
 class SubclassedModel(keras.Model):
     def __init__(self, output_dim, name=None):
-        super(SubclassedModel, self).__init__(name=name)
+        super().__init__(name=name)
         self.output_dim = output_dim
         self.dense_1 = keras.layers.Dense(64, activation="relu", name="dense_1")
         self.dense_2 = keras.layers.Dense(64, activation="relu", name="dense_2")
@@ -929,7 +929,7 @@ ckpt_path = tf.train.Checkpoint(
 # Define the subclassed model.
 class ContrivedModel(keras.Model):
     def __init__(self):
-        super(ContrivedModel, self).__init__()
+        super().__init__()
         self.first_dense = keras.layers.Dense(64)
         self.kernel = self.add_variable("kernel", shape=(64, 10))
         self.bias = self.add_variable("bias", shape=(10,))
@@ -988,7 +988,7 @@ Note that changing `layer.trainable` may result in a different
 
 class NestedDenseLayer(keras.layers.Layer):
     def __init__(self, units, name=None):
-        super(NestedDenseLayer, self).__init__(name=name)
+        super().__init__(name=name)
         self.dense_1 = keras.layers.Dense(units, name="dense_1")
         self.dense_2 = keras.layers.Dense(units, name="dense_2")
 

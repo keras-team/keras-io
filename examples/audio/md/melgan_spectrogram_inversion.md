@@ -208,7 +208,7 @@ class MelSpec(layers.Layer):
             return audio
 
     def get_config(self):
-        config = super(MelSpec, self).get_config()
+        config = super().get_config()
         config.update(
             {
                 "frame_length": self.frame_length,

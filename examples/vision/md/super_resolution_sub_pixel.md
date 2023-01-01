@@ -413,7 +413,7 @@ This is the main metric we use to evaluate super-resolution performance.
 
 class ESPCNCallback(keras.callbacks.Callback):
     def __init__(self):
-        super(ESPCNCallback, self).__init__()
+        super().__init__()
         self.test_img = get_lowres_image(load_img(test_img_paths[0]), upscale_factor)
 
     # Store PSNR value in each epoch.

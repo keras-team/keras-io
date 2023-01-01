@@ -258,7 +258,7 @@ we will discuss shortly).
 
 class AdaMatch(keras.Model):
     def __init__(self, model, total_steps, tau=0.9):
-        super(AdaMatch, self).__init__()
+        super().__init__()
         self.model = model
         self.tau = tau  # Denotes the confidence threshold
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")

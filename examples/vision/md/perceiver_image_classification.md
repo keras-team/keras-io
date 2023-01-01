@@ -168,7 +168,7 @@ def create_ffn(hidden_units, dropout_rate):
 
 class Patches(layers.Layer):
     def __init__(self, patch_size):
-        super(Patches, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
 
     def call(self, images):
@@ -200,7 +200,7 @@ Note that the orginal Perceiver paper uses the Fourier feature positional encodi
 
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dim):
-        super(PatchEncoder, self).__init__()
+        super().__init__()
         self.num_patches = num_patches
         self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(
@@ -346,7 +346,7 @@ class Perceiver(keras.Model):
         num_iterations,
         classifier_units,
     ):
-        super(Perceiver, self).__init__()
+        super().__init__()
 
         self.latent_dim = latent_dim
         self.data_dim = data_dim
@@ -400,7 +400,7 @@ class Perceiver(keras.Model):
             hidden_units=self.classifier_units, dropout_rate=self.dropout_rate
         )
 
-        super(Perceiver, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, inputs):
         # Augment data.

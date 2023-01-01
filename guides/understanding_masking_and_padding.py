@@ -172,7 +172,7 @@ to the `__call__` method of a mask-consuming layer, like this:
 
 class MyLayer(layers.Layer):
     def __init__(self, **kwargs):
-        super(MyLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embedding = layers.Embedding(input_dim=5000, output_dim=16, mask_zero=True)
         self.lstm = layers.LSTM(32)
 
@@ -238,7 +238,7 @@ mask from input values:
 
 class CustomEmbedding(keras.layers.Layer):
     def __init__(self, input_dim, output_dim, mask_zero=False, **kwargs):
-        super(CustomEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.mask_zero = mask_zero
@@ -294,7 +294,7 @@ Here's an example of a layer that is whitelisted for mask propagation:
 
 class MyActivation(keras.layers.Layer):
     def __init__(self, **kwargs):
-        super(MyActivation, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Signal that the layer is safe for mask propagation
         self.supports_masking = True
 

@@ -245,7 +245,7 @@ leaves to produce the final `outputs`.
 
 class NeuralDecisionTree(keras.Model):
     def __init__(self, depth, num_features, used_features_rate, num_classes):
-        super(NeuralDecisionTree, self).__init__()
+        super().__init__()
         self.depth = depth
         self.num_leaves = 2**depth
         self.num_classes = num_classes
@@ -319,7 +319,7 @@ trained simultaneously. The output of the forest model is the average outputs of
 
 class NeuralDecisionForest(keras.Model):
     def __init__(self, num_trees, depth, num_features, used_features_rate, num_classes):
-        super(NeuralDecisionForest, self).__init__()
+        super().__init__()
         self.ensemble = []
         # Initialize the ensemble by adding NeuralDecisionTree instances.
         # Each tree will have its own randomly selected input features to use.

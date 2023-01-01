@@ -301,7 +301,7 @@ like `Add` and `Concatenate`.
 
 class QREmbedding(keras.layers.Layer):
     def __init__(self, vocabulary, embedding_dim, num_buckets, name=None):
-        super(QREmbedding, self).__init__(name=name)
+        super().__init__(name=name)
         self.num_buckets = num_buckets
 
         self.index_lookup = StringLookup(
@@ -356,7 +356,7 @@ class MDEmbedding(keras.layers.Layer):
     def __init__(
         self, blocks_vocabulary, blocks_embedding_dims, base_embedding_dim, name=None
     ):
-        super(MDEmbedding, self).__init__(name=name)
+        super().__init__(name=name)
         self.num_blocks = len(blocks_vocabulary)
 
         # Create vocab to block lookup.

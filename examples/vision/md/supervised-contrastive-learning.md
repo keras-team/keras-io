@@ -288,7 +288,7 @@ softmax are optimized.
 
 class SupervisedContrastiveLoss(keras.losses.Loss):
     def __init__(self, temperature=1, name=None):
-        super(SupervisedContrastiveLoss, self).__init__(name=name)
+        super().__init__(name=name)
         self.temperature = temperature
 
     def __call__(self, labels, feature_vectors, sample_weight=None):

@@ -368,7 +368,7 @@ that counts how many samples were correctly classified as belonging to a given c
 
 class CategoricalTruePositives(keras.metrics.Metric):
     def __init__(self, name="categorical_true_positives", **kwargs):
-        super(CategoricalTruePositives, self).__init__(name=name, **kwargs)
+        super().__init__(name=name, **kwargs)
         self.true_positives = self.add_weight(name="ctp", initializer="zeros")
 
     def update_state(self, y_true, y_pred, sample_weight=None):
@@ -547,7 +547,7 @@ tracks classification accuracy via `add_metric()`.
 
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
-        super(LogisticEndpoint, self).__init__(name=name)
+        super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
         self.accuracy_fn = keras.metrics.BinaryAccuracy()
 

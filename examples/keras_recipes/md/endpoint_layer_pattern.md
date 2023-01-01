@@ -37,7 +37,7 @@ Note that you could have separate metrics for training and eval with this patter
 
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
-        super(LogisticEndpoint, self).__init__(name=name)
+        super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
         self.accuracy_fn = keras.metrics.BinaryAccuracy(name="accuracy")
 
@@ -113,7 +113,7 @@ preds = inference_model.predict(np.random.random((1000, 764)))
 
 class LogReg(keras.Model):
     def __init__(self):
-        super(LogReg, self).__init__()
+        super().__init__()
         self.dense = keras.layers.Dense(1)
         self.logistic_endpoint = LogisticEndpoint()
 

@@ -295,7 +295,7 @@ class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
     """
 
     def __init__(self, patience=0):
-        super(EarlyStoppingAtMinLoss, self).__init__()
+        super().__init__()
         self.patience = patience
         # best_weights to store the weights at which the minimum loss occurs.
         self.best_weights = None
@@ -359,7 +359,7 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
     """
 
     def __init__(self, schedule):
-        super(CustomLearningRateScheduler, self).__init__()
+        super().__init__()
         self.schedule = schedule
 
     def on_epoch_begin(self, epoch, logs=None):

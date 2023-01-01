@@ -33,7 +33,7 @@ Here's a densely-connected layer. It has a state: the variables `w` and `b`.
 
 class Linear(keras.layers.Layer):
     def __init__(self, units=32, input_dim=32):
-        super(Linear, self).__init__()
+        super().__init__()
         w_init = tf.random_normal_initializer()
         self.w = tf.Variable(
             initial_value=w_init(shape=(input_dim, units), dtype="float32"),
@@ -84,7 +84,7 @@ the `add_weight()` method:
 
 class Linear(keras.layers.Layer):
     def __init__(self, units=32, input_dim=32):
-        super(Linear, self).__init__()
+        super().__init__()
         self.w = self.add_weight(
             shape=(input_dim, units), initializer="random_normal", trainable=True
         )
@@ -122,7 +122,7 @@ Here's how to add and use a non-trainable weight:
 
 class ComputeSum(keras.layers.Layer):
     def __init__(self, input_dim):
-        super(ComputeSum, self).__init__()
+        super().__init__()
         self.total = tf.Variable(initial_value=tf.zeros((input_dim,)), trainable=False)
 
     def call(self, inputs):
@@ -175,7 +175,7 @@ the shape of the weights `w` and `b` in `__init__()`:
 
 class Linear(keras.layers.Layer):
     def __init__(self, units=32, input_dim=32):
-        super(Linear, self).__init__()
+        super().__init__()
         self.w = self.add_weight(
             shape=(input_dim, units), initializer="random_normal", trainable=True
         )
@@ -198,7 +198,7 @@ inputs_shape)` method of your layer. Like this:
 
 class Linear(keras.layers.Layer):
     def __init__(self, units=32):
-        super(Linear, self).__init__()
+        super().__init__()
         self.units = units
 
     def build(self, input_shape):
@@ -251,7 +251,7 @@ the first `__call__()` to trigger building their weights.
 
 class MLPBlock(keras.layers.Layer):
     def __init__(self):
-        super(MLPBlock, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.linear_2 = Linear(32)
         self.linear_3 = Linear(1)
@@ -289,7 +289,7 @@ calling `self.add_loss(value)`:
 # A layer that creates an activity regularization loss
 class ActivityRegularizationLayer(keras.layers.Layer):
     def __init__(self, rate=1e-2):
-        super(ActivityRegularizationLayer, self).__init__()
+        super().__init__()
         self.rate = rate
 
     def call(self, inputs):
@@ -311,7 +311,7 @@ created during the last forward pass.
 
 class OuterLayer(keras.layers.Layer):
     def __init__(self):
-        super(OuterLayer, self).__init__()
+        super().__init__()
         self.activity_reg = ActivityRegularizationLayer(1e-2)
 
     def call(self, inputs):
@@ -337,7 +337,7 @@ for the weights of any inner layer:
 
 class OuterLayerWithKernelRegularizer(keras.layers.Layer):
     def __init__(self):
-        super(OuterLayerWithKernelRegularizer, self).__init__()
+        super().__init__()
         self.dense = keras.layers.Dense(
             32, kernel_regularizer=tf.keras.regularizers.l2(1e-3)
         )
@@ -432,7 +432,7 @@ via `add_loss()`, and it computes an accuracy scalar, which it tracks via
 
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
-        super(LogisticEndpoint, self).__init__(name=name)
+        super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
         self.accuracy_fn = keras.metrics.BinaryAccuracy()
 
@@ -512,7 +512,7 @@ method:
 
 class Linear(keras.layers.Layer):
     def __init__(self, units=32):
-        super(Linear, self).__init__()
+        super().__init__()
         self.units = units
 
     def build(self, input_shape):
@@ -555,7 +555,7 @@ layer config:
 
 class Linear(keras.layers.Layer):
     def __init__(self, units=32, **kwargs):
-        super(Linear, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.units = units
 
     def build(self, input_shape):
@@ -572,7 +572,7 @@ class Linear(keras.layers.Layer):
         return tf.matmul(inputs, self.w) + self.b
 
     def get_config(self):
-        config = super(Linear, self).get_config()
+        config = super().get_config()
         config.update({"units": self.units})
         return config
 
@@ -618,7 +618,7 @@ inference.
 
 class CustomDropout(keras.layers.Layer):
     def __init__(self, rate, **kwargs):
-        super(CustomDropout, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.rate = rate
 
     def call(self, inputs, training=None):
@@ -686,7 +686,7 @@ a `Model` that we could train with `fit()`, and that we could save with
 class ResNet(tf.keras.Model):
 
     def __init__(self, num_classes=1000):
-        super(ResNet, self).__init__()
+        super().__init__()
         self.block_1 = ResNetBlock()
         self.block_2 = ResNetBlock()
         self.global_pool = layers.GlobalAveragePooling2D()
@@ -744,7 +744,7 @@ class Encoder(layers.Layer):
     """Maps MNIST digits to a triplet (z_mean, z_log_var, z)."""
 
     def __init__(self, latent_dim=32, intermediate_dim=64, name="encoder", **kwargs):
-        super(Encoder, self).__init__(name=name, **kwargs)
+        super().__init__(name=name, **kwargs)
         self.dense_proj = layers.Dense(intermediate_dim, activation="relu")
         self.dense_mean = layers.Dense(latent_dim)
         self.dense_log_var = layers.Dense(latent_dim)
@@ -762,7 +762,7 @@ class Decoder(layers.Layer):
     """Converts z, the encoded digit vector, back into a readable digit."""
 
     def __init__(self, original_dim, intermediate_dim=64, name="decoder", **kwargs):
-        super(Decoder, self).__init__(name=name, **kwargs)
+        super().__init__(name=name, **kwargs)
         self.dense_proj = layers.Dense(intermediate_dim, activation="relu")
         self.dense_output = layers.Dense(original_dim, activation="sigmoid")
 
@@ -782,7 +782,7 @@ class VariationalAutoEncoder(keras.Model):
         name="autoencoder",
         **kwargs
     ):
-        super(VariationalAutoEncoder, self).__init__(name=name, **kwargs)
+        super().__init__(name=name, **kwargs)
         self.original_dim = original_dim
         self.encoder = Encoder(latent_dim=latent_dim, intermediate_dim=intermediate_dim)
         self.decoder = Decoder(original_dim, intermediate_dim=intermediate_dim)

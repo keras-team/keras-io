@@ -169,7 +169,7 @@ the frequency domain.
 
 class FNetEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, **kwargs):
-        super(FNetEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.dense_proj = keras.Sequential(
@@ -206,7 +206,7 @@ The architecture that follows is taken from
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
-        super(PositionalEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.token_embeddings = layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -230,7 +230,7 @@ class PositionalEmbedding(layers.Layer):
 
 class FNetDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(FNetDecoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads
