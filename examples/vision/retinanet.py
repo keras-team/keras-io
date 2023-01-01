@@ -750,9 +750,7 @@ class RetinaNetBoxLoss(tf.losses.Loss):
     """Implements Smooth L1 loss"""
 
     def __init__(self, delta):
-        super().__init__(
-            reduction="none", name="RetinaNetBoxLoss"
-        )
+        super().__init__(reduction="none", name="RetinaNetBoxLoss")
         self._delta = delta
 
     def call(self, y_true, y_pred):
@@ -771,9 +769,7 @@ class RetinaNetClassificationLoss(tf.losses.Loss):
     """Implements Focal loss"""
 
     def __init__(self, alpha, gamma):
-        super().__init__(
-            reduction="none", name="RetinaNetClassificationLoss"
-        )
+        super().__init__(reduction="none", name="RetinaNetClassificationLoss")
         self._alpha = alpha
         self._gamma = gamma
 
