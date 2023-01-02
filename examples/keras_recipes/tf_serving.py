@@ -1,8 +1,8 @@
 """
 Title: Serving TensorFlow models with TFServing
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
-Date created: 2023/01/01
-Last modified: 2023/01/01
+Date created: 2023/01/02
+Last modified: 2023/01/02
 Description: How to serve TensorFlow models with TensorFlow Serving.
 Accelerator: NONE
 """
@@ -10,15 +10,16 @@ Accelerator: NONE
 """
 ## Introduction
 
-Once you build your machine learning models, the next likely step is to serve
-them. You may want to do that by exposing your model as an endpoint service,
-there are many frameworks that you can use to do that, but the TensorFlow
+Once you build a machine learning model, the next step is to serve it.
+You may want to do that by exposing your model as an endpoint service.
+There are many frameworks that you can use to do that, but the TensorFlow
 ecosystem has its own solution called
 [TensorFlow Serving](https://www.tensorflow.org/tfx/guide/serving).
 
 From the TensorFlow Serving
 [GitHub page](https://github.com/tensorflow/serving):
->TensorFlow Serving is a flexible, high-performance serving system for machine
+
+> TensorFlow Serving is a flexible, high-performance serving system for machine
 learning models, designed for production environments. It deals with the
 inference aspect of machine learning, taking models after training and
 managing their lifetimes, providing clients with versioned access via a
@@ -28,18 +29,17 @@ to serve other types of models and data."
 
 To note a few features:
 
-- Can serve multiple models, or multiple versions of the same model
+- It can serve multiple models, or multiple versions of the same model
 simultaneously
-- Exposes both gRPC as well as HTTP inference endpoints
-- Allows deployment of new model versions without changing any client code
-- Supports canarying new versions and A/B testing experimental models
-- Adds minimal latency to inference time due to efficient, low-overhead
+- It exposes both gRPC as well as HTTP inference endpoints
+- It allows deployment of new model versions without changing any client code
+- It supports canarying new versions and A/B testing experimental models
+- It adds minimal latency to inference time due to efficient, low-overhead
 implementation
-- Features a scheduler that groups individual inference requests into batches
+- It features a scheduler that groups individual inference requests into batches
 for joint execution on GPU, with configurable latency controls
-- Supports many servables: Tensorflow models, embeddings, vocabularies,
+- It supports many servables: Tensorflow models, embeddings, vocabularies,
 feature transformations and even non-Tensorflow-based machine learning models
-
 
 This guide creates a simple [MobileNet](https://arxiv.org/abs/1704.04861)
 model using the [Keras applications API](https://keras.io/api/applications/),
@@ -48,8 +48,9 @@ The focus is on TensorFlow Serving, rather than the modeling and training in
 TensorFlow.
 
 > Note: you can find a Colab notebook with the full working code at
-[this link](https://colab.research.google.com/drive/1nwuIJa4so1XzYU0ngq8tX_-SGTO295Mu?usp=sharing)
-
+[this link](https://colab.research.google.com/drive/1nwuIJa4so1XzYU0ngq8tX_-SGTO295Mu?usp=sharing).
+"""
+"""
 ## Dependencies
 """
 
@@ -64,7 +65,7 @@ import matplotlib.pyplot as plt
 """
 ## Model
 
-Here we will load a pre-trained [MobileNet](https://arxiv.org/abs/1704.04861)
+Here we load a pre-trained [MobileNet](https://arxiv.org/abs/1704.04861)
 from the [Keras applications](https://keras.io/api/applications/), this is the
 model that we are going to serve.
 """
@@ -174,7 +175,7 @@ print(f"Predicted class: {postprocess(model_outputs)}")
 """
 ## Save the model
 
-To load our trained model into TensorFlow Serving we first need to save it in
+To load our trained model into TensorFlow Serving, we first need to save it in
 [SavedModel](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/saved_model)
 format. This will create a protobuf file in a well-defined directory hierarchy,
 and will include a version number.
@@ -213,7 +214,7 @@ saved_model_cli show --dir {model_export_path} --tag_set serve --signature_def s
 
 """
 That tells us a lot about our model! For instance, we can see that its inputs
-have a 4-d shape `(-1, 224, 224, 3)` which means
+have a 4D shape `(-1, 224, 224, 3)` which means
 `(batch_size, height, width, channels)`, also note that this model requires a
 specific image shape `(224, 224, 3)` this means that we may need to reshape
 our images before sending them to the model. We can also see that the model's
@@ -460,7 +461,7 @@ saved_model_cli show --dir {model_sig_export_path} --tag_set serve --signature_d
 """
 
 """
-Note that this model has a different signature, its input is still 4-d but now
+Note that this model has a different signature, its input is still 4D but now
 with a `(-1, -1, -1, 3)` shape, which means that it supports images with any
 height and width size. Its output also has a different shape, it no longer
 outputs the 1000-long logits.
@@ -534,6 +535,7 @@ Predicted class: [[b'banana']]
 ```
 
 ## Additional resources
+
 - [Colab notebook with the full working code](https://colab.research.google.com/drive/1nwuIJa4so1XzYU0ngq8tX_-SGTO295Mu?usp=sharing)
 - [Train and serve a TensorFlow model with TensorFlow Serving - TensorFlow blog](https://www.tensorflow.org/tfx/tutorials/serving/rest_simple#make_a_request_to_your_model_in_tensorflow_serving)
 - [TensorFlow Serving playlist - TensorFlow YouTube channel](https://www.youtube.com/playlist?list=PLQY2H8rRoyvwHdpVQVohY7-qcYf2s1UYK)
