@@ -2,7 +2,7 @@
 Title: Masked image modeling with Autoencoders
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
 Date created: 2022/12/28
-Last modified: 2022/12/28
+Last modified: 2023/01/04
 Description: Fine-tuning Stable Diffusion using a custom image-caption dataset.
 Accelerator: GPU
 """
@@ -26,14 +26,16 @@ the code.
 
 By the end of the guide, you'll be able to generate images of interesting pokemons:
 
-![custom-pokemons](https://i.imgur.com/RtVBPzp.png)
+![custom-pokemons](https://i.imgur.com/X4m614M.png)
 
 For the code, the tutorial relies on KerasCV 0.3.5 which is not yet available on PyPI.
-So, we need to install it from the source.
+So, we need to install it from the source. Additionally, we need the latest stable 
+version of TensorFlow.
 """
 
 """shell
 pip install git+https://github.com/keras-team/keras-cv -q
+pip install -U tensorflow -q
 """
 
 """
@@ -87,6 +89,7 @@ from keras_cv.models.stable_diffusion.diffusion_model import DiffusionModel
 from keras_cv.models.stable_diffusion.image_encoder import ImageEncoder
 from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
 from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
+from tensorflow import keras
 
 """
 ## Data loading
@@ -247,7 +250,13 @@ class Trainer(tf.keras.Model):
     # https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py
 
     def __init__(
-        self, diffusion_model, vae, noise_scheduler, max_grad_norm=1.0, **kwargs
+        self,
+        diffusion_model,
+        vae,
+        noise_scheduler,
+        use_mixed_precision=False,
+        max_grad_norm=1.0,
+        **kwargs
     ):
         super().__init__(**kwargs)
 
@@ -256,6 +265,7 @@ class Trainer(tf.keras.Model):
         self.noise_scheduler = noise_scheduler
         self.max_grad_norm = max_grad_norm
 
+        self.use_mixed_precision = use_mixed_precision
         self.vae.trainable = False
 
     def train_step(self, inputs):
@@ -280,7 +290,9 @@ class Trainer(tf.keras.Model):
 
             # Add noise to the latents according to the noise magnitude at each timestep
             # (this is the forward diffusion process).
-            noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
+            noisy_latents = self.noise_scheduler.add_noise(
+                tf.cast(latents, noise.dtype), noise, timesteps
+            )
 
             # Get the target for loss depending on the prediction type
             # just the sampled noise for now.
@@ -295,10 +307,14 @@ class Trainer(tf.keras.Model):
                 [noisy_latents, timestep_embedding, encoded_text], training=True
             )
             loss = self.compiled_loss(target, model_pred)
+            if self.use_mixed_precision:
+                loss = self.optimizer.get_scaled_loss(loss)
 
         # Update parameters of the diffusion model.
         trainable_vars = self.diffusion_model.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
+        if self.use_mixed_precision:
+            gradients = self.optimizer.get_unscaled_gradients(gradients)
         gradients = [tf.clip_by_norm(g, self.max_grad_norm) for g in gradients]
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
@@ -319,8 +335,20 @@ class Trainer(tf.keras.Model):
         mean, logvar = tf.split(outputs, 2, axis=-1)
         logvar = tf.clip_by_value(logvar, -30.0, 20.0)
         std = tf.exp(0.5 * logvar)
-        sample = tf.random.normal(tf.shape(mean))
+        sample = tf.random.normal(tf.shape(mean), dtype=mean.dtype)
         return mean + std * sample
+
+    def save_weights(self, filepath, overwrite=True, save_format=None, options=None):
+        # Overriding this method will allow us to use the `ModelCheckpoint`
+        # callback directly with this trainer class. In this case, it will
+        # only checkpoint the `diffusion_model` since that's what we're training
+        # during fine-tuning.
+        self.diffusion_model.save_weights(
+            filepath=filepath,
+            overwrite=overwrite,
+            save_format=save_format,
+            options=options,
+        )
 
 
 """
@@ -338,6 +366,11 @@ of brevity, we discarded those elements. More on this later in the tutorial.
 ## Initialize the trainer and compile it
 """
 
+# Enable mixed-precision training if the underlying GPU has tensor cores.
+USE_MP = True
+if USE_MP:
+    keras.mixed_precision.set_global_policy("mixed_float16")
+
 image_encoder = ImageEncoder(RESOLUTION, RESOLUTION)
 diffusion_ft_trainer = Trainer(
     diffusion_model=DiffusionModel(RESOLUTION, RESOLUTION, MAX_PROMPT_LENGTH),
@@ -348,6 +381,7 @@ diffusion_ft_trainer = Trainer(
         image_encoder.layers[-2].output,
     ),
     noise_scheduler=NoiseScheduler(),
+    use_mixed_precision=USE_MP,
 )
 
 # These hyperparameters come from this tutorial by Hugging Face:
@@ -373,19 +407,27 @@ To keep the runtime of this tutorial short, we just fine-tune for an epoch.
 """
 
 epochs = 1
-diffusion_ft_trainer.fit(training_dataset, epochs=epochs)
+ckpt_path = "finetuned_stable_diffusion.h5"
+ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
+    ckpt_path,
+    save_weights_only=True,
+    monitor="loss",
+    mode="min",
+)
+diffusion_ft_trainer.fit(training_dataset, epochs=epochs, callbacks=[ckpt_callback])
 
 """
 ## Inference
 
-We fine-tuned the model for 20 epochs on an image resolution of 512x512. To allow
-training with this resolution, we also incorporated mixed-precision support. You can
-check out [this repository](https://github.com/sayakpaul/stabe-diffusion-keras-ft) for
-more details. It additionally provides support for exponential moving averaging of
+We fine-tuned the model for 60 epochs on an image resolution of 512x512. To allow
+training with this resolution, we incorporated mixed-precision support. You can
+check out
+[this repository](https://github.com/sayakpaul/stabe-diffusion-keras-ft)
+for more details. It additionally provides support for exponential moving averaging of
 the fine-tuned model parameters and model checkpointing.
 
 
-For this section, we'll use a checkpoint derived after 20 epochs of fine-tuning.
+For this section, we'll use the checkpoint derived after 60 epochs of fine-tuning.
 """
 
 weights_path = tf.keras.utils.get_file(
@@ -404,17 +446,17 @@ Now, we can take this model for a test-drive.
 """
 
 prompts = ["Yoda", "Hello Kitty", "A pokemon with red eyes"]
-image_to_generate = 3
+images_to_generate = 3
 outputs = {}
 
 for prompt in prompts:
     generated_images = pokemon_model.text_to_image(
-        prompt, batch_size=image_to_generate, unconditional_guidance_scale=50
+        prompt, batch_size=images_to_generate, unconditional_guidance_scale=40
     )
     outputs.update({prompt: generated_images})
 
 """
-With just 20 epochs of fine-tuning (a good number is 70), the generated images were not
+With 60 epochs of fine-tuning (a good number is 70), the generated images were not
 up to the mark. So, we experimented with the number of steps Stable Diffusion takes
 during the inference time and the `unconditional_guidance_scale` parameter.
 
