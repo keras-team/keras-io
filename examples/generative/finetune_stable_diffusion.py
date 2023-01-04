@@ -481,7 +481,9 @@ for prompt in outputs:
 We can notice that the model has started adapting to the style of our dataset. You can
 check the
 [accompanying repository](https://github.com/sayakpaul/stable-diffusion-keras-ft#results)
-for more comparisons and commentary.
+for more comparisons and commentary. If you're feeling adventurous to try out a demo,
+you can check out
+[this resource](https://huggingface.co/spaces/sayakpaul/pokemon-sd-kerascv).  
 """
 
 """
