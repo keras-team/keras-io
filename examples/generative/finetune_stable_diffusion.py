@@ -28,13 +28,12 @@ By the end of the guide, you'll be able to generate images of interesting pokemo
 
 ![custom-pokemons](https://i.imgur.com/X4m614M.png)
 
-For the code, the tutorial relies on KerasCV 0.4.0 which is not yet available on PyPI.
-So, we need to install it from the source. Additionally, we at least need TensorFlow
-2.11 for using AdamW with mixed-precision.
+For the code, the tutorial relies on KerasCV 0.4.0. Additionally, we at least
+need TensorFlow 2.11 for using AdamW with mixed-precision.
 """
 
 """shell
-pip install git+https://github.com/keras-team/keras-cv -q
+pip install keras-cv==0.4.0 -q
 pip install -U tensorflow -q
 """
 
@@ -122,6 +121,8 @@ fine-tuning. So, we can save some compute by doing this.
 Before we employ the text encoder, we need to tokenize the captions.
 """
 
+# The padding token and maximum prompt length are specific to the text encoder.
+# If you're using a different text encoder be sure to change them accordingly.
 PADDING_TOKEN = 49407
 MAX_PROMPT_LENGTH = 77
 
