@@ -28,9 +28,9 @@ By the end of the guide, you'll be able to generate images of interesting pokemo
 
 ![custom-pokemons](https://i.imgur.com/X4m614M.png)
 
-For the code, the tutorial relies on KerasCV 0.3.5 which is not yet available on PyPI.
-So, we need to install it from the source. Additionally, we need the latest stable 
-version of TensorFlow.
+For the code, the tutorial relies on KerasCV 0.4.0 which is not yet available on PyPI.
+So, we need to install it from the source. Additionally, we at least need TensorFlow
+2.11 for using AdamW with mixed-precision.
 """
 
 """shell
@@ -67,7 +67,7 @@ added in step 3.
 gradient descent.
 
 Note that only the diffusion model parameters are updated during fine-tuning while the
-text and the image encoders are kept frozen.
+(pre-trained) text and the image encoders are kept frozen.
 
 Don't worry if this reads complicated. The code is much simpler than this.
 """
