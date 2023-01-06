@@ -2,7 +2,7 @@
 Title: Multiclass semantic segmentation using DeepLabV3+
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/08/31
-Last modified: 2021/09/1
+Last modified: 2023/01/06
 Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
 Accelerator: GPU
 """
@@ -80,7 +80,7 @@ def read_image(image_path, mask=False):
         image = tf.image.decode_png(image, channels=3)
         image.set_shape([None, None, 3])
         image = tf.image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
-        image = image / 127.5 - 1
+        image = tf.keras.applications.resnet50.preprocess_input(image)
     return image
 
 
