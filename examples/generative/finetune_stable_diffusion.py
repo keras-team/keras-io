@@ -1,9 +1,9 @@
 """
-Title: Masked image modeling with Autoencoders
+Title: Fine-tuning Stable Diffusion
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
 Date created: 2022/12/28
 Last modified: 2023/01/04
-Description: Fine-tuning Stable Diffusion using a custom image-caption dataset.
+Description: Implementing Masked image modeling with Autoencoders using a custom image-caption dataset.
 Accelerator: GPU
 """
 """
@@ -11,25 +11,25 @@ Accelerator: GPU
 
 This tutorial shows how to fine-tune a
 [Stable Diffusion model](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/)
-on a custom dataset containing {image,caption} pairs. We build on top of the fine-tuning
+on a custom dataset of `{image, caption}` pairs. We build on top of the fine-tuning
 script provided by Hugging Face
 [here](https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py).
 
 We assume that you have a high-level understanding of the Stable Diffusion model.
-Following resources can be helpful if you're looking for resources in that regard:
+The following resources can be helpful if you're looking for more information in that regard:
 
 * [High-performance image generation using Stable Diffusion in KerasCV](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/)
 * [Stable Diffusion with Diffusers](https://huggingface.co/blog/stable_diffusion)
 
-It's highly recommended that you use a GPU having at least 30 GBs of memory to execute
+It's highly recommended that you use a GPU with at least 30GB of memory to execute
 the code.
 
 By the end of the guide, you'll be able to generate images of interesting pokemons:
 
 ![custom-pokemons](https://i.imgur.com/X4m614M.png)
 
-For the code, the tutorial relies on KerasCV 0.4.0. Additionally, we at least
-need TensorFlow 2.11 for using AdamW with mixed-precision.
+The tutorial relies on KerasCV 0.4.0. Additionally, we need
+at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 """
 
 """shell
@@ -40,35 +40,35 @@ pip install -U tensorflow -q
 """
 ## What are we fine-tuning? 
 
-A Stable Diffusion model can be decoupled into several key models:
+A Stable Diffusion model can be decomposed into several key models:
 
-* A text encoder that projects the input prompt to a latent space.
-* A variational autoencoder (VAE) that projects an input image into a latent space acting
-as an image encoder.
-* A diffusion model that refines an input latent and produces another latent in the
-presence of the encoded text prompt.
-* A decoder that generates images given a latent from the diffusion model.
+* A text encoder that projects the input prompt to a latent space. (The caption
+associated with an image is referred to as the "prompt".)
+* A variational autoencoder (VAE) that projects an input image to a latent space acting
+as an image vector space.
+* A diffusion model that refines a latent vector and produces another latent vector, conditioned
+on the encoded text prompt
+* A decoder that generates images given a latent vector from the diffusion model.
 
 It's worth noting that during the process of generating an image from a text prompt, the
 image encoder is not typically employed.
 
 However, during the process of fine-tuning, the workflow goes like the following:
 
-1. An input prompt is projected to a latent space by the text encoder. The caption
-associated with an image is referred to as the prompt.
+1. An input text prompt is projected to a latent space by the text encoder.
 2. An input image is projected to a latent space by the image encoder portion of the VAE.
-3. A small amount of noise is added to the image latent with a given timestep.
-4. The diffusion model uses latents from these two spaces along with a timestep embedding
+3. A small amount of noise is added to the image latent vector for a given timestep.
+4. The diffusion model uses latent vectors from these two spaces along with a timestep embedding
 to predict the noise that was added to the image latent.
 5. A reconstruction loss is calculated between the predicted noise and the original noise
 added in step 3.
-6. Finally, the diffusion model parameters are then optimized w.r.t this loss using
+6. Finally, the diffusion model parameters are optimized w.r.t this loss using
 gradient descent.
 
-Note that only the diffusion model parameters are updated during fine-tuning while the
+Note that only the diffusion model parameters are updated during fine-tuning, while the
 (pre-trained) text and the image encoders are kept frozen.
 
-Don't worry if this reads complicated. The code is much simpler than this.
+Don't worry if this sounds complicated. The code is much simpler than this!
 """
 
 """
@@ -93,7 +93,7 @@ from tensorflow import keras
 """
 ## Data loading
 
-The dataset is
+We use the dataset
 [Pokémon BLIP captions](https://huggingface.co/datasets/lambdalabs/pokemon-blip-captions).
 However, we'll use a slightly different version which was derived from the original
 dataset to fit better with `tf.data`. Refer to
@@ -114,11 +114,11 @@ data_frame["image_path"] = data_frame["image_path"].apply(
 data_frame.head()
 
 """
-Since we have only 833 {image,caption} pairs we can precompute the text embeddings from
+Since we have only 833 `{image, caption}` pairs, we can precompute the text embeddings from
 the captions. Moreover, the text encoder will be kept frozen during the course of
-fine-tuning. So, we can save some compute by doing this.
+fine-tuning, so we can save some compute by doing this.
 
-Before we employ the text encoder, we need to tokenize the captions.
+Before we use the text encoder, we need to tokenize the captions.
 """
 
 # The padding token and maximum prompt length are specific to the text encoder.
@@ -206,11 +206,11 @@ def prepare_dataset(image_paths, tokenized_texts, batch_size=1):
 
 
 """
-The baseline Stable Diffusion model was trained using images of 512x512 resolution. It's
-unlikely for a model that's trained using higher resolution images to transfer well to
-lower resolution images. However, the current model will lead to OOM if we keep the
+The baseline Stable Diffusion model was trained using images with 512x512 resolution. It's
+unlikely for a model that's trained using higher-resolution images to transfer well to
+lower-resolution images. However, the current model will lead to OOM if we keep the
 resolution to 512x512 (without enabling mixed-precision). Therefore, in the interest of
-interactive demonstration, we kept the input resolution to 256x256.
+interactive demonstrations, we kept the input resolution to 256x256.
 """
 
 # Prepare the dataset.
@@ -353,14 +353,14 @@ class Trainer(tf.keras.Model):
 
 
 """
-One important implementation detail to note here. Instead of directly taking
-the latent produced by the image encoder (which is a VAE), we sample from the
+One important implementation detail to note here: Instead of directly taking
+the latent vector produced by the image encoder (which is a VAE), we sample from the
 mean and log-variance predicted by it. This way, we can achieve better sample
 quality and diversity. 
 
 It's common to add support for mixed-precision training along with exponential
 moving averaging of model weights for fine-tuning these models. However, in the interest
-of brevity, we discarded those elements. More on this later in the tutorial.
+of brevity, we discard those elements. More on this later in the tutorial.
 """
 
 """
@@ -457,7 +457,7 @@ for prompt in prompts:
     outputs.update({prompt: generated_images})
 
 """
-With 60 epochs of fine-tuning (a good number is 70), the generated images were not
+With 60 epochs of fine-tuning (a good number is about 70), the generated images were not
 up to the mark. So, we experimented with the number of steps Stable Diffusion takes
 during the inference time and the `unconditional_guidance_scale` parameter.
 
