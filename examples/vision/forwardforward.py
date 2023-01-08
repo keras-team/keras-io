@@ -1,10 +1,10 @@
 """
 Title: Using Forward-Forward Algorithm for Image Classification
 Author: [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
-Date created: 2022/12/21
-Last modified: 2022/12/23
-Description: Training a Dense-layer based model using the Forward-Forward algorithm.
-
+Date created: 2023/01/08
+Last modified: 2023/01/08
+Description: Training a Dense-layer model using the Forward-Forward algorithm.
+Accelerator: GPU
 """
 
 """
@@ -12,22 +12,27 @@ Description: Training a Dense-layer based model using the Forward-Forward algori
 
 The following example explores how to use the Forward-Forward algorithm to perform
 training instead of the traditionally-used method of backpropagation, as proposed by
-[Prof. Geoffrey Hinton](https://www.cs.toronto.edu/~hinton/FFA13.pdf)
-The concept was inspired by the understanding behind [Boltzmann
-Machines](http://www.cs.toronto.edu/~fritz/absps/dbm.pdf). Backpropagation involves
-calculating loss via a cost function and propagating the error across the network. On the
-other hand, the FF Algorithm suggests the analogy of neurons which get "excited" based on
-looking at a certain recognized combination of an image and its correct corresponding
-label.
+Hinton in [The Forward-Forward Algorithm: Some Preliminary
+Investigations](https://www.cs.toronto.edu/~hinton/FFA13.pdf)(2022)
+
+The concept was inspired by the understanding behind
+[Boltzmann Machines](http://www.cs.toronto.edu/~fritz/absps/dbm.pdf). Backpropagation
+involves calculating the difference between actual and predicted output via a cost
+function to adjust network weights. On the other hand, the FF Algorithm suggests the
+analogy of neurons which get "excited" based on looking at a certain recognized
+combination of an image and its correct corresponding label.
+
 This method takes certain inspiration from the biological learning process that occurs in
 the cortex. A significant advantage that this method brings is the fact that
 backpropagation through the network does not need to be performed anymore, and that
 weight updates are local to the layer itself.
+
 As this is yet still an experimental method, it does not yield state-of-the-art results.
 But with proper tuning, it is supposed to come close to the same.
 Through this example, we will examine a process that allows us to implement the
 Forward-Forward algorithm within the layers themselves, instead of the traditional method
 of relying on the global loss functions and optimizers.
+
 The process is as follows:
 - Perform necessary imports
 - Load the [MNIST dataset](http://yann.lecun.com/exdb/mnist/)
@@ -56,13 +61,11 @@ subclassing](https://www.tensorflow.org/guide/keras/custom_layers_and_models)
 
 import tensorflow as tf
 from tensorflow import keras
-from tqdm.notebook import trange, tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 import random
-
-tf.config.run_functions_eagerly(True)
+from tensorflow.compiler.tf2xla.python import xla
 
 """
 ## Load dataset and visualize
@@ -103,6 +106,7 @@ In this custom layer, we have a base `tf.keras.layers.Dense` object which acts a
 base `Dense` layer within. Since weight updates will happen within the layer itself, we
 add an `tf.keras.optimizers.Optimizer` object that is accepted from the user. Here, we
 use `Adam` as our optimizer with a rather higher learning rate of `0.03`.
+
 Following the algorithm's specifics, we must set a `threshold` parameter that will be
 used to make the positive-negative decision in each prediction. This is set to a default
 of 2.0
@@ -118,6 +122,7 @@ representing the positive and negative samples respectively. We write a custom t
 loop here with the use of `tf.GradientTape()`, within which we calculate a loss per
 sample by taking the distance of the prediction from the threshold to understand the
 error and taking its mean to get a `mean_loss` metric.
+
 With the help of `tf.GradientTape()` we calculate the gradient updates for the trainable
 base `Dense` layer and apply them using the layer's local optimizer.
 
@@ -127,12 +132,19 @@ certain all-epoch run.
 """
 
 
-class FFDense(tf.keras.layers.Layer):
+class FFDense(keras.layers.Layer):
+    """
+    A custom ForwardForward-enabled Dense layer. It has an implementation of the
+    Forward-Forward network internally for use.
+    This layer must be used in conjunction with the `FFNetwork` model.
+    """
+
     def __init__(
         self,
         units,
         optimizer,
-        num_epochs=2000,
+        loss_metric,
+        num_epochs=50,
         use_bias=True,
         kernel_initializer="glorot_uniform",
         bias_initializer="zeros",
@@ -140,7 +152,7 @@ class FFDense(tf.keras.layers.Layer):
         bias_regularizer=None,
         **kwargs,
     ):
-        super(FFDense, self).__init__()
+        super().__init__(**kwargs)
         self.dense = keras.layers.Dense(
             units=units,
             use_bias=use_bias,
@@ -148,12 +160,15 @@ class FFDense(tf.keras.layers.Layer):
             bias_initializer=bias_initializer,
             kernel_regularizer=kernel_regularizer,
             bias_regularizer=bias_regularizer,
-            **kwargs,
         )
         self.relu = keras.layers.ReLU()
         self.optimizer = optimizer
-        self.threshold = 2.0
+        self.loss_metric = loss_metric
+        self.threshold = 1.5
         self.num_epochs = num_epochs
+
+    # We perform a normalization step before we run the input through the Dense
+    # layer.
 
     def call(self, x):
         x_norm = tf.norm(x, ord=2, axis=1, keepdims=True)
@@ -162,9 +177,19 @@ class FFDense(tf.keras.layers.Layer):
         res = self.dense(x_dir)
         return self.relu(res)
 
-    def forwardforward(self, x_pos, x_neg):
-        loss_list = []
-        for i in trange(self.num_epochs):
+    # The Forward-Forward algorithm is below. We first perform the Dense-layer
+    # operation and then get a Mean Square value for all positive and negative
+    # samples respectively.
+    # The custom loss function finds the distance between the Mean-squared
+    # result and the threshold value we set (a hyperparameter) that will define
+    # whether the prediction is positive or negative in nature. Once the loss is
+    # calculated, we get a mean across the entire batch combined and perform a
+    # gradient calculation and optimization step. This does not technically
+    # qualify as backpropagation since there is no gradient being
+    # sent to any previous layer and is completely local in nature.
+
+    def forward_forward(self, x_pos, x_neg):
+        for i in range(self.num_epochs):
             with tf.GradientTape() as tape:
                 g_pos = tf.math.reduce_mean(tf.math.pow(self.call(x_pos), 2), 1)
                 g_neg = tf.math.reduce_mean(tf.math.pow(self.call(x_neg), 2), 1)
@@ -175,15 +200,14 @@ class FFDense(tf.keras.layers.Layer):
                         tf.concat([-g_pos + self.threshold, g_neg - self.threshold], 0)
                     )
                 )
-                mean_loss = tf.math.reduce_mean(loss)
-                loss_list.append(mean_loss.numpy())
-            gradients = tape.gradient(mean_loss, self.trainable_weights)
+                mean_loss = tf.cast(tf.math.reduce_mean(loss), tf.float32)
+                self.loss_metric.update_state([mean_loss])
+            gradients = tape.gradient(mean_loss, self.dense.trainable_weights)
             self.optimizer.apply_gradients(zip(gradients, self.dense.trainable_weights))
         return (
             tf.stop_gradient(self.call(x_pos)),
             tf.stop_gradient(self.call(x_neg)),
-            mean_loss,
-            loss_list,
+            self.loss_metric.result(),
         )
 
 
@@ -211,34 +235,66 @@ training on each layer as per the number of epochs per layer.
 
 
 class FFNetwork(keras.Model):
-    def __init__(self, dims, layer_optimizer=keras.optimizers.Adam(learning_rate=0.03)):
-        super().__init__()
+    """
+    A `keras.Model` that supports a `FFDense` network creation. This model
+    can work for any kind of classification task. It has an internal
+    implementation with some details specific to the MNIST dataset which can be
+    changed as per the use-case.
+    """
+
+    # Since each layer runs gradient-calculation and optimization locally, each
+    # layer has its own optimizer that we pass. As a standard choice, we pass
+    # the `Adam` optimizer with a default learning rate of 0.03 as that was
+    # found to be the best rate after experimentation.
+    # Loss is tracked using `loss_var` and `loss_count` variables.
+
+    def __init__(
+        self, dims, layer_optimizer=keras.optimizers.Adam(learning_rate=0.03), **kwargs
+    ):
+        super().__init__(**kwargs)
         self.layer_optimizer = layer_optimizer
-        self.mean_loss = keras.metrics.Mean()
-        self.flatten_layer = keras.layers.Flatten()
+        self.loss_var = tf.Variable(0.0, trainable=False, dtype=tf.float32)
+        self.loss_count = tf.Variable(0.0, trainable=False, dtype=tf.float32)
         self.layer_list = [keras.Input(shape=(dims[0],))]
         for d in range(len(dims) - 1):
-            self.layer_list += [FFDense(dims[d + 1], optimizer=self.layer_optimizer)]
+            self.layer_list += [
+                FFDense(
+                    dims[d + 1],
+                    optimizer=self.layer_optimizer,
+                    loss_metric=keras.metrics.Mean(),
+                )
+            ]
 
-    @tf.function()
-    def overlay_y_on_x(self, X, y):
-        x_res = X.numpy()
-        x_npy = X.numpy()
-        x_res[:, :10] *= 0.0
-        if not isinstance(y, int):
-            y_npy = y.numpy()
-            x_res[range(x_npy.shape[0]), y.numpy()] = x_npy.max()
-        else:
-            x_res[range(x_npy.shape[0]), y] = x_npy.max()
-        return tf.convert_to_tensor(x_res)
+    # This function makes a dynamic change to the image wherein the labels are
+    # put on top of the original image (for this example, as MNIST has 10
+    # unique labels, we take the top-left corner's first 10 pixels). This
+    # function returns the original data tensor with the first 10 pixels being
+    # a pixel-based one-hot representation of the labels.
 
-    @tf.function()
+    @tf.function(reduce_retracing=True)
+    def overlay_y_on_x(self, data):
+        X_sample, y_sample = data
+        max_sample = tf.reduce_max(X_sample, axis=0, keepdims=True)
+        max_sample = tf.cast(max_sample, dtype=tf.float64)
+        X_zeros = tf.zeros([10], dtype=tf.float64)
+        X_update = xla.dynamic_update_slice(X_zeros, max_sample, [y_sample])
+        X_sample = xla.dynamic_update_slice(X_sample, X_update, [0])
+        return X_sample, y_sample
+
+    # A custom `predict_one_sample` performs predictions by passing the images
+    # through the network, measures the results produced by each layer (i.e.
+    # how high/low the output values are with respect to the set threshold for
+    # each label) and then simply finding the label with the highest values.
+    # In such a case, the images are tested for their 'goodness' with all
+    # labels.
+
+    @tf.function(reduce_retracing=True)
     def predict_one_sample(self, x):
         goodness_per_label = []
-        x = tf.expand_dims(x, axis=0)
+        x = tf.reshape(x, [tf.shape(x)[0] * tf.shape(x)[1]])
         for label in range(10):
-            h = self.overlay_y_on_x(x, label)
-            h = self.flatten_layer(h)
+            h, label = self.overlay_y_on_x(data=(x, label))
+            h = tf.reshape(h, [-1, tf.shape(h)[0]])
             goodness = []
             for layer_idx in range(1, len(self.layer_list)):
                 layer = self.layer_list[layer_idx]
@@ -248,39 +304,49 @@ class FFNetwork(keras.Model):
                 tf.expand_dims(tf.reduce_sum(goodness, keepdims=True), 1)
             ]
         goodness_per_label = tf.concat(goodness_per_label, 1)
-        return tf.argmax(goodness_per_label, 1)
+        return tf.cast(tf.argmax(goodness_per_label, 1), tf.float64)
 
     def predict(self, data):
         x = data
         preds = list()
-        for idx in trange(x.shape[0]):
-            sample = x[idx]
-            result = self.predict_one_sample(sample)
-            preds.append(result)
+        preds = tf.map_fn(fn=self.predict_one_sample, elems=x)
         return np.asarray(preds, dtype=int)
 
+    # This custom `train_step` function overrides the internal `train_step`
+    # implementation. We take all the input image tensors, flatten them and
+    # subsequently produce positive and negative samples on the images.
+    # A positive sample is an image that has the right label encoded on it with
+    # the `overlay_y_on_x` function. A negative sample is an image that has an
+    # erroneous label present on it.
+    # With the samples ready, we pass them through each `FFLayer` and perform
+    # the Forward-Forward computation on it. The returned loss is the final
+    # loss value over all the layers.
+
+    @tf.function(jit_compile=True)
     def train_step(self, data):
         x, y = data
-        x = self.flatten_layer(x)
-        perm_array = tf.range(start=0, limit=x.get_shape()[0], delta=1)
-        x_pos = self.overlay_y_on_x(x, y)
-        y_numpy = y.numpy()
-        random_y_tensor = y_numpy[tf.random.shuffle(perm_array)]
-        x_neg = self.overlay_y_on_x(x, tf.convert_to_tensor(random_y_tensor))
+
+        # Flatten op
+        x = tf.reshape(x, [-1, tf.shape(x)[1] * tf.shape(x)[2]])
+
+        x_pos, y = tf.map_fn(fn=self.overlay_y_on_x, elems=(x, y))
+
+        random_y = tf.random.shuffle(y)
+        x_neg, y = tf.map_fn(fn=self.overlay_y_on_x, elems=(x, random_y))
+
         h_pos, h_neg = x_pos, x_neg
+
         for idx, layer in enumerate(self.layers):
-            if idx == 0:
-                print("Input layer : No training")
-                continue
-            print(f"Training layer {idx+1} now : ")
             if isinstance(layer, FFDense):
-                h_pos, h_neg, loss, loss_list = layer.forwardforward(h_pos, h_neg)
-                plt.plot(range(len(loss_list)), loss_list)
-                plt.title(f"Loss over training on layer {idx+1}")
-                plt.show()
+                print(f"Training layer {idx+1} now : ")
+                h_pos, h_neg, loss = layer.forward_forward(h_pos, h_neg)
+                self.loss_var.assign_add(loss)
+                self.loss_count.assign_add(1.0)
             else:
+                print(f"Passing layer {idx+1} now : ")
                 x = layer(x)
-        return {"FinalLoss": loss}
+        mean_res = tf.math.divide(self.loss_var, self.loss_count)
+        return {"FinalLoss": mean_res}
 
 
 """
@@ -292,6 +358,8 @@ into the `tf.data.Dataset` format which allows for optimized loading.
 
 x_train = x_train.astype(float) / 255
 x_test = x_test.astype(float) / 255
+y_train = y_train.astype(int)
+y_test = y_test.astype(int)
 
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
@@ -310,16 +378,20 @@ curve as each layer is trained.
 model = FFNetwork(dims=[784, 500, 500])
 
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=0.03), loss="mse", run_eagerly=True
+    optimizer=keras.optimizers.Adam(learning_rate=0.03),
+    loss="mse",
+    jit_compile=True,
+    metrics=[keras.metrics.Mean()],
 )
 
-history = model.fit(train_dataset, epochs=1)
+epochs = 250
+history = model.fit(train_dataset, epochs=epochs)
 
 """
 ## Perform inference and testing
 
-Having trained the model to a large extent, we now see how it performs on the test set.
-We calculate the Accuracy Score to understand the results closely.
+Having trained the model to a large extent, we now see how it performs on the
+test set. We calculate the Accuracy Score to understand the results closely.
 """
 
 preds = model.predict(tf.convert_to_tensor(x_test))
@@ -328,7 +400,11 @@ preds = preds.reshape((preds.shape[0], preds.shape[1]))
 
 results = accuracy_score(preds, y_test)
 
-print(f"Accuracy score : {results*100}%")
+print(f"Test Accuracy score : {results*100}%")
+
+plt.plot(range(len(history.history["FinalLoss"])), history.history["FinalLoss"])
+plt.title("Loss over training")
+plt.show()
 
 """
 ## Conclusion:
@@ -339,7 +415,7 @@ in their paper are currently still limited to smaller models and datasets like M
 Fashion-MNIST, subsequent results on larger models like LLMs are expected in future
 papers.
 
-Through the paper, Prof. Hinton has reported results of 1.36% test error with a
+Through the paper, Prof. Hinton has reported results of 1.36% test accuracy error with a
 2000-units, 4 hidden-layer, fully-connected network run over 60 epochs (while mentioning
 that backpropagation takes only 20 epochs to achieve similar performance). Another run of
 doubling the learning rate and training for 40 epochs yields a slightly worse error rate
