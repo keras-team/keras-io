@@ -1,4 +1,4 @@
-# Using Forward-Forward Algorithm for Image Classification
+# Using the Forward-Forward Algorithm for Image Classification
 
 **Author:** [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)<br>
 **Date created:** 2023/01/08<br>
