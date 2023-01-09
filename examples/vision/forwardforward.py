@@ -112,7 +112,7 @@ Following the algorithm's specifics, we must set a `threshold` parameter that wi
 used to make the positive-negative decision in each prediction. This is set to a default
 of 2.0.
 As the epochs are localized to the layer itself, we also set a `num_epochs` parameter
-(defaults to 2000).
+(defaults to 50).
 
 We override the `call` method in order to perform a normalization over the complete
 input space followed by running it through the base `Dense` layer as would happen in a
@@ -371,8 +371,8 @@ test_dataset = test_dataset.batch(10000)
 """
 ## Fit the network and visualize results
 
-Having performed all previous set-up, we are now going to run `model.fit()` and run 1
-model epoch, which will perform 2000 epochs on each layer. We get to see the plotted loss
+Having performed all previous set-up, we are now going to run `model.fit()` and run 250
+model epochs, which will perform 50*250 epochs on each layer. We get to see the plotted loss
 curve as each layer is trained.
 """
 
