@@ -2,7 +2,7 @@
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>
 **Date created:** 2021/08/31<br>
-**Last modified:** 2021/09/1<br>
+**Last modified:** 2023/01/06<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/deeplabv3_plus.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/deeplabv3_plus.py)
@@ -96,7 +96,7 @@ def read_image(image_path, mask=False):
         image = tf.image.decode_png(image, channels=3)
         image.set_shape([None, None, 3])
         image = tf.image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
-        image = image / 127.5 - 1
+        image = tf.keras.applications.resnet50.preprocess_input(image)
     return image
 
 
