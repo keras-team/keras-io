@@ -12,8 +12,9 @@ Accelerator: GPU
 
 The following example explores how to use the Forward-Forward algorithm to perform
 training instead of the traditionally-used method of backpropagation, as proposed by
-Hinton in [The Forward-Forward Algorithm: Some Preliminary
-Investigations](https://www.cs.toronto.edu/~hinton/FFA13.pdf)(2022)
+Hinton in
+[The Forward-Forward Algorithm: Some Preliminary Investigations](https://www.cs.toronto.edu/~hinton/FFA13.pdf)
+(2022).
 
 The concept was inspired by the understanding behind
 [Boltzmann Machines](http://www.cs.toronto.edu/~fritz/absps/dbm.pdf). Backpropagation
@@ -33,7 +34,8 @@ Through this example, we will examine a process that allows us to implement the
 Forward-Forward algorithm within the layers themselves, instead of the traditional method
 of relying on the global loss functions and optimizers.
 
-The process is as follows:
+The tutorial is structured as follows:
+
 - Perform necessary imports
 - Load the [MNIST dataset](http://yann.lecun.com/exdb/mnist/)
 - Visualize Random samples from the MNIST dataset
@@ -44,15 +46,14 @@ functions for per-sample prediction and overlaying labels
 - Convert MNIST from `NumPy` arrays to `tf.data.Dataset`
 - Fit the network
 - Visualize results
-- Perform inference testing
+- Perform inference on test samples
 
 As this example requires the customization of certain core functions with
-`tf.keras.layers.Layer` and `tf.keras.models.Model`, refer to the following resources for
-a primer on how to do so
-- [Customizing what happens in
-`model.fit()`](https://www.tensorflow.org/guide/keras/customizing_what_happens_in_fit)
-- [Making new Layers and Models via
-subclassing](https://www.tensorflow.org/guide/keras/custom_layers_and_models)
+`keras.layers.Layer` and `keras.models.Model`, refer to the following resources for
+a primer on how to do so:
+
+- [Customizing what happens in `model.fit()`](https://www.tensorflow.org/guide/keras/customizing_what_happens_in_fit)
+- [Making new Layers and Models via subclassing](https://www.tensorflow.org/guide/keras/custom_layers_and_models)
 """
 
 """
@@ -68,14 +69,14 @@ import random
 from tensorflow.compiler.tf2xla.python import xla
 
 """
-## Load dataset and visualize
+## Load the dataset and visualize the data
 
 We use the `keras.datasets.mnist.load_data()` utility to directly pull the MNIST dataset
 in the form of `NumPy` arrays. We then arrange it in the form of the train and test
 splits.
 
 Following loading the dataset, we select 4 random samples from within the training set
-and visualize them using `matplotlib.pyplot`
+and visualize them using `matplotlib.pyplot`.
 """
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
@@ -100,20 +101,20 @@ for idx, item in enumerate(imgs):
 plt.show()
 
 """
-## Define `FFDense` Custom Layer
+## Define `FFDense` custom layer
 
-In this custom layer, we have a base `tf.keras.layers.Dense` object which acts as the
+In this custom layer, we have a base `keras.layers.Dense` object which acts as the
 base `Dense` layer within. Since weight updates will happen within the layer itself, we
-add an `tf.keras.optimizers.Optimizer` object that is accepted from the user. Here, we
+add an `keras.optimizers.Optimizer` object that is accepted from the user. Here, we
 use `Adam` as our optimizer with a rather higher learning rate of `0.03`.
 
 Following the algorithm's specifics, we must set a `threshold` parameter that will be
 used to make the positive-negative decision in each prediction. This is set to a default
-of 2.0
+of 2.0.
 As the epochs are localized to the layer itself, we also set a `num_epochs` parameter
-(default at 2000).
+(defaults to 2000).
 
-We override the `call` function in order to perform a normalization over the complete
+We override the `call` method in order to perform a normalization over the complete
 input space followed by running it through the base `Dense` layer as would happen in a
 normal `Dense` layer call.
 
@@ -215,7 +216,7 @@ class FFDense(keras.layers.Layer):
 ## Define the `FFNetwork` Custom Model
 
 With our custom layer defined, we also need to override the `train_step` method and
-define a custom `tf.keras.models.Model` that works with our `FFDense` layer.
+define a custom `keras.models.Model` that works with our `FFDense` layer.
 
 For this algorithm, we must 'embed' the labels onto the original image. To do so, we
 exploit the structure of MNIST images where the top-left 10 pixels are always zeros. We
@@ -407,10 +408,10 @@ plt.title("Loss over training")
 plt.show()
 
 """
-## Conclusion:
+## Conclusion
 
 This example has hereby demonstrated how the Forward-Forward algorithm works using
-TensorFlow and Keras modules. While the investigation results presented by Prof. Hinton
+the TensorFlow and Keras packages. While the investigation results presented by Prof. Hinton
 in their paper are currently still limited to smaller models and datasets like MNIST and
 Fashion-MNIST, subsequent results on larger models like LLMs are expected in future
 papers.
@@ -422,7 +423,7 @@ doubling the learning rate and training for 40 epochs yields a slightly worse er
 of 1.46%
 
 The current example does not yield state-of-the-art results. But with proper tuning of
-the Learning Rate, model architecture (no. of units in `Dense` layers, kernel
+the Learning Rate, model architecture (number of units in `Dense` layers, kernel
 activations, initializations, regularization etc.), the results can be improved
-drastically to match the claims of the paper.
+to match the claims of the paper.
 """
