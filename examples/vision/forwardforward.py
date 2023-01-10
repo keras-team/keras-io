@@ -1,5 +1,5 @@
 """
-Title: Using Forward-Forward Algorithm for Image Classification
+Title: Using the Forward-Forward Algorithm for Image Classification
 Author: [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
 Date created: 2023/01/08
 Last modified: 2023/01/08
