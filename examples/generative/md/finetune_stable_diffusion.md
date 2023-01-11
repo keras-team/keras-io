@@ -1,12 +1,16 @@
-"""
-Title: Fine-tuning Stable Diffusion
-Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
-Date created: 2022/12/28
-Last modified: 2023/01/04
-Description: Implementing Masked image modeling with Autoencoders using a custom image-caption dataset.
-Accelerator: GPU
-"""
-"""
+# Fine-tuning Stable Diffusion
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)<br>
+**Date created:** 2022/12/28<br>
+**Last modified:** 2023/01/04<br>
+**Description:** Implementing Masked image modeling with Autoencoders using a custom image-caption dataset.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/finetune_stable_diffusion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/finetune_stable_diffusion.py)
+
+
+
+---
 ## Introduction
 
 This tutorial shows how to fine-tune a
@@ -30,14 +34,23 @@ By the end of the guide, you'll be able to generate images of interesting pokemo
 
 The tutorial relies on KerasCV 0.4.0. Additionally, we need
 at least TensorFlow 2.11 in order to use AdamW with mixed precision.
-"""
 
-"""shell
-pip install keras-cv==0.4.0 -q
-pip install -U tensorflow -q
-"""
 
-"""
+```python
+!pip install keras-cv==0.4.0 -q
+!pip install -U tensorflow -q
+```
+
+<div class="k-default-codeblock">
+```
+[31mERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: 'top_level.txt'
+Consider using the `--user` option or check the permissions.
+[0m[31m
+[0m
+
+```
+</div>
+---
 ## What are we fine-tuning?
 
 A Stable Diffusion model can be decomposed into several key models:
@@ -69,12 +82,12 @@ Note that only the diffusion model parameters are updated during fine-tuning, wh
 (pre-trained) text and the image encoders are kept frozen.
 
 Don't worry if this sounds complicated. The code is much simpler than this!
-"""
 
-"""
+---
 ## Imports
-"""
 
+
+```python
 import os
 
 import keras_cv
@@ -89,8 +102,22 @@ from keras_cv.models.stable_diffusion.image_encoder import ImageEncoder
 from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
 from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
 from tensorflow import keras
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/__init__.py:98: UserWarning: unable to load libtensorflow_io_plugins.so: unable to open file: libtensorflow_io_plugins.so, from paths: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io_plugins.so']
+caused by: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io_plugins.so: undefined symbol: _ZN3tsl5mutexC1Ev']
+  warnings.warn(f"unable to load libtensorflow_io_plugins.so: {e}")
+/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/__init__.py:104: UserWarning: file system plugins are not loaded: unable to open file: libtensorflow_io.so, from paths: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io.so']
+caused by: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io.so: undefined symbol: _ZNK10tensorflow4data11DatasetBase8FinalizeEPNS_15OpKernelContextESt8functionIFN3tsl8StatusOrISt10unique_ptrIS1_NS5_4core15RefCountDeleterEEEEvEE']
+  warnings.warn(f"file system plugins are not loaded: {e}")
+
+You do not have pycocotools installed, so KerasCV pycoco metrics are not available. Please run `pip install pycocotools`.
+
+```
+</div>
+---
 ## Data loading
 
 We use the dataset
@@ -99,8 +126,9 @@ However, we'll use a slightly different version which was derived from the origi
 dataset to fit better with `tf.data`. Refer to
 [the documentation](https://huggingface.co/datasets/sayakpaul/pokemon-blip-original-version)
 for more details.
-"""
 
+
+```python
 data_path = tf.keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/pokemon-blip-original-version/resolve/main/pokemon_dataset.tar.gz",
     untar=True,
@@ -112,15 +140,77 @@ data_frame["image_path"] = data_frame["image_path"].apply(
     lambda x: os.path.join(data_path, x)
 )
 data_frame.head()
+```
 
-"""
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<div class="k-default-codeblock">
+```
+.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+```
+</div>
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>image_path</th>
+      <th>caption</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>/home/jupyter/.keras/datasets/pokemon_dataset/...</td>
+      <td>a drawing of a green pokemon with red eyes</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>/home/jupyter/.keras/datasets/pokemon_dataset/...</td>
+      <td>a green and yellow toy with a red nose</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>/home/jupyter/.keras/datasets/pokemon_dataset/...</td>
+      <td>a red and white ball with an angry look on its...</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>/home/jupyter/.keras/datasets/pokemon_dataset/...</td>
+      <td>a cartoon ball with a smile on it's face</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>/home/jupyter/.keras/datasets/pokemon_dataset/...</td>
+      <td>a bunch of balls with faces drawn on them</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
 Since we have only 833 `{image, caption}` pairs, we can precompute the text embeddings from
 the captions. Moreover, the text encoder will be kept frozen during the course of
 fine-tuning, so we can save some compute by doing this.
 
 Before we use the text encoder, we need to tokenize the captions.
-"""
 
+
+```python
 # The padding token and maximum prompt length are specific to the text encoder.
 # If you're using a different text encoder be sure to change them accordingly.
 PADDING_TOKEN = 49407
@@ -142,8 +232,9 @@ tokenized_texts = np.empty((len(data_frame), MAX_PROMPT_LENGTH))
 all_captions = list(data_frame["caption"].values)
 for i, caption in enumerate(all_captions):
     tokenized_texts[i] = process_text(caption)
+```
 
-"""
+---
 ## Prepare a `tf.data.Dataset`
 
 In this section, we'll prepare a `tf.data.Dataset` object from the input image file paths
@@ -152,8 +243,9 @@ and their corresponding caption tokens. The section will include the following:
 * Pre-computation of the text embeddings from the tokenized captions.
 * Loading and augmentation of the input images.
 * Shuffling and batching of the dataset.
-"""
 
+
+```python
 RESOLUTION = 256
 AUTO = tf.data.AUTOTUNE
 POS_IDS = tf.convert_to_tensor([list(range(MAX_PROMPT_LENGTH))], dtype=tf.int32)
@@ -204,15 +296,16 @@ def prepare_dataset(image_paths, tokenized_texts, batch_size=1):
     dataset = dataset.map(prepare_dict, num_parallel_calls=AUTO)
     return dataset.prefetch(AUTO)
 
+```
 
-"""
 The baseline Stable Diffusion model was trained using images with 512x512 resolution. It's
 unlikely for a model that's trained using higher-resolution images to transfer well to
 lower-resolution images. However, the current model will lead to OOM if we keep the
 resolution to 512x512 (without enabling mixed-precision). Therefore, in the interest of
 interactive demonstrations, we kept the input resolution to 256x256.
-"""
 
+
+```python
 # Prepare the dataset.
 training_dataset = prepare_dataset(
     np.array(data_frame["image_path"]), tokenized_texts, batch_size=4
@@ -223,11 +316,24 @@ sample_batch = next(iter(training_dataset))
 
 for k in sample_batch:
     print(k, sample_batch[k].shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
+images (4, 256, 256, 3)
+tokens (4, 77)
+encoded_text (4, 77, 768)
+
+```
+</div>
 We can also take a look at the training images and their corresponding captions.
-"""
 
+
+```python
 plt.figure(figsize=(20, 10))
 
 for i in range(3):
@@ -240,11 +346,19 @@ for i in range(3):
     plt.title(text)
 
     plt.axis("off")
+```
 
-"""
+
+    
+![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_15_0.png)
+    
+
+
+---
 ## A trainer class for the fine-tuning loop
-"""
 
+
+```python
 
 class Trainer(tf.keras.Model):
     # Reference:
@@ -351,8 +465,8 @@ class Trainer(tf.keras.Model):
             options=options,
         )
 
+```
 
-"""
 One important implementation detail to note here: Instead of directly taking
 the latent vector produced by the image encoder (which is a VAE), we sample from the
 mean and log-variance predicted by it. This way, we can achieve better sample
@@ -361,12 +475,12 @@ quality and diversity.
 It's common to add support for mixed-precision training along with exponential
 moving averaging of model weights for fine-tuning these models. However, in the interest
 of brevity, we discard those elements. More on this later in the tutorial.
-"""
 
-"""
+---
 ## Initialize the trainer and compile it
-"""
 
+
+```python
 # Enable mixed-precision training if the underlying GPU has tensor cores.
 USE_MP = True
 if USE_MP:
@@ -400,13 +514,22 @@ optimizer = tf.keras.optimizers.experimental.AdamW(
     epsilon=epsilon,
 )
 diffusion_ft_trainer.compile(optimizer=optimizer, loss="mse")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-SXM4-40GB, compute capability 8.0
+
+```
+</div>
+---
 ## Fine-tuning
 
 To keep the runtime of this tutorial short, we just fine-tune for an epoch.
-"""
 
+
+```python
 epochs = 1
 ckpt_path = "finetuned_stable_diffusion.h5"
 ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
@@ -416,8 +539,20 @@ ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
     mode="min",
 )
 diffusion_ft_trainer.fit(training_dataset, epochs=epochs, callbacks=[ckpt_callback])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:From /opt/conda/lib/python3.7/site-packages/tensorflow/python/util/deprecation.py:629: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
+Instructions for updating:
+Use fn_output_signature instead
+209/209 [==============================] - 320s 433ms/step - loss: 0.0709
+
+<keras.callbacks.History at 0x7f97d1434e10>
+
+```
+</div>
+---
 ## Inference
 
 We fine-tuned the model for 60 epochs on an image resolution of 512x512. To allow
@@ -429,8 +564,9 @@ the fine-tuned model parameters and model checkpointing.
 
 
 For this section, we'll use the checkpoint derived after 60 epochs of fine-tuning.
-"""
 
+
+```python
 weights_path = tf.keras.utils.get_file(
     origin="https://huggingface.co/sayakpaul/kerascv_sd_pokemon_finetuned/resolve/main/ckpt_epochs_72_res_512_mp_True.h5"
 )
@@ -441,11 +577,20 @@ pokemon_model = keras_cv.models.StableDiffusion(
 )
 # We just reload the weights of the fine-tuned diffusion model.
 pokemon_model.diffusion_model.load_weights(weights_path)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://huggingface.co/sayakpaul/kerascv_sd_pokemon_finetuned/resolve/main/ckpt_epochs_72_res_512_mp_True.h5
+3439089408/3439089408 [==============================] - 85s 0us/step
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
+
+```
+</div>
 Now, we can take this model for a test-drive.
-"""
 
+
+```python
 prompts = ["Yoda", "Hello Kitty", "A pokemon with red eyes"]
 images_to_generate = 3
 outputs = {}
@@ -455,16 +600,27 @@ for prompt in prompts:
         prompt, batch_size=images_to_generate, unconditional_guidance_scale=40
     )
     outputs.update({prompt: generated_images})
+```
 
-"""
+<div class="k-default-codeblock">
+```
+25/25 [==============================] - 17s 244ms/step
+Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
+198180272/198180272 [==============================] - 1s 0us/step
+25/25 [==============================] - 6s 227ms/step
+25/25 [==============================] - 6s 227ms/step
+
+```
+</div>
 With 60 epochs of fine-tuning (a good number is about 70), the generated images were not
 up to the mark. So, we experimented with the number of steps Stable Diffusion takes
 during the inference time and the `unconditional_guidance_scale` parameter.
 
 We found the best results with this checkpoint with `unconditional_guidance_scale` set to
 40.
-"""
 
+
+```python
 
 def plot_images(images, title):
     plt.figure(figsize=(20, 20))
@@ -477,17 +633,34 @@ def plot_images(images, title):
 
 for prompt in outputs:
     plot_images(outputs[prompt], prompt)
+```
 
-"""
+
+    
+![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_0.png)
+    
+
+
+
+    
+![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_1.png)
+    
+
+
+
+    
+![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_2.png)
+    
+
+
 We can notice that the model has started adapting to the style of our dataset. You can
 check the
 [accompanying repository](https://github.com/sayakpaul/stable-diffusion-keras-ft#results)
 for more comparisons and commentary. If you're feeling adventurous to try out a demo,
 you can check out
 [this resource](https://huggingface.co/spaces/sayakpaul/pokemon-sd-kerascv).
-"""
 
-"""
+---
 ## Conclusion and acknowledgements
 
 We demonstrated how to fine-tune the Stable Diffusion model on a custom dataset. While
@@ -505,4 +678,3 @@ We'd like to acknowledge the GCP Credit support from ML Developer Programs' team
 Google. We'd like to thank the Hugging Face team for providing the
 [fine-tuning script](https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py)
 . It's very readable and easy to understand.
-"""
