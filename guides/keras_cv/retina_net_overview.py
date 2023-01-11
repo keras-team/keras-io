@@ -361,9 +361,8 @@ decoder to the RetinaNet constructor as follows:
 """
 
 prediction_decoder = keras_cv.layers.NonMaxSuppressiong(
-    iou_threshold=0.75,
     bounding_box_format="xywh",
-    classes=20,
+    iou_threshold=0.75,
     confidence_threshold=0.85,
 )
 model.prediction_decoder = prediction_decoder
