@@ -12,7 +12,8 @@ Accelerator: GPU
 
 KerasCV offers a complete set of APIs to train your own state-of-the-art,
 production-grade object detection model.  These APIs include object detection specific
-data augmentation techniques, models, and COCO metrics.
+data augmentation techniques, batteries included object detection models, and
+a custom callback to evaluate COCO metrics.
 
 To get started, let's sort out all of our imports and define global configuration parameters.
 """
@@ -29,15 +30,34 @@ from luketils import visualization
 
 BATCH_SIZE = 16
 EPOCHS = int(os.getenv("EPOCHS", "1"))
+# To fully train a RetinaNet, comment out this line.
+# EPOCHS = 50
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
 
 """
 ## Data loading
 
-In this guide, we use the function: `keras_cv.datasets.pascal_voc.load()` to load our
-data. KerasCV requires a `bounding_box_format` argument in all components that process
-bounding boxes.  To match the KerasCV API style, it is recommended that when writing a
+KerasCV has a predefined specificication for bounding boxes.  To comply with this, you
+should package your bounding boxes into a dictionary matching the speciciation below:
+
+```
+bounding_boxes = {
+    # num_boxes may be a Ragged dimension
+    'boxes': Tensor(shape=[batch, num_boxes, 4]),
+    'classes': Tensor(shape=[batch, num_boxes])
+}
+```
+
+
+`bounding_boxes['boxes']` contains the coordinates of your bounding box in a KerasCV
+supported `bounding_box_format`.
+KerasCV requires a `bounding_box_format` argument in all components that process
+bounding boxes.
+This is done to maximize users' ability to plug and play individual components into their
+object detection components.
+
+To match the KerasCV API style, it is recommended that when writing a
 custom data loader, you also support a `bounding_box_format` argument.
 This makes it clear to those invoking your data loader what format the bounding boxes
 are in.
@@ -45,7 +65,7 @@ are in.
 For example:
 
 ```python
-train_ds, ds_info = keras_cv.datasets.pascal_voc.load(
+train_ds, ds_info = your_data_loader.load(
     split='train', bounding_box_format='xywh', batch_size=8
 )
 ```
@@ -59,10 +79,48 @@ KerasCV preprocessing components.
 
 Let's load some data and verify that our data looks as we expect it to.
 """
-
-dataset, dataset_info = keras_cv.datasets.pascal_voc.load(
-    split="train", bounding_box_format="xywh", batch_size=BATCH_SIZE
+def unpackage_tfds_inputs(inputs):
+  image = inputs["image"]
+  boxes = keras_cv.bounding_box.convert_format(
+      inputs["objects"]["bbox"],
+      images=image,
+      source="rel_yxyx",
+      target="xywh",
+  )
+  bounding_boxes = {
+      'classes': tf.cast(inputs["objects"]["label"], dtype=tf.float32),
+      'boxes': tf.cast(boxes, dtype=tf.float32)
+  }
+  return {
+      'images': tf.cast(image, tf.float32), 'bounding_boxes': bounding_boxes
+  }
+train_ds = tfds.load(
+    "voc/2007", split="train+validation", with_info=False, shuffle_files=True
 )
+# add pascal 2012 dataset to augment the training set
+train_ds = train_ds.concatenate(
+    tfds.load("voc/2012", split="train+validation", with_info=False, shuffle_files=True)
+)
+eval_ds = tfds.load("voc/2007", split="test", with_info=False)
+
+train_ds = train_ds.map(unpackage_tfds_inputs, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(unpackage_tfds_inputs, num_parallel_calls=tf.data.AUTOTUNE)
+
+"""
+Next, lets batch our data.  In KerasCV object detection tasks it is recommended that
+users use ragged batches.  This is due to the fact that images may be of different
+sizes in PascalVOC and that there may be different numbers of bounding boxes per image.
+
+The easiest way to construct a ragged dataset in a `tf.data` pipeline is to use
+`tf.data.experimental.dense_to_ragged_batch`.
+"""
+
+train_ds = train_ds.apply(tf.data.experimental.dense_to_ragged_batch(BATCH_SIZE))
+eval_ds = eval_ds.apply(tf.data.experimental.dense_to_ragged_batch(BATCH_SIZE))
+
+"""
+Let's make sure our datasets look as we expect them to:
+"""
 
 class_ids = [
     "Aeroplane",
@@ -89,27 +147,30 @@ class_ids = [
 ]
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
-
 def visualize_dataset(dataset, bounding_box_format):
-    example = next(iter(dataset))
-    images, boxes = example["images"], example["bounding_boxes"]
+    sample = next(iter(dataset))
+    images, boxes = sample['images'], sample['bounding_boxes']
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),
         bounding_box_format=bounding_box_format,
         y_true=boxes,
         scale=4,
-        rows=3,
-        cols=3,
+        rows=2,
+        cols=2,
         show=True,
         thickness=4,
         font_scale=1,
         class_mapping=class_mapping,
     )
 
+visualize_dataset(train_ds, bounding_box_format="xywh")
 
-visualize_dataset(dataset, bounding_box_format="xywh")
+"""
+and our eval set:
+"""
 
+visualize_dataset(eval_ds, bounding_box_format="xywh")
 
 """
 Looks like everything is structured as expected.  Now we can move on to constructing our
