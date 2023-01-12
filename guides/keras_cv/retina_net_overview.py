@@ -366,7 +366,7 @@ tune the prediction decoder layer.  This can be done by passing a custom predict
 decoder to the RetinaNet constructor as follows:
 """
 
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppressiong(
+prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=0.75,
