@@ -12,8 +12,7 @@ Accelerator: GPU
 
 KerasCV offers a complete set of APIs to train your own state-of-the-art,
 production-grade object detection model.  These APIs include object detection specific
-data augmentation techniques, batteries included object detection models, and
-a custom callback to evaluate COCO metrics.
+data augmentation techniques, and batteries included object detection models.
 
 To get started, let's sort out all of our imports and define global configuration parameters.
 """
@@ -283,16 +282,7 @@ dense image Tensors and bounding box dictionaries to `fit()` and `train_on_batch
 This matches what we have constructed in our input pipeline above.
 """
 
-"""
-## Evaluation with COCO Metrics
-
-KerasCV offers a `keras.callbacks.Callback` to evaluate COCO metrics using the
-`pycocotools` library.  Lets construct a list of callbacks included the
-`keras_cv.callbacks.PyCOCOCallback`:
-"""
-
 callbacks = [
-    keras_cv.callbacks.PyCOCOCallback(eval_ds, bounding_box_format="xywh"),
     keras.callbacks.TensorBoard(log_dir="logs"),
     keras.callbacks.ReduceLROnPlateau(patience=5),
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
@@ -380,8 +370,8 @@ visualize_detections(model, bounding_box_format="xywh")
 
 KerasCV makes it easy to construct state-of-the-art object detection pipelines.  All of
 the KerasCV object detection components can be used independently, but also have deep
-integration with each other.  With KerasCV, bounding box augmentation, train-time COCO
-metrics evaluation, and more, are all made simple and consistent.
+integration with each other.  With KerasCV, bounding box augmentation and more, 
+are all made simple and consistent.
 
 Some follow up exercises for the reader:
 
