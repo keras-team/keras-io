@@ -342,6 +342,7 @@ model.load_weights(INFERENCE_CHECKPOINT_PATH)
 def visualize_detections(model, bounding_box_format):
     images, y_true = next(iter(train_ds.take(1)))
     y_pred = model.predict(images)
+    y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),

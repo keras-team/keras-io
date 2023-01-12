@@ -139,15 +139,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteN8G35B/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompletePCCLZP/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteN8G35B/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompletePCCLZP/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteN8G35B/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompletePCCLZP/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 [1mDownloading and preparing dataset 3.59 GiB (download: 3.59 GiB, generated: Unknown size, total: 3.59 GiB) to ~/tensorflow_datasets/voc/2012/4.0.0...[0m
@@ -162,15 +162,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/10991 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteOXIZD1/voc-test.tfrecord*...:   0%|          | 0/1099…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteHRKBC6/voc-test.tfrecord*...:   0%|          | 0/1099…
 
 Generating train examples...:   0%|          | 0/5717 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteOXIZD1/voc-train.tfrecord*...:   0%|          | 0/571…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteHRKBC6/voc-train.tfrecord*...:   0%|          | 0/571…
 
 Generating validation examples...:   0%|          | 0/5823 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteOXIZD1/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteHRKBC6/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2012/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -438,31 +438,31 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-310/310 [==============================] - 36s 108ms/step
+310/310 [==============================] - 37s 107ms/step
 creating index...
 index created!
 creating index...
 index created!
 Running per image evaluation...
 Evaluate annotation type *bbox*
-DONE (t=0.48s).
+DONE (t=1.35s).
 Accumulating evaluation results...
-DONE (t=0.15s).
+DONE (t=0.29s).
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.002
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.009
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.001
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.010
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.002
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.003
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.003
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.004
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.004
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.004
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.006
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.006
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.003
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.006
-1035/1035 [==============================] - 235s 211ms/step - loss: 1.3550 - box_loss: 0.6096 - cls_loss: 0.7454 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 1.1828 - val_box_loss: 0.5522 - val_cls_loss: 0.6305 - val_percent_boxes_matched_with_anchor: 0.9056 - val_AP: 0.0023 - val_AP50: 0.0094 - val_AP75: 7.1723e-04 - val_APs: 0.0000e+00 - val_APm: 0.0021 - val_APl: 0.0027 - val_ARmax1: 0.0036 - val_ARmax10: 0.0043 - val_ARmax100: 0.0043 - val_ARs: 0.0000e+00 - val_ARm: 0.0030 - val_ARl: 0.0058 - lr: 0.0100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.007
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.007
+1035/1035 [==============================] - 234s 210ms/step - loss: 1.3484 - box_loss: 0.6087 - cls_loss: 0.7397 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 1.1996 - val_box_loss: 0.5563 - val_cls_loss: 0.6433 - val_percent_boxes_matched_with_anchor: 0.9056 - val_AP: 0.0024 - val_AP50: 0.0100 - val_AP75: 3.3908e-04 - val_APs: 1.8042e-04 - val_APm: 0.0028 - val_APl: 0.0026 - val_ARmax1: 0.0035 - val_ARmax10: 0.0060 - val_ARmax100: 0.0062 - val_ARs: 2.3495e-04 - val_ARm: 0.0069 - val_ARl: 0.0067 - lr: 0.0100
 
-<keras.callbacks.History at 0x7fe8302a4828>
+<keras.callbacks.History at 0x7f4bc0017c50>
 
 ```
 </div>
@@ -481,6 +481,7 @@ model.load_weights(INFERENCE_CHECKPOINT_PATH)
 def visualize_detections(model, bounding_box_format):
     images, y_true = next(iter(train_ds.take(1)))
     y_pred = model.predict(images)
+    y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),
@@ -502,7 +503,7 @@ visualize_detections(model, bounding_box_format="xywh")
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 148ms/step
+1/1 [==============================] - 0s 149ms/step
 
 ```
 </div>
