@@ -26,6 +26,7 @@ from tensorflow.keras import optimizers
 import keras_cv
 from keras_cv import bounding_box
 import os
+import resource
 from luketils import visualization
 
 BATCH_SIZE = 16
@@ -34,6 +35,9 @@ EPOCHS = int(os.getenv("EPOCHS", "1"))
 # EPOCHS = 50
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
+
+low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
+resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
 
 """
 ## Data loading
@@ -318,7 +322,7 @@ And run `model.fit()`!
 
 model.fit(
     train_ds,
-    validation_data=val_ds.take(20),
+    validation_data=eval_ds,
     epochs=EPOCHS,
     callbacks=callbacks,
 )
