@@ -336,6 +336,8 @@ RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
 a non max suppression operation for you.
 """
 
+model.load_weights(INFERENCE_CHECKPOINT_PATH)
+
 
 def visualize_detections(model, bounding_box_format):
     images, y_true = next(iter(train_ds.take(1)))
@@ -364,8 +366,9 @@ tune the prediction decoder layer.  This can be done by passing a custom predict
 decoder to the RetinaNet constructor as follows:
 """
 
-prediction_decoder = keras_cv.layers.NonMaxSuppressiong(
+prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppressiong(
     bounding_box_format="xywh",
+    from_logits=True,
     iou_threshold=0.75,
     confidence_threshold=0.85,
 )
