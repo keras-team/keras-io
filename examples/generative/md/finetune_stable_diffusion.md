@@ -95,13 +95,6 @@ from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
 from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
 from tensorflow import keras
 ```
-
-<div class="k-default-codeblock">
-```
-You do not have pycocotools installed, so KerasCV pycoco metrics are not available. Please run `pip install pycocotools`.
-
-```
-</div>
 ---
 ## Data loading
 
@@ -305,14 +298,9 @@ for k in sample_batch:
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
 images (4, 256, 256, 3)
 tokens (4, 77)
 encoded_text (4, 77, 768)
-
 ```
 </div>
 We can also take a look at the training images and their corresponding captions.
@@ -338,7 +326,6 @@ for i in range(3):
     
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_15_0.png)
     
-
 
 ---
 ## A trainer class for the fine-tuning loop
@@ -502,16 +489,6 @@ optimizer = tf.keras.optimizers.experimental.AdamW(
 diffusion_ft_trainer.compile(optimizer=optimizer, loss="mse")
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
-Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-SXM4-40GB, compute capability 8.0
-WARNING:tensorflow:From /opt/conda/envs/py38/lib/python3.8/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 ---
 ## Fine-tuning
 
@@ -529,18 +506,6 @@ ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
 )
 diffusion_ft_trainer.fit(training_dataset, epochs=epochs, callbacks=[ckpt_callback])
 ```
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /opt/conda/envs/py38/lib/python3.8/site-packages/tensorflow/python/util/deprecation.py:629: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
-Instructions for updating:
-Use fn_output_signature instead
-209/209 [==============================] - 318s 442ms/step - loss: 0.0761
-
-<keras.callbacks.History at 0x7fa278085fa0>
-
-```
-</div>
 ---
 ## Inference
 
@@ -620,8 +585,6 @@ for prompt in outputs:
     plot_images(outputs[prompt], prompt)
 ```
 
-
-    
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_0.png)
     
 
@@ -635,8 +598,6 @@ for prompt in outputs:
 
     
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_2.png)
-    
-
 
 We can notice that the model has started adapting to the style of our dataset. You can
 check the
