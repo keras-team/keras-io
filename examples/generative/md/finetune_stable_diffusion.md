@@ -41,15 +41,6 @@ at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 !pip install -U tensorflow -q
 ```
 
-<div class="k-default-codeblock">
-```
-[31mERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: 'top_level.txt'
-Consider using the `--user` option or check the permissions.
-[0m[31m
-[0m
-
-```
-</div>
 ---
 ## What are we fine-tuning?
 
@@ -307,10 +298,6 @@ for k in sample_batch:
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
 images (4, 256, 256, 3)
 tokens (4, 77)
 encoded_text (4, 77, 768)
