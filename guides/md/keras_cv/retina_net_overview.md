@@ -15,8 +15,7 @@
 
 KerasCV offers a complete set of APIs to train your own state-of-the-art,
 production-grade object detection model.  These APIs include object detection specific
-data augmentation techniques, batteries included object detection models, and
-a custom callback to evaluate COCO metrics.
+data augmentation techniques, and batteries included object detection models.
 
 To get started, let's sort out all of our imports and define global configuration parameters.
 
@@ -139,15 +138,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompletePCCLZP/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteV7B5OW/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompletePCCLZP/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteV7B5OW/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompletePCCLZP/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteV7B5OW/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 [1mDownloading and preparing dataset 3.59 GiB (download: 3.59 GiB, generated: Unknown size, total: 3.59 GiB) to ~/tensorflow_datasets/voc/2012/4.0.0...[0m
@@ -162,15 +161,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/10991 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteHRKBC6/voc-test.tfrecord*...:   0%|          | 0/1099…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteDREP08/voc-test.tfrecord*...:   0%|          | 0/1099…
 
 Generating train examples...:   0%|          | 0/5717 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteHRKBC6/voc-train.tfrecord*...:   0%|          | 0/571…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteDREP08/voc-train.tfrecord*...:   0%|          | 0/571…
 
 Generating validation examples...:   0%|          | 0/5823 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteHRKBC6/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteDREP08/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2012/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -386,17 +385,9 @@ That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tu
 dense image Tensors and bounding box dictionaries to `fit()` and `train_on_batch()`
 This matches what we have constructed in our input pipeline above.
 
----
-## Evaluation with COCO Metrics
-
-KerasCV offers a `keras.callbacks.Callback` to evaluate COCO metrics using the
-`pycocotools` library.  Lets construct a list of callbacks included the
-`keras_cv.callbacks.PyCOCOCallback`:
-
 
 ```python
 callbacks = [
-    keras_cv.callbacks.PyCOCOCallback(eval_ds, bounding_box_format="xywh"),
     keras.callbacks.TensorBoard(log_dir="logs"),
     keras.callbacks.ReduceLROnPlateau(patience=5),
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
@@ -438,31 +429,48 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-310/310 [==============================] - 37s 107ms/step
-creating index...
-index created!
-creating index...
-index created!
-Running per image evaluation...
-Evaluate annotation type *bbox*
-DONE (t=1.35s).
-Accumulating evaluation results...
-DONE (t=0.29s).
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.002
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.010
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.003
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.003
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.004
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.006
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.006
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.007
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.007
-1035/1035 [==============================] - 234s 210ms/step - loss: 1.3484 - box_loss: 0.6087 - cls_loss: 0.7397 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 1.1996 - val_box_loss: 0.5563 - val_cls_loss: 0.6433 - val_percent_boxes_matched_with_anchor: 0.9056 - val_AP: 0.0024 - val_AP50: 0.0100 - val_AP75: 3.3908e-04 - val_APs: 1.8042e-04 - val_APm: 0.0028 - val_APl: 0.0026 - val_ARmax1: 0.0035 - val_ARmax10: 0.0060 - val_ARmax100: 0.0062 - val_ARs: 2.3495e-04 - val_ARm: 0.0069 - val_ARl: 0.0067 - lr: 0.0100
+Epoch 1/20
+1035/1035 [==============================] - 192s 169ms/step - loss: 1.3442 - box_loss: 0.6097 - cls_loss: 0.7345 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 1.1719 - val_box_loss: 0.5512 - val_cls_loss: 0.6207 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 2/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 1.0251 - box_loss: 0.4797 - cls_loss: 0.5454 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 1.0314 - val_box_loss: 0.4870 - val_cls_loss: 0.5445 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 3/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.8987 - box_loss: 0.4284 - cls_loss: 0.4703 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.9336 - val_box_loss: 0.4460 - val_cls_loss: 0.4875 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 4/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.8242 - box_loss: 0.4019 - cls_loss: 0.4224 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.8650 - val_box_loss: 0.4248 - val_cls_loss: 0.4402 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 5/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.7752 - box_loss: 0.3841 - cls_loss: 0.3910 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.8208 - val_box_loss: 0.4077 - val_cls_loss: 0.4131 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 6/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.7408 - box_loss: 0.3723 - cls_loss: 0.3685 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.7843 - val_box_loss: 0.3960 - val_cls_loss: 0.3883 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 7/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.7131 - box_loss: 0.3611 - cls_loss: 0.3519 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.7672 - val_box_loss: 0.3877 - val_cls_loss: 0.3795 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 8/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6920 - box_loss: 0.3527 - cls_loss: 0.3392 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.7527 - val_box_loss: 0.3825 - val_cls_loss: 0.3702 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 9/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6731 - box_loss: 0.3451 - cls_loss: 0.3281 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.7325 - val_box_loss: 0.3747 - val_cls_loss: 0.3578 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 10/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6585 - box_loss: 0.3390 - cls_loss: 0.3195 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.7161 - val_box_loss: 0.3645 - val_cls_loss: 0.3516 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 11/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6444 - box_loss: 0.3326 - cls_loss: 0.3117 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.6987 - val_box_loss: 0.3614 - val_cls_loss: 0.3373 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 12/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6336 - box_loss: 0.3286 - cls_loss: 0.3050 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.6872 - val_box_loss: 0.3586 - val_cls_loss: 0.3286 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 13/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6216 - box_loss: 0.3236 - cls_loss: 0.2980 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.6761 - val_box_loss: 0.3525 - val_cls_loss: 0.3235 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 14/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6136 - box_loss: 0.3196 - cls_loss: 0.2940 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.6668 - val_box_loss: 0.3480 - val_cls_loss: 0.3188 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 15/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.6037 - box_loss: 0.3153 - cls_loss: 0.2884 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.6634 - val_box_loss: 0.3440 - val_cls_loss: 0.3194 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 16/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.5964 - box_loss: 0.3119 - cls_loss: 0.2845 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.6611 - val_box_loss: 0.3424 - val_cls_loss: 0.3186 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 17/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.5904 - box_loss: 0.3096 - cls_loss: 0.2808 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.6453 - val_box_loss: 0.3390 - val_cls_loss: 0.3063 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 18/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.5812 - box_loss: 0.3049 - cls_loss: 0.2763 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.6448 - val_box_loss: 0.3350 - val_cls_loss: 0.3098 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 19/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.5771 - box_loss: 0.3035 - cls_loss: 0.2735 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.6388 - val_box_loss: 0.3315 - val_cls_loss: 0.3073 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
+Epoch 20/20
+1035/1035 [==============================] - 172s 166ms/step - loss: 0.5702 - box_loss: 0.2998 - cls_loss: 0.2704 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.6259 - val_box_loss: 0.3291 - val_cls_loss: 0.2968 - val_percent_boxes_matched_with_anchor: 0.9056 - lr: 0.0100
 
-<keras.callbacks.History at 0x7f4bc0017c50>
+<keras.callbacks.History at 0x7f35e01ccf60>
 
 ```
 </div>
@@ -503,12 +511,12 @@ visualize_detections(model, bounding_box_format="xywh")
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 149ms/step
+1/1 [==============================] - 2s 2s/step
 
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_29_1.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_28_1.png)
     
 
 
@@ -535,7 +543,7 @@ visualize_detections(model, bounding_box_format="xywh")
 ```
 </div>
     
-![png](/img/guides/retina_net_overview/retina_net_overview_31_1.png)
+![png](/img/guides/retina_net_overview/retina_net_overview_30_1.png)
     
 
 
@@ -544,8 +552,8 @@ visualize_detections(model, bounding_box_format="xywh")
 
 KerasCV makes it easy to construct state-of-the-art object detection pipelines.  All of
 the KerasCV object detection components can be used independently, but also have deep
-integration with each other.  With KerasCV, bounding box augmentation, train-time COCO
-metrics evaluation, and more, are all made simple and consistent.
+integration with each other.  With KerasCV, bounding box augmentation and more,
+are all made simple and consistent.
 
 Some follow up exercises for the reader:
 

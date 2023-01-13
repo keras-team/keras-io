@@ -370,7 +370,7 @@ visualize_detections(model, bounding_box_format="xywh")
 
 KerasCV makes it easy to construct state-of-the-art object detection pipelines.  All of
 the KerasCV object detection components can be used independently, but also have deep
-integration with each other.  With KerasCV, bounding box augmentation and more, 
+integration with each other.  With KerasCV, bounding box augmentation and more,
 are all made simple and consistent.
 
 Some follow up exercises for the reader:
