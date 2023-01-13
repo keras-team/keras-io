@@ -543,6 +543,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image generation",
                 },
                 {
+                    "path": "finetune_stable_diffusion",
+                    "title": "Fine-tuning Stable Diffusion",
+                    "subcategory": "Image generation",
+                },
+                {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
                     "subcategory": "Image generation",

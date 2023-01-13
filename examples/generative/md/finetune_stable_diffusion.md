@@ -104,19 +104,6 @@ from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
 from tensorflow import keras
 ```
 
-<div class="k-default-codeblock">
-```
-/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/__init__.py:98: UserWarning: unable to load libtensorflow_io_plugins.so: unable to open file: libtensorflow_io_plugins.so, from paths: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io_plugins.so']
-caused by: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io_plugins.so: undefined symbol: _ZN3tsl5mutexC1Ev']
-  warnings.warn(f"unable to load libtensorflow_io_plugins.so: {e}")
-/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/__init__.py:104: UserWarning: file system plugins are not loaded: unable to open file: libtensorflow_io.so, from paths: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io.so']
-caused by: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io.so: undefined symbol: _ZNK10tensorflow4data11DatasetBase8FinalizeEPNS_15OpKernelContextESt8functionIFN3tsl8StatusOrISt10unique_ptrIS1_NS5_4core15RefCountDeleterEEEEvEE']
-  warnings.warn(f"file system plugins are not loaded: {e}")
-
-You do not have pycocotools installed, so KerasCV pycoco metrics are not available. Please run `pip install pycocotools`.
-
-```
-</div>
 ---
 ## Data loading
 
@@ -349,9 +336,9 @@ for i in range(3):
 ```
 
 
-    
+
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_15_0.png)
-    
+
 
 
 ---
@@ -636,21 +623,21 @@ for prompt in outputs:
 ```
 
 
-    
+
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_0.png)
-    
 
 
 
-    
+
+
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_1.png)
-    
 
 
 
-    
+
+
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_2.png)
-    
+
 
 
 We can notice that the model has started adapting to the style of our dataset. You can
