@@ -2,8 +2,8 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)<br>
 **Date created:** 2022/12/28<br>
-**Last modified:** 2023/01/04<br>
-**Description:** Implementing Masked image modeling with Autoencoders using a custom image-caption dataset.
+**Last modified:** 2023/01/13<br>
+**Description:** Fine-tuning Stable Diffusion using a custom image-caption dataset.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/finetune_stable_diffusion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/finetune_stable_diffusion.py)
@@ -79,6 +79,7 @@ Don't worry if this sounds complicated. The code is much simpler than this!
 
 
 ```python
+from textwrap import wrap
 import os
 
 import keras_cv
@@ -94,7 +95,6 @@ from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
 from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
 from tensorflow import keras
 ```
-
 ---
 ## Data loading
 
@@ -301,7 +301,6 @@ for k in sample_batch:
 images (4, 256, 256, 3)
 tokens (4, 77)
 encoded_text (4, 77, 768)
-
 ```
 </div>
 We can also take a look at the training images and their corresponding captions.
@@ -317,16 +316,16 @@ for i in range(3):
     text = tokenizer.decode(sample_batch["tokens"][i].numpy().squeeze())
     text = text.replace("<|startoftext|>", "")
     text = text.replace("<|endoftext|>", "")
-    plt.title(text)
+    text = "\n".join(wrap(text, 12))
+    plt.title(text, fontsize=15)
 
     plt.axis("off")
 ```
 
 
-
+    
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_15_0.png)
-
-
+    
 
 ---
 ## A trainer class for the fine-tuning loop
@@ -490,13 +489,6 @@ optimizer = tf.keras.optimizers.experimental.AdamW(
 diffusion_ft_trainer.compile(optimizer=optimizer, loss="mse")
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
-Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-SXM4-40GB, compute capability 8.0
-
-```
-</div>
 ---
 ## Fine-tuning
 
@@ -514,18 +506,6 @@ ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
 )
 diffusion_ft_trainer.fit(training_dataset, epochs=epochs, callbacks=[ckpt_callback])
 ```
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /opt/conda/lib/python3.7/site-packages/tensorflow/python/util/deprecation.py:629: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
-Instructions for updating:
-Use fn_output_signature instead
-209/209 [==============================] - 320s 433ms/step - loss: 0.0709
-
-<keras.callbacks.History at 0x7f97d1434e10>
-
-```
-</div>
 ---
 ## Inference
 
@@ -555,8 +535,6 @@ pokemon_model.diffusion_model.load_weights(weights_path)
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://huggingface.co/sayakpaul/kerascv_sd_pokemon_finetuned/resolve/main/ckpt_epochs_72_res_512_mp_True.h5
-3439089408/3439089408 [==============================] - 85s 0us/step
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
 
 ```
@@ -578,11 +556,9 @@ for prompt in prompts:
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 17s 244ms/step
-Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
-198180272/198180272 [==============================] - 1s 0us/step
-25/25 [==============================] - 6s 227ms/step
-25/25 [==============================] - 6s 227ms/step
+25/25 [==============================] - 17s 231ms/step
+25/25 [==============================] - 6s 229ms/step
+25/25 [==============================] - 6s 229ms/step
 
 ```
 </div>
@@ -609,23 +585,19 @@ for prompt in outputs:
     plot_images(outputs[prompt], prompt)
 ```
 
-
-
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_0.png)
+    
 
 
 
-
-
+    
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_1.png)
+    
 
 
 
-
-
+    
 ![png](/img/examples/generative/finetune_stable_diffusion/finetune_stable_diffusion_28_2.png)
-
-
 
 We can notice that the model has started adapting to the style of our dataset. You can
 check the

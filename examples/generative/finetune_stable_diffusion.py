@@ -2,8 +2,8 @@
 Title: Fine-tuning Stable Diffusion
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
 Date created: 2022/12/28
-Last modified: 2023/01/04
-Description: Implementing Masked image modeling with Autoencoders using a custom image-caption dataset.
+Last modified: 2023/01/13
+Description: Fine-tuning Stable Diffusion using a custom image-caption dataset.
 Accelerator: GPU
 """
 """
@@ -75,6 +75,7 @@ Don't worry if this sounds complicated. The code is much simpler than this!
 ## Imports
 """
 
+from textwrap import wrap
 import os
 
 import keras_cv
@@ -237,7 +238,8 @@ for i in range(3):
     text = tokenizer.decode(sample_batch["tokens"][i].numpy().squeeze())
     text = text.replace("<|startoftext|>", "")
     text = text.replace("<|endoftext|>", "")
-    plt.title(text)
+    text = "\n".join(wrap(text, 12))
+    plt.title(text, fontsize=15)
 
     plt.axis("off")
 
