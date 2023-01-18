@@ -16,8 +16,8 @@ using the SimSiam implementation from TensorFlow Similarity.
 
 ## Background
 
-Self-supervised learning is an approach to pre-training models using unlabeled data. T
-his approach drastically increases accuracy when you have very few labeled examples but
+Self-supervised learning is an approach to pre-training models using unlabeled data. 
+This approach drastically increases accuracy when you have very few labeled examples but
 a lot of unlabelled data.
 The key insight is that you can train a self-supervised model to learn data
 representations by contrasting multiple augmented views of the same example.
@@ -634,4 +634,5 @@ Some follow-up exercises to this tutorial:
     on STL-10
 - Experiment with other data augmentation techniques in pretraining
 - Train a model using the [BarlowTwins implementation](https://github.com/tensorflow/similarity/blob/master/examples/unsupervised_hello_world.ipynb) in TensorFlow similarity
+- Try pretraining on your own dataset
 """
