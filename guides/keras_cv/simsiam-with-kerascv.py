@@ -630,7 +630,8 @@ model trainining pipeline.
 
 Some follow-up exercises to this tutorial:
 
-- Train an EfficientNetV2B0 on STL-10
+- Train a [`keras_cv.models.EfficientNetV2B0`](https://github.com/keras-team/keras-cv/blob/master/keras_cv/models/efficientnet_v2.py)
+    on STL-10
 - Experiment with other data augmentation techniques in pretraining
-- Train a model using the BarlowTwins implementation in TensorFlow similarity
+- Train a model using the [BarlowTwins implementation](https://github.com/tensorflow/similarity/blob/master/examples/unsupervised_hello_world.ipynb) in TensorFlow similarity
 """
