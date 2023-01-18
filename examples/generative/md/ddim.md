@@ -80,7 +80,7 @@ from keras import layers
 ```
 
 ---
-## Hyperparameterers
+## Hyperparameters
 
 
 ```python
