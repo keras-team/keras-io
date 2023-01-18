@@ -26,9 +26,9 @@ jitter, noise, etc. Training a simple linear classifier on top of the frozen
 representations is easier and requires fewer labels because the pre-trained model
 already produces meaningful and generally useful features.
 
-Overall, self-supervised pre-training learns representations which are more generic and
-robust than other approaches to augmented training and pre-training.  An overview of
-the general contrastive learning process is shown below:
+Overall, self-supervised pre-training learns representations which are [more generic and
+robust than other approaches to augmented training and pre-training](https://arxiv.org/abs/2002.05709).
+An overview of the general contrastive learning process is shown below:
 
 ![Contrastive overview](https://i.imgur.com/mzaEq3C.png)
 
