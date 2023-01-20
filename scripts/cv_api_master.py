@@ -194,6 +194,13 @@ REGULARIZATION_MASTER = {
             "generate": [
                 "keras_cv.layers.SqueezeAndExcite2D",
             ],
+        },
+        {
+            "path": "stochastic_depth",
+            "title": "StochasticDepth layer",
+            "generate": [
+                "keras_cv.layers.StochasticDepth",
+            ],
         }
     ],
 }
