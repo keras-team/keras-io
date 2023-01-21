@@ -36,14 +36,14 @@ AUGMENTATION_MASTER = {
             "generate": ["keras_cv.layers.GridMask"],
         },
         {
+            "path": "jittered_resize",
+            "title": "JitteredResize layer",
+            "generate": ["keras_cv.layers.JitteredResize"]
+        },
+        {
             "path": "mix_up",
             "title": "MixUp layer",
             "generate": ["keras_cv.layers.MixUp"],
-        },
-        {
-            "path": "posterization",
-            "title": "Posterization layer",
-            "generate": ["keras_cv.layers.Posterization"],
         },
         {
             "path": "rand_augment",
@@ -118,6 +118,11 @@ PREPROCESSING_MASTER = {
             "title": "Equalization layer",
             "generate": ["keras_cv.layers.Equalization"],
         },
+        {
+            "path": "posterization",
+            "title": "Posterization layer",
+            "generate": ["keras_cv.layers.Posterization"],
+        },
     ],
 }
 
@@ -151,6 +156,21 @@ BOUNDING_BOX_UTILS = {
             "path": "clip_to_image",
             "title": "Clip bounding boxes to be within the bounds of provided images",
             "generate": ["keras_cv.bounding_box.clip_to_image"],
+        },
+        {
+            "path": "to_dense",
+            "title": "Convert a bounding box dictionary to -1 padded Dense tensors",
+            "generate": ["keras_cv.bounding_box.to_dense"],
+        },
+        {
+            "path": "to_ragged",
+            "title": "Convert a bounding box dictionary batched Ragged tensors",
+            "generate": ["keras_cv.bounding_box.to_ragged"],
+        },
+        {
+            "path": "validate_format",
+            "title": "Ensure that your bounding boxes comply with the bounding box spec"
+            "generate": ["keras_cv.bounding_box.validate_format"],
         },
     ],
 }
@@ -255,6 +275,26 @@ MODELS_MASTER = {
                 "keras_cv.models.RetinaNet",
             ],
         },
+        {
+            "path": "faster_rcnn",
+            "title": "The FasterRCNN model",
+            "generate": [
+                "keras_cv.models.FasterRCNN"
+            ]
+        }
+    {
+        "path": "efficientnetv2",
+        "title": "EfficientNetV2 models",
+        "generate": [
+            "keras_cv.models.EfficientNetV2B0",
+            "keras_cv.models.EfficientNetV2B1",
+            "keras_cv.models.EfficientNetV2B2",
+            "keras_cv.models.EfficientNetV2B3",
+            "keras_cv.models.EfficientNetV2S",
+            "keras_cv.models.EfficientNetV2M",
+            "keras_cv.models.EfficientNetV2L",
+        ],
+    },
         {
             "path": "densenet",
             "title": "DenseNet models",
