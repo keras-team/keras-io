@@ -1,4 +1,3 @@
-
 AUGMENTATION_MASTER = {
     "path": "augmentation/",
     "title": "Augmentation layers",
@@ -29,7 +28,6 @@ AUGMENTATION_MASTER = {
             "title": "FourierMix layer",
             "generate": ["keras_cv.layers.FourierMix"],
         },
-
         {
             "path": "grid_mask",
             "title": "GridMask layer",
@@ -38,7 +36,7 @@ AUGMENTATION_MASTER = {
         {
             "path": "jittered_resize",
             "title": "JitteredResize layer",
-            "generate": ["keras_cv.layers.JitteredResize"]
+            "generate": ["keras_cv.layers.JitteredResize"],
         },
         {
             "path": "mix_up",
@@ -169,7 +167,7 @@ BOUNDING_BOX_UTILS = {
         },
         {
             "path": "validate_format",
-            "title": "Ensure that your bounding boxes comply with the bounding box spec"
+            "title": "Ensure that your bounding boxes comply with the bounding box spec",
             "generate": ["keras_cv.bounding_box.validate_format"],
         },
     ],
@@ -221,7 +219,7 @@ REGULARIZATION_MASTER = {
             "generate": [
                 "keras_cv.layers.StochasticDepth",
             ],
-        }
+        },
     ],
 }
 
@@ -278,23 +276,21 @@ MODELS_MASTER = {
         {
             "path": "faster_rcnn",
             "title": "The FasterRCNN model",
+            "generate": ["keras_cv.models.FasterRCNN"],
+        },
+        {
+            "path": "efficientnetv2",
+            "title": "EfficientNetV2 models",
             "generate": [
-                "keras_cv.models.FasterRCNN"
-            ]
-        }
-    {
-        "path": "efficientnetv2",
-        "title": "EfficientNetV2 models",
-        "generate": [
-            "keras_cv.models.EfficientNetV2B0",
-            "keras_cv.models.EfficientNetV2B1",
-            "keras_cv.models.EfficientNetV2B2",
-            "keras_cv.models.EfficientNetV2B3",
-            "keras_cv.models.EfficientNetV2S",
-            "keras_cv.models.EfficientNetV2M",
-            "keras_cv.models.EfficientNetV2L",
-        ],
-    },
+                "keras_cv.models.EfficientNetV2B0",
+                "keras_cv.models.EfficientNetV2B1",
+                "keras_cv.models.EfficientNetV2B2",
+                "keras_cv.models.EfficientNetV2B3",
+                "keras_cv.models.EfficientNetV2S",
+                "keras_cv.models.EfficientNetV2M",
+                "keras_cv.models.EfficientNetV2L",
+            ],
+        },
         {
             "path": "densenet",
             "title": "DenseNet models",
