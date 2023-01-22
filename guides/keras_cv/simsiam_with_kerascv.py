@@ -16,7 +16,7 @@ using the SimSiam implementation from TensorFlow Similarity.
 
 ## Background
 
-Self-supervised learning is an approach to pre-training models using unlabeled data. 
+Self-supervised learning is an approach to pre-training models using unlabeled data.
 This approach drastically increases accuracy when you have very few labeled examples but
 a lot of unlabelled data.
 The key insight is that you can train a self-supervised model to learn data
@@ -180,7 +180,7 @@ print(
 
 Self-supervised networks require at least two augmented "views" of each example.
 This can be created using a dataset and an augmentation function.
-The dataset treats each example in the batch as its own class and then the augment 
+The dataset treats each example in the batch as its own class and then the augment
 function produces two separate views for each example.
 
 This means the resulting batch will yield tuples containing the two views, i.e.,
