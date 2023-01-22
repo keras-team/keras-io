@@ -76,7 +76,7 @@ from tensorflow import keras
 from keras import layers
 
 """
-## Hyperparameterers
+## Hyperparameters
 """
 
 # data
