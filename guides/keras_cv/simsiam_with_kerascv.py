@@ -1,8 +1,8 @@
 """
 Title: SimSiam Training with TensorFlow Similarity and KerasCV
 Author: [lukewood](https://lukewood.xyz), Ian Stenbit, Owen Vallis
-Date created: 2022/09/21
-Last modified: 2022/09/21
+Date created: 2023/01/22
+Last modified: 2023/01/22
 Description: Train a KerasCV model using unlabelled data with SimSiam.
 """
 
@@ -38,7 +38,7 @@ contrastive learning; allowing for unprecedented scores on CIFAR-100 and other d
 
 You may need to install:
 
-```bash
+```
 pip -q install tensorflow_similarity
 pip -q install keras-cv
 ```
@@ -85,7 +85,7 @@ WARMUP_STEPS = 0
 DIM = 2048
 
 """
-## Data Loading
+## Data loading
 
 Next, we will load the STL-10 dataset.  STL-10 is a dataset consisting of 100k unlabelled
 images, 5k labelled training images, and 10k labelled test images.  Due to this distribution,
@@ -177,18 +177,15 @@ print(
 
 """
 ## Augmentations
-Self-supervised networks require at least two augmented "views" of each example. This can be created using a DataSet and an augmentation function. The DataSet treats each example in the batch as its own class and then the augment function produces two separate views for each example.
+
+Self-supervised networks require at least two augmented "views" of each example.
+This can be created using a dataset and an augmentation function.
+The dataset treats each example in the batch as its own class and then the augment 
+function produces two separate views for each example.
 
 This means the resulting batch will yield tuples containing the two views, i.e.,
 Tuple[(BATCH_SIZE, 32, 32, 3), (BATCH_SIZE, 32, 32, 3)].
 
-TensorFlow Similarity provides several random augmentation functions, and here we combine augmenters from the simCLR module to replicate the augmentations used in simsiam.
-"""
-
-"""
-## Augmentation
-
-Now that we have all of our datasets produced, we can move on to dataset augmentation.
 Using KerasCV, it is trivial to construct an augmenter that performs as the one
 described in the original SimSiam paper.  Lets do that below.
 """
@@ -623,7 +620,7 @@ SimSiam has a minimum batch size of 512.
 
 ## Conclusion
 
-TensorFlow similarity can be used to easily train KerasCV models using
+TensorFlow Similarity can be used to easily train KerasCV models using
 contrastive algorithms such as SimCLR, SimSiam and BarlowTwins.
 This allows you to leverage large corpuses of unlabelled data in your
 model trainining pipeline.
