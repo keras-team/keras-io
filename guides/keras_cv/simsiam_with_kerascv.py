@@ -609,8 +609,8 @@ pt_history = pt_eval_model.fit(
 """
 All that is left to do is evaluate the models:
 """
-print("no pretrain", no_pt_eval_model.evaluate(eval_test_ds))
-print("pretrained", pt_eval_model.evaluate(eval_test_ds))
+print("no pretrain", no_pt_eval_model.evaluate(eval_val_ds))
+print("pretrained", pt_eval_model.evaluate(eval_val_ds))
 """
 Awesome!  Our pretrained model stomped the non-pretrained model.
 71% accuracy is quite good for a ResNet18 on the STL-10 dataset.
