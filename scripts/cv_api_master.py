@@ -155,21 +155,21 @@ BOUNDING_BOX_UTILS = {
             "title": "Clip bounding boxes to be within the bounds of provided images",
             "generate": ["keras_cv.bounding_box.clip_to_image"],
         },
-        {
-            "path": "to_dense",
-            "title": "Convert a bounding box dictionary to -1 padded Dense tensors",
-            "generate": ["keras_cv.bounding_box.to_dense"],
-        },
-        {
-            "path": "to_ragged",
-            "title": "Convert a bounding box dictionary batched Ragged tensors",
-            "generate": ["keras_cv.bounding_box.to_ragged"],
-        },
-        {
-            "path": "validate_format",
-            "title": "Ensure that your bounding boxes comply with the bounding box spec",
-            "generate": ["keras_cv.bounding_box.validate_format"],
-        },
+        # {
+        #     "path": "to_dense",
+        #     "title": "Convert a bounding box dictionary to -1 padded Dense tensors",
+        #     "generate": ["keras_cv.bounding_box.to_dense"],
+        # },
+        # {
+        #     "path": "to_ragged",
+        #     "title": "Convert a bounding box dictionary batched Ragged tensors",
+        #     "generate": ["keras_cv.bounding_box.to_ragged"],
+        # },
+        # {
+        #     "path": "validate_format",
+        #     "title": "Ensure that your bounding boxes comply with the bounding box spec",
+        #     "generate": ["keras_cv.bounding_box.validate_format"],
+        # },
     ],
 }
 
