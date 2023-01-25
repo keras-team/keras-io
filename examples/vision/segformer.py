@@ -193,7 +193,7 @@ the loss computation part when we provide labels alongside the input images. Aft
 computing the loss, the model returned a structured `dataclass` object which is
 then used to guide the training process.
 
-With the compiled, we can proceed and call `fit()` on it to begin the fine-tuning
+With the compiled model, we can proceed and call `fit()` on it to begin the fine-tuning
 process! 
 """
 
@@ -280,7 +280,7 @@ And then you can load the model by doing
 `TFSegformerForSemanticSegmentation.from_pretrained("your-username/your-awesome-model"`).
 [Here](https://github.com/huggingface/notebooks/blob/main/examples/semantic_segmentation-tf.ipynb)
 is an end-to-end example if you're looking for a reference.
-* If you'd rather want to push the model checkpoints to the Hub as the model is being
+* If you'd rather push the model checkpoints to the Hub as the model is being
 fine-tuned you can instead use the `PushToHubCallback` Keras callback.
 [Here](https://gist.github.com/sayakpaul/f474ffb01f0cdcc8ba239357965c3bca) is an example.
 [Here](https://huggingface.co/sayakpaul/mit-b0-finetuned-pets) is an example of a model
