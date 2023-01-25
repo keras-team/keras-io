@@ -307,91 +307,12 @@ print("val_ds", val_ds)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
 train_ds <PrefetchDataset element_spec=(TensorSpec(shape=(None, 96, 96, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 96, 96, 3), dtype=tf.float32, name=None))>
 val_ds <PrefetchDataset element_spec=(TensorSpec(shape=(None, 96, 96, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 96, 96, 3), dtype=tf.float32, name=None))>
 
 ```
 </div>
+
 Lets visualize our pairs using the `tfsim.visualization` utility package.
 
 
@@ -1276,7 +1197,7 @@ pretrained [1.465279221534729, 0.6474305391311646]
 ```
 </div>
 Awesome!  Our pretrained model stomped the non-pretrained model.
-71% accuracy is quite good for a ResNet18 on the STL-10 dataset.
+This accuracy is quite good for a ResNet18 on the STL-10 dataset.
 For better results, try using an EfficientNetV2B0 instead.
 Unfortunately, this will require a higher end graphics card as
 SimSiam has a minimum batch size of 512.

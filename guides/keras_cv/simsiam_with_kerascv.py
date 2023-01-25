@@ -625,7 +625,7 @@ print(
 )
 """
 Awesome!  Our pretrained model stomped the non-pretrained model.
-71% accuracy is quite good for a ResNet18 on the STL-10 dataset.
+This accuracy is quite good for a ResNet18 on the STL-10 dataset.
 For better results, try using an EfficientNetV2B0 instead.
 Unfortunately, this will require a higher end graphics card as
 SimSiam has a minimum batch size of 512.
