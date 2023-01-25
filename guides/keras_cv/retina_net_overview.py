@@ -299,7 +299,15 @@ Let's compile our model:
 """
 
 # including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.optimizers.SGD(global_clipnorm=10.0)
+base_lr = 0.01
+lr_decay = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+    boundaries=[12000 * 16, 16000 * 16],
+    values=[base_lr, 0.1 * base_lr, 0.01 * base_lr],
+)
+
+optimizer = tf.keras.optimizers.SGD(
+    learning_rate=lr_decay, momentum=0.9, global_clipnorm=10.0
+)
 model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
@@ -376,7 +384,7 @@ are all made simple and consistent.
 Some follow up exercises for the reader:
 
 - add additional augmentation techniques to improve model performance
-- grid search `confidence_threshold` and `iou_threshold` on `NmsPredictionDecoder` to
+- grid search `confidence_threshold` and `iou_threshold` on `MultiClassNonMaxSuppression` to
     achieve an optimal Mean Average Precision
 - tune the hyperparameters and data augmentation used to produce high quality results
 - train an object detection model on another dataset
