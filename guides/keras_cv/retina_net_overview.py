@@ -284,7 +284,6 @@ This matches what we have constructed in our input pipeline above.
 
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
-    keras.callbacks.ReduceLROnPlateau(patience=5),
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 
