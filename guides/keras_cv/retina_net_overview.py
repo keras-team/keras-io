@@ -31,7 +31,7 @@ from luketils import visualization
 BATCH_SIZE = 16
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 # To fully train a RetinaNet, comment out this line.
-# EPOCHS = 50
+# EPOCHS = 100
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
 
