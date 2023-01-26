@@ -138,15 +138,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteGOYLIH/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRZ87DX/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteGOYLIH/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRZ87DX/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteGOYLIH/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRZ87DX/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 [1mDownloading and preparing dataset 3.59 GiB (download: 3.59 GiB, generated: Unknown size, total: 3.59 GiB) to ~/tensorflow_datasets/voc/2012/4.0.0...[0m
@@ -161,15 +161,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/10991 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteUCXRQM/voc-test.tfrecord*...:   0%|          | 0/1099…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteNAAL21/voc-test.tfrecord*...:   0%|          | 0/1099…
 
 Generating train examples...:   0%|          | 0/5717 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteUCXRQM/voc-train.tfrecord*...:   0%|          | 0/571…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteNAAL21/voc-train.tfrecord*...:   0%|          | 0/571…
 
 Generating validation examples...:   0%|          | 0/5823 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteUCXRQM/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteNAAL21/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2012/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -436,9 +436,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-1035/1035 [==============================] - 191s 168ms/step - loss: 0.9492 - box_loss: 0.4397 - cls_loss: 0.5095 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.7767 - val_box_loss: 0.3839 - val_cls_loss: 0.3928 - val_percent_boxes_matched_with_anchor: 0.9056
+1035/1035 [==============================] - 190s 167ms/step - loss: 0.9607 - box_loss: 0.4417 - cls_loss: 0.5190 - percent_boxes_matched_with_anchor: 0.9111 - val_loss: 0.7737 - val_box_loss: 0.3804 - val_cls_loss: 0.3933 - val_percent_boxes_matched_with_anchor: 0.9056
 
-<keras.callbacks.History at 0x7f0d507e01d0>
+<keras.callbacks.History at 0x7ff7f85f2898>
 
 ```
 </div>
@@ -453,10 +453,9 @@ a non max suppression operation for you.
 ```python
 model.load_weights(INFERENCE_CHECKPOINT_PATH)
 
-images, y_true = next(iter(train_ds.take(1)))
-
 
 def visualize_detections(model, bounding_box_format):
+    images, y_true = next(iter(eval_ds.take(1)))
     y_pred = model.predict(images)
     y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
