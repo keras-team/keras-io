@@ -367,8 +367,10 @@ decoder to the RetinaNet constructor as follows:
 prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
+    # Decrease the required threshold to make predictions get pruned out
     iou_threshold=0.5,
-    confidence_threshold=0.9,
+    # Tune confidence threshold for predictions to pass NMS
+    confidence_threshold=0.95,
 )
 model.prediction_decoder = prediction_decoder
 visualize_detections(model, bounding_box_format="xywh")
