@@ -335,9 +335,10 @@ a non max suppression operation for you.
 
 model.load_weights(INFERENCE_CHECKPOINT_PATH)
 
+images, y_true = next(iter(train_ds.take(1)))
+
 
 def visualize_detections(model, bounding_box_format):
-    images, y_true = next(iter(train_ds.take(1)))
     y_pred = model.predict(images)
     y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
@@ -368,7 +369,7 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     # Decrease the required threshold to make predictions get pruned out
-    iou_threshold=0.5,
+    iou_threshold=0.35,
     # Tune confidence threshold for predictions to pass NMS
     confidence_threshold=0.95,
 )
