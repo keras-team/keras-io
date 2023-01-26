@@ -138,15 +138,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteJI14PM/voc-test.tfrecord*...:   0%|          | 0/4952…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteQSRPVO/voc-test.tfrecord*...:   0%|          | 0/4952…
 
 Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteJI14PM/voc-train.tfrecord*...:   0%|          | 0/250…
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteQSRPVO/voc-train.tfrecord*...:   0%|          | 0/250…
 
 Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteJI14PM/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteQSRPVO/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
 [1mDownloading and preparing dataset 3.59 GiB (download: 3.59 GiB, generated: Unknown size, total: 3.59 GiB) to ~/tensorflow_datasets/voc/2012/4.0.0...[0m
@@ -161,15 +161,15 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating test examples...:   0%|          | 0/10991 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incomplete4CPBNJ/voc-test.tfrecord*...:   0%|          | 0/1099…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteGKR87F/voc-test.tfrecord*...:   0%|          | 0/1099…
 
 Generating train examples...:   0%|          | 0/5717 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incomplete4CPBNJ/voc-train.tfrecord*...:   0%|          | 0/571…
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteGKR87F/voc-train.tfrecord*...:   0%|          | 0/571…
 
 Generating validation examples...:   0%|          | 0/5823 [00:00<?, ? examples/s]
 
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incomplete4CPBNJ/voc-validation.tfrecord*...:   0%|          | …
+Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteGKR87F/voc-validation.tfrecord*...:   0%|          | …
 
 [1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2012/4.0.0. Subsequent calls will reuse this data.[0m
 
@@ -436,9 +436,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-1035/1035 [==============================] - 190s 168ms/step - loss: 0.9516 - box_loss: 0.4392 - cls_loss: 0.5125 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.7759 - val_box_loss: 0.3817 - val_cls_loss: 0.3942 - val_percent_boxes_matched_with_anchor: 0.9056
+1035/1035 [==============================] - 190s 167ms/step - loss: 0.9477 - box_loss: 0.4371 - cls_loss: 0.5106 - percent_boxes_matched_with_anchor: 0.9110 - val_loss: 0.7695 - val_box_loss: 0.3785 - val_cls_loss: 0.3909 - val_percent_boxes_matched_with_anchor: 0.9056
 
-<keras.callbacks.History at 0x7f45dec20ba8>
+<keras.callbacks.History at 0x7f1af4b62c50>
 
 ```
 </div>
@@ -497,8 +497,8 @@ decoder to the RetinaNet constructor as follows:
 prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
-    iou_threshold=0.75,
-    confidence_threshold=0.85,
+    iou_threshold=0.5,
+    confidence_threshold=0.9,
 )
 model.prediction_decoder = prediction_decoder
 visualize_detections(model, bounding_box_format="xywh")
