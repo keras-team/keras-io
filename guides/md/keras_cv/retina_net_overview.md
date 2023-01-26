@@ -43,12 +43,6 @@ low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
 ```
 
-<div class="k-default-codeblock">
-```
-You do not have Waymo Open Dataset installed, so KerasCV Waymo metrics are not available.
-
-```
-</div>
 ---
 ## Data loading
 
@@ -124,57 +118,6 @@ train_ds = train_ds.map(unpackage_tfds_inputs, num_parallel_calls=tf.data.AUTOTU
 eval_ds = eval_ds.map(unpackage_tfds_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 ```
 
-<div class="k-default-codeblock">
-```
-[1mDownloading and preparing dataset 868.85 MiB (download: 868.85 MiB, generated: Unknown size, total: 868.85 MiB) to ~/tensorflow_datasets/voc/2007/4.0.0...[0m
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
-
-Generating test examples...:   0%|          | 0/4952 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRZ87DX/voc-test.tfrecord*...:   0%|          | 0/4952…
-
-Generating train examples...:   0%|          | 0/2501 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRZ87DX/voc-train.tfrecord*...:   0%|          | 0/250…
-
-Generating validation examples...:   0%|          | 0/2510 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2007/4.0.0.incompleteRZ87DX/voc-validation.tfrecord*...:   0%|          | …
-
-[1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2007/4.0.0. Subsequent calls will reuse this data.[0m
-[1mDownloading and preparing dataset 3.59 GiB (download: 3.59 GiB, generated: Unknown size, total: 3.59 GiB) to ~/tensorflow_datasets/voc/2012/4.0.0...[0m
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
-
-Generating test examples...:   0%|          | 0/10991 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteNAAL21/voc-test.tfrecord*...:   0%|          | 0/1099…
-
-Generating train examples...:   0%|          | 0/5717 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteNAAL21/voc-train.tfrecord*...:   0%|          | 0/571…
-
-Generating validation examples...:   0%|          | 0/5823 [00:00<?, ? examples/s]
-
-Shuffling ~/tensorflow_datasets/voc/2012/4.0.0.incompleteNAAL21/voc-validation.tfrecord*...:   0%|          | …
-
-[1mDataset voc downloaded and prepared to ~/tensorflow_datasets/voc/2012/4.0.0. Subsequent calls will reuse this data.[0m
-
-```
-</div>
 Next, lets batch our data.  In KerasCV object detection tasks it is recommended that
 users use ragged batches.  This is due to the fact that images may be of different
 sizes in PascalVOC and that there may be different numbers of bounding boxes per image.
