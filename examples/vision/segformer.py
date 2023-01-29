@@ -1,23 +1,26 @@
 """
-Title: Semantic segmentation with Hugging Face Transformers
+Title: Semantic segmentation with SegFormer and Hugging Face Transformers
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2023/01/25
-Last modified: 2023/01/25
+Last modified: 2023/01/29
 Description: Fine-tuning a SegFormer model variant for semantic segmentation.
 Accelerator: GPU
 """
 """
-# Semantic segmentation with Hugging Face Transformers
+## Introduction
 
 In this example, we will learn how to fine-tune a SegFormer model variant for the task of
-semantic segmentation on a custom dataset. SegFormer was proposed in 
+semantic segmentation on a custom dataset. Semantic segmentation is the task of
+assigning each and every pixel of an image some semantic label. SegFormer was proposed in 
 [SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers](https://arxiv.org/abs/2105.15203).
 SegFormer uses a hierarchical transformer architecture (called "Mix Transformer") as
 its encoder and a lightweight decoder for segmentation. As a result, it yields
 state-of-the-art performance on semantic segmentation while being more efficient than
 the existing models. For more details, check out the original paper. 
 
-We'll leverage
+![segformer-arch](https://i.imgur.com/BsrVwYe.png)
+
+We leverage
 [Hugging Face Transformers](https://github.com/huggingface/transformers)
 to load a pre-trained SegFormer checkpoint and fine-tune it on a custom dataset.
 
@@ -36,8 +39,8 @@ To run this example, we need to install the `transformers` library:
 """
 ## Load dataset
 
-We'll use the [Oxford-IIIT Pets](https://www.robots.ox.ac.uk/~vgg/data/pets/) dataset for
-this example. We'll leverage `tensorflow_datasets` to load the dataset.
+We use the [Oxford-IIIT Pets](https://www.robots.ox.ac.uk/~vgg/data/pets/) dataset for
+this example. We leverage `tensorflow_datasets` to load the dataset.
 """
 
 import tensorflow_datasets as tfds
@@ -47,7 +50,7 @@ dataset, info = tfds.load("oxford_iiit_pet:3.*.*", with_info=True)
 """
 ## Prepare datasets
 
-For preparing the datasets for training and evaluation, we'll:
+For preparing the datasets for training and evaluation, we:
 
 * Normalize the images with the mean and standard deviation used during pre-training
 SegFormer. 
@@ -149,7 +152,7 @@ We now load a pre-trained SegFormer model variant from Hugging Face Transformers
 SegFormer model comes in different variants dubbed as **MiT-B0** to **MiT-B5**. You can
 find these checkpoints
 [here](https://huggingface.co/models?pipeline_tag=image-segmentation&sort=downloads&search=segformer).
-We'll load the smallest variant Mix-B0 which produces a good trade-off
+We load the smallest variant Mix-B0 which produces a good trade-off
 between inference efficiency and predictive performance.
 """
 
