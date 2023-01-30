@@ -59,7 +59,7 @@ than the longest item need to be padded with some placeholder value (alternative
 one might also truncate long samples before padding short samples).
 
 Keras provides a utility function to truncate and pad Python lists to a common length:
-`tf.keras.preprocessing.sequence.pad_sequences`.
+`tf.keras.utils.pad_sequences`.
 """
 
 raw_inputs = [
@@ -75,7 +75,7 @@ raw_inputs = [
 # We recommend using "post" padding when working with RNN layers
 # (in order to be able to use the
 # CuDNN implementation of the layers).
-padded_inputs = tf.keras.preprocessing.sequence.pad_sequences(
+padded_inputs = tf.keras.utils.pad_sequences(
     raw_inputs, padding="post"
 )
 print(padded_inputs)
