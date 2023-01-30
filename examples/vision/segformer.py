@@ -9,27 +9,27 @@ Accelerator: GPU
 """
 ## Introduction
 
-In this example, we will learn how to fine-tune a SegFormer model variant for the task of
+In this example, we show how to fine-tune a SegFormer model variant to do
 semantic segmentation on a custom dataset. Semantic segmentation is the task of
-assigning each and every pixel of an image some semantic label. SegFormer was proposed in 
+assigning a category to each and every pixel of an image. SegFormer was proposed in
 [SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers](https://arxiv.org/abs/2105.15203).
-SegFormer uses a hierarchical transformer architecture (called "Mix Transformer") as
+SegFormer uses a hierarchical Transformer architecture (called "Mix Transformer") as
 its encoder and a lightweight decoder for segmentation. As a result, it yields
 state-of-the-art performance on semantic segmentation while being more efficient than
-the existing models. For more details, check out the original paper. 
+existing models. For more details, check out the original paper.
 
 ![segformer-arch](https://i.imgur.com/BsrVwYe.png)
 
 We leverage
 [Hugging Face Transformers](https://github.com/huggingface/transformers)
-to load a pre-trained SegFormer checkpoint and fine-tune it on a custom dataset.
+to load a pretrained SegFormer checkpoint and fine-tune it on a custom dataset.
 
-**Note** that this example reuses code from the following resources:
+**Note:** this example reuses code from the following sources:
 
 * [Official tutorial on segmentation from the TensorFlow team](https://www.tensorflow.org/tutorials/images/segmentation)
 * [Hugging Face Task guide on segmentation](https://huggingface.co/docs/transformers/main/en/tasks/semantic_segmentation)
 
-To run this example, we need to install the `transformers` library: 
+To run this example, we need to install the `transformers` library:
 """
 
 """shell
@@ -37,7 +37,7 @@ To run this example, we need to install the `transformers` library:
 """
 
 """
-## Load dataset
+## Load the data
 
 We use the [Oxford-IIIT Pets](https://www.robots.ox.ac.uk/~vgg/data/pets/) dataset for
 this example. We leverage `tensorflow_datasets` to load the dataset.
@@ -48,15 +48,15 @@ import tensorflow_datasets as tfds
 dataset, info = tfds.load("oxford_iiit_pet:3.*.*", with_info=True)
 
 """
-## Prepare datasets
+## Prepare the datasets
 
 For preparing the datasets for training and evaluation, we:
 
 * Normalize the images with the mean and standard deviation used during pre-training
-SegFormer. 
-* Subtract one from the segmentation masks so that the pixel values start from 0. 
+SegFormer.
+* Subtract 1 from the segmentation masks so that the pixel values start from 0. 
 * Resize the images.
-* Transpose the images such that they become "channels_first" format. This is to make
+* Transpose the images such that they are in `"channels_first"` format. This is to make
 them compatible with the SegFormer model from Hugging Face Transformers. 
 """
 
@@ -85,14 +85,13 @@ def load_image(datapoint):
 
     input_image, input_mask = normalize(input_image, input_mask)
     input_image = tf.transpose(input_image, (2, 0, 1))
-
     return {"pixel_values": input_image, "labels": tf.squeeze(input_mask)}
 
 
 """
 We now use the above utilities to prepare `tf.data.Dataset` objects including
-`prefetch()` for performance. Change the `batch_size` depending on the GPU that you're
-using for training. 
+`prefetch()` for performance. Change the `batch_size` to match the size of the GPU memory
+on the GPU that you're using for training. 
 """
 
 auto = tf.data.AUTOTUNE
@@ -114,7 +113,7 @@ test_ds = (
 )
 
 """
-We can verify the shapes of the input images and their segmentation maps.
+We can check the shapes of the input images and their segmentation maps:
 """
 
 print(train_ds.element_spec)
@@ -146,13 +145,13 @@ for samples in train_ds.take(2):
     display([sample_image, sample_mask])
 
 """
-## Load a pre-trained SegFormer checkpoint
+## Load a pretrained SegFormer checkpoint
 
-We now load a pre-trained SegFormer model variant from Hugging Face Transformers. The
+We now load a pretrained SegFormer model variant from Hugging Face Transformers. The
 SegFormer model comes in different variants dubbed as **MiT-B0** to **MiT-B5**. You can
 find these checkpoints
 [here](https://huggingface.co/models?pipeline_tag=image-segmentation&sort=downloads&search=segformer).
-We load the smallest variant Mix-B0 which produces a good trade-off
+We load the smallest variant Mix-B0, which produces a good trade-off
 between inference efficiency and predictive performance.
 """
 
@@ -175,9 +174,9 @@ The warning is telling us that we're throwing away some weights and newly initia
 some others. Don't panic! This is absolutely normal. Since we're using a custom dataset
 which has a different set of semantic class labels than the pre-training dataset,
 [`TFSegformerForSemanticSegmentation`](https://huggingface.co/docs/transformers/model_doc/segformer#transformers.TFSegformerForSemanticSegmentation)
-is initializing a new decoder head.  
+is initializing a new decoder head.
 
-We can now initialize an optimizer and compile the model with it. 
+We can now initialize an optimizer and compile the model with it.
 """
 
 """
@@ -197,7 +196,7 @@ computing the loss, the model returned a structured `dataclass` object which is
 then used to guide the training process.
 
 With the compiled model, we can proceed and call `fit()` on it to begin the fine-tuning
-process! 
+process!
 """
 
 """
@@ -205,7 +204,7 @@ process!
 
 It helps us to visualize some sample predictions when the model is being fine-tuned,
 thereby helping us to monitor the progress of the model. This callback is inspired from
-[this tutorial](https://www.tensorflow.org/tutorials/images/segmentation). 
+[this tutorial](https://www.tensorflow.org/tutorials/images/segmentation).
 """
 
 from IPython.display import clear_output
@@ -263,7 +262,7 @@ history = model.fit(
 """
 ## Inference
 
-Perform inference on a few samples from the test set. 
+We perform inference on a few samples from the test set. 
 """
 
 show_predictions(test_ds, 5)
@@ -272,7 +271,7 @@ show_predictions(test_ds, 5)
 ## Conclusion
 
 In this example, we learned how to fine-tune a SegFormer model variant on a custom
-dataset for the task of semantic segmentation. In the interest of brevity, the example
+dataset for semantic segmentation. In the interest of brevity, the example
 was kept short. However, there are a couple of things, you can further try out:
 
 * Incorporate data augmentation to potentially improve the results. 
