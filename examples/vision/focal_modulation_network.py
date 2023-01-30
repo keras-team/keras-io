@@ -56,9 +56,8 @@ In this tutorial, we will delve into the practical application of this layer by 
 the entire model on the CIFAR-10 dataset and visually interpreting the layer's
 performance.
 
-Note: We have tried aligning our implementation with the
-[official implementation](https://github.com/microsoft/FocalNet) as
-much as we could.
+Note: We try to align our implementation with the
+[official implementation](https://github.com/microsoft/FocalNet).
 """
 
 """
@@ -117,7 +116,7 @@ EPOCHS = 50
 """
 ### Build the augmentations
 
-We have used the `keras.Sequential` API to compose all the individual augmentation steps
+We use the `keras.Sequential` API to compose all the individual augmentation steps
 into one API. 
 """
 
