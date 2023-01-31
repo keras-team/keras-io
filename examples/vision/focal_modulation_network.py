@@ -1,5 +1,5 @@
 """
-Title: Focal Modulation Networks
+Title: Focal Modulation: A replacement for Self Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2023/01/25
 Last modified: 2023/01/25
@@ -10,7 +10,7 @@ Description: Image classification with Focal Modulation Networks.
 
 This tutorial aims to provide a comprehensive guide to the implementation of
 [Focal Modulation Networks](https://arxiv.org/abs/2203.11926), as
-presented in the academic paper by Yang et. al. 
+presented in the academic paper by Yang et al.
 
 This tutorial will provide a formal, minimalistic approach to implementing Focal
 Modulation Networks and explore its potential applications in the field of Deep Learning.
@@ -26,29 +26,34 @@ Transformers ([Dosovitskiy et. al](https://arxiv.org/abs/2010.11929v2)).
 enables input-dependent global interactions, in contrast to convolution operation which
 constraints interactions in a local region with a shared kernel.
 
-The **attention** module is mathematically written as
+The **Attention** module is mathematically written as shown in **Equation 1**.
 
-$$\text{Attention} = \text{softmax}(\frac{QK^{T}}{\sqrt{d_k}})V$$
+| ![Attention Equation](https://i.imgur.com/thdHvQx.png) |
+| :--: |
+| Equation 1: The mathematical equation of attention (Source: Authors) |
 
-where:
+Where:
 - $Q$ is the query
 - $K$ is the key
 - $V$ is the value
 - $d_k$ is the dimension of the key
 
-With **self-attention** the query, key, and value are all sourced from the input
-sequence. Let's rewrite the attention equation for self-attention.
+With **self-attention**, the query, key, and value are all sourced from the input
+sequence. Let us rewrite the attention equation for self-attention as shown in **Equation
+2**.
 
-$$\text{Self Attention} = \text{softmax}(\frac{QQ^{T}}{\sqrt{d_q}})Q$$
+| ![Self Attention Equation](https://i.imgur.com/My9tRnd.png) |
+| :--: |
+| Equation 2: The mathematical equation of self-attention (Source: Authors) |
 
-Upon looking at the equation of self-attention we see that it is a quadratic equation.
-This means that as number of tokens increase, so does the computation time (cost too). To
-mitigate this problem, and also to make the Transformer more interpretable Yang et. al
-have tried to replace the Self Attention module with better componenets.
+Upon looking at the equation of self-attention, we see that it is a quadratic equation.
+Therefore, as the number of tokens increase, so does the computation time (cost too). To
+mitigate this problem and make the Transformer more interpretable, Yang et al.
+have tried to replace the Self Attention module with better components.
 
 **The Solution**
 
-Yang et. al introduce the revolutionary Focal Modulation _Layer_, poised to serve as a
+Yang et al. introduce the revolutionary Focal Modulation _Layer_, poised to serve as a
 seamless replacement for the Self Attention Layer. The layer boasts high
 interpretability, making it a valuable tool for Deep Learning practitioners.
 
@@ -67,12 +72,10 @@ We use tensorflow version `2.11.0` for this tutorial.
 """
 
 import numpy as np
-
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.Keras import layers
 from tensorflow.keras.optimizers.experimental import AdamW
-
 from typing import Optional, Tuple, List
 from matplotlib import pyplot as plt
 from random import randint
@@ -101,7 +104,7 @@ LEARNING_RATE = 1e-4
 WEIGHT_DECAY = 1e-4
 
 # TRAINING
-EPOCHS = 50
+EPOCHS = 25
 
 """
 ## Load and process the CIFAR-10 dataset
@@ -144,49 +147,28 @@ test_aug = keras.Sequential(
 ### Build `tf.data` pipeline
 """
 
-
-def train_map(image: tf.Tensor, label: tf.Tensor):
-    """Applies `train_aug` transformation to an image.
-
-    Args:
-        image (tf.Tensor): Input image
-        label (tf.Tensor): Input label
-
-    Returns:
-        Tuple of transformed image and original label
-    """
-    image = train_aug(image)
-    return image, label
-
-
-def test_map(image: tf.Tensor, label: tf.Tensor):
-    """Applies `test_aug` transformation to an image.
-
-    Args:
-        image (tf.Tensor): Input image
-        label (tf.Tensor): Input label
-
-    Returns:
-        Tuple of transformed image and original label
-    """
-    image = test_aug(image)
-    return image, label
-
-
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_ds = (
-    train_ds.map(train_map, num_parallel_calls=AUTO)
+    train_ds.map(
+        lambda image, label: (train_aug(image), label), num_parallel_calls=AUTO
+    )
     .shuffle(BUFFER_SIZE)
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
 )
 
 val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_ds = val_ds.map(test_map, num_parallel_calls=AUTO).batch(BATCH_SIZE).prefetch(AUTO)
+val_ds = (
+    val_ds.map(lambda image, label: (test_aug(image), label), num_parallel_calls=AUTO)
+    .batch(BATCH_SIZE)
+    .prefetch(AUTO)
+)
 
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 test_ds = (
-    test_ds.map(test_map, num_parallel_calls=AUTO).batch(BATCH_SIZE).prefetch(AUTO)
+    test_ds.map(lambda image, label: (test_aug(image), label), num_parallel_calls=AUTO)
+    .batch(BATCH_SIZE)
+    .prefetch(AUTO)
 )
 
 """
@@ -206,14 +188,14 @@ will follow:
 
 - Patch Embedding Layer
 - Focal Modulation Block
-  - Multi Layer Perceptron
+  - Multi-Layer Perceptron
   - Focal Modulation Layer
     - Hierarchical Contextualization
     - Gated Aggregation
   - Building Focal Modulation Block
 - Building the Basic Layer
 
-To better understand the architecture in a format we are well versed with, let us see how
+To better understand the architecture in a format we are well versed in, let us see how
 the Focal Modulation Network would look when drawn like a Transformer architecture.
 
 **Figure 2** shows the encoder layer of a traditional Transformer architecture where Self
@@ -237,13 +219,12 @@ latent space. This layer is also used as the down-sampling layer in the architec
 
 
 class PatchEmbed(layers.Layer):
-    """Image patch embedding layer, and also acts as the down-sampling layer.
+    """Image patch embedding layer, also acts as the down-sampling layer.
 
     Args:
         image_size (Tuple[int]): Input image resolution.
         patch_size (Tuple[int]): Patch spatial resolution.
-        embed_dim (int): Embedding dimnesion.
-        norm_layer (tf.keras.layers.Layer): Normalization layer.
+        embed_dim (int): Embedding dimension.
     """
 
     def __init__(
@@ -251,7 +232,6 @@ class PatchEmbed(layers.Layer):
         image_size: Tuple[int] = (224, 224),
         patch_size: Tuple[int] = (4, 4),
         embed_dim: int = 96,
-        norm_layer: tf.keras.layers.Layer = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -268,10 +248,11 @@ class PatchEmbed(layers.Layer):
             filters=embed_dim, kernel_size=patch_size, strides=patch_size
         )
         self.flatten = layers.Reshape(target_shape=(-1, embed_dim))
-        self.norm = norm_layer(epsilon=1e-7) if norm_layer is not None else None
+        self.norm = keras.layers.LayerNormalization(epsilon=1e-7)
 
     def call(self, x: tf.Tensor) -> Tuple[tf.Tensor, int, int, int]:
-        """
+        """Patchifies the image and converts into tokens.
+
         Args:
             x: Tensor of shape (B, H, W, C)
 
@@ -289,9 +270,7 @@ class PatchEmbed(layers.Layer):
         channels = tf.shape(x)[3]
 
         # B, H, W, C -> B, H*W, C
-        x = self.flatten(x)
-        if self.norm is not None:
-            x = self.norm(x)
+        x = self.norm(self.flatten(x))
 
         return x, height, width, channels
 
@@ -300,7 +279,7 @@ class PatchEmbed(layers.Layer):
 ## Focal Modulation _Block_
 
 A Focal Modulation _Block_ can be considered as a single Transformer Block with the Self
-Attention (SA) module being replaced with Focal Modulation module as we saw in **Figure
+Attention (SA) module being replaced with Focal Modulation module, as we saw in **Figure
 2**.
 
 Let us recall how a focal modulation block is supposed to look like with the aid of the
@@ -325,17 +304,14 @@ def MLP(
     in_features: int,
     hidden_features: Optional[int] = None,
     out_features: Optional[int] = None,
-    act_layer=keras.activations.gelu,
     mlp_drop_rate: float = 0.0,
 ):
     hidden_features = hidden_features or in_features
     out_features = out_features or in_features
-    act_layer = act_layer
-    mlp_drop_rate = mlp_drop_rate
 
     return keras.Sequential(
         [
-            layers.Dense(units=hidden_features, activation=act_layer),
+            layers.Dense(units=hidden_features, activation=keras.activations.gelu),
             layers.Dense(units=out_features),
             layers.Dropout(rate=mlp_drop_rate),
         ]
@@ -345,12 +321,11 @@ def MLP(
 """
 ### Focal Modulation _Layer_
 
-In a typical Transformer architecture, for each visual token (**query**) $x_{i} \in
-\mathbb{R}^{C}$ in an input feature map $X \in \mathbb{R}^{H \times W \times C}$ a
-**generic encoding process** produces a feature representation $y_{i} \in
-\mathbb{R}^{C}$. 
+In a typical Transformer architecture, for each visual token (**query**) `x_i in R^C` in
+an input feature map `X in R^{HxWxC}` a **generic encoding process** produces a feature
+representation `y_i in R^C`. 
 
-The encoding process consists of **interaction** (with its surroundings for e.g a dot
+The encoding process consists of **interaction** (with its surroundings for e.g. a dot
 product), and **aggregation** (over the contexts for e.g weighted mean).
 
 We will talk about two types of encoding here:
@@ -363,8 +338,9 @@ We will talk about two types of encoding here:
 | :--: |
 | **Figure 4**: Self Attention module. (Source: Authors) |
 
-$$ y_{i} = \text{Aggregation} (\text{Interaction} (x_{i}, X), X) $$
-$$ \text{Self Attention}  = \text{softmax} (\frac{QK}{\sqrt{d_{k}}}) V $$
+| ![Aggregation and Interaction for Self-Attention](https://i.imgur.com/j1k8Xmy.png) |
+| :--: |
+| **Equation 3:** Aggregation and Interaction in Self-Attention(Surce: Authors)|
 
 As shown in **Figure 4** the query and the key interact (in the interaction step) with
 each other to output the attention scores. The weighted aggregation of the value comes
@@ -376,26 +352,25 @@ next, known as the aggregation step.
 | :--: |
 | **Figure 5**: Focal Modulation module. (Source: Authors) | 
 
-$$ y_{i} = \text{Interaction} (\text{Aggregation} (i, X), x_{i}) $$
-$$ y_{i} = q(x_i) \odot m(i, X)$$
+| ![Aggregation and Interaction in Focal Modulation](https://i.imgur.com/gsvJfWp.png) |
+| :--: |
+| **Equation 4:** Aggregation and Interaction in Focal Modulation (Source: Authors) |
 
-$$ y_{i} = q(x_i) \odot m(i, X)$$
-
-**Figure 5** depicts the Focal Modulation _Layer_. $q()$ is the query projection
-function. It is a **linear layer** that projects the query into a latent space. $m ()$ is
-the context aggregation function. In focal modulation unlike self-attention the
-aggregation step takes place before the interaction step.
+**Figure 5** depicts the Focal Modulation _Layer_. `q()` is the query projection
+function. It is a **linear layer** that projects the query into a latent space. `m ()` is
+the context aggregation function. Unlike self-attention, the
+aggregation step takes place in focal modulation before the interaction step.
 """
 
 """
-While $q()$ is fairly straight forward to understand, the context aggregation function
-$m()$ is a bit more complex. We will focus on $m()$ in this section.
+While `q()` is pretty straightforward to understand, the context aggregation function
+`m()` is more complex. Therefore, this section will focus on `m()`.
 
 | ![Context Aggregation](https://i.imgur.com/uqIRXI7.png)|
 | :--: |
-| **Figure 6**: Context Aggregation function $m()$. (Source: Authors) |
+| **Figure 6**: Context Aggregation function `m()`. (Source: Authors) |
 
-The context aggregation function $m()$ consists of two parts as shown in **Figure 6**:
+The context aggregation function `m()` consists of two parts as shown in **Figure 6**:
 - Hierarchical Contextualization
 - Gated Aggregation
 """
@@ -407,24 +382,30 @@ The context aggregation function $m()$ consists of two parts as shown in **Figur
 | :--: |
 | **Figure 7**: Hierarchical Contextualization (Source: Authors) |
 
-In **Figure 7** we see that the input is first projected linearly. This linear projection
-produces $Z^{0}$. Where $Z^{0}$ can be expressed as follows:
+In **Figure 7**, we see that the input is first projected linearly. This linear projection
+produces `Z^0`. Where `Z^0` can be expressed as follows:
 
-$$Z^{0}=f_{z}(X) \in \mathbb{R}^{H \times W \times C}$$
+| ![Linear projection of z_not](https://i.imgur.com/pd0Z2Of.png) |
+| :--: |
+| Equation 5: Linear projection of `Z^0` (Source: Authors) |
 
-$Z^{0}$ is then passed on to a series of Depth-Wise (DWConv) Conv and
+`Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
 [GeLU](https://www.tensorflow.org/api_docs/python/tf/keras/activations/gelu) layers. The
-authors term each block of DWConv and GeLU as levels denoted by $l$. In **Figure 6** we
-have 2 levels. Mathematically this is represented as:
+authors term each block of DWConv and GeLU as levels denoted by `l`. In **Figure 6** we
+have two levels. Mathematically this is represented as:
 
-$$Z^{l}=f_{a}^{l}(Z^{l-1}) \in \mathbb{R}^{H \times W \times C}$$
+| ![Levels of modulation](https://i.imgur.com/ijGD1Df.png) |
+| :--: |
+| Equation 6: Levels of the modulation layer (Source: Authors) |
 
-where $l \in \{1, \dots , L\}$
+where `l in {1, ... , L}`
 
 The final feature map goes through a Global Average Pooling Layer. This can be expressed
 as follows:
 
-$$Z^{L+1}=\text{AvgPool}(Z^{L}) \in \mathbb{R}^{C}$$
+| ![Avg Pool](https://i.imgur.com/MQzQhbo.png) |
+| :--: |
+| Equation 7: Average Pooling of the final feature (Source: Authors)|
 """
 
 """
@@ -434,28 +415,37 @@ $$Z^{L+1}=\text{AvgPool}(Z^{L}) \in \mathbb{R}^{C}$$
 | :--: |
 | **Figure 8**: Gated Aggregation (Source: Authors) |
 
-Now that we have $L+1$ intermediate feature maps by virtue of the Hierarchical
+Now that we have `L+1` intermediate feature maps by virtue of the Hierarchical
 Contextualization step, we need a gating mechanism that lets some features pass and
-prohibits the others. This can be very simply implemented with the attention module.
-Later in the tutorial, we will visualize these gates, to better understand their
+prohibits others. This can be implemented with the attention module.
+Later in the tutorial, we will visualize these gates to better understand their
 usefulness.
 
-First we build the weights for aggregation. Here we apply a **linear layer** on the input
+First, we build the weights for aggregation. Here we apply a **linear layer** on the input
 feature map that projects it into $L+1$ dimensions.
 
-$$G=f_{g}(X) \in \mathbb{R}^{H \times W \times (L+1)}$$ 
+| ![Gates](https://i.imgur.com/1CgEo1G.png) |
+| :--: |
+| Eqation 8: Gates (Source: Authors) |
 
 Next we perform the weighted aggregation over the contexts.
 
-$$Z^{\text{out}}=\sum_{l=1}^{L+1}G^{l} \odot Z^{l} \in \mathbb{R}^{H \times W \times C}$$
+| ![z out](https://i.imgur.com/mpJ712R.png) |
+| :--: |
+| Eqation 9: Final feature map (Source: Authors) |
 
-To enable the communication across different channels we use another linear layer $h()$
+To enable communication across different channels, we use another linear layer $h()$
 to obtain the modulator
 
-$$M = h(Z^{\text{out}}) \in \mathbb{R}^{H \times W \times C}$$
+| ![Modulator](https://i.imgur.com/0EpT3Ti.png) |
+| :--: |
+| Eqation 10: Modulator (Source: Authors) |
 
 To sum up the Focal Modulation _Layer_ we have:
-$$ y_{i} = q(x_i) \odot h(\sum_{l=1}^{L+1}g^{l}_{i} \odot z^{l}_{i})$$
+
+| ![Focal Modulation Layer](https://i.imgur.com/1QIhvYA.png) |
+| :--: |
+| Eqation 11: Focal Modulation Layer (Source: Authors) |
 """
 
 
@@ -562,31 +552,9 @@ class FocalModulationLayer(layers.Layer):
 """
 ### Building Focal Modulation _Block_
 
-Finally we have all the components we need to build the Focal Modulation block. Here we
+Finally, we have all the components we need to build the Focal Modulation block. Here we
 take the MLP and Focal Modulaion _Layer_ together and build the Focal Modulation _Block_.
 """
-
-
-class DropPath(layers.Layer):
-    """Drop Path also known as the Stochastic Depth layer.
-
-    Refernece:
-        - https://keras.io/examples/vision/cct/#stochastic-depth-for-regularization
-        - github.com:rwightman/pytorch-image-models
-    """
-
-    def __init__(self, drop_path_prob: float, **kwargs):
-        super().__init__(**kwargs)
-        self.drop_path_prob = drop_path_prob
-
-    def call(self, x: tf.Tensor, training: bool = False):
-        if training:
-            keep_prob = 1 - self.drop_path_prob
-            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
-            return (x / keep_prob) * random_tensor
-        return x
 
 
 class FocalModulationBlock(layers.Layer):
@@ -598,8 +566,6 @@ class FocalModulationBlock(layers.Layer):
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         drop (float): Dropout rate.
         drop_path (float): Stochastic depth rate.
-        act_layer (tf.keras.activations.Activation): Activation layer.
-        norm_layer (tf.keras.layers.Layer): Normalization layer.
         focal_level (int): Number of focal levels.
         focal_window (int): Focal window size at first focal level
     """
@@ -611,8 +577,6 @@ class FocalModulationBlock(layers.Layer):
         mlp_ratio: float = 4.0,
         drop: float = 0.0,
         drop_path: float = 0.0,
-        act_layer=keras.activations.gelu,
-        norm_layer=layers.LayerNormalization,
         focal_level: int = 1,
         focal_window: int = 3,
         **kwargs,
@@ -623,28 +587,23 @@ class FocalModulationBlock(layers.Layer):
         self.mlp_ratio = mlp_ratio
         self.focal_level = focal_level
         self.focal_window = focal_window
-        self.norm1 = norm_layer(epsilon=1e-5)
+        self.norm = layers.LayerNormalization(epsilon=1e-5)
         self.modulation = FocalModulationLayer(
             dim=self.dim,
             focal_window=self.focal_window,
             focal_level=self.focal_level,
             proj_drop_rate=drop,
         )
-        self.drop_path = (
-            DropPath(drop_path_prob=drop_path)
-            if drop_path > 0.0
-            else layers.Activation("linear")
-        )
         mlp_hidden_dim = int(self.dim * self.mlp_ratio)
         self.mlp = MLP(
             in_features=self.dim,
             hidden_features=mlp_hidden_dim,
-            act_layer=act_layer,
             mlp_drop_rate=drop,
         )
 
     def call(self, x: tf.Tensor, height: int, width: int, channels: int) -> tf.Tensor:
-        """
+        """Processes the input tensor through the focal modulation block.
+
         Args:
             x (tf.Tensor): Inputs of the shape (B, L, C)
             height (int): The height of the feature map
@@ -662,8 +621,8 @@ class FocalModulationBlock(layers.Layer):
         x = tf.reshape(x, shape=(-1, height * width, channels))
 
         # FFN
-        x = shortcut + self.drop_path(x)
-        x = x + self.drop_path(self.mlp(self.norm1(x)))
+        x = shortcut + x
+        x = x + self.mlp(self.norm(x))
         return x
 
 
@@ -677,8 +636,8 @@ illustrated in **Figure 9**.
 | :--: |
 | **Figure 9**: Basic Layer, a collection of focal modulation blocks. (Source: Authors) | 
 
-Notice how in **Fig. 9** there are more than one focal modulation blocks denoted by
-$N\times$. This shows how the Basic Layer is a collection of Focal Modulation _Blocks_.
+Notice how in **Fig. 9** there are more than one focal modulation blocks denoted by `Nx`.
+This shows how the Basic Layer is a collection of Focal Modulation _Blocks_.
 """
 
 
@@ -690,11 +649,8 @@ class BasicLayer(layers.Layer):
         out_dim (int): Dimension used by the Patch Embedding Layer.
         input_resolution (Tuple[int]): Input image resolution.
         depth (int): The number of Focal Modulation Blocks.
-        window_size (int): Local window size.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         drop (float): Dropout rate.
-        drop_path (float): Droppath rate.
-        norm_layer (tf.keras.layers.Layer): The normalizaiotn used.
         downsample (tf.keras.layers.Layer): Downsampling layer at the end of the layer.
         focal_level (int): The current focal level.
         focal_window (int): Focal window used.
@@ -708,8 +664,6 @@ class BasicLayer(layers.Layer):
         depth: int,
         mlp_ratio: float = 4.0,
         drop: float = 0.0,
-        drop_path: float = 0.0,
-        norm_layer=layers.LayerNormalization,
         downsample=None,
         focal_level: int = 1,
         focal_window: int = 1,
@@ -725,8 +679,6 @@ class BasicLayer(layers.Layer):
                 input_resolution=input_resolution,
                 mlp_ratio=mlp_ratio,
                 drop=drop,
-                drop_path=drop_path[i] if isinstance(drop_path, list) else drop_path,
-                norm_layer=norm_layer,
                 focal_level=focal_level,
                 focal_window=focal_window,
             )
@@ -757,7 +709,6 @@ class BasicLayer(layers.Layer):
             A tuple of the processed tensor, changed height, width, and
             dim of the tensor.
         """
-        # print(f"Basic Layer {x.shape}")
         # Apply Focal Modulation Blocks
         for block in self.blocks:
             x = block(x, height, width, channels)
@@ -789,15 +740,12 @@ class FocalModulationNetwork(keras.Model):
 
     Parameters:
         image_size (Tuple[int]): Spatial size of images used.
-        patch_size (Tuple[int]): Patch size of each patches.
+        patch_size (Tuple[int]): Patch size of each patch.
         num_classes (int): Number of classes used for classification.
         embed_dim (int): Patch embedding dimension.
         depths (List[int]): Depth of each Focal Transformer block.
         mlp_ratio (float): Ratio of expansion for the intermediate layer of MLP.
         drop_rate (float): The dropout rate for FM and MLP layers.
-        drop_path_rate (float): Stochastic depth rate.
-        norm_layer (tf.keras.layers.Layer): Normalization layer.
-        patch_norm (bool): If True, add normalization after patch embedding.
         focal_levels (list): How many focal levels at all stages.
             Note that this excludes the finest-grain level.
         focal_windows (list): The focal window size at all stages.
@@ -812,38 +760,26 @@ class FocalModulationNetwork(keras.Model):
         depths: List[int] = [2, 3, 2],
         mlp_ratio: float = 4.0,
         drop_rate: float = 0.1,
-        drop_path_rate: float = 0.1,
-        norm_layer=layers.LayerNormalization,
         focal_levels=[2, 2, 2],
         focal_windows=[3, 3, 3],
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.num_layers = len(depths)
-
-        # Embedding dimension doubles every stage of the model.
         embed_dim = [embed_dim * (2**i) for i in range(self.num_layers)]
-
         self.num_classes = num_classes
         self.embed_dim = embed_dim
         self.num_features = embed_dim[-1]
         self.mlp_ratio = mlp_ratio
-
         self.patch_embed = PatchEmbed(
             image_size=image_size,
             patch_size=patch_size,
             embed_dim=embed_dim[0],
-            norm_layer=norm_layer,
         )
-
         num_patches = self.patch_embed.num_patches
         patches_resolution = self.patch_embed.patch_resolution
         self.patches_resolution = patches_resolution
         self.pos_drop = layers.Dropout(drop_rate)
-
-        # Calculate stochastic depth probabilities.
-        dpr = [x for x in np.linspace(start=0, stop=drop_path_rate, num=sum(depths))]
-
         self.basic_layers = list()
         for i_layer in range(self.num_layers):
             layer = BasicLayer(
@@ -858,26 +794,23 @@ class FocalModulationNetwork(keras.Model):
                 depth=depths[i_layer],
                 mlp_ratio=self.mlp_ratio,
                 drop=drop_rate,
-                drop_path=dpr[sum(depths[:i_layer]) : sum(depths[: i_layer + 1])],
-                norm_layer=norm_layer,
                 downsample=PatchEmbed if (i_layer < self.num_layers - 1) else None,
                 focal_level=focal_levels[i_layer],
                 focal_window=focal_windows[i_layer],
             )
             self.basic_layers.append(layer)
-
-        self.norm = norm_layer(epsilon=1e-7)
+        self.norm = keras.layers.LayerNormalization(epsilon=1e-7)
         self.avgpool = layers.GlobalAveragePooling1D()
         self.flatten = layers.Flatten()
         self.head = layers.Dense(self.num_classes, activation="softmax")
 
-    def forward_features(self, x: tf.Tensor) -> tf.Tensor:
+    def call(self, x: tf.Tensor) -> tf.Tensor:
         """
         Args:
             x: Tensor of shape (B, H, W, C)
 
         Returns:
-            The processed tensor.
+            The logits.
         """
         # Patch Embed the input images.
         x, height, width, channels = self.patch_embed(x)
@@ -889,18 +822,6 @@ class FocalModulationNetwork(keras.Model):
         x = self.norm(x)
         x = self.avgpool(x)
         x = self.flatten(x)
-
-        return x
-
-    def call(self, x: tf.Tensor) -> tf.Tensor:
-        """
-        Args:
-            x: Tensor of shape (B, H, W, C)
-
-        Returns:
-            The logits.
-        """
-        x = self.forward_features(x)
         x = self.head(x)
         return x
 
@@ -918,7 +839,7 @@ In this section, we train our Focal Modulation _Model_ on the CIFAR-10 dataset.
 ### Visualization Callback
 A key feature of the Focal Modulation Network is Explicit input-dependency. This means
 the modulator is calculated by looking at the local features around the target location,
-so it depends on the input. In very simple terms, this makes interpretaion easy. We can
+so it depends on the input. In very simple terms, this makes interpretation easy. We can
 simply lay down the gating values and the original image, next to each other to see how
 the gating mechanism works.
 
@@ -940,7 +861,8 @@ def display_grid(
     gates: tf.Tensor,
     modulator: tf.Tensor,
 ):
-    """
+    """Displays the image with the gates and modulator overlayed.
+
     Args:
         test_images (tf.Tensor): A batch of test images.
         gates (tf.Tensor): The gates of the Focal Modualtion Layer.
@@ -959,34 +881,20 @@ def display_grid(
     ax[0].set_title("Original:")
     ax[0].axis("off")
 
-    # Gate 1
-    img = ax[1].imshow(orig_image)
-    ax[1].imshow(gate_image[..., 0], cmap="inferno", alpha=0.6, extent=img.get_extent())
-    ax[1].set_title("G 1:")
-    ax[1].axis("off")
+    for index in range(1, 5):
+        img = ax[index].imshow(orig_image)
+        if index != 4:
+            overlay_image = gate_image[..., index - 1]
+            title = f"G {index}:"
+        else:
+            overlay_image = tf.math.reduce_mean(modulator_image, axis=-1)
+            title = f"MOD:"
 
-    # Gate 2
-    img = ax[2].imshow(orig_image)
-    ax[2].imshow(gate_image[..., 1], cmap="inferno", alpha=0.6, extent=img.get_extent())
-    ax[2].set_title("G 2:")
-    ax[2].axis("off")
-
-    # Gate 3
-    img = ax[3].imshow(orig_image)
-    ax[3].imshow(gate_image[..., 2], cmap="inferno", alpha=0.6, extent=img.get_extent())
-    ax[3].set_title("G 3:")
-    ax[3].axis("off")
-
-    # Gate 4
-    img = ax[4].imshow(orig_image)
-    ax[4].imshow(
-        tf.math.reduce_mean(modulator_image, axis=-1),
-        cmap="inferno",
-        alpha=0.6,
-        extent=img.get_extent(),
-    )
-    ax[4].set_title("MOD:")
-    ax[4].axis("off")
+        ax[index].imshow(
+            overlay_image, cmap="inferno", alpha=0.6, extent=img.get_extent()
+        )
+        ax[index].set_title(title)
+        ax[index].axis("off")
 
     plt.axis("off")
     plt.show()
@@ -997,7 +905,7 @@ def display_grid(
 ### TrainMonitor
 """
 
-# Taking a batch of test inputs to measure model's progress.
+# Taking a batch of test inputs to measure the model's progress.
 test_images, test_labels = next(iter(test_ds))
 upsampler = tf.keras.layers.UpSampling2D(
     size=(4, 4),
@@ -1022,10 +930,6 @@ class TrainMonitor(keras.callbacks.Callback):
             # Display the grid of gates and modulator.
             display_grid(test_images=test_images, gates=gates, modulator=modulator)
 
-
-callbacks = [
-    TrainMonitor(epoch_interval=10),
-]
 
 """
 ### Learning Rate scheduler
@@ -1098,7 +1002,7 @@ history = focal_mod_net.fit(
     train_ds,
     epochs=EPOCHS,
     validation_data=val_ds,
-    callbacks=callbacks,
+    callbacks=[TrainMonitor(epoch_interval=10)],
 )
 
 """
