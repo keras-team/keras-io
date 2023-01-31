@@ -1,12 +1,16 @@
-"""
-Title: Semantic segmentation with SegFormer and Hugging Face Transformers
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2023/01/25
-Last modified: 2023/01/29
-Description: Fine-tuning a SegFormer model variant for semantic segmentation.
-Accelerator: GPU
-"""
-"""
+# Semantic segmentation with SegFormer and Hugging Face Transformers
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Date created:** 2023/01/25<br>
+**Last modified:** 2023/01/29<br>
+**Description:** Fine-tuning a SegFormer model variant for semantic segmentation.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/segformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/segformer.py)
+
+
+
+---
 ## Introduction
 
 In this example, we show how to fine-tune a SegFormer model variant to do
@@ -30,24 +34,46 @@ to load a pretrained SegFormer checkpoint and fine-tune it on a custom dataset.
 * [Hugging Face Task guide on segmentation](https://huggingface.co/docs/transformers/main/en/tasks/semantic_segmentation)
 
 To run this example, we need to install the `transformers` library:
-"""
 
-"""shell
-!pip install transformers -q
-"""
 
-"""
+```python
+!!pip install transformers -q
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+[]
+
+```
+</div>
+---
 ## Load the data
 
 We use the [Oxford-IIIT Pets](https://www.robots.ox.ac.uk/~vgg/data/pets/) dataset for
 this example. We leverage `tensorflow_datasets` to load the dataset.
-"""
 
+
+```python
 import tensorflow_datasets as tfds
 
 dataset, info = tfds.load("oxford_iiit_pet:3.*.*", with_info=True)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/__init__.py:98: UserWarning: unable to load libtensorflow_io_plugins.so: unable to open file: libtensorflow_io_plugins.so, from paths: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io_plugins.so']
+caused by: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io_plugins.so: undefined symbol: _ZN3tsl5mutexC1Ev']
+  warnings.warn(f"unable to load libtensorflow_io_plugins.so: {e}")
+/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/__init__.py:104: UserWarning: file system plugins are not loaded: unable to open file: libtensorflow_io.so, from paths: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io.so']
+caused by: ['/opt/conda/lib/python3.7/site-packages/tensorflow_io/python/ops/libtensorflow_io.so: undefined symbol: _ZNK10tensorflow4data11DatasetBase8FinalizeEPNS_15OpKernelContextESt8functionIFN3tsl8StatusOrISt10unique_ptrIS1_NS5_4core15RefCountDeleterEEEEvEE']
+  warnings.warn(f"file system plugins are not loaded: {e}")
+
+```
+</div>
+---
 ## Prepare the datasets
 
 For preparing the datasets for training and evaluation, we:
@@ -58,8 +84,9 @@ SegFormer.
 * Resize the images.
 * Transpose the images such that they are in `"channels_first"` format. This is to make
 them compatible with the SegFormer model from Hugging Face Transformers.
-"""
 
+
+```python
 import tensorflow as tf
 from tensorflow.keras import backend
 
@@ -87,13 +114,14 @@ def load_image(datapoint):
     input_image = tf.transpose(input_image, (2, 0, 1))
     return {"pixel_values": input_image, "labels": tf.squeeze(input_mask)}
 
+```
 
-"""
 We now use the above utilities to prepare `tf.data.Dataset` objects including
 `prefetch()` for performance. Change the `batch_size` to match the size of the GPU memory
 on the GPU that you're using for training.
-"""
 
+
+```python
 auto = tf.data.AUTOTUNE
 batch_size = 4
 
@@ -111,17 +139,26 @@ test_ds = (
     .batch(batch_size)
     .prefetch(auto)
 )
+```
 
-"""
 We can check the shapes of the input images and their segmentation maps:
-"""
 
+
+```python
 print(train_ds.element_spec)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+{'pixel_values': TensorSpec(shape=(None, 3, 512, 512), dtype=tf.float32, name=None), 'labels': TensorSpec(shape=(None, 512, 512), dtype=tf.float32, name=None)}
+
+```
+</div>
+---
 ## Visualize dataset
-"""
 
+
+```python
 import matplotlib.pyplot as plt
 
 
@@ -143,8 +180,21 @@ for samples in train_ds.take(2):
     sample_image = tf.transpose(sample_image, (1, 2, 0))
     sample_mask = tf.expand_dims(sample_mask, -1)
     display([sample_image, sample_mask])
+```
 
-"""
+
+    
+![png](/img/examples/vision/segformer/segformer_12_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/segformer/segformer_12_1.png)
+    
+
+
+---
 ## Load a pretrained SegFormer checkpoint
 
 We now load a pretrained SegFormer model variant from Hugging Face Transformers. The
@@ -153,8 +203,9 @@ find these checkpoints
 [here](https://huggingface.co/models?pipeline_tag=image-segmentation&sort=downloads&search=segformer).
 We load the smallest variant Mix-B0, which produces a good trade-off
 between inference efficiency and predictive performance.
-"""
 
+
+```python
 from transformers import TFSegformerForSemanticSegmentation
 
 model_checkpoint = "nvidia/mit-b0"
@@ -168,8 +219,25 @@ model = TFSegformerForSemanticSegmentation.from_pretrained(
     label2id=label2id,
     ignore_mismatched_sizes=True,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:5 out of the last 5 calls to <function Conv._jit_compiled_convolution_op at 0x7fa8cc1139e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+WARNING:tensorflow:5 out of the last 5 calls to <function Conv._jit_compiled_convolution_op at 0x7fa8cc1139e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+WARNING:tensorflow:6 out of the last 6 calls to <function Conv._jit_compiled_convolution_op at 0x7fa8bde37440> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+WARNING:tensorflow:6 out of the last 6 calls to <function Conv._jit_compiled_convolution_op at 0x7fa8bde37440> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+Some layers from the model checkpoint at nvidia/mit-b0 were not used when initializing TFSegformerForSemanticSegmentation: ['classifier']
+- This IS expected if you are initializing TFSegformerForSemanticSegmentation from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing TFSegformerForSemanticSegmentation from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some layers of TFSegformerForSemanticSegmentation were not initialized from the model checkpoint at nvidia/mit-b0 and are newly initialized: ['decode_head']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+
+```
+</div>
 The warning is telling us that we're throwing away some weights and newly initializing
 some others. Don't panic! This is absolutely normal. Since we're using a custom dataset
 which has a different set of semantic class labels than the pre-training dataset,
@@ -177,17 +245,23 @@ which has a different set of semantic class labels than the pre-training dataset
 is initializing a new decoder head.
 
 We can now initialize an optimizer and compile the model with it.
-"""
 
-"""
+---
 ## Compile the model
-"""
 
+
+```python
 lr = 0.00006
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
 model.compile(optimizer=optimizer)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+No loss specified in compile() - the model's internal loss computation will be used as the loss. Don't panic - this is a common way to train TensorFlow models in Transformers! To disable this behaviour please pass a loss argument, or explicitly pass `loss=None` if you do not want your model to compute a loss.
+
+```
+</div>
 Notice that we are not using any loss function for compiling the model. This is because
 the forward pass of the model
 [implements](https://github.com/huggingface/transformers/blob/820c46a707ddd033975bc3b0549eea200e64c7da/src/transformers/models/segformer/modeling_tf_segformer.py#L873)
@@ -197,16 +271,16 @@ then used to guide the training process.
 
 With the compiled model, we can proceed and call `fit()` on it to begin the fine-tuning
 process!
-"""
 
-"""
+---
 ## Prediction callback to monitor training progress
 
 It helps us to visualize some sample predictions when the model is being fine-tuned,
 thereby helping us to monitor the progress of the model. This callback is inspired from
 [this tutorial](https://www.tensorflow.org/tutorials/images/segmentation).
-"""
 
+
+```python
 from IPython.display import clear_output
 
 
@@ -244,11 +318,13 @@ class DisplayCallback(tf.keras.callbacks.Callback):
         show_predictions(self.dataset)
         print("\nSample Prediction after epoch {}\n".format(epoch + 1))
 
+```
 
-"""
+---
 ## Train model
-"""
 
+
+```python
 # Increase the number of epochs if the results are not of expected quality.
 epochs = 5
 
@@ -258,16 +334,98 @@ history = model.fit(
     callbacks=[DisplayCallback(test_ds)],
     epochs=epochs,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 54ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/segformer/segformer_22_1.png)
+    
+
+
+    
+<div class="k-default-codeblock">
+```
+Sample Prediction after epoch 5
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+920/920 [==============================] - 89s 97ms/step - loss: 0.1742 - val_loss: 0.1927
+
+```
+</div>
+---
 ## Inference
 
 We perform inference on a few samples from the test set.
-"""
 
+
+```python
 show_predictions(test_ds, 5)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 54ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/segformer/segformer_24_1.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 54ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/segformer/segformer_24_3.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 53ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/segformer/segformer_24_5.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 53ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/segformer/segformer_24_7.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 53ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/segformer/segformer_24_9.png)
+    
+
+
+---
 ## Conclusion
 
 In this example, we learned how to fine-tune a SegFormer model variant on a custom
@@ -287,4 +445,3 @@ fine-tuned you can instead use the `PushToHubCallback` Keras callback.
 [Here](https://gist.github.com/sayakpaul/f474ffb01f0cdcc8ba239357965c3bca) is an example.
 [Here](https://huggingface.co/sayakpaul/mit-b0-finetuned-pets) is an example of a model
 repository that was created using this callback.
-"""
