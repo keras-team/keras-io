@@ -31,7 +31,7 @@ from luketils import visualization
 BATCH_SIZE = 16
 EPOCHS = int(os.getenv("EPOCHS", "1"))
 # To fully train a RetinaNet, comment out this line.
-# EPOCHS = 50
+# EPOCHS = 100
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "checkpoint/")
 INFERENCE_CHECKPOINT_PATH = os.getenv("INFERENCE_CHECKPOINT_PATH", CHECKPOINT_PATH)
 
@@ -284,7 +284,6 @@ This matches what we have constructed in our input pipeline above.
 
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs"),
-    keras.callbacks.ReduceLROnPlateau(patience=5),
     keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_weights_only=True),
 ]
 
@@ -299,7 +298,15 @@ Let's compile our model:
 """
 
 # including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.optimizers.SGD(global_clipnorm=10.0)
+base_lr = 0.01
+lr_decay = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+    boundaries=[12000 * 16, 16000 * 16],
+    values=[base_lr, 0.1 * base_lr, 0.01 * base_lr],
+)
+
+optimizer = tf.keras.optimizers.SGD(
+    learning_rate=lr_decay, momentum=0.9, global_clipnorm=10.0
+)
 model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
@@ -330,7 +337,7 @@ model.load_weights(INFERENCE_CHECKPOINT_PATH)
 
 
 def visualize_detections(model, bounding_box_format):
-    images, y_true = next(iter(train_ds.take(1)))
+    images, y_true = next(iter(eval_ds.take(1)))
     y_pred = model.predict(images)
     y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
@@ -360,8 +367,10 @@ decoder to the RetinaNet constructor as follows:
 prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
-    iou_threshold=0.75,
-    confidence_threshold=0.85,
+    # Decrease the required threshold to make predictions get pruned out
+    iou_threshold=0.35,
+    # Tune confidence threshold for predictions to pass NMS
+    confidence_threshold=0.95,
 )
 model.prediction_decoder = prediction_decoder
 visualize_detections(model, bounding_box_format="xywh")
@@ -376,7 +385,7 @@ are all made simple and consistent.
 Some follow up exercises for the reader:
 
 - add additional augmentation techniques to improve model performance
-- grid search `confidence_threshold` and `iou_threshold` on `NmsPredictionDecoder` to
+- grid search `confidence_threshold` and `iou_threshold` on `MultiClassNonMaxSuppression` to
     achieve an optimal Mean Average Precision
 - tune the hyperparameters and data augmentation used to produce high quality results
 - train an object detection model on another dataset
