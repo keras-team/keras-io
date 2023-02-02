@@ -2,7 +2,7 @@
 Title: DreamBooth
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
 Date created: 2023/02/01
-Last modified: 2023/02/01
+Last modified: 2023/02/02
 Description: Implementing DreamBooth.
 Accelerator: GPU
 """
@@ -50,6 +50,25 @@ from keras_cv.models.stable_diffusion.diffusion_model import DiffusionModel
 from keras_cv.models.stable_diffusion.image_encoder import ImageEncoder
 from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
 from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
+
+"""
+## Usage od DreamBooth
+
+... is very versatile. By teaching Stable Diffusion about your favorite visual
+concepts, you can 
+
+* Recontextualize objects in interesting ways:
+
+  ![](https://i.imgur.com/4Da9ozw.png)
+
+* Generate artistic renderings of the underlying visual concept: 
+
+  ![](https://i.imgur.com/nI2N8bI.png)
+
+
+And many other applications. We welcome you to check out the original
+[DreamBooth paper](https://arxiv.org/abs/2208.12242) in this regard. 
+"""
 
 """
 ## Download the instance and class images
@@ -142,31 +161,46 @@ Then we load the images from the paths.
 """
 
 from PIL import Image
+import numpy as np
 
 
 def load_images(image_paths):
     images = []
     for path in image_paths:
         image = Image.open(path)
-        images.append(image)
+        images.append(np.array(image))
     return images
 
 
 """
-And then we make use a utility function to plot the loaded images (code referred from
-[this notebook](https://colab.research.google.com/github/huggingface/notebooks/blob/main/diffusers/training_example.ipynb)). 
+And then we make use a utility function to plot the loaded images. 
 """
 
 
-def make_grid(images, rows, cols):
-    w, h = images[0].size
-    grid = Image.new("RGB", size=(cols * w, rows * h))
-    for i, image in enumerate(images):
-        grid.paste(image, box=(i % cols * w, i // cols * h))
-    return grid
+import matplotlib.pyplot as plt
 
 
-make_grid(load_images(class_image_paths)[:5], 1, 5)
+def plot_images(images, title=None):
+    plt.figure(figsize=(20, 20))
+    for i in range(len(images)):
+        ax = plt.subplot(1, len(images), i + 1)
+        if title is not None:
+            plt.title(title)
+        plt.imshow(images[i])
+        plt.axis("off")
+
+
+"""
+**Instance images**:
+"""
+
+plot_images(load_images(instance_image_paths[:5]))
+
+"""
+**Class images**:
+"""
+
+plot_images(load_images(class_image_paths[:5]))
 
 """
 ## Prepare datasets
@@ -201,7 +235,6 @@ class_prompts = [class_prompt] * len(class_image_paths)
 Next, we embed the prompts to save some compute.  
 """
 
-import numpy as np
 import itertools
 
 # The padding token and maximum prompt length are specific to the text encoder.
