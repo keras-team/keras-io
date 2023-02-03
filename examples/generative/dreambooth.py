@@ -52,7 +52,7 @@ from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
 from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
 
 """
-## Usage od DreamBooth
+## Usage of DreamBooth
 
 ... is very versatile. By teaching Stable Diffusion about your favorite visual
 concepts, you can 
