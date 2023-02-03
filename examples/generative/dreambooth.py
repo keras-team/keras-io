@@ -625,10 +625,10 @@ fine-tuned the text encoder along with the UNet:
 """
 
 unet_weights = tf.keras.utils.get_file(
-    origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
+    origin="https://hf.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
 )
 text_encoder_weights = tf.keras.utils.get_file(
-    origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5"
+    origin="https://hf.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5"
 )
 
 dreambooth_model.diffusion_model.load_weights(unet_weights)
@@ -650,10 +650,9 @@ plot_images(images_dreamboothed, prompt)
 
 """
 Feel free to experiment with different prompts (don't forget to add the unique identifer
-and the class label!) to see how the results change. We welcome you to check out more
-experimental results
-[here](https://github.com/sayakpaul/dreambooth-keras#results)
-and get
+and the class label!) to see how the results change. We welcome you to check out our
+codebase and more experimental results
+[here](https://github.com/sayakpaul/dreambooth-keras#results). You can also read
 [this blog post](https://huggingface.co/blog/dreambooth) to get more ideas.
 """
 
