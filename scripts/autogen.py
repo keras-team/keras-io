@@ -210,7 +210,7 @@ class KerasIO:
                     name = fname[:-3]
                     py_path = Path(src_dir) / fname
                     nb_path = target_dir / (name + ".ipynb")
-                    py_to_nb(py_path, nb_path, fill_outputs=False)
+                    tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
 
         # Guides
         guides_dir = Path(self.guides_dir)
