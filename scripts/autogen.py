@@ -1047,48 +1047,19 @@ def get_working_dir(arg):
 
 
 def render_keras_nlp_tags(template):
-    from decimal import Decimal
 
-    def round_num(n, decimal=2):
-        n=Decimal(n)
-        return n.to_integral() if n == n.to_integral() else round(n.normalize(), decimal)
+    def param_count(count:int):
+        if count>=1e9:
+            return f"{int(count / 1e9)}B"
+        if count >= 1e6:
+            return f"{int(count / 1e6)}M"
+        if count >= 1e3:
+            return f"{int(count / 1e3)}K"
+        return f"{count}"
 
-    def numerize(n, decimal=2):
-        #60 sufixes
-        sufixes = [ "", "K", "M", "B", "T", "Qa", "Qu", "S", "Oc", "No", 
-                    "D", "Ud", "Dd", "Td", "Qt", "Qi", "Se", "Od", "Nd","V", 
-                    "Uv", "Dv", "Tv", "Qv", "Qx", "Sx", "Ox", "Nx", "Tn", "Qa",
-                    "Qu", "S", "Oc", "No", "D", "Ud", "Dd", "Td", "Qt", "Qi",
-                    "Se", "Od", "Nd", "V", "Uv", "Dv", "Tv", "Qv", "Qx", "Sx",
-                    "Ox", "Nx", "Tn", "x", "xx", "xxx", "X", "XX", "XXX", "END"] 
-        
-        sci_expr = [1e0, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21, 1e24, 1e27, 
-                    1e30, 1e33, 1e36, 1e39, 1e42, 1e45, 1e48, 1e51, 1e54, 1e57, 
-                    1e60, 1e63, 1e66, 1e69, 1e72, 1e75, 1e78, 1e81, 1e84, 1e87, 
-                    1e90, 1e93, 1e96, 1e99, 1e102, 1e105, 1e108, 1e111, 1e114, 1e117, 
-                    1e120, 1e123, 1e126, 1e129, 1e132, 1e135, 1e138, 1e141, 1e144, 1e147, 
-                    1e150, 1e153, 1e156, 1e159, 1e162, 1e165, 1e168, 1e171, 1e174, 1e177]
-        minus_buff = n
-        n=abs(n)
-        for x in range(len(sci_expr)):
-            try:
-                if n >= sci_expr[x] and n < sci_expr[x+1]:
-                    sufix = sufixes[x]
-                    if n >= 1e3:
-                        num = str(round_num(n/sci_expr[x], decimal))
-                    else:
-                        num = str(n)
-                    return num + sufix if minus_buff > 0 else "-" + num + sufix
-            except IndexError:
-                print("You've reached the end")
     if "{{backbone_presets_table}}" in template:
-        # Import KerasNLP and do some stuff.
-        
-        from keras_nlp.models.bert import bert_presets
-        from keras_nlp.models.distil_bert import distil_bert_presets
-        from keras_nlp.models.roberta import roberta_presets
-        from keras_nlp.models.xlm_roberta import xlm_roberta_presets
-
+        # Import KerasNLP
+        import keras_nlp
 
         # Table Header
         table = "Preset ID | Model | Parameters | Description  \n"
@@ -1096,11 +1067,16 @@ def render_keras_nlp_tags(template):
         # Column alignment
         table += "-------|--------|-------|------\n"
 
-        presets = [ bert_presets,  distil_bert_presets, roberta_presets, xlm_roberta_presets]
-        links = ["[BERT](bert)", "[DistilBert](distil_bert)", "[RoBERTa](roberta)", "[XLM-RoBERTa](xlm_roberta)"]
-        for preset, link in zip(presets, links):
-            for key in preset.backbone_presets:
-                table += f"{key} | {link} | {numerize(preset.backbone_presets[key]['metadata']['params'], 0)} | {preset.backbone_presets[key]['metadata']['description']}  \n"
+        # Classifier presets
+        for name, symbol in keras_nlp.models.__dict__.items():
+            if "Classifier" not in name:
+                continue
+            for preset in symbol.presets:
+                if preset in symbol.backbone_cls.presets:
+                    # Generating table for only those which has path in metadata
+                    if 'path' in symbol.presets[preset]['metadata']:
+                        table += (f"{preset} | [{symbol.presets[preset]['metadata']['official_name']}]({symbol.presets[preset]['metadata']['path']}) | {param_count(symbol.presets[preset]['metadata']['params'])} | {symbol.presets[preset]['metadata']['description']}  \n")
+
         template = template.replace(
             "{{backbone_presets_table}}", table
         )
@@ -1115,12 +1091,13 @@ def render_keras_nlp_tags(template):
         table += "-------|--------|-------|------\n"
 
         # Classifier presets
-        presets = [bert_presets]
-        links = ["[BERT](bert)"]
-        for preset, link in zip(presets, links):
-            for key in preset.classifier_presets:
-                table += f"{key} | {link} | {numerize(preset.classifier_presets[key]['metadata']['params'], 0)} | {preset.classifier_presets[key]['metadata']['description']}  \n"
-        
+        for name, symbol in keras_nlp.models.__dict__.items():
+            if "Classifier" not in name:
+                continue
+            for preset in symbol.presets:
+                if not preset in symbol.backbone_cls.presets:
+                    table += (f"{preset} | [{symbol.presets[preset]['metadata']['official_name']}]({symbol.presets[preset]['metadata']['path']}) | {param_count(symbol.presets[preset]['metadata']['params'])} | {symbol.presets[preset]['metadata']['description']}  \n")
+
         template = template.replace(
             "{{classifier_presets_table}}", table
         )
