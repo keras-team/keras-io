@@ -53,7 +53,7 @@ def build_model(hp):
     )
     if hp.Boolean("dropout"):
         model.add(layers.Dropout(rate=0.25))
-    model.add
+    model.add(layers.Dense(units=10, activation="softmax"))
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=hp.Choice("learning_rate", values=[1e-2, 1e-3, 1e-4])

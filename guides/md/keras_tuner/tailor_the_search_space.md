@@ -58,7 +58,7 @@ def build_model(hp):
     )
     if hp.Boolean("dropout"):
         model.add(layers.Dropout(rate=0.25))
-    model.add
+    model.add(layers.Dense(units=10, activation="softmax"))
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=hp.Choice("learning_rate", values=[1e-2, 1e-3, 1e-4])
@@ -70,13 +70,6 @@ def build_model(hp):
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-04-28 04:09:21.924650: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-04-28 04:09:21.924705: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 We will reuse this search space in the rest of the tutorial by overriding the
 hyperparameters without defining a new search space.
 
@@ -126,15 +119,15 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-val_accuracy: 0.0
+Trial 3 Complete [00h 00m 01s]
+val_accuracy: 0.05000000074505806
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.10000000149011612
-Total elapsed time: 00h 00m 02s
+Best val_accuracy So Far: 0.15000000596046448
+Total elapsed time: 00h 00m 05s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -188,15 +181,15 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-val_accuracy: 0.0
+Trial 3 Complete [00h 00m 01s]
+val_accuracy: 0.10000000149011612
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.05000000074505806
-Total elapsed time: 00h 00m 02s
+Best val_accuracy So Far: 0.15000000596046448
+Total elapsed time: 00h 00m 03s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -216,7 +209,7 @@ Default search space size: 3
 learning_rate (Fixed)
 {'conditions': [], 'value': 0.0001}
 units (Int)
-{'default': 64, 'conditions': [], 'min_value': 32, 'max_value': 128, 'step': 32, 'sampling': None}
+{'default': 64, 'conditions': [], 'min_value': 32, 'max_value': 128, 'step': 32, 'sampling': 'linear'}
 dropout (Boolean)
 {'default': False, 'conditions': []}
 
@@ -235,7 +228,9 @@ tuner = keras_tuner.RandomSearch(
     build_model,
     optimizer=keras.optimizers.Adam(1e-3),
     loss="mse",
-    metrics=["sparse_categorical_crossentropy",],
+    metrics=[
+        "sparse_categorical_crossentropy",
+    ],
     objective="val_loss",
     max_trials=3,
     overwrite=True,
@@ -248,15 +243,15 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-val_loss: 24.548675537109375
+Trial 3 Complete [00h 00m 01s]
+val_loss: 18.5389404296875
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 22.171010971069336
-Total elapsed time: 00h 00m 02s
+Best val_loss So Far: 18.5389404296875
+Total elapsed time: 00h 00m 03s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -273,10 +268,16 @@ tuner.get_best_models()[0].loss
 WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.
 WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-0.kernel
 WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-0.bias
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'm' for (root).layer_with_weights-0.kernel
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'm' for (root).layer_with_weights-0.bias
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'v' for (root).layer_with_weights-0.kernel
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer's state 'v' for (root).layer_with_weights-0.bias
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-1.kernel
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-1.bias
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.1
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.2
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.3
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.4
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.5
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.6
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.7
+WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.8
 
 'mse'
 
@@ -328,15 +329,15 @@ tuner.search_space_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 05s]
+Trial 3 Complete [00h 00m 09s]
 val_accuracy: 0.05000000074505806
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.15000000596046448
-Total elapsed time: 00h 00m 11s
+Best val_accuracy So Far: 0.05000000074505806
+Total elapsed time: 00h 00m 27s
 INFO:tensorflow:Oracle triggered exit
 Search space summary
 Default search space size: 1
