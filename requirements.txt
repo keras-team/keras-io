@@ -11,6 +11,6 @@ jupyter
 tensorflow~=2.11.0
 tensorflow_datasets
 keras-tuner
-keras-cv==0.3.4
-keras-nlpkeras-nlp
+keras-cv==0.4.1
+keras-nlp
 pycocotools
