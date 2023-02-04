@@ -34,7 +34,7 @@ import autogen_utils
 from master import MASTER
 import tutobooks
 import generate_tf_guides
-
+from render_nlp_tags import render_keras_nlp_tags
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
@@ -511,7 +511,7 @@ class KerasIO:
                     "missing {{toc}} tag." % (template_path,)
                 )
             template = template.replace("{{toc}}", toc)
-        if "keras_nlp/" in path_stack:
+        if "keras_nlp/" in path_stack and "models/" in path_stack:
             template = render_keras_nlp_tags(template)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
@@ -1043,65 +1043,6 @@ def get_working_dir(arg):
     if not arg.startswith("--working_dir="):
         return None
     return arg[len("--working_dir=") :]
-
-
-
-def render_keras_nlp_tags(template):
-
-    def param_count(count:int):
-        if count>=1e9:
-            return f"{int(count / 1e9)}B"
-        if count >= 1e6:
-            return f"{int(count / 1e6)}M"
-        if count >= 1e3:
-            return f"{int(count / 1e3)}K"
-        return f"{count}"
-
-    if "{{backbone_presets_table}}" in template:
-        # Import KerasNLP
-        import keras_nlp
-
-        # Table Header
-        table = "Preset ID | Model | Parameters | Description  \n"
-
-        # Column alignment
-        table += "-------|--------|-------|------\n"
-
-        # Classifier presets
-        for name, symbol in keras_nlp.models.__dict__.items():
-            if "Classifier" not in name:
-                continue
-            for preset in symbol.presets:
-                if preset in symbol.backbone_cls.presets:
-                    # Generating table for only those which has path in metadata
-                    if 'path' in symbol.presets[preset]['metadata']:
-                        table += (f"{preset} | [{symbol.presets[preset]['metadata']['official_name']}]({symbol.presets[preset]['metadata']['path']}) | {param_count(symbol.presets[preset]['metadata']['params'])} | {symbol.presets[preset]['metadata']['description']}  \n")
-
-        template = template.replace(
-            "{{backbone_presets_table}}", table
-        )
-    if "{{classifier_presets_table}}" in template:
-        # Import KerasNLP and do some stuff.
-        from keras_nlp.models.bert import bert_presets
-
-        # Table Header
-        table = "Preset ID | Model | Parameters | Description  \n"
-
-        # Column alignment
-        table += "-------|--------|-------|------\n"
-
-        # Classifier presets
-        for name, symbol in keras_nlp.models.__dict__.items():
-            if "Classifier" not in name:
-                continue
-            for preset in symbol.presets:
-                if not preset in symbol.backbone_cls.presets:
-                    table += (f"{preset} | [{symbol.presets[preset]['metadata']['official_name']}]({symbol.presets[preset]['metadata']['path']}) | {param_count(symbol.presets[preset]['metadata']['params'])} | {symbol.presets[preset]['metadata']['description']}  \n")
-
-        template = template.replace(
-            "{{classifier_presets_table}}", table
-        )
-    return template
 
 if __name__ == "__main__":
     keras_io = KerasIO(
