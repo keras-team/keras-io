@@ -2,14 +2,14 @@
 Title: DreamBooth
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
 Date created: 2023/02/01
-Last modified: 2023/02/02
+Last modified: 2023/02/05
 Description: Implementing DreamBooth.
 Accelerator: GPU
 """
 """
 ## Introduction
 
-In this example, we'll implement DreamBooth, a fine-tuning technique to teach new visual
+In this example, we implement DreamBooth, a fine-tuning technique to teach new visual
 concepts to text-conditioned Diffusion models with just 3 - 5 images. DreamBooth was
 proposed in
 [DreamBooth: Fine Tuning Text-to-Image Diffusion Models for Subject-Driven Generation](https://arxiv.org/abs/2208.12242)
@@ -43,13 +43,14 @@ VRAM.
 ## Initial imports
 """
 
-import tensorflow as tf
+import math
 
-from keras_cv.models.stable_diffusion.clip_tokenizer import SimpleTokenizer
-from keras_cv.models.stable_diffusion.diffusion_model import DiffusionModel
-from keras_cv.models.stable_diffusion.image_encoder import ImageEncoder
-from keras_cv.models.stable_diffusion.noise_scheduler import NoiseScheduler
-from keras_cv.models.stable_diffusion.text_encoder import TextEncoder
+import keras_cv
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
+from imutils import paths
+from tensorflow import keras
 
 """
 ## Usage of DreamBooth
@@ -148,36 +149,22 @@ class_images_root = tf.keras.utils.get_file(
 
 First, let's load the image paths. 
 """
-
-from imutils import paths
-
 instance_image_paths = list(paths.list_images(instance_images_root))
 class_image_paths = list(paths.list_images(class_images_root))
-
-instance_image_paths, class_image_paths[:5]
 
 """
 Then we load the images from the paths. 
 """
 
-from PIL import Image
-import numpy as np
-
 
 def load_images(image_paths):
-    images = []
-    for path in image_paths:
-        image = Image.open(path)
-        images.append(np.array(image))
+    images = [np.array(keras.utils.load_img(path)) for path in image_paths]
     return images
 
 
 """
 And then we make use a utility function to plot the loaded images. 
 """
-
-
-import matplotlib.pyplot as plt
 
 
 def plot_images(images, title=None):
@@ -243,7 +230,7 @@ padding_token = 49407
 max_prompt_length = 77
 
 # Load the tokenizer.
-tokenizer = SimpleTokenizer()
+tokenizer = keras_cv.models.stable_diffusion.SimpleTokenizer()
 
 # Method to tokenize and pad the tokens.
 def process_text(caption):
@@ -263,7 +250,7 @@ for i, caption in enumerate(itertools.chain(instance_prompts, class_prompts)):
 
 # We also pre-compute the text embeddings to save some memory during training.
 POS_IDS = tf.convert_to_tensor([list(range(max_prompt_length))], dtype=tf.int32)
-text_encoder = TextEncoder(max_prompt_length)
+text_encoder = keras_cv.models.stable_diffusion.TextEncoder(max_prompt_length)
 
 gpus = tf.config.list_logical_devices("GPU")
 
@@ -280,8 +267,6 @@ del text_encoder
 ## Prepare the images
 """
 
-import keras_cv
-
 resolution = 512
 auto = tf.data.AUTOTUNE
 
@@ -289,7 +274,7 @@ augmenter = keras_cv.layers.Augmenter(
     layers=[
         keras_cv.layers.CenterCrop(resolution, resolution),
         keras_cv.layers.RandomFlip(),
-        tf.keras.layers.Rescaling(scale=1.0 / 127.5, offset=-1),
+        keras.layers.Rescaling(scale=1.0 / 127.5, offset=-1),
     ]
 )
 
@@ -518,6 +503,16 @@ class DreamBoothTrainer(tf.keras.Model):
             options=options,
         )
 
+    def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
+        # Similarly override `load_weights()` so that we can directly call it on
+        # the trainer class object.
+        self.diffusion_model.load_weights(
+            filepath=filepath,
+            by_name=by_name,
+            skip_mismatch=skip_mismatch,
+            options=options,
+        )
+
 
 """
 ## Trainer initialization
@@ -528,28 +523,30 @@ tf.keras.mixed_precision.set_global_policy("mixed_float16")
 
 use_mp = True  # Set it to False if you're not using a GPU with tensor cores.
 
-image_encoder = ImageEncoder(resolution, resolution)
+image_encoder = keras_cv.models.stable_diffusion.ImageEncoder(resolution, resolution)
 dreambooth_trainer = DreamBoothTrainer(
-    diffusion_model=DiffusionModel(resolution, resolution, max_prompt_length),
+    diffusion_model=keras_cv.models.stable_diffusion.DiffusionModel(
+        resolution, resolution, max_prompt_length
+    ),
     # Remove the top layer from the encoder, which cuts off the variance and only
     # returns the mean.
     vae=tf.keras.Model(
         image_encoder.input,
         image_encoder.layers[-2].output,
     ),
-    noise_scheduler=NoiseScheduler(),
+    noise_scheduler=keras_cv.models.stable_diffusion.NoiseScheduler(),
     use_mixed_precision=use_mp,
 )
 
 # These hyperparameters come from this tutorial by Hugging Face:
 # https://github.com/huggingface/diffusers/tree/main/examples/dreambooth
-lr = 5e-6
+learning_rate = 5e-6
 beta_1, beta_2 = 0.9, 0.999
 weight_decay = (1e-2,)
 epsilon = 1e-08
 
 optimizer = tf.keras.optimizers.experimental.AdamW(
-    learning_rate=lr,
+    learning_rate=learning_rate,
     weight_decay=weight_decay,
     beta_1=beta_1,
     beta_2=beta_2,
@@ -562,8 +559,6 @@ dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
 
 We first calculate the number of epochs, we need to train for.
 """
-
-import math
 
 num_update_steps_per_epoch = train_dataset.cardinality()
 max_train_steps = 800
@@ -594,18 +589,6 @@ experiments are based on
 First, let's see how we can use the fine-tuned checkpoint for running inference. 
 """
 
-import matplotlib.pyplot as plt
-
-
-def plot_images(images, title):
-    plt.figure(figsize=(20, 20))
-    for i in range(len(images)):
-        ax = plt.subplot(1, len(images), i + 1)
-        plt.title(title)
-        plt.imshow(images[i])
-        plt.axis("off")
-
-
 # Initialize a new Stable Diffusion model.
 dreambooth_model = keras_cv.models.StableDiffusion(
     img_width=resolution, img_height=resolution, jit_compile=True
@@ -625,10 +608,10 @@ fine-tuned the text encoder along with the UNet:
 """
 
 unet_weights = tf.keras.utils.get_file(
-    origin="https://hf.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
+    origin="https://hf.co/chansung/dreambooth-dog/resolve/main/learning_rate%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
 )
 text_encoder_weights = tf.keras.utils.get_file(
-    origin="https://hf.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5"
+    origin="https://hf.co/chansung/dreambooth-dog/resolve/main/learning_rate%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5"
 )
 
 dreambooth_model.diffusion_model.load_weights(unet_weights)
