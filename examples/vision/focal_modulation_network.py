@@ -1,5 +1,5 @@
 """
-Title: Focal Modulation: A replacement for Self Attention
+Title: Focal Modulation: A replacement for Self-Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2023/01/25
 Last modified: 2023/01/25
@@ -9,18 +9,18 @@ Description: Image classification with Focal Modulation Networks.
 ## Introduction
 
 This tutorial aims to provide a comprehensive guide to the implementation of
-[Focal Modulation Networks](https://arxiv.org/abs/2203.11926), as
-presented in the academic paper by Yang et al.
+Focal Modulation Networks, as presented in
+[Yang et al.](https://arxiv.org/abs/2203.11926).
 
 This tutorial will provide a formal, minimalistic approach to implementing Focal
 Modulation Networks and explore its potential applications in the field of Deep Learning.
 
-**The Problem Statement**
+**Problem statement**
 
-The architecture of Transformer ([Vaswani et. al](https://arxiv.org/abs/1706.03762)),
+The Transformer architecture ([Vaswani et al.](https://arxiv.org/abs/1706.03762)),
 which has become the de facto standard in most Natural Language Processing tasks, has
-also been applied to the field of computer vision through the seminal work of Vision
-Transformers ([Dosovitskiy et. al](https://arxiv.org/abs/2010.11929v2)).
+also been applied to the field of computer vision, e.g. Vision
+Transformers ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929v2)).
 
 > In Transformers, the self-attention (SA) is arguably the key to its success which
 enables input-dependent global interactions, in contrast to convolution operation which
@@ -33,28 +33,29 @@ The **Attention** module is mathematically written as shown in **Equation 1**.
 | Equation 1: The mathematical equation of attention (Source: Authors) |
 
 Where:
-- $Q$ is the query
-- $K$ is the key
-- $V$ is the value
-- $d_k$ is the dimension of the key
+
+- `Q` is the query
+- `K` is the key
+- `V` is the value
+- `d_k` is the dimension of the key
 
 With **self-attention**, the query, key, and value are all sourced from the input
 sequence. Let us rewrite the attention equation for self-attention as shown in **Equation
 2**.
 
-| ![Self Attention Equation](https://i.imgur.com/My9tRnd.png) |
+| ![Self-Attention Equation](https://i.imgur.com/My9tRnd.png) |
 | :--: |
 | Equation 2: The mathematical equation of self-attention (Source: Authors) |
 
 Upon looking at the equation of self-attention, we see that it is a quadratic equation.
 Therefore, as the number of tokens increase, so does the computation time (cost too). To
-mitigate this problem and make the Transformer more interpretable, Yang et al.
-have tried to replace the Self Attention module with better components.
+mitigate this problem and make Transformers more interpretable, Yang et al.
+have tried to replace the Self-Attention module with better components.
 
 **The Solution**
 
-Yang et al. introduce the revolutionary Focal Modulation _Layer_, poised to serve as a
-seamless replacement for the Self Attention Layer. The layer boasts high
+Yang et al. introduce the Focal Modulation layer to serve as a
+seamless replacement for the Self-Attention Layer. The layer boasts high
 interpretability, making it a valuable tool for Deep Learning practitioners.
 
 In this tutorial, we will delve into the practical application of this layer by training
@@ -180,7 +181,7 @@ us a bird's eye view of the entire architecture.
 
 | ![Diagram of the model](https://i.imgur.com/v5HYV5R.png) |
 | :--: |
-| Figure 1: A diagram of the Focal Modulation _Model_ (Source: Authors) | 
+| Figure 1: A diagram of the Focal Modulation model (Source: Authors) | 
 
 We dive deep into each of these layers in the following sections. This is the order we
 will follow:
@@ -199,11 +200,11 @@ To better understand the architecture in a format we are well versed in, let us 
 the Focal Modulation Network would look when drawn like a Transformer architecture.
 
 **Figure 2** shows the encoder layer of a traditional Transformer architecture where Self
-Attention is replaced with the Focal Modulation _Layer_.
+Attention is replaced with the Focal Modulation layer.
 
-The <font color="blue">blue</font> blocks represent the Focal Modulation _Block_. A stack
+The <font color="blue">blue</font> blocks represent the Focal Modulation block. A stack
 of these blocks builds a single Basic Layer. The <font color="green">green</font> blocks
-represent the Focal Modulation _Layer_.
+represent the Focal Modulation layer.
 
 | ![The Entire Architecture](https://i.imgur.com/PduYD6m.png) |
 | :--: |
@@ -276,9 +277,9 @@ class PatchEmbed(layers.Layer):
 
 
 """
-## Focal Modulation _Block_
+## Focal Modulation block
 
-A Focal Modulation _Block_ can be considered as a single Transformer Block with the Self
+A Focal Modulation block can be considered as a single Transformer Block with the Self
 Attention (SA) module being replaced with Focal Modulation module, as we saw in **Figure
 2**.
 
@@ -292,7 +293,7 @@ Let us recall how a focal modulation block is supposed to look like with the aid
 
 The Focal Modulation Block consists of:
 - Multilayer Perceptron
-- Focal Modulation _Layer_
+- Focal Modulation layer
 """
 
 """
@@ -319,7 +320,7 @@ def MLP(
 
 
 """
-### Focal Modulation _Layer_
+### Focal Modulation layer
 
 In a typical Transformer architecture, for each visual token (**query**) `x_i in R^C` in
 an input feature map `X in R^{HxWxC}` a **generic encoding process** produces a feature
@@ -329,14 +330,14 @@ The encoding process consists of **interaction** (with its surroundings for e.g.
 product), and **aggregation** (over the contexts for e.g weighted mean).
 
 We will talk about two types of encoding here:
-- Interaction and then Aggregation in **Self Attention**
+- Interaction and then Aggregation in **Self-Attention**
 - Aggregation and then Interaction in **Focal Modulation**
 
-**Self Attention**
+**Self-Attention**
 
-| ![Self Attention Expression](https://i.imgur.com/heBYp0F.png) |
+| ![Self-Attention Expression](https://i.imgur.com/heBYp0F.png) |
 | :--: |
-| **Figure 4**: Self Attention module. (Source: Authors) |
+| **Figure 4**: Self-Attention module. (Source: Authors) |
 
 | ![Aggregation and Interaction for Self-Attention](https://i.imgur.com/j1k8Xmy.png) |
 | :--: |
@@ -356,7 +357,7 @@ next, known as the aggregation step.
 | :--: |
 | **Equation 4:** Aggregation and Interaction in Focal Modulation (Source: Authors) |
 
-**Figure 5** depicts the Focal Modulation _Layer_. `q()` is the query projection
+**Figure 5** depicts the Focal Modulation layer. `q()` is the query projection
 function. It is a **linear layer** that projects the query into a latent space. `m ()` is
 the context aggregation function. Unlike self-attention, the
 aggregation step takes place in focal modulation before the interaction step.
@@ -422,7 +423,7 @@ Later in the tutorial, we will visualize these gates to better understand their
 usefulness.
 
 First, we build the weights for aggregation. Here we apply a **linear layer** on the input
-feature map that projects it into $L+1$ dimensions.
+feature map that projects it into `L+1` dimensions.
 
 | ![Gates](https://i.imgur.com/1CgEo1G.png) |
 | :--: |
@@ -434,14 +435,14 @@ Next we perform the weighted aggregation over the contexts.
 | :--: |
 | Eqation 9: Final feature map (Source: Authors) |
 
-To enable communication across different channels, we use another linear layer $h()$
+To enable communication across different channels, we use another linear layer `h()`
 to obtain the modulator
 
 | ![Modulator](https://i.imgur.com/0EpT3Ti.png) |
 | :--: |
 | Eqation 10: Modulator (Source: Authors) |
 
-To sum up the Focal Modulation _Layer_ we have:
+To sum up the Focal Modulation layer we have:
 
 | ![Focal Modulation Layer](https://i.imgur.com/1QIhvYA.png) |
 | :--: |
@@ -450,7 +451,7 @@ To sum up the Focal Modulation _Layer_ we have:
 
 
 class FocalModulationLayer(layers.Layer):
-    """The Focal Modulation module includes query projection and context aggregation.
+    """The Focal Modulation layer includes query projection & context aggregation.
 
     Args:
         dim (int): Projection dimension.
@@ -513,7 +514,8 @@ class FocalModulationLayer(layers.Layer):
         self.proj_drop = layers.Dropout(self.proj_drop_rate)
 
     def call(self, x: tf.Tensor, training: Optional[bool] = None) -> tf.Tensor:
-        """
+        """Forward pass of the layer.
+
         Args:
             x: Tensor of shape (B, H, W, C)
         """
@@ -550,15 +552,15 @@ class FocalModulationLayer(layers.Layer):
 
 
 """
-### Building Focal Modulation _Block_
+### The Focal Modulation block
 
 Finally, we have all the components we need to build the Focal Modulation block. Here we
-take the MLP and Focal Modulaion _Layer_ together and build the Focal Modulation _Block_.
+take the MLP and Focal Modulation layer together and build the Focal Modulation block.
 """
 
 
 class FocalModulationBlock(layers.Layer):
-    """A block of FFN and Focal Modulation Layer.
+    """Combine FFN and Focal Modulation Layer.
 
     Args:
         dim (int): Number of input channels.
@@ -627,9 +629,9 @@ class FocalModulationBlock(layers.Layer):
 
 
 """
-## Building the Basic Layer
+## The Basic Layer
 
-The basic layer consists of a collection of Focal Modulation _Blocks_. This is
+The basic layer consists of a collection of Focal Modulation blocks. This is
 illustrated in **Figure 9**.
 
 | ![Basic Layer](https://i.imgur.com/UcZV0K6.png) |
@@ -637,12 +639,12 @@ illustrated in **Figure 9**.
 | **Figure 9**: Basic Layer, a collection of focal modulation blocks. (Source: Authors) | 
 
 Notice how in **Fig. 9** there are more than one focal modulation blocks denoted by `Nx`.
-This shows how the Basic Layer is a collection of Focal Modulation _Blocks_.
+This shows how the Basic Layer is a collection of Focal Modulation blocks.
 """
 
 
 class BasicLayer(layers.Layer):
-    """A collection of Focal Modulation Blocks.
+    """Collection of Focal Modulation Blocks.
 
     Args:
         dim (int): Dimensions of the model.
@@ -698,7 +700,8 @@ class BasicLayer(layers.Layer):
     def call(
         self, x: tf.Tensor, height: int, width: int, channels: int
     ) -> Tuple[tf.Tensor, int, int, int]:
-        """
+        """Forward pass of the layer.
+
         Args:
             x (tf.Tensor): Tensor of shape (B, L, C)
             height (int): Height of feature map
@@ -725,13 +728,11 @@ class BasicLayer(layers.Layer):
 
 
 """
-## Focal Modulation Network _Model_
+## The Focal Modulation Network model
 
-This is where everything is tied together. The Focal Modulation _Model_ consists of a
-collection of Basic Layers with a classification head. For a recap of how this is
-structured refer to **Figure 1**.
-
-
+This is the model that ties everything together.
+It consists of a collection of Basic Layers with a classification head.
+For a recap of how this is structured refer to **Figure 1**.
 """
 
 
@@ -805,7 +806,8 @@ class FocalModulationNetwork(keras.Model):
         self.head = layers.Dense(self.num_classes, activation="softmax")
 
     def call(self, x: tf.Tensor) -> tf.Tensor:
-        """
+        """Forward pass of the layer.
+
         Args:
             x: Tensor of shape (B, H, W, C)
 
@@ -832,19 +834,20 @@ class FocalModulationNetwork(keras.Model):
 Now with all the components in place and the architecture actually built, we are ready to
 put it to good use.
 
-In this section, we train our Focal Modulation _Model_ on the CIFAR-10 dataset.
+In this section, we train our Focal Modulation model on the CIFAR-10 dataset.
 """
 
 """
 ### Visualization Callback
-A key feature of the Focal Modulation Network is Explicit input-dependency. This means
+
+A key feature of the Focal Modulation Network is explicit input-dependency. This means
 the modulator is calculated by looking at the local features around the target location,
 so it depends on the input. In very simple terms, this makes interpretation easy. We can
 simply lay down the gating values and the original image, next to each other to see how
 the gating mechanism works.
 
 The authors of the paper visualize the gates and the modulator in order to focus on the
-interpretability of the Focal Modulation _Layer_. We have devised a visualization
+interpretability of the Focal Modulation layer. Below is a visualization
 callback that shows the gates and modulator of a specific layer in the model while the
 model trains.
 
@@ -1020,7 +1023,7 @@ plt.legend()
 plt.show()
 
 """
-## Test Visulaizations
+## Test visualizations
 
 Let's test our model on some test images and see how the gates look like.
 """
@@ -1045,32 +1048,30 @@ for row in range(5):
 """
 ## Conclusion
 
-The proposed architecture, Focal Modulation Network is a mechanism that allows different
+The proposed architecture, the Focal Modulation Network
+architecture is a mechanism that allows different
 parts of an image to interact with each other in a way that depends on the image itself.
 It works by first gathering different levels of context information around each part of
 the image (the "query token"), then using a gate to decide which context information is
 most relevant, and finally combining the chosen information in a simple but effective
 way.
 
-This is meant as a replacement of Self Attention mechanism from the Transformer
+This is meant as a replacement of Self-Attention mechanism from the Transformer
 architecture. The key feature that makes this research notable is not the conception of
 attention-less networks, but rather the introduction of a equally powerful architecture
 that is interpretable.
 
 The authors also mention that they created a series of Focal Modulation Networks
-(FocalNets) that significantly outperform Self Attention counterparts and with a fraction
+(FocalNets) that significantly outperform Self-Attention counterparts and with a fraction
 of parameters and pretraining data.
 
 The FocalNets architecture has the potential to deliver impressive results and offers a
 simple implementation. Its promising performance and ease of use make it an attractive
-alternative to Self Attention for researchers to explore in their own projects. It could
+alternative to Self-Attention for researchers to explore in their own projects. It could
 potentially become widely adopted by the Deep Learning community in the near future.
 
-
-"""
-
-"""
 ## Acknowledgement
+
 We would like to thank [PyImageSearch](https://pyimagesearch.com/) for providing with a
 Colab Pro account and also Microsoft Research for providing an [official
 implementation](https://github.com/microsoft/FocalNet) of their paper.
