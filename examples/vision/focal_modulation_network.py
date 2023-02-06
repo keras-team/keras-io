@@ -30,7 +30,7 @@ The **Attention** module is mathematically written as shown in **Equation 1**.
 
 | ![Attention Equation](https://i.imgur.com/thdHvQx.png) |
 | :--: |
-| Equation 1: The mathematical equation of attention (Source: Authors) |
+| Equation 1: The mathematical equation of attention (Source: Aritra and Ritwik) |
 
 Where:
 
@@ -45,7 +45,7 @@ sequence. Let us rewrite the attention equation for self-attention as shown in *
 
 | ![Self-Attention Equation](https://i.imgur.com/My9tRnd.png) |
 | :--: |
-| Equation 2: The mathematical equation of self-attention (Source: Authors) |
+| Equation 2: The mathematical equation of self-attention (Source: Aritra and Ritwik) |
 
 Upon looking at the equation of self-attention, we see that it is a quadratic equation.
 Therefore, as the number of tokens increase, so does the computation time (cost too). To
@@ -181,7 +181,7 @@ us a bird's eye view of the entire architecture.
 
 | ![Diagram of the model](https://i.imgur.com/v5HYV5R.png) |
 | :--: |
-| Figure 1: A diagram of the Focal Modulation model (Source: Authors) | 
+| Figure 1: A diagram of the Focal Modulation model (Source: Aritra and Ritwik) | 
 
 We dive deep into each of these layers in the following sections. This is the order we
 will follow:
@@ -208,7 +208,7 @@ represent the Focal Modulation layer.
 
 | ![The Entire Architecture](https://i.imgur.com/PduYD6m.png) |
 | :--: |
-| Figure 2: The Entire Architecture (Source: Authors) |
+| Figure 2: The Entire Architecture (Source: Aritra and Ritwik) |
 """
 
 """
@@ -289,7 +289,7 @@ Let us recall how a focal modulation block is supposed to look like with the aid
 
 | ![Focal Modulation Block](https://i.imgur.com/bPYTSiB.png) |
 | :--: |
-| Figure 3: The isolated view of the Focal Modulation Block (Source: Authors) |
+| Figure 3: The isolated view of the Focal Modulation Block (Source: Aritra and Ritwik) |
 
 The Focal Modulation Block consists of:
 - Multilayer Perceptron
@@ -337,11 +337,11 @@ We will talk about two types of encoding here:
 
 | ![Self-Attention Expression](https://i.imgur.com/heBYp0F.png) |
 | :--: |
-| **Figure 4**: Self-Attention module. (Source: Authors) |
+| **Figure 4**: Self-Attention module. (Source: Aritra and Ritwik) |
 
 | ![Aggregation and Interaction for Self-Attention](https://i.imgur.com/j1k8Xmy.png) |
 | :--: |
-| **Equation 3:** Aggregation and Interaction in Self-Attention(Surce: Authors)|
+| **Equation 3:** Aggregation and Interaction in Self-Attention(Surce: Aritra and Ritwik)|
 
 As shown in **Figure 4** the query and the key interact (in the interaction step) with
 each other to output the attention scores. The weighted aggregation of the value comes
@@ -351,11 +351,11 @@ next, known as the aggregation step.
 
 | ![Focal Modulation module](https://i.imgur.com/tmbLgQl.png) |
 | :--: |
-| **Figure 5**: Focal Modulation module. (Source: Authors) | 
+| **Figure 5**: Focal Modulation module. (Source: Aritra and Ritwik) | 
 
 | ![Aggregation and Interaction in Focal Modulation](https://i.imgur.com/gsvJfWp.png) |
 | :--: |
-| **Equation 4:** Aggregation and Interaction in Focal Modulation (Source: Authors) |
+| **Equation 4:** Aggregation and Interaction in Focal Modulation (Source: Aritra and Ritwik) |
 
 **Figure 5** depicts the Focal Modulation layer. `q()` is the query projection
 function. It is a **linear layer** that projects the query into a latent space. `m ()` is
@@ -369,7 +369,7 @@ While `q()` is pretty straightforward to understand, the context aggregation fun
 
 | ![Context Aggregation](https://i.imgur.com/uqIRXI7.png)|
 | :--: |
-| **Figure 6**: Context Aggregation function `m()`. (Source: Authors) |
+| **Figure 6**: Context Aggregation function `m()`. (Source: Aritra and Ritwik) |
 
 The context aggregation function `m()` consists of two parts as shown in **Figure 6**:
 - Hierarchical Contextualization
@@ -381,14 +381,14 @@ The context aggregation function `m()` consists of two parts as shown in **Figur
 
 | ![Hierarchical Contextualization](https://i.imgur.com/q875c83.png)|
 | :--: |
-| **Figure 7**: Hierarchical Contextualization (Source: Authors) |
+| **Figure 7**: Hierarchical Contextualization (Source: Aritra and Ritwik) |
 
 In **Figure 7**, we see that the input is first projected linearly. This linear projection
 produces `Z^0`. Where `Z^0` can be expressed as follows:
 
 | ![Linear projection of z_not](https://i.imgur.com/pd0Z2Of.png) |
 | :--: |
-| Equation 5: Linear projection of `Z^0` (Source: Authors) |
+| Equation 5: Linear projection of `Z^0` (Source: Aritra and Ritwik) |
 
 `Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
 [GeLU](https://www.tensorflow.org/api_docs/python/tf/keras/activations/gelu) layers. The
@@ -397,7 +397,7 @@ have two levels. Mathematically this is represented as:
 
 | ![Levels of modulation](https://i.imgur.com/ijGD1Df.png) |
 | :--: |
-| Equation 6: Levels of the modulation layer (Source: Authors) |
+| Equation 6: Levels of the modulation layer (Source: Aritra and Ritwik) |
 
 where `l in {1, ... , L}`
 
@@ -406,7 +406,7 @@ as follows:
 
 | ![Avg Pool](https://i.imgur.com/MQzQhbo.png) |
 | :--: |
-| Equation 7: Average Pooling of the final feature (Source: Authors)|
+| Equation 7: Average Pooling of the final feature (Source: Aritra and Ritwik)|
 """
 
 """
@@ -414,7 +414,7 @@ as follows:
 
 | ![Gated Aggregation](https://i.imgur.com/LwrdDKo.png[/img)|
 | :--: |
-| **Figure 8**: Gated Aggregation (Source: Authors) |
+| **Figure 8**: Gated Aggregation (Source: Aritra and Ritwik) |
 
 Now that we have `L+1` intermediate feature maps by virtue of the Hierarchical
 Contextualization step, we need a gating mechanism that lets some features pass and
@@ -427,26 +427,26 @@ feature map that projects it into `L+1` dimensions.
 
 | ![Gates](https://i.imgur.com/1CgEo1G.png) |
 | :--: |
-| Eqation 8: Gates (Source: Authors) |
+| Eqation 8: Gates (Source: Aritra and Ritwik) |
 
 Next we perform the weighted aggregation over the contexts.
 
 | ![z out](https://i.imgur.com/mpJ712R.png) |
 | :--: |
-| Eqation 9: Final feature map (Source: Authors) |
+| Eqation 9: Final feature map (Source: Aritra and Ritwik) |
 
 To enable communication across different channels, we use another linear layer `h()`
 to obtain the modulator
 
 | ![Modulator](https://i.imgur.com/0EpT3Ti.png) |
 | :--: |
-| Eqation 10: Modulator (Source: Authors) |
+| Eqation 10: Modulator (Source: Aritra and Ritwik) |
 
 To sum up the Focal Modulation layer we have:
 
 | ![Focal Modulation Layer](https://i.imgur.com/1QIhvYA.png) |
 | :--: |
-| Eqation 11: Focal Modulation Layer (Source: Authors) |
+| Eqation 11: Focal Modulation Layer (Source: Aritra and Ritwik) |
 """
 
 
@@ -636,7 +636,7 @@ illustrated in **Figure 9**.
 
 | ![Basic Layer](https://i.imgur.com/UcZV0K6.png) |
 | :--: |
-| **Figure 9**: Basic Layer, a collection of focal modulation blocks. (Source: Authors) | 
+| **Figure 9**: Basic Layer, a collection of focal modulation blocks. (Source: Aritra and Ritwik) | 
 
 Notice how in **Fig. 9** there are more than one focal modulation blocks denoted by `Nx`.
 This shows how the Basic Layer is a collection of Focal Modulation blocks.
