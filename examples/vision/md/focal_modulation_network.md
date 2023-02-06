@@ -1,12 +1,16 @@
-"""
-Title: Focal Modulation: A replacement for Self-Attention
-Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
-Date created: 2023/01/25
-Last modified: 2023/01/25
-Description: Image classification with Focal Modulation Networks.
-Accelerator: GPU
-"""
-"""
+# Focal Modulation: A replacement for Self-Attention
+
+**Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
+**Date created:** 2023/01/25<br>
+**Last modified:** 2023/01/25<br>
+**Description:** Image classification with Focal Modulation Networks.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/focal_modulation_network.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/focal_modulation_network.py)
+
+
+
+---
 ## Introduction
 
 This tutorial aims to provide a comprehensive guide to the implementation of
@@ -65,14 +69,14 @@ performance.
 
 Note: We try to align our implementation with the
 [official implementation](https://github.com/microsoft/FocalNet).
-"""
 
-"""
+---
 ## Setup and Imports
 
 We use tensorflow version `2.11.0` for this tutorial.
-"""
 
+
+```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -84,14 +88,16 @@ from random import randint
 
 # Set seed for reproducibility.
 tf.keras.utils.set_random_seed(42)
+```
 
-"""
+---
 ## Global Configuration
 
 We do not have any strong ratioanle behind choosing these hyperparameters. Please feel
 free to change the configuration and train the model.
-"""
 
+
+```python
 # DATA
 TRAIN_SLICE = 40000
 BUFFER_SIZE = 2048
@@ -107,24 +113,34 @@ WEIGHT_DECAY = 1e-4
 
 # TRAINING
 EPOCHS = 25
+```
 
-"""
+---
 ## Load and process the CIFAR-10 dataset
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 (x_train, y_train), (x_val, y_val) = (
     (x_train[:TRAIN_SLICE], y_train[:TRAIN_SLICE]),
     (x_train[TRAIN_SLICE:], y_train[TRAIN_SLICE:]),
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+170498071/170498071 [==============================] - 56s 0us/step
+
+```
+</div>
 ### Build the augmentations
 
 We use the `keras.Sequential` API to compose all the individual augmentation steps
 into one API.
-"""
 
+
+```python
 # Build the `train` augmentation pipeline.
 train_aug = keras.Sequential(
     [
@@ -144,11 +160,12 @@ test_aug = keras.Sequential(
     ],
     name="test_data_augmentation",
 )
+```
 
-"""
 ### Build `tf.data` pipeline
-"""
 
+
+```python
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_ds = (
     train_ds.map(
@@ -172,8 +189,17 @@ test_ds = (
     .batch(BATCH_SIZE)
     .prefetch(AUTO)
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:From /usr/local/lib/python3.8/dist-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
+Instructions for updating:
+Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+
+```
+</div>
+---
 ## Architecture
 
 We pause here to take a quick look at the Architecture of the Focal Modulation Network.
@@ -210,15 +236,15 @@ represent the Focal Modulation layer.
 | ![The Entire Architecture](https://i.imgur.com/PduYD6m.png) |
 | :--: |
 | Figure 2: The Entire Architecture (Source: Aritra and Ritwik) |
-"""
 
-"""
+---
 ## Patch Embedding Layer
 
 The patch embedding layer is used to patchify the input images and project them into a
 latent space. This layer is also used as the down-sampling layer in the architecture.
-"""
 
+
+```python
 
 class PatchEmbed(layers.Layer):
     """Image patch embedding layer, also acts as the down-sampling layer.
@@ -276,8 +302,9 @@ class PatchEmbed(layers.Layer):
 
         return x, height, width, channels
 
+```
 
-"""
+---
 ## Focal Modulation block
 
 A Focal Modulation block can be considered as a single Transformer Block with the Self
@@ -295,12 +322,11 @@ Let us recall how a focal modulation block is supposed to look like with the aid
 The Focal Modulation Block consists of:
 - Multilayer Perceptron
 - Focal Modulation layer
-"""
 
-"""
 ### Multilayer Perceptron
-"""
 
+
+```python
 
 def MLP(
     in_features: int,
@@ -319,8 +345,8 @@ def MLP(
         ]
     )
 
+```
 
-"""
 ### Focal Modulation layer
 
 In a typical Transformer architecture, for each visual token (**query**) `x_i in R^C` in
@@ -362,9 +388,7 @@ next, known as the aggregation step.
 function. It is a **linear layer** that projects the query into a latent space. `m ()` is
 the context aggregation function. Unlike self-attention, the
 aggregation step takes place in focal modulation before the interaction step.
-"""
 
-"""
 While `q()` is pretty straightforward to understand, the context aggregation function
 `m()` is more complex. Therefore, this section will focus on `m()`.
 
@@ -375,9 +399,7 @@ While `q()` is pretty straightforward to understand, the context aggregation fun
 The context aggregation function `m()` consists of two parts as shown in **Figure 6**:
 - Hierarchical Contextualization
 - Gated Aggregation
-"""
 
-"""
 #### Hierarchical Contextualization
 
 | ![Hierarchical Contextualization](https://i.imgur.com/q875c83.png)|
@@ -408,9 +430,7 @@ as follows:
 | ![Avg Pool](https://i.imgur.com/MQzQhbo.png) |
 | :--: |
 | Equation 7: Average Pooling of the final feature (Source: Aritra and Ritwik)|
-"""
 
-"""
 #### Gated Aggregation
 
 | ![Gated Aggregation](https://i.imgur.com/LwrdDKo.png[/img)|
@@ -448,8 +468,9 @@ To sum up the Focal Modulation layer we have:
 | ![Focal Modulation Layer](https://i.imgur.com/1QIhvYA.png) |
 | :--: |
 | Eqation 11: Focal Modulation Layer (Source: Aritra and Ritwik) |
-"""
 
+
+```python
 
 class FocalModulationLayer(layers.Layer):
     """The Focal Modulation layer includes query projection & context aggregation.
@@ -551,14 +572,15 @@ class FocalModulationLayer(layers.Layer):
 
         return x_output
 
+```
 
-"""
 ### The Focal Modulation block
 
 Finally, we have all the components we need to build the Focal Modulation block. Here we
 take the MLP and Focal Modulation layer together and build the Focal Modulation block.
-"""
 
+
+```python
 
 class FocalModulationBlock(layers.Layer):
     """Combine FFN and Focal Modulation Layer.
@@ -628,8 +650,9 @@ class FocalModulationBlock(layers.Layer):
         x = x + self.mlp(self.norm(x))
         return x
 
+```
 
-"""
+---
 ## The Basic Layer
 
 The basic layer consists of a collection of Focal Modulation blocks. This is
@@ -641,8 +664,9 @@ illustrated in **Figure 9**.
 
 Notice how in **Fig. 9** there are more than one focal modulation blocks denoted by `Nx`.
 This shows how the Basic Layer is a collection of Focal Modulation blocks.
-"""
 
+
+```python
 
 class BasicLayer(layers.Layer):
     """Collection of Focal Modulation Blocks.
@@ -727,15 +751,17 @@ class BasicLayer(layers.Layer):
 
         return x, height_o, width_o, channels_o
 
+```
 
-"""
+---
 ## The Focal Modulation Network model
 
 This is the model that ties everything together.
 It consists of a collection of Basic Layers with a classification head.
 For a recap of how this is structured refer to **Figure 1**.
-"""
 
+
+```python
 
 class FocalModulationNetwork(keras.Model):
     """The Focal Modulation Network.
@@ -828,17 +854,16 @@ class FocalModulationNetwork(keras.Model):
         x = self.head(x)
         return x
 
+```
 
-"""
+---
 ## Train the model
 
 Now with all the components in place and the architecture actually built, we are ready to
 put it to good use.
 
 In this section, we train our Focal Modulation model on the CIFAR-10 dataset.
-"""
 
-"""
 ### Visualization Callback
 
 A key feature of the Focal Modulation Network is explicit input-dependency. This means
@@ -857,8 +882,9 @@ We will notice later that as the model trains, the visualizations get better.
 The gates appear to selectively permit certain aspects of the input image to pass
 through, while gently disregarding others, ultimately leading to improved classification
 accuracy.
-"""
 
+
+```python
 
 def display_grid(
     test_images: tf.Tensor,
@@ -904,11 +930,12 @@ def display_grid(
     plt.show()
     plt.close()
 
+```
 
-"""
 ### TrainMonitor
-"""
 
+
+```python
 # Taking a batch of test inputs to measure the model's progress.
 test_images, test_labels = next(iter(test_ds))
 upsampler = tf.keras.layers.UpSampling2D(
@@ -934,11 +961,12 @@ class TrainMonitor(keras.callbacks.Callback):
             # Display the grid of gates and modulator.
             display_grid(test_images=test_images, gates=gates, modulator=modulator)
 
+```
 
-"""
 ### Learning Rate scheduler
-"""
 
+
+```python
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
@@ -988,11 +1016,12 @@ scheduled_lrs = WarmUpCosine(
     warmup_learning_rate=0.0,
     warmup_steps=warmup_steps,
 )
+```
 
-"""
 ### Initialize, compile and train the model
-"""
 
+
+```python
 focal_mod_net = FocalModulationNetwork()
 optimizer = AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
 
@@ -1008,11 +1037,101 @@ history = focal_mod_net.fit(
     validation_data=val_ds,
     callbacks=[TrainMonitor(epoch_interval=10)],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/25
+40/40 [==============================] - ETA: 0s - loss: 2.3926 - accuracy: 0.1407
+
+```
+</div>
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_1.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+40/40 [==============================] - 54s 676ms/step - loss: 2.3926 - accuracy: 0.1407 - val_loss: 2.2212 - val_accuracy: 0.1767
+Epoch 2/25
+40/40 [==============================] - 18s 456ms/step - loss: 2.0792 - accuracy: 0.2244 - val_loss: 2.3125 - val_accuracy: 0.1784
+Epoch 3/25
+40/40 [==============================] - 18s 451ms/step - loss: 2.0116 - accuracy: 0.2592 - val_loss: 2.6114 - val_accuracy: 0.2009
+Epoch 4/25
+40/40 [==============================] - 18s 452ms/step - loss: 1.8096 - accuracy: 0.3368 - val_loss: 2.0304 - val_accuracy: 0.3096
+Epoch 5/25
+40/40 [==============================] - 18s 452ms/step - loss: 1.6008 - accuracy: 0.4152 - val_loss: 1.8425 - val_accuracy: 0.3636
+Epoch 6/25
+40/40 [==============================] - 18s 455ms/step - loss: 1.4751 - accuracy: 0.4662 - val_loss: 1.5041 - val_accuracy: 0.4771
+Epoch 7/25
+40/40 [==============================] - 18s 454ms/step - loss: 1.3607 - accuracy: 0.5125 - val_loss: 1.4829 - val_accuracy: 0.4933
+Epoch 8/25
+40/40 [==============================] - 18s 454ms/step - loss: 1.2567 - accuracy: 0.5506 - val_loss: 1.2788 - val_accuracy: 0.5542
+Epoch 9/25
+40/40 [==============================] - 18s 453ms/step - loss: 1.1549 - accuracy: 0.5870 - val_loss: 1.2480 - val_accuracy: 0.5583
+Epoch 10/25
+40/40 [==============================] - 18s 452ms/step - loss: 1.0719 - accuracy: 0.6203 - val_loss: 1.1263 - val_accuracy: 0.6076
+Epoch 11/25
+40/40 [==============================] - ETA: 0s - loss: 1.0016 - accuracy: 0.6435
+
+```
+</div>
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_3.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+40/40 [==============================] - 19s 467ms/step - loss: 1.0016 - accuracy: 0.6435 - val_loss: 1.1374 - val_accuracy: 0.6090
+Epoch 12/25
+40/40 [==============================] - 18s 454ms/step - loss: 0.9315 - accuracy: 0.6723 - val_loss: 1.0915 - val_accuracy: 0.6268
+Epoch 13/25
+40/40 [==============================] - 18s 453ms/step - loss: 0.8707 - accuracy: 0.6953 - val_loss: 0.9864 - val_accuracy: 0.6598
+Epoch 14/25
+40/40 [==============================] - 18s 453ms/step - loss: 0.8109 - accuracy: 0.7159 - val_loss: 0.9835 - val_accuracy: 0.6630
+Epoch 15/25
+40/40 [==============================] - 18s 455ms/step - loss: 0.7769 - accuracy: 0.7289 - val_loss: 0.9775 - val_accuracy: 0.6675
+Epoch 16/25
+40/40 [==============================] - 18s 455ms/step - loss: 0.7309 - accuracy: 0.7438 - val_loss: 0.9449 - val_accuracy: 0.6768
+Epoch 17/25
+40/40 [==============================] - 18s 452ms/step - loss: 0.6924 - accuracy: 0.7587 - val_loss: 0.9300 - val_accuracy: 0.6845
+Epoch 18/25
+40/40 [==============================] - 18s 454ms/step - loss: 0.6589 - accuracy: 0.7729 - val_loss: 0.9427 - val_accuracy: 0.6812
+Epoch 19/25
+40/40 [==============================] - 18s 453ms/step - loss: 0.6343 - accuracy: 0.7809 - val_loss: 0.9414 - val_accuracy: 0.6840
+Epoch 20/25
+40/40 [==============================] - 18s 455ms/step - loss: 0.6119 - accuracy: 0.7900 - val_loss: 0.9239 - val_accuracy: 0.6900
+Epoch 21/25
+39/40 [============================>.] - ETA: 0s - loss: 0.5938 - accuracy: 0.7963
+
+```
+</div>
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_5.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+40/40 [==============================] - 19s 459ms/step - loss: 0.5938 - accuracy: 0.7964 - val_loss: 0.9270 - val_accuracy: 0.6907
+Epoch 22/25
+40/40 [==============================] - 18s 454ms/step - loss: 0.5865 - accuracy: 0.8004 - val_loss: 0.9276 - val_accuracy: 0.6902
+Epoch 23/25
+40/40 [==============================] - 18s 454ms/step - loss: 0.5779 - accuracy: 0.8036 - val_loss: 0.9224 - val_accuracy: 0.6900
+Epoch 24/25
+40/40 [==============================] - 19s 456ms/step - loss: 0.5785 - accuracy: 0.8038 - val_loss: 0.9240 - val_accuracy: 0.6902
+Epoch 25/25
+40/40 [==============================] - 18s 453ms/step - loss: 0.5749 - accuracy: 0.8038 - val_loss: 0.9240 - val_accuracy: 0.6902
+
+```
+</div>
+---
 ## Plot loss and accuracy
-"""
 
+
+```python
 plt.plot(history.history["loss"], label="loss")
 plt.plot(history.history["val_loss"], label="val_loss")
 plt.legend()
@@ -1022,13 +1141,27 @@ plt.plot(history.history["accuracy"], label="accuracy")
 plt.plot(history.history["val_accuracy"], label="val_accuracy")
 plt.legend()
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_39_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_39_1.png)
+    
+
+
+---
 ## Test visualizations
 
 Let's test our model on some test images and see how the gates look like.
-"""
 
+
+```python
 test_images, test_labels = next(iter(test_ds))
 _ = focal_mod_net(test_images)
 
@@ -1045,8 +1178,39 @@ for row in range(5):
         gates=gates,
         modulator=modulator,
     )
+```
 
-"""
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_1.png)
+    
+
+
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_2.png)
+    
+
+
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_3.png)
+    
+
+
+
+    
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_4.png)
+    
+
+
+---
 ## Conclusion
 
 The proposed architecture, the Focal Modulation Network
@@ -1071,10 +1235,10 @@ simple implementation. Its promising performance and ease of use make it an attr
 alternative to Self-Attention for researchers to explore in their own projects. It could
 potentially become widely adopted by the Deep Learning community in the near future.
 
+---
 ## Acknowledgement
 
 We would like to thank [PyImageSearch](https://pyimagesearch.com/) for providing with a
 Colab Pro account, [JarvisLabs.ai](https://cloud.jarvislabs.ai/) for GPU credits,
 and also Microsoft Research for providing an
 [official implementation](https://github.com/microsoft/FocalNet) of their paper.
-"""
