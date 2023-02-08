@@ -1,12 +1,16 @@
-"""
-Title: DreamBooth
-Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
-Date created: 2023/02/01
-Last modified: 2023/02/05
-Description: Implementing DreamBooth.
-Accelerator: GPU
-"""
-"""
+# DreamBooth
+
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)<br>
+**Date created:** 2023/02/01<br>
+**Last modified:** 2023/02/05<br>
+**Description:** Implementing DreamBooth.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/dreambooth.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/dreambooth.py)
+
+
+
+---
 ## Introduction
 
 In this example, we implement DreamBooth, a fine-tuning technique to teach new visual
@@ -27,22 +31,20 @@ help you to get familiarized quickly:
 
 First, let's install the latest versions of KerasCV and TensorFlow.
 
-"""
 
-"""shell
-pip install -q -U keras_cv
-pip install -q -U tensorflow
-"""
+```python
+!pip install -q -U keras_cv
+!pip install -q -U tensorflow
+```
 
-"""
 If you're running the code, please ensure you're using a GPU with at least 24 GBs of
 VRAM.
-"""
 
-"""
+---
 ## Initial imports
-"""
 
+
+```python
 import math
 
 import keras_cv
@@ -51,8 +53,15 @@ import numpy as np
 import tensorflow as tf
 from imutils import paths
 from tensorflow import keras
+```
 
-"""
+<div class="k-default-codeblock">
+```
+You do not have Waymo Open Dataset installed, so KerasCV Waymo metrics are not available.
+
+```
+</div>
+---
 ## Usage of DreamBooth
 
 ... is very versatile. By teaching Stable Diffusion about your favorite visual
@@ -69,9 +78,8 @@ concepts, you can
 
 And many other applications. We welcome you to check out the original
 [DreamBooth paper](https://arxiv.org/abs/2208.12242) in this regard.
-"""
 
-"""
+---
 ## Download the instance and class images
 
 DreamBooth uses a technique called "prior preservation" to meaningfully guide the
@@ -132,8 +140,9 @@ and generated some class images using
 
 **Note** that prior preservation is an optional technique used in DreamBooth, but it
 almost always helps in improving the quality of the generated images.
-"""
 
+
+```python
 instance_images_root = tf.keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/instance-images.tar.gz",
     untar=True,
@@ -142,29 +151,34 @@ class_images_root = tf.keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/class-images.tar.gz",
     untar=True,
 )
+```
 
-"""
+---
 ## Visualize images
 
 First, let's load the image paths.
-"""
+
+
+```python
 instance_image_paths = list(paths.list_images(instance_images_root))
 class_image_paths = list(paths.list_images(class_images_root))
+```
 
-"""
 Then we load the images from the paths.
-"""
 
+
+```python
 
 def load_images(image_paths):
     images = [np.array(keras.utils.load_img(path)) for path in image_paths]
     return images
 
+```
 
-"""
 And then we make use a utility function to plot the loaded images.
-"""
 
+
+```python
 
 def plot_images(images, title=None):
     plt.figure(figsize=(20, 20))
@@ -175,30 +189,40 @@ def plot_images(images, title=None):
         plt.imshow(images[i])
         plt.axis("off")
 
+```
 
-"""
 **Instance images**:
-"""
 
+
+```python
 plot_images(load_images(instance_image_paths[:5]))
+```
 
-"""
+
+![png](/img/examples/generative/dreambooth/dreambooth_16_0.png)
+
+
 **Class images**:
-"""
 
+
+```python
 plot_images(load_images(class_image_paths[:5]))
+```
 
-"""
+
+![png](/img/examples/generative/dreambooth/dreambooth_18_0.png)
+
+
+---
 ## Prepare datasets
 
 Dataset preparation includes two stages: (1): preparing the captions, (2) processing the
 images.
-"""
 
-"""
 ### Prepare the captions
-"""
 
+
+```python
 # Since we're using prior preservation, we need to match the number
 # of instance images we're using. We just repeat the instance image paths
 # to do so.
@@ -216,11 +240,12 @@ instance_prompts = [instance_prompt] * len(new_instance_image_paths)
 
 class_prompt = f"a photo of {class_label}"
 class_prompts = [class_prompt] * len(class_image_paths)
+```
 
-"""
 Next, we embed the prompts to save some compute.
-"""
 
+
+```python
 import itertools
 
 # The padding token and maximum prompt length are specific to the text encoder.
@@ -264,11 +289,13 @@ with tf.device(gpus[0].name):
 
 # To ensure text_encoder doesn't occupy any GPU space.
 del text_encoder
+```
 
-"""
+---
 ## Prepare the images
-"""
 
+
+```python
 resolution = 512
 auto = tf.data.AUTOTUNE
 
@@ -321,10 +348,13 @@ def assemble_dataset(image_paths, embedded_texts, instance_only=True, batch_size
     dataset = dataset.map(prepare_dict_fn, num_parallel_calls=auto)
     return dataset
 
+```
 
-"""
+---
 ## Assemble dataset
-"""
+
+
+```python
 instance_dataset = assemble_dataset(
     new_instance_image_paths,
     embedded_text[: len(new_instance_image_paths)],
@@ -335,12 +365,28 @@ class_dataset = assemble_dataset(
     instance_only=False,
 )
 train_dataset = tf.data.Dataset.zip((instance_dataset, class_dataset))
-"""
+```
+
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
+
+```
+</div>
+---
 ## Check shapes
 
 Now that the dataset has been prepared, let's quickly check what's inside it.
-"""
 
+
+```python
 sample_batch = next(iter(train_dataset))
 print(sample_batch[0].keys(), sample_batch[1].keys())
 
@@ -349,13 +395,22 @@ for k in sample_batch[0]:
 
 for k in sample_batch[1]:
     print(k, sample_batch[1][k].shape)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+dict_keys(['instance_images', 'instance_embedded_texts']) dict_keys(['class_images', 'class_embedded_texts'])
+instance_images (1, 512, 512, 3)
+instance_embedded_texts (1, 77, 768)
+class_images (1, 512, 512, 3)
+class_embedded_texts (1, 77, 768)
+
+```
+</div>
 During training, we make use of these keys to gather the images and text embeddings and
 concat them accordingly.
-"""
 
-"""
+---
 ## DreamBooth training loop
 
 Our DreamBooth training loop is very much inspired by
@@ -365,8 +420,9 @@ difference to note. We only fine-tune the UNet (the model responsible for predic
 noise) and don't fine-tune the text encoder in this example. If you're looking for an
 implementation that also performs the additional fine-tuning of the text encoder, refer
 to [this repository](https://github.com/sayakpaul/dreambooth-keras/).
-"""
 
+
+```python
 import tensorflow.experimental.numpy as tnp
 
 
@@ -513,11 +569,13 @@ class DreamBoothTrainer(tf.keras.Model):
             options=options,
         )
 
+```
 
-"""
+---
 ## Trainer initialization
-"""
 
+
+```python
 # Comment it if you are not using a GPU having tensor cores.
 tf.keras.mixed_precision.set_global_policy("mixed_float16")
 
@@ -553,22 +611,39 @@ optimizer = tf.keras.optimizers.experimental.AdamW(
     epsilon=epsilon,
 )
 dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:From /usr/local/lib/python3.8/dist-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
+Instructions for updating:
+Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+
+```
+</div>
+---
 ## Train!
 
 We first calculate the number of epochs, we need to train for.
-"""
 
+
+```python
 num_update_steps_per_epoch = train_dataset.cardinality()
 max_train_steps = 800
 epochs = math.ceil(max_train_steps / num_update_steps_per_epoch)
 print(f"Training for {epochs} epochs.")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Training for 4 epochs.
+
+```
+</div>
 And then we start training!
-"""
 
+
+```python
 ckpt_path = "dreambooth-unet.h5"
 ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
     ckpt_path,
@@ -577,8 +652,29 @@ ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
     mode="min",
 )
 dreambooth_trainer.fit(train_dataset, epochs=epochs, callbacks=[ckpt_callback])
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/4
+
+WARNING:tensorflow:From /usr/local/lib/python3.8/dist-packages/tensorflow/python/util/deprecation.py:629: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
+Instructions for updating:
+Use fn_output_signature instead
+
+200/200 [==============================] - 301s 462ms/step - loss: 0.1203
+Epoch 2/4
+200/200 [==============================] - 94s 469ms/step - loss: 0.1139
+Epoch 3/4
+200/200 [==============================] - 94s 469ms/step - loss: 0.1016
+Epoch 4/4
+200/200 [==============================] - 94s 469ms/step - loss: 0.1231
+
+<keras.callbacks.History at 0x7f19726600a0>
+
+```
+</div>
+---
 ## Experiments and inference
 
 We ran various experiments with a slightly modified version of this example. Our
@@ -587,8 +683,9 @@ experiments are based on
 [this blog post](https://huggingface.co/blog/dreambooth) from Hugging Face.
 
 First, let's see how we can use the fine-tuned checkpoint for running inference.
-"""
 
+
+```python
 # Initialize a new Stable Diffusion model.
 dreambooth_model = keras_cv.models.StableDiffusion(
     img_width=resolution, img_height=resolution, jit_compile=True
@@ -601,12 +698,23 @@ num_imgs_to_gen = 3
 
 images_dreamboothed = dreambooth_model.text_to_image(prompt, batch_size=num_imgs_to_gen)
 plot_images(images_dreamboothed, prompt)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
+50/50 [==============================] - 42s 160ms/step
+
+```
+</div>
+![png](/img/examples/generative/dreambooth/dreambooth_40_1.png)
+
+
 Now, let's load checkpoints from a different experiment we conducted where we also
 fine-tuned the text encoder along with the UNet:
-"""
 
+
+```python
 unet_weights = tf.keras.utils.get_file(
     origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
 )
@@ -619,27 +727,49 @@ dreambooth_model.text_encoder.load_weights(text_encoder_weights)
 
 images_dreamboothed = dreambooth_model.text_to_image(prompt, batch_size=num_imgs_to_gen)
 plot_images(images_dreamboothed, prompt)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5
+3439088208/3439088208 [==============================] - 67s 0us/step
+Downloading data from https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5
+492466760/492466760 [==============================] - 9s 0us/step
+50/50 [==============================] - 8s 159ms/step
+
+```
+</div>
+![png](/img/examples/generative/dreambooth/dreambooth_42_1.png)
+
+
 The default number of steps for generating an image in `text_to_image()`
 [is 50](https://github.com/keras-team/keras-cv/blob/3575bc3b944564fe15b46b917e6555aa6a9d7be0/keras_cv/models/stable_diffusion/stable_diffusion.py#L73).
 Let's increase it to 100.
-"""
 
+
+```python
 images_dreamboothed = dreambooth_model.text_to_image(
     prompt, batch_size=num_imgs_to_gen, num_steps=100
 )
 plot_images(images_dreamboothed, prompt)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+100/100 [==============================] - 16s 159ms/step
+
+```
+</div>
+![png](/img/examples/generative/dreambooth/dreambooth_44_1.png)
+
+
 Feel free to experiment with different prompts (don't forget to add the unique identifer
 and the class label!) to see how the results change. We welcome you to check out our
 codebase and more experimental results
 [here](https://github.com/sayakpaul/dreambooth-keras#results). You can also read
 [this blog post](https://huggingface.co/blog/dreambooth) to get more ideas.
-"""
 
-"""
+---
 ## Acknowledgements
 
 * Thanks to the
@@ -652,4 +782,3 @@ general recommendations
 Thanks to
 [Abhishek Thakur](https://no.linkedin.com/in/abhi1thakur)
 for helping with these.
-"""
