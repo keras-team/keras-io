@@ -156,13 +156,16 @@ class_image_paths = list(paths.list_images(class_images_root))
 Then we load the images from the paths. 
 """
 
+
 def load_images(image_paths):
     images = [np.array(keras.utils.load_img(path)) for path in image_paths]
     return images
 
+
 """
 And then we make use a utility function to plot the loaded images. 
 """
+
 
 def plot_images(images, title=None):
     plt.figure(figsize=(20, 20))
@@ -172,6 +175,7 @@ def plot_images(images, title=None):
             plt.title(title)
         plt.imshow(images[i])
         plt.axis("off")
+
 
 """
 **Instance images**:
@@ -253,7 +257,7 @@ gpus = tf.config.list_logical_devices("GPU")
 # Ensure the computation takes place on a GPU.
 # Note that it's done automatically when there's a GPU present.
 # This example just attempts at showing how you can do it
-# more explicitly. 
+# more explicitly.
 with tf.device(gpus[0].name):
     embedded_text = text_encoder(
         [tf.convert_to_tensor(tokenized_texts), POS_IDS], training=False
@@ -277,14 +281,17 @@ augmenter = keras_cv.layers.Augmenter(
     ]
 )
 
+
 def process_image(image_path, tokenized_text):
     image = tf.io.read_file(image_path)
     image = tf.io.decode_png(image, 3)
     image = tf.image.resize(image, (resolution, resolution))
     return image, tokenized_text
 
+
 def apply_augmentation(image_batch, embedded_tokens):
     return augmenter(image_batch), embedded_tokens
+
 
 def prepare_dict(instance_only=True):
     def fn(image_batch, embedded_tokens):
@@ -303,6 +310,7 @@ def prepare_dict(instance_only=True):
 
     return fn
 
+
 def assemble_dataset(image_paths, embedded_texts, instance_only=True, batch_size=1):
     dataset = tf.data.Dataset.from_tensor_slices((image_paths, embedded_texts))
     dataset = dataset.map(process_image, num_parallel_calls=auto)
@@ -313,6 +321,7 @@ def assemble_dataset(image_paths, embedded_texts, instance_only=True, batch_size
     prepare_dict_fn = prepare_dict(instance_only=instance_only)
     dataset = dataset.map(prepare_dict_fn, num_parallel_calls=auto)
     return dataset
+
 
 """
 ## Assemble dataset
@@ -360,6 +369,7 @@ to [this repository](https://github.com/sayakpaul/dreambooth-keras/).
 """
 
 import tensorflow.experimental.numpy as tnp
+
 
 class DreamBoothTrainer(tf.keras.Model):
     # Reference:
