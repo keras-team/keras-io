@@ -55,12 +55,6 @@ from imutils import paths
 from tensorflow import keras
 ```
 
-<div class="k-default-codeblock">
-```
-You do not have Waymo Open Dataset installed, so KerasCV Waymo metrics are not available.
-
-```
-</div>
 ---
 ## Usage of DreamBooth
 
