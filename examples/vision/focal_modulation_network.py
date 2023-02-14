@@ -44,7 +44,7 @@ With **self-attention**, the query, key, and value are all sourced from the inpu
 sequence. Let us rewrite the attention equation for self-attention as shown in **Equation
 2**.
 
-| ![Self-Attention Equation](https://i.imgur.com/My9tRnd.png) |
+| ![Self-Attention Equation](https://i.imgur.com/OFsmVdP.png) |
 | :--: |
 | Equation 2: The mathematical equation of self-attention (Source: Aritra and Ritwik) |
 
@@ -891,7 +891,7 @@ def display_grid(
             overlay_image = gate_image[..., index - 1]
             title = f"G {index}:"
         else:
-            overlay_image = tf.math.reduce_mean(modulator_image, axis=-1)
+            overlay_image = tf.norm(modulator_image, ord=2, axis=-1)
             title = f"MOD:"
 
         ax[index].imshow(
@@ -1077,4 +1077,7 @@ We would like to thank [PyImageSearch](https://pyimagesearch.com/) for providing
 Colab Pro account, [JarvisLabs.ai](https://cloud.jarvislabs.ai/) for GPU credits,
 and also Microsoft Research for providing an
 [official implementation](https://github.com/microsoft/FocalNet) of their paper.
+We would also like to extend our gratitude to the first author of the
+paper [Jianwei Yang](https://twitter.com/jw2yang4ai) who reviewed this tutorial
+extensively.
 """
