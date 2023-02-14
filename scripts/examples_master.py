@@ -533,6 +533,11 @@ EXAMPLES_MASTER = {
                     "highlight": True,
                 },
                 {
+                    "path": "dreambooth",
+                    "title": "DreamBooth",
+                    "subcategory": "Image generation",
+                },
+                {
                     "path": "ddpm",
                     "title": "Denoising Diffusion Probabilistic Models",
                     "subcategory": "Image generation",

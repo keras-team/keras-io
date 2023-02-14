@@ -361,19 +361,6 @@ class_dataset = assemble_dataset(
 train_dataset = tf.data.Dataset.zip((instance_dataset, class_dataset))
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-
-```
-</div>
 ---
 ## Check shapes
 
@@ -607,14 +594,6 @@ optimizer = tf.keras.optimizers.experimental.AdamW(
 dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /usr/local/lib/python3.8/dist-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 ---
 ## Train!
 
@@ -651,11 +630,6 @@ dreambooth_trainer.fit(train_dataset, epochs=epochs, callbacks=[ckpt_callback])
 <div class="k-default-codeblock">
 ```
 Epoch 1/4
-
-WARNING:tensorflow:From /usr/local/lib/python3.8/dist-packages/tensorflow/python/util/deprecation.py:629: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
-Instructions for updating:
-Use fn_output_signature instead
-
 200/200 [==============================] - 301s 462ms/step - loss: 0.1203
 Epoch 2/4
 200/200 [==============================] - 94s 469ms/step - loss: 0.1139
