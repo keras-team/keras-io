@@ -2,7 +2,7 @@
 Title: Focal Modulation: A replacement for Self-Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2023/01/25
-Last modified: 2023/01/25
+Last modified: 2023/02/15
 Description: Image classification with Focal Modulation Networks.
 Accelerator: GPU
 """
