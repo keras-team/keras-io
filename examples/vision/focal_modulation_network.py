@@ -88,7 +88,7 @@ tf.keras.utils.set_random_seed(42)
 """
 ## Global Configuration
 
-We do not have any strong ratioanle behind choosing these hyperparameters. Please feel
+We do not have any strong rationale behind choosing these hyperparameters. Please feel
 free to change the configuration and train the model.
 """
 
