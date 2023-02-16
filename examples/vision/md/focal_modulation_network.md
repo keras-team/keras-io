@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
 **Date created:** 2023/01/25<br>
-**Last modified:** 2023/01/25<br>
+**Last modified:** 2023/02/15<br>
 **Description:** Image classification with Focal Modulation Networks.
 
 
@@ -48,7 +48,7 @@ With **self-attention**, the query, key, and value are all sourced from the inpu
 sequence. Let us rewrite the attention equation for self-attention as shown in **Equation
 2**.
 
-| ![Self-Attention Equation](https://i.imgur.com/My9tRnd.png) |
+| ![Self-Attention Equation](https://i.imgur.com/OFsmVdP.png) |
 | :--: |
 | Equation 2: The mathematical equation of self-attention (Source: Aritra and Ritwik) |
 
@@ -130,7 +130,7 @@ EPOCHS = 25
 <div class="k-default-codeblock">
 ```
 Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-170498071/170498071 [==============================] - 56s 0us/step
+170498071/170498071 [==============================] - 30s 0us/step
 
 ```
 </div>
@@ -917,7 +917,7 @@ def display_grid(
             overlay_image = gate_image[..., index - 1]
             title = f"G {index}:"
         else:
-            overlay_image = tf.math.reduce_mean(modulator_image, axis=-1)
+            overlay_image = tf.norm(modulator_image, ord=2, axis=-1)
             title = f"MOD:"
 
         ax[index].imshow(
@@ -1042,7 +1042,7 @@ history = focal_mod_net.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-40/40 [==============================] - ETA: 0s - loss: 2.3926 - accuracy: 0.1407
+40/40 [==============================] - ETA: 0s - loss: 2.3925 - accuracy: 0.1401
 
 ```
 </div>
@@ -1053,27 +1053,27 @@ Epoch 1/25
 
 <div class="k-default-codeblock">
 ```
-40/40 [==============================] - 54s 676ms/step - loss: 2.3926 - accuracy: 0.1407 - val_loss: 2.2212 - val_accuracy: 0.1767
+40/40 [==============================] - 57s 724ms/step - loss: 2.3925 - accuracy: 0.1401 - val_loss: 2.2182 - val_accuracy: 0.1768
 Epoch 2/25
-40/40 [==============================] - 18s 456ms/step - loss: 2.0792 - accuracy: 0.2244 - val_loss: 2.3125 - val_accuracy: 0.1784
+40/40 [==============================] - 20s 483ms/step - loss: 2.0790 - accuracy: 0.2261 - val_loss: 2.2933 - val_accuracy: 0.1795
 Epoch 3/25
-40/40 [==============================] - 18s 451ms/step - loss: 2.0116 - accuracy: 0.2592 - val_loss: 2.6114 - val_accuracy: 0.2009
+40/40 [==============================] - 19s 479ms/step - loss: 2.0130 - accuracy: 0.2585 - val_loss: 2.6833 - val_accuracy: 0.2022
 Epoch 4/25
-40/40 [==============================] - 18s 452ms/step - loss: 1.8096 - accuracy: 0.3368 - val_loss: 2.0304 - val_accuracy: 0.3096
+40/40 [==============================] - 21s 507ms/step - loss: 1.8270 - accuracy: 0.3315 - val_loss: 1.9127 - val_accuracy: 0.3215
 Epoch 5/25
-40/40 [==============================] - 18s 452ms/step - loss: 1.6008 - accuracy: 0.4152 - val_loss: 1.8425 - val_accuracy: 0.3636
+40/40 [==============================] - 19s 475ms/step - loss: 1.6037 - accuracy: 0.4173 - val_loss: 1.7226 - val_accuracy: 0.3938
 Epoch 6/25
-40/40 [==============================] - 18s 455ms/step - loss: 1.4751 - accuracy: 0.4662 - val_loss: 1.5041 - val_accuracy: 0.4771
+40/40 [==============================] - 19s 476ms/step - loss: 1.4758 - accuracy: 0.4658 - val_loss: 1.5097 - val_accuracy: 0.4733
 Epoch 7/25
-40/40 [==============================] - 18s 454ms/step - loss: 1.3607 - accuracy: 0.5125 - val_loss: 1.4829 - val_accuracy: 0.4933
+40/40 [==============================] - 19s 476ms/step - loss: 1.3677 - accuracy: 0.5075 - val_loss: 1.4630 - val_accuracy: 0.4986
 Epoch 8/25
-40/40 [==============================] - 18s 454ms/step - loss: 1.2567 - accuracy: 0.5506 - val_loss: 1.2788 - val_accuracy: 0.5542
+40/40 [==============================] - 21s 508ms/step - loss: 1.2599 - accuracy: 0.5490 - val_loss: 1.2908 - val_accuracy: 0.5492
 Epoch 9/25
-40/40 [==============================] - 18s 453ms/step - loss: 1.1549 - accuracy: 0.5870 - val_loss: 1.2480 - val_accuracy: 0.5583
+40/40 [==============================] - 19s 478ms/step - loss: 1.1689 - accuracy: 0.5818 - val_loss: 1.2750 - val_accuracy: 0.5518
 Epoch 10/25
-40/40 [==============================] - 18s 452ms/step - loss: 1.0719 - accuracy: 0.6203 - val_loss: 1.1263 - val_accuracy: 0.6076
+40/40 [==============================] - 19s 476ms/step - loss: 1.0843 - accuracy: 0.6140 - val_loss: 1.1444 - val_accuracy: 0.6002
 Epoch 11/25
-40/40 [==============================] - ETA: 0s - loss: 1.0016 - accuracy: 0.6435
+39/40 [============================>.] - ETA: 0s - loss: 1.0040 - accuracy: 0.6453
 
 ```
 </div>
@@ -1084,27 +1084,27 @@ Epoch 11/25
 
 <div class="k-default-codeblock">
 ```
-40/40 [==============================] - 19s 467ms/step - loss: 1.0016 - accuracy: 0.6435 - val_loss: 1.1374 - val_accuracy: 0.6090
+40/40 [==============================] - 20s 489ms/step - loss: 1.0041 - accuracy: 0.6452 - val_loss: 1.1765 - val_accuracy: 0.5939
 Epoch 12/25
-40/40 [==============================] - 18s 454ms/step - loss: 0.9315 - accuracy: 0.6723 - val_loss: 1.0915 - val_accuracy: 0.6268
+40/40 [==============================] - 20s 480ms/step - loss: 0.9401 - accuracy: 0.6701 - val_loss: 1.1276 - val_accuracy: 0.6181
 Epoch 13/25
-40/40 [==============================] - 18s 453ms/step - loss: 0.8707 - accuracy: 0.6953 - val_loss: 0.9864 - val_accuracy: 0.6598
+40/40 [==============================] - 19s 480ms/step - loss: 0.8787 - accuracy: 0.6910 - val_loss: 0.9990 - val_accuracy: 0.6547
 Epoch 14/25
-40/40 [==============================] - 18s 453ms/step - loss: 0.8109 - accuracy: 0.7159 - val_loss: 0.9835 - val_accuracy: 0.6630
+40/40 [==============================] - 19s 479ms/step - loss: 0.8198 - accuracy: 0.7122 - val_loss: 1.0074 - val_accuracy: 0.6562
 Epoch 15/25
-40/40 [==============================] - 18s 455ms/step - loss: 0.7769 - accuracy: 0.7289 - val_loss: 0.9775 - val_accuracy: 0.6675
+40/40 [==============================] - 19s 480ms/step - loss: 0.7831 - accuracy: 0.7275 - val_loss: 0.9739 - val_accuracy: 0.6686
 Epoch 16/25
-40/40 [==============================] - 18s 455ms/step - loss: 0.7309 - accuracy: 0.7438 - val_loss: 0.9449 - val_accuracy: 0.6768
+40/40 [==============================] - 19s 478ms/step - loss: 0.7358 - accuracy: 0.7428 - val_loss: 0.9578 - val_accuracy: 0.6753
 Epoch 17/25
-40/40 [==============================] - 18s 452ms/step - loss: 0.6924 - accuracy: 0.7587 - val_loss: 0.9300 - val_accuracy: 0.6845
+40/40 [==============================] - 19s 478ms/step - loss: 0.7018 - accuracy: 0.7557 - val_loss: 0.9414 - val_accuracy: 0.6789
 Epoch 18/25
-40/40 [==============================] - 18s 454ms/step - loss: 0.6589 - accuracy: 0.7729 - val_loss: 0.9427 - val_accuracy: 0.6812
+40/40 [==============================] - 20s 480ms/step - loss: 0.6678 - accuracy: 0.7678 - val_loss: 0.9492 - val_accuracy: 0.6771
 Epoch 19/25
-40/40 [==============================] - 18s 453ms/step - loss: 0.6343 - accuracy: 0.7809 - val_loss: 0.9414 - val_accuracy: 0.6840
+40/40 [==============================] - 19s 476ms/step - loss: 0.6423 - accuracy: 0.7783 - val_loss: 0.9422 - val_accuracy: 0.6832
 Epoch 20/25
-40/40 [==============================] - 18s 455ms/step - loss: 0.6119 - accuracy: 0.7900 - val_loss: 0.9239 - val_accuracy: 0.6900
+40/40 [==============================] - 19s 479ms/step - loss: 0.6202 - accuracy: 0.7868 - val_loss: 0.9324 - val_accuracy: 0.6860
 Epoch 21/25
-39/40 [============================>.] - ETA: 0s - loss: 0.5938 - accuracy: 0.7963
+40/40 [==============================] - ETA: 0s - loss: 0.6005 - accuracy: 0.7938
 
 ```
 </div>
@@ -1115,15 +1115,15 @@ Epoch 21/25
 
 <div class="k-default-codeblock">
 ```
-40/40 [==============================] - 19s 459ms/step - loss: 0.5938 - accuracy: 0.7964 - val_loss: 0.9270 - val_accuracy: 0.6907
+40/40 [==============================] - 20s 488ms/step - loss: 0.6005 - accuracy: 0.7938 - val_loss: 0.9326 - val_accuracy: 0.6880
 Epoch 22/25
-40/40 [==============================] - 18s 454ms/step - loss: 0.5865 - accuracy: 0.8004 - val_loss: 0.9276 - val_accuracy: 0.6902
+40/40 [==============================] - 19s 478ms/step - loss: 0.5937 - accuracy: 0.7970 - val_loss: 0.9339 - val_accuracy: 0.6875
 Epoch 23/25
-40/40 [==============================] - 18s 454ms/step - loss: 0.5779 - accuracy: 0.8036 - val_loss: 0.9224 - val_accuracy: 0.6900
+40/40 [==============================] - 19s 478ms/step - loss: 0.5899 - accuracy: 0.7984 - val_loss: 0.9294 - val_accuracy: 0.6894
 Epoch 24/25
-40/40 [==============================] - 19s 456ms/step - loss: 0.5785 - accuracy: 0.8038 - val_loss: 0.9240 - val_accuracy: 0.6902
+40/40 [==============================] - 19s 478ms/step - loss: 0.5840 - accuracy: 0.8012 - val_loss: 0.9315 - val_accuracy: 0.6881
 Epoch 25/25
-40/40 [==============================] - 18s 453ms/step - loss: 0.5749 - accuracy: 0.8038 - val_loss: 0.9240 - val_accuracy: 0.6902
+40/40 [==============================] - 19s 478ms/step - loss: 0.5853 - accuracy: 0.7997 - val_loss: 0.9315 - val_accuracy: 0.6880
 
 ```
 </div>
@@ -1242,3 +1242,6 @@ We would like to thank [PyImageSearch](https://pyimagesearch.com/) for providing
 Colab Pro account, [JarvisLabs.ai](https://cloud.jarvislabs.ai/) for GPU credits,
 and also Microsoft Research for providing an
 [official implementation](https://github.com/microsoft/FocalNet) of their paper.
+We would also like to extend our gratitude to the first author of the
+paper [Jianwei Yang](https://twitter.com/jw2yang4ai) who reviewed this tutorial
+extensively.
