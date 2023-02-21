@@ -1,23 +1,26 @@
 """Custom rendering code for the /api/keras_nlp/models page
 
-Presets table contains details about the model information such as Name, Preset ID, parameters, Description.
-
+Presets table contains details about the model information such as Name,
+Preset ID, parameters, Description.
 This code is used to render preset table at https://keras.io/api/keras_nlp/models/.
-
 It uses metadata present in keras-nlp/models/xx/xx_presets.py.
 
 The model metadata is present as a dict form as
-```py
+
 metdata{
     'description': tuple of string
     'params': parameter count of model
     'official_name': Name of model
     'path': Relative path of model at keras.io
 }
-```
 
-NOTE It generated presets table for those models which has path in it.
-"""        
+"""
+
+
+TABLE_HEADER = (
+    "Preset ID | Model | Parameters | Description\n"
+    "----------|-------|------------|------------\n"
+)
 
 
 def format_param_count(count):
@@ -46,12 +49,7 @@ def render_backbone_table(template):
     """Renders the markdown table for backbone presets as a string."""
     # Import KerasNLP
     import keras_nlp
-
-    # Table Header
-    table = "Preset ID | Model | Parameters | Description  \n"
-
-    # Column alignment
-    table += "-------|--------|-------|------\n"
+    table = TABLE_HEADER
 
     # Classifier presets
     for name, symbol in keras_nlp.models.__dict__.items():
@@ -66,10 +64,9 @@ def render_backbone_table(template):
                               f"{param_count(symbol, preset)} | "
                               f"{symbol.presets[preset]['metadata']['description']} \n")
                     
-    template = template.replace(
+    return template.replace(
         "{{backbone_presets_table}}", table
     )
-    return template
 
 
 def render_classifier_table(template):
@@ -77,11 +74,7 @@ def render_classifier_table(template):
     # Import KerasNLP and do some stuff.
     import keras_nlp
 
-    # Table Header
-    table = "Preset ID | Model | Parameters | Description  \n"
-
-    # Column alignment
-    table += "-------|--------|-------|------\n"
+    table = TABLE_HEADER
 
     # Classifier presets
     for name, symbol in keras_nlp.models.__dict__.items():
@@ -93,10 +86,9 @@ def render_classifier_table(template):
                           f"{path(symbol, preset)}|"
                           f"{param_count(symbol, preset)} |"
                           f"{symbol.presets[preset]['metadata']['description']} \n")
-    template = template.replace(
+    return template.replace(
         "{{classifier_presets_table}}", table
     )
-    return template
 
 
 def render_keras_nlp_tags(template):
