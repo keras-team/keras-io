@@ -529,3 +529,6 @@ Test accuracy: 85.33%
 
 ```
 </div>
+
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/neural-decision-forest) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Neural-Decision-Forest).

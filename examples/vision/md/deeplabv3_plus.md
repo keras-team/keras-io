@@ -48,7 +48,7 @@ from tensorflow.keras import layers
 
 
 ```python
-!gdown https://drive.google.com/uc?id=1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz
+!gdown "1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz&confirm=t"
 !unzip -q instance-level-human-parsing.zip
 ```
 
