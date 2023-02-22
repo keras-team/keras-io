@@ -1,21 +1,14 @@
-"""Custom rendering code for the /api/keras_nlp/models page
+"""Custom rendering code for the /api/keras_nlp/models page.
 
-Presets table contains details about the model information such as Name,
-Preset ID, parameters, Description.
-This code is used to render preset table
-at https://keras.io/api/keras_nlp/models/.
+The model metadata is pulled from the keras_nlp library, each preset has a
+metadata dictionary as follows:
 
-It uses metadata present in keras-nlp/models/xx/xx_presets.py.
-
-The model metadata is present as a dict form as
-
-metadata{
-    'description': tuple of string
-    'params': parameter count of model
-    'official_name': Name of model
-    'path': Relative path of model at keras.io
+{
+    'description': Description of the model,
+    'params': Parameter count of the model,
+    'official_name': Name of the model,
+    'path': Relative path of the model on keras.io,
 }
-
 """
 
 
@@ -36,17 +29,9 @@ def format_param_count(count):
     return f"{count}"
 
 
-def path(symbol, preset):
+def format_path(metadata):
     """Returns Path for the given preset"""
-    return (
-        f"[{symbol.presets[preset]['metadata']['official_name']}]"
-        f"({symbol.presets[preset]['metadata']['path']})"
-    )
-
-
-def param_count(symbol, preset):
-    """Returns parameter count for the given preset"""
-    return f"{format_param_count(symbol.presets[preset]['metadata']['params'])}"
+    return f"[{metadata['official_name']}]({metadata['path']})"
 
 
 def render_backbone_table(template):
@@ -56,27 +41,23 @@ def render_backbone_table(template):
 
     table = TABLE_HEADER
 
-    # Classifier presets
+    # Bakcbone presets
     for name, symbol in keras_nlp.models.__dict__.items():
-        if "Classifier" not in name:
+        if "Backbone" not in name:
             continue
         for preset in symbol.presets:
-            if preset in symbol.backbone_cls.presets:
-                # Generating table for only those which has path in metadata
-                if "path" in symbol.presets[preset]["metadata"]:
-                    table += (
-                        f"{preset} | "
-                        f"{path(symbol, preset)} | "
-                        f"{param_count(symbol, preset)} | "
-                        f"{symbol.presets[preset]['metadata']['description']} \n"
-                    )
-
+            metadata = symbol.presets[preset]['metadata']
+            table += (
+                f"{preset} | "
+                f"{format_path(metadata)} | "
+                f"{format_param_count(metadata['params'])} | "
+                f"{metadata['description']} \n"
+            )
     return template.replace("{{backbone_presets_table}}", table)
 
 
 def render_classifier_table(template):
     """Renders the markdown table for classifier presets as a string."""
-    # Import KerasNLP and do some stuff.
     import keras_nlp
 
     table = TABLE_HEADER
@@ -87,11 +68,12 @@ def render_classifier_table(template):
             continue
         for preset in symbol.presets:
             if preset not in symbol.backbone_cls.presets:
+                metadata = symbol.presets[preset]['metadata']
                 table += (
-                    f"{preset} |"
-                    f"{path(symbol, preset)}|"
-                    f"{param_count(symbol, preset)} |"
-                    f"{symbol.presets[preset]['metadata']['description']} \n"
+                    f"{preset} | "
+                    f"{format_path(metadata)} | "
+                    f"{format_param_count(metadata['params'])} | "
+                    f"{metadata['description']} \n"
                 )
     return template.replace("{{classifier_presets_table}}", table)
 
