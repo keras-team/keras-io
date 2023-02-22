@@ -142,7 +142,7 @@ print(raw_datasets[0])
 </div>
 For the sake of demonstrating the workflow, in this notebook we will only take
 small stratified balanced splits (10%) of the train as our training and test sets.
-We can easily split teh dataset using the `train_test_split` method which expects
+We can easily split the dataset using the `train_test_split` method which expects
 the split size and the name of the column relative to which you want to stratify.
 
 
