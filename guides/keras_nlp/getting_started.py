@@ -155,17 +155,13 @@ the `tiny` architecture for demo purposes, but larger models are recommended for
 performance. For all the task-specific presets available for `BertClassifier`, see
 our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 
-Let's evaluate our classifier on the IMDB dataset. We first need to compile the
-`keras.Model`. The output is `[loss, accuracy]`,
+Let's evaluate our classifier on the IMDB dataset. You will note we don't need to
+call `keras.Model.compile` here. All **task** models like `BertClassifier` ship with
+compilation defaults, meaning we can just call `keras.Model.evaluate` directly. You
+can always call compile as normal to override these defaults (e.g. to add new metrics).
 
-**Note**: We don't need an optimizer since we're not training the model.
+The output below is [loss, accuracy],
 """
-
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
-)
 
 classifier.evaluate(imdb_test)
 
@@ -189,20 +185,15 @@ a **backone** **preset**, a **task** `Model` will randomly initialize all task-s
 layers in preparation for training. For all the **backbone** presets available for
 `BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 
-To train your classifier, use `Model.compile()` and `Model.fit()` as with any other
-`keras.Model`. Since preprocessing is included in all **tasks** by default, we again pass
-the raw data.
+To train your classifier, use `keras.Model.fit` as with any other
+`keras.Model`. As with our inference example, we can rely on the compilation
+defaults for the **task** and skip `keras.Model.compile`. As preprocessing is
+included, we again pass the raw data.
 """
 
 classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased",
     num_classes=2,
-)
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
 )
 classifier.fit(
     imdb_train,
@@ -257,12 +248,6 @@ imdb_test_cached = (
 classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased",
     preprocessor=None,
-)
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
 )
 classifier.fit(
     imdb_train_cached,
