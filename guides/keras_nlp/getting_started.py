@@ -128,6 +128,13 @@ imdb_test = tf.keras.utils.text_dataset_from_directory(
 # Format is (review text tensor, label tensor)
 print(imdb_train.unbatch().take(1).get_single_element())
 
+# The above line does the
+# following trick.
+for data_elem in imdb_train:
+    print(data_elem[0][0])
+    print(data_elem[1][0])
+    break
+
 """
 ## Inference with a pretrained classifier
 
@@ -137,7 +144,8 @@ The highest level module in KerasNLP is a **task**. A **task** is a `keras.Model
 consisting of a (generally pretrained) **backbone** model and task-specific layers.
 Here's an example using `keras_nlp.models.BertClassifier`.
 
-**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive).
+**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive). The output is 
+[negative, positive] for binary classification.
 """
 
 classifier = keras_nlp.models.BertClassifier.from_preset("bert_tiny_en_uncased_sst2")
@@ -247,6 +255,13 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     sequence_length=512,
 )
 
+# Now apply the preprocessor to every sample of train and test data using `map()`.
+# The `tf.data.AUTOTUNE` argument for map allows TensorFlow to dynamically 
+# adjust the number of parallel calls to the function based on available 
+# computing resources.
+# `prefetch()` is a method that fetches the next batch of data while 
+# the model is processing the current batch, reducing the time it takes to 
+# train or test the model.
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
 )
@@ -300,7 +315,9 @@ packer = keras_nlp.layers.MultiSegmentPacker(
     sequence_length=64,
 )
 
-
+# This function that takes a text sample x and its 
+# corresponding label y as input and converts the 
+# text into a format suitable for input into a BERT model.
 def preprocessor(x, y):
     token_ids, segment_ids = packer(tokenizer(x))
     x = {
@@ -311,7 +328,7 @@ def preprocessor(x, y):
     return x, y
 
 
-imbd_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
+imdb_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
 imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
@@ -319,7 +336,7 @@ imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
 )
 
 # Preprocessed example
-print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
+print(imdb_train_preprocessed.unbatch().take(1).get_single_element())
 
 """
 ## Fine tuning with a custom model
@@ -528,7 +545,7 @@ and finetuning a custom transformer on
 """
 
 """
-### Train custom vocabulary from IMBD data
+### Train custom vocabulary from IMDB data
 """
 
 vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
