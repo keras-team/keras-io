@@ -2,12 +2,14 @@
 
 Presets table contains details about the model information such as Name,
 Preset ID, parameters, Description.
-This code is used to render preset table at https://keras.io/api/keras_nlp/models/.
+This code is used to render preset table
+at https://keras.io/api/keras_nlp/models/.
+
 It uses metadata present in keras-nlp/models/xx/xx_presets.py.
 
 The model metadata is present as a dict form as
 
-metdata{
+metadata{
     'description': tuple of string
     'params': parameter count of model
     'official_name': Name of model
@@ -36,8 +38,10 @@ def format_param_count(count):
 
 def path(symbol, preset):
     """Returns Path for the given preset"""
-    return f"[{symbol.presets[preset]['metadata']['official_name']}]" + \
-           f"({symbol.presets[preset]['metadata']['path']})"
+    return (
+        f"[{symbol.presets[preset]['metadata']['official_name']}]"
+        f"({symbol.presets[preset]['metadata']['path']})"
+    )
 
 
 def param_count(symbol, preset):
@@ -49,6 +53,7 @@ def render_backbone_table(template):
     """Renders the markdown table for backbone presets as a string."""
     # Import KerasNLP
     import keras_nlp
+
     table = TABLE_HEADER
 
     # Classifier presets
@@ -58,15 +63,15 @@ def render_backbone_table(template):
         for preset in symbol.presets:
             if preset in symbol.backbone_cls.presets:
                 # Generating table for only those which has path in metadata
-                if 'path' in symbol.presets[preset]['metadata']:
-                    table += (f"{preset} | "
-                              f"{path(symbol, preset)} | "
-                              f"{param_count(symbol, preset)} | "
-                              f"{symbol.presets[preset]['metadata']['description']} \n")
-                    
-    return template.replace(
-        "{{backbone_presets_table}}", table
-    )
+                if "path" in symbol.presets[preset]["metadata"]:
+                    table += (
+                        f"{preset} | "
+                        f"{path(symbol, preset)} | "
+                        f"{param_count(symbol, preset)} | "
+                        f"{symbol.presets[preset]['metadata']['description']} \n"
+                    )
+
+    return template.replace("{{backbone_presets_table}}", table)
 
 
 def render_classifier_table(template):
@@ -82,13 +87,13 @@ def render_classifier_table(template):
             continue
         for preset in symbol.presets:
             if preset not in symbol.backbone_cls.presets:
-                table += (f"{preset} |"
-                          f"{path(symbol, preset)}|"
-                          f"{param_count(symbol, preset)} |"
-                          f"{symbol.presets[preset]['metadata']['description']} \n")
-    return template.replace(
-        "{{classifier_presets_table}}", table
-    )
+                table += (
+                    f"{preset} |"
+                    f"{path(symbol, preset)}|"
+                    f"{param_count(symbol, preset)} |"
+                    f"{symbol.presets[preset]['metadata']['description']} \n"
+                )
+    return template.replace("{{classifier_presets_table}}", table)
 
 
 def render_keras_nlp_tags(template):
