@@ -128,11 +128,10 @@ imdb_test = tf.keras.utils.text_dataset_from_directory(
 # Format is (review text tensor, label tensor)
 print(imdb_train.unbatch().take(1).get_single_element())
 
-# The above line does the
-# following trick.
+# Traverse the data manually
 for data_elem in imdb_train:
-    print(data_elem[0][0])
-    print(data_elem[1][0])
+    print("Review text is: ", data_elem[0][0])
+    print("Review label is: ", data_elem[1][0])
     break
 
 """
