@@ -436,11 +436,6 @@ EXAMPLES_MASTER = {
                     "subcategory": "Structured data classification",
                 },
                 {
-                    "path": "bayesian_neural_networks",
-                    "title": "Probabilistic Bayesian Neural Networks",
-                    "subcategory": "Structured data classification",
-                },
-                {
                     "path": "classification_with_grn_and_vsn",
                     "title": "Classification with Gated Residual and Variable Selection Networks",
                     "subcategory": "Structured data classification",
