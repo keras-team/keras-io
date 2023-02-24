@@ -39,6 +39,7 @@ check out our
 ## Examples
 
 * [English-to-Spanish translation](/examples/nlp/neural_machine_translation_with_keras_nlp/)
+* [GPT text generation from scratch](/examples/generative/text_generation_gpt/)
 * [Text Classification using FNet](/examples/nlp/fnet_classification_with_keras_nlp/)
 
 ---
@@ -47,14 +48,14 @@ check out our
 To install the latest official release:
 
 ```
-pip install --upgrade keras-nlp tensorflow
+pip install keras-nlp --upgrade
 ```
 
 To install the latest unreleased changes to the library, we recommend using
 pip to install directly from the master branch on github:
 
 ```
-pip install --upgrade git+https://github.com/keras-team/keras-nlp.git tensorflow
+pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
 ```
 
 ## Quickstart
@@ -64,7 +65,6 @@ Fine-tune BERT on a small sentiment analysis task using the
 
 ```python
 import keras_nlp
-from tensorflow import keras
 import tensorflow_datasets as tfds
 
 imdb_train, imdb_test = tfds.load(
@@ -73,23 +73,12 @@ imdb_train, imdb_test = tfds.load(
     as_supervised=True,
     batch_size=16,
 )
-classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_base_en_uncased",
-)
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.Adam(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
-)
-classifier.fit(
-    imdb_train,
-    validation_data=imdb_test,
-    epochs=1,
-)
-
-# Predict a new example
-classifier.predict(["What an amazing movie, three hours of pure bliss!"])
+# Load a BERT model.
+classifier = keras_nlp.models.BertClassifier.from_preset("bert_base_en_uncased")
+# Fine-tune on IMDb movie reviews.
+classifier.fit(imdb_train, validation_data=imdb_test)
+# Predict two new examples.
+classifier.predict(["What an amazing movie!", "A total waste of my time."])
 ```
 
 ## Compatibility
