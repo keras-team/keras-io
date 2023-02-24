@@ -34,7 +34,7 @@ import autogen_utils
 from master import MASTER
 import tutobooks
 import generate_tf_guides
-
+from render_nlp_tags import render_keras_nlp_tags
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
@@ -511,6 +511,8 @@ class KerasIO:
                     "missing {{toc}} tag." % (template_path,)
                 )
             template = template.replace("{{toc}}", toc)
+        if "keras_nlp/" in path_stack and "models/" in path_stack:
+            template = render_keras_nlp_tags(template)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
             md_source_path = source_path / "index.md"
@@ -1041,7 +1043,6 @@ def get_working_dir(arg):
     if not arg.startswith("--working_dir="):
         return None
     return arg[len("--working_dir=") :]
-
 
 if __name__ == "__main__":
     keras_io = KerasIO(
