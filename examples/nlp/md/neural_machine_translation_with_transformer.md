@@ -272,7 +272,7 @@ class TransformerEncoder(layers.Layer):
 
     def call(self, inputs, mask=None):
         if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype="int32")
+            padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
         attention_output = self.attention(
             query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
         )
