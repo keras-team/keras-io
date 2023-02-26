@@ -248,9 +248,11 @@ class FFNetwork(keras.Model):
     # the `Adam` optimizer with a default learning rate of 0.03 as that was
     # found to be the best rate after experimentation.
     # Loss is tracked using `loss_var` and `loss_count` variables.
+    # Use legacy optimizer for Layer Optimizer to fix issue
+    # https://github.com/keras-team/keras-io/issues/1241
 
     def __init__(
-        self, dims, layer_optimizer=keras.optimizers.Adam(learning_rate=0.03), **kwargs
+        self, dims, layer_optimizer=keras.optimizers.legacy.Adam(learning_rate=0.03), **kwargs
     ):
         super().__init__(**kwargs)
         self.layer_optimizer = layer_optimizer
