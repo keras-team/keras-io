@@ -252,7 +252,10 @@ class FFNetwork(keras.Model):
     # https://github.com/keras-team/keras-io/issues/1241
 
     def __init__(
-        self, dims, layer_optimizer=keras.optimizers.legacy.Adam(learning_rate=0.03), **kwargs
+        self,
+        dims,
+        layer_optimizer=keras.optimizers.legacy.Adam(learning_rate=0.03),
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.layer_optimizer = layer_optimizer
