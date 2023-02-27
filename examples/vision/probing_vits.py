@@ -75,11 +75,11 @@ from tensorflow import keras
 RESOLUTION = 224
 PATCH_SIZE = 16
 GITHUB_RELEASE = "https://github.com/sayakpaul/probing-vits/releases/download/v1.0.0/probing_vits.zip"
-FNAME = "/content/probing_vits.zip"
+FNAME = "probing_vits.zip"
 MODELS_ZIP = {
-    "vit_dino_base16": "/content/Probing_ViTs/vit_dino_base16.zip",
-    "vit_b16_patch16_224": "/content/Probing_ViTs/vit_b16_patch16_224.zip",
-    "vit_b16_patch16_224-i1k_pretrained": "/content/Probing_ViTs/vit_b16_patch16_224-i1k_pretrained.zip",
+    "vit_dino_base16": "Probing_ViTs/vit_dino_base16.zip",
+    "vit_b16_patch16_224": "Probing_ViTs/vit_b16_patch16_224.zip",
+    "vit_b16_patch16_224-i1k_pretrained": "Probing_ViTs/vit_b16_patch16_224-i1k_pretrained.zip",
 }
 
 """
@@ -163,20 +163,20 @@ zip_path = tf.keras.utils.get_file(
 )
 
 with zipfile.ZipFile(zip_path, "r") as zip_ref:
-    zip_ref.extractall("/content/")
+    zip_ref.extractall("./")
 
-os.rename("/content/Probing ViTs", "/content/Probing_ViTs")
+os.rename("Probing ViTs", "Probing_ViTs")
 
 
 def load_model(model_path: str) -> tf.keras.Model:
     with zipfile.ZipFile(model_path, "r") as zip_ref:
-        zip_ref.extractall("/content/Probing_ViTs/")
+        zip_ref.extractall("Probing_ViTs/")
     model_name = model_path.split(".")[0]
-    
+
     inputs = keras.Input((RESOLUTION, RESOLUTION, 3))
     model = keras.models.load_model(model_name, compile=False)
     outputs, attention_weights = model(inputs, training=False)
-    
+
     return keras.Model(inputs, outputs=[outputs, attention_weights])
 
 
