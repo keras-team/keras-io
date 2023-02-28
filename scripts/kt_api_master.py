@@ -193,5 +193,16 @@ KT_API_MASTER = {
         TUNER_MASTER,
         ORACLE_MASTER,
         HYPERMODEL_MASTER,
+        {
+            "path": "errors",
+            "title": "Errors",
+            "generate": [
+                "keras_tuner.errors.FailedTrialError",
+                "keras_tuner.errors.FatalError",
+                "keras_tuner.errors.FatalValueError",
+                "keras_tuner.errors.FatalTypeError",
+                "keras_tuner.errors.FatalRuntimeError",
+            ]
+        },
     ],
 }
