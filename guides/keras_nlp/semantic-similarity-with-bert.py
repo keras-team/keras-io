@@ -1,36 +1,37 @@
 """
-Semantic Similarity with KerasNLP
+Title: Semantic Similarity with KerasNLP
 Author: [Anshuman Mishra](https://github.com/shivance/)
-Date created: 2022/04/18
-Last modified: 2022/04/18
-Description: Use KerasNLP to train a Transformer model from scratch.
+Date created: 2023/02/25
+Last modified: 2023/02/25
+Description: Use pretrained models from KerasNLP for Semantic Similarity Task
 Accelerator: GPU
 """
 
-
-
 """
-Introduction
+# Introduction
 
-Semantic Similarity is the task of determining how similar two sentences are, in terms of what they mean. This example demonstrates the use of SNLI (Stanford Natural Language Inference) Corpus to predict sentence semantic similarity with Transformers. We will fine-tune a BERT model that takes two sentences as inputs and that outputs a similarity score for these two sentences. This notebook reproduces [this](https://keras.io/examples/nlp/semantic_similarity_with_bert/) notebook but with KerasNLP package.
+Semantic Similarity is the task of determining how similar two sentences are, in terms of 
+what they mean. We already saw in [this](https://keras.io/examples/nlp/semantic_similarity_with_bert/) 
+example how to use SNLI (Stanford Natural Language Inference) Corpus to predict sentence 
+semantic similarity with HuggingFace Transformers library. In this tutorial we will 
+learn how to use [KerasNLP](https://keras.io/keras_nlp/), an extension of the core Keras API, 
+for the same task. We'll also learn how KerasNLP reduces the boilerplate code and makes models easy to use.
 
-References
-1. [BERT](https://arxiv.org/pdf/1810.04805.pdf)
-2. [SNLI](https://nlp.stanford.edu/projects/snli/)
+This guide is broken into three parts:
+
+1. *Setup*, task definition, and establishing a baseline.
+2. *Training* a BERT model.
+3. *Saving and Reloading* the model.
+4. *Performing inference* with the model.
 
 # Setup
 
 To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
 
-A simple thing we can do right off the bat is to enable
-[mixed precision](https://keras.io/api/mixed_precision/), which will speed up training by
-running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
-Training a Transformer can take a while, so it is important to pull out all the stops for
-faster training!
 """
 
 """shell
-pip install -q --upgrade keras-nlp tensorflow
+pip install -q --upgrade keras-nlp tensorflow tensorflow-text
 """
 
 
@@ -42,23 +43,32 @@ from tensorflow import keras
 import keras_nlp
 
 # Import classes corresponding to BERT model from KerasNLP
-from keras_nlp.models.bert.bert_preprocessor import BertPreprocessor
-from keras_nlp.models.bert.bert_classifier import BertClassifier
-from keras_nlp.models.bert.bert_tokenizer import BertTokenizer
-
+from keras_nlp.models.bert import BertPreprocessor, BertClassifier
 
 """shell
 curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
 tar -xvzf data.tar.gz
 """
 
-labels = ["contradiction", "entailment", "neutral"]
+"""
+Load the SNLI dataset train, validation and test data
+There are more than 550k samples in total; we will use 100k for this example.
 
+Dataset Overview:
 
-# In[8]:
+   * sentence1: The premise caption that was supplied to the author of the pair.
+   * sentence2: The hypothesis caption that was written by the author of the pair.
+   * similarity: This is the label chosen by the majority of annotators. Where no 
+        majority exists, the label "-" is used (we will skip such samples here).
 
+Here are the "similarity" label values in our dataset:
 
-# There are more than 550k samples in total; we will use 100k for this example.
+   * Contradiction: The sentences share no similarity.
+   * Entailment: The sentences have similar meaning.
+   * Neutral: The sentences are neutral.
+
+"""
+
 train_df = pd.read_csv("SNLI_Corpus/snli_1.0_train.csv", nrows=100000)
 valid_df = pd.read_csv("SNLI_Corpus/snli_1.0_dev.csv")
 test_df = pd.read_csv("SNLI_Corpus/snli_1.0_test.csv")
@@ -68,23 +78,10 @@ print(f"Total train samples : {train_df.shape[0]}")
 print(f"Total validation samples: {valid_df.shape[0]}")
 print(f"Total test samples: {valid_df.shape[0]}")
 
-"""
-Dataset Overview:
+# Define labels for classification task
+labels = ["contradiction", "entailment", "neutral"]
 
-   * sentence1: The premise caption that was supplied to the author of the pair.
-   * sentence2: The hypothesis caption that was written by the author of the pair.
-   * similarity: This is the label chosen by the majority of annotators. Where no majority exists, the label "-" is used (we will skip such samples here).
-
-Here are the "similarity" label values in our dataset:
-
-   * Contradiction: The sentences share no similarity.
-   * Entailment: The sentences have similar meaning.
-   * Neutral: The sentences are neutral.
-
-Let's look at one sample from the dataset:
-
-"""
-
+# Let's look at one sample from the dataset:
 print(f"Sentence1: {train_df.loc[1, 'sentence1']}")
 print(f"Sentence2: {train_df.loc[1, 'sentence2']}")
 print(f"Similarity: {train_df.loc[1, 'similarity']}")
@@ -102,10 +99,10 @@ train_df.dropna(axis=0, inplace=True)
 print("Train Target Distribution")
 print(train_df.similarity.value_counts())
 
-
 print("Validation Target Distribution")
 print(valid_df.similarity.value_counts())
 
+# Filter and shuffle train and validation data
 train_df = (
     train_df[train_df.similarity != "-"]
     .sample(frac=1.0, random_state=42)
@@ -117,7 +114,7 @@ valid_df = (
     .reset_index(drop=True)
 )
 
-
+# Convert label column to numerical values for train, validation and test data
 train_df["label"] = train_df["similarity"].apply(
     lambda x: 0 if x == "contradiction" else 1 if x == "entailment" else 2
 )
@@ -133,37 +130,87 @@ test_df["label"] = test_df["similarity"].apply(
 )
 y_test = test_df.label
 
+"""
+Initialize a BertPreprocessor object from KerasNLP library with preset 
+configuration "bert_tiny_en_uncased". The preprocessor can preprocess 
+sentence pairs for BERT-based models by converting tokens to corresponding IDs in 
+BERT vocabulary and adding special tokens.
+"""
 preprocessor = BertPreprocessor.from_preset("bert_tiny_en_uncased")
 
-x_train = preprocessor((tf.constant(train_df["sentence1"]), tf.constant(train_df["sentence2"])))
-x_val   = preprocessor((tf.constant(valid_df["sentence1"]), tf.constant(valid_df["sentence2"])))
-x_test = preprocessor((tf.constant(test_df["sentence1"]), tf.constant(test_df["sentence2"])))
+"""
+Preprocessing the sentence pairs in the training, validation, and test data using 
+a preprocessor object. BertPreprocessor automatically takes care of sentence packing,
+and seperates them with [SEP] token
+"""
+x_train = preprocessor((train_df["sentence1"], train_df["sentence2"]))
+x_val = preprocessor((valid_df["sentence1"], valid_df["sentence2"]))
+x_test = preprocessor((test_df["sentence1"], test_df["sentence2"]))
 
 """
 ### Train the Model End to End
  
-KerasNLP offers pretrained models, we'll use the same here
+We'll use BertClassifier from KerasNLP. This model attaches a classification head to 
+a keras_nlp.model.BertBackbone backbone, mapping from the backbone outputs to logit 
+output suitable for a classification task. This makes the job a lot easier !
+
+Here we'll use this model with pre-trained weights. `from_preset()` method allows you
+to use your own preprocessor. Here we'll set the `num_classes` as 3 for SNLI dataset
 """
 
 model = BertClassifier.from_preset(
-    "bert_tiny_en_uncased", 
-    num_classes=3, 
-    preprocessor=None)
+    "bert_tiny_en_uncased", num_classes=3, preprocessor=None
+)
 
-model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              optimizer=tf.keras.optimizers.Adam(1e-5),
-              metrics=["accuracy"])
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=tf.keras.optimizers.Adam(1e-5),
+    metrics=["accuracy"],
+)
 
 model.summary()
 
+"""
+Training the model we just compiled using the fit() method with the following arguments:
 
-history = model.fit(x = x_train, y = y_train, validation_data = (x_val, y_val), epochs=4, batch_size=64)
-
-
-# In just four epochs we achieved 71% of accuracy.
+    x_train: The input data for the training set, preprocessed using BertPreprocessor
+    y_train: The target labels for the training set
+    validation_data: A tuple containing the input and target data for the validation set
+    epochs: The number of epochs to train the model
+    batch_size: The number of samples per gradient update
+"""
+model.fit(x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=4, batch_size=64)
 
 """
-### Evaluate model on the test set
+### Evaluate the performance of the trained model on test data.
 """
+model.evaluate(x=x_test, y=y_test)
 
-model.evaluate(x = x_test, y = y_test)
+
+"""
+# Save and Reload the model
+"""
+model.save("bert_classifier.pb", compile=False)
+restored_model = keras.models.load_model("bert_classifier.pb")
+restored_model.evaluate(x=x_test, y=y_test)
+
+"""
+# Inference
+
+Randomly sample 4 sentence pairs from the test set
+"""
+infer_df = test_df.sample(n=4)
+infer_df.head()
+
+# Making predictions
+preprocessed = preprocessor((infer_df["sentence1"], infer_df["sentence2"]))
+predictions = restored_model.predict(preprocessed)
+print(tf.math.argmax(predictions, axis=1).numpy())
+
+"""
+KerasNLP is a toolbox of modular building blocks ranging from pretrained state-of-the-art 
+models, to low-level Transformer Encoder layers. We have shown one approach to use a pretrained
+BERT here, but KerasNLP supports an ever growing array of components for preprocessing text and 
+building models. We hope it makes it easier to experiment on solutions to your natural language 
+problems.
+"""
