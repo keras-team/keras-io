@@ -51,7 +51,8 @@ def render_backbone_table(template):
                 f"{preset} | "
                 f"{format_path(metadata)} | "
                 f"{format_param_count(metadata['params'])} | "
-                f"{metadata['description']} \n"
+                f"{metadata['description']} "
+                f"[Model Card]({metadata['model_card']})\n"
             )
     return template.replace("{{backbone_presets_table}}", table)
 
@@ -73,7 +74,8 @@ def render_classifier_table(template):
                     f"{preset} | "
                     f"{format_path(metadata)} | "
                     f"{format_param_count(metadata['params'])} | "
-                    f"{metadata['description']} \n"
+                    f"{metadata['description']} "
+                    f"[Model Card]({metadata['model_card']})\n"
                 )
     return template.replace("{{classifier_presets_table}}", table)
 
