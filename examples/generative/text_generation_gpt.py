@@ -1,5 +1,5 @@
 """
-Title: GPT text generation with KerasNLP
+Title: GPT text generation from scratch with KerasNLP
 Author: [Jesse Chan](https://github.com/jessechancy)
 Date created: 2022/07/25
 Last modified: 2022/07/25
