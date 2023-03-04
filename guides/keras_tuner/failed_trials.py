@@ -70,18 +70,19 @@ def build_model(hp):
     units_2 = hp.Int("units_2", 10, 30, step=10)
 
     # Define the model
-    model = keras.Sequential([
-        layers.Dense(units=units_1, input_shape=(20,)),
-        layers.Dense(units=units_2),
-        layers.Dense(units=1),
-    ])
+    model = keras.Sequential(
+        [
+            layers.Dense(units=units_1, input_shape=(20,)),
+            layers.Dense(units=units_2),
+            layers.Dense(units=1),
+        ]
+    )
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
     n_params = model.count_params()
     if n_params > 1200:
-        raise ValueError(
-            f"Model too large! It contains {n_params} params.")
+        raise ValueError(f"Model too large! It contains {n_params} params.")
     return model
 
 
@@ -138,11 +139,13 @@ def build_model(hp):
     units_2 = hp.Int("units_2", 10, 30, step=10)
 
     # Define the model
-    model = keras.Sequential([
-        layers.Dense(units=units_1, input_shape=(20,)),
-        layers.Dense(units=units_2),
-        layers.Dense(units=1),
-    ])
+    model = keras.Sequential(
+        [
+            layers.Dense(units=units_1, input_shape=(20,)),
+            layers.Dense(units=units_2),
+            layers.Dense(units=1),
+        ]
+    )
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
@@ -150,7 +153,8 @@ def build_model(hp):
     if n_params > 1200:
         # When this error is raised, it skips the retries.
         raise keras_tuner.errors.FailedTrialError(
-            f"Model too large! It contains {n_params} params.")
+            f"Model too large! It contains {n_params} params."
+        )
     return model
 
 
@@ -195,11 +199,13 @@ def build_model(hp):
     units_2 = hp.Int("units_2", 10, 30, step=10)
 
     # Define the model
-    model = keras.Sequential([
-        layers.Dense(units=units_1, input_shape=(20,)),
-        layers.Dense(units=units_2),
-        layers.Dense(units=1),
-    ])
+    model = keras.Sequential(
+        [
+            layers.Dense(units=units_1, input_shape=(20,)),
+            layers.Dense(units=units_2),
+            layers.Dense(units=1),
+        ]
+    )
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
@@ -207,7 +213,8 @@ def build_model(hp):
     if n_params > 1200:
         # When this error is raised, the search is terminated.
         raise keras_tuner.errors.FatalError(
-            f"Model too large! It contains {n_params} params.")
+            f"Model too large! It contains {n_params} params."
+        )
     return model
 
 
