@@ -7,12 +7,8 @@ Description: The basics of fault tolerance configurations in KerasTuner.
 Accelerator: GPU
 """
 
-"""shell
-pip install keras-tuner -q
 """
-
-"""
-# Introduction
+## Introduction
 
 A KerasTuner program may take a long time to run since each model may take a
 long time to train. We do not want the program to fail just because some trials
@@ -24,6 +20,14 @@ including:
 * How to tolerate the failed trials during the search
 * How to mark a trial as failed during building and evaluating the model
 * How to terminate the search by raising a `FatalError`
+"""
+
+"""
+## Setup
+"""
+
+"""shell
+pip install keras-tuner -q
 """
 
 from tensorflow import keras
@@ -61,20 +65,23 @@ The following code shows how these two arguments work in action.
 
 
 def build_model(hp):
-    model = keras.Sequential()
+    # Define the 2 hyperparameters for the units in dense layers
     units_1 = hp.Int("units_1", 10, 40, step=10)
     units_2 = hp.Int("units_2", 10, 30, step=10)
 
-    # Define the 2 hyperparameters for the units in dense layers
-    model.add(layers.Dense(units=units_1))
-    model.add(layers.Dense(units=units_2))
-
-    model.add(layers.Dense(units=1))
+    # Define the model
+    model = keras.Sequential([
+        layers.Dense(units=units_1, input_shape=(20,)),
+        layers.Dense(units=units_2),
+        layers.Dense(units=1),
+    ])
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
-    if units_1 * units_2 > 800:
-        raise ValueError("Model too large!")
+    n_params = model.count_params()
+    if n_params > 1200:
+        raise ValueError(
+            f"Model too large! It contains {n_params} params.")
     return model
 
 
@@ -126,21 +133,24 @@ errors occur. An example is shown as follows.
 
 
 def build_model(hp):
-    model = keras.Sequential()
+    # Define the 2 hyperparameters for the units in dense layers
     units_1 = hp.Int("units_1", 10, 40, step=10)
     units_2 = hp.Int("units_2", 10, 30, step=10)
 
-    # Define the 2 hyperparameters for the units in dense layers
-    model.add(layers.Dense(units=units_1))
-    model.add(layers.Dense(units=units_2))
-
-    model.add(layers.Dense(units=1))
+    # Define the model
+    model = keras.Sequential([
+        layers.Dense(units=units_1, input_shape=(20,)),
+        layers.Dense(units=units_2),
+        layers.Dense(units=1),
+    ])
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
-    if units_1 * units_2 > 800:
+    n_params = model.count_params()
+    if n_params > 1200:
         # When this error is raised, it skips the retries.
-        raise keras_tuner.errors.FailedTrialError("Model too large!")
+        raise keras_tuner.errors.FailedTrialError(
+            f"Model too large! It contains {n_params} params.")
     return model
 
 
@@ -180,21 +190,24 @@ Following is an example to terminate the search when the model is too large.
 
 
 def build_model(hp):
-    model = keras.Sequential()
+    # Define the 2 hyperparameters for the units in dense layers
     units_1 = hp.Int("units_1", 10, 40, step=10)
     units_2 = hp.Int("units_2", 10, 30, step=10)
 
-    # Define the 2 hyperparameters for the units in dense layers
-    model.add(layers.Dense(units=units_1))
-    model.add(layers.Dense(units=units_2))
-
-    model.add(layers.Dense(units=1))
+    # Define the model
+    model = keras.Sequential([
+        layers.Dense(units=units_1, input_shape=(20,)),
+        layers.Dense(units=units_2),
+        layers.Dense(units=1),
+    ])
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
-    if units_1 * units_2 > 800:
+    n_params = model.count_params()
+    if n_params > 1200:
         # When this error is raised, the search is terminated.
-        raise keras_tuner.errors.FatalError("Model too large!")
+        raise keras_tuner.errors.FatalError(
+            f"Model too large! It contains {n_params} params.")
     return model
 
 
@@ -219,3 +232,19 @@ try:
     )
 except keras_tuner.errors.FatalError:
     print("The search is terminated.")
+
+"""
+## Takeaways
+
+In this tutorial, we learned the following things about handling failed trials
+in KerasTuner:
+
+* Use `max_retries_per_trial` to specify the number of retries for a failed
+  trial.
+* Use `max_consecutive_failed_trials` to specify the maximum consecutive failed
+  trials to tolerate.
+* Raise `FailedTrialError` to directly mark a trial as failed and skip the
+  retries.
+* Raise `FatalError`, `FatalValueError`, `FatalTypeError`, `FatalRuntimeError`
+  to terminate the search immediately.
+"""
