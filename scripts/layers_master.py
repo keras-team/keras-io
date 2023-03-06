@@ -9,12 +9,22 @@ LAYERS_MASTER = {
             "generate": [
                 "tensorflow.keras.layers.Layer",
                 # Properties sorted
+                "tensorflow.keras.layers.Layer.activity_regularizer",
+                "tensorflow.keras.layers.Layer.name",
+                "tensorflow.keras.layers.Layer.compute_dtype",
+                "tensorflow.keras.layers.Layer.dtype",
+                "tensorflow.keras.layers.Layer.dtype_policy",
                 "tensorflow.keras.layers.Layer.dynamic",
+                "tensorflow.keras.layers.Layer.input",
+                "tensorflow.keras.layers.Layer.input_spec",
                 "tensorflow.keras.layers.Layer.losses",
                 "tensorflow.keras.layers.Layer.metrics",
                 "tensorflow.keras.layers.Layer.non_trainable_weights",
+                "tensorflow.keras.layers.Layer.output",
+                "tensorflow.keras.layers.Layer.supports_masking",
                 "tensorflow.keras.layers.Layer.trainable",
                 "tensorflow.keras.layers.Layer.trainable_weights",
+                "tensorflow.keras.layers.Layer.variable_dtype",
                 "tensorflow.keras.layers.Layer.weights",
                 # Methods sorted
                 "tensorflow.keras.layers.Layer.add_loss",
