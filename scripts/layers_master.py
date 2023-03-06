@@ -1,5 +1,5 @@
 LAYERS_MASTER = {
-    "path": "layers/",  # TODO
+    "path": "layers/",
     "title": "Layers API",
     "toc": True,
     "children": [
@@ -8,19 +8,21 @@ LAYERS_MASTER = {
             "title": "The base Layer class",
             "generate": [
                 "tensorflow.keras.layers.Layer",
-                "tensorflow.keras.layers.Layer.weights",
-                "tensorflow.keras.layers.Layer.trainable_weights",
-                "tensorflow.keras.layers.Layer.non_trainable_weights",
-                "tensorflow.keras.layers.Layer.add_weight",
-                "tensorflow.keras.layers.Layer.trainable",
-                "tensorflow.keras.layers.Layer.get_weights",
-                "tensorflow.keras.layers.Layer.set_weights",
-                "tensorflow.keras.Model.get_config",
-                "tensorflow.keras.layers.Layer.add_loss",
-                "tensorflow.keras.layers.Layer.add_metric",
+                # Properties sorted
+                "tensorflow.keras.layers.Layer.dynamic",
                 "tensorflow.keras.layers.Layer.losses",
                 "tensorflow.keras.layers.Layer.metrics",
-                "tensorflow.keras.layers.Layer.dynamic",
+                "tensorflow.keras.layers.Layer.non_trainable_weights",
+                "tensorflow.keras.layers.Layer.trainable",
+                "tensorflow.keras.layers.Layer.trainable_weights",
+                "tensorflow.keras.layers.Layer.weights",
+                # Methods sorted
+                "tensorflow.keras.layers.Layer.add_loss",
+                "tensorflow.keras.layers.Layer.add_metric",
+                "tensorflow.keras.layers.Layer.add_weight",
+                "tensorflow.keras.layers.Layer.get_weights",
+                "tensorflow.keras.layers.Layer.get_config",
+                "tensorflow.keras.layers.Layer.set_weights",
             ],
         },
         {
