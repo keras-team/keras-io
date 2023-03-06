@@ -80,9 +80,9 @@ def build_model(hp):
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
-    n_params = model.count_params()
-    if n_params > 1200:
-        raise ValueError(f"Model too large! It contains {n_params} params.")
+    num_params = model.count_params()
+    if num_params > 1200:
+        raise ValueError(f"Model too large! It contains {num_params} params.")
     return model
 
 
@@ -149,11 +149,11 @@ def build_model(hp):
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
-    n_params = model.count_params()
-    if n_params > 1200:
+    num_params = model.count_params()
+    if num_params > 1200:
         # When this error is raised, it skips the retries.
         raise keras_tuner.errors.FailedTrialError(
-            f"Model too large! It contains {n_params} params."
+            f"Model too large! It contains {num_params} params."
         )
     return model
 
@@ -209,11 +209,11 @@ def build_model(hp):
     model.compile(loss="mse")
 
     # Raise an error when the model is too large
-    n_params = model.count_params()
-    if n_params > 1200:
+    num_params = model.count_params()
+    if num_params > 1200:
         # When this error is raised, the search is terminated.
         raise keras_tuner.errors.FatalError(
-            f"Model too large! It contains {n_params} params."
+            f"Model too large! It contains {num_params} params."
         )
     return model
 
@@ -243,8 +243,7 @@ except keras_tuner.errors.FatalError:
 """
 ## Takeaways
 
-In this tutorial, we learned the following things about handling failed trials
-in KerasTuner:
+In this guide, you learn how to handle failed trials in KerasTuner:
 
 * Use `max_retries_per_trial` to specify the number of retries for a failed
   trial.
