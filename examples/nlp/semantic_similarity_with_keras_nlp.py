@@ -31,7 +31,7 @@ To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
 """
 
 """shell
-pip install -q --upgrade keras-nlp tensorflow tensorflow-text
+pip install -q keras-nlp
 """
 
 
@@ -42,9 +42,6 @@ import tensorflow as tf
 from tensorflow import keras
 import keras_nlp
 
-# Import classes corresponding to BERT model from KerasNLP
-from keras_nlp.models.bert import BertPreprocessor, BertClassifier
-
 """shell
 curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
 tar -xvzf data.tar.gz
@@ -52,20 +49,22 @@ tar -xvzf data.tar.gz
 
 """
 Load the SNLI dataset train, validation and test data
-There are more than 550k samples in total; we will use 100k for this example.
+There are more than 550k samples in total. To keep this example running quickly, 
+we will use 100k samples for this example.
 
-Dataset Overview:
+## Overview of SNLI Dataset:
 
-   * sentence1: The premise caption that was supplied to the author of the pair.
-   * sentence2: The hypothesis caption that was written by the author of the pair.
-   * similarity: This is the label chosen by the majority of annotators. Where no 
-        majority exists, the label "-" is used (we will skip such samples here).
+Every sample in the dataset contains three components of form (sentence1, sentence2, 
+similarity label).
 
-Here are the "similarity" label values in our dataset:
+sentence1 is the initial caption provided to the author of the pair, sentence2 is 
+the hypothesis caption created by the author of the pair, and similarity is the 
+label assigned by annotators to denote the similarity between the two sentences.
 
-   * Contradiction: The sentences share no similarity.
-   * Entailment: The sentences have similar meaning.
-   * Neutral: The sentences are neutral.
+The dataset includes three possible similarity label values: Contradiction, 
+Entailment, and Neutral, which respectively represent completely dissimilar sentences,
+similar meaning sentences, and neutral sentences where no clear similarity or 
+dissimilarity can be established between them.
 
 """
 
@@ -136,7 +135,7 @@ configuration "bert_tiny_en_uncased". The preprocessor can preprocess
 sentence pairs for BERT-based models by converting tokens to corresponding IDs in 
 BERT vocabulary and adding special tokens.
 """
-preprocessor = BertPreprocessor.from_preset("bert_tiny_en_uncased")
+preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
 
 """
 Preprocessing the sentence pairs in the training, validation, and test data using 
@@ -158,8 +157,8 @@ Here we'll use this model with pre-trained weights. `from_preset()` method allow
 to use your own preprocessor. Here we'll set the `num_classes` as 3 for SNLI dataset
 """
 
-model = BertClassifier.from_preset(
-    "bert_tiny_en_uncased", num_classes=3, preprocessor=None
+model = keras_nlp.models.BertClassifier.from_preset(
+    "bert_tiny_en_uncased", num_classes=3
 )
 
 model.compile(
