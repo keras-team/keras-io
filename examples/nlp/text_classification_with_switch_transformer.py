@@ -187,7 +187,9 @@ class Router(layers.Layer):
         ) * tf.squeeze(tf.one_hot(position_in_expert, depth=self.expert_capacity), 1)
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
-        dispatch_tensor = tf.cast(combined_tensor, tf.dtypes.float32)
+        dispatch_tensor = tf.cast(
+            tf.math.greater(combined_tensor, 0.0), tf.dtypes.float32
+        )
 
         return dispatch_tensor, combined_tensor
 
