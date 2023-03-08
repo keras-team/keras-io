@@ -165,7 +165,7 @@ class Router(layers.Layer):
         # the batch indices, to each expert, with position in expert make sure that
         # not more that expert capacity examples can be routed to each expert.
         position_in_expert = tf.cast(
-            tf.math.cumsum(expert_mask, axis=0) * expert_mask, tf.dtypes.int32
+            (tf.math.cumsum(expert_mask, axis=0) - 1) * expert_mask, tf.dtypes.int32
         )
         # Keep only tokens that fit within expert capacity.
         expert_mask *= tf.cast(
