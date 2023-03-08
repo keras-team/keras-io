@@ -343,9 +343,9 @@ Reconstruction error threshold:  0.1195600905852785
 
 ```
 </div>
-### Compare recontruction
+### Compare reconstruction
 
-Just for fun, let's see how our model has recontructed the first sample.
+Just for fun, let's see how our model has reconstructed the first sample.
 This is the 288 timesteps from day 1 of our training dataset.
 
 
