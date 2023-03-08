@@ -165,6 +165,7 @@ the fit() method with the following arguments:
     epochs: The number of epochs to train the model
     batch_size: The number of samples per gradient update
 """
+
 bert_clf.fit(
     x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=1, batch_size=512
 )
@@ -198,6 +199,7 @@ bert_clf_1.fit(
     x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=1, batch_size=512
 )
 
+bert_clf_1.evaluate(x = x_test, y = y_test)
 """
 This time we got 72% accuracy on val and test split. Not bad for 1 epoch ! Let's save our model
 for now and learn how to perform inference with it. We took batch size of 512 to utilize our GPUs fully.
@@ -253,7 +255,7 @@ roberta_clf.fit(
 roberta_clf.evaluate(x=x_test, y=y_test)
 
 """
-"robeta_base_en" is slightly bigger model than bert_tiny, it took almost 1.5 hrs to train on
+`robeta_base_en` is slightly bigger model than bert_tiny, it took almost 1.5 hrs to train on
 Kaggle P100 GPU. 
 
 We achieved a significant performance improvement with roberta. Our accuracy hiked to 88% on
