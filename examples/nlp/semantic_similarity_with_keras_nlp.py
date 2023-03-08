@@ -17,12 +17,13 @@ semantic similarity with HuggingFace Transformers library. In this tutorial we w
 learn how to use [KerasNLP](https://keras.io/keras_nlp/), an extension of the core Keras API, 
 for the same task. We'll also learn how KerasNLP reduces the boilerplate code and makes models easy to use.
 
-This guide is broken into three parts:
+This guide is broken into following parts:
 
 1. *Setup*, task definition, and establishing a baseline.
-2. *Training* a BERT model.
+2. *Establishing baseline* with BERT.
 3. *Saving and Reloading* the model.
 4. *Performing inference* with the model.
+5  *Enhancing Performance* with RoBERTa
 
 # Setup
 
