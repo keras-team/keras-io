@@ -183,9 +183,9 @@ visualize_dataset(train_ds, bounding_box_format="xywh")
 ```
 
 
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_8_0.png)
-
+    
 
 
 and our eval set:
@@ -196,9 +196,9 @@ visualize_dataset(eval_ds, bounding_box_format="xywh")
 ```
 
 
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_10_0.png)
-
+    
 
 
 Looks like everything is structured as expected.  Now we can move on to constructing our
@@ -253,9 +253,9 @@ Lambda fuctions will be no more assumed to be used in the statement where they a
 
 ```
 </div>
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_13_2.png)
-
+    
 
 
 Great!  We now have a bounding box friendly augmentation pipeline.
@@ -272,9 +272,9 @@ visualize_dataset(eval_ds, bounding_box_format="xywh")
 ```
 
 
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_15_0.png)
-
+    
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and prepare to feed
@@ -426,9 +426,9 @@ visualize_detections(model, bounding_box_format="xywh")
 
 ```
 </div>
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_28_1.png)
-
+    
 
 
 To get good results, you should train for at least 50~ epochs.  You also may need to
@@ -455,9 +455,9 @@ visualize_detections(model, bounding_box_format="xywh")
 
 ```
 </div>
-
+    
 ![png](/img/guides/retina_net_overview/retina_net_overview_30_1.png)
-
+    
 
 
 ---
