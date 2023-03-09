@@ -128,11 +128,7 @@ imdb_test = tf.keras.utils.text_dataset_from_directory(
 # Format is (review text tensor, label tensor)
 print(imdb_train.unbatch().take(1).get_single_element())
 
-# Traverse the data manually
-for data_elem in imdb_train:
-    print("Review text is: ", data_elem[0][0])
-    print("Review label is: ", data_elem[1][0])
-    break
+
 
 """
 ## Inference with a pretrained classifier
@@ -254,13 +250,9 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     sequence_length=512,
 )
 
-# Now apply the preprocessor to every sample of train and test data using `map()`.
-# The `tf.data.AUTOTUNE` argument for map allows TensorFlow to dynamically 
-# adjust the number of parallel calls to the function based on available 
-# computing resources.
-# `prefetch()` is a method that fetches the next batch of data while 
-# the model is processing the current batch, reducing the time it takes to 
-# train or test the model.
+# Apply the preprocessor to every sample of train and test data using `map()`. 
+# `tf.data.AUTOTUNE` and `prefetch()` are options to tune performance, see 
+# https://www.tensorflow.org/guide/data_performance for details.
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
 )
@@ -314,8 +306,8 @@ packer = keras_nlp.layers.MultiSegmentPacker(
     sequence_length=64,
 )
 
-# This function that takes a text sample x and its 
-# corresponding label y as input and converts the 
+# This function that takes a text sample `x` and its 
+# corresponding label `y` as input and converts the 
 # text into a format suitable for input into a BERT model.
 def preprocessor(x, y):
     token_ids, segment_ids = packer(tokenizer(x))
