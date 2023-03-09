@@ -264,7 +264,7 @@ the model are expected to be in the range `[0, 255]`.
 
 model = keras_cv.models.RetinaNet(
     # number of classes to be used in box classification
-    classes=20,
+    num_classes=20,
     # For more info on supported bounding box formats, visit
     # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
