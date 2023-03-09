@@ -206,7 +206,7 @@ for now and learn how to perform inference with it. We took batch size of 512 to
 
 # Save and Reload the model
 """
-bert_clf.save("bert_classifier.pb", compile=False)
+bert_clf.save("bert_classifier.pb")
 restored_model = keras.models.load_model("bert_classifier.pb")
 restored_model.evaluate(x=x_test, y=y_test)
 
