@@ -199,7 +199,7 @@ bert_clf_1.fit(
     x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=1, batch_size=512
 )
 
-bert_clf_1.evaluate(x = x_test, y = y_test)
+bert_clf_1.evaluate(x=x_test, y=y_test)
 """
 This time we got 72% accuracy on val and test split. Not bad for 1 epoch ! Let's save our model
 for now and learn how to perform inference with it. We took batch size of 512 to utilize our GPUs fully.
