@@ -193,7 +193,7 @@ class Router(layers.Layer):
         # the batch indices, to each expert, with position in expert make sure that
         # not more that expert capacity examples can be routed to each expert.
         position_in_expert = tf.cast(
-            tf.math.cumsum(expert_mask, axis=0) * expert_mask, tf.dtypes.int32
+            (tf.math.cumsum(expert_mask, axis=0) - 1) * expert_mask, tf.dtypes.int32
         )
         # Keep only tokens that fit within expert capacity.
         expert_mask *= tf.cast(
@@ -215,7 +215,9 @@ class Router(layers.Layer):
         ) * tf.squeeze(tf.one_hot(position_in_expert, depth=self.expert_capacity), 1)
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
-        dispatch_tensor = tf.cast(combined_tensor, tf.dtypes.float32)
+        dispatch_tensor = tf.cast(
+            tf.math.greater(combined_tensor, 0.0), tf.dtypes.float32
+        )
 
         return dispatch_tensor, combined_tensor
 
