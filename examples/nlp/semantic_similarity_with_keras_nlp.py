@@ -44,11 +44,6 @@ from tensorflow import keras
 import keras_nlp
 import tensorflow_datasets as tfds
 
-"""shell
-curl -LO https://raw.githubusercontent.com/MohamadMerchant/SNLI/master/data.tar.gz
-tar -xvzf data.tar.gz
-"""
-
 """
 We'll Load the SNLI dataset using tensorflow-datasets library.
 There are more than 550k samples in total. To keep this example running quickly, 
@@ -150,7 +145,7 @@ to use your own preprocessor. Here we'll set the `num_classes` as 3 for SNLI dat
 """
 
 bert_clf = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased", num_classes=3
+    "bert_tiny_en_uncased", num_classes=3, preprocessor=None
 )
 
 bert_clf.summary()
@@ -186,7 +181,7 @@ improve it.
 Let's recompile our model with a different learning rate and see performance
 """
 bert_clf_1 = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased", num_classes=3
+    "bert_tiny_en_uncased", num_classes=3, preprocessor=None
 )
 
 bert_clf_1.compile(
