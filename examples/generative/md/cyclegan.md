@@ -627,7 +627,7 @@ cycle_gan_model.compile(
 plotter = GANMonitor()
 checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints.{epoch:03d}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_filepath, save_weights_only = True
+    filepath=checkpoint_filepath,save_weights_only = True
 )
 
 # Here we will train the model for just one epoch as each epoch takes around
