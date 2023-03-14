@@ -1,6 +1,6 @@
 # Getting Started with KerasNLP
 
-**Author:** [jbischof](https://github.com/jbischof)<br>
+**Author:** [Jonathan Bischof](https://github.com/jbischof)<br>
 **Date created:** 2022/12/15<br>
 **Last modified:** 2022/12/15<br>
 **Description:** An introduction to the KerasNLP API.
