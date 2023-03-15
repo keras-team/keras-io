@@ -238,7 +238,7 @@ error between the real data and the predictions:
 
 
 def custom_mean_squared_error(y_true, y_pred):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred))
+    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis = -1)
 
 
 model = get_uncompiled_model()
@@ -272,8 +272,8 @@ class CustomMSE(keras.losses.Loss):
         self.regularization_factor = regularization_factor
 
     def call(self, y_true, y_pred):
-        mse = tf.math.reduce_mean(tf.square(y_true - y_pred))
-        reg = tf.math.reduce_mean(tf.square(0.5 - y_pred))
+        mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+        reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
         return mse + reg * self.regularization_factor
 
 
