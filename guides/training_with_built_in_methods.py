@@ -229,7 +229,7 @@ Metrics:
 """
 ### Custom losses
 
-If you need to create a custom loss, Keras provides two ways to do so.
+If you need to create a custom loss, Keras provides three ways to do so.
 
 The first method involves creating a function that accepts inputs `y_true` and
 `y_pred`. The following example shows a loss function that computes the mean squared
@@ -279,6 +279,40 @@ class CustomMSE(keras.losses.Loss):
 
 model = get_uncompiled_model()
 model.compile(optimizer=keras.optimizers.Adam(), loss=CustomMSE())
+
+y_train_one_hot = tf.one_hot(y_train, depth=10)
+model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
+
+"""
+Alternatively you could implement the loss function as a method, 
+and use the `LossFunctionWrapper` to turn it into a class. 
+This method has the added benefit of auto-generating config methods for the class.
+
+The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
+
+- `fn`: The loss function to wrap, with signature `fn(y_true, y_pred, **kwargs)`.
+- `reduction`:  Type of `tf.keras.losses.Reduction` to apply to loss. will raise an error. 
+Please see this custom training [tutorial](https://www.tensorflow.org/tutorials/distribute/custom_training#define_the_loss_function) 
+for more details.
+- `name`: Optional name for the instance.
+- Any other parameters will be passed to `fn` as `kwargs` through the `call()` method.
+
+We could implement the previous `CustomMSE` class using `LossFunctionWrapper`:
+"""
+
+
+def custom_mean_squared_error_expended(y_true, y_pred, regularization_factor=0.1):
+    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis = -1)
+
+
+class WrappedCustomMSE(keras.losses.LossFunctionWrapper):
+    def __init__(self, reduction=tf.keras.losses.Reduction.AUTO, name="custom_mse_with_regularization", regularization_factor=0.1):
+        super().__init__(custom_mean_squared_error_expended, name=name, reduction=reduction, regularization_factor=regularization_factor)
+
+
+model = get_uncompiled_model()
+model.compile(optimizer=keras.optimizers.Adam(), 
+              loss=WrappedCustomMSE(regularization_factor=0.2, name="mse_custom_0_2"))
 
 y_train_one_hot = tf.one_hot(y_train, depth=10)
 model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
