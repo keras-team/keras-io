@@ -58,7 +58,7 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncas
 
 {{backbone_presets_table}}
 
-**Disclaimer**: The links provided will lead to the model card or to the official README, 
+**Note**: The links provided will lead to the model card or to the official README, 
 if no model card has been provided by the author.
 
 ## Classification presets
@@ -78,7 +78,7 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncas
 
 {{classifier_presets_table}}
 
-**Disclaimer**: The links provided will lead to the model card or to the official README, 
+**Note**: The links provided will lead to the model card or to the official README, 
 if no model card has been provided by the author.
 
 ## API Documentation
