@@ -238,7 +238,7 @@ error between the real data and the predictions:
 
 
 def custom_mean_squared_error(y_true, y_pred):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis = -1)
+    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
 
 
 model = get_uncompiled_model()
@@ -302,17 +302,29 @@ We could implement the previous `CustomMSE` class using `LossFunctionWrapper`:
 
 
 def custom_mean_squared_error_expended(y_true, y_pred, regularization_factor=0.1):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis = -1)
+    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
 
 
 class WrappedCustomMSE(keras.losses.LossFunctionWrapper):
-    def __init__(self, reduction=tf.keras.losses.Reduction.AUTO, name="custom_mse_with_regularization", regularization_factor=0.1):
-        super().__init__(custom_mean_squared_error_expended, name=name, reduction=reduction, regularization_factor=regularization_factor)
+    def __init__(
+        self,
+        reduction=tf.keras.losses.Reduction.AUTO,
+        name="custom_mse_with_regularization",
+        regularization_factor=0.1,
+    ):
+        super().__init__(
+            custom_mean_squared_error_expended,
+            name=name,
+            reduction=reduction,
+            regularization_factor=regularization_factor,
+        )
 
 
 model = get_uncompiled_model()
-model.compile(optimizer=keras.optimizers.Adam(), 
-              loss=WrappedCustomMSE(regularization_factor=0.2, name="mse_custom_0_2"))
+model.compile(
+    optimizer=keras.optimizers.Adam(),
+    loss=WrappedCustomMSE(regularization_factor=0.2, name="mse_custom_0_2"),
+)
 
 y_train_one_hot = tf.one_hot(y_train, depth=10)
 model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
