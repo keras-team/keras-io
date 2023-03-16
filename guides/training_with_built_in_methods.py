@@ -291,7 +291,7 @@ This method has the added benefit of auto-generating config methods for the clas
 The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
 
 - `fn`: The loss function to wrap, with signature `fn(y_true, y_pred, **kwargs)`.
-- `reduction`:  Type of `tf.keras.losses.Reduction` to apply to loss. will raise an error. 
+- `reduction`: Type of `tf.keras.losses.Reduction` [class](https://www.tensorflow.org/api_docs/python/tf/keras/losses/Reduction) to apply to loss. 
 Please see this custom training [tutorial](https://www.tensorflow.org/tutorials/distribute/custom_training#define_the_loss_function) 
 for more details.
 - `name`: Optional name for the instance.
