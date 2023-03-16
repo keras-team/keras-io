@@ -520,7 +520,7 @@ import numpy as np
 inputs = keras.Input(shape=(3,), name="inputs")
 targets = keras.Input(shape=(10,), name="targets")
 logits = keras.layers.Dense(10)(inputs)
-predictions = LogisticEndpoint(name="predictions")(logits, targets)
+predictions = LogisticEndpoint(name="predictions")(targets, logits)
 
 model = keras.Model(inputs=[inputs, targets], outputs=predictions)
 model.compile(optimizer="adam")  # No loss argument!
