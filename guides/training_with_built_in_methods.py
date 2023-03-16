@@ -286,15 +286,13 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 """
 Alternatively you could implement the loss function as a method,
 and use the `LossFunctionWrapper` to turn it into a class.
-This class wrapps around a loss method, passes it any extra parameters which are given to it,
-and handles the config for these extra parameters.
+This class wraps around a loss function,
+and handles the parsing of extra arguments by passing them to the `call()` and config methods.
 
 The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
 
 - `fn`: The loss function to wrap, with signature `fn(y_true, y_pred, **kwargs)`.
-- `reduction`: Type of `tf.keras.losses.Reduction` [class](https://www.tensorflow.org/api_docs/python/tf/keras/losses/Reduction) to apply to loss.
-Please see this custom training [tutorial](https://www.tensorflow.org/tutorials/distribute/custom_training#define_the_loss_function)
-for more details.
+- `reduction`: Type of [`tf.keras.losses.Reduction`](https://www.tensorflow.org/api_docs/python/tf/keras/losses/Reduction) to apply to loss.
 - `name`: Optional name for the instance.
 - Any other parameters will be passed to `fn` as `kwargs` through the `call()` method.
 
@@ -302,11 +300,14 @@ We could implement the previous `CustomMSE` class using `LossFunctionWrapper`:
 """
 
 
+from keras import losses
+
+
 def custom_mean_squared_error_expended(y_true, y_pred, regularization_factor=0.1):
     return tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
 
 
-class WrappedCustomMSE(keras.losses.LossFunctionWrapper):
+class WrappedCustomMSE(losses.LossFunctionWrapper):
     def __init__(
         self,
         reduction=tf.keras.losses.Reduction.AUTO,
