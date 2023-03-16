@@ -286,7 +286,8 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 """
 Alternatively you could implement the loss function as a method, 
 and use the `LossFunctionWrapper` to turn it into a class. 
-This method has the added benefit of auto-generating config methods for the class.
+This class wrapps around a loss method, passes it any extra parameters which are given to it, 
+and handles the config for these extra parameters.
 
 The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
 
