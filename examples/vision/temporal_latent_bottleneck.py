@@ -431,9 +431,7 @@ class BaseAttention(layers.Layer):
 
         self.attention_scores = None
 
-    def call(
-        self, input_query, key, value
-    ):
+    def call(self, input_query, key, value):
         # Apply the attention module.
         query = self.query_layernorm(input_query)
         key = self.key_layernorm(key)
@@ -564,7 +562,7 @@ class CustomRecurrentCell(layers.Layer):
         num_heads,
         key_dim,
         attn_dropout,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         # Save the arguments.
@@ -702,7 +700,7 @@ custom_rnn_cell = CustomRecurrentCell(
 )
 model = TemporalLatentBottleneckModel(
     patch_layer=patch_layer,
-    custom_cell=custom_rnn_cell
+    custom_cell=custom_rnn_cell,
 )
 
 """
