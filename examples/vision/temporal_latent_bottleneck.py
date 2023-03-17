@@ -42,7 +42,7 @@ mechanism to perform image classification on the CIFAR-10 dataset. We implement 
 model by making a custom `RNNCell` implementation in order to make a **performant** and
 **vectorized** design.
 
-_Note_: This example makes use of `TensorFlow 2.11.0`, which must be installed into our
+_Note_: This example makes use of `TensorFlow 2.12.0`, which must be installed into our
 system
 """
 
@@ -54,10 +54,9 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import mixed_precision
-from tensorflow.keras.optimizers.experimental import AdamW
+from tensorflow.keras.optimizers import AdamW
 
 import random
-from typing import Tuple, List
 from matplotlib import pyplot as plt
 
 # Set seed for reproducibility.
@@ -146,7 +145,7 @@ keeping sizes same.
 """
 
 # Build the `train` augmentation pipeline.
-train_aug = keras.Sequential(
+train_augmentation = keras.Sequential(
     [
         layers.Rescaling(1 / 255.0, dtype="float32"),
         layers.Resizing(
@@ -161,7 +160,7 @@ train_aug = keras.Sequential(
 )
 
 # Build the `val` and `test` data pipeline.
-test_aug = keras.Sequential(
+test_augmentation = keras.Sequential(
     [
         layers.Rescaling(1 / 255.0, dtype="float32"),
         layers.Resizing(config["image_size"], config["image_size"], dtype="float32"),
@@ -175,11 +174,11 @@ test_aug = keras.Sequential(
 
 
 def train_map_fn(image, label):
-    return train_aug(image), label
+    return train_augmentation(image), label
 
 
 def test_map_fn(image, label):
-    return test_aug(image), label
+    return test_augmentation(image), label
 
 
 """
@@ -259,7 +258,7 @@ A PyTorch-style pseudocode is also proposed by the authors as shown in **Algorit
 """
 
 """
-### `PatchEmbed` layer
+### `PatchEmbedding` layer
 
 This custom `keras.layers.Layer` is useful for generating patches from the image and
 transform them into a higher-dimensional embedding space using `keras.layers.Embedding`.
@@ -276,7 +275,7 @@ used as the final input to the model.
 """
 
 
-class PatchEmbed(layers.Layer):
+class PatchEmbedding(layers.Layer):
     """Image to Patch Embedding.
     Args:
         image_size (`Tuple[int]`): Size of the input image.
@@ -287,10 +286,10 @@ class PatchEmbed(layers.Layer):
 
     def __init__(
         self,
-        image_size: Tuple[int],
-        patch_size: Tuple[int],
-        embed_dim: int,
-        chunk_size: int,
+        image_size,
+        patch_size,
+        embed_dim,
+        chunk_size,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -336,15 +335,7 @@ class PatchEmbed(layers.Layer):
             name="chunking_layer",
         )
 
-    def call(self, inputs: tf.Tensor) -> Tuple[tf.Tensor, int, int, int]:
-        """Call function.
-                Args:
-                    inputs (`tf.Tensor`): Input tensor.
-                Returns:
-        `Tuple[tf.Tensor, int, int, int]`: Tuple of the projected input, number of
-        patches,
-                        patch resolution, and embedding dimension.
-        """
+    def call(self, inputs):
         # Project the inputs to the embedding dimension.
         x = self.projection(inputs)
 
@@ -376,7 +367,7 @@ class FeedForwardNetwork(layers.Layer):
         dropout (`float`): Dropout probability for FFN.
     """
 
-    def __init__(self, dims: int, dropout: float, **kwargs):
+    def __init__(self, dims, dropout, **kwargs):
         super().__init__(**kwargs)
 
         # Create the layers.
@@ -388,23 +379,15 @@ class FeedForwardNetwork(layers.Layer):
             ],
             name="ffn",
         )
-        self.add = layers.Add(
-            name="add",
-        )
         self.layernorm = layers.LayerNormalization(
             epsilon=1e-5,
             name="layernorm",
         )
 
-    def call(self, inputs: tf.Tensor) -> tf.Tensor:
-        """Call function.
-        Args:
-            inputs (`tf.Tensor`): Input tensor.
-        Returns:
-            `tf.Tensor`: Output tensor."""
+    def call(self, inputs):
         # Apply the FFN.
         x = self.layernorm(inputs)
-        x = self.add([inputs, self.ffn(x)])
+        x = inputs + self.ffn(x)
         return x
 
 
@@ -425,47 +408,37 @@ class BaseAttention(layers.Layer):
         dropout (`float`): Dropout probability for attention module.
     """
 
-    def __init__(self, num_heads: int, key_dim: int, dropout: float, **kwargs):
+    def __init__(self, num_heads, key_dim, dropout, **kwargs):
         super().__init__(**kwargs)
-        self.mha = layers.MultiHeadAttention(
+        self.multi_head_attention = layers.MultiHeadAttention(
             num_heads=num_heads,
             key_dim=key_dim,
             dropout=dropout,
             name="mha",
         )
-        self.q_layernorm = layers.LayerNormalization(
+        self.query_layernorm = layers.LayerNormalization(
             epsilon=1e-5,
             name="q_layernorm",
         )
-        self.k_layernorm = layers.LayerNormalization(
+        self.key_layernorm = layers.LayerNormalization(
             epsilon=1e-5,
             name="k_layernorm",
         )
-        self.v_layernorm = layers.LayerNormalization(
+        self.value_layernorm = layers.LayerNormalization(
             epsilon=1e-5,
             name="v_layernorm",
         )
-        self.add = layers.Add(
-            name="add",
-        )
 
-        self.attn_scores = None
+        self.attention_scores = None
 
     def call(
-        self, input_query: tf.Tensor, key: tf.Tensor, value: tf.Tensor
-    ) -> tf.Tensor:
-        """Call function.
-        Args:
-            input_query (`tf.Tensor`): Input query tensor.
-            key (`tf.Tensor`): Key tensor.
-            value (`tf.Tensor`): Value tensor.
-        Returns:
-            `tf.Tensor`: Output tensor."""
+        self, input_query, key, value
+    ):
         # Apply the attention module.
-        query = self.q_layernorm(input_query)
-        key = self.k_layernorm(key)
-        value = self.v_layernorm(value)
-        (attn_outs, attn_scores) = self.mha(
+        query = self.query_layernorm(input_query)
+        key = self.key_layernorm(key)
+        value = self.value_layernorm(value)
+        (attention_outputs, attention_scores) = self.multi_head_attention(
             query=query,
             key=key,
             value=value,
@@ -473,10 +446,10 @@ class BaseAttention(layers.Layer):
         )
 
         # Save the attention scores for later visualization.
-        self.attn_scores = attn_scores
+        self.attention_scores = attention_scores
 
         # Add the input to the attention output.
-        x = self.add([input_query, attn_outs])
+        x = input_query + attention_outputs
         return x
 
 
@@ -502,11 +475,11 @@ class AttentionWithFFN(layers.Layer):
 
     def __init__(
         self,
-        ffn_dims: int,
-        ffn_dropout: float,
-        num_heads: int,
-        key_dim: int,
-        attn_dropout: float,
+        ffn_dims,
+        ffn_dropout,
+        num_heads,
+        key_dim,
+        attn_dropout,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -523,22 +496,14 @@ class AttentionWithFFN(layers.Layer):
             name="ffn",
         )
 
-        self.attn_scores = None
+        self.attention_scores = None
 
-    def call(self, query: tf.Tensor, key: tf.Tensor, value: tf.Tensor) -> tf.Tensor:
-        """Call function.
-        Args:
-            query (`tf.Tensor`): Input query tensor.
-            key (`tf.Tensor`): Key tensor.
-            value (`tf.Tensor`): Value tensor.
-        Returns:
-            `tf.Tensor`: Output tensor.
-        """
+    def call(self, query, key, value):
         # Apply the attention module.
         x = self.attention(query, key, value)
 
         # Save the attention scores for later visualization.
-        self.attn_scores = self.attention.attn_scores
+        self.attention_scores = self.attention.attention_scores
 
         # Apply the FFN.
         x = self.ffn(x)
@@ -591,15 +556,15 @@ class CustomRecurrentCell(layers.Layer):
 
     def __init__(
         self,
-        chunk_size: int,
-        r: int,
-        num_layers: int,
-        ffn_dims: int,
-        ffn_dropout: float,
-        num_heads: int,
-        key_dim: int,
-        attn_dropout: float,
-        **kwargs,
+        chunk_size,
+        r,
+        num_layers,
+        ffn_dims,
+        ffn_dropout,
+        num_heads,
+        key_dim,
+        attn_dropout,
+        **kwargs
     ):
         super().__init__(**kwargs)
         # Save the arguments.
@@ -617,12 +582,10 @@ class CustomRecurrentCell(layers.Layer):
         self.state_size = tf.TensorShape([chunk_size, ffn_dims])
         self.output_size = tf.TensorShape([chunk_size, ffn_dims])
 
-        self.get_attn_scores = False
-        self.attn_scores = []
+        self.get_attention_scores = False
+        self.attention_scores = []
 
-        ########################################################################
         # Perceptual Module
-        ########################################################################
         perceptual_module = list()
         for layer_idx in range(num_layers):
             perceptual_module.append(
@@ -648,9 +611,7 @@ class CustomRecurrentCell(layers.Layer):
                 )
         self.perceptual_module = perceptual_module
 
-        ########################################################################
         # Temporal Latent Bottleneck Module
-        ########################################################################
         self.tlb_module = AttentionWithFFN(
             ffn_dims=ffn_dims,
             ffn_dropout=ffn_dropout,
@@ -660,15 +621,7 @@ class CustomRecurrentCell(layers.Layer):
             name=f"tlb_cross_attn_ffn",
         )
 
-    def call(self, inputs, states) -> Tuple[tf.Tensor, List[tf.Tensor]]:
-        """Call function.
-        Args:
-            inputs (`tf.Tensor`): Input tensor.
-            states (`List[tf.Tensor]`): List of state tensors.
-        Returns:
-            `Tuple[tf.Tensor, List[tf.Tensor]]`: Tuple of output tensor and list
-                of state tensors.
-        """
+    def call(self, inputs, states):
         # inputs => (batch, chunk_size, dims)
         # states => [(batch, chunk_size, units)]
         slow_stream = states[0]
@@ -687,20 +640,20 @@ class CustomRecurrentCell(layers.Layer):
         )
 
         # Save the attention scores for later visualization.
-        if self.get_attn_scores:
-            self.attn_scores.append(self.tlb_module.attn_scores)
+        if self.get_attention_scores:
+            self.attention_scores.append(self.tlb_module.attention_scores)
 
         return fast_stream, [slow_stream]
 
 
 """
-### `ModelTrainer` to encapsulate full model
+### `TemporalLatentBottleneckModel` to encapsulate full model
 
 Here, we just wrap the full model as to expose it for training.
 """
 
 
-class ModelTrainer(keras.Model):
+class TemporalLatentBottleneckModel(keras.Model):
     """Model Trainer.
     Args:
         patch_layer (`tf.keras.layers.Layer`): Patching layer.
@@ -714,13 +667,7 @@ class ModelTrainer(keras.Model):
         self.gap = layers.GlobalAveragePooling1D(name="gap")
         self.head = layers.Dense(10, activation="softmax", dtype="float32", name="head")
 
-    def call(self, inputs: tf.Tensor) -> tf.Tensor:
-        """Call function.
-        Args:
-            inputs (`tf.Tensor`): Input tensor.
-        Returns:
-            `tf.Tensor`: Output tensor.
-        """
+    def call(self, inputs):
         x = self.patch_layer(inputs)
         x = self.rnn(x)
         x = self.gap(x)
@@ -736,13 +683,8 @@ to our wrapper class, which will prepare the final model for training. We define
 `PatchEmbed` layer, and the `CustomCell`-based RNN.
 """
 
-# We call this to clear all previous session states. This frees up GPU memory
-# consumption as well.
-
-keras.backend.clear_session()
-
 # Build the model.
-patch_layer = PatchEmbed(
+patch_layer = PatchEmbedding(
     image_size=(config["image_size"], config["image_size"]),
     patch_size=(config["patch_size"], config["patch_size"]),
     embed_dim=config["embed_dim"],
@@ -758,7 +700,10 @@ custom_rnn_cell = CustomRecurrentCell(
     key_dim=config["embed_dim"],
     attn_dropout=config["attn_drop"],
 )
-model = ModelTrainer(patch_layer=patch_layer, custom_cell=custom_rnn_cell)
+model = TemporalLatentBottleneckModel(
+    patch_layer=patch_layer,
+    custom_cell=custom_rnn_cell
+)
 
 """
 ## Metrics and Callbacks
