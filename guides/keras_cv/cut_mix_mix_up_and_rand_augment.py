@@ -40,9 +40,9 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
-from tensorflow.keras import applications
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
+from keras import applications
+from keras import losses
+from keras import optimizers
 
 """
 ## Data loading
@@ -227,7 +227,7 @@ times. `RandAugment` can be thought of as a specific case of
 `RandomAugmentationPipeline` internally.
 
 In this example, we will create a custom `RandomAugmentationPipeline` by removing
-`RandomRotation` layers from the standard `RandAugment` policy, and substitutex a
+`RandomRotation` layers from the standard `RandAugment` policy, and substitute a
 `GridMask` layer in its place.
 """
 
@@ -329,8 +329,6 @@ test_dataset = test_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUN
 train_dataset = train_dataset.prefetch(AUTOTUNE)
 test_dataset = test_dataset.prefetch(AUTOTUNE)
 
-train_dataset = train_dataset
-test_dataset = test_dataset
 
 """
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
