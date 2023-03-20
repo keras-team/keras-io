@@ -149,7 +149,7 @@ As Feynman said about the universe: _"It's not complicated, it's just a lot of i
 """
 ## Perks of KerasCV
 
-With several implementations of Stable Diffusion publicly available why shoud you use
+With several implementations of Stable Diffusion publicly available why should you use
 `keras_cv.models.StableDiffusion`?
 
 Aside from the easy-to-use API, KerasCV's Stable Diffusion model comes
