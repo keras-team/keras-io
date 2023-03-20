@@ -286,8 +286,8 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 """
 Alternatively you could implement the loss function as a method,
 and use the `LossFunctionWrapper` to turn it into a class.
-This class wraps around a loss function,
-and handles the parsing of extra arguments by passing them to the `call()` and config methods.
+This wrapper is a subclass of `tf.keras.losses.Loss` which handles the parsing of
+extra arguments by passing them to the `call()` and config methods.
 
 The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
 
@@ -304,7 +304,9 @@ from keras import losses
 
 
 def custom_mean_squared_error_expended(y_true, y_pred, regularization_factor=0.1):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+    mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+    reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
+    return mse + reg * regularization_factor
 
 
 class WrappedCustomMSE(losses.LossFunctionWrapper):
