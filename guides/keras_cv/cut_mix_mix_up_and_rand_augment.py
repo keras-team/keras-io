@@ -40,9 +40,9 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
-from keras import applications
-from keras import losses
-from keras import optimizers
+from tensorflow.keras import applications
+from tensorflow.keras import losses
+from tensorflow.keras import optimizers
 
 """
 ## Data loading
