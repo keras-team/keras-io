@@ -206,16 +206,19 @@ bert_classifier = keras_nlp.models.BertClassifier.from_preset(
 
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=tf.keras.optimizers.Adam(TriangularSchedule(0.001, 1000, 5000)),
+    optimizer=tf.keras.optimizers.experimental.AdamW(
+        TriangularSchedule(0.001, 1000, 5000)
+    ),
     metrics=["accuracy"],
 )
 
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=3)
 
 """
-We see that after completion of first epoch, validation accuracy hikes upto ~75%,
-and upto ~85% in three epochs
-Let's evaluate on test set
+With LR scheduler and AdamW optimizer we see that after completion of first epoch, 
+validation accuracy hikes upto ~77%, and upto ~80% in three epochs
+
+Let's evaluate our model on test set !
 """
 
 bert_classifier.evaluate(test_ds)
