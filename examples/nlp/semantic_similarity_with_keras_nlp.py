@@ -69,57 +69,50 @@ snli_train = tfds.load("snli", split="train[:20%]")
 snli_val = tfds.load("snli", split="validation")
 snli_test = tfds.load("snli", split="test")
 
+# Let's take a look at how our training samples look like
+snli_train.take(1).get_single_element()
+
 # Define labels for classification task
 labels = ["neutral", "entailment", "contradiction"]
 
 """
 ### Preprocessing
 
-Tensorflow datasets come as prefetch datasets, with strings converted into bytes. To
-make the tutorial easy to grasp, we convert our dataset to dataframe.
+Some of the samples have -1 label, we'll simply filter those out
 """
 
-
-def to_dataframe(dataset):
-    dataset = tfds.as_dataframe(dataset)
-    # decoding bytes to strings
-    dataset["hypothesis"] = dataset["hypothesis"].str.decode("utf-8")
-    dataset["premise"] = dataset["premise"].str.decode("utf-8")
-    return dataset
-
+def filter_labels(sample):
+    return sample["label"] >= 0
 
 """
-Let's take a look at how our dataset looks like
+Utility function to split the example into an (x, y) tuple suitable for `model.fit()`.
+BertPreprocessor automatically takes care of sentence packing, and seperates them with 
+[SEP] token
 """
-snli_val_df = to_dataframe(snli_val)
-snli_val_df.head()
+def split_labels(sample):
+    return (sample["hypothesis"], sample["premise"]), sample["label"]
+
+
+train_ds = snli_train.filter(filter_labels).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE).batch(16)
+val_ds = snli_train.filter(filter_labels).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE).batch(16)
+test_ds = snli_train.filter(filter_labels).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE).batch(16)
 
 """
-This utility function tokenizes our string inputs according to model's requirements.
-We return tuples of data and labels.
+KerasNLP models automatically tokenizes the inputs as per the model used, but user can use custom preprocessing
+as per need.
 """
-
-
-def preprocess_dataset(dataset, preprocessor):
-    dataset = to_dataframe(dataset)
-    # some sample have -1 as label entries. We'll simply drop those here
-    dataset.drop(dataset[dataset["label"] == -1].index, inplace=True)
-
-    x = preprocessor((dataset["hypothesis"], dataset["premise"]))
-    y = np.array(dataset.label)
-    return x, y
-
 
 """
 ## BERT Baseline
 
-We'll use BERT from KerasNLP to establish a baseline.
+We'll use BERT model from KerasNLP to establish a baseline. 
 
 Initialize a BertPreprocessor object from KerasNLP library with preset 
 configuration "bert_tiny_en_uncased". The preprocessor can preprocess 
 sentence pairs for BERT-based models by converting tokens to corresponding IDs in 
 BERT vocabulary and adding special tokens.
 """
+
 bert_preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_tiny_en_uncased"
 )
@@ -129,14 +122,15 @@ Preprocessing the sentence pairs in the training, validation, and test data usin
 a preprocessor object. BertPreprocessor automatically takes care of sentence packing,
 and seperates them with [SEP] token
 """
-x_train, y_train = preprocess_dataset(snli_train, bert_preprocessor)
-x_test, y_test = preprocess_dataset(snli_test, bert_preprocessor)
-x_val, y_val = preprocess_dataset(snli_val, bert_preprocessor)
+
+train_ds = train_ds.map(bert_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
+val_ds = val_ds.map(bert_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
+test_ds = test_ds.map(bert_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
 ### Train the Model End to End
- 
-BertClassifier class attaches classification head to the BertBackbone backbone, mapping 
+
+keras_nlp.models.BertClassifier class attaches classification head to the BERT Backbone, mapping 
 the backbone outputs to logit output suitable for a classification task. This significantly
 reduces need of custom code.
 
@@ -144,35 +138,29 @@ Here we'll use this model with pre-trained weights. `from_preset()` method allow
 to use your own preprocessor. Here we'll set the `num_classes` as 3 for SNLI dataset
 """
 
-bert_clf = keras_nlp.models.BertClassifier.from_preset(
+bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3, preprocessor=None
 )
 
-bert_clf.summary()
+bert_classifier.summary()
 
 """
-KerasNLP models compile automatically. Let's train the model we just instantiated, using 
-the fit() method with the following arguments:
-
-    x_train: The input data for the training set, preprocessed using BertPreprocessor
-    y_train: The target labels for the training set
-    validation_data: A tuple containing the input and target data for the validation set
-    epochs: The number of epochs to train the model
-    batch_size: The number of samples per gradient update
+KerasNLP task models come with compilation defaults. Let's train the model we just instantiated, by calling
+the fit() method with 
 """
 
-bert_clf.fit(
-    x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=1, batch_size=512
+bert_classifier.fit(
+    train_ds, validation_data=val_ds, epochs=1
 )
 
 """
 
-Our BERT classifier gave us ~68% accuracy on validation split, let's see how it performs
+Our BERT classifier gave us ~65% accuracy on validation split, let's see how it performs
 on Test split
 
 ### Evaluate the performance of the trained model on test data.
 """
-bert_clf.evaluate(x=x_test, y=y_test)
+bert_classifier.evaluate(test_ds)
 
 """
 Our baseline bert gave almost similar (~68%) accuracy on the test split. Let's see if we can
@@ -180,74 +168,75 @@ improve it.
 
 Let's recompile our model with a different learning rate and see performance
 """
-bert_clf_1 = keras_nlp.models.BertClassifier.from_preset(
+bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3, preprocessor=None
 )
 
-bert_clf_1.compile(
+bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=tf.keras.optimizers.Adam(1e-4),
     metrics=["accuracy"],
 )
 
-bert_clf_1.fit(
-    x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=1, batch_size=512
+bert_classifier.fit(
+    train_ds, validation_data=val_ds, epochs=1
 )
 
-bert_clf_1.evaluate(x=x_test, y=y_test)
+bert_classifier.evaluate(test_ds)
 """
 This time we got 72% accuracy on val and test split. Not bad for 1 epoch ! Let's save our model
 for now and learn how to perform inference with it. We took batch size of 512 to utilize our GPUs fully.
 
 # Save and Reload the model
 """
-bert_clf.save("bert_classifier.pb")
-restored_model = keras.models.load_model("bert_classifier.pb")
-restored_model.evaluate(x=x_test, y=y_test)
+bert_classifier.save("bert_classifier")
+restored_model = keras.models.load_model("bert_classifier")
+restored_model.evaluate(test_ds)
 
 """
 # Inference
 
-Randomly sample 4 sentence pairs from the test set
+Randomly sample 4 sentence pair from the test set
 """
-infer_df = to_dataframe(snli_test).sample(n=4)
-infer_df.head()
+sample = snli_test.batch(4).take(1).get_single_element()
+sample
 
-# Making predictions
-preprocessed = bert_preprocessor((infer_df["hypothesis"], infer_df["premise"]))
-predictions = bert_clf.predict(preprocessed)
+"""
+Now to tokenize this sample, we will need a preprocessor
+"""
+
+bert_preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
+
+preprocessed_sample = bert_preprocessor(sample)
+predictions = bert_classifier.predict(preprocessed_sample)
+
+# Get the class predictions with maximum probabilities
 print(tf.math.argmax(predictions, axis=1).numpy())
 
 """
-# Enhancing accuracy with RoBERTA
+# Enhancing accuracy with RoBERTa
 
 Now that we have established a baseline, we'll attempt to get better results by trying different
-models. KerasNLP makes experimentation easy for us, with just few lines of code, we can train 
-a roberta on the same dataset.
+models. KerasNLP makes experimentation easy for us, with just few lines of code, we can fine-tune 
+a roberta checkpoint on the same dataset.
 """
-
 # Roberta has it's own data preprocessing methods
 roberta_preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset(
     "roberta_base_en"
 )
 
-# we preprocess original snli dataset with roberta preprocessor
-x_train, y_train = preprocess_dataset(snli_train, roberta_preprocessor)
-x_test, y_test = preprocess_dataset(snli_test, roberta_preprocessor)
-x_val, y_val = preprocess_dataset(snli_val, roberta_preprocessor)
-
-# inittializing a roberta from preset
-roberta_clf = keras_nlp.models.RobertaClassifier.from_preset(
+# Inittializing a RoBERTa from preset
+roberta_classifier = keras_nlp.models.RobertaClassifier.from_preset(
     "roberta_base_en", num_classes=3, preprocessor=None
 )
 
-roberta_clf.summary()
+roberta_classifier.summary()
 
-roberta_clf.fit(
-    x=x_train, y=y_train, validation_data=(x_val, y_val), epochs=1, batch_size=16
+roberta_classifier.fit(
+    train_ds, validation_data=val_ds, epochs=1
 )
 
-roberta_clf.evaluate(x=x_test, y=y_test)
+roberta_classifier.evaluate(test_ds)
 
 """
 `robeta_base_en` is slightly bigger model than bert_tiny, it took almost 1.5 hrs to train on
@@ -255,13 +244,13 @@ Kaggle P100 GPU.
 
 We achieved a significant performance improvement with roberta. Our accuracy hiked to 88% on
 validation and test split. 16 was the biggest batch size that we could fit on Kaggle P100 GPU
-with roberta as our model.
+with RoBERTa as our model.
 
-The steps to perform inference with roberta remain same as our bert !
+The steps to perform inference with the RoBERTa model remain same as with BERT!
 """
 
-preprocessed = roberta_preprocessor((infer_df["hypothesis"], infer_df["premise"]))
-predictions = roberta_clf.predict(preprocessed)
+preprocessed_sample = roberta_preprocessor(sample)
+predictions = roberta_classifier.predict(preprocessed_sample)
 print(tf.math.argmax(predictions, axis=1).numpy())
 
 """
