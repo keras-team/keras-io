@@ -197,7 +197,7 @@ The code below loads the Pascal VOC dataset, and performs on-the-fly bounding bo
 friendly data augmentation inside of a `tf.data` pipeline.
 """
 
-augment = keras_cv.layers.Augmenter(
+augment = keras.Sequential(
     layers=[
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.RandAugment(
