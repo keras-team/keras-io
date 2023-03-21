@@ -82,21 +82,37 @@ labels = ["neutral", "entailment", "contradiction"]
 Some of the samples have -1 label, we'll simply filter those out
 """
 
+
 def filter_labels(sample):
     return sample["label"] >= 0
+
 
 """
 Utility function to split the example into an (x, y) tuple suitable for `model.fit()`.
 BertPreprocessor automatically takes care of sentence packing, and seperates them with 
 [SEP] token
 """
+
+
 def split_labels(sample):
     return (sample["hypothesis"], sample["premise"]), sample["label"]
 
 
-train_ds = snli_train.filter(filter_labels).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE).batch(16)
-val_ds = snli_train.filter(filter_labels).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE).batch(16)
-test_ds = snli_train.filter(filter_labels).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE).batch(16)
+train_ds = (
+    snli_train.filter(filter_labels)
+    .map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
+    .batch(16)
+)
+val_ds = (
+    snli_train.filter(filter_labels)
+    .map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
+    .batch(16)
+)
+test_ds = (
+    snli_train.filter(filter_labels)
+    .map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
+    .batch(16)
+)
 
 """
 KerasNLP models automatically tokenizes the inputs as per the model used, but user can use custom preprocessing
@@ -128,9 +144,7 @@ Take a note that BERT tiny has 4,386,307 trainable parameters. KerasNLP task mod
 compilation defaults. Let's train the model we just instantiated, by calling the fit() method with 
 """
 
-bert_classifier.fit(
-    train_ds, validation_data=val_ds, epochs=1
-)
+bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 
 """
 
@@ -157,9 +171,7 @@ bert_classifier.compile(
     metrics=["accuracy"],
 )
 
-bert_classifier.fit(
-    train_ds, validation_data=val_ds, epochs=1
-)
+bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 
 bert_classifier.evaluate(test_ds)
 """
@@ -169,8 +181,10 @@ for now and learn how to perform inference with it. We took batch size of 512 to
 Let's see if we can improve it further. Let's use a learning rate scheduler this time.
 """
 
+
 class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
     """Linear ramp up for `warmup` steps, then linear decay to zero at `total` steps."""
+
     def __init__(self, rate, warmup, total):
         self.rate = tf.cast(rate, dtype="float32")
         self.warmup = tf.cast(warmup, dtype="float32")
@@ -185,6 +199,7 @@ class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
         )
         return tf.maximum(self.rate * multiplier, 0.0)
 
+
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3
 )
@@ -195,9 +210,7 @@ bert_classifier.compile(
     metrics=["accuracy"],
 )
 
-bert_classifier.fit(
-    train_ds, validation_data=val_ds, epochs=3
-)
+bert_classifier.fit(train_ds, validation_data=val_ds, epochs=3)
 
 """
 We see that after completion of first epoch, validation accuracy hikes upto ~75%,
@@ -248,9 +261,7 @@ roberta_classifier = keras_nlp.models.RobertaClassifier.from_preset(
     "roberta_base_en", num_classes=3
 )
 
-roberta_classifier.fit(
-    train_ds, validation_data=val_ds, epochs=1
-)
+roberta_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 
 roberta_classifier.evaluate(test_ds)
 
