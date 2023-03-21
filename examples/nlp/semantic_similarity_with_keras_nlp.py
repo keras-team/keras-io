@@ -69,8 +69,9 @@ snli_train = tfds.load("snli", split="train[:20%]")
 snli_val = tfds.load("snli", split="validation")
 snli_test = tfds.load("snli", split="test")
 
-# Let's take a look at how our training samples look like
-snli_train.take(1).get_single_element()
+# Let's take a look at how our training samples look like, randomly picking up 4 samples
+sample = snli_test.batch(4).take(1).get_single_element()
+sample
 
 # Define labels for classification task
 labels = ["neutral", "entailment", "contradiction"]
@@ -107,46 +108,24 @@ as per need.
 
 We'll use BERT model from KerasNLP to establish a baseline. 
 
-Initialize a BertPreprocessor object from KerasNLP library with preset 
-configuration "bert_tiny_en_uncased". The preprocessor can preprocess 
-sentence pairs for BERT-based models by converting tokens to corresponding IDs in 
-BERT vocabulary and adding special tokens.
-"""
+KerasNLP models take care of tokenization by default. If we pass a tuple as input,
+it'll tokenize all strings and concatenates them with a [SEP] seperator.
 
-bert_preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
-    "bert_tiny_en_uncased"
-)
-
-"""
-Preprocessing the sentence pairs in the training, validation, and test data using 
-a preprocessor object. BertPreprocessor automatically takes care of sentence packing,
-and seperates them with [SEP] token
-"""
-
-train_ds = train_ds.map(bert_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
-val_ds = val_ds.map(bert_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
-test_ds = test_ds.map(bert_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
-
-"""
-### Train the Model End to End
-
-keras_nlp.models.BertClassifier class attaches classification head to the BERT Backbone, mapping 
-the backbone outputs to logit output suitable for a classification task. This significantly
-reduces need of custom code.
+keras_nlp.models.BertClassifier class attaches classification head to the BERT Backbone, 
+mapping  the backbone outputs to logit output suitable for a classification task. This 
+significantly reduces need of custom code.
 
 Here we'll use this model with pre-trained weights. `from_preset()` method allows you
 to use your own preprocessor. Here we'll set the `num_classes` as 3 for SNLI dataset
 """
 
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased", num_classes=3, preprocessor=None
+    "bert_tiny_en_uncased", num_classes=3
 )
 
-bert_classifier.summary()
-
 """
-KerasNLP task models come with compilation defaults. Let's train the model we just instantiated, by calling
-the fit() method with 
+Take a note that BERT tiny has 4,386,307 trainable parameters. KerasNLP task models come with
+compilation defaults. Let's train the model we just instantiated, by calling the fit() method with 
 """
 
 bert_classifier.fit(
@@ -169,7 +148,7 @@ improve it.
 Let's recompile our model with a different learning rate and see performance
 """
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased", num_classes=3, preprocessor=None
+    "bert_tiny_en_uncased", num_classes=3
 )
 
 bert_classifier.compile(
@@ -184,8 +163,52 @@ bert_classifier.fit(
 
 bert_classifier.evaluate(test_ds)
 """
-This time we got 72% accuracy on val and test split. Not bad for 1 epoch ! Let's save our model
+This time we got ~72% validation accuracy on val and test split. Not bad for 1 epoch ! Let's save our model
 for now and learn how to perform inference with it. We took batch size of 512 to utilize our GPUs fully.
+
+Let's see if we can improve it further. Let's use a learning rate scheduler this time.
+"""
+
+class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
+    """Linear ramp up for `warmup` steps, then linear decay to zero at `total` steps."""
+    def __init__(self, rate, warmup, total):
+        self.rate = tf.cast(rate, dtype="float32")
+        self.warmup = tf.cast(warmup, dtype="float32")
+        self.total = tf.cast(total, dtype="float32")
+
+    def __call__(self, step):
+        step = tf.cast(step, dtype="float32")
+        multiplier = tf.cond(
+            step < self.warmup,
+            lambda: step / self.warmup,
+            lambda: (self.total - step) / (self.total - self.warmup),
+        )
+        return tf.maximum(self.rate * multiplier, 0.0)
+
+bert_classifier = keras_nlp.models.BertClassifier.from_preset(
+    "bert_tiny_en_uncased", num_classes=3
+)
+
+bert_classifier.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=tf.keras.optimizers.Adam(TriangularSchedule(0.001, 1000, 5000)),
+    metrics=["accuracy"],
+)
+
+bert_classifier.fit(
+    train_ds, validation_data=val_ds, epochs=3
+)
+
+"""
+We see that after completion of first epoch, validation accuracy hikes upto ~75%,
+and upto ~85% in three epochs
+Let's evaluate on test set
+"""
+
+bert_classifier.evaluate(test_ds)
+
+"""
+Our Tiny BERT achieved around ~85% of accuracy on test set with learning rate scheduler
 
 # Save and Reload the model
 """
@@ -196,19 +219,18 @@ restored_model.evaluate(test_ds)
 """
 # Inference
 
-Randomly sample 4 sentence pair from the test set
+Let's see how to perform inference with KerasNLP models
 """
-sample = snli_test.batch(4).take(1).get_single_element()
+
+# Convert to Hypothesis-Premise pair, for forward pass through model
+sample = (sample["hypothesis"], sample["premise"])
 sample
 
 """
-Now to tokenize this sample, we will need a preprocessor
+Again, we don't need to tokenize the inputs explicitly as we are using the default preprocessor
+here
 """
-
-bert_preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
-
-preprocessed_sample = bert_preprocessor(sample)
-predictions = bert_classifier.predict(preprocessed_sample)
+predictions = bert_classifier.predict(sample)
 
 # Get the class predictions with maximum probabilities
 print(tf.math.argmax(predictions, axis=1).numpy())
@@ -220,17 +242,11 @@ Now that we have established a baseline, we'll attempt to get better results by 
 models. KerasNLP makes experimentation easy for us, with just few lines of code, we can fine-tune 
 a roberta checkpoint on the same dataset.
 """
-# Roberta has it's own data preprocessing methods
-roberta_preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset(
-    "roberta_base_en"
-)
 
 # Inittializing a RoBERTa from preset
 roberta_classifier = keras_nlp.models.RobertaClassifier.from_preset(
-    "roberta_base_en", num_classes=3, preprocessor=None
+    "roberta_base_en", num_classes=3
 )
-
-roberta_classifier.summary()
 
 roberta_classifier.fit(
     train_ds, validation_data=val_ds, epochs=1
@@ -239,8 +255,8 @@ roberta_classifier.fit(
 roberta_classifier.evaluate(test_ds)
 
 """
-`robeta_base_en` is slightly bigger model than bert_tiny, it took almost 1.5 hrs to train on
-Kaggle P100 GPU. 
+`robeta_base_en` is bigger model with 124,645,635 trainable parameters (almost 30x of bert tiny 
+parameters), it took almost 1.5 hrs to train on Kaggle P100 GPU. 
 
 We achieved a significant performance improvement with roberta. Our accuracy hiked to 88% on
 validation and test split. 16 was the biggest batch size that we could fit on Kaggle P100 GPU
@@ -249,8 +265,7 @@ with RoBERTa as our model.
 The steps to perform inference with the RoBERTa model remain same as with BERT!
 """
 
-preprocessed_sample = roberta_preprocessor(sample)
-predictions = roberta_classifier.predict(preprocessed_sample)
+predictions = roberta_classifier.predict(sample)
 print(tf.math.argmax(predictions, axis=1).numpy())
 
 """
