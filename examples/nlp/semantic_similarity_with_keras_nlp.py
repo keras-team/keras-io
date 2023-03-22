@@ -35,10 +35,7 @@ To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
 pip install -q keras-nlp
 """
 
-
 import numpy as np
-import pandas as pd
-
 import tensorflow as tf
 from tensorflow import keras
 import keras_nlp
@@ -73,13 +70,11 @@ snli_test = tfds.load("snli", split="test")
 sample = snli_test.batch(4).take(1).get_single_element()
 sample
 
-# Define labels for classification task
-labels = ["neutral", "entailment", "contradiction"]
-
 """
 ### Preprocessing
 
-Some of the samples have -1 label, we'll simply filter those out
+In our dataset, correct labels for some of the samples have missing and labelled as -1,
+we'll simply filter those out
 """
 
 
@@ -88,9 +83,10 @@ def filter_labels(sample):
 
 
 """
-Utility function to split the example into an (x, y) tuple suitable for `model.fit()`.
-BertPreprocessor automatically takes care of sentence packing, and seperates them with 
-[SEP] token
+Utility function to split the example into an `(x, y)` tuple suitable for `model.fit()`. 
+By default, `keras_nlp.models.BertClassifier` will tokenize and pack together raw strings 
+with a `"[SEP]"` token during training. So this label splitting is all the data preparation 
+we need to do!
 """
 
 
@@ -127,7 +123,7 @@ We'll use BERT model from KerasNLP to establish a baseline.
 KerasNLP models take care of tokenization by default. If we pass a tuple as input,
 it'll tokenize all strings and concatenates them with a [SEP] seperator.
 
-keras_nlp.models.BertClassifier class attaches classification head to the BERT Backbone, 
+`keras_nlp.models.BertClassifier` class attaches classification head to the BERT Backbone, 
 mapping  the backbone outputs to logit output suitable for a classification task. This 
 significantly reduces need of custom code.
 
@@ -204,10 +200,15 @@ bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3
 )
 
+# Get the total count of training batches.
+# This requires walking the dataset to filter all -1 labels.
+total_steps = sum(1 for _ in train_ds.as_numpy_iterator())
+warmup_steps = int(total_steps * 0.2)
+
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=tf.keras.optimizers.experimental.AdamW(
-        TriangularSchedule(0.001, 1000, 5000)
+        TriangularSchedule(0.001, warmup_steps, total_steps)
     ),
     metrics=["accuracy"],
 )
@@ -215,8 +216,7 @@ bert_classifier.compile(
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=3)
 
 """
-With LR scheduler and AdamW optimizer we see that after completion of first epoch, 
-validation accuracy hikes upto ~77%, and upto ~80% in three epochs
+With LR scheduler and AdamW optimizer we see that our validation accuracy hikes upto ~79%
 
 Let's evaluate our model on test set !
 """
@@ -224,7 +224,7 @@ Let's evaluate our model on test set !
 bert_classifier.evaluate(test_ds)
 
 """
-Our Tiny BERT achieved around ~85% of accuracy on test set with learning rate scheduler
+Our Tiny BERT achieved around ~79% of accuracy on test set with learning rate scheduler
 
 # Save and Reload the model
 """
@@ -248,8 +248,13 @@ here
 """
 predictions = bert_classifier.predict(sample)
 
+
+def softmax(x):
+    return np.exp(x) / np.exp(x).sum(axis=0)
+
+
 # Get the class predictions with maximum probabilities
-print(tf.math.argmax(predictions, axis=1).numpy())
+predictions = softmax(predictions)
 
 """
 # Enhancing accuracy with RoBERTa
