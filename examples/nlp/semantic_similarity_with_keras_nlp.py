@@ -121,7 +121,7 @@ as per need.
 We'll use BERT model from KerasNLP to establish a baseline. 
 
 KerasNLP models take care of tokenization by default. If we pass a tuple as input,
-it'll tokenize all strings and concatenates them with a [SEP] seperator.
+it'll tokenize all strings and concatenates them with a `"[SEP]"` seperator.
 
 `keras_nlp.models.BertClassifier` class attaches classification head to the BERT Backbone, 
 mapping  the backbone outputs to logit output suitable for a classification task. This 
@@ -137,7 +137,7 @@ bert_classifier = keras_nlp.models.BertClassifier.from_preset(
 
 """
 Take a note that BERT tiny has 4,386,307 trainable parameters. KerasNLP task models come with
-compilation defaults. Let's train the model we just instantiated, by calling the fit() method with 
+compilation defaults. Let's train the model we just instantiated, by calling the `fit()` method with 
 """
 
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
@@ -216,7 +216,7 @@ bert_classifier.compile(
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=3)
 
 """
-With LR scheduler and AdamW optimizer we see that our validation accuracy hikes upto ~79%
+With LR scheduler and `AdamW` optimizer we see that our validation accuracy hikes upto ~79%
 
 Let's evaluate our model on test set !
 """
