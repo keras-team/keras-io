@@ -7,9 +7,13 @@ Here are some of the areas in which Keras compares favorably to existing alterna
 
 With around 2.5 million developers as of early 2023, Keras is at the center of a massive community and ecosystem.
 
-You are already constantly interacting with features built with Keras -- it is in use at YouTube, Netflix, Uber, Yelp, Instacart, Zocdoc, Twitter, Square/Block, and many others -- Keras is especially popular among startups that place deep learning at the core of their products. Keras is also used in many well-known companies you might not associate with Machine Learning, such as JP Morgan Chase, Orange, and Comcast, and by research units at the likes of NASA, the US DOE, and CERN.
+You are already constantly interacting with features built with Keras -- it is in use at YouTube, Netflix, Uber, Yelp, Instacart, Zocdoc, Twitter, Square/Block, and many others.
+Keras is especially popular among startups that place deep learning at the core of their products.
+Keras is also used in many well-known companies you might not associate with Machine Learning, such as JP Morgan Chase, Orange, and Comcast,
+and by research units at the likes of NASA, the US DOE, and CERN.
 
-In the 2022 survey "State of Data Science and Machine Learning" by Kaggle, Keras had a 61% adoption rate among Machine Learning developers and Data Scientists [[source](https://www.kaggle.com/kaggle-survey-2022)].
+In the 2022 survey "State of Data Science and Machine Learning" by Kaggle,
+Keras had a 61% adoption rate among Machine Learning developers and Data Scientists [[source](https://www.kaggle.com/kaggle-survey-2022)].
 
 ![ML frameworks adoption stats](/img/kaggle-2022-adoption.png)
 
