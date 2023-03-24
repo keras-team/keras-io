@@ -28,9 +28,6 @@ SAVING_MASTER = {
             "generate": [
                 "tensorflow.keras.Model.get_config",
                 "tensorflow.keras.Model.from_config",
-                "tensorflow.keras.models.model_from_config",  # TODO: move to saving
-                "tensorflow.keras.Model.to_json",
-                "tensorflow.keras.models.model_from_json",  # TODO: move to saving
                 "tensorflow.keras.models.clone_model",  # TODO: move somewhere else?
             ],
         },
