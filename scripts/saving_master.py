@@ -42,8 +42,8 @@ SAVING_MASTER = {
             "path": "serialization_utils",
             "title": "Serialization utilities",
             "generate": [
-                "tensorflow.keras.saving.serialize_keras_object",
-                "tensorflow.keras.saving.deserialize_keras_object",
+                "tensorflow.keras.utils.serialize_keras_object",  # TODO: move to saving
+                "tensorflow.keras.utils.deserialize_keras_object",  # TODO: move to saving
                 "tensorflow.keras.saving.custom_object_scope",
                 "tensorflow.keras.saving.get_custom_objects",
                 "tensorflow.keras.saving.register_keras_serializable",
