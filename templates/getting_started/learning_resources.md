@@ -1,6 +1,6 @@
 # Learning resources
 
-This page is a compilation of learning resources for modern Keras / TensorFlow 2 best practices.
+This page is a compilation of learning resources for modern Keras best practices.
 
 Notes that best starter resources are still our [developer guides](/guides/), our [official code examples](/examples/),
 as well as the [tutorials on tensorflow.org](https://www.tensorflow.org/tutorials).
