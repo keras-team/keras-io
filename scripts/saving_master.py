@@ -1,5 +1,5 @@
 SAVING_MASTER = {
-    "path": "saving/",
+    "path": "model_saving_apis/",
     "title": "Saving & serialization",
     "toc": True,
     "children": [

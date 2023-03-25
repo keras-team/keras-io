@@ -2,7 +2,6 @@ from guides_master import GUIDES_MASTER
 from models_master import MODELS_MASTER
 from layers_master import LAYERS_MASTER
 from callbacks_master import CALLBACKS_MASTER
-from saving_master import SAVING_MASTER
 from utils_master import UTILS_MASTER
 from kt_api_master import KT_API_MASTER
 from examples_master import EXAMPLES_MASTER
@@ -521,7 +520,6 @@ MASTER = {
                         },
                     ],
                 },
-                SAVING_MASTER,
                 UTILS_MASTER,
                 KT_API_MASTER,
                 CV_API_MASTER,
