@@ -188,7 +188,7 @@ across all NVIDIA GPUs.
 
 For the sake of completeness, both cold-start and warm-start generation times are
 reported. Cold-start execution time includes the one-time cost of model creation and compilation,
-and is therefore neglible in a production environment (where you would reuse the same model instance
+and is therefore negligible in a production environment (where you would reuse the same model instance
 many times). Regardless, here are the cold-start numbers:
 
 

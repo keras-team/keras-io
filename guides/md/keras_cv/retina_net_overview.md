@@ -218,7 +218,7 @@ friendly data augmentation inside of a `tf.data` pipeline.
 
 
 ```python
-augment = keras_cv.layers.Augmenter(
+augment = keras.Sequential(
     layers=[
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.RandAugment(

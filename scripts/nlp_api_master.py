@@ -4,6 +4,48 @@ MODELS_MASTER = {
     "toc": True,
     "children": [
         {
+            "path": "albert/",
+            "title": "Albert",
+            "toc": True,
+            "children": [
+                {
+                    "path": "albert_tokenizer",
+                    "title": "AlbertTokenizer",
+                    "generate": [
+                        "keras_nlp.models.AlbertTokenizer",
+                        "keras_nlp.models.AlbertTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "albert_preprocessor",
+                    "title": "AlbertPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.AlbertPreprocessor",
+                        "keras_nlp.models.AlbertPreprocessor.from_preset",
+                        "keras_nlp.models.AlbertPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "albert_backbone",
+                    "title": "AlbertBackbone model",
+                    "generate": [
+                        "keras_nlp.models.AlbertBackbone",
+                        "keras_nlp.models.AlbertBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "albert_classifier",
+                    "title": "AlbertClassifier model",
+                    "generate": [
+                        "keras_nlp.models.AlbertClassifier",
+                        "keras_nlp.models.AlbertClassifier.from_preset",
+                        "keras_nlp.models.AlbertClassifier.backbone",
+                        "keras_nlp.models.AlbertClassifier.preprocessor",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "bert/",
             "title": "Bert",
             "toc": True,
@@ -46,6 +88,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "deberta_v3/",
+            "title": "DebertaV3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "deberta_v3_tokenizer",
+                    "title": "DebertaV3Tokenizer",
+                    "generate": [
+                        "keras_nlp.models.DebertaV3Tokenizer",
+                        "keras_nlp.models.DebertaV3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "deberta_v3_preprocessor",
+                    "title": "DebertaV3Preprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.DebertaV3Preprocessor",
+                        "keras_nlp.models.DebertaV3Preprocessor.from_preset",
+                        "keras_nlp.models.DebertaV3Preprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "deberta_v3_backbone",
+                    "title": "DebertaV3Backbone model",
+                    "generate": [
+                        "keras_nlp.models.DebertaV3Backbone",
+                        "keras_nlp.models.DebertaV3Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "deberta_v3_classifier",
+                    "title": "DebertaV3Classifier model",
+                    "generate": [
+                        "keras_nlp.models.DebertaV3Classifier",
+                        "keras_nlp.models.DebertaV3Classifier.from_preset",
+                        "keras_nlp.models.DebertaV3Classifier.backbone",
+                        "keras_nlp.models.DebertaV3Classifier.preprocessor",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "distil_bert/",
             "title": "DistilBert",
             "toc": True,
@@ -83,6 +167,48 @@ MODELS_MASTER = {
                         "keras_nlp.models.DistilBertClassifier.from_preset",
                         "keras_nlp.models.DistilBertClassifier.backbone",
                         "keras_nlp.models.DistilBertClassifier.preprocessor",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "f_net/",
+            "title": "FNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "f_net_tokenizer",
+                    "title": "FNetTokenizer",
+                    "generate": [
+                        "keras_nlp.models.FNetTokenizer",
+                        "keras_nlp.models.FNetTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "f_net_preprocessor",
+                    "title": "FNetPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.FNetPreprocessor",
+                        "keras_nlp.models.FNetPreprocessor.from_preset",
+                        "keras_nlp.models.FNetPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "f_net3_backbone",
+                    "title": "FNetBackbone model",
+                    "generate": [
+                        "keras_nlp.models.FNetBackbone",
+                        "keras_nlp.models.FNetBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "f_net_classifier",
+                    "title": "FNetClassifier model",
+                    "generate": [
+                        "keras_nlp.models.FNetClassifier",
+                        "keras_nlp.models.FNetClassifier.from_preset",
+                        "keras_nlp.models.FNetClassifier.backbone",
+                        "keras_nlp.models.FNetClassifier.preprocessor",
                     ],
                 },
             ],
