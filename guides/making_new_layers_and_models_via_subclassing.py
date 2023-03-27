@@ -2,7 +2,7 @@
 Title: Making new layers and models via subclassing
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/13
+Last modified: 2023/03/16
 Description: Complete guide to writing `Layer` and `Model` objects from scratch.
 Accelerator: GPU
 """
