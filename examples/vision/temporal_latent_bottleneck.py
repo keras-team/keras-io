@@ -18,9 +18,9 @@ sequence `x`.
 | **Equation 1**: The recurrence equation. (Source: Aritra and Suvaditya)|
 
 On the other hand, Transformers ([Vaswani et. al](https://arxiv.org/abs/1706.03762)) have
-little inductive bias towards learning temporally compressed representations. It has
-achieved SoTA results in Natural Language Processing (NLP) and Vision tasks with its
-pair-wise attention mechanism.
+little inductive bias towards learning temporally compressed representations.
+Transformer has achieved SoTA results in Natural Language Processing (NLP)
+and Vision tasks with its pairwise attention mechanism.
 
 While the Transformer has the ability to **attend** to different sections of the input
 sequence, the computation of attention is quadratic in nature.
@@ -60,7 +60,7 @@ import random
 from matplotlib import pyplot as plt
 
 # Set seed for reproducibility.
-tf.keras.utils.set_random_seed(42)
+keras.utils.set_random_seed(42)
 
 AUTO = tf.data.AUTOTUNE
 
@@ -123,25 +123,25 @@ as [`keras.datasets.cifar10`](https://keras.io/api/datasets/cifar10/) API refere
 )
 
 """
-## Define Augmentation pipelines for Train and Validation/Test pipelines
+## Define data augmentation for the training and validation/test pipelines
 
 We define separate pipelines for performing image augmentation on our data. This step is
-important in pre-processing the data, making the model more robust to changes, helping it
-to generalize better. The steps we perform are as follows:
+important to make the model more robust to changes, helping it generalize better.
+The preprocessing and augmentation steps we perform are as follows:
 
-- `Rescaling` (Training, Test): This step is performed to normalize all image pixel
-values from the [0,255] range to [0,1). This helps in maintaining numerical stability
+- `Rescaling` (training, test): This step is performed to normalize all image pixel
+values from the `[0,255]` range to `[0,1)`. This helps in maintaining numerical stability
 later ahead during training.
 
-- `Resizing` (Training, Test): We resize the image from it's original size of (32, 32) to
+- `Resizing` (training, test): We resize the image from it's original size of (32, 32) to
 (52, 52). This is done to account for the Random Crop, as well as comply with the
 specifications of the data given in the paper.
 
-- `RandomCrop` (Training): This layer will randomly select a crop/sub-region of the image
-with size (48, 48).
+- `RandomCrop` (training): This layer randomly selects a crop/sub-region of the image
+with size `(48, 48)`.
 
-- `RandomFlip` (Training): This layer will randomly flip all the images horizontally,
-keeping sizes same.
+- `RandomFlip` (training): This layer randomly flips all the images horizontally,
+keeping image sizes the same.
 """
 
 # Build the `train` augmentation pipeline.
@@ -253,7 +253,7 @@ A PyTorch-style pseudocode is also proposed by the authors as shown in **Algorit
 
 | ![Pseudocode of the model](https://i.imgur.com/s8a5Vz9.png) |
 | :--: |
-| Algorithm 1: PyTorch styled pseudocode. (Source: https://arxiv.org/abs/2205.14794) |
+| Algorithm 1: PyTorch style pseudocode. (Source: https://arxiv.org/abs/2205.14794) |
 
 """
 
@@ -654,8 +654,8 @@ Here, we just wrap the full model as to expose it for training.
 class TemporalLatentBottleneckModel(keras.Model):
     """Model Trainer.
     Args:
-        patch_layer (`tf.keras.layers.Layer`): Patching layer.
-        custom_cell (`tf.keras.layers.Layer`): Custom Recurrent Cell.
+        patch_layer (`keras.layers.Layer`): Patching layer.
+        custom_cell (`keras.layers.Layer`): Custom Recurrent Cell.
     """
 
     def __init__(self, patch_layer, custom_cell, **kwargs):
@@ -706,9 +706,8 @@ model = TemporalLatentBottleneckModel(
 """
 ## Metrics and Callbacks
 
-We use the `AdamW` optimizer from `tf.keras.optimizers.experimental` (previously part of
-`tensorflow-addons`) since it has been shown to perform very well on several benchmark
-tasks from an optimization perspective. It is a version of the `tf.keras.optimizers.Adam`
+We use the `AdamW` optimizer since it has been shown to perform very well on several benchmark
+tasks from an optimization perspective. It is a version of the `keras.optimizers.Adam`
 optimizer, along with Weight Decay in place.
 
 For a loss function, we make use of the `keras.losses.SparseCategoricalCrossentropy`
@@ -759,11 +758,11 @@ plt.show()
 """
 ## Visualize attention maps from the Temporal Latent Bottleneck
 
-Now that we have trained our model it is time for some visualizations. The Fast Stream
+Now that we have trained our model, it is time for some visualizations. The Fast Stream
 (Transformers) processes a chunk of tokens. The Slow Stream processes each chunk and
 attends to tokens that are useful for the task.
 
-In this section we will visualize the attention map of the Slow Stream. This is done by
+In this section we visualize the attention map of the Slow Stream. This is done by
 extracting the attention scores from the TLB layer at each chunk's intersection and
 storing it within the RNN's state. This is followed by 'ballooning' it up and returning
 these values.
@@ -835,20 +834,20 @@ plt.show()
 """
 ## Conclusion
 
-This example has hereby demonstrated an implementation of the Temporal Latent Bottleneck
+This example has demonstrated an implementation of the Temporal Latent Bottleneck
 mechanism. The example highlights the use of compression and storage of historical states
 in the form of a Temporal Latent Bottleneck with regular updates from a Perceptual Module
 as an effective method to do so.
 
 In the original paper, the authors have conducted highly extensive tests around different
 modalities ranging from Supervised Image Classification to applications in Reinforcement
-Learning.  
+Learning.
 
 While we have only displayed a method to apply this mechanism to Image Classification, it
 can be extended to other modalities too with minimal changes.
 
 *Note*: While building this example we did not have the official code to refer to. This
-means that our implementation is inspired from the paper with no claims of being a
+means that our implementation is inspired by the paper with no claims of being a
 complete reproduction. For more details on the training process one can head over to
 [our GitHub repository](https://github.com/suvadityamuk/Temporal-Latent-Bottleneck-TF).
 """
