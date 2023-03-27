@@ -1,11 +1,13 @@
+from saving_master import SAVING_MASTER
+
 MODELS_MASTER = {
     "path": "models/",
-    "title": "Models API",  # TODO
+    "title": "Models API",
     "toc": True,
     "children": [
         {
             "path": "model",
-            "title": "The Model class",  # TODO
+            "title": "The Model class",
             "generate": [
                 "tensorflow.keras.Model",
                 "tensorflow.keras.Model.summary",
@@ -14,7 +16,7 @@ MODELS_MASTER = {
         },
         {
             "path": "sequential",
-            "title": "The Sequential class",  # TODO
+            "title": "The Sequential class",
             "generate": [
                 "tensorflow.keras.Sequential",
                 "tensorflow.keras.Sequential.add",
@@ -23,7 +25,7 @@ MODELS_MASTER = {
         },
         {
             "path": "model_training_apis",
-            "title": "Model training APIs",  # TODO
+            "title": "Model training APIs",
             "generate": [
                 "tensorflow.keras.Model.compile",
                 "tensorflow.keras.Model.fit",
@@ -35,24 +37,6 @@ MODELS_MASTER = {
                 "tensorflow.keras.Model.run_eagerly",
             ],
         },
-        {
-            "path": "model_saving_apis",
-            "title": "Model saving & serialization APIs",  # TODO
-            "generate": [
-                "tensorflow.keras.Model.save",
-                "tensorflow.keras.models.save_model",
-                "tensorflow.keras.models.load_model",
-                "tensorflow.keras.Model.get_weights",
-                "tensorflow.keras.Model.set_weights",
-                "tensorflow.keras.Model.save_weights",
-                "tensorflow.keras.Model.load_weights",
-                "tensorflow.keras.Model.get_config",
-                "tensorflow.keras.Model.from_config",
-                "tensorflow.keras.models.model_from_config",
-                "tensorflow.keras.Model.to_json",
-                "tensorflow.keras.models.model_from_json",
-                "tensorflow.keras.models.clone_model",
-            ],
-        },
+        SAVING_MASTER,
     ],
 }

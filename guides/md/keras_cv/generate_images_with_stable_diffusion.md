@@ -176,7 +176,7 @@ As Feynman said about the universe: _"It's not complicated, it's just a lot of i
 ---
 ## Perks of KerasCV
 
-With several implementations of Stable Diffusion publicly available why shoud you use
+With several implementations of Stable Diffusion publicly available why should you use
 `keras_cv.models.StableDiffusion`?
 
 Aside from the easy-to-use API, KerasCV's Stable Diffusion model comes
@@ -215,7 +215,7 @@ across all NVIDIA GPUs.
 
 For the sake of completeness, both cold-start and warm-start generation times are
 reported. Cold-start execution time includes the one-time cost of model creation and compilation,
-and is therefore neglible in a production environment (where you would reuse the same model instance
+and is therefore negligible in a production environment (where you would reuse the same model instance
 many times). Regardless, here are the cold-start numbers:
 
 
