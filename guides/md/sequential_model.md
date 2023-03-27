@@ -540,6 +540,5 @@ That's about all you need to know about Sequential models!
 
 To find out more about building models in Keras, see:
 
-- [Guide to the Functional API](/guides/functional_api/)
-- [Guide to making new Layers & Models via subclassing](
-    /guides/making_new_layers_and_models_via_subclassing/)
+- [Guide to the Functional API](https://keras.io/guides/functional_api/)
+- [Guide to making new Layers & Models via subclassing](https://keras.io/guides/making_new_layers_and_models_via_subclassing/)

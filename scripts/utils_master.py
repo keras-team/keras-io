@@ -12,14 +12,10 @@ UTILS_MASTER = {
             ],
         },
         {
-            "path": "serialization_utils",
-            "title": "Serialization utilities",
+            "path": "feature_space",
+            "title": "Structured data preprocessing utilities",
             "generate": [
-                "tensorflow.keras.utils.custom_object_scope",
-                "tensorflow.keras.utils.get_custom_objects",
-                "tensorflow.keras.utils.register_keras_serializable",
-                "tensorflow.keras.utils.serialize_keras_object",
-                "tensorflow.keras.utils.deserialize_keras_object",
+                "tensorflow.keras.utils.FeatureSpace",
             ],
         },
         {
@@ -28,11 +24,12 @@ UTILS_MASTER = {
             "generate": [
                 "tensorflow.keras.utils.set_random_seed",
                 "tensorflow.keras.utils.split_dataset",
-                "tensorflow.keras.utils.to_categorical",
-                "tensorflow.keras.utils.normalize",
                 "tensorflow.keras.utils.get_file",
                 "tensorflow.keras.utils.Progbar",
                 "tensorflow.keras.utils.Sequence",
+                "tensorflow.keras.utils.to_categorical",
+                "tensorflow.keras.utils.to_ordinal",
+                "tensorflow.keras.utils.normalize",
             ],
         },
         {
