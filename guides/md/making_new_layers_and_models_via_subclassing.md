@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/03/01<br>
-**Last modified:** 2020/04/13<br>
+**Last modified:** 2023/03/16<br>
 **Description:** Complete guide to writing `Layer` and `Model` objects from scratch.
 
 
@@ -63,8 +63,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.02134706 -0.11407568 -0.06567862 -0.03393517]
- [-0.02134706 -0.11407568 -0.06567862 -0.03393517]], shape=(2, 4), dtype=float32)
+[[0.07264713 0.14730662 0.08933581 0.03730425]
+ [0.07264713 0.14730662 0.08933581 0.03730425]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -103,8 +103,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.0213856  -0.05269931  0.04779436  0.02541557]
- [-0.0213856  -0.05269931  0.04779436  0.02541557]], shape=(2, 4), dtype=float32)
+[[-0.02228201  0.04957826 -0.09935614 -0.01868932]
+ [-0.02228201  0.04957826 -0.09935614 -0.01868932]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -356,7 +356,7 @@ print(layer.losses)
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.0021371832>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.0024072158>]
 
 ```
 </div>
@@ -409,10 +409,10 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 95ms/step - loss: 0.1557
-1/1 [==============================] - 0s 47ms/step - loss: 0.0044
+1/1 [==============================] - 0s 52ms/step - loss: 0.0717
+1/1 [==============================] - 0s 23ms/step - loss: 0.0069
 
-<keras.callbacks.History at 0x12e57e760>
+<keras.callbacks.History at 0x7fa01c68f7f0>
 
 ```
 </div>
@@ -468,7 +468,7 @@ print("current accuracy value:", float(layer.metrics[0].result()))
 
 <div class="k-default-codeblock">
 ```
-layer.metrics: [<keras.metrics.metrics.BinaryAccuracy object at 0x12e2d36d0>]
+layer.metrics: [<keras.metrics.BinaryAccuracy object at 0x7fa01c640850>]
 current accuracy value: 1.0
 
 ```
@@ -480,7 +480,7 @@ Just like for `add_loss()`, these metrics are tracked by `fit()`:
 inputs = keras.Input(shape=(3,), name="inputs")
 targets = keras.Input(shape=(10,), name="targets")
 logits = keras.layers.Dense(10)(inputs)
-predictions = LogisticEndpoint(name="predictions")(logits, targets)
+predictions = LogisticEndpoint(name="predictions")(targets, logits)
 
 model = keras.Model(inputs=[inputs, targets], outputs=predictions)
 model.compile(optimizer="adam")
@@ -494,9 +494,9 @@ model.fit(data)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 219ms/step - loss: 1.0331 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 126ms/step - loss: 0.7173 - binary_accuracy: 0.0000e+00
 
-<keras.callbacks.History at 0x12e5f5cd0>
+<keras.callbacks.History at 0x7fa01c695820>
 
 ```
 </div>
@@ -842,16 +842,14 @@ for epoch in range(epochs):
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11490434/11490434 [==============================] - 1s 0us/step
 Start of epoch 0
-step 0: mean loss = 0.3169
-step 100: mean loss = 0.1252
-step 200: mean loss = 0.0990
-step 300: mean loss = 0.0891
-step 400: mean loss = 0.0842
+step 0: mean loss = 0.3313
+step 100: mean loss = 0.1258
+step 200: mean loss = 0.0993
+step 300: mean loss = 0.0893
+step 400: mean loss = 0.0843
 step 500: mean loss = 0.0809
-step 600: mean loss = 0.0787
+step 600: mean loss = 0.0788
 step 700: mean loss = 0.0771
 step 800: mean loss = 0.0760
 step 900: mean loss = 0.0750
@@ -885,11 +883,11 @@ vae.fit(x_train, x_train, epochs=2, batch_size=64)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-938/938 [==============================] - 2s 2ms/step - loss: 0.0747
+938/938 [==============================] - 1s 1ms/step - loss: 0.0746
 Epoch 2/2
-938/938 [==============================] - 2s 2ms/step - loss: 0.0676
+938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<keras.callbacks.History at 0x12e6e48b0>
+<keras.callbacks.History at 0x7fa01c48a250>
 
 ```
 </div>
@@ -941,13 +939,13 @@ vae.fit(x_train, x_train, epochs=3, batch_size=64)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-938/938 [==============================] - 2s 2ms/step - loss: 0.0748
+938/938 [==============================] - 1s 1ms/step - loss: 0.0746
 Epoch 2/3
-938/938 [==============================] - 2s 2ms/step - loss: 0.0676
+938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 Epoch 3/3
-938/938 [==============================] - 2s 2ms/step - loss: 0.0675
+938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<keras.callbacks.History at 0x12e6ab7f0>
+<keras.callbacks.History at 0x7fa01c2f76a0>
 
 ```
 </div>

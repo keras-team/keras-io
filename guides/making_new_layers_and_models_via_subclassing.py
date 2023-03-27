@@ -2,7 +2,7 @@
 Title: Making new layers and models via subclassing
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/13
+Last modified: 2023/03/16
 Description: Complete guide to writing `Layer` and `Model` objects from scratch.
 Accelerator: GPU
 """
@@ -396,7 +396,7 @@ Just like for `add_loss()`, these metrics are tracked by `fit()`:
 inputs = keras.Input(shape=(3,), name="inputs")
 targets = keras.Input(shape=(10,), name="targets")
 logits = keras.layers.Dense(10)(inputs)
-predictions = LogisticEndpoint(name="predictions")(logits, targets)
+predictions = LogisticEndpoint(name="predictions")(targets, logits)
 
 model = keras.Model(inputs=[inputs, targets], outputs=predictions)
 model.compile(optimizer="adam")
