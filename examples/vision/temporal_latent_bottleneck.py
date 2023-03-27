@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Suvaditya Mukhe
 Date created: 2023/03/12
 Last modified: 2023/03/12
 Description: Image Classification with Temporal Latent Bottleneck Networks
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -855,6 +856,11 @@ complete reproduction. For more details on the training process one can head ove
 """
 ## Acknowledgement
 
-We would like to thank [PyImageSearch](https://pyimagesearch.com/) for a Colab Pro
-account and [JarvisLabs.ai](https://cloud.jarvislabs.ai/) for GPU credits.
+Thanks to [Aniket Didolkar](https://www.aniketdidolkar.in/) (the first author) and
+[Anirudh Goyal](https://anirudh9119.github.io/) (the third author)
+for revieweing our work.
+
+We would like to thank
+[PyImageSearch](https://pyimagesearch.com/) for a Colab Pro account and
+[JarvisLabs.ai](https://cloud.jarvislabs.ai/) for the GPU credits.
 """
