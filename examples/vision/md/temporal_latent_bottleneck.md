@@ -1,12 +1,16 @@
-"""
-Title: When Recurrence meets Transformers
-Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
-Date created: 2023/03/12
-Last modified: 2023/03/12
-Description: Image Classification with Temporal Latent Bottleneck Networks.
-Accelerator: GPU
-"""
-"""
+# When Recurrence meets Transformers
+
+**Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)<br>
+**Date created:** 2023/03/12<br>
+**Last modified:** 2023/03/12<br>
+**Description:** Image Classification with Temporal Latent Bottleneck Networks.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/temporal_latent_bottleneck.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/temporal_latent_bottleneck.py)
+
+
+
+---
 ## Introduction
 
 A simple Recurrent Neural Network (RNN) displays a strong inductive bias towards learning
@@ -45,12 +49,12 @@ model by making a custom `RNNCell` implementation in order to make a **performan
 
 _Note_: This example makes use of `TensorFlow 2.12.0`, which must be installed into our
 system
-"""
 
-"""
+---
 ## Setup imports
-"""
 
+
+```python
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -64,8 +68,9 @@ from matplotlib import pyplot as plt
 keras.utils.set_random_seed(42)
 
 AUTO = tf.data.AUTOTUNE
+```
 
-"""
+---
 ## Setting required configuration
 
 We set a few configuration parameters that are needed within the pipeline we have
@@ -77,8 +82,9 @@ The model also supports `mixed-precision` settings, which would quantize the mod
 `16-bit` float numbers where it can, while keeping some parameters in `32-bit` as needed
 for numerical stability. This brings performance benefits as the footprint of the model
 decreases significantly while bringing speed boosts at inference-time.
-"""
 
+
+```python
 config = {
     "mixed_precision": True,
     "dataset": "cifar10",
@@ -104,8 +110,16 @@ config = {
 if config["mixed_precision"]:
     policy = mixed_precision.Policy("mixed_float16")
     mixed_precision.set_global_policy(policy)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-PCIE-40GB, compute capability 8.0
+
+```
+</div>
+---
 ## Loading the CIFAR-10 dataset
 
 We are going to use the CIFAR10 dataset for running our experiments. This dataset
@@ -115,15 +129,17 @@ of `(32, 32, 3)`.
 It also has a separate set of `10,000` images with similar characteristics. More
 information about the dataset may be found at the official site for the dataset as well
 as [`keras.datasets.cifar10`](https://keras.io/api/datasets/cifar10/) API reference
-"""
 
+
+```python
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 (x_train, y_train), (x_val, y_val) = (
     (x_train[: config["train_slice"]], y_train[: config["train_slice"]]),
     (x_train[config["train_slice"] :], y_train[config["train_slice"] :]),
 )
+```
 
-"""
+---
 ## Define data augmentation for the training and validation/test pipelines
 
 We define separate pipelines for performing image augmentation on our data. This step is
@@ -143,8 +159,9 @@ with size `(48, 48)`.
 
 - `RandomFlip` (training): This layer randomly flips all the images horizontally,
 keeping image sizes the same.
-"""
 
+
+```python
 # Build the `train` augmentation pipeline.
 train_augmentation = keras.Sequential(
     [
@@ -181,8 +198,9 @@ def train_map_fn(image, label):
 def test_map_fn(image, label):
     return test_augmentation(image), label
 
+```
 
-"""
+---
 ## Load dataset into `tf.data.Dataset` object
 
 - We take the `np.ndarray` instance of the datasets and move them into a
@@ -195,8 +213,9 @@ def test_map_fn(image, label):
 [`.batch()`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch)
 - Enable pre-fetching of batches using
 [`.prefetch()`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#prefetch)
-"""
 
+
+```python
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_ds = (
     train_ds.map(train_map_fn, num_parallel_calls=AUTO)
@@ -218,8 +237,9 @@ test_ds = (
     .batch(config["batch_size"], num_parallel_calls=AUTO)
     .prefetch(AUTO)
 )
+```
 
-"""
+---
 ## Temporal Latent Bottleneck
 
 An excerpt from the paper:
@@ -256,9 +276,6 @@ A PyTorch-style pseudocode is also proposed by the authors as shown in **Algorit
 | :--: |
 | Algorithm 1: PyTorch style pseudocode. (Source: https://arxiv.org/abs/2205.14794) |
 
-"""
-
-"""
 ### `PatchEmbedding` layer
 
 This custom `keras.layers.Layer` is useful for generating patches from the image and
@@ -273,8 +290,9 @@ this stage, we also inject positional information to the tokens.
 After we obtain the tokens we chunk them. The chunking operation involves taking
 fixed-size sequences from the embedding output to create 'chunks', which will then be
 used as the final input to the model.
-"""
 
+
+```python
 
 class PatchEmbedding(layers.Layer):
     """Image to Patch Embedding.
@@ -352,14 +370,15 @@ class PatchEmbedding(layers.Layer):
 
         return x
 
+```
 
-"""
 ### `FeedForwardNetwork` Layer
 
 This custom `keras.layers.Layer` instance allows us to define a generic FFN along with a
 dropout.
-"""
 
+
+```python
 
 class FeedForwardNetwork(layers.Layer):
     """Feed Forward Network.
@@ -391,15 +410,16 @@ class FeedForwardNetwork(layers.Layer):
         x = inputs + self.ffn(x)
         return x
 
+```
 
-"""
 ### `BaseAttention` layer
 
 This custom `keras.layers.Layer` instance is a `super`/`base` class that wraps a
 `keras.layers.MultiHeadAttention` layer along with some other components. This gives us
 basic common denominator functionality for all the Attention layers/modules in our model.
-"""
 
+
+```python
 
 class BaseAttention(layers.Layer):
     """Base Attention Module.
@@ -451,16 +471,17 @@ class BaseAttention(layers.Layer):
         x = input_query + attention_outputs
         return x
 
+```
 
-"""
 ### `Attention` with `FeedForwardNetwork` layer
 
 This custom `keras.layers.Layer` implementation combines the `BaseAttention` and
 `FeedForwardNetwork` components to develop one block which will be used repeatedly within
 the model. This module is highly customizable and flexible, allowing for changes within
 the internal layers.
-"""
 
+
+```python
 
 class AttentionWithFFN(layers.Layer):
     """Attention with Feed Forward Network.
@@ -508,8 +529,8 @@ class AttentionWithFFN(layers.Layer):
         x = self.ffn(x)
         return x
 
+```
 
-"""
 ### Custom RNN Cell for **Temporal Latent Bottleneck** and **Perceptual Module**
 
 **Algorithm 1** (the pseudocode) depicts recurrence with the help of for loops. Looping
@@ -537,8 +558,9 @@ as the *SelfAttention* layer).
 - The other layers take the intermediate state outputs from within the Temporal Latent
 Bottleneck module as the Query while using the output of the previous Self-Attention
 layers before it as the Key and Value.
-"""
 
+
+```python
 
 class CustomRecurrentCell(layers.Layer):
     """Custom Recurrent Cell.
@@ -644,13 +666,14 @@ class CustomRecurrentCell(layers.Layer):
 
         return fast_stream, [slow_stream]
 
+```
 
-"""
 ### `TemporalLatentBottleneckModel` to encapsulate full model
 
 Here, we just wrap the full model as to expose it for training.
-"""
 
+
+```python
 
 class TemporalLatentBottleneckModel(keras.Model):
     """Model Trainer.
@@ -673,15 +696,17 @@ class TemporalLatentBottleneckModel(keras.Model):
         outputs = self.head(x)
         return outputs
 
+```
 
-"""
+---
 ## Build the model
 
 To begin training, we now define the components individually and pass them as arguments
 to our wrapper class, which will prepare the final model for training. We define a
 `PatchEmbed` layer, and the `CustomCell`-based RNN.
-"""
 
+
+```python
 # Build the model.
 patch_layer = PatchEmbedding(
     image_size=(config["image_size"], config["image_size"]),
@@ -703,8 +728,9 @@ model = TemporalLatentBottleneckModel(
     patch_layer=patch_layer,
     custom_cell=custom_rnn_cell,
 )
+```
 
-"""
+---
 ## Metrics and Callbacks
 
 We use the `AdamW` optimizer since it has been shown to perform very well on several benchmark
@@ -714,8 +740,9 @@ optimizer, along with Weight Decay in place.
 For a loss function, we make use of the `keras.losses.SparseCategoricalCrossentropy`
 function that makes use of simple Cross-entropy between prediction and actual logits. We
 also calculate accuracy on our data as a sanity-check.
-"""
 
+
+```python
 optimizer = AdamW(
     learning_rate=config["learning_rate"], weight_decay=config["weight_decay"]
 )
@@ -724,28 +751,97 @@ model.compile(
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"],
 )
+```
 
-"""
+---
 ## Train the model with `model.fit()`
 
 We pass the training dataset and run training.
-"""
 
+
+```python
 history = model.fit(
     train_ds,
     epochs=config["epochs"],
     validation_data=val_ds,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/30
+20/20 [==============================] - 104s 3s/step - loss: 2.6284 - accuracy: 0.1010 - val_loss: 2.2835 - val_accuracy: 0.1251
+Epoch 2/30
+20/20 [==============================] - 35s 2s/step - loss: 2.2797 - accuracy: 0.1542 - val_loss: 2.1721 - val_accuracy: 0.1846
+Epoch 3/30
+20/20 [==============================] - 34s 2s/step - loss: 2.1989 - accuracy: 0.1883 - val_loss: 2.1288 - val_accuracy: 0.2241
+Epoch 4/30
+20/20 [==============================] - 34s 2s/step - loss: 2.1267 - accuracy: 0.2192 - val_loss: 2.0919 - val_accuracy: 0.2477
+Epoch 5/30
+20/20 [==============================] - 33s 2s/step - loss: 2.0653 - accuracy: 0.2393 - val_loss: 2.0134 - val_accuracy: 0.2671
+Epoch 6/30
+20/20 [==============================] - 34s 2s/step - loss: 2.0327 - accuracy: 0.2524 - val_loss: 2.0258 - val_accuracy: 0.2665
+Epoch 7/30
+20/20 [==============================] - 34s 2s/step - loss: 2.0047 - accuracy: 0.2598 - val_loss: 1.9871 - val_accuracy: 0.2831
+Epoch 8/30
+20/20 [==============================] - 34s 2s/step - loss: 1.9765 - accuracy: 0.2781 - val_loss: 1.9550 - val_accuracy: 0.2968
+Epoch 9/30
+20/20 [==============================] - 34s 2s/step - loss: 1.9432 - accuracy: 0.2883 - val_loss: 1.9559 - val_accuracy: 0.2969
+Epoch 10/30
+20/20 [==============================] - 33s 2s/step - loss: 1.9062 - accuracy: 0.3020 - val_loss: 1.8967 - val_accuracy: 0.3200
+Epoch 11/30
+20/20 [==============================] - 33s 2s/step - loss: 1.8741 - accuracy: 0.3158 - val_loss: 1.8648 - val_accuracy: 0.3330
+Epoch 12/30
+20/20 [==============================] - 33s 2s/step - loss: 1.8336 - accuracy: 0.3282 - val_loss: 1.7863 - val_accuracy: 0.3464
+Epoch 13/30
+20/20 [==============================] - 33s 2s/step - loss: 1.7931 - accuracy: 0.3434 - val_loss: 1.7364 - val_accuracy: 0.3669
+Epoch 14/30
+20/20 [==============================] - 34s 2s/step - loss: 1.7491 - accuracy: 0.3558 - val_loss: 1.7104 - val_accuracy: 0.3710
+Epoch 15/30
+20/20 [==============================] - 34s 2s/step - loss: 1.7182 - accuracy: 0.3686 - val_loss: 1.6883 - val_accuracy: 0.3866
+Epoch 16/30
+20/20 [==============================] - 33s 2s/step - loss: 1.6819 - accuracy: 0.3790 - val_loss: 1.6493 - val_accuracy: 0.3933
+Epoch 17/30
+20/20 [==============================] - 33s 2s/step - loss: 1.6594 - accuracy: 0.3873 - val_loss: 1.6021 - val_accuracy: 0.4161
+Epoch 18/30
+20/20 [==============================] - 33s 2s/step - loss: 1.6279 - accuracy: 0.3946 - val_loss: 1.5949 - val_accuracy: 0.4170
+Epoch 19/30
+20/20 [==============================] - 34s 2s/step - loss: 1.6127 - accuracy: 0.4015 - val_loss: 1.5672 - val_accuracy: 0.4239
+Epoch 20/30
+20/20 [==============================] - 33s 2s/step - loss: 1.5995 - accuracy: 0.4079 - val_loss: 1.5795 - val_accuracy: 0.4223
+Epoch 21/30
+20/20 [==============================] - 34s 2s/step - loss: 1.5809 - accuracy: 0.4167 - val_loss: 1.5294 - val_accuracy: 0.4390
+Epoch 22/30
+20/20 [==============================] - 34s 2s/step - loss: 1.5572 - accuracy: 0.4254 - val_loss: 1.5192 - val_accuracy: 0.4455
+Epoch 23/30
+20/20 [==============================] - 33s 2s/step - loss: 1.5468 - accuracy: 0.4291 - val_loss: 1.5243 - val_accuracy: 0.4424
+Epoch 24/30
+20/20 [==============================] - 34s 2s/step - loss: 1.5347 - accuracy: 0.4335 - val_loss: 1.4920 - val_accuracy: 0.4532
+Epoch 25/30
+20/20 [==============================] - 33s 2s/step - loss: 1.5245 - accuracy: 0.4387 - val_loss: 1.4805 - val_accuracy: 0.4584
+Epoch 26/30
+20/20 [==============================] - 33s 2s/step - loss: 1.5057 - accuracy: 0.4469 - val_loss: 1.4754 - val_accuracy: 0.4592
+Epoch 27/30
+20/20 [==============================] - 34s 2s/step - loss: 1.5013 - accuracy: 0.4457 - val_loss: 1.4688 - val_accuracy: 0.4619
+Epoch 28/30
+20/20 [==============================] - 33s 2s/step - loss: 1.4852 - accuracy: 0.4548 - val_loss: 1.4543 - val_accuracy: 0.4704
+Epoch 29/30
+20/20 [==============================] - 34s 2s/step - loss: 1.4728 - accuracy: 0.4570 - val_loss: 1.4437 - val_accuracy: 0.4751
+Epoch 30/30
+20/20 [==============================] - 34s 2s/step - loss: 1.4652 - accuracy: 0.4606 - val_loss: 1.4546 - val_accuracy: 0.4726
+
+```
+</div>
+---
 ## Visualize training metrics
 
 The `model.fit()` will return a `history` object, which stores the values of the metrics
 generated during the training run (but it is ephemeral and needs to be saved manually).
 
 We now display the Loss and Accuracy curves for the training and validation sets.
-"""
 
+
+```python
 plt.plot(history.history["loss"], label="loss")
 plt.plot(history.history["val_loss"], label="val_loss")
 plt.legend()
@@ -755,8 +851,21 @@ plt.plot(history.history["accuracy"], label="accuracy")
 plt.plot(history.history["val_accuracy"], label="val_accuracy")
 plt.legend()
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/temporal_latent_bottleneck/temporal_latent_bottleneck_32_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/temporal_latent_bottleneck/temporal_latent_bottleneck_32_1.png)
+    
+
+
+---
 ## Visualize attention maps from the Temporal Latent Bottleneck
 
 Now that we have trained our model, it is time for some visualizations. The Fast Stream
@@ -767,8 +876,9 @@ In this section we visualize the attention map of the Slow Stream. This is done 
 extracting the attention scores from the TLB layer at each chunk's intersection and
 storing it within the RNN's state. This is followed by 'ballooning' it up and returning
 these values.
-"""
 
+
+```python
 
 def score_to_viz(chunk_score):
     # get the most attended token
@@ -804,11 +914,12 @@ chunk_viz = tf.reshape(
 upsampled_heat_map = layers.UpSampling2D(
     size=(4, 4), interpolation="bilinear", dtype="float32"
 )(chunk_viz)
+```
 
-"""
 Run the following code snippet to get different images and their attention maps.
-"""
 
+
+```python
 # Sample a random image
 index = random.randint(0, config["batch_size"])
 orig_image = images[index]
@@ -831,8 +942,15 @@ ax[1].imshow(
 ax[1].set_title("TLB Attention:")
 
 plt.show()
+```
 
-"""
+
+    
+![png](/img/examples/vision/temporal_latent_bottleneck/temporal_latent_bottleneck_36_0.png)
+    
+
+
+---
 ## Conclusion
 
 This example has demonstrated an implementation of the Temporal Latent Bottleneck
@@ -851,9 +969,8 @@ can be extended to other modalities too with minimal changes.
 means that our implementation is inspired by the paper with no claims of being a
 complete reproduction. For more details on the training process one can head over to
 [our GitHub repository](https://github.com/suvadityamuk/Temporal-Latent-Bottleneck-TF).
-"""
 
-"""
+---
 ## Acknowledgement
 
 Thanks to [Aniket Didolkar](https://www.aniketdidolkar.in/) (the first author) and
@@ -863,4 +980,3 @@ for revieweing our work.
 We would like to thank
 [PyImageSearch](https://pyimagesearch.com/) for a Colab Pro account and
 [JarvisLabs.ai](https://cloud.jarvislabs.ai/) for the GPU credits.
-"""
