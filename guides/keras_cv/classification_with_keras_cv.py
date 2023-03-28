@@ -93,7 +93,10 @@ classifier = keras_cv.models.DenseNet121(
 
 filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
-image
+
+"""
+![Picture of a cat with a velvet blanket](https://i.imgur.com/9i63gLN.jpg)
+"""
 
 image = np.array(image)
 
