@@ -206,7 +206,8 @@ bert_classifier = keras_nlp.models.BertClassifier.from_preset(
 
 # Get the total count of training batches.
 # This requires walking the dataset to filter all -1 labels.
-total_steps = sum(1 for _ in train_ds.as_numpy_iterator())
+epochs = 3
+total_steps = sum(1 for _ in train_ds.as_numpy_iterator()) * epochs
 warmup_steps = int(total_steps * 0.2)
 
 bert_classifier.compile(
@@ -217,11 +218,12 @@ bert_classifier.compile(
     metrics=["accuracy"],
 )
 
-bert_classifier.fit(train_ds, validation_data=val_ds, epochs=3)
+bert_classifier.fit(train_ds, validation_data=val_ds, epochs=epochs)
 
 """
 Great! With the learning rate scheduler and the AdamW optimizer, our validation 
-accuracy improved to around 79%.
+accuracy improved to around 79% within one epoch, and it hiked to 86% in three
+epochs.
 
 Now, let's evaluate our final model on the test set and see how it performs.
 """
