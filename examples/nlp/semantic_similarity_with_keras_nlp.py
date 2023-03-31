@@ -3,7 +3,7 @@ Title: Semantic Similarity with KerasNLP
 Author: [Anshuman Mishra](https://github.com/shivance/)
 Date created: 2023/02/25
 Last modified: 2023/02/25
-Description: Use pretrained models from KerasNLP for the Semantic Similarity Task
+Description: Use pretrained models from KerasNLP for the Semantic Similarity task.
 Accelerator: GPU
 """
 
@@ -19,7 +19,7 @@ for the same task. Furthermore, we will discover how KerasNLP effectively reduce
 code and simplifies the process of building and utilizing models. For more information on KerasNLP, 
 please refer to [KerasNLP's official documentation](https://keras.io/keras_nlp/).
 
-This guide is broken down into following parts:
+This guide is broken down into the following parts:
 
 1. *Setup*, task definition, and establishing a baseline.
 2. *Establishing baseline* with BERT.
@@ -44,11 +44,11 @@ import keras_nlp
 import tensorflow_datasets as tfds
 
 """
-To load the SNLI dataset, we will utilize the tensorflow-datasets library, which 
+To load the SNLI dataset, we use the tensorflow-datasets library, which 
 contains over 550,000 samples in total. However, to ensure that this example runs 
-quickly, we will only use 20% of the training samples.
+quickly, we use only 20% of the training samples.
 
-## Overview of SNLI Dataset:
+## Overview of SNLI Dataset
 
 Every sample in the dataset contains three components: `hypothesis`, `premise`, 
 and `label`. epresents the original caption provided to the author of the pair, 
@@ -76,7 +76,7 @@ sample
 
 In our dataset, we have identified that some samples have missing or incorrectly labeled 
 data, which is denoted by a value of -1. To ensure the accuracy and reliability of our model, 
-we will simply filter out these samples from our dataset.
+we simply filter out these samples from our dataset.
 """
 
 
@@ -118,7 +118,7 @@ test_ds = (
 """
 ## Establishing baseline with BERT.
 
-We will use the BERT model from KerasNLP to establish a baseline for our semantic similarity 
+We use the BERT model from KerasNLP to establish a baseline for our semantic similarity 
 task. The `keras_nlp.models.BertClassifier` class attaches a classification head to the BERT 
 Backbone, mapping the backbone outputs to a logit output suitable for a classification task. 
 This significantly reduces the need for custom code.
@@ -128,8 +128,8 @@ based on the selected model. However, users can also use custom preprocessing te
 as per their specific needs. If we pass a tuple as input, the model will tokenize all the 
 strings and concatenate them with a `"[SEP]"` separator.
 
-We will use this model with pre-trained weights, and we can use the `from_preset()` method 
-to use our own preprocessor. For the SNLI dataset, we will set num_classes as 3.
+We use this model with pretrained weights, and we can use the `from_preset()` method 
+to use our own preprocessor. For the SNLI dataset, we set `num_classes` to 3.
 """
 
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
@@ -152,17 +152,18 @@ let's evaluate its performance on the test split.
 
 ### Evaluate the performance of the trained model on test data.
 """
+
 bert_classifier.evaluate(test_ds)
 
 """
-Our baseline BERT model achieved almost similar accuracy of around 68% on the test split. 
+Our baseline BERT model achieved a similar accuracy of around 68% on the test split. 
 Now, let's try to improve its performance by recompiling the model with a different 
-learning rate and observe its performance.
+learning rate.
 """
+
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3
 )
-
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=tf.keras.optimizers.Adam(1e-4),
@@ -170,17 +171,14 @@ bert_classifier.compile(
 )
 
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
-
 bert_classifier.evaluate(test_ds)
 
 """
-This time, we achieved around 72% validation accuracy on both validation and test 
-splits with just one epoch, which is quite impressive! Let's save our model for now 
-and move on to learning how to perform inference with it.
+This time, we achieve around 72% validation accuracy on both the validation and test 
+splits after just one epoch, which is quite impressive!
 
 Now, let's see if we can further improve the model by using a learning rate scheduler.
 """
-
 
 class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
     """Linear ramp up for `warmup` steps, then linear decay to zero at `total` steps."""
@@ -221,7 +219,7 @@ bert_classifier.compile(
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=epochs)
 
 """
-Great! With the learning rate scheduler and the AdamW optimizer, our validation 
+Great! With the learning rate scheduler and the `AdamW` optimizer, our validation 
 accuracy improved to around 79% within one epoch, and it hiked to 86% in three
 epochs.
 
@@ -233,10 +231,12 @@ bert_classifier.evaluate(test_ds)
 """
 Our Tiny BERT model achieved an accuracy of approximately 79% on the test set 
 with the use of a learning rate scheduler. This is a significant improvement over 
-our previous results. It's important to note that fine-tuning a pre-trained BERT 
+our previous results. Fine-tuning a pretrained BERT 
 model can be a powerful tool in natural language processing tasks, and even a 
-small model like Tiny BERT can achieve impressive results. 
+small model like Tiny BERT can achieve impressive results.
 
+Let's save our model for now 
+and move on to learning how to perform inference with it.
 
 ## Save and Reload the model
 """
@@ -287,11 +287,11 @@ roberta_classifier.evaluate(test_ds)
 
 """
 The RoBERTa base model has significantly more trainable parameters than the BERT 
-Tiny model, with almost 30 times as many at 124,645,635. As a result, it took 
-approximately 1.5 hours to train on a Kaggle P100 GPU. However, the performance 
+Tiny model, with almost 30 times as many at 124,645,635 parameters. As a result, it took 
+approximately 1.5 hours to train on a P100 GPU. However, the performance 
 improvement was substantial, with accuracy increasing to 88% on both the validation 
 and test splits. With RoBERTa, we were able to fit a maximum batch size of 16 on 
-our Kaggle P100 GPU.
+our P100 GPU.
 
 Despite using a different model, the steps to perform inference with RoBERTa are 
 the same as with BERT!
@@ -304,7 +304,7 @@ print(tf.math.argmax(predictions, axis=1).numpy())
 We hope this tutorial has been helpful in demonstrating the ease and effectiveness 
 of using KerasNLP and BERT for semantic similarity tasks.
 
-Throughout this tutorial, we demonstrated how to use a pre-trained BERT model to 
+Throughout this tutorial, we demonstrated how to use a pretrained BERT model to 
 establish a baseline and improve performance by training a larger RoBERTa model 
 using just a few lines of code.
 
