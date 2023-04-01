@@ -188,6 +188,11 @@ class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
         self.warmup = tf.cast(warmup, dtype="float32")
         self.total = tf.cast(total, dtype="float32")
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"rate": self.rate, "warmup": self.warmup, "total": self.total})
+        return config
+
     def __call__(self, step):
         step = tf.cast(step, dtype="float32")
         multiplier = tf.cond(
