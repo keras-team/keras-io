@@ -189,8 +189,7 @@ class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
         self.total = tf.cast(total, dtype="float32")
 
     def get_config(self):
-        config = super().get_config()
-        config.update({"rate": self.rate, "warmup": self.warmup, "total": self.total})
+        config = {"rate": self.rate, "warmup": self.warmup, "total": self.total}
         return config
 
     def __call__(self, step):
