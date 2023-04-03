@@ -663,6 +663,7 @@ Luckily, with KerasCV this is easy:
 
 best_decoder = None
 score_to_beat = 0
+worst_score = 1.0
 
 iou_thresholds = [0.35, 0.5, 0.65]
 confidence_thresholds = [0.5, 0.75, 0.9]
@@ -673,23 +674,32 @@ for iou_threshold in tqdm(iou_thresholds):
             bounding_box_format="xywh",
             from_logits=True,
             # Decrease the required threshold to make predictions get pruned out
-            iou_threshold=0.35,
+            iou_threshold=iou_threshold,
             # Tune confidence threshold for predictions to pass NMS
-            confidence_threshold=0.75,
+            confidence_threshold=iou_threshold,
         )
         model.prediction_decoder = prediction_decoder
-        result = model.evaluate(eval_ds)
+
+        # Remove take(20) in a production setting
+        coco_metrics.reset_state()
+        model.evaluate(eval_ds.take(20))
         result = coco_metrics.result(force=True)
         if result["MaP"] > score_to_beat:
             best_decoder = prediction_decoder
             score_to_beat = result["MaP"]
 
+        if result["MaP"] < worst_score:
+            worst_score = result["MaP"]
+
 model.prediction_decoder = best_decoder
 print(
-    f"Best scores found with iou_threshold={best_decoder.iou_threshold}, confidence_threshold={best_decoder.confidence_threshold}"
+    f"Best scores found with iou_threshold={best_decoder.iou_threshold},
+    f"confidence_threshold={best_decoder.confidence_threshold}. Best MaP is "
+    f"{score_to_beat}, worst MaP is {worst_score}."
 )
+
 """
-Finally, lets visualize the results:
+Lets visualize the results using our optimal decoder:
 """
 
 visualize_detections(model, bounding_box_format="xywh", dataset=eval_ds.shuffle(8))
