@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 **Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
 **Date created:** 2023/04/03<br>
