@@ -56,7 +56,9 @@ Let's get started by constructing a RetinaNet pretrained on the `pascalvoc`
 dataset.
 """
 
-model = keras_cv.models.RetinaNet.from_preset("retinanet_resnet50_pascalvoc", bounding_box_format='xywh')
+model = keras_cv.models.RetinaNet.from_preset(
+    "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
+)
 
 """
 Notice the `bounding_box_format` argument.
@@ -78,7 +80,8 @@ image = np.array(image)
 visualization.plot_image_gallery(
     [image],
     value_range=(0, 255),
-    rows=1, cols=1,
+    rows=1,
+    cols=1,
     scale=5,
 )
 
@@ -103,7 +106,9 @@ a `keras_cv.layers.Resizing` layer.
 This can be implemented in one line of code:
 """
 
-inference_resizing = keras_cv.layers.Resizing(640, 640, pad_to_aspect_ratio=True, bounding_box_format='xywh')
+inference_resizing = keras_cv.layers.Resizing(
+    640, 640, pad_to_aspect_ratio=True, bounding_box_format="xywh"
+)
 """
 This can be used as our inference preprocessing pipeline:
 """
@@ -149,10 +154,11 @@ y_pred = model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
     image_batch,
     value_range=(0, 255),
-    rows=1, cols=1,
+    rows=1,
+    cols=1,
     y_pred=y_pred,
     scale=5,
-    bounding_box_format='xywh',
+    bounding_box_format="xywh",
     class_mapping=class_mapping,
 )
 
@@ -184,10 +190,11 @@ y_pred = model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
     image_batch,
     value_range=(0, 255),
-    rows=1, cols=1,
+    rows=1,
+    cols=1,
     y_pred=y_pred,
     scale=5,
-    bounding_box_format='xywh',
+    bounding_box_format="xywh",
     class_mapping=class_mapping,
 )
 
@@ -275,6 +282,7 @@ supported in all KerasCV preprocessing components.
 Let's load some data and verify that our data looks as we expect it to.
 """
 
+
 def unpackage_raw_tfds_inputs(inputs, bounding_box_format):
     image = inputs["image"]
     boxes = keras_cv.bounding_box.convert_format(
@@ -291,15 +299,19 @@ def unpackage_raw_tfds_inputs(inputs, bounding_box_format):
 
 
 def load_pascal_voc(split, dataset, bounding_box_format):
-  ds = tfds.load(
-      dataset, split=split, with_info=False, shuffle_files=True
-  )
-  ds = ds.map(lambda x: unpackage_raw_tfds_inputs(x, bounding_box_format=bounding_box_format), num_parallel_calls=tf.data.AUTOTUNE)
-  return ds
+    ds = tfds.load(dataset, split=split, with_info=False, shuffle_files=True)
+    ds = ds.map(
+        lambda x: unpackage_raw_tfds_inputs(x, bounding_box_format=bounding_box_format),
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    return ds
 
-train_ds = load_pascal_voc(split='train', dataset='voc/2007', bounding_box_format='xywh')
-eval_ds = load_pascal_voc(split='test', dataset='voc/2007', bounding_box_format='xywh')
-eval_ds = load_pascal_voc(dataset="voc/2007", split="test", bounding_box_format='xywh')
+
+train_ds = load_pascal_voc(
+    split="train", dataset="voc/2007", bounding_box_format="xywh"
+)
+eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format="xywh")
+eval_ds = load_pascal_voc(dataset="voc/2007", split="test", bounding_box_format="xywh")
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
 visualization.visualize_dataset(train_ds, value_range=(0, 255), rows=2, cols=2)
@@ -339,7 +351,7 @@ visualization.visualize_dataset(eval_ds, bounding_box_format="xywh")
 If you are not running your experiment on a local machine, you can also make
 `visualize_dataset()` dump the plot to a file using the `path` parameter:
 """
-visualization.visualize_dataset(eval_ds, bounding_box_format="xywh", path='eval.png')
+visualization.visualize_dataset(eval_ds, bounding_box_format="xywh", path="eval.png")
 
 """
 Looks like everything is structured as expected.
@@ -362,10 +374,7 @@ friendly data augmentation inside of a `tf.data` pipeline.
 augmenter = keras.Sequential(
     layers=[
         keras_cv.layers.RandAugment(
-            augmentations_per_image=1,
-            rate=0.5,
-            magnitude=0.3,
-            geometric=False
+            augmentations_per_image=1, rate=0.5, magnitude=0.3, geometric=False
         ),
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.JitteredResize(
@@ -374,9 +383,7 @@ augmenter = keras.Sequential(
     ]
 )
 
-train_ds = train_ds.map(
-    augmenter, num_parallel_calls=tf.data.AUTOTUNE
-)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 """
 Let's make sure our augmentations look how we expect them to:
 """
@@ -412,10 +419,12 @@ the KerasCV RetinaNet
 label encoder will automatically correctly encode Ragged training targets.
 """
 
+
 def dict_to_tuple(inputs):
     return inputs["images"], bounding_box.to_dense(
         inputs["bounding_boxes"], max_boxes=32
     )
+
 
 train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
@@ -441,7 +450,7 @@ For example:
 """
 
 model = keras_cv.models.RetinaNet.from_preset(
-    "resnet50_v2_imagenet"
+    "resnet50_v2_imagenet",
     # number of classes to be used in box classification
     num_classes=len(class_mapping) + 1,
     # For more info on supported bounding box formats, visit
@@ -483,8 +492,8 @@ so instead we recommend you do it in your training loops.
 """
 
 for layer in model.backbone.layers:
-  if isinstance(layer, keras.layers.BatchNormalization):
-    layer.trainable = False
+    if isinstance(layer, keras.layers.BatchNormalization):
+        layer.trainable = False
 
 """
 ### Metric Evaluation
@@ -495,7 +504,9 @@ which were published alongside the MSCOCO dataset.  KerasCV provides an easy
 to use suite of COCO metrics. under the `keras_cv.metrics.BoxCOCOMetrics`
 symbol:
 """
-coco_metrics = keras_cv.metrics.BoxCOCOMetrics(bounding_box_format='xywh', evaluate_freq=128)
+coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
+    bounding_box_format="xywh", evaluate_freq=128
+)
 """
 Due to the high computational cost of computing COCO metrics, the KerasCV
 `BoxCOCOMetrics` component requires an `evaluate_freq` parameter to be passed to
@@ -509,7 +520,7 @@ model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
     optimizer=optimizer,
-    metrics=[coco_metrics]
+    metrics=[coco_metrics],
 )
 result = model.evaluate(eval_ds)
 result = coco_metrics.result(force=True)
@@ -531,28 +542,30 @@ Luckily, there are two workarounds that allow you to still train a RetinaNet on 
 Let's use a custom callback to achieve TPU compatibility in this guide:
 """
 
+
 class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
-  def __init__(self, data):
-    super().__init__()
-    self.data = data
-    self.metrics = keras_cv.metrics.BoxCOCOMetrics(
-        bounding_box_format='xywh',
-        # passing 1e9 ensures we never evaluate until
-        # `metrics.result(force=True)` is
-        # called.
-        evaluate_freq=1e9
-    )
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+        self.metrics = keras_cv.metrics.BoxCOCOMetrics(
+            bounding_box_format="xywh",
+            # passing 1e9 ensures we never evaluate until
+            # `metrics.result(force=True)` is
+            # called.
+            evaluate_freq=1e9,
+        )
 
-  def on_epoch_end(self, epoch, logs):
-    self.metrics.reset_state()
-    for batch in tqdm.tqdm(self.data):
-      images, y_true = batch[0], batch[1]
-      y_pred = self.model.predict(images, verbose=0)
-      self.metrics.update_state(y_true, y_pred)
+    def on_epoch_end(self, epoch, logs):
+        self.metrics.reset_state()
+        for batch in tqdm.tqdm(self.data):
+            images, y_true = batch[0], batch[1]
+            y_pred = self.model.predict(images, verbose=0)
+            self.metrics.update_state(y_true, y_pred)
 
-    metrics = self.metrics.result()
-    logs.update(metrics)
-    return logs
+        metrics = self.metrics.result()
+        logs.update(metrics)
+        return logs
+
 
 """
 ## Training our model
@@ -568,7 +581,7 @@ model.compile(
     box_loss="smoothl1",
     optimizer=optimizer,
     # We will use our custom callback to evaluate COCO metrics
-    metrics=None
+    metrics=None,
 )
 
 """
@@ -580,7 +593,7 @@ model.fit(
     validation_data=eval_ds,
     # Run for 10-35~ epochs to achieve good scores.
     epochs=1,
-    callbacks=[EvaluateMetricsCallback()]
+    callbacks=[EvaluateMetricsCallback()],
 )
 
 """
@@ -591,7 +604,7 @@ result = model.evaluate(eval_ds)
 result = coco_metrics.result(force=True)
 print(tablify(result))
 for key in result:
-  print(key, result[key])
+    print(key, result[key])
 
 """
 To achieve reasonable scores, you will want to run `fit()` with 10-35~ epochs.
@@ -609,7 +622,17 @@ Visualizing
 KerasCV makes object detection inference simple.  `model.predict(images)` returns a
 RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()` will perform
 a non max suppression operation for you.
+
+In this section, we will use a `keras_cv` provided preset:
 """
+model = keras_cv.models.RetinaNet.from_preset(
+    "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
+)
+
+"""
+And construct a basic helper function to plot our results:
+"""
+
 
 def visualize_detections(model, dataset, bounding_box_format):
     images, y_true = next(iter(dataset.shuffle(8).take(1)))
@@ -629,16 +652,8 @@ def visualize_detections(model, dataset, bounding_box_format):
         class_mapping=class_mapping,
     )
 
+
 visualize_detections(model, bounding_box_format="xywh")
-
-"""
-One helpful pattern when monitoring training is to visualize detections in a
-`keras.callbacks.Callback`:
-"""
-
-class VisualizeDetections(keras.callbacks.Callback):
-  def on_epoch_end(self, epoch, logs):
-    visualize_detections(self.model, eval_ds, bounding_box_format='xywh')
 
 """
 To achieve good visual results, you may want to grid-search prediction decoders
@@ -666,12 +681,14 @@ for iou_threshold in tqdm(iou_thresholds):
         model.prediction_decoder = prediction_decoder
         result = model.evaluate(eval_ds)
         result = coco_metrics.result(force=True)
-        if result['MaP'] > score_to_beat:
+        if result["MaP"] > score_to_beat:
             best_decoder = prediction_decoder
-            score_to_beat = result['MaP']
+            score_to_beat = result["MaP"]
 
 model.prediction_decoder = best_decoder
-print(f"Best scores found with iou_threshold={best_decoder.iou_threshold}, confidence_threshold={best_decoder.confidence_threshold}")
+print(
+    f"Best scores found with iou_threshold={best_decoder.iou_threshold}, confidence_threshold={best_decoder.confidence_threshold}"
+)
 """
 Finally, lets visualize the results:
 """
@@ -680,7 +697,16 @@ visualize_detections(model, bounding_box_format="xywh", dataset=eval_ds.shuffle(
 
 """
 Awesome!
+
+One final helpful pattern to be aware of is monitoring training is to visualize
+detections in a `keras.callbacks.Callback`:
 """
+
+
+class VisualizeDetections(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs):
+        visualize_detections(self.model, eval_ds, bounding_box_format="xywh")
+
 
 """
 ## Takeaways and Next Steps
@@ -706,8 +732,9 @@ Some follow up exercises for the reader:
 
 One last fun code snippet to showcase the power of KerasCV's modular API!
 """
-images = stable_diffusion.text_to_image("A photograph of a cool looking cat sitting on the beach.", batch_size=4, seed=1337)
-model = keras_cv.models.RetinaNet.from_preset('retinanet_resnet50_pascalvoc', bounding_box_format='xywh')
+images = stable_diffusion.text_to_image(
+    "A photograph of a cool looking cat sitting on the beach.", batch_size=4, seed=1337
+)
 y_pred = model.predict(images)
 visualization.plot_bounding_box_gallery(
     images,
@@ -715,6 +742,6 @@ visualization.plot_bounding_box_gallery(
     rows=2,
     cols=2,
     scale=5,
-    bounding_box_format='xywh',
-    class_mapping=class_mapping
+    bounding_box_format="xywh",
+    class_mapping=class_mapping,
 )
