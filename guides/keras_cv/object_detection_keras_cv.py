@@ -482,7 +482,7 @@ optimizer = tf.keras.optimizers.SGD(
 )
 
 """
-**Note: be sure to isable BatchNorm***
+**Note: be sure to freeze BatchNormalization layers***
 
 And important but easy to miss step in training your own object detection model
 is freezing the `BatchNormalization` layers in your backbone.
@@ -587,23 +587,16 @@ model.compile(
 And run `model.fit()`!
 """
 
+# If you want to train the fully model, uncomment `.take(20)` from each
+# of the following dataset references.
+
 model.fit(
-    train_ds,
-    validation_data=eval_ds,
+    train_ds.take(20),
+    validation_data=eval_ds.take(20),
     # Run for 10-35~ epochs to achieve good scores.
     epochs=1,
-    callbacks=[EvaluateMetricsCallback()],
+    callbacks=[EvaluateCOCOMetricsCallback(eval_ds.take(20))],
 )
-
-"""
-Let's evaluate our final model performance!
-"""
-coco_metrics.reset_state()
-result = model.evaluate(eval_ds)
-result = coco_metrics.result(force=True)
-print(tablify(result))
-for key in result:
-    print(key, result[key])
 
 """
 To achieve reasonable scores, you will want to run `fit()` with 10-35~ epochs.
@@ -613,7 +606,8 @@ To achieve reasonable scores, you will want to run `fit()` with 10-35~ epochs.
 Visualizing
 """
 
-"""This metric can be used with `fit()` like any other callback, simply pass:
+"""
+This metric can be used with `fit()` like any other callback, simply pass:
 `callbacks=callbacks + [EvaluateMetricsCallback(data=eval_ds)]` to your `fit()` call.
 
 ## Inference and Plotting results
