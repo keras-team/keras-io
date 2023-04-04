@@ -20,32 +20,20 @@ Description: Use KerasCV to train a state of the art image classifier.
 """
 
 """
-KerasCV is a computer vision library that supports users through their entire
-development cycle.
-Our workflows are built from modular components that have state-of-the-art
-preset weights and architectures when used out-of-the-box and are easily
-customizable when more control is needed. We emphasize building APIs that are
-user-friendly, yet still yield state of the art results.
-Due to the in-graph nature of our models, users can expect easy
-productionization using the TensorFlow ecosystem.
-
-This library is an extension of the core Keras API; all high-level modules are
-Layers or Models. If you are familiar with Keras, congratulations! You already
-understand most of KerasCV.
-
-This guide demonstrates our modular approach using an image classification
-example at two levels of complexity:
+This guide demonstrates KerasCV's modular approach to solving image
+classification problems at two levels of complexity:
 
 - Inference with a pretrained classifier
-- Fine tuning a pretrained backbone
+- Fine-tuning a pretrained backbone
 
 We use Professor Keras, the official Keras mascot, as a
 visual reference for the complexity of the material:
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png)
 
-Please note that due to classification being a pretty simple use case, this guide only covers beginner and intermediate work flows.
-Advanced and expert workflows may be found in the [other KerasCV guides](https://keras.io/guides/keras_cv/)!
+Please note that due to classification being a pretty simple use case,
+this guide only covers beginner and intermediate workflows.
+Advanced and expert workflows may be found in [other KerasCV guides](https://keras.io/guides/keras_cv/)!
 """
 
 """shell
@@ -65,42 +53,37 @@ import numpy as np
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
 
 Let's get started with the simples KerasCV API: a pretrained classifier.
-In this example we will build a Dogs vs Cats classifier using a model that was
+In this example, we will build a Dogs vs Cats classifier using a model that was
 pretrained on the ImageNet dataset.
 
 The highest level module in KerasCV is a *task*. A *task* is a `keras.Model`
 consisting of a (generally pretrained) backbone model and task-specific layers.
-Here's an example using keras_cv.models.ImageClassifier with a ResNet50V2
+Here's an example using `keras_cv.models.ImageClassifier` with a ResNet50V2
 Backbone.
 
 
 """
 
-import json
-import keras_cv
-import tensorflow as tf
-import tensorflow_datasets as tfds
-import keras
-import numpy as np
-
-# TODO(lukewood): replace with ImageClassifier.from_preset()
-classifier = keras_cv.models.DenseNet121(
-    weights='imagenet',
-    include_top=True,
-    include_rescaling=True,
-    num_classes=1000
+classifier = keras_cv.models.ImageClassifier.from_preset(
+    "densenet121_imagenet_classifier",
 )
-
 filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
-
-"""
-![Picture of a cat with a velvet blanket](https://i.imgur.com/9i63gLN.jpg)
-"""
-
 image = np.array(image)
+keras_cv.visualization.plot_image_gallery(
+    [image],
+    rows=1,
+    cols=1,
+    value_range=(0, 255),
+    show=True,
+)
+"""
+Next, we can perform some predictions using this classifier
+"""
 
-predictions = classifier.predict(image[None, ...])
+
+# Predictions are softmax-ed category rankings
+predictions = classifier.predict([image])
 top_classes = predictions[0].argsort(axis=-1)
 
 # Subset of imagenet classes
