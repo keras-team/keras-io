@@ -325,7 +325,7 @@ plt.show()
 
 
     
-![png](/img/examples/audio/ctc_asr/ctc_asr_15_1.png)
+![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/ctc_asr/ctc_asr_15_1.png)
     
 
 
