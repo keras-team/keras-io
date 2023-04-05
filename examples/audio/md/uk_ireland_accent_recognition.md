@@ -890,7 +890,7 @@ plt.show()
 ```
 
 
-![png](/img/examples/audio/uk_ireland_accent_recognition/uk_ireland_accent_recognition_29_0.png)
+![png](/examples/audio/img/uk_ireland_accent_recognition/uk_ireland_accent_recognition_29_0.png)
 
 
 ---
@@ -1199,4 +1199,4 @@ _ = plt.ylim(-0.5 + np.array([len(class_names), 0]))
 ```
 
 
-![png](/img/examples/audio/uk_ireland_accent_recognition/uk_ireland_accent_recognition_48_0.png)
+![png](//examples/audio/img/uk_ireland_accent_recognition/uk_ireland_accent_recognition_48_0.png)
