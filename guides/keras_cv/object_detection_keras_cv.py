@@ -34,14 +34,26 @@ import tqdm
 """
 ## API Introduction
 
-The KerasCV Object Detection API is designed to alleviate some of the most
-frustrating painpoints of object detection.  These include:
+Object detection is typically defined as the process of identifying, classifying,
+and localizing objects within a given image.
 
-- ambiguity in box format
-- difficulty performing augmentation with respect to boxes
-- proper resizing of images at inference time
 
-To begin exploring these, let's assemble a pretrained KerasCV `RetinaNet`.
+In the modern era following the invention of *You Only Look Once* (aka YOLO),
+object detection is typically solved using deep learning.
+Most deep learning architectures do this by cleverly framing the object detection
+problem as a combination of many small classification problems as well as
+many regression problems.
+This is done by generating many boxes of varying shapes and sizes across the
+input images and assigning them each a class label, as well as
+`x`, `y`, `width` and `height` offsets.
+The model is trained to predict the class labels of each box, as well as the
+`x`, `y`, `width`, and `height` offsets of each box that is predicted to be an
+object.
+
+# TODO anchor box image!!!!!!
+
+Objection detection is a technically complex problem but we offer a
+bulletproof approach to getting great results. Let's do this!
 
 ## Perform Detections with a Pretrained Model
 
