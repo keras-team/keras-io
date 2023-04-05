@@ -2,7 +2,7 @@
 
 **Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
 **Date created:** 2022/08/22<br>
-**Last modified:** 2022/08/22<br>
+**Last modified:** 2023/03/30<br>
 **Description:** Use KerasCV to train a RetinaNet on Pascal VOC 2007.
 
 
@@ -47,7 +47,7 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
 ## Data loading
 
 KerasCV has a predefined specificication for bounding boxes.  To comply with this, you
-should package your bounding boxes into a dictionary matching the speciciation below:
+should package your bounding boxes into a dictionary matching the specification below:
 
 ```
 bounding_boxes = {
@@ -81,7 +81,7 @@ train_ds, ds_info = your_data_loader.load(
 Clearly yields bounding boxes in the format `xywh`.  You can read more about
 KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
 
-Our data comesloaded into the format
+Our loaded data comes into the format
 `{"images": images, "bounding_boxes": bounding_boxes}`.  This format is supported in all
 KerasCV preprocessing components.
 
@@ -118,7 +118,7 @@ train_ds = train_ds.map(unpackage_tfds_inputs, num_parallel_calls=tf.data.AUTOTU
 eval_ds = eval_ds.map(unpackage_tfds_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 ```
 
-Next, lets batch our data.  In KerasCV object detection tasks it is recommended that
+Next, let's batch our data.  In KerasCV object detection tasks, it is recommended that
 users use ragged batches.  This is due to the fact that images may be of different
 sizes in PascalVOC and that there may be different numbers of bounding boxes per image.
 
@@ -325,7 +325,7 @@ model.backbone.trainable = False
 ```
 
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts tuples of
-dense image Tensors and bounding box dictionaries to `fit()` and `train_on_batch()`
+dense image Tensors and bounding box dictionaries to `fit()` and `train_on_batch()`.
 This matches what we have constructed in our input pipeline above.
 
 
