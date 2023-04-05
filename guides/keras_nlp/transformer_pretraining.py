@@ -463,7 +463,7 @@ text would all continue to boost performance significantly.
 """
 ### Save a model that accepts raw text
 
-The last thing we can do with our fine-tuned model is saveing including our tokenization
+The last thing we can do with our fine-tuned model is saving including our tokenization
 layer. One of the key advantages of KerasNLP is all preprocessing is done inside the
 [TensorFlow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
 to save and restore a model that can directly run inference on raw text!
