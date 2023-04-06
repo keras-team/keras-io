@@ -46,6 +46,7 @@ pip install keras_nlp==0.3.0
 pip install datasets
 pip install huggingface-hub
 pip install nltk
+pip install rouge-score
 """
 
 """
