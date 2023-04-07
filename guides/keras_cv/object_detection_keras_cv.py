@@ -32,34 +32,54 @@ from keras_cv import visualization
 import tqdm
 
 """
-## API Introduction
+## Object Detection Introduction
 
 Object detection is typically defined as the process of identifying, classifying,
-and localizing objects within a given image.
+and localizing objects within a given image.  Typically, your inputs are
+images, and your labels are bounding boxes with optional class
+labels.
 
+**For example:**
 
-In the modern era following the invention of *You Only Look Once* (aka YOLO),
-object detection is typically solved using deep learning.
+<img width="300" src="https://i.imgur.com/QTvxIZH.jpeg">
+
+The data often looks something like this:
+```
+image = [height, width, 3])
+bounding_boxes = {
+  "classes": [num_boxes],
+  "boxes": [num_boxes, 4]
+}
+```
+
+Since the inception of *You Only Look Once* (aka YOLO),
+object detection has primarily solved using deep learning.
 Most deep learning architectures do this by cleverly framing the object detection
-problem as a combination of many small classification problems as well as
+problem as a combination of many small classification problems and
 many regression problems.
-This is done by generating many boxes of varying shapes and sizes across the
+
+More specifically, this is done by generating many boxes of varying shapes and sizes across the
 input images and assigning them each a class label, as well as
 `x`, `y`, `width` and `height` offsets.
 The model is trained to predict the class labels of each box, as well as the
 `x`, `y`, `width`, and `height` offsets of each box that is predicted to be an
 object.
 
-# TODO anchor box image!!!!!!
+**Visualization of some sample anchor boxes**:
 
-Objection detection is a technically complex problem but we offer a
-bulletproof approach to getting great results. Let's do this!
+<img width="400" src="https://i.imgur.com/cJIuiK9.jpg">
 
+Objection detection is a technically complex problem but luckily we offer a
+bulletproof approach to getting great results.
+Let's do this!
+"""
+
+"""
 ## Perform Detections with a Pretrained Model
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
 
-The highest level API in the KerasCV API is the `keras_cv.models` API.
+The highest level API in the KerasCV Object Detection API is the `keras_cv.models` API.
 This API includes fully pretrained object detection models, such as
 `keras_cv.models.RetinaNet`.
 
@@ -67,16 +87,45 @@ Let's get started by constructing a RetinaNet pretrained on the `pascalvoc`
 dataset.
 """
 
-model = keras_cv.models.RetinaNet.from_preset(
+pretrained_model = keras_cv.models.RetinaNet.from_preset(
     "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
 )
 
 """
-Notice the `bounding_box_format` argument.
-This is a critical piece of the KerasCV object detection API.
-Every component that is to process bounding boxes accepts a required
+Notice the `bounding_box_format` argument?
+
+Recall in the section above, the format of bounding boxes:
+
+```
+bounding_boxes = {
+  "classes": [num_boxes],
+  "boxes": [num_boxes, 4]
+}
+```
+
+This argument describes *exactly* what format the values in the `"boxes"`
+field of the label dictionary take in your pipeline.
+For example, a box in `xywh` format at coordinates (100, 100) with a width of 55 and a height of 70 would be represented by:
+```
+[100, 100, 55, 75]
+```
+
+or equivalently in `xyxy` format:
+
+```
+[100, 100, 155, 175]
+```
+
+While this may seem simple, it is a critical piece of the KerasCV object
+detection API!
+Every component that is to process bounding boxes requires
 `bounding_box_format` argument.
-This is done to ensure that code remains readable, reusable, and clear.
+You can read more about
+KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
+
+
+This is done because there is no one correct format for bounding boxes!
+Components in different pipelines expect different formats, and so by requiring them to be specified we ensure that our components remain readable, reusable, and clear.
 Box format conversion bugs are perhaps the most common bug surface in object
 detection pipelines - by requiring this parameter we mitigate against these
 bugs (especially when combining code from many sources).
@@ -97,7 +146,7 @@ visualization.plot_image_gallery(
 )
 
 """
-In order to use the `RetinaNet` architecture, you'll need to resize your image
+To use the `RetinaNet` architecture, you'll need to resize your image
 to a size that is divisible by 64.
 In object detection, the approach to resizing images to comply
 with this constraint is *extremely* important.  If the resize operation distorts
@@ -109,7 +158,7 @@ from `0.33` when using a naive resizing operation.
 Additionally, if you crop to preserve the aspect ratio as you do in classification
 your model may entirely miss some bounding boxes.  As such, when running inference
 on an object detection model we recommend the use of padding to the desired size,
-while resizing the longest size to match the aspect ration
+while resizing the longest size to match the aspect ratio.
 
 KerasCV makes resizing properly easy; simply pass `pad_to_aspect_ratio=True` to
 a `keras_cv.layers.Resizing` layer.
@@ -120,9 +169,11 @@ This can be implemented in one line of code:
 inference_resizing = keras_cv.layers.Resizing(
     640, 640, pad_to_aspect_ratio=True, bounding_box_format="xywh"
 )
+
 """
 This can be used as our inference preprocessing pipeline:
 """
+
 image_batch = inference_resizing([image])
 
 """
@@ -156,12 +207,12 @@ class_ids = [
 ]
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
-
 """
 Just like any other `keras.Model` you can predict bounding boxes using the
 `model.predict()` API.
 """
-y_pred = model.predict(image_batch)
+
+y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
     image_batch,
     value_range=(0, 255),
@@ -176,8 +227,13 @@ visualization.plot_bounding_box_gallery(
 """
 In order to support easy this easy and intuitive inference workflow, KerasCV
 perform non-max suppression inside of the `RetinaNet` class.
+Non-max suppression is a traditional computing algorithm that solves the problem of a model detecting multiple boxes for the same object.
 
-In most cases you will want to customize the settings of your model's non-max
+**Example of pre-NMS detections (left) and post-NMS detections (right):**
+
+<img width="400" src="https://i.imgur.com/L2KPpSF.jpg">
+
+Non-max suppression is a highly configurable algorithm, and in most cases you will want to customize the settings of your model's non-max
 suppression operation.
 This can be done by writing to the `model.prediction_decoder` attribute.
 
@@ -193,11 +249,11 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     # Decrease the required threshold to make predictions get pruned out
     iou_threshold=0.35,
     # Tune confidence threshold for predictions to pass NMS
-    confidence_threshold=0.75,
+    confidence_threshold=0.8,
 )
-model.prediction_decoder = prediction_decoder
+pretrained_model.prediction_decoder = prediction_decoder
 
-y_pred = model.predict(image_batch)
+y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
     image_batch,
     value_range=(0, 255),
@@ -210,12 +266,6 @@ visualization.plot_bounding_box_gallery(
 )
 
 """
-Looks great!
-Up next, we'll take you through the process of training your own `KerasCV`
-object detection model.
-"""
-
-"""
 
 ## Train a Custom Object Detection Model
 
@@ -223,10 +273,6 @@ object detection model.
 
 Whether you're an object detection amateur or a well seasoned veteran, assembling
 an object detection pipeline from scratch is a massive undertaking.
-The most commonly used object detection solutions, such as `ultralytrics`'s
-YOLO implementations, primarily rely on a bespoke single pipeline.
-Extracting pieces of their code and re-using them yourself is a huge undertaking.
-
 Luckily, all KerasCV object detection APIs are built as modular components.
 Whether you need a complete pipeline, an object detection pipeline, or even just
 a conversion utility to transform your boxes from `xywh` format to `xyxy`,
@@ -293,6 +339,23 @@ supported in all KerasCV preprocessing components.
 Let's load some data and verify that our data looks as we expect it to.
 """
 
+# TODO(lukewood): upstream to KerasCV before launching guide
+def visualize_dataset(inputs, value_range, rows, cols, bounding_box_format):
+  inputs = next(iter(inputs.take(1)))
+  images, bounding_boxes = inputs['images'], inputs['bounding_boxes']
+  visualization.plot_bounding_box_gallery(
+      images,
+      value_range=value_range,
+      rows=rows,
+      cols=cols,
+      y_true=bounding_boxes,
+      scale=5,
+      bounding_box_format=bounding_box_format,
+      class_mapping=class_mapping,
+  )
+
+
+visualization.visualize_dataset = visualize_dataset
 
 def unpackage_raw_tfds_inputs(inputs, bounding_box_format):
     image = inputs["image"]
@@ -325,7 +388,7 @@ eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format=
 eval_ds = load_pascal_voc(dataset="voc/2007", split="test", bounding_box_format="xywh")
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
-visualization.visualize_dataset(train_ds, value_range=(0, 255), rows=2, cols=2)
+
 """
 Next, lets batch our data.
 
@@ -350,19 +413,20 @@ are not drawn on, or are drawn in the wrong locations that is a sign that your
 data is mis-formatted.
 """
 
-visualization.visualize_dataset(train_ds, bounding_box_format="xywh")
+visualization.visualize_dataset(train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2)
 
 """
 And for the eval set:
 """
 
-visualization.visualize_dataset(eval_ds, bounding_box_format="xywh")
+visualization.visualize_dataset(eval_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2)
 
 """
 If you are not running your experiment on a local machine, you can also make
 `visualize_dataset()` dump the plot to a file using the `path` parameter:
 """
-visualization.visualize_dataset(eval_ds, bounding_box_format="xywh", path="eval.png")
+
+# visualization.visualize_dataset(eval_ds, bounding_box_format="xywh", path="eval.png", value_range=(0, 255), rows=2, cols=2)
 
 """
 Looks like everything is structured as expected.
@@ -371,7 +435,7 @@ data augmentation pipeline.
 
 ## Data augmentation
 
-One of the most labor-intensive tasks when constructing object detection
+One of the most challenging tasks when constructing object detection
 pipelines is data augmentation.  Image augmentation techniques must be aware of the underlying
 bounding boxes, and must update them accordingly.
 
@@ -381,12 +445,8 @@ of [data augmentation layers](https://keras.io/api/keras_cv/layers/preprocessing
 The code below loads the Pascal VOC dataset, and performs on-the-fly bounding box
 friendly data augmentation inside of a `tf.data` pipeline.
 """
-
 augmenter = keras.Sequential(
     layers=[
-        keras_cv.layers.RandAugment(
-            augmentations_per_image=1, rate=0.5, magnitude=0.3, geometric=False
-        ),
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.JitteredResize(
             target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
@@ -395,10 +455,7 @@ augmenter = keras.Sequential(
 )
 
 train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
-"""
-Let's make sure our augmentations look how we expect them to:
-"""
-visualize_dataset(train_ds, bounding_box_format="xywh")
+visualization.visualize_dataset(train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2)
 
 """
 Great!  We now have a bounding box friendly data augmentation pipeline.
@@ -419,7 +476,7 @@ uses `layers.Resizing(pad_to_aspect_ratio=True)`, it is good practice to
 visualize both datasets:
 """
 
-visualize_dataset(eval_ds, bounding_box_format="xywh")
+visualization.visualize_dataset(eval_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2)
 
 """
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -430,12 +487,10 @@ the KerasCV RetinaNet
 label encoder will automatically correctly encode Ragged training targets.
 """
 
-
 def dict_to_tuple(inputs):
     return inputs["images"], bounding_box.to_dense(
         inputs["bounding_boxes"], max_boxes=32
     )
-
 
 train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
@@ -461,7 +516,7 @@ For example:
 """
 
 model = keras_cv.models.RetinaNet.from_preset(
-    "resnet50_v2_imagenet",
+    "resnet50_imagenet",
     # number of classes to be used in box classification
     num_classes=len(class_mapping) + 1,
     # For more info on supported bounding box formats, visit
@@ -475,36 +530,57 @@ tuples of dense image Tensors and bounding box dictionaries to `fit()` and
 `train_on_batch()`
 
 This matches what we have constructed in our input pipeline above.
-"""
 
-"""
-### Optimizer
-
-Next, let's construct a learning rate schedule and optimizer for our model.
-"""
-base_lr = 0.005 * (BATCH_SIZE / 16)
-lr_decay = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=[12000 * 16, 16000 * 16],
-    values=[base_lr, 0.1 * base_lr, 0.01 * base_lr],
-)
-
-# including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.keras.optimizers.SGD(
-    learning_rate=lr_decay, momentum=0.9, global_clipnorm=10.0
-)
-
-"""
-**Note: be sure to freeze BatchNormalization layers***
+**Note: be sure to freeze BatchNormalization layers when training a RetinaNet.***
 
 And important but easy to miss step in training your own object detection model
 is freezing the `BatchNormalization` layers in your backbone.
-We felt it was a violation of user expectations to automatically do this,
+We felt it would be confusing to do this automatically,
 so instead we recommend you do it in your training loops.
 """
 
 for layer in model.backbone.layers:
     if isinstance(layer, keras.layers.BatchNormalization):
         layer.trainable = False
+
+"""
+
+### Optimizer
+
+In this guide, we use a standard SGD optimizer and rely on the [`keras.callbacks.ReduceLROnPlateau`](https://keras.io/api/callbacks/reduce_lr_on_plateau/) callback to reduce the learning rate.
+
+You will always want to include a `global_clipnorm` when training object detection models.  This is to remedy exploding gradient problems that frequently occur when training object detection models.
+"""
+
+base_lr = 0.005
+# including a global_clipnorm is extremely important in object detection tasks
+optimizer = tf.keras.optimizers.SGD(
+    learning_rate=base_lr, momentum=0.9, global_clipnorm=10.0
+)
+
+"""
+To achieve the best results on your dataset, you'll likely want to hand craft a
+`PiecewiseConstantDecay` learning rate schedule.
+While `PiecewiseConstantDecay` schedules tend to perform better, they don't
+translate between problems.
+"""
+
+"""
+### Loss Functions
+
+You may not be familiar with the `"focal"` or `"smoothl1"` losses.  While not common in other models, these losses are more or less staples in the object detection world.
+
+In short, ["Focal Loss"](https://arxiv.org/abs/1708.02002) places extra emphasis on difficult training examples.  This is useful when training the classification loss, as the majority of the losses are assigned to the background class.
+
+"SmoothL1 Loss" is used to [prevent exploding gradients](https://arxiv.org/abs/1504.08083) that often occur when attempting to perform the box regression task.
+
+In KerasCV you can use these losses simply by passing the strings `"focal"` and `"smoothl1"` to `compile()`:
+"""
+
+pretrained_model.compile(
+    classification_loss="focal",
+    box_loss="smoothl1",
+)
 
 """
 ### Metric Evaluation
@@ -515,9 +591,22 @@ which were published alongside the MSCOCO dataset.  KerasCV provides an easy
 to use suite of COCO metrics. under the `keras_cv.metrics.BoxCOCOMetrics`
 symbol:
 """
+
 coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
     bounding_box_format="xywh", evaluate_freq=128
 )
+
+"""
+Lets define a quick helper to print our metrics in a nice table:
+"""
+
+def print_metrics(metrics):
+  maxlen = max([len(key) for key in result.keys()])
+  print("Metrics:")
+  print("-" * (maxlen+1))
+  for k, v in metrics.items():
+      print(f"{k.ljust(maxlen+1)}: {v.numpy():0.2f}")
+
 """
 Due to the high computational cost of computing COCO metrics, the KerasCV
 `BoxCOCOMetrics` component requires an `evaluate_freq` parameter to be passed to
@@ -527,18 +616,22 @@ result will be returned.
 
 To force an evaluation, you may call `coco_metrics.result(force=True)`:
 """
-model.compile(
+
+pretrained_model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
     optimizer=optimizer,
     metrics=[coco_metrics],
 )
-result = model.evaluate(eval_ds)
+coco_metrics.reset_state()
+result = pretrained_model.evaluate(eval_ds.take(40), verbose=0)
 result = coco_metrics.result(force=True)
-print(tablify(result))
+
+print_metrics(result)
 
 """
-**A note on TPU compatibility**
+
+**A note on TPU compatibility:**
 
 Evaluation of `BoxCOCOMetrics` require running `tf.image.non_max_suppression()`
 inside of the `model.train_step()` and `model.evaluation_step()` functions.
@@ -552,7 +645,6 @@ Luckily, there are two workarounds that allow you to still train a RetinaNet on 
 
 Let's use a custom callback to achieve TPU compatibility in this guide:
 """
-
 
 class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
     def __init__(self, data):
@@ -577,7 +669,6 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
         logs.update(metrics)
         return logs
 
-
 """
 ## Training our model
 
@@ -596,12 +687,9 @@ model.compile(
 )
 
 """
-And run `model.fit()`!
+If you want to train the fully model, uncomment `.take(20)` from each
+of the following dataset references.
 """
-
-# If you want to train the fully model, uncomment `.take(20)` from each
-# of the following dataset references.
-
 model.fit(
     train_ds.take(20),
     validation_data=eval_ds.take(20),
@@ -611,16 +699,6 @@ model.fit(
 )
 
 """
-To achieve reasonable scores, you will want to run `fit()` with 10-35~ epochs.
-"""
-
-"""
-Visualizing
-"""
-
-"""
-This metric can be used with `fit()` like any other callback, simply pass:
-`callbacks=callbacks + [EvaluateMetricsCallback(data=eval_ds)]` to your `fit()` call.
 
 ## Inference and Plotting results
 
@@ -630,17 +708,23 @@ a non max suppression operation for you.
 
 In this section, we will use a `keras_cv` provided preset:
 """
+
 model = keras_cv.models.RetinaNet.from_preset(
     "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
 )
 
 """
-And construct a basic helper function to plot our results:
+Next, for convenience we construct a dataset with larger batches:
 """
+visualization_ds = eval_ds.unbatch()
+visualization_ds = visualization_ds.ragged_batch(16)
+visualization_ds = visualization_ds.shuffle(8)
 
-
+"""
+Lets create a simple function to plot our inferences:
+"""
 def visualize_detections(model, dataset, bounding_box_format):
-    images, y_true = next(iter(dataset.shuffle(8).take(1)))
+    images, y_true = next(iter(dataset.take(1)))
     y_pred = model.predict(images)
     y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
@@ -649,7 +733,7 @@ def visualize_detections(model, dataset, bounding_box_format):
         bounding_box_format=bounding_box_format,
         y_true=y_true,
         y_pred=y_pred,
-        scale=3,
+        scale=4,
         rows=2,
         cols=4,
         show=True,
@@ -658,14 +742,19 @@ def visualize_detections(model, dataset, bounding_box_format):
     )
 
 
-visualize_detections(model, bounding_box_format="xywh")
+visualize_detections(model, visualization_ds, bounding_box_format="xywh")
 
 """
 To achieve good visual results, you may want to grid-search prediction decoders
 until you find a configuration that achieves a strong `MeanAveragePrecision`.
-
 Luckily, with KerasCV this is easy:
 """
+model.compile(
+    classification_loss="focal",
+    box_loss="smoothl1",
+    optimizer=optimizer,
+    metrics=[coco_metrics],
+)
 
 best_decoder = None
 score_to_beat = 0
@@ -704,15 +793,16 @@ print(
     f"{score_to_beat}, worst MaP is {worst_score}."
 )
 
+
 """
 Lets visualize the results using our optimal decoder:
 """
 
 visualize_detections(model, bounding_box_format="xywh", dataset=eval_ds.shuffle(8))
 
+
 """
 Awesome!
-
 One final helpful pattern to be aware of is monitoring training is to visualize
 detections in a `keras.callbacks.Callback`:
 """
@@ -745,18 +835,30 @@ Some follow up exercises for the reader:
 - tune the hyperparameters and data augmentation used to produce high quality results
 - train an object detection model on your own dataset
 
-One last fun code snippet to showcase the power of KerasCV's modular API!
+One last fun code snippet to showcase the power of KerasCV's API!
 """
+
+stable_diffusion = keras_cv.models.StableDiffusionV2(512, 512)
 images = stable_diffusion.text_to_image(
-    "A photograph of a cool looking cat sitting on the beach.", batch_size=4, seed=1337
+    prompt="A zoomed out photograph of a cool looking cat.  The cat stands in a beautiful forest",
+    negative_prompt="unrealistic, bad looking, malformed",
+    batch_size=4,
+    seed=1231
 )
 y_pred = model.predict(images)
 visualization.plot_bounding_box_gallery(
     images,
     value_range=(0, 255),
+    y_pred=y_pred,
     rows=2,
     cols=2,
     scale=5,
     bounding_box_format="xywh",
     class_mapping=class_mapping,
 )
+
+"""
+Object detection, using a pretrained ML model, on ML generated images, all using
+KerasCV models!
+Awesome!
+"""
