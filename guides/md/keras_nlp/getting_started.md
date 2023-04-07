@@ -167,7 +167,8 @@ The highest level module in KerasNLP is a **task**. A **task** is a `keras.Model
 consisting of a (generally pretrained) **backbone** model and task-specific layers.
 Here's an example using `keras_nlp.models.BertClassifier`.
 
-**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive).
+**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive). The output is
+[negative, positive] for binary classification.
 
 
 ```python
@@ -294,7 +295,9 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_tiny_en_uncased",
     sequence_length=512,
 )
-
+# Apply the preprocessor to every sample of train and test data using `map()`.
+# `tf.data.AUTOTUNE` and `prefetch()` are options to tune performance, see
+# https://www.tensorflow.org/guide/data_performance for details.
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
 )
@@ -355,6 +358,9 @@ packer = keras_nlp.layers.MultiSegmentPacker(
 )
 
 
+# This function that takes a text sample `x` and its
+# corresponding label `y` as input and converts the
+# text into a format suitable for input into a BERT model.
 def preprocessor(x, y):
     token_ids, segment_ids = packer(tokenizer(x))
     x = {
@@ -365,7 +371,7 @@ def preprocessor(x, y):
     return x, y
 
 
-imbd_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
+imdb_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
 imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
@@ -373,7 +379,7 @@ imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
 )
 
 # Preprocessed example
-print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
+print(imdb_train_preprocessed.unbatch().take(1).get_single_element())
 ```
 
 <div class="k-default-codeblock">
@@ -787,7 +793,7 @@ classification task. Interested in more details? We wrote an entire guide to pre
 and finetuning a custom transformer on
 [keras.io](https://keras.io/guides/keras_nlp/transformer_pretraining/),
 
-### Train custom vocabulary from IMBD data
+### Train custom vocabulary from IMDB data
 
 
 ```python

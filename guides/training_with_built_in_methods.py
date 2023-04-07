@@ -2,7 +2,7 @@
 Title: Training & evaluation with the built-in methods
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/13
+Last modified: 2023/03/20
 Description: Complete guide to training & evaluation with `fit()` and `evaluate()`.
 Accelerator: GPU
 """
@@ -229,7 +229,7 @@ Metrics:
 """
 ### Custom losses
 
-If you need to create a custom loss, Keras provides two ways to do so.
+If you need to create a custom loss, Keras provides three ways to do so.
 
 The first method involves creating a function that accepts inputs `y_true` and
 `y_pred`. The following example shows a loss function that computes the mean squared
@@ -238,7 +238,7 @@ error between the real data and the predictions:
 
 
 def custom_mean_squared_error(y_true, y_pred):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred))
+    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
 
 
 model = get_uncompiled_model()
@@ -272,13 +272,63 @@ class CustomMSE(keras.losses.Loss):
         self.regularization_factor = regularization_factor
 
     def call(self, y_true, y_pred):
-        mse = tf.math.reduce_mean(tf.square(y_true - y_pred))
-        reg = tf.math.reduce_mean(tf.square(0.5 - y_pred))
+        mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+        reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
         return mse + reg * self.regularization_factor
 
 
 model = get_uncompiled_model()
 model.compile(optimizer=keras.optimizers.Adam(), loss=CustomMSE())
+
+y_train_one_hot = tf.one_hot(y_train, depth=10)
+model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
+
+"""
+Alternatively you could implement the loss function as a method,
+and use the `LossFunctionWrapper` to turn it into a class.
+This wrapper is a subclass of `tf.keras.losses.Loss` which handles the parsing of
+extra arguments by passing them to the `call()` and config methods.
+
+The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
+
+- `fn`: The loss function to wrap, with signature `fn(y_true, y_pred, **kwargs)`.
+- `reduction`: Type of [`tf.keras.losses.Reduction`](https://www.tensorflow.org/api_docs/python/tf/keras/losses/Reduction) to apply to loss.
+- `name`: Optional name for the instance.
+- Any other parameters will be passed to `fn` as `kwargs` through the `call()` method.
+
+We could implement the previous `CustomMSE` class using `LossFunctionWrapper`:
+"""
+
+
+from keras import losses
+
+
+def custom_mean_squared_error_expended(y_true, y_pred, regularization_factor=0.1):
+    mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+    reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
+    return mse + reg * regularization_factor
+
+
+class WrappedCustomMSE(losses.LossFunctionWrapper):
+    def __init__(
+        self,
+        reduction=tf.keras.losses.Reduction.AUTO,
+        name="custom_mse_with_regularization",
+        regularization_factor=0.1,
+    ):
+        super().__init__(
+            custom_mean_squared_error_expended,
+            name=name,
+            reduction=reduction,
+            regularization_factor=regularization_factor,
+        )
+
+
+model = get_uncompiled_model()
+model.compile(
+    optimizer=keras.optimizers.Adam(),
+    loss=WrappedCustomMSE(regularization_factor=0.2, name="mse_custom_0_2"),
+)
 
 y_train_one_hot = tf.one_hot(y_train, depth=10)
 model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
@@ -474,7 +524,7 @@ import numpy as np
 inputs = keras.Input(shape=(3,), name="inputs")
 targets = keras.Input(shape=(10,), name="targets")
 logits = keras.layers.Dense(10)(inputs)
-predictions = LogisticEndpoint(name="predictions")(logits, targets)
+predictions = LogisticEndpoint(name="predictions")(targets, logits)
 
 model = keras.Model(inputs=[inputs, targets], outputs=predictions)
 model.compile(optimizer="adam")  # No loss argument!

@@ -136,6 +136,11 @@ model.fit(ratings.batch(4096), epochs=3)
 
 ## TensorFlow Decision Forests
 
+TensorFlow Decision Forests is a library to train, run and interpret decision forest models
+(e.g., Random Forests, Gradient Boosted Trees) in TensorFlow and Keras.
+It supports classification, regression, ranking and uplifting.
+
+
 ```python
 import tensorflow_decision_forests as tfdf
 
