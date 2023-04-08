@@ -1,9 +1,13 @@
 """
-**Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
-**Date created:** 2023/04/03<br>
-**Last modified:** 2023/04/03<br>
-**Description:** Use KerasCV to assemble object detection pipelines.
+Title: Object Detection with KerasCV
+Author: [lukewood](https://twitter.com/luke_wood_ml)
+Date created: 2023/04/08
+Last modified: 2023/04/08
+Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+Accelerator: GPU
+"""
 
+"""
 KerasCV offers a complete set of production grade APIs to solve object detection
 problems.
 These APIs include object detection specific
@@ -586,7 +590,7 @@ symbol:
 """
 
 coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
-    bounding_box_format="xywh", evaluate_freq=128
+    bounding_box_format="xywh", evaluate_freq=20
 )
 
 """
@@ -808,7 +812,7 @@ worst_score = 1.0
 
 iou_thresholds = [0.35, 0.5, 0.65]
 confidence_thresholds = [0.5, 0.75, 0.9]
-for iou_threshold in tqdm(iou_thresholds):
+for iou_threshold in tqdm.tqdm(iou_thresholds):
     for confidence_threshold in confidence_thresholds:
         coco_metrics.reset_state()
         prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
