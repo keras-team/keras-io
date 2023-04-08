@@ -1,13 +1,15 @@
-"""
-Title: Object Detection with KerasCV
-Author: [lukewood](https://twitter.com/luke_wood_ml)
-Date created: 2023/04/08
-Last modified: 2023/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
-Accelerator: GPU
-"""
+# Object Detection with KerasCV
 
-"""
+**Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
+**Date created:** 2023/04/08<br>
+**Last modified:** 2023/04/08<br>
+**Description:** Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/object_detection_keras_cv.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/object_detection_keras_cv.py)
+
+
+
 KerasCV offers a complete set of production grade APIs to solve object detection
 problems.
 These APIs include object detection specific
@@ -17,12 +19,16 @@ and everything you need to train your own state of the art object detection
 models!
 
 Let's give KerasCV's object detection API a spin.
-"""
 
-"""shell
-!pip install --upgrade keras-cv
-"""
 
+```python
+!!pip install --upgrade keras-cv
+```
+
+
+
+
+```python
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
@@ -34,8 +40,40 @@ import os
 import resource
 from keras_cv import visualization
 import tqdm
+```
+<div class="k-default-codeblock">
+```
+['Requirement already satisfied: keras-cv in /home/lukewood/workspace/keras-cv (0.4.2)',
+ 'Requirement already satisfied: packaging in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (22.0)',
+ 'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (1.4.0)',
+ 'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (2022.7.9)',
+ 'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (4.8.3)',
+ 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
+ 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
+ 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
+ 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
+ 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
+ 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
+ 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
+ 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
+ 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.1.1)',
+ 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.12.0)',
+ 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
+ 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
+ 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (3.20.3)',
+ 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
+ 'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (4.4.0)',
+ 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (5.12.0)',
+ 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
+ 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (3.4)',
+ 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (1.26.14)',
+ 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2022.12.7)',
+ 'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv) (1.16.0)',
+ 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv) (1.59.0)']
 
-"""
+```
+</div>
+---
 ## Object detection introduction
 
 Object detection is the process of identifying, classifying,
@@ -84,9 +122,8 @@ object.
 Objection detection is a technically complex problem but luckily we offer a
 bulletproof approach to getting great results.
 Let's do this!
-"""
 
-"""
+---
 ## Perform detections with a pretrained model
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
@@ -97,13 +134,14 @@ This API includes fully pretrained object detection models, such as
 
 Let's get started by constructing a RetinaNet pretrained on the `pascalvoc`
 dataset.
-"""
 
+
+```python
 pretrained_model = keras_cv.models.RetinaNet.from_preset(
     "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
 )
+```
 
-"""
 Notice the `bounding_box_format` argument?
 
 Recall in the section above, the format of bounding boxes:
@@ -146,8 +184,9 @@ detection pipelines - by requiring this parameter we mitigate against these
 bugs (especially when combining code from many sources).
 
 Next let's load an image:
-"""
 
+
+```python
 filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
@@ -159,8 +198,14 @@ visualization.plot_image_gallery(
     cols=1,
     scale=5,
 )
+```
 
-"""
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
+    
+
+
 To use the `RetinaNet` architecture, you'll need to resize your image
 to a size that is divisible by 64.
 If the resize operation distorts
@@ -178,24 +223,27 @@ KerasCV makes resizing properly easy; simply pass `pad_to_aspect_ratio=True` to
 a `keras_cv.layers.Resizing` layer.
 
 This can be implemented in one line of code:
-"""
 
+
+```python
 inference_resizing = keras_cv.layers.Resizing(
     640, 640, pad_to_aspect_ratio=True, bounding_box_format="xywh"
 )
+```
 
-"""
 This can be used as our inference preprocessing pipeline:
-"""
 
+
+```python
 image_batch = inference_resizing([image])
+```
 
-"""
 `keras_cv.visualization.plot_bounding_box_gallery()` supports a `class_mapping`
 parameter to highlight what class each box was assigned to.  Let's assemble a
 class mapping now.
-"""
 
+
+```python
 class_ids = [
     "Aeroplane",
     "Bicycle",
@@ -220,12 +268,13 @@ class_ids = [
     "Total",
 ]
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
+```
 
-"""
 Just like any other `keras.Model` you can predict bounding boxes using the
 `model.predict()` API.
-"""
 
+
+```python
 y_pred = pretrained_model.predict(image_batch)
 # y_pred is a bounding box Tensor:
 # {"classes": ..., boxes": ...}
@@ -240,8 +289,19 @@ visualization.plot_bounding_box_gallery(
     bounding_box_format="xywh",
     class_mapping=class_mapping,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 7s 7s/step
+
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
+    
+
+
 In order to support easy this easy and intuitive inference workflow, KerasCV
 perform non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
@@ -265,8 +325,9 @@ Raising the `confidence_threshold` will cause the model to only output boxes
 that have a higher confidence score.  `iou_threshold` controls the threshold of
 IoU two boxes must have in order for one to be pruned out.
 [More information on these parameters may be found in the TensorFlow API docs](https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression)
-"""
 
+
+```python
 prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
@@ -289,9 +350,20 @@ visualization.plot_bounding_box_gallery(
     bounding_box_format="xywh",
     class_mapping=class_mapping,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 2s 2s/step
 
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
+    
+
+
+---
 ## Train a custom object detection model
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png)
@@ -309,11 +381,13 @@ and inference!
 
 To get started, let's sort out all of our imports and define global
 configuration parameters.
-"""
 
+
+```python
 BATCH_SIZE = 4
+```
 
-"""
+---
 ## Data loading
 
 To get started, let's discuss data loading and bounding box formatting.
@@ -360,8 +434,9 @@ Our data comes loaded into the format
 supported in all KerasCV preprocessing components.
 
 Let's load some data and verify that the data looks as we expect it to.
-"""
 
+
+```python
 
 def visualize_dataset(inputs, value_range, rows, cols, bounding_box_format):
     inputs = next(iter(inputs.take(1)))
@@ -410,8 +485,26 @@ eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format=
 eval_ds = load_pascal_voc(dataset="voc/2007", split="test", bounding_box_format="xywh")
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:You use TensorFlow DType <dtype: 'float32'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to float32.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:You use TensorFlow DType <dtype: 'bool'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to bool.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:You use TensorFlow DType <dtype: 'int64'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to int64.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+
+```
+</div>
 Next, let's batch our data.
 
 In KerasCV object detection tasks it is recommended that
@@ -422,43 +515,60 @@ image.
 
 To construct a ragged dataset in a `tf.data` pipeline, you can use the
 `ragged_batch()` method.
-"""
 
+
+```python
 train_ds = train_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
 eval_ds = eval_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
+```
 
-"""
 Let's make sure our dataset is following the format KerasCV expects.
 By using the `visualize_dataset()` function, you can visually verify
 that your data is in the format that KerasCV expects.  If the bounding boxes
 are not visible, or are visible in the wrong locations that is a sign that your
 data is mis-formatted.
-"""
 
+
+```python
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
+```
 
-"""
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_26_0.png)
+    
+
+
 And for the eval set:
-"""
 
+
+```python
 visualize_dataset(
     eval_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
+```
 
-"""
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
+    
+
+
 If you are not running your experiment on a local machine, you can also make
 `visualize_dataset()` dump the plot to a file using the `path` parameter:
-"""
 
+
+```python
 # visualize_dataset(eval_ds, bounding_box_format="xywh", path="eval.png", value_range=(0, 255), rows=2, cols=2)
+```
 
-"""
 Looks like everything is structured as expected.
 Now we can move on to constructing our
 data augmentation pipeline.
 
+---
 ## Data augmentation
 
 One of the most challenging tasks when constructing object detection
@@ -470,7 +580,9 @@ library
 of [data augmentation layers](https://keras.io/api/keras_cv/layers/preprocessing/).
 The code below loads the Pascal VOC dataset, and performs on-the-fly bounding box
 friendly data augmentation inside of a `tf.data` pipeline.
-"""
+
+
+```python
 augmenter = keras.Sequential(
     layers=[
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
@@ -484,39 +596,61 @@ train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:2", shape=(None, 3), dtype=float32), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'bounding_boxes': {'classes': tf.RaggedTensor(values=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:1", shape=(None,), dtype=float32), row_splits=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'boxes': tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None, 4), dtype=float32), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(5,), dtype=int64))}}. Consider rewriting this model with the Functional API.
+
+WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:2", shape=(None, 3), dtype=float32), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'bounding_boxes': {'classes': tf.RaggedTensor(values=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:1", shape=(None,), dtype=float32), row_splits=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'boxes': tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None, 4), dtype=float32), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(5,), dtype=int64))}}. Consider rewriting this model with the Functional API.
+
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_32_2.png)
+    
+
+
 Great!  We now have a bounding box friendly data augmentation pipeline.
 Let's format our evaluation dataset to match.  Instead of using
 `JitteredResize`, let's use the deterministic `keras_cv.layers.Resizing()`
 layer.
-"""
 
+
+```python
 inference_resizing = keras_cv.layers.Resizing(
     640, 640, bounding_box_format="xywh", pad_to_aspect_ratio=True
 )
 eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
+```
 
-"""
 Due to the fact that the resize operation differs between the train dataset,
 which uses `JitteredResize()` to resize images, and the inference dataset which
 uses `layers.Resizing(pad_to_aspect_ratio=True)`, it is good practice to
 visualize both datasets:
-"""
 
+
+```python
 visualize_dataset(
     eval_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
+```
 
-"""
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_36_0.png)
+    
+
+
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
 prepare to feed the inputs into our model.  In order to be TPU compatible,
 bounding box Tensors need to be `Dense` instead of `Ragged`.  If training on
 GPU, you can omit the `bounding_box.to_dense()` call.  If ommitted,
 the KerasCV RetinaNet
 label encoder will automatically correctly encode Ragged training targets.
-"""
 
+
+```python
 
 def dict_to_tuple(inputs):
     return inputs["images"], bounding_box.to_dense(
@@ -529,8 +663,7 @@ eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 
 train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
-
-"""
+```
 
 ### Optimizer
 
@@ -541,22 +674,21 @@ callback to reduce the learning rate.
 You will always want to include a `global_clipnorm` when training object
 detection models.  This is to remedy exploding gradient problems that frequently
 occur when training object detection models.
-"""
 
+
+```python
 base_lr = 0.005
 # including a global_clipnorm is extremely important in object detection tasks
 optimizer = tf.keras.optimizers.SGD(
     learning_rate=base_lr, momentum=0.9, global_clipnorm=10.0
 )
+```
 
-"""
 To achieve the best results on your dataset, you'll likely want to hand craft a
 `PiecewiseConstantDecay` learning rate schedule.
 While `PiecewiseConstantDecay` schedules tend to perform better, they don't
 translate between problems.
-"""
 
-"""
 ### Loss functions
 
 You may not be familiar with the `"focal"` or `"smoothl1"` losses.  While not
@@ -572,14 +704,15 @@ that often occur when attempting to perform the box regression task.
 
 In KerasCV you can use these losses simply by passing the strings `"focal"` and
 `"smoothl1"` to `compile()`:
-"""
 
+
+```python
 pretrained_model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
 )
+```
 
-"""
 ### Metric evaluation
 
 Just like any other metric, you can pass the `KerasCV` object detection metrics
@@ -587,16 +720,18 @@ to `compile()`.  The most popular Object Detection metrics are COCO metrics,
 which were published alongside the MSCOCO dataset.  KerasCV provides an easy
 to use suite of COCO metrics. under the `keras_cv.metrics.BoxCOCOMetrics`
 symbol:
-"""
 
+
+```python
 coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
     bounding_box_format="xywh", evaluate_freq=20
 )
+```
 
-"""
 Let's define a quick helper to print our metrics in a nice table:
-"""
 
+
+```python
 
 def print_metrics(metrics):
     maxlen = max([len(key) for key in result.keys()])
@@ -605,8 +740,8 @@ def print_metrics(metrics):
     for k, v in metrics.items():
         print(f"{k.ljust(maxlen+1)}: {v.numpy():0.2f}")
 
+```
 
-"""
 Due to the high computational cost of computing COCO metrics, the KerasCV
 `BoxCOCOMetrics` component requires an `evaluate_freq` parameter to be passed to
 its constructor.  Every `evaluate_freq`-th call to `update_state()`, the metric
@@ -614,8 +749,9 @@ will recompute the result.  In between invocations, a cached version of the
 result will be returned.
 
 To force an evaluation, you may call `coco_metrics.result(force=True)`:
-"""
 
+
+```python
 pretrained_model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
@@ -627,9 +763,27 @@ result = pretrained_model.evaluate(eval_ds.take(40), verbose=0)
 result = coco_metrics.result(force=True)
 
 print_metrics(result)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Metrics:
+----------------------------
+MaP                         : 0.37
+MaP@[IoU=50]                : 0.56
+MaP@[IoU=75]                : 0.40
+MaP@[area=small]            : 0.00
+MaP@[area=medium]           : 0.23
+MaP@[area=large]            : 0.44
+Recall@[max_detections=1]   : 0.36
+Recall@[max_detections=10]  : 0.44
+Recall@[max_detections=100] : 0.44
+Recall@[area=small]         : 0.01
+Recall@[area=medium]        : 0.28
+Recall@[area=large]         : 0.50
 
+```
+</div>
 **A note on TPU compatibility:**
 
 Evaluation of `BoxCOCOMetrics` require running `tf.image.non_max_suppression()`
@@ -643,8 +797,9 @@ Luckily, there are two workarounds that allow you to still train a RetinaNet on 
 - Using a [SideCarEvaluator](https://www.tensorflow.org/api_docs/python/tf/keras/utils/SidecarEvaluator)
 
 Let's use a custom callback to achieve TPU compatibility in this guide:
-"""
 
+
+```python
 
 class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
     def __init__(self, data):
@@ -669,11 +824,12 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
         logs.update(metrics)
         return logs
 
+```
 
-"""
 Our data pipeline is now complete!
 We can now move on to model creation and training.
 
+---
 ## Model creation
 
 Next, let's use the KerasCV API to construct an untrained RetinaNet model.
@@ -684,8 +840,9 @@ KerasCV makes it easy to construct a `RetinaNet` with any of the KerasCV
 backbones.  Simply use one of the presets for the architecture you'd like!
 
 For example:
-"""
 
+
+```python
 model = keras_cv.models.RetinaNet.from_preset(
     "resnet50_imagenet",
     # number of classes to be used in box classification
@@ -697,8 +854,8 @@ model = keras_cv.models.RetinaNet.from_preset(
     # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
 )
+```
 
-"""
 That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts
 tuples of dense image Tensors and bounding box dictionaries to `fit()` and
 `train_on_batch()`
@@ -711,21 +868,24 @@ And important but easy to miss step in training your own object detection model
 is freezing the `BatchNormalization` layers in your backbone.
 We felt it would be confusing to do this automatically,
 so instead we recommend you do it in your training loops.
-"""
 
+
+```python
 for layer in model.backbone.layers:
     if isinstance(layer, keras.layers.BatchNormalization):
         layer.trainable = False
+```
 
-"""
+---
 ## Training our model
 
 All that is left to do is train our model.  KerasCV object detection models
 follow the standard Keras workflow, leveraging `compile()` and `fit()`.
 
 Let's compile our model:
-"""
 
+
+```python
 model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
@@ -733,11 +893,13 @@ model.compile(
     # We will use our custom callback to evaluate COCO metrics
     metrics=None,
 )
+```
 
-"""
 If you want to train the fully model, uncomment `.take(20)` from each
 of the following dataset references.
-"""
+
+
+```python
 model.fit(
     train_ds.take(20),
     validation_data=eval_ds.take(20),
@@ -745,9 +907,31 @@ model.fit(
     epochs=1,
     callbacks=[EvaluateCOCOMetricsCallback(eval_ds.take(20))],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+20/20 [==============================] - ETA: 0s - loss: 1.8221 - box_loss: 0.6910 - classification_loss: 1.1312 - percent_boxes_matched_with_anchor: 0.9277
 
+100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.17it/s]
+
+20/20 [==============================] - 24s 458ms/step - loss: 1.8221 - box_loss: 0.6910 - classification_loss: 1.1312 - percent_boxes_matched_with_anchor: 0.9277 - val_loss: 1.7760 - val_box_loss: 0.6936 - val_classification_loss: 1.0824 - val_percent_boxes_matched_with_anchor: 0.9125 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+
+```
+</div>
+    
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.callbacks.History at 0x7f8e28d363b0>
+
+```
+</div>
+---
 ## Inference and plotting results
 
 KerasCV makes object detection inference simple.  `model.predict(images)`
@@ -755,23 +939,27 @@ returns a RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()`
 will perform a non max suppression operation for you.
 
 In this section, we will use a `keras_cv` provided preset:
-"""
 
+
+```python
 model = keras_cv.models.RetinaNet.from_preset(
     "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
 )
+```
 
-"""
 Next, for convenience we construct a dataset with larger batches:
-"""
+
+
+```python
 visualization_ds = eval_ds.unbatch()
 visualization_ds = visualization_ds.ragged_batch(16)
 visualization_ds = visualization_ds.shuffle(8)
+```
 
-"""
 Let's create a simple function to plot our inferences:
-"""
 
+
+```python
 
 def visualize_detections(model, dataset, bounding_box_format):
     images, y_true = next(iter(dataset.take(1)))
@@ -793,12 +981,25 @@ def visualize_detections(model, dataset, bounding_box_format):
 
 
 visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 5s 5s/step
+
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_65_1.png)
+    
+
+
 To achieve good visual results, you may want to grid-search prediction decoders
 until you find a configuration that achieves a strong `MeanAveragePrecision`.
 Luckily, with KerasCV this is easy:
-"""
+
+
+```python
 model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
@@ -843,20 +1044,62 @@ print(
     f"{score_to_beat}, worst MaP is {worst_score}."
 )
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+  0%|                                                                               | 0/3 [00:00<?, ?it/s]
+
+20/20 [==============================] - 6s 70ms/step - loss: 0.4631 - box_loss: 0.2378 - classification_loss: 0.2254 - MaP: 0.0121 - MaP@[IoU=50]: 0.0234 - MaP@[IoU=75]: 0.0100 - MaP@[area=small]: 0.0071 - MaP@[area=medium]: 0.0076 - MaP@[area=large]: 0.0210 - Recall@[max_detections=1]: 0.0387 - Recall@[max_detections=10]: 0.0486 - Recall@[max_detections=100]: 0.0500 - Recall@[area=small]: 0.0070 - Recall@[area=medium]: 0.0396 - Recall@[area=large]: 0.0524 - percent_boxes_matched_with_anchor: 0.9004
+20/20 [==============================] - 5s 69ms/step - loss: 0.4212 - box_loss: 0.2166 - classification_loss: 0.2047 - MaP: 0.0149 - MaP@[IoU=50]: 0.0243 - MaP@[IoU=75]: 0.0156 - MaP@[area=small]: 0.0052 - MaP@[area=medium]: 0.0149 - MaP@[area=large]: 0.0267 - Recall@[max_detections=1]: 0.0424 - Recall@[max_detections=10]: 0.0521 - Recall@[max_detections=100]: 0.0526 - Recall@[area=small]: 0.0087 - Recall@[area=medium]: 0.0376 - Recall@[area=large]: 0.0545 - percent_boxes_matched_with_anchor: 0.9176
+20/20 [==============================] - 4s 69ms/step - loss: 0.4673 - box_loss: 0.2374 - classification_loss: 0.2299 - MaP: 0.0118 - MaP@[IoU=50]: 0.0226 - MaP@[IoU=75]: 0.0098 - MaP@[area=small]: 0.0056 - MaP@[area=medium]: 0.0053 - MaP@[area=large]: 0.0235 - Recall@[max_detections=1]: 0.0408 - Recall@[max_detections=10]: 0.0507 - Recall@[max_detections=100]: 0.0515 - Recall@[area=small]: 0.0087 - Recall@[area=medium]: 0.0392 - Recall@[area=large]: 0.0526 - percent_boxes_matched_with_anchor: 0.9094
+
+ 33%|███████████████████████▋                                               | 1/3 [00:17<00:34, 17.22s/it]
+
+20/20 [==============================] - 4s 54ms/step - loss: 0.4329 - box_loss: 0.2181 - classification_loss: 0.2148 - MaP: 0.0208 - MaP@[IoU=50]: 0.0357 - MaP@[IoU=75]: 0.0182 - MaP@[area=small]: 0.0021 - MaP@[area=medium]: 0.0080 - MaP@[area=large]: 0.0331 - Recall@[max_detections=1]: 0.0417 - Recall@[max_detections=10]: 0.0527 - Recall@[max_detections=100]: 0.0527 - Recall@[area=small]: 0.0036 - Recall@[area=medium]: 0.0361 - Recall@[area=large]: 0.0554 - percent_boxes_matched_with_anchor: 0.9125
+20/20 [==============================] - 4s 56ms/step - loss: 0.4403 - box_loss: 0.2250 - classification_loss: 0.2154 - MaP: 0.0215 - MaP@[IoU=50]: 0.0384 - MaP@[IoU=75]: 0.0184 - MaP@[area=small]: 0.0013 - MaP@[area=medium]: 0.0131 - MaP@[area=large]: 0.0292 - Recall@[max_detections=1]: 0.0397 - Recall@[max_detections=10]: 0.0498 - Recall@[max_detections=100]: 0.0510 - Recall@[area=small]: 0.0036 - Recall@[area=medium]: 0.0319 - Recall@[area=large]: 0.0531 - percent_boxes_matched_with_anchor: 0.9078
+20/20 [==============================] - 4s 55ms/step - loss: 0.4706 - box_loss: 0.2381 - classification_loss: 0.2325 - MaP: 0.0222 - MaP@[IoU=50]: 0.0384 - MaP@[IoU=75]: 0.0202 - MaP@[area=small]: 0.0040 - MaP@[area=medium]: 0.0110 - MaP@[area=large]: 0.0303 - Recall@[max_detections=1]: 0.0377 - Recall@[max_detections=10]: 0.0480 - Recall@[max_detections=100]: 0.0486 - Recall@[area=small]: 0.0047 - Recall@[area=medium]: 0.0288 - Recall@[area=large]: 0.0523 - percent_boxes_matched_with_anchor: 0.9020
+
+ 67%|███████████████████████████████████████████████▎                       | 2/3 [00:31<00:15, 15.23s/it]
+
+20/20 [==============================] - 4s 50ms/step - loss: 0.4613 - box_loss: 0.2338 - classification_loss: 0.2275 - MaP: 0.0229 - MaP@[IoU=50]: 0.0385 - MaP@[IoU=75]: 0.0220 - MaP@[area=small]: 0.0020 - MaP@[area=medium]: 0.0184 - MaP@[area=large]: 0.0305 - Recall@[max_detections=1]: 0.0385 - Recall@[max_detections=10]: 0.0493 - Recall@[max_detections=100]: 0.0508 - Recall@[area=small]: 0.0020 - Recall@[area=medium]: 0.0353 - Recall@[area=large]: 0.0526 - percent_boxes_matched_with_anchor: 0.9086
+20/20 [==============================] - 4s 51ms/step - loss: 0.4341 - box_loss: 0.2240 - classification_loss: 0.2101 - MaP: 0.0238 - MaP@[IoU=50]: 0.0391 - MaP@[IoU=75]: 0.0228 - MaP@[area=small]: 0.0020 - MaP@[area=medium]: 0.0177 - MaP@[area=large]: 0.0263 - Recall@[max_detections=1]: 0.0367 - Recall@[max_detections=10]: 0.0465 - Recall@[max_detections=100]: 0.0483 - Recall@[area=small]: 0.0020 - Recall@[area=medium]: 0.0325 - Recall@[area=large]: 0.0504 - percent_boxes_matched_with_anchor: 0.9094
+20/20 [==============================] - 4s 50ms/step - loss: 0.4702 - box_loss: 0.2392 - classification_loss: 0.2310 - MaP: 0.0220 - MaP@[IoU=50]: 0.0364 - MaP@[IoU=75]: 0.0199 - MaP@[area=small]: 0.0035 - MaP@[area=medium]: 0.0145 - MaP@[area=large]: 0.0300 - Recall@[max_detections=1]: 0.0351 - Recall@[max_detections=10]: 0.0451 - Recall@[max_detections=100]: 0.0462 - Recall@[area=small]: 0.0035 - Recall@[area=medium]: 0.0332 - Recall@[area=large]: 0.0509 - percent_boxes_matched_with_anchor: 0.8996
+
+100%|███████████████████████████████████████████████████████████████████████| 3/3 [00:44<00:00, 14.78s/it]
+
+Best scores found with iou_threshold=0.65confidence_threshold=0.65. Best MaP is 0.24945168197155, worst MaP is 0.12378182262182236.
+
+```
+</div>
+    
+
+
 Let's visualize the results using our optimal decoder:
-"""
 
+
+```python
 visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 2s 2s/step
+
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_69_1.png)
+    
+
+
 Awesome!
 One final helpful pattern to be aware of is monitoring training is to visualize
 detections in a `keras.callbacks.Callback`:
-"""
 
+
+```python
 
 class VisualizeDetections(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
@@ -864,8 +1107,9 @@ class VisualizeDetections(keras.callbacks.Callback):
             self.model, bounding_box_format="xywh", dataset=visualization_dataset
         )
 
+```
 
-"""
+---
 ## Takeaways and next steps
 
 KerasCV makes it easy to construct state-of-the-art object detection pipelines.
@@ -888,8 +1132,9 @@ Some follow up exercises for the reader:
 - train an object detection model on your own dataset
 
 One last fun code snippet to showcase the power of KerasCV's API!
-"""
 
+
+```python
 stable_diffusion = keras_cv.models.StableDiffusionV2(512, 512)
 images = stable_diffusion.text_to_image(
     prompt="A zoomed out photograph of a cool looking cat.  The cat stands in a beautiful forest",
@@ -909,3 +1154,25 @@ visualization.plot_bounding_box_gallery(
     bounding_box_format="xywh",
     class_mapping=class_mapping,
 )
+```
+
+<div class="k-default-codeblock">
+```
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/main/LICENSE-MODEL
+Downloading data from https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true
+1356917/1356917 [==============================] - 0s 0us/step
+Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/text_encoder_v2_1.h5
+1361968152/1361968152 [==============================] - 5s 0us/step
+Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/diffusion_model_v2_1.h5
+3464605600/3464605600 [==============================] - 17s 0us/step
+50/50 [==============================] - 68s 311ms/step
+Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
+198180272/198180272 [==============================] - 1s 0us/step
+1/1 [==============================] - 2s 2s/step
+
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_73_1.png)
+    
+
