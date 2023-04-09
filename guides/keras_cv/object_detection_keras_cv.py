@@ -271,9 +271,9 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     # Decrease the required threshold to make predictions get pruned out
-    iou_threshold=0.35,
+    iou_threshold=0.2,
     # Tune confidence threshold for predictions to pass NMS
-    confidence_threshold=0.8,
+    confidence_threshold=0.97,
 )
 pretrained_model.prediction_decoder = prediction_decoder
 
@@ -291,6 +291,7 @@ visualization.plot_bounding_box_gallery(
 )
 
 """
+That looks a lot better!
 
 ## Train a custom object detection model
 
@@ -704,18 +705,8 @@ tuples of dense image Tensors and bounding box dictionaries to `fit()` and
 `train_on_batch()`
 
 This matches what we have constructed in our input pipeline above.
-
-**Note: be sure to freeze BatchNormalization layers when training a RetinaNet.***
-
-And important but easy to miss step in training your own object detection model
-is freezing the `BatchNormalization` layers in your backbone.
-We felt it would be confusing to do this automatically,
-so instead we recommend you do it in your training loops.
 """
 
-for layer in model.backbone.layers:
-    if isinstance(layer, keras.layers.BatchNormalization):
-        layer.trainable = False
 
 """
 ## Training our model
