@@ -258,8 +258,8 @@ This can be done by overriding to the `model.prediction_decoder` attribute.
 
 Let's use a custom `keras_cv.layers.MultiClassNonMaxSuppression` instance
 to perform prediction decoding in our pretrained model.
-In this case, we will tune the `iou_threshold` to `0.35`, and the
-`confidence_threshold` to `0.75`.
+In this case, we will tune the `iou_threshold` to `0.2`, and the
+`confidence_threshold` to `0.97`.
 
 Raising the `confidence_threshold` will cause the model to only output boxes
 that have a higher confidence score.  `iou_threshold` controls the threshold of
@@ -445,15 +445,15 @@ And for the eval set:
 """
 
 visualize_dataset(
-    eval_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
+    eval_ds,
+    bounding_box_format="xywh",
+    value_range=(0, 255),
+    rows=2,
+    cols=2,
+    # If you are not running your experiment on a local machine, you can also
+    # make `visualize_dataset()` dump the plot to a file using `path`:
+    # path="eval.png"
 )
-
-"""
-If you are not running your experiment on a local machine, you can also make
-`visualize_dataset()` dump the plot to a file using the `path` parameter:
-"""
-
-# visualize_dataset(eval_ds, bounding_box_format="xywh", path="eval.png", value_range=(0, 255), rows=2, cols=2)
 
 """
 Looks like everything is structured as expected.
@@ -783,64 +783,19 @@ def visualize_detections(model, dataset, bounding_box_format):
     )
 
 
-visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
+"""
+You'll likely need to configure your NonMaxSuppression operation to achieve
+visually appealing results:
+"""
 
-"""
-To achieve good visual results, you may want to grid-search prediction decoders
-until you find a configuration that achieves a strong `MeanAveragePrecision`.
-Luckily, with KerasCV this is easy:
-"""
-model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
-    optimizer=optimizer,
-    metrics=[coco_metrics],
+model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+    bounding_box_format="xywh",
+    from_logits=True,
+    iou_threshold=0.2,
+    confidence_threshold=0.95,
 )
 
-best_decoder = None
-score_to_beat = 0
-worst_score = 1.0
-
-iou_thresholds = [0.35, 0.5, 0.65]
-confidence_thresholds = [0.5, 0.75, 0.9]
-for iou_threshold in tqdm.tqdm(iou_thresholds):
-    for confidence_threshold in confidence_thresholds:
-        coco_metrics.reset_state()
-        prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
-            bounding_box_format="xywh",
-            from_logits=True,
-            # Decrease the required threshold to make predictions get pruned out
-            iou_threshold=iou_threshold,
-            # Tune confidence threshold for predictions to pass NMS
-            confidence_threshold=iou_threshold,
-        )
-        model.prediction_decoder = prediction_decoder
-
-        # Remove take(20) in a production setting
-        coco_metrics.reset_state()
-        model.evaluate(eval_ds.take(20))
-        result = coco_metrics.result(force=True)
-        if result["MaP"] > score_to_beat:
-            best_decoder = prediction_decoder
-            score_to_beat = result["MaP"]
-
-        if result["MaP"] < worst_score:
-            worst_score = result["MaP"]
-
-model.prediction_decoder = best_decoder
-print(
-    f"Best scores found with iou_threshold={best_decoder.iou_threshold}"
-    f"confidence_threshold={best_decoder.confidence_threshold}. Best MaP is "
-    f"{score_to_beat}, worst MaP is {worst_score}."
-)
-
-
-"""
-Let's visualize the results using our optimal decoder:
-"""
-
 visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
-
 
 """
 Awesome!

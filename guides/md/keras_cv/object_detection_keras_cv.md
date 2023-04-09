@@ -48,22 +48,22 @@ import tqdm
  'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (1.4.0)',
  'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (2022.7.9)',
  'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (4.8.3)',
- 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
- 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
- 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
+ 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
  'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.1.1)',
  'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.12.0)',
- 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
- 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
+ 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
+ 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
+ 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
+ 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
  'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (3.20.3)',
  'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
- 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
- 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
- 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
- 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
- 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
+ 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
+ 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
+ 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
+ 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
  'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (5.12.0)',
  'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (4.4.0)',
+ 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
  'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (3.4)',
  'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
  'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2022.12.7)',
@@ -318,8 +318,8 @@ This can be done by overriding to the `model.prediction_decoder` attribute.
 
 Let's use a custom `keras_cv.layers.MultiClassNonMaxSuppression` instance
 to perform prediction decoding in our pretrained model.
-In this case, we will tune the `iou_threshold` to `0.35`, and the
-`confidence_threshold` to `0.75`.
+In this case, we will tune the `iou_threshold` to `0.2`, and the
+`confidence_threshold` to `0.97`.
 
 Raising the `confidence_threshold` will cause the model to only output boxes
 that have a higher confidence score.  `iou_threshold` controls the threshold of
@@ -548,7 +548,14 @@ And for the eval set:
 
 ```python
 visualize_dataset(
-    eval_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
+    eval_ds,
+    bounding_box_format="xywh",
+    value_range=(0, 255),
+    rows=2,
+    cols=2,
+    # If you are not running your experiment on a local machine, you can also
+    # make `visualize_dataset()` dump the plot to a file using `path`:
+    # path="eval.png"
 )
 ```
 
@@ -557,14 +564,6 @@ visualize_dataset(
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
     
 
-
-If you are not running your experiment on a local machine, you can also make
-`visualize_dataset()` dump the plot to a file using the `path` parameter:
-
-
-```python
-# visualize_dataset(eval_ds, bounding_box_format="xywh", path="eval.png", value_range=(0, 255), rows=2, cols=2)
-```
 
 Looks like everything is structured as expected.
 Now we can move on to constructing our
@@ -609,7 +608,7 @@ WARNING:tensorflow:Layers in a Sequential model should only have a single input 
 ```
 </div>
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_32_2.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_2.png)
     
 
 
@@ -640,7 +639,7 @@ visualize_dataset(
 
 
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_36_0.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_34_0.png)
     
 
 
@@ -771,18 +770,18 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.34
-MaP@[IoU=50]                : 0.51
-MaP@[IoU=75]                : 0.38
+MaP                         : 0.38
+MaP@[IoU=50]                : 0.55
+MaP@[IoU=75]                : 0.43
 MaP@[area=small]            : 0.00
-MaP@[area=medium]           : 0.10
-MaP@[area=large]            : 0.40
-Recall@[max_detections=1]   : 0.34
-Recall@[max_detections=10]  : 0.37
-Recall@[max_detections=100] : 0.37
+MaP@[area=medium]           : 0.07
+MaP@[area=large]            : 0.44
+Recall@[max_detections=1]   : 0.38
+Recall@[max_detections=10]  : 0.42
+Recall@[max_detections=100] : 0.42
 Recall@[area=small]         : 0.00
-Recall@[area=medium]        : 0.11
-Recall@[area=large]         : 0.43
+Recall@[area=medium]        : 0.08
+Recall@[area=large]         : 0.47
 
 ```
 </div>
@@ -899,13 +898,23 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8191 - box_loss: 0.6994 - classification_loss: 1.1197 - percent_boxes_matched_with_anchor: 0.9254
+20/20 [==============================] - ETA: 0s - loss: 1.8239 - box_loss: 0.7045 - classification_loss: 1.1194 - percent_boxes_matched_with_anchor: 0.9250
 
-100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.16it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.12it/s]
 
-20/20 [==============================] - 30s 458ms/step - loss: 1.8191 - box_loss: 0.6994 - classification_loss: 1.1197 - percent_boxes_matched_with_anchor: 0.9254 - val_loss: 1.7374 - val_box_loss: 0.6875 - val_classification_loss: 1.0499 - val_percent_boxes_matched_with_anchor: 0.9176 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 30s 458ms/step - loss: 1.8239 - box_loss: 0.7045 - classification_loss: 1.1194 - percent_boxes_matched_with_anchor: 0.9250 - val_loss: 1.7466 - val_box_loss: 0.6856 - val_classification_loss: 1.0610 - val_percent_boxes_matched_with_anchor: 0.8996 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
-<keras.callbacks.History at 0x7f9c92e88e80>
+```
+</div>
+    
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.callbacks.History at 0x7f0990244b20>
 
 ```
 </div>
@@ -957,6 +966,19 @@ def visualize_detections(model, dataset, bounding_box_format):
         class_mapping=class_mapping,
     )
 
+```
+
+You'll likely need to configure your NonMaxSuppression operation to achieve
+visually appealing results:
+
+
+```python
+model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+    bounding_box_format="xywh",
+    from_logits=True,
+    iou_threshold=0.2,
+    confidence_threshold=0.95,
+)
 
 visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
 ```
@@ -969,106 +991,6 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 </div>
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
-    
-
-
-To achieve good visual results, you may want to grid-search prediction decoders
-until you find a configuration that achieves a strong `MeanAveragePrecision`.
-Luckily, with KerasCV this is easy:
-
-
-```python
-model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
-    optimizer=optimizer,
-    metrics=[coco_metrics],
-)
-
-best_decoder = None
-score_to_beat = 0
-worst_score = 1.0
-
-iou_thresholds = [0.35, 0.5, 0.65]
-confidence_thresholds = [0.5, 0.75, 0.9]
-for iou_threshold in tqdm.tqdm(iou_thresholds):
-    for confidence_threshold in confidence_thresholds:
-        coco_metrics.reset_state()
-        prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
-            bounding_box_format="xywh",
-            from_logits=True,
-            # Decrease the required threshold to make predictions get pruned out
-            iou_threshold=iou_threshold,
-            # Tune confidence threshold for predictions to pass NMS
-            confidence_threshold=iou_threshold,
-        )
-        model.prediction_decoder = prediction_decoder
-
-        # Remove take(20) in a production setting
-        coco_metrics.reset_state()
-        model.evaluate(eval_ds.take(20))
-        result = coco_metrics.result(force=True)
-        if result["MaP"] > score_to_beat:
-            best_decoder = prediction_decoder
-            score_to_beat = result["MaP"]
-
-        if result["MaP"] < worst_score:
-            worst_score = result["MaP"]
-
-model.prediction_decoder = best_decoder
-print(
-    f"Best scores found with iou_threshold={best_decoder.iou_threshold}"
-    f"confidence_threshold={best_decoder.confidence_threshold}. Best MaP is "
-    f"{score_to_beat}, worst MaP is {worst_score}."
-)
-
-```
-
-<div class="k-default-codeblock">
-```
-  0%|                                                                               | 0/3 [00:00<?, ?it/s]
-
-20/20 [==============================] - 6s 79ms/step - loss: 0.4654 - box_loss: 0.2393 - classification_loss: 0.2261 - MaP: 0.0190 - MaP@[IoU=50]: 0.0331 - MaP@[IoU=75]: 0.0168 - MaP@[area=small]: 0.0023 - MaP@[area=medium]: 0.0123 - MaP@[area=large]: 0.0283 - Recall@[max_detections=1]: 0.0390 - Recall@[max_detections=10]: 0.0497 - Recall@[max_detections=100]: 0.0505 - Recall@[area=small]: 0.0037 - Recall@[area=medium]: 0.0368 - Recall@[area=large]: 0.0516 - percent_boxes_matched_with_anchor: 0.9008
-20/20 [==============================] - 5s 79ms/step - loss: 0.4742 - box_loss: 0.2434 - classification_loss: 0.2308 - MaP: 0.0162 - MaP@[IoU=50]: 0.0284 - MaP@[IoU=75]: 0.0157 - MaP@[area=small]: 0.0012 - MaP@[area=medium]: 0.0071 - MaP@[area=large]: 0.0245 - Recall@[max_detections=1]: 0.0389 - Recall@[max_detections=10]: 0.0488 - Recall@[max_detections=100]: 0.0490 - Recall@[area=small]: 0.0033 - Recall@[area=medium]: 0.0383 - Recall@[area=large]: 0.0531 - percent_boxes_matched_with_anchor: 0.9023
-20/20 [==============================] - 5s 93ms/step - loss: 0.4197 - box_loss: 0.2170 - classification_loss: 0.2027 - MaP: 0.0205 - MaP@[IoU=50]: 0.0327 - MaP@[IoU=75]: 0.0207 - MaP@[area=small]: 0.0013 - MaP@[area=medium]: 0.0146 - MaP@[area=large]: 0.0309 - Recall@[max_detections=1]: 0.0421 - Recall@[max_detections=10]: 0.0517 - Recall@[max_detections=100]: 0.0517 - Recall@[area=small]: 0.0040 - Recall@[area=medium]: 0.0385 - Recall@[area=large]: 0.0532 - percent_boxes_matched_with_anchor: 0.9176
-
- 33%|███████████████████████▋                                               | 1/3 [00:18<00:37, 18.76s/it]
-
-20/20 [==============================] - 5s 77ms/step - loss: 0.4219 - box_loss: 0.2175 - classification_loss: 0.2044 - MaP: 0.0211 - MaP@[IoU=50]: 0.0339 - MaP@[IoU=75]: 0.0217 - MaP@[area=small]: 4.9760e-04 - MaP@[area=medium]: 0.0211 - MaP@[area=large]: 0.0289 - Recall@[max_detections=1]: 0.0421 - Recall@[max_detections=10]: 0.0528 - Recall@[max_detections=100]: 0.0530 - Recall@[area=small]: 0.0028 - Recall@[area=medium]: 0.0375 - Recall@[area=large]: 0.0566 - percent_boxes_matched_with_anchor: 0.9176
-20/20 [==============================] - 5s 76ms/step - loss: 0.4576 - box_loss: 0.2339 - classification_loss: 0.2236 - MaP: 0.0202 - MaP@[IoU=50]: 0.0335 - MaP@[IoU=75]: 0.0195 - MaP@[area=small]: 0.0025 - MaP@[area=medium]: 0.0125 - MaP@[area=large]: 0.0280 - Recall@[max_detections=1]: 0.0376 - Recall@[max_detections=10]: 0.0482 - Recall@[max_detections=100]: 0.0492 - Recall@[area=small]: 0.0027 - Recall@[area=medium]: 0.0400 - Recall@[area=large]: 0.0544 - percent_boxes_matched_with_anchor: 0.9000
-20/20 [==============================] - 5s 97ms/step - loss: 0.4726 - box_loss: 0.2379 - classification_loss: 0.2347 - MaP: 0.0217 - MaP@[IoU=50]: 0.0341 - MaP@[IoU=75]: 0.0231 - MaP@[area=small]: 9.9764e-04 - MaP@[area=medium]: 0.0111 - MaP@[area=large]: 0.0288 - Recall@[max_detections=1]: 0.0389 - Recall@[max_detections=10]: 0.0492 - Recall@[max_detections=100]: 0.0497 - Recall@[area=small]: 0.0027 - Recall@[area=medium]: 0.0388 - Recall@[area=large]: 0.0562 - percent_boxes_matched_with_anchor: 0.9051
-
- 67%|███████████████████████████████████████████████▎                       | 2/3 [00:35<00:17, 17.64s/it]
-
-20/20 [==============================] - 4s 69ms/step - loss: 0.4692 - box_loss: 0.2358 - classification_loss: 0.2334 - MaP: 0.0225 - MaP@[IoU=50]: 0.0346 - MaP@[IoU=75]: 0.0254 - MaP@[area=small]: 7.4140e-04 - MaP@[area=medium]: 0.0199 - MaP@[area=large]: 0.0289 - Recall@[max_detections=1]: 0.0396 - Recall@[max_detections=10]: 0.0519 - Recall@[max_detections=100]: 0.0542 - Recall@[area=small]: 0.0020 - Recall@[area=medium]: 0.0380 - Recall@[area=large]: 0.0568 - percent_boxes_matched_with_anchor: 0.9016
-20/20 [==============================] - 5s 86ms/step - loss: 0.4762 - box_loss: 0.2417 - classification_loss: 0.2344 - MaP: 0.0190 - MaP@[IoU=50]: 0.0286 - MaP@[IoU=75]: 0.0211 - MaP@[area=small]: 0.0046 - MaP@[area=medium]: 0.0143 - MaP@[area=large]: 0.0273 - Recall@[max_detections=1]: 0.0371 - Recall@[max_detections=10]: 0.0496 - Recall@[max_detections=100]: 0.0517 - Recall@[area=small]: 0.0055 - Recall@[area=medium]: 0.0348 - Recall@[area=large]: 0.0584 - percent_boxes_matched_with_anchor: 0.8996
-20/20 [==============================] - 4s 68ms/step - loss: 0.4725 - box_loss: 0.2404 - classification_loss: 0.2321 - MaP: 0.0213 - MaP@[IoU=50]: 0.0338 - MaP@[IoU=75]: 0.0228 - MaP@[area=small]: 0.0017 - MaP@[area=medium]: 0.0180 - MaP@[area=large]: 0.0271 - Recall@[max_detections=1]: 0.0375 - Recall@[max_detections=10]: 0.0505 - Recall@[max_detections=100]: 0.0532 - Recall@[area=small]: 0.0017 - Recall@[area=medium]: 0.0357 - Recall@[area=large]: 0.0564 - percent_boxes_matched_with_anchor: 0.9016   
-
-100%|███████████████████████████████████████████████████████████████████████| 3/3 [00:51<00:00, 17.06s/it]
-
-Best scores found with iou_threshold=0.65confidence_threshold=0.65. Best MaP is 0.23597964644432068, worst MaP is 0.16992801427841187.
-
-```
-</div>
-    
-
-
-Let's visualize the results using our optimal decoder:
-
-
-```python
-visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
-
-```
-
-<div class="k-default-codeblock">
-```
-1/1 [==============================] - 2s 2s/step
-
-```
-</div>
-    
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
     
 
 
@@ -1137,12 +1059,12 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/main/LICENSE-MODEL
-50/50 [==============================] - 50s 312ms/step
+50/50 [==============================] - 49s 310ms/step
 1/1 [==============================] - 2s 2s/step
 
 ```
 </div>
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_72_1.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
     
 
