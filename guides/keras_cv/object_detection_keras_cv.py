@@ -843,6 +843,12 @@ images = stable_diffusion.text_to_image(
     batch_size=4,
     seed=1231,
 )
+model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+    bounding_box_format="xywh",
+    from_logits=True,
+    iou_threshold=0.2,
+    confidence_threshold=0.8,
+)
 y_pred = model.predict(images)
 visualization.plot_bounding_box_gallery(
     images,
