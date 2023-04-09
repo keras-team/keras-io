@@ -49,25 +49,25 @@ import tqdm
  'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (2022.7.9)',
  'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (4.8.3)',
  'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
- 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
- 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
- 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
- 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
- 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
- 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
- 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
  'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.1.1)',
  'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.12.0)',
+ 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
  'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
+ 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
+ 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
  'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
+ 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
+ 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
+ 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
  'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (3.20.3)',
- 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
+ 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
  'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (4.4.0)',
  'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (5.12.0)',
- 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
- 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (3.4)',
+ 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
  'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (1.26.14)',
+ 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
  'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2022.12.7)',
+ 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (3.4)',
  'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv) (1.16.0)',
  'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv) (1.59.0)']
 
@@ -142,6 +142,13 @@ pretrained_model = keras_cv.models.RetinaNet.from_preset(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/keras-cv/models/retinanet/pascal_voc/resnet50-v2.h5
+237207528/237207528 [==============================] - 2s 0us/step
+
+```
+</div>
 Notice the `bounding_box_format` argument?
 
 Recall in the section above, the format of bounding boxes:
@@ -293,7 +300,7 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 7s 7s/step
+1/1 [==============================] - 6s 6s/step
 
 ```
 </div>
@@ -769,17 +776,17 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.37
+MaP                         : 0.32
 MaP@[IoU=50]                : 0.56
-MaP@[IoU=75]                : 0.40
+MaP@[IoU=75]                : 0.31
 MaP@[area=small]            : 0.00
-MaP@[area=medium]           : 0.23
-MaP@[area=large]            : 0.44
-Recall@[max_detections=1]   : 0.36
+MaP@[area=medium]           : 0.20
+MaP@[area=large]            : 0.38
+Recall@[max_detections=1]   : 0.33
 Recall@[max_detections=10]  : 0.44
 Recall@[max_detections=100] : 0.44
-Recall@[area=small]         : 0.01
-Recall@[area=medium]        : 0.28
+Recall@[area=small]         : 0.00
+Recall@[area=medium]        : 0.25
 Recall@[area=large]         : 0.50
 
 ```
@@ -911,11 +918,11 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8221 - box_loss: 0.6910 - classification_loss: 1.1312 - percent_boxes_matched_with_anchor: 0.9277
+20/20 [==============================] - ETA: 0s - loss: 1.8307 - box_loss: 0.6991 - classification_loss: 1.1316 - percent_boxes_matched_with_anchor: 0.9180
 
-100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.17it/s]
+100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.19it/s]
 
-20/20 [==============================] - 24s 458ms/step - loss: 1.8221 - box_loss: 0.6910 - classification_loss: 1.1312 - percent_boxes_matched_with_anchor: 0.9277 - val_loss: 1.7760 - val_box_loss: 0.6936 - val_classification_loss: 1.0824 - val_percent_boxes_matched_with_anchor: 0.9125 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 24s 458ms/step - loss: 1.8307 - box_loss: 0.6991 - classification_loss: 1.1316 - percent_boxes_matched_with_anchor: 0.9180 - val_loss: 1.7798 - val_box_loss: 0.6885 - val_classification_loss: 1.0914 - val_percent_boxes_matched_with_anchor: 0.9023 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
 ```
 </div>
@@ -927,7 +934,7 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-<keras.callbacks.History at 0x7f8e28d363b0>
+<keras.callbacks.History at 0x7f3b64338ac0>
 
 ```
 </div>
@@ -1050,25 +1057,25 @@ print(
 ```
   0%|                                                                               | 0/3 [00:00<?, ?it/s]
 
-20/20 [==============================] - 6s 70ms/step - loss: 0.4631 - box_loss: 0.2378 - classification_loss: 0.2254 - MaP: 0.0121 - MaP@[IoU=50]: 0.0234 - MaP@[IoU=75]: 0.0100 - MaP@[area=small]: 0.0071 - MaP@[area=medium]: 0.0076 - MaP@[area=large]: 0.0210 - Recall@[max_detections=1]: 0.0387 - Recall@[max_detections=10]: 0.0486 - Recall@[max_detections=100]: 0.0500 - Recall@[area=small]: 0.0070 - Recall@[area=medium]: 0.0396 - Recall@[area=large]: 0.0524 - percent_boxes_matched_with_anchor: 0.9004
-20/20 [==============================] - 5s 69ms/step - loss: 0.4212 - box_loss: 0.2166 - classification_loss: 0.2047 - MaP: 0.0149 - MaP@[IoU=50]: 0.0243 - MaP@[IoU=75]: 0.0156 - MaP@[area=small]: 0.0052 - MaP@[area=medium]: 0.0149 - MaP@[area=large]: 0.0267 - Recall@[max_detections=1]: 0.0424 - Recall@[max_detections=10]: 0.0521 - Recall@[max_detections=100]: 0.0526 - Recall@[area=small]: 0.0087 - Recall@[area=medium]: 0.0376 - Recall@[area=large]: 0.0545 - percent_boxes_matched_with_anchor: 0.9176
-20/20 [==============================] - 4s 69ms/step - loss: 0.4673 - box_loss: 0.2374 - classification_loss: 0.2299 - MaP: 0.0118 - MaP@[IoU=50]: 0.0226 - MaP@[IoU=75]: 0.0098 - MaP@[area=small]: 0.0056 - MaP@[area=medium]: 0.0053 - MaP@[area=large]: 0.0235 - Recall@[max_detections=1]: 0.0408 - Recall@[max_detections=10]: 0.0507 - Recall@[max_detections=100]: 0.0515 - Recall@[area=small]: 0.0087 - Recall@[area=medium]: 0.0392 - Recall@[area=large]: 0.0526 - percent_boxes_matched_with_anchor: 0.9094
+20/20 [==============================] - 6s 79ms/step - loss: 0.4754 - box_loss: 0.2420 - classification_loss: 0.2334 - MaP: 0.0163 - MaP@[IoU=50]: 0.0275 - MaP@[IoU=75]: 0.0164 - MaP@[area=small]: 0.0012 - MaP@[area=medium]: 0.0125 - MaP@[area=large]: 0.0241 - Recall@[max_detections=1]: 0.0385 - Recall@[max_detections=10]: 0.0484 - Recall@[max_detections=100]: 0.0491 - Recall@[area=small]: 0.0033 - Recall@[area=medium]: 0.0362 - Recall@[area=large]: 0.0525 - percent_boxes_matched_with_anchor: 0.8980
+20/20 [==============================] - 5s 79ms/step - loss: 0.4729 - box_loss: 0.2398 - classification_loss: 0.2331 - MaP: 0.0184 - MaP@[IoU=50]: 0.0319 - MaP@[IoU=75]: 0.0167 - MaP@[area=small]: 0.0023 - MaP@[area=medium]: 0.0109 - MaP@[area=large]: 0.0260 - Recall@[max_detections=1]: 0.0386 - Recall@[max_detections=10]: 0.0495 - Recall@[max_detections=100]: 0.0503 - Recall@[area=small]: 0.0037 - Recall@[area=medium]: 0.0367 - Recall@[area=large]: 0.0511 - percent_boxes_matched_with_anchor: 0.8949
+20/20 [==============================] - 5s 96ms/step - loss: 0.4625 - box_loss: 0.2347 - classification_loss: 0.2279 - MaP: 0.0203 - MaP@[IoU=50]: 0.0367 - MaP@[IoU=75]: 0.0181 - MaP@[area=small]: 0.0071 - MaP@[area=medium]: 0.0164 - MaP@[area=large]: 0.0259 - Recall@[max_detections=1]: 0.0372 - Recall@[max_detections=10]: 0.0500 - Recall@[max_detections=100]: 0.0508 - Recall@[area=small]: 0.0085 - Recall@[area=medium]: 0.0391 - Recall@[area=large]: 0.0523 - percent_boxes_matched_with_anchor: 0.8984
 
- 33%|███████████████████████▋                                               | 1/3 [00:17<00:34, 17.22s/it]
+ 33%|███████████████████████▋                                               | 1/3 [00:18<00:37, 18.71s/it]
 
-20/20 [==============================] - 4s 54ms/step - loss: 0.4329 - box_loss: 0.2181 - classification_loss: 0.2148 - MaP: 0.0208 - MaP@[IoU=50]: 0.0357 - MaP@[IoU=75]: 0.0182 - MaP@[area=small]: 0.0021 - MaP@[area=medium]: 0.0080 - MaP@[area=large]: 0.0331 - Recall@[max_detections=1]: 0.0417 - Recall@[max_detections=10]: 0.0527 - Recall@[max_detections=100]: 0.0527 - Recall@[area=small]: 0.0036 - Recall@[area=medium]: 0.0361 - Recall@[area=large]: 0.0554 - percent_boxes_matched_with_anchor: 0.9125
-20/20 [==============================] - 4s 56ms/step - loss: 0.4403 - box_loss: 0.2250 - classification_loss: 0.2154 - MaP: 0.0215 - MaP@[IoU=50]: 0.0384 - MaP@[IoU=75]: 0.0184 - MaP@[area=small]: 0.0013 - MaP@[area=medium]: 0.0131 - MaP@[area=large]: 0.0292 - Recall@[max_detections=1]: 0.0397 - Recall@[max_detections=10]: 0.0498 - Recall@[max_detections=100]: 0.0510 - Recall@[area=small]: 0.0036 - Recall@[area=medium]: 0.0319 - Recall@[area=large]: 0.0531 - percent_boxes_matched_with_anchor: 0.9078
-20/20 [==============================] - 4s 55ms/step - loss: 0.4706 - box_loss: 0.2381 - classification_loss: 0.2325 - MaP: 0.0222 - MaP@[IoU=50]: 0.0384 - MaP@[IoU=75]: 0.0202 - MaP@[area=small]: 0.0040 - MaP@[area=medium]: 0.0110 - MaP@[area=large]: 0.0303 - Recall@[max_detections=1]: 0.0377 - Recall@[max_detections=10]: 0.0480 - Recall@[max_detections=100]: 0.0486 - Recall@[area=small]: 0.0047 - Recall@[area=medium]: 0.0288 - Recall@[area=large]: 0.0523 - percent_boxes_matched_with_anchor: 0.9020
+20/20 [==============================] - 4s 76ms/step - loss: 0.4157 - box_loss: 0.2122 - classification_loss: 0.2035 - MaP: 0.0207 - MaP@[IoU=50]: 0.0332 - MaP@[IoU=75]: 0.0212 - MaP@[area=small]: 7.3026e-04 - MaP@[area=medium]: 0.0208 - MaP@[area=large]: 0.0293 - Recall@[max_detections=1]: 0.0421 - Recall@[max_detections=10]: 0.0528 - Recall@[max_detections=100]: 0.0530 - Recall@[area=small]: 0.0028 - Recall@[area=medium]: 0.0375 - Recall@[area=large]: 0.0566 - percent_boxes_matched_with_anchor: 0.9176
+20/20 [==============================] - 5s 78ms/step - loss: 0.4783 - box_loss: 0.2433 - classification_loss: 0.2350 - MaP: 0.0193 - MaP@[IoU=50]: 0.0334 - MaP@[IoU=75]: 0.0183 - MaP@[area=small]: 0.0011 - MaP@[area=medium]: 0.0178 - MaP@[area=large]: 0.0252 - Recall@[max_detections=1]: 0.0386 - Recall@[max_detections=10]: 0.0505 - Recall@[max_detections=100]: 0.0515 - Recall@[area=small]: 0.0024 - Recall@[area=medium]: 0.0377 - Recall@[area=large]: 0.0543 - percent_boxes_matched_with_anchor: 0.8949
+20/20 [==============================] - 5s 91ms/step - loss: 0.4254 - box_loss: 0.2188 - classification_loss: 0.2067 - MaP: 0.0198 - MaP@[IoU=50]: 0.0330 - MaP@[IoU=75]: 0.0198 - MaP@[area=small]: 4.5576e-04 - MaP@[area=medium]: 0.0203 - MaP@[area=large]: 0.0281 - Recall@[max_detections=1]: 0.0421 - Recall@[max_detections=10]: 0.0528 - Recall@[max_detections=100]: 0.0530 - Recall@[area=small]: 0.0028 - Recall@[area=medium]: 0.0375 - Recall@[area=large]: 0.0566 - percent_boxes_matched_with_anchor: 0.9176
 
- 67%|███████████████████████████████████████████████▎                       | 2/3 [00:31<00:15, 15.23s/it]
+ 67%|███████████████████████████████████████████████▎                       | 2/3 [00:35<00:17, 17.45s/it]
 
-20/20 [==============================] - 4s 50ms/step - loss: 0.4613 - box_loss: 0.2338 - classification_loss: 0.2275 - MaP: 0.0229 - MaP@[IoU=50]: 0.0385 - MaP@[IoU=75]: 0.0220 - MaP@[area=small]: 0.0020 - MaP@[area=medium]: 0.0184 - MaP@[area=large]: 0.0305 - Recall@[max_detections=1]: 0.0385 - Recall@[max_detections=10]: 0.0493 - Recall@[max_detections=100]: 0.0508 - Recall@[area=small]: 0.0020 - Recall@[area=medium]: 0.0353 - Recall@[area=large]: 0.0526 - percent_boxes_matched_with_anchor: 0.9086
-20/20 [==============================] - 4s 51ms/step - loss: 0.4341 - box_loss: 0.2240 - classification_loss: 0.2101 - MaP: 0.0238 - MaP@[IoU=50]: 0.0391 - MaP@[IoU=75]: 0.0228 - MaP@[area=small]: 0.0020 - MaP@[area=medium]: 0.0177 - MaP@[area=large]: 0.0263 - Recall@[max_detections=1]: 0.0367 - Recall@[max_detections=10]: 0.0465 - Recall@[max_detections=100]: 0.0483 - Recall@[area=small]: 0.0020 - Recall@[area=medium]: 0.0325 - Recall@[area=large]: 0.0504 - percent_boxes_matched_with_anchor: 0.9094
-20/20 [==============================] - 4s 50ms/step - loss: 0.4702 - box_loss: 0.2392 - classification_loss: 0.2310 - MaP: 0.0220 - MaP@[IoU=50]: 0.0364 - MaP@[IoU=75]: 0.0199 - MaP@[area=small]: 0.0035 - MaP@[area=medium]: 0.0145 - MaP@[area=large]: 0.0300 - Recall@[max_detections=1]: 0.0351 - Recall@[max_detections=10]: 0.0451 - Recall@[max_detections=100]: 0.0462 - Recall@[area=small]: 0.0035 - Recall@[area=medium]: 0.0332 - Recall@[area=large]: 0.0509 - percent_boxes_matched_with_anchor: 0.8996
+20/20 [==============================] - 4s 68ms/step - loss: 0.4265 - box_loss: 0.2199 - classification_loss: 0.2066 - MaP: 0.0206 - MaP@[IoU=50]: 0.0312 - MaP@[IoU=75]: 0.0228 - MaP@[area=small]: 2.5983e-04 - MaP@[area=medium]: 0.0205 - MaP@[area=large]: 0.0264 - Recall@[max_detections=1]: 0.0416 - Recall@[max_detections=10]: 0.0531 - Recall@[max_detections=100]: 0.0549 - Recall@[area=small]: 0.0020 - Recall@[area=medium]: 0.0369 - Recall@[area=large]: 0.0584 - percent_boxes_matched_with_anchor: 0.9176
+20/20 [==============================] - 5s 83ms/step - loss: 0.4655 - box_loss: 0.2382 - classification_loss: 0.2273 - MaP: 0.0211 - MaP@[IoU=50]: 0.0339 - MaP@[IoU=75]: 0.0217 - MaP@[area=small]: 0.0017 - MaP@[area=medium]: 0.0187 - MaP@[area=large]: 0.0266 - Recall@[max_detections=1]: 0.0374 - Recall@[max_detections=10]: 0.0506 - Recall@[max_detections=100]: 0.0533 - Recall@[area=small]: 0.0017 - Recall@[area=medium]: 0.0368 - Recall@[area=large]: 0.0567 - percent_boxes_matched_with_anchor: 0.8973   
+20/20 [==============================] - 4s 70ms/step - loss: 0.4694 - box_loss: 0.2402 - classification_loss: 0.2293 - MaP: 0.0189 - MaP@[IoU=50]: 0.0278 - MaP@[IoU=75]: 0.0210 - MaP@[area=small]: 0.0045 - MaP@[area=medium]: 0.0147 - MaP@[area=large]: 0.0272 - Recall@[max_detections=1]: 0.0371 - Recall@[max_detections=10]: 0.0496 - Recall@[max_detections=100]: 0.0517 - Recall@[area=small]: 0.0055 - Recall@[area=medium]: 0.0348 - Recall@[area=large]: 0.0584 - percent_boxes_matched_with_anchor: 0.8996
 
-100%|███████████████████████████████████████████████████████████████████████| 3/3 [00:44<00:00, 14.78s/it]
+100%|███████████████████████████████████████████████████████████████████████| 3/3 [00:50<00:00, 16.89s/it]
 
-Best scores found with iou_threshold=0.65confidence_threshold=0.65. Best MaP is 0.24945168197155, worst MaP is 0.12378182262182236.
+Best scores found with iou_threshold=0.65confidence_threshold=0.65. Best MaP is 0.22120563685894012, worst MaP is 0.17126941680908203.
 
 ```
 </div>
@@ -1159,16 +1166,8 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/main/LICENSE-MODEL
-Downloading data from https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true
-1356917/1356917 [==============================] - 0s 0us/step
-Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/text_encoder_v2_1.h5
-1361968152/1361968152 [==============================] - 5s 0us/step
-Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/diffusion_model_v2_1.h5
-3464605600/3464605600 [==============================] - 17s 0us/step
-50/50 [==============================] - 68s 311ms/step
-Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
-198180272/198180272 [==============================] - 1s 0us/step
-1/1 [==============================] - 2s 2s/step
+50/50 [==============================] - 50s 313ms/step
+1/1 [==============================] - 3s 3s/step
 
 ```
 </div>
