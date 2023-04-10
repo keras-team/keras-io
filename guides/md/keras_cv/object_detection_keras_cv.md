@@ -41,38 +41,7 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
-<div class="k-default-codeblock">
-```
-['Requirement already satisfied: keras-cv in /home/lukewood/workspace/keras-cv (0.4.2)',
- 'Requirement already satisfied: packaging in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (22.0)',
- 'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (1.4.0)',
- 'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (2022.7.9)',
- 'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (4.8.3)',
- 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
- 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
- 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
- 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.1.1)',
- 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
- 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.12.0)',
- 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
- 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
- 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
- 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
- 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (3.20.3)',
- 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
- 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
- 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
- 'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (4.4.0)',
- 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (5.12.0)',
- 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (3.4)',
- 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (1.26.14)',
- 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
- 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2022.12.7)',
- 'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv) (1.16.0)',
- 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv) (1.59.0)']
 
-```
-</div>
 ---
 ## Object detection introduction
 
@@ -201,9 +170,9 @@ visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
-    
+
 
 
 To use the `RetinaNet` architecture, you'll need to resize your image
@@ -297,9 +266,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
-    
+
 
 
 In order to support easy this easy and intuitive inference workflow, KerasCV
@@ -358,9 +327,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
-    
+
 
 
 That looks a lot better!
@@ -538,9 +507,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_26_0.png)
-    
+
 
 
 And for the eval set:
@@ -560,9 +529,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
-    
+
 
 
 Looks like everything is structured as expected.
@@ -607,9 +576,9 @@ WARNING:tensorflow:Layers in a Sequential model should only have a single input 
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_2.png)
-    
+
 
 
 Great!  We now have a bounding box friendly data augmentation pipeline.
@@ -638,9 +607,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_34_0.png)
-    
+
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -902,7 +871,7 @@ model.fit(
 
 ```
 </div>
-    
+
 
 
 
@@ -985,9 +954,9 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
-    
+
 
 
 Awesome!
@@ -1060,7 +1029,5 @@ By using this model checkpoint, you acknowledge that its usage is subject to the
 
 ```
 </div>
-    
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
-    
 
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)

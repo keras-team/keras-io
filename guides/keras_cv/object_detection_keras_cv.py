@@ -160,13 +160,16 @@ visualization.plot_image_gallery(
 )
 
 """
-To use the `RetinaNet` architecture, you'll need to resize your image
-to a size that is divisible by 64.
+To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
+resize your image to a size that is divisible by 64.  This is to ensure
+compatibility with the number of downscaling operations done by the convolution
+layers in the ResNet.
+
 If the resize operation distorts
 the input's aspect ratio, the model will perform signficantly poorer.  For the
 pretrained `"retinanet_resnet50_pascalvoc"` preset we are using, the final
 `MeanAveragePrecision` on the `pascalvoc/2012` evaluation set drops to `0.15`
-from `0.33` when using a naive resizing operation.
+from `0.38` when using a naive resizing operation.
 
 Additionally, if you crop to preserve the aspect ratio as you do in classification
 your model may entirely miss some bounding boxes.  As such, when running inference
@@ -242,7 +245,7 @@ visualization.plot_bounding_box_gallery(
 
 """
 In order to support easy this easy and intuitive inference workflow, KerasCV
-perform non-max suppression inside of the `RetinaNet` class.
+performs non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
 
@@ -407,7 +410,6 @@ train_ds = load_pascal_voc(
     split="train", dataset="voc/2007", bounding_box_format="xywh"
 )
 eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format="xywh")
-eval_ds = load_pascal_voc(dataset="voc/2007", split="test", bounding_box_format="xywh")
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
 
@@ -431,7 +433,7 @@ eval_ds = eval_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
 Let's make sure our dataset is following the format KerasCV expects.
 By using the `visualize_dataset()` function, you can visually verify
 that your data is in the format that KerasCV expects.  If the bounding boxes
-are not visible, or are visible in the wrong locations that is a sign that your
+are not visible or are visible in the wrong locations that is a sign that your
 data is mis-formatted.
 """
 
@@ -499,8 +501,8 @@ eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
 Due to the fact that the resize operation differs between the train dataset,
-which uses `JitteredResize()` to resize images, and the inference dataset which
-uses `layers.Resizing(pad_to_aspect_ratio=True)`, it is good practice to
+which uses `JitteredResize()` to resize images, and the inference dataset, which
+uses `layers.Resizing(pad_to_aspect_ratio=True)`. it is good practice to
 visualize both datasets:
 """
 
