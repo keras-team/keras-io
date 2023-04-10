@@ -689,11 +689,7 @@ For example:
 
 model = keras_cv.models.RetinaNet.from_preset(
     "resnet50_imagenet",
-    # number of classes to be used in box classification
-    # Due to the fact that RetinaNet uses a softmax operation to
-    # produce confidence scores, we use num_classes+1 to allow the model
-    # to learn a softmax floor.
-    num_classes=len(class_mapping) + 1,
+    num_classes=len(class_mapping),
     # For more info on supported bounding box formats, visit
     # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
