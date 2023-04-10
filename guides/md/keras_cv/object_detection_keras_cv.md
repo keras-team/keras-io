@@ -41,59 +41,7 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
-<div class="k-default-codeblock">
-```
-['Collecting git+https://github.com/keras-team/keras-cv',
- '  Cloning https://github.com/keras-team/keras-cv to /tmp/pip-req-build-k5aesj3m',
- '  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras-cv /tmp/pip-req-build-k5aesj3m',
- '  Resolved https://github.com/keras-team/keras-cv to commit eba5770bcbd2726cb55e142d5bc7caccbb729cb6',
- '  Installing build dependencies: started',
- "  Installing build dependencies: finished with status 'done'",
- '  Getting requirements to build wheel: started',
- "  Getting requirements to build wheel: finished with status 'done'",
- '  Preparing metadata (pyproject.toml): started',
- "  Preparing metadata (pyproject.toml): finished with status 'done'",
- 'Requirement already satisfied: packaging in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (22.0)',
- 'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (2022.7.9)',
- 'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (1.4.0)',
- 'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (4.8.3)',
- 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.3)',
- 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (3.20.3)',
- 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.12.0)',
- 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (5.9.0)',
- 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.23.5)',
- 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.2.0)',
- 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (8.0.4)',
- 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.14.1)',
- 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.1.1)',
- 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (0.1.8)',
- 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.28.1)',
- 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (0.10.2)',
- 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (4.64.1)',
- 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (5.12.0)',
- 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (3.11.0)',
- 'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (4.4.0)',
- 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (1.26.14)',
- 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (2022.12.7)',
- 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (3.4)',
- 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (2.0.4)',
- 'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv==0.4.2) (1.16.0)',
- 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv==0.4.2) (1.59.0)',
- 'Building wheels for collected packages: keras-cv',
- '  Building wheel for keras-cv (pyproject.toml): started',
- "  Building wheel for keras-cv (pyproject.toml): finished with status 'done'",
- '  Created wheel for keras-cv: filename=keras_cv-0.4.2-py3-none-any.whl size=680601 sha256=c37fe3663c29caa6dbd36c3f9c0883cc3670d626c0767e76b02ed85136887bf1',
- '  Stored in directory: /tmp/pip-ephem-wheel-cache-8iwntn_x/wheels/35/f2/a0/a17d87e8d0bfd3f36a4f092213fb8f0bd8b1a87cebcec85de2',
- 'Successfully built keras-cv',
- 'Installing collected packages: keras-cv',
- '  Attempting uninstall: keras-cv',
- '    Found existing installation: keras-cv 0.4.2',
- '    Uninstalling keras-cv-0.4.2:',
- '      Successfully uninstalled keras-cv-0.4.2',
- 'Successfully installed keras-cv-0.4.2']
 
-```
-</div>
 ---
 ## Object detection introduction
 
@@ -512,24 +460,6 @@ eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format=
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:You use TensorFlow DType <dtype: 'float32'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to float32.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:You use TensorFlow DType <dtype: 'bool'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to bool.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:You use TensorFlow DType <dtype: 'int64'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to int64.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
-
-```
-</div>
 Next, let's batch our data.
 
 In KerasCV object detection tasks it is recommended that
@@ -622,14 +552,6 @@ visualize_dataset(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:2", shape=(None, 3), dtype=float32), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'bounding_boxes': {'classes': tf.RaggedTensor(values=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:1", shape=(None,), dtype=float32), row_splits=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'boxes': tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None, 4), dtype=float32), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(5,), dtype=int64))}}. Consider rewriting this model with the Functional API.
-
-WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:2", shape=(None, 3), dtype=float32), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'bounding_boxes': {'classes': tf.RaggedTensor(values=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:1", shape=(None,), dtype=float32), row_splits=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'boxes': tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None, 4), dtype=float32), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(5,), dtype=int64))}}. Consider rewriting this model with the Functional API.
-
-```
-</div>
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_2.png)
     
