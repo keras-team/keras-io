@@ -22,7 +22,7 @@ Let's give KerasCV's object detection API a spin.
 
 
 ```python
-!!pip install --upgrade keras-cv
+!!pip install --upgrade git+https://github.com/keras-team/keras-cv
 ```
 
 
@@ -41,7 +41,59 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
+<div class="k-default-codeblock">
+```
+['Collecting git+https://github.com/keras-team/keras-cv',
+ '  Cloning https://github.com/keras-team/keras-cv to /tmp/pip-req-build-k5aesj3m',
+ '  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras-cv /tmp/pip-req-build-k5aesj3m',
+ '  Resolved https://github.com/keras-team/keras-cv to commit eba5770bcbd2726cb55e142d5bc7caccbb729cb6',
+ '  Installing build dependencies: started',
+ "  Installing build dependencies: finished with status 'done'",
+ '  Getting requirements to build wheel: started',
+ "  Getting requirements to build wheel: finished with status 'done'",
+ '  Preparing metadata (pyproject.toml): started',
+ "  Preparing metadata (pyproject.toml): finished with status 'done'",
+ 'Requirement already satisfied: packaging in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (22.0)',
+ 'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (2022.7.9)',
+ 'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (1.4.0)',
+ 'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (4.8.3)',
+ 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.3)',
+ 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (3.20.3)',
+ 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.12.0)',
+ 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (5.9.0)',
+ 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.23.5)',
+ 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.2.0)',
+ 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (8.0.4)',
+ 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.14.1)',
+ 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.1.1)',
+ 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (0.1.8)',
+ 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.28.1)',
+ 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (0.10.2)',
+ 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (4.64.1)',
+ 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (5.12.0)',
+ 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (3.11.0)',
+ 'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (4.4.0)',
+ 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (1.26.14)',
+ 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (2022.12.7)',
+ 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (3.4)',
+ 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (2.0.4)',
+ 'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv==0.4.2) (1.16.0)',
+ 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv==0.4.2) (1.59.0)',
+ 'Building wheels for collected packages: keras-cv',
+ '  Building wheel for keras-cv (pyproject.toml): started',
+ "  Building wheel for keras-cv (pyproject.toml): finished with status 'done'",
+ '  Created wheel for keras-cv: filename=keras_cv-0.4.2-py3-none-any.whl size=680601 sha256=c37fe3663c29caa6dbd36c3f9c0883cc3670d626c0767e76b02ed85136887bf1',
+ '  Stored in directory: /tmp/pip-ephem-wheel-cache-8iwntn_x/wheels/35/f2/a0/a17d87e8d0bfd3f36a4f092213fb8f0bd8b1a87cebcec85de2',
+ 'Successfully built keras-cv',
+ 'Installing collected packages: keras-cv',
+ '  Attempting uninstall: keras-cv',
+ '    Found existing installation: keras-cv 0.4.2',
+ '    Uninstalling keras-cv-0.4.2:',
+ '      Successfully uninstalled keras-cv-0.4.2',
+ 'Successfully installed keras-cv-0.4.2']
 
+```
+</div>
 ---
 ## Object detection introduction
 
@@ -170,18 +222,21 @@ visualization.plot_image_gallery(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
+    
 
 
+To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
+resize your image to a size that is divisible by 64.  This is to ensure
+compatibility with the number of downscaling operations done by the convolution
+layers in the ResNet.
 
-To use the `RetinaNet` architecture, you'll need to resize your image
-to a size that is divisible by 64.
 If the resize operation distorts
 the input's aspect ratio, the model will perform signficantly poorer.  For the
 pretrained `"retinanet_resnet50_pascalvoc"` preset we are using, the final
 `MeanAveragePrecision` on the `pascalvoc/2012` evaluation set drops to `0.15`
-from `0.33` when using a naive resizing operation.
+from `0.38` when using a naive resizing operation.
 
 Additionally, if you crop to preserve the aspect ratio as you do in classification
 your model may entirely miss some bounding boxes.  As such, when running inference
@@ -266,13 +321,13 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
-
+    
 
 
 In order to support easy this easy and intuitive inference workflow, KerasCV
-perform non-max suppression inside of the `RetinaNet` class.
+performs non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
 
@@ -327,9 +382,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
-
+    
 
 
 That looks a lot better!
@@ -453,7 +508,6 @@ train_ds = load_pascal_voc(
     split="train", dataset="voc/2007", bounding_box_format="xywh"
 )
 eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format="xywh")
-eval_ds = load_pascal_voc(dataset="voc/2007", split="test", bounding_box_format="xywh")
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
 ```
@@ -496,7 +550,7 @@ eval_ds = eval_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
 Let's make sure our dataset is following the format KerasCV expects.
 By using the `visualize_dataset()` function, you can visually verify
 that your data is in the format that KerasCV expects.  If the bounding boxes
-are not visible, or are visible in the wrong locations that is a sign that your
+are not visible or are visible in the wrong locations that is a sign that your
 data is mis-formatted.
 
 
@@ -507,9 +561,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_26_0.png)
-
+    
 
 
 And for the eval set:
@@ -529,9 +583,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
-
+    
 
 
 Looks like everything is structured as expected.
@@ -576,9 +630,9 @@ WARNING:tensorflow:Layers in a Sequential model should only have a single input 
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_2.png)
-
+    
 
 
 Great!  We now have a bounding box friendly data augmentation pipeline.
@@ -595,8 +649,8 @@ eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 ```
 
 Due to the fact that the resize operation differs between the train dataset,
-which uses `JitteredResize()` to resize images, and the inference dataset which
-uses `layers.Resizing(pad_to_aspect_ratio=True)`, it is good practice to
+which uses `JitteredResize()` to resize images, and the inference dataset, which
+uses `layers.Resizing(pad_to_aspect_ratio=True)`. it is good practice to
 visualize both datasets:
 
 
@@ -607,9 +661,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_34_0.png)
-
+    
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -739,16 +793,16 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.40
-MaP@[IoU=50]                : 0.62
-MaP@[IoU=75]                : 0.46
-MaP@[area=small]            : 0.03
-MaP@[area=medium]           : 0.26
-MaP@[area=large]            : 0.43
-Recall@[max_detections=1]   : 0.39
-Recall@[max_detections=10]  : 0.46
-Recall@[max_detections=100] : 0.46
-Recall@[area=small]         : 0.03
+MaP                         : 0.38
+MaP@[IoU=50]                : 0.60
+MaP@[IoU=75]                : 0.44
+MaP@[area=small]            : 0.02
+MaP@[area=medium]           : 0.27
+MaP@[area=large]            : 0.45
+Recall@[max_detections=1]   : 0.38
+Recall@[max_detections=10]  : 0.45
+Recall@[max_detections=100] : 0.45
+Recall@[area=small]         : 0.02
 Recall@[area=medium]        : 0.28
 Recall@[area=large]         : 0.49
 
@@ -863,15 +917,15 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8217 - box_loss: 0.6991 - classification_loss: 1.1225 - percent_boxes_matched_with_anchor: 0.9215
+20/20 [==============================] - ETA: 0s - loss: 1.8030 - box_loss: 0.7000 - classification_loss: 1.1031 - percent_boxes_matched_with_anchor: 0.9152
 
-100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:04<00:00,  4.84it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.18it/s]
 
-20/20 [==============================] - 30s 468ms/step - loss: 1.8217 - box_loss: 0.6991 - classification_loss: 1.1225 - percent_boxes_matched_with_anchor: 0.9215 - val_loss: 1.7622 - val_box_loss: 0.6888 - val_classification_loss: 1.0734 - val_percent_boxes_matched_with_anchor: 0.9047 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 30s 453ms/step - loss: 1.8030 - box_loss: 0.7000 - classification_loss: 1.1031 - percent_boxes_matched_with_anchor: 0.9152 - val_loss: 1.7505 - val_box_loss: 0.6855 - val_classification_loss: 1.0651 - val_percent_boxes_matched_with_anchor: 0.9219 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
 ```
 </div>
-
+    
 
 
 
@@ -879,7 +933,7 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-<keras.callbacks.History at 0x7f7fb810eaa0>
+<keras.callbacks.History at 0x7f7d8c5482e0>
 
 ```
 </div>
@@ -954,9 +1008,9 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
-
+    
 
 
 Awesome!
@@ -1024,10 +1078,12 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/main/LICENSE-MODEL
-50/50 [==============================] - 50s 311ms/step
-1/1 [==============================] - 2s 2s/step
+50/50 [==============================] - 50s 309ms/step
+1/1 [==============================] - 3s 3s/step
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
+    
+

@@ -20,7 +20,7 @@ Let's give KerasCV's object detection API a spin.
 """
 
 """shell
-!pip install --upgrade keras-cv
+!pip install --upgrade git+https://github.com/keras-team/keras-cv
 """
 import tensorflow as tf
 import tensorflow_datasets as tfds
