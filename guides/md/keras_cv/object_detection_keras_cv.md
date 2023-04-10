@@ -48,26 +48,26 @@ import tqdm
  'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (1.4.0)',
  'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (2022.7.9)',
  'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv) (4.8.3)',
- 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
- 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
- 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (3.20.3)',
  'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (8.0.4)',
- 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
- 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.1.1)',
- 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
- 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
- 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
- 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
- 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
- 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.12.0)',
  'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.23.5)',
- 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (5.12.0)',
+ 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.3)',
+ 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.1.1)',
+ 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.1.8)',
+ 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.12.0)',
+ 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.2.0)',
+ 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (0.10.2)',
+ 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (4.64.1)',
+ 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (1.14.1)',
+ 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (3.20.3)',
+ 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (2.28.1)',
+ 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv) (5.9.0)',
  'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (3.11.0)',
  'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (4.4.0)',
- 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (1.26.14)',
- 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2022.12.7)',
- 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
+ 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv) (5.12.0)',
  'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (3.4)',
+ 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (1.26.14)',
+ 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2.0.4)',
+ 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv) (2022.12.7)',
  'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv) (1.16.0)',
  'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv) (1.59.0)']
 
@@ -770,18 +770,18 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.36
-MaP@[IoU=50]                : 0.56
-MaP@[IoU=75]                : 0.42
+MaP                         : 0.40
+MaP@[IoU=50]                : 0.62
+MaP@[IoU=75]                : 0.46
 MaP@[area=small]            : 0.03
-MaP@[area=medium]           : 0.17
-MaP@[area=large]            : 0.40
-Recall@[max_detections=1]   : 0.38
-Recall@[max_detections=10]  : 0.43
-Recall@[max_detections=100] : 0.43
-Recall@[area=small]         : 0.04
-Recall@[area=medium]        : 0.20
-Recall@[area=large]         : 0.47
+MaP@[area=medium]           : 0.26
+MaP@[area=large]            : 0.43
+Recall@[max_detections=1]   : 0.39
+Recall@[max_detections=10]  : 0.46
+Recall@[max_detections=100] : 0.46
+Recall@[area=small]         : 0.03
+Recall@[area=medium]        : 0.28
+Recall@[area=large]         : 0.49
 
 ```
 </div>
@@ -894,13 +894,23 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8173 - box_loss: 0.6974 - classification_loss: 1.1199 - percent_boxes_matched_with_anchor: 0.9250
+20/20 [==============================] - ETA: 0s - loss: 1.8217 - box_loss: 0.6991 - classification_loss: 1.1225 - percent_boxes_matched_with_anchor: 0.9215
 
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:04<00:00,  4.75it/s]
+100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:04<00:00,  4.84it/s]
 
-20/20 [==============================] - 30s 474ms/step - loss: 1.8173 - box_loss: 0.6974 - classification_loss: 1.1199 - percent_boxes_matched_with_anchor: 0.9250 - val_loss: 1.7458 - val_box_loss: 0.6812 - val_classification_loss: 1.0646 - val_percent_boxes_matched_with_anchor: 0.9133 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 30s 468ms/step - loss: 1.8217 - box_loss: 0.6991 - classification_loss: 1.1225 - percent_boxes_matched_with_anchor: 0.9215 - val_loss: 1.7622 - val_box_loss: 0.6888 - val_classification_loss: 1.0734 - val_percent_boxes_matched_with_anchor: 0.9047 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
-<keras.callbacks.History at 0x7f51c42df5b0>
+```
+</div>
+    
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.callbacks.History at 0x7f7fb810eaa0>
 
 ```
 </div>
@@ -963,7 +973,7 @@ model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=0.5,
-    confidence_threshold=0.5,
+    confidence_threshold=0.75,
 )
 
 visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
@@ -1045,7 +1055,7 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/main/LICENSE-MODEL
-50/50 [==============================] - 49s 312ms/step
+50/50 [==============================] - 50s 311ms/step
 1/1 [==============================] - 2s 2s/step
 
 ```

@@ -781,7 +781,7 @@ model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=0.5,
-    confidence_threshold=0.5,
+    confidence_threshold=0.75,
 )
 
 visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
