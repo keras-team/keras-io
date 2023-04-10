@@ -22,7 +22,6 @@ Let's give KerasCV's object detection API a spin.
 """shell
 !pip install --upgrade keras-cv
 """
-
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
@@ -273,7 +272,7 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     # Decrease the required threshold to make predictions get pruned out
     iou_threshold=0.2,
     # Tune confidence threshold for predictions to pass NMS
-    confidence_threshold=0.97,
+    confidence_threshold=0.7,
 )
 pretrained_model.prediction_decoder = prediction_decoder
 
@@ -712,7 +711,6 @@ follow the standard Keras workflow, leveraging `compile()` and `fit()`.
 
 Let's compile our model:
 """
-
 model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
@@ -720,7 +718,6 @@ model.compile(
     # We will use our custom callback to evaluate COCO metrics
     metrics=None,
 )
-
 """
 If you want to train the fully model, uncomment `.take(20)` from each
 of the following dataset references.
@@ -732,7 +729,6 @@ model.fit(
     epochs=1,
     callbacks=[EvaluateCOCOMetricsCallback(eval_ds.take(20))],
 )
-
 """
 
 ## Inference and plotting results
@@ -743,18 +739,15 @@ will perform a non max suppression operation for you.
 
 In this section, we will use a `keras_cv` provided preset:
 """
-
 model = keras_cv.models.RetinaNet.from_preset(
     "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
 )
-
 """
 Next, for convenience we construct a dataset with larger batches:
 """
 visualization_ds = eval_ds.unbatch()
 visualization_ds = visualization_ds.ragged_batch(16)
 visualization_ds = visualization_ds.shuffle(8)
-
 """
 Let's create a simple function to plot our inferences:
 """
@@ -838,12 +831,6 @@ images = stable_diffusion.text_to_image(
     negative_prompt="unrealistic, bad looking, malformed",
     batch_size=4,
     seed=1231,
-)
-model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
-    bounding_box_format="xywh",
-    from_logits=True,
-    iou_threshold=0.2,
-    confidence_threshold=0.8,
 )
 y_pred = model.predict(images)
 visualization.plot_bounding_box_gallery(
