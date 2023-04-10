@@ -249,9 +249,9 @@ performs non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
 
-**Example of pre-NMS detections (left) and post-NMS detections (right):**
+**Example of pre-NMS detections:**
 
-<img width="400" src="https://i.imgur.com/L2KPpSF.jpg">
+<img width="400" src="https://i.imgur.com/cJIuiK9.jpg">
 
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
