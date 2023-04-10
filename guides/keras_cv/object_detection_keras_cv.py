@@ -261,7 +261,7 @@ This can be done by overriding to the `model.prediction_decoder` attribute.
 Let's use a custom `keras_cv.layers.MultiClassNonMaxSuppression` instance
 to perform prediction decoding in our pretrained model.
 In this case, we will tune the `iou_threshold` to `0.2`, and the
-`confidence_threshold` to `0.97`.
+`confidence_threshold` to `0.7`.
 
 Raising the `confidence_threshold` will cause the model to only output boxes
 that have a higher confidence score.  `iou_threshold` controls the threshold of
