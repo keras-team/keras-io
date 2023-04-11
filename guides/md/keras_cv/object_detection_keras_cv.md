@@ -41,7 +41,47 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
+<div class="k-default-codeblock">
+```
+['Collecting git+https://github.com/keras-team/keras-cv',
+ '  Cloning https://github.com/keras-team/keras-cv to /tmp/pip-req-build-cb6j_nlx',
+ '  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras-cv /tmp/pip-req-build-cb6j_nlx',
+ '  Resolved https://github.com/keras-team/keras-cv to commit c142683e55b05e21b6f5b302105e45f133c77190',
+ '  Installing build dependencies: started',
+ "  Installing build dependencies: finished with status 'done'",
+ '  Getting requirements to build wheel: started',
+ "  Getting requirements to build wheel: finished with status 'done'",
+ '  Preparing metadata (pyproject.toml): started',
+ "  Preparing metadata (pyproject.toml): finished with status 'done'",
+ 'Requirement already satisfied: absl-py in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (1.4.0)',
+ 'Requirement already satisfied: regex in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (2022.7.9)',
+ 'Requirement already satisfied: tensorflow-datasets in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (4.8.3)',
+ 'Requirement already satisfied: packaging in /home/lukewood/anaconda3/lib/python3.10/site-packages (from keras-cv==0.4.2) (22.0)',
+ 'Requirement already satisfied: protobuf>=3.12.2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (3.20.3)',
+ 'Requirement already satisfied: numpy in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.23.5)',
+ 'Requirement already satisfied: requests>=2.19.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.28.1)',
+ 'Requirement already satisfied: tensorflow-metadata in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.12.0)',
+ 'Requirement already satisfied: promise in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.3)',
+ 'Requirement already satisfied: psutil in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (5.9.0)',
+ 'Requirement already satisfied: tqdm in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (4.64.1)',
+ 'Requirement already satisfied: toml in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (0.10.2)',
+ 'Requirement already satisfied: termcolor in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (2.2.0)',
+ 'Requirement already satisfied: wrapt in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.14.1)',
+ 'Requirement already satisfied: click in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (8.0.4)',
+ 'Requirement already satisfied: dm-tree in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (0.1.8)',
+ 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-datasets->keras-cv==0.4.2) (1.1.1)',
+ 'Requirement already satisfied: zipp in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (3.11.0)',
+ 'Requirement already satisfied: importlib_resources in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (5.12.0)',
+ 'Requirement already satisfied: typing_extensions in /home/lukewood/anaconda3/lib/python3.10/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.4.2) (4.4.0)',
+ 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (1.26.14)',
+ 'Requirement already satisfied: idna<4,>=2.5 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (3.4)',
+ 'Requirement already satisfied: certifi>=2017.4.17 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (2022.12.7)',
+ 'Requirement already satisfied: charset-normalizer<3,>=2 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.4.2) (2.0.4)',
+ 'Requirement already satisfied: six in /home/lukewood/anaconda3/lib/python3.10/site-packages (from promise->tensorflow-datasets->keras-cv==0.4.2) (1.16.0)',
+ 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /home/lukewood/anaconda3/lib/python3.10/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv==0.4.2) (1.59.0)']
 
+```
+</div>
 ---
 ## Object detection introduction
 
@@ -170,9 +210,9 @@ visualization.plot_image_gallery(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
-
+    
 
 
 To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
@@ -269,9 +309,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
-
+    
 
 
 In order to support easy this easy and intuitive inference workflow, KerasCV
@@ -279,19 +319,55 @@ performs non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
 
-**Example of pre-NMS detections:**
-
-<img width="400" src="https://i.imgur.com/L1SbT5a.jpg">
-
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
 suppression operation.
 This can be done by overriding to the `model.prediction_decoder` attribute.
 
-Let's use a custom `keras_cv.layers.MultiClassNonMaxSuppression` instance
-to perform prediction decoding in our pretrained model.
+To show this concept off, lets temporarily disable non-max suppression on our
+RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
+
+
+```python
+# The following NonMaxSuppression layer is equivalent to disabling the operation
+prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+    bounding_box_format="xywh",
+    from_logits=True,
+    iou_threshold=1.0,
+    confidence_threshold=0.0,
+)
+pretrained_model.prediction_decoder = prediction_decoder
+
+y_pred = pretrained_model.predict(image_batch)
+visualization.plot_bounding_box_gallery(
+    image_batch,
+    value_range=(0, 255),
+    rows=1,
+    cols=1,
+    y_pred=y_pred,
+    scale=5,
+    font_scale=0.7,
+    bounding_box_format="xywh",
+    class_mapping=class_mapping,
+)
+
+```
+
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 2s 2s/step
+
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
+    
+
+
+Next, lets re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
+use case!
 In this case, we will tune the `iou_threshold` to `0.2`, and the
-`confidence_threshold` to `0.97`.
+`confidence_threshold` to `0.7`.
 
 Raising the `confidence_threshold` will cause the model to only output boxes
 that have a higher confidence score.  `iou_threshold` controls the threshold of
@@ -330,9 +406,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
-
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_1.png)
+    
 
 
 That looks a lot better!
@@ -460,6 +536,24 @@ eval_ds = load_pascal_voc(split="test", dataset="voc/2007", bounding_box_format=
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:You use TensorFlow DType <dtype: 'float32'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to float32.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:You use TensorFlow DType <dtype: 'bool'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to bool.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:You use TensorFlow DType <dtype: 'int64'> in tfds.features This will soon be deprecated in favor of NumPy DTypes. In the meantime it was converted to int64.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+WARNING:absl:`TensorInfo.dtype` is deprecated. Please change your code to use NumPy with the field `TensorInfo.np_dtype` or use TensorFlow with the field `TensorInfo.tf_dtype`.
+
+```
+</div>
 Next, let's batch our data.
 
 In KerasCV object detection tasks it is recommended that
@@ -491,9 +585,9 @@ visualize_dataset(
 ```
 
 
-
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_26_0.png)
-
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
+    
 
 
 And for the eval set:
@@ -513,9 +607,9 @@ visualize_dataset(
 ```
 
 
-
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
-
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_0.png)
+    
 
 
 Looks like everything is structured as expected.
@@ -552,9 +646,17 @@ visualize_dataset(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:2", shape=(None, 3), dtype=float32), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'bounding_boxes': {'classes': tf.RaggedTensor(values=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:1", shape=(None,), dtype=float32), row_splits=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'boxes': tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None, 4), dtype=float32), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(5,), dtype=int64))}}. Consider rewriting this model with the Functional API.
 
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_2.png)
+WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:2", shape=(None, 3), dtype=float32), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant_2/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'bounding_boxes': {'classes': tf.RaggedTensor(values=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:1", shape=(None,), dtype=float32), row_splits=Tensor("RaggedFromVariant_1/RaggedTensorFromVariant:0", shape=(5,), dtype=int64)), 'boxes': tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None, 4), dtype=float32), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(5,), dtype=int64))}}. Consider rewriting this model with the Functional API.
 
+```
+</div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_32_2.png)
+    
 
 
 Great!  We now have a bounding box friendly data augmentation pipeline.
@@ -583,9 +685,9 @@ visualize_dataset(
 ```
 
 
-
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_34_0.png)
-
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_36_0.png)
+    
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -715,18 +817,18 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.38
-MaP@[IoU=50]                : 0.60
-MaP@[IoU=75]                : 0.44
-MaP@[area=small]            : 0.02
-MaP@[area=medium]           : 0.27
-MaP@[area=large]            : 0.45
-Recall@[max_detections=1]   : 0.38
-Recall@[max_detections=10]  : 0.45
-Recall@[max_detections=100] : 0.45
-Recall@[area=small]         : 0.02
-Recall@[area=medium]        : 0.28
-Recall@[area=large]         : 0.49
+MaP                         : 0.35
+MaP@[IoU=50]                : 0.54
+MaP@[IoU=75]                : 0.40
+MaP@[area=small]            : 0.04
+MaP@[area=medium]           : 0.17
+MaP@[area=large]            : 0.38
+Recall@[max_detections=1]   : 0.37
+Recall@[max_detections=10]  : 0.42
+Recall@[max_detections=100] : 0.42
+Recall@[area=small]         : 0.04
+Recall@[area=medium]        : 0.20
+Recall@[area=large]         : 0.46
 
 ```
 </div>
@@ -839,15 +941,15 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8030 - box_loss: 0.7000 - classification_loss: 1.1031 - percent_boxes_matched_with_anchor: 0.9152
+20/20 [==============================] - ETA: 0s - loss: 1.8238 - box_loss: 0.6991 - classification_loss: 1.1248 - percent_boxes_matched_with_anchor: 0.9281
 
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.18it/s]
+100%|█████████████████████████████████████████████████████████████████████| 20/20 [00:03<00:00,  5.15it/s]
 
-20/20 [==============================] - 30s 453ms/step - loss: 1.8030 - box_loss: 0.7000 - classification_loss: 1.1031 - percent_boxes_matched_with_anchor: 0.9152 - val_loss: 1.7505 - val_box_loss: 0.6855 - val_classification_loss: 1.0651 - val_percent_boxes_matched_with_anchor: 0.9219 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 30s 471ms/step - loss: 1.8238 - box_loss: 0.6991 - classification_loss: 1.1248 - percent_boxes_matched_with_anchor: 0.9281 - val_loss: 1.7587 - val_box_loss: 0.6847 - val_classification_loss: 1.0740 - val_percent_boxes_matched_with_anchor: 0.9086 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
 ```
 </div>
-
+    
 
 
 
@@ -855,7 +957,7 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-<keras.callbacks.History at 0x7f7d8c5482e0>
+<keras.callbacks.History at 0x7f2c0819d600>
 
 ```
 </div>
@@ -930,9 +1032,9 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 ```
 </div>
-
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
-
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_66_1.png)
+    
 
 
 Awesome!
@@ -1000,10 +1102,12 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/main/LICENSE-MODEL
-50/50 [==============================] - 50s 309ms/step
-1/1 [==============================] - 3s 3s/step
+50/50 [==============================] - 49s 311ms/step
+1/1 [==============================] - 2s 2s/step
 
 ```
 </div>
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_70_1.png)
+    
 
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
