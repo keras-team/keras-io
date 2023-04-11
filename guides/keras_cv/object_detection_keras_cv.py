@@ -249,17 +249,41 @@ performs non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
 
-**Example of pre-NMS detections:**
-
-<img width="400" src="https://i.imgur.com/L1SbT5a.jpg">
-
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
 suppression operation.
 This can be done by overriding to the `model.prediction_decoder` attribute.
 
-Let's use a custom `keras_cv.layers.MultiClassNonMaxSuppression` instance
-to perform prediction decoding in our pretrained model.
+To show this concept off, lets temporarily disable non-max suppression on our
+RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
+"""
+
+# The following NonMaxSuppression layer is equivalent to disabling the operation
+prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+    bounding_box_format="xywh",
+    from_logits=True,
+    iou_threshold=1.0,
+    confidence_threshold=0.0,
+)
+pretrained_model.prediction_decoder = prediction_decoder
+
+y_pred = pretrained_model.predict(image_batch)
+visualization.plot_bounding_box_gallery(
+    image_batch,
+    value_range=(0, 255),
+    rows=1,
+    cols=1,
+    y_pred=y_pred,
+    scale=5,
+    font_scale=0.7,
+    bounding_box_format="xywh",
+    class_mapping=class_mapping,
+)
+
+
+"""
+Next, lets re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
+use case!
 In this case, we will tune the `iou_threshold` to `0.2`, and the
 `confidence_threshold` to `0.7`.
 
