@@ -170,9 +170,9 @@ visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
-    
+
 
 
 To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
@@ -269,9 +269,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
-    
+
 
 
 In order to support easy this easy and intuitive inference workflow, KerasCV
@@ -281,7 +281,7 @@ of a model detecting multiple boxes for the same object.
 
 **Example of pre-NMS detections:**
 
-<img width="400" src="https://i.imgur.com/cJIuiK9.jpg">
+<img width="400" src="https://i.imgur.com/L1SbT5a.jpg">
 
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
@@ -330,9 +330,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
-    
+
 
 
 That looks a lot better!
@@ -491,9 +491,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_26_0.png)
-    
+
 
 
 And for the eval set:
@@ -513,9 +513,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
-    
+
 
 
 Looks like everything is structured as expected.
@@ -552,9 +552,9 @@ visualize_dataset(
 )
 ```
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_2.png)
-    
+
 
 
 Great!  We now have a bounding box friendly data augmentation pipeline.
@@ -583,9 +583,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_34_0.png)
-    
+
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -847,7 +847,7 @@ model.fit(
 
 ```
 </div>
-    
+
 
 
 
@@ -930,9 +930,9 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
-    
+
 
 
 Awesome!
@@ -1005,7 +1005,5 @@ By using this model checkpoint, you acknowledge that its usage is subject to the
 
 ```
 </div>
-    
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
-    
 
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_68_1.png)
