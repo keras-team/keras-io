@@ -251,7 +251,7 @@ of a model detecting multiple boxes for the same object.
 
 **Example of pre-NMS detections:**
 
-<img width="400" src="https://i.imgur.com/cJIuiK9.jpg">
+<img width="400" src="https://i.imgur.com/L1SbT5a.jpg">
 
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
