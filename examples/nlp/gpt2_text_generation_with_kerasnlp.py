@@ -224,7 +224,7 @@ for demo purposes.
 """
 
 train_ds = train_ds.take(500)
-num_epochs = 2
+num_epochs = 1
 
 lr = tf.keras.optimizers.schedules.PolynomialDecay(
     5e-5,
@@ -253,9 +253,6 @@ print(output)
 
 end = time.time()
 print("TOTAL TIME ELAPSED: ", end - start)
-
-# You can save the weights for future usage.
-gpt2_lm.backbone.save_weights("/content/model.h5")
 
 """
 ## Into the Sampling Method
@@ -326,8 +323,10 @@ import os
 import json
 
 poem_collection = []
-for file in os.listdir("chinese-poetry/quan_tang_shi/json"):
-    full_filename = "%s/%s" % ("chinese-poetry/quan_tang_shi/json", file)
+for file in os.listdir("chinese-poetry/全唐诗"):
+    if ".json" not in file or "poet" not in file:
+        continue
+    full_filename = "%s/%s" % ("chinese-poetry/全唐诗", file)
     with open(full_filename, "r") as f:
         content = json.load(f)
         poem_collection.extend(content)
@@ -352,10 +351,10 @@ train_ds = (
     .prefetch(tf.data.AUTOTUNE)
 )
 
-# Running through the whole dataset takes long, only take `500` and run 2
+# Running through the whole dataset takes long, only take `500` and run 1
 # epochs for demo purposes.
 train_ds = train_ds.take(500)
-num_epochs = 2
+num_epochs = 1
 
 lr = tf.keras.optimizers.schedules.PolynomialDecay(
     5e-4,
@@ -379,6 +378,3 @@ print(output)
 """
 Not bad 😀
 """
-
-# You can save the weights for future usage.
-gpt2_lm.backbone.save_weights("/content/model.h5")
