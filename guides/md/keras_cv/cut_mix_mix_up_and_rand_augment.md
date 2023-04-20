@@ -152,7 +152,7 @@ applied at each layer.
 
 You can read more about these
 parameters in the
-[`RandAugment` API documentation](/api/keras_cv/layers/preprocessing/rand_augment/).
+[`RandAugment` API documentation](https://keras.io/api/keras_cv/layers/preprocessing/rand_augment/).
 
 Let's use KerasCV's RandAugment implementation.
 
