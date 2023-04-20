@@ -207,7 +207,7 @@ built using the functional API as for `Sequential` models.
 
 The `Model` class offers a built-in training loop (the `fit()` method)
 and a built-in evaluation loop (the `evaluate()` method). Note
-that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
+that you can easily [customize these loops](https://keras.io/guides/customizing_what_happens_in_fit/)
 to implement training routines beyond supervised learning
 (e.g. [GANs](https://keras.io/examples/generative/dcgan_overriding_train_step/)).
 
@@ -906,7 +906,7 @@ your own layers. All layers subclass the `Layer` class and implement:
 convention since you can create weights in `__init__`, as well).
 
 To learn more about creating layers from scratch, read
-[custom layers and models](/guides/making_new_layers_and_models_via_subclassing) guide.
+[custom layers and models](https://keras.io/guides/making_new_layers_and_models_via_subclassing) guide.
 
 The following is a basic implementation of `tf.keras.layers.Dense`:
 
@@ -1070,7 +1070,7 @@ Because a functional model is a data structure rather than a piece of code,
 it is safely serializable and can be saved as a single file
 that allows you to recreate the exact same model
 without having access to any of the original code.
-See the [serialization & saving guide](/guides/serialization_and_saving/).
+See the [serialization & saving guide](https://keras.io/guides/serialization_and_saving/).
 
 To serialize a subclassed model, it is necessary for the implementer
 to specify a `get_config()`
