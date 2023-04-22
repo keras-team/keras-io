@@ -7,7 +7,6 @@ Description: Use KerasNLP GPT2 model and `samplers` to do text generation.
 Accelerator: GPU
 """
 """
-# KerasNLP Text Generation Guide
 
 In this tutorial, you will learn to use [KerasNLP](https://keras.io/keras_nlp/) to load a
 pre-trained Large Language Model (LLM) - [GPT-2
@@ -18,7 +17,7 @@ languages (Chinese in ths tutorial).
 """
 
 """
-# Before you begin
+##  Before you begin
 
 Colab offers different kinds of runtimes. Make sure to go to **Runtime -> Change runtime
 type** and choose the GPU Hardware Accelerator runtime (which should have >12G System RAM
@@ -40,7 +39,7 @@ from tensorflow import keras
 import time
 
 """
-# Introduction to Generative Large Language Models (LLMs)
+## Introduction to Generative Large Language Models (LLMs)
 
 Large language models (LLMs) are a type of machine learning models that are
 trained on a large corpus of text data to generate outputs for various natural
@@ -53,40 +52,28 @@ Google researchers in 2017, and are trained on massive amounts of text data,
 often involving billions of words. These models, such as Google [LaMDA](https://blog.google/technology/ai/lamda/)
 and [PaLM](https://ai.googleblog.com/2022/04/pathways-language-model-palm-scaling-to.html),
 are trained with a large dataset from various data sources which allows them to
-generate output for many tasks.
-
-Generative LLMs are large because of their sheer size and the vast volumes of
-data on which they are trained, but at the core they are just language models
-that can predict the next word in a sentence, often referred as
-**Causal LM Pretraining**. Language models do this by analyzing the words that
-have already been used in the sentence and then using that information to
-calculate the probability of each possible word. This way LLMs can generate
-coherent text based on user prompts. For a more pedagogical discussion on
-language models, you can refer to the [Stanford CS324 LLM class](https://stanford-cs324.github.io/winter2022/lectures/introduction/).
+generate output for many tasks. The core of Generative LLMs is predicting the
+next word in a sentence, often referred as **Causal LM Pretraining**. In this
+way LLMs can generate coherent text based on user prompts. For a more
+pedagogical discussion on language models, you can refer to the
+[Stanford CS324 LLM class](https://stanford-cs324.github.io/winter2022/lectures/introduction/).
 """
 
 """
-# Introduction to KerasNLP
+## Introduction to KerasNLP
 
 Large Language Models are complex to build and expensive to train from scratch.
 Luckily there are pretrained LLMs available for use right away. One toolkit that
 offers state-of-the-art pretrained models for free is [KerasNLP](https://keras.io/keras_nlp/).
 
 KerasNLP is a natural language processing library that supports users through
-their entire development cycle. The workflows are built from modular components
-that have state-of-the-art preset weights and architectures when used
-out-of-the-box and are easily customizable when more control is needed. KerasNLP
-emphasizes in-graph computation for all workflows so that developers can expect
-easy productionization using the TensorFlow ecosystem, for example, deployment
-to mobile devices with TensorFlow Lite.
-
-KerasNLP is a great choice for anyone who wants to build NLP models with Keras.
-It provides a high-level API for building NLP models, and it includes a variety
-of pre-trained models and modules. It is easy to use, and it provides a wide
-range of features. If you are new to NLP, KerasNLP is a great place to start.
+their entire development cycle. KerasNLP offers both pretrained models and
+modularized building blocks, so developers could easily reuse pretrained models
+or stack their own LLM.
 
 In a nutshell, for generative LLM, KerasNLP offers:
-- Pretrained models with `generate()` method, e.g., GPT2, BART and OPT.
+- Pretrained models with `generate()` method, e.g.,
+    `keras_nlp.models.GPT2CausalLM` and `keras_nlp.models.OPTCausalLM`.
 - Sampler class that implements generation algorithms such as Top-K, Beam and
     contrastive search. These samplers can be used to generate text with
     custom models.
@@ -150,7 +137,7 @@ finetuning.
 """
 
 """
-# More on the GPT-2 model from KerasNLP
+## More on the GPT-2 model from KerasNLP
 
 While it may be sufficient to move on to the next step of finetuning the
 loaded model now, for the more curious you can better understand how generative
@@ -167,7 +154,7 @@ pretrained model:
     causal LM training. It does the tokenization along with other preprocessing
     works such as creating the label and appending the end token.
 - `keras_nlp.models.GPT2Backbone`: the GPT2 model, which is a stack of
-    `keras_nlp.layersTransformerDecoder`. This is usually just referred as
+    `keras_nlp.layers.TransformerDecoder`. This is usually just referred as
     `GPT2`.
 - `keras_nlp.models.GPT2CausalLM`: wraps `GPT2Backbone`, it multiplies the
     output of `GPT2Backbone` by embedding matrix to generate logits over
@@ -175,7 +162,7 @@ pretrained model:
 """
 
 """
-# Finetune on Reddit dataset.
+## Finetune on Reddit dataset.
 
 Now you have the knowledge of the GPT-2 model from KerasNLP, you can take one
 step further to finetune the model so that it generates text in a specific
@@ -191,8 +178,8 @@ reddit_ds = tfds.load("reddit_tifu", split="train", as_supervised=True)
 Let's take a look inside sample data from the reddit TensorFlow Dataset. There
 are two features:
 
-- __document__: text of the post
-- __title__: the title
+- **__document__**: text of the post.
+- **__title__**: the title.
 
 """
 
@@ -257,11 +244,12 @@ print("TOTAL TIME ELAPSED: ", end - start)
 """
 ## Into the Sampling Method
 
-In KerasNLP, we offer a few sampling method, e.g., contrastive search,
-Top-K search and beam search. By default our `GPT2CausalLM` uses contrastive
+In KerasNLP, we offer a few sampling methods, e.g., contrastive search,
+Top-K and beam sampling. By default our `GPT2CausalLM` uses contrastive
 search, but you can choose your own sampling method.
 
-There are two ways to specify your custom sampler:
+Much like optimizer and activations, there are two ways to specify your custom
+sampler:
 - Use a string identifier, such as "top_k", you are using the default
 configuration via this way.
 - Pass a `keras_nlp.samplers.Sampler` instance, you can use custom configuration
@@ -270,28 +258,17 @@ via this way.
 
 # Use a string identifier.
 gpt2_lm.compile(sampler="top_k")
-
-start = time.time()
-
 output = gpt2_lm.generate("I like basketball", max_length=200)
 print("\nGPT-2 output:")
 print(output)
-
-end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
 
 # Use a `Sampler` instance.
 beam_sampler = keras_nlp.samplers.BeamSampler(num_beams=3)
 gpt2_lm.compile(sampler=beam_sampler)
 
-start = time.time()
-
 output = gpt2_lm.generate("I like basketball", max_length=200)
 print("\nGPT-2 output:")
 print(output)
-
-end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
 
 """
 For more details on KerasNLP `Sampler` class, you can check the code
@@ -306,7 +283,7 @@ this part illustrates how to finetung GPT2 on Chinese poem dataset to teach our
 model to become a poet!
 
 Because GPT2 uses byte-pair encoder, and the original pretraining dataset
-contains some Chinese character, we can use the original vocab to finetune on
+contains some Chinese characters, we can use the original vocab to finetune on
 Chinese dataset.
 """
 

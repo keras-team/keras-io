@@ -10,8 +10,6 @@
 
 
 
-# KerasNLP Text Generation Guide
-
 In this tutorial, you will learn to use [KerasNLP](https://keras.io/keras_nlp/) to load a
 pre-trained Large Language Model (LLM) - [GPT-2
 model](https://openai.com/research/better-language-models) (originally invented by
@@ -19,7 +17,8 @@ OpenAI), finetune it to a specific text style, and generate text based on users'
 (also known as prompt). You will also learn how GPT2 adapts quickly to non-English
 languages (Chinese in ths tutorial).
 
-# Before you begin
+---
+##  Before you begin
 
 Colab offers different kinds of runtimes. Make sure to go to **Runtime -> Change runtime
 type** and choose the GPU Hardware Accelerator runtime (which should have >12G System RAM
@@ -49,7 +48,8 @@ import time
 
 ```
 </div>
-# Introduction to Generative Large Language Models (LLMs)
+---
+## Introduction to Generative Large Language Models (LLMs)
 
 Large language models (LLMs) are a type of machine learning models that are
 trained on a large corpus of text data to generate outputs for various natural
@@ -62,38 +62,27 @@ Google researchers in 2017, and are trained on massive amounts of text data,
 often involving billions of words. These models, such as Google [LaMDA](https://blog.google/technology/ai/lamda/)
 and [PaLM](https://ai.googleblog.com/2022/04/pathways-language-model-palm-scaling-to.html),
 are trained with a large dataset from various data sources which allows them to
-generate output for many tasks.
+generate output for many tasks. The core of Generative LLMs is predicting the
+next word in a sentence, often referred as **Causal LM Pretraining**. In this
+way LLMs can generate coherent text based on user prompts. For a more
+pedagogical discussion on language models, you can refer to the
+[Stanford CS324 LLM class](https://stanford-cs324.github.io/winter2022/lectures/introduction/).
 
-Generative LLMs are large because of their sheer size and the vast volumes of
-data on which they are trained, but at the core they are just language models
-that can predict the next word in a sentence, often referred as
-**Causal LM Pretraining**. Language models do this by analyzing the words that
-have already been used in the sentence and then using that information to
-calculate the probability of each possible word. This way LLMs can generate
-coherent text based on user prompts. For a more pedagogical discussion on
-language models, you can refer to the [Stanford CS324 LLM class](https://stanford-cs324.github.io/winter2022/lectures/introduction/).
-
-# Introduction to KerasNLP
+---
+## Introduction to KerasNLP
 
 Large Language Models are complex to build and expensive to train from scratch.
 Luckily there are pretrained LLMs available for use right away. One toolkit that
 offers state-of-the-art pretrained models for free is [KerasNLP](https://keras.io/keras_nlp/).
 
 KerasNLP is a natural language processing library that supports users through
-their entire development cycle. The workflows are built from modular components
-that have state-of-the-art preset weights and architectures when used
-out-of-the-box and are easily customizable when more control is needed. KerasNLP
-emphasizes in-graph computation for all workflows so that developers can expect
-easy productionization using the TensorFlow ecosystem, for example, deployment
-to mobile devices with TensorFlow Lite.
-
-KerasNLP is a great choice for anyone who wants to build NLP models with Keras.
-It provides a high-level API for building NLP models, and it includes a variety
-of pre-trained models and modules. It is easy to use, and it provides a wide
-range of features. If you are new to NLP, KerasNLP is a great place to start.
+their entire development cycle. KerasNLP offers both pretrained models and
+modularized building blocks, so developers could easily reuse pretrained models
+or stack their own LLM.
 
 In a nutshell, for generative LLM, KerasNLP offers:
-- Pretrained models with `generate()` method, e.g., GPT2, BART and OPT.
+- Pretrained models with `generate()` method, e.g.,
+    `keras_nlp.models.GPT2CausalLM` and `keras_nlp.models.OPTCausalLM`.
 - Sampler class that implements generation algorithms such as Top-K, Beam and
     contrastive search. These samplers can be used to generate text with
     custom models.
@@ -159,7 +148,7 @@ I didn't know what I was doing. I just thought I was going to get out of here an
     
 <div class="k-default-codeblock">
 ```
-TOTAL TIME ELAPSED:  18.295717477798462
+TOTAL TIME ELAPSED:  18.434622764587402
 
 ```
 </div>
@@ -206,7 +195,7 @@ The eatery is located at 5100 N. Broadway in New York City, according to the New
 <div class="k-default-codeblock">
 ```
 The restaurant, which has a large Italian menu, was closed in April after the owner, who is Italian, told the Post that the restaurant was "not a good place," but that he was "working on a new restaurant."
-TOTAL TIME ELAPSED:  1.73724365234375
+TOTAL TIME ELAPSED:  1.7215840816497803
 
 ```
 </div>
@@ -216,7 +205,8 @@ graph is compiled in the 1st run and re-used in the 2nd behind the scene.
 The quality of the generated text looks OK, but we can improved it via
 finetuning.
 
-# More on the GPT-2 model from KerasNLP
+---
+## More on the GPT-2 model from KerasNLP
 
 While it may be sufficient to move on to the next step of finetuning the
 loaded model now, for the more curious you can better understand how generative
@@ -233,13 +223,14 @@ pretrained model:
     causal LM training. It does the tokenization along with other preprocessing
     works such as creating the label and appending the end token.
 - `keras_nlp.models.GPT2Backbone`: the GPT2 model, which is a stack of
-    `keras_nlp.layersTransformerDecoder`. This is usually just referred as
+    `keras_nlp.layers.TransformerDecoder`. This is usually just referred as
     `GPT2`.
 - `keras_nlp.models.GPT2CausalLM`: wraps `GPT2Backbone`, it multiplies the
     output of `GPT2Backbone` by embedding matrix to generate logits over
     vocab tokens.
 
-# Finetune on Reddit dataset.
+---
+## Finetune on Reddit dataset.
 
 Now you have the knowledge of the GPT-2 model from KerasNLP, you can take one
 step further to finetune the model so that it generates text in a specific
@@ -256,8 +247,8 @@ reddit_ds = tfds.load("reddit_tifu", split="train", as_supervised=True)
 Let's take a look inside sample data from the reddit TensorFlow Dataset. There
 are two features:
 
-- __document__: text of the post
-- __title__: the title
+- **__document__**: text of the post.
+- **__title__**: the title.
 
 
 ```python
@@ -315,9 +306,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 214s 312ms/step - loss: 3.3057 - accuracy: 0.3265
+500/500 [==============================] - 213s 310ms/step - loss: 3.3057 - accuracy: 0.3265
 
-<keras.callbacks.History at 0x7f2884619790>
+<keras.callbacks.History at 0x7f4ce0730580>
 
 ```
 </div>
@@ -361,18 +352,19 @@ so, i'm in the middle of a game, and i get a little frustrated, so i just try to
 <div class="k-default-codeblock">
 ```
 it's like a giant
-TOTAL TIME ELAPSED:  15.901640892028809
+TOTAL TIME ELAPSED:  15.863253593444824
 
 ```
 </div>
 ---
 ## Into the Sampling Method
 
-In KerasNLP, we offer a few sampling method, e.g., contrastive search,
-Top-K search and beam search. By default our `GPT2CausalLM` uses contrastive
+In KerasNLP, we offer a few sampling methods, e.g., contrastive search,
+Top-K and beam sampling. By default our `GPT2CausalLM` uses contrastive
 search, but you can choose your own sampling method.
 
-There are two ways to specify your custom sampler:
+Much like optimizer and activations, there are two ways to specify your custom
+sampler:
 - Use a string identifier, such as "top_k", you are using the default
 configuration via this way.
 - Pass a `keras_nlp.samplers.Sampler` instance, you can use custom configuration
@@ -382,28 +374,17 @@ via this way.
 ```python
 # Use a string identifier.
 gpt2_lm.compile(sampler="top_k")
-
-start = time.time()
-
 output = gpt2_lm.generate("I like basketball", max_length=200)
 print("\nGPT-2 output:")
 print(output)
-
-end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
 
 # Use a `Sampler` instance.
 beam_sampler = keras_nlp.samplers.BeamSampler(num_beams=3)
 gpt2_lm.compile(sampler=beam_sampler)
 
-start = time.time()
-
 output = gpt2_lm.generate("I like basketball", max_length=200)
 print("\nGPT-2 output:")
 print(output)
-
-end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
 ```
 
     
@@ -448,7 +429,6 @@ so he looked up at me and said "hey guys, you're going to have to play the next 
 ```
 so i was like "yeah, i know, i guess i'll go." 
 so i
-TOTAL TIME ELAPSED:  15.862805843353271
 ```
 </div>
     
@@ -516,7 +496,6 @@ so, i'm sitting in the back of the locker room, watching the game.
 <div class="k-default-codeblock">
 ```
 so, i'm sitting in the back
-TOTAL TIME ELAPSED:  16.93277096748352
 
 ```
 </div>
@@ -531,7 +510,7 @@ this part illustrates how to finetung GPT2 on Chinese poem dataset to teach our
 model to become a poet!
 
 Because GPT2 uses byte-pair encoder, and the original pretraining dataset
-contains some Chinese character, we can use the original vocab to finetune on
+contains some Chinese characters, we can use the original vocab to finetune on
 Chinese dataset.
 
 
@@ -546,7 +525,7 @@ Chinese dataset.
 <div class="k-default-codeblock">
 ```
 ["Cloning into 'chinese-poetry'...",
- 'Checking out files:  43% (1004/2283)   ',
+ 'Checking out files:  43% (1003/2283)   ',
  'Checking out files:  44% (1005/2283)   ',
  'Checking out files:  45% (1028/2283)   ',
  'Checking out files:  46% (1051/2283)   ',
@@ -557,8 +536,8 @@ Chinese dataset.
  'Checking out files:  51% (1165/2283)   ',
  'Checking out files:  52% (1188/2283)   ',
  'Checking out files:  53% (1210/2283)   ',
+ 'Checking out files:  53% (1221/2283)   ',
  'Checking out files:  54% (1233/2283)   ',
- 'Checking out files:  54% (1236/2283)   ',
  'Checking out files:  55% (1256/2283)   ',
  'Checking out files:  56% (1279/2283)   ',
  'Checking out files:  57% (1302/2283)   ',
@@ -673,9 +652,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 159s 208ms/step - loss: 2.4424 - accuracy: 0.2812
+500/500 [==============================] - 157s 206ms/step - loss: 2.4420 - accuracy: 0.2814
 
-<keras.callbacks.History at 0x7f2884626130>
+<keras.callbacks.History at 0x7f4ce0216460>
 
 ```
 </div>
@@ -689,11 +668,11 @@ print(output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f2928250e20>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f4da0343f10>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f2928250e20>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f4da0343f10>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-昨夜雨疏风骤渡，短石頭石百翠知。清香翠萬至處，池石屋汝清須。登風山山書，紅紅非山處。
+昨夜雨疏风骤清，短石頭石翁綠細。
 
 ```
 </div>
