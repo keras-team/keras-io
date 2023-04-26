@@ -58,15 +58,24 @@ pretrained on the ImageNet dataset.
 
 The highest level module in KerasCV is a *task*. A *task* is a `keras.Model`
 consisting of a (generally pretrained) backbone model and task-specific layers.
-Here's an example using `keras_cv.models.ImageClassifier` with a ResNet50V2
+Here's an example using `keras_cv.models.ImageClassifier` with a EfficientNetV2S
 Backbone.
-
-
 """
 
 classifier = keras_cv.models.ImageClassifier.from_preset(
-    "densenet121_imagenet_classifier",
+    "efficientnetv2_s_imagenet_classifier",
 )
+
+"""
+You may notice a small deviation from the old `keras.applications` API; where
+you would construct the class with `EfficientNetV2S(weights="imagenet")`.
+While the old API was great for classification, it did not scale effectively to
+other use cases that required complex architectures, like object deteciton and
+semantic segmentation.
+
+Now that we have a classifier build, lets take our model for a spin!
+Let's run inference on a picture of  a cute cat:
+"""
 filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
@@ -77,38 +86,61 @@ keras_cv.visualization.plot_image_gallery(
     value_range=(0, 255),
     show=True,
 )
+
 """
-Next, we can perform some predictions using this classifier
+Lets also fetch the class mapping for ImageNet.  I have this class mapping
+hosted in a GitHub gist.
+"""
+import json
+class_mapping = keras.utils.get_file(origin="https://gist.githubusercontent.com/LukeWood/368e2e89bb0e36bd34ff7043e0247289/raw/0615d1e88a93d4e971bf2dea0cfc52f30a12dd99/imagenet%2520mapping")
+class_mapping = json.load(open(class_mapping, 'r'))\\
+
+"""
+Let's get some predictions from our classifier:
 """
 
-
-# Predictions are softmax-ed category rankings
 predictions = classifier.predict([image])
+"""
+Predictions come in the form of softmax-ed category rankings.
+We can find the index of the top classes using a simple argsort function:
+"""
 top_classes = predictions[0].argsort(axis=-1)
 
-# Subset of imagenet classes
-classes = {
-    281: 'tabby, tabby cat',
-    885: 'velvet'
-}
+"""
+In order to decode the class mappings, we can construct a mapping from
+category indices to ImageNet class names.
+For conveneince, I've stored the ImageNet class mapping in a GitHub gist.
+Let's download and load it now.
+"""
+classes = keras.utils.get_file(
+    origin="https://gist.githubusercontent.com/LukeWood/62eebcd5c5c4a4d0e0b7845780f76d55/raw/fde63e5e4c09e2fa0a3436680f436bdcb8325aac/ImagenetClassnames.json"
+)
+with open(classes, 'rb') as f:
+    classes = json.load(f)
+"""
+Now we can simply look up the class names via index:
+"""
 top_two = [classes[i] for i in top_classes[-2:]]
 print("Top two classes are:", top_two)
 
-"""Great!  Both of these are correct!  But what if you don't care about the
-velvet blanket, and instead only want to know if a cat is in the image or not?
-This can be solved using fine tuning.
+"""
+Great!  Both of these appear to be correct!
+But what if you don't care about the
+velvet blanket?
+Perhaps instead, you only want to know if a cat is in the image or not.
+This can be solved using fine tuning your own classifier.
 
 # Fine tuning a pretrained classifier
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
 
 When labeled images specific to our task are available, fine-tuning a custom
-classifier can improve performance. If we want to train a Cats VS Dogs
+classifier can improve performance. If we want to train a Cats vs Dogs
 Classifier, using explicitly labeled Cat vs Dog data should perform better than
 the generic classifier data! And for many tasks, no relevant pretrained model
 will be available (e.g., categorizing images specific to your application).
 
-The biggest difficulty when finetuning a KerasCV model is loading and augmenting
+The biggest difficulty when fine-tuning a KerasCV model is loading and augmenting
 your data.  Luckily, we've handled the second half for you, so all you'll have
 to do is load your own data.
 
@@ -196,7 +228,11 @@ train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
 model.fit(train_dataset.map(unpackage_data, num_parallel_calls=tf.data.AUTOTUNE))
 
-predictions = model.predict(image[None, ...])
+"""
+Let's look at how our model performs after the fine tuning!
+"""
+
+predictions = model.predict([image])
 
 classes = {
     0: 'cat',
@@ -205,9 +241,13 @@ classes = {
 print("Top class is:", classes[predictions[0].argmax()])
 
 """
+Awesome!  Looks like the model correctly classified the image.
+"""
+
+"""
 ## Conclusions
 
-KerasCV makes producing robust solutions to classification problems easy.
+KerasCV makes image classification easy.
 Making use of the KerasCV `ImageClassifier` API, pretrained weights, and the
 KerasCV data augmentations allows you to train a powerful classifier in `<50`
 lines of code.
