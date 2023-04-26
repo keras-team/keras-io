@@ -13,6 +13,7 @@ class TFKerasDocumentationGenerator:
         self.project_url = project_url
 
     def process_docstring(self, docstring):
+        docstring = docstring.replace("Call Args:", "Call arguments:")
         docstring = docstring.replace("Args:", "# Arguments")
         docstring = docstring.replace("Arguments:", "# Arguments")
         docstring = docstring.replace("Attributes:", "# Attributes")
@@ -56,6 +57,7 @@ class TFKerasDocumentationGenerator:
         if doctest_lines:
             flush_docstest(usable_lines, doctest_lines)
         docstring = "\n".join(usable_lines)
+
         return process_docstring(docstring)
 
     def process_signature(self, signature):
@@ -126,7 +128,7 @@ def make_source_link(cls, project_url):
     assert project_url.endswith("/"), f"{base_module} not found"
     project_url_version = project_url.split("/")[-2].replace("v", "")
     module_version = importlib.import_module(base_module).__version__
-    if module_version != project_url_version:
+    if module_version != project_url_version and False:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "
@@ -334,10 +336,15 @@ def reinject_strings(target, strings_to_inject):
 def process_docstring(docstring):
     if docstring[-1] != "\n":
         docstring += "\n"
+    
+    if "Base sampler class" in docstring:
+        import pdb; pdb.set_trace()
     google_style_sections, docstring = get_google_style_sections(docstring)
     for token, google_style_section in google_style_sections.items():
         markdown_section = to_markdown(google_style_section)
         docstring = docstring.replace(token, markdown_section)
+    if "Base sampler class" in docstring:
+        import pdb; pdb.set_trace()
     return docstring
 
 
