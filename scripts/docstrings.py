@@ -134,7 +134,8 @@ def make_source_link(cls, project_url):
     assert project_url.endswith("/"), f"{base_module} not found"
     project_url_version = project_url.split("/")[-2].replace("v", "")
     module_version = importlib.import_module(base_module).__version__
-    if module_version != project_url_version and False:
+    # TODO: reenable this check before merge.
+    if False and module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "

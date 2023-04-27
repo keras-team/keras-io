@@ -792,7 +792,6 @@ METRICS_MASTER = {
             "title": "EditDistance metric",
             "generate": ["keras_nlp.metrics.EditDistance"],
         },
-
     ],
 }
 
@@ -801,7 +800,7 @@ NLP_API_MASTER = {
     "title": "KerasNLP",
     "toc": True,
     "children": [
-        MODELS_MASTER,        
+        MODELS_MASTER,
         TOKENIZERS_MASTER,
         PREPROCESSING_LAYERS_MASTER,
         MODELING_LAYERS_MASTER,
