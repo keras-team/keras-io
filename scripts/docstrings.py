@@ -26,8 +26,12 @@ class TFKerasDocumentationGenerator:
         docstring = docstring.replace("Example:", "# Example\n")
         docstring = docstring.replace("Examples:", "# Examples\n")
 
-        docstring = re.sub(r"\nReference:\n\s*", "\n**Reference**\n\n", docstring)
-        docstring = re.sub(r"\nReferences:\n\s*", "\n**References**\n\n", docstring)
+        docstring = re.sub(
+            r"\nReference:\n\s*", "\n**Reference**\n\n", docstring
+        )
+        docstring = re.sub(
+            r"\nReferences:\n\s*", "\n**References**\n\n", docstring
+        )
 
         # Fix typo
         docstring = docstring.replace("\n >>> ", "\n>>> ")
@@ -112,7 +116,9 @@ def import_object(string: str):
         try:
             last_object_got = importlib.import_module(".".join(seen_names))
         except ModuleNotFoundError:
-            assert last_object_got is not None, f"Failed to import path {string}"
+            assert (
+                last_object_got is not None
+            ), f"Failed to import path {string}"
             last_object_got = getattr(last_object_got, name)
     return last_object_got
 
@@ -287,7 +293,9 @@ def get_google_style_sections_without_code(docstring):
         google_style_section = docstring[section_start:section_end]
         token = f"KERAS_AUTODOC_GOOGLE_STYLE_SECTION_{i}"
         google_style_sections[token] = google_style_section
-        docstring = insert_in_string(docstring, token, section_start, section_end)
+        docstring = insert_in_string(
+            docstring, token, section_start, section_end
+        )
     return google_style_sections, docstring
 
 
@@ -295,10 +303,14 @@ def get_google_style_sections(docstring):
     # First, extract code blocks and process them.
     # The parsing is easier if the #, : and other symbols aren't there.
     code_blocks, docstring = get_code_blocks(docstring)
-    google_style_sections, docstring = get_google_style_sections_without_code(docstring)
+    google_style_sections, docstring = get_google_style_sections_without_code(
+        docstring
+    )
     docstring = reinject_strings(docstring, code_blocks)
     for section_token, section in google_style_sections.items():
-        google_style_sections[section_token] = reinject_strings(section, code_blocks)
+        google_style_sections[section_token] = reinject_strings(
+            section, code_blocks
+        )
     return google_style_sections, docstring
 
 
@@ -336,15 +348,11 @@ def reinject_strings(target, strings_to_inject):
 def process_docstring(docstring):
     if docstring[-1] != "\n":
         docstring += "\n"
-    
-    if "Base sampler class" in docstring:
-        import pdb; pdb.set_trace()
+
     google_style_sections, docstring = get_google_style_sections(docstring)
     for token, google_style_section in google_style_sections.items():
         markdown_section = to_markdown(google_style_section)
         docstring = docstring.replace(token, markdown_section)
-    if "Base sampler class" in docstring:
-        import pdb; pdb.set_trace()
     return docstring
 
 
@@ -361,7 +369,9 @@ def get_class_from_method(meth):
         )
         if isinstance(cls, type):
             return cls
-    return getattr(meth, "__objclass__", None)  # handle special descriptor objects
+    return getattr(
+        meth, "__objclass__", None
+    )  # handle special descriptor objects
 
 
 def insert_in_string(target, string_to_insert, start, end):
