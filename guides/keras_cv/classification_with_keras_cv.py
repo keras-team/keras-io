@@ -3,7 +3,8 @@ Title: Classification with KerasCV
 Author: [lukewood](https://lukewood.xyz)
 Date created: 03/28/2023
 Last modified: 03/28/2023
-Description: Use KerasCV to train a state of the art image classifier.
+Description: Use KerasCV to train powerful image classifiers.
+Accelerator: GPU
 """
 
 """
@@ -50,7 +51,7 @@ Backbone.
 """
 
 classifier = keras_cv.models.ImageClassifier.from_preset(
-    "efficientnetv2_s_imagenet_classifier",
+    "efficientnetv2-s_imagenet_classifier"
 )
 
 """
@@ -79,14 +80,17 @@ Lets also fetch the class mapping for ImageNet.  I have this class mapping
 hosted in a GitHub gist.
 """
 import json
-class_mapping = keras.utils.get_file(origin="https://gist.githubusercontent.com/LukeWood/368e2e89bb0e36bd34ff7043e0247289/raw/0615d1e88a93d4e971bf2dea0cfc52f30a12dd99/imagenet%2520mapping")
-class_mapping = json.load(open(class_mapping, 'r'))\\
+
+class_mapping = keras.utils.get_file(
+    origin="https://gist.githubusercontent.com/LukeWood/368e2e89bb0e36bd34ff7043e0247289/raw/0615d1e88a93d4e971bf2dea0cfc52f30a12dd99/imagenet%2520mapping"
+)
+class_mapping = json.load(open(class_mapping, "r"))
 
 """
 Let's get some predictions from our classifier:
 """
 
-predictions = classifier.predict([image])
+predictions = classifier.predict(np.expand_dims(image, axis=0))
 """
 Predictions come in the form of softmax-ed category rankings.
 We can find the index of the top classes using a simple argsort function:
@@ -102,12 +106,12 @@ Let's download and load it now.
 classes = keras.utils.get_file(
     origin="https://gist.githubusercontent.com/LukeWood/62eebcd5c5c4a4d0e0b7845780f76d55/raw/fde63e5e4c09e2fa0a3436680f436bdcb8325aac/ImagenetClassnames.json"
 )
-with open(classes, 'rb') as f:
+with open(classes, "rb") as f:
     classes = json.load(f)
 """
 Now we can simply look up the class names via index:
 """
-top_two = [classes[i] for i in top_classes[-2:]]
+top_two = [classes[str(i)] for i in top_classes[-2:]]
 print("Top two classes are:", top_two)
 
 """
@@ -140,12 +144,13 @@ tfds.disable_progress_bar()
 
 data, dataset_info = tfds.load("cats_vs_dogs", with_info=True, as_supervised=True)
 train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
-train_dataset = data['train']
+train_dataset = data["train"]
 
 IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
 random_crop = keras_cv.layers.Resizing(224, 224, crop_to_aspect_ratio=True)
+
 
 def package_dict(image, label):
     image = tf.cast(image, tf.float32)
@@ -154,10 +159,12 @@ def package_dict(image, label):
     return {"images": image, "labels": label}
 
 
-train_dataset = train_dataset.shuffle(10 * BATCH_SIZE).map(package_dict, num_parallel_calls=AUTOTUNE)
+train_dataset = train_dataset.shuffle(10 * BATCH_SIZE).map(
+    package_dict, num_parallel_calls=AUTOTUNE
+)
 train_dataset = train_dataset.batch(BATCH_SIZE)
 
-images = next(iter(train_dataset.take(1)))['images']
+images = next(iter(train_dataset.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 
 """
@@ -174,41 +181,43 @@ augmenter = keras.Sequential(
         keras_cv.layers.RandomFlip(),
         keras_cv.layers.RandAugment(value_range=(0, 255)),
         keras_cv.layers.CutMix(),
-        keras_cv.layers.MixUp()
+        keras_cv.layers.MixUp(),
     ]
 )
 
 train_dataset = train_dataset.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 
-images = next(iter(train_dataset.take(1)))['images']
+images = next(iter(train_dataset.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 
 """
 Next let's construct our model:
 """
 
-backbone = keras_cv.models.DenseNet121(
-    include_rescaling=True,
-    include_top=False,
-    num_classes=2,
-    pooling='max',
-    weights="imagenet/classification"
+backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
+    "efficientnetv2-s_imagenet",
 )
 model = keras.Sequential(
-    [backbone, keras.layers.Dense(2, activation='softmax')]
+    [
+        backbone,
+        keras.layers.GlobalMaxPooling2D(),
+        keras.layers.Dense(2, activation="softmax"),
+    ]
 )
 model.compile(
-    loss='categorical_crossentropy',
+    loss="categorical_crossentropy",
     optimizer=tf.optimizers.SGD(learning_rate=0.01),
-    metrics=['accuracy'],
+    metrics=["accuracy"],
 )
 
 """
 All that is left to do is construct a standard Keras `model.fit()` loop!
 """
 
+
 def unpackage_data(inputs):
-  return inputs['images'], inputs['labels']
+    return inputs["images"], inputs["labels"]
+
 
 train_dataset.map(unpackage_data, num_parallel_calls=tf.data.AUTOTUNE)
 train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
@@ -219,12 +228,9 @@ model.fit(train_dataset.map(unpackage_data, num_parallel_calls=tf.data.AUTOTUNE)
 Let's look at how our model performs after the fine tuning!
 """
 
-predictions = model.predict([image])
+predictions = model.predict(np.expand_dims(image, axis=0))
 
-classes = {
-    0: 'cat',
-    1: 'dog'
-}
+classes = {0: "cat", 1: "dog"}
 print("Top class is:", classes[predictions[0].argmax()])
 
 """
