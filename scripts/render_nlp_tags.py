@@ -46,7 +46,7 @@ def render_backbone_table(template):
         if "Backbone" not in name:
             continue
         for preset in symbol.presets:
-            metadata = symbol.presets[preset]['metadata']
+            metadata = symbol.presets[preset]["metadata"]
             table += (
                 f"{preset} | "
                 f"{format_path(metadata)} | "
@@ -68,7 +68,7 @@ def render_classifier_table(template):
             continue
         for preset in symbol.presets:
             if preset not in symbol.backbone_cls.presets:
-                metadata = symbol.presets[preset]['metadata']
+                metadata = symbol.presets[preset]["metadata"]
                 table += (
                     f"{preset} | "
                     f"{format_path(metadata)} | "

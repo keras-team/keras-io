@@ -13,7 +13,6 @@ class TFKerasDocumentationGenerator:
         self.project_url = project_url
 
     def process_docstring(self, docstring):
-        docstring = docstring.replace("Call Args:", "Call arguments:")
         docstring = docstring.replace("Args:", "# Arguments")
         docstring = docstring.replace("Arguments:", "# Arguments")
         docstring = docstring.replace("Attributes:", "# Attributes")

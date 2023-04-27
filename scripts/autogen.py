@@ -36,8 +36,12 @@ import tutobooks
 import generate_tf_guides
 from render_nlp_tags import render_keras_nlp_tags
 
-EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
-GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
+EXAMPLES_GH_LOCATION = (
+    Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
+)
+GUIDES_GH_LOCATION = (
+    Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
+)
 PROJECT_URL = {
     "keras": "https://github.com/keras-team/keras/tree/v2.12.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.3/",
@@ -75,7 +79,9 @@ class KerasIO:
 
         self.make_examples_master()
         self.nav = self.make_nav_index()
-        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
+        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(
+            PROJECT_URL
+        )
 
     def make_examples_master(self):
         for entry in self.master["children"]:
@@ -98,7 +104,9 @@ class KerasIO:
                         f.close()
                         assert title_line.startswith("Title: ")
                         title = title_line[len("Title: ") :]
-                        children.append({"path": example_path, "title": title.strip()})
+                        children.append(
+                            {"path": example_path, "title": title.strip()}
+                        )
             entry["children"] = children
 
     def make_md_sources(self):
@@ -114,7 +122,9 @@ class KerasIO:
         self.sync_tutobook_templates()
 
         # Recursively generate all md sources based on the MASTER tree
-        self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
+        self.make_md_source_for_entry(
+            self.master, path_stack=[], title_stack=[]
+        )
 
         # Pull some content from GitHub (governance, contributing)
         # This enables us to keep a single source of truth for that content.
@@ -161,7 +171,9 @@ class KerasIO:
             + ")",
             "\n",
         ]
-        md_content_lines = md_content_lines[:6] + button_lines + md_content_lines[6:]
+        md_content_lines = (
+            md_content_lines[:6] + button_lines + md_content_lines[6:]
+        )
         md_content = "\n".join(md_content_lines)
         # Normalize img urls
         md_content = md_content.replace(
@@ -254,7 +266,9 @@ class KerasIO:
 
         self.disable_warnings()
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
-        tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
+        tutobooks.py_to_md(
+            py_path, nb_path, md_path, img_dir, working_dir=working_dir
+        )
 
         md_content = open(md_path).read()
         github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
@@ -291,7 +305,9 @@ class KerasIO:
 
         self.disable_warnings()
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
-        tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
+        tutobooks.py_to_md(
+            py_path, nb_path, md_path, img_dir, working_dir=working_dir
+        )
 
         md_content = open(md_path).read()
         md_content = md_content.replace("../guides/img/", "/img/guides/")
@@ -353,7 +369,8 @@ class KerasIO:
                         src_dir=path,  # e.g. examples/nlp
                         target_dir=target_dir,  # e.g. examples/nlp/md
                         img_dir=img_dir,  # e.g. examples/nlp/img
-                        site_img_dir="img/examples/" + name,  # e.g. img/examples/nlp
+                        site_img_dir="img/examples/"
+                        + name,  # e.g. img/examples/nlp
                         github_repo_dir=str(EXAMPLES_GH_LOCATION / name),
                     )
 
@@ -368,17 +385,23 @@ class KerasIO:
         """
         # Guides
         copy_inner_contents(
-            Path(self.guides_dir) / "md", Path(self.templates_dir) / "guides", ext=".md"
+            Path(self.guides_dir) / "md",
+            Path(self.templates_dir) / "guides",
+            ext=".md",
         )
         # Special cases
         shutil.copyfile(
-            Path(self.templates_dir) / "guides" / "intro_to_keras_for_engineers.md",
+            Path(self.templates_dir)
+            / "guides"
+            / "intro_to_keras_for_engineers.md",
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_engineers.md",
         )
         shutil.copyfile(
-            Path(self.templates_dir) / "guides" / "intro_to_keras_for_researchers.md",
+            Path(self.templates_dir)
+            / "guides"
+            / "intro_to_keras_for_researchers.md",
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_researchers.md",
@@ -405,7 +428,9 @@ class KerasIO:
         for name in os.listdir(Path(self.guides_dir) / "img"):
             path = Path(self.guides_dir) / "img" / name
             if os.path.isdir(path):
-                shutil.copytree(path, Path(self.site_dir) / "img" / "guides" / name)
+                shutil.copytree(
+                    path, Path(self.site_dir) / "img" / "guides" / name
+                )
         # Copy images for examples notebooks
         for dir_name in os.listdir(Path(self.examples_dir)):
             dir_path = Path(self.examples_dir) / dir_name
@@ -422,7 +447,11 @@ class KerasIO:
                     if os.path.isdir(path):
                         shutil.copytree(
                             path,
-                            Path(self.site_dir) / "img" / "examples" / dir_name / name,
+                            Path(self.site_dir)
+                            / "img"
+                            / "examples"
+                            / dir_name
+                            / name,
                         )
 
     def make_nav_index(self):
@@ -527,7 +556,9 @@ class KerasIO:
         # Save metadata file
         location_history = []
         for i in range(len(path_stack)):
-            stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
+            stripped_path_stack = [
+                s.replace("/", "") for s in path_stack[: i + 1]
+            ]
             url = self.url + "/".join(stripped_path_stack)
             location_history.append(
                 {
@@ -541,7 +572,8 @@ class KerasIO:
                 "outline": autogen_utils.make_outline(template)
                 if entry.get("outline", True)
                 else [],
-                "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
+                "location": "/"
+                + "/".join([s.replace("/", "") for s in path_stack]),
                 "url": parent_url,
                 "title": entry["title"],
             }
@@ -550,7 +582,9 @@ class KerasIO:
 
         if children:
             for entry in children:
-                self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
+                self.make_md_source_for_entry(
+                    entry, path_stack[:], title_stack[:]
+                )
 
     def make_map_of_symbol_names_to_api_urls(self):
         def recursive_make_map(entry, current_url):
@@ -627,13 +661,17 @@ class KerasIO:
             if len(subcategories_to_render) > 1:
                 category_dict["subcategories"] = subcategories_to_render
             else:
-                category_dict["examples"] = subcategories_to_render[0]["examples"]
+                category_dict["examples"] = subcategories_to_render[0][
+                    "examples"
+                ]
             categories_to_render.append(category_dict)
 
         with open(Path(self.templates_dir) / "examples/index.md") as f:
             md_content = f.read()
 
-        with open(Path(self.md_sources_dir) / "examples/index_metadata.json") as f:
+        with open(
+            Path(self.md_sources_dir) / "examples/index_metadata.json"
+        ) as f:
             metadata = json.loads(f.read())
 
         examples_template = jinja2.Template(
@@ -678,7 +716,9 @@ class KerasIO:
                 for entry in self.nav
             ]
             to_render = [
-                cat for cat in categories_to_render if cat["title"] == category_name
+                cat
+                for cat in categories_to_render
+                if cat["title"] == category_name
             ]
             html_example_cards = examples_template.render(
                 {"categories": to_render, "legend": False}
@@ -698,8 +738,12 @@ class KerasIO:
     def render_md_sources_to_html(self):
         self.make_map_of_symbol_names_to_api_urls()
         print("Rendering md sources to HTML")
-        base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
-        docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
+        base_template = jinja2.Template(
+            open(Path(self.theme_dir) / "base.html").read()
+        )
+        docs_template = jinja2.Template(
+            open(Path(self.theme_dir) / "docs.html").read()
+        )
 
         all_urls_list = []
 
@@ -711,7 +755,8 @@ class KerasIO:
             pool = multiprocessing.Pool(processes=8)
             workers = [
                 pool.apply_async(
-                    self.render_single_file, args=(src_location, fname, self.nav)
+                    self.render_single_file,
+                    args=(src_location, fname, self.nav),
                 )
                 for fname in fnames
             ]
@@ -724,15 +769,21 @@ class KerasIO:
             pool.join()
 
         # Images & css
-        shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
-        shutil.copytree(Path(self.theme_dir) / "img", Path(self.site_dir) / "img")
+        shutil.copytree(
+            Path(self.theme_dir) / "css", Path(self.site_dir) / "css"
+        )
+        shutil.copytree(
+            Path(self.theme_dir) / "img", Path(self.site_dir) / "img"
+        )
 
         # Landing page
         landing_template = jinja2.Template(
             open(Path(self.theme_dir) / "landing.html").read()
         )
         landing_page = landing_template.render({"base_url": self.url})
-        autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
+        autogen_utils.save_file(
+            Path(self.site_dir) / "index.html", landing_page
+        )
 
         # Search page
         search_main = open(Path(self.theme_dir) / "search.html").read()
@@ -744,7 +795,9 @@ class KerasIO:
                 "main": search_main,
             }
         )
-        autogen_utils.save_file(Path(self.site_dir) / "search.html", search_page)
+        autogen_utils.save_file(
+            Path(self.site_dir) / "search.html", search_page
+        )
 
         # 404 page
         page404 = base_template.render(
@@ -765,7 +818,8 @@ class KerasIO:
 
         # Favicon
         shutil.copyfile(
-            Path(self.theme_dir) / "favicon.ico", Path(self.site_dir) / "favicon.ico"
+            Path(self.theme_dir) / "favicon.ico",
+            Path(self.site_dir) / "favicon.ico",
         )
 
         # Tutobooks
@@ -807,7 +861,9 @@ class KerasIO:
             full_target_dir = Path(target_dir) / fname_no_ext
             os.makedirs(full_target_dir)
             target_path = full_target_dir / "index.html"
-            relative_url = (str(full_target_dir) + "/").replace(self.site_dir, "/")
+            relative_url = (str(full_target_dir) + "/").replace(
+                self.site_dir, "/"
+            )
             relative_url = relative_url.replace("//", "/")
 
         md_file = open(src_dir / fname, encoding="utf-8")
@@ -818,7 +874,9 @@ class KerasIO:
         # Convert Keras symbols to links to the Keras docs
         for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
             md_content = re.sub(
-                r"`((tf\.|)" + symbol + ")`", r"[`\1`](" + symbol_url + ")", md_content
+                r"`((tf\.|)" + symbol + ")`",
+                r"[`\1`](" + symbol_url + ")",
+                md_content,
             )
 
         # Convert TF symbols to links to tensorflow.org
@@ -838,7 +896,9 @@ class KerasIO:
                     symbol_parts = symbol.split(".")
                     if len(symbol_parts) >= 3 and symbol_parts[-2][0].isupper():
                         # In this case the link should look like ".../class#method"
-                        path = "/".join(symbol_parts[:-1]) + "#" + symbol_parts[-1]
+                        path = (
+                            "/".join(symbol_parts[:-1]) + "#" + symbol_parts[-1]
+                        )
                     else:
                         # Otherwise just ".../module/class_or_fn"
                         path = symbol.replace(".", "/")
@@ -873,10 +933,20 @@ class KerasIO:
         return relative_url
 
     def render_single_docs_page_from_html(
-        self, target_path, title, html_content, location_history, outline, local_nav
+        self,
+        target_path,
+        title,
+        html_content,
+        location_history,
+        outline,
+        local_nav,
     ):
-        base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
-        docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
+        base_template = jinja2.Template(
+            open(Path(self.theme_dir) / "base.html").read()
+        )
+        docs_template = jinja2.Template(
+            open(Path(self.theme_dir) / "docs.html").read()
+        )
         html_docs = docs_template.render(
             {
                 "title": title,
@@ -983,7 +1053,9 @@ def insert_title_ids_in_html(html):
         normalized_title = normalized_title.replace("<code>", "")
         normalized_title = normalized_title.replace("</code>", "")
         if ">" in normalized_title:
-            normalized_title = normalized_title[normalized_title.find(">") + 1 :]
+            normalized_title = normalized_title[
+                normalized_title.find(">") + 1 :
+            ]
             normalized_title = normalized_title[: normalized_title.find("</")]
         normalized_title = autogen_utils.turn_title_into_id(normalized_title)
         html = html.replace(marker + title + marker_end, normalized_title)
@@ -1044,6 +1116,7 @@ def get_working_dir(arg):
         return None
     return arg[len("--working_dir=") :]
 
+
 if __name__ == "__main__":
     keras_io = KerasIO(
         master=MASTER,
@@ -1060,7 +1133,13 @@ if __name__ == "__main__":
     )
 
     cmd = sys.argv[1]
-    if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
+    if cmd not in {
+        "make",
+        "serve",
+        "add_example",
+        "add_guide",
+        "generate_tf_guides",
+    }:
         raise ValueError(
             "Must specify command `make`, `serve`, `add_example`, `add_guide` or `generate_tf_guides`."
         )
@@ -1078,13 +1157,17 @@ if __name__ == "__main__":
     elif cmd == "add_example":
         keras_io.add_example(
             sys.argv[2],
-            working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
+            working_dir=get_working_dir(sys.argv[3])
+            if len(sys.argv) == 4
+            else None,
         )
     elif cmd == "add_guide":
         tutobooks.MAX_LOC = 500
         keras_io.add_guide(
             sys.argv[2],
-            working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
+            working_dir=get_working_dir(sys.argv[3])
+            if len(sys.argv) == 4
+            else None,
         )
     elif cmd == "generate_tf_guides":
         generate_tf_guides.generate_tf_guides()
