@@ -9,20 +9,19 @@ Accelerator: GPU
 """
 
 In this tutorial, you will learn to use [KerasNLP](https://keras.io/keras_nlp/) to load a
-pre-trained Large Language Model (LLM) - [GPT-2
-model](https://openai.com/research/better-language-models) (originally invented by
-OpenAI), finetune it to a specific text style, and generate text based on users' input
-(also known as prompt). You will also learn how GPT2 adapts quickly to non-English
-languages (Chinese in ths tutorial).
+pre-trained Large Language Model (LLM) - [GPT-2 model](https://openai.com/research/better-language-models)
+(originally invented by OpenAI), finetune it to a specific text style, and
+generate text based on users' input (also known as prompt). You will also learn
+how GPT2 adapts quickly to non-English languages, such as Chinese.
 """
 
 """
-##  Before you begin
+##  Before we begin
 
-Colab offers different kinds of runtimes. Make sure to go to **Runtime -> Change runtime
-type** and choose the GPU Hardware Accelerator runtime (which should have >12G System RAM
-and ~15G GPU RAM) since you will finetune the GPT-2 model. Running this tutorial on CPU
-runtime will take hours.
+Colab offers different kinds of runtimes. Make sure to go to **Runtime ->
+Change runtime type** and choose the GPU Hardware Accelerator runtime
+(which should have >12G host RAM and ~15G GPU RAM) since you will finetune the
+GPT-2 model. Running this tutorial on CPU runtime will take hours.
 """
 
 """
@@ -30,7 +29,7 @@ runtime will take hours.
 """
 
 """shell
-!pip install -q -U git+https://github.com/keras-team/keras-nlp.git@master
+pip install -q -U git+https://github.com/keras-team/keras-nlp.git@master
 """
 
 import keras_nlp
@@ -72,6 +71,7 @@ modularized building blocks, so developers could easily reuse pretrained models
 or stack their own LLM.
 
 In a nutshell, for generative LLM, KerasNLP offers:
+
 - Pretrained models with `generate()` method, e.g.,
     `keras_nlp.models.GPT2CausalLM` and `keras_nlp.models.OPTCausalLM`.
 - Sampler class that implements generation algorithms such as Top-K, Beam and
@@ -113,7 +113,7 @@ print("\nGPT-2 output:")
 print(output)
 
 end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
+print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 
 """
 Try another one:
@@ -126,7 +126,7 @@ print("\nGPT-2 output:")
 print(output)
 
 end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
+print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 
 """
 Notice how much faster the second call is. This is because the computational
@@ -148,6 +148,7 @@ The code of GPT2 can be found
 Conceptually the `GPT2CausalLM` can be hierarchically broken down into several
 modules in KerasNLP, all of which have a *from_preset()* function that loads a
 pretrained model:
+
 - `keras_nlp.models.GPT2Tokenizer`: The tokenizer used by GPT2 model, which is a
     [byte-pair encoder](https://huggingface.co/course/chapter6/5?fw=pt).
 - `keras_nlp.models.GPT2CausalLMPreprocessor`: the preprocessor used by GPT2
@@ -213,14 +214,16 @@ for demo purposes.
 train_ds = train_ds.take(500)
 num_epochs = 1
 
-lr = tf.keras.optimizers.schedules.PolynomialDecay(
+learning_rate = keras.optimizers.schedules.PolynomialDecay(
     5e-5,
     decay_steps=train_ds.cardinality() * num_epochs,
     end_learning_rate=0.0,
 )
-loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 gpt2_lm.compile(
-    optimizer=keras.optimizers.Adam(lr), loss=loss, weighted_metrics=["accuracy"]
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=loss,
+    weighted_metrics=["accuracy"],
 )
 
 gpt2_lm.fit(train_ds, epochs=num_epochs)
@@ -239,7 +242,7 @@ print("\nGPT-2 output:")
 print(output)
 
 end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
+print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 
 """
 ## Into the Sampling Method
@@ -250,6 +253,7 @@ search, but you can choose your own sampling method.
 
 Much like optimizer and activations, there are two ways to specify your custom
 sampler:
+
 - Use a string identifier, such as "top_k", you are using the default
 configuration via this way.
 - Pass a `keras_nlp.samplers.Sampler` instance, you can use custom configuration
@@ -289,7 +293,7 @@ Chinese dataset.
 
 """shell
 # Load chinese poetry dataset.
-!git clone https://github.com/chinese-poetry/chinese-poetry.git
+git clone https://github.com/chinese-poetry/chinese-poetry.git
 """
 
 """
@@ -333,14 +337,16 @@ train_ds = (
 train_ds = train_ds.take(500)
 num_epochs = 1
 
-lr = tf.keras.optimizers.schedules.PolynomialDecay(
+learning_rate = keras.optimizers.schedules.PolynomialDecay(
     5e-4,
     decay_steps=train_ds.cardinality() * num_epochs,
     end_learning_rate=0.0,
 )
-loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 gpt2_lm.compile(
-    optimizer=keras.optimizers.Adam(lr), loss=loss, weighted_metrics=["accuracy"]
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=loss,
+    weighted_metrics=["accuracy"],
 )
 
 gpt2_lm.fit(train_ds, epochs=num_epochs)

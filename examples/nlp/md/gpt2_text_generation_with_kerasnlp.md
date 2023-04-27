@@ -11,29 +11,26 @@
 
 
 In this tutorial, you will learn to use [KerasNLP](https://keras.io/keras_nlp/) to load a
-pre-trained Large Language Model (LLM) - [GPT-2
-model](https://openai.com/research/better-language-models) (originally invented by
-OpenAI), finetune it to a specific text style, and generate text based on users' input
-(also known as prompt). You will also learn how GPT2 adapts quickly to non-English
-languages (Chinese in ths tutorial).
+pre-trained Large Language Model (LLM) - [GPT-2 model](https://openai.com/research/better-language-models)
+(originally invented by OpenAI), finetune it to a specific text style, and
+generate text based on users' input (also known as prompt). You will also learn
+how GPT2 adapts quickly to non-English languages, such as Chinese.
 
 ---
-##  Before you begin
+##  Before we begin
 
-Colab offers different kinds of runtimes. Make sure to go to **Runtime -> Change runtime
-type** and choose the GPU Hardware Accelerator runtime (which should have >12G System RAM
-and ~15G GPU RAM) since you will finetune the GPT-2 model. Running this tutorial on CPU
-runtime will take hours.
+Colab offers different kinds of runtimes. Make sure to go to **Runtime ->
+Change runtime type** and choose the GPU Hardware Accelerator runtime
+(which should have >12G host RAM and ~15G GPU RAM) since you will finetune the
+GPT-2 model. Running this tutorial on CPU runtime will take hours.
 
 ---
 ## Install KerasNLP and Import Dependencies.
 
 
 ```python
-!!pip install -q -U git+https://github.com/keras-team/keras-nlp.git@master
+!pip install -q -U git+https://github.com/keras-team/keras-nlp.git@master
 ```
-
-
 
 
 ```python
@@ -42,12 +39,7 @@ import tensorflow as tf
 from tensorflow import keras
 import time
 ```
-<div class="k-default-codeblock">
-```
-[]
 
-```
-</div>
 ---
 ## Introduction to Generative Large Language Models (LLMs)
 
@@ -81,6 +73,7 @@ modularized building blocks, so developers could easily reuse pretrained models
 or stack their own LLM.
 
 In a nutshell, for generative LLM, KerasNLP offers:
+
 - Pretrained models with `generate()` method, e.g.,
     `keras_nlp.models.GPT2CausalLM` and `keras_nlp.models.OPTCausalLM`.
 - Sampler class that implements generation algorithms such as Top-K, Beam and
@@ -129,7 +122,7 @@ print("\nGPT-2 output:")
 print(output)
 
 end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
+print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 ```
 
     
@@ -148,7 +141,7 @@ I didn't know what I was doing. I just thought I was going to get out of here an
     
 <div class="k-default-codeblock">
 ```
-TOTAL TIME ELAPSED:  18.434622764587402
+TOTAL TIME ELAPSED: 18.15s
 
 ```
 </div>
@@ -163,7 +156,7 @@ print("\nGPT-2 output:")
 print(output)
 
 end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
+print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 ```
 
     
@@ -195,7 +188,7 @@ The eatery is located at 5100 N. Broadway in New York City, according to the New
 <div class="k-default-codeblock">
 ```
 The restaurant, which has a large Italian menu, was closed in April after the owner, who is Italian, told the Post that the restaurant was "not a good place," but that he was "working on a new restaurant."
-TOTAL TIME ELAPSED:  1.7215840816497803
+TOTAL TIME ELAPSED: 1.72s
 
 ```
 </div>
@@ -217,6 +210,7 @@ The code of GPT2 can be found
 Conceptually the `GPT2CausalLM` can be hierarchically broken down into several
 modules in KerasNLP, all of which have a *from_preset()* function that loads a
 pretrained model:
+
 - `keras_nlp.models.GPT2Tokenizer`: The tokenizer used by GPT2 model, which is a
     [byte-pair encoder](https://huggingface.co/course/chapter6/5?fw=pt).
 - `keras_nlp.models.GPT2CausalLMPreprocessor`: the preprocessor used by GPT2
@@ -291,14 +285,16 @@ for demo purposes.
 train_ds = train_ds.take(500)
 num_epochs = 1
 
-lr = tf.keras.optimizers.schedules.PolynomialDecay(
+learning_rate = keras.optimizers.schedules.PolynomialDecay(
     5e-5,
     decay_steps=train_ds.cardinality() * num_epochs,
     end_learning_rate=0.0,
 )
-loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 gpt2_lm.compile(
-    optimizer=keras.optimizers.Adam(lr), loss=loss, weighted_metrics=["accuracy"]
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=loss,
+    weighted_metrics=["accuracy"],
 )
 
 gpt2_lm.fit(train_ds, epochs=num_epochs)
@@ -306,9 +302,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 213s 310ms/step - loss: 3.3057 - accuracy: 0.3265
+500/500 [==============================] - 210s 307ms/step - loss: 3.3057 - accuracy: 0.3265
 
-<keras.callbacks.History at 0x7f4ce0730580>
+<keras.callbacks.History at 0x7fedc44b99d0>
 
 ```
 </div>
@@ -326,7 +322,7 @@ print("\nGPT-2 output:")
 print(output)
 
 end = time.time()
-print("TOTAL TIME ELAPSED: ", end - start)
+print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 ```
 
     
@@ -352,7 +348,7 @@ so, i'm in the middle of a game, and i get a little frustrated, so i just try to
 <div class="k-default-codeblock">
 ```
 it's like a giant
-TOTAL TIME ELAPSED:  15.863253593444824
+TOTAL TIME ELAPSED: 15.56s
 
 ```
 </div>
@@ -365,6 +361,7 @@ search, but you can choose your own sampling method.
 
 Much like optimizer and activations, there are two ways to specify your custom
 sampler:
+
 - Use a string identifier, such as "top_k", you are using the default
 configuration via this way.
 - Pass a `keras_nlp.samplers.Sampler` instance, you can use custom configuration
@@ -435,67 +432,97 @@ so i
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-I like basketball, but i don't really like the game. 
+I like basketball. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i was playing basketball at my local high school. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i was sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back of the locker room, watching the game. 
+so, i'm a freshman in high school. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm sitting in the back
+so, i'm a freshman in high school. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+so, i'm a freshman in high school. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+so, i'm a freshman in high school. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+so, i'm a freshman in high school. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+so, i'm a freshman in high school. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+so, i'm a freshman in high school.
 
 ```
 </div>
@@ -516,75 +543,19 @@ Chinese dataset.
 
 ```python
 !# Load chinese poetry dataset.
-!!git clone https://github.com/chinese-poetry/chinese-poetry.git
+!git clone https://github.com/chinese-poetry/chinese-poetry.git
 ```
-
-
-
 
 <div class="k-default-codeblock">
 ```
-["Cloning into 'chinese-poetry'...",
- 'Checking out files:  43% (1003/2283)   ',
- 'Checking out files:  44% (1005/2283)   ',
- 'Checking out files:  45% (1028/2283)   ',
- 'Checking out files:  46% (1051/2283)   ',
- 'Checking out files:  47% (1074/2283)   ',
- 'Checking out files:  48% (1096/2283)   ',
- 'Checking out files:  49% (1119/2283)   ',
- 'Checking out files:  50% (1142/2283)   ',
- 'Checking out files:  51% (1165/2283)   ',
- 'Checking out files:  52% (1188/2283)   ',
- 'Checking out files:  53% (1210/2283)   ',
- 'Checking out files:  53% (1221/2283)   ',
- 'Checking out files:  54% (1233/2283)   ',
- 'Checking out files:  55% (1256/2283)   ',
- 'Checking out files:  56% (1279/2283)   ',
- 'Checking out files:  57% (1302/2283)   ',
- 'Checking out files:  58% (1325/2283)   ',
- 'Checking out files:  59% (1347/2283)   ',
- 'Checking out files:  60% (1370/2283)   ',
- 'Checking out files:  61% (1393/2283)   ',
- 'Checking out files:  62% (1416/2283)   ',
- 'Checking out files:  63% (1439/2283)   ',
- 'Checking out files:  64% (1462/2283)   ',
- 'Checking out files:  65% (1484/2283)   ',
- 'Checking out files:  66% (1507/2283)   ',
- 'Checking out files:  67% (1530/2283)   ',
- 'Checking out files:  68% (1553/2283)   ',
- 'Checking out files:  69% (1576/2283)   ',
- 'Checking out files:  70% (1599/2283)   ',
- 'Checking out files:  71% (1621/2283)   ',
- 'Checking out files:  72% (1644/2283)   ',
- 'Checking out files:  73% (1667/2283)   ',
- 'Checking out files:  74% (1690/2283)   ',
- 'Checking out files:  75% (1713/2283)   ',
- 'Checking out files:  76% (1736/2283)   ',
- 'Checking out files:  77% (1758/2283)   ',
- 'Checking out files:  78% (1781/2283)   ',
- 'Checking out files:  79% (1804/2283)   ',
- 'Checking out files:  80% (1827/2283)   ',
- 'Checking out files:  81% (1850/2283)   ',
- 'Checking out files:  82% (1873/2283)   ',
- 'Checking out files:  83% (1895/2283)   ',
- 'Checking out files:  84% (1918/2283)   ',
- 'Checking out files:  85% (1941/2283)   ',
- 'Checking out files:  86% (1964/2283)   ',
- 'Checking out files:  87% (1987/2283)   ',
- 'Checking out files:  88% (2010/2283)   ',
- 'Checking out files:  89% (2032/2283)   ',
- 'Checking out files:  90% (2055/2283)   ',
- 'Checking out files:  91% (2078/2283)   ',
- 'Checking out files:  92% (2101/2283)   ',
- 'Checking out files:  93% (2124/2283)   ',
- 'Checking out files:  94% (2147/2283)   ',
- 'Checking out files:  95% (2169/2283)   ',
- 'Checking out files:  96% (2192/2283)   ',
- 'Checking out files:  97% (2215/2283)   ',
- 'Checking out files:  98% (2238/2283)   ',
- 'Checking out files:  99% (2261/2283)   ',
- 'Checking out files: 100% (2283/2283)   ',
- 'Checking out files: 100% (2283/2283), done.']
+Cloning into 'chinese-poetry'...
+remote: Enumerating objects: 7222, done.[K
+remote: Counting objects: 100% (27/27), done.[K
+remote: Compressing objects: 100% (19/19), done.[K
+remote: Total 7222 (delta 5), reused 20 (delta 5), pack-reused 7195[K
+Receiving objects: 100% (7222/7222), 197.75 MiB | 20.73 MiB/s, done.
+Resolving deltas: 100% (5295/5295), done.
+Checking out files: 100% (2283/2283), done.
 
 ```
 </div>
@@ -637,14 +608,16 @@ train_ds = (
 train_ds = train_ds.take(500)
 num_epochs = 1
 
-lr = tf.keras.optimizers.schedules.PolynomialDecay(
+learning_rate = keras.optimizers.schedules.PolynomialDecay(
     5e-4,
     decay_steps=train_ds.cardinality() * num_epochs,
     end_learning_rate=0.0,
 )
-loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 gpt2_lm.compile(
-    optimizer=keras.optimizers.Adam(lr), loss=loss, weighted_metrics=["accuracy"]
+    optimizer=keras.optimizers.Adam(learning_rate),
+    loss=loss,
+    weighted_metrics=["accuracy"],
 )
 
 gpt2_lm.fit(train_ds, epochs=num_epochs)
@@ -652,9 +625,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 157s 206ms/step - loss: 2.4420 - accuracy: 0.2814
+500/500 [==============================] - 157s 207ms/step - loss: 2.4427 - accuracy: 0.2812
 
-<keras.callbacks.History at 0x7f4ce0216460>
+<keras.callbacks.History at 0x7fedc412d3d0>
 
 ```
 </div>
@@ -668,11 +641,11 @@ print(output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f4da0343f10>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7fee75195b20>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f4da0343f10>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7fee75195b20>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-昨夜雨疏风骤清，短石頭石翁綠細。
+昨夜雨疏风骤紛，白萬聞城清山。
 
 ```
 </div>
