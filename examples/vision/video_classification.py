@@ -1,18 +1,24 @@
 """
-Title: Video Classification with a CNN-RNN Architecture
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
+Video Classification with a CNN-RNN Architecture
+Modified, corrected, and updated: [Mikolaj Buchwald](https://www.linkedin.com/in/mikolaj-buchwald/)
+Author of the original example: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
-Last modified: 2021/06/05
+Last modified: 2023/05/01
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 Accelerator: GPU
 """
 """
 This example demonstrates video classification, an important use-case with
 applications in recommendations, security, and so on.
+
 We will be using the [UCF101 dataset](https://www.crcv.ucf.edu/data/UCF101.php)
 to build our video classifier. The dataset consists of videos categorized into different
 actions, like cricket shot, punching, biking, etc. This dataset is commonly used to
 build action recognizers, which are an application of video classification.
+
+The subset (subsampling) of the UCF-101 dataset that we will be working on is available
+at: https://zenodo.org/record/7882861#.ZE-UTC1Bxqs and will be downloaded using the `wget`
+command. On macOS, install the `wget` using `brew install wget`.
 
 A video consists of an ordered sequence of frames. Each frame contains *spatial*
 information, and the sequence of those frames contains *temporal* information. To model
@@ -37,28 +43,39 @@ In order to keep the runtime of this example relatively short, we will be using 
 subsampled version of the original UCF101 dataset. You can refer to
 [this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
 to know how the subsampling was done.
+
+#### Note
+
+There was an issue with the link to the dataset, and it was resolved, but at this moment the dataset generation
+notebook is not entirely compatible with this working version of the example, see: https://github.com/keras-team/keras-io/issues/1342
 """
 
 """shell
-wget -q https://git.io/JGc31 -O ucf101_top5.tar.gz
-tar xf ucf101_top5.tar.gz
+wget -q https://zenodo.org/record/7882861/files/ucf101_top10.tar.gz -O ucf101_top10.tar.gz
+tar xf ucf101_top10.tar.gz
 """
 
 """
 ## Setup
 """
 
+import cv2
+import imageio
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pandas as pd
+import ssl
+import tensorflow as tf
+
+from imutils import paths
 from tensorflow_docs.vis import embed
 from tensorflow import keras
-from imutils import paths
+from tqdm import tqdm
 
-import matplotlib.pyplot as plt
-import tensorflow as tf
-import pandas as pd
-import numpy as np
-import imageio
-import cv2
-import os
+# The SSL part is needed to download Keras' Inception V3 model.
+ssl._create_default_https_context = ssl._create_unverified_context
+
 
 """
 ## Define hyperparameters
@@ -75,8 +92,8 @@ NUM_FEATURES = 2048
 ## Data preparation
 """
 
-train_df = pd.read_csv("train.csv")
-test_df = pd.read_csv("test.csv")
+train_df = pd.read_csv('ucf101_top10/train.csv')
+test_df = pd.read_csv('ucf101_top10/test.csv')
 
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
@@ -183,7 +200,7 @@ Finally, we can put all the pieces together to create our data processing utilit
 
 def prepare_all_videos(df, root_dir):
     num_samples = len(df)
-    video_paths = df["video_name"].values.tolist()
+    video_names = df["video_name"].values.tolist()
     labels = df["tag"].values
     labels = label_processor(labels[..., None]).numpy()
 
@@ -196,19 +213,14 @@ def prepare_all_videos(df, root_dir):
     )
 
     # For each video.
-    for idx, path in enumerate(video_paths):
+    for idx, name in enumerate(tqdm(video_names)):
         # Gather all its frames and add a batch dimension.
-        frames = load_video(os.path.join(root_dir, path))
+        video_path = os.path.join(root_dir, name)
+        frames = load_video(video_path)
         frames = frames[None, ...]
 
         # Initialize placeholders to store the masks and features of the current video.
-        temp_frame_mask = np.zeros(
-            shape=(
-                1,
-                MAX_SEQ_LENGTH,
-            ),
-            dtype="bool",
-        )
+        temp_frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
         temp_frame_features = np.zeros(
             shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32"
         )
@@ -219,28 +231,25 @@ def prepare_all_videos(df, root_dir):
             length = min(MAX_SEQ_LENGTH, video_length)
             for j in range(length):
                 temp_frame_features[i, j, :] = feature_extractor.predict(
-                    batch[None, j, :]
+                    batch[None, j, :],
+                    verbose = 0
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
-        frame_features[
-            idx,
-        ] = temp_frame_features.squeeze()
-        frame_masks[
-            idx,
-        ] = temp_frame_mask.squeeze()
+        frame_features[idx,] = temp_frame_features.squeeze()
+        frame_masks[idx,] = temp_frame_mask.squeeze()
 
     return (frame_features, frame_masks), labels
 
 
-train_data, train_labels = prepare_all_videos(train_df, "train")
-test_data, test_labels = prepare_all_videos(test_df, "test")
+train_data, train_labels = prepare_all_videos(train_df, 'ucf101_top10/train')
+test_data, test_labels = prepare_all_videos(test_df, 'ucf101_top10/test')
 
 print(f"Frame features in train set: {train_data[0].shape}")
 print(f"Frame masks in train set: {train_data[1].shape}")
 
 """
-The above code block will take ~20 minutes to execute depending on the machine it's being
+The above code block will take ~50 minutes to execute depending on the machine it's being
 executed.
 """
 
@@ -248,7 +257,6 @@ executed.
 ## The sequence model
 
 Now, we can feed this data to a sequence model consisting of recurrent layers like `GRU`.
-
 """
 
 # Utility for our sequence model.
@@ -307,7 +315,6 @@ training examples. This number of training examples is low with respect to the s
 model being used that has 99,909 trainable parameters. You are encouraged to sample more
 data from the UCF101 dataset using [the notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb) mentioned above and train the same model.
 """
-
 """
 ## Inference
 """
@@ -315,13 +322,7 @@ data from the UCF101 dataset using [the notebook](https://colab.research.google.
 
 def prepare_single_video(frames):
     frames = frames[None, ...]
-    frame_mask = np.zeros(
-        shape=(
-            1,
-            MAX_SEQ_LENGTH,
-        ),
-        dtype="bool",
-    )
+    frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
     frame_features = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
 
     for i, batch in enumerate(frames):
@@ -337,7 +338,7 @@ def prepare_single_video(frames):
 def sequence_prediction(path):
     class_vocab = label_processor.get_vocabulary()
 
-    frames = load_video(os.path.join("test", path))
+    frames = load_video(path)
     frame_features, frame_mask = prepare_single_video(frames)
     probabilities = sequence_model.predict([frame_features, frame_mask])[0]
 
@@ -351,13 +352,14 @@ def sequence_prediction(path):
 # https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
 def to_gif(images):
     converted_images = images.astype(np.uint8)
-    imageio.mimsave("animation.gif", converted_images, fps=10)
+    imageio.mimsave("animation.gif", converted_images, duration=1000*1/10)
     return embed.embed_file("animation.gif")
 
 
 test_video = np.random.choice(test_df["video_name"].values.tolist())
-print(f"Test video path: {test_video}")
-test_frames = sequence_prediction(test_video)
+test_video_path = os.path.join('ucf101_top10', 'test', test_video)
+print(f"Test video path: {test_video_path}")
+test_frames = sequence_prediction(test_video_path)
 to_gif(test_frames[:MAX_SEQ_LENGTH])
 
 """
