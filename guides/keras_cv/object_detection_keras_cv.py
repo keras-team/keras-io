@@ -3,7 +3,7 @@ Title: Object Detection with KerasCV
 Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2023/04/08
 Last modified: 2023/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+Description: Train an object detection model with KerasCV.
 Accelerator: GPU
 """
 
@@ -47,7 +47,7 @@ arbitrary number of classes.
 
 **For example:**
 
-<img width="300" src="https://i.imgur.com/QTvxIZH.jpeg">
+<img width="300" src="https://i.imgur.com/8xSEbQD.png">
 
 The data for the above image may look something like this:
 ```python
