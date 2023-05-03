@@ -69,132 +69,207 @@ import time
 """
 
 
-def discounted_cumulative_sums(x, discount):
-    # Discounted cumulative sums of vectors for computing rewards-to-go and advantage estimates
-    return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1]
+class PPO:
+    def __init__(
+        self,
+        observation_dimensions,
+        num_actions,
+        steps_per_epoch,
+        policy_learning_rate=3e-4,
+        value_function_learning_rate=1e-3,
+        clip_ratio=0.2,
+        hidden_sizes=(64, 64),
+        gamma=0.99,
+        lam=0.95
+    ):
+        self.observation_dimensions = observation_dimensions
+        self.steps_per_epoch = steps_per_epoch
+        self.hidden_sizes = hidden_sizes
+        self.num_actions = num_actions
+        self.policy_learning_rate = policy_learning_rate
+        self.value_function_learning_rate = value_function_learning_rate
+        self.clip_ratio = clip_ratio
 
-
-class Buffer:
-    # Buffer for storing trajectories
-    def __init__(self, observation_dimensions, size, gamma=0.99, lam=0.95):
-        # Buffer initialization
-        self.observation_buffer = np.zeros(
-            (size, observation_dimensions), dtype=np.float32
-        )
-        self.action_buffer = np.zeros(size, dtype=np.int32)
-        self.advantage_buffer = np.zeros(size, dtype=np.float32)
-        self.reward_buffer = np.zeros(size, dtype=np.float32)
-        self.return_buffer = np.zeros(size, dtype=np.float32)
-        self.value_buffer = np.zeros(size, dtype=np.float32)
-        self.logprobability_buffer = np.zeros(size, dtype=np.float32)
-        self.gamma, self.lam = gamma, lam
-        self.pointer, self.trajectory_start_index = 0, 0
-
-    def store(self, observation, action, reward, value, logprobability):
-        # Append one step of agent-environment interaction
-        self.observation_buffer[self.pointer] = observation
-        self.action_buffer[self.pointer] = action
-        self.reward_buffer[self.pointer] = reward
-        self.value_buffer[self.pointer] = value
-        self.logprobability_buffer[self.pointer] = logprobability
-        self.pointer += 1
-
-    def finish_trajectory(self, last_value=0):
-        # Finish the trajectory by computing advantage estimates and rewards-to-go
-        path_slice = slice(self.trajectory_start_index, self.pointer)
-        rewards = np.append(self.reward_buffer[path_slice], last_value)
-        values = np.append(self.value_buffer[path_slice], last_value)
-
-        deltas = rewards[:-1] + self.gamma * values[1:] - values[:-1]
-
-        self.advantage_buffer[path_slice] = discounted_cumulative_sums(
-            deltas, self.gamma * self.lam
-        )
-        self.return_buffer[path_slice] = discounted_cumulative_sums(
-            rewards, self.gamma
-        )[:-1]
-
-        self.trajectory_start_index = self.pointer
-
-    def get(self):
-        # Get all data of the buffer and normalize the advantages
-        self.pointer, self.trajectory_start_index = 0, 0
-        advantage_mean, advantage_std = (
-            np.mean(self.advantage_buffer),
-            np.std(self.advantage_buffer),
-        )
-        self.advantage_buffer = (self.advantage_buffer - advantage_mean) / advantage_std
-        return (
-            self.observation_buffer,
-            self.action_buffer,
-            self.advantage_buffer,
-            self.return_buffer,
-            self.logprobability_buffer,
+        # Initialize the buffer
+        self.buffer = self.Buffer(
+            self.observation_dimensions,
+            self.steps_per_epoch
         )
 
-
-def mlp(x, sizes, activation=tf.tanh, output_activation=None):
-    # Build a feedforward neural network
-    for size in sizes[:-1]:
-        x = layers.Dense(units=size, activation=activation)(x)
-    return layers.Dense(units=sizes[-1], activation=output_activation)(x)
-
-
-def logprobabilities(logits, a):
-    # Compute the log-probabilities of taking actions a by using the logits (i.e. the output of the actor)
-    logprobabilities_all = tf.nn.log_softmax(logits)
-    logprobability = tf.reduce_sum(
-        tf.one_hot(a, num_actions) * logprobabilities_all, axis=1
-    )
-    return logprobability
-
-
-# Sample action from actor
-@tf.function
-def sample_action(observation):
-    logits = actor(observation)
-    action = tf.squeeze(tf.random.categorical(logits, 1), axis=1)
-    return logits, action
-
-
-# Train the policy by maxizing the PPO-Clip objective
-@tf.function
-def train_policy(
-    observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
-):
-
-    with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
-        ratio = tf.exp(
-            logprobabilities(actor(observation_buffer), action_buffer)
-            - logprobability_buffer
-        )
-        min_advantage = tf.where(
-            advantage_buffer > 0,
-            (1 + clip_ratio) * advantage_buffer,
-            (1 - clip_ratio) * advantage_buffer,
+        # Initialize the actor and the critic as keras models
+        observation_input = keras.Input(
+            shape=(self.observation_dimensions,),
+            dtype=tf.float32
         )
 
-        policy_loss = -tf.reduce_mean(
-            tf.minimum(ratio * advantage_buffer, min_advantage)
+        logits = self.mlp(
+            observation_input,
+            list(self.hidden_sizes) + [self.num_actions],
+            tf.tanh,
+            None
         )
-    policy_grads = tape.gradient(policy_loss, actor.trainable_variables)
-    policy_optimizer.apply_gradients(zip(policy_grads, actor.trainable_variables))
 
-    kl = tf.reduce_mean(
-        logprobability_buffer
-        - logprobabilities(actor(observation_buffer), action_buffer)
-    )
-    kl = tf.reduce_sum(kl)
-    return kl
+        self.actor = keras.Model(inputs=observation_input, outputs=logits)
 
+        value = tf.squeeze(
+            self.mlp(
+                observation_input,
+                list(self.hidden_sizes) + [1],
+                tf.tanh,
+                None
+            ),
+            axis=1
+        )
 
-# Train the value function by regression on mean-squared error
-@tf.function
-def train_value_function(observation_buffer, return_buffer):
-    with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
-        value_loss = tf.reduce_mean((return_buffer - critic(observation_buffer)) ** 2)
-    value_grads = tape.gradient(value_loss, critic.trainable_variables)
-    value_optimizer.apply_gradients(zip(value_grads, critic.trainable_variables))
+        self.critic = keras.Model(inputs=observation_input, outputs=value)
+
+        # Initialize the policy and the value function optimizers
+        self.policy_optimizer = keras.optimizers.Adam(
+            learning_rate=self.policy_learning_rate
+        )
+
+        self.value_optimizer = keras.optimizers.Adam(
+            learning_rate=self.value_function_learning_rate
+        )
+
+    class Buffer:
+        # Buffer for storing trajectories
+        def __init__(self, observation_dimensions, size, gamma=0.99, lam=0.95):
+            # Buffer initialization
+            self.gamma = gamma
+            self.lam = lam
+            self.pointer = 0
+            self.trajectory_start_index = 0
+
+            shape = (size, observation_dimensions)
+            self.observation_buffer = np.zeros(shape, dtype=np.float32)
+            self.action_buffer = np.zeros(size, dtype=np.int32)
+            self.advantage_buffer = np.zeros(size, dtype=np.float32)
+            self.reward_buffer = np.zeros(size, dtype=np.float32)
+            self.return_buffer = np.zeros(size, dtype=np.float32)
+            self.value_buffer = np.zeros(size, dtype=np.float32)
+            self.logprobability_buffer = np.zeros(size, dtype=np.float32)
+
+        def store(self, observation, action, reward, value, logprobability):
+            # Append one step of agent-environment interaction
+            self.observation_buffer[self.pointer] = observation
+            self.action_buffer[self.pointer] = action
+            self.reward_buffer[self.pointer] = reward
+            self.value_buffer[self.pointer] = value
+            self.logprobability_buffer[self.pointer] = logprobability
+            self.pointer += 1
+
+        def finish_trajectory(self, last_value=0):
+            # Finish the trajectory by computing advantage estimates and rewards-to-go
+            path_slice = slice(self.trajectory_start_index, self.pointer)
+            rewards = np.append(self.reward_buffer[path_slice], last_value)
+            values = np.append(self.value_buffer[path_slice], last_value)
+
+            # Compute the GAE-Lambda advantage estimates
+            deltas = rewards[:-1] + self.gamma * values[1:] - values[:-1]
+            self.advantage_buffer[path_slice] = self.discounted_cumulative_sums(
+                deltas, self.gamma * self.lam
+            )
+
+            # Compute the rewards-to-go
+            self.return_buffer[path_slice] = self.discounted_cumulative_sums(
+                rewards, self.gamma
+            )[:-1]
+
+            self.trajectory_start_index = self.pointer
+
+        def get(self):
+            # Get all data of the buffer and normalize the advantages
+            self.pointer, self.trajectory_start_index = 0, 0
+            advantage_mean, advantage_std = (
+                np.mean(self.advantage_buffer),
+                np.std(self.advantage_buffer),
+            )
+            self.advantage_buffer = (
+                self.advantage_buffer - advantage_mean) / advantage_std
+            return (
+                self.observation_buffer,
+                self.action_buffer,
+                self.advantage_buffer,
+                self.return_buffer,
+                self.logprobability_buffer,
+            )
+
+        def discounted_cumulative_sums(self, x, discount):
+            # Discounted cumulative sums of vectors for computing rewards-to-go and advantage estimates
+            return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1]
+
+    def mlp(self, x, sizes, activation=tf.tanh, output_activation=None):
+        # Build a feedforward neural network
+        for size in sizes[:-1]:
+            x = layers.Dense(units=size, activation=activation)(x)
+        return layers.Dense(units=sizes[-1], activation=output_activation)(x)
+
+    def logprobabilities(self, logits, a):
+        # Compute the log-probabilities of taking actions a by using the logits (i.e. the output of the actor)
+        logprobabilities_all = tf.nn.log_softmax(logits)
+        logprobability = tf.reduce_sum(
+            tf.one_hot(a, self.num_actions) * logprobabilities_all, axis=1
+        )
+        return logprobability
+
+    @tf.function
+    def sample_action(self, observation):
+        # Sample action from actor
+        logits = self.actor(observation)
+        action = tf.squeeze(tf.random.categorical(logits, 1), axis=1)
+        return logits, action
+
+    @tf.function
+    def train_policy(self, observation_buffer, action_buffer, logprobability_buffer, advantage_buffer):
+        # Train the policy by maxizing the PPO-Clip objective
+        with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
+            ratio = tf.exp(
+                self.logprobabilities(self.actor(
+                    observation_buffer), action_buffer)
+                - logprobability_buffer
+            )
+            min_advantage = tf.where(
+                advantage_buffer > 0,
+                (1 + self.clip_ratio) * advantage_buffer,
+                (1 - self.clip_ratio) * advantage_buffer,
+            )
+
+            policy_loss = -tf.reduce_mean(
+                tf.minimum(ratio * advantage_buffer, min_advantage)
+            )
+        policy_grads = tape.gradient(
+            policy_loss, self.actor.trainable_variables)
+        self.policy_optimizer.apply_gradients(
+            zip(policy_grads, self.actor.trainable_variables))
+
+        self.kl = tf.reduce_mean(
+            logprobability_buffer
+            - self.logprobabilities(self.actor(observation_buffer), action_buffer)
+        )
+        self.kl = tf.reduce_sum(self.kl)
+        return self.kl
+
+    @tf.function
+    def train_value_function(self, observation_buffer, return_buffer):
+        # Train the value function by regression on mean-squared error
+        with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
+            value_loss = tf.reduce_mean(
+                (return_buffer - self.critic(observation_buffer)) ** 2)
+        value_grads = tape.gradient(
+            value_loss, self.critic.trainable_variables)
+        self.value_optimizer.apply_gradients(
+            zip(value_grads, self.critic.trainable_variables))
+
+    def save(self, path):
+        """Salva o modelo treinado em um arquivo."""
+        self.actor.save(f"{path}_actor.h5")
+        self.critic.save(f"{path}_critic.h5")
+
+    def load(self, path):
+        """Carrega um modelo previamente treinado de um arquivo."""
+        self.actor = keras.models.load_model(f"{path}_actor.h5")
+        self.critic = keras.models.load_model(f"{path}_critic.h5")
 
 
 """
@@ -204,13 +279,8 @@ def train_value_function(observation_buffer, return_buffer):
 # Hyperparameters of the PPO algorithm
 steps_per_epoch = 4000
 epochs = 30
-gamma = 0.99
-clip_ratio = 0.2
-policy_learning_rate = 3e-4
-value_function_learning_rate = 1e-3
 train_policy_iterations = 80
 train_value_iterations = 80
-lam = 0.97
 target_kl = 0.01
 hidden_sizes = (64, 64)
 
@@ -227,21 +297,12 @@ env = gym.make("CartPole-v0")
 observation_dimensions = env.observation_space.shape[0]
 num_actions = env.action_space.n
 
-# Initialize the buffer
-buffer = Buffer(observation_dimensions, steps_per_epoch)
-
-# Initialize the actor and the critic as keras models
-observation_input = keras.Input(shape=(observation_dimensions,), dtype=tf.float32)
-logits = mlp(observation_input, list(hidden_sizes) + [num_actions], tf.tanh, None)
-actor = keras.Model(inputs=observation_input, outputs=logits)
-value = tf.squeeze(
-    mlp(observation_input, list(hidden_sizes) + [1], tf.tanh, None), axis=1
+# Initialize PPO
+ppo = PPO(
+    observation_dimensions=observation_dimensions,
+    num_actions=num_actions,
+    steps_per_epoch=steps_per_epoch,
 )
-critic = keras.Model(inputs=observation_input, outputs=value)
-
-# Initialize the policy and the value function optimizers
-policy_optimizer = keras.optimizers.Adam(learning_rate=policy_learning_rate)
-value_optimizer = keras.optimizers.Adam(learning_rate=value_function_learning_rate)
 
 # Initialize the observation, episode return and episode length
 observation, episode_return, episode_length = env.reset(), 0, 0
@@ -263,17 +324,18 @@ for epoch in range(epochs):
 
         # Get the logits, action, and take one step in the environment
         observation = observation.reshape(1, -1)
-        logits, action = sample_action(observation)
+        logits, action = ppo.sample_action(observation)
         observation_new, reward, done, _ = env.step(action[0].numpy())
         episode_return += reward
         episode_length += 1
 
         # Get the value and log-probability of the action
-        value_t = critic(observation)
-        logprobability_t = logprobabilities(logits, action)
+        value_t = ppo.critic(observation)
+        logprobability_t = ppo.logprobabilities(logits, action)
 
         # Store obs, act, rew, v_t, logp_pi_t
-        buffer.store(observation, action, reward, value_t, logprobability_t)
+        ppo.buffer.store(observation, action, reward,
+                         value_t, logprobability_t)
 
         # Update the observation
         observation = observation_new
@@ -281,8 +343,8 @@ for epoch in range(epochs):
         # Finish trajectory if reached to a terminal state
         terminal = done
         if terminal or (t == steps_per_epoch - 1):
-            last_value = 0 if done else critic(observation.reshape(1, -1))
-            buffer.finish_trajectory(last_value)
+            last_value = 0 if done else ppo.critic(observation.reshape(1, -1))
+            ppo.buffer.finish_trajectory(last_value)
             sum_return += episode_return
             sum_length += episode_length
             num_episodes += 1
@@ -295,11 +357,11 @@ for epoch in range(epochs):
         advantage_buffer,
         return_buffer,
         logprobability_buffer,
-    ) = buffer.get()
+    ) = ppo.buffer.get()
 
     # Update the policy and implement early stopping using KL divergence
     for _ in range(train_policy_iterations):
-        kl = train_policy(
+        kl = ppo.train_policy(
             observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
         )
         if kl > 1.5 * target_kl:
@@ -308,12 +370,13 @@ for epoch in range(epochs):
 
     # Update the value function
     for _ in range(train_value_iterations):
-        train_value_function(observation_buffer, return_buffer)
+        ppo.train_value_function(observation_buffer, return_buffer)
 
     # Print mean return and length for each epoch
     print(
         f" Epoch: {epoch + 1}. Mean Return: {sum_return / num_episodes}. Mean Length: {sum_length / num_episodes}"
     )
+
 
 """
 ## Visualizations
