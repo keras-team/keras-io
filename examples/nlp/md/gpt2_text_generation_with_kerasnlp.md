@@ -25,12 +25,13 @@ Change runtime type** and choose the GPU Hardware Accelerator runtime
 GPT-2 model. Running this tutorial on CPU runtime will take hours.
 
 ---
-## Install KerasNLP and Import Dependencies.
+## Install KerasNLP and Import Dependencies
 
 
 ```python
-!pip install keras-nlp
+!pip install -q keras-nlp
 ```
+
 
 ```python
 import keras_nlp
@@ -38,60 +39,7 @@ import tensorflow as tf
 from tensorflow import keras
 import time
 ```
-<div class="k-default-codeblock">
-```
-Requirement already satisfied: keras-nlp in /opt/conda/envs/tf/lib/python3.9/site-packages (0.5.0.dev0)
-Requirement already satisfied: absl-py in /opt/conda/envs/tf/lib/python3.9/site-packages (from keras-nlp) (1.4.0)
-Requirement already satisfied: numpy in /opt/conda/envs/tf/lib/python3.9/site-packages (from keras-nlp) (1.23.5)
-Requirement already satisfied: packaging in /opt/conda/envs/tf/lib/python3.9/site-packages (from keras-nlp) (23.1)
-Requirement already satisfied: tensorflow-text in /opt/conda/envs/tf/lib/python3.9/site-packages (from keras-nlp) (2.12.1)
-Requirement already satisfied: tensorflow-hub>=0.8.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow-text->keras-nlp) (0.13.0)
-Requirement already satisfied: tensorflow<2.13,>=2.12.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow-text->keras-nlp) (2.12.0)
-Requirement already satisfied: astunparse>=1.6.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.6.3)
-Requirement already satisfied: flatbuffers>=2.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (23.3.3)
-Requirement already satisfied: gast<=0.4.0,>=0.2.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.4.0)
-Requirement already satisfied: google-pasta>=0.1.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.2.0)
-Requirement already satisfied: grpcio<2.0,>=1.24.3 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.53.0)
-Requirement already satisfied: h5py>=2.9.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.8.0)
-Requirement already satisfied: jax>=0.3.15 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.4.8)
-Requirement already satisfied: keras<2.13,>=2.12.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.12.0)
-Requirement already satisfied: libclang>=13.0.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (16.0.0)
-Requirement already satisfied: opt-einsum>=2.3.2 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.3.0)
-Requirement already satisfied: protobuf!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<5.0.0dev,>=3.20.3 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.20.3)
-Requirement already satisfied: setuptools in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (67.6.1)
-Requirement already satisfied: six>=1.12.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.16.0)
-Requirement already satisfied: tensorboard<2.13,>=2.12 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.12.2)
-Requirement already satisfied: tensorflow-estimator<2.13,>=2.12.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.12.0)
-Requirement already satisfied: termcolor>=1.1.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.2.0)
-Requirement already satisfied: typing-extensions>=3.6.6 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (4.5.0)
-Requirement already satisfied: wrapt<1.15,>=1.11.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.14.1)
-Requirement already satisfied: tensorflow-io-gcs-filesystem>=0.23.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.32.0)
-Requirement already satisfied: wheel<1.0,>=0.23.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from astunparse>=1.6.0->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.40.0)
-Requirement already satisfied: ml-dtypes>=0.0.3 in /opt/conda/envs/tf/lib/python3.9/site-packages (from jax>=0.3.15->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.1.0)
-Requirement already satisfied: scipy>=1.7 in /opt/conda/envs/tf/lib/python3.9/site-packages (from jax>=0.3.15->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.10.1)
-Requirement already satisfied: google-auth<3,>=1.6.3 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.17.3)
-Requirement already satisfied: google-auth-oauthlib<1.1,>=0.5 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.0.0)
-Requirement already satisfied: markdown>=2.6.8 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.4.3)
-Requirement already satisfied: requests<3,>=2.21.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.28.2)
-Requirement already satisfied: tensorboard-data-server<0.8.0,>=0.7.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.7.0)
-Requirement already satisfied: tensorboard-plugin-wit>=1.6.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.8.1)
-Requirement already satisfied: werkzeug>=1.0.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.2.3)
-Requirement already satisfied: cachetools<6.0,>=2.0.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (5.3.0)
-Requirement already satisfied: pyasn1-modules>=0.2.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.2.8)
-Requirement already satisfied: rsa<5,>=3.1.4 in /opt/conda/envs/tf/lib/python3.9/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (4.9)
-Requirement already satisfied: requests-oauthlib>=0.7.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from google-auth-oauthlib<1.1,>=0.5->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.3.1)
-Requirement already satisfied: importlib-metadata>=4.4 in /opt/conda/envs/tf/lib/python3.9/site-packages (from markdown>=2.6.8->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (6.4.1)
-Requirement already satisfied: charset-normalizer<4,>=2 in /opt/conda/envs/tf/lib/python3.9/site-packages (from requests<3,>=2.21.0->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.1.0)
-Requirement already satisfied: idna<4,>=2.5 in /opt/conda/envs/tf/lib/python3.9/site-packages (from requests<3,>=2.21.0->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.4)
-Requirement already satisfied: urllib3<1.27,>=1.21.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from requests<3,>=2.21.0->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (1.26.15)
-Requirement already satisfied: certifi>=2017.4.17 in /opt/conda/envs/tf/lib/python3.9/site-packages (from requests<3,>=2.21.0->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2022.12.7)
-Requirement already satisfied: MarkupSafe>=2.1.1 in /opt/conda/envs/tf/lib/python3.9/site-packages (from werkzeug>=1.0.1->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (2.1.2)
-Requirement already satisfied: zipp>=0.5 in /opt/conda/envs/tf/lib/python3.9/site-packages (from importlib-metadata>=4.4->markdown>=2.6.8->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.15.0)
-Requirement already satisfied: pyasn1<0.5.0,>=0.4.6 in /opt/conda/envs/tf/lib/python3.9/site-packages (from pyasn1-modules>=0.2.1->google-auth<3,>=1.6.3->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (0.4.8)
-Requirement already satisfied: oauthlib>=3.0.0 in /opt/conda/envs/tf/lib/python3.9/site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<1.1,>=0.5->tensorboard<2.13,>=2.12->tensorflow<2.13,>=2.12.0->tensorflow-text->keras-nlp) (3.2.2)
 
-```
-</div>
 ---
 ## Introduction to Generative Large Language Models (LLMs)
 
@@ -194,7 +142,7 @@ I didn't know what I was doing. I just thought I was going to get out of here an
     
 <div class="k-default-codeblock">
 ```
-TOTAL TIME ELAPSED: 21.28s
+TOTAL TIME ELAPSED: 18.25s
 
 ```
 </div>
@@ -241,7 +189,7 @@ The eatery is located at 5100 N. Broadway in New York City, according to the New
 <div class="k-default-codeblock">
 ```
 The restaurant, which has a large Italian menu, was closed in April after the owner, who is Italian, told the Post that the restaurant was "not a good place," but that he was "working on a new restaurant."
-TOTAL TIME ELAPSED: 1.74s
+TOTAL TIME ELAPSED: 1.71s
 
 ```
 </div>
@@ -278,7 +226,7 @@ pretrained model:
     vocab tokens.
 
 ---
-## Finetune on Reddit dataset.
+## Finetune on Reddit dataset
 
 Now you have the knowledge of the GPT-2 model from KerasNLP, you can take one
 step further to finetune the model so that it generates text in a specific
@@ -357,9 +305,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 217s 317ms/step - loss: 3.3056 - accuracy: 0.3265
+500/500 [==============================] - 212s 311ms/step - loss: 3.3057 - accuracy: 0.3265
 
-<keras.callbacks.History at 0x7fb72021e940>
+<keras.callbacks.History at 0x7f3fead74b20>
 
 ```
 </div>
@@ -403,7 +351,7 @@ so, i'm in the middle of a game, and i get a little frustrated, so i just try to
 <div class="k-default-codeblock">
 ```
 it's like a giant
-TOTAL TIME ELAPSED: 17.36s
+TOTAL TIME ELAPSED: 16.22s
 
 ```
 </div>
@@ -566,7 +514,7 @@ remote: Enumerating objects: 7222, done.[K
 remote: Counting objects: 100% (27/27), done.[K
 remote: Compressing objects: 100% (19/19), done.[K
 remote: Total 7222 (delta 5), reused 20 (delta 5), pack-reused 7195[K
-Receiving objects: 100% (7222/7222), 197.75 MiB | 32.98 MiB/s, done.
+Receiving objects: 100% (7222/7222), 197.75 MiB | 15.15 MiB/s, done.
 Resolving deltas: 100% (5295/5295), done.
 Checking out files: 100% (2283/2283), done.
 
@@ -638,9 +586,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 163s 213ms/step - loss: 2.4427 - accuracy: 0.2812
+500/500 [==============================] - 160s 211ms/step - loss: 2.4432 - accuracy: 0.2811
 
-<keras.callbacks.History at 0x7fb720205c10>
+<keras.callbacks.History at 0x7f40802d8e20>
 
 ```
 </div>
@@ -654,11 +602,11 @@ print(output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7fb7b52d56d0>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f40804406a0>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7fb7b52d56d0>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f40804406a0>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-昨夜雨疏风骤紛，爲臨靜林萬野風。
+昨夜雨疏风骤紛，白萬聞城清山。江清知非頭自花，爲花萬屋清清除。白處樂深紅花，清處馬自自自。
 
 ```
 </div>

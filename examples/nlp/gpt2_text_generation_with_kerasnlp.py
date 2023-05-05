@@ -25,11 +25,11 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 """
 
 """
-## Install KerasNLP and Import Dependencies.
+## Install KerasNLP and Import Dependencies
 """
 
 """shell
-pip install keras-nlp
+pip install -q keras-nlp
 """
 
 import keras_nlp
@@ -165,7 +165,7 @@ pretrained model:
 """
 
 """
-## Finetune on Reddit dataset.
+## Finetune on Reddit dataset
 
 Now you have the knowledge of the GPT-2 model from KerasNLP, you can take one
 step further to finetune the model so that it generates text in a specific
