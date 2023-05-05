@@ -29,7 +29,7 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 """
 
 """shell
-pip install -q -U git+https://github.com/keras-team/keras-nlp.git@master
+pip install keras-nlp
 """
 
 import keras_nlp
@@ -62,8 +62,9 @@ pedagogical discussion on language models, you can refer to the
 ## Introduction to KerasNLP
 
 Large Language Models are complex to build and expensive to train from scratch.
-Luckily there are pretrained LLMs available for use right away. One toolkit that
-offers state-of-the-art pretrained models for free is [KerasNLP](https://keras.io/keras_nlp/).
+Luckily there are pretrained LLMs available for use right away. [KerasNLP](https://keras.io/keras_nlp/)
+provides a large number of pre-trained checkpoints that allow you to experiment
+with SOTA models without needing to train them yourself.
 
 KerasNLP is a natural language processing library that supports users through
 their entire development cycle. KerasNLP offers both pretrained models and
@@ -90,11 +91,11 @@ the list of models available in the [KerasNLP repository](https://github.com/ker
 It's very easy to load the GPT-2 model as you can see below:
 """
 
-# To speed up, we use preprocessor of length 128 instead of full length 1024.
+# To speed up training and generation, we use preprocessor of length 128
+# instead of full length 1024.
 preprocessor = keras_nlp.models.GPT2CausalLMPreprocessor.from_preset(
     "gpt2_base_en",
     sequence_length=128,
-    add_end_token=True,
 )
 gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset(
     "gpt2_base_en", preprocessor=preprocessor
@@ -130,7 +131,8 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 
 """
 Notice how much faster the second call is. This is because the computational
-graph is compiled in the 1st run and re-used in the 2nd behind the scene.
+graph is [XLA compiled](https://www.tensorflow.org/xla) in the 1st run and
+re-used in the 2nd behind the scenes.
 
 The quality of the generated text looks OK, but we can improved it via
 finetuning.
@@ -139,9 +141,9 @@ finetuning.
 """
 ## More on the GPT-2 model from KerasNLP
 
-While it may be sufficient to move on to the next step of finetuning the
-loaded model now, for the more curious you can better understand how generative
-LLMs are built by KerasNLP in this section.
+Next up, we will actually fine-tune the model to update it's parameters, but
+before we do, let's take a look at the full set of tools we have to for working
+with for GPT2.
 
 The code of GPT2 can be found
 [here](https://github.com/keras-team/keras-nlp/blob/master/keras_nlp/models/gpt2/).
@@ -214,6 +216,7 @@ for demo purposes.
 train_ds = train_ds.take(500)
 num_epochs = 1
 
+# Linearly decaying learning rate.
 learning_rate = keras.optimizers.schedules.PolynomialDecay(
     5e-5,
     decay_steps=train_ds.cardinality() * num_epochs,
@@ -248,13 +251,13 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 ## Into the Sampling Method
 
 In KerasNLP, we offer a few sampling methods, e.g., contrastive search,
-Top-K and beam sampling. By default our `GPT2CausalLM` uses contrastive
-search, but you can choose your own sampling method.
+Top-K and beam sampling. By default our `GPT2CausalLM` uses Top-k search, but
+you can choose your own sampling method.
 
 Much like optimizer and activations, there are two ways to specify your custom
 sampler:
 
-- Use a string identifier, such as "top_k", you are using the default
+- Use a string identifier, such as "greedy", you are using the default
 configuration via this way.
 - Pass a `keras_nlp.samplers.Sampler` instance, you can use custom configuration
 via this way.
@@ -266,9 +269,9 @@ output = gpt2_lm.generate("I like basketball", max_length=200)
 print("\nGPT-2 output:")
 print(output)
 
-# Use a `Sampler` instance.
-beam_sampler = keras_nlp.samplers.BeamSampler(num_beams=3)
-gpt2_lm.compile(sampler=beam_sampler)
+# Use a `Sampler` instance. `GreedySampler` tends to repeat itself,
+greedy_sampler = keras_nlp.samplers.GreedySampler()
+gpt2_lm.compile(sampler=greedy_sampler)
 
 output = gpt2_lm.generate("I like basketball", max_length=200)
 print("\nGPT-2 output:")
