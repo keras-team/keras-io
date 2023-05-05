@@ -31,6 +31,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.AlbertBackbone",
                         "keras_nlp.models.AlbertBackbone.from_preset",
+                        "keras_nlp.models.AlbertBackbone.token_embedding",
                     ],
                 },
                 {
@@ -92,6 +93,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.BertBackbone",
                         "keras_nlp.models.BertBackbone.from_preset",
+                        "keras_nlp.models.BertBackbone.token_embedding",
                     ],
                 },
                 {
@@ -153,6 +155,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.DebertaV3Backbone",
                         "keras_nlp.models.DebertaV3Backbone.from_preset",
+                        "keras_nlp.models.DebertaV3Backbone.token_embedding",
                     ],
                 },
                 {
@@ -214,6 +217,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.DistilBertBackbone",
                         "keras_nlp.models.DistilBertBackbone.from_preset",
+                        "keras_nlp.models.DistilBertBackbone.token_embedding",
                     ],
                 },
                 {
@@ -275,6 +279,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.GPT2Backbone",
                         "keras_nlp.models.GPT2Backbone.from_preset",
+                        "keras_nlp.models.GPT2Backbone.token_embedding",
                     ],
                 },
                 {
@@ -294,6 +299,8 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.GPT2CausalLMPreprocessor",
                         "keras_nlp.models.GPT2CausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.GPT2CausalLMPreprocessor.generate_preprocess",
+                        "keras_nlp.models.GPT2CausalLMPreprocessor.generate_postprocess",
                         "keras_nlp.models.GPT2CausalLMPreprocessor.tokenizer",
                     ],
                 },
@@ -327,6 +334,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.FNetBackbone",
                         "keras_nlp.models.FNetBackbone.from_preset",
+                        "keras_nlp.models.FNetBackbone.token_embedding",
                     ],
                 },
                 {
@@ -388,6 +396,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.OPTBackbone",
                         "keras_nlp.models.OPTBackbone.from_preset",
+                        "keras_nlp.models.OPTBackbone.token_embedding",
                     ],
                 },
                 {
@@ -440,6 +449,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.RobertaBackbone",
                         "keras_nlp.models.RobertaBackbone.from_preset",
+                        "keras_nlp.models.RobertaBackbone.token_embedding",
                     ],
                 },
                 {
@@ -501,6 +511,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_nlp.models.XLMRobertaBackbone",
                         "keras_nlp.models.XLMRobertaBackbone.from_preset",
+                        "keras_nlp.models.XLMRobertaBackbone.token_embedding",
                     ],
                 },
                 {
@@ -552,32 +563,32 @@ SAMPLERS_MASTER = {
         },
         {
             "path": "beam_sampler",
-            "title": "Beam sampler",
+            "title": "BeamSampler",
             "generate": ["keras_nlp.samplers.BeamSampler"],
         },
         {
             "path": "contrastive_sampler",
-            "title": "Contrastive sampler",
+            "title": "ContrastiveSampler",
             "generate": ["keras_nlp.samplers.ContrastiveSampler"],
         },
         {
             "path": "greedy_sampler",
-            "title": "Greedy sampler",
+            "title": "GreedySampler",
             "generate": ["keras_nlp.samplers.GreedySampler"],
         },
         {
             "path": "random_sampler",
-            "title": "Random sampler",
+            "title": "RandomSampler",
             "generate": ["keras_nlp.samplers.RandomSampler"],
         },
         {
             "path": "top_k_sampler",
-            "title": "Top-K sampler",
+            "title": "TopKSampler",
             "generate": ["keras_nlp.samplers.TopKSampler"],
         },
         {
             "path": "top_p_sampler",
-            "title": "Top-P sampler",
+            "title": "TopPSampler",
             "generate": ["keras_nlp.samplers.TopPSampler"],
         },
     ],
