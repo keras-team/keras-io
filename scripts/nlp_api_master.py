@@ -769,6 +769,11 @@ MODELING_LAYERS_MASTER = {
             "title": "MaskedLMHead layer",
             "generate": ["keras_nlp.layers.MaskedLMHead"],
         },
+        {
+            "path": "cached_multi_head_attention",
+            "title": "CachedMultiHeadAttention layer",
+            "generate": ["keras_nlp.layers.CachedMultiHeadAttention"],
+        },
     ],
 }
 

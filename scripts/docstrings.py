@@ -141,6 +141,8 @@ def make_source_link(cls, project_url):
             f"current imported package version {module_version}"
         )
     path = cls.__module__.replace(".", "/")
+    if base_module == "keras_nlp":
+        path = path.replace("src/", "")
     line = inspect.getsourcelines(cls)[-1]
     return (
         f'<span style="float:right;">'
