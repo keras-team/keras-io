@@ -180,8 +180,17 @@ test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
 """
 Remember we called `tf.config.experimental.enable_op_determinism()` at the
 beginning of the function. This makes the `tf.data` operations deterministic.
-However, making `tf.data` operations deterministic comes with a performance cost.
+However, making `tf.data` operations deterministic comes with a performance 
+cost.
 If you want to learn more about it, please check this [official guide](https://www.tensorflow.org/api_docs/python/tf/config/experimental/enable_op_determinism#determinism_and_tfdata).
+
+Small summary what's going on here. Models have `kernel_initializer` and
+`bias_initializer` parameters. Since we set random seeds using
+`keras.utils.set_random_seed` in the beginning of the notebook, the initializers
+will produce same results in the sequential runs. Additionally, TensorFlow
+operations have now become deterministic. Frequently, you will be utilizing GPUs
+that have thousands of hardware threads which causes non-deterministic behavior
+to occur.
 """
 
 
