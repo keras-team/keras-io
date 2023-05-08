@@ -37,7 +37,9 @@ import keras_cv
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import keras
+from keras import losses
 import numpy as np
+from keras import metrics
 
 
 """
@@ -236,6 +238,8 @@ template may be used on ImageNet to achieve state of the art scores.
 Let's start out by tackling data loading:
 """
 NUM_CLASSES = 101
+# Change to 100~ to fully train.
+EPOCHS = 1
 
 def package_inputs(image, label):
     return {
@@ -250,8 +254,17 @@ train_ds = train_ds.ragged_batch(BATCH_SIZE)
 eval_ds = eval_ds.ragged_batch(BATCH_SIZE)
 
 image_batch = next(train_ds)["images"]
-
+keras_cv.visualization.plot_image_gallery(
+    image_batch,
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
 """
+
+## Data Augmentation
+
 In our previous finetuning exmaple, we performed a static resizing operation and
 did not include any image augmentation.
 This is because a single pass over the training set was sufficient to achieve
@@ -448,10 +461,184 @@ cut_mix_or_mix_up = keras_cv.layers.RandomChoice([cut_mix, mix_up])
 augmenters += [cut_mix_or_mix_up]
 
 """
-Congratulations!  You now have constructed and understood a powerful augmentation
-pipeline!
+Applying it to your training pipeline is easy:
 """
 
+augmenter = keras.Sequential([augmenters])
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+
+image_batch = next(train_ds)["images"]
+keras_cv.visualization.plot_image_gallery(
+    image_batch,
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
+
+"""
+We also need to resize our evaluation set, but luckily that's trivial:
+"""
+inference_resizing = keras_cv.layers.Resizing(IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True)
+eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
+
+image_batch = next(eval_ds)["images"]
+keras_cv.visualization.plot_image_gallery(
+    image_batch,
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
+
+"""
+Finally, lets unpackage our datasets and prepare to pass them to the `model.fit()`
+call, which accepts a tuple of `(images, labels)`.
+"""
+
+def unpackage_dict(inputs):
+    return inputs["images"], inputs["labels"]
+
+train_ds = train_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
+
+"""
+Cool!  Data augmentation is by far the hardest piece of training a classifier
+in the modern era.
+Congratulations on making it this far!
+
+## Optimizer Tuning
+
+To achieve optimal performance, we must implement a Warm up Cosinde decay
+learning rate schedule.
+While we won't go into detail on this schedule, [you can read more about it
+here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
+"""
+
+
+def lr_warmup_cosine_decay(
+    global_step,
+    warmup_steps,
+    hold=0,
+    total_steps=0,
+    start_lr=0.0,
+    target_lr=1e-2,
+):
+    # Cosine decay
+    learning_rate = (
+        0.5
+        * target_lr
+        * (
+            1
+            + tf.cos(
+                tf.constant(math.pi)
+                * tf.cast(global_step - warmup_steps - hold, tf.float32)
+                / float(total_steps - warmup_steps - hold)
+            )
+        )
+    )
+
+    warmup_lr = tf.cast(target_lr * (global_step / warmup_steps), tf.float32)
+    target_lr = tf.cast(target_lr, tf.float32)
+
+    if hold > 0:
+        learning_rate = tf.where(
+            global_step > warmup_steps + hold, learning_rate, target_lr
+        )
+
+    learning_rate = tf.where(
+        global_step < warmup_steps, warmup_lr, learning_rate
+    )
+    return learning_rate
+
+
+class WarmUpCosineDecay(keras.optimizers.schedules.LearningRateSchedule):
+    def __init__(
+        self, warmup_steps, total_steps, hold, start_lr=0.0, target_lr=1e-2
+    ):
+        super().__init__()
+        self.start_lr = start_lr
+        self.target_lr = target_lr
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+        self.hold = hold
+
+    def __call__(self, step):
+        lr = lr_warmup_cosine_decay(
+            global_step=step,
+            total_steps=self.total_steps,
+            warmup_steps=self.warmup_steps,
+            start_lr=self.start_lr,
+            target_lr=self.target_lr,
+            hold=self.hold,
+        )
+
+        return tf.where(step > self.total_steps, 0.0, lr, name="learning_rate")
+
+"""
+Next let's construct this optimizer:
+"""
+total_steps = (NUM_IMAGES // BATCH_SIZE) * EPOCHS
+warmup_steps = int(FLAGS.warmup_steps_percentage * total_steps)
+hold_steps = int(FLAGS.warmup_hold_steps_percentage * total_steps)
+schedule = WarmUpCosineDecay(
+    start_lr=0.0,
+    target_lr=INITIAL_LEARNING_RATE,
+    warmup_steps=warmup_steps,
+    total_steps=total_steps,
+    hold=hold_steps,
+)
+optimizer = optimizers.SGD(
+    weight_decay=FLAGS.weight_decay,
+    learning_rate=schedule,
+    momentum=0.9,
+    use_ema=FLAGS.use_ema,
+)
+"""
+At long last, we can now build our model and call `fit()`!
+"""
+
+backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
+    "efficientnetv2-b0",
+)
+model = keras.Sequential(
+    [
+        backbone,
+        keras.layers.GlobalMaxPooling2D(),
+        keras.layers.Dropout(rate=0.5),
+        keras.layers.Dense(2, activation="softmax"),
+    ]
+)
+
+
+model.fit(train_dataset)
+
+"""
+When using `MixUp()` and `CutMix()`, using `label_smoothing` in your loss is
+extremely important.
+"""
+loss = losses.CategoricalCrossentropy(label_smoothing=0.1)
+"""
+Let's compile our model:
+"""
+model.compile(
+    loss=loss,
+    optimizer=optimizer,
+    metrics=[
+        metrics.CategoricalAccuracy(),
+        metrics.TopKCategoricalAccuracy(k=5),
+    ],
+)
+"""
+and finally call fit().
+"""
+model.fit(
+    train_ds,
+    batch_size=BATCH_SIZE,
+    epochs=EPOCHS,
+    callbacks=model_callbacks,
+    validation_data=test_ds,
+)
 """
 ## Conclusions
 
