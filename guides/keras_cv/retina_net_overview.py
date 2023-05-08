@@ -20,7 +20,9 @@ To get started, let's sort out all of our imports and define global configuratio
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
-from tensorflow.keras import optimizers
+from keras import optimizers
+import math
+from keras.optimizers import schedules
 
 import keras_cv
 from keras_cv import bounding_box
@@ -299,7 +301,7 @@ Let's compile our model:
 
 # including a global_clipnorm is extremely important in object detection tasks
 base_lr = 0.01
-lr_decay = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+lr_decay = schedules.PiecewiseConstantDecay(
     boundaries=[12000 * 16, 16000 * 16],
     values=[base_lr, 0.1 * base_lr, 0.01 * base_lr],
 )

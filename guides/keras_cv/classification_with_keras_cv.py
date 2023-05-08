@@ -39,6 +39,8 @@ import tensorflow_datasets as tfds
 import keras
 from keras import losses
 import numpy as np
+from keras import optimizers
+from keras.optimizers import schedules
 from keras import metrics
 
 
@@ -88,6 +90,7 @@ keras_cv.visualization.plot_image_gallery(
     cols=1,
     value_range=(0, 255),
     show=True,
+    scale=4
 )
 
 """
@@ -168,13 +171,14 @@ train_dataset = train_dataset.batch(BATCH_SIZE)
 images = next(iter(train_dataset.take(1)))[0]
 keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 
-
 """
+Meow!
+
 Next let's construct our model:
 """
 
 backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
-    "efficientnetv2-s_imagenet",
+    "efficientnetv2_b0_imagenet",
 )
 """
 The use of imagenet in the preset name indicates that the backbone was
@@ -238,24 +242,30 @@ template may be used on ImageNet to achieve state of the art scores.
 Let's start out by tackling data loading:
 """
 NUM_CLASSES = 101
-# Change to 100~ to fully train.
+# Change epochs to 100~ to fully train.
 EPOCHS = 1
 
 def package_inputs(image, label):
     return {
         "images": image,
-        "labels": tf.one_hot(label, NUM_CLASSES)
+        "labels": tf.one_hot(label, num_classes)
     }
 
 train_ds, eval_ds = tfds.load("caltech101", split=["train", "test"], as_supervised="true")
 train_ds = train_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
+
+train_ds = train_ds.shuffle(BATCH_SIZE*16)
+
 train_ds = train_ds.ragged_batch(BATCH_SIZE)
 eval_ds = eval_ds.ragged_batch(BATCH_SIZE)
 
-image_batch = next(train_ds)["images"]
+batch = next(iter(train_ds.take(1)))
+image_batch = batch["images"]
+label_batch = batch["labels"]
+
 keras_cv.visualization.plot_image_gallery(
-    image_batch,
+    image_batch.to_tensor(),
     rows=3,
     cols=3,
     value_range=(0, 255),
@@ -305,13 +315,15 @@ augmenters = [
 
 image_batch = random_flip(image_batch)
 keras_cv.visualization.plot_image_gallery(
-    image_batch,
+    image_batch.to_tensor(),
     rows=3,
     cols=3,
     value_range=(0, 255),
     show=True,
 )
 """
+Half of the images have been flipped!
+
 The next augmentation we'll use is `RandomCropAndResize`.
 This operation selects a random subset of the image, then resizes it to the provided target size.
 By using this augmentation, we force our classifier to become spatially invariant.
@@ -330,7 +342,7 @@ Let's add a `RandomCropAndResize` to our set of augmentations:
 """
 crop_and_resize = keras_cv.layers.RandomCropAndResize(
     target_size=IMAGE_SIZE,
-    area_factor=(0.8, 1.0),
+    crop_area_factor=(0.8, 1.0),
     aspect_ratio_factor=(0.9, 1.1),
 )
 augmenters+=[
@@ -418,8 +430,11 @@ overlaid into the cutout section's label.
 What does this look like in practice?  Let's check it out:
 """
 cut_mix = keras_cv.layers.CutMix()
+# CutMix needs to modify both images and labels
+inputs = {"images": image_batch, "labels": label_batch}
+
 keras_cv.visualization.plot_image_gallery(
-    cut_mix(image_batch),
+    cut_mix(inputs)["images"],
     rows=3,
     cols=3,
     value_range=(0, 255),
@@ -444,30 +459,35 @@ labels.
 Let's see it in action:
 """
 mix_up = keras_cv.layers.MixUp()
+# MixUp needs to modify both images and labels
+inputs = {"images": image_batch, "labels": label_batch}
+
 keras_cv.visualization.plot_image_gallery(
-    mix_up(image_batch),
+    mix_up(inputs)["images"],
     rows=3,
     cols=3,
     value_range=(0, 255),
     show=True,
 )
 """
+If you look closely, you'll see that the images have been blended together.
+
 Instead of applying `CutMix()` and `MixUp()` to every image, we instead pick
 one or the other to apply to each batch.
 This can be expressed using `keras_cv.layers.RandomChoice()`
 """
 
-cut_mix_or_mix_up = keras_cv.layers.RandomChoice([cut_mix, mix_up])
+cut_mix_or_mix_up = keras_cv.layers.RandomChoice([cut_mix, mix_up], batchwise=True)
 augmenters += [cut_mix_or_mix_up]
 
 """
 Applying it to your training pipeline is easy:
 """
 
-augmenter = keras.Sequential([augmenters])
+augmenter = keras.Sequential(augmenters)
 train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 
-image_batch = next(train_ds)["images"]
+image_batch = next(iter(train_ds.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(
     image_batch,
     rows=3,
@@ -482,7 +502,17 @@ We also need to resize our evaluation set, but luckily that's trivial:
 inference_resizing = keras_cv.layers.Resizing(IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True)
 eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
+inference_resizing = keras_cv.layers.Resizing(IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True)
+eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
+
 image_batch = next(eval_ds)["images"]
+keras_cv.visualization.plot_image_gallery(
+    image_batch,
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
 keras_cv.visualization.plot_image_gallery(
     image_batch,
     rows=3,
@@ -552,7 +582,7 @@ def lr_warmup_cosine_decay(
     return learning_rate
 
 
-class WarmUpCosineDecay(keras.optimizers.schedules.LearningRateSchedule):
+class WarmUpCosineDecay(schedules.LearningRateSchedule):
     def __init__(
         self, warmup_steps, total_steps, hold, start_lr=0.0, target_lr=1e-2
     ):
@@ -578,40 +608,37 @@ class WarmUpCosineDecay(keras.optimizers.schedules.LearningRateSchedule):
 """
 Next let's construct this optimizer:
 """
-total_steps = (NUM_IMAGES // BATCH_SIZE) * EPOCHS
-warmup_steps = int(FLAGS.warmup_steps_percentage * total_steps)
-hold_steps = int(FLAGS.warmup_hold_steps_percentage * total_steps)
+
+total_steps = (9000 // BATCH_SIZE) * EPOCHS
+warmup_steps = int(0.1 * total_steps)
+hold_steps = int(.45 * total_steps)
 schedule = WarmUpCosineDecay(
-    start_lr=0.0,
-    target_lr=INITIAL_LEARNING_RATE,
+    start_lr=0.05,
+    target_lr=1e-2,
     warmup_steps=warmup_steps,
     total_steps=total_steps,
     hold=hold_steps,
 )
 optimizer = optimizers.SGD(
-    weight_decay=FLAGS.weight_decay,
+    decay=5e-4,
     learning_rate=schedule,
     momentum=0.9,
-    use_ema=FLAGS.use_ema,
 )
 """
 At long last, we can now build our model and call `fit()`!
 """
 
 backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
-    "efficientnetv2-b0",
+    "efficientnetv2_b0",
 )
 model = keras.Sequential(
     [
         backbone,
         keras.layers.GlobalMaxPooling2D(),
         keras.layers.Dropout(rate=0.5),
-        keras.layers.Dense(2, activation="softmax"),
+        keras.layers.Dense(101, activation="softmax"),
     ]
 )
-
-
-model.fit(train_dataset)
 
 """
 When using `MixUp()` and `CutMix()`, using `label_smoothing` in your loss is
@@ -634,18 +661,28 @@ and finally call fit().
 """
 model.fit(
     train_ds,
-    batch_size=BATCH_SIZE,
     epochs=EPOCHS,
-    callbacks=model_callbacks,
-    validation_data=test_ds,
+    validation_data=eval_ds,
 )
+
+"""
+Congratulations!  You now know how to train a powerful image classifier from
+scratch in KerasCV.
+In practice, you'll likely want to combine transfer learning with an
+augmentation chain similar to what we constructed above.
+This tends to yield fast convergence, but solid model robustness.
+"""
+
 """
 ## Conclusions
 
-KerasCV makes image classification easy.
-Making use of the KerasCV `ImageClassifier` API, pretrained weights, and the
-KerasCV data augmentations allows you to train a powerful classifier in `<50`
-lines of code.
+While image classificaiton is perhaps the simplest problem in computer vision,
+the modern landscape has numerous complex components.
+Luckily, KerasCV offers robust, production grade APIs to make assembling most
+of these components possible in one line of code.
+Through the use of the KerasCV `ImageClassifier` API, pretrained weights, and the
+KerasCV data augmentations you can assemble everything you need to train a
+powerful classifier in a few hundred lines of code!
 
 As a follow up exercise, give the following a try:
 
