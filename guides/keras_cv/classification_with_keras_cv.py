@@ -40,7 +40,7 @@ import keras
 from keras import losses
 import numpy as np
 from keras import optimizers
-from keras.optimizers import schedules
+from tensorflow.keras.optimizers import schedules
 from keras import metrics
 
 
@@ -67,7 +67,7 @@ If an EfficientNetV2B0 is not powerful enough for the task you are hoping to
 solve, be sure to check out [KerasCV's other available Backbones](https://github.com/keras-team/keras-cv/tree/master/keras_cv/models/backbones)!
 """
 classifier = keras_cv.models.ImageClassifier.from_preset(
-    "efficientnetv2-b0_imagenet_classifier"
+    "efficientnetv2_b0_imagenet_classifier"
 )
 
 """
@@ -85,12 +85,7 @@ filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 keras_cv.visualization.plot_image_gallery(
-    [image],
-    rows=1,
-    cols=1,
-    value_range=(0, 255),
-    show=True,
-    scale=4
+    [image], rows=1, cols=1, value_range=(0, 255), show=True, scale=4
 )
 
 """
@@ -154,7 +149,9 @@ train_dataset = data["train"]
 IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
-resizing = keras_cv.layers.Resizing(IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True)
+resizing = keras_cv.layers.Resizing(
+    IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True
+)
 
 
 def preprocess_inputs(image, label):
@@ -245,17 +242,18 @@ NUM_CLASSES = 101
 # Change epochs to 100~ to fully train.
 EPOCHS = 1
 
-def package_inputs(image, label):
-    return {
-        "images": image,
-        "labels": tf.one_hot(label, num_classes)
-    }
 
-train_ds, eval_ds = tfds.load("caltech101", split=["train", "test"], as_supervised="true")
+def package_inputs(image, label):
+    return {"images": image, "labels": tf.one_hot(label, NUM_CLASSES)}
+
+
+train_ds, eval_ds = tfds.load(
+    "caltech101", split=["train", "test"], as_supervised="true"
+)
 train_ds = train_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 
-train_ds = train_ds.shuffle(BATCH_SIZE*16)
+train_ds = train_ds.shuffle(BATCH_SIZE * 16)
 
 train_ds = train_ds.ragged_batch(BATCH_SIZE)
 eval_ds = eval_ds.ragged_batch(BATCH_SIZE)
@@ -309,9 +307,7 @@ vertical axis will make the digit appear more like a `7` than a `6`, but the
 label will still show a `6`.
 """
 random_flip = keras_cv.layers.RandomFlip()
-augmenters = [
-    random_flip
-]
+augmenters = [random_flip]
 
 image_batch = random_flip(image_batch)
 keras_cv.visualization.plot_image_gallery(
@@ -345,9 +341,7 @@ crop_and_resize = keras_cv.layers.RandomCropAndResize(
     crop_area_factor=(0.8, 1.0),
     aspect_ratio_factor=(0.9, 1.1),
 )
-augmenters+=[
-    crop_and_resize
-]
+augmenters += [crop_and_resize]
 
 image_batch = crop_and_resize(image_batch)
 keras_cv.visualization.plot_image_gallery(
@@ -382,9 +376,7 @@ rand_augment = keras_cv.layers.RandAugment(
     magnitude=0.3,
     value_range=(0, 255),
 )
-augmenters+=[
-    rand_augment
-]
+augmenters += [rand_augment]
 
 image_batch = rand_augment(image_batch)
 keras_cv.visualization.plot_image_gallery(
@@ -404,7 +396,7 @@ classify cats simply by observing their ears?
 One easy approach to tackling this is to use `RandomCutout`, which randomly
 strips out a sub-section of the image:
 """
-random_cutout = keras_cv.layers.RandomCutout()
+random_cutout = keras_cv.layers.RandomCutout(width_factor=0.4, height_factor=0.4)
 keras_cv.visualization.plot_image_gallery(
     random_cutout(image_batch),
     rows=3,
@@ -499,13 +491,17 @@ keras_cv.visualization.plot_image_gallery(
 """
 We also need to resize our evaluation set, but luckily that's trivial:
 """
-inference_resizing = keras_cv.layers.Resizing(IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True)
+inference_resizing = keras_cv.layers.Resizing(
+    IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True
+)
 eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
-inference_resizing = keras_cv.layers.Resizing(IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True)
+inference_resizing = keras_cv.layers.Resizing(
+    IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True
+)
 eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
-image_batch = next(eval_ds)["images"]
+image_batch = next(iter(eval_ds.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(
     image_batch,
     rows=3,
@@ -526,8 +522,10 @@ Finally, lets unpackage our datasets and prepare to pass them to the `model.fit(
 call, which accepts a tuple of `(images, labels)`.
 """
 
+
 def unpackage_dict(inputs):
     return inputs["images"], inputs["labels"]
+
 
 train_ds = train_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
@@ -576,16 +574,12 @@ def lr_warmup_cosine_decay(
             global_step > warmup_steps + hold, learning_rate, target_lr
         )
 
-    learning_rate = tf.where(
-        global_step < warmup_steps, warmup_lr, learning_rate
-    )
+    learning_rate = tf.where(global_step < warmup_steps, warmup_lr, learning_rate)
     return learning_rate
 
 
 class WarmUpCosineDecay(schedules.LearningRateSchedule):
-    def __init__(
-        self, warmup_steps, total_steps, hold, start_lr=0.0, target_lr=1e-2
-    ):
+    def __init__(self, warmup_steps, total_steps, hold, start_lr=0.0, target_lr=1e-2):
         super().__init__()
         self.start_lr = start_lr
         self.target_lr = target_lr
@@ -605,13 +599,14 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
 
         return tf.where(step > self.total_steps, 0.0, lr, name="learning_rate")
 
+
 """
 Next let's construct this optimizer:
 """
 
 total_steps = (9000 // BATCH_SIZE) * EPOCHS
 warmup_steps = int(0.1 * total_steps)
-hold_steps = int(.45 * total_steps)
+hold_steps = int(0.45 * total_steps)
 schedule = WarmUpCosineDecay(
     start_lr=0.05,
     target_lr=1e-2,
