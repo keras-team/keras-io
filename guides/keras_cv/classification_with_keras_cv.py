@@ -334,7 +334,124 @@ keras_cv.visualization.plot_image_gallery(
 )
 """
 Great!  We are now working with a batch of dense images.
-The images are randomly
+Next up, lets include some spatial and color-based jitter to our training set.
+This will allow us to produce a classifier that is robust to lighting flickers,
+shadows, and more.
+
+There are limitless ways to augment an image by altering color and spatial
+features, but perhaps
+[the most battle tested technique is `RandAugment`](https://arxiv.org/abs/1909.13719).
+`RandAugment` is actually a set of 10 different augmentations:
+`AutoContrast`, `Equalize`, `Solarize`, `RandomColorJitter`, `RandomContrast`,
+`RandomBrightness`, `ShearX`, `ShearY`, `TranslateX` and `TranslateY`.
+At inference time, `num_augmentations` augmenters are sampled for each image,
+and random magnitude factors are sampled for each.
+These augmentations are then applied sequentially.
+
+KerasCV makes tuning these parameters easy using the `augmentations_per_image`
+and `magnitude` parameters!
+Let's take it for a spin:
+"""
+rand_augment = keras_cv.layers.RandAugment(
+    augmentations_per_image=3,
+    magnitude=0.3,
+    value_range=(0, 255),
+)
+augmenters+=[
+    rand_augment
+]
+
+image_batch = rand_augment(image_batch)
+keras_cv.visualization.plot_image_gallery(
+    image_batch,
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
+
+"""
+Looks great; but we're not done yet!
+What if an image is missing one critical feature of a class?  For example, what
+if a leaf is blocking the view of a Cat's ear, but our classifier learned to
+classify cats simply by observing their ears?
+
+One easy approach to tackling this is to use `RandomCutout`, which randomly
+strips out a sub-section of the image:
+"""
+random_cutout = keras_cv.layers.RandomCutout()
+keras_cv.visualization.plot_image_gallery(
+    random_cutout(image_batch),
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
+
+"""
+While this tackles the problem reasonably well, it can cause the classifier to
+develop responses to borders between features and black pixel areas caused by
+the cutout.
+
+[`CutMix`](https://arxiv.org/abs/1905.04899) solves the same issue; but by using
+a more complex (and effective!) technique.
+Instead of replacing the cut-out areas with black pixels, `CutMix` replaces
+these regions with regions of other images sampled from within your training
+set!
+Following this replacement, the image's classification label is updated to be a
+blend of the original image's class label, as well as the image that was
+overlaid into the cutout section's label.
+
+What does this look like in practice?  Let's check it out:
+"""
+cut_mix = keras_cv.layers.CutMix()
+keras_cv.visualization.plot_image_gallery(
+    cut_mix(image_batch),
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
+"""
+Let's hold off from adding it to our augmenter for a minute - more on that
+soon!
+
+Next, let's look into `MixUp()```.
+Unfortunately, while `MixUp()` has been empirically shown to *substantially*
+improve both the robustness and the generalization of the trained model,
+it is not well-understood why such improvement occurs.
+A little alchemy never hurt anyone!
+
+![](https://i.imgur.com/d4ZZYvW.png)
+
+`MixUp()` works by sampling two images from a batch, then proceeding to
+literally blend together their pixel intensities as well as their classification
+labels.
+
+Let's see it in action:
+"""
+mix_up = keras_cv.layers.MixUp()
+keras_cv.visualization.plot_image_gallery(
+    mix_up(image_batch),
+    rows=3,
+    cols=3,
+    value_range=(0, 255),
+    show=True,
+)
+"""
+Instead of applying `CutMix()` and `MixUp()` to every image, we instead pick
+one or the other to apply to each batch.
+This can be expressed using `keras_cv.layers.RandomChoice()`
+"""
+
+cut_mix_or_mix_up = keras_cv.layers.RandomChoice([cut_mix, mix_up])
+augmenters += [cut_mix_or_mix_up]
+
+"""
+Congratulations!  You now have constructed and understood a powerful augmentation
+pipeline!
+"""
+
 """
 ## Conclusions
 
