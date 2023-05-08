@@ -437,7 +437,7 @@ keras_cv.visualization.plot_image_gallery(
 Let's hold off from adding it to our augmenter for a minute - more on that
 soon!
 
-Next, let's look into `MixUp()```.
+Next, let's look into `MixUp()`.
 Unfortunately, while `MixUp()` has been empirically shown to *substantially*
 improve both the robustness and the generalization of the trained model,
 it is not well-understood why such improvement occurs.
