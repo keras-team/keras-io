@@ -30,19 +30,21 @@ import jinja2
 import requests
 import multiprocessing
 import autogen_utils
+import keras_nlp
+import keras_cv
 
 from master import MASTER
 import tutobooks
 import generate_tf_guides
-from render_nlp_tags import render_keras_nlp_tags
+import render_tags
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
     "keras": "https://github.com/keras-team/keras/tree/v2.12.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.3/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.4.2/",
-    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/r0.5/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.5.0/",
+    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.5.1/",
 }
 
 
@@ -514,7 +516,9 @@ class KerasIO:
                 )
             template = template.replace("{{toc}}", toc)
         if "keras_nlp/" in path_stack and "models/" in path_stack:
-            template = render_keras_nlp_tags(template)
+            template = render_tags.render_tags(template, keras_nlp)
+        if "keras_cv/" in path_stack and "models/" in path_stack:
+            template = render_tags.render_tags(template, keras_cv)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
             md_source_path = source_path / "index.md"
