@@ -131,29 +131,6 @@ def unpack_resize_data(section):
 train_ds = train_ds.map(unpack_resize_data, num_parallel_calls=AUTOTUNE)
 valid_ds = valid_ds.map(unpack_resize_data, num_parallel_calls=AUTOTUNE)
 test_ds = test_ds.map(unpack_resize_data, num_parallel_calls=AUTOTUNE)
-
-
-def preprocess_data(image, segmentation_mask):
-    image = keras.applications.vgg19.preprocess_input(image)
-
-    return image, segmentation_mask
-
-
-final_train_ds = (
-    train_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
-    .shuffle(buffer_size=1024)
-    .prefetch(buffer_size=1024)
-)
-final_valid_ds = (
-    valid_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
-    .shuffle(buffer_size=1024)
-    .prefetch(buffer_size=1024)
-)
-final_test_ds = (
-    test_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
-    .shuffle(buffer_size=1024)
-    .prefetch(buffer_size=1024)
-)
 """
 ## Visualize one random sample from the pre-processed dataset
 
@@ -187,6 +164,35 @@ ax[1].imshow(
 )
 plt.show()
 
+"""
+## Perform VGG-specific pre-processing
+
+`keras.applications.VGG19` requires the use of a `preprocess_input` function that will
+pro-actively perform Image-net style Standard Deviation Normalization scheme.
+"""
+
+
+def preprocess_data(image, segmentation_mask):
+    image = keras.applications.vgg19.preprocess_input(image)
+
+    return image, segmentation_mask
+
+
+train_ds = (
+    train_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+    .shuffle(buffer_size=1024)
+    .prefetch(buffer_size=1024)
+)
+valid_ds = (
+    valid_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+    .shuffle(buffer_size=1024)
+    .prefetch(buffer_size=1024)
+)
+test_ds = (
+    test_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+    .shuffle(buffer_size=1024)
+    .prefetch(buffer_size=1024)
+)
 """
 ## Model Definition
 
@@ -455,9 +461,7 @@ fcn32s_model.compile(
     ],
 )
 
-fcn32s_history = fcn32s_model.fit(
-    final_train_ds, epochs=EPOCHS, validation_data=final_valid_ds
-)
+fcn32s_history = fcn32s_model.fit(train_ds, epochs=EPOCHS, validation_data=valid_ds)
 
 """
 ### FCN-16S
@@ -479,9 +483,7 @@ fcn16s_model.compile(
     ],
 )
 
-fcn16s_history = fcn16s_model.fit(
-    final_train_ds, epochs=EPOCHS, validation_data=final_valid_ds
-)
+fcn16s_history = fcn16s_model.fit(train_ds, epochs=EPOCHS, validation_data=valid_ds)
 
 """
 ### FCN-8S
@@ -503,9 +505,7 @@ fcn8s_model.compile(
     ],
 )
 
-fcn8s_history = fcn8s_model.fit(
-    final_train_ds, epochs=EPOCHS, validation_data=final_valid_ds
-)
+fcn8s_history = fcn8s_model.fit(train_ds, epochs=EPOCHS, validation_data=valid_ds)
 """
 ## Visualizations
 """
