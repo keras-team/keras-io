@@ -1,8 +1,8 @@
 """
 Title: Image Segmentation using Composable Fully-Convolutional Networks
 Author: [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
-Date created: 2023/05/08
-Last modified: 2023/05/08
+Date created: 2023/05/09
+Last modified: 2023/05/09
 Description: Using the Fully-Convolutional Network for Image Segmentation.
 Accelerator: GPU
 """
@@ -11,69 +11,38 @@ Accelerator: GPU
 ## Introduction
 
 The following example walks through the steps to implement Fully-Convolutional Networks
-for Image Segmentation on the Oxford-IIIT Pets dataset. The model was proposed in the
-paper, [Fully Convolutional Networks for Semantic Segmentation by Long et. al.
-(2014)](https://arxiv.org/abs/1411.4038).
+for Image Segmentation on the Oxford-IIIT Pets dataset.
+The model was proposed in the paper,
+[Fully Convolutional Networks for Semantic Segmentation by Long et. al.(2014)](https://arxiv.org/abs/1411.4038).
 Image segmentation is one of the most common and introductory tasks when it comes to
-Computer Vision. The idea is to extend the problem of Image Classification from
+Computer Vision, where we extend the problem of Image Classification from
 one-label-per-image to a pixel-wise classification problem.
-In this example, we are going to work on developing a Fully-Convolutional Network that is
-capable of performing Image Segmentation. For this, we make use of the VGG-19 model as
-available in `keras.applications` and continue towards extending its internal layers and
-creating our Fully-Convolutional Network.
+In this example, we will assemble the aforementioned Fully-Convolutional Segmentation architecture,
+capable of performing Image Segmentation.
 The network extends the pooling layer outputs from the VGG in order to perform upsampling
-and get a final result. Different intermediate pool layers are extracted and processed
-upon for different versions of the network.
-The FCN architecture has 3 versions of differing quality, as mentioned in the paper.
+and get a final result. The intermediate outputs coming from the 3rd, 4th and 5th Max-Pooling layers from VGG19 are
+extracted out and upsampled at different levels and factors to get a final output with the same shape as that
+of the output, but with the class of each pixel present at each location, instead of pixel intensity values.
+Different intermediate pool layers are extracted and processed upon for different versions of the network.
+The FCN architecture has 3 versions of differing quality.
 - FCN-32S
 - FCN-16S
 - FCN-8S
 All versions of the model derive their outputs through an iterative processing of
-successive intermediate pool layers of the main backbone used. A better idea can be
-gained from the figure below.
+successive intermediate pool layers of the main backbone used.
+A better idea can be gained from the figure below.
 | ![FCN Architecture](https://i.imgur.com/Ttros06.png) |
 | :--: |
 | **Diagram 1**: Combined Architecture Versions (Source: Paper)|
 
-The process we are going to follow is:
-- Set-up all imports
-- Set global notebook configuration
-- Load and preprocess dataset
-- Visualize random samples from pre-processed dataset
-- Define our model in steps
-  - Backbone (VGG-19)
-  - FCN-32S
-  - FCN-16S
-  - FCN-8S
-- Load weights into converted Convolution layers
-- Training
-  - FCN-32S
-  - FCN-16S
-  - FCN-8S
-- Visualizations
-  - Metrics
-  - Segmentation Mask results
-
 To get a better idea on Image Segmentation or find more pre-trained models, feel free to
-navigate to the links below
-- [Hugging Face Image
-Segmentation](https://huggingface.co/models?pipeline_tag=image-segmentation)
-- [PyImageSearch Blog on Semantic
-Segmentation](https://pyimagesearch.com/2018/09/03/semantic-segmentation-with-opencv-and-deep-learning/)
+navigate to the [Hugging Face Image Segmentation Models](https://huggingface.co/models?pipeline_tag=image-segmentation) page,
+or a [PyImageSearch Blog on Semantic Segmentation](https://pyimagesearch.com/2018/09/03/semantic-segmentation-with-opencv-and-deep-learning/)
 
 """
 
 """
 ## Setup Imports
-
-We use the imports for the following reasons
-- `tensorflow_datasets`: Utility to download our dataset
-- `matplotlib.pyplot`: Utility for plotting and visualizations
-- `numpy`: Utility for performing array manipulation operations
-
-We then set the Random Seed to make sure the results are reproducible over separate
-iterations. We also use `tf.data.AUTOTUNE` to set some parameters based on the current
-system's configuration.
 """
 
 import tensorflow as tf
@@ -83,49 +52,48 @@ import tensorflow_datasets as tfds
 import numpy as np
 
 keras.utils.set_random_seed(42)
+tf.random.set_seed(42)
 
 AUTOTUNE = tf.data.AUTOTUNE
 
 """
 ## Set configurations for notebook variables
 
-We set the required parameters for the experiment. The chosen dataset has a total of 4
-classes per image, with regards to the segmentation mask. We also set our hyperparameters
-in this cell.
+We set the required parameters for the experiment.
+The chosen dataset has a total of 4 classes per image, with regards to the segmentation mask.
+We also set our hyperparameters in this cell.
 
 Mixed Precision as an option is also available in systems which support it, to reduce
-load. This would make most tensors use `16-bit float` values instead of `32-bit float`
+load.
+This would make most tensors use `16-bit float` values instead of `32-bit float`
 values, in places where it will not adversely affect computation.
+This means, during computation, TensorFlow will use `16-bit float` Tensors to increase speed at the cost of precision,
+while storing the values in their original default `32-bit float` form.
 """
 
-config = {
-    "num_classes": 4,
-    "input_height": 224,
-    "input_width": 224,
-    "learning_rate": 1e-3,
-    "weight_decay": 1e-4,
-    "epochs": 10,
-    "batch_size": 32,
-    "mixed_precision": False,
-    "shuffle": True,
-}
+NUM_CLASSES = 4
+INPUT_HEIGHT = 224
+INPUT_WIDTH = 224
+LEARNING_RATE = 1e-3
+WEIGHT_DECAY = 1e-4
+EPOCHS = 10
+BATCH_SIZE = 32
+MIXED_PRECISION = True
+SHUFFLE = True
 
 # Mixed-precision setting
-if config["mixed_precision"]:
+if MIXED_PRECISION:
     policy = keras.mixed_precision.Policy("mixed_float16")
     keras.mixed_precision.set_global_policy(policy)
-
-NUM_CLASSES = config["num_classes"]
 
 """
 ## Load dataset
 
 We make use of the [Oxford-IIIT Pets dataset](http://www.robots.ox.ac.uk/~vgg/data/pets/)
-which contains a total of 7,349 samples and their segmentation masks. The dataset is
-lightly imbalanced, but not enough to create a severe impact. We have 37 classes, with
-almost 200 samples per class.
-Our training and validation dataset has 3,128 and 552 samples respectively. Aside from
-this, our test split has a total of 3,669 samples.
+which contains a total of 7,349 samples and their segmentation masks.
+We have 37 classes, with roughly 200 samples per class.
+Our training and validation dataset has 3,128 and 552 samples respectively.
+Aside from this, our test split has a total of 3,669 samples.
 
 We set a `batch_size` parameter that will batch our samples together, use a `shuffle`
 parameter to mix our samples together.
@@ -134,61 +102,72 @@ parameter to mix our samples together.
 (train_ds, valid_ds, test_ds) = tfds.load(
     "oxford_iiit_pet",
     split=["train[:85%]", "train[85%:]", "test"],
-    batch_size=config["batch_size"],
-    shuffle_files=config["shuffle"],
+    batch_size=BATCH_SIZE,
+    shuffle_files=SHUFFLE,
 )
 
 """
-## Pre-process dataset
+## Unpack and Pre-process dataset
 
-We define a simple function that includes performs Resizing and Rescaling over our
-training, validation and test datasets. To handle the same in our masks, we simply
-perform Resizing to make sure we get the same tensor size as that of our image.
+We define a simple function that includes performs Resizing over our
+training, validation and test datasets.
+We do the same process on the masks as well, to make sure both are aligned in terms of shape and size.
 """
 
-# Image Pre-processing
-image_preprocessing_layers = keras.Sequential(
-    [
-        keras.layers.Rescaling(1.0 / 255, dtype="float32"),
-        keras.layers.Resizing(config["input_height"], config["input_width"]),
-    ]
-)
 
-# Mask Pre-processing
-mask_preprocessing_layers = keras.Sequential(
-    [keras.layers.Resizing(config["input_height"], config["input_width"])]
-)
-
-
-def preprocess_data(section):
+# Image and Mask Pre-processing
+def unpack_resize_data(section):
     image = section["image"]
     segmentation_mask = section["segmentation_mask"]
 
-    image = image_preprocessing_layers(image)
-    segmentation_mask = mask_preprocessing_layers(segmentation_mask)
+    resize_layer = keras.layers.Resizing(INPUT_HEIGHT, INPUT_WIDTH)
+
+    image = resize_layer(image)
+    segmentation_mask = resize_layer(segmentation_mask)
 
     return image, segmentation_mask
 
 
-train_ds = train_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
-valid_ds = valid_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
-test_ds = test_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+train_ds = train_ds.map(unpack_resize_data, num_parallel_calls=AUTOTUNE)
+valid_ds = valid_ds.map(unpack_resize_data, num_parallel_calls=AUTOTUNE)
+test_ds = test_ds.map(unpack_resize_data, num_parallel_calls=AUTOTUNE)
 
+
+def preprocess_data(image, segmentation_mask):
+    image = keras.applications.vgg19.preprocess_input(image)
+
+    return image, segmentation_mask
+
+
+final_train_ds = (
+    train_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+    .shuffle(buffer_size=1024)
+    .prefetch(buffer_size=1024)
+)
+final_valid_ds = (
+    valid_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+    .shuffle(buffer_size=1024)
+    .prefetch(buffer_size=1024)
+)
+final_test_ds = (
+    test_ds.map(preprocess_data, num_parallel_calls=AUTOTUNE)
+    .shuffle(buffer_size=1024)
+    .prefetch(buffer_size=1024)
+)
 """
 ## Visualize one random sample from the pre-processed dataset
 
 We visualize what a random sample in our test split of the dataset looks like, and plot
-the segmentation mask on top to see the effective mask areas. Note that we have performed
-pre-processing on this dataset too, which makes the image and mask size same.
+the segmentation mask on top to see the effective mask areas.
+Note that we have performed pre-processing on this dataset too,
+which makes the image and mask size same.
 """
 
 # Select random image and mask. Cast to NumPy array
 # for Matplotlib visualization.
 
 images, masks = next(iter(test_ds))
-random_idx = tf.random.uniform(
-    [], minval=0, maxval=config["batch_size"], dtype=tf.int32
-)
+random_idx = tf.random.uniform([], minval=0, maxval=BATCH_SIZE, dtype=tf.int32)
 
 test_image = images[random_idx].numpy().astype("float")
 test_mask = masks[random_idx].numpy().astype("float")
@@ -197,10 +176,10 @@ test_mask = masks[random_idx].numpy().astype("float")
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
 
 ax[0].set_title("Image")
-ax[0].imshow(test_image)
+ax[0].imshow(test_image / 255.0)
 
 ax[1].set_title("Image with segmentation mask overlay")
-ax[1].imshow(test_image)
+ax[1].imshow(test_image / 255.0)
 ax[1].imshow(
     test_mask,
     cmap="inferno",
@@ -219,8 +198,8 @@ layers.
 | **Diagram 2**: Generic FCN Forward Pass (Source: Paper)|
 
 Pixel-wise prediction is performed by having a Softmax Convolutional layer with the same
-size of the image, such that we can perform direct comparison. We can find several
-important metrics such as Accuracy and Mean-Intersection-over-Union on the network.
+size of the image, such that we can perform direct comparison
+We can find several important metrics such as Accuracy and Mean-Intersection-over-Union on the network.
 """
 
 """
@@ -236,11 +215,11 @@ layers based on the [original Caffe code present
 here.](https://github.com/linxi159/FCN-caffe/blob/master/pascalcontext-fcn16s/net.py)
 All 3 networks will share the same backbone weights, but will have differing results
 based on their extensions.
-We make the backbone non-trainable to improve training time requirements. It is also
-noted in the paper that making the network trainable does not yield major benefits.
+We make the backbone non-trainable to improve training time requirements.
+It is also noted in the paper that making the network trainable does not yield major benefits.
 """
 
-input_layer = keras.Input(shape=(config["input_height"], config["input_width"], 3))
+input_layer = keras.Input(shape=(INPUT_HEIGHT, INPUT_WIDTH, 3))
 
 # VGG Model backbone with pre-trained ImageNet weights.
 vgg_model = keras.applications.vgg19.VGG19(include_top=True, weights="imagenet")
@@ -291,9 +270,9 @@ We extend the last output, perform a `1x1 Convolution` and perform 2D Bilinear U
 by a factor of 32 to get an image of the same size as that of our input.
 We use a simple `keras.layers.UpSampling2D` layer over a `keras.layers.Conv2DTranspose`
 since it yields performance benefits from being a deterministic mathematical operation
-over a Convolutional operation. It is also noted in the paper that making the Up-sampling
-parameters trainable does not yield benefits. Original experiments of the paper used
-Upsampling as well.
+over a Convolutional operation
+It is also noted in the paper that making the Up-sampling parameters trainable does not yield benefits.
+Original experiments of the paper used Upsampling as well.
 """
 
 # 1x1 convolution to set channels = number of classes
@@ -331,7 +310,8 @@ fcn32s_model = keras.Model(inputs=input_layer, outputs=final_fcn32s_output)
 ### FCN-16S
 
 The pooling output from the FCN-32S is extended and added to the 4th-level Pooling output
-of our backbone. Following this, we upsample by a factor of 16 to get image of the same
+of our backbone.
+Following this, we upsample by a factor of 16 to get image of the same
 size as that of our input.
 """
 
@@ -380,8 +360,8 @@ fcn16s_model = keras.models.Model(inputs=input_layer, outputs=final_fcn16s_outpu
 ### FCN-8S
 
 The pooling output from the FCN-16S is extended once more, and added from the 3rd-level
-Pooling output of our backbone. This result is upsampled by a factor of 8 to get an image
-of the same size as that of our input.
+Pooling output of our backbone.
+This result is upsampled by a factor of 8 to get an image of the same size as that of our input.
 """
 
 # 1x1 convolution to set channels = number of classes
@@ -449,8 +429,9 @@ dense_convs.layers[2].set_weights([weights2])
 ## Training
 
 The original paper talks about making use of [SGD with
-Momentum](https://keras.io/api/optimizers/sgd/) as the optimizer of choice. But it was
-noticed during experimentation that [AdamW](https://keras.io/api/optimizers/adamw/)
+Momentum](https://keras.io/api/optimizers/sgd/) as the optimizer of choice.
+But it was noticed during experimentation that
+[AdamW](https://keras.io/api/optimizers/adamw/)
 yielded better results in terms of mIOU and Pixel-wise Accuracy.
 """
 
@@ -459,7 +440,7 @@ yielded better results in terms of mIOU and Pixel-wise Accuracy.
 """
 
 fcn32s_optimizer = keras.optimizers.AdamW(
-    learning_rate=config["learning_rate"], weight_decay=config["weight_decay"]
+    learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
 )
 
 fcn32s_loss = keras.losses.SparseCategoricalCrossentropy()
@@ -475,7 +456,7 @@ fcn32s_model.compile(
 )
 
 fcn32s_history = fcn32s_model.fit(
-    train_ds, epochs=config["epochs"], validation_data=valid_ds
+    final_train_ds, epochs=EPOCHS, validation_data=final_valid_ds
 )
 
 """
@@ -483,7 +464,7 @@ fcn32s_history = fcn32s_model.fit(
 """
 
 fcn16s_optimizer = keras.optimizers.AdamW(
-    learning_rate=config["learning_rate"], weight_decay=config["weight_decay"]
+    learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
 )
 
 fcn16s_loss = keras.losses.SparseCategoricalCrossentropy()
@@ -499,7 +480,7 @@ fcn16s_model.compile(
 )
 
 fcn16s_history = fcn16s_model.fit(
-    train_ds, epochs=config["epochs"], validation_data=valid_ds
+    final_train_ds, epochs=EPOCHS, validation_data=final_valid_ds
 )
 
 """
@@ -507,7 +488,7 @@ fcn16s_history = fcn16s_model.fit(
 """
 
 fcn8s_optimizer = keras.optimizers.AdamW(
-    learning_rate=config["learning_rate"], weight_decay=config["weight_decay"]
+    learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
 )
 
 fcn8s_loss = keras.losses.SparseCategoricalCrossentropy()
@@ -523,9 +504,8 @@ fcn8s_model.compile(
 )
 
 fcn8s_history = fcn8s_model.fit(
-    train_ds, epochs=config["epochs"], validation_data=valid_ds
+    final_train_ds, epochs=EPOCHS, validation_data=final_valid_ds
 )
-
 """
 ## Visualizations
 """
@@ -573,15 +553,14 @@ dataset and perform inference on it to see the masks generated by each model.
 """
 
 images, masks = next(iter(test_ds))
-random_idx = tf.random.uniform(
-    [], minval=0, maxval=config["batch_size"], dtype=tf.int32
-)
+random_idx = tf.random.uniform([], minval=0, maxval=BATCH_SIZE, dtype=tf.int32)
 
 # Get random test image and mask
 test_image = images[random_idx].numpy().astype("float")
 test_mask = masks[random_idx].numpy().astype("float")
 
 pred_image = tf.expand_dims(test_image, axis=0)
+pred_image = keras.applications.vgg19.preprocess_input(pred_image)
 
 # Perform inference on FCN-32S
 pred_mask_32s = fcn32s_model.predict(pred_image, verbose=0).astype("float")
@@ -604,10 +583,10 @@ fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(15, 8))
 fig.delaxes(ax[0, 2])
 
 ax[0, 0].set_title("Image")
-ax[0, 0].imshow(test_image)
+ax[0, 0].imshow(test_image / 255.0)
 
 ax[0, 1].set_title("Image with ground truth overlay")
-ax[0, 1].imshow(test_image)
+ax[0, 1].imshow(test_image / 255.0)
 ax[0, 1].imshow(
     test_mask,
     cmap="inferno",
@@ -615,15 +594,15 @@ ax[0, 1].imshow(
 )
 
 ax[1, 0].set_title("Image with FCN-32S mask overlay")
-ax[1, 0].imshow(test_image)
+ax[1, 0].imshow(test_image / 255.0)
 ax[1, 0].imshow(pred_mask_32s, cmap="inferno", alpha=0.6)
 
 ax[1, 1].set_title("Image with FCN-16S mask overlay")
-ax[1, 1].imshow(test_image)
+ax[1, 1].imshow(test_image / 255.0)
 ax[1, 1].imshow(pred_mask_16s, cmap="inferno", alpha=0.6)
 
 ax[1, 2].set_title("Image with FCN-8S mask overlay")
-ax[1, 2].imshow(test_image)
+ax[1, 2].imshow(test_image / 255.0)
 ax[1, 2].imshow(pred_mask_8s, cmap="inferno", alpha=0.6)
 
 plt.show()
@@ -632,8 +611,8 @@ plt.show()
 ## Conclusion
 
 The Fully-Convolutional Network is an exceptionally simple network that has yielded
-strong results in Image Segmentation tasks across different benchmarks. With the advent
-of better mechanisms like [Attention](https://arxiv.org/abs/1706.03762) as used in
+strong results in Image Segmentation tasks across different benchmarks.
+With the advent of better mechanisms like [Attention](https://arxiv.org/abs/1706.03762) as used in
 [SegFormer](https://arxiv.org/abs/2105.15203) and
 [DeTR](https://arxiv.org/abs/2005.12872), this model serves as a quick way to iterate and
 find baselines for this task on unknown data.
