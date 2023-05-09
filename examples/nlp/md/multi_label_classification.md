@@ -618,13 +618,13 @@ Epoch 20/20
 
 
     
-![png](../examples/nlp/md/multi_label_classification_files/../examples/nlp/md/multi_label_classification_38_1.png)
+![png](/img/examples/nlp/multi_label_classification/multi_label_classification_38_1.png)
     
 
 
 
     
-![png](../examples/nlp/md/multi_label_classification_files/../examples/nlp/md/multi_label_classification_38_2.png)
+![png](/img/examples/nlp/multi_label_classification/multi_label_classification_38_2.png)
     
 
 

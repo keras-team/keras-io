@@ -172,7 +172,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
     for key in NB_BASE.keys():
         notebook[key] = copy.deepcopy(NB_BASE[key])
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
-    notebook["metadata"]["accelerator"] = attributes['accelerator']
+    notebook["metadata"]["accelerator"] = attributes["accelerator"]
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
@@ -465,7 +465,7 @@ def _parse_header(header):
         "date_created": date_created,
         "last_modified": last_modified,
         "description": description,
-        "accelerator": accelerator
+        "accelerator": accelerator,
     }
 
 

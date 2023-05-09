@@ -27,7 +27,7 @@ task.  This makes it is essential for any system to learn speech representations
 high-level information, such as acoustic and linguistic content, including phonemes,
 words, semantic meanings, tone, speaker characteristics from speech signals available to
 solve the downstream task. [Wav2Vec 2.0](https://arxiv.org/abs/2006.11477), which solves a
-self-supervised contratsive learning task to learn high-level speech reprentations,
+self-supervised contrastive learning task to learn high-level speech representations,
 provides a great alternative to traditional low-level features for training deep learning
 models for KWS.
 

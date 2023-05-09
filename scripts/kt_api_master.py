@@ -202,7 +202,7 @@ KT_API_MASTER = {
                 "keras_tuner.errors.FatalValueError",
                 "keras_tuner.errors.FatalTypeError",
                 "keras_tuner.errors.FatalRuntimeError",
-            ]
+            ],
         },
     ],
 }

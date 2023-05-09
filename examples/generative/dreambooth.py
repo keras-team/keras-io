@@ -272,7 +272,7 @@ del text_encoder
 resolution = 512
 auto = tf.data.AUTOTUNE
 
-augmenter = keras_cv.layers.Augmenter(
+augmenter = keras.Sequential(
     layers=[
         keras_cv.layers.CenterCrop(resolution, resolution),
         keras_cv.layers.RandomFlip(),

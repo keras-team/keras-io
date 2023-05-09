@@ -38,6 +38,19 @@ Please read the information below about adding new code examples.
 We are currently interested in [the following examples](https://github.com/keras-team/keras-io/blob/master/call_for_contributions.md).
 
 
+## Fixing something in an existing code example
+
+### Fixing typos
+
+If your fix is very simple, please send out a PR simultaneously updating
+the `.py`, the `.md`, and the `.ipynb` files for the example.
+
+## More extensive fixes
+
+For larger fixes, please send a PR that only includes the `.py` file,
+so we only update the other two files once the code has been reviewed
+and approved.
+
 
 ## Adding a new code example
 
