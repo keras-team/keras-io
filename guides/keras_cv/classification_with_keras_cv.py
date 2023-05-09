@@ -363,8 +363,8 @@ This will allow us to produce a classifier that is robust to lighting flickers,
 shadows, and more.
 
 There are limitless ways to augment an image by altering color and spatial
-features, but perhaps
-[the most battle tested technique is `RandAugment`](https://arxiv.org/abs/1909.13719).
+features, but perhaps the most battle tested technique is
+[`RandAugment`](https://arxiv.org/abs/1909.13719).
 `RandAugment` is actually a set of 10 different augmentations:
 `AutoContrast`, `Equalize`, `Solarize`, `RandomColorJitter`, `RandomContrast`,
 `RandomBrightness`, `ShearX`, `ShearY`, `TranslateX` and `TranslateY`.
@@ -395,7 +395,7 @@ keras_cv.visualization.plot_image_gallery(
 """
 Looks great; but we're not done yet!
 What if an image is missing one critical feature of a class?  For example, what
-if a leaf is blocking the view of a Cat's ear, but our classifier learned to
+if a leaf is blocking the view of a cat's ear, but our classifier learned to
 classify cats simply by observing their ears?
 
 One easy approach to tackling this is to use `RandomCutout`, which randomly
@@ -415,14 +415,13 @@ While this tackles the problem reasonably well, it can cause the classifier to
 develop responses to borders between features and black pixel areas caused by
 the cutout.
 
-[`CutMix`](https://arxiv.org/abs/1905.04899) solves the same issue; but by using
-a more complex (and effective!) technique.
+[`CutMix`](https://arxiv.org/abs/1905.04899) solves the same issue by using
+a more complex (and more effective) technique.
 Instead of replacing the cut-out areas with black pixels, `CutMix` replaces
 these regions with regions of other images sampled from within your training
 set!
 Following this replacement, the image's classification label is updated to be a
-blend of the original image's class label, as well as the image that was
-overlaid into the cutout section's label.
+blend of the original and mixed image's class label.
 
 What does this look like in practice?  Let's check it out:
 """
@@ -494,7 +493,9 @@ keras_cv.visualization.plot_image_gallery(
 )
 
 """
-We also need to resize our evaluation set, but luckily that's trivial:
+We also need to resize our evaluation set to get dense batches of the image size
+expected by our model. We use the deterministic keras_cv.layers.Resizing in this
+case to avoid adding noise to our evaluation metric.
 """
 inference_resizing = keras_cv.layers.Resizing(
     IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True
@@ -523,8 +524,8 @@ keras_cv.visualization.plot_image_gallery(
 )
 
 """
-Finally, lets unpackage our datasets and prepare to pass them to the `model.fit()`
-call, which accepts a tuple of `(images, labels)`.
+Finally, lets unpackage our datasets and prepare to pass them to `model.fit()`,
+which accepts a tuple of `(images, labels)`.
 """
 
 
@@ -536,15 +537,15 @@ train_ds = train_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
-Cool!  Data augmentation is by far the hardest piece of training a classifier
-in the modern era.
+Data augmentation is by far the hardest piece of training a modern
+classifier.
 Congratulations on making it this far!
 
 ## Optimizer Tuning
 
-To achieve optimal performance, we must implement a Warm up Cosinde decay
-learning rate schedule.
-While we won't go into detail on this schedule, [you can read more about it
+To achieve optimal performance,we need to use a learning rate schedule instead
+of a single learning rate. While we won't go into detail on the Cosine decay
+with warmup schedule used here, [you can read more about it
 here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
 """
 
@@ -609,7 +610,8 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
 Next let's construct this optimizer:
 """
 
-total_steps = (9000 // BATCH_SIZE) * EPOCHS
+total_images = 9000
+total_steps = (total_images // BATCH_SIZE) * EPOCHS
 warmup_steps = int(0.1 * total_steps)
 hold_steps = int(0.45 * total_steps)
 schedule = WarmUpCosineDecay(
@@ -670,7 +672,7 @@ Congratulations!  You now know how to train a powerful image classifier from
 scratch in KerasCV.
 In practice, you'll likely want to combine transfer learning with an
 augmentation chain similar to what we constructed above.
-This tends to yield fast convergence, but solid model robustness.
+This tends to yield fast convergence and solid model robustness.
 """
 
 """
@@ -680,7 +682,7 @@ While image classificaiton is perhaps the simplest problem in computer vision,
 the modern landscape has numerous complex components.
 Luckily, KerasCV offers robust, production grade APIs to make assembling most
 of these components possible in one line of code.
-Through the use of the KerasCV `ImageClassifier` API, pretrained weights, and the
+Through the use of KerasCV's `ImageClassifier` API, pretrained weights, and the
 KerasCV data augmentations you can assemble everything you need to train a
 powerful classifier in a few hundred lines of code!
 
