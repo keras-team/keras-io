@@ -228,7 +228,7 @@ RESOLUTION = 256
 AUTO = tf.data.AUTOTUNE
 POS_IDS = tf.convert_to_tensor([list(range(MAX_PROMPT_LENGTH))], dtype=tf.int32)
 
-augmenter = keras_cv.layers.Augmenter(
+augmenter = keras.Sequential(
     layers=[
         keras_cv.layers.CenterCrop(RESOLUTION, RESOLUTION),
         keras_cv.layers.RandomFlip(),

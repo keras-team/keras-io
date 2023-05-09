@@ -1023,9 +1023,9 @@ tuner.results_summary()
 To familiarize yourself with the concepts in this introduction, see the following
  end-to-end examples:
 
-- [Text classification](/examples/nlp/text_classification_from_scratch/)
-- [Image classification](/examples/vision/image_classification_from_scratch/)
-- [Credit card fraud detection](/examples/structured_data/imbalanced_classification/)
+- [Text classification](https://keras.io/examples/nlp/text_classification_from_scratch/)
+- [Image classification](https://keras.io/examples/vision/image_classification_from_scratch/)
+- [Credit card fraud detection](https://keras.io/examples/structured_data/imbalanced_classification/)
 
 ---
 ## What to learn next

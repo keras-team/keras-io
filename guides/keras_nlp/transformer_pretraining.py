@@ -45,13 +45,13 @@ policy = keras.mixed_precision.Policy("mixed_float16")
 keras.mixed_precision.set_global_policy(policy)
 
 """
-Next up, can download two datasets.
+Next up, we can download two datasets.
 
 - [SST-2](https://paperswithcode.com/sota/sentiment-analysis-on-sst-2-binary) a text
 classification dataset and our "end goal". This dataset is often used to benchmark
 language models.
 - [WikiText-103](https://paperswithcode.com/dataset/wikitext-103): A medium sized
-collection of featured articles from English wikipedia, which we will use for
+collection of featured articles from English Wikipedia, which we will use for
 pretraining.
 
 Finally, we will download a WordPiece vocabulary, to do sub-word tokenization later on in
@@ -188,12 +188,12 @@ particularly powerful model, the Transformer, with ease.
 ## Pretraining
 
 To beat our baseline, we will leverage the `WikiText103` dataset, an unlabeled
-collection of wikipedia articles that is much bigger than than `SST-2`.
+collection of Wikipedia articles that is much bigger than `SST-2`.
 
 We are going to train a *transformer*, a highly expressive model which will learn
 to embed each word in our input as a low dimentional vector. Our wikipedia dataset has no
 labels, so we will use an unsupervised training objective called the *Masked Language
-Modeling* (MaskedLM) ojective.
+Modeling* (MaskedLM) objective.
 
 Essentially, we will be playing a big game of "guess the missing word". For each input
 sample we will obscure 25% of our input data, and train our model to predict the parts we
@@ -214,7 +214,7 @@ for transforming text into sequences of integer token ids.
 In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
 *sub-word* tokenization. Sub-word tokenization is popular when training models on large
 text corpora. Essentially, it allows our model to learn from uncommon words, while not
-requireing a massive vocabulary of every word in our training set.
+requiring a massive vocabulary of every word in our training set.
 
 The second thing we need to do is mask our input for the MaskedLM task. To do this, we can use
 `keras_nlp.layers.MaskedLMMaskGenerator`, which will randomly select a set of tokens in each
@@ -345,8 +345,8 @@ masked out in the original input. It will gather the token encodings we masked, 
 transform them back in predictions over our entire vocabulary.
 
 With that, we are ready to compile and run pretraining. If you are running this in a
-colab, note that this will take about an hour. Training Transformer is famously compute
-intesive, so even this relatively small Transformer will take some time.
+Colab, note that this will take about an hour. Training Transformer is famously compute
+intensive, so even this relatively small Transformer will take some time.
 """
 
 # Create the pretraining model by attaching a masked language model head.
@@ -463,7 +463,7 @@ text would all continue to boost performance significantly.
 """
 ### Save a model that accepts raw text
 
-The last thing we can do with our fine-tuned model is saveing including our tokenization
+The last thing we can do with our fine-tuned model is saving including our tokenization
 layer. One of the key advantages of KerasNLP is all preprocessing is done inside the
 [TensorFlow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
 to save and restore a model that can directly run inference on raw text!

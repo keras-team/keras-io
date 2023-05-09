@@ -49,7 +49,7 @@ The following figure provides an illustration of this idea. In the present examp
 [MNIST dataset](http://yann.lecun.com/exdb/mnist/) as the source dataset, while the target dataset is
 [SVHN](http://ufldl.stanford.edu/housenumbers/), which consists of images of house
 numbers. Both datasets have various varying factors in terms of texture, viewpoint,
-appearence, etc.: their domains, or distributions, are different from one
+appearance, etc.: their domains, or distributions, are different from one
 another.
 
 ![](https://i.imgur.com/dJFSJuT.png)
