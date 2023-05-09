@@ -159,7 +159,6 @@ resizing = keras_cv.layers.Resizing(
 
 def preprocess_inputs(image, label):
     image = tf.cast(image, tf.float32)
-    image = resizing(image)
     return resizing(image), tf.one_hot(label, num_classes)
 
 
@@ -256,6 +255,12 @@ eval_ds = eval_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 16)
 
+"""
+The CalTech101 dataset has different sizes for every image, so we use the
+`ragged_batch()` API to batch them together while maintaining each individual
+image's shape information.
+"""
+
 train_ds = train_ds.ragged_batch(BATCH_SIZE)
 eval_ds = eval_ds.ragged_batch(BATCH_SIZE)
 
@@ -281,14 +286,13 @@ decent results.
 When training to solve a more difficult task, you'll want to include data
 augmentation in your data pipeline.
 
-Data augmentation is a way of cheaply producing more training examples for your
-model to learn from.
-Data augmentation is a vital technique when attempting to traing powerful image
-classifier, but the modern augmetnation landscape is extremely complex.
-There are numerous powerful augmentations available, and there's no one set of
-augmentations that is optimal for all tasks.
-Despite this, we have prepared a set of augmentations that while not optimal for
-all tests, tend to perform pretty well.
+Data augmentation is a technique to make your model robust to changes in input
+data such as lighting, cropping, and orientation.
+KerasCV includes some of the most useful augmentations in the keras_cv.layers
+API.
+Creating an optimal pipeline of augmentations is an art, but in this section of
+the guide we'll offer some tips on best practices for classification.
+
 One caveat to be aware of with image data augmentation is that you must be careful
 to not shift your augmented data distribution too far from the original data
 distribution.
@@ -443,10 +447,8 @@ soon!
 Next, let's look into `MixUp()`.
 Unfortunately, while `MixUp()` has been empirically shown to *substantially*
 improve both the robustness and the generalization of the trained model,
-it is not well-understood why such improvement occurs.
-A little alchemy never hurt anyone!
-
-![](https://i.imgur.com/d4ZZYvW.png)
+it is not well-understood why such improvement occurs... but
+a little alchemy never hurt anyone!
 
 `MixUp()` works by sampling two images from a batch, then proceeding to
 literally blend together their pixel intensities as well as their classification
@@ -647,8 +649,9 @@ model = keras.Sequential(
 )
 
 """
-When using `MixUp()` and `CutMix()`, using `label_smoothing` in your loss is
-extremely important.
+Since the labels produced by MixUp() and CutMix() are somewhat artificial, we
+employ label smoothing to prevent the model from overfitting to artifacts of
+this augmentation process.
 """
 loss = losses.CategoricalCrossentropy(label_smoothing=0.1)
 """
