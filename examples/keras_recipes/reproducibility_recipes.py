@@ -11,19 +11,17 @@ Accelerator: GPU
 This example demonstrates how to control randomness in Keras models. Sometimes
 you may want to reproduce the exact same results across runs, for experimentation
 purposes or to debug a problem.
-
-This tutorial applies to Keras 2.7 and higher.
 """
 
 """
 ## Setup
 """
-import inspect
 import json
 
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import initializers
 
 # Set the seed using keras.utils.set_random_seed. This will set:
 # 1) `numpy` seed
@@ -31,8 +29,11 @@ from tensorflow.keras import layers
 # 3) `python` random seed
 keras.utils.set_random_seed(812)
 
-# This will make TensorFlow ops as deterministic as possible.
+# This will make TensorFlow ops as deterministic as possible, but it will
+# affect the overall performance, so it's not enabled by default.
+# `enable_op_determinism()` is introduced in TensorFlow 2.9.
 tf.config.experimental.enable_op_determinism()
+
 
 """
 ## Weight initialization in Keras
@@ -42,45 +43,39 @@ parameters. These parameters allow you to specify the strategy used for
 initializing the weights of layer variables. The following built-in initializers
 are available as part of `tf.keras.initializers`:
 """
-to_be_removed = ["Initializer", "Ones", "Zeros", "Identity"]
+
 initializers_list = [
-    string
-    for string in dir(keras.initializers)
-    if string[0].isupper() and string not in to_be_removed
+    initializers.RandomNormal,
+    initializers.RandomUniform,
+    initializers.TruncatedNormal,
+    initializers.VarianceScaling,
+    initializers.GlorotNormal,
+    initializers.GlorotUniform,
+    initializers.HeNormal,
+    initializers.HeUniform,
+    initializers.LecunNormal,
+    initializers.LecunUniform,
+    initializers.Orthogonal,
 ]
-print(initializers_list)
 
-# Let's call each initializer two times and store the results in a dictionary.
-results = {}
+"""
+In a reproducible model, the weights of the model should be initialized with
+same values in subsequent runs. First, we'll check how initializers behave when
+they are called multiple times with same `seed` value.
+"""
 
-for initializer_name in initializers_list:
-    print(f"Running {initializer_name} initializer")
-    # Get the initializer object from the Keras initializers module
-    initializer = getattr(keras.initializers, initializer_name)
-    results[initializer_name] = []
+for initializer in initializers_list:
+    print(f"Running {initializer}")
 
-    # Get the signature of the initializer
-    initializer_signature = inspect.signature(initializer)
-
-    for _ in range(2):
+    for iteration in range(2):
         # In order to get same results across multiple runs from an initializer,
         # you need to specify a seed value. Note that this is not related to
         # keras.utils.set_random_seed or tf.config.experimental.enable_op_determinism.
         # If you comment those lines, you will still get the same results.
-        if "seed" in initializer_signature.parameters:
-            result = initializer(seed=42)(shape=(3, 3))
-        else:
-            result = initializer()(shape=(3, 3))
-        results[initializer_name].append(result)
+        result = initializer(seed=42)(shape=(1, 1)).numpy()
+        print(f"\tIteration --> {iteration} // Result --> {result}")
+    print("\n")
 
-# Check if the results are equal.
-all_equal = True
-for initializer_name, initializer_results in results.items():
-    if not tf.experimental.numpy.allclose(
-        initializer_results[0], initializer_results[1]
-    ).numpy():
-        all_equal = False
-print(f"Are the results equal? {all_equal}")
 
 """
 Now, let's inspect how two different initializer objects behave when they are
@@ -106,7 +101,7 @@ print(f"Are the results equal? {equal}")
 If the seed value is not set (or different seed values are used), two different
 objects will produce different results. Since the random seed is set at the beginning
 of the notebook, the results will be same in the sequential runs. This is related
-to the `keras.utils.set_random_seed`.
+to the `keras.utils.set_random_seed`. 
 """
 
 glorot_normal_3 = keras.initializers.GlorotNormal()
