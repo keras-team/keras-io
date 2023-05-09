@@ -74,7 +74,7 @@ EfficientNetV2B0 Backbone.
 EfficientNetV2B0 is a great starting model when constructing an image
 classification pipeline.
 This architecture manages to achieve high accuracy, while using a
-parameter count of `7_200_312`.
+parameter count of `7M`.
 If an EfficientNetV2B0 is not powerful enough for the task you are hoping to
 solve, be sure to check out [KerasCV's other available Backbones](https://github.com/keras-team/keras-cv/tree/master/keras_cv/models/backbones)!
 
@@ -91,8 +91,7 @@ While the old API was great for classification, it did not scale effectively to
 other use cases that required complex architectures, like object deteciton and
 semantic segmentation.
 
-Now that we have a classifier build, lets take our model for a spin!
-Let's run inference on a picture of  a cute cat:
+Now that our classifier is built, let's apply it to this cute cat picture!
 
 
 ```python
@@ -162,8 +161,11 @@ Top two classes are: ['Egyptian cat', 'velvet']
 </div>
 Great!  Both of these appear to be correct!
 However, the top class here is "Velvet".
-We're trying to classify Cats VS Dogs. We don't care about the
-velvet blanket!
+We're trying to classify Cats VS Dogs.
+We don't care about the velvet blanket!
+
+Ideally, we'd have a classifier that only performs computation to determine if
+an image is a cat or a dog, and has all of its resources dedicated to this task.
 This can be solved by fine tuning our own classifier.
 
 # Fine tuning a pretrained classifier
@@ -182,6 +184,7 @@ First, let's get started by loading some data:
 
 ```python
 BATCH_SIZE = 32
+IMAGE_SIZE = (224, 224)
 AUTOTUNE = tf.data.AUTOTUNE
 tfds.disable_progress_bar()
 
@@ -189,7 +192,6 @@ data, dataset_info = tfds.load("cats_vs_dogs", with_info=True, as_supervised=Tru
 train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
 train_dataset = data["train"]
 
-IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
 resizing = keras_cv.layers.Resizing(
@@ -199,7 +201,6 @@ resizing = keras_cv.layers.Resizing(
 
 def preprocess_inputs(image, label):
     image = tf.cast(image, tf.float32)
-    image = resizing(image)
     return resizing(image), tf.one_hot(label, num_classes)
 
 
@@ -231,10 +232,8 @@ backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
 
 The use of imagenet in the preset name indicates that the backbone was
 pretrained on the ImageNet dataset.
-This is called transfer learning, and results in a more efficient fitting of the
-model to our new dataset.
-Transfer learning models fit in fewer epochs, and often achieve better final
-results.
+Pretrained backbones extract more information from our labeled examples by
+leveraging patterns extracted from potentially much larger datasets.
 
 Next lets put together our classifier:
 
@@ -256,7 +255,7 @@ model.compile(
 ```
 
 Here our classifier is just a simple `keras.Sequential`.
-All that is left to do is call `model.fit()`!
+All that is left to do is call `model.fit()`:
 
 
 ```python
@@ -266,62 +265,62 @@ model.fit(train_dataset)
 
 <div class="k-default-codeblock">
 ```
-217/727 [=======>......................] - ETA: 26s - loss: 0.8515 - accuracy: 0.9061
+217/727 [=======>......................] - ETA: 26s - loss: 0.8715 - accuracy: 0.9062
 
 Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
 
-253/727 [=========>....................] - ETA: 24s - loss: 0.7776 - accuracy: 0.9124
+252/727 [=========>....................] - ETA: 24s - loss: 0.7876 - accuracy: 0.9116
 
 Warning: unknown JFIF revision number 0.00
 
-265/727 [=========>....................] - ETA: 24s - loss: 0.7505 - accuracy: 0.9144
+265/727 [=========>....................] - ETA: 23s - loss: 0.7657 - accuracy: 0.9132
 
 Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
 
-308/727 [===========>..................] - ETA: 21s - loss: 0.6723 - accuracy: 0.9207
+309/727 [===========>..................] - ETA: 21s - loss: 0.6827 - accuracy: 0.9205
 
 Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
 
-357/727 [=============>................] - ETA: 19s - loss: 0.6118 - accuracy: 0.9246
+357/727 [=============>................] - ETA: 19s - loss: 0.6189 - accuracy: 0.9249
 
 Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
 Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
 
-373/727 [==============>...............] - ETA: 18s - loss: 0.5922 - accuracy: 0.9265
+374/727 [==============>...............] - ETA: 18s - loss: 0.6011 - accuracy: 0.9266
 
 Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
 
-533/727 [====================>.........] - ETA: 10s - loss: 0.4704 - accuracy: 0.9359
+534/727 [=====================>........] - ETA: 9s - loss: 0.4682 - accuracy: 0.9376 
 
 Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
 
-635/727 [=========================>....] - ETA: 4s - loss: 0.4246 - accuracy: 0.9403
+636/727 [=========================>....] - ETA: 4s - loss: 0.4205 - accuracy: 0.9421
 
 Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
 
-652/727 [=========================>....] - ETA: 3s - loss: 0.4182 - accuracy: 0.9408
+652/727 [=========================>....] - ETA: 3s - loss: 0.4171 - accuracy: 0.9423
 
 Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
 
-666/727 [==========================>...] - ETA: 3s - loss: 0.4109 - accuracy: 0.9416
+666/727 [==========================>...] - ETA: 3s - loss: 0.4120 - accuracy: 0.9428
 
 Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
 
-702/727 [===========================>..] - ETA: 1s - loss: 0.3970 - accuracy: 0.9426
+702/727 [===========================>..] - ETA: 1s - loss: 0.3968 - accuracy: 0.9442
 
 Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
 
-711/727 [============================>.] - ETA: 0s - loss: 0.3942 - accuracy: 0.9428
+711/727 [============================>.] - ETA: 0s - loss: 0.3942 - accuracy: 0.9443
 
 Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
 
-727/727 [==============================] - 62s 53ms/step - loss: 0.3882 - accuracy: 0.9434
+727/727 [==============================] - 62s 52ms/step - loss: 0.3872 - accuracy: 0.9450
 
-<keras.callbacks.History at 0x7f7f2c0cfca0>
+<keras.callbacks.History at 0x7f7e9017f9a0>
 
 ```
 </div>
-Let's look at how our model performs after the fine tuning!
+Let's look at how our model performs after the fine tuning:
 
 
 ```python
@@ -338,7 +337,7 @@ Top class is: cat
 
 ```
 </div>
-Awesome!  Looks like the model correctly classified the image.
+Awesome - looks like the model correctly classified the image.
 
 # Train a Classifier from Scratch
 
@@ -372,7 +371,14 @@ train_ds = train_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 
 train_ds = train_ds.shuffle(BATCH_SIZE * 16)
+```
 
+The CalTech101 dataset has different sizes for every image, so we use the
+`ragged_batch()` API to batch them together while maintaining each individual
+image's shape information.
+
+
+```python
 train_ds = train_ds.ragged_batch(BATCH_SIZE)
 eval_ds = eval_ds.ragged_batch(BATCH_SIZE)
 
@@ -391,7 +397,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_28_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_30_0.png)
     
 
 
@@ -405,14 +411,13 @@ decent results.
 When training to solve a more difficult task, you'll want to include data
 augmentation in your data pipeline.
 
-Data augmentation is a way as cheaply producing more training examples for your
-model to learn from.
-Data augmentation is a vital technique when attempting to traing powerful image
-classifier, but the modern augmetnation landscape is extremely complex.
-There are numerous powerful augmentations available, and there's no one set of
-augmentations that is optimal for all tasks.
-Despite this, we have prepared a set of augmentations that while not optimal for
-all tests, tend to perform pretty well.
+Data augmentation is a technique to make your model robust to changes in input
+data such as lighting, cropping, and orientation.
+KerasCV includes some of the most useful augmentations in the keras_cv.layers
+API.
+Creating an optimal pipeline of augmentations is an art, but in this section of
+the guide we'll offer some tips on best practices for classification.
+
 One caveat to be aware of with image data augmentation is that you must be careful
 to not shift your augmented data distribution too far from the original data
 distribution.
@@ -448,19 +453,23 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_30_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_32_0.png)
     
 
 
 Half of the images have been flipped!
 
 The next augmentation we'll use is `RandomCropAndResize`.
-This operation selects a random subset of the image, then resizes it to the provided target size.
+This operation selects a random subset of the image, then resizes it to the
+provided target size.
 By using this augmentation, we force our classifier to become spatially invariant.
-Additionally, this layer accepts a `aspect_ratio_factor` which can be used to distort the aspect ratio of the image.
+Additionally, this layer accepts an `aspect_ratio_factor` which can be used to
+distort the aspect ratio of the image.
 While this can improve model performance, it should be used with caution.
-It is very easy for an aspect ratio distortion to shift a sample too far from the original training set's data distribution.
-Remember - the goal of data augmentation is to produce more training samples that align with the data distribution of your training set!
+It is very easy for an aspect ratio distortion to shift a sample too far from
+the original training set's data distribution.
+Remember - the goal of data augmentation is to produce more training samples
+that align with the data distribution of your training set!
 
 `RandomCropAndResize` also can handle `tf.RaggedTensor` inputs.  In the
 CalTech101 image dataset images come in a wide variety of sizes.
@@ -491,7 +500,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_32_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_34_0.png)
     
 
 
@@ -501,8 +510,8 @@ This will allow us to produce a classifier that is robust to lighting flickers,
 shadows, and more.
 
 There are limitless ways to augment an image by altering color and spatial
-features, but perhaps
-[the most battle tested technique is `RandAugment`](https://arxiv.org/abs/1909.13719).
+features, but perhaps the most battle tested technique is
+[`RandAugment`](https://arxiv.org/abs/1909.13719).
 `RandAugment` is actually a set of 10 different augmentations:
 `AutoContrast`, `Equalize`, `Solarize`, `RandomColorJitter`, `RandomContrast`,
 `RandomBrightness`, `ShearX`, `ShearY`, `TranslateX` and `TranslateY`.
@@ -535,13 +544,13 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_34_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_36_0.png)
     
 
 
 Looks great; but we're not done yet!
 What if an image is missing one critical feature of a class?  For example, what
-if a leaf is blocking the view of a Cat's ear, but our classifier learned to
+if a leaf is blocking the view of a cat's ear, but our classifier learned to
 classify cats simply by observing their ears?
 
 One easy approach to tackling this is to use `RandomCutout`, which randomly
@@ -561,7 +570,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_36_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_38_0.png)
     
 
 
@@ -569,14 +578,13 @@ While this tackles the problem reasonably well, it can cause the classifier to
 develop responses to borders between features and black pixel areas caused by
 the cutout.
 
-[`CutMix`](https://arxiv.org/abs/1905.04899) solves the same issue; but by using
-a more complex (and effective!) technique.
+[`CutMix`](https://arxiv.org/abs/1905.04899) solves the same issue by using
+a more complex (and more effective) technique.
 Instead of replacing the cut-out areas with black pixels, `CutMix` replaces
 these regions with regions of other images sampled from within your training
 set!
 Following this replacement, the image's classification label is updated to be a
-blend of the original image's class label, as well as the image that was
-overlaid into the cutout section's label.
+blend of the original and mixed image's class label.
 
 What does this look like in practice?  Let's check it out:
 
@@ -597,20 +605,18 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_38_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_40_0.png)
     
 
 
 Let's hold off from adding it to our augmenter for a minute - more on that
 soon!
 
-Next, let's look into `MixUp()```.
+Next, let's look into `MixUp()`.
 Unfortunately, while `MixUp()` has been empirically shown to *substantially*
 improve both the robustness and the generalization of the trained model,
-it is not well-understood why such improvement occurs.
-A little alchemy never hurt anyone!
-
-![](https://i.imgur.com/d4ZZYvW.png)
+it is not well-understood why such improvement occurs... but
+a little alchemy never hurt anyone!
 
 `MixUp()` works by sampling two images from a batch, then proceeding to
 literally blend together their pixel intensities as well as their classification
@@ -635,7 +641,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_40_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_42_0.png)
     
 
 
@@ -677,11 +683,13 @@ WARNING:tensorflow:Layers in a Sequential model should only have a single input 
 ```
 </div>
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_44_2.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_46_2.png)
     
 
 
-We also need to resize our evaluation set, but luckily that's trivial:
+We also need to resize our evaluation set to get dense batches of the image size
+expected by our model. We use the deterministic keras_cv.layers.Resizing in this
+case to avoid adding noise to our evaluation metric.
 
 
 ```python
@@ -714,18 +722,18 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_46_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_48_0.png)
     
 
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_46_1.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_48_1.png)
     
 
 
-Finally, lets unpackage our datasets and prepare to pass them to the `model.fit()`
-call, which accepts a tuple of `(images, labels)`.
+Finally, lets unpackage our datasets and prepare to pass them to `model.fit()`,
+which accepts a tuple of `(images, labels)`.
 
 
 ```python
@@ -738,16 +746,16 @@ train_ds = train_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.map(unpackage_dict, num_parallel_calls=tf.data.AUTOTUNE)
 ```
 
-Cool!  Data augmentation is by far the hardest piece of training a classifier
-in the modern era.
+Data augmentation is by far the hardest piece of training a modern
+classifier.
 Congratulations on making it this far!
 
 ---
 ## Optimizer Tuning
 
-To achieve optimal performance, we must implement a Warm up Cosinde decay
-learning rate schedule.
-While we won't go into detail on this schedule, [you can read more about it
+To achieve optimal performance,we need to use a learning rate schedule instead
+of a single learning rate. While we won't go into detail on the Cosine decay
+with warmup schedule used here, [you can read more about it
 here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
 
 
@@ -810,11 +818,16 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
 
 ```
 
+![WarmUpCosineDecay schedule](https://i.imgur.com/YCr5pII.png)
+
+The schedule looks a as we expect.
+
 Next let's construct this optimizer:
 
 
 ```python
-total_steps = (9000 // BATCH_SIZE) * EPOCHS
+total_images = 9000
+total_steps = (total_images // BATCH_SIZE) * EPOCHS
 warmup_steps = int(0.1 * total_steps)
 hold_steps = int(0.45 * total_steps)
 schedule = WarmUpCosineDecay(
@@ -848,8 +861,9 @@ model = keras.Sequential(
 )
 ```
 
-When using `MixUp()` and `CutMix()`, using `label_smoothing` in your loss is
-extremely important.
+Since the labels produced by MixUp() and CutMix() are somewhat artificial, we
+employ label smoothing to prevent the model from overfitting to artifacts of
+this augmentation process.
 
 
 ```python
@@ -883,9 +897,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-96/96 [==============================] - 26s 157ms/step - loss: 8.1020 - categorical_accuracy: 0.0062 - top_k_categorical_accuracy: 0.0448 - val_loss: 10.4027 - val_categorical_accuracy: 0.0066 - val_top_k_categorical_accuracy: 0.0296
+96/96 [==============================] - 26s 157ms/step - loss: 8.1137 - categorical_accuracy: 0.0124 - top_k_categorical_accuracy: 0.0493 - val_loss: 4.6566 - val_categorical_accuracy: 0.0046 - val_top_k_categorical_accuracy: 0.2281
 
-<keras.callbacks.History at 0x7f7e92b04a00>
+<keras.callbacks.History at 0x7f7d88167100>
 
 ```
 </div>
@@ -893,7 +907,7 @@ Congratulations!  You now know how to train a powerful image classifier from
 scratch in KerasCV.
 In practice, you'll likely want to combine transfer learning with an
 augmentation chain similar to what we constructed above.
-This tends to yield fast convergence, but solid model robustness.
+This tends to yield fast convergence and solid model robustness.
 
 ---
 ## Conclusions
@@ -902,7 +916,7 @@ While image classificaiton is perhaps the simplest problem in computer vision,
 the modern landscape has numerous complex components.
 Luckily, KerasCV offers robust, production grade APIs to make assembling most
 of these components possible in one line of code.
-Through the use of the KerasCV `ImageClassifier` API, pretrained weights, and the
+Through the use of KerasCV's `ImageClassifier` API, pretrained weights, and the
 KerasCV data augmentations you can assemble everything you need to train a
 powerful classifier in a few hundred lines of code!
 
