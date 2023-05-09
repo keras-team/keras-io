@@ -63,7 +63,7 @@ EfficientNetV2B0 Backbone.
 EfficientNetV2B0 is a great starting model when constructing an image
 classification pipeline.
 This architecture manages to achieve high accuracy, while using a
-parameter count of `7_200_312`.
+parameter count of `7M`.
 If an EfficientNetV2B0 is not powerful enough for the task you are hoping to
 solve, be sure to check out [KerasCV's other available Backbones](https://github.com/keras-team/keras-cv/tree/master/keras_cv/models/backbones)!
 """
@@ -78,8 +78,7 @@ While the old API was great for classification, it did not scale effectively to
 other use cases that required complex architectures, like object deteciton and
 semantic segmentation.
 
-Now that we have a classifier build, lets take our model for a spin!
-Let's run inference on a picture of  a cute cat:
+Now that our classifier is built, let's apply it to this cute cat picture!
 """
 
 filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
@@ -121,8 +120,11 @@ print("Top two classes are:", top_two)
 """
 Great!  Both of these appear to be correct!
 However, the top class here is "Velvet".
-We're trying to classify Cats VS Dogs. We don't care about the
-velvet blanket!
+We're trying to classify Cats VS Dogs.
+We don't care about the velvet blanket!
+
+Ideally, we'd have a classifier that only performs computation to determine if
+an image is a cat or a dog, and has all of its resources dedicated to this task.
 This can be solved by fine tuning our own classifier.
 
 # Fine tuning a pretrained classifier
@@ -140,6 +142,7 @@ First, let's get started by loading some data:
 """
 
 BATCH_SIZE = 32
+IMAGE_SIZE = (224, 224)
 AUTOTUNE = tf.data.AUTOTUNE
 tfds.disable_progress_bar()
 
@@ -147,7 +150,6 @@ data, dataset_info = tfds.load("cats_vs_dogs", with_info=True, as_supervised=Tru
 train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
 train_dataset = data["train"]
 
-IMAGE_SIZE = (224, 224)
 num_classes = dataset_info.features["label"].num_classes
 
 resizing = keras_cv.layers.Resizing(
@@ -181,10 +183,8 @@ backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
 """
 The use of imagenet in the preset name indicates that the backbone was
 pretrained on the ImageNet dataset.
-This is called transfer learning, and results in a more efficient fitting of the
-model to our new dataset.
-Transfer learning models fit in fewer epochs, and often achieve better final
-results.
+Pretrained backbones extract more information from our labeled examples by
+leveraging patterns extracted from potentially much larger datasets.
 
 Next lets put together our classifier:
 """
@@ -205,14 +205,14 @@ model.compile(
 
 """
 Here our classifier is just a simple `keras.Sequential`.
-All that is left to do is call `model.fit()`!
+All that is left to do is call `model.fit()`:
 """
 
 model.fit(train_dataset)
 
 
 """
-Let's look at how our model performs after the fine tuning!
+Let's look at how our model performs after the fine tuning:
 """
 
 predictions = model.predict(np.expand_dims(image, axis=0))
@@ -221,7 +221,7 @@ classes = {0: "cat", 1: "dog"}
 print("Top class is:", classes[predictions[0].argmax()])
 
 """
-Awesome!  Looks like the model correctly classified the image.
+Awesome - looks like the model correctly classified the image.
 """
 
 """
@@ -281,7 +281,7 @@ decent results.
 When training to solve a more difficult task, you'll want to include data
 augmentation in your data pipeline.
 
-Data augmentation is a way as cheaply producing more training examples for your
+Data augmentation is a way of cheaply producing more training examples for your
 model to learn from.
 Data augmentation is a vital technique when attempting to traing powerful image
 classifier, but the modern augmetnation landscape is extremely complex.
@@ -322,12 +322,16 @@ keras_cv.visualization.plot_image_gallery(
 Half of the images have been flipped!
 
 The next augmentation we'll use is `RandomCropAndResize`.
-This operation selects a random subset of the image, then resizes it to the provided target size.
+This operation selects a random subset of the image, then resizes it to the
+provided target size.
 By using this augmentation, we force our classifier to become spatially invariant.
-Additionally, this layer accepts a `aspect_ratio_factor` which can be used to distort the aspect ratio of the image.
+Additionally, this layer accepts an `aspect_ratio_factor` which can be used to
+distort the aspect ratio of the image.
 While this can improve model performance, it should be used with caution.
-It is very easy for an aspect ratio distortion to shift a sample too far from the original training set's data distribution.
-Remember - the goal of data augmentation is to produce more training samples that align with the data distribution of your training set!
+It is very easy for an aspect ratio distortion to shift a sample too far from
+the original training set's data distribution.
+Remember - the goal of data augmentation is to produce more training samples
+that align with the data distribution of your training set!
 
 `RandomCropAndResize` also can handle `tf.RaggedTensor` inputs.  In the
 CalTech101 image dataset images come in a wide variety of sizes.
