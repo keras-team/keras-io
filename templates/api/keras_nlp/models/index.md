@@ -5,7 +5,7 @@ architectures. These models can be created in two ways:
 
 - Through the `from_preset()` constructor, which instantiates an object with
   a pre-trained configurations, vocabularies, and (optionally) weights.
-  Available preset IDs are listed on this page.
+  Available preset names are listed on this page.
 
 ```python
 classifier = keras_nlp.models.BertClassifier.from_preset("bert_base_en_uncased")
@@ -43,11 +43,11 @@ For a more in depth introduction to how our API fits together, see the
 
 ## Backbone presets
 
-The following preset IDs correspond to a configuration, weights and vocabulary
+The following preset names correspond to a configuration, weights and vocabulary
 for a model **backbone**. These presets are not inference-ready, and must be
 fine-tuned for a given task!
 
-IDs below can be used with any `from_preset()` constructor for a given model.
+The names below can be used with any `from_preset()` constructor for a given model.
 
 ```python
 classifier = keras_nlp.models.BertClassifier.from_preset("bert_tiny_en_uncased")
@@ -60,11 +60,11 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncas
 
 ## Classification presets
 
-The following preset ID correspond to a configuration, weights and vocabulary
+The following preset names correspond to a configuration, weights and vocabulary
 for a model **classifier**. These models are inference ready, but can be further
 fine-tuned if desired.
 
-IDs below can be used with the `from_preset()` constructor for classifier models
+The names below can be used with the `from_preset()` constructor for classifier models
 and preprocessing layers.
 
 ```python
