@@ -93,9 +93,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_6_0.png)
-    
+
 
 
 Next, let's get some predictions from our classifier:
@@ -207,9 +207,9 @@ keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_16_0.png)
-    
+
 
 
 Meow!
@@ -245,59 +245,7 @@ model.fit(train_dataset)
 
 <div class="k-default-codeblock">
 ```
-217/727 [=======>......................] - ETA: 26s - loss: 0.3727 - accuracy: 0.9234
-
-Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
-
-253/727 [=========>....................] - ETA: 24s - loss: 0.3518 - accuracy: 0.9265
-
-Warning: unknown JFIF revision number 0.00
-
-265/727 [=========>....................] - ETA: 23s - loss: 0.3464 - accuracy: 0.9277
-
-Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
-
-309/727 [===========>..................] - ETA: 21s - loss: 0.3253 - accuracy: 0.9313
-
-Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
-
-357/727 [=============>................] - ETA: 19s - loss: 0.3054 - accuracy: 0.9353
-
-Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
-Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
-
-373/727 [==============>...............] - ETA: 18s - loss: 0.2987 - accuracy: 0.9368
-
-Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
-
-533/727 [====================>.........] - ETA: 9s - loss: 0.2539 - accuracy: 0.9431 
-
-Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
-
-635/727 [=========================>....] - ETA: 4s - loss: 0.2323 - accuracy: 0.9475
-
-Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
-
-652/727 [=========================>....] - ETA: 3s - loss: 0.2290 - accuracy: 0.9479
-
-Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
-
-666/727 [==========================>...] - ETA: 3s - loss: 0.2263 - accuracy: 0.9486
-
-Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
-
-703/727 [============================>.] - ETA: 1s - loss: 0.2205 - accuracy: 0.9496
-
-Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
-
-711/727 [============================>.] - ETA: 0s - loss: 0.2193 - accuracy: 0.9497
-
-Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
-
 727/727 [==============================] - 61s 52ms/step - loss: 0.2168 - accuracy: 0.9501
-
-<keras.callbacks.History at 0x7f3d08171ab0>
-
 ```
 </div>
 Let's look at how our model performs after the fine tuning:
@@ -376,9 +324,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_27_0.png)
-    
+
 
 
 ---
@@ -432,9 +380,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_29_0.png)
-    
+
 
 
 Half of the images have been flipped!
@@ -479,9 +427,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_31_0.png)
-    
+
 
 
 Great!  We are now working with a batch of dense images.
@@ -523,9 +471,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_33_0.png)
-    
+
 
 
 Looks great; but we're not done yet!
@@ -549,9 +497,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_35_0.png)
-    
+
 
 
 While this tackles the problem reasonably well, it can cause the classifier to
@@ -584,9 +532,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_37_0.png)
-    
+
 
 
 Let's hold off from adding it to our augmenter for a minute - more on that
@@ -620,9 +568,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_39_0.png)
-    
+
 
 
 If you look closely, you'll see that the images have been blended together.
@@ -654,17 +602,8 @@ keras_cv.visualization.plot_image_gallery(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:2", shape=(None, 3), dtype=uint8), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(None,), dtype=int64)), 'labels': <tf.Tensor 'args_1:0' shape=(None, 101) dtype=float32>}. Consider rewriting this model with the Functional API.
-
-WARNING:tensorflow:Layers in a Sequential model should only have a single input tensor. Received: inputs={'images': tf.RaggedTensor(values=tf.RaggedTensor(values=Tensor("RaggedFromVariant/RaggedTensorFromVariant:2", shape=(None, 3), dtype=uint8), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:1", shape=(None,), dtype=int64)), row_splits=Tensor("RaggedFromVariant/RaggedTensorFromVariant:0", shape=(None,), dtype=int64)), 'labels': <tf.Tensor 'args_1:0' shape=(None, 101) dtype=float32>}. Consider rewriting this model with the Functional API.
-
-```
-</div>
-    
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_43_2.png)
-    
+
 
 
 We also need to resize our evaluation set to get dense batches of the image size
@@ -694,9 +633,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_45_0.png)
-    
+
 
 
 Finally, lets unpackage our datasets and prepare to pass them to `model.fit()`,
@@ -866,9 +805,6 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 96/96 [==============================] - 29s 171ms/step - loss: 8.2322 - categorical_accuracy: 0.0095 - top_k_categorical_accuracy: 0.0484 - val_loss: 4.6036 - val_categorical_accuracy: 0.0150 - val_top_k_categorical_accuracy: 0.0832
-
-<keras.callbacks.History at 0x7f32b677fcd0>
-
 ```
 </div>
 Congratulations!  You now know how to train a powerful image classifier from
