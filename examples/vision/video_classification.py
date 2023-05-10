@@ -1,7 +1,6 @@
 """
-Video Classification with a CNN-RNN Architecture
-Modified, corrected, and updated: [Mikolaj Buchwald](https://www.linkedin.com/in/mikolaj-buchwald/)
-Author of the original example: [Sayak Paul](https://twitter.com/RisingSayak)
+Title: Video Classification with a CNN-RNN Architecture
+Author: [Sayak Paul](https://twitter.com/RisingSayak), [Mikolaj Buchwald](https://www.linkedin.com/in/mikolaj-buchwald/)
 Date created: 2021/05/28
 Last modified: 2023/05/01
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
@@ -92,8 +91,8 @@ NUM_FEATURES = 2048
 ## Data preparation
 """
 
-train_df = pd.read_csv('ucf101_top10/train.csv')
-test_df = pd.read_csv('ucf101_top10/test.csv')
+train_df = pd.read_csv("ucf101_top10/train.csv")
+test_df = pd.read_csv("ucf101_top10/test.csv")
 
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
@@ -220,7 +219,13 @@ def prepare_all_videos(df, root_dir):
         frames = frames[None, ...]
 
         # Initialize placeholders to store the masks and features of the current video.
-        temp_frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
+        temp_frame_mask = np.zeros(
+            shape=(
+                1,
+                MAX_SEQ_LENGTH,
+            ),
+            dtype="bool",
+        )
         temp_frame_features = np.zeros(
             shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32"
         )
@@ -231,8 +236,7 @@ def prepare_all_videos(df, root_dir):
             length = min(MAX_SEQ_LENGTH, video_length)
             for j in range(length):
                 temp_frame_features[i, j, :] = feature_extractor.predict(
-                    batch[None, j, :],
-                    verbose = 0
+                    batch[None, j, :], verbose=0
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
@@ -242,8 +246,8 @@ def prepare_all_videos(df, root_dir):
     return (frame_features, frame_masks), labels
 
 
-train_data, train_labels = prepare_all_videos(train_df, 'ucf101_top10/train')
-test_data, test_labels = prepare_all_videos(test_df, 'ucf101_top10/test')
+train_data, train_labels = prepare_all_videos(train_df, "ucf101_top10/train")
+test_data, test_labels = prepare_all_videos(test_df, "ucf101_top10/test")
 
 print(f"Frame features in train set: {train_data[0].shape}")
 print(f"Frame masks in train set: {train_data[1].shape}")
@@ -258,6 +262,7 @@ executed.
 
 Now, we can feed this data to a sequence model consisting of recurrent layers like `GRU`.
 """
+
 
 # Utility for our sequence model.
 def get_sequence_model():
@@ -322,7 +327,13 @@ data from the UCF101 dataset using [the notebook](https://colab.research.google.
 
 def prepare_single_video(frames):
     frames = frames[None, ...]
-    frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
+    frame_mask = np.zeros(
+        shape=(
+            1,
+            MAX_SEQ_LENGTH,
+        ),
+        dtype="bool",
+    )
     frame_features = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
 
     for i, batch in enumerate(frames):
@@ -352,12 +363,12 @@ def sequence_prediction(path):
 # https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
 def to_gif(images):
     converted_images = images.astype(np.uint8)
-    imageio.mimsave("animation.gif", converted_images, duration=1000*1/10)
+    imageio.mimsave("animation.gif", converted_images, duration=1000 * 1 / 10)
     return embed.embed_file("animation.gif")
 
 
 test_video = np.random.choice(test_df["video_name"].values.tolist())
-test_video_path = os.path.join('ucf101_top10', 'test', test_video)
+test_video_path = os.path.join("ucf101_top10", "test", test_video)
 print(f"Test video path: {test_video_path}")
 test_frames = sequence_prediction(test_video_path)
 to_gif(test_frames[:MAX_SEQ_LENGTH])
