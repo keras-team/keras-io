@@ -76,28 +76,10 @@ def preprocess_data(images, labels, augment=False):
     outputs = augmenter(inputs) if augment else inputs
     return outputs['images'], outputs['labels']
 
-<<<<<<< HEAD
-Augment a `tf.data.Dataset`:
-
-```python
-dataset = tfds.load('rock_paper_scissors', as_supervised=True, split='train')
-dataset = dataset.batch(64)
-dataset = dataset.map(augment_data, num_parallel_calls=tf.data.AUTOTUNE)
-```
-
-Create a model:
-
-```python
-densenet = keras_cv.models.DenseNet121(
-  include_rescaling=True,
-  include_top=True,
-  num_classes=3
-=======
 train_dataset, test_dataset = tfds.load(
     'rock_paper_scissors',
     as_supervised=True,
     split=['train', 'test'],
->>>>>>> master
 )
 train_dataset = train_dataset.batch(BATCH_SIZE).map(
     lambda x, y: preprocess_data(x, y, augment=True),
