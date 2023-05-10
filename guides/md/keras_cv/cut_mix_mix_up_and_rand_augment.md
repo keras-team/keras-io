@@ -385,8 +385,8 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    model = keras_cv.models.DenseNet121(
-        include_rescaling=True, include_top=True, classes=num_classes
+    model = keras_cv.models.ImageClassifier.from_preset(
+        "efficientnetv2_s", num_classes=num_classes
     )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
