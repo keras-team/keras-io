@@ -46,6 +46,7 @@ PROJECT_URL = {
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.5.0/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.5.1/",
 }
+USE_MULTIPROCESSING = False
 
 
 class KerasIO:
@@ -713,22 +714,28 @@ class KerasIO:
             print("Clearing", self.site_dir)
             shutil.rmtree(self.site_dir)
 
-        for src_location, _, fnames in os.walk(self.md_sources_dir):
-            pool = multiprocessing.Pool(processes=8)
-            workers = [
-                pool.apply_async(
-                    self.render_single_file,
-                    args=(src_location, fname, self.nav),
-                )
-                for fname in fnames
-            ]
+        if USE_MULTIPROCESSING:
+            for src_location, _, fnames in os.walk(self.md_sources_dir):
+                pool = multiprocessing.Pool(processes=8)
+                workers = [
+                    pool.apply_async(
+                        self.render_single_file,
+                        args=(src_location, fname, self.nav),
+                    )
+                    for fname in fnames
+                ]
 
-            for worker in workers:
-                url = worker.get()
-                if url is not None:
-                    all_urls_list.append(url)
-            pool.close()
-            pool.join()
+                for worker in workers:
+                    url = worker.get()
+                    if url is not None:
+                        all_urls_list.append(url)
+                pool.close()
+                pool.join()
+        else:
+            for src_location, _, fnames in os.walk(self.md_sources_dir):
+                for fname in fnames:
+                    print("...Rendering", fname)
+                    self.render_single_file(src_location, fname, self.nav)
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
