@@ -75,7 +75,6 @@ from tqdm import tqdm
 # The SSL part is needed to download Keras' Inception V3 model.
 ssl._create_default_https_context = ssl._create_unverified_context
 
-
 """
 ## Define hyperparameters
 """
