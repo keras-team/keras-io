@@ -7,6 +7,7 @@ import inspect
 import importlib
 import itertools
 
+import render_tags
 
 class TFKerasDocumentationGenerator:
     def __init__(self, project_url=None):
@@ -79,9 +80,9 @@ class TFKerasDocumentationGenerator:
         else:
             signature_override = None
             object_ = element
-        return self.render_from_object(object_, signature_override)
+        return self.render_from_object(object_, signature_override, element)
 
-    def render_from_object(self, object_, signature_override: str):
+    def render_from_object(self, object_, signature_override: str, element):
         subblocks = []
         source_link = make_source_link(object_, self.project_url)
         if source_link is not None:
@@ -95,6 +96,11 @@ class TFKerasDocumentationGenerator:
         if docstring:
             docstring = self.process_docstring(docstring)
             subblocks.append(docstring)
+        # Render preset table for KerasCV and KerasNLP
+        if element.endswith('from_preset'):
+            table = render_tags.render_table(import_object(element.rsplit(".", 1)[0]))
+            if table is not None:
+                subblocks.append(table)
         return "\n\n".join(subblocks) + "\n\n----\n\n"
 
 
