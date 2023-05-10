@@ -28,10 +28,6 @@ visual reference for the complexity of the material:
 """
 
 
-"""shell
-!pip install -q --upgrade git+https://github.com/keras-team/keras-cv.git tensorflow
-"""
-
 import json
 import math
 import keras_cv
@@ -50,7 +46,7 @@ from keras import metrics
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
 
-Let's get started with the simples KerasCV API: a pretrained classifier.
+Let's get started with the simplest KerasCV API: a pretrained classifier.
 In this example, we will construct a classifier that was
 pretrained on the ImageNet dataset.
 We'll use this model to solve the age old "Cat or Dog" problem.
@@ -63,7 +59,7 @@ EfficientNetV2B0 Backbone.
 EfficientNetV2B0 is a great starting model when constructing an image
 classification pipeline.
 This architecture manages to achieve high accuracy, while using a
-parameter count of `7M`.
+parameter count of 7M.
 If an EfficientNetV2B0 is not powerful enough for the task you are hoping to
 solve, be sure to check out [KerasCV's other available Backbones](https://github.com/keras-team/keras-cv/tree/master/keras_cv/models/backbones)!
 """
@@ -103,7 +99,7 @@ top_classes = predictions[0].argsort(axis=-1)
 """
 In order to decode the class mappings, we can construct a mapping from
 category indices to ImageNet class names.
-For conveneince, I've stored the ImageNet class mapping in a GitHub gist.
+For convenience, I've stored the ImageNet class mapping in a GitHub gist.
 Let's download and load it now.
 """
 classes = keras.utils.get_file(
@@ -119,7 +115,7 @@ print("Top two classes are:", top_two)
 
 """
 Great!  Both of these appear to be correct!
-However, the top class here is "Velvet".
+However, one of the classes is "Velvet".
 We're trying to classify Cats VS Dogs.
 We don't care about the velvet blanket!
 
@@ -159,12 +155,16 @@ resizing = keras_cv.layers.Resizing(
 
 def preprocess_inputs(image, label):
     image = tf.cast(image, tf.float32)
+    # Staticly resize images as we only iterate the dataset once.
     return resizing(image), tf.one_hot(label, num_classes)
 
 
-train_dataset = train_dataset.shuffle(10 * BATCH_SIZE).map(
-    preprocess_inputs, num_parallel_calls=AUTOTUNE
-)
+# Shuffle the dataset to increase diversity of batches.
+# 10*BATCH_SIZE follows the assumption that bigger machines can handle bigger
+# shuffle buffers.
+train_dataset = train_dataset.shuffle(
+    10 * BATCH_SIZE, reshuffle_each_iteration=True
+).map(preprocess_inputs, num_parallel_calls=AUTOTUNE)
 train_dataset = train_dataset.batch(BATCH_SIZE)
 
 images = next(iter(train_dataset.take(1)))[0]
@@ -173,13 +173,7 @@ keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 """
 Meow!
 
-Next let's construct our model:
-"""
-
-backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
-    "efficientnetv2_b0_imagenet",
-)
-"""
+Next let's construct our model.
 The use of imagenet in the preset name indicates that the backbone was
 pretrained on the ImageNet dataset.
 Pretrained backbones extract more information from our labeled examples by
@@ -188,14 +182,7 @@ leveraging patterns extracted from potentially much larger datasets.
 Next lets put together our classifier:
 """
 
-model = keras.Sequential(
-    [
-        backbone,
-        keras.layers.GlobalMaxPooling2D(),
-        keras.layers.Dropout(rate=0.5),
-        keras.layers.Dense(2, activation="softmax"),
-    ]
-)
+model = ImageClassifier.from_preset("efficientnetv2_b0_imagenet", num_classes=2)
 model.compile(
     loss="categorical_crossentropy",
     optimizer=tf.optimizers.SGD(learning_rate=0.01),
@@ -234,7 +221,7 @@ A standard benchmark for image classification is the ImageNet dataset, however
 due to licensing constraints we will use the CalTech 101 image classification
 dataset in this tutorial.
 While we use the simpler CalTech 101 dataset in this guide, the same training
-template may be used on ImageNet to achieve state of the art scores.
+template may be used on ImageNet to achieve near state-of-the-art scores.
 
 Let's start out by tackling data loading:
 """
@@ -280,7 +267,7 @@ keras_cv.visualization.plot_image_gallery(
 ## Data Augmentation
 
 In our previous finetuning exmaple, we performed a static resizing operation and
-did not include any image augmentation.
+did not utilize any image augmentation.
 This is because a single pass over the training set was sufficient to achieve
 decent results.
 When training to solve a more difficult task, you'll want to include data
@@ -288,7 +275,7 @@ augmentation in your data pipeline.
 
 Data augmentation is a technique to make your model robust to changes in input
 data such as lighting, cropping, and orientation.
-KerasCV includes some of the most useful augmentations in the keras_cv.layers
+KerasCV includes some of the most useful augmentations in the `keras_cv.layers`
 API.
 Creating an optimal pipeline of augmentations is an art, but in this section of
 the guide we'll offer some tips on best practices for classification.
@@ -296,7 +283,7 @@ the guide we'll offer some tips on best practices for classification.
 One caveat to be aware of with image data augmentation is that you must be careful
 to not shift your augmented data distribution too far from the original data
 distribution.
-The goal is to introduce noise to prevent overfitting and increase generalization,
+The goal is to prevent overfitting and increase generalization,
 but samples that lie completely out of the data distribution simply add noise to
 the training process.
 
@@ -479,7 +466,7 @@ cut_mix_or_mix_up = keras_cv.layers.RandomChoice([cut_mix, mix_up], batchwise=Tr
 augmenters += [cut_mix_or_mix_up]
 
 """
-Applying it to your training pipeline is easy:
+Now let's apply our final augmenter to the training data:
 """
 
 augmenter = keras.Sequential(augmenters)
@@ -496,8 +483,8 @@ keras_cv.visualization.plot_image_gallery(
 
 """
 We also need to resize our evaluation set to get dense batches of the image size
-expected by our model. We use the deterministic keras_cv.layers.Resizing in this
-case to avoid adding noise to our evaluation metric.
+expected by our model. We use the deterministic `keras_cv.layers.Resizing` in
+this case to avoid adding noise to our evaluation metric.
 """
 inference_resizing = keras_cv.layers.Resizing(
     IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True
@@ -510,13 +497,6 @@ inference_resizing = keras_cv.layers.Resizing(
 eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
 image_batch = next(iter(eval_ds.take(1)))["images"]
-keras_cv.visualization.plot_image_gallery(
-    image_batch,
-    rows=3,
-    cols=3,
-    value_range=(0, 255),
-    show=True,
-)
 keras_cv.visualization.plot_image_gallery(
     image_batch,
     rows=3,
@@ -545,7 +525,7 @@ Congratulations on making it this far!
 
 ## Optimizer Tuning
 
-To achieve optimal performance,we need to use a learning rate schedule instead
+To achieve optimal performance, we need to use a learning rate schedule instead
 of a single learning rate. While we won't go into detail on the Cosine decay
 with warmup schedule used here, [you can read more about it
 here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
@@ -634,11 +614,12 @@ optimizer = optimizers.SGD(
 )
 """
 At long last, we can now build our model and call `fit()`!
+`keras_cv.models.EfficientNetV2B0Backbone()` is a convenience alias for
+`keras_cv.models.EfficientNetV2Backbone.from_preset('efficientnetv2_b0')`.
+Note that this preset does not come with any pretrained weights.
 """
 
-backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
-    "efficientnetv2_b0",
-)
+backbone = keras_cv.models.EfficientNetV2B1Backbone()
 model = keras.Sequential(
     [
         backbone,
@@ -679,17 +660,20 @@ Congratulations!  You now know how to train a powerful image classifier from
 scratch in KerasCV.
 In practice, you'll likely want to combine transfer learning with an
 augmentation chain similar to what we constructed above.
-This tends to yield fast convergence and solid model robustness.
+Depending on the availability of labeled data for your application, training
+from scratch may or may not be more powerful than using transfer learning in
+addition to the data augmentations discussed above. For smaller datasets,
+pretrained models generally produce high accuracy and faster convergence.
 """
 
 """
 ## Conclusions
 
-While image classificaiton is perhaps the simplest problem in computer vision,
+While image classification is perhaps the simplest problem in computer vision,
 the modern landscape has numerous complex components.
-Luckily, KerasCV offers robust, production grade APIs to make assembling most
+Luckily, KerasCV offers robust, production-grade APIs to make assembling most
 of these components possible in one line of code.
-Through the use of KerasCV's `ImageClassifier` API, pretrained weights, and the
+Through the use of KerasCV's `ImageClassifier` API, pretrained weights, and
 KerasCV data augmentations you can assemble everything you need to train a
 powerful classifier in a few hundred lines of code!
 
