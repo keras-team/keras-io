@@ -182,7 +182,9 @@ leveraging patterns extracted from potentially much larger datasets.
 Next lets put together our classifier:
 """
 
-model = ImageClassifier.from_preset("efficientnetv2_b0_imagenet", num_classes=2)
+model = keras_cv.models.ImageClassifier.from_preset(
+    "efficientnetv2_b0_imagenet", num_classes=2
+)
 model.compile(
     loss="categorical_crossentropy",
     optimizer=tf.optimizers.SGD(learning_rate=0.01),
@@ -658,8 +660,6 @@ model.fit(
 """
 Congratulations!  You now know how to train a powerful image classifier from
 scratch in KerasCV.
-In practice, you'll likely want to combine transfer learning with an
-augmentation chain similar to what we constructed above.
 Depending on the availability of labeled data for your application, training
 from scratch may or may not be more powerful than using transfer learning in
 addition to the data augmentations discussed above. For smaller datasets,

@@ -30,13 +30,7 @@ visual reference for the complexity of the material:
 
 
 ```python
-!!pip install -q --upgrade git+https://github.com/keras-team/keras-cv.git tensorflow
-```
 
-
-
-
-```python
 import json
 import math
 import keras_cv
@@ -50,18 +44,13 @@ from tensorflow.keras.optimizers import schedules
 from keras import metrics
 
 ```
-<div class="k-default-codeblock">
-```
-[]
 
-```
-</div>
 ---
 ## Inference with a pretrained classifier
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
 
-Let's get started with the simples KerasCV API: a pretrained classifier.
+Let's get started with the simplest KerasCV API: a pretrained classifier.
 In this example, we will construct a classifier that was
 pretrained on the ImageNet dataset.
 We'll use this model to solve the age old "Cat or Dog" problem.
@@ -74,7 +63,7 @@ EfficientNetV2B0 Backbone.
 EfficientNetV2B0 is a great starting model when constructing an image
 classification pipeline.
 This architecture manages to achieve high accuracy, while using a
-parameter count of `7M`.
+parameter count of 7M.
 If an EfficientNetV2B0 is not powerful enough for the task you are hoping to
 solve, be sure to check out [KerasCV's other available Backbones](https://github.com/keras-team/keras-cv/tree/master/keras_cv/models/backbones)!
 
@@ -105,7 +94,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_7_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_6_0.png)
     
 
 
@@ -133,7 +122,7 @@ top_classes = predictions[0].argsort(axis=-1)
 
 In order to decode the class mappings, we can construct a mapping from
 category indices to ImageNet class names.
-For conveneince, I've stored the ImageNet class mapping in a GitHub gist.
+For convenience, I've stored the ImageNet class mapping in a GitHub gist.
 Let's download and load it now.
 
 
@@ -160,7 +149,7 @@ Top two classes are: ['Egyptian cat', 'velvet']
 ```
 </div>
 Great!  Both of these appear to be correct!
-However, the top class here is "Velvet".
+However, one of the classes is "Velvet".
 We're trying to classify Cats VS Dogs.
 We don't care about the velvet blanket!
 
@@ -201,12 +190,16 @@ resizing = keras_cv.layers.Resizing(
 
 def preprocess_inputs(image, label):
     image = tf.cast(image, tf.float32)
+    # Staticly resize images as we only iterate the dataset once.
     return resizing(image), tf.one_hot(label, num_classes)
 
 
-train_dataset = train_dataset.shuffle(10 * BATCH_SIZE).map(
-    preprocess_inputs, num_parallel_calls=AUTOTUNE
-)
+# Shuffle the dataset to increase diversity of batches.
+# 10*BATCH_SIZE follows the assumption that bigger machines can handle bigger
+# shuffle buffers.
+train_dataset = train_dataset.shuffle(
+    10 * BATCH_SIZE, reshuffle_each_iteration=True
+).map(preprocess_inputs, num_parallel_calls=AUTOTUNE)
 train_dataset = train_dataset.batch(BATCH_SIZE)
 
 images = next(iter(train_dataset.take(1)))[0]
@@ -215,21 +208,13 @@ keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_17_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_16_0.png)
     
 
 
 Meow!
 
-Next let's construct our model:
-
-
-```python
-backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
-    "efficientnetv2_b0_imagenet",
-)
-```
-
+Next let's construct our model.
 The use of imagenet in the preset name indicates that the backbone was
 pretrained on the ImageNet dataset.
 Pretrained backbones extract more information from our labeled examples by
@@ -239,13 +224,8 @@ Next lets put together our classifier:
 
 
 ```python
-model = keras.Sequential(
-    [
-        backbone,
-        keras.layers.GlobalMaxPooling2D(),
-        keras.layers.Dropout(rate=0.5),
-        keras.layers.Dense(2, activation="softmax"),
-    ]
+model = keras_cv.models.ImageClassifier.from_preset(
+    "efficientnetv2_b0_imagenet", num_classes=2
 )
 model.compile(
     loss="categorical_crossentropy",
@@ -265,58 +245,58 @@ model.fit(train_dataset)
 
 <div class="k-default-codeblock">
 ```
-217/727 [=======>......................] - ETA: 26s - loss: 0.8715 - accuracy: 0.9062
+217/727 [=======>......................] - ETA: 26s - loss: 0.3727 - accuracy: 0.9234
 
 Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
 
-252/727 [=========>....................] - ETA: 24s - loss: 0.7876 - accuracy: 0.9116
+253/727 [=========>....................] - ETA: 24s - loss: 0.3518 - accuracy: 0.9265
 
 Warning: unknown JFIF revision number 0.00
 
-265/727 [=========>....................] - ETA: 23s - loss: 0.7657 - accuracy: 0.9132
+265/727 [=========>....................] - ETA: 23s - loss: 0.3464 - accuracy: 0.9277
 
 Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
 
-309/727 [===========>..................] - ETA: 21s - loss: 0.6827 - accuracy: 0.9205
+309/727 [===========>..................] - ETA: 21s - loss: 0.3253 - accuracy: 0.9313
 
 Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
 
-357/727 [=============>................] - ETA: 19s - loss: 0.6189 - accuracy: 0.9249
+357/727 [=============>................] - ETA: 19s - loss: 0.3054 - accuracy: 0.9353
 
 Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
 Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
 
-374/727 [==============>...............] - ETA: 18s - loss: 0.6011 - accuracy: 0.9266
+373/727 [==============>...............] - ETA: 18s - loss: 0.2987 - accuracy: 0.9368
 
 Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
 
-534/727 [=====================>........] - ETA: 9s - loss: 0.4682 - accuracy: 0.9376 
+533/727 [====================>.........] - ETA: 9s - loss: 0.2539 - accuracy: 0.9431 
 
 Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
 
-636/727 [=========================>....] - ETA: 4s - loss: 0.4205 - accuracy: 0.9421
+635/727 [=========================>....] - ETA: 4s - loss: 0.2323 - accuracy: 0.9475
 
 Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
 
-652/727 [=========================>....] - ETA: 3s - loss: 0.4171 - accuracy: 0.9423
+652/727 [=========================>....] - ETA: 3s - loss: 0.2290 - accuracy: 0.9479
 
 Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
 
-666/727 [==========================>...] - ETA: 3s - loss: 0.4120 - accuracy: 0.9428
+666/727 [==========================>...] - ETA: 3s - loss: 0.2263 - accuracy: 0.9486
 
 Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
 
-702/727 [===========================>..] - ETA: 1s - loss: 0.3968 - accuracy: 0.9442
+703/727 [============================>.] - ETA: 1s - loss: 0.2205 - accuracy: 0.9496
 
 Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
 
-711/727 [============================>.] - ETA: 0s - loss: 0.3942 - accuracy: 0.9443
+711/727 [============================>.] - ETA: 0s - loss: 0.2193 - accuracy: 0.9497
 
 Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
 
-727/727 [==============================] - 62s 52ms/step - loss: 0.3872 - accuracy: 0.9450
+727/727 [==============================] - 61s 52ms/step - loss: 0.2168 - accuracy: 0.9501
 
-<keras.callbacks.History at 0x7f7e9017f9a0>
+<keras.callbacks.History at 0x7f3d08171ab0>
 
 ```
 </div>
@@ -349,7 +329,7 @@ A standard benchmark for image classification is the ImageNet dataset, however
 due to licensing constraints we will use the CalTech 101 image classification
 dataset in this tutorial.
 While we use the simpler CalTech 101 dataset in this guide, the same training
-template may be used on ImageNet to achieve state of the art scores.
+template may be used on ImageNet to achieve near state-of-the-art scores.
 
 Let's start out by tackling data loading:
 
@@ -397,7 +377,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_30_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_27_0.png)
     
 
 
@@ -405,7 +385,7 @@ keras_cv.visualization.plot_image_gallery(
 ## Data Augmentation
 
 In our previous finetuning exmaple, we performed a static resizing operation and
-did not include any image augmentation.
+did not utilize any image augmentation.
 This is because a single pass over the training set was sufficient to achieve
 decent results.
 When training to solve a more difficult task, you'll want to include data
@@ -413,7 +393,7 @@ augmentation in your data pipeline.
 
 Data augmentation is a technique to make your model robust to changes in input
 data such as lighting, cropping, and orientation.
-KerasCV includes some of the most useful augmentations in the keras_cv.layers
+KerasCV includes some of the most useful augmentations in the `keras_cv.layers`
 API.
 Creating an optimal pipeline of augmentations is an art, but in this section of
 the guide we'll offer some tips on best practices for classification.
@@ -421,7 +401,7 @@ the guide we'll offer some tips on best practices for classification.
 One caveat to be aware of with image data augmentation is that you must be careful
 to not shift your augmented data distribution too far from the original data
 distribution.
-The goal is to introduce noise to prevent overfitting and increase generalization,
+The goal is to prevent overfitting and increase generalization,
 but samples that lie completely out of the data distribution simply add noise to
 the training process.
 
@@ -453,7 +433,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_32_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_29_0.png)
     
 
 
@@ -500,7 +480,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_34_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_31_0.png)
     
 
 
@@ -544,7 +524,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_36_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_33_0.png)
     
 
 
@@ -570,7 +550,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_38_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_35_0.png)
     
 
 
@@ -605,7 +585,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_40_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_37_0.png)
     
 
 
@@ -641,7 +621,7 @@ keras_cv.visualization.plot_image_gallery(
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_42_0.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_39_0.png)
     
 
 
@@ -657,7 +637,7 @@ cut_mix_or_mix_up = keras_cv.layers.RandomChoice([cut_mix, mix_up], batchwise=Tr
 augmenters += [cut_mix_or_mix_up]
 ```
 
-Applying it to your training pipeline is easy:
+Now let's apply our final augmenter to the training data:
 
 
 ```python
@@ -683,13 +663,13 @@ WARNING:tensorflow:Layers in a Sequential model should only have a single input 
 ```
 </div>
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_46_2.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_43_2.png)
     
 
 
 We also need to resize our evaluation set to get dense batches of the image size
-expected by our model. We use the deterministic keras_cv.layers.Resizing in this
-case to avoid adding noise to our evaluation metric.
+expected by our model. We use the deterministic `keras_cv.layers.Resizing` in
+this case to avoid adding noise to our evaluation metric.
 
 
 ```python
@@ -711,24 +691,11 @@ keras_cv.visualization.plot_image_gallery(
     value_range=(0, 255),
     show=True,
 )
-keras_cv.visualization.plot_image_gallery(
-    image_batch,
-    rows=3,
-    cols=3,
-    value_range=(0, 255),
-    show=True,
-)
 ```
 
 
     
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_48_0.png)
-    
-
-
-
-    
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_48_1.png)
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_45_0.png)
     
 
 
@@ -753,7 +720,7 @@ Congratulations on making it this far!
 ---
 ## Optimizer Tuning
 
-To achieve optimal performance,we need to use a learning rate schedule instead
+To achieve optimal performance, we need to use a learning rate schedule instead
 of a single learning rate. While we won't go into detail on the Cosine decay
 with warmup schedule used here, [you can read more about it
 here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
@@ -845,12 +812,13 @@ optimizer = optimizers.SGD(
 ```
 
 At long last, we can now build our model and call `fit()`!
+`keras_cv.models.EfficientNetV2B0Backbone()` is a convenience alias for
+`keras_cv.models.EfficientNetV2Backbone.from_preset('efficientnetv2_b0')`.
+Note that this preset does not come with any pretrained weights.
 
 
 ```python
-backbone = keras_cv.models.EfficientNetV2Backbone.from_preset(
-    "efficientnetv2_b0",
-)
+backbone = keras_cv.models.EfficientNetV2B1Backbone()
 model = keras.Sequential(
     [
         backbone,
@@ -897,26 +865,27 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-96/96 [==============================] - 26s 157ms/step - loss: 8.1137 - categorical_accuracy: 0.0124 - top_k_categorical_accuracy: 0.0493 - val_loss: 4.6566 - val_categorical_accuracy: 0.0046 - val_top_k_categorical_accuracy: 0.2281
+96/96 [==============================] - 29s 171ms/step - loss: 8.2322 - categorical_accuracy: 0.0095 - top_k_categorical_accuracy: 0.0484 - val_loss: 4.6036 - val_categorical_accuracy: 0.0150 - val_top_k_categorical_accuracy: 0.0832
 
-<keras.callbacks.History at 0x7f7d88167100>
+<keras.callbacks.History at 0x7f32b677fcd0>
 
 ```
 </div>
 Congratulations!  You now know how to train a powerful image classifier from
 scratch in KerasCV.
-In practice, you'll likely want to combine transfer learning with an
-augmentation chain similar to what we constructed above.
-This tends to yield fast convergence and solid model robustness.
+Depending on the availability of labeled data for your application, training
+from scratch may or may not be more powerful than using transfer learning in
+addition to the data augmentations discussed above. For smaller datasets,
+pretrained models generally produce high accuracy and faster convergence.
 
 ---
 ## Conclusions
 
-While image classificaiton is perhaps the simplest problem in computer vision,
+While image classification is perhaps the simplest problem in computer vision,
 the modern landscape has numerous complex components.
-Luckily, KerasCV offers robust, production grade APIs to make assembling most
+Luckily, KerasCV offers robust, production-grade APIs to make assembling most
 of these components possible in one line of code.
-Through the use of KerasCV's `ImageClassifier` API, pretrained weights, and the
+Through the use of KerasCV's `ImageClassifier` API, pretrained weights, and
 KerasCV data augmentations you can assemble everything you need to train a
 powerful classifier in a few hundred lines of code!
 
