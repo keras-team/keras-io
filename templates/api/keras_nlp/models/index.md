@@ -1,45 +1,15 @@
 # KerasNLP Models
 
-KerasNLP contains end-to-end implementations of popular model
-architectures. These models can be created in two ways:
+KerasNLP contains end-to-end implementations of popular model architectures.
+These models can be created in two ways:
 
 - Through the `from_preset()` constructor, which instantiates an object with
   a pre-trained configurations, vocabularies, and (optionally) weights.
-  Available preset names are listed on this page.
+- Through custom configuration controlled by the user.
 
-```python
-classifier = keras_nlp.models.BertClassifier.from_preset("bert_base_en_uncased")
-```
-
-- Through custom configuration controlled by the user. To do this, simply
-  pass the desired configuration parameters to the default constructors of the
-  symbols documented below.
-
-```python
-tokenizer = keras_nlp.models.BertTokenizer(
-    vocabulary="./vocab.txt",
-)
-preprocessor = keras_nlp.models.BertPreprocessor(
-    tokenizer=tokenizer,
-    sequence_length=128,
-)
-backbone = keras_nlp.models.BertBackbone(
-    vocabulary_size=30552,
-    num_layers=12,
-    num_heads=12,
-    hidden_dim=768,
-    intermediate_dim=3072,
-    max_sequence_length=128,
-)
-classifier = keras_nlp.models.BertClassifier(
-    backbone=backbone,
-    preprocessor=preprocessor,
-    num_classes=4,
-)
-```
-
-For a more in depth introduction to how our API fits together, see the
-[getting started guide](guides/keras_nlp/getting_started/).
+Below, we list all presets available in the library. For more detailed usage,
+browse the docstring for a particular class. For an in depth introduction
+to our API, see the [getting started guide](guides/keras_nlp/getting_started/).
 
 ## Backbone presets
 
