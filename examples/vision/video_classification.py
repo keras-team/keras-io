@@ -16,7 +16,9 @@ actions, like cricket shot, punching, biking, etc. This dataset is commonly used
 build action recognizers, which are an application of video classification.
 
 The subset (subsampling) of the UCF-101 dataset that we will be working on is available
-at: https://zenodo.org/record/7882861#.ZE-UTC1Bxqs and will be downloaded using the `wget`
+at: https://zenodo.org/record/7924745#.ZFztKy1Bxqs (DOI:
+[10.5281/zenodo.7924745](https://doi.org/10.5281/zenodo.7924745)) and will be downloaded
+using the `wget`
 command. On macOS, install the `wget` using `brew install wget`.
 
 A video consists of an ordered sequence of frames. Each frame contains *spatial*
@@ -50,8 +52,8 @@ notebook is not entirely compatible with this working version of the example, se
 """
 
 """shell
-wget -q https://zenodo.org/record/7882861/files/ucf101_top10.tar.gz -O ucf101_top10.tar.gz
-tar xf ucf101_top10.tar.gz
+wget -q https://zenodo.org/record/7924745/files/ucf101_top5.tar.gz -O ucf101_top5.tar.gz
+tar xf ucf101_top5.tar.gz
 """
 
 """
@@ -90,8 +92,8 @@ NUM_FEATURES = 2048
 ## Data preparation
 """
 
-train_df = pd.read_csv("ucf101_top10/train.csv")
-test_df = pd.read_csv("ucf101_top10/test.csv")
+train_df = pd.read_csv("ucf101_top5/train.csv")
+test_df = pd.read_csv("ucf101_top5/test.csv")
 
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
@@ -245,8 +247,8 @@ def prepare_all_videos(df, root_dir):
     return (frame_features, frame_masks), labels
 
 
-train_data, train_labels = prepare_all_videos(train_df, "ucf101_top10/train")
-test_data, test_labels = prepare_all_videos(test_df, "ucf101_top10/test")
+train_data, train_labels = prepare_all_videos(train_df, "ucf101_top5/train")
+test_data, test_labels = prepare_all_videos(test_df, "ucf101_top5/test")
 
 print(f"Frame features in train set: {train_data[0].shape}")
 print(f"Frame masks in train set: {train_data[1].shape}")
@@ -319,6 +321,7 @@ training examples. This number of training examples is low with respect to the s
 model being used that has 99,909 trainable parameters. You are encouraged to sample more
 data from the UCF101 dataset using [the notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb) mentioned above and train the same model.
 """
+
 """
 ## Inference
 """
@@ -367,7 +370,7 @@ def to_gif(images):
 
 
 test_video = np.random.choice(test_df["video_name"].values.tolist())
-test_video_path = os.path.join("ucf101_top10", "test", test_video)
+test_video_path = os.path.join("ucf101_top5", "test", test_video)
 print(f"Test video path: {test_video_path}")
 test_frames = sequence_prediction(test_video_path)
 to_gif(test_frames[:MAX_SEQ_LENGTH])
