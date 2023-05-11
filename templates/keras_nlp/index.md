@@ -28,7 +28,7 @@ check out our
 
 * [KerasNLP API reference](/api/keras_nlp/)
 * [KerasNLP on GitHub](https://github.com/keras-team/keras-nlp)
-* [List of available models and presets](https://keras.io/api/keras_nlp/models/)
+* [List of available models and presets](/api/keras_nlp/models/)
 ---
 ## Guides
 
