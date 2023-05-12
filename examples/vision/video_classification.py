@@ -18,8 +18,7 @@ build action recognizers, which are an application of video classification.
 The subset (subsampling) of the UCF-101 dataset that we will be working on is available
 at: https://zenodo.org/record/7924745#.ZFztKy1Bxqs (DOI:
 [10.5281/zenodo.7924745](https://doi.org/10.5281/zenodo.7924745)) and will be downloaded
-using the `wget`
-command. On macOS, install the `wget` using `brew install wget`.
+using the [tf.keras.utils.get_file](https://www.tensorflow.org/api_docs/python/tf/keras/utils/get_file) function.
 
 A video consists of an ordered sequence of frames. Each frame contains *spatial*
 information, and the sequence of those frames contains *temporal* information. To model
@@ -63,9 +62,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 In order to keep the runtime of this example relatively short, we will be using a
 subsampled version of the original UCF101 dataset. You can refer to
-[this
-notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
-notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
+[this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
 to know how the subsampling was done.
 
 #### Note
