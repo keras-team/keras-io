@@ -1,6 +1,6 @@
 """
 Title: Video Classification with a CNN-RNN Architecture
-Author: [Sayak Paul](https://twitter.com/RisingSayak), [Mikolaj Buchwald](https://www.linkedin.com/in/mikolaj-buchwald/)
+Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
 Last modified: 2023/05/12
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
@@ -408,4 +408,13 @@ equally important to decide its category. In those situations, putting a
 sequence model will likely yield better results.
 * Following [this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11),
 you can implement Transformers-based models for processing videos.
+
+
+## Acknowledgements
+
+In May 2023 [Mikolaj Buchwald](https://www.linkedin.com/in/mikolaj-buchwald/) introduced some modifications to the
+original example by [Sayak Paul](https://twitter.com/RisingSayak), in order to improve/fix this example. These changes
+included: providing a new link to the dataset, changing the download method (from `wget` to keras' native function for
+fetching the data), and the introduction of the `tqdm` training progress visualization.
+
 """
