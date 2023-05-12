@@ -2,7 +2,7 @@
 Title: Video Classification with a CNN-RNN Architecture
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Mikolaj Buchwald](https://www.linkedin.com/in/mikolaj-buchwald/)
 Date created: 2021/05/28
-Last modified: 2023/05/01
+Last modified: 2023/05/12
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 Accelerator: GPU
 """
@@ -38,25 +38,6 @@ pip install -q git+https://github.com/tensorflow/docs
 """
 
 """
-## Data collection
-
-In order to keep the runtime of this example relatively short, we will be using a
-subsampled version of the original UCF101 dataset. You can refer to
-[this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
-to know how the subsampling was done.
-
-#### Note
-
-There was an issue with the link to the dataset, and it was resolved, but at this moment the dataset generation
-notebook is not entirely compatible with this working version of the example, see: https://github.com/keras-team/keras-io/issues/1342
-"""
-
-"""shell
-wget -q https://zenodo.org/record/7924745/files/ucf101_top5.tar.gz -O ucf101_top5.tar.gz
-tar xf ucf101_top5.tar.gz
-"""
-
-"""
 ## Setup
 """
 
@@ -78,6 +59,39 @@ from tqdm import tqdm
 ssl._create_default_https_context = ssl._create_unverified_context
 
 """
+## Data collection
+
+In order to keep the runtime of this example relatively short, we will be using a
+subsampled version of the original UCF101 dataset. You can refer to
+[this
+notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
+notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
+to know how the subsampling was done.
+
+#### Note
+
+There was an issue with the link to the dataset, and it was resolved, but at this moment
+the dataset generation
+notebook is not entirely compatible with this working version of the example, see:
+https://github.com/keras-team/keras-io/issues/1342
+"""
+
+# `fname` in the following function is an equivalent to
+# `wget`'s `-O` parameter. It is needed so that the download
+# function know under which name to save the downloaded file.
+file_path = keras.utils.get_file(
+    fname="ucf101_top5.tar.gz",
+    origin="https://zenodo.org/record/7924745/files/ucf101_top5.tar.gz",
+    extract=True,
+)
+
+keras_datasets_dir = os.path.dirname(file_path)
+
+# Assuming that you know of the contents of the archive to be extracted:
+dataset_dir = os.path.join(keras_datasets_dir, "ucf101_top5")
+dataset_dir
+
+"""
 ## Define hyperparameters
 """
 
@@ -92,8 +106,8 @@ NUM_FEATURES = 2048
 ## Data preparation
 """
 
-train_df = pd.read_csv("ucf101_top5/train.csv")
-test_df = pd.read_csv("ucf101_top5/test.csv")
+train_df = pd.read_csv(os.path.join(dataset_dir, "train.csv"))
+test_df = pd.read_csv(os.path.join(dataset_dir, "test.csv"))
 
 print(f"Total videos for training: {len(train_df)}")
 print(f"Total videos for testing: {len(test_df)}")
@@ -247,8 +261,10 @@ def prepare_all_videos(df, root_dir):
     return (frame_features, frame_masks), labels
 
 
-train_data, train_labels = prepare_all_videos(train_df, "ucf101_top5/train")
-test_data, test_labels = prepare_all_videos(test_df, "ucf101_top5/test")
+train_data, train_labels = prepare_all_videos(
+    train_df, os.path.join(dataset_dir, "train")
+)
+test_data, test_labels = prepare_all_videos(test_df, os.path.join(dataset_dir, "test"))
 
 print(f"Frame features in train set: {train_data[0].shape}")
 print(f"Frame masks in train set: {train_data[1].shape}")
@@ -370,7 +386,7 @@ def to_gif(images):
 
 
 test_video = np.random.choice(test_df["video_name"].values.tolist())
-test_video_path = os.path.join("ucf101_top5", "test", test_video)
+test_video_path = os.path.join(dataset_dir, "test", test_video)
 print(f"Test video path: {test_video_path}")
 test_frames = sequence_prediction(test_video_path)
 to_gif(test_frames[:MAX_SEQ_LENGTH])
