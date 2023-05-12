@@ -64,13 +64,6 @@ In order to keep the runtime of this example relatively short, we will be using 
 subsampled version of the original UCF101 dataset. You can refer to
 [this notebook](https://colab.research.google.com/github/sayakpaul/Action-Recognition-in-TensorFlow/blob/main/Data_Preparation_UCF101.ipynb)
 to know how the subsampling was done.
-
-#### Note
-
-There was an issue with the link to the dataset, and it was resolved, but at this moment
-the dataset generation
-notebook is not entirely compatible with this working version of the example, see:
-https://github.com/keras-team/keras-io/issues/1342
 """
 
 # `fname` in the following function is an equivalent to
