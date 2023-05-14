@@ -629,23 +629,6 @@ LAYERS_MASTER = {
             ],
         },
         {
-            "path": "locally_connected_layers/",
-            "title": "Locally-connected layers",
-            "toc": True,
-            "children": [
-                {
-                    "path": "locall_connected1d",
-                    "title": "LocallyConnected1D layer",
-                    "generate": ["tensorflow.keras.layers.LocallyConnected1D"],
-                },
-                {
-                    "path": "locall_connected2d",
-                    "title": "LocallyConnected2D layer",
-                    "generate": ["tensorflow.keras.layers.LocallyConnected2D"],
-                },
-            ],
-        },
-        {
             "path": "activation_layers/",
             "title": "Activation layers",
             "toc": True,
