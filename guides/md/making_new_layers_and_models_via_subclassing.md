@@ -63,8 +63,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[0.07264713 0.14730662 0.08933581 0.03730425]
- [0.07264713 0.14730662 0.08933581 0.03730425]], shape=(2, 4), dtype=float32)
+[[-0.25781104 -0.14223234  0.02061915  0.03538814]
+ [-0.25781104 -0.14223234  0.02061915  0.03538814]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -103,8 +103,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.02228201  0.04957826 -0.09935614 -0.01868932]
- [-0.02228201  0.04957826 -0.09935614 -0.01868932]], shape=(2, 4), dtype=float32)
+[[ 0.09950162 -0.04441277  0.12963964 -0.06469987]
+ [ 0.09950162 -0.04441277  0.12963964 -0.06469987]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -286,6 +286,7 @@ calling `self.add_loss(value)`:
 
 
 ```python
+
 # A layer that creates an activity regularization loss
 class ActivityRegularizationLayer(keras.layers.Layer):
     def __init__(self, rate=1e-2):
@@ -356,7 +357,7 @@ print(layer.losses)
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.0024072158>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.0016893063>]
 
 ```
 </div>
@@ -409,94 +410,10 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 52ms/step - loss: 0.0717
-1/1 [==============================] - 0s 23ms/step - loss: 0.0069
+1/1 [==============================] - 0s 65ms/step - loss: 0.0626
+1/1 [==============================] - 0s 25ms/step - loss: 0.0066
 
-<keras.callbacks.History at 0x7fa01c68f7f0>
-
-```
-</div>
----
-## The `add_metric()` method
-
-Similarly to `add_loss()`, layers also have an `add_metric()` method
-for tracking the moving average of a quantity during training.
-
-Consider the following layer: a "logistic endpoint" layer.
-It takes as inputs predictions & targets, it computes a loss which it tracks
-via `add_loss()`, and it computes an accuracy scalar, which it tracks via
-`add_metric()`.
-
-
-```python
-
-class LogisticEndpoint(keras.layers.Layer):
-    def __init__(self, name=None):
-        super().__init__(name=name)
-        self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-        self.accuracy_fn = keras.metrics.BinaryAccuracy()
-
-    def call(self, targets, logits, sample_weights=None):
-        # Compute the training-time loss value and add it
-        # to the layer using `self.add_loss()`.
-        loss = self.loss_fn(targets, logits, sample_weights)
-        self.add_loss(loss)
-
-        # Log accuracy as a metric and add it
-        # to the layer using `self.add_metric()`.
-        acc = self.accuracy_fn(targets, logits, sample_weights)
-        self.add_metric(acc, name="accuracy")
-
-        # Return the inference-time prediction tensor (for `.predict()`).
-        return tf.nn.softmax(logits)
-
-```
-
-Metrics tracked in this way are accessible via `layer.metrics`:
-
-
-```python
-layer = LogisticEndpoint()
-
-targets = tf.ones((2, 2))
-logits = tf.ones((2, 2))
-y = layer(targets, logits)
-
-print("layer.metrics:", layer.metrics)
-print("current accuracy value:", float(layer.metrics[0].result()))
-```
-
-<div class="k-default-codeblock">
-```
-layer.metrics: [<keras.metrics.BinaryAccuracy object at 0x7fa01c640850>]
-current accuracy value: 1.0
-
-```
-</div>
-Just like for `add_loss()`, these metrics are tracked by `fit()`:
-
-
-```python
-inputs = keras.Input(shape=(3,), name="inputs")
-targets = keras.Input(shape=(10,), name="targets")
-logits = keras.layers.Dense(10)(inputs)
-predictions = LogisticEndpoint(name="predictions")(targets, logits)
-
-model = keras.Model(inputs=[inputs, targets], outputs=predictions)
-model.compile(optimizer="adam")
-
-data = {
-    "inputs": np.random.random((3, 3)),
-    "targets": np.random.random((3, 10)),
-}
-model.fit(data)
-```
-
-<div class="k-default-codeblock">
-```
-1/1 [==============================] - 0s 126ms/step - loss: 0.7173 - binary_accuracy: 0.0000e+00
-
-<keras.callbacks.History at 0x7fa01c695820>
+<keras.callbacks.History at 0x2b796ecb0>
 
 ```
 </div>
@@ -713,8 +630,8 @@ Here's what you've learned so far:
 - A `Layer` encapsulate a state (created in `__init__()` or `build()`) and some
 computation (defined in `call()`).
 - Layers can be recursively nested to create new, bigger computation blocks.
-- Layers can create and track losses (typically regularization losses) as well
-as metrics, via `add_loss()` and `add_metric()`
+- Layers can create and track losses (typically regularization losses)
+via `add_loss()`.
 - The outer container, the thing you want to train, is a `Model`. A `Model` is
 just like a `Layer`, but with added training and serialization utilities.
 
@@ -842,14 +759,16 @@ for epoch in range(epochs):
 
 <div class="k-default-codeblock">
 ```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+
 Start of epoch 0
-step 0: mean loss = 0.3313
-step 100: mean loss = 0.1258
-step 200: mean loss = 0.0993
-step 300: mean loss = 0.0893
-step 400: mean loss = 0.0843
+step 0: mean loss = 0.3363
+step 100: mean loss = 0.1257
+step 200: mean loss = 0.0992
+step 300: mean loss = 0.0892
+step 400: mean loss = 0.0842
 step 500: mean loss = 0.0809
-step 600: mean loss = 0.0788
+step 600: mean loss = 0.0787
 step 700: mean loss = 0.0771
 step 800: mean loss = 0.0760
 step 900: mean loss = 0.0750
@@ -882,12 +801,15 @@ vae.fit(x_train, x_train, epochs=2, batch_size=64)
 
 <div class="k-default-codeblock">
 ```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
+
 Epoch 1/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.0746
+938/938 [==============================] - 2s 1ms/step - loss: 0.0746
 Epoch 2/2
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<keras.callbacks.History at 0x7fa01c48a250>
+<keras.callbacks.History at 0x2b796dab0>
 
 ```
 </div>
@@ -938,14 +860,17 @@ vae.fit(x_train, x_train, epochs=3, batch_size=64)
 
 <div class="k-default-codeblock">
 ```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
+
 Epoch 1/3
-938/938 [==============================] - 1s 1ms/step - loss: 0.0746
+938/938 [==============================] - 2s 1ms/step - loss: 0.0746
 Epoch 2/3
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 Epoch 3/3
 938/938 [==============================] - 1s 1ms/step - loss: 0.0676
 
-<keras.callbacks.History at 0x7fa01c2f76a0>
+<keras.callbacks.History at 0x2b7ce1780>
 
 ```
 </div>

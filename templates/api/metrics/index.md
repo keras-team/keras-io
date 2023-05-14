@@ -185,35 +185,3 @@ print('Intermediate result:', float(m.result()))
 m.update_state([1, 1, 1, 1], [0, 1, 1, 0])
 print('Final result:', float(m.result()))
 ```
-
-
----
-
-## The `add_metric()` API
-
-When writing the forward pass of a custom layer or a subclassed model,
-you may sometimes want to log certain quantities on the fly, as metrics.
-In such cases, you can use the `add_metric()` method.
-
-Let's say you want to log as metric the mean of the activations of a Dense-like custom layer.
-You could do the following:
-
-```python
-class DenseLike(Layer):
-  """y = w.x + b"""
-
-  ...
-
-  def call(self, inputs):
-      output = tf.matmul(inputs, self.w) + self.b
-      self.add_metric(tf.reduce_mean(output), aggregation='mean', name='activation_mean')
-      return output
-```
-
-The quantity will then tracked under the name "activation_mean". The value tracked will be
-the average of the per-batch metric metric values (as specified by `aggregation='mean'`).
-
-See [the `add_metric()` documentation](/api/layers/base_layer/#add_metric-method) for more details.
-
-
-

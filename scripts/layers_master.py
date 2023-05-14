@@ -17,7 +17,6 @@ LAYERS_MASTER = {
                 "tensorflow.keras.layers.Layer.set_weights",
                 "tensorflow.keras.Model.get_config",
                 "tensorflow.keras.layers.Layer.add_loss",
-                "tensorflow.keras.layers.Layer.add_metric",
                 "tensorflow.keras.layers.Layer.losses",
                 "tensorflow.keras.layers.Layer.metrics",
                 "tensorflow.keras.layers.Layer.dynamic",

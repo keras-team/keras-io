@@ -103,6 +103,13 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 We call `fit()`, which will train the model by slicing the data into "batches" of size
 `batch_size`, and repeatedly iterating over the entire dataset for a given number of
 `epochs`.
@@ -126,9 +133,9 @@ history = model.fit(
 ```
 Fit model on training data
 Epoch 1/2
-782/782 [==============================] - 1s 836us/step - loss: 0.3430 - sparse_categorical_accuracy: 0.9022 - val_loss: 0.1762 - val_sparse_categorical_accuracy: 0.9499
+782/782 [==============================] - 1s 787us/step - loss: 0.3439 - sparse_categorical_accuracy: 0.9021 - val_loss: 0.1775 - val_sparse_categorical_accuracy: 0.9505
 Epoch 2/2
-782/782 [==============================] - 1s 732us/step - loss: 0.1616 - sparse_categorical_accuracy: 0.9520 - val_loss: 0.1328 - val_sparse_categorical_accuracy: 0.9619
+782/782 [==============================] - 1s 672us/step - loss: 0.1649 - sparse_categorical_accuracy: 0.9510 - val_loss: 0.1440 - val_sparse_categorical_accuracy: 0.9599
 
 ```
 </div>
@@ -145,10 +152,10 @@ history.history
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.34301409125328064, 0.16158528625965118],
- 'sparse_categorical_accuracy': [0.9021999835968018, 0.951960027217865],
- 'val_loss': [0.17617398500442505, 0.13279496133327484],
- 'val_sparse_categorical_accuracy': [0.9498999714851379, 0.961899995803833]}
+{'loss': [0.3438594937324524, 0.16489940881729126],
+ 'sparse_categorical_accuracy': [0.9021199941635132, 0.9510200023651123],
+ 'val_loss': [0.17748108506202698, 0.1440342217683792],
+ 'val_sparse_categorical_accuracy': [0.9505000114440918, 0.9599000215530396]}
 
 ```
 </div>
@@ -171,9 +178,10 @@ print("predictions shape:", predictions.shape)
 <div class="k-default-codeblock">
 ```
 Evaluate on test data
-79/79 [==============================] - 0s 515us/step - loss: 0.1430 - sparse_categorical_accuracy: 0.9571
-test loss, test acc: [0.1430177092552185, 0.957099974155426]
+79/79 [==============================] - 0s 454us/step - loss: 0.1472 - sparse_categorical_accuracy: 0.9549
+test loss, test acc: [0.1472143679857254, 0.9549000263214111]
 Generate predictions for 3 samples
+1/1 [==============================] - 0s 32ms/step
 predictions shape: (3, 10)
 
 ```
@@ -197,6 +205,13 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 The `metrics` argument should be a list -- your model can have any number of metrics.
 
 If your model has multiple outputs, you can specify different losses and metrics for
@@ -293,9 +308,12 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 664us/step - loss: 0.0159
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-<keras.callbacks.History at 0x7fe1bc54c130>
+782/782 [==============================] - 1s 667us/step - loss: 0.0159
+
+<keras.callbacks.History at 0x297874ac0>
 
 ```
 </div>
@@ -337,9 +355,12 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 671us/step - loss: 0.0389
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-<keras.callbacks.History at 0x7fe1bc493850>
+782/782 [==============================] - 1s 688us/step - loss: 0.0387
+
+<keras.callbacks.History at 0x29d6d5990>
 
 ```
 </div>
@@ -396,9 +417,12 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 674us/step - loss: 0.0606
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-<keras.callbacks.History at 0x7fe1bc340880>
+782/782 [==============================] - 1s 685us/step - loss: 0.0610
+
+<keras.callbacks.History at 0x297a1eec0>
 
 ```
 </div>
@@ -457,14 +481,17 @@ model.fit(x_train, y_train, batch_size=64, epochs=3)
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/3
-782/782 [==============================] - 1s 659us/step - loss: 0.3343 - categorical_true_positives: 45214.0000
-Epoch 2/3
-782/782 [==============================] - 1s 654us/step - loss: 0.1562 - categorical_true_positives: 47677.0000
-Epoch 3/3
-782/782 [==============================] - 1s 661us/step - loss: 0.1154 - categorical_true_positives: 48289.0000
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
 
-<keras.callbacks.History at 0x7fe1bc25a1c0>
+Epoch 1/3
+782/782 [==============================] - 1s 607us/step - loss: 0.3355 - categorical_true_positives: 45233.0000
+Epoch 2/3
+782/782 [==============================] - 0s 605us/step - loss: 0.1532 - categorical_true_positives: 47746.0000
+Epoch 3/3
+782/782 [==============================] - 0s 608us/step - loss: 0.1125 - categorical_true_positives: 48304.0000
+
+<keras.callbacks.History at 0x2c7ddb8b0>
 
 ```
 </div>
@@ -512,57 +539,17 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 647us/step - loss: 2.4751
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
 
-<keras.callbacks.History at 0x7fe1bc129760>
+782/782 [==============================] - 1s 596us/step - loss: 2.4744
 
-```
-</div>
-You can do the same for logging metric values, using `add_metric()`:
-
-
-```python
-
-class MetricLoggingLayer(layers.Layer):
-    def call(self, inputs):
-        # The `aggregation` argument defines
-        # how to aggregate the per-batch values
-        # over each epoch:
-        # in this case we simply average them.
-        self.add_metric(
-            keras.backend.std(inputs), name="std_of_activation", aggregation="mean"
-        )
-        return inputs  # Pass-through layer.
-
-
-inputs = keras.Input(shape=(784,), name="digits")
-x = layers.Dense(64, activation="relu", name="dense_1")(inputs)
-
-# Insert std logging as a layer.
-x = MetricLoggingLayer()(x)
-
-x = layers.Dense(64, activation="relu", name="dense_2")(x)
-outputs = layers.Dense(10, name="predictions")(x)
-
-model = keras.Model(inputs=inputs, outputs=outputs)
-model.compile(
-    optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-)
-model.fit(x_train, y_train, batch_size=64, epochs=1)
-```
-
-<div class="k-default-codeblock">
-```
-782/782 [==============================] - 1s 686us/step - loss: 0.3519 - std_of_activation: 1.0144
-
-<keras.callbacks.History at 0x7fe1bc127160>
+<keras.callbacks.History at 0x2db58d1b0>
 
 ```
 </div>
 In the [Functional API](/guides/functional_api/),
-you can also call `model.add_loss(loss_tensor)`,
-or `model.add_metric(metric_tensor, name, aggregation)`.
+you can also call `model.add_loss(loss_tensor)`.
 
 Here's a simple example:
 
@@ -576,8 +563,6 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 
 model.add_loss(tf.reduce_sum(x1) * 0.1)
 
-model.add_metric(keras.backend.std(x1), name="std_of_activation", aggregation="mean")
-
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -587,9 +572,12 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 678us/step - loss: 2.5247 - std_of_activation: 0.0022
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
 
-<keras.callbacks.History at 0x7fe1bc1e3880>
+782/782 [==============================] - 1s 598us/step - loss: 2.5414
+
+<keras.callbacks.History at 0x2db9343a0>
 
 ```
 </div>
@@ -597,8 +585,7 @@ Note that when you pass losses via `add_loss()`, it becomes possible to call
 `compile()` without a loss function, since the model already has a loss to minimize.
 
 Consider the following `LogisticEndpoint` layer: it takes as inputs
-targets & logits, and it tracks a crossentropy loss via `add_loss()`. It also
-tracks classification accuracy via `add_metric()`.
+targets & logits, and it tracks a crossentropy loss via `add_loss()`.
 
 
 ```python
@@ -607,18 +594,12 @@ class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-        self.accuracy_fn = keras.metrics.BinaryAccuracy()
 
     def call(self, targets, logits, sample_weights=None):
         # Compute the training-time loss value and add it
         # to the layer using `self.add_loss()`.
         loss = self.loss_fn(targets, logits, sample_weights)
         self.add_loss(loss)
-
-        # Log accuracy as a metric and add it
-        # to the layer using `self.add_metric()`.
-        acc = self.accuracy_fn(targets, logits, sample_weights)
-        self.add_metric(acc, name="accuracy")
 
         # Return the inference-time prediction tensor (for `.predict()`).
         return tf.nn.softmax(logits)
@@ -649,9 +630,9 @@ model.fit(data)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 134ms/step - loss: 0.7597 - binary_accuracy: 0.0000e+00
+1/1 [==============================] - 0s 220ms/step - loss: 0.7063
 
-<keras.callbacks.History at 0x7fe1b05bc820>
+<keras.callbacks.History at 0x29d2efe50>
 
 ```
 </div>
@@ -684,9 +665,9 @@ model.fit(x_train, y_train, batch_size=64, validation_split=0.2, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-625/625 [==============================] - 1s 823us/step - loss: 0.3711 - sparse_categorical_accuracy: 0.8938 - val_loss: 0.2436 - val_sparse_categorical_accuracy: 0.9255
+625/625 [==============================] - 1s 816us/step - loss: 0.3660 - sparse_categorical_accuracy: 0.8958 - val_loss: 0.2292 - val_sparse_categorical_accuracy: 0.9332
 
-<keras.callbacks.History at 0x7fe1b051f790>
+<keras.callbacks.History at 0x2db58d3f0>
 
 ```
 </div>
@@ -736,16 +717,15 @@ dict(zip(model.metrics_names, result))
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-782/782 [==============================] - 1s 799us/step - loss: 0.3337 - sparse_categorical_accuracy: 0.9077
+782/782 [==============================] - 1s 614us/step - loss: 0.3468 - sparse_categorical_accuracy: 0.9020
 Epoch 2/3
-782/782 [==============================] - 1s 772us/step - loss: 0.1564 - sparse_categorical_accuracy: 0.9539
+782/782 [==============================] - 0s 609us/step - loss: 0.1652 - sparse_categorical_accuracy: 0.9513
 Epoch 3/3
-782/782 [==============================] - 1s 795us/step - loss: 0.1162 - sparse_categorical_accuracy: 0.9653
+782/782 [==============================] - 0s 617us/step - loss: 0.1197 - sparse_categorical_accuracy: 0.9642
 Evaluate
-157/157 [==============================] - 0s 506us/step - loss: 0.1427 - sparse_categorical_accuracy: 0.9578
+157/157 [==============================] - 0s 431us/step - loss: 0.1156 - sparse_categorical_accuracy: 0.9654
 
-{'loss': 0.14267084002494812,
- 'sparse_categorical_accuracy': 0.9577999711036682}
+{'loss': 0.11563559621572495, 'sparse_categorical_accuracy': 0.965399980545044}
 
 ```
 </div>
@@ -775,13 +755,13 @@ model.fit(train_dataset, epochs=3, steps_per_epoch=100)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-100/100 [==============================] - 0s 860us/step - loss: 0.7791 - sparse_categorical_accuracy: 0.8022
+100/100 [==============================] - 0s 643us/step - loss: 0.7504 - sparse_categorical_accuracy: 0.8070
 Epoch 2/3
-100/100 [==============================] - 0s 787us/step - loss: 0.3895 - sparse_categorical_accuracy: 0.8877
+100/100 [==============================] - 0s 630us/step - loss: 0.3575 - sparse_categorical_accuracy: 0.9002
 Epoch 3/3
-100/100 [==============================] - 0s 782us/step - loss: 0.3329 - sparse_categorical_accuracy: 0.9034
+100/100 [==============================] - 0s 629us/step - loss: 0.3147 - sparse_categorical_accuracy: 0.9061
 
-<keras.callbacks.History at 0x7fe1b0392700>
+<keras.callbacks.History at 0x2dc6d0d90>
 
 ```
 </div>
@@ -806,9 +786,9 @@ model.fit(train_dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 964us/step - loss: 0.3317 - sparse_categorical_accuracy: 0.9057 - val_loss: 0.2036 - val_sparse_categorical_accuracy: 0.9379
+782/782 [==============================] - 1s 767us/step - loss: 0.3285 - sparse_categorical_accuracy: 0.9068 - val_loss: 0.1731 - val_sparse_categorical_accuracy: 0.9512
 
-<keras.callbacks.History at 0x7fe1b01ad400>
+<keras.callbacks.History at 0x2deef0790>
 
 ```
 </div>
@@ -844,9 +824,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 872us/step - loss: 0.3349 - sparse_categorical_accuracy: 0.9056 - val_loss: 0.2843 - val_sparse_categorical_accuracy: 0.9281
+782/782 [==============================] - 1s 691us/step - loss: 0.3333 - sparse_categorical_accuracy: 0.9060 - val_loss: 0.3260 - val_sparse_categorical_accuracy: 0.9078
 
-<keras.callbacks.History at 0x7fe1b01a3f10>
+<keras.callbacks.History at 0x2deef03d0>
 
 ```
 </div>
@@ -976,9 +956,9 @@ model.fit(x_train, y_train, class_weight=class_weight, batch_size=64, epochs=1)
 <div class="k-default-codeblock">
 ```
 Fit with class weight
-782/782 [==============================] - 1s 713us/step - loss: 0.3811 - sparse_categorical_accuracy: 0.8975
+782/782 [==============================] - 1s 666us/step - loss: 0.3807 - sparse_categorical_accuracy: 0.8995
 
-<keras.callbacks.History at 0x7fe1846df730>
+<keras.callbacks.History at 0x2df398400>
 
 ```
 </div>
@@ -1014,9 +994,9 @@ model.fit(x_train, y_train, sample_weight=sample_weight, batch_size=64, epochs=1
 <div class="k-default-codeblock">
 ```
 Fit with sample weight
-782/782 [==============================] - 1s 659us/step - loss: 0.3761 - sparse_categorical_accuracy: 0.9008
+782/782 [==============================] - 1s 614us/step - loss: 0.3681 - sparse_categorical_accuracy: 0.9027
 
-<keras.callbacks.History at 0x7fe1845962e0>
+<keras.callbacks.History at 0x2c7915d20>
 
 ```
 </div>
@@ -1040,9 +1020,9 @@ model.fit(train_dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 1s 859us/step - loss: 0.3743 - sparse_categorical_accuracy: 0.9001
+782/782 [==============================] - 1s 613us/step - loss: 0.3641 - sparse_categorical_accuracy: 0.9051
 
-<keras.callbacks.History at 0x7fe1844a6c40>
+<keras.callbacks.History at 0x2c79ceef0>
 
 ```
 </div>
@@ -1088,12 +1068,15 @@ shapes shown in the plot are batch shapes, rather than per-sample shapes).
 keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=True)
 ```
 
-<div class="k-default-codeblock">
-```
-('You must install pydot (`pip install pydot`) and install graphviz (see instructions at https://graphviz.gitlab.io/download/) ', 'for plot_model/model_to_dot to work.')
 
-```
-</div>
+
+
+    
+![png](/img/guides/training_with_built_in_methods/training_with_built_in_methods_64_0.png)
+    
+
+
+
 At compilation time, we can specify different losses to different outputs, by passing
 the loss functions as a list:
 
@@ -1105,6 +1088,13 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 If we only passed a single loss function to the model, the same loss function would be
 applied to every output (which is not appropriate here).
 
@@ -1125,6 +1115,13 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 Since we gave names to our output layers, we could also specify per-output losses and
 metrics via a dict:
 
@@ -1146,6 +1143,13 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 We recommend the use of explicit names and dicts if you have more than 2 outputs.
 
 It's possible to give different weights to different output-specific losses (for
@@ -1171,6 +1175,13 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 You could also choose not to compute a loss for certain outputs, if these outputs are
 meant for prediction but not for training:
 
@@ -1189,6 +1200,15 @@ model.compile(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 Passing data to a multi-input or multi-output model in `fit()` works in a similar way as
 specifying a loss function in compile: you can pass **lists of NumPy arrays** (with
 1:1 mapping to the outputs that received a loss function) or **dicts mapping output
@@ -1221,10 +1241,13 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 7.0510 - score_output_loss: 2.8159 - class_output_loss: 4.2352
-4/4 [==============================] - 0s 2ms/step - loss: 6.0612 - score_output_loss: 1.7917 - class_output_loss: 4.2696
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.RMSprop`.
 
-<keras.callbacks.History at 0x7fe1bc474b20>
+4/4 [==============================] - 0s 2ms/step - loss: 19.4325 - score_output_loss: 0.6934 - class_output_loss: 18.7392
+4/4 [==============================] - 0s 2ms/step - loss: 20.7377 - score_output_loss: 0.4496 - class_output_loss: 20.2881
+
+<keras.callbacks.History at 0x2e828bc10>
 
 ```
 </div>
@@ -1246,9 +1269,9 @@ model.fit(train_dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-2/2 [==============================] - 0s 5ms/step - loss: 5.6661 - score_output_loss: 1.3361 - class_output_loss: 4.3300
+2/2 [==============================] - 0s 3ms/step - loss: 21.2040 - score_output_loss: 0.3316 - class_output_loss: 20.8724
 
-<keras.callbacks.History at 0x7fe1b0194940>
+<keras.callbacks.History at 0x2df3992d0>
 
 ```
 </div>
@@ -1299,18 +1322,18 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-625/625 [==============================] - 1s 837us/step - loss: 0.3723 - sparse_categorical_accuracy: 0.8938 - val_loss: 0.2416 - val_sparse_categorical_accuracy: 0.9276
+625/625 [==============================] - 1s 818us/step - loss: 0.3753 - sparse_categorical_accuracy: 0.8942 - val_loss: 0.2394 - val_sparse_categorical_accuracy: 0.9268
 Epoch 2/20
-625/625 [==============================] - 0s 741us/step - loss: 0.1755 - sparse_categorical_accuracy: 0.9459 - val_loss: 0.1807 - val_sparse_categorical_accuracy: 0.9447
+625/625 [==============================] - 0s 702us/step - loss: 0.1770 - sparse_categorical_accuracy: 0.9474 - val_loss: 0.1911 - val_sparse_categorical_accuracy: 0.9415
 Epoch 3/20
-625/625 [==============================] - 0s 732us/step - loss: 0.1278 - sparse_categorical_accuracy: 0.9617 - val_loss: 0.1672 - val_sparse_categorical_accuracy: 0.9517
+625/625 [==============================] - 0s 700us/step - loss: 0.1276 - sparse_categorical_accuracy: 0.9616 - val_loss: 0.1567 - val_sparse_categorical_accuracy: 0.9534
 Epoch 4/20
-625/625 [==============================] - 0s 731us/step - loss: 0.1003 - sparse_categorical_accuracy: 0.9699 - val_loss: 0.1602 - val_sparse_categorical_accuracy: 0.9551
+625/625 [==============================] - 0s 703us/step - loss: 0.0996 - sparse_categorical_accuracy: 0.9714 - val_loss: 0.1486 - val_sparse_categorical_accuracy: 0.9562
 Epoch 5/20
-625/625 [==============================] - 0s 737us/step - loss: 0.0820 - sparse_categorical_accuracy: 0.9745 - val_loss: 0.1611 - val_sparse_categorical_accuracy: 0.9550
-Epoch 00005: early stopping
+625/625 [==============================] - 0s 714us/step - loss: 0.0813 - sparse_categorical_accuracy: 0.9750 - val_loss: 0.1481 - val_sparse_categorical_accuracy: 0.9564
+Epoch 5: early stopping
 
-<keras.callbacks.History at 0x7fe184148cd0>
+<keras.callbacks.History at 0x171cf7700>
 
 ```
 </div>
@@ -1371,7 +1394,7 @@ callbacks = [
         # the current checkpoint if and only if
         # the `val_loss` score has improved.
         # The saved model name will include the current epoch.
-        filepath="mymodel_{epoch}",
+        filepath="mymodel_{epoch}.keras",
         save_best_only=True,  # Only save a model if `val_loss` has improved.
         monitor="val_loss",
         verbose=1,
@@ -1385,17 +1408,15 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-619/625 [============================>.] - ETA: 0s - loss: 0.3721 - sparse_categorical_accuracy: 0.8958
-Epoch 00001: val_loss improved from inf to 0.22460, saving model to mymodel_1
-INFO:tensorflow:Assets written to: mymodel_1/assets
-625/625 [==============================] - 1s 1ms/step - loss: 0.3712 - sparse_categorical_accuracy: 0.8960 - val_loss: 0.2246 - val_sparse_categorical_accuracy: 0.9337
+574/625 [==========================>...] - ETA: 0s - loss: 0.3947 - sparse_categorical_accuracy: 0.8879
+Epoch 1: val_loss improved from inf to 0.24554, saving model to mymodel_1.keras
+625/625 [==============================] - 1s 846us/step - loss: 0.3792 - sparse_categorical_accuracy: 0.8921 - val_loss: 0.2455 - val_sparse_categorical_accuracy: 0.9262
 Epoch 2/2
-556/625 [=========================>....] - ETA: 0s - loss: 0.1769 - sparse_categorical_accuracy: 0.9473
-Epoch 00002: val_loss improved from 0.22460 to 0.17411, saving model to mymodel_2
-INFO:tensorflow:Assets written to: mymodel_2/assets
-625/625 [==============================] - 1s 1ms/step - loss: 0.1726 - sparse_categorical_accuracy: 0.9490 - val_loss: 0.1741 - val_sparse_categorical_accuracy: 0.9475
+572/625 [==========================>...] - ETA: 0s - loss: 0.1777 - sparse_categorical_accuracy: 0.9475
+Epoch 2: val_loss improved from 0.24554 to 0.17778, saving model to mymodel_2.keras
+625/625 [==============================] - 0s 726us/step - loss: 0.1765 - sparse_categorical_accuracy: 0.9477 - val_loss: 0.1778 - val_sparse_categorical_accuracy: 0.9484
 
-<keras.callbacks.History at 0x7fe154780850>
+<keras.callbacks.History at 0x2ecf3fa90>
 
 ```
 </div>
@@ -1427,10 +1448,10 @@ def make_or_restore_model():
 
 model = make_or_restore_model()
 callbacks = [
-    # This callback saves a SavedModel every 100 batches.
+    # This callback saves the model every 100 batches.
     # We include the training loss in the saved model name.
     keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + "/ckpt-loss={loss:.2f}", save_freq=100
+        filepath=checkpoint_dir + "/model-loss={loss:.2f}.keras", save_freq=100
     )
 ]
 model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
@@ -1439,24 +1460,9 @@ model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
 <div class="k-default-codeblock">
 ```
 Creating a new model
-  79/1563 [>.............................] - ETA: 0s - loss: 1.0755 - sparse_categorical_accuracy: 0.7136  INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.97/assets
- 175/1563 [==>...........................] - ETA: 2s - loss: 0.7567 - sparse_categorical_accuracy: 0.7921INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.71/assets
- 279/1563 [====>.........................] - ETA: 2s - loss: 0.6145 - sparse_categorical_accuracy: 0.8308INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.60/assets
- 382/1563 [======>.......................] - ETA: 2s - loss: 0.5344 - sparse_categorical_accuracy: 0.8504INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.52/assets
- 484/1563 [========>.....................] - ETA: 2s - loss: 0.4874 - sparse_categorical_accuracy: 0.8628INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.48/assets
- 575/1563 [==========>...................] - ETA: 2s - loss: 0.4559 - sparse_categorical_accuracy: 0.8710INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.45/assets
- 676/1563 [===========>..................] - ETA: 2s - loss: 0.4277 - sparse_categorical_accuracy: 0.8791INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.42/assets
- 777/1563 [=============>................] - ETA: 1s - loss: 0.4042 - sparse_categorical_accuracy: 0.8857INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.40/assets
- 880/1563 [===============>..............] - ETA: 1s - loss: 0.3885 - sparse_categorical_accuracy: 0.8898INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.38/assets
- 975/1563 [=================>............] - ETA: 1s - loss: 0.3713 - sparse_categorical_accuracy: 0.8939INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.37/assets
-1079/1563 [===================>..........] - ETA: 1s - loss: 0.3562 - sparse_categorical_accuracy: 0.8981INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.35/assets
-1178/1563 [=====================>........] - ETA: 1s - loss: 0.3448 - sparse_categorical_accuracy: 0.9008INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.34/assets
-1273/1563 [=======================>......] - ETA: 0s - loss: 0.3339 - sparse_categorical_accuracy: 0.9041INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.33/assets
-1377/1563 [=========================>....] - ETA: 0s - loss: 0.3242 - sparse_categorical_accuracy: 0.9069INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.32/assets
-1477/1563 [===========================>..] - ETA: 0s - loss: 0.3130 - sparse_categorical_accuracy: 0.9100INFO:tensorflow:Assets written to: ./ckpt/ckpt-loss=0.31/assets
-1563/1563 [==============================] - 4s 3ms/step - loss: 0.3071 - sparse_categorical_accuracy: 0.9115
+1563/1563 [==============================] - 1s 592us/step - loss: 0.3022 - sparse_categorical_accuracy: 0.9122
 
-<keras.callbacks.History at 0x7fe15464c310>
+<keras.callbacks.History at 0x2eddbbe20>
 
 ```
 </div>
@@ -1490,6 +1496,12 @@ lr_schedule = keras.optimizers.schedules.ExponentialDecay(
 optimizer = keras.optimizers.RMSprop(learning_rate=lr_schedule)
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.RMSprop` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.RMSprop`.
+
+```
+</div>
 Several built-in schedules are available: `ExponentialDecay`, `PiecewiseConstantDecay`,
 `PolynomialDecay`, and `InverseTimeDecay`.
 
@@ -1545,7 +1557,7 @@ keras.callbacks.TensorBoard(
 
 <div class="k-default-codeblock">
 ```
-<keras.callbacks.TensorBoard at 0x7fe1544a2640>
+<keras.callbacks.TensorBoard at 0x2ed0318a0>
 
 ```
 </div>

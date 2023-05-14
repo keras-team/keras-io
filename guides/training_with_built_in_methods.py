@@ -427,42 +427,8 @@ model.compile(
 model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 """
-You can do the same for logging metric values, using `add_metric()`:
-"""
-
-
-class MetricLoggingLayer(layers.Layer):
-    def call(self, inputs):
-        # The `aggregation` argument defines
-        # how to aggregate the per-batch values
-        # over each epoch:
-        # in this case we simply average them.
-        self.add_metric(
-            keras.backend.std(inputs), name="std_of_activation", aggregation="mean"
-        )
-        return inputs  # Pass-through layer.
-
-
-inputs = keras.Input(shape=(784,), name="digits")
-x = layers.Dense(64, activation="relu", name="dense_1")(inputs)
-
-# Insert std logging as a layer.
-x = MetricLoggingLayer()(x)
-
-x = layers.Dense(64, activation="relu", name="dense_2")(x)
-outputs = layers.Dense(10, name="predictions")(x)
-
-model = keras.Model(inputs=inputs, outputs=outputs)
-model.compile(
-    optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-)
-model.fit(x_train, y_train, batch_size=64, epochs=1)
-
-"""
 In the [Functional API](/guides/functional_api/),
-you can also call `model.add_loss(loss_tensor)`,
-or `model.add_metric(metric_tensor, name, aggregation)`.
+you can also call `model.add_loss(loss_tensor)`.
 
 Here's a simple example:
 """
@@ -475,8 +441,6 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 
 model.add_loss(tf.reduce_sum(x1) * 0.1)
 
-model.add_metric(keras.backend.std(x1), name="std_of_activation", aggregation="mean")
-
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -488,8 +452,7 @@ Note that when you pass losses via `add_loss()`, it becomes possible to call
 `compile()` without a loss function, since the model already has a loss to minimize.
 
 Consider the following `LogisticEndpoint` layer: it takes as inputs
-targets & logits, and it tracks a crossentropy loss via `add_loss()`. It also
-tracks classification accuracy via `add_metric()`.
+targets & logits, and it tracks a crossentropy loss via `add_loss()`.
 """
 
 
@@ -497,18 +460,12 @@ class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-        self.accuracy_fn = keras.metrics.BinaryAccuracy()
 
     def call(self, targets, logits, sample_weights=None):
         # Compute the training-time loss value and add it
         # to the layer using `self.add_loss()`.
         loss = self.loss_fn(targets, logits, sample_weights)
         self.add_loss(loss)
-
-        # Log accuracy as a metric and add it
-        # to the layer using `self.add_metric()`.
-        acc = self.accuracy_fn(targets, logits, sample_weights)
-        self.add_metric(acc, name="accuracy")
 
         # Return the inference-time prediction tensor (for `.predict()`).
         return tf.nn.softmax(logits)
@@ -1116,7 +1073,7 @@ callbacks = [
         # the current checkpoint if and only if
         # the `val_loss` score has improved.
         # The saved model name will include the current epoch.
-        filepath="mymodel_{epoch}",
+        filepath="mymodel_{epoch}.keras",
         save_best_only=True,  # Only save a model if `val_loss` has improved.
         monitor="val_loss",
         verbose=1,
@@ -1154,10 +1111,10 @@ def make_or_restore_model():
 
 model = make_or_restore_model()
 callbacks = [
-    # This callback saves a SavedModel every 100 batches.
+    # This callback saves the model every 100 batches.
     # We include the training loss in the saved model name.
     keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + "/ckpt-loss={loss:.2f}", save_freq=100
+        filepath=checkpoint_dir + "/model-loss={loss:.2f}.keras", save_freq=100
     )
 ]
 model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
