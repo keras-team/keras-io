@@ -745,7 +745,7 @@ model.compile(
     metrics=None,
 )
 """
-If you want to train the fully model, uncomment `.take(20)` from each
+If you want to fully train the model, uncomment `.take(20)` from each
 of the following dataset references.
 """
 model.fit(
@@ -814,8 +814,8 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 """
 Awesome!
-One final helpful pattern to be aware of is monitoring training is to visualize
-detections in a `keras.callbacks.Callback`:
+One final helpful pattern to be aware of is to visualize
+detections in a `keras.callbacks.Callback` to monitor training :
 """
 
 
