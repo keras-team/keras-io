@@ -757,7 +757,7 @@ def generate_caption():
         )
         sampled_token_index = np.argmax(predictions[0, i, :])
         sampled_token = index_lookup[sampled_token_index]
-        if sampled_token == " <end>":
+        if sampled_token == "<end>":
             break
         decoded_caption += " " + sampled_token
 
