@@ -578,7 +578,7 @@ class GANMonitor(keras.callbacks.Callback):
             ax[i, 0].axis("off")
             ax[i, 1].axis("off")
 
-            prediction = keras.preprocessing.image.array_to_img(prediction)
+            prediction = keras.utils.array_to_img(prediction)
             prediction.save(
                 "generated_img_{i}_{epoch}.png".format(i=i, epoch=epoch + 1)
             )
@@ -693,7 +693,7 @@ for i, img in enumerate(test_horses.take(4)):
     ax[i, 0].axis("off")
     ax[i, 1].axis("off")
 
-    prediction = keras.preprocessing.image.array_to_img(prediction)
+    prediction = keras.utils.array_to_img(prediction)
     prediction.save("predicted_img_{i}.png".format(i=i))
 plt.tight_layout()
 plt.show()

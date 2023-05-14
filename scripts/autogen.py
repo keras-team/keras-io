@@ -789,7 +789,7 @@ class KerasIO:
         autogen_utils.save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
         # Redirects
-        # shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
+        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
 
         # Examples landing page
         self.generate_examples_landing_page()

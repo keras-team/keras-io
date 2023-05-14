@@ -650,16 +650,16 @@ for ax, test_image in zip(axes, test_images[:10]):
     inv2_kernel = tf.reduce_sum(inv2_kernel, axis=[-1, -2, -3])
     inv3_kernel = tf.reduce_sum(inv3_kernel, axis=[-1, -2, -3])
 
-    ax[0].imshow(keras.preprocessing.image.array_to_img(test_image))
+    ax[0].imshow(keras.utils.array_to_img(test_image))
     ax[0].set_title("Input Image")
 
-    ax[1].imshow(keras.preprocessing.image.array_to_img(inv1_kernel[0, ..., None]))
+    ax[1].imshow(keras.utils.array_to_img(inv1_kernel[0, ..., None]))
     ax[1].set_title("Involution Kernel 1")
 
-    ax[2].imshow(keras.preprocessing.image.array_to_img(inv2_kernel[0, ..., None]))
+    ax[2].imshow(keras.utils.array_to_img(inv2_kernel[0, ..., None]))
     ax[2].set_title("Involution Kernel 2")
 
-    ax[3].imshow(keras.preprocessing.image.array_to_img(inv3_kernel[0, ..., None]))
+    ax[3].imshow(keras.utils.array_to_img(inv3_kernel[0, ..., None]))
     ax[3].set_title("Involution Kernel 3")
 ```
 
