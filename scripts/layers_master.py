@@ -400,16 +400,6 @@ LAYERS_MASTER = {
                             "generate": ["tensorflow.keras.layers.RandomZoom"],
                         },
                         {
-                            "path": "random_height",
-                            "title": "RandomHeight layer",
-                            "generate": ["tensorflow.keras.layers.RandomHeight"],
-                        },
-                        {
-                            "path": "random_width",
-                            "title": "RandomWidth layer",
-                            "generate": ["tensorflow.keras.layers.RandomWidth"],
-                        },
-                        {
                             "path": "random_contrast",
                             "title": "RandomContrast layer",
                             "generate": ["tensorflow.keras.layers.RandomContrast"],
