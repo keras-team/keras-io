@@ -236,13 +236,8 @@ def build_centerpillar_model():
   voxelization layer.
   """
   unet_layer = UNet(
-      # This is 512,512,128
-      # TODO(ianstenbit): Can we remove the need to specify this?
       input_shape=(
-          voxel_utils.compute_voxel_spatial_size(
-              voxel_size=voxel_size,
-              spatial_size=spatial_size,
-          )[:-1]
+          voxelization_layer._voxel_spatial_size[:2]
           + [voxelization_feature_size]
       ),
       # These configurations represent the number of filters and number of
