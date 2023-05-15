@@ -54,6 +54,27 @@ Point cloud inputs to 3D object detection models typically come from LIDAR
 sensors, and are generally structured as large batches of unsorted points
 captured at a single point in time.
 
+Before we get into the details of KerasCV's 3D object detection offerings, let's
+take a look at a pre-trained KerasCV 3D object detector. This preset has been
+trained on the entirety of the Waymo Open Dataset for 160 epochs, and achieves
+an average precision of 0.7 on the evaluation dataset for both vehicles and
+passengers.
+"""
+
+# TODO(ianstenbit): This doesn't work yet
+# pretrained_model = MultiHeadCenterPillar.from_preset("waymo_open_dataset_vehicles_and_pedestrians")
+# TODO(ianstenbit): Load up an eval frame and run predictions
+
+"""
+Great! Below we show a visualization of what some of these predictions look like
+alongside a rendering of the input point clouds.
+"""
+
+# TODO(ianstenbit): Include a link to a rendering of a visualization.
+
+"""
+Awesome! Now let's check out how to train this sort of model ourselves! First
+let's discuss how data is formatted for 3D object detection in KerasCV.
 In KerasCV, we adopt a data format where point clouds are represented as a
 dictionary with the following structure:
 
