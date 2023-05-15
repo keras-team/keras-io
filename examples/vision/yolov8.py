@@ -40,22 +40,18 @@ from keras_cv import visualization
 
 """# Load Data
 
-The VOC2007 dataset is a widely-used benchmark for object detection and image classification tasks in computer vision. It consists of approximately 10,000 images across 20 different object categories, including people, animals, vehicles, and household items.
+The Aquarium Dataset is a collection of 638 images obtained from two aquariums in the United States: The Henry Doorly Zoo in Omaha (October 16, 2020) and the National Aquarium in Baltimore (November 14, 2020). These images were curated and labeled for object detection by the Roboflow team, with assistance from SageMaker Ground Truth. The dataset, including both the images and annotations
 
-One of the main advantages of using the VOC2007 dataset is its large size and diversity, which allows researchers and practitioners to train and test their models on a wide range of real-world scenarios. In addition, the dataset comes with pre-defined training and testing splits, which makes it easier to compare results between different models and approaches.
+The TensorFlow Datasets library provides a convenient way to download and use various datasets, including the object dataset. This can be a great option for those who want to quickly start working with the data without having to manually download and preprocess it.
 
-The TensorFlow Datasets library provides a convenient way to download and use various datasets, including the VOC2007 dataset. This can be a great option for those who want to quickly start working with the data without having to manually download and preprocess it.
-
-To download the VOC2007 dataset using TensorFlow Datasets, simply follow the link to the VOC dataset page on the TensorFlow website (https://www.tensorflow.org/datasets/catalog/voc), and then use the provided code snippet to load the dataset.
+You can view various OD datasets here [Tensorflow Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
 
 However, in this code example, we will demonstrate how to load the dataset from scratch using TensorFlow's tf.data pipeline. This approach provides more flexibility and allows you to customize the preprocessing steps as needed.
 
 loading custom datasets that are not available in the TensorFlow Datasets library is one of the main advantages of using the tf.data pipeline. This approach allows you to create a custom data preprocessing pipeline tailored to the specific needs and requirements of your dataset.
 """
 
-!wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
-!tar -xf VOCtrainval_06-Nov-2007.tar
-!rm VOCtrainval_06-Nov-2007.tar
+!unzip -q /content/drive/MyDrive/dataset.zip
 
 """# Hyperparameters"""
 
@@ -72,33 +68,13 @@ A dictionary is created to map each class name to a unique numerical identifier.
 """
 
 class_ids = [
-    "aeroplane",
-    "bicycle",
-    "bird",
-    "boat",
-    "bottle",
-    "bus",
-    "car",
-    "cat",
-    "chair",
-    "cow",
-    "diningtable",
-    "dog",
-    "horse",
-    "motorbike",
-    "person",
-    "pottedplant",
-    "sheep",
-    "sofa",
-    "train",
-    "tvmonitor",
-    "total",
+    "fish", "jellyfish", "penguin", "shark", "puffin", "stingray", "starfish",
 ]
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 # Path to images and annotations
-path_images = "/content/VOCdevkit/VOC2007/JPEGImages/"
-path_annot = "/content/VOCdevkit/VOC2007/Annotations/"
+path_images = "/content/JPEGImages/"
+path_annot = "/content/Annotations/"
 
 # Get all XML file paths in path_annot and sort them
 xml_files = sorted([os.path.join(path_annot, file_name) for file_name in os.listdir(path_annot) if file_name.endswith(".xml")])
