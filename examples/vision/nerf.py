@@ -629,9 +629,7 @@ for ax, ori_img, recons_img, depth_map in zip(
     ax[1].imshow(keras.utils.array_to_img(recons_img))
     ax[1].set_title("Reconstructed")
 
-    ax[2].imshow(
-        keras.utils.array_to_img(depth_map[..., None]), cmap="inferno"
-    )
+    ax[2].imshow(keras.utils.array_to_img(depth_map[..., None]), cmap="inferno")
     ax[2].set_title("Depth Map")
 
 """

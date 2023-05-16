@@ -83,7 +83,6 @@ ds_train = keras.utils.image_dataset_from_directory(
 )
 
 
-
 def resize_image(res, image):
     # only donwsampling, so use nearest neighbor that is faster to run
     image = tf.image.resize(
