@@ -211,10 +211,10 @@ def prepare_dataset(image, label):
 This method has a `buffer_size` parameter which controls the size of the 
 buffer. If you set this value to `len(train_images)`, the whole dataset will 
 be shuffled. If the buffer size is equal to the length of the dataset, 
-then the elements will be shuffled in a completely random order. This can be 
-useful for training machine learning models that are sensitive to the order 
-of the data. Main drawback of this approach is that filling the buffer can
-take a while depending on the size of the dataset.
+then the elements will be shuffled in a completely random order. 
+
+Main drawback of setting the buffer size to the length of the dataset is that 
+filling the buffer can take a while depending on the size of the dataset.
 
 Here is a small summary of what's going on here: 
 1) The `shuffle()` method creates a buffer of the specified size. 
