@@ -217,24 +217,40 @@ model.fit(train_ds, validation_data=val_ds, verbose=2, epochs=EPOCHS)
 """
 ## Inference
 
-With our trained model, we can test it out to gauge it's performance. Since this model is
-built with a `"[BOS]"` token, we can have an empty starting prompt for text generation.
+With our trained model, we can test it out to gauge it's performance. To do this
+we can seed our model with an input sequence starting with the `"[BOS]"` token,
+and progressively sample the model by making predictions for each subsequent
+token in a loop.
+
+To start lets build a prompt with the same shape as our model inputs, containing
+only the `"[BOS]"` token.
 """
 
-# Unpadded bos token.
-prompt_tokens = tf.convert_to_tensor([tokenizer.token_to_id("[BOS]")])
+# The "packer" layers adds the [BOS] token for us.
+prompt_tokens = start_packer(tokenizer([""]))
+prompt_tokens
 
 """
-We will use the `keras_nlp.utils` module for inference. Every text generation
-utility requires a `token_logits_fn()` wrapper around the model. This wrapper takes
-in an unpadded token sequence, and requires the logits of the next token as the output.
+We will use the `keras_nlp.samplers` module for inference, which requires a
+callback function wrapping the model we just trained. This wrapper calls
+the model and returns the logit predictions for the current token we are
+generating.
+
+Note: There are two pieces of more advanced functionality available when
+defining your callback. The first is the ability to take in a `cache` of states
+computed in previous generation steps, which can be used to speed up generation.
+The second is the ability to output the final dense "hidden state" of each
+generated token. This is used by `keras_nlp.samplers.ContrastiveSampler`, which
+avoids repetition by penalizing repeated hidden states. Both are optional, and
+we will ignore them for now.
 """
 
 
-def token_logits_fn(inputs):
-    cur_len = inputs.shape[1]
-    output = model(inputs)
-    return output[:, cur_len - 1, :]  # return next token logits
+def next(prompt, cache, index):
+    logits = model(prompt)[:, index - 1, :]
+    # Ignore hidden states for now; only needed for contrastive search.
+    hidden_states = None
+    return logits, hidden_states, cache
 
 
 """
@@ -249,10 +265,11 @@ We greedily pick the most probable token at each timestep. In other words, we ge
 argmax of the model output.
 """
 
-output_tokens = keras_nlp.utils.greedy_search(
-    token_logits_fn,
-    prompt_tokens,
-    max_length=NUM_TOKENS_TO_GENERATE,
+sampler = keras_nlp.samplers.GreedySampler()
+output_tokens = sampler(
+    next=next,
+    prompt=prompt_tokens,
+    index=1,  # Start sampling immediately after the [BOS] token.
 )
 txt = tokenizer.detokenize(output_tokens)
 print(f"Greedy search generated text: \n{txt}\n")
@@ -274,12 +291,11 @@ greedy search since it has to compute and store multiple potential sequences.
 **Note:** beam search with `num_beams=1` is identical to greedy search.
 """
 
-output_tokens = keras_nlp.utils.beam_search(
-    token_logits_fn,
-    prompt_tokens,
-    max_length=NUM_TOKENS_TO_GENERATE,
-    num_beams=10,
-    from_logits=True,
+sampler = keras_nlp.samplers.BeamSampler(num_beams=10)
+output_tokens = sampler(
+    next=next,
+    prompt=prompt_tokens,
+    index=1,
 )
 txt = tokenizer.detokenize(output_tokens)
 print(f"Beam search generated text: \n{txt}\n")
@@ -296,11 +312,11 @@ Random search is our first probabilistic method. At each time step, it samples t
 token using the softmax probabilities provided by the model.
 """
 
-output_tokens = keras_nlp.utils.random_search(
-    token_logits_fn,
-    prompt_tokens,
-    max_length=NUM_TOKENS_TO_GENERATE,
-    from_logits=True,
+sampler = keras_nlp.samplers.RandomSampler()
+output_tokens = sampler(
+    next=next,
+    prompt=prompt_tokens,
+    index=1,
 )
 txt = tokenizer.detokenize(output_tokens)
 print(f"Random search generated text: \n{txt}\n")
@@ -321,12 +337,11 @@ we won't be sampling from low probability tokens, and hence we would have less
 nonsensical words!
 """
 
-output_tokens = keras_nlp.utils.top_k_search(
-    token_logits_fn,
-    prompt_tokens,
-    max_length=NUM_TOKENS_TO_GENERATE,
-    k=10,
-    from_logits=True,
+sampler = keras_nlp.samplers.TopKSampler(k=10)
+output_tokens = sampler(
+    next=next,
+    prompt=prompt_tokens,
+    index=1,
 )
 txt = tokenizer.detokenize(output_tokens)
 print(f"Top-K search generated text: \n{txt}\n")
@@ -348,12 +363,11 @@ top 2 tokens to sample from. If instead the 90% is distributed over 10 tokens, i
 similarly filter out the top 10 tokens to sample from.
 """
 
-output_tokens = keras_nlp.utils.top_p_search(
-    token_logits_fn,
-    prompt_tokens,
-    max_length=NUM_TOKENS_TO_GENERATE,
-    p=0.5,
-    from_logits=True,
+sampler = keras_nlp.samplers.TopPSampler(p=0.5)
+output_tokens = sampler(
+    next=next,
+    prompt=prompt_tokens,
+    index=1,
 )
 txt = tokenizer.detokenize(output_tokens)
 print(f"Top-P search generated text: \n{txt}\n")
@@ -370,15 +384,13 @@ class TopKTextGenerator(keras.callbacks.Callback):
     """A callback to generate text from a trained model using top-k."""
 
     def __init__(self, k):
-        self.k = k
+        self.sampler = keras_nlp.samplers.TopKSampler(k)
 
     def on_epoch_end(self, epoch, logs=None):
-        output_tokens = keras_nlp.utils.top_k_search(
-            token_logits_fn,
-            prompt_tokens,
-            max_length=NUM_TOKENS_TO_GENERATE,
-            k=self.k,
-            from_logits=True,
+        output_tokens = self.sampler(
+            next=next,
+            prompt=prompt_tokens,
+            index=1,
         )
         txt = tokenizer.detokenize(output_tokens)
         print(f"Top-K search generated text: \n{txt}\n")
