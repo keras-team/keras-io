@@ -73,6 +73,7 @@ class_names = ds_info.features["label"].names
 print(f"Number of classes: {num_classes}")
 print(f"Class names: {class_names}")
 
+
 # Convert datasets to NumPy arrays
 def dataset_to_array(dataset, image_size, num_classes):
     images, labels = [], []

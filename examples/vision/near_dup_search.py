@@ -66,7 +66,7 @@ NUM_IMAGES = 1000
 images = []
 labels = []
 
-for (image, label) in train_ds.take(NUM_IMAGES):
+for image, label in train_ds.take(NUM_IMAGES):
     image = tf.image.resize(image, (IMAGE_SIZE, IMAGE_SIZE))
     images.append(image.numpy())
     labels.append(label.numpy())
@@ -316,6 +316,7 @@ we will be benchmarking performance between optimized and unoptimized embedding 
 will also warm up our GPU to avoid any unfair comparison.
 """
 
+
 # Utility to warm up the GPU.
 def warmup():
     dummy_sample = tf.ones((1, IMAGE_SIZE, IMAGE_SIZE, 3))
@@ -442,7 +443,7 @@ Now we write our visualization utilities.
 def plot_images(images, labels):
     plt.figure(figsize=(20, 10))
     columns = 5
-    for (i, image) in enumerate(images):
+    for i, image in enumerate(images):
         ax = plt.subplot(len(images) / columns + 1, columns, i + 1)
         if i == 0:
             ax.set_title("Query Image\n" + "Label: {}".format(labels[i]))

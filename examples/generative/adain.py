@@ -231,7 +231,7 @@ style, content = next(iter(train_ds))
 fig, axes = plt.subplots(nrows=10, ncols=2, figsize=(5, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
-for (axis, style_image, content_image) in zip(axes, style[0:10], content[0:10]):
+for axis, style_image, content_image in zip(axes, style[0:10], content[0:10]):
     (ax_style, ax_content) = axis
     ax_style.imshow(style_image)
     ax_style.set_title("Style Image")
@@ -588,9 +588,7 @@ class TrainMonitor(tf.keras.callbacks.Callback):
         ax[1].imshow(tf.keras.utils.array_to_img(test_content[0]))
         ax[1].set_title(f"Content: {epoch:03d}")
 
-        ax[2].imshow(
-            tf.keras.utils.array_to_img(test_reconstructed_image[0])
-        )
+        ax[2].imshow(tf.keras.utils.array_to_img(test_reconstructed_image[0]))
         ax[2].set_title(f"NST: {epoch:03d}")
 
         plt.show()

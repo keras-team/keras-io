@@ -207,7 +207,6 @@ Therefore, the default `num_epochs=1` is used in the `run_experiment()` method.
 
 
 def run_experiment(model, train_data, test_data, num_epochs=1, batch_size=None):
-
     train_dataset = tfdf.keras.pd_dataframe_to_tf_dataset(
         train_data, label=TARGET_COLUMN_NAME, weight=WEIGHT_COLUMN_NAME
     )
@@ -527,7 +526,6 @@ and let the model infer semantics of the input features.
 
 
 def create_gbt_with_preprocessor(preprocessor):
-
     gbt_model = tfdf.keras.GradientBoostedTreesModel(
         preprocessing=preprocessor,
         num_trees=NUM_TREES,

@@ -83,7 +83,6 @@ ds_train = keras.utils.image_dataset_from_directory(
 )
 
 
-
 def resize_image(res, image):
     # only donwsampling, so use nearest neighbor that is faster to run
     image = tf.image.resize(
@@ -373,7 +372,6 @@ class Generator:
             rgb = self.to_rgb[0](x)
         else:
             for i in range(1, num_stages - 1):
-
                 x = self.g_blocks[i]([x, w[:, i], self.noise_inputs[i]])
 
             old_rgb = self.to_rgb[num_stages - 2](x)
@@ -551,7 +549,6 @@ class StyleGAN(tf.keras.Model):
         return loss
 
     def train_step(self, real_images):
-
         self.train_step_counter.assign_add(1)
 
         if self.phase == "TRANSITION":

@@ -162,7 +162,6 @@ def sample_action(observation):
 def train_policy(
     observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
 ):
-
     with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
         ratio = tf.exp(
             logprobabilities(actor(observation_buffer), action_buffer)

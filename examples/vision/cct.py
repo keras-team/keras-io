@@ -179,6 +179,7 @@ layer. In CCT, stochastic depth is used just before the residual blocks of a Tra
 encoder.
 """
 
+
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
@@ -244,7 +245,6 @@ def create_cct_model(
     projection_dim=projection_dim,
     transformer_units=transformer_units,
 ):
-
     inputs = layers.Input(input_shape)
 
     # Augment data.

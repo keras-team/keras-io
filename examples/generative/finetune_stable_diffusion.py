@@ -130,6 +130,7 @@ MAX_PROMPT_LENGTH = 77
 # Load the tokenizer.
 tokenizer = SimpleTokenizer()
 
+
 #  Method to tokenize and pad the tokens.
 def process_text(caption):
     tokens = tokenizer.encode(caption)

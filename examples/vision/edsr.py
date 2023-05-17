@@ -144,7 +144,6 @@ As low resolution images, we use 24x24 RGB input patches.
 
 
 def dataset_object(dataset_cache, training=True):
-
     ds = dataset_cache
     ds = ds.map(
         lambda lowres, highres: random_crop(lowres, highres, scale=4),

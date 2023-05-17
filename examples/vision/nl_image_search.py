@@ -202,7 +202,6 @@ def read_example(example):
 
 
 def get_dataset(file_pattern, batch_size):
-
     return (
         tf.data.TFRecordDataset(tf.data.Dataset.list_files(file_pattern))
         .map(

@@ -173,7 +173,6 @@ class GraphAttention(layers.Layer):
         self.kernel_regularizer = keras.regularizers.get(kernel_regularizer)
 
     def build(self, input_shape):
-
         self.kernel = self.add_weight(
             shape=(input_shape[0][-1], self.units),
             trainable=True,

@@ -135,7 +135,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return x, y
 
     def on_epoch_end(self):
-
         """
         Updates indexes after each epoch
         """
@@ -170,7 +169,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return image_, depth_map
 
     def data_generation(self, batch):
-
         x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 

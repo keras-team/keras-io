@@ -204,7 +204,6 @@ where the `data_dim` is set to the `num_patches`.
 def create_cross_attention_module(
     latent_dim, data_dim, projection_dim, ffn_units, dropout_rate
 ):
-
     inputs = {
         # Recieve the latent array as an input of shape [1, latent_dim, projection_dim].
         "latent_array": layers.Input(shape=(latent_dim, projection_dim)),
@@ -260,7 +259,6 @@ def create_transformer_module(
     ffn_units,
     dropout_rate,
 ):
-
     # input_shape: [1, latent_dim, projection_dim]
     inputs = layers.Input(shape=(latent_dim, projection_dim))
 
@@ -401,7 +399,6 @@ class Perceiver(keras.Model):
 
 
 def run_experiment(model):
-
     # Create LAMB optimizer with weight decay.
     optimizer = tfa.optimizers.LAMB(
         learning_rate=learning_rate,

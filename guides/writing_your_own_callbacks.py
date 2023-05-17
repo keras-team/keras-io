@@ -84,6 +84,7 @@ Let's take a look at a concrete example. To get started, let's import tensorflow
 define a simple Sequential Keras model:
 """
 
+
 # Define the Keras model to add callbacks to
 def get_model():
     model = keras.Sequential()

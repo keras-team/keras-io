@@ -107,7 +107,6 @@ plus a softmax layer with the target classes.
 
 
 def create_classifier(encoder, trainable=True):
-
     for layer in encoder.layers:
         layer.trainable = trainable
 

@@ -94,7 +94,6 @@ def get_text_list_from_files(files):
 
 
 def get_data_from_text_files(folder_name):
-
     pos_files = glob.glob("aclImdb/" + folder_name + "/pos/*.txt")
     pos_texts = get_text_list_from_files(pos_files)
     neg_files = glob.glob("aclImdb/" + folder_name + "/neg/*.txt")
