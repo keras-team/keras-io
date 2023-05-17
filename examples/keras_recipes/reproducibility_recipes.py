@@ -72,7 +72,7 @@ for initializer in initializers_list:
         # you need to specify a seed value. Note that this is not related to
         # keras.utils.set_random_seed or tf.config.experimental.enable_op_determinism.
         # If you comment those lines, you will still get the same results.
-        result = initializer(seed=42)(shape=(1, 1)).numpy()
+        result = float(initializer(seed=42)(shape=(1, 1)))
         print(f"\tIteration --> {iteration} // Result --> {result}")
     print("\n")
 
@@ -155,6 +155,10 @@ def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict
         optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
     )
 
+    # model.fit has a `shuffle` parameter which has a default value of `True`.
+    # If you are using array-like objects, this will shuffle the data before
+    # training. This argument is ignored when `x` is a generator or
+    # `tf.data.Dataset`.
     history = model.fit(train_data, epochs=5, validation_data=test_data)
 
     print(f"Model accuracy on test data: {model.evaluate(test_data)[1] * 100:.2f}%")
@@ -202,6 +206,26 @@ def prepare_dataset(image, label):
     return image, label
 
 
+"""
+`tf.data.Dataset` objects have a `shuffle` method which shuffles the data. 
+This method has a `buffer_size` parameter which controls the size of the 
+buffer. If you set this value to `len(train_images)`, the whole dataset will 
+be shuffled. If the buffer size is equal to the length of the dataset, 
+then the elements will be shuffled in a completely random order. This can be 
+useful for training machine learning models that are sensitive to the order 
+of the data. Main drawback of this approach is that filling the buffer can
+take a while depending on the size of the dataset.
+
+Here is a small summary of what's going on here: 
+1) The `shuffle()` method creates a buffer of the specified size. 
+2) The elements of the dataset are randomly shuffled and placed into the buffer.
+3) The elements of the buffer are then returned in a random order.
+
+Since `tf.config.experimental.enable_op_determinism()` is enabled and we set
+random seeds using `keras.utils.set_random_seed` in the beginning of the
+notebook, the `shuffle()` method will produce same results in the sequential
+runs.
+"""
 # Prepare the datasets, batch-map --> vectorized operations
 train_data = (
     train_ds.shuffle(buffer_size=len(train_images))
