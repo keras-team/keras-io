@@ -32,9 +32,9 @@ onboard GPUs, mobile, and edge chips.
 ## Quick Links
 - [List of available models and presets](https://keras.io/api/keras_cv/models/)
 - [Developer Guides](https://keras.io/guides/keras_cv/)
-- [Contributing Guide](.github/CONTRIBUTING.md)
+- [Contributing Guide](https://github.com/keras-team/keras-cv/blob/master/.github/CONTRIBUTING.md)
 - [Call for Contributions](https://github.com/keras-team/keras-cv/issues?q=is%3Aopen+is%3Aissue+label%3Acontribution-welcome)
-- [API Design Guidelines](.github/API_DESIGN.md)
+- [API Design Guidelines](https://github.com/keras-team/keras-cv/blob/master/.github/API_DESIGN.md)
 
 ## Installation
 
