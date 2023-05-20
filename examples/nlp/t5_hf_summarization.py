@@ -106,7 +106,7 @@ raw_datasets = load_dataset("xsum", split="train")
 """
 The dataset has the following fields:
 
-- **document**: the original BBC article to me summarized
+- **document**: the original BBC article to be summarized
 - **summary**: the single sentence summary of the BBC article
 - **id**: ID of the document-summary pair
 """
