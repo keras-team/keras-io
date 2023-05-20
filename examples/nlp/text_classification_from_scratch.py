@@ -177,6 +177,10 @@ text_ds = raw_train_ds.map(lambda x, y: x)
 # Let's call `adapt`:
 vectorize_layer.adapt(text_ds)
 
+# The vocabulary created by vectorize_layer.adapt(text_ds) is stored within the vectorize_layer itself.
+# You can check out the created vocabulary list using following way
+vocabulary = vectorize_layer.get_vocabulary()
+print(vocabulary)
 """
 ## Two options to vectorize the data
 
