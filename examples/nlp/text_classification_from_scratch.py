@@ -59,7 +59,7 @@ cat aclImdb/train/pos/6248_7.txt
 """
 
 """
-We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
+We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it.:
 """
 
 """shell
