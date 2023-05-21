@@ -401,6 +401,10 @@ with strategy.scope():
     model.compile(optimizer=optimizer, metrics=["accuracy"])
 
 """
+### Start training!
+"""
+
+"""
 Next, we set up a handy callback to push the intermediate training checkpoints to the
 Hugging Face Hub. To be able to operationalize this callback, we need to log in to our
 Hugging Face account (if you don't have one, you create one
