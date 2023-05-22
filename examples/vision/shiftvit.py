@@ -471,6 +471,7 @@ with the patch merging layer as well. Combining the two operations (shift ViT
 block and patch merging) is a design choice we picked for better code reusability.
 """
 
+
 # Note: This layer will have a different depth of stacking
 # for different stages on the model.
 class StackedShiftBlocks(layers.Layer):
@@ -666,7 +667,7 @@ class ShiftViTModel(keras.Model):
         # Optimize the gradients.
         grads = tape.gradient(total_loss, train_vars)
         trainable_variable_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 trainable_variable_list.append((g, v))
         self.optimizer.apply_gradients(trainable_variable_list)
@@ -708,6 +709,7 @@ and then cool down the model with a slowly decaying learning rate. In the warmup
 decay, the learning rate linearly increases for the warmup steps and then decays with a
 cosine decay.
 """
+
 
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.

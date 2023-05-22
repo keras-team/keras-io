@@ -20,14 +20,14 @@ import numpy as np
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](https://keras.io/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
 (for instance, to train a GAN using `fit()`), you can subclass the `Model` class and
 implement your own `train_step()` method, which
 is called repeatedly during `fit()`. This is covered in the guide
-[Customizing what happens in `fit()`](/guides/customizing_what_happens_in_fit/).
+[Customizing what happens in `fit()`](https://keras.io/guides/customizing_what_happens_in_fit/).
 
 Now, if you want very low-level control over training & evaluation, you should write
 your own training & evaluation loops from scratch. This is what this guide is about.
@@ -101,11 +101,9 @@ for epoch in range(epochs):
 
     # Iterate over the batches of the dataset.
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
-
         # Open a GradientTape to record the operations run
         # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
-
             # Run the forward pass of the layer.
             # The operations that the layer applies
             # to its inputs are going to be recorded

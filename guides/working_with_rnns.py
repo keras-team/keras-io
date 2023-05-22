@@ -366,6 +366,7 @@ input_dim = 28
 units = 64
 output_size = 10  # labels are from 0 to 9
 
+
 # Build the RNN model
 def build_model(allow_cudnn_kernel=True):
     # CuDNN is only available at the layer level, and not at the cell level.

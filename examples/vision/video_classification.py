@@ -223,12 +223,8 @@ def prepare_all_videos(df, root_dir):
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
-        frame_features[
-            idx,
-        ] = temp_frame_features.squeeze()
-        frame_masks[
-            idx,
-        ] = temp_frame_mask.squeeze()
+        frame_features[idx,] = temp_frame_features.squeeze()
+        frame_masks[idx,] = temp_frame_mask.squeeze()
 
     return (frame_features, frame_masks), labels
 
@@ -250,6 +246,7 @@ executed.
 Now, we can feed this data to a sequence model consisting of recurrent layers like `GRU`.
 
 """
+
 
 # Utility for our sequence model.
 def get_sequence_model():

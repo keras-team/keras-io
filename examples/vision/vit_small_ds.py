@@ -443,6 +443,7 @@ def create_vit_classifier(vanilla=False):
 ## Compile, train, and evaluate the mode
 """
 
+
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):

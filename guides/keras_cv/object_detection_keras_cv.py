@@ -3,7 +3,7 @@ Title: Object Detection with KerasCV
 Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2023/04/08
 Last modified: 2023/04/08
-Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+Description: Train an object detection model with KerasCV.
 Accelerator: GPU
 """
 
@@ -47,7 +47,7 @@ arbitrary number of classes.
 
 **For example:**
 
-<img width="300" src="https://i.imgur.com/QTvxIZH.jpeg">
+<img width="300" src="https://i.imgur.com/8xSEbQD.png">
 
 The data for the above image may look something like this:
 ```python
@@ -745,7 +745,7 @@ model.compile(
     metrics=None,
 )
 """
-If you want to train the fully model, uncomment `.take(20)` from each
+If you want to fully train the model, uncomment `.take(20)` from each
 of the following dataset references.
 """
 model.fit(
@@ -814,8 +814,8 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 """
 Awesome!
-One final helpful pattern to be aware of is monitoring training is to visualize
-detections in a `keras.callbacks.Callback`:
+One final helpful pattern to be aware of is to visualize
+detections in a `keras.callbacks.Callback` to monitor training :
 """
 
 

@@ -281,7 +281,7 @@ def decode_segmentation_masks(mask, colormap, n_classes):
 
 
 def get_overlay(image, colored_mask):
-    image = tf.keras.preprocessing.image.array_to_img(image)
+    image = tf.keras.utils.array_to_img(image)
     image = np.array(image).astype(np.uint8)
     overlay = cv2.addWeighted(image, 0.35, colored_mask, 0.65, 0)
     return overlay
@@ -291,7 +291,7 @@ def plot_samples_matplotlib(display_list, figsize=(5, 3)):
     _, axes = plt.subplots(nrows=1, ncols=len(display_list), figsize=figsize)
     for i in range(len(display_list)):
         if display_list[i].shape[-1] == 3:
-            axes[i].imshow(tf.keras.preprocessing.image.array_to_img(display_list[i]))
+            axes[i].imshow(tf.keras.utils.array_to_img(display_list[i]))
         else:
             axes[i].imshow(display_list[i])
     plt.show()

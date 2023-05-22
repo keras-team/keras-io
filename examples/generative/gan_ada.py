@@ -294,6 +294,7 @@ process automatically applies stronger data augmentation when it is needed.
 
 """
 
+
 # "hard sigmoid", useful for binary accuracy calculation from logits
 def step(values):
     # negative values -> 0.0, positive values -> 1.0
@@ -383,6 +384,7 @@ But also because it should be disabled based on theory when using [spectral norm
 in GANs. We also disable the bias in the fully connected and convolutional layers, because
 the following batch normalization makes it redundant.
 """
+
 
 # DCGAN generator
 def get_generator():

@@ -33,8 +33,8 @@ You'll learn how to:
 - Implement a sequence-to-sequence Transformer model using KerasNLP's
 `keras_nlp.layers.TransformerEncoder`, `keras_nlp.layers.TransformerDecoder` and
 `keras_nlp.layers.TokenAndPositionEmbedding` layers, and train it.
-- Use `keras_nlp.utils.top_p_search` function to generate translations
-of unseen input sentences using the top-p decoding strategy!
+- Use `keras_nlp.samplers` to generate translations of unseen input sentences
+ using the top-p decoding strategy!
 
 Don't worry if you aren't familiar with KerasNLP. This tutorial will start with
 the basics. Let's dive right in!
@@ -130,11 +130,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('tom and mary are dancing.', 'tom y mary están bailando.')
-("it can't be removed. it's fixed.", 'no se puede quitar. está fijo.')
-('you can get a loan from a bank.', 'puedes conseguir un préstamo de un banco.')
-("you're so stuck up.", 'sois tan engreídas.')
-('can man live without having a social life?', '¿puede un hombre vivir sin tener una vida social?')
+('i can touch the ceiling.', 'puedo tocar el cielorraso.')
+('his brave deed earned him respect.', 'su valiente hazaña le otorgó el respeto.')
+("it won't be easy.", 'no será fácil.')
+('tom asked mary how john was doing.', 'tom preguntó a mary cómo le iba a john.')
+("i've always wanted to sing on stage.", 'siempre he querido cantar en un escenario.')
 
 ```
 </div>
@@ -181,7 +181,7 @@ training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
 (characters don't really encode meaning like words do). Luckily, KerasNLP
-makes it very simple to train WordPiece on a corpus with the 
+makes it very simple to train WordPiece on a corpus with the
 `keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 
@@ -217,14 +217,6 @@ spa_samples = [text_pair[1] for text_pair in train_pairs]
 spa_vocab = train_word_piece(spa_samples, SPA_VOCAB_SIZE, reserved_tokens)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /usr/local/google/home/chenmoney/anaconda3/envs/keras-io-dev/lib/python3.9/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 Let's see some tokens!
 
 
@@ -235,8 +227,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['him', 'there', 'they', 'go', 'her', 'has', 'will', 'time', 'how', 're']
-Spanish Tokens:  ['mary', 'las', 'más', 'al', 'yo', 'tu', 'estoy', 'eso', 'este', 'muy']
+English Tokens:  ['they', 'go', 'her', 'has', 'will', 're', 'how', 'time', 'll', 'did']
+Spanish Tokens:  ['ella', 'te', 'para', 'mary', 'las', 'más', 'al', 'yo', 'estoy', 'tu']
 
 ```
 </div>
@@ -282,17 +274,17 @@ print(
 
 <div class="k-default-codeblock">
 ```
-English sentence:  think about it.
-Tokens:  tf.Tensor([120 117  70  12], shape=(4,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'think about it .', shape=(), dtype=string)
+English sentence:  a girl phoned me.
+Tokens:  tf.Tensor([ 26 353 426 207  76  11], shape=(6,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'a girl phoned me .', shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  piénsalo.
-Tokens:  tf.Tensor([  44 1677 2782  207   15], shape=(5,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'pi\xc3\xa9nsalo .', shape=(), dtype=string)
+Spanish sentence:  una chica me llamó por teléfono.
+Tokens:  tf.Tensor([ 91 544  86 833  89 377  15], shape=(7,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'una chica me llam\xc3\xb3 por tel\xc3\xa9fono .', shape=(), dtype=string)
 
 ```
 </div>
@@ -503,17 +495,17 @@ ________________________________________________________________________________
  transformer_encoder (Transform  (None, None, 256)   1315072     ['token_and_position_embedding[0]
  erEncoder)                                                      [0]']                            
                                                                                                   
- model_1 (Functional)           (None, None, 15000)  10203288    ['decoder_inputs[0][0]',         
+ model_1 (Functional)           (None, None, 15000)  9283992     ['decoder_inputs[0][0]',         
                                                                   'transformer_encoder[0][0]']    
                                                                                                   
 ==================================================================================================
-Total params: 15,368,600
-Trainable params: 15,368,600
+Total params: 14,449,304
+Trainable params: 14,449,304
 Non-trainable params: 0
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 548s 418ms/step - loss: 3.8116 - accuracy: 0.4294 - val_loss: 2.8681 - val_accuracy: 0.5342
+1302/1302 [==============================] - 52s 36ms/step - loss: 3.8582 - accuracy: 0.4209 - val_loss: 2.9147 - val_accuracy: 0.5268
 
-<keras.callbacks.History at 0x7f2af05291c0>
+<keras.callbacks.History at 0x7f013c289520>
 
 ```
 </div>
@@ -526,7 +518,7 @@ as well as the target token `"[START]"`. The model outputs probabilities of the
 next token. We then we repeatedly generated the next token conditioned on the
 tokens generated so far, until we hit the token `"[END]"`.
 
-For decoding, we will use the `keras_nlp.utils.greedy_search` function from
+For decoding, we will use the `keras_nlp.samplers` module from
 KerasNLP. Greedy Decoding is a text decoding method which outputs the most
 likely next token at each time step, i.e., the token with the highest probability.
 
@@ -543,18 +535,23 @@ def decode_sequences(input_sentences):
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
-    def token_probability_fn(decoder_input_tokens):
-        return transformer([encoder_input_tokens, decoder_input_tokens])[:, -1, :]
+    def next(prompt, cache, index):
+        logits = transformer([encoder_input_tokens, prompt])[:, index - 1, :]
+        # Ignore hidden states for now; only needed for contrastive search.
+        hidden_states = None
+        return logits, hidden_states, cache
 
-    # Set the prompt to the "[START]" token.
-    prompt = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    # Build a prompt of length 40 with a start token and padding tokens.
+    length = 40
+    start = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    pad = tf.fill((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
+    prompt = tf.concat((start, pad), axis=-1)
 
-    generated_tokens = keras_nlp.utils.top_p_search(
-        token_probability_fn,
+    generated_tokens = keras_nlp.samplers.GreedySampler()(
+        next,
         prompt,
-        p=0.1,
-        max_length=40,
         end_token_id=spa_tokenizer.token_to_id("[END]"),
+        index=1,  # Start sampling after start token.
     )
     generated_sentences = spa_tokenizer.detokenize(generated_tokens)
     return generated_sentences
@@ -580,16 +577,16 @@ for i in range(2):
 <div class="k-default-codeblock">
 ```
 ** Example 0 **
-when did this occur?
-¿ cuándo se apulul ?
+he had his socks on inside out.
+él tenía su compla .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-have you ever interrupted your manager?
-¿ has dis tu opul ?
+i want to buy an automobile.
+quiero comprar una procumpla .
 ```
 </div>
     
@@ -634,8 +631,8 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.4015512>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.34473664>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.3574271>}
-ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.1584127>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.12230159>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.13493896>}
+ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.31951058>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.3090733>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.30876765>}
+ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.14046296>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.13882938>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.13624863>}
 
 ```
 </div>

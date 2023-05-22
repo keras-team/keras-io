@@ -14,23 +14,21 @@
 ## Setup
 
 
-
 ```python
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-
 ```
 
 ---
 ## Usage of endpoint layers in the Functional API
 
-An "endpoint layer" has access to the model's targets, and creates arbitrary losses and
-metrics using `add_loss` and `add_metric`. This enables you to define losses and
- metrics that don't match the usual signature `fn(y_true, y_pred, sample_weight=None)`.
+An "endpoint layer" has access to the model's targets, and creates arbitrary losses
+in `call()` using `self.add_loss()` and `Metric.update_state()`.
+This enables you to define losses and
+metrics that don't match the usual signature `fn(y_true, y_pred, sample_weight=None)`.
 
 Note that you could have separate metrics for training and eval with this pattern.
-
 
 
 ```python
@@ -39,7 +37,7 @@ class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-        self.accuracy_fn = keras.metrics.BinaryAccuracy(name="accuracy")
+        self.accuracy_metric = keras.metrics.BinaryAccuracy(name="accuracy")
 
     def call(self, logits, targets=None, sample_weight=None):
         if targets is not None:
@@ -49,8 +47,8 @@ class LogisticEndpoint(keras.layers.Layer):
             self.add_loss(loss)
 
             # Log the accuracy as a metric (we could log arbitrary metrics,
-            # including different metrics for training and inference.
-            self.add_metric(self.accuracy_fn(targets, logits, sample_weight))
+            # including different metrics for training and inference.)
+            self.accuracy_metric.update_state(targets, logits, sample_weight)
 
         # Return the inference-time prediction tensor (for `.predict()`).
         return tf.nn.softmax(logits)
@@ -71,17 +69,19 @@ data = {
 
 model.compile(keras.optimizers.Adam(1e-3))
 model.fit(data, epochs=2)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
-32/32 [==============================] - 0s 898us/step - loss: 0.3674 - accuracy: 0.0000e+00
-Epoch 2/2
-32/32 [==============================] - 0s 847us/step - loss: 0.3563 - accuracy: 0.0000e+00
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-<tensorflow.python.keras.callbacks.History at 0x14b31d090>
+Epoch 1/2
+32/32 [==============================] - 0s 513us/step - loss: 0.3746 - accuracy: 0.0000e+00
+Epoch 2/2
+32/32 [==============================] - 0s 481us/step - loss: 0.3587 - accuracy: 0.0000e+00
+
+<keras.callbacks.History at 0x2bdd4ffd0>
 
 ```
 </div>
@@ -89,7 +89,6 @@ Epoch 2/2
 ## Exporting an inference-only model
 
 Simply don't include `targets` in the model. The weights stay the same.
-
 
 
 ```python
@@ -101,12 +100,16 @@ inference_model = keras.Model(inputs, preds)
 inference_model.set_weights(model.get_weights())
 
 preds = inference_model.predict(np.random.random((1000, 764)))
-
 ```
 
+<div class="k-default-codeblock">
+```
+32/32 [==============================] - 0s 281us/step
+
+```
+</div>
 ---
 ## Usage of loss endpoint layers in subclassed models
-
 
 
 ```python
@@ -138,17 +141,19 @@ data = {
 
 model.compile(keras.optimizers.Adam(1e-3))
 model.fit(data, epochs=2)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
-32/32 [==============================] - 0s 833us/step - loss: 0.3499 - accuracy: 0.0000e+00
-Epoch 2/2
-32/32 [==============================] - 0s 643us/step - loss: 0.3443 - accuracy: 0.0000e+00
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-<tensorflow.python.keras.callbacks.History at 0x14afb6850>
+Epoch 1/2
+32/32 [==============================] - 0s 586us/step - loss: 0.3591 - accuracy: 0.0000e+00
+Epoch 2/2
+32/32 [==============================] - 0s 543us/step - loss: 0.3518 - accuracy: 0.0000e+00
+
+<keras.callbacks.History at 0x2bdea3e80>
 
 ```
 </div>

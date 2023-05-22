@@ -398,6 +398,7 @@ Thanks to [Rein van 't Veer](https://github.com/reinvantveer) for improving this
 copy-edits and minor code clean-ups.
 """
 
+
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):

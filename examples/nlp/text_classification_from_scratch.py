@@ -136,6 +136,7 @@ from tensorflow.keras.layers import TextVectorization
 import string
 import re
 
+
 # Having looked at our data above, we see that the raw text contains HTML break
 # tags of the form '<br />'. These tags will not be removed by the default
 # standardizer (which doesn't strip HTML). Because of this, we will need to

@@ -289,6 +289,7 @@ idea being to use larger batches and a larger learning rate than usual, since ou
 
 import numpy as np
 
+
 # Construct an instance of MyModel
 def get_model():
     inputs = keras.Input(shape=(784,))

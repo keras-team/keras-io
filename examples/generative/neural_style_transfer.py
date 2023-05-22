@@ -55,7 +55,7 @@ style_weight = 1e-6
 content_weight = 2.5e-8
 
 # Dimensions of the generated picture.
-width, height = keras.preprocessing.image.load_img(base_image_path).size
+width, height = keras.utils.load_img(base_image_path).size
 img_nrows = 400
 img_ncols = int(width * img_nrows / height)
 
@@ -75,10 +75,8 @@ display(Image(style_reference_image_path))
 
 def preprocess_image(image_path):
     # Util function to open, resize and format pictures into appropriate tensors
-    img = keras.preprocessing.image.load_img(
-        image_path, target_size=(img_nrows, img_ncols)
-    )
-    img = keras.preprocessing.image.img_to_array(img)
+    img = keras.utils.load_img(image_path, target_size=(img_nrows, img_ncols))
+    img = keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = vgg19.preprocess_input(img)
     return tf.convert_to_tensor(img)
@@ -263,7 +261,7 @@ for i in range(1, iterations + 1):
         print("Iteration %d: loss=%.2f" % (i, loss))
         img = deprocess_image(combination_image.numpy())
         fname = result_prefix + "_at_iteration_%d.png" % i
-        keras.preprocessing.image.save_img(fname, img)
+        keras.utils.save_img(fname, img)
 
 """
 After 4000 iterations, you get the following result:
