@@ -394,6 +394,21 @@ with strategy.scope():
     model.compile(optimizer=optimizer, metrics=["accuracy"])
 
 """
+A couple of things to note here: 
+* The
+[`create_optimizer()`](https://huggingface.co/docs/transformers/main_classes/optimizer_schedules#transformers.create_optimizer)
+function creates an Adam optimizer with a learning rate schedule using a warmup phase
+followed by a linear decay. Since we're using weight decay here, under the hood,
+`create_optimizer()` instantiates
+[the right variant of Adam](https://github.com/huggingface/transformers/blob/118e9810687dd713b6be07af79e80eeb1d916908/src/transformers/optimization_tf.py#L172)
+to enable weight decay.
+* While compiling the model, we're NOT using any `loss` argument. This is because
+the TensorFlow models internally compute the loss when expected labels are provided.
+Based on the model type and the labels being used, `transformers` will automatically
+infer the loss to use.
+"""
+
+"""
 ### Start training!
 """
 
