@@ -207,6 +207,7 @@ test_dataset = test_dataset.batch(256).map(
 ## Creating Helper Functions
 """
 
+
 # Helper function for merging new history objects with older ones
 def append_history(losses, val_losses, accuracy, val_accuracy, history):
     losses = losses + history.history["loss"]
@@ -368,7 +369,6 @@ def train_active_learning_models(
     num_iterations=3,
     sampling_size=5000,
 ):
-
     # Creating lists for storing metrics
     losses, val_losses, accuracies, val_accuracies = [], [], [], []
 

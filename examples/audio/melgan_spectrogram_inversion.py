@@ -80,6 +80,7 @@ mapped to a spectrogram using the custom `MelSpec` layer as shown later in this 
 wavs = tf.io.gfile.glob("LJSpeech-1.1/wavs/*.wav")
 print(f"Number of audio files: {len(wavs)}")
 
+
 # Mapper function for loading the audio. This function returns two instances of the wave
 def preprocess(filename):
     audio = tf.audio.decode_wav(tf.io.read_file(filename), 1, DESIRED_SAMPLES).audio

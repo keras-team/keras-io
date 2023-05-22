@@ -214,7 +214,6 @@ def run_experiment(
     weight_decay,
     batch_size,
 ):
-
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
@@ -274,13 +273,11 @@ regardless their vocabulary sizes. This is required for the Transformer model.
 
 
 def encode_inputs(inputs, embedding_dims):
-
     encoded_categorical_feature_list = []
     numerical_feature_list = []
 
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURE_NAMES:
-
             # Get the vocabulary of the categorical feature.
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
 
@@ -307,7 +304,6 @@ def encode_inputs(inputs, embedding_dims):
             encoded_categorical_feature_list.append(encoded_categorical_feature)
 
         else:
-
             # Use the numerical features as-is.
             numerical_feature = tf.expand_dims(inputs[feature_name], -1)
             numerical_feature_list.append(numerical_feature)
@@ -321,7 +317,6 @@ def encode_inputs(inputs, embedding_dims):
 
 
 def create_mlp(hidden_units, dropout_rate, activation, normalization_layer, name=None):
-
     mlp_layers = []
     for units in hidden_units:
         mlp_layers.append(normalization_layer),
@@ -341,7 +336,6 @@ In the first experiment, we create a simple multi-layer feed-forward network.
 def create_baseline_model(
     embedding_dims, num_mlp_blocks, mlp_hidden_units_factors, dropout_rate
 ):
-
     # Create model inputs.
     inputs = create_model_inputs()
     # encode features.
@@ -442,7 +436,6 @@ def create_tabtransformer_classifier(
     dropout_rate,
     use_column_embedding=False,
 ):
-
     # Create model inputs.
     inputs = create_model_inputs()
     # encode features.

@@ -295,10 +295,8 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
 
 # Iterate over the batches of the dataset.
 for step, (x, y) in enumerate(dataset):
-
     # Open a GradientTape.
     with tf.GradientTape() as tape:
-
         # Forward pass.
         logits = linear_layer(x)
 
@@ -486,7 +484,6 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
 
 for step, (x, y) in enumerate(dataset):
     with tf.GradientTape() as tape:
-
         # Forward pass.
         logits = mlp(x)
 
@@ -560,13 +557,6 @@ for epoch in range(2):
 
     # Reset the metric's state at the end of an epoch
     accuracy.reset_state()
-
-"""
-In addition to this, similarly to the `self.add_loss()` method, you have access
-to an `self.add_metric()` method on layers. It tracks the average of
-whatever quantity you pass to it. You can reset the value of these metrics
-by calling `layer.reset_metrics()` on any layer or model.
-"""
 
 """
 You can also define your own metrics by subclassing `keras.metrics.Metric`.

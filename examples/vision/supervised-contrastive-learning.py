@@ -61,8 +61,6 @@ data_augmentation = keras.Sequential(
         layers.Normalization(),
         layers.RandomFlip("horizontal"),
         layers.RandomRotation(0.02),
-        layers.RandomWidth(0.2),
-        layers.RandomHeight(0.2),
     ]
 )
 
@@ -109,7 +107,6 @@ plus a softmax layer with the target classes.
 
 
 def create_classifier(encoder, trainable=True):
-
     for layer in encoder.layers:
         layer.trainable = trainable
 

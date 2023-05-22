@@ -250,6 +250,7 @@ print(f"Test accuracy: {acc*100}%")
 For this part, we will borrow the `Distiller` class from [this Keras Example](https://keras.io/examples/vision/knowledge_distillation/).
 """
 
+
 # Majority of the code is taken from:
 # https://keras.io/examples/vision/knowledge_distillation/
 class SelfTrainer(tf.keras.Model):

@@ -231,6 +231,7 @@ max_prompt_length = 77
 # Load the tokenizer.
 tokenizer = keras_cv.models.stable_diffusion.SimpleTokenizer()
 
+
 # Method to tokenize and pad the tokens.
 def process_text(caption):
     tokens = tokenizer.encode(caption)

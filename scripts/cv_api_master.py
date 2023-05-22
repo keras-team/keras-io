@@ -254,9 +254,90 @@ LAYERS_MASTER = {
 #     ],
 # }
 
-MODELS_MASTER = {
-    "path": "models/",
-    "title": "Models",
+
+BACKBONES_MASTER = {
+    "path": "backbones/",
+    "title": "Backbones",
+    "toc": True,
+    "children": [
+        {
+            "path": "resnet_v1",
+            "title": "ResNetV1 backbones",
+            "generate": [
+                "keras_cv.models.ResNetBackbone",
+                "keras_cv.models.ResNetBackbone.from_preset",
+                "keras_cv.models.ResNet18Backbone",
+                "keras_cv.models.ResNet34Backbone",
+                "keras_cv.models.ResNet50Backbone",
+                "keras_cv.models.ResNet101Backbone",
+                "keras_cv.models.ResNet152Backbone",
+            ],
+        },
+        {
+            "path": "resnet_v2",
+            "title": "ResNetV2 backbones",
+            "generate": [
+                "keras_cv.models.ResNetV2Backbone",
+                "keras_cv.models.ResNetV2Backbone.from_preset",
+                "keras_cv.models.ResNet18V2Backbone",
+                "keras_cv.models.ResNet34V2Backbone",
+                "keras_cv.models.ResNet50V2Backbone",
+                "keras_cv.models.ResNet101V2Backbone",
+                "keras_cv.models.ResNet152V2Backbone",
+            ],
+        },
+        {
+            "path": "csp_darknet",
+            "title": "CSPDarkNet backbones",
+            "generate": [
+                "keras_cv.models.CSPDarkNetBackbone",
+                "keras_cv.models.CSPDarkNetBackbone.from_preset",
+                "keras_cv.models.CSPDarkNetTinyBackbone",
+                "keras_cv.models.CSPDarkNetSBackbone",
+                "keras_cv.models.CSPDarkNetMBackbone",
+                "keras_cv.models.CSPDarkNetLBackbone",
+                "keras_cv.models.CSPDarkNetXLBackbone",
+            ],
+        },
+        {
+            "path": "yolo_v8",
+            "title": "YOLOV8 backbones",
+            "generate": [
+                "keras_cv.models.YOLOV8Backbone",
+                "keras_cv.models.YOLOV8Backbone.from_preset",
+            ],
+        },
+        {
+            "path": "mobilenetv3",
+            "title": "MobileNetV3 backbones",
+            "generate": [
+                "keras_cv.models.MobileNetV3Backbone",
+                "keras_cv.models.MobileNetV3Backbone.from_preset",
+                "keras_cv.models.MobileNetV3SmallBackbone",
+                "keras_cv.models.MobileNetV3LargeBackbone",
+            ],
+        },
+        {
+            "path": "efficientnetv2",
+            "title": "EfficientNetV2 models",
+            "generate": [
+                "keras_cv.models.EfficientNetV2Backbone",
+                "keras_cv.models.EfficientNetV2Backbone.from_preset",
+                "keras_cv.models.EfficientNetV2B0Backbone",
+                "keras_cv.models.EfficientNetV2B1Backbone",
+                "keras_cv.models.EfficientNetV2B2Backbone",
+                "keras_cv.models.EfficientNetV2B3Backbone",
+                "keras_cv.models.EfficientNetV2SBackbone",
+                "keras_cv.models.EfficientNetV2MBackbone",
+                "keras_cv.models.EfficientNetV2LBackbone",
+            ],
+        },
+    ],
+}
+
+TASKS_MASKTER = {
+    "path": "tasks/",
+    "title": "Tasks",
     "toc": True,
     "children": [
         {
@@ -271,36 +352,33 @@ MODELS_MASTER = {
             "title": "The RetinaNet model",
             "generate": [
                 "keras_cv.models.RetinaNet",
+                "keras_cv.models.RetinaNet.from_preset",
             ],
         },
         {
-            "path": "faster_rcnn",
-            "title": "The FasterRCNN model",
-            "generate": ["keras_cv.models.FasterRCNN"],
-        },
-        {
-            "path": "efficientnetv2",
-            "title": "EfficientNetV2 models",
+            "path": "image_classifier",
+            "title": "The ImageClassifier model",
             "generate": [
-                "keras_cv.models.EfficientNetV2B0",
-                "keras_cv.models.EfficientNetV2B1",
-                "keras_cv.models.EfficientNetV2B2",
-                "keras_cv.models.EfficientNetV2B3",
-                "keras_cv.models.EfficientNetV2S",
-                "keras_cv.models.EfficientNetV2M",
-                "keras_cv.models.EfficientNetV2L",
+                "keras_cv.models.ImageClassifier",
+                "keras_cv.models.ImageClassifier.from_preset",
             ],
         },
         {
-            "path": "densenet",
-            "title": "DenseNet models",
+            "path": "yolo_v8_detector",
+            "title": "The YOLOV8Detector model",
             "generate": [
-                "keras_cv.models.DenseNet121",
-                "keras_cv.models.DenseNet169",
-                "keras_cv.models.DenseNet201",
+                "keras_cv.models.YOLOV8Detector",
+                "keras_cv.models.YOLOV8Detector.from_preset",
             ],
         },
     ],
+}
+
+MODELS_MASTER = {
+    "path": "models/",
+    "title": "Models",
+    "toc": True,
+    "children": [TASKS_MASKTER, BACKBONES_MASTER],
 }
 
 CV_API_MASTER = {

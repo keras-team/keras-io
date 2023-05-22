@@ -41,11 +41,12 @@ task using Hugging Face Transformers on the `XSum` dataset loaded from Hugging F
 """
 
 """shell
-pip install transformers==4.20.0
-pip install keras_nlp==0.3.0
-pip install datasets
-pip install huggingface-hub
-pip install nltk
+!pip install transformers==4.20.0
+!pip install keras_nlp==0.3.0
+!pip install datasets
+!pip install huggingface-hub
+!pip install nltk
+!pip install rouge-score
 """
 
 """

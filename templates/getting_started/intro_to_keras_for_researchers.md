@@ -150,8 +150,8 @@ print(a)
 <div class="k-default-codeblock">
 ```
 <tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
-array([[-1.7639292,  0.4263797],
-       [-0.3954156, -0.6072024]], dtype=float32)>
+array([[-0.11127437,  0.37391818],
+       [-0.53640217, -0.8033101 ]], dtype=float32)>
 
 ```
 </div>
@@ -213,8 +213,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.99851996 -0.56305575]
- [-0.99985445 -0.773933  ]], shape=(2, 2), dtype=float32)
+[[-0.34171113 -0.348583  ]
+ [ 0.54899895 -0.25350904]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -233,8 +233,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.99851996 -0.56305575]
- [-0.99985445 -0.773933  ]], shape=(2, 2), dtype=float32)
+[[-0.34171113 -0.348583  ]
+ [ 0.54899895 -0.25350904]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -254,8 +254,8 @@ with tf.GradientTape() as outer_tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[1.2510717e-03 4.4079739e-01]
- [2.1326542e-04 3.7843192e-01]], shape=(2, 2), dtype=float32)
+[[2.7081103 0.7274715]
+ [0.4489885 1.2576567]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -388,10 +388,8 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
 
 # Iterate over the batches of the dataset.
 for step, (x, y) in enumerate(dataset):
-
     # Open a GradientTape.
     with tf.GradientTape() as tape:
-
         # Forward pass.
         logits = linear_layer(x)
 
@@ -411,16 +409,18 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.4605865478515625
-Step: 100 Loss: 2.3112568855285645
-Step: 200 Loss: 2.1920084953308105
-Step: 300 Loss: 2.1255125999450684
-Step: 400 Loss: 2.020744562149048
-Step: 500 Loss: 2.060229539871216
-Step: 600 Loss: 1.9214580059051514
-Step: 700 Loss: 1.7613574266433716
-Step: 800 Loss: 1.6828575134277344
-Step: 900 Loss: 1.6320191621780396
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.SGD` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.SGD`.
+
+Step: 0 Loss: 2.339794874191284
+Step: 100 Loss: 2.2681260108947754
+Step: 200 Loss: 2.1939074993133545
+Step: 300 Loss: 2.0258545875549316
+Step: 400 Loss: 1.895912528038025
+Step: 500 Loss: 1.9022576808929443
+Step: 600 Loss: 1.7397000789642334
+Step: 700 Loss: 1.682852029800415
+Step: 800 Loss: 1.7028923034667969
+Step: 900 Loss: 1.5907071828842163
 
 ```
 </div>
@@ -579,7 +579,7 @@ print(mlp.losses)  # List containing one float32 scalar
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.21796302>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.1054272>]
 
 ```
 </div>
@@ -615,7 +615,6 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
 
 for step, (x, y) in enumerate(dataset):
     with tf.GradientTape() as tape:
-
         # Forward pass.
         logits = mlp(x)
 
@@ -638,16 +637,18 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 6.307978630065918
-Step: 100 Loss: 2.5283541679382324
-Step: 200 Loss: 2.4068050384521484
-Step: 300 Loss: 2.3749840259552
-Step: 400 Loss: 2.34563946723938
-Step: 500 Loss: 2.3380157947540283
-Step: 600 Loss: 2.3201656341552734
-Step: 700 Loss: 2.3250539302825928
-Step: 800 Loss: 2.344613790512085
-Step: 900 Loss: 2.3183579444885254
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.SGD` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.SGD`.
+
+Step: 0 Loss: 6.72915506362915
+Step: 100 Loss: 2.616196632385254
+Step: 200 Loss: 2.4459407329559326
+Step: 300 Loss: 2.3743927478790283
+Step: 400 Loss: 2.3421053886413574
+Step: 500 Loss: 2.3347532749176025
+Step: 600 Loss: 2.329498529434204
+Step: 700 Loss: 2.3266661167144775
+Step: 800 Loss: 2.3347079753875732
+Step: 900 Loss: 2.3129796981811523
 
 ```
 </div>
@@ -710,34 +711,31 @@ for epoch in range(2):
 
 <div class="k-default-codeblock">
 ```
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.141
+Total running accuracy so far: 0.188
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.751
+Total running accuracy so far: 0.758
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.827
+Total running accuracy so far: 0.828
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.859
+Total running accuracy so far: 0.857
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.876
+Total running accuracy so far: 0.873
 Epoch: 1 Step: 0
 Total running accuracy so far: 0.938
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.944
+Total running accuracy so far: 0.938
 Epoch: 1 Step: 400
-Total running accuracy so far: 0.944
+Total running accuracy so far: 0.940
 Epoch: 1 Step: 600
-Total running accuracy so far: 0.945
+Total running accuracy so far: 0.941
 Epoch: 1 Step: 800
-Total running accuracy so far: 0.945
+Total running accuracy so far: 0.941
 
 ```
 </div>
-In addition to this, similarly to the `self.add_loss()` method, you have access
-to an `self.add_metric()` method on layers. It tracks the average of
-whatever quantity you pass to it. You can reset the value of these metrics
-by calling `layer.reset_metrics()` on any layer or model.
-
 You can also define your own metrics by subclassing `keras.metrics.Metric`.
 You need to override the three functions called above:
 
@@ -865,16 +863,18 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.291861057281494
-Step: 100 Loss: 0.5378965735435486
-Step: 200 Loss: 0.48008084297180176
-Step: 300 Loss: 0.3359006941318512
-Step: 400 Loss: 0.28147661685943604
-Step: 500 Loss: 0.31419697403907776
-Step: 600 Loss: 0.2735794484615326
-Step: 700 Loss: 0.3001103401184082
-Step: 800 Loss: 0.18827161192893982
-Step: 900 Loss: 0.15798673033714294
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+
+Step: 0 Loss: 2.365858316421509
+Step: 100 Loss: 0.6919876933097839
+Step: 200 Loss: 0.27754053473472595
+Step: 300 Loss: 0.47360336780548096
+Step: 400 Loss: 0.18255259096622467
+Step: 500 Loss: 0.31124019622802734
+Step: 600 Loss: 0.2792532444000244
+Step: 700 Loss: 0.36256417632102966
+Step: 800 Loss: 0.22643642127513885
+Step: 900 Loss: 0.15995879471302032
 
 ```
 </div>
@@ -1017,13 +1017,17 @@ model.evaluate(dataset)
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.3958 - sparse_categorical_accuracy: 0.8872
-Epoch 2/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.1916 - sparse_categorical_accuracy: 0.9447
-938/938 [==============================] - 1s 798us/step - loss: 0.1729 - sparse_categorical_accuracy: 0.9485
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-[0.1728748232126236, 0.9484500288963318]
+Epoch 1/2
+938/938 [==============================] - 1s 625us/step - loss: 0.3931 - sparse_categorical_accuracy: 0.8890
+Epoch 2/2
+938/938 [==============================] - 1s 622us/step - loss: 0.1860 - sparse_categorical_accuracy: 0.9453
+938/938 [==============================] - 0s 341us/step
+938/938 [==============================] - 0s 367us/step - loss: 0.1539 - sparse_categorical_accuracy: 0.9533
+
+[0.15391898155212402, 0.9532666802406311]
 
 ```
 </div>
@@ -1082,12 +1086,14 @@ model.fit(dataset, epochs=2)
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.3737 - accuracy: 0.8340
-Epoch 2/2
-938/938 [==============================] - 1s 946us/step - loss: 0.1934 - accuracy: 0.9405
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
 
-<keras.callbacks.History at 0x15dfae110>
+Epoch 1/2
+938/938 [==============================] - 1s 514us/step - loss: 0.4022 - accuracy: 0.8112
+Epoch 2/2
+938/938 [==============================] - 0s 515us/step - loss: 0.2089 - accuracy: 0.9343
+
+<keras.callbacks.History at 0x29e62e3e0>
 
 ```
 </div>
@@ -1249,17 +1255,19 @@ for step, x in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.3246927559375763
-Step: 100 Loss: 0.12636583357459247
-Step: 200 Loss: 0.099717023916802
-Step: 300 Loss: 0.0896754782535507
-Step: 400 Loss: 0.08474012454065896
-Step: 500 Loss: 0.08153954131933981
-Step: 600 Loss: 0.07914437327577349
-Step: 700 Loss: 0.07779341802723738
-Step: 800 Loss: 0.07658644887466406
-Step: 900 Loss: 0.07564477964855325
-Step: 1000 Loss: 0.07468595038671474
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+
+Step: 0 Loss: 0.3580949902534485
+Step: 100 Loss: 0.1271588603901391
+Step: 200 Loss: 0.10059373158572325
+Step: 300 Loss: 0.09024866822599573
+Step: 400 Loss: 0.08506722282850535
+Step: 500 Loss: 0.08182044965986482
+Step: 600 Loss: 0.07937284828025767
+Step: 700 Loss: 0.07802503153192844
+Step: 800 Loss: 0.07680399313606276
+Step: 900 Loss: 0.0758183566599125
+Step: 1000 Loss: 0.07485662428262112
 
 ```
 </div>
@@ -1329,9 +1337,12 @@ vae.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 3s 1ms/step - loss: 0.0713
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
 
-<keras.callbacks.History at 0x15e150f10>
+1875/1875 [==============================] - 3s 1ms/step - loss: 0.0714
+
+<keras.callbacks.History at 0x2c73f0910>
 
 ```
 </div>
@@ -1362,7 +1373,10 @@ classes = 10
 
 # This is the main network we'll actually use to predict labels.
 main_network = keras.Sequential(
-    [keras.layers.Dense(64, activation=tf.nn.relu), keras.layers.Dense(classes),]
+    [
+        keras.layers.Dense(64, activation=tf.nn.relu),
+        keras.layers.Dense(classes),
+    ]
 )
 
 # It doesn't need to create its own weights, so let's mark its layers
@@ -1470,17 +1484,19 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 1.3274627923965454
-Step: 100 Loss: 2.5709669510326765
-Step: 200 Loss: 2.2051062234700542
-Step: 300 Loss: 2.0191424489686534
-Step: 400 Loss: 1.8865989956417193
-Step: 500 Loss: 1.7706833476604333
-Step: 600 Loss: 1.6479115988951523
-Step: 700 Loss: 1.603230944064981
-Step: 800 Loss: 1.533307248778922
-Step: 900 Loss: 1.513232192888781
-Step: 1000 Loss: 1.4671869220568465
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+
+Step: 0 Loss: 2.9760189056396484
+Step: 100 Loss: 2.5381786324600184
+Step: 200 Loss: 2.235966676725677
+Step: 300 Loss: 2.112266645776077
+Step: 400 Loss: 1.9635035995013101
+Step: 500 Loss: 1.8773559593907398
+Step: 600 Loss: 1.8203280925204104
+Step: 700 Loss: 1.773320673520015
+Step: 800 Loss: 1.7310391644066194
+Step: 900 Loss: 1.6813015580682764
+Step: 1000 Loss: 1.6270896273646922
 
 ```
 </div>

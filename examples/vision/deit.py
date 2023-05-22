@@ -153,6 +153,7 @@ First, we'll implement a layer for Stochastic Depth
 which is used in DeiT for regularization.
 """
 
+
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
@@ -178,7 +179,7 @@ def mlp(x, dropout_rate: float, hidden_units: List):
     """FFN for a Transformer block."""
     # Iterate over the hidden units and
     # add Dense => Dropout.
-    for (idx, units) in enumerate(hidden_units):
+    for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
             activation=tf.nn.gelu if idx == 0 else None,

@@ -54,7 +54,7 @@ for input_path, target_path in zip(input_img_paths[:10], target_img_paths[:10]):
 """
 
 from IPython.display import Image, display
-from tensorflow.keras.preprocessing.image import load_img
+from tensorflow.keras.utils import load_img
 from PIL import ImageOps
 
 # Display input image #7
@@ -70,7 +70,7 @@ display(img)
 
 from tensorflow import keras
 import numpy as np
-from tensorflow.keras.preprocessing.image import load_img
+from tensorflow.keras.utils import load_img
 
 
 class OxfordPets(keras.utils.Sequence):
@@ -227,7 +227,7 @@ def display_mask(i):
     """Quick utility to display a model's prediction."""
     mask = np.argmax(val_preds[i], axis=-1)
     mask = np.expand_dims(mask, axis=-1)
-    img = ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
+    img = ImageOps.autocontrast(keras.utils.array_to_img(mask))
     display(img)
 
 

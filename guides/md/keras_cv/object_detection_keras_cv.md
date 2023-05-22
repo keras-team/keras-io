@@ -3,7 +3,7 @@
 **Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
 **Date created:** 2023/04/08<br>
 **Last modified:** 2023/04/08<br>
-**Description:** Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+**Description:** Train an object detection model with KerasCV.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/object_detection_keras_cv.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/object_detection_keras_cv.py)
@@ -55,7 +55,7 @@ arbitrary number of classes.
 
 **For example:**
 
-<img width="300" src="https://i.imgur.com/QTvxIZH.jpeg">
+<img width="300" src="https://i.imgur.com/8xSEbQD.png">
 
 The data for the above image may look something like this:
 ```python
@@ -859,7 +859,7 @@ model.compile(
 )
 ```
 
-If you want to train the fully model, uncomment `.take(20)` from each
+If you want to fully train the  model, uncomment `.take(20)` from each
 of the following dataset references.
 
 
@@ -961,9 +961,8 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 
 Awesome!
-One final helpful pattern to be aware of is monitoring training is to visualize
-detections in a `keras.callbacks.Callback`:
-
+One final helpful pattern to be aware of is to visualize
+detections in a `keras.callbacks.Callback` to monitor training:
 
 ```python
 

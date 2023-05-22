@@ -272,6 +272,7 @@ See this [guide](https://www.tensorflow.org/guide/data_performance)
 for more information on data pipeline performance.
 """
 
+
 # One-hot / categorical encoding
 def input_preprocess(image, label):
     label = tf.one_hot(label, NUM_CLASSES)

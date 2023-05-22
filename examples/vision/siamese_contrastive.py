@@ -207,7 +207,6 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
     # Plot the images
     fig, axes = plt.subplots(num_row, num_col, figsize=(5, 5))
     for i in range(to_show):
-
         # If the number of rows is 1, the axes array is one-dimensional
         if num_row == 1:
             ax = axes[i % num_col]
@@ -253,6 +252,7 @@ produces embeddings. A `Lambda` layer then merges them using an
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged output is fed to the final network.
 """
+
 
 # Provided two tensors t1 and t2
 # Euclidean distance = sqrt(sum(square(t1-t2)))

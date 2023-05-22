@@ -105,7 +105,7 @@ base_image_path = os.path.join(base_path, "words")
 def get_image_paths_and_labels(samples):
     paths = []
     corrected_samples = []
-    for (i, file_line) in enumerate(samples):
+    for i, file_line in enumerate(samples):
         line_split = file_line.strip()
         line_split = line_split.split(" ")
 

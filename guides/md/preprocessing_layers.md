@@ -70,8 +70,6 @@ are only active during training.
 - `tf.keras.layers.RandomTranslation`
 - `tf.keras.layers.RandomRotation`
 - `tf.keras.layers.RandomZoom`
-- `tf.keras.layers.RandomHeight`
-- `tf.keras.layers.RandomWidth`
 - `tf.keras.layers.RandomContrast`
 
 ---
@@ -328,9 +326,9 @@ model.fit(train_dataset, steps_per_epoch=5)
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 11s 443ms/step - loss: 8.7779
+5/5 [==============================] - 5s 149ms/step - loss: 8.6297
 
-<keras.callbacks.History at 0x12c82c110>
+<keras.callbacks.History at 0x1733b4e20>
 
 ```
 </div>
@@ -364,9 +362,9 @@ model.fit(x_train, y_train)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 2s 1ms/step - loss: 2.1254
+1563/1563 [==============================] - 1s 620us/step - loss: 2.1256
 
-<keras.callbacks.History at 0x139bfa310>
+<keras.callbacks.History at 0x2812df1c0>
 
 ```
 </div>
@@ -541,14 +539,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 2s 2s/step - loss: 0.5132
+1/1 [==============================] - 1s 1s/step - loss: 0.4723
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[0.03228145]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.00129266]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -618,6 +616,7 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
+WARNING:tensorflow:5 out of the last 1567 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x2f9d48310> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0.
   0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0.]]
@@ -627,14 +626,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 214ms/step - loss: 0.2350
+1/1 [==============================] - 0s 125ms/step - loss: 0.5575
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[-0.8317138]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[0.04716435]], shape=(1, 1), dtype=float32)
 
 ```
 </div>
@@ -698,6 +697,7 @@ print("Model output:", test_output)
 
 <div class="k-default-codeblock">
 ```
+WARNING:tensorflow:6 out of the last 1568 calls to <function PreprocessingLayer.make_adapt_function.<locals>.adapt_step at 0x17752bf40> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 Encoded text:
  [[5.461647  1.6945957 0.        0.        0.        0.        0.
   0.        0.        0.        0.        0.        0.        0.
@@ -711,14 +711,14 @@ Encoded text:
 <div class="k-default-codeblock">
 ```
 Training model...
-1/1 [==============================] - 0s 270ms/step - loss: 1.5942
+1/1 [==============================] - 0s 124ms/step - loss: 21.4507
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Calling end-to-end model on test string...
-Model output: tf.Tensor([[1.2851937]], shape=(1, 1), dtype=float32)
+Model output: tf.Tensor([[-0.8515837]], shape=(1, 1), dtype=float32)
 
 ```
 </div>

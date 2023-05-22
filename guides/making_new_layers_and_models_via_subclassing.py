@@ -229,6 +229,7 @@ you will want to use later, when writing your training loop. This is doable by
 calling `self.add_loss(value)`:
 """
 
+
 # A layer that creates an activity regularization loss
 class ActivityRegularizationLayer(keras.layers.Layer):
     def __init__(self, rate=1e-2):
@@ -341,71 +342,6 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 # call during the forward pass!
 model.compile(optimizer="adam")
 model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
-
-"""
-## The `add_metric()` method
-
-Similarly to `add_loss()`, layers also have an `add_metric()` method
-for tracking the moving average of a quantity during training.
-
-Consider the following layer: a "logistic endpoint" layer.
-It takes as inputs predictions & targets, it computes a loss which it tracks
-via `add_loss()`, and it computes an accuracy scalar, which it tracks via
-`add_metric()`.
-"""
-
-
-class LogisticEndpoint(keras.layers.Layer):
-    def __init__(self, name=None):
-        super().__init__(name=name)
-        self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-        self.accuracy_fn = keras.metrics.BinaryAccuracy()
-
-    def call(self, targets, logits, sample_weights=None):
-        # Compute the training-time loss value and add it
-        # to the layer using `self.add_loss()`.
-        loss = self.loss_fn(targets, logits, sample_weights)
-        self.add_loss(loss)
-
-        # Log accuracy as a metric and add it
-        # to the layer using `self.add_metric()`.
-        acc = self.accuracy_fn(targets, logits, sample_weights)
-        self.add_metric(acc, name="accuracy")
-
-        # Return the inference-time prediction tensor (for `.predict()`).
-        return tf.nn.softmax(logits)
-
-
-"""
-Metrics tracked in this way are accessible via `layer.metrics`:
-"""
-
-layer = LogisticEndpoint()
-
-targets = tf.ones((2, 2))
-logits = tf.ones((2, 2))
-y = layer(targets, logits)
-
-print("layer.metrics:", layer.metrics)
-print("current accuracy value:", float(layer.metrics[0].result()))
-
-"""
-Just like for `add_loss()`, these metrics are tracked by `fit()`:
-"""
-
-inputs = keras.Input(shape=(3,), name="inputs")
-targets = keras.Input(shape=(10,), name="targets")
-logits = keras.layers.Dense(10)(inputs)
-predictions = LogisticEndpoint(name="predictions")(targets, logits)
-
-model = keras.Model(inputs=[inputs, targets], outputs=predictions)
-model.compile(optimizer="adam")
-
-data = {
-    "inputs": np.random.random((3, 3)),
-    "targets": np.random.random((3, 10)),
-}
-model.fit(data)
 
 """
 ## You can optionally enable serialization on your layers
@@ -609,8 +545,8 @@ Here's what you've learned so far:
 - A `Layer` encapsulate a state (created in `__init__()` or `build()`) and some
 computation (defined in `call()`).
 - Layers can be recursively nested to create new, bigger computation blocks.
-- Layers can create and track losses (typically regularization losses) as well
-as metrics, via `add_loss()` and `add_metric()`
+- Layers can create and track losses (typically regularization losses)
+via `add_loss()`.
 - The outer container, the thing you want to train, is a `Model`. A `Model` is
 just like a `Layer`, but with added training and serialization utilities.
 

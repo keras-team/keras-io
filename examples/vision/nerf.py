@@ -533,10 +533,10 @@ class TrainMonitor(keras.callbacks.Callback):
 
         # Plot the rgb, depth and the loss plot.
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
-        ax[0].imshow(keras.preprocessing.image.array_to_img(test_recons_images[0]))
+        ax[0].imshow(keras.utils.array_to_img(test_recons_images[0]))
         ax[0].set_title(f"Predicted Image: {epoch:03d}")
 
-        ax[1].imshow(keras.preprocessing.image.array_to_img(depth_maps[0, ..., None]))
+        ax[1].imshow(keras.utils.array_to_img(depth_maps[0, ..., None]))
         ax[1].set_title(f"Depth Map: {epoch:03d}")
 
         ax[2].plot(loss_list)
@@ -623,15 +623,13 @@ fig, axes = plt.subplots(nrows=5, ncols=3, figsize=(10, 20))
 for ax, ori_img, recons_img, depth_map in zip(
     axes, test_imgs, test_recons_images, depth_maps
 ):
-    ax[0].imshow(keras.preprocessing.image.array_to_img(ori_img))
+    ax[0].imshow(keras.utils.array_to_img(ori_img))
     ax[0].set_title("Original")
 
-    ax[1].imshow(keras.preprocessing.image.array_to_img(recons_img))
+    ax[1].imshow(keras.utils.array_to_img(recons_img))
     ax[1].set_title("Reconstructed")
 
-    ax[2].imshow(
-        keras.preprocessing.image.array_to_img(depth_map[..., None]), cmap="inferno"
-    )
+    ax[2].imshow(keras.utils.array_to_img(depth_map[..., None]), cmap="inferno")
     ax[2].set_title("Depth Map")
 
 """

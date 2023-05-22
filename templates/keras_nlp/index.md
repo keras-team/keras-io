@@ -28,6 +28,7 @@ check out our
 
 * [KerasNLP API reference](/api/keras_nlp/)
 * [KerasNLP on GitHub](https://github.com/keras-team/keras-nlp)
+* [List of available models and presets](/api/keras_nlp/models/)
 ---
 ## Guides
 
@@ -39,6 +40,7 @@ check out our
 ## Examples
 
 * [English-to-Spanish translation](/examples/nlp/neural_machine_translation_with_keras_nlp/)
+* [GPT2 text generation](/examples/generative/gpt2_text_generation_with_kerasnlp/)
 * [GPT text generation from scratch](/examples/generative/text_generation_gpt/)
 * [Text Classification using FNet](/examples/nlp/fnet_classification_with_keras_nlp/)
 

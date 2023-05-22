@@ -26,14 +26,14 @@ import numpy as np
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](https://keras.io/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
 (for instance, to train a GAN using `fit()`), you can subclass the `Model` class and
 implement your own `train_step()` method, which
 is called repeatedly during `fit()`. This is covered in the guide
-[Customizing what happens in `fit()`](/guides/customizing_what_happens_in_fit/).
+[Customizing what happens in `fit()`](https://keras.io/guides/customizing_what_happens_in_fit/).
 
 Now, if you want very low-level control over training & evaluation, you should write
 your own training & evaluation loops from scratch. This is what this guide is about.
