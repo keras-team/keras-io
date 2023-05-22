@@ -213,7 +213,7 @@ def preprocess_function(examples):
 
 To apply this function on all the pairs of sentences in our dataset, we just use the
 `map` method of our `dataset` object we created earlier. This will apply the function on
-all the elements of all the splits in `dataset`, so our training, validation and testing
+all the elements of all the splits in `dataset`, so our training and testing
 data will be preprocessed in one single command.
 
 
