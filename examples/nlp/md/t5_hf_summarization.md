@@ -230,7 +230,7 @@ sequence-to-sequence (both the input and output are text sequences), we use the
 tokenizer, the `from_pretrained` method will download and cache the model for us.
 
 The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. As
-mentioned earlier, we will use the `t5-base` model checkpoint.
+mentioned earlier, we will use the `t5-small` model checkpoint.
 
 
 ```python
