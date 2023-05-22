@@ -136,14 +136,7 @@ import re
 
 import tensorflow as tf
 
-from transformers import (
-    AutoConfig,
-    AutoTokenizer,
-    DataCollatorForLanguageModeling,
-    PushToHubCallback,
-    TFAutoModelForMaskedLM,
-    create_optimizer,
-)
+import transformers
 
 """
 ### Initialize TPUs
@@ -176,8 +169,8 @@ For the model, we use RoBERTa (the base variant), introduced in
 tokenizer = "tf-tpu/unigram-tokenizer-wikitext"
 pretrained_model_config = "roberta-base"
 
-tokenizer = AutoTokenizer.from_pretrained(tokenizer)
-config = AutoConfig.from_pretrained(pretrained_model_config)
+tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
+config = transformers.AutoConfig.from_pretrained(pretrained_model_config)
 config.vocab_size = tokenizer.vocab_size
 
 """
@@ -250,7 +243,7 @@ for this purpose.
 # We use a standard masking probability of 0.15. `mlm_probability` denotes
 # probability with which we mask the input tokens in a sequence.
 mlm_probability = 0.15
-data_collator = DataCollatorForLanguageModeling(
+data_collator = transformers.DataCollatorForLanguageModeling(
     tokenizer=tokenizer, mlm_probability=mlm_probability, mlm=True, return_tensors="tf"
 )
 
@@ -388,11 +381,11 @@ learning_rate = 0.0001
 weight_decay_rate = 1e-3
 
 with strategy.scope():
-    model = TFAutoModelForMaskedLM.from_config(config)
+    model = transformers.TFAutoModelForMaskedLM.from_config(config)
     model(
         model.dummy_inputs
     )  # Pass some dummy inputs through the model to ensure all the weights are built
-    optimizer, schedule = create_optimizer(
+    optimizer, schedule = transformers.create_optimizer(
         num_train_steps=total_train_steps,
         num_warmup_steps=total_train_steps // 20,
         init_lr=learning_rate,
@@ -426,7 +419,7 @@ hub_model_id = output_dir = "masked-lm-tpu"
 
 callbacks = []
 callbacks.append(
-    PushToHubCallback(
+    transformers.PushToHubCallback(
         output_dir=output_dir, hub_model_id=hub_model_id, tokenizer=tokenizer
     )
 )
