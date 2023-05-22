@@ -71,14 +71,14 @@ We will be using the
 [CIFAR-10](https://www.tensorflow.org/datasets/catalog/cifar10)
 dataset for this tutorial.
 
-For a similarity model to learn efficiently, each batch must contains at least 2
+For a similarity model to learn efficiently, each batch must contain at least 2
 examples of each class.
 
 To make this easy, tf_similarity offers `Sampler` objects that enable you to set both
 the number of classes and the minimum number of examples of each class per
 batch.
 
-The train and validation datasets will be created using the
+The training and validation datasets will be created using the
 `TFDatasetMultiShotMemorySampler` object. This creates a sampler that loads datasets
 from [TensorFlow Datasets](https://www.tensorflow.org/datasets) and yields
 batches containing a target number of classes and a target number of examples
