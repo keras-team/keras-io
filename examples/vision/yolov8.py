@@ -34,14 +34,11 @@ required for building object detection models with KerasCV.
 """
 
 import os
-import glob
-import numpy as np
 from tqdm.auto import tqdm
 import xml.etree.ElementTree as ET
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import optimizers
 
 import keras_cv
 from keras_cv import bounding_box
