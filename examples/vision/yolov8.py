@@ -101,9 +101,8 @@ your dataset.
 
 SPLIT_RATIO = 0.2
 BATCH_SIZE = 4
-LEARNING_RATE = 1e-6
+LEARNING_RATE = 0.001
 EPOCH = 5
-MOMENTUM = 0.9
 GLOBAL_CLIPNORM = 10.0
 
 """
@@ -531,8 +530,8 @@ probabilities and bounding boxes.
 """
 
 optimizer = tf.keras.optimizers.Adam(
-    learning_rate=0.001,
-    global_clipnorm=10.0,
+    learning_rate=LEARNING_RATE,
+    global_clipnorm=GLOBAL_CLIPNORM,
 )
 
 yolo.compile(
@@ -575,7 +574,7 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
 yolo.fit(
     train_ds,
     validation_data=val_ds,
-    epochs=5,
+    epochs=EPOCH,
     callbacks=[EvaluateCOCOMetricsCallback(val_ds)],
 )
 
