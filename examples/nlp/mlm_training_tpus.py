@@ -396,7 +396,7 @@ with strategy.scope():
     model.compile(optimizer=optimizer, metrics=["accuracy"])
 
 """
-A couple of things to note here: 
+A couple of things to note here:
 * The
 [`create_optimizer()`](https://huggingface.co/docs/transformers/main_classes/optimizer_schedules#transformers.create_optimizer)
 function creates an Adam optimizer with a learning rate schedule using a warmup phase
