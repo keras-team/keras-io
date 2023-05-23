@@ -1,12 +1,9 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-"""
-# Efficient Object Detection with YOLOV8 and KerasCV
+Title: Efficient Object Detection with YOLOV8 and KerasCV
+Author: [Gitesh Chawda](https://www.linkedin.com/in/gitesh-ch/)
+Date created: 2023/05/23
+Last modified: 2023/05/23
+Description: Train custom YOLOV8 object detection model with KerasCV.
 """
 
 """
@@ -85,7 +82,7 @@ However, in this code example, we will demonstrate how to load the dataset from 
 using TensorFlow's tf.data pipeline. This approach provides more flexibility and allows
 you to customize the preprocessing steps as needed.
 
-loading custom datasets that are not available in the TensorFlow Datasets library is one
+Loading custom datasets that are not available in the TensorFlow Datasets library is one
 of the main advantages of using the tf.data pipeline. This approach allows you to create
 a custom data preprocessing pipeline tailored to the specific needs and requirements of
 your dataset.
@@ -204,7 +201,7 @@ sequences, such as text or time series data.
 classes = [[8, 8, 8, 8, 8], # 5 classes
  [12, 14, 14, 14],          # 4 classes
  [1],                       # 1 class
- [7, 7],                    # 2 class
+ [7, 7],                    # 2 classes
  ...]
 ```
 
@@ -213,9 +210,9 @@ bbox = [[199.0, 19.0, 390.0, 401.0],
   [217.0, 15.0, 270.0, 157.0],
   [393.0, 18.0, 432.0, 162.0],
   [1.0, 15.0, 226.0, 276.0],
-  [19.0, 95.0, 458.0, 443.0]],  #image 1 having 4 objects
- [[52.0, 117.0, 109.0, 177.0]], #image 2 having 1 object
- [[88.0, 87.0, 235.0, 322.0], [113.0, 117.0, 218.0, 471.0]], #image 2 having 2 objects
+  [19.0, 95.0, 458.0, 443.0]],  #image 1 has 4 objects
+ [[52.0, 117.0, 109.0, 177.0]], #image 2 has 1 object
+ [[88.0, 87.0, 235.0, 322.0], [113.0, 117.0, 218.0, 471.0]], #image 3 has 2 objects
  ...]
 ```
 
@@ -313,7 +310,7 @@ Bounding Box Formats supported by KerasCV:
 You can read more about KerasCV bounding box formats in
 [docs](https://keras.io/api/keras_cv/bounding_box/formats/).
 
-Also, you can convert one format to another using:
+Furthermore, it is possible to perform format conversion between any two pairs:
 
 ```python
 boxes = keras_cv.bounding_box.convert_format(
@@ -323,17 +320,6 @@ boxes = keras_cv.bounding_box.convert_format(
         target="xywh",  # Target Format (to which we want to convert)
     )
 ```
-
-Using KerasCV, conversion may be carried out between any two pairs:
-
-1. center_yxhw
-2. xyxy
-3. center_xywh
-4. xywh
-5. rel_xywh
-6. rel_xyxy
-7. yxyx
-8. rel_yxyx
 """
 
 resizing = keras_cv.layers.Resizing(
@@ -489,7 +475,7 @@ Next, let's build a YOLOV8 model using the `YOLOV8Detector`, which accepts a fea
 extractor as the `backbone` argument, a `num_classes` argument that specifies the number
 of object classes to detect based on the size of the `class_mapping` list, a
 `bounding_box_format` argument that informs the model of the format of the bbox in the
-dataset, and a Finally, the feature pyramid network (FPN) depth is specified by the
+dataset, and a finally, the feature pyramid network (FPN) depth is specified by the
 `fpn_depth` argument.
 
 It is simple to build a YOLOV8 using any of the aforementioned backbones thanks to
