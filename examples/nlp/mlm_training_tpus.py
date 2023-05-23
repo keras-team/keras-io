@@ -10,7 +10,7 @@ Accelerator: TPU
 ## Introduction
 
 In this example, we cover how to train a masked language model using TensorFlow,
-[🤗 Transformers](https://huggingface.co/transformers/index), and TPUs. 
+[🤗 Transformers](https://huggingface.co/transformers/index), and TPUs.
 
 TPU training is a useful skill to have: TPU pods are high-performance and extremely
 scalable, making it easy to train models at any scale from a few tens of millions of
@@ -25,7 +25,7 @@ showing small-scale TPU training with TensorFlow and introducing the core concep
 need to understand to get your model working on TPU. However, our Colab example doesn't
 contain all the steps needed to train a language model from scratch such as
 training the tokenizer. So, we wanted to provide a consolidated example of
-walking you through every critical step involved there. 
+walking you through every critical step involved there.
 
 As in our Colab example, we're taking advantage of TensorFlow's very clean TPU support
 via XLA and `TPUStrategy`. We'll also be benefiting from the fact that the majority of
@@ -113,7 +113,7 @@ For convenience, we have also hosted the resultant TFRecord shards in
 on the Hub.
 
 Once the data is tokenized and serialized into TFRecord shards, we can proceed toward
-training. 
+training.
 """
 
 """
@@ -121,7 +121,7 @@ training.
 
 ### Setup and imports
 
-Let's start by installing 🤗 Transformers. 
+Let's start by installing 🤗 Transformers.
 """
 
 """shell
@@ -160,7 +160,7 @@ print(f"Available number of replicas: {strategy.num_replicas_in_sync}")
 We then load the tokenizer. For more details on the tokenizer, check out 
 [its repository](https://huggingface.co/tf-tpu/unigram-tokenizer-wikitext).
 For the model, we use RoBERTa (the base variant), introduced in
-[this paper](https://arxiv.org/abs/1907.11692). 
+[this paper](https://arxiv.org/abs/1907.11692).
 """
 
 """
@@ -238,7 +238,7 @@ for more details.
 Next up, we have our masking utility that is responsible for masking parts of the inputs
 and preparing labels for the masked language model to learn from. We leverage the
 [`DataCollatorForLanguageModeling`](https://huggingface.co/docs/transformers/v4.29.1/en/main_classes/data_collator#transformers.DataCollatorForLanguageModeling)
-for this purpose. 
+for this purpose.
 """
 
 # We use a standard masking probability of 0.15. `mlm_probability` denotes
@@ -320,7 +320,7 @@ eval_dataset = prepare_dataset(
 )
 
 """
-Let's now investigate how a single batch of dataset looks like. 
+Let's now investigate how a single batch of dataset looks like.
 """
 
 single_batch = next(iter(train_dataset))
@@ -328,7 +328,7 @@ print(single_batch.keys())
 
 """
 * `input_ids` denotes the tokenized versions of the input samples containing the mask
-tokens as well. 
+tokens as well.
 * `attention_mask` denotes the mask to be used when performing attention operation.s 
 * `labels` denotes the actual values of masked tokens the model is supposed to learn from.
 """
@@ -360,7 +360,7 @@ print(labels[0].numpy()[:30])
 
 """
 Here, `-100` means that the corresponding tokens in the `input_ids` are NOT masked and
-non `-100` values denote the actual values of the masked tokens. 
+non `-100` values denote the actual values of the masked tokens.
 """
 
 """
