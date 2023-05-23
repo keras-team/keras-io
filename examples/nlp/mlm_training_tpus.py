@@ -50,7 +50,7 @@ language model with 🤗 Transformers using TensorFlow and TPUs:
 """
 ## Data
 
-We use the 
+We use the
 [WikiText dataset (v1)](https://huggingface.co/datasets/wikitext).
 You can head over to the
 [dataset page on the Hugging Face Hub](https://huggingface.co/datasets/wikitext)
@@ -62,7 +62,7 @@ Since the dataset is already available on the Hub in a compatible format, we can
 load and interact with it using
 [🤗 datasets](https://hf.co/docs/datasets).
 However, training a language model from scratch also requires a separate
-tokenizer training step. We skip that part in this example for brevity, but, 
+tokenizer training step. We skip that part in this example for brevity, but,
 here's a gist of what we can do to train a tokenizer from scratch:
 
 - Load the `train` split of the WikiText using 🤗 datasets.
