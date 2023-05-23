@@ -4,6 +4,7 @@ Authors: [Matthew Carrigan](https://twitter.com/carrigmat), [Sayak Paul](https:/
 Date created: 2023/05/21
 Last modified: 2023/05/21
 Description: Train a masked language model on TPUs using 🤗 Transformers.
+Accelerator: TPU
 """
 """
 ## Introduction
