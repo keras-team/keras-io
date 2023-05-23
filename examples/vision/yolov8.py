@@ -1,19 +1,20 @@
 """
-Title: Efficient Object Detection with YOLOV8 and KerasCV
-Author: [Gitesh Chawda](https://www.linkedin.com/in/gitesh-ch/)
-Date created: 2023/05/15
-Last modified: 2023/05/15
-Description: Train custom YOLOV8 object detection model with KerasCV.
+Title: FILLME
+Author: FILLME
+Date created: FILLME
+Last modified: FILLME
+Description: FILLME
+"""
+"""
+# Efficient Object Detection with YOLOV8 and KerasCV
 """
 
 """
-KerasCV is a deep learning library built on top of Keras, a popular deep learning
-framework. KerasCV provides a set of tools and utilities for building and training deep
-learning models for computer vision tasks, such as image classification, object
-detection, and segmentation.
+KerasCV is an extension of Keras for computer vision tasks. In this example, we'll see
+how to train a YOLOV8 object detection model using KerasCV.
 
 KerasCV includes pre-trained models for popular computer vision datasets, such as
-ImageNet, COCO, and Pascal VOC, which can be used for transfer learning.KerasCV also
+ImageNet, COCO, and Pascal VOC, which can be used for transfer learning. KerasCV also
 provides a range of visualization tools for inspecting the intermediate representations
 learned by the model and for visualizing the results of object detection and segmentation
 tasks.
@@ -54,12 +55,21 @@ from keras_cv import visualization
 """
 
 """
+For this guide, we will be utilizing the Self-Driving Car Dataset obtained from
+[roboflow](https://public.roboflow.com/object-detection/self-driving-car). In order to
+make the dataset more manageable, I have extracted a subset of the larger dataset, which
+originally consisted of 15,000 data samples. From this subset, I have chosen 7,316
+samples for model training.
 
-The Aquarium Dataset is a collection of 638 images obtained from two aquariums in the
-United States: The Henry Doorly Zoo in Omaha (October 16, 2020) and the National Aquarium
-in Baltimore (November 14, 2020). These images were curated and labeled for object
-detection by the Roboflow team, with assistance from SageMaker Ground Truth. The dataset,
-including both the images and annotations
+To simplify the task at hand and focus our efforts, we will be working with a reduced
+number of object classes. Specifically, we will be considering five primary classes for
+detection and classification: car, pedestrian, traffic light, biker, and truck. These
+classes represent some of the most common and significant objects encountered in the
+context of self-driving cars.
+
+By narrowing down the dataset to these specific classes, we can concentrate on building a
+robust object detection model that can accurately identify and classify these important
+objects. 
 """
 
 """
@@ -82,7 +92,7 @@ your dataset.
 """
 
 """shell
-!unzip -q /content/drive/MyDrive/dataset.zip
+!unzip -q /content/drive/MyDrive/data.zip
 """
 
 """
@@ -107,19 +117,17 @@ object detection tasks.
 """
 
 class_ids = [
-    "fish",
-    "jellyfish",
-    "penguin",
-    "shark",
-    "puffin",
-    "stingray",
-    "starfish",
+    "car",
+    "pedestrian",
+    "trafficLight",
+    "biker",
+    "truck",
 ]
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 # Path to images and annotations
-path_images = "/content/JPEGImages/"
-path_annot = "/content/Annotations/"
+path_images = "/content/data/images/"
+path_annot = "/content/data/annotations/"
 
 # Get all XML file paths in path_annot and sort them
 xml_files = sorted(
@@ -140,7 +148,7 @@ jpg_files = sorted(
 )
 
 """
-Below function reads the xml file and finds the image name and path, and then iterates
+Below function reads the XML file and finds the image name and path, and then iterates
 over each object in the XML file to extract the bounding box coordinates and class labels
 for each object.
 
@@ -195,7 +203,7 @@ sequences, such as text or time series data.
 
 ```python
 classes = [[8, 8, 8, 8, 8], # 5 classes
- [12, 14, 14, 14],          # 4 clsses
+ [12, 14, 14, 14],          # 4 classes
  [1],                       # 1 class
  [7, 7],                    # 2 class
  ...]
@@ -206,9 +214,9 @@ bbox = [[199.0, 19.0, 390.0, 401.0],
   [217.0, 15.0, 270.0, 157.0],
   [393.0, 18.0, 432.0, 162.0],
   [1.0, 15.0, 226.0, 276.0],
-  [19.0, 95.0, 458.0, 443.0]],  #bbox 1 having 4 objects
- [[52.0, 117.0, 109.0, 177.0]], #bbox 2 having 1 object
- [[88.0, 87.0, 235.0, 322.0], [113.0, 117.0, 218.0, 471.0]], #bbox 2 having 2 objects
+  [19.0, 95.0, 458.0, 443.0]],  #image 1 having 4 objects
+ [[52.0, 117.0, 109.0, 177.0]], #image 2 having 1 object
+ [[88.0, 87.0, 235.0, 322.0], [113.0, 117.0, 218.0, 471.0]], #image 2 having 2 objects
  ...]
 ```
 
@@ -298,6 +306,10 @@ Bounding Box Formats supported by KerasCV:
 2.   XYWH
 3.   XYXY
 4.   REL_XYXY
+5.   REL_XYWH 
+6.   YXYX
+7.   REL_YXYX
+
 
 You can read more about KerasCV bounding box formats in
 [docs](https://keras.io/api/keras_cv/bounding_box/formats/).
@@ -313,28 +325,16 @@ boxes = keras_cv.bounding_box.convert_format(
     )
 ```
 
-Conversion you can do using KerasCV:
+Using KerasCV, conversion may be carried out between any two pairs:
 
-
-1.   center_yxhw to xyxy
-2.   center_xywh to xyxy
-3.   xywh to xyxy
-4.   xyxy to center_yxhw
-5.   rel_xywh to xyxy
-6.   xyxy to xywh
-7.   xyxy to rel_xywh
-8.   xyxy to center_xywh
-9.   rel_xyxy to xyxy
-10.  xyxy to_rel xyxy
-11.  yxyx to xyxy
-12.  rel_yxyx to xyxy
-13.  xyxy to yxyx
-14.  xyxy to rel_yxyx
-
-
-
-
-
+1. center_yxhw
+2. xyxy
+3. center_xywh
+4. xywh
+5. rel_xywh
+6. rel_xyxy
+7. yxyx
+8. rel_yxyx
 """
 
 resizing = keras_cv.layers.Resizing(
@@ -459,7 +459,7 @@ Blog](https://blog.roboflow.com/whats-new-in-yolov8/)
 First we will create a instance of backbone which will be used by our yolov8 detector
 class. 
 
-Backbones available in KerasCV:
+YOLOV8 Backbones available in KerasCV:
 
 1.   Without Weights:
 
@@ -482,7 +482,7 @@ Backbones available in KerasCV:
 """
 
 backbone = keras_cv.models.YOLOV8Backbone.from_preset(
-    "yolo_v8_s_backbone"  # We will use yolov8 small backbone
+    "yolo_v8_s_backbone_coco"  # We will use yolov8 small backbone with coco weights
 )
 
 """
@@ -530,18 +530,53 @@ probabilities and bounding boxes.
 
 """
 
-yolo.compile(
-    optimizer="adam", classification_loss="binary_crossentropy", box_loss="iou"
+optimizer = tf.keras.optimizers.Adam(
+    learning_rate=0.001,
+    global_clipnorm=10.0,
 )
+
+yolo.compile(
+    optimizer=optimizer, classification_loss="binary_crossentropy", box_loss="iou"
+)
+
+"""
+# COCO Metric Callback
+
+We will be using `BoxCOCOMetrics` from KerasCV to evaluate the model and calculate the
+Map(Mean Average Precision) score, Recall and Precision.
+"""
+
+
+class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+        self.metrics = keras_cv.metrics.BoxCOCOMetrics(
+            bounding_box_format="xyxy",
+            evaluate_freq=1e9,
+        )
+
+    def on_epoch_end(self, epoch, logs):
+        self.metrics.reset_state()
+        for batch in self.data:
+            images, y_true = batch[0], batch[1]
+            y_pred = self.model.predict(images, verbose=0)
+            self.metrics.update_state(y_true, y_pred)
+
+        metrics = self.metrics.result(force=True)
+        logs.update(metrics)
+        return logs
+
 
 """
 # Train the Model
 """
 
 yolo.fit(
-    train_ds.take(100),
-    validation_data=val_ds.take(100),
+    train_ds,
+    validation_data=val_ds,
     epochs=5,
+    callbacks=[EvaluateCOCOMetricsCallback(val_ds)],
 )
 
 """
