@@ -17,9 +17,9 @@ scalable, making it easy to train models at any scale from a few tens of million
 parameters up to truly enormous sizes: Google's PaLM model
 (over 500 billion parameters!) was trained entirely on TPU pods.
 
-We've previously written a 
+We've previously written a
 [**tutorial**](https://huggingface.co/docs/transformers/main/perf_train_tpu_tf)
-and a 
+and a
 [**Colab example**](https://colab.research.google.com/github/huggingface/notebooks/blob/main/examples/tpu_training-tf.ipynb)
 showing small-scale TPU training with TensorFlow and introducing the core concepts you
 need to understand to get your model working on TPU. However, our Colab example doesn't
@@ -52,7 +52,7 @@ language model with 🤗 Transformers using TensorFlow and TPUs:
 
 We use the 
 [WikiText dataset (v1)](https://huggingface.co/datasets/wikitext).
-You can head over to the 
+You can head over to the
 [dataset page on the Hugging Face Hub](https://huggingface.co/datasets/wikitext)
 to explore the dataset.
 
@@ -63,7 +63,7 @@ load and interact with it using
 [🤗 datasets](https://hf.co/docs/datasets).
 However, training a language model from scratch also requires a separate
 tokenizer training step. We skip that part in this example for brevity, but, 
-here's a gist of what we can do to train a tokenizer from scratch: 
+here's a gist of what we can do to train a tokenizer from scratch:
 
 - Load the `train` split of the WikiText using 🤗 datasets.
 - Leverage
@@ -73,9 +73,9 @@ to train a
 - Upload the trained tokenizer on the Hub.
 
 You can find the tokenizer training
-code 
+code
 [**here**](https://github.com/huggingface/transformers/tree/main/examples/tensorflow/language-modeling-tpu#training-a-tokenizer)
-and the tokenizer 
+and the tokenizer
 [**here**](https://huggingface.co/tf-tpu/unigram-tokenizer-wikitext).
 This script also allows you to run it with
 [**any compatible dataset**](https://huggingface.co/datasets?task_ids=task_ids:language-modeling)
@@ -97,7 +97,7 @@ aggressively discarding text content (because of truncation).
 
 We then take these tokenized samples in batches and serialize those batches as multiple
 TFRecord shards, where the total dataset length and individual shard size determine the
-number of shards. Finally, these shards are pushed to a 
+number of shards. Finally, these shards are pushed to a
 [Google Cloud Storage (GCS) bucket](https://cloud.google.com/storage/docs/json_api/v1/buckets).
 
 If you're using a TPU node for training, then the data needs to be streamed from a GCS
@@ -106,9 +106,9 @@ locally or even attach persistent storage to those VMs. Since TPU nodes (which i
 have in a Colab) are still quite heavily used, we based our example on using a GCS bucket
 for data storage.
 
-You can see all of this in code in 
+You can see all of this in code in
 [this script](https://github.com/huggingface/transformers/blob/main/examples/tensorflow/language-modeling-tpu/prepare_tfrecord_shards.py).
-For convenience, we have also hosted the resultant TFRecord shards in 
+For convenience, we have also hosted the resultant TFRecord shards in
 [this repository](https://huggingface.co/datasets/tf-tpu/wikitext-v1-tfrecords)
 on the Hub.
 
@@ -157,7 +157,7 @@ strategy = tf.distribute.TPUStrategy(tpu)
 print(f"Available number of replicas: {strategy.num_replicas_in_sync}")
 
 """
-We then load the tokenizer. For more details on the tokenizer, check out 
+We then load the tokenizer. For more details on the tokenizer, check out
 [its repository](https://huggingface.co/tf-tpu/unigram-tokenizer-wikitext).
 For the model, we use RoBERTa (the base variant), introduced in
 [this paper](https://arxiv.org/abs/1907.11692).
@@ -191,7 +191,7 @@ eval_records = tf.io.gfile.glob(os.path.join(eval_dataset_path, "*.tfrecord"))
 
 """
 Now, we will write a utility to count the number of training samples we have. We need to
-know this value in order properly initialize our optimizer later: 
+know this value in order properly initialize our optimizer later:
 """
 
 
@@ -211,7 +211,7 @@ print(f"Number of total training samples: {num_train_samples}")
 
 """
 Let's now prepare our datasets for training and evaluation. We start by writing our
-utilities. First, we need to be able to decode the TFRecords: 
+utilities. First, we need to be able to decode the TFRecords:
 """
 
 max_sequence_length = 512
@@ -266,7 +266,7 @@ def mask_with_collator(batch):
 
 """
 And now is the time to write the final data preparation utility to put it all together in
-a `tf.data.Dataset` object: 
+a `tf.data.Dataset` object:
 """
 
 auto = tf.data.AUTOTUNE
@@ -295,7 +295,7 @@ def prepare_dataset(
 
 
 """
-Let's prepare our datasets with these utilities: 
+Let's prepare our datasets with these utilities:
 """
 
 per_replica_batch_size = 16  # Change as needed.
@@ -343,7 +343,7 @@ for k in single_batch:
 
 """
 Now, we can leverage our `tokenizer` to investigate the values of the tokens. Let's start
-with `input_ids`: 
+with `input_ids`:
 """
 
 idx = 0
@@ -352,7 +352,7 @@ print(tokenizer.decode(input_ids[idx].numpy()))
 
 """
 As expected, the decoded tokens contain the special tokens including the mask tokens as
-well. Let's now investigate the mask tokens: 
+well. Let's now investigate the mask tokens:
 """
 
 # Taking the first 30 tokens of the first sequence.
