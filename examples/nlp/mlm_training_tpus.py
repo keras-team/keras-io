@@ -69,7 +69,7 @@ here's a gist of what we can do to train a tokenizer from scratch:
 - Load the `train` split of the WikiText using 🤗 datasets.
 - Leverage
 [🤗 tokenizers](https://huggingface.co/docs/tokenizers/index)
-to train a 
+to train a
 [**Unigram model**](https://huggingface.co/course/chapter6/7?fw=pt).
 - Upload the trained tokenizer on the Hub.
 
