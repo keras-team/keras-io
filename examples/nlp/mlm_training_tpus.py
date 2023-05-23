@@ -10,7 +10,8 @@ Accelerator: TPU
 ## Introduction
 
 In this example, we cover how to train a masked language model using TensorFlow,
-[🤗 Transformers](https://huggingface.co/transformers/index), and TPUs.
+[🤗 Transformers](https://huggingface.co/transformers/index),
+and TPUs.
 
 TPU training is a useful skill to have: TPU pods are high-performance and extremely
 scalable, making it easy to train models at any scale from a few tens of millions of
