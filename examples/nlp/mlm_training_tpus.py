@@ -330,7 +330,7 @@ print(single_batch.keys())
 """
 * `input_ids` denotes the tokenized versions of the input samples containing the mask
 tokens as well.
-* `attention_mask` denotes the mask to be used when performing attention operation.s 
+* `attention_mask` denotes the mask to be used when performing attention operations. 
 * `labels` denotes the actual values of masked tokens the model is supposed to learn from.
 """
 
