@@ -429,7 +429,7 @@ notebook_login()
 
 """
 Let's now define the
-[`PushToHubCallback`](https://huggingface.co/docs/transformers/main_classes/keras_callbacks#transformers.PushToHubCallback): 
+[`PushToHubCallback`](https://huggingface.co/docs/transformers/main_classes/keras_callbacks#transformers.PushToHubCallback):
 """
 
 hub_model_id = output_dir = "masked-lm-tpu"
