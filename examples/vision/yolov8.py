@@ -68,21 +68,21 @@ objects.
 
 """
 The TensorFlow Datasets library provides a convenient way to download and use various
-datasets, including the object dataset. This can be a great option for those who want to
-quickly start working with the data without having to manually download and preprocess
-it.
+datasets, including the object detection dataset. This can be a great option for those
+who want to quickly start working with the data without having to manually download and
+preprocess it.
 
 You can view various OD datasets here [Tensorflow
 Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
 
 However, in this code example, we will demonstrate how to load the dataset from scratch
-using TensorFlow's tf.data pipeline. This approach provides more flexibility and allows
+using TensorFlow's `tf.data` pipeline. This approach provides more flexibility and allows
 you to customize the preprocessing steps as needed.
 
 Loading custom datasets that are not available in the TensorFlow Datasets library is one
-of the main advantages of using the tf.data pipeline. This approach allows you to create
-a custom data preprocessing pipeline tailored to the specific needs and requirements of
-your dataset.
+of the main advantages of using the `tf.data` pipeline. This approach allows you to
+create a custom data preprocessing pipeline tailored to the specific needs and
+requirements of your dataset.
 """
 
 """shell
@@ -100,10 +100,6 @@ EPOCH = 5
 GLOBAL_CLIPNORM = 10.0
 
 """
-In object detection tasks, it is important to know the specific class of each object that
-the model detects in an image. To achieve this, a list of class names or labels is often
-used to label the objects detected in an image.
-
 A dictionary is created to map each class name to a unique numerical identifier. This
 mapping is used to encode and decode the class labels during training and inference in
 object detection tasks.
@@ -141,9 +137,9 @@ jpg_files = sorted(
 )
 
 """
-Below function reads the XML file and finds the image name and path, and then iterates
-over each object in the XML file to extract the bounding box coordinates and class labels
-for each object.
+The function below reads the XML file and finds the image name and path, and then
+iterates over each object in the XML file to extract the bounding box coordinates and
+class labels for each object.
 
 The function returns three values: the image path, a list of bounding boxes (each
 represented as a list of four floats: xmin, ymin, xmax, ymax), and a list of class IDs
@@ -189,33 +185,36 @@ for xml_file in tqdm(xml_files):
     classes.append(class_ids)
 
 """
-Here we are using `tf.ragged.constant` to create ragged tensors from the bbox and classes
-lists. A ragged tensor is a type of tensor that can handle varying lengths of data along
-one or more dimensions. This is useful when dealing with data that has variable-length
-sequences, such as text or time series data.
+Here we are using `tf.ragged.constant` to create ragged tensors from the `bbox` and
+`classes` lists. A ragged tensor is a type of tensor that can handle varying lengths of
+data along one or more dimensions. This is useful when dealing with data that has
+variable-length sequences, such as text or time series data.
 
 ```python
-classes = [[8, 8, 8, 8, 8], # 5 classes
- [12, 14, 14, 14],          # 4 classes
- [1],                       # 1 class
- [7, 7],                    # 2 classes
+classes = [
+    [8, 8, 8, 8, 8],      # 5 classes
+    [12, 14, 14, 14],     # 4 classes
+    [1],                  # 1 class
+    [7, 7],               # 2 classes
  ...]
 ```
 
 ```python
-bbox = [[199.0, 19.0, 390.0, 401.0],
-  [217.0, 15.0, 270.0, 157.0],
-  [393.0, 18.0, 432.0, 162.0],
-  [1.0, 15.0, 226.0, 276.0],
-  [19.0, 95.0, 458.0, 443.0]],  #image 1 has 4 objects
- [[52.0, 117.0, 109.0, 177.0]], #image 2 has 1 object
- [[88.0, 87.0, 235.0, 322.0], [113.0, 117.0, 218.0, 471.0]], #image 3 has 2 objects
+bbox = [
+    [[199.0, 19.0, 390.0, 401.0],
+    [217.0, 15.0, 270.0, 157.0],
+    [393.0, 18.0, 432.0, 162.0],
+    [1.0, 15.0, 226.0, 276.0],
+    [19.0, 95.0, 458.0, 443.0]],     #image 1 has 4 objects
+    [[52.0, 117.0, 109.0, 177.0]],   #image 2 has 1 object
+    [[88.0, 87.0, 235.0, 322.0], 
+    [113.0, 117.0, 218.0, 471.0]],   #image 3 has 2 objects
  ...]
 ```
 
-In this case, the bbox and classes lists have different lengths for each image, depending
-on the number of objects in the image and the corresponding bounding boxes and classes.
-To handle this variability, ragged tensors are used instead of regular tensors.
+In this case, the `bbox` and `classes` lists have different lengths for each image,
+depending on the number of objects in the image and the corresponding bounding boxes and
+classes. To handle this variability, ragged tensors are used instead of regular tensors.
 
 Later, these ragged tensors are used to create a `tf.data.Dataset` using the
 `from_tensor_slices` method. This method creates a dataset from the input tensors by
@@ -255,13 +254,13 @@ bounding_boxes = {
 ```
 
 The dictionary has two keys, `'boxes'` and `'classes'`, each of which maps to a
-TensorFlow RaggedTensor or Tensor object. The 'boxes' Tensor has a shape of `[batch,
+TensorFlow RaggedTensor or Tensor object. The `'boxes'` Tensor has a shape of `[batch,
 num_boxes, 4]`, where batch is the number of images in the batch and num_boxes is the
 maximum number of bounding boxes in any image. The 4 represents the four values needed to
 define a bounding box:  xmin, ymin, xmax, ymax.
 
-The 'classes' Tensor has a shape of `[batch, num_boxes]`, where each element represents
-the class label for the corresponding bounding box in the 'boxes' Tensor. The num_boxes
+The `'classes'` Tensor has a shape of `[batch, num_boxes]`, where each element represents
+the class label for the corresponding bounding box in the `'boxes'` Tensor. The num_boxes
 dimension may be ragged, which means that the number of boxes may vary across images in
 the batch.
 
@@ -319,8 +318,41 @@ boxes = keras_cv.bounding_box.convert_format(
 ```
 """
 
-resizing = keras_cv.layers.Resizing(
-    640, 640, bounding_box_format="xyxy", pad_to_aspect_ratio=True
+"""
+# Data Augmentation
+
+One of the most challenging tasks when constructing object detection pipelines is data
+augmentation. It involves applying various transformations to the input images to
+increase the diversity of the training data and improve the model's ability to
+generalize. However, when working with object detection tasks, it becomes even more
+complex as these transformations need to be aware of the underlying bounding boxes and
+update them accordingly.
+
+KerasCV provides native support for bounding box augmentation. KerasCV offers an
+extensive collection of data augmentation layers specifically designed to handle bounding
+boxes. These layers intelligently adjust the bounding box coordinates as the image is
+transformed, ensuring that the bounding boxes remain accurate and aligned with the
+augmented images.
+
+By leveraging KerasCV's capabilities, developers can conveniently integrate bounding
+box-friendly data augmentation into their object detection pipelines. By performing
+on-the-fly augmentation within a tf.data pipeline, the process becomes seamless and
+efficient, enabling better training and more accurate object detection results.
+"""
+
+augmenter = keras.Sequential(
+    layers=[
+        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xyxy"),
+        keras_cv.layers.RandomTranslation(
+            height_factor=0.2, width_factor=0.2, bounding_box_format="xyxy"
+        ),
+        keras_cv.layers.RandomShear(
+            x_factor=0.2, y_factor=0.2, bounding_box_format="xyxy"
+        ),
+        keras_cv.layers.JitteredResize(
+            target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xyxy"
+        ),
+    ]
 )
 
 """
@@ -330,11 +362,15 @@ Creating Training Dataset
 train_ds = train_data.map(load_dataset, num_parallel_calls=tf.data.AUTOTUNE)
 train_ds = train_ds.shuffle(BATCH_SIZE * 4)
 train_ds = train_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
-train_ds = train_ds.map(resizing, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
 Creating Validation Dataset
 """
+
+resizing = keras_cv.layers.Resizing(
+    640, 640, bounding_box_format="xyxy", pad_to_aspect_ratio=True
+)
 
 val_ds = val_data.map(load_dataset, num_parallel_calls=tf.data.AUTOTUNE)
 val_ds = val_ds.shuffle(BATCH_SIZE * 4)
@@ -498,7 +534,7 @@ Loss used for YOLOV8
 1. Classification Loss: This loss function calculates the discrepancy between anticipated
 class probabilities and actual class probabilities. In this instance,
 `binary_crossentropy`, a prominent solution for binary classification issues, is
-utilised. We utilised binary crossentropy since each thing that is identified is either
+Utilized. We Utilized binary crossentropy since each thing that is identified is either
 classed as belonging to or not belonging to a certain object class (such as a person, a
 car, etc.).
 
