@@ -168,7 +168,7 @@ vectorize_layer = TextVectorization(
     output_sequence_length=sequence_length,
 )
 
-# Now that the vocab layer has been created, call `adapt` on a text-only
+# Now that the vectorize_layer has been created, call `adapt` on a text-only
 # dataset to create the vocabulary. You don't have to batch, but for very large
 # datasets this means you're not keeping spare copies of the dataset in memory.
 
