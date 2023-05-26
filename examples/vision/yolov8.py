@@ -1,9 +1,12 @@
 """
 Title: Efficient Object Detection with YOLOV8 and KerasCV
 Author: [Gitesh Chawda](https://www.linkedin.com/in/gitesh-ch/)
-Date created: 2023/05/23
-Last modified: 2023/05/23
+Date created: 2023/05/27
+Last modified: 2023/05/27
 Description: Train custom YOLOV8 object detection model with KerasCV.
+"""
+"""
+## Introduction
 """
 
 """
@@ -19,18 +22,17 @@ tasks.
 
 """
 If you're interested in learning about object detection using KerasCV, I highly suggest
-taking a look at the guide created by lukewood. This resource, available at [OD With
-KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-intr
-oduction), provides a comprehensive overview of the fundamental concepts and techniques
-required for building object detection models with KerasCV.
+taking a look at the guide created by lukewood. This resource, available at 
+[OD With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction), 
+provides a comprehensive overview of the fundamental concepts and techniques required for building object detection models with KerasCV.
 """
 
 """shell
-!!pip install --upgrade git+https://github.com/keras-team/keras-cv -q
+pip install --upgrade git+https://github.com/keras-team/keras-cv -q
 """
 
 """
-# Setup
+## Setup
 """
 
 import os
@@ -45,7 +47,7 @@ from keras_cv import bounding_box
 from keras_cv import visualization
 
 """
-# Load Data
+## Load Data
 """
 
 """
@@ -72,7 +74,8 @@ datasets, including the object detection dataset. This can be a great option for
 who want to quickly start working with the data without having to manually download and
 preprocess it.
 
-You can view various OD datasets here [Tensorflow
+You can view various OD datasets here 
+[TensorFlow
 Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
 
 However, in this code example, we will demonstrate how to load the dataset from scratch
@@ -86,11 +89,11 @@ requirements of your dataset.
 """
 
 """shell
-!unzip -q /content/drive/MyDrive/data.zip
+unzip -q /content/drive/MyDrive/data.zip
 """
 
 """
-# Hyperparameters
+## Hyperparameters
 """
 
 SPLIT_RATIO = 0.2
@@ -319,7 +322,7 @@ boxes = keras_cv.bounding_box.convert_format(
 """
 
 """
-# Data Augmentation
+## Data Augmentation
 
 One of the most challenging tasks when constructing object detection pipelines is data
 augmentation. It involves applying various transformations to the input images to
@@ -356,7 +359,7 @@ augmenter = keras.Sequential(
 )
 
 """
-Creating Training Dataset 
+## Creating Training Dataset 
 """
 
 train_ds = train_data.map(load_dataset, num_parallel_calls=tf.data.AUTOTUNE)
@@ -365,7 +368,7 @@ train_ds = train_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
 train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
-Creating Validation Dataset
+## Creating Validation Dataset
 """
 
 resizing = keras_cv.layers.Resizing(
@@ -378,7 +381,7 @@ val_ds = val_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
 val_ds = val_ds.map(resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
-# Visualization
+## Visualization
 """
 
 
@@ -427,7 +430,7 @@ val_ds = val_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
 
 """
-# Creating Model
+## Creating Model
 """
 
 """
@@ -524,7 +527,7 @@ yolo = keras_cv.models.YOLOV8Detector(
 )
 
 """
-# Compile the Model
+## Compile the Model
 """
 
 """
@@ -558,7 +561,7 @@ yolo.compile(
 )
 
 """
-# COCO Metric Callback
+## COCO Metric Callback
 
 We will be using `BoxCOCOMetrics` from KerasCV to evaluate the model and calculate the
 Map(Mean Average Precision) score, Recall and Precision.
@@ -587,7 +590,7 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
 
 
 """
-# Train the Model
+## Train the Model
 """
 
 yolo.fit(
@@ -598,7 +601,7 @@ yolo.fit(
 )
 
 """
-# Visualize Predictions
+## Visualize Predictions
 """
 
 
