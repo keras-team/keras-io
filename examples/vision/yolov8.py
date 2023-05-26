@@ -24,7 +24,8 @@ tasks.
 If you're interested in learning about object detection using KerasCV, I highly suggest
 taking a look at the guide created by lukewood. This resource, available at 
 [OD With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction), 
-provides a comprehensive overview of the fundamental concepts and techniques required for building object detection models with KerasCV.
+provides a comprehensive overview of the fundamental concepts and techniques required 
+for building object detection models with KerasCV.
 """
 
 """shell
