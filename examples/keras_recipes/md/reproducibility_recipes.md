@@ -1,21 +1,26 @@
-"""
-Title: Reproducibility in Keras Models
-Author: [Frightera](https://github.com/Frightera)
-Date created: 2023/05/05
-Last modified: 2023/05/05
-Description: Demonstration of random weight initialization and reproducibility in Keras models.
-Accelerator: GPU
-"""
-"""
+# Reproducibility in Keras Models
+
+**Author:** [Frightera](https://github.com/Frightera)<br>
+**Date created:** 2023/05/05<br>
+**Last modified:** 2023/05/05<br>
+**Description:** Demonstration of random weight initialization and reproducibility in Keras models.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_recipes/ipynb/reproducibility_recipes.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_recipes/reproducibility_recipes.py)
+
+
+
+---
 ## Introduction
 This example demonstrates how to control randomness in Keras models. Sometimes
 you may want to reproduce the exact same results across runs, for experimentation
 purposes or to debug a problem.
-"""
 
-"""
+---
 ## Setup
-"""
+
+
+```python
 import json
 
 import tensorflow as tf
@@ -34,16 +39,18 @@ keras.utils.set_random_seed(812)
 # `enable_op_determinism()` is introduced in TensorFlow 2.9.
 tf.config.experimental.enable_op_determinism()
 
+```
 
-"""
+---
 ## Weight initialization in Keras
 
 Most of the layers in Keras have `kernel_initializer` and `bias_initializer`
 parameters. These parameters allow you to specify the strategy used for
 initializing the weights of layer variables. The following built-in initializers
 are available as part of `tf.keras.initializers`:
-"""
 
+
+```python
 initializers_list = [
     initializers.RandomNormal,
     initializers.RandomUniform,
@@ -57,13 +64,14 @@ initializers_list = [
     initializers.LecunUniform,
     initializers.Orthogonal,
 ]
+```
 
-"""
 In a reproducible model, the weights of the model should be initialized with
 same values in subsequent runs. First, we'll check how initializers behave when
 they are called multiple times with same `seed` value.
-"""
 
+
+```python
 for initializer in initializers_list:
     print(f"Running {initializer}")
 
@@ -76,12 +84,114 @@ for initializer in initializers_list:
         print(f"\tIteration --> {iteration} // Result --> {result}")
     print("\n")
 
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.RandomNormal'>
+	Iteration --> 0 // Result --> 0.000790853810030967
+	Iteration --> 1 // Result --> 0.000790853810030967
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.RandomUniform'>
+	Iteration --> 0 // Result --> -0.02175668440759182
+	Iteration --> 1 // Result --> -0.02175668440759182
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.TruncatedNormal'>
+	Iteration --> 0 // Result --> 0.000790853810030967
+	Iteration --> 1 // Result --> 0.000790853810030967
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.VarianceScaling'>
+	Iteration --> 0 // Result --> 0.017981600016355515
+	Iteration --> 1 // Result --> 0.017981600016355515
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.GlorotNormal'>
+	Iteration --> 0 // Result --> 0.017981600016355515
+	Iteration --> 1 // Result --> 0.017981600016355515
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.GlorotUniform'>
+	Iteration --> 0 // Result --> -0.7536736726760864
+	Iteration --> 1 // Result --> -0.7536736726760864
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.HeNormal'>
+	Iteration --> 0 // Result --> 0.025429822504520416
+	Iteration --> 1 // Result --> 0.025429822504520416
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.HeUniform'>
+	Iteration --> 0 // Result --> -1.065855622291565
+	Iteration --> 1 // Result --> -1.065855622291565
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.LecunNormal'>
+	Iteration --> 0 // Result --> 0.017981600016355515
+	Iteration --> 1 // Result --> 0.017981600016355515
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.LecunUniform'>
+	Iteration --> 0 // Result --> -0.7536736726760864
+	Iteration --> 1 // Result --> -0.7536736726760864
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Running <class 'keras.initializers.initializers.Orthogonal'>
+	Iteration --> 0 // Result --> 1.0
+	Iteration --> 1 // Result --> 1.0
+```
+</div>
+    
+    
+
+
 Now, let's inspect how two different initializer objects behave when they are
 have the same seed value.
-"""
 
+
+```python
 # Setting the seed value for an initializer will cause two different objects
 # to produce same results.
 glorot_normal_1 = keras.initializers.GlorotNormal(seed=42)
@@ -96,14 +206,21 @@ result_2 = glorot_normal_2(shape=(input_dim, neurons))
 # Check if the results are equal.
 equal = tf.experimental.numpy.allclose(result_1, result_2).numpy()
 print(f"Are the results equal? {equal}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Are the results equal? True
+
+```
+</div>
 If the seed value is not set (or different seed values are used), two different
 objects will produce different results. Since the random seed is set at the beginning
 of the notebook, the results will be same in the sequential runs. This is related
 to the `keras.utils.set_random_seed`.
-"""
 
+
+```python
 glorot_normal_3 = keras.initializers.GlorotNormal()
 glorot_normal_4 = keras.initializers.GlorotNormal()
 
@@ -115,14 +232,19 @@ result_4 = glorot_normal_4(shape=(input_dim, neurons))
 
 equal = tf.experimental.numpy.allclose(result_3, result_4).numpy()
 print(f"Are the results equal? {equal}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Are the results equal? False
+
+```
+</div>
 `result_3` and `result_4` will be different, but when you run the notebook
 again, `result_3` will have identical values to the ones in the previous run.
 Same goes for `result_4`.
-"""
 
-"""
+---
 ## Reproducibility in model training process
 If you want to reproduce the results of a model training process, you need to
 control the randomness sources during the training process. In order to show a
@@ -131,8 +253,9 @@ operations.
 
 In order to start, let's create a simple function which returns the history
 object of the Keras model.
-"""
 
+
+```python
 
 def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict:
     model = keras.Sequential(
@@ -175,8 +298,15 @@ def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict
 # Construct tf.data.Dataset objects
 train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
 test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11490434/11490434 [==============================] - 1s 0us/step
+
+```
+</div>
 Remember we called `tf.config.experimental.enable_op_determinism()` at the
 beginning of the function. This makes the `tf.data` operations deterministic.
 However, making `tf.data` operations deterministic comes with a performance
@@ -190,8 +320,9 @@ will produce same results in the sequential runs. Additionally, TensorFlow
 operations have now become deterministic. Frequently, you will be utilizing GPUs
 that have thousands of hardware threads which causes non-deterministic behavior
 to occur.
-"""
 
+
+```python
 
 def prepare_dataset(image, label):
     # Cast and normalize the image
@@ -205,8 +336,8 @@ def prepare_dataset(image, label):
 
     return image, label
 
+```
 
-"""
 `tf.data.Dataset` objects have a `shuffle` method which shuffles the data.
 This method has a `buffer_size` parameter which controls the size of the
 buffer. If you set this value to `len(train_images)`, the whole dataset will
@@ -225,7 +356,9 @@ Since `tf.config.experimental.enable_op_determinism()` is enabled and we set
 random seeds using `keras.utils.set_random_seed` in the beginning of the
 notebook, the `shuffle()` method will produce same results in the sequential
 runs.
-"""
+
+
+```python
 # Prepare the datasets, batch-map --> vectorized operations
 train_data = (
     train_ds.shuffle(buffer_size=len(train_images))
@@ -239,43 +372,66 @@ test_data = (
     .map(prepare_dataset, num_parallel_calls=tf.data.AUTOTUNE)
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
+```
 
-"""
 Train the model for the first time.
-"""
 
+
+```python
 history = train_model(train_data, test_data)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/5
+938/938 [==============================] - 16s 5ms/step - loss: 0.6929 - accuracy: 0.7678 - val_loss: 0.1764 - val_accuracy: 0.9466
+Epoch 2/5
+938/938 [==============================] - 5s 5ms/step - loss: 0.2439 - accuracy: 0.9257 - val_loss: 0.1114 - val_accuracy: 0.9674
+Epoch 3/5
+938/938 [==============================] - 5s 5ms/step - loss: 0.1782 - accuracy: 0.9454 - val_loss: 0.0858 - val_accuracy: 0.9728
+Epoch 4/5
+938/938 [==============================] - 5s 5ms/step - loss: 0.1503 - accuracy: 0.9549 - val_loss: 0.0847 - val_accuracy: 0.9737
+Epoch 5/5
+938/938 [==============================] - 5s 5ms/step - loss: 0.1291 - accuracy: 0.9616 - val_loss: 0.0665 - val_accuracy: 0.9800
+157/157 [==============================] - 0s 2ms/step - loss: 0.0665 - accuracy: 0.9800
+Model accuracy on test data: 98.00%
+
+```
+</div>
 Let's save our results into a json file, and restart the kernel. After
 restarting the kernel, we should see the same results as the previous run,
 this includes metrics and loss values both on the training and test data.
-"""
 
+
+```python
 # Save the history object into a json file
 with open("history.json", "w") as fp:
     json.dump(history, fp)
+```
 
-"""
 Do not run the cell above in order not to overwrite the results. Execute the
 model training cell again and compare the results.
-"""
 
+
+```python
 with open("history.json", "r") as fp:
     history_loaded = json.load(fp)
 
+```
 
-"""
 Compare the results one by one. You will see that they are equal.
-"""
+
+
+```python
 for key in history.keys():
     for i in range(len(history[key])):
         if not tf.experimental.numpy.allclose(
             history[key][i], history_loaded[key][i]
         ).numpy():
             print(f"{key} are not equal")
+```
 
-"""
+---
 ## Conclusion
 In this tutorial, you learned how to control the randomness sources in Keras and
 TensorFlow. You also learned how to reproduce the results of a model training
@@ -290,4 +446,3 @@ as using `recurrent_dropout` in RNN layers.
 
 Reproducibility is subject to the environment. You'll get the same results if you
 run the notebook or the code on the same machine with the same environment.
-"""
