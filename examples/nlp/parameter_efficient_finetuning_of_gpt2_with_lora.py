@@ -20,7 +20,7 @@ However, LLMs are extremely large in size, and we don't need to train all the
 parameters in the model while fine-tuning, especially because datasets on which
 the model is fine-tuned are relatively small. Another way of saying this is
 that LLMs are over-parametrized for fine-tuning. This is where
-[Low-rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) comes in; it
+[Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) comes in; it
 significantly reduces the number of trainable parameters. This results in a
 decrease in training time and GPU memory usage, while maintaining the quality
 of the outputs.
@@ -66,6 +66,7 @@ BATCH_SIZE = 32
 NUM_BATCHES = 500
 EPOCHS = 1  # Can be set to a higher value for better results
 MAX_SEQUENCE_LENGTH = 128
+MAX_GENERATION_LENGTH = 200
 
 GPT2_PRESET = "gpt2_base_en"
 
@@ -233,8 +234,8 @@ first call to `generate()` will be slow because of XLA compilation, but
 subsequent calls will be super-fast. :)
 """
 
-generate_text(gpt2_lm, "I like basketball", max_length=200)
-generate_text(gpt2_lm, "That Italian restaurant is", max_length=200)
+generate_text(gpt2_lm, "I like basketball", max_length=MAX_GENERATION_LENGTH)
+generate_text(gpt2_lm, "That Italian restaurant is", max_length=MAX_GENERATION_LENGTH)
 
 """
 ## LoRA GPT-2
@@ -285,8 +286,7 @@ have `768 x 4 + 4 x 768 = 6,144` parameters. So, for the dense layer, we go from
 According to the technical description above, let's create a LoRA layer. In
 a transformer model, the LoRA layer is created and injected for the query and
 value projection matrices. In `keras.layers.MultiHeadAttention`, the query/value
-projection layers are `keras.layers.EinsumDense` layers:
-https://github.com/keras-team/keras/blob/v2.12.0/keras/layers/attention/multi_head_attention.py#L383-L391.
+projection layers are `keras.layers.EinsumDense` layers.
 """
 
 import math
@@ -401,6 +401,10 @@ lora_model = keras_nlp.models.GPT2CausalLM.from_preset(
     preprocessor=preprocessor,
 )
 
+"""
+We will now override the original query/value projection matrices with our
+new LoRA layers.
+"""
 
 gpt2_backbone_layer_name = [
     layer.name for layer in list(lora_model.layers) if "GPT2Backbone" in str(layer)
@@ -450,6 +454,7 @@ Let's now do a forward pass to make sure it is going through.
 """
 
 lora_model(preprocessor(["they are going to ban LoRA in EU, lol"])[0])
+pass
 
 """
 Freeze the entire LLM, only the LoRA layers should be trainable.
@@ -470,7 +475,7 @@ total parameters are correct.
 
 In a previous section, we had calculated the number of parameters associated with
 the LoRA layers to be 6,144. The total trainable parameters in the model should
-be `num_layers * (query, value) * 6,144 = `12 * 2 * 6,144 = 147,456`. The
+be `num_layers * (query, value) * 6,144 = 12 * 2 * 6,144 = 147,456`. The
 number of non-trainable parameters should be the same as the total number of
 parameters in the original GPT-2 model, which is `124,439,808`.
 """
@@ -515,10 +520,10 @@ lora_model_memory_usage = gpu_memory_callback.memory_usage
 lora_model_memory_labels = gpu_memory_callback.labels
 
 """
-And we're done! Before we generate text, let's compare the training time
-and memory usage of the two models. The training time of GPT-2 on a 16 GB
-Tesla T4 (Colab) is 7 minutes, and for LoRA, it is 5 minutes, a 30% decrease.
-The memory usage of LoRA GPT-2 is roughly 2 times less than GPT-2.
+And we are done fine-tuning the model! Before we generate text, let's compare
+the training time and memory usage of the two models. The training time of GPT-2
+on a 16 GB Tesla T4 (Colab) is 7 minutes, and for LoRA, it is 5 minutes, a 30%
+decrease. The memory usage of LoRA GPT-2 is roughly 3 times less than GPT-2.
 """
 
 plt.plot(gpt2_lm_memory_labels, gpt2_lm_memory_usage, label="GPT-2")
@@ -527,7 +532,7 @@ plt.plot(lora_model_memory_labels, lora_model_memory_usage, label="LoRA GPT-2")
 plt.xticks(rotation=90)
 
 plt.xlabel("Time")
-plt.ylabel("GPU Memory (in GB)")
+plt.ylabel("GPU Memory Usage")
 
 plt.title("GPU Memory Usage (in GB)")
 plt.legend()
@@ -575,8 +580,10 @@ for layer_idx in range(lora_model.get_layer(gpt2_backbone_layer_name).num_layers
 We are now all set to generate text with our LoRA model :).
 """
 
-generate_text(lora_model, "I like basketball", max_length=200)
-generate_text(lora_model, "That Italian restaurant is", max_length=200)
+generate_text(lora_model, "I like basketball", max_length=MAX_GENERATION_LENGTH)
+generate_text(
+    lora_model, "That Italian restaurant is", max_length=MAX_GENERATION_LENGTH
+)
 
 """
 And we're all done!
