@@ -244,7 +244,7 @@ model, fine-tune it and generate text.
 
 ### What exactly is LoRA?
 
-LoRA is a parameter-efficient fine-tuning technique for LLMs. It freezes the 
+LoRA is a parameter-efficient fine-tuning technique for LLMs. It freezes the
 weights of the LLM, and injects trainable rank-decomposition matrices. Let's
 understand this more clearly.
 
@@ -282,7 +282,7 @@ have `768 x 4 + 4 x 768 = 6,144` parameters. So, for the dense layer, we go from
 
 ### Create LoRA layer
 
-According to the technical description above, let's create a LoRA layer. In 
+According to the technical description above, let's create a LoRA layer. In
 a transformer model, the LoRA layer is created and injected for the query and
 value projection matrices. In `keras.layers.MultiHeadAttention`, the query/value
 projection layers are `keras.layers.EinsumDense` layers:
@@ -578,5 +578,5 @@ generate_text(lora_model, "I like basketball", max_length=200)
 generate_text(lora_model, "That Italian restaurant is", max_length=200)
 
 """
-And we're all done! 
+And we're all done!
 """
