@@ -63,7 +63,7 @@ Let's also define our hyperparameters.
 
 # General hyperparameters
 BATCH_SIZE = 32
-NUM_BATCHES = 500
+NUM_BATCHES = 15
 EPOCHS = 1  # Can be set to a higher value for better results
 MAX_SEQUENCE_LENGTH = 128
 
@@ -143,7 +143,7 @@ class GPUMemoryCallback(keras.callbacks.Callback):
     def _compute_memory_usage(self):
         memory_stats = tf.config.experimental.get_memory_info("GPU:0")
         # Convert bytes to GB and store in list.
-        peak_usage = round((memory_stats["peak"] - self.subtract_value) / 2 ^ 30, 3)
+        peak_usage = round((memory_stats["peak"] - self.subtract_value) / (2 ^ 30), 3)
         self.memory_usage.append(peak_usage)
 
     def on_epoch_begin(self, epoch, logs=None):
@@ -305,7 +305,8 @@ class LoraLayer(keras.layers.Layer):
 
         # We want to keep the name of this layer the same as the original
         # dense layer.
-        name = original_layer.name
+        original_layer_config = original_layer.get_config()
+        name = original_layer_config["name"]
 
         kwargs.pop("name", None)
 
@@ -317,8 +318,8 @@ class LoraLayer(keras.layers.Layer):
 
         self._scale = alpha / rank
 
-        self._num_heads = original_layer.output_shape[-2]
-        self._hidden_dim = self._num_heads * original_layer.output_shape[-1]
+        self._num_heads = original_layer_config["output_shape"][-2]
+        self._hidden_dim = self._num_heads * original_layer_config["output_shape"][-1]
 
         # Layers.
 
@@ -347,8 +348,8 @@ class LoraLayer(keras.layers.Layer):
         # `e`: `hidden_dim//num_heads`. The only difference is that in layer `B`,
         # `c` represents `rank`.
         self.B = keras.layers.EinsumDense(
-            equation=original_layer.equation,
-            output_shape=original_layer.output_shape,
+            equation=original_layer_config["equation"],
+            output_shape=original_layer_config["output_shape"],
             kernel_initializer="zeros",
             trainable=trainable,
             name=f"B_{layer_idx}",
