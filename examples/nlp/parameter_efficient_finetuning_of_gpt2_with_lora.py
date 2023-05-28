@@ -143,7 +143,7 @@ class GPUMemoryCallback(keras.callbacks.Callback):
     def _compute_memory_usage(self):
         memory_stats = tf.config.experimental.get_memory_info("GPU:0")
         # Convert bytes to GB and store in list.
-        peak_usage = round((memory_stats["peak"] - self.subtract_value) / (2 ^ 30), 3)
+        peak_usage = round((memory_stats["peak"] - self.subtract_value) / (2**30), 3)
         self.memory_usage.append(peak_usage)
 
     def on_epoch_begin(self, epoch, logs=None):
@@ -223,7 +223,7 @@ gpt2_lm.compile(
 We are all set to train the model!
 """
 
-gpt2_lm.fit(train_ds, epochs=EPOCHS)
+gpt2_lm.fit(train_ds, epochs=EPOCHS, callbacks=[gpu_memory_callback])
 gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
 gpt2_lm_memory_labels = gpu_memory_callback.labels
 
@@ -521,7 +521,7 @@ Tesla T4 (Colab) is 7 minutes, and for LoRA, it is 5 minutes, a 30% decrease.
 The memory usage of LoRA GPT-2 is roughly 2 times less than GPT-2.
 """
 
-plt.plot(gpt2_lm_memory_usage, gpt2_lm_memory_labels, label="GPT-2")
+plt.plot(gpt2_lm_memory_labels, gpt2_lm_memory_usage, label="GPT-2")
 plt.plot(lora_model_memory_labels, lora_model_memory_usage, label="LoRA GPT-2")
 
 plt.xticks(rotation=90)
