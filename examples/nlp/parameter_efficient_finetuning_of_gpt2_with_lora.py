@@ -1,5 +1,5 @@
 """
-Title: Parameter-Efficient fine-tuning of GPT-2 with LoRA
+Title: Parameter-efficient fine-tuning of GPT-2 with LoRA
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2023/05/27
 Last modified: 2023/05/27
