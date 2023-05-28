@@ -43,7 +43,7 @@ training time.
 """
 
 """shell
-!pip install keras-nlp
+pip install keras-nlp -q
 """
 
 import keras_nlp
