@@ -63,7 +63,7 @@ Let's also define our hyperparameters.
 
 # General hyperparameters
 BATCH_SIZE = 32
-NUM_BATCHES = 15
+NUM_BATCHES = 500
 EPOCHS = 1  # Can be set to a higher value for better results
 MAX_SEQUENCE_LENGTH = 128
 
