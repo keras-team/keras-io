@@ -385,7 +385,7 @@ del loss
 del learning_rate
 
 # This resets "peak" memory usage to "current" memory usage.
-tf.config.experimental.reset_memory_stats()
+tf.config.experimental.reset_memory_stats("GPU:0")
 # We will subtract this from the total memory usage when calculating the
 # memory usage for LoRA.
 current_memory_usage = tf.config.experimental.get_memory_info("GPU:0")
