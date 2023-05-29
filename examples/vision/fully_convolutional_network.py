@@ -25,9 +25,11 @@ extracted out and upsampled at different levels and factors to get a final outpu
 of the output, but with the class of each pixel present at each location, instead of pixel intensity values.
 Different intermediate pool layers are extracted and processed upon for different versions of the network.
 The FCN architecture has 3 versions of differing quality.
+
 - FCN-32S
 - FCN-16S
 - FCN-8S
+
 All versions of the model derive their outputs through an iterative processing of
 successive intermediate pool layers of the main backbone used.
 A better idea can be gained from the figure below.
@@ -107,7 +109,7 @@ parameter to mix our samples together.
 )
 
 """
-## Unpack and Pre-process dataset
+## Unpack and preprocess dataset
 
 We define a simple function that includes performs Resizing over our
 training, validation and test datasets.
@@ -199,6 +201,7 @@ test_ds = (
 The Fully-Convolutional Network boasts a simple architecture composed of only
 `keras.layers.Conv2D` Layers, `keras.layers.Dense` layers and `keras.layers.Dropout`
 layers.
+
 | ![FCN Architecture](https://i.imgur.com/PerTKjf.png) |
 | :--: |
 | **Diagram 2**: Generic FCN Forward Pass (Source: Paper)|
@@ -217,8 +220,7 @@ We extract different outputs from the network by making use of `keras.models.Mod
 Following this, we add layers on top to make a network perfectly simulating that of
 Diagram 1.
 The backbone's `keras.layers.Dense` layers will be converted to `keras.layers.Conv2D`
-layers based on the [original Caffe code present
-here.](https://github.com/linxi159/FCN-caffe/blob/master/pascalcontext-fcn16s/net.py)
+layers based on the [original Caffe code present here.](https://github.com/linxi159/FCN-caffe/blob/master/pascalcontext-fcn16s/net.py)
 All 3 networks will share the same backbone weights, but will have differing results
 based on their extensions.
 We make the backbone non-trainable to improve training time requirements.
@@ -434,8 +436,7 @@ dense_convs.layers[2].set_weights([weights2])
 """
 ## Training
 
-The original paper talks about making use of [SGD with
-Momentum](https://keras.io/api/optimizers/sgd/) as the optimizer of choice.
+The original paper talks about making use of [SGD with Momentum](https://keras.io/api/optimizers/sgd/) as the optimizer of choice.
 But it was noticed during experimentation that
 [AdamW](https://keras.io/api/optimizers/adamw/)
 yielded better results in terms of mIOU and Pixel-wise Accuracy.
